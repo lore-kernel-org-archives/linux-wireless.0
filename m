@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3592 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750960Ab3ARIi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 03:38:26 -0500
-Date: Fri, 18 Jan 2013 16:38:25 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [wireless-next:master 52/89] drivers/bcma/driver_mips.c:297:4:
- error: implicit declaration of function 'bcma_core_irq'
-Message-ID: <50f90a01.gkgVoH9EfWvuZEYP%fengguang.wu@intel.com> (sfid-20130118_093832_165576_8A466474)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8676 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752529Ab3ABEdr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jan 2013 23:33:47 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH V6 1/2] cfg80211: Move the definition of struct mac_address up
+Date: Wed, 2 Jan 2013 10:03:32 +0530
+Message-ID: <1357101213-9870-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20130102_053352_804680_BC5105B2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-head:   660b9caaad380758c756a7e60397e33dab44fe3f
-commit: e3f05a42faac627d8704c76c1927e09b22443b7b [52/89] bcma: mips: explicit assign IRQ numbers
-config: make ARCH=mips allmodconfig
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Note: the wireless-next/master HEAD 660b9ca builds fine.
-      It only hurts bisectibility.
+struct mac_address will be used by ACL related configuration ops.
 
-All error/warnings:
-
-   In file included from include/linux/bcma/bcma.h:7:0,
-                    from drivers/bcma/bcma_private.h:8,
-                    from drivers/bcma/driver_mips.c:13:
-   include/linux/bcma/bcma_driver_chipcommon.h:582:19: error: field 'gpio' has incomplete type
-   In file included from include/linux/bcma/bcma.h:11:0,
-                    from drivers/bcma/bcma_private.h:8,
-                    from drivers/bcma/driver_mips.c:13:
-   include/linux/ssb/ssb.h:440:19: error: field 'gpio' has incomplete type
-   drivers/bcma/driver_mips.c: In function 'bcma_core_mips_init':
->> drivers/bcma/driver_mips.c:297:4: error: implicit declaration of function 'bcma_core_irq' [-Werror=implicit-function-declaration]
-   cc1: some warnings being treated as errors
-
-vim +/bcma_core_irq +297 drivers/bcma/driver_mips.c
-
-   291			bcma_core_mips_set_irq_name(bus, 4, BCMA_CORE_USB20_HOST, 0);
-   292			bcma_core_mips_set_irq_name(bus, 0, BCMA_CORE_4706_CHIPCOMMON,
-   293						    0);
-   294			break;
-   295		default:
-   296			list_for_each_entry(core, &bus->cores, list) {
- > 297				core->irq = bcma_core_irq(core);
-   298			}
-   299			bcma_err(bus,
-   300				 "Unknown device (0x%x) found, can not configure IRQs\n",
-
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
-0-DAY kernel build testing backend              Open Source Technology Center
-http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
+ include/net/cfg80211.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8e6a6b7..9273d05 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -521,6 +521,10 @@ struct cfg80211_beacon_data {
+ 	size_t probe_resp_len;
+ };
+ 
++struct mac_address {
++	u8 addr[ETH_ALEN];
++};
++
+ /**
+  * struct cfg80211_ap_settings - AP configuration
+  *
+@@ -2146,10 +2150,6 @@ struct ieee80211_iface_combination {
+ 	bool beacon_int_infra_match;
+ };
+ 
+-struct mac_address {
+-	u8 addr[ETH_ALEN];
+-};
+-
+ struct ieee80211_txrx_stypes {
+ 	u16 tx, rx;
+ };
+-- 
+1.7.0.4
+
