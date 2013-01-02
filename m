@@ -1,138 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:59161 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754210Ab3AWKTe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab3ABM56 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 05:19:34 -0500
-Received: by mail-bk0-f48.google.com with SMTP id jk14so1711255bkc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 02:19:33 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
-Subject: [RFC 3/3] ath9k: mesh powersave support
-Date: Wed, 23 Jan 2013 11:19:20 +0100
-Message-Id: <1358936360-7795-4-git-send-email-marco@cozybit.com> (sfid-20130123_111940_449840_CFA6867A)
-In-Reply-To: <1358936360-7795-1-git-send-email-marco@cozybit.com>
-References: <1358936360-7795-1-git-send-email-marco@cozybit.com>
+	Wed, 2 Jan 2013 07:57:58 -0500
+Message-ID: <1357131499.9839.19.camel@jlt4.sipsolutions.net> (sfid-20130102_135805_248791_7B5EFC7E)
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 02 Jan 2013 13:58:19 +0100
+In-Reply-To: <CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com> (sfid-20130102_004632_190205_ACBF40E1)
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1354111295.9345.25.camel@jlt4.sipsolutions.net>
+	 <20121130134311.GA19037@pandem0nium>
+	 <1356707102.9922.26.camel@jlt4.sipsolutions.net>
+	 <20121230233304.GB16767@pandem0nium>
+	 <CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com>
+	 (sfid-20130102_004632_190205_ACBF40E1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register mesh PS ops on interface add and de-register on
-removal.
+On Tue, 2013-01-01 at 15:46 -0800, Adrian Chadd wrote:
+> I've been looking at WME parameter handling for FreeBSD's net80211
+> stack (with and without 802.11n support.)
+> 
+> Yes, the problem is figuring out what the actual BSS configuration
+> _should_ be. You could potentially hear a variety of different WMM
+> parameters from a variety of different nodes in the BSS (depending
+> upon how buggy their WMM IE handling in adhoc mode is, I guess) so you
+> can't just simply update the WMM parameters based on what you hear
+> from peers.
+> 
+> What I have thus far:
+> 
+> * When creating a BSS, used the stored values;
+> * When joining a BSS, use the configuration from the BSS node you've
+> initially decided to "join" against, and hope they're actually
+> "correct";
+> * When doing a BSS merge, use the configuration from the BSS node that
+> you're joining to;
+> * If a different BSS configuration is heard from the node you joined
+> against, update your local configuration;
+> * .. and set a timer that enforces you don't change your configuration
+> for another 'n' ms (for n > 1000?) even if the joined/merged BSS ID
+> changes its config.
+> 
+> STA mode operation has the STA listening to changes in the BSS. It
+> only hears these frames from the active AP so you don't have churn if
+> you hear different WMM IEs from different APs (in the same SSID.)
+> adhoc is slightly crazier there.
+> 
+> My only concern is having oscillating BSS updates propagate across the
+> network in a rather silly looking fashion. Hence the BGP 'route
+> dampening' style timer to try and ensure that doesn't occur.
+> 
+> It'd be nice if we could come up with a unified way of doing this and
+> have it interoperate between FreeBSD/Linux (and any other vendor
+> adhoc+wmm implementations out there.)
 
-When enabling mesh PS, do not enable the hardware's TIM timer
-interrupt.
+Makes sense to me, but I'm not really into IBSS.
 
-React to mac80211 doze/wakeup calls.
-Add a PS status flag PS_MAC80211_CTL to store last mesh PS
-command from mac80211.
+Overall, that speaks for having the parameters given as part of the
+"IBSS join" command rather than being updated on the fly though.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |   46 +++++++++++++++++++++++++++++---
- 2 files changed, 44 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8250330..f11c210 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -651,6 +651,7 @@ enum sc_op_flags {
- #define PS_WAIT_FOR_TX_ACK        BIT(3)
- #define PS_BEACON_SYNC            BIT(4)
- #define PS_WAIT_FOR_ANI           BIT(5)
-+#define PS_MAC80211_CTL           BIT(6)
- 
- struct ath_rate_table;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0fb53d6..2929808 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -132,7 +132,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 				     PS_WAIT_FOR_CAB |
- 				     PS_WAIT_FOR_PSPOLL_DATA |
- 				     PS_WAIT_FOR_TX_ACK |
--				     PS_WAIT_FOR_ANI))) {
-+				     PS_WAIT_FOR_ANI |
-+				     PS_MAC80211_CTL))) {
- 		mode = ATH9K_PM_NETWORK_SLEEP;
- 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
- 			ath9k_btcoex_stop_gen_timer(sc);
-@@ -824,6 +825,38 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	ath_dbg(common, CONFIG, "Driver halt\n");
- }
- 
-+static void ath9k_mesh_doze(struct ieee80211_hw *hw)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	unsigned long flags;
-+
-+	ath9k_ps_wakeup(sc);
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	/* in mesh mode mac80211 checks beacons and CAB */
-+	sc->ps_flags &= ~(PS_WAIT_FOR_BEACON |
-+			  PS_WAIT_FOR_CAB |
-+			  PS_MAC80211_CTL);
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+	ath9k_ps_restore(sc);
-+}
-+
-+static void ath9k_mesh_wakeup(struct ieee80211_hw *hw)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	unsigned long flags;
-+
-+	ath9k_ps_wakeup(sc);
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	sc->ps_flags |= PS_MAC80211_CTL;
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+	ath9k_ps_restore(sc);
-+}
-+
-+static const struct ieee80211_mps_ops ath9k_mesh_ps_ops = {
-+	.hw_doze = ath9k_mesh_doze,
-+	.hw_wakeup = ath9k_mesh_wakeup,
-+};
-+
- bool ath9k_uses_beacons(int type)
- {
- 	switch (type) {
-@@ -934,6 +967,11 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 			ah->opmode = NL80211_IFTYPE_ADHOC;
- 		else
- 			ah->opmode = NL80211_IFTYPE_STATION;
-+
-+		if (ah->opmode == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_mps_init(hw, &ath9k_mesh_ps_ops);
-+		else if (old_opmode == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_mps_init(hw, NULL);
- 	}
- 
- 	ath9k_hw_setopmode(ah);
-@@ -1037,7 +1075,9 @@ static void ath9k_enable_ps(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	sc->ps_enabled = true;
--	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
-+	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP) &&
-+	    sc->sc_ah->opmode != NL80211_IFTYPE_MESH_POINT) {
-+		/* in mesh mode we trigger wakeups from mac80211 */
- 		if ((ah->imask & ATH9K_INT_TIM_TIMER) == 0) {
- 			ah->imask |= ATH9K_INT_TIM_TIMER;
- 			ath9k_hw_set_interrupts(ah);
-@@ -1178,7 +1218,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	 * We just prepare to enable PS. We have to wait until our AP has
- 	 * ACK'd our null data frame to disable RX otherwise we'll ignore
- 	 * those ACKs and end up retransmitting the same null data frames.
--	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
-+	 * IEEE80211_CONF_CHANGE_PS is passed by mac80211 for STA or mesh mode.
- 	 */
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		unsigned long flags;
--- 
-1.7.9.5
+johannes
 
