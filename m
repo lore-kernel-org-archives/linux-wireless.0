@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:55513 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab3AHR2p (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:53874 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503Ab3ABDt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 12:28:45 -0500
-Received: by mail-wg0-f47.google.com with SMTP id dq11so528483wgb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 09:28:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130108141328.GA18920@pandem0nium>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com>
-	<1357131499.9839.19.camel@jlt4.sipsolutions.net>
-	<201301021436.55010.chunkeey@googlemail.com>
-	<1357137688.9839.43.camel@jlt4.sipsolutions.net>
-	<20130108141328.GA18920@pandem0nium>
-Date: Tue, 8 Jan 2013 09:28:44 -0800
-Message-ID: <CAJ-Vmom91BS5fPas+FWsaqQwm-ZVcZckUXB2vQgoEXtKiOH6mA@mail.gmail.com> (sfid-20130108_182849_414931_18E77AC8)
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
-From: Adrian Chadd <adrian@freebsd.org>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 1 Jan 2013 22:49:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k_htc: Fix skb leaks
+Date: Tue,  1 Jan 2013 21:49:27 -0600
+Message-Id: <1357098567-8558-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130102_045039_656585_8A16AB65)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I still populate the WME fields; I need to "fix" paying attention to
-them in the adhoc case.
+Running with kmemleak shows that this driver leaks every skb allocated in
+routine htc_connect_service() whether the service connection succeeds or
+fails.
 
-The performance loss without them is quite noticable.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/htc_hst.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 4a9570d..a304748 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -278,10 +278,12 @@ int htc_connect_service(struct htc_target *target,
+ 	if (!time_left) {
+ 		dev_err(target->dev, "Service connection timeout for: %d\n",
+ 			service_connreq->service_id);
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	*conn_rsp_epid = target->conn_rsp_epid;
++	kfree_skb(skb);
+ 	return 0;
+ err:
+ 	kfree_skb(skb);
+-- 
+1.7.10.4
 
-
-Adrian
