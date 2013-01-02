@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42702 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824Ab3AQVyF (ORCPT
+Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:50985
+	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751229Ab3ABF1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 16:54:05 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1645389pbc.33
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 13:54:03 -0800 (PST)
-Date: Thu, 17 Jan 2013 13:54:00 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] staging: vt6656: staging: vt6656 change remaining to
- vnt_mgmt and remove typedef v2
-Message-ID: <20130117215400.GA9147@kroah.com> (sfid-20130117_225410_065141_8286BB48)
-References: <1357602156.12182.11.camel@canaries64>
- <20130117211256.GA23334@kroah.com>
- <1358457883.5641.7.camel@canaries64>
+	Wed, 2 Jan 2013 00:27:25 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1358457883.5641.7.camel@canaries64>
+Message-ID: <20707.50445.510814.481023@gargle.gargle.HOWL> (sfid-20130102_062745_650211_E32217AB)
+Date: Wed, 2 Jan 2013 10:56:37 +0530
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: Fix skb leaks
+In-Reply-To: <50E3BE23.3010102@lwfinger.net>
+References: <1357098567-8558-1-git-send-email-Larry.Finger@lwfinger.net>
+	<20707.47067.474241.813195@gargle.gargle.HOWL>
+	<50E3BE23.3010102@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 09:24:43PM +0000, Malcolm Priestley wrote:
-> On Thu, 2013-01-17 at 13:12 -0800, Greg KH wrote:
-> > On Mon, Jan 07, 2013 at 11:42:36PM +0000, Malcolm Priestley wrote:
-> > > 
-> > > rebased version
-> > > 
-> > > after this patch continue on wards with
-> > > [10/11] staging: vt6656: clean up struct vnt_private.
-> > > [11/11] staging: vt6656: clean up struct vnt manager
-> > 
-> > What do you mean by this?  Can you please just send the entire series of
-> > patches?  I don't have these anymore in any tree.  For now, I'll just
-> > drop all of these and wait for your resend.
-> > 
-> 
-> Part of the series is already in staging-next.
-> 
-> However, the driver is currently broken in staging-next, these three
-> patches bring the driver up.
-> 
-> Those two clean up patches can be dropped for now, and I will resend
-> them later.
+Larry Finger wrote:
+> My only counter argument is that none of the other paths that get to 
+> ath9k_htc_txcompletion_cb() leak the skb. It only happens for the path that goes 
+> through htc_connect_service().
 
-Please send whatever needs to be done to get it working again, I can't
-accept this format, it doesn't make any sense.
+Sure, but the TX completion handler would be invoked for every skb that is passed
+to the USB layer, including the ones that are allocated in htc_hst.c. When this
+skb goes down to hif_usb.c, a URB is allocated and I am not sure how freeing
+the skb before the USB layer invokes the completion handler for the URB is correct.
 
-thanks,
+I'll come up with a patch and see if kmemleak still complains.
 
-greg k-h
+Sujith
