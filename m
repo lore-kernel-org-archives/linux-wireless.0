@@ -1,168 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:53751
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753456Ab3AGIYr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 03:24:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] ath9k_hw: Use helper routines to simplify ar9003_hw_init_cal()
-Date: Mon,  7 Jan 2013 13:53:48 +0530
-Message-Id: <1357547028-22891-3-git-send-email-sujith@msujith.org> (sfid-20130107_092504_296676_BDDF0A8C)
-In-Reply-To: <1357547028-22891-1-git-send-email-sujith@msujith.org>
-References: <1357547028-22891-1-git-send-email-sujith@msujith.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:1890 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752696Ab3ABUsf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 15:48:35 -0500
+Message-ID: <50E49D10.7080501@broadcom.com> (sfid-20130102_214838_154504_3E3FFE6C)
+Date: Wed, 2 Jan 2013 21:48:16 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: WARNING: at
+ drivers/net/wireless/brcm80211/brcmsmac/main.c:7539
+References: <CA+55aFwpdyrtvE=86e1aHE9L5TR+_xP7e4PBBKtdcey3=f+Suw@mail.gmail.com>
+ <50E4229D.5000900@broadcom.com> <20130102135031.GA11439@thinkpad-t410>
+ <50E43F40.4090206@broadcom.com> <20130102150939.GB11439@thinkpad-t410>
+In-Reply-To: <20130102150939.GB11439@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 01/02/2013 04:09 PM, Seth Forshee wrote:
+> On Wed, Jan 02, 2013 at 03:08:00PM +0100, Arend van Spriel wrote:
+>> On 01/02/2013 02:50 PM, Seth Forshee wrote:
+>>> On Wed, Jan 02, 2013 at 01:05:49PM +0100, Arend van Spriel wrote:
+>>>> On 12/28/2012 07:07 AM, Linus Torvalds wrote:
+>>>>> Ok, maybe somebody is interested in this.. I don't know what triggered
+>>>>> it, but maybe the few lines around it give some clue.
+>>>>
+>>>> Hi Linus,
+>>>>
+>>>> I am interested (being paid for it kinda helps). The warning itself does
+>>>> not necessarily have to be a problem, but the frameid mismatch between
+>>>> tx status info and the related buffer taken from the DMA ring does.
+>>>> Smells like a race condition, but I need to investigate that.
+>>>>
+>>>>> I think it's new to 3.8-rc1, because I haven't seen it before (well,
+>>>>> I'm running current -git - v3.8.0-rc1-00035-g101e5c7470eb to be exact
+>>>>> - but the networking changes since -rc1 are small and seem unrelated).
+>>>>> But maybe it just happens under certain circumstances.
+>>>>
+>>>> We had a big contribution from Canonical (cc-ed Seth) in brcmsmac
+>>>> itself. Not playing the blame game, but I suspect it has altered
+>>>> circumstances making the real issue (that was already there) more likely
+>>>> to happen. Hope that helps us nailing it down.
+>>>
+>>> I'm certain that both problems existed prior to 3.8-rc1. The warning
+>>> itself has generated a fairly consistent trickle of bug reports for a
+>>> while now. I haven't noticed any increased frequency of these messages;
+>>> if anything I'd say I'm hitting the WARN_ON less often (though I've been
+>>> doing a lot of testing under heavy load so my observations may not be
+>>> typical).
+>>
+>> Hi Seth,
+>>
+>> Indeed the warning has been there for a while, but the fatal error
+>> resulting in triggering a restart from mac80211 has popped up late in
+>> the 3.7-rc cycles and seem to consistently fail on our smoketest as well.
+> 
+> I looked at the errors again and realized I was interpreting some of
+> your comments in the wrong context. I don't recall having seen the
+> frameid != txh->TxFrameID problems in my testing. If you can give me a
+> test case to reproduce then I'll take a look as well.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 92 ++++++++++++++++-----------
- drivers/net/wireless/ath/ath9k/hw.h           |  1 +
- 2 files changed, 55 insertions(+), 38 deletions(-)
+I tried today and got dma_getnexttxp() return NULL pointer, which also
+results in a hardware restart.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 15f9b89..f0e472c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -960,22 +960,68 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
- 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0);
- }
- 
-+static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	int i;
-+
-+	if (!AR_SREV_9462(ah) || !AR_SREV_9565(ah))
-+		return;
-+
-+	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+		if (!(ah->rxchainmask & (1 << i)))
-+			continue;
-+		ar9003_hw_manual_peak_cal(ah, i, IS_CHAN_2GHZ(chan));
-+	}
-+}
-+
-+static void ar9003_hw_cl_cal_post_proc(struct ath_hw *ah, bool is_reusable)
-+{
-+	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
-+					  AR_PHY_CL_TAB_1,
-+					  AR_PHY_CL_TAB_2 };
-+	struct ath9k_hw_cal_data *caldata = ah->caldata;
-+	bool txclcal_done = false;
-+	int i, j;
-+
-+	if (!caldata || !(ah->enabled_cals & TX_CL_CAL))
-+		return;
-+
-+	txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
-+			  AR_PHY_AGC_CONTROL_CLC_SUCCESS);
-+
-+	if (caldata->done_txclcal_once) {
-+		for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+			if (!(ah->txchainmask & (1 << i)))
-+				continue;
-+			for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
-+				REG_WRITE(ah, CL_TAB_ENTRY(cl_idx[i]),
-+					  caldata->tx_clcal[i][j]);
-+		}
-+	} else if (is_reusable && txclcal_done) {
-+		for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+			if (!(ah->txchainmask & (1 << i)))
-+				continue;
-+			for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
-+				caldata->tx_clcal[i][j] =
-+					REG_READ(ah, CL_TAB_ENTRY(cl_idx[i]));
-+		}
-+		caldata->done_txclcal_once = true;
-+	}
-+}
-+
- static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			       struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
--	bool txiqcal_done = false, txclcal_done = false;
-+	bool txiqcal_done = false;
- 	bool is_reusable = true, status = true;
- 	bool run_rtt_cal = false, run_agc_cal, sep_iq_cal = false;
- 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
- 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
- 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
- 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
--	int i, j;
--	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
--					  AR_PHY_CL_TAB_1,
--					  AR_PHY_CL_TAB_2 };
- 
- 	if (rtt) {
- 		if (!ar9003_hw_rtt_restore(ah, chan))
-@@ -1060,14 +1106,8 @@ skip_tx_iqcal:
- 		status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
- 				       AR_PHY_AGC_CONTROL_CAL,
- 				       0, AH_WAIT_TIMEOUT);
--		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
--			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
--				if (!(ah->rxchainmask & (1 << i)))
--					continue;
--				ar9003_hw_manual_peak_cal(ah, i,
--							  IS_CHAN_2GHZ(chan));
--			}
--		}
-+
-+		ar9003_hw_do_manual_peak_cal(ah, chan);
- 	}
- 
- 	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
-@@ -1092,31 +1132,7 @@ skip_tx_iqcal:
- 	else if (caldata && caldata->done_txiqcal_once)
- 		ar9003_hw_tx_iq_cal_reload(ah);
- 
--#define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
--	if (caldata && (ah->enabled_cals & TX_CL_CAL)) {
--		txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
--					   AR_PHY_AGC_CONTROL_CLC_SUCCESS);
--		if (caldata->done_txclcal_once) {
--			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
--				if (!(ah->txchainmask & (1 << i)))
--					continue;
--				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
--					REG_WRITE(ah, CL_TAB_ENTRY(cl_idx[i]),
--						  caldata->tx_clcal[i][j]);
--			}
--		} else if (is_reusable && txclcal_done) {
--			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
--				if (!(ah->txchainmask & (1 << i)))
--					continue;
--				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
--					caldata->tx_clcal[i][j] =
--						REG_READ(ah,
--						  CL_TAB_ENTRY(cl_idx[i]));
--			}
--			caldata->done_txclcal_once = true;
--		}
--	}
--#undef CL_TAB_ENTRY
-+	ar9003_hw_cl_cal_post_proc(ah, is_reusable);
- 
- 	if (run_rtt_cal && caldata) {
- 		if (is_reusable) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 809599c..f5332b1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -397,6 +397,7 @@ enum ath9k_int {
- #define MAX_RTT_TABLE_ENTRY     6
- #define MAX_IQCAL_MEASUREMENT	8
- #define MAX_CL_TAB_ENTRY	16
-+#define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
- 
- struct ath9k_hw_cal_data {
- 	u16 channel;
--- 
-1.8.1
+> Do you recall the exact -rc when it appeared? I can run a bisection if I
+> can get it reproducing consistently.
+
+Not sure. We did not upgrade the smoketests to every rc. So it only ran
+rc3 and rc6 although mac80211, cfg80211, and brcm80211 drivers were
+built and tested nightly from wireless-testing. Digging in my mailbox
+the last reliable smoketest seems to be around november 29th.
+
+Greetings,
+Arend
+
 
