@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:54898 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457Ab3A3TNE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41336 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788Ab3ABQAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 14:13:04 -0500
+	Wed, 2 Jan 2013 11:00:12 -0500
+Date: Wed, 2 Jan 2013 10:47:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hin-Tak Leung <htl10@users.sourceforge.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	linux-wireless@vger.kernel.org, kay@redhat.com
+Subject: Re: rtl8187 WARN slowpath on suspend with 3.6.11
+Message-ID: <20130102154724.GA2198@tuxdriver.com> (sfid-20130102_170018_434346_4B0A941B)
+References: <50E23C19.7050008@lwfinger.net>
+ <1357138947.38782.YahooMailClassic@web172305.mail.ir2.yahoo.com>
 MIME-Version: 1.0
-In-Reply-To: <CALiWzOhawsfaW9TQgn-CZO5XQ_2=1R_91QB9q4yM1HDq_yQRFg@mail.gmail.com>
-References: <20130128225657.GA17533@kashmir> <0BA3FCBA62E2DC44AF3030971E174FB301925D7A@HASMSX103.ger.corp.intel.com>
- <CALiWzOhawsfaW9TQgn-CZO5XQ_2=1R_91QB9q4yM1HDq_yQRFg@mail.gmail.com>
-From: Mathieu Chouquet-Stringer <mathieu@csetco.com>
-Date: Wed, 30 Jan 2013 20:12:22 +0100
-Message-ID: <CALiWzOiO9Bj=kJh8=Dzfph7mhu8bKowdmV-CeoaLMX8n--6pGw@mail.gmail.com> (sfid-20130130_201323_916612_AD27F3B9)
-Subject: Re: [Ilw] iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost
- unusable on 3.8.0-rc5)
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1357138947.38782.YahooMailClassic@web172305.mail.ir2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 10:14 AM, Mathieu Chouquet-Stringer
-<mathieu@csetco.com> wrote:
-> On Tue, Jan 29, 2013 at 8:16 AM, Grumbach, Emmanuel
-> <emmanuel.grumbach@intel.com> wrote:
->> Please try this one:
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=c3e5d7181afb66657393066bccce0956fab09ab3
->>
->> as you can see, it is in mainline already.
->
-> Ha, that was fast!  I'll check tonight, thanks for your quick turn around.
+On Wed, Jan 02, 2013 at 03:02:27PM +0000, Hin-Tak Leung wrote:
+> --- On Tue, 1/1/13, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> 
+> > On 12/31/2012 06:16 PM, Hin-Tak Leung
+> > wrote:
+> > > Hi,
+> > >
+> > > Does either Larry or Herton see the sort of behavior
+> > (https://bugzilla.redhat.com/show_bug.cgi?id=891019) on
+> > suspend? John, is there anything changed between 3.6.9 and
+> > 3.6.11 which would cause this?
+> > >
+> > > Other than a genuine kernel regression, it is possible
+> > that it might be fedora specific - I just went from F17 to
+> > F18. F18 seems to have an systemd integrated udevd which
+> > might behaves differently from the older udevd's... or
+> > general funniness with F18 (I noticed another bug https://bugzilla.redhat.com/show_bug.cgi?id=891018 but
+> > that might be unrelated).
+> > >
+> > > Anyway, other than whole sale downgrade I think I can
+> > try booting 3.6.9 (which suspended cleanly under F17) and
+> > see whether it is a F18-specific problem.
+> > 
+> > Hin-Tak,
+> > 
+> > My system has never done a suspend/resume with any wireless
+> > card, thus I cannot 
+> > check your result. The test with 3.6.9 is a good idea.
+> > 
+> > Sorry,
+> > 
+> > Larry
+> 
+> Hi Larry,
+> 
+> Thanks for the reply. I have since rebooted to 3.6.9-2.fc17.x86_64, 3.6.10-2.fc17.x86_64 as well as 3.6.9-4.fc18.x86_64, 3.6.10-5.fc18.x86_64 and 3.6.11-3.fc18.x86_64; and all have the same problem. 3.6.9-2.fc17.x86_64 was the last kernel which I ran for over two weeks and had suspended a few times according to my /var/log/messages*. So this looks like a fedora-18 specific problems brought on by changes in userland
+> between F17 and F18. (possibly the systemd integrated udevd).
+> 
+> I'll add a comment to the bug report and let John reassign as appropriate.
 
-Issue is indeed fixed: thank you!
+Thanks, Hin-Tak!  I'll ask Kay to investigate.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
