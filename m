@@ -1,204 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711Ab3APXin (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 18:38:43 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: allow drivers to access IPv6 information
-Date: Thu, 17 Jan 2013 00:39:06 +0100
-Message-Id: <1358379546-13811-1-git-send-email-johannes@sipsolutions.net> (sfid-20130117_003848_008666_573657E9)
+Received: from mms3.broadcom.com ([216.31.210.19]:3914 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752761Ab3ABOXH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jan 2013 09:23:07 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 17/18] brcmfmac: Removing obsolete variables and inline
+ functions.
+Date: Wed, 2 Jan 2013 15:22:50 +0100
+Message-ID: <1357136572-18273-18-git-send-email-arend@broadcom.com> (sfid-20130102_155320_539301_4BD9167D)
+In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-To be able to implement NS response offloading (in
-regular operation or while in WoWLAN) drivers need
-to know the IPv6 addresses assigned to interfaces.
-Implement an IPv6 notifier in mac80211 to call the
-driver when addresses change.
-
-Unlike for IPv4, implement it as a callback rather
-than as a list in the BSS configuration, that is
-more flexible.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/net/mac80211.h     |  9 +++++++++
- net/mac80211/driver-ops.h  | 12 ++++++++++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/main.c        | 48 ++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/trace.h       |  8 ++++++++
- 5 files changed, 78 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h     |   24 ---------------------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |    2 --
+ 2 files changed, 26 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4110845..6737ae5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2497,6 +2497,9 @@ enum ieee80211_rate_control_changed {
-  *	driver's resume function returned 1, as this is just like an "inline"
-  *	hardware restart. This callback may sleep.
-  *
-+ * @ipv6_addr_change: IPv6 address assignment on the given interface changed.
-+ *	Currently, this is only called for managed or P2P client interfaces.
-+ *	This callback is optional; it must not sleep.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -2670,6 +2673,12 @@ struct ieee80211_ops {
- 				     struct ieee80211_chanctx_conf *ctx);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index bbefaf3..a2f32fb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -481,33 +481,14 @@ struct brcmf_pub {
+ 	unsigned long drv_version;	/* Version of dongle-resident driver */
+ 	u8 mac[ETH_ALEN];		/* MAC address obtained from dongle */
  
- 	void (*restart_complete)(struct ieee80211_hw *hw);
-+
-+#if IS_ENABLED(CONFIG_IPV6)
-+	void (*ipv6_addr_change)(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct inet6_dev *idev);
-+#endif
+-	/* Additional stats for the bus level */
+-
+ 	/* Multicast data packets sent to dongle */
+ 	unsigned long tx_multicast;
+-	/* Packets flushed due to unscheduled sendup thread */
+-	unsigned long rx_flushed;
+-	/* Number of times dpc scheduled by watchdog timer */
+-	unsigned long wd_dpc_sched;
+-
+-	/* Number of flow control pkts recvd */
+-	unsigned long fc_packets;
+-
+-	/* Last error return */
+-	int bcmerror;
+-
+-	/* Suspend disable flag  flag */
+-	int suspend_disable_flag;	/* "1" to disable all extra powersaving
+-					 during suspend */
+-	int in_suspend;		/* flag set to 1 when early suspend called */
+-	int dtim_skip;		/* dtim skip , default 0 means wake each dtim */
+ 
+ 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
+ 
+ 	struct mutex proto_block;
+ 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
+ 
+-	u8 macvalue[ETH_ALEN];
+ 	atomic_t pend_8021x_cnt;
+ 	wait_queue_head_t pend_8021x_wait;
+ 
+@@ -550,11 +531,6 @@ struct brcmf_if {
+ 	u8 mac_addr[ETH_ALEN];
  };
  
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 0c07f94..9e18e15 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1020,4 +1020,16 @@ static inline void drv_restart_complete(struct ieee80211_local *local)
- 	trace_drv_return_void(local);
- }
+-static inline s32 brcmf_ndev_bssidx(struct net_device *ndev)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	return ifp->bssidx;
+-}
  
-+#if IS_ENABLED(CONFIG_IPV6)
-+static inline void drv_ipv6_addr_change(struct ieee80211_local *local,
-+					struct ieee80211_sub_if_data *sdata,
-+					struct inet6_dev *idev)
-+{
-+	trace_drv_ipv6_addr_change(local, sdata);
-+	if (local->ops->ipv6_addr_change)
-+		local->ops->ipv6_addr_change(&local->hw, &sdata->vif, idev);
-+	trace_drv_return_void(local);
-+}
-+#endif
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b7284c0..fdb0d3c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1127,6 +1127,7 @@ struct ieee80211_local {
- 	struct timer_list dynamic_ps_timer;
- 	struct notifier_block network_latency_notifier;
- 	struct notifier_block ifa_notifier;
-+	struct notifier_block ifa6_notifier;
+ extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
  
- 	/*
- 	 * The dynamic ps timeout configured from user space via WEXT -
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index baf9720..2bdd454 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -23,6 +23,7 @@
- #include <linux/inetdevice.h>
- #include <net/net_namespace.h>
- #include <net/cfg80211.h>
-+#include <net/addrconf.h>
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index 4557709..bb454cd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -92,8 +92,6 @@ struct brcmf_proto_bdc_header {
  
- #include "ieee80211_i.h"
- #include "driver-ops.h"
-@@ -369,6 +370,37 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
- }
- #endif
- 
-+#if IS_ENABLED(CONFIG_IPV6)
-+static int ieee80211_ifa6_changed(struct notifier_block *nb,
-+				  unsigned long data, void *arg)
-+{
-+	struct inet6_ifaddr *ifa = (struct inet6_ifaddr *)arg;
-+	struct inet6_dev *idev = ifa->idev;
-+	struct net_device *ndev = ifa->idev->dev;
-+	struct ieee80211_local *local =
-+		container_of(nb, struct ieee80211_local, ifa6_notifier);
-+	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	/* Make sure it's our interface that got changed */
-+	if (!wdev || wdev->wiphy != local->hw.wiphy)
-+		return NOTIFY_DONE;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-+
-+	/*
-+	 * For now only support station mode. This is mostly because
-+	 * doing AP would have to handle AP_VLAN in some way ...
-+	 */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return NOTIFY_DONE;
-+
-+	drv_ipv6_addr_change(local, sdata, idev);
-+
-+	return NOTIFY_DONE;
-+}
-+#endif
-+
- static int ieee80211_napi_poll(struct napi_struct *napi, int budget)
- {
- 	struct ieee80211_local *local =
-@@ -977,12 +1009,25 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_ifa;
- #endif
- 
-+#if IS_ENABLED(CONFIG_IPV6)
-+	local->ifa6_notifier.notifier_call = ieee80211_ifa6_changed;
-+	result = register_inet6addr_notifier(&local->ifa6_notifier);
-+	if (result)
-+		goto fail_ifa6;
-+#endif
-+
- 	netif_napi_add(&local->napi_dev, &local->napi, ieee80211_napi_poll,
- 			local->hw.napi_weight);
- 
- 	return 0;
- 
-+#if IS_ENABLED(CONFIG_IPV6)
-+ fail_ifa6:
- #ifdef CONFIG_INET
-+	unregister_inetaddr_notifier(&local->ifa_notifier);
-+#endif
-+#endif
-+#if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-  fail_ifa:
- 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
- 			       &local->network_latency_notifier);
-@@ -1018,6 +1063,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- #ifdef CONFIG_INET
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
- #endif
-+#if IS_ENABLED(CONFIG_IPV6)
-+	unregister_inet6addr_notifier(&local->ifa6_notifier);
-+#endif
- 
- 	rtnl_lock();
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 52cae5f..cdcba31 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1437,6 +1437,14 @@ DEFINE_EVENT(local_only_evt, drv_restart_complete,
- 	TP_ARGS(local)
- );
- 
-+#if IS_ENABLED(CONFIG_IPV6)
-+DEFINE_EVENT(local_sdata_evt, drv_ipv6_addr_change,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+#endif
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
+ struct brcmf_proto {
+ 	u16 reqid;
+-	u8 pending;
+-	u32 lastcmd;
+ 	u8 bus_header[BUS_HEADER_LEN];
+ 	struct brcmf_proto_cdc_dcmd msg;
+ 	unsigned char buf[BRCMF_DCMD_MAXLEN + ROUND_UP_MARGIN];
 -- 
-1.8.0
+1.7.10.4
+
 
