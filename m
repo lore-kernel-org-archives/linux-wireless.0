@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:39182 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730Ab3AGPFF (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:42837 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753058Ab3ACA4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 10:05:05 -0500
-Received: by mail-bk0-f52.google.com with SMTP id w5so8299593bku.25
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 07:05:04 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCHv2 3/6] mac80211: move add_tim to subfunction
-Date: Mon,  7 Jan 2013 16:04:50 +0100
-Message-Id: <1357571093-12868-4-git-send-email-marco@cozybit.com> (sfid-20130107_160512_682054_AE366910)
-In-Reply-To: <1357571093-12868-1-git-send-email-marco@cozybit.com>
-References: <1357571093-12868-1-git-send-email-marco@cozybit.com>
+	Wed, 2 Jan 2013 19:56:21 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: use correct htcapinfo for HT20 ibss network
+Date: Wed,  2 Jan 2013 16:56:00 -0800
+Message-Id: <1357174561-28898-1-git-send-email-bzhao@marvell.com> (sfid-20130103_015629_977988_BE77871C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This functions will be used for mesh beacons, too.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
+It is observed that same htcapinfo ie is included in beacon for
+HT20, HT40+ and HT40- ibss networks. This patch makes sure that
+we will not advertise 40Mhz flags while creating/joining ibss
+network in HT20 mode.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/tx.c |   48 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 19 deletions(-)
+ drivers/net/wireless/mwifiex/11n.c  |    4 +++-
+ drivers/net/wireless/mwifiex/join.c |   10 ++++++++++
+ 2 files changed, 13 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e9eadc4..1b04984 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2261,9 +2261,9 @@ void ieee80211_tx_pending(unsigned long data)
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 245a371..9cd6216 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -53,7 +53,9 @@ mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
+ 	       sizeof(sband->ht_cap.mcs));
  
- /* functions for drivers to get certain frames */
+ 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
+-	    sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
++	    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
++	     (priv->adapter->sec_chan_offset !=
++					IEEE80211_HT_PARAM_CHA_SEC_NONE)))
+ 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
+ 		SETHT_MCS32(ht_cap->ht_cap.mcs.rx_mask);
  
--static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
--				     struct ps_data *ps,
--				     struct sk_buff *skb)
-+static void __ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				       struct ps_data *ps,
-+				       struct sk_buff *skb)
- {
- 	u8 *pos, *tim;
- 	int aid0 = 0;
-@@ -2325,6 +2325,31 @@ static void ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- 	}
- }
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 88664ae..3c7cabe 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -969,6 +969,16 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 					priv->adapter->config_bands);
+ 		mwifiex_fill_cap_info(priv, radio_type, ht_cap);
  
-+static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
-+				    struct ps_data *ps,
-+				    struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = sdata->local;
++		if (adapter->sec_chan_offset ==
++					IEEE80211_HT_PARAM_CHA_SEC_NONE) {
++			u16 tmp_ht_cap;
 +
-+	/* Not very nice, but we want to allow the driver to call
-+	 * ieee80211_beacon_get() as a response to the set_tim() callback.
-+	 * That, however, is already invoked under the sta_lock to guarantee
-+	 * consistent and race-free update of the tim bitmap in mac80211 and
-+	 * the driver.
-+	 */
-+	if (local->tim_in_locked_section) {
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+	} else {
-+		unsigned long flags;
++			tmp_ht_cap = le16_to_cpu(ht_cap->ht_cap.cap_info);
++			tmp_ht_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++			tmp_ht_cap &= ~IEEE80211_HT_CAP_SGI_40;
++			ht_cap->ht_cap.cap_info = cpu_to_le16(tmp_ht_cap);
++		}
 +
-+		spin_lock_irqsave(&local->tim_lock, flags);
-+		__ieee80211_beacon_add_tim(sdata, ps, skb);
-+		spin_unlock_irqrestore(&local->tim_lock, flags);
-+	}
-+
-+	return 0;
-+}
-+
- struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 u16 *tim_offset, u16 *tim_length)
-@@ -2369,22 +2394,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 			memcpy(skb_put(skb, beacon->head_len), beacon->head,
- 			       beacon->head_len);
+ 		pos += sizeof(struct mwifiex_ie_types_htcap);
+ 		cmd_append_size += sizeof(struct mwifiex_ie_types_htcap);
  
--			/*
--			 * Not very nice, but we want to allow the driver to call
--			 * ieee80211_beacon_get() as a response to the set_tim()
--			 * callback. That, however, is already invoked under the
--			 * sta_lock to guarantee consistent and race-free update
--			 * of the tim bitmap in mac80211 and the driver.
--			 */
--			if (local->tim_in_locked_section) {
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--			} else {
--				unsigned long flags;
--
--				spin_lock_irqsave(&local->tim_lock, flags);
--				ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
--				spin_unlock_irqrestore(&local->tim_lock, flags);
--			}
-+			ieee80211_beacon_add_tim(sdata, &ap->ps, skb);
- 
- 			if (tim_offset)
- 				*tim_offset = beacon->head_len;
 -- 
-1.7.9.5
+1.7.0.2
 
