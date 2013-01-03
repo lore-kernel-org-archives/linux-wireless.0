@@ -1,445 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41695 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200Ab3A1Ji1 (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:57106 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753050Ab3ACA43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:38:27 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 2 Jan 2013 19:56:29 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 28/37] iwlwifi: add the MVM driver (rs.h)
-Date: Mon, 28 Jan 2013 10:37:35 +0100
-Message-Id: <1359365864-4259-29-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103831_561852_AAB1E456)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/2] mwifiex: parse WMM IEs from hostapd for mwifiex AP
+Date: Wed,  2 Jan 2013 16:56:01 -0800
+Message-Id: <1357174561-28898-2-git-send-email-bzhao@marvell.com> (sfid-20130103_015637_973661_B4551387)
+In-Reply-To: <1357174561-28898-1-git-send-email-bzhao@marvell.com>
+References: <1357174561-28898-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Avinash Patil <patila@marvell.com>
 
-Newer firmware revisions have a completely new
-firmware API. This is the new driver for this
-new API.
+This patch adds support for parsing WMM IEs from hostapd
+and setting them to FW via sys configure command.
 
-I've listed the people who directly contributed
-code, but many others from various teams have
-contributed in other ways.
+Patch also sets wiphy flag to advertise AP uAPSD support.
 
-Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Amit Beka <amit.beka@intel.com>
-Cc: Amnon Paz <amnonx.paz@intel.com>
-Cc: Assaf Krauss <assaf.krauss@intel.com>
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Dor Shaish <dor.shaish@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Cc: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.h | 393 ++++++++++++++++++++++++++++++++++
- 1 file changed, 393 insertions(+)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/rs.h
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 +
+ drivers/net/wireless/mwifiex/decl.h     |   18 ++++++++++++
+ drivers/net/wireless/mwifiex/fw.h       |   11 +++----
+ drivers/net/wireless/mwifiex/ioctl.h    |    3 +-
+ drivers/net/wireless/mwifiex/main.h     |    4 +++
+ drivers/net/wireless/mwifiex/uap_cmd.c  |   44 +++++++++++++++++++++++++++++++
+ 6 files changed, 75 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-new file mode 100644
-index 0000000..219c685
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -0,0 +1,393 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2003 - 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __rs_h__
-+#define __rs_h__
-+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index a875499..c4edb28 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1327,6 +1327,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 	}
+ 
+ 	mwifiex_set_ht_params(priv, bss_cfg, params);
++	mwifiex_set_wmm_params(priv, bss_cfg, params);
+ 
+ 	if (params->inactivity_timeout > 0) {
+ 		/* sta_ao_timer/ps_sta_ao_timer is in unit of 100ms */
+@@ -2261,6 +2262,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
+ 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
++			WIPHY_FLAG_AP_UAPSD |
+ 			WIPHY_FLAG_CUSTOM_REGULATORY |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index e9357d8..e8a569a 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -26,6 +26,7 @@
+ #include <linux/wait.h>
+ #include <linux/timer.h>
+ #include <linux/ieee80211.h>
 +#include <net/mac80211.h>
+ 
+ 
+ #define MWIFIEX_MAX_BSS_NUM         (3)
+@@ -58,6 +59,8 @@
+ #define MWIFIEX_RTS_MAX_VALUE              (2347)
+ #define MWIFIEX_FRAG_MIN_VALUE             (256)
+ #define MWIFIEX_FRAG_MAX_VALUE             (2346)
++#define MWIFIEX_WMM_VERSION                0x01
++#define MWIFIEX_WMM_SUBTYPE                0x01
+ 
+ #define MWIFIEX_RETRY_LIMIT                14
+ #define MWIFIEX_SDIO_BLOCK_SIZE            256
+@@ -126,4 +129,19 @@ enum mwifiex_wmm_ac_e {
+ 	WMM_AC_VI,
+ 	WMM_AC_VO
+ } __packed;
 +
-+#include "iwl-config.h"
++struct ieee_types_wmm_ac_parameters {
++	u8 aci_aifsn_bitmap;
++	u8 ecw_bitmap;
++	__le16 tx_op_limit;
++} __packed;
 +
-+#include "fw-api.h"
-+#include "iwl-trans.h"
++struct mwifiex_types_wmm_info {
++	u8 oui[4];
++	u8 subtype;
++	u8 version;
++	u8 qos_info;
++	u8 reserved;
++	struct ieee_types_wmm_ac_parameters ac_params[IEEE80211_NUM_ACS];
++} __packed;
+ #endif /* !_MWIFIEX_DECL_H_ */
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 4dc8e2e..41c85dd 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1131,12 +1131,6 @@ struct ieee_types_vendor_header {
+ 	u8 version;
+ } __packed;
+ 
+-struct ieee_types_wmm_ac_parameters {
+-	u8 aci_aifsn_bitmap;
+-	u8 ecw_bitmap;
+-	__le16 tx_op_limit;
+-} __packed;
+-
+ struct ieee_types_wmm_parameter {
+ 	/*
+ 	 * WMM Parameter IE - Vendor Specific Header:
+@@ -1186,6 +1180,11 @@ struct mwifiex_ie_types_htcap {
+ 	struct ieee80211_ht_cap ht_cap;
+ } __packed;
+ 
++struct mwifiex_ie_types_wmmcap {
++	struct mwifiex_ie_types_header header;
++	struct mwifiex_types_wmm_info wmm_info;
++} __packed;
 +
-+struct iwl_rs_rate_info {
-+	u8 plcp;	/* uCode API:  IWL_RATE_6M_PLCP, etc. */
-+	u8 plcp_siso;	/* uCode API:  IWL_RATE_SISO_6M_PLCP, etc. */
-+	u8 plcp_mimo2;	/* uCode API:  IWL_RATE_MIMO2_6M_PLCP, etc. */
-+	u8 plcp_mimo3;  /* uCode API:  IWL_RATE_MIMO3_6M_PLCP, etc. */
-+	u8 ieee;	/* MAC header:  IWL_RATE_6M_IEEE, etc. */
-+	u8 prev_ieee;    /* previous rate in IEEE speeds */
-+	u8 next_ieee;    /* next rate in IEEE speeds */
-+	u8 prev_rs;      /* previous rate used in rs algo */
-+	u8 next_rs;      /* next rate used in rs algo */
-+	u8 prev_rs_tgg;  /* previous rate used in TGG rs algo */
-+	u8 next_rs_tgg;  /* next rate used in TGG rs algo */
-+};
-+
-+#define IWL_RATE_60M_PLCP 3
-+
-+enum {
-+	IWL_RATE_INVM_INDEX = IWL_RATE_COUNT,
-+	IWL_RATE_INVALID = IWL_RATE_COUNT,
-+};
-+
-+#define LINK_QUAL_MAX_RETRY_NUM 16
-+
-+enum {
-+	IWL_RATE_6M_INDEX_TABLE = 0,
-+	IWL_RATE_9M_INDEX_TABLE,
-+	IWL_RATE_12M_INDEX_TABLE,
-+	IWL_RATE_18M_INDEX_TABLE,
-+	IWL_RATE_24M_INDEX_TABLE,
-+	IWL_RATE_36M_INDEX_TABLE,
-+	IWL_RATE_48M_INDEX_TABLE,
-+	IWL_RATE_54M_INDEX_TABLE,
-+	IWL_RATE_1M_INDEX_TABLE,
-+	IWL_RATE_2M_INDEX_TABLE,
-+	IWL_RATE_5M_INDEX_TABLE,
-+	IWL_RATE_11M_INDEX_TABLE,
-+	IWL_RATE_INVM_INDEX_TABLE = IWL_RATE_INVM_INDEX - 1,
-+};
-+
-+/* #define vs. enum to keep from defaulting to 'large integer' */
-+#define	IWL_RATE_6M_MASK   (1 << IWL_RATE_6M_INDEX)
-+#define	IWL_RATE_9M_MASK   (1 << IWL_RATE_9M_INDEX)
-+#define	IWL_RATE_12M_MASK  (1 << IWL_RATE_12M_INDEX)
-+#define	IWL_RATE_18M_MASK  (1 << IWL_RATE_18M_INDEX)
-+#define	IWL_RATE_24M_MASK  (1 << IWL_RATE_24M_INDEX)
-+#define	IWL_RATE_36M_MASK  (1 << IWL_RATE_36M_INDEX)
-+#define	IWL_RATE_48M_MASK  (1 << IWL_RATE_48M_INDEX)
-+#define	IWL_RATE_54M_MASK  (1 << IWL_RATE_54M_INDEX)
-+#define IWL_RATE_60M_MASK  (1 << IWL_RATE_60M_INDEX)
-+#define	IWL_RATE_1M_MASK   (1 << IWL_RATE_1M_INDEX)
-+#define	IWL_RATE_2M_MASK   (1 << IWL_RATE_2M_INDEX)
-+#define	IWL_RATE_5M_MASK   (1 << IWL_RATE_5M_INDEX)
-+#define	IWL_RATE_11M_MASK  (1 << IWL_RATE_11M_INDEX)
-+
-+
-+/* uCode API values for OFDM high-throughput (HT) bit rates */
-+enum {
-+	IWL_RATE_SISO_6M_PLCP = 0,
-+	IWL_RATE_SISO_12M_PLCP = 1,
-+	IWL_RATE_SISO_18M_PLCP = 2,
-+	IWL_RATE_SISO_24M_PLCP = 3,
-+	IWL_RATE_SISO_36M_PLCP = 4,
-+	IWL_RATE_SISO_48M_PLCP = 5,
-+	IWL_RATE_SISO_54M_PLCP = 6,
-+	IWL_RATE_SISO_60M_PLCP = 7,
-+	IWL_RATE_MIMO2_6M_PLCP  = 0x8,
-+	IWL_RATE_MIMO2_12M_PLCP = 0x9,
-+	IWL_RATE_MIMO2_18M_PLCP = 0xa,
-+	IWL_RATE_MIMO2_24M_PLCP = 0xb,
-+	IWL_RATE_MIMO2_36M_PLCP = 0xc,
-+	IWL_RATE_MIMO2_48M_PLCP = 0xd,
-+	IWL_RATE_MIMO2_54M_PLCP = 0xe,
-+	IWL_RATE_MIMO2_60M_PLCP = 0xf,
-+	IWL_RATE_MIMO3_6M_PLCP  = 0x10,
-+	IWL_RATE_MIMO3_12M_PLCP = 0x11,
-+	IWL_RATE_MIMO3_18M_PLCP = 0x12,
-+	IWL_RATE_MIMO3_24M_PLCP = 0x13,
-+	IWL_RATE_MIMO3_36M_PLCP = 0x14,
-+	IWL_RATE_MIMO3_48M_PLCP = 0x15,
-+	IWL_RATE_MIMO3_54M_PLCP = 0x16,
-+	IWL_RATE_MIMO3_60M_PLCP = 0x17,
-+	IWL_RATE_SISO_INVM_PLCP,
-+	IWL_RATE_MIMO2_INVM_PLCP = IWL_RATE_SISO_INVM_PLCP,
-+	IWL_RATE_MIMO3_INVM_PLCP = IWL_RATE_SISO_INVM_PLCP,
-+};
-+
-+/* MAC header values for bit rates */
-+enum {
-+	IWL_RATE_6M_IEEE  = 12,
-+	IWL_RATE_9M_IEEE  = 18,
-+	IWL_RATE_12M_IEEE = 24,
-+	IWL_RATE_18M_IEEE = 36,
-+	IWL_RATE_24M_IEEE = 48,
-+	IWL_RATE_36M_IEEE = 72,
-+	IWL_RATE_48M_IEEE = 96,
-+	IWL_RATE_54M_IEEE = 108,
-+	IWL_RATE_60M_IEEE = 120,
-+	IWL_RATE_1M_IEEE  = 2,
-+	IWL_RATE_2M_IEEE  = 4,
-+	IWL_RATE_5M_IEEE  = 11,
-+	IWL_RATE_11M_IEEE = 22,
-+};
-+
-+#define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
-+
-+#define IWL_INVALID_VALUE    -1
-+
-+#define IWL_MIN_RSSI_VAL                 -100
-+#define IWL_MAX_RSSI_VAL                    0
-+
-+/* These values specify how many Tx frame attempts before
-+ * searching for a new modulation mode */
-+#define IWL_LEGACY_FAILURE_LIMIT	160
-+#define IWL_LEGACY_SUCCESS_LIMIT	480
-+#define IWL_LEGACY_TABLE_COUNT		160
-+
-+#define IWL_NONE_LEGACY_FAILURE_LIMIT	400
-+#define IWL_NONE_LEGACY_SUCCESS_LIMIT	4500
-+#define IWL_NONE_LEGACY_TABLE_COUNT	1500
-+
-+/* Success ratio (ACKed / attempted tx frames) values (perfect is 128 * 100) */
-+#define IWL_RS_GOOD_RATIO		12800	/* 100% */
-+#define IWL_RATE_SCALE_SWITCH		10880	/*  85% */
-+#define IWL_RATE_HIGH_TH		10880	/*  85% */
-+#define IWL_RATE_INCREASE_TH		6400	/*  50% */
-+#define IWL_RATE_DECREASE_TH		1920	/*  15% */
-+
-+/* possible actions when in legacy mode */
-+#define IWL_LEGACY_SWITCH_ANTENNA1      0
-+#define IWL_LEGACY_SWITCH_ANTENNA2      1
-+#define IWL_LEGACY_SWITCH_SISO          2
-+#define IWL_LEGACY_SWITCH_MIMO2_AB      3
-+#define IWL_LEGACY_SWITCH_MIMO2_AC      4
-+#define IWL_LEGACY_SWITCH_MIMO2_BC      5
-+#define IWL_LEGACY_SWITCH_MIMO3_ABC     6
-+
-+/* possible actions when in siso mode */
-+#define IWL_SISO_SWITCH_ANTENNA1        0
-+#define IWL_SISO_SWITCH_ANTENNA2        1
-+#define IWL_SISO_SWITCH_MIMO2_AB        2
-+#define IWL_SISO_SWITCH_MIMO2_AC        3
-+#define IWL_SISO_SWITCH_MIMO2_BC        4
-+#define IWL_SISO_SWITCH_GI              5
-+#define IWL_SISO_SWITCH_MIMO3_ABC       6
-+
-+
-+/* possible actions when in mimo mode */
-+#define IWL_MIMO2_SWITCH_ANTENNA1       0
-+#define IWL_MIMO2_SWITCH_ANTENNA2       1
-+#define IWL_MIMO2_SWITCH_SISO_A         2
-+#define IWL_MIMO2_SWITCH_SISO_B         3
-+#define IWL_MIMO2_SWITCH_SISO_C         4
-+#define IWL_MIMO2_SWITCH_GI             5
-+#define IWL_MIMO2_SWITCH_MIMO3_ABC      6
-+
-+
-+/* possible actions when in mimo3 mode */
-+#define IWL_MIMO3_SWITCH_ANTENNA1       0
-+#define IWL_MIMO3_SWITCH_ANTENNA2       1
-+#define IWL_MIMO3_SWITCH_SISO_A         2
-+#define IWL_MIMO3_SWITCH_SISO_B         3
-+#define IWL_MIMO3_SWITCH_SISO_C         4
-+#define IWL_MIMO3_SWITCH_MIMO2_AB       5
-+#define IWL_MIMO3_SWITCH_MIMO2_AC       6
-+#define IWL_MIMO3_SWITCH_MIMO2_BC       7
-+#define IWL_MIMO3_SWITCH_GI             8
-+
-+
-+#define IWL_MAX_11N_MIMO3_SEARCH IWL_MIMO3_SWITCH_GI
-+#define IWL_MAX_SEARCH IWL_MIMO2_SWITCH_MIMO3_ABC
-+
-+/*FIXME:RS:add possible actions for MIMO3*/
-+
-+#define IWL_ACTION_LIMIT		3	/* # possible actions */
-+
-+#define LINK_QUAL_AGG_TIME_LIMIT_DEF	(4000) /* 4 milliseconds */
-+#define LINK_QUAL_AGG_TIME_LIMIT_MAX	(8000)
-+#define LINK_QUAL_AGG_TIME_LIMIT_MIN	(100)
-+
-+#define LINK_QUAL_AGG_DISABLE_START_DEF	(3)
-+#define LINK_QUAL_AGG_DISABLE_START_MAX	(255)
-+#define LINK_QUAL_AGG_DISABLE_START_MIN	(0)
-+
-+#define LINK_QUAL_AGG_FRAME_LIMIT_DEF	(63)
-+#define LINK_QUAL_AGG_FRAME_LIMIT_MAX	(63)
-+#define LINK_QUAL_AGG_FRAME_LIMIT_MIN	(0)
-+
-+#define LQ_SIZE		2	/* 2 mode tables:  "Active" and "Search" */
-+
-+/* load per tid defines for A-MPDU activation */
-+#define IWL_AGG_TPT_THREHOLD	0
-+#define IWL_AGG_LOAD_THRESHOLD	10
-+#define IWL_AGG_ALL_TID		0xff
-+#define TID_QUEUE_CELL_SPACING	50	/*mS */
-+#define TID_QUEUE_MAX_SIZE	20
-+#define TID_ROUND_VALUE		5	/* mS */
-+
-+#define TID_MAX_TIME_DIFF ((TID_QUEUE_MAX_SIZE - 1) * TID_QUEUE_CELL_SPACING)
-+#define TIME_WRAP_AROUND(x, y) (((y) > (x)) ? (y) - (x) : (0-(x)) + (y))
-+
-+enum iwl_table_type {
-+	LQ_NONE,
-+	LQ_G,		/* legacy types */
-+	LQ_A,
-+	LQ_SISO,	/* high-throughput types */
-+	LQ_MIMO2,
-+	LQ_MIMO3,
-+	LQ_MAX,
-+};
-+
-+#define is_legacy(tbl) (((tbl) == LQ_G) || ((tbl) == LQ_A))
-+#define is_siso(tbl) ((tbl) == LQ_SISO)
-+#define is_mimo2(tbl) ((tbl) == LQ_MIMO2)
-+#define is_mimo3(tbl) ((tbl) == LQ_MIMO3)
-+#define is_mimo(tbl) (is_mimo2(tbl) || is_mimo3(tbl))
-+#define is_Ht(tbl) (is_siso(tbl) || is_mimo(tbl))
-+#define is_a_band(tbl) ((tbl) == LQ_A)
-+#define is_g_and(tbl) ((tbl) == LQ_G)
-+
-+#define IWL_MAX_MCS_DISPLAY_SIZE	12
-+
-+struct iwl_rate_mcs_info {
-+	char	mbps[IWL_MAX_MCS_DISPLAY_SIZE];
-+	char	mcs[IWL_MAX_MCS_DISPLAY_SIZE];
-+};
-+
-+/**
-+ * struct iwl_rate_scale_data -- tx success history for one rate
+ struct mwifiex_ie_types_htinfo {
+ 	struct mwifiex_ie_types_header header;
+ 	struct ieee80211_ht_operation ht_oper;
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 4e31c60..6095b3e 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -20,7 +20,6 @@
+ #ifndef _MWIFIEX_IOCTL_H_
+ #define _MWIFIEX_IOCTL_H_
+ 
+-#include <net/mac80211.h>
+ #include <net/lib80211.h>
+ 
+ enum {
+@@ -107,6 +106,8 @@ struct mwifiex_uap_bss_param {
+ 	u8 rates[MWIFIEX_SUPPORTED_RATES];
+ 	u32 sta_ao_timer;
+ 	u32 ps_sta_ao_timer;
++	u8 qos_info;
++	struct mwifiex_types_wmm_info wmm_info;
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 1b3cfc8..d717c98 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -890,6 +890,10 @@ void mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 			   struct cfg80211_ap_settings *params);
+ void mwifiex_set_uap_rates(struct mwifiex_uap_bss_param *bss_cfg,
+ 			   struct cfg80211_ap_settings *params);
++void
++mwifiex_set_wmm_params(struct mwifiex_private *priv,
++		       struct mwifiex_uap_bss_param *bss_cfg,
++		       struct cfg80211_ap_settings *params);
+ 
+ /*
+  * This function checks if the queuing is RA based or not.
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 8dd7224..6e76a15 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -219,6 +219,7 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
+ 	config->rts_threshold = 0x7FFF;
+ 	config->frag_threshold = 0x7FFF;
+ 	config->retry_limit = 0x7F;
++	config->qos_info = 0xFF;
+ }
+ 
+ /* This function parses BSS related parameters from structure
+@@ -297,6 +298,38 @@ mwifiex_uap_bss_wpa(u8 **tlv_buf, void *cmd_buf, u16 *param_size)
+ 	return;
+ }
+ 
++/* This function parses WMM related parameters from cfg80211_ap_settings
++ * structure and updates bss_config structure.
 + */
-+struct iwl_rate_scale_data {
-+	u64 data;		/* bitmap of successful frames */
-+	s32 success_counter;	/* number of frames successful */
-+	s32 success_ratio;	/* per-cent * 128  */
-+	s32 counter;		/* number of frames attempted */
-+	s32 average_tpt;	/* success ratio * expected throughput */
-+	unsigned long stamp;
-+};
-+
-+/**
-+ * struct iwl_scale_tbl_info -- tx params and success history for all rates
-+ *
-+ * There are two of these in struct iwl_lq_sta,
-+ * one for "active", and one for "search".
-+ */
-+struct iwl_scale_tbl_info {
-+	enum iwl_table_type lq_type;
-+	u8 ant_type;
-+	u8 is_SGI;	/* 1 = short guard interval */
-+	u8 is_ht40;	/* 1 = 40 MHz channel width */
-+	u8 action;	/* change modulation; IWL_[LEGACY/SISO/MIMO]_SWITCH_* */
-+	u8 max_search;	/* maximun number of tables we can search */
-+	s32 *expected_tpt;	/* throughput metrics; expected_tpt_G, etc. */
-+	u32 current_rate;  /* rate_n_flags, uCode API format */
-+	struct iwl_rate_scale_data win[IWL_RATE_COUNT]; /* rate histories */
-+};
-+
-+struct iwl_traffic_load {
-+	unsigned long time_stamp;	/* age of the oldest statistics */
-+	u32 packet_count[TID_QUEUE_MAX_SIZE];   /* packet count in this time
-+						 * slice */
-+	u32 total;			/* total num of packets during the
-+					 * last TID_MAX_TIME_DIFF */
-+	u8 queue_count;			/* number of queues that has
-+					 * been used since the last cleanup */
-+	u8 head;			/* start of the circular buffer */
-+};
-+
-+/**
-+ * struct iwl_lq_sta -- driver's rate scaling private structure
-+ *
-+ * Pointer to this gets passed back and forth between driver and mac80211.
-+ */
-+struct iwl_lq_sta {
-+	u8 active_tbl;		/* index of active table, range 0-1 */
-+	u8 enable_counter;	/* indicates HT mode */
-+	u8 stay_in_tbl;		/* 1: disallow, 0: allow search for new mode */
-+	u8 search_better_tbl;	/* 1: currently trying alternate mode */
-+	s32 last_tpt;
-+
-+	/* The following determine when to search for a new mode */
-+	u32 table_count_limit;
-+	u32 max_failure_limit;	/* # failed frames before new search */
-+	u32 max_success_limit;	/* # successful frames before new search */
-+	u32 table_count;
-+	u32 total_failed;	/* total failed frames, any/all rates */
-+	u32 total_success;	/* total successful frames, any/all rates */
-+	u64 flush_timer;	/* time staying in mode before new search */
-+
-+	u8 action_counter;	/* # mode-switch actions tried */
-+	u8 is_green;
-+	enum ieee80211_band band;
-+
-+	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
-+	u32 supp_rates;
-+	u16 active_legacy_rate;
-+	u16 active_siso_rate;
-+	u16 active_mimo2_rate;
-+	u16 active_mimo3_rate;
-+	s8 max_rate_idx;     /* Max rate set by user */
-+	u8 missed_rate_counter;
-+
-+	struct iwl_lq_cmd lq;
-+	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
-+	struct iwl_traffic_load load[IWL_MAX_TID_COUNT];
-+	u8 tx_agg_tid_en;
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	struct dentry *rs_sta_dbgfs_scale_table_file;
-+	struct dentry *rs_sta_dbgfs_stats_table_file;
-+	struct dentry *rs_sta_dbgfs_rate_scale_data_file;
-+	struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
-+	u32 dbg_fixed_rate;
-+#endif
-+	struct iwl_mvm *drv;
-+
-+	/* used to be in sta_info */
-+	int last_txrate_idx;
-+	/* last tx rate_n_flags */
-+	u32 last_rate_n_flags;
-+	/* packets destined for this STA are aggregated */
-+	u8 is_agg;
-+	/* BT traffic this sta was last updated in */
-+	u8 last_bt_traffic;
-+};
-+
-+static inline u8 num_of_ant(u8 mask)
++void
++mwifiex_set_wmm_params(struct mwifiex_private *priv,
++		       struct mwifiex_uap_bss_param *bss_cfg,
++		       struct cfg80211_ap_settings *params)
 +{
-+	return  !!((mask) & ANT_A) +
-+		!!((mask) & ANT_B) +
-+		!!((mask) & ANT_C);
++	const u8 *vendor_ie;
++	struct ieee_types_header *wmm_ie;
++	u8 wmm_oui[] = {0x00, 0x50, 0xf2, 0x02};
++
++	vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++					    WLAN_OUI_TYPE_MICROSOFT_WMM,
++					    params->beacon.tail,
++					    params->beacon.tail_len);
++	if (vendor_ie) {
++		wmm_ie = (struct ieee_types_header *)vendor_ie;
++		memcpy(&bss_cfg->wmm_info, wmm_ie + 1,
++		       sizeof(bss_cfg->wmm_info));
++		priv->wmm_enabled = 1;
++	} else {
++		memset(&bss_cfg->wmm_info, 0, sizeof(bss_cfg->wmm_info));
++		memcpy(&bss_cfg->wmm_info.oui, wmm_oui, sizeof(wmm_oui));
++		bss_cfg->wmm_info.subtype = MWIFIEX_WMM_SUBTYPE;
++		bss_cfg->wmm_info.version = MWIFIEX_WMM_VERSION;
++		priv->wmm_enabled = 0;
++	}
++
++	bss_cfg->qos_info = 0x00;
++	return;
 +}
+ /* This function parses BSS related parameters from structure
+  * and prepares TLVs specific to WEP encryption.
+  * These TLVs are appended to command buffer.
+@@ -354,6 +387,7 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 	struct host_cmd_tlv_rates *tlv_rates;
+ 	struct host_cmd_tlv_ageout_timer *ao_timer, *ps_ao_timer;
+ 	struct mwifiex_ie_types_htcap *htcap;
++	struct mwifiex_ie_types_wmmcap *wmm_cap;
+ 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
+ 	int i;
+ 	u16 cmd_size = *param_size;
+@@ -507,6 +541,16 @@ mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ 		tlv += sizeof(struct mwifiex_ie_types_htcap);
+ 	}
+ 
++	if (bss_cfg->wmm_info.qos_info != 0xFF) {
++		wmm_cap = (struct mwifiex_ie_types_wmmcap *)tlv;
++		wmm_cap->header.type = cpu_to_le16(WLAN_EID_VENDOR_SPECIFIC);
++		wmm_cap->header.len = cpu_to_le16(sizeof(wmm_cap->wmm_info));
++		memcpy(&wmm_cap->wmm_info, &bss_cfg->wmm_info,
++		       sizeof(wmm_cap->wmm_info));
++		cmd_size += sizeof(struct mwifiex_ie_types_wmmcap);
++		tlv += sizeof(struct mwifiex_ie_types_wmmcap);
++	}
 +
-+/* Initialize station's rate scaling information after adding station */
-+extern void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm,
-+				 struct ieee80211_sta *sta,
-+				 enum ieee80211_band band);
-+
-+/**
-+ * iwl_rate_control_register - Register the rate control algorithm callbacks
-+ *
-+ * Since the rate control algorithm is hardware specific, there is no need
-+ * or reason to place it as a stand alone module.  The driver can call
-+ * iwl_rate_control_register in order to register the rate control callbacks
-+ * with the mac80211 subsystem.  This should be performed prior to calling
-+ * ieee80211_register_hw
-+ *
-+ */
-+extern int iwl_mvm_rate_control_register(void);
-+
-+/**
-+ * iwl_rate_control_unregister - Unregister the rate control callbacks
-+ *
-+ * This should be called after calling ieee80211_unregister_hw, but before
-+ * the driver is unloaded.
-+ */
-+extern void iwl_mvm_rate_control_unregister(void);
-+
-+#endif /* __rs__ */
+ 	if (bss_cfg->sta_ao_timer) {
+ 		ao_timer = (struct host_cmd_tlv_ageout_timer *)tlv;
+ 		ao_timer->tlv.type = cpu_to_le16(TLV_TYPE_UAP_AO_TIMER);
 -- 
-1.8.0
+1.7.0.2
 
