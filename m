@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55079 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756834Ab3AHSK4 (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:38419 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751422Ab3ACH47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 13:10:56 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 3/3] mac80211: Disable off-channel powersave when software scans are suspended
-Date: Tue,  8 Jan 2013 12:10:45 -0600
-Message-Id: <1357668645-5101-4-git-send-email-seth.forshee@canonical.com> (sfid-20130108_191058_720741_DC08EF27)
-In-Reply-To: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
-References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+	Thu, 3 Jan 2013 02:56:59 -0500
+Date: Thu, 3 Jan 2013 13:20:47 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Remove redundant txq_idx
+Message-ID: <20130103075043.GA19951@markyou.marvell.com> (sfid-20130103_085705_286241_68419B4A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Leaving powersave enabled while the scan is suspended requires the use
-of PS-Poll to retrieve frames buffered at the AP. PS-Poll isn't a very
-efficient means of data transfer and may not even work with drivers not
-supporting powersave. These problems can largely be avoided by simply
-disabling off-channel powersave when the scan is suspended and enabling
-it again when returning to off-channel operation.
+Ampdu stream index can be derived from stream->idx.
+So we no longer need stream->txq_idx, hence removing it.
 
-The results of this change are fantastic. Previously when using iperf I
-would see greatly decreased throughput (often dropping to 0 bits/sec for
-several seconds) and very high packet loss during software scans. This
-patch completely eliminates the packet loss and reduces the loss in
-throughput to very reasonable levels.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- net/mac80211/scan.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwl8k.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index a875f74..f982dda 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -699,11 +699,11 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 0cdae66..93dd0ef 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -160,7 +160,6 @@ struct mwl8k_ampdu_stream {
+ 	u8 tid;
+ 	u8 state;
+ 	u8 idx;
+-	u8 txq_idx; /* index of this stream in priv->txq */
+ };
  
- 	/*
--	 * Re-enable vifs and beaconing.  Leave PS
--	 * in off-channel state..will put that back
--	 * on-channel at the end of scanning.
-+	 * Re-enable vifs and beaconing.  Disable PS
-+	 * while the scan is suspended for more
-+	 * efficient frame rx than with PS-Poll.
- 	 */
--	ieee80211_offchannel_return(local, false);
-+	ieee80211_offchannel_return(local, true);
- 
- 	*next_delay = HZ / 5;
- 	/* afterwards, resume scan & go to next channel */
-@@ -713,8 +713,8 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
- static void ieee80211_scan_state_resume(struct ieee80211_local *local,
- 					unsigned long *next_delay)
- {
--	/* PS already is in off-channel mode */
--	ieee80211_offchannel_stop_vifs(local, false);
-+	/* Put PS back in off-channel mode */
-+	ieee80211_offchannel_stop_vifs(local, true);
- 
- 	if (local->ops->flush) {
- 		drv_flush(local, false);
+ struct mwl8k_priv {
+@@ -1741,7 +1740,6 @@ mwl8k_add_stream(struct ieee80211_hw *hw, struct ieee80211_sta *sta, u8 tid)
+ 			stream->state = AMPDU_STREAM_NEW;
+ 			stream->tid = tid;
+ 			stream->idx = i;
+-			stream->txq_idx = MWL8K_TX_WMM_QUEUES + i;
+ 			wiphy_debug(hw->wiphy, "Added a new stream for %pM %d",
+ 				    sta->addr, tid);
+ 			return stream;
+@@ -1928,8 +1926,8 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
+ 		stream = mwl8k_lookup_stream(hw, sta->addr, tid);
+ 		if (stream != NULL) {
+ 			if (stream->state == AMPDU_STREAM_ACTIVE) {
+-				txpriority = stream->txq_idx;
+-				index = stream->txq_idx;
++				txpriority = stream->idx + MWL8K_TX_WMM_QUEUES;
++				index = stream->idx + MWL8K_TX_WMM_QUEUES;
+ 			} else if (stream->state == AMPDU_STREAM_NEW) {
+ 				/* We get here if the driver sends us packets
+ 				 * after we've initiated a stream, but before
 -- 
-1.7.9.5
+1.8.0.3
 
