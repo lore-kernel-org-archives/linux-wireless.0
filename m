@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36172 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781Ab3ADPAQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48326 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab3ACOmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 10:00:16 -0500
-Date: Fri, 4 Jan 2013 09:58:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH for 3.8] mips: bcm47xx: select GPIOLIB for BCMA on
- bcm47xx platform
-Message-ID: <20130104145807.GA21871@tuxdriver.com> (sfid-20130104_160020_385882_94BE0949)
-References: <1357290191-5728-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357290191-5728-1-git-send-email-arend@broadcom.com>
+	Thu, 3 Jan 2013 09:42:33 -0500
+Message-ID: <1357224173.9741.18.camel@jlt4.sipsolutions.net> (sfid-20130103_154237_783254_5F6A01AA)
+Subject: pull-request: iwlwifi 2013-01-03
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 03 Jan 2013 15:42:53 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-fMzv5JoZ0wMTbu6WFkBX"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shouldn't this go to Ralf?
 
-On Fri, Jan 04, 2013 at 10:03:11AM +0100, Arend van Spriel wrote:
-> The Kconfig items BCM47XX_BCMA and BCM47XX_SSB selected
-> respectively BCMA_DRIVER_GPIO and SSB_DRIVER_GPIO. These
-> options depend on GPIOLIB without explicitly selecting it
-> so it results in a warning when GPIOLIB is not set:
-> 
-> scripts/kconfig/conf --oldconfig Kconfig
-> warning: (BCM47XX_BCMA) selects BCMA_DRIVER_GPIO ... unmet direct
-> 	dependencies (BCMA_POSSIBLE && BCMA && GPIOLIB)
-> warning: (BCM47XX_SSB) selects SSB_DRIVER_GPIO ... unmet direct
-> 	dependencies (SSB_POSSIBLE && SSB && GPIOLIB)
-> 
-> which subsequently results in compile errors.
-> 
-> Cc: Hauke Mehrtens <hauke@hauke-m.de>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  arch/mips/bcm47xx/Kconfig |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
-> index d7af29f..ba61192 100644
-> --- a/arch/mips/bcm47xx/Kconfig
-> +++ b/arch/mips/bcm47xx/Kconfig
-> @@ -8,8 +8,10 @@ config BCM47XX_SSB
->  	select SSB_DRIVER_EXTIF
->  	select SSB_EMBEDDED
->  	select SSB_B43_PCI_BRIDGE if PCI
-> +	select SSB_DRIVER_PCICORE if PCI
->  	select SSB_PCICORE_HOSTMODE if PCI
->  	select SSB_DRIVER_GPIO
-> +	select GPIOLIB
->  	default y
->  	help
->  	 Add support for old Broadcom BCM47xx boards with Sonics Silicon Backplane support.
-> @@ -25,6 +27,7 @@ config BCM47XX_BCMA
->  	select BCMA_HOST_PCI if PCI
->  	select BCMA_DRIVER_PCI_HOSTMODE if PCI
->  	select BCMA_DRIVER_GPIO
-> +	select GPIOLIB
->  	default y
->  	help
->  	 Add support for new Broadcom BCM47xx boards with Broadcom specific Advanced Microcontroller Bus.
-> -- 
-> 1.7.10.4
-> 
-> 
-> 
+--=-fMzv5JoZ0wMTbu6WFkBX
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+John,
+
+I have two fixes for iwlwifi: one to fix a lost return value that was
+dropped in a previous patch and could cause "nobody cared" IRQ messages,
+and one to work around a firmware issue.
+
+Please pull.
+
+Thanks,
+johannes
+
+
+The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565=
+:
+
+  Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to f590dcec944552f9a4a61155810f3abd17d6465d:
+
+  iwlwifi: fix the reclaimed packet tracking upon flush queue (2013-01-03 1=
+5:31:15 +0100)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: fix the reclaimed packet tracking upon flush queue
+
+Johannes Berg (1):
+      iwlwifi: fix PCIe interrupt handle return value
+
+ drivers/net/wireless/iwlwifi/dvm/tx.c  | 24 +++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/pcie/rx.c |  1 +
+ 2 files changed, 18 insertions(+), 7 deletions(-)
+
+
+--=-fMzv5JoZ0wMTbu6WFkBX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQ5ZjtAAoJEDBSmw7B7bqr4BkP/2VqbRIJdrSsjE0XWyEjP8ZR
+XGjboHZT7zAAlWtEZXLiODrh8BMjbnuH7de8LUPyES8UgmAYbzc2VDbxv9Yacatd
+e2QEOK9qM8ODzsyUer9kV64ErsgFZFrM7X1KK6RRGI/dscF10EISwkmtMPA3R5Gf
+QSk6DTVUXa3Z4InsUjogL/n9hWfYYR7IVhaQHafUq1innsRKnBqq/+bGB4X4bbGe
+1unbT3k6yAVsh0uvuW+koTJaBXEFVZ+6UXFcmKw+SxdUXIWTGADyrytWcf96U58x
+Rrj6eOxoFWi65Qm6CEQrkg7BR3m6J+eGLHmKxDuJfsxXk2O1nbsMFOufh9hizbms
+THcMSRe2sl8x1REgXlBpi+bF6qplNlHyjN/6h3B7PJawsCNUBvxG03ydX0iSyrY8
+wB6/my2rfLUPc7ih6FduUcHV8mGBTV5QV4YTsMPzAXWWr7sXDtbK0N5pjVWn52el
+b5yZsN+QjmvjhJFNsFw/MP9CaUsafdUJ9FMA7KJNGiccSJclZbXVhkKuNrQ2PwGj
+bt7wgOrHKUnjnKyzb2k4fq/Ine6cT6eZCG5KAaR+gkzA0CINPD0ljQJtA94UGes4
+OohHI6tlAdj0cH3Q2iThgRTxKV3zb6R8X+r27qime55sPGex93gpJXCeUun061E8
+K8ieQz1hfaJpTQG5ngYo
+=EFva
+-----END PGP SIGNATURE-----
+
+--=-fMzv5JoZ0wMTbu6WFkBX--
+
