@@ -1,50 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54874 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab3AaNOo (ORCPT
+Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:58884
+	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751792Ab3ACGw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 08:14:44 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] mac80211: allow transmitting deauth with tainted key
-Date: Thu, 31 Jan 2013 14:15:06 +0100
-Message-Id: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net> (sfid-20130131_141448_355132_8437FAF0)
+	Thu, 3 Jan 2013 01:52:29 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath9k_hw: Enable calibration types in init_cal_settings
+Date: Thu,  3 Jan 2013 12:21:21 +0530
+Message-Id: <1357195883-8516-1-git-send-email-sujith@msujith.org> (sfid-20130103_075234_776507_256ADFAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-When we had a connection for WoWLAN and after resume it
-needed to be disconnected, the previous commit enabled
-sending a deauth frame to the AP. This frame would not
-go through on MFP-enabled networks as the key for it is
-marked tainted before the frame is transmitted.
+Doing this in ath9k_hw_fill_cap_info() is odd and it's
+cleaner to do this in the init function for calibration.
+Also, setup the supported calibration type in init_cal_settings.
 
-Allow a tainted key to be used for deauth frames. Worst
-case, we'll use a wrong key because the PTK was rekeyed
-while suspended, but more likely the PTK is still fine
-and the taint flag really only applies to the GTK(s).
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/tx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 17 +++++++++++------
+ drivers/net/wireless/ath/ath9k/hw.c           |  7 -------
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index a2cb6a3..7892b0a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -594,7 +594,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 			break;
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 8b0d8dc..598b847 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -323,6 +323,14 @@ static const struct ath9k_percal_data iq_cal_single_sample = {
+ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
+ {
+ 	ah->iq_caldata.calData = &iq_cal_single_sample;
++
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		ah->enabled_cals |= TX_IQ_CAL;
++		if (AR_SREV_9485_OR_LATER(ah))
++			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
++	}
++
++	ah->supp_cals = IQ_MISMATCH_CAL;
+ }
  
--		if (unlikely(tx->key && tx->key->flags & KEY_FLAG_TAINTED))
-+		if (unlikely(tx->key && tx->key->flags & KEY_FLAG_TAINTED &&
-+			     !ieee80211_is_deauth(hdr->frame_control)))
- 			return TX_DROP;
+ /*
+@@ -1131,13 +1139,10 @@ skip_tx_iqcal:
  
- 		if (!skip_hw && tx->key &&
+ 	/* Initialize list pointers */
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+-	ah->supp_cals = IQ_MISMATCH_CAL;
+ 
+-	if (ah->supp_cals & IQ_MISMATCH_CAL) {
+-		INIT_CAL(&ah->iq_caldata);
+-		INSERT_CAL(ah, &ah->iq_caldata);
+-		ath_dbg(common, CALIBRATE, "enabling IQ Calibration\n");
+-	}
++	INIT_CAL(&ah->iq_caldata);
++	INSERT_CAL(ah, &ah->iq_caldata);
++	ath_dbg(common, CALIBRATE, "enabling IQ Calibration\n");
+ 
+ 	if (ah->supp_cals & TEMP_COMP_CAL) {
+ 		INIT_CAL(&ah->tempCompCalData);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7cb7870..5d73e92 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2576,12 +2576,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		rx_chainmask >>= 1;
+ 	}
+ 
+-	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		ah->enabled_cals |= TX_IQ_CAL;
+-		if (AR_SREV_9485_OR_LATER(ah))
+-			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+-	}
+-
+ 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
+@@ -2590,7 +2584,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+ 	}
+ 
+-
+ 	if (AR_SREV_9280_20_OR_LATER(ah)) {
+ 		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE |
+ 				 ATH9K_HW_WOW_PATTERN_MATCH_EXACT;
 -- 
-1.8.0
+1.8.1
 
