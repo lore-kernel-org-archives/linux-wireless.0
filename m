@@ -1,121 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1575 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757422Ab3A1Qim (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:60705 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab3ACHhB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 11:38:42 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/14] wil6210: checkpatch warnings
-Date: Mon, 28 Jan 2013 18:31:07 +0200
-Message-ID: <1359390669-9310-13-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173849_211713_10D89740)
-In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 3 Jan 2013 02:37:01 -0500
+Date: Thu, 3 Jan 2013 08:36:54 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv5 4/8] mac80211: add radar detection command/event
+Message-ID: <20130103073654.GB20780@pandem0nium> (sfid-20130103_083704_545651_70050046)
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1355407113-27006-5-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1357134029.9839.28.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GRPZ8SYKNexpdSJ7"
+In-Reply-To: <1357134029.9839.28.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c  |    1 -
- drivers/net/wireless/ath/wil6210/interrupt.c |    1 -
- drivers/net/wireless/ath/wil6210/main.c      |    4 ++--
- drivers/net/wireless/ath/wil6210/netdev.c    |    4 ++--
- drivers/net/wireless/ath/wil6210/txrx.c      |    3 +--
- drivers/net/wireless/ath/wil6210/wmi.c       |    1 -
- 6 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 4b48f2e..002851f 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -204,7 +204,6 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
--
- 	}
- 
- 	/* FW don't support scan after connection attempt */
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 865c33f..dc97e7b 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -52,7 +52,6 @@
- 
- static inline void wil_icr_clear(u32 x, void __iomem *addr)
- {
--
- }
- #else /* defined(CONFIG_WIL6210_ISR_COR) */
- /* configure to Write-1-to-Clear mode */
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index d160ea8..761c389 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -80,7 +80,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, void *bssid)
- 					GFP_KERNEL);
- 		break;
- 	default:
--		;
-+		break;
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(wil->vring_tx); i++)
-@@ -357,7 +357,7 @@ static int __wil_up(struct wil6210_priv *wil)
- 			wmi_set_channel(wil, channel->hw_value);
- 		break;
- 	default:
--		;
-+		break;
- 	}
- 
- 	/* MAC address - pre-requisite for other commands */
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 073dc7d..8ce2e33 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -39,8 +39,8 @@ static const struct net_device_ops wil_netdev_ops = {
- 	.ndo_open		= wil_open,
- 	.ndo_stop		= wil_stop,
- 	.ndo_start_xmit		= wil_start_xmit,
--	.ndo_set_mac_address    = eth_mac_addr,
--	.ndo_validate_addr      = eth_validate_addr,
-+	.ndo_set_mac_address	= eth_mac_addr,
-+	.ndo_validate_addr	= eth_validate_addr,
- };
- 
- void *wil_if_alloc(struct device *dev, void __iomem *csr)
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index f0d0913..48cfa7e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -758,8 +758,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	case -ENOMEM:
- 		return NETDEV_TX_BUSY;
- 	default:
--		; /* goto drop; */
--		break;
-+		break; /* goto drop; */
- 	}
-  drop:
- 	netif_tx_stop_all_queues(ndev);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 91f41a7..8178cc0 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -188,7 +188,6 @@ static int __wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len)
- 		wil_err(wil, "WMI size too large: %d bytes, max is %d\n",
- 			(int)(sizeof(cmd) + len), r->entry_size);
- 		return -ERANGE;
--
- 	}
- 
- 	might_sleep();
--- 
-1.7.10.4
+--GRPZ8SYKNexpdSJ7
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 02, 2013 at 02:40:29PM +0100, Johannes Berg wrote:
+> On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
+>=20
+> > +	int (*start_radar_detection)(struct ieee80211_hw *hw,
+> > +				     struct ieee80211_vif *vif,
+> > +				     struct ieee80211_channel *chan);
+>=20
+> pass a chandef?
+
+Good idea, will change that.
+
+> > +void ieee80211_radar_detected(struct ieee80211_vif *vif,
+> > +			      struct ieee80211_channel *chan, gfp_t gfp);
+>=20
+> Here you probably don't need to pass the channel, once the tracking in
+> cfg80211 moves into the sdata (or even local) struct the same can happen
+> in mac80211.
+
+Yep, we should change this depending on the result of the discussion whether
+we want to change the tracking.
+
+Cheers,
+	Simon
+
+--GRPZ8SYKNexpdSJ7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDlNRYACgkQrzg/fFk7axYVogCgxryCbPWAyhCzJu3ZrRWsxsiL
+MpAAn1Xk7yB8PaZOVIMdN/UZ7y++9Kng
+=xqDZ
+-----END PGP SIGNATURE-----
+
+--GRPZ8SYKNexpdSJ7--
