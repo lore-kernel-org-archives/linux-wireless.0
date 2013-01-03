@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45998 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751884Ab3A2K5f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 05:57:35 -0500
-Message-ID: <1359457078.8108.4.camel@jlt4.sipsolutions.net> (sfid-20130129_115740_522415_928D53BA)
-Subject: Re: [RFC/RFT] mac80211: use macaddr vif parameter for P2P_DEVICE
- creation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Tue, 29 Jan 2013 11:57:58 +0100
-In-Reply-To: <1359382746-26322-1-git-send-email-arend@broadcom.com>
-References: <1359382746-26322-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:53053 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753636Ab3ACTlE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jan 2013 14:41:04 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Akinobu Mita <akinobu.mita@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>
+CC: "David S. Miller" <davem@davemloft.net>,
+	Michael Chan <mchan@broadcom.com>,
+	Thomas Sailer <t.sailer@alumni.ethz.ch>,
+	Jean-Paul Roubelat <jpr@f6fbb.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-hams@vger.kernel.org" <linux-hams@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 3 Jan 2013 11:36:54 -0800
+Subject: RE: [PATCH -v2 18/26] drivers/net: rename random32() to
+ prandom_u32()
+Message-ID: <477F20668A386D41ADCC57781B1F70430D13EA8B31@SC-VEXCH1.marvell.com> (sfid-20130103_204141_876030_67F793A1)
+References: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
+ <1357215562-6288-19-git-send-email-akinobu.mita@gmail.com>
+In-Reply-To: <1357215562-6288-19-git-send-email-akinobu.mita@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-28 at 15:19 +0100, Arend van Spriel wrote:
-> This patch is a follow-up of:
+Hi Akinobu,
+
+> Use more preferable function name which implies using a pseudo-random
+> number generator.
 > 
-> commit 1c18f1452a772dfe884ed25677bddb3ecaf9c43a
-> Author: Arend van Spriel <arend@broadcom.com>
-> Date:   Tue Jan 8 10:17:27 2013 +0100
-> 
->     nl80211: allow user-space to set address for P2P_DEVICE
-> 
-> The address of the wdev is determined by the macaddr parameter
-> when it is not a zero ethernet address. Otherwise, the permanent
-> address as determined by ieee80211_assign_perm_addr() is used.
-> 
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Acked-by: Thomas Sailer <t.sailer@alumni.ethz.ch>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Michael Chan <mchan@broadcom.com>
+> Cc: Thomas Sailer <t.sailer@alumni.ethz.ch>
+> Cc: Jean-Paul Roubelat <jpr@f6fbb.org>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-hams@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+
+Acked-by: Bing Zhao <bzhao@marvell.com> [mwifiex]
+
+Thanks,
+Bing
+
 > ---
-> Hi Johannes,
 > 
-> Here a mac80211 change to take the user-space provided mac address into
-> account. Not sure if that is sufficient. Tested P2P device vif creation using
-> iw with mac80211_hwsim:
-
-Looks fine to me, yeah.
-
-johannes
+> No change from v1
+> 
+>  drivers/net/ethernet/broadcom/cnic.c    | 4 ++--
+>  drivers/net/hamradio/baycom_epp.c       | 2 +-
+>  drivers/net/hamradio/hdlcdrv.c          | 2 +-
+>  drivers/net/hamradio/yam.c              | 2 +-
+>  drivers/net/wireless/mwifiex/cfg80211.c | 4 ++--
+>  5 files changed, 7 insertions(+), 7 deletions(-)
 
