@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ultra-3eti.com ([173.13.207.162]:55148 "EHLO
-	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757065Ab3AQQ0Y convert rfc822-to-8bit (ORCPT
+Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:55703
+	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752006Ab3ACGwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 11:26:24 -0500
-From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-CC: Georgiewskiy Yuriy <bottleman@icf.org.ru>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	open11s <devel@lists.open80211s.org>
-Subject: RE: help: 802.11s bad performance with 802.11n enabled
-Date: Thu, 17 Jan 2013 16:14:33 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1AF64@RockMX01.rock.corp> (sfid-20130117_172628_547128_78FA8BD0)
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
- <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
- <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
- <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
- <alpine.DEB.2.02.1212080726150.22564@icf.org.ru>
- <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com>
- <alpine.DEB.2.02.1212080739540.23821@icf.org.ru>
- <BD54DDEB2546894FAB0731EA7B0EDF8D07C12939@RockMX01.rock.corp>
- <CAG6hwVMVd0azJotzVqcz+Uu7vpDtxJa+4XfK0BS_31=gBPD2vA@mail.gmail.com>
-In-Reply-To: <CAG6hwVMVd0azJotzVqcz+Uu7vpDtxJa+4XfK0BS_31=gBPD2vA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 3 Jan 2013 01:52:30 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath9k_hw: Remove TEMP_COMP_CAL
+Date: Thu,  3 Jan 2013 12:21:23 +0530
+Message-Id: <1357195883-8516-3-git-send-email-sujith@msujith.org> (sfid-20130103_075235_905857_713921DC)
+In-Reply-To: <1357195883-8516-1-git-send-email-sujith@msujith.org>
+References: <1357195883-8516-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-TP> We recently applied
-TP> https://github.com/cozybit/authsae/commit/0e5c65c3f773db820d6cee7b365cd4a70181c72d
-which may fix your issue.
+This is not enabled for any chip and is unused.
 
-All, I just find that the patch above introduce a segmentation fault.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 20 +++-----------------
+ drivers/net/wireless/ath/ath9k/hw.h           |  1 -
+ 2 files changed, 3 insertions(+), 18 deletions(-)
 
-Below is the patch content. Look at line 970, "cand->state" would dereference a NULL pointer because the "if"  statement makes sure "cand" is NULL.
-
-
-
-if ((cand = find_peer(mgmt->sa, 0)) == NULL) {
-
-968 	  	
-
--    sae_debug(AMPE_DEBUG_FSM, "Mesh plink: plink open from unauthed peer\n");
-
-  	967 	
-
-+    /* "1" here means only get peers in SAE_ACCEPTED */
-
-  	968 	
-
-+    if ((cand = find_peer(mgmt->sa, 1)) == NULL) {
-
-  	969 	
-
-+    sae_debug(AMPE_DEBUG_FSM, "Mesh plink: plink open from unauthed peer "MACSTR" state=%d\n",
-
-  	970 	
-
-+                  MAC2STR(mgmt->sa), cand->state);
-
-969 	971 	
-
-         return 0;
-
-970 	972 	
-
-     }
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 303e40d..fa67e84 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -32,7 +32,6 @@ struct coeff {
+ 
+ enum ar9003_cal_types {
+ 	IQ_MISMATCH_CAL = BIT(0),
+-	TEMP_COMP_CAL = BIT(1),
+ };
+ 
+ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
+@@ -49,7 +48,7 @@ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
+ 		 */
+ 		REG_RMW_FIELD(ah, AR_PHY_TIMING4,
+ 			      AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX,
+-		currCal->calData->calCountMax);
++			      currCal->calData->calCountMax);
+ 		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
+ 
+ 		ath_dbg(common, CALIBRATE,
+@@ -58,14 +57,8 @@ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
+ 		/* Kick-off cal */
+ 		REG_SET_BIT(ah, AR_PHY_TIMING4, AR_PHY_TIMING4_DO_CAL);
+ 		break;
+-	case TEMP_COMP_CAL:
+-		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_THERM,
+-			      AR_PHY_65NM_CH0_THERM_LOCAL, 1);
+-		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_THERM,
+-			      AR_PHY_65NM_CH0_THERM_START, 1);
+-
+-		ath_dbg(common, CALIBRATE,
+-			"starting Temperature Compensation Calibration\n");
++	default:
++		ath_err(common, "Invalid calibration type\n");
+ 		break;
+ 	}
+ }
+@@ -1144,13 +1137,6 @@ skip_tx_iqcal:
+ 	INSERT_CAL(ah, &ah->iq_caldata);
+ 	ath_dbg(common, CALIBRATE, "enabling IQ Calibration\n");
+ 
+-	if (ah->supp_cals & TEMP_COMP_CAL) {
+-		INIT_CAL(&ah->tempCompCalData);
+-		INSERT_CAL(ah, &ah->tempCompCalData);
+-		ath_dbg(common, CALIBRATE,
+-			"enabling Temperature Compensation Calibration\n");
+-	}
+-
+ 	/* Initialize current pointer to first element in list */
+ 	ah->cal_list_curr = ah->cal_list;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 7f1a8e9..809599c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -771,7 +771,6 @@ struct ath_hw {
+ 	struct ath9k_cal_list iq_caldata;
+ 	struct ath9k_cal_list adcgain_caldata;
+ 	struct ath9k_cal_list adcdc_caldata;
+-	struct ath9k_cal_list tempCompCalData;
+ 	struct ath9k_cal_list *cal_list;
+ 	struct ath9k_cal_list *cal_list_last;
+ 	struct ath9k_cal_list *cal_list_curr;
+-- 
+1.8.1
 
