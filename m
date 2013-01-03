@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:44320 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138Ab3ASShH (ORCPT
+Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:53568
+	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752715Ab3ACJ0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2013 13:37:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
-Subject: [PATCH] rtlwifi: Fix build warning introduced by commit a290593
-Date: Sat, 19 Jan 2013 12:36:49 -0600
-Message-Id: <1358620609-9794-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130119_193730_610363_7EF03175)
+	Thu, 3 Jan 2013 04:26:39 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ath9k_hw: Fix calibration for AR9340
+Date: Thu,  3 Jan 2013 14:55:48 +0530
+Message-Id: <1357205148-11781-1-git-send-email-sujith@msujith.org> (sfid-20130103_102642_577007_3F4486C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kbuild test robot reports the following warning with x86_64-randconfig-x955:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-warning: (RTL8192CE && RTL8192SE && RTL8192DE && RTL8723AE && RTL8192CU) selects
- RTLWIFI which has unmet direct dependencies (NETDEVICES && WLAN &&
- (RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE))
+TX_IQ_ON_AGC_CAL should not be enabled for AR9340. TX-IQ calibration
+is run as part of AGC calibration only for AR9485, AR9462 and AR9565.
+For the others (AR9300, AR9330, AR9340), TX-IQ cal is done independent
+of AGC-cal.
 
-This warning was introduced in commit a290593, "rtlwifi: Modify files for addition
-of rtl8723ae", and is d ue to a missing dependence of RTLWIFI on RTL8723AE.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kbuild test robot <fengguang.wu@intel.com>
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/Kconfig |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index 21b1bbb..b80bc46 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -57,12 +57,12 @@ config RTL8192CU
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 598b847..303e40d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -326,7 +326,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
  
- config RTLWIFI
- 	tristate
--	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
-+	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
- 	default m
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ah->enabled_cals |= TX_IQ_CAL;
+-		if (AR_SREV_9485_OR_LATER(ah))
++		if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah))
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+ 	}
  
- config RTLWIFI_DEBUG
- 	bool "Additional debugging output"
--	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
-+	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
- 	default y
- 
- config RTL8192C_COMMON
 -- 
-1.7.10.4
+1.8.1
 
