@@ -1,171 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4731 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752693Ab3ABUUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 15:20:30 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Joe Perches" <joe@perches.com>
-Subject: [PATCH v2 08/18] brcmfmac: define pr_fmt in one place
-Date: Wed, 2 Jan 2013 21:20:10 +0100
-Message-ID: <1357158010-9767-1-git-send-email-arend@broadcom.com> (sfid-20130102_212040_608428_50486B81)
-In-Reply-To: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38680 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753776Ab3ACXvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jan 2013 18:51:42 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/6] bcma: make bcma_find_core_unit() accessible
+Date: Fri,  4 Jan 2013 00:51:20 +0100
+Message-Id: <1357257085-11822-2-git-send-email-hauke@hauke-m.de> (sfid-20130104_005149_327798_6FE2EF7B)
+In-Reply-To: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
+References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several source files (but not all) define the pr_fmt() macro in exactly
-the same way. Instead this commit defines it in a header file so driver
-logging is consistent.
+This bcma_find_core_unit() is needed by the mips driver in the next
+patch.
 
-Cc: Joe Perches <joe@perches.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-Hi John,
+ drivers/bcma/bcma_private.h |    2 ++
+ drivers/bcma/main.c         |    4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Joe caught this so here is the replacement patch for previous patch with
-message id: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c       |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c      |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h      |    4 ++++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c     |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 --
- 9 files changed, 4 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index be35a2f..11fd1c7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -15,8 +15,6 @@
-  */
- /* ****************** SDIO CARD Interface Functions **************************/
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 4a2d72e..d35294e 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -31,6 +31,8 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
+ int bcma_bus_suspend(struct bcma_bus *bus);
+ int bcma_bus_resume(struct bcma_bus *bus);
+ #endif
++struct bcma_device *bcma_find_core_unit(struct bcma_bus *bus, u16 coreid,
++					u8 unit);
  
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/types.h>
- #include <linux/netdevice.h>
- #include <linux/export.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index d33e559..d92d373 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -14,8 +14,6 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+ /* scan.c */
+ int bcma_bus_scan(struct bcma_bus *bus);
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 53ba20c..d12b7da 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -81,8 +81,8 @@ struct bcma_device *bcma_find_core(struct bcma_bus *bus, u16 coreid)
+ }
+ EXPORT_SYMBOL_GPL(bcma_find_core);
  
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/types.h>
- #include <linux/netdevice.h>
- #include <linux/mmc/sdio.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index 8392355..0c83998 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -19,8 +19,6 @@
-  * For certain dcmd codes, the dongle interprets string data from the host.
-  ******************************************************************************/
+-static struct bcma_device *bcma_find_core_unit(struct bcma_bus *bus, u16 coreid,
+-					       u8 unit)
++struct bcma_device *bcma_find_core_unit(struct bcma_bus *bus, u16 coreid,
++					u8 unit)
+ {
+ 	struct bcma_device *core;
  
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/types.h>
- #include <linux/netdevice.h>
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index f8b52e5..4544342 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -14,8 +14,6 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/kernel.h>
- #include <linux/string.h>
- #include <linux/netdevice.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-index f2ab01c..ea3f5f5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-@@ -34,6 +34,10 @@
- #define BRCMF_SCAN_VAL	0x4000
- #define BRCMF_CONN_VAL	0x8000
- 
-+/* set default print format */
-+#undef pr_fmt
-+#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
-+
- /* Macro for error messages. net_ratelimit() is used when driver
-  * debugging is not selected. When debugging the driver error
-  * messages are as important as other tracing or even more so.
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 16efcb4..6520b58 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -14,8 +14,6 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <linux/module.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index cf857f1..651474b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -14,8 +14,6 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/kthread.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index b1bb46c..14be2d5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -15,8 +15,6 @@
-  */
- /* ***** SDIO interface chip backplane handle functions ***** */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/types.h>
- #include <linux/netdevice.h>
- #include <linux/mmc/card.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index ee4eb44..1ec2d57 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -16,8 +16,6 @@
- 
- /* Toplevel file. Relies on dhd_linux.c to send commands to the dongle. */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <net/cfg80211.h>
 -- 
 1.7.10.4
-
 
