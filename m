@@ -1,233 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28421 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753444Ab3A1QiX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48391 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281Ab3ACOpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 11:38:23 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/14] wil6210: remove raw wil_dbg() calls
-Date: Mon, 28 Jan 2013 18:30:58 +0200
-Message-ID: <1359390669-9310-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173826_436357_C56EBF0A)
-In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 3 Jan 2013 09:45:55 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/12] iwlwifi: move some PCIe calls to better places
+Date: Thu,  3 Jan 2013 15:46:14 +0100
+Message-Id: <1357224376-27803-10-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154604_559447_C5F043C5)
+In-Reply-To: <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
+References: <1357224324.9741.20.camel@jlt4.sipsolutions.net>
+ <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce debug category "MISC", convert all raw wil_dbg() to this category.
-This improves dynamic debug manageability
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Synchronizing the IRQ is pointless when we will
+then enable the RF-Kill interrupt again, but is
+needed before we free it and the data needed to
+handle IRQs; move it to the free function.
+
+Simiarly, cancelling the replenish work struct
+can move to the function that frees the RX data
+structures.
+
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |    8 ++++----
- drivers/net/wireless/ath/wil6210/main.c     |   28 +++++++++++++--------------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |    4 ++--
- drivers/net/wireless/ath/wil6210/txrx.c     |    8 ++++----
- drivers/net/wireless/ath/wil6210/wil6210.h  |    1 +
- 5 files changed, 25 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c    | 2 ++
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 9 +++------
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 116f4e8..56f39b6 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -228,8 +228,8 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 		}
- 		/* 0-based channel indexes */
- 		cmd.cmd.channel_list[cmd.cmd.num_channels++].channel = ch - 1;
--		wil_dbg(wil, "Scan for ch %d  : %d MHz\n", ch,
--			request->channels[i]->center_freq);
-+		wil_dbg_MISC(wil, "Scan for ch %d  : %d MHz\n", ch,
-+			     request->channels[i]->center_freq);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index dad4c4a..02c9016 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -545,6 +545,8 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 		return;
  	}
  
- 	return wmi_send(wil, WMI_START_SCAN_CMDID, &cmd, sizeof(cmd.cmd) +
-@@ -425,8 +425,8 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
++	cancel_work_sync(&trans_pcie->rx_replenish);
++
+ 	spin_lock_irqsave(&rxq->lock, flags);
+ 	iwl_pcie_rxq_free_rbs(trans);
+ 	spin_unlock_irqrestore(&rxq->lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 48cd65e..bca6203 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -534,12 +534,6 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
  
--	wil_dbg(wil, "AP on Channel %d %d MHz, %s\n", channel->hw_value,
--		channel->center_freq, info->privacy ? "secure" : "open");
-+	wil_dbg_MISC(wil, "AP on Channel %d %d MHz, %s\n", channel->hw_value,
-+		     channel->center_freq, info->privacy ? "secure" : "open");
- 	print_hex_dump_bytes("SSID ", DUMP_PREFIX_OFFSET,
- 			     info->ssid, info->ssid_len);
+ 	iwl_enable_rfkill_int(trans);
  
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 95fcd36..90786df 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -64,7 +64,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, void *bssid)
- 	struct net_device *ndev = wil_to_ndev(wil);
- 	struct wireless_dev *wdev = wil->wdev;
+-	/* wait to make sure we flush pending tasklet*/
+-	synchronize_irq(trans_pcie->pci_dev->irq);
+-	tasklet_kill(&trans_pcie->irq_tasklet);
+-
+-	cancel_work_sync(&trans_pcie->rx_replenish);
+-
+ 	/* stop and reset the on-board processor */
+ 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
  
--	wil_dbg(wil, "%s()\n", __func__);
-+	wil_dbg_MISC(wil, "%s()\n", __func__);
- 
- 	wil_link_off(wil);
- 	clear_bit(wil_status_fwconnected, &wil->status);
-@@ -99,7 +99,7 @@ static void wil_connect_timer_fn(ulong x)
+@@ -682,6 +676,9 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
  {
- 	struct wil6210_priv *wil = (void *)x;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
  
--	wil_dbg(wil, "Connect timeout\n");
-+	wil_dbg_MISC(wil, "Connect timeout\n");
++	synchronize_irq(trans_pcie->pci_dev->irq);
++	tasklet_kill(&trans_pcie->irq_tasklet);
++
+ 	iwl_pcie_tx_free(trans);
+ 	iwl_pcie_rx_free(trans);
  
- 	/* reschedule to thread context - disconnect won't
- 	 * run from atomic context
-@@ -109,7 +109,7 @@ static void wil_connect_timer_fn(ulong x)
- 
- int wil_priv_init(struct wil6210_priv *wil)
- {
--	wil_dbg(wil, "%s()\n", __func__);
-+	wil_dbg_MISC(wil, "%s()\n", __func__);
- 
- 	mutex_init(&wil->mutex);
- 	mutex_init(&wil->wmi_mutex);
-@@ -162,7 +162,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
- 
- static void wil_target_reset(struct wil6210_priv *wil)
- {
--	wil_dbg(wil, "Resetting...\n");
-+	wil_dbg_MISC(wil, "Resetting...\n");
- 
- 	/* register write */
- #define W(a, v) iowrite32(v, wil->csr + HOSTADDR(a))
-@@ -202,7 +202,7 @@ static void wil_target_reset(struct wil6210_priv *wil)
- 
- 	msleep(2000);
- 
--	wil_dbg(wil, "Reset completed\n");
-+	wil_dbg_MISC(wil, "Reset completed\n");
- 
- #undef W
- #undef S
-@@ -225,8 +225,8 @@ static int wil_wait_for_fw_ready(struct wil6210_priv *wil)
- 		wil_err(wil, "Firmware not ready\n");
- 		return -ETIME;
- 	} else {
--		wil_dbg(wil, "FW ready after %d ms\n",
--			jiffies_to_msecs(to-left));
-+		wil_dbg_MISC(wil, "FW ready after %d ms\n",
-+			     jiffies_to_msecs(to-left));
- 	}
- 	return 0;
- }
-@@ -278,7 +278,7 @@ void wil_link_on(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 
--	wil_dbg(wil, "%s()\n", __func__);
-+	wil_dbg_MISC(wil, "%s()\n", __func__);
- 
- 	netif_carrier_on(ndev);
- 	netif_tx_wake_all_queues(ndev);
-@@ -288,7 +288,7 @@ void wil_link_off(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
- 
--	wil_dbg(wil, "%s()\n", __func__);
-+	wil_dbg_MISC(wil, "%s()\n", __func__);
- 
- 	netif_tx_stop_all_queues(ndev);
- 	netif_carrier_off(ndev);
-@@ -311,27 +311,27 @@ static int __wil_up(struct wil6210_priv *wil)
- 	wmi_nettype = wil_iftype_nl2wmi(NL80211_IFTYPE_ADHOC);
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
--		wil_dbg(wil, "type: STATION\n");
-+		wil_dbg_MISC(wil, "type: STATION\n");
- 		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		wil_dbg(wil, "type: AP\n");
-+		wil_dbg_MISC(wil, "type: AP\n");
- 		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
--		wil_dbg(wil, "type: P2P_CLIENT\n");
-+		wil_dbg_MISC(wil, "type: P2P_CLIENT\n");
- 		bi = 0;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_P2P_GO:
--		wil_dbg(wil, "type: P2P_GO\n");
-+		wil_dbg_MISC(wil, "type: P2P_GO\n");
- 		bi = 100;
- 		ndev->type = ARPHRD_ETHER;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--		wil_dbg(wil, "type: Monitor\n");
-+		wil_dbg_MISC(wil, "type: Monitor\n");
- 		bi = 0;
- 		ndev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		/* ARPHRD_IEEE80211 or ARPHRD_IEEE80211_RADIOTAP ? */
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 0fc83ed..ab1cade 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -53,7 +53,7 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	}
- 	wil->n_msi = use_msi;
- 	if (wil->n_msi) {
--		wil_dbg(wil, "Setup %d MSI interrupts\n", use_msi);
-+		wil_dbg_MISC(wil, "Setup %d MSI interrupts\n", use_msi);
- 		rc = pci_enable_msi_block(pdev, wil->n_msi);
- 		if (rc && (wil->n_msi == 3)) {
- 			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-@@ -65,7 +65,7 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 			wil->n_msi = 0;
- 		}
- 	} else {
--		wil_dbg(wil, "MSI interrupts disabled, use INTx\n");
-+		wil_dbg_MISC(wil, "MSI interrupts disabled, use INTx\n");
- 	}
- 
- 	rc = wil6210_init_irq(wil, pdev->irq);
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index f29c294..241dd0e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -100,8 +100,8 @@ static int wil_vring_alloc(struct wil6210_priv *wil, struct vring *vring)
- 		d->dma.status = TX_DMA_STATUS_DU;
- 	}
- 
--	wil_dbg(wil, "vring[%d] 0x%p:0x%016llx 0x%p\n", vring->size,
--		vring->va, (unsigned long long)vring->pa, vring->ctx);
-+	wil_dbg_MISC(wil, "vring[%d] 0x%p:0x%016llx 0x%p\n", vring->size,
-+		     vring->va, (unsigned long long)vring->pa, vring->ctx);
- 
- 	return 0;
- }
-@@ -528,8 +528,8 @@ int wil_rx_init(struct wil6210_priv *wil)
- 
- 	vring->hwtail = le32_to_cpu(evt.evt.rx_ring_tail_ptr);
- 
--	wil_dbg(wil, "Rx init: status %d tail 0x%08x\n",
--		le32_to_cpu(evt.evt.status), vring->hwtail);
-+	wil_dbg_MISC(wil, "Rx init: status %d tail 0x%08x\n",
-+		     le32_to_cpu(evt.evt.status), vring->hwtail);
- 
- 	rc = wil_rx_refill(wil, vring->size);
- 	if (rc)
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 3bd2447..a9b6f70 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -275,6 +275,7 @@ struct wil6210_priv {
- #define wil_dbg_IRQ(wil, fmt, arg...) wil_dbg(wil, "DBG[ IRQ]" fmt, ##arg)
- #define wil_dbg_TXRX(wil, fmt, arg...) wil_dbg(wil, "DBG[TXRX]" fmt, ##arg)
- #define wil_dbg_WMI(wil, fmt, arg...) wil_dbg(wil, "DBG[ WMI]" fmt, ##arg)
-+#define wil_dbg_MISC(wil, fmt, arg...) wil_dbg(wil, "DBG[MISC]" fmt, ##arg)
- 
- #define wil_hex_dump_TXRX(prefix_str, prefix_type, rowsize,	\
- 			  groupsize, buf, len, ascii)		\
 -- 
-1.7.10.4
+1.8.0
 
