@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58613 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab3A2MYO (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:50017 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752735Ab3ACBcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 07:24:14 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Wed, 2 Jan 2013 20:32:25 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv7 3/3] nl80211: allow DFS in start_ap
-Date: Tue, 29 Jan 2013 13:22:00 +0100
-Message-Id: <1359462120-22898-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130129_132418_365952_B9848F37)
-In-Reply-To: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.8] mwifiex: fix typo in setting up ibss network parameters
+Date: Wed,  2 Jan 2013 17:32:19 -0800
+Message-Id: <1357176739-29932-1-git-send-email-bzhao@marvell.com> (sfid-20130103_023234_456978_E5CCF49E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables DFS within nl80211/cfg80211. start_ap now checks if
-DFS is allowed on the channel with the selected channel width.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+commit 683b6d3... "cfg80211: pass a channel definition struct"
+accidentally changed "==" to "!=".
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-Changes to PATCHv6:
- * let reg_can_beacon() and others check for channel states, simplify
-   start_ap
- * check using cfg80211_chandef_dfs_required
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Changes to PATCHv5:
- * check radar detection width
----
- net/wireless/nl80211.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2e0216a..fd7b654 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2608,6 +2608,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ap_settings params;
- 	int err;
-+	u8 radar_detect_width = 0;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-@@ -2726,9 +2727,17 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
- 		return -EINVAL;
- 
-+	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
-+	if (err < 0)
-+		return -EINVAL;
-+	if (err)
-+		radar_detect_width = BIT(params.chandef.width);
-+
- 	mutex_lock(&rdev->devlist_mtx);
--	err = cfg80211_can_use_chan(rdev, wdev, params.chandef.chan,
--				    CHAN_MODE_SHARED);
-+	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					   params.chandef.chan,
-+					   CHAN_MODE_SHARED,
-+					   radar_detect_width);
- 	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (err)
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index c4edb28..a1f7fe0 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1710,7 +1710,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
+ 						NL80211_CHAN_NO_HT)
+ 			config_bands |= BAND_GN;
+ 	} else {
+-		if (cfg80211_get_chandef_type(&params->chandef) !=
++		if (cfg80211_get_chandef_type(&params->chandef) ==
+ 						NL80211_CHAN_NO_HT)
+ 			config_bands = BAND_A;
+ 		else
 -- 
-1.7.10.4
+1.7.0.2
 
