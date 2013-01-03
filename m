@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:56523
-	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753348Ab3AUMDP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48330 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753215Ab3ACOnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 07:03:15 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 6/15] drivers/net/wireless/iwlegacy/4965-mac.c: adjust duplicate test
-Date: Mon, 21 Jan 2013 14:02:50 +0100
-Message-Id: <1358773378-4700-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20130121_131533_563355_B0B06FB6)
-In-Reply-To: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr>
+	Thu, 3 Jan 2013 09:43:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] iwlwifi: fix PCIe interrupt handle return value
+Date: Thu,  3 Jan 2013 15:43:22 +0100
+Message-Id: <1357224203-27639-1-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154306_398970_08EBD119)
+In-Reply-To: <1357224173.9741.18.camel@jlt4.sipsolutions.net>
+References: <1357224173.9741.18.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Delete successive tests to the same location.  This looks like simple code
-duplication.
+By accident, commit eb6476441bc2fecf6232a87d0313a85f8e3da7f4
+("iwlwifi: protect use_ict with irq_lock") changed the return
+value of the iwl_pcie_isr() function in case it handles an
+interrupt -- it now returns IRQ_NONE instead of IRQ_HANDLED.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Put back the correct return value.
 
-// <smpl>
-@s exists@
-local idexpression y;
-expression x,e;
-@@
-
-*if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
- { ... when forall
-   return ...; }
-... when != \(y = e\|y += e\|y -= e\|y |= e\|y &= e\|y++\|y--\|&y\)
-    when != \(XT_GETPAGE(...,y)\|WMI_CMD_BUF(...)\)
-*if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
- { ... when forall
-   return ...; }
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Cc: stable@vger.kernel.org
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlegacy/4965-mac.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 10fc249..0195190 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6572,9 +6572,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (err)
- 		goto out_free_eeprom;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index dad4c4a..8389cd3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1166,6 +1166,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	else if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
+ 		 !trans_pcie->inta)
+ 		iwl_enable_interrupts(trans);
++	return IRQ_HANDLED;
  
--	if (err)
--		goto out_free_eeprom;
--
- 	/* extract MAC Address */
- 	il4965_eeprom_get_mac(il, il->addresses[0].addr);
- 	D_INFO("MAC address: %pM\n", il->addresses[0].addr);
+ none:
+ 	/* re-enable interrupts here since we don't have anything to service. */
+-- 
+1.8.0
 
