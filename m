@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37674 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:48381 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420Ab3APN6P (ORCPT
+	with ESMTP id S1752853Ab3ACOpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 08:58:15 -0500
+	Thu, 3 Jan 2013 09:45:53 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/6] iwlwifi: allow to zero SRAM
-Date: Wed, 16 Jan 2013 14:58:36 +0100
-Message-Id: <1358344719-26486-3-git-send-email-johannes@sipsolutions.net> (sfid-20130116_145825_647880_AA6EDE7D)
-In-Reply-To: <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
-References: <1358344682.22862.4.camel@jlt4.sipsolutions.net>
- <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 05/12] iwlwifi: use __packed
+Date: Thu,  3 Jan 2013 15:46:09 +0100
+Message-Id: <1357224376-27803-5-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154602_798775_A4E02408)
+In-Reply-To: <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
+References: <1357224324.9741.20.camel@jlt4.sipsolutions.net>
+ <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Sending a NULL pointer to iwl_trans_write_mem allows now
-to zero SRAM.
+Use __packed instead of __attribute__((packed)).
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h  | 3 ++-
- drivers/net/wireless/iwlwifi/pcie/trans.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/commands.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index b0d5c71..55a140a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -391,7 +391,8 @@ struct iwl_trans;
-  * @read_prph: read a DWORD from a periphery register
-  * @write_prph: write a DWORD to a periphery register
-  * @read_mem: read device's SRAM in DWORD
-- * @write_mem: write device's SRAM in DWORD
-+ * @write_mem: write device's SRAM in DWORD. If %buf is %NULL, then the memory
-+ *	will be zeroed.
-  * @configure: configure parameters required by the transport layer from
-  *	the op_mode. May be called several times before start_fw, can't be
-  *	called after that.
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 2de5770..4028c03 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -815,7 +815,8 @@ static int iwl_trans_pcie_write_mem(struct iwl_trans *trans, u32 addr,
- 	if (iwl_trans_grab_nic_access(trans, false)) {
- 		iwl_write32(trans, HBUS_TARG_MEM_WADDR, addr);
- 		for (offs = 0; offs < dwords; offs++)
--			iwl_write32(trans, HBUS_TARG_MEM_WDAT, vals[offs]);
-+			iwl_write32(trans, HBUS_TARG_MEM_WDAT,
-+				    vals ? vals[offs] : 0);
- 		iwl_trans_release_nic_access(trans);
- 	} else {
- 		ret = -EBUSY;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/commands.h b/drivers/net/wireless/iwlwifi/dvm/commands.h
+index 71ab76b..0ca99c1 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/commands.h
++++ b/drivers/net/wireless/iwlwifi/dvm/commands.h
+@@ -3695,7 +3695,7 @@ struct iwl_bt_uart_msg {
+ 	u8 frame5;
+ 	u8 frame6;
+ 	u8 frame7;
+-} __attribute__((packed));
++} __packed;
+ 
+ struct iwl_bt_coex_profile_notif {
+ 	struct iwl_bt_uart_msg last_bt_uart_msg;
+@@ -3703,7 +3703,7 @@ struct iwl_bt_coex_profile_notif {
+ 	u8 bt_traffic_load; /* 0 .. 3? */
+ 	u8 bt_ci_compliance; /* 0 - not complied, 1 - complied */
+ 	u8 reserved;
+-} __attribute__((packed));
++} __packed;
+ 
+ #define IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS	0
+ #define IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_MSK	0x1
+@@ -3752,7 +3752,7 @@ enum bt_coex_prio_table_priorities {
+ 
+ struct iwl_bt_coex_prio_table_cmd {
+ 	u8 prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX];
+-} __attribute__((packed));
++} __packed;
+ 
+ #define IWL_BT_COEX_ENV_CLOSE	0
+ #define IWL_BT_COEX_ENV_OPEN	1
+@@ -3764,7 +3764,7 @@ struct iwl_bt_coex_prot_env_cmd {
+ 	u8 action; /* 0 = closed, 1 = open */
+ 	u8 type; /* 0 .. 15 */
+ 	u8 reserved[2];
+-} __attribute__((packed));
++} __packed;
+ 
+ /*
+  * REPLY_D3_CONFIG
 -- 
 1.8.0
 
