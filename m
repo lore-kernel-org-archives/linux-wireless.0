@@ -1,88 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45837 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752290Ab3ATQcI (ORCPT
+Received: from mail-ia0-f173.google.com ([209.85.210.173]:44455 "EHLO
+	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab3ACFLa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 11:32:08 -0500
-Date: Sun, 20 Jan 2013 19:31:30 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Laight <David.Laight@ACULAB.COM>,
-	kernel-janitors@vger.kernel.org
-Subject: [patch v3] b43: N-PHY: fix gain in
- b43_nphy_get_gain_ctl_workaround_ent()
-Message-ID: <20130120163130.GA7730@elgon.mountain> (sfid-20130120_173249_689783_F88F0198)
+	Thu, 3 Jan 2013 00:11:30 -0500
+Received: by mail-ia0-f173.google.com with SMTP id w21so12528002iac.18
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 21:11:30 -0800 (PST)
+Date: Thu, 3 Jan 2013 00:09:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: fix mesh_hwmp kerneldoc
+Message-ID: <20130103050945.GE13185@localhost> (sfid-20130103_061135_213095_26262EF6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7118@saturn3.aculab.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were no break statements in this switch statement so everything
-used the default settings.  Per Walter Harms's suggestion, I've replaced
-the switch statement and done a little cleanup.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+One of the function names was wrong and some parameters were
+missing.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
-v2: Make additional style fixes as well while we're messing with the
-    function.
-v3: Make the array static const int.
+ net/mac80211/mesh_hwmp.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 97d4e27..aaca60c 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3226,8 +3226,6 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- {
- 	struct nphy_gain_ctl_workaround_entry *e;
- 	u8 phy_idx;
--	u8 tr_iso = ghz5 ? dev->dev->bus_sprom->fem.ghz5.tr_iso :
--			   dev->dev->bus_sprom->fem.ghz2.tr_iso;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 47aeee2..f0b384e 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -219,12 +219,14 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
+ }
  
- 	if (!ghz5 && dev->phy.rev >= 6 && dev->phy.radio_rev == 11)
- 		return &nphy_gain_ctl_wa_phy6_radio11_ghz2;
-@@ -3249,6 +3247,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 		    !b43_channel_type_is_40mhz(dev->phy.channel_type))
- 			e->cliplo_gain = 0x2d;
- 	} else if (!ghz5 && dev->phy.rev >= 5) {
-+		static const int gain_data[] = {0x0062, 0x0064, 0x006a, 0x106a,
-+						0x106c, 0x1074, 0x107c, 0x207c};
-+		u8 tr_iso = dev->dev->bus_sprom->fem.ghz2.tr_iso;
-+
- 		if (ext_lna) {
- 			e->rfseq_init[0] &= ~0x4000;
- 			e->rfseq_init[1] &= ~0x4000;
-@@ -3256,26 +3258,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 			e->rfseq_init[3] &= ~0x4000;
- 			e->init_gain &= ~0x4000;
- 		}
--		switch (tr_iso) {
--		case 0:
--			e->cliplo_gain = 0x0062;
--		case 1:
--			e->cliplo_gain = 0x0064;
--		case 2:
--			e->cliplo_gain = 0x006a;
--		case 3:
--			e->cliplo_gain = 0x106a;
--		case 4:
--			e->cliplo_gain = 0x106c;
--		case 5:
--			e->cliplo_gain = 0x1074;
--		case 6:
--			e->cliplo_gain = 0x107c;
--		case 7:
--			e->cliplo_gain = 0x207c;
--		default:
--			e->cliplo_gain = 0x106a;
--		}
-+		if (tr_iso > 7)
-+			tr_iso = 3;
-+		e->cliplo_gain = gain_data[tr_iso];
-+
- 	} else if (ghz5 && dev->phy.rev == 4 && ext_lna) {
- 		e->rfseq_init[0] &= ~0x4000;
- 		e->rfseq_init[1] &= ~0x4000;
+ /**
+- * mesh_send_path error - Sends a PERR mesh management frame
++ * mesh_path_error_tx - Sends a PERR mesh management frame
+  *
++ * @ttl: allowed remaining hops
+  * @target: broken destination
+  * @target_sn: SN of the broken destination
+  * @target_rcode: reason code for this PERR
+  * @ra: node this frame is addressed to
++ * @sdata: local mesh subif
+  *
+  * Note: This function may be called with driver locks taken that the driver
+  * also acquires in the TX path.  To avoid a deadlock we don't transmit the
+@@ -350,6 +352,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+  * @sdata: local mesh subif
+  * @mgmt: mesh management frame
+  * @hwmp_ie: hwmp information element (PREP or PREQ)
++ * @action: type of hwmp ie
+  *
+  * This function updates the path routing information to the originator and the
+  * transmitter of a HWMP PREQ or PREP frame.
+-- 
+1.7.10.4
+
+-- 
+Bob Copeland %% www.bobcopeland.com
