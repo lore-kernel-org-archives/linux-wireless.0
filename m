@@ -1,123 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:51110 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753890Ab3ARXkd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 18:40:33 -0500
-Received: by mail-ee0-f51.google.com with SMTP id d17so1965059eek.10
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 15:40:32 -0800 (PST)
-Subject: [RFC] iwl4965: report A-MPDU status
-To: linux-wireless@vger.kernel.org
-Cc: sgruszka@redhat.com
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 19 Jan 2013 00:30:11 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201301190030.11771.chunkeey@googlemail.com> (sfid-20130119_004037_956066_34B3CA0C)
+Received: from mout.web.de ([212.227.17.11]:52258 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750955Ab3ACJdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jan 2013 04:33:09 -0500
+Date: Thu, 3 Jan 2013 10:31:50 +0100
+From: Julian Wollrath <jwollrath@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: WARNING: at net/wireless/mlme.c:517
+Message-ID: <20130103103150.21ed1269@ilfaris> (sfid-20130103_103313_695381_D9B15659)
+In-Reply-To: <50E467C4.6030602@lwfinger.net>
+References: <20130101154507.351dfb03@ilfaris>
+	<50E325B5.205@lwfinger.net>
+	<20130101231544.430cf1fe@ilfaris>
+	<50E36325.3090502@lwfinger.net>
+	<20130102120002.691dbbb4@ilfaris>
+	<50E467C4.6030602@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the firmware will give us an A-MPDU bit and
-only a single PHY information packet for all the
-subframes in an A-MPDU, we can easily report the
-minimal A-MPDU information for radiotap.
+> I have not looked at detail at the debug listing, but I do have
+> additional questions. None of your Emails on this subject mention
+> anything about the AP. What make/model is it? What firmware is it
+> running? Is it 802.11g or 802.11n? What are the details of the
+> encryption? The device authenticates but is never able to associate
+> after that.
+One device is a NETGEAR WN3000RP and it uses WPA-PSK and TKIP as cipher
+but similar problems accured at university where WPA2 is used and the
+AP are probably not the same there (I can check it next monday). Here
+is the output of "iw dev wlan0 scan", which hopefully answers your
+questions which I did not answer above:
+BSS xx:xx:xx:xx:xx:xx (on wlan0)
+	freq: 2462
+	beacon interval: 100
+	capability: ESS Privacy ShortSlotTime (0x0411)
+	signal: -48.00 dBm
+	last seen: 143 ms ago
+	Information elements from Probe Response frame:
+	SSID: xxx
+	Supported rates: 1.0* 2.0* 5.5 11.0 18.0 24.0 36.0 54.0 
+	DS Parameter set: channel 11
+	ERP: Use_Protection Barker_Preamble_Mode
+	Extended supported rates: 6.0 9.0 12.0 48.0 
+	WPS:	 * Version: 1.0
+		 * Wi-Fi Protected Setup State: 2 (Configured)
+		 * Selected Registrar: 0x0
+		 * Response Type: 3 (AP)
+		 * UUID: xxx
+		 * Manufacturer: NETGEAR, Inc.
+		 * Model: WN3000RP
+		 * Model Number: WN3000RP
+		 * Serial Number: 01
+		 * Primary Device Type: 6-0050f204-1
+		 * Device name: WN3000RP
+		 * Config methods: Label, PBC
+		 * RF Bands: 0x1
+	WPA:	 * Version: 1
+		 * Group cipher: TKIP
+		 * Pairwise ciphers: TKIP
+		 * Authentication suites: PSK
+		 * Capabilities: 16-PTKSA-RC (0x000c)
+	WMM:	 * Parameter version 1
+		 * u-APSD
+		 * BE: CW 15-1023, AIFSN 3
+		 * BK: CW 15-1023, AIFSN 7
+		 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
+		 * VO: CW 3-7, AIFSN 2, TXOP 1504 usec
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Just two things.
+If it does not answer all of your questions, a hint, how to find the
+answers without access (physical or otherwise) to the AP would be
+appreciated.
 
-1. This patch [including commit msg] is a copy of:
-   commit 12bf6f45d17038589e0eaa8adeb7ee8169c0e4de
-   Author: Johannes Berg <johannes.berg@intel.com>
-   Date:   Thu Jul 5 13:05:08 2012 +0200
-      iwlwifi: report A-MPDU status
 
-2. RX_RES_PHY_FLAGS_ANTENNA_MSK
-   I had the chance to test this with a real 4965.
-   As far as I can tell, the hardware has just 3
-   antenna connectors. But I have seen frames, which
-   apparently have been received on 4 antennas?!
-
-   Note: iwlwifi had this problem as well. It was
-   fixed by:
-     commit 362b0563b28506d534a82d9c6cd5fdf58783fda6
-     Author: Johannes Berg <johannes.berg@intel.com>
-     Date:   Fri Aug 24 11:13:17 2012 +0200
-        iwlwifi: fix antenna bitmask
-   I suppose 4965 also uses the 4th bit as the AMPDU
-   indicator. It would be very helpful if someone
-   could confirm this assumption. [Otherwise the
-   whole AMPDU status feature patch has little use].
-
-(BTW: wireshark 1.9.0+ already supports the AMPDU_DETAILS
-radiotap extension.)
-
-Regards
-
-Christian
----
- drivers/net/wireless/iwlegacy/4965-mac.c |   12 ++++++++++++
- drivers/net/wireless/iwlegacy/commands.h |    3 ++-
- drivers/net/wireless/iwlegacy/common.h   |    1 +
- 3 files changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 10fc249..cb64126 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -725,6 +725,16 @@ il4965_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
- 	if (rate_n_flags & RATE_MCS_SGI_MSK)
- 		rx_status.flag |= RX_FLAG_SHORT_GI;
- 
-+	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_AGG_MSK) {
-+		/* We know which subframes of an A-MPDU belong
-+		 * together since we get a single PHY response
-+		 * from the firmware for all of them.
-+		 */
-+
-+		rx_status.flag |= RX_FLAG_AMPDU_DETAILS;
-+		rx_status.ampdu_reference = il->_4965.ampdu_ref;
-+	}
-+
- 	il4965_pass_packet_to_mac80211(il, header, len, ampdu_status, rxb,
- 				       &rx_status);
- }
-@@ -736,6 +747,7 @@ il4965_hdl_rx_phy(struct il_priv *il, struct il_rx_buf *rxb)
- {
- 	struct il_rx_pkt *pkt = rxb_addr(rxb);
- 	il->_4965.last_phy_res_valid = true;
-+	il->_4965.ampdu_ref++;
- 	memcpy(&il->_4965.last_phy_res, pkt->u.raw,
- 	       sizeof(struct il_rx_phy_res));
- }
-diff --git a/drivers/net/wireless/iwlegacy/commands.h b/drivers/net/wireless/iwlegacy/commands.h
-index 25dd7d2..3b6c994 100644
---- a/drivers/net/wireless/iwlegacy/commands.h
-+++ b/drivers/net/wireless/iwlegacy/commands.h
-@@ -1134,8 +1134,9 @@ struct il_wep_cmd {
- #define RX_RES_PHY_FLAGS_MOD_CCK_MSK		cpu_to_le16(1 << 1)
- #define RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK	cpu_to_le16(1 << 2)
- #define RX_RES_PHY_FLAGS_NARROW_BAND_MSK	cpu_to_le16(1 << 3)
--#define RX_RES_PHY_FLAGS_ANTENNA_MSK		0xf0
-+#define RX_RES_PHY_FLAGS_ANTENNA_MSK		0x70
- #define RX_RES_PHY_FLAGS_ANTENNA_POS		4
-+#define RX_RES_PHY_FLAGS_AGG_MSK		cpu_to_le16(1 << 7)
- 
- #define RX_RES_STATUS_SEC_TYPE_MSK	(0x7 << 8)
- #define RX_RES_STATUS_SEC_TYPE_NONE	(0x0 << 8)
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 37fe553..96f2025 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1356,6 +1356,7 @@ struct il_priv {
- 		struct {
- 			struct il_rx_phy_res last_phy_res;
- 			bool last_phy_res_valid;
-+			u32 ampdu_ref;
- 
- 			struct completion firmware_loading_complete;
- 
--- 
-1.7.10.4
-
+With best regards,
+Julian
