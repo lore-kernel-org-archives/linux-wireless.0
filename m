@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:56621 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753379Ab3AGDDc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48397 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752852Ab3ACOtg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2013 22:03:32 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130107024827.GZ27530@wantstofly.org>
-References: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu> <20130107024827.GZ27530@wantstofly.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 7 Jan 2013 14:03:10 +1100
-Message-ID: <CAGRGNgVF_s1ux9TjL6TqUDF=NB9e-XS0CQvowEGV=9Vj5r9Osg@mail.gmail.com> (sfid-20130107_040347_969951_9E953170)
-Subject: Re: [PATCH] drivers/net/wireless/mwl8k.c: avoid use-after-free
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Nickolai Zeldovich <nickolai@csail.mit.edu>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 Jan 2013 09:49:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Subject: [PATCH 11/12] iwlwifi: fix spelling and value in LED registers.
+Date: Thu,  3 Jan 2013 15:46:15 +0100
+Message-Id: <1357224376-27803-11-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154939_385849_60F7A1A1)
+In-Reply-To: <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
+References: <1357224324.9741.20.camel@jlt4.sipsolutions.net>
+ <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lennert,
+From: Eytan Lifshitz <eytan.lifshitz@intel.com>
 
-On Mon, Jan 7, 2013 at 1:48 PM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Sun, Jan 06, 2013 at 08:27:22PM -0500, Nickolai Zeldovich wrote:
->
->> Do not dereference p->station_id after kfree(cmd) because p
->> points into the cmd data structure.
->
-> Good catch, but the patch would be better titled "mwl8k.c: avoid
-> having a working driver", as the station_id return code _is_ needed
-> by the caller in case of success.
+Fix typo in the macro name and the wrong value.
 
-Are you sure?
+Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/led.c | 2 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
->> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
->> index f221b95..83564d3 100644
->> --- a/drivers/net/wireless/mwl8k.c
->> +++ b/drivers/net/wireless/mwl8k.c
->> @@ -4250,9 +4250,11 @@ static int mwl8k_cmd_update_stadb_add(struct ieee80211_hw *hw,
->>       p->amsdu_enabled = 0;
->>
->>       rc = mwl8k_post_cmd(hw, &cmd->header);
->> +     if (!rc)
->> +             rc = p->station_id;
->>       kfree(cmd);
->>
->> -     return rc ? rc : p->station_id;
-
-If I'm reading this right, the removed line is equivalent to:
-
-if( rc )
-    return rc;
-else
-    return p->station_id;
-
-which is equivalent to:
-
-if( !rc )
-    rc = p->station_id;
-
-return rc;
-
-
-Thanks,
-
+diff --git a/drivers/net/wireless/iwlwifi/dvm/led.c b/drivers/net/wireless/iwlwifi/dvm/led.c
+index bf479f7..844a17f 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/led.c
++++ b/drivers/net/wireless/iwlwifi/dvm/led.c
+@@ -69,7 +69,7 @@ static const struct ieee80211_tpt_blink iwl_blink[] = {
+ /* Set led register off */
+ void iwlagn_led_enable(struct iwl_priv *priv)
+ {
+-	iwl_write32(priv->trans, CSR_LED_REG, CSR_LED_REG_TRUN_ON);
++	iwl_write32(priv->trans, CSR_LED_REG, CSR_LED_REG_TURN_ON);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 34a5287..b419a1e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -381,8 +381,8 @@
+ 
+ /* LED */
+ #define CSR_LED_BSM_CTRL_MSK (0xFFFFFFDF)
+-#define CSR_LED_REG_TRUN_ON (0x78)
+-#define CSR_LED_REG_TRUN_OFF (0x38)
++#define CSR_LED_REG_TURN_ON (0x60)
++#define CSR_LED_REG_TURN_OFF (0x20)
+ 
+ /* ANA_PLL */
+ #define CSR50_ANA_PLL_CFG_VAL        (0x00880300)
 -- 
-Julian Calaby
+1.8.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
