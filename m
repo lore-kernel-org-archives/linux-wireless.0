@@ -1,54 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:65148 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab3AQSm5 convert rfc822-to-8bit (ORCPT
+Received: from mail-da0-f49.google.com ([209.85.210.49]:37998 "EHLO
+	mail-da0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410Ab3ACMUP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 13:42:57 -0500
-Received: by mail-ea0-f169.google.com with SMTP id d13so1172902eaa.28
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 10:42:55 -0800 (PST)
-References: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com> <201301171816.15309.chunkeey@googlemail.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <201301171816.15309.chunkeey@googlemail.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com> (sfid-20130117_194259_868701_9A36E70D)
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
-	"stf_xl@wp.pl" <stf_xl@wp.pl>,
-	"andihartmann@01019freenet.de" <andihartmann@01019freenet.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
-Date: Thu, 17 Jan 2013 19:42:52 +0100
-To: Christian Lamparter <chunkeey@googlemail.com>
+	Thu, 3 Jan 2013 07:20:15 -0500
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Michael Chan <mchan@broadcom.com>,
+	Thomas Sailer <t.sailer@alumni.ethz.ch>,
+	Jean-Paul Roubelat <jpr@f6fbb.org>,
+	Bing Zhao <bzhao@marvell.com>, netdev@vger.kernel.org,
+	linux-hams@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH -v2 18/26] drivers/net: rename random32() to prandom_u32()
+Date: Thu,  3 Jan 2013 21:19:14 +0900
+Message-Id: <1357215562-6288-19-git-send-email-akinobu.mita@gmail.com> (sfid-20130103_132331_352228_69174973)
+In-Reply-To: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
+References: <1357215562-6288-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use more preferable function name which implies using a pseudo-random
+number generator.
 
-
-Sent from my iPad
-
-On 17 jan. 2013, at 18:16, Christian Lamparter <chunkeey@googlemail.com> wrote:
-
-> On Thursday, January 17, 2013 05:34:32 PM Helmut Schaa wrote:
->> Since rt2800 hardware isn't capable of reporting the TX status of
->> BlockAckReq frames implement the TX status handling of BARs in
->> rt2x00lib. We keep track of all BARs that are send out and try to
->> match incoming BAs to the appropriate BARs. This allows us to report a
->> more or less accurate TX status for BAR frames which in turn improves
->> BA session stability.
-> ---
-> What about:
->> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
->> Author: Stanislaw Gruszka <sgruszka@redhat.com>
->> Date:   Mon Dec 3 12:56:33 2012 +0100
->> mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
-> 
-> Should it be kept or dropped (as no driver uses it anymore?)
-
-I guess it should be dropped. I guess we could create a revert patch for that once this patch has been merged.
-
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Acked-by: Thomas Sailer <t.sailer@alumni.ethz.ch>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Michael Chan <mchan@broadcom.com>
+Cc: Thomas Sailer <t.sailer@alumni.ethz.ch>
+Cc: Jean-Paul Roubelat <jpr@f6fbb.org>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-hams@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
 ---
-Gertjan
+
+No change from v1
+
+ drivers/net/ethernet/broadcom/cnic.c    | 4 ++--
+ drivers/net/hamradio/baycom_epp.c       | 2 +-
+ drivers/net/hamradio/hdlcdrv.c          | 2 +-
+ drivers/net/hamradio/yam.c              | 2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c | 4 ++--
+ 5 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/cnic.c b/drivers/net/ethernet/broadcom/cnic.c
+index df8c30d..27d7a32 100644
+--- a/drivers/net/ethernet/broadcom/cnic.c
++++ b/drivers/net/ethernet/broadcom/cnic.c
+@@ -4085,7 +4085,7 @@ static int cnic_cm_alloc_mem(struct cnic_dev *dev)
+ 	if (!cp->csk_tbl)
+ 		return -ENOMEM;
+ 
+-	port_id = random32();
++	port_id = prandom_u32();
+ 	port_id %= CNIC_LOCAL_PORT_RANGE;
+ 	if (cnic_init_id_tbl(&cp->csk_port_tbl, CNIC_LOCAL_PORT_RANGE,
+ 			     CNIC_LOCAL_PORT_MIN, port_id)) {
+@@ -4145,7 +4145,7 @@ static int cnic_cm_init_bnx2_hw(struct cnic_dev *dev)
+ {
+ 	u32 seed;
+ 
+-	seed = random32();
++	seed = prandom_u32();
+ 	cnic_ctx_wr(dev, 45, 0, seed);
+ 	return 0;
+ }
+diff --git a/drivers/net/hamradio/baycom_epp.c b/drivers/net/hamradio/baycom_epp.c
+index 49b8b58..484f77e 100644
+--- a/drivers/net/hamradio/baycom_epp.c
++++ b/drivers/net/hamradio/baycom_epp.c
+@@ -449,7 +449,7 @@ static int transmit(struct baycom_state *bc, int cnt, unsigned char stat)
+ 			if ((--bc->hdlctx.slotcnt) > 0)
+ 				return 0;
+ 			bc->hdlctx.slotcnt = bc->ch_params.slottime;
+-			if ((random32() % 256) > bc->ch_params.ppersist)
++			if ((prandom_u32() % 256) > bc->ch_params.ppersist)
+ 				return 0;
+ 		}
+ 	}
+diff --git a/drivers/net/hamradio/hdlcdrv.c b/drivers/net/hamradio/hdlcdrv.c
+index a4a3516..3169252 100644
+--- a/drivers/net/hamradio/hdlcdrv.c
++++ b/drivers/net/hamradio/hdlcdrv.c
+@@ -389,7 +389,7 @@ void hdlcdrv_arbitrate(struct net_device *dev, struct hdlcdrv_state *s)
+ 	if ((--s->hdlctx.slotcnt) > 0)
+ 		return;
+ 	s->hdlctx.slotcnt = s->ch_params.slottime;
+-	if ((random32() % 256) > s->ch_params.ppersist)
++	if ((prandom_u32() % 256) > s->ch_params.ppersist)
+ 		return;
+ 	start_tx(dev, s);
+ }
+diff --git a/drivers/net/hamradio/yam.c b/drivers/net/hamradio/yam.c
+index c6645f1..21f231a 100644
+--- a/drivers/net/hamradio/yam.c
++++ b/drivers/net/hamradio/yam.c
+@@ -638,7 +638,7 @@ static void yam_arbitrate(struct net_device *dev)
+ 	yp->slotcnt = yp->slot / 10;
+ 
+ 	/* is random > persist ? */
+-	if ((random32() % 256) > yp->pers)
++	if ((prandom_u32() % 256) > yp->pers)
+ 		return;
+ 
+ 	yam_start_tx(dev, yp);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index a875499..78dbc18 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -216,7 +216,7 @@ mwifiex_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	mwifiex_form_mgmt_frame(skb, buf, len);
+ 	mwifiex_queue_tx_pkt(priv, skb);
+ 
+-	*cookie = random32() | 1;
++	*cookie = prandom_u32() | 1;
+ 	cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true, GFP_ATOMIC);
+ 
+ 	wiphy_dbg(wiphy, "info: management frame transmitted\n");
+@@ -271,7 +271,7 @@ mwifiex_cfg80211_remain_on_channel(struct wiphy *wiphy,
+ 					 duration);
+ 
+ 	if (!ret) {
+-		*cookie = random32() | 1;
++		*cookie = prandom_u32() | 1;
+ 		priv->roc_cfg.cookie = *cookie;
+ 		priv->roc_cfg.chan = *chan;
+ 
+-- 
+1.7.11.7
+
