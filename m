@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1586 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757398Ab3A1Qit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 11:38:49 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/14] wil6210: Call skb_orphan() right before Rx indication
-Date: Mon, 28 Jan 2013 18:31:02 +0200
-Message-ID: <1359390669-9310-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173901_419480_DB13D37B)
-In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38723 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754009Ab3ACXv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jan 2013 18:51:57 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/6] bcma: mips: rename oldirqflag to irqinitmask
+Date: Fri,  4 Jan 2013 00:51:25 +0100
+Message-Id: <1357257085-11822-7-git-send-email-hauke@hauke-m.de> (sfid-20130104_005200_247207_DF5C8827)
+In-Reply-To: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
+References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Other parts of Rx path (BACK logic) will need to access associated data
+The new name better matches the use of this variable.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/bcma/driver_mips.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index e7ea538..649f504 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -430,6 +430,8 @@ static void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 	int rc;
- 	unsigned int len = skb->len;
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index c6d7be3..8a51c79 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -130,9 +130,9 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
+ 			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) |
+ 			    (1 << irqflag));
+ 	} else {
+-		u32 oldirqflag = bcma_read32(mdev,
+-					     BCMA_MIPS_MIPS74K_INTMASK(irq));
+-		if (oldirqflag) {
++		u32 irqinitmask = bcma_read32(mdev,
++					      BCMA_MIPS_MIPS74K_INTMASK(irq));
++		if (irqinitmask) {
+ 			struct bcma_device *core;
  
-+	skb_orphan(skb);
-+
- 	if (in_interrupt())
- 		rc = netif_rx(skb);
- 	else
-@@ -464,8 +466,6 @@ void wil_rx_handle(struct wil6210_priv *wil)
- 		wil_hex_dump_TXRX("Rx ", DUMP_PREFIX_OFFSET, 16, 1,
- 				  skb->data, skb_headlen(skb), false);
- 
--		skb_orphan(skb);
--
- 		if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR) {
- 			skb->dev = ndev;
- 			skb_reset_mac_header(skb);
+ 			/* backplane irq line is in use, find out who uses
+@@ -140,7 +140,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
+ 			 */
+ 			list_for_each_entry(core, &bus->cores, list) {
+ 				if ((1 << bcma_core_mips_irqflag(core)) ==
+-				    oldirqflag) {
++				    irqinitmask) {
+ 					bcma_core_mips_set_irq(core, 0);
+ 					break;
+ 				}
 -- 
 1.7.10.4
 
