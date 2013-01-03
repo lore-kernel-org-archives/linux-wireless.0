@@ -1,41 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757690Ab3APWoc (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:60340 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751422Ab3ACIA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 17:44:32 -0500
-Message-ID: <1358376287.15012.32.camel@jlt4.sipsolutions.net> (sfid-20130116_234435_784908_3E50780E)
-Subject: Re: [PATCHv6 2/6] cfg80211: check radar interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 16 Jan 2013 23:44:47 +0100
-In-Reply-To: <1358376177.15012.31.camel@jlt4.sipsolutions.net> (sfid-20130116_234247_634938_6B0564B1)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1357650251-17425-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1358376177.15012.31.camel@jlt4.sipsolutions.net>
-	 (sfid-20130116_234247_634938_6B0564B1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 Jan 2013 03:00:58 -0500
+Date: Thu, 3 Jan 2013 13:24:03 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 3/5] mwl8k: Handle Watchdog events for the new ampdu streams
+Message-ID: <20130103075358.GA20387@markyou.marvell.com> (sfid-20130103_090100_336093_E25D2EFE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-16 at 23:42 +0100, Johannes Berg wrote:
-> On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
-> > To ease further DFS development regarding interface combinations, use
-> > the interface combinations structure to test for radar capabilities.
-> > Drivers can specify which channel widths they support, and in which
-> > modes. Drivers should first allow AP mode only, but can later allow
-> > MultiSSID APs, AP+Ad-Hoc, etc.
-> 
-> Applied.
+With more ampdu streams, we need to handle watchdog
+events for the new ampdu streams. Handle these
+events appropriately.
 
-Btw, an iw patch would be nice.
+Earlier mwl8k_cmd_get_watchdog_bitmap used to return
+only one stream index and hence bitwise operations
+on the return value were not required. Now the function
+returns a bitmap with different bits are mapped with
+different stream indices.
 
-johannes
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 44 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 32 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index a603e64..07b7546 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3603,7 +3603,11 @@ static int mwl8k_cmd_get_watchdog_bitmap(struct ieee80211_hw *hw, u8 *bitmap)
+ 	return rc;
+ }
+ 
+-#define INVALID_BA	0xAA
++#define MWL8K_WMM_QUEUE_NUMBER	3
++
++static void mwl8k_destroy_ba(struct ieee80211_hw *hw,
++			     u8 idx);
++
+ static void mwl8k_watchdog_ba_events(struct work_struct *work)
+ {
+ 	int rc;
+@@ -3611,24 +3615,40 @@ static void mwl8k_watchdog_ba_events(struct work_struct *work)
+ 	struct mwl8k_ampdu_stream *streams;
+ 	struct mwl8k_priv *priv =
+ 		container_of(work, struct mwl8k_priv, watchdog_ba_handle);
++	struct ieee80211_hw *hw = priv->hw;
++	int i;
++	u32 status = 0;
++
++	mwl8k_fw_lock(hw);
+ 
+ 	rc = mwl8k_cmd_get_watchdog_bitmap(priv->hw, &bitmap);
+ 	if (rc)
+-		return;
++		goto done;
+ 
+-	if (bitmap == INVALID_BA)
+-		return;
++	spin_lock(&priv->stream_lock);
+ 
+ 	/* the bitmap is the hw queue number.  Map it to the ampdu queue. */
+-	stream_index = bitmap - MWL8K_TX_WMM_QUEUES;
+-
+-	BUG_ON(stream_index >= priv->num_ampdu_queues);
+-
+-	streams = &priv->ampdu[stream_index];
+-
+-	if (streams->state == AMPDU_STREAM_ACTIVE)
+-		ieee80211_stop_tx_ba_session(streams->sta, streams->tid);
++	for (i = 0; i < TOTAL_HW_TX_QUEUES; i++) {
++		if (bitmap & (1 << i)) {
++			stream_index = (i + MWL8K_WMM_QUEUE_NUMBER) %
++				       TOTAL_HW_TX_QUEUES;
++			streams = &priv->ampdu[stream_index];
++			if (streams->state == AMPDU_STREAM_ACTIVE) {
++				ieee80211_stop_tx_ba_session(streams->sta,
++							     streams->tid);
++				spin_unlock(&priv->stream_lock);
++				mwl8k_destroy_ba(hw, stream_index);
++				spin_lock(&priv->stream_lock);
++			}
++		}
++	}
+ 
++	spin_unlock(&priv->stream_lock);
++done:
++	status = ioread32(priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
++	iowrite32((status | MWL8K_A2H_INT_BA_WATCHDOG),
++		  priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
++	mwl8k_fw_unlock(hw);
+ 	return;
+ }
+ 
+-- 
+1.8.0.3
 
