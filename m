@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:60620 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab3AWVSv (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:32842 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752947Ab3ACH6Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 16:18:51 -0500
-Received: by mail-lb0-f170.google.com with SMTP id ge1so2897929lbb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 13:18:50 -0800 (PST)
+	Thu, 3 Jan 2013 02:58:25 -0500
+Date: Thu, 3 Jan 2013 13:22:18 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/5] mwl8k: Support additional AMPDU streams
+Message-ID: <20130103075214.GA20164@markyou.marvell.com> (sfid-20130103_085829_623578_2B81F95D)
 MIME-Version: 1.0
-In-Reply-To: <1357737477-39830-1-git-send-email-nbd@openwrt.org>
-References: <1357737477-39830-1-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Wed, 23 Jan 2013 13:18:30 -0800
-Message-ID: <CAB=NE6X=hapGB8t6O3+tV0kjiMGhn2bwXjDRc2Ju2De5PKNLyQ@mail.gmail.com> (sfid-20130123_221855_442825_6F588FE1)
-Subject: Re: [PATCH] compat: fix compile errors when assembly is built into modules
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 5:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On powerpc, modules can be compiled and linked with an assembly file, adding
-> missing symbols that the compiler references when using -Os.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+a. Add support for additional ampdu streams 
+b. Handle corresponding watchdog events to destroy ampdu streams
+c. bump the fw API version
 
-Thanks, I've applied this into my tree but I will send a respective
-annotated patch with ckmake result to Hauke now that he's maintaining
-compat / compat-drivers. I'll submit this patch and the backported
-versions to Hauke / the list.
+Yogesh Ashok Powar (5):
+  mwl8k: Enable support to support additional ampdu streams
+  mwl8k: changing mwl8k_destroy_ba prototype
+  mwl8k: Handle Watchdog events for the new ampdu streams
+  mwl8k: Handle watchdog event with highest prioriry
+  mwl8k: bump firmware API to 3
 
-  Luis
+ drivers/net/wireless/mwl8k.c | 110 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 87 insertions(+), 23 deletions(-)
+
+-- 
+1.8.0.3
+
