@@ -1,98 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55125 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851Ab3AaOn6 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55924 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab3ACIgh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 09:43:58 -0500
-Message-ID: <1359643448.8415.62.camel@jlt4.sipsolutions.net> (sfid-20130131_154401_499674_84F87162)
-Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 31 Jan 2013 15:44:08 +0100
-In-Reply-To: <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 Jan 2013 03:36:37 -0500
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: kbuild test robot <fengguang.wu@intel.com>
+Subject: [PATCH] Re: (.text+0x114bfe): undefined reference to `ath_printk'
+Date: Thu, 3 Jan 2013 10:36:33 +0200
+Message-ID: <2738069.M9B5ZOSCVk@lx-vladimir> (sfid-20130103_093641_449000_65A215C6)
+In-Reply-To: <50e4beed.U5yRtg02BE/adPiZ%fengguang.wu@intel.com>
+References: <50e4beed.U5yRtg02BE/adPiZ%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 13:21 +0100, Simon Wunderlich wrote:
+On Thursday, January 03, 2013 07:12:45 AM kbuild test robot wrote:
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux master
+> head:   5439ca6b8ff8cf8d758c19eb28b617a5912904ee
+> commit: 009b969632137f91534db91c19d62f1ae21ba8a0 wireless: fix Atheros drivers compilation
+> date:   2 weeks ago
+> config: i386-randconfig-b995 (attached as .config)
+> 
+> All error/warnings:
+> 
+> drivers/built-in.o: In function `ar9002_hw_rf_claim':
+> (.text+0x114bfe): undefined reference to `ath_printk'
+> 
 
-> +void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
-> +				    struct ieee80211_chanctx *chanctx)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +	bool radar_enabled = false;
-> +
-> +	lockdep_assert_held(&local->chanctx_mtx);
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-> +		if (sdata->radar_required)
-> +			radar_enabled = true;
+Quick analysis shows I missed ATH9K_HTC. It is not sub-module for ATH9K as I assumed
+by mistake, but independent module. Fix follows.
 
-I guess you could break here. Technically though I'm not sure this is
-right, since it should only iterate interfaces on this chanctx. OTOH,
-multiple channel contexts aren't (currently?) allowed anyway.
 
-> +	chanctx->conf.radar_enabled = radar_enabled;
-> +	local->radar_detect_enabled = chanctx->conf.radar_enabled;
+>From d4c750170d79952eaa9d46c8d1d35a79b31db012 Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Thu, 3 Jan 2013 10:31:19 +0200
+Subject: [PATCH] ath9k: Fix Kconfig for ATH9K_HTC
 
-What's the reason for "local->radar_detect_enabled"?
+Ath9k consists of 2 different sub-modules: ATH9K and ATH9K_HTC.
+Both uses common Atheros code from ath.ko and need ATH_COMMON.
 
-Btw, do we also make the driver responsible for turning off any
-powersave when radar detection is enabled? I guess so?
+However, while ATH9K selects ATH_COMMON, ATH9K_HTC does not.
+As result, if ATH9K_HTC is the only Atheros card selected, compilation fails with
+unresolved symbols.
 
-> @@ -817,6 +817,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->  
->  	cancel_work_sync(&sdata->recalc_smps);
->  
-> +	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
-> +
-> +	/* only inform about abort cac if it was started before. */
-> +	if (sdata->wdev.cac_started) {
+This patch moves ATH_COMMON selection to the common part for both
+ATH9K and ATH9K_HTC
 
-I'm not entirely sure we should use the wdev data here, OTOH it seems
-safe, so why not.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +void ieee80211_dfs_cac_timer_work(struct work_struct *work)
-> +{
-> +	struct delayed_work *delayed_work =
-> +		container_of(work, struct delayed_work, work);
-> +	struct ieee80211_sub_if_data *sdata =
-> +		container_of(delayed_work, struct ieee80211_sub_if_data,
-> +			     dfs_cac_timer_work);
-> +
-> +	rtnl_lock();
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 5fc15bf..ef1c207 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -2,6 +2,7 @@ config ATH9K_HW
+ 	tristate
+ config ATH9K_COMMON
+ 	tristate
++	select ATH_COMMON
+ config ATH9K_DFS_DEBUGFS
+ 	def_bool y
+ 	depends on ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED
+@@ -17,7 +18,6 @@ config ATH9K_BTCOEX_SUPPORT
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on MAC80211
+-	select ATH_COMMON
+ 	select ATH9K_HW
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+-- 
+1.7.10.4
 
-what part requires rtnl?
-
-> +void ieee80211_radar_detected(struct ieee80211_vif *vif, gfp_t gfp)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +
-> +	trace_api_radar_detected(sdata);
-> +
-> +	/* may happen to devices which have been added but are not up */
-> +	if (!cfg80211_chandef_valid(&sdata->vif.bss_conf.chandef))
-> +		return;
-
-Huh, what does device and up have to do with that?
-
->  static bool ieee80211_can_scan(struct ieee80211_local *local,
->  			       struct ieee80211_sub_if_data *sdata)
->  {
-> +	if (local->radar_detect_enabled)
-> +		return false;
-
-Oh, ok. I guess that explains the reason for radar_detect_enabled :)
-
-johannes
 
