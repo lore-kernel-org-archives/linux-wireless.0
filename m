@@ -1,40 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:53468 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474Ab3ATVBf convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab3ACOpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 16:01:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130120163130.GA7730@elgon.mountain>
-References: <AE90C24D6B3A694183C094C60CF0A2F6026B7118@saturn3.aculab.com>
-	<20130120163130.GA7730@elgon.mountain>
-Date: Sun, 20 Jan 2013 22:01:33 +0100
-Message-ID: <CACna6ryF=3y8cNxLSnpbWbuQjAp3PZO5k2BxOGFC9H7d+aXz8A@mail.gmail.com> (sfid-20130120_220208_391851_F04984C1)
-Subject: Re: [patch v3] b43: N-PHY: fix gain in b43_nphy_get_gain_ctl_workaround_ent()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	David Laight <David.Laight@aculab.com>,
-	kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 3 Jan 2013 09:45:03 -0500
+Message-ID: <1357224324.9741.20.camel@jlt4.sipsolutions.net> (sfid-20130103_154507_387968_EEE45336)
+Subject: pull-request: iwlwifi-next 2012-01-03
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 03 Jan 2013 15:45:24 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-/5aZgUxtLUZafvYZ2+4N"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/1/20 Dan Carpenter <dan.carpenter@oracle.com>:
-> There were no break statements in this switch statement so everything
-> used the default settings.  Per Walter Harms's suggestion, I've replaced
-> the switch statement and done a little cleanup.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> v2: Make additional style fixes as well while we're messing with the
->     function.
-> v3: Make the array static const int.
 
-Looks fine, thanks Dan
+--=-/5aZgUxtLUZafvYZ2+4N
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Rafał
+John,
+
+My last pull request for today :-)
+
+For iwlwifi-next, I have a few cleanups/improvements as well as a few
+not very important fixes and more preparations for new devices.
+
+Let me know if there are any problems.
+
+Thanks,
+johannes
+
+
+The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565=
+:
+
+  Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to abae2386d55aff1d395cdb665f03684c227a6a69:
+
+  iwlwifi: always check that grab_nic_access succeeds (2013-01-03 15:34:11 =
++0100)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (8):
+      iwlwifi: make the BC table layout configurable
+      iwlwifi: clean up code in AGG
+      iwlwifi: don't verify fw after download
+      iwlwifi: let the op_mode run a FW while in RFKILL
+      iwlwifi: virtualize iwl_{grab,release}_nic_access
+      iwlwifi: virtualize SRAM access
+      iwlwifi: don't treat a bool as an error code
+      iwlwifi: always check that grab_nic_access succeeds
+
+Eytan Lifshitz (1):
+      iwlwifi: fix spelling and value in LED registers.
+
+Johannes Berg (3):
+      iwlwifi: use __packed
+      iwlwifi: request IRQ only once
+      iwlwifi: move some PCIe calls to better places
+
+ drivers/net/wireless/iwlwifi/dvm/commands.h  |   8 +-
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c   |   4 +-
+ drivers/net/wireless/iwlwifi/dvm/led.c       |   2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c  |   8 +-
+ drivers/net/wireless/iwlwifi/dvm/main.c      |  21 ++--
+ drivers/net/wireless/iwlwifi/dvm/tt.c        |   4 +-
+ drivers/net/wireless/iwlwifi/dvm/tx.c        |  21 ++--
+ drivers/net/wireless/iwlwifi/dvm/ucode.c     |  96 +-------------
+ drivers/net/wireless/iwlwifi/iwl-csr.h       |   4 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c        | 168 ++++-------------------=
+--
+ drivers/net/wireless/iwlwifi/iwl-io.h        |  21 +---
+ drivers/net/wireless/iwlwifi/iwl-test.c      |  53 ++++----
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |  69 ++++++++++-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |   6 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |   2 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c    | 179 ++++++++++++++++++++---=
+----
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |  31 ++---
+ 17 files changed, 311 insertions(+), 386 deletions(-)
+
+
+--=-/5aZgUxtLUZafvYZ2+4N
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJQ5ZmEAAoJEDBSmw7B7bqrHGcP/22sTHe28g5jCxv6xYEuRPQe
+8wWVjOJ3bMdINPS6Q19qGfZeSvvmlZo4xgSUysK52sgvNVDYoaLECMO6FfIXZ6hn
+xtzYlXof7N9lkf9S4g57kX3EaZbwM1iK26jt0SdJV167W2m7N3w+k5sDyi288t7Q
++WvHNkV24GmHcydkKU/lGC0mVqZY4Nh1WS1+JDW+rP3zb0O9HY828v9l1mz/Q6DN
+HHk3dxmh/QK3jXiLd3VTEhATHD4OXo1NKXin58UmqOt8ritz4bzC0bJ4BUYJGnCX
+2mkX97ZnwRXIQtt5JC60nBRWVT7cxsmIKxfaQevOhCw/ndnFSXc6INuR2fIQVdz5
+TqcTg7hDMd26RyU4UO+9yyAiy9cenJQROQCJh7xzIrUyg6HxFIKOGorKZxhhr9Ck
+E1v+iPlWFDQCKEys/pl44uG9uKsfU1bxt1OLl1NSkwxVne2t+Il6ylmq0J/bjT1B
+k0Z8BMgz1UJsALfv/2KR4YD1orHf4xKRs3sa9ups2osQ+UkFpLBdj4aH6LFQ/s2B
+SnwmsWAeS2GvCJcxsSUxbXh9uBgSqGA0trzarVYT/qlXjvCWvRSyFpGGpl5i5EMh
+OmDQq4eojC+AteCJ9rjFzo6wg7nyjGK1PZW2KYNULmgtXOOPwYCEPc/BKK9/GcWR
+g/To2lX2LOdMQt46FLch
+=MfSS
+-----END PGP SIGNATURE-----
+
+--=-/5aZgUxtLUZafvYZ2+4N--
+
