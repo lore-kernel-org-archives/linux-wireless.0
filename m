@@ -1,161 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:35024 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073Ab3AaQbg (ORCPT
+Received: from mailout2.ltindia.com ([125.18.18.171]:8016 "EHLO
+	mailout2.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754187Ab3ADDwC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 11:31:36 -0500
-Date: Thu, 31 Jan 2013 17:31:26 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
-Message-ID: <20130131163126.GB1387@pandem0nium> (sfid-20130131_173140_013390_48C33ABE)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359643448.8415.62.camel@jlt4.sipsolutions.net>
+	Thu, 3 Jan 2013 22:52:02 -0500
+From: Girish Bn <Girish.BN@lnties.com>
+To: "Zigman, Eran" <eranz@ti.com>, "Coelho, Luciano" <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx (ol_R5.SP3.05) drivers + firmware (ol_R5.SP3.05) doesn't
+ work on WL1271 (HW PG 2.0)
+Date: Fri, 4 Jan 2013 03:52:27 +0000
+Message-ID: <45566970CF58C74CB52107862E0541CD1D1CC891@POCITMSEXMB02.LntUniverse.com> (sfid-20130104_045207_888061_956891AE)
+References: <45566970CF58C74CB52107862E0541CD1D1CB484@POCITMSEXMB02.LntUniverse.com>
+ <1355945507.5373.2.camel@cumari.coelho.fi>
+ <58098F92B10CE64E898E9D20B13AA4830B58C497@DNCE05.ent.ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
-In-Reply-To: <1359643448.8415.62.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---KFztAG8eRSV9hGtP
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Jan 31, 2013 at 03:44:08PM +0100, Johannes Berg wrote:
-> On Tue, 2013-01-29 at 13:21 +0100, Simon Wunderlich wrote:
->=20
-> > +void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
-> > +				    struct ieee80211_chanctx *chanctx)
-> > +{
-> > +	struct ieee80211_sub_if_data *sdata;
-> > +	bool radar_enabled =3D false;
-> > +
-> > +	lockdep_assert_held(&local->chanctx_mtx);
-> > +
-> > +	rcu_read_lock();
-> > +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-> > +		if (sdata->radar_required)
-> > +			radar_enabled =3D true;
->=20
-> I guess you could break here.=20
-
-yes, OK.
-
-> Technically though I'm not sure this is
-> right, since it should only iterate interfaces on this chanctx. OTOH,
-> multiple channel contexts aren't (currently?) allowed anyway.
-
-I wonder of multiple channel contexts ever make sense for the DFS case.
-If they do, we would have to change this anyway to detect radars on
-one channel but (maybe) not on the other ... Anyway, I would leave that
-to future strategists. ;)
-
->=20
-> > +	chanctx->conf.radar_enabled =3D radar_enabled;
-> > +	local->radar_detect_enabled =3D chanctx->conf.radar_enabled;
->=20
-> What's the reason for "local->radar_detect_enabled"?
-
-Interaction checking with ROC and scan.
->=20
-> Btw, do we also make the driver responsible for turning off any
-> powersave when radar detection is enabled? I guess so?
->=20
-> > @@ -817,6 +817,15 @@ static void ieee80211_do_stop(struct ieee80211_sub=
-_if_data *sdata,
-> > =20
-> >  	cancel_work_sync(&sdata->recalc_smps);
-> > =20
-> > +	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
-> > +
-> > +	/* only inform about abort cac if it was started before. */
-> > +	if (sdata->wdev.cac_started) {
->=20
-> I'm not entirely sure we should use the wdev data here, OTOH it seems
-> safe, so why not.
->=20
-
-If you don't mind, it's easier like that ... ;)
-
-> > +void ieee80211_dfs_cac_timer_work(struct work_struct *work)
-> > +{
-> > +	struct delayed_work *delayed_work =3D
-> > +		container_of(work, struct delayed_work, work);
-> > +	struct ieee80211_sub_if_data *sdata =3D
-> > +		container_of(delayed_work, struct ieee80211_sub_if_data,
-> > +			     dfs_cac_timer_work);
-> > +
-> > +	rtnl_lock();
->=20
-> what part requires rtnl?
->=20
-ieee80211_vif_release_channel() calls __ieee80211_vif_release_channel()
-and has ASSERT_RTNL() before parsing the AP VLAN list.
-
-cfg80211_radar_event() probably doesn't need it ... I should remove it
-=66rom the rtnl lock, I guess?
-
-> > +void ieee80211_radar_detected(struct ieee80211_vif *vif, gfp_t gfp)
-> > +{
-> > +	struct ieee80211_sub_if_data *sdata =3D vif_to_sdata(vif);
-> > +
-> > +	trace_api_radar_detected(sdata);
-> > +
-> > +	/* may happen to devices which have been added but are not up */
-> > +	if (!cfg80211_chandef_valid(&sdata->vif.bss_conf.chandef))
-> > +		return;
->=20
-> Huh, what does device and up have to do with that?
->=20
-
-What I've tried:
- * configure 2 SSIDs in hostapd, start it
- * both wlan0 and wlan0-1 got created
- * only wlan0 comes up, wlan0-1 was rejected because of missing channel com=
-binations
- * now I've injected a radar - which should be sent to wlan0 and wlan0-1
- * wlan0 could send the event, but wlan0-1 had no bss configured and theref=
-ore no chandef
-
-I can change this comment to "may happen to devices which have currently no=
- BSS configured",
-maybe that it is not so confusing ...
-
-> >  static bool ieee80211_can_scan(struct ieee80211_local *local,
-> >  			       struct ieee80211_sub_if_data *sdata)
-> >  {
-> > +	if (local->radar_detect_enabled)
-> > +		return false;
->=20
-> Oh, ok. I guess that explains the reason for radar_detect_enabled :)
-
-Yup. :)
-
-Cheers,
-	Simon
-
---KFztAG8eRSV9hGtP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlEKnF4ACgkQrzg/fFk7axY88gCgvaNc6nH2qAUElueq1K6slfGU
-VZMAmgKRYVqDAIdOY8IaW6jKGKYSaXaZ
-=BScQ
------END PGP SIGNATURE-----
-
---KFztAG8eRSV9hGtP--
+SGksDQoNCkRvIHlvdSBoYXZlIGFueSB1cGRhdGVzIG9uIHRoZSB0ZXN0aW5nIGF0IHlvdXIgc2lk
+ZT8gTGV0IHVzIGtub3cgYW55IHBhdGggZm9yd2FyZCBvbiB0aGlzPw0KDQpUaGFua3MgJiBSZWdh
+cmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0KSGViYmFsLUhv
+b3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRlbGVwaG9uZSA6ICBESUQrOTEtODIxLTI0MDU1
+NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUtbWFpbCBJRCA6R2lyaXNoLkJOQGxudGllcy5j
+b20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFpbCBpcyBjbGFzc2lmaWVkIGFzIDoNCiggICkg
+TCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KKFgpIEwmVCBJ
+RVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBHZW5lcmFsIEJ1c2luZXNzDQoNCi0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBHaXJpc2ggQm4NClNlbnQ6IEZyaWRheSwgRGVjZW1i
+ZXIgMjgsIDIwMTIgNjoxNyBQTQ0KVG86ICdaaWdtYW4sIEVyYW4nOyBDb2VsaG8sIEx1Y2lhbm8N
+CkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJFOiB3bDEyeHgg
+KG9sX1I1LlNQMy4wNSkgZHJpdmVycyArIGZpcm13YXJlIChvbF9SNS5TUDMuMDUpIGRvZXNuJ3Qg
+d29yayBvbiBXTDEyNzEgKEhXIFBHIDIuMCkNCg0KSGksDQoNClRoYW5rcyBmb3IgdGhlIHN1cHBv
+cnQNCkNhbiB5b3UgbGV0IHVzIGtub3cgd2hldGhlciB5b3Ugd2VyZSBhYmxlIHRvIHJlcHJvZHVj
+ZSB0aGUgaXNzdWUgdXNpbmcgUjUuU1AzIG9uIFdMMTI3MUwgKEhXIFBHIDIuMCkgb24gTGludXg/
+DQoNCiBUaGFua3MgJiBSZWdhcmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIgSW5kdXN0cmlh
+bCBBcmVhLA0KSGViYmFsLUhvb3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRlbGVwaG9uZSA6
+ICBESUQrOTEtODIxLTI0MDU1NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUtbWFpbCBJRCA6
+R2lyaXNoLkJOQGxudGllcy5jb20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFpbCBpcyBjbGFz
+c2lmaWVkIGFzIDoNCiggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQgSUVTIENvbmZp
+ZGVudGlhbA0KKFgpIEwmVCBJRVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBHZW5lcmFsIEJ1
+c2luZXNzDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBaaWdtYW4sIEVyYW4g
+W21haWx0bzplcmFuekB0aS5jb21dDQpTZW50OiBTYXR1cmRheSwgRGVjZW1iZXIgMjIsIDIwMTIg
+MTI6MzYgQU0NClRvOiBDb2VsaG8sIEx1Y2lhbm87IEdpcmlzaCBCbg0KQ2M6IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBk
+cml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQMy4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAo
+SFcgUEcgMi4wKQ0KDQpMdWNhLA0KV2UgaGF2ZSB0ZXN0ZWQgdGhlIGJlbG93IHJlbGVhc2UgUjUu
+U1AzIG9uIEFNMzM1eCBhbmQgV0wxMjcxTCAoSFcgUEcgMy54KSBvbiBMaW51eCBidXQgbm90IG9u
+IFBHIDIuMC4NCkkgYW0gbm90IHN1cmUgaWYgdGhlIFI1LlNQMyBkcml2ZXIvZmlybXdhcmUgd291
+bGQgaGF2ZSBhbnkgbGltaXRhdGlvbnMgb2Ygb2xkIHZlcnNpb24gUEcyLjAuDQpXZSB3aWxsIHJ1
+biB0aGUgZXhhY3Qgc2NlbmFyaW9zIHRoYXQgeW91IG1lbnRpb25lZCBmb3IgV0w2IChQRzMueCkg
+YW5kIHVwZGF0ZS4NCg0KDQpDYW4geW91IHBsZWFzZSBzaGVkIHNvbWUgbGlnaHQgb24gdGhpcyBh
+Y3Rpdml0eSwgY3VzdG9tZXIuLi4NCg0KVGhhbmtzIGFuZCBSZWdhcmRzLA0KDQpFcmFuIFppZ21h
+bg0KVGV4YXMgSW5zdHJ1bWVudHMgSW5jDQpFQ1MgQXBwbGljYXRpb24NCkNlbGw6IDQwOC02ODA5
+NzM0LCBPZmZpY2U6IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogQ29lbGhvLCBMdWNpYW5vDQpTZW50OiBXZWRuZXNkYXksIERlY2VtYmVyIDE5LCAyMDEyIDEx
+OjMyIEFNDQpUbzogWmlnbWFuLCBFcmFuOyBHaXJpc2ggQm4NCkNjOiBsaW51eC13aXJlbGVzc0B2
+Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiB3bDEyeHggKG9sX1I1LlNQMy4wNSkgZHJpdmVy
+cyArIGZpcm13YXJlIChvbF9SNS5TUDMuMDUpIGRvZXNuJ3Qgd29yayBvbiBXTDEyNzEgKEhXIFBH
+IDIuMCkNCg0KSGkgRXJhbiwNCg0KQ2FuIHlvdSBwbGVhc2UgY2hlY2sgR2lyaXNoJ3MgZW1haWwg
+YmVsb3cgYW5kIGhlbHAgaGltIHdpdGggdGhpcz8NCg0KVGhhbmtzIQ0KDQotLQ0KTHVjYS4NCg0K
+T24gV2VkLCAyMDEyLTEyLTE5IGF0IDE0OjQxICswMDAwLCBHaXJpc2ggQm4gd3JvdGU6DQo+IEhp
+LA0KPg0KPiBXZSBhcmUgY2xpZW50IGlzIHVzaW5nIHRoZSBKb3JqaW4gV0c3MzEwLTAwIFdMQU4v
+QlQvRk0gTW9kdWxlIGZvciBvbmUgb2YgdGhlIFdMQU4gc2VydmVyIG1vZHVsZS4NCj4gV2UgYXJl
+IHBvcnRpbmcgdGhlIExpbnV4IG9wZW4gc291cmNlIGRyaXZlcnMgdG8gV0wxMjcxIGJhc2VkIEpv
+cmppbiBtb2R1bGUuIE91ciBrZXJuZWwgdmVyc2lvbiBpcyAyLjYuMjguMiBhbmQgcHJvY2Vzc29y
+IGlzIExQQzMxMzAuIFRoZSBQRyB2ZXIgb2YgV2wxMjcxIGlzIDIuDQo+IFJlY2VudGx5IHdlIGhh
+dmUgYmFjayBwb3J0ZWQgdGhlIHdsMTJ4eCBkcml2ZXJzIGZyb20gdGhlIFRJLU9wZW5MaW5rDQo+
+IHNpdGUgV2UgaGF2ZSB0YWtlbiB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbQ0KPiBodHRwczovL2dp
+dGh1Yi5jb20vVEktT3Blbkxpbmsvd2wxMnh4IGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZw0KPiBv
+bF9SNS5TUDMuMDUgQWxzbyB3ZSBoYWQgdGFrZW4gdGhlIGZpcm13YXJlIGZyb20NCj4gaHR0cHM6
+Ly9naXRodWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFuY2ggcjVfamIgYW5kIHRh
+Zw0KPiBvbF9SNS5TUDMuMDUgVGhlIHN1cHBsaWNhbnQgYWxzbyB3YXMgdGFrZW4gZnJvbQ0KPiBo
+dHRwczovL2dpdGh1Yi5jb20vVEktT3BlbkxpbmsvaG9zdGFwIGFuZCBicmFuY2ggcjVfamIgYW5k
+IHRhZw0KPiBvbF9SNS5TUDMuMDUNCj4NCj4gV2UgdXNpbmcgdGhlIG11bHRpLXJvbGUgZmVhdHVy
+ZSBvZiB0aGUgZHJpdmVyLg0KPiBXZSBoYWQgc3BlY2lmaWNhbGx5IHRha2VuIGFib3ZlIHBhY2th
+Z2UgYXMgd2Ugd2FudGVkIHRoZSBBUCBjaGFubmVsIHN3aXRjaCBmdW5jdGlvbmFsaXR5LiBUaGlz
+IGZlYXR1cmUgaGFuZGxlcyBhIHBhcnRpY3VsYXIgY2FzZSBsaWtlIGlmIHlvdSBzdGFydGVkIHRo
+ZSBTVEEgb24gQ2hhbm5lbCBYIGFuZCBhbHNvIHlvdSB3aWxsIHN0YXJ0IEFQIChQMlAgR3JvdXAg
+T3duZXIpIG9uIHRoZSBzYW1lIGNoYW5uZWwgKENoYW5uZWwgWCkuIE5vdyBpZiB5b3UgY2hhbmdl
+IHRoZSBjaGFubmVsIG9mIFN0YXRpb24gdG8gQ2hhbm5lbChZKSwgdGhlIGRyaXZlciBhdXRvbWF0
+aWNhbGx5IHdpbGwgdGFrZSBjYXJlIG9mIHJlc3RhcnRpbmcgdGhlIEFQKFAyUCBHTykgb24gdGhl
+IHNhbWUgY2hhbm5lbChDaGFubmVsIFkpLg0KPg0KPiBXZSBhcmUgZmFjaW5nIGlzc3VlIHdpdGgg
+dGhpcyBwYWNrYWdlIGFuZCB0aGUgZHJpdmVycyB3b24ndCB3b3JrIHByb3Blcmx5IGZvciB1cy4N
+Cj4gVGhlIG1ham9yIGlzc3VlcyBzZWVuIHdpdGggdGhpcyBwYWNrYWdlIGFyZSAxLiBXZSBhYmxl
+IHRvIGRvIHRoZSBzY2FuDQo+IGFuZCBjb25uZWN0IHRvIGFuIGVuY3J5cHRlZCBuZXR3b3JrLiAg
+QnV0IHdoZW4gd2UgcnVuIERIQ1AgY2xpZW50IG9uIHdsYW4wIHRvIGdldCB0aGUgSVAgYWRkcmVz
+cyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQsIHRoZSBkcml2ZXIgdGhyb3dzICJ3bDEyeHg6IEJlYWNv
+biBsb3NzIGRldGVjdGVkIiBtZXNzYWdlIGFuZCB0aGUgY29ubmVjdGlvbiBicmVha3MgYW5kIHRo
+ZSBkcml2ZXIgZ2V0cyBpbnRvIFNDQU4gbW9kZSBhbmQgd2lsbCB0cnkgdG8gcmVjb25uZWN0IHRv
+IHRoZSBBY2Nlc3MgUG9pbnQuIEV2ZW50dWFsbHkgd2UgZG9uJ3QgcmVjZWl2ZSB0aGUgSVAgYWRk
+cmVzcyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQuDQo+IDIuIEkgd2FzIGFibGUgdG8gc3RhcnQgdGhl
+IFN0YXRpb24gYW5kIEFQIHJvbGUgb24gdGhlIHNhbWUgY2hhbm5lbC4gQnV0IHRoZSBhZnRlciBz
+dGF0aW5nIHRoZSBBUCByb2xlLCBzdGF0aW9uIHJvbGUgd2lsbCBiZSBkaXNjb25uZWN0ZWQgYXV0
+b21hdGljYWxseSBhbmQgSSB3b24ndCBiZSBhYmxlIHRvIGRvIHNjYW4gYW5kIGNvbm5lY3Rpb24g
+b24gU1RBLg0KPiAzLiBBbHNvIGNhbm5vdCBjb25uZWN0IHRvIG15IFN5c3RlbSB3aGljaCBpcyBh
+Y3RpbmcgYXMgUDJQIEdyb3VwIE93bmVyKEFQKSBmcm9tIGFueSBvdGhlciBXaS1GaSBkZXZpY2Ug
+bGlrZSBpUGhvbmUvTGFwdG9wIG9yIGFueSBvdGhlci4gVGhlIGlzc3VlIGlzIHNlZW4gd2hlbiBT
+eXN0ZW0gaXMgc2V0IHRvIFAyUCBHTyBlaXRoZXIgdXNpbmcgU2luZ2xlIFJvbGUgZmlybXdhcmUg
+b25seSBvciB1c2luZyBNdWx0aS1yb2xlIGZpcm13YXJlLg0KPg0KPiBXZSBzdXNwZWN0IHRoZSBp
+c3N1ZSB3aXRoIHRoZSBhYm92ZSB2ZXJzaW9ucyBvZiAob2xfUjUuU1AzLjA1KSB3bDEyN3gNCj4g
+ZmlybXdhcmUgYW5kIHN1cnByaXNpbmdseSBhbGwgdGhlIGFib3ZlIHRocmVlIGlzc3VlcyBhcmUg
+Tk9UIHNlZW4gd2hlbg0KPiBJIHVzZSB0aGUgYmVsb3cgZmlybXdhcmUgdmVyc2lvbnMgKHdoaWNo
+IGlzIHF1aXRlIG9sZCkgU2luZ2xlIFJvbGUNCj4gKFNSKTogIFJldiA2LjMuNy4wLjEwNQ0KPiBN
+dWx0aS1Sb2xlKE1SKTogUmV2IDYuNS41LjAuMjENCj4NCj4NCj4gVGhlIGZpcm13YXJlIHZlcnNp
+b25zIHRha2VuIGZyb20NCj4gaHR0cHM6Ly9naXRodWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxz
+IGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZw0KPiBvbF9SNS5TUDMuMDUgYXJlIFNpbmdsZSBSb2xl
+IChTUik6ICBSZXYgNi4zLjEwLjAuMTMyIE11bHRpLVJvbGUgKE1SKToNCj4gUmV2IDYuNS43LjAu
+NDINCj4NCj4gQ2FuIHlvdSBsZXQgdXMga25vdyB3aGV0aGVyIFdsMTI3MSBodyBQRyBWZXIgMi4w
+IGNhbiBydW4gdGhlIG9sX1I1LlNQMy4wNSBmaXJtd2FyZSBzdWNjZXNzZnVsbHkgb3IgYW55IGhh
+cmR3YXJlIGxpbWl0YXRpb25zIHdpdGggV2wxMjcxPw0KPiBBbnkgc3VnZ2VzdGlvbnMgb24gdGhl
+IGFib3ZlIGlzc3VlcyB3aWxsIGJlIGdyZWF0bHkgaGVscGZ1bA0KPg0KPg0KPiBUaGFua3MgJiBS
+ZWdhcmRzLA0KPiBHaXJpc2gNCj4gTCZUIElFUywNCj4gS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0K
+PiBIZWJiYWwtSG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KPiBUZWxlcGhvbmUgOiAgRElE
+KzkxLTgyMS0yNDA1NTUyDQo+IE1vYmlsZTogKzkxLTk3NDEyMDY0MDINCj4gRS1tYWlsIElEIDpH
+aXJpc2guQk5AbG50aWVzLmNvbQ0KPiB3d3cubG50aWVzLmNvbQ0KPg0KPiBUaGlzIG1haWwgaXMg
+Y2xhc3NpZmllZCBhcyA6DQo+ICggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KPiAoICApIEwmVCBJ
+RVMgQ29uZmlkZW50aWFsDQo+IChYKSBMJlQgSUVTIEludGVybmFsIFVzZQ0KPiAoICkgTCZUIElF
+UyBHZW5lcmFsIEJ1c2luZXNzDQo+DQo+IExhcnNlbiAmIFRvdWJybyBMaW1pdGVkDQo+DQo+IHd3
+dy5sYXJzZW50b3Vicm8uY29tDQo+DQo+IFRoaXMgRW1haWwgbWF5IGNvbnRhaW4gY29uZmlkZW50
+aWFsIG9yIHByaXZpbGVnZWQgaW5mb3JtYXRpb24gZm9yIHRoZSBpbnRlbmRlZCByZWNpcGllbnQg
+KHMpLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgZG8gbm90
+IHVzZSBvciBkaXNzZW1pbmF0ZSB0aGUgaW5mb3JtYXRpb24sIG5vdGlmeSB0aGUgc2VuZGVyIGFu
+ZCBkZWxldGUgaXQgZnJvbSB5b3VyIHN5c3RlbS4NCg0KTGFyc2VuICYgVG91YnJvIExpbWl0ZWQN
+Cg0Kd3d3LmxhcnNlbnRvdWJyby5jb20NCg0KVGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRl
+bnRpYWwgb3IgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVu
+dCAocykuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBu
+b3QgdXNlIG9yIGRpc3NlbWluYXRlIHRoZSBpbmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIg
+YW5kIGRlbGV0ZSBpdCBmcm9tIHlvdXIgc3lzdGVtLg0K
