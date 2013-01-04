@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55151 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51904 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab3AXPEj (ORCPT
+	with ESMTP id S1754613Ab3ADM7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 10:04:39 -0500
-Message-ID: <1359039903.21908.3.camel@jlt4.sipsolutions.net> (sfid-20130124_160443_007667_114E984F)
-Subject: Re: [PATCH 2/2] mac80211: support mesh rate updates
+	Fri, 4 Jan 2013 07:59:10 -0500
+Message-ID: <1357304360.11302.1.camel@jlt4.sipsolutions.net> (sfid-20130104_135914_116767_7F541645)
+Subject: Re: [PATCH v2 2/4] mac80211_hwsim: hrtimer beacon
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Thomas Pedersen <thomas@cozybit.com>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+Cc: linville@tuxdriver.org, j@w1.fi, linux-wireless@vger.kernel.org,
 	devel@lists.open80211s.org
-Date: Thu, 24 Jan 2013 16:05:03 +0100
-In-Reply-To: <1358972293-2884-2-git-send-email-thomas@cozybit.com> (sfid-20130123_211904_054764_808A46E7)
-References: <1358972293-2884-1-git-send-email-thomas@cozybit.com>
-	 <1358972293-2884-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20130123_211904_054764_808A46E7)
+Date: Fri, 04 Jan 2013 13:59:20 +0100
+In-Reply-To: <1357167319-13338-2-git-send-email-thomas@cozybit.com> (sfid-20130102_235557_467689_F4EE95CB)
+References: <1357167319-13338-1-git-send-email-thomas@cozybit.com>
+	 <1357167319-13338-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20130102_235557_467689_F4EE95CB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-23 at 12:18 -0800, Thomas Pedersen wrote:
-> An existing mesh station entry may change its rate
-> capabilities, so call rate_control_rate_update() to notify
-> the rate control.
+On Wed, 2013-01-02 at 14:55 -0800, Thomas Pedersen wrote:
 
-Applied, with a fix to make it compile. Tssk Tssk.
+> -	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
+> -	struct mac80211_hwsim_data *data = hw->priv;
+> +	struct tasklet_hrtimer *ttimer = container_of(timer,
+> +						      struct tasklet_hrtimer,
+> +						      timer);
+> +	struct mac80211_hwsim_data *data = container_of(ttimer,
+> +						struct mac80211_hwsim_data,
+> +						beacon_timer);
+
+I simplified this to just use "beacon_timer.timer" in the second
+container_of()
 
 johannes
 
