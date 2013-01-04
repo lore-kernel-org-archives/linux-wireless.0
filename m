@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477Ab3A1JhY (ORCPT
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:52072 "EHLO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750936Ab3ADFWh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:37:24 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tzl9W-000730-Qo
-	for linux-wireless@vger.kernel.org; Mon, 28 Jan 2013 10:37:23 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 4 Jan 2013 00:22:37 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/37] iwlwifi: add the MVM driver
-Date: Mon, 28 Jan 2013 10:37:07 +0100
-Message-Id: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103728_069407_001EDD61)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 0/5] mwifiex_pcie enhancement for 3.9
+Date: Thu,  3 Jan 2013 21:21:27 -0800
+Message-Id: <1357276892-32759-1-git-send-email-bzhao@marvell.com> (sfid-20130104_062241_233502_6A8E5DB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finally :-)
+This series of mwifiex_pcie enhancement patches are intended for 3.9.
 
-Here's our new MVM driver, along with 7000 device config and
-some requisite cleanups. Obviously, I'm not going to split it
-up into single patches for my pull request, but for the list
-I have to.
+Avinash Patil (5):
+  mwifiex: access interrupt status only while holding lock
+  mwifiex: add init_fw_port handler for PCIe interface
+  mwifiex: use pci_alloc/free_consistent APIs for PCIe
+  mwifiex: flush TX ring for PCIe after disconnect or bss stop
+  mwifiex: use map/unmap APIs in TX and RX to reduce memcpy
 
-We know that the rs.c code is ugly, it's copied from the old
-code while we work on new code. Otherwise, the driver should
-be pretty clean. Some small TODO items are left, as any other
-driver this is work in progress :)
-
-johannes
+ drivers/net/wireless/mwifiex/11n_aggr.c |    6 +-
+ drivers/net/wireless/mwifiex/init.c     |    6 +
+ drivers/net/wireless/mwifiex/main.h     |    2 +
+ drivers/net/wireless/mwifiex/pcie.c     |  654 +++++++++++++++++++++----------
+ drivers/net/wireless/mwifiex/pcie.h     |   33 ++-
+ drivers/net/wireless/mwifiex/sta_cmd.c  |   10 +-
+ drivers/net/wireless/mwifiex/txrx.c     |    6 +-
+ drivers/net/wireless/mwifiex/util.h     |    8 +-
+ drivers/net/wireless/mwifiex/wmm.c      |    8 +-
+ 9 files changed, 511 insertions(+), 222 deletions(-)
 
