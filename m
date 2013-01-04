@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45744 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754183Ab3AIR3Y (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40121 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755040Ab3ADVPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 12:29:24 -0500
-Message-ID: <1357752583.9757.17.camel@jlt4.sipsolutions.net> (sfid-20130109_182928_712676_A55E4120)
-Subject: Re: [PATCH] mac80211: fix delayed ADDBA response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Victor Goldenshtein <victorg@ti.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 09 Jan 2013 18:29:43 +0100
-In-Reply-To: <CA+XVXfc+zyLybv9bush3B-Ax65HNTeKOt-FAzT281gQytr3ABA@mail.gmail.com> (sfid-20130109_182521_008336_FEAA5EFA)
-References: <1357654597-8493-1-git-send-email-victorg@ti.com>
-	 <1357735100.9757.9.camel@jlt4.sipsolutions.net> <50ED94F7.9000709@ti.com>
-	 <1357749133.9757.16.camel@jlt4.sipsolutions.net>
-	 <CA+XVXfc+zyLybv9bush3B-Ax65HNTeKOt-FAzT281gQytr3ABA@mail.gmail.com>
-	 (sfid-20130109_182521_008336_FEAA5EFA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 4 Jan 2013 16:15:11 -0500
+Date: Fri, 4 Jan 2013 16:12:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-01-03
+Message-ID: <20130104211254.GC21871@tuxdriver.com> (sfid-20130104_221521_417007_39196645)
+References: <1357221075.9741.4.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1357221075.9741.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-09 at 19:25 +0200, Arik Nemtsov wrote:
-
-> This is just a speed optimization for BA session management, so I'm
-> pretty sure the above was not tested.
+On Thu, Jan 03, 2013 at 02:51:15PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Maybe we can make the "if" stricter and only allow it to pass if it's
-> hw_scanning and mgmt->u.action.category == WLAN_CATEGORY_BACK ? Would
-> that make sense?
+> Please pull (per below). This includes a number of fixes for various
+> pieces of mac80211. I've also included Thomas's memory RMC hash table
+> optimisation since it saves so much memory.
+> 
+> Thanks,
+> Johannes
+> 
+> 
+> 
+> The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565:
+> 
+>   Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 09b1426e7fcec510aba55a761da5004e47a11ce3:
+> 
+>   mac80211: fix maximum MTU (2013-01-03 13:00:01 +0100)
 
-Yeah that's the other option -- making the processing loop more
-selective. That's more complex, but should work better.
+I'm pulling this, intending to forward it to Dave early next week.
 
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
