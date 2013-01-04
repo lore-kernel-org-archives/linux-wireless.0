@@ -1,69 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44545 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752024Ab3ASRST (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2013 12:18:19 -0500
-Message-ID: <50FAD54F.8080601@hauke-m.de> (sfid-20130119_181824_491223_EC2AB5FC)
-Date: Sat, 19 Jan 2013 18:18:07 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Piotr Haber <phaber@broadcom.com>
-CC: Rafal Milecki <zajec5@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: bcma: trouble with gpio
-References: <50F95D45.6060601@broadcom.com>
-In-Reply-To: <50F95D45.6060601@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:35734 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750715Ab3ADFZd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jan 2013 00:25:33 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/5] mwifiex: access interrupt status only while holding lock
+Date: Thu,  3 Jan 2013 21:21:28 -0800
+Message-Id: <1357276892-32759-2-git-send-email-bzhao@marvell.com> (sfid-20130104_062537_538754_2DE0855A)
+In-Reply-To: <1357276892-32759-1-git-send-email-bzhao@marvell.com>
+References: <1357276892-32759-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/18/2013 03:33 PM, Piotr Haber wrote:
-> Hi,
-> 
-> I turned GPIO support in bcma (CONFIG_BCMA_DRIVER_GPIO)
-> and get this in log:
-> 
-> bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and package 0x0A
-> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
-> bcma: bus0: Found rev 6 PMU (capabilities 0x108C2606)
-> bcma: bus0: SPROM offset 0x830
-> bcma: bus0: PMU resource config unknown or not needed for device 0xA8D8
-> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-> bcma: bus0: Error registering GPIO driver: -28
-> bcma: bus0: Bus registered
-> bcma: bus1: Found chip with id 0x4313, rev 0x01 and package 0x08
-> bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-> bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-> bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
-> bcma: bus1: Found rev 8 PMU (capabilities 0x084C3008)
-> bcma: bus1: SPROM offset 0x830
-> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-> bcma: bus1: Error registering GPIO driver: -28
-> bcma: bus1: Bus registered
-> bcma: bus2: Found chip with id 0x4313, rev 0x01 and package 0x08
-> bcma: bus2: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-> bcma: bus2: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-> bcma: bus2: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
-> bcma: bus2: Found rev 8 PMU (capabilities 0x084C3008)
-> bcma: bus2: SPROM offset 0x830
-> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-> bcma: bus2: Error registering GPIO driver: -28
-> bcma: bus2: Bus registered
-> 
-> does that mean that gpio is not usable?
+From: Avinash Patil <patila@marvell.com>
 
-At least it is not usable through the standard linux gpio interface.
+This patch fixes a bug for few instances where PCIe interrupt
+status variable is accessed without holding spin lock.
+This can result into missing interrupts.
 
-> what might be the problem?
+Fix this by copying interrupt status to a local variable and
+then using it for calling specific routine.
 
-Is this -28 (ENOSPC) originally returned in gpiochip_find_base() in
-drivers/gpio/gpiolib.c?
-I have no idea what's going wrong here, could you provide me with your
-kernel config and what kernel version are you using?
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |   25 ++++++++++++-------------
+ 1 files changed, 12 insertions(+), 13 deletions(-)
 
-> 
-> Kind regards
-> Piotr
-> 
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 13fbc4e..e4c2cfd 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -1594,39 +1594,40 @@ exit:
+ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ {
+ 	int ret;
+-	u32 pcie_ireg = 0;
++	u32 pcie_ireg;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&adapter->int_lock, flags);
+ 	/* Clear out unused interrupts */
+-	adapter->int_status &= HOST_INTR_MASK;
++	pcie_ireg = adapter->int_status;
++	adapter->int_status = 0;
+ 	spin_unlock_irqrestore(&adapter->int_lock, flags);
+ 
+-	while (adapter->int_status & HOST_INTR_MASK) {
+-		if (adapter->int_status & HOST_INTR_DNLD_DONE) {
+-			adapter->int_status &= ~HOST_INTR_DNLD_DONE;
++	while (pcie_ireg & HOST_INTR_MASK) {
++		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
++			pcie_ireg &= ~HOST_INTR_DNLD_DONE;
+ 			if (adapter->data_sent) {
+ 				dev_dbg(adapter->dev, "info: DATA sent intr\n");
+ 				adapter->data_sent = false;
+ 			}
+ 		}
+-		if (adapter->int_status & HOST_INTR_UPLD_RDY) {
+-			adapter->int_status &= ~HOST_INTR_UPLD_RDY;
++		if (pcie_ireg & HOST_INTR_UPLD_RDY) {
++			pcie_ireg &= ~HOST_INTR_UPLD_RDY;
+ 			dev_dbg(adapter->dev, "info: Rx DATA\n");
+ 			ret = mwifiex_pcie_process_recv_data(adapter);
+ 			if (ret)
+ 				return ret;
+ 		}
+-		if (adapter->int_status & HOST_INTR_EVENT_RDY) {
+-			adapter->int_status &= ~HOST_INTR_EVENT_RDY;
++		if (pcie_ireg & HOST_INTR_EVENT_RDY) {
++			pcie_ireg &= ~HOST_INTR_EVENT_RDY;
+ 			dev_dbg(adapter->dev, "info: Rx EVENT\n");
+ 			ret = mwifiex_pcie_process_event_ready(adapter);
+ 			if (ret)
+ 				return ret;
+ 		}
+ 
+-		if (adapter->int_status & HOST_INTR_CMD_DONE) {
+-			adapter->int_status &= ~HOST_INTR_CMD_DONE;
++		if (pcie_ireg & HOST_INTR_CMD_DONE) {
++			pcie_ireg &= ~HOST_INTR_CMD_DONE;
+ 			if (adapter->cmd_sent) {
+ 				dev_dbg(adapter->dev,
+ 					"info: CMD sent Interrupt\n");
+@@ -1654,8 +1655,6 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 						 "Write register failed\n");
+ 					return -1;
+ 				}
+-				adapter->int_status |= pcie_ireg;
+-				adapter->int_status &= HOST_INTR_MASK;
+ 			}
+ 
+ 		}
+-- 
+1.7.0.2
 
