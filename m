@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:61056 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754887Ab3AVTGs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550Ab3ADNJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 14:06:48 -0500
-Received: by mail-ea0-f181.google.com with SMTP id i13so2086245eaa.26
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 11:06:47 -0800 (PST)
-References: <20130122164914.GB25134@localhost.localdomain>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20130122164914.GB25134@localhost.localdomain>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com> (sfid-20130122_200651_034817_E1EF7BBE)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
-Date: Tue, 22 Jan 2013 19:58:58 +0100
-To: Stanislaw Gruszka <stf_xl@wp.pl>
+	Fri, 4 Jan 2013 08:09:59 -0500
+Message-ID: <1357305013.11302.7.camel@jlt4.sipsolutions.net> (sfid-20130104_141002_556024_402D9100)
+Subject: Re: [PATCHv5 7/8] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 04 Jan 2013 14:10:13 +0100
+In-Reply-To: <20130103074732.GD20780@pandem0nium>
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1355407113-27006-8-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1357134469.9839.35.camel@jlt4.sipsolutions.net>
+	 <20130103074732.GD20780@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-Sent from my iPad
-
-On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
-> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
-> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
-> 2 files changed, 4 insertions(+), 4 deletions(-)
+On Thu, 2013-01-03 at 08:47 +0100, Simon Wunderlich wrote:
+> On Wed, Jan 02, 2013 at 02:47:49PM +0100, Johannes Berg wrote:
+> > On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
+> > 
+> > > +	mutex_lock(&local->mtx);
+> > > +	if (local->ap_cs_chandef.chan->flags & IEEE80211_CHAN_RADAR) {
+> > > +		sdata_info(sdata, "changing to DFS channel\n");
+> > > +		/* when changing to a DFS channel, stop AP. Userspace must
+> > > +		 * restart AP or do start radar detection first.
+> > > +		 */
+> > > +		stop_ap = true;
+> > 
+> > I don't see any value in this. You might just as well simply forbid
+> > requesting a channel change to a DFS channel, hostapd could then stop
+> > instead of doing the switch.
+> > 
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 3e37c19..bef449c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -92,7 +92,7 @@
-> #define NOTICE(__dev, __msg, __args...) \
->    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
-> #define INFO(__dev, __msg, __args...) \
-> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
-> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
-> #define DEBUG(__dev, __msg, __args...) \
->    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
-> #define EEPROM(__dev, __msg, __args...) \
+> We explicitly want the channel switch, this was the original idea in 802.11h
+> - announce the next channel, then switch. To announce the next channel, we
+> need to allow this.
+> 
+> As discussed before, doing stop_ap here is probably not a good idea. We
+> can change that back to let the driver disable transmissions and expect
+> an explicit enable_tx call from userspace after CAC on the new channel.
 
-I think this change is good, but we should also change WARNING and NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is disabled, but INFO will, which would be strange.
+I just don't see that the clients will wait a minute (?) for the CAC on
+the new channel, they'll probably just disconnect and look for another
+AP. So I guess the question is whether we should ever switch to a radar
+channel ...
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index ed7a1bb..20c6ecc 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -731,9 +731,9 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw,
->    queue->aifs = params->aifs;
->    queue->txop = params->txop;
-> 
-> -    INFO(rt2x00dev,
-> -         "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d, TXop: %d.\n",
-> -         queue_idx, queue->cw_min, queue->cw_max, queue->aifs, queue->txop);
-> +    DEBUG(rt2x00dev,
-> +          "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d, TXop: %d.\n",
-> +          queue_idx, queue->cw_min, queue->cw_max, queue->aifs, queue->txop);
-> 
->    return 0;
-> }
-> -- 
-> 1.7.4.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
