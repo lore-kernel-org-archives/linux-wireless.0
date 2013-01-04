@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:47075 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755802Ab3A2NOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 08:14:30 -0500
-Message-ID: <5107CB32.2070908@neratec.com> (sfid-20130129_141433_626450_987D89E4)
-Date: Tue, 29 Jan 2013 14:14:26 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:51937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754676Ab3ADNIh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jan 2013 08:08:37 -0500
+Message-ID: <1357304925.11302.6.camel@jlt4.sipsolutions.net> (sfid-20130104_140840_832617_B735030F)
+Subject: Re: [PATCHv5 6/8] nl80211/cfg80211: add ap channel switch command
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 0/3] Add DFS master ability
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Fri, 04 Jan 2013 14:08:45 +0100
+In-Reply-To: <20130102150555.GC7794@pandem0nium>
+References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1355407113-27006-7-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1357134319.9839.32.camel@jlt4.sipsolutions.net>
+	 <20130102150555.GC7794@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
-> [...]
-> 
-> The channel states are now implemented in cfg80211. Shall we inform userspace
-> about channel changes? If yes, how should we do that? We could add channel states
-> to the channel list, and give "channel list changed" events to userspace as it
-> happens now, or define a new kind of event ("channel-available-again-event").
-> Suggestions welcome. :)
-> 
-An event whenever a channel state changes is perfect, ideally provided with the
-time-stamp when this change happened.
+On Wed, 2013-01-02 at 16:05 +0100, Simon Wunderlich wrote:
 
-With the centralized channel state handling proposed here, the required
-modification to allow managed DFS operation can be minimized to a proprietary (or
-even upstreamed but CONFIG_CFG80211_CERTIFICATION_ONUS guarded) function to modify
-channel states.
-
-Can't contribute much to code review, but full ACK for the updated concept.
-
-> If you prefer, I can split off the channel state stuff from the radar detect
-> patches.
+> > Also, we already have an event to notify of an AP channel change, maybe
+> > that should be used? If not, why not?
 > 
-> Cheers,
-> 	Simon
-> 
+> The NL80211_CMD_CH_SWITCH_NOTIFY event is already present and not introduced
+> with this patch, but reused for AP. Which other event do you mean for this
+> purpose?
+
+Ah ok, never mind then.
+
+johannes
 
