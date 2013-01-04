@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36082 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753Ab3AZXsA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 18:48:00 -0500
-Message-ID: <1359244101.9086.8.camel@jlt4.sipsolutions.net> (sfid-20130127_004811_031456_5F556B2B)
-Subject: Re: [PATCH v2] mac80211: dynamic short slot time for MBSSs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Sun, 27 Jan 2013 00:48:21 +0100
-In-Reply-To: <CAG6hwVNFbuQLGhLECpjoFVevf+SunUY62RNAxmJSum34XGH+gw@mail.gmail.com> (sfid-20130127_003645_161477_2208DDCC)
-References: <1359232645-10563-1-git-send-email-thomas@cozybit.com>
-	 <1359241463.9086.4.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVNFbuQLGhLECpjoFVevf+SunUY62RNAxmJSum34XGH+gw@mail.gmail.com>
-	 (sfid-20130127_003645_161477_2208DDCC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1620 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752719Ab3ADJGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jan 2013 04:06:00 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>
+Subject: [PATCH for 3.8] mips: bcm47xx: select GPIOLIB for BCMA on
+ bcm47xx platform
+Date: Fri, 4 Jan 2013 10:03:11 +0100
+Message-ID: <1357290191-5728-1-git-send-email-arend@broadcom.com> (sfid-20130104_100609_123259_2930F139)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-01-26 at 15:36 -0800, Thomas Pedersen wrote:
+The Kconfig items BCM47XX_BCMA and BCM47XX_SSB selected
+respectively BCMA_DRIVER_GPIO and SSB_DRIVER_GPIO. These
+options depend on GPIOLIB without explicitly selecting it
+so it results in a warning when GPIOLIB is not set:
 
-> Huh, that's actually pretty nice. 
+scripts/kconfig/conf --oldconfig Kconfig
+warning: (BCM47XX_BCMA) selects BCMA_DRIVER_GPIO ... unmet direct
+	dependencies (BCMA_POSSIBLE && BCMA && GPIOLIB)
+warning: (BCM47XX_SSB) selects SSB_DRIVER_GPIO ... unmet direct
+	dependencies (SSB_POSSIBLE && SSB && GPIOLIB)
 
-:)
+which subsequently results in compile errors.
 
-> I don't really get why the
-> for_each_set_bit() is broken on big endian 64-bit systems, but hey
-> this approach takes care of that concern :)
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ arch/mips/bcm47xx/Kconfig |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Because then you're taking the address of a 32-bit variable, and
-treating it as an unsigned long (64 bits), so if you iterate its 64 bits
-then you'll get some random other stuff from the stack (on both big and
-little endian actually, I thought you were limiting it to n_bitrates
-then it would work on little endian)
+diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
+index d7af29f..ba61192 100644
+--- a/arch/mips/bcm47xx/Kconfig
++++ b/arch/mips/bcm47xx/Kconfig
+@@ -8,8 +8,10 @@ config BCM47XX_SSB
+ 	select SSB_DRIVER_EXTIF
+ 	select SSB_EMBEDDED
+ 	select SSB_B43_PCI_BRIDGE if PCI
++	select SSB_DRIVER_PCICORE if PCI
+ 	select SSB_PCICORE_HOSTMODE if PCI
+ 	select SSB_DRIVER_GPIO
++	select GPIOLIB
+ 	default y
+ 	help
+ 	 Add support for old Broadcom BCM47xx boards with Sonics Silicon Backplane support.
+@@ -25,6 +27,7 @@ config BCM47XX_BCMA
+ 	select BCMA_HOST_PCI if PCI
+ 	select BCMA_DRIVER_PCI_HOSTMODE if PCI
+ 	select BCMA_DRIVER_GPIO
++	select GPIOLIB
+ 	default y
+ 	help
+ 	 Add support for new Broadcom BCM47xx boards with Broadcom specific Advanced Microcontroller Bus.
+-- 
+1.7.10.4
 
-johannes
 
