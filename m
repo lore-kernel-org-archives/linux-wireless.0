@@ -1,96 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:61359 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab3ATKoh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 05:44:37 -0500
-Message-ID: <50FBCABD.6070205@gmail.com> (sfid-20130120_114442_044150_915C3401)
-Date: Sun, 20 Jan 2013 18:45:17 +0800
-From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
-MIME-Version: 1.0
-To: Chen Gang <gang.chen@asianux.com>
-CC: sgruszka@redhat.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/iwlegacy: use strlcpy instead of
+Received: from perches-mx.perches.com ([206.117.179.246]:42675 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755574Ab3AEOmq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jan 2013 09:42:46 -0500
+Message-ID: <1357396966.21156.4.camel@joe-AO722> (sfid-20130105_154254_352627_CF8251C4)
+Subject: Re: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of
  strncpy
-References: <50EA5246.8060206@asianux.com> <50FBB977.7080805@asianux.com>
-In-Reply-To: <50FBB977.7080805@asianux.com>
-Content-Type: multipart/mixed;
- boundary="------------050507030308040906040103"
+From: Joe Perches <joe@perches.com>
+To: Chen Gang <gang.chen@asianux.com>
+Cc: stas.yakovlev@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Sat, 05 Jan 2013 06:42:46 -0800
+In-Reply-To: <50E82D7D.4090107@asianux.com>
+References: <50E82D7D.4090107@asianux.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050507030308040906040103
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 8bit
+On Sat, 2013-01-05 at 21:41 +0800, Chen Gang wrote:
+>   The fields must be null-terminated, or IPW_DEBUG_ASSOC will cause issue.
+[]
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+[]
+> @@ -5558,7 +5558,7 @@ static int ipw_find_adhoc_network(struct ipw_priv *priv,
+>  			    min(network->ssid_len, priv->essid_len)))) {
+>  			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+>  
+> -			strncpy(escaped,
+> +			strlcpy(escaped,
+>  				print_ssid(ssid, network->ssid,
+>  					   network->ssid_len),
+>  				sizeof(escaped));
+> @@ -5771,7 +5771,7 @@ static int ipw_best_network(struct ipw_priv *priv,
+>  		     memcmp(network->ssid, priv->essid,
+>  			    min(network->ssid_len, priv->essid_len)))) {
+>  			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+> -			strncpy(escaped,
+> +			strlcpy(escaped,
+>  				print_ssid(ssid, network->ssid,
+>  					   network->ssid_len),
+>  				sizeof(escaped));
+> @@ -5788,7 +5788,7 @@ static int ipw_best_network(struct ipw_priv *priv,
+>  	 * testing everything else. */
+>  	if (match->network && match->network->stats.rssi > network->stats.rssi) {
+>  		char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+> -		strncpy(escaped,
+> +		strlcpy(escaped,
+>  			print_ssid(ssid, network->ssid, network->ssid_len),
+>  			sizeof(escaped));
+>  		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
 
-  oh, sorry, it is my fault.
+This happens because escaped is declared the wrong size.
 
-  according to fill_write_buffer in fs/sysfs/file.c,
-    we can assume that 'const char *buf' must be '\0' based string.
-
-  please skip original reply.
-
-
-gchen.
-
-于 2013年01月20日 17:31, Chen Gang 写道:
-> Hello all:
-> 
->   sorry, after checking the details:
->     I think this patch is incorrect.
->       we can not assume that the parameter "char *buf" is terminated by '\0'
->       so we should only use strlcpy instead of strncpy, without touching 'min(...'
-> 
->   since it is already integrated into main branch (at least, in next-20130118).
->     I should send additional patch to fix it.
-> 
->   please help to check, thanks.
-> 
-> 
-> gchen.
-> 
-> 
-> 于 2013年01月07日 12:42, Chen Gang 写道:
->>
->>   The fields must be null-terminated, or simple_strtoul will cause issue.
->>
->> Signed-off-by: Chen Gang <gang.chen@asianux.com>
->> ---
->>  drivers/net/wireless/iwlegacy/3945-mac.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
->> index d604b40..3726cd6 100644
->> --- a/drivers/net/wireless/iwlegacy/3945-mac.c
->> +++ b/drivers/net/wireless/iwlegacy/3945-mac.c
->> @@ -3273,7 +3273,7 @@ il3945_store_measurement(struct device *d, struct device_attribute *attr,
->>  
->>  	if (count) {
->>  		char *p = buffer;
->> -		strncpy(buffer, buf, min(sizeof(buffer), count));
->> +		strlcpy(buffer, buf, sizeof(buffer));
->>  		channel = simple_strtoul(p, NULL, 0);
->>  		if (channel)
->>  			params.channel = channel;
->>
-> 
-> 
+It'd be better to change
+	char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+to
+	DECLARE_SSID_BUF(escaped);
+and use
+	print_ssid(escaped, network->ssid, network->ssid_len)
+in the debug.
 
 
--- 
-Chen Gang
-
-Flying Transformer
-
---------------050507030308040906040103
-Content-Type: text/x-vcard; charset=utf-8;
- name="chen_gang_flying_transformer.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="chen_gang_flying_transformer.vcf"
-
-YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
-ZW5kOnZjYXJkDQoNCg==
---------------050507030308040906040103--
