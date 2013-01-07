@@ -1,114 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:46739 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab3ATWFM (ORCPT
+Received: from intranet.asianux.com ([58.214.24.6]:4821 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753009Ab3AGCs6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 17:05:12 -0500
+	Sun, 6 Jan 2013 21:48:58 -0500
+Message-ID: <50EA37CE.1090901@asianux.com> (sfid-20130107_034903_808096_CAC4508B)
+Date: Mon, 07 Jan 2013 10:49:50 +0800
+From: Chen Gang <gang.chen@asianux.com>
 MIME-Version: 1.0
-In-Reply-To: <1358715322-46447-2-git-send-email-nbd@openwrt.org>
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org>
-	<1358715322-46447-2-git-send-email-nbd@openwrt.org>
-Date: Sun, 20 Jan 2013 14:05:10 -0800
-Message-ID: <CAJ-Vmontz33Fzx5_=D=LDFoWEkmWSO5iku3aiv5S+gQJCDD3og@mail.gmail.com> (sfid-20130120_230517_479504_C4B852E8)
-Subject: Re: [PATCH 3.8 2/3] ath9k_hw: fix chain swap setting when setting rx
- chainmask to 5
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: stas.yakovlev@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of
+ strncpy
+References: <50E82D7D.4090107@asianux.com> <1357396966.21156.4.camel@joe-AO722>
+In-Reply-To: <1357396966.21156.4.camel@joe-AO722>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hiya,
+于 2013年01月05日 22:42, Joe Perches 写道:
+> This happens because escaped is declared the wrong size.
+> 
+> It'd be better to change
+> 	char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+> to
+> 	DECLARE_SSID_BUF(escaped);
+> and use
+> 	print_ssid(escaped, network->ssid, network->ssid_len)
+> in the debug.
+> 
 
-What's the motivation behind this?
+  if what you said is true:
+    it is better to delete escaped variable
+    use ssid instead of escaped, directly.
 
-The reason why the PHY analog swapping is done when the chainmask set
-to 0x5 is because pre-AR9280 chips didn't support arbitrary chainmask
-configurations for TX.
-So it could either be 0x1, 0x3, or 0x7.
+  but I think the original author intended to use escaped instead of ssid
+    DECLARE_SSID_BUF(ssid)  (line 5525, 5737)
+    use ssid to print debug information directly
+      (such as: line 5530..5535, 5545..5549, 5745..5749, ...)
+    when need print additional information, use escaped
+      (line 5559..5569, 5773..5782, 5791..5799)
 
-The AR5416 2-TX 3-TX reference design has TX antenna on chain 0 and 2
-(hence 0x5, as you know), so:
+  so, I still suggest:
+    only fix the bug (use strlcpy instead of strncpy)
+    and not touch original features which orignal author intended using.
 
-* One should never be allowed to configure a TX chainmask enabling
-chain 1, as that plain won't work (there's no actual TX bits on the
-card itself; it only has the RX related switch/amp/etc);
-* If the chainmask is set to 0x3 or 0x5 on a device that has 3 TX
-chains (ie, anything AR93xx and later with 3 chains and 3 TX capable
-switches/amplifiers on the NIC itself) then _strictly speaking_ I
-don't think it's necessary to do the analog swap, but that's when
-you'd do it.
+  Regards
 
-The AR9130 and AR9160 have the same limitation. The AR9280 and later
-don't, but the AR92xx chips are one or two chain, so this doesn't
-(strictly speaking) need to happen.
+gchen.
 
-For FreeBSD, I'm going to add code to enforce that the configured
-chainmask doesn't conflict with the EEPROM chainmask, in case people
-try to do stupid things.
+in drivers/net/wireless/ipw2x00/ipw2200.c:
 
-Thanks,
+ 5519 static int ipw_find_adhoc_network(struct ipw_priv *priv,
+ 5520                                   struct ipw_network_match *match,
+ 5521                                   struct libipw_network *network,
+ 5522                                   int roaming)
+ 5523 {
+ 5524         struct ipw_supported_rates rates;
+ 5525         DECLARE_SSID_BUF(ssid);
+ 5526 
+ 5527         /* Verify that this network's capability is compatible with the
+ 5528          * current mode (AdHoc or Infrastructure) */
+ 5529         if ((priv->ieee->iw_mode == IW_MODE_ADHOC &&
+ 5530              !(network->capability & WLAN_CAPABILITY_IBSS))) {
+ 5531                 IPW_DEBUG_MERGE("Network '%s (%pM)' excluded due to "
+ 5532                                 "capability mismatch.\n",
+ 5533                                 print_ssid(ssid, network->ssid,
+ 5534                                            network->ssid_len),
+ 5535                                 network->bssid);
+ 5536                 return 0;
+ 5537         }
+ 5538 
+ 5539         if (unlikely(roaming)) {
+ 5540                 /* If we are roaming, then ensure check if this is a valid
+ 5541                  * network to try and roam to */
+ 5542                 if ((network->ssid_len != match->network->ssid_len) ||
+ 5543                     memcmp(network->ssid, match->network->ssid,
+ 5544                            network->ssid_len)) {
+ 5545                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
+ 5546                                         "because of non-network ESSID.\n",
+ 5547                                         print_ssid(ssid, network->ssid,
+ 5548                                                    network->ssid_len),
+ 5549                                         network->bssid);
+ 5550                         return 0;
+ 5551                 }
+ 5552         } else {
+ 5553                 /* If an ESSID has been configured then compare the broadcast
+ 5554                  * ESSID to ours */
+ 5555                 if ((priv->config & CFG_STATIC_ESSID) &&
+ 5556                     ((network->ssid_len != priv->essid_len) ||
+ 5557                      memcmp(network->ssid, priv->essid,
+ 5558                             min(network->ssid_len, priv->essid_len)))) {
+ 5559                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+ 5560 
+ 5561                         strncpy(escaped,
+ 5562                                 print_ssid(ssid, network->ssid,
+ 5563                                            network->ssid_len),
+ 5564                                 sizeof(escaped));
+ 5565                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
+ 5566                                         "because of ESSID mismatch: '%s'.\n",
+ 5567                                         escaped, network->bssid,
+ 5568                                         print_ssid(ssid, priv->essid,
+ 5569                                                    priv->essid_len));
+ 5570                         return 0;
+ 5571                 }
+ 5572         }
+ ...
+ 
+ 5732 static int ipw_best_network(struct ipw_priv *priv,
+ 5733                             struct ipw_network_match *match,
+ 5734                             struct libipw_network *network, int roaming)
+ 5735 {
+ 5736         struct ipw_supported_rates rates;
+ 5737         DECLARE_SSID_BUF(ssid);
+ 5738 
+ 5739         /* Verify that this network's capability is compatible with the
+ 5740          * current mode (AdHoc or Infrastructure) */
+ 5741         if ((priv->ieee->iw_mode == IW_MODE_INFRA &&
+ 5742              !(network->capability & WLAN_CAPABILITY_ESS)) ||
+ 5743             (priv->ieee->iw_mode == IW_MODE_ADHOC &&
+ 5744              !(network->capability & WLAN_CAPABILITY_IBSS))) {
+ 5745                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded due to "
+ 5746                                 "capability mismatch.\n",
+ 5747                                 print_ssid(ssid, network->ssid,
+ 5748                                            network->ssid_len),
+ 5749                                 network->bssid);
+ 5750                 return 0;
+ 5751         }
+ 5752 
+ 5753         if (unlikely(roaming)) {
+ 5754                 /* If we are roaming, then ensure check if this is a valid
+ 5755                  * network to try and roam to */
+ 5756                 if ((network->ssid_len != match->network->ssid_len) ||
+ 5757                     memcmp(network->ssid, match->network->ssid,
+ 5758                            network->ssid_len)) {
+ 5759                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
+ 5760                                         "because of non-network ESSID.\n",
+ 5761                                         print_ssid(ssid, network->ssid,
+ 5762                                                    network->ssid_len),
+ 5763                                         network->bssid);
+ 5764                         return 0;
+ 5765                 }
+ 5766         } else {
+ 5767                 /* If an ESSID has been configured then compare the broadcast
+ 5768                  * ESSID to ours */
+ 5769                 if ((priv->config & CFG_STATIC_ESSID) &&
+ 5770                     ((network->ssid_len != priv->essid_len) ||
+ 5771                      memcmp(network->ssid, priv->essid,
+ 5772                             min(network->ssid_len, priv->essid_len)))) {
+ 5773                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+ 5774                         strncpy(escaped,
+ 5775                                 print_ssid(ssid, network->ssid,
+ 5776                                            network->ssid_len),
+ 5777                                 sizeof(escaped));
+ 5778                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
+ 5779                                         "because of ESSID mismatch: '%s'.\n",
+ 5780                                         escaped, network->bssid,
+ 5781                                         print_ssid(ssid, priv->essid,
+ 5782                                                    priv->essid_len));
+ 5783                         return 0;
+ 5784                 }
+ 5785         }
+ 5786 
+ 5787         /* If the old network rate is better than this one, don't bother
+ 5788          * testing everything else. */
+ 5789         if (match->network && match->network->stats.rssi > network->stats.rssi) {
+ 5790                 char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+ 5791                 strncpy(escaped,
+ 5792                         print_ssid(ssid, network->ssid, network->ssid_len),
+ 5793                         sizeof(escaped));
+ 5794                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
+ 5795                                 "'%s (%pM)' has a stronger signal.\n",
+ 5796                                 escaped, network->bssid,
+ 5797                                 print_ssid(ssid, match->network->ssid,
+ 5798                                            match->network->ssid_len),
+ 5799                                 match->network->bssid);
+ 5800                 return 0;
+ 5801         }
 
-Adrian
+-- 
+Chen Gang
 
-
-On 20 January 2013 12:55, Felix Fietkau <nbd@openwrt.org> wrote:
-> Chain swapping should only be enabled when the EEPROM chainmask is set to 5,
-> regardless of what the runtime chainmask is.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c | 25 ++++++-------------------
->  1 file changed, 6 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index 8290edd..3afc24b 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -588,30 +588,17 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
->
->  void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
->  {
-> -       switch (rx) {
-> -       case 0x5:
-> +       if (ah->caps.tx_chainmask == 5 || ah->caps.rx_chainmask == 5)
->                 REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
->                             AR_PHY_SWAP_ALT_CHAIN);
-> -       case 0x3:
-> -       case 0x1:
-> -       case 0x2:
-> -       case 0x7:
-> -               REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx);
-> -               REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx);
-> -               break;
-> -       default:
-> -               break;
-> -       }
-> +
-> +       REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx);
-> +       REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx);
->
->         if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) && (tx == 0x7))
-> -               REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
-> -       else
-> -               REG_WRITE(ah, AR_SELFGEN_MASK, tx);
-> +               tx = 3;
->
-> -       if (tx == 0x5) {
-> -               REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
-> -                           AR_PHY_SWAP_ALT_CHAIN);
-> -       }
-> +       REG_WRITE(ah, AR_SELFGEN_MASK, tx);
->  }
->
->  /*
-> --
-> 1.8.0.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Asianux Corporation
