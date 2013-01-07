@@ -1,126 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:53291 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754703Ab3AVTv1 (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:64181 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754290Ab3AHAAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 14:51:27 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so4048655bkw.33
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 11:51:26 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: register platform device for parallel flash
-Date: Tue, 22 Jan 2013 20:50:43 +0100
-Message-Id: <1358884243-29668-1-git-send-email-zajec5@gmail.com> (sfid-20130122_205132_185758_58D34AAD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Jan 2013 19:00:37 -0500
+Received: by mail-wg0-f46.google.com with SMTP id dr13so10044182wgb.13
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 16:00:36 -0800 (PST)
+Message-ID: <1357602787.12182.14.camel@canaries64> (sfid-20130108_010043_397099_4FD8FCBE)
+Subject: Re: [PATCH 01/11] staging: vt6656: create new structure names to
+ remove typedefs.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 07 Jan 2013 23:53:07 +0000
+In-Reply-To: <20130107191456.GA8395@kroah.com>
+References: <1355176559.4680.15.camel@canaries64>
+	 <20130107191456.GA8395@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2013-01-07 at 11:14 -0800, Greg KH wrote:
+> On Mon, Dec 10, 2012 at 09:55:59PM +0000, Malcolm Priestley wrote:
+> > 
+> > This patch and the next 8 patches remove the old structure names and
+> > replace;
+> > 
+> > 
+> > struct vnt_private for DEVICE_INFO and PSDevice
+> > struct vnt_manager for SMgmtObject
+> > struct vnt_rx_mgmt for SRxMgmtPacket and PSRxMgmtPacket
+> > struct vnt_tx_mgmt for STxMgmtPacket and PSTxMgmtPacket
+> > 
+> > and
+> > 
+> > struct vnt_manager vnt_mgmt
+> > to replace
+> > SMgmtObject sMgmtObj;
+> > 
+> > Applied after patch staging: vt6656: dpc.c :RXbBulkInProcessData clean up RSC
+> 
+> Not all of these patches could be applied, can you please redo the ones
+> I didn't apply and resend them?
+> 
+Yes, the missing rebased patches have been sent.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: fix error message (s/serial/parallel/)
----
- drivers/bcma/bcma_private.h |    1 +
- drivers/bcma/driver_mips.c  |   28 +++++++++++++++++++++++-----
- drivers/bcma/main.c         |    8 ++++++++
- 3 files changed, 32 insertions(+), 5 deletions(-)
+Regards
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 04f7c86..6f377bd 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -47,6 +47,7 @@ int bcma_sprom_get(struct bcma_bus *bus);
- /* driver_chipcommon.c */
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
-+extern struct platform_device bcma_pflash_dev;
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
- /* driver_chipcommon_pmu.c */
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 9fe86ee..cf8b6b7 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -14,11 +14,23 @@
- 
- #include <linux/bcma/bcma.h>
- 
-+#include <linux/platform_device.h>
- #include <linux/serial.h>
- #include <linux/serial_core.h>
- #include <linux/serial_reg.h>
- #include <linux/time.h>
- 
-+static struct resource bcma_pflash_resource = {
-+	.name	= "bcma_pflash",
-+	.flags  = IORESOURCE_MEM,
-+};
-+
-+struct platform_device bcma_pflash_dev = {
-+	.name		= "bcma_pflash",
-+	.resource	= &bcma_pflash_resource,
-+	.num_resources	= 1,
-+};
-+
- /* The 47162a0 hangs when reading MIPS DMP registers registers */
- static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
- {
-@@ -211,6 +223,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus = mcore->core->bus;
- 	struct bcma_drv_cc *cc = &bus->drv_cc;
-+	struct bcma_pflash *pflash = &cc->pflash;
- 
- 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
- 	case BCMA_CC_FLASHT_STSER:
-@@ -220,15 +233,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 		break;
- 	case BCMA_CC_FLASHT_PARA:
- 		bcma_debug(bus, "Found parallel flash\n");
--		cc->pflash.present = true;
--		cc->pflash.window = BCMA_SOC_FLASH2;
--		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
-+		pflash->present = true;
-+		pflash->window = BCMA_SOC_FLASH2;
-+		pflash->window_size = BCMA_SOC_FLASH2_SZ;
- 
- 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
- 		     BCMA_CC_FLASH_CFG_DS) == 0)
--			cc->pflash.buswidth = 1;
-+			pflash->buswidth = 1;
- 		else
--			cc->pflash.buswidth = 2;
-+			pflash->buswidth = 2;
-+
-+		bcma_pflash_resource.start = pflash->window;
-+		bcma_pflash_resource.end = pflash->window + pflash->window_size;
-+		bcma_pflash_dev.dev.platform_data = pflash;
-+
- 		break;
- 	default:
- 		bcma_err(bus, "Flash type not supported\n");
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index ff85289..6eda7ef 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -149,6 +149,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 		dev_id++;
- 	}
- 
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+	if (bus->drv_cc.pflash.present) {
-+		err = platform_device_register(&bcma_pflash_dev);
-+		if (err)
-+			bcma_err(bus, "Error registering parallel flash\n");
-+	}
-+#endif
-+
- #ifdef CONFIG_BCMA_SFLASH
- 	if (bus->drv_cc.sflash.present) {
- 		err = platform_device_register(&bcma_sflash_dev);
--- 
-1.7.7
+
+Malcolm
 
