@@ -1,35 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:50800 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752009Ab3AGPLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 10:11:45 -0500
-Date: Mon, 7 Jan 2013 16:06:40 +0100
-From: Julian Wollrath <jwollrath@web.de>
-To: Julian Wollrath <jwollrath@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: WARNING: at net/wireless/mlme.c:517
-Message-ID: <20130107160640.2dbfa21d@ilfaris> (sfid-20130107_161148_212190_1417A5A7)
-In-Reply-To: <20130103103150.21ed1269@ilfaris>
-References: <20130101154507.351dfb03@ilfaris>
-	<50E325B5.205@lwfinger.net>
-	<20130101231544.430cf1fe@ilfaris>
-	<50E36325.3090502@lwfinger.net>
-	<20130102120002.691dbbb4@ilfaris>
-	<50E467C4.6030602@lwfinger.net>
-	<20130103103150.21ed1269@ilfaris>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-we0-f174.google.com ([74.125.82.174]:49510 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626Ab3AGKXN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 05:23:13 -0500
+Received: by mail-we0-f174.google.com with SMTP id x10so9713410wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 02:23:11 -0800 (PST)
+Date: Mon, 7 Jan 2013 11:23:07 +0100
+From: Jiri Pirko <jiri@resnulli.us>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
+Message-ID: <20130107102307.GA1587@minipsycho.orion> (sfid-20130107_112316_865807_D495F06C)
+References: <20130107095548.GA6931@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130107095548.GA6931@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> [...] similar problems accured at university where WPA2 is used
-> and the AP are probably not the same there (I can check it next
-> monday).
-At university I have a signal strength of 10.00dBm and the network has
-the flags [WPA-EAP-TKIP+CCMP][WPA2-EAP-CCMP][ESS] but what model etc.
-the AP has, I have no idea.
+Mon, Jan 07, 2013 at 10:55:49AM CET, sgruszka@redhat.com wrote:
+>Since:
+>
+>commit 2c60db037034d27f8c636403355d52872da92f81
+>Author: Eric Dumazet <edumazet@google.com>
+>Date:   Sun Sep 16 09:17:26 2012 +0000
+>
+>    net: provide a default dev->ethtool_ops
+>
+>wireless core does not correctly assign ethtool_ops. In order to fix
+>the problem, and avoid assigning ethtool_ops on each individual cfg80211
+>drivers, we check against default_ethool_ops pointer instead of NULL in
+>wireless core.
+>
+>Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>Acked-by: Ben Hutchings <bhutchings@solarflare.com>
+>Cc: stable@vger.kernel.org # 3.7+
+>---
+>This should go directly through net tree since patch include core
+>net specific changes.
+>
+> include/linux/netdevice.h |    2 ++
+> net/core/dev.c            |    3 ++-
+> net/wireless/core.c       |    2 +-
+> 3 files changed, 5 insertions(+), 2 deletions(-)
+>
+>diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+>index f8eda02..c98e1c3 100644
+>--- a/include/linux/netdevice.h
+>+++ b/include/linux/netdevice.h
+>@@ -60,6 +60,8 @@ struct wireless_dev;
+> #define SET_ETHTOOL_OPS(netdev,ops) \
+> 	( (netdev)->ethtool_ops = (ops) )
+> 
+>+extern const struct ethtool_ops default_ethtool_ops;
+>+
+> /* hardware address assignment types */
+> #define NET_ADDR_PERM		0	/* address is permanent (default) */
+> #define NET_ADDR_RANDOM		1	/* address is generated randomly */
+>diff --git a/net/core/dev.c b/net/core/dev.c
+>index c0946cb..4cd2168 100644
+>--- a/net/core/dev.c
+>+++ b/net/core/dev.c
+>@@ -6008,7 +6008,8 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+> 	return queue;
+> }
+> 
+>-static const struct ethtool_ops default_ethtool_ops;
+>+const struct ethtool_ops default_ethtool_ops;
+>+EXPORT_SYMBOL_GPL(default_ethtool_ops);
 
+I think that default_ethtool_ops should stay static. Wouldn't it be
+nicer to introduce a helper like:
 
-With best regards,
-Julian
+bool dev_has_default_ethtool_ops(struct net_device *dev)
+{
+	return dev->ethtool_ops == &default_ethtool_ops;
+}
+
+> 
+> /**
+>  *	alloc_netdev_mqs - allocate network device
+>diff --git a/net/wireless/core.c b/net/wireless/core.c
+>index 14d9904..90915d4 100644
+>--- a/net/wireless/core.c
+>+++ b/net/wireless/core.c
+>@@ -866,7 +866,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+> 		/* allow mac80211 to determine the timeout */
+> 		wdev->ps_timeout = -1;
+> 
+>-		if (!dev->ethtool_ops)
+>+		if (dev->ethtool_ops == &default_ethtool_ops)
+> 			dev->ethtool_ops = &cfg80211_ethtool_ops;
+> 
+> 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+>-- 
+>1.7.1
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe netdev" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
