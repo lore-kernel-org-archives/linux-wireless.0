@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:53631 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753552Ab3AKUP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 15:15:26 -0500
-Message-ID: <1357935264.28524.8.camel@cumari.coelho.fi> (sfid-20130111_211529_595509_6F2E3C43)
-Subject: Re: [PATCH] wireless: make the reg_notifier() void
-From: Luciano Coelho <coelho@ti.com>
-To: <mcgrof@do-not-panic.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Date: Fri, 11 Jan 2013 22:14:24 +0200
-In-Reply-To: <1357929576-11609-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1357929576-11609-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:44420 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626Ab3AGLRO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 06:17:14 -0500
+Received: by mail-wg0-f52.google.com with SMTP id 12so9724187wgh.7
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 03:17:13 -0800 (PST)
+Date: Mon, 7 Jan 2013 12:11:08 +0100
+From: Jiri Pirko <jiri@resnulli.us>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
+Message-ID: <20130107111108.GB1587@minipsycho.orion> (sfid-20130107_121718_137652_57550FF0)
+References: <20130107095548.GA6931@redhat.com>
+ <20130107102307.GA1587@minipsycho.orion>
+ <20130107104413.GB6931@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130107104413.GB6931@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-01-11 at 18:39 +0000, mcgrof@do-not-panic.com wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> 
-> The reg_notifier()'s return value need not be checked
-> as it is only supposed to do post regulatory work and
-> that should never fail. Any behaviour to regulatory
-> that needs to be considered before cfg80211 does work
-> to a driver should be specified by using the already
-> existing flags, the reg_notifier() just does post
-> processing should it find it needs to.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> ---
+Mon, Jan 07, 2013 at 11:44:14AM CET, sgruszka@redhat.com wrote:
+>On Mon, Jan 07, 2013 at 11:23:07AM +0100, Jiri Pirko wrote:
+>> >-static const struct ethtool_ops default_ethtool_ops;
+>> >+const struct ethtool_ops default_ethtool_ops;
+>> >+EXPORT_SYMBOL_GPL(default_ethtool_ops);
+>> 
+>> I think that default_ethtool_ops should stay static. Wouldn't it be
+>> nicer to introduce a helper like:
+>> 
+>> bool dev_has_default_ethtool_ops(struct net_device *dev)
+>> {
+>> 	return dev->ethtool_ops == &default_ethtool_ops;
+>> }
+>
+>Then I still have to export this function. So with your approch, number
+>of exported symbols will be the same, but there will be few more lines
+>of code.
 
-For the wlcore part:
+I think it's always better to add few more lines in order to prevent possible
+confusion which exporting default_ethtool_ops might introduce...
 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index d7de063..ce6e62a 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -89,8 +89,8 @@ static int wl12xx_set_authorized(struct wl1271 *wl,
->  	return 0;
->  }
->  
-> -static int wl1271_reg_notify(struct wiphy *wiphy,
-> -			     struct regulatory_request *request)
-> +static void wl1271_reg_notify(struct wiphy *wiphy,
-> +			      struct regulatory_request *request)
->  {
->  	struct ieee80211_supported_band *band;
->  	struct ieee80211_channel *ch;
-> @@ -107,8 +107,6 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
->  				     IEEE80211_CHAN_PASSIVE_SCAN;
->  
->  	}
-> -
-> -	return 0;
->  }
->  
->  static int wl1271_set_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-
-Acked-by: Luciano Coelho <coelho@ti.com>
-
---
-Luca.
-
+>
+>Stanislaw
