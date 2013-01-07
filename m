@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:53095
-	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752237Ab3AJQEu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 11:04:50 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] Revert "ath9k_hw: Fix calibration for AR9340"
-Date: Thu, 10 Jan 2013 21:33:50 +0530
-Message-Id: <1357833830-24005-1-git-send-email-sujith@msujith.org> (sfid-20130110_170454_400213_00E19FB3)
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:46539 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754874Ab3AGSrh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 13:47:37 -0500
+Received: by mail-wg0-f49.google.com with SMTP id 15so9724180wgd.28
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 10:47:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1357571093-12868-2-git-send-email-marco@cozybit.com>
+References: <1357571093-12868-1-git-send-email-marco@cozybit.com> <1357571093-12868-2-git-send-email-marco@cozybit.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 7 Jan 2013 10:47:13 -0800
+Message-ID: <CAG6hwVMCqsOkLgkS-f1Dt+yz2VF5OKXra=k1Pv-Hv+7CwQaoyA@mail.gmail.com> (sfid-20130107_194742_128835_FC742D86)
+Subject: Re: [PATCHv2 1/6] nl80211: add range checks to mesh parameters
+To: devel@lists.open80211s.org
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Jan 7, 2013 at 7:04 AM, Marco Porsch <marco@cozybit.com> wrote:
+> Ranges are taken from IEEE 802.11-2012, common sense or current implementation
+> requirements.
+>
+> Signed-off-by: Marco Porsch <marco@cozybit.com>
+Acked-by: Thomas Pedersen <thomas@cozybit.com>
 
-This reverts commit 03c2dc73581ad4ae54f1ccfc1463929b16b8b736.
+I believe Javier acked an earlier submission of this patch as well.
 
-The change for AR9340 breaks TP-Link TL-WDR4300, we can re-submit this
-change once the HW differences are identified and appropriate code
-changes have been made.
-
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 9221f32..4caa80b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -319,7 +319,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ah->enabled_cals |= TX_IQ_CAL;
--		if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah))
-+		if (AR_SREV_9485_OR_LATER(ah))
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
- 
--- 
-1.8.1
-
+Thomas
