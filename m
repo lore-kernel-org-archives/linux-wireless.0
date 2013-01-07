@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:47590 "EHLO
-	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750757Ab3AUInA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 03:43:00 -0500
-From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl12xx: does not connect to WPA2-personal
-Date: Mon, 21 Jan 2013 08:42:52 +0000
-Message-ID: <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in> (sfid-20130121_094306_155555_021F8876)
-References: <loom.20130120T094649-416@post.gmane.org>
- <1358754973.6252.131.camel@cumari.coelho.fi>
-In-Reply-To: <1358754973.6252.131.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+Received: from blu0-omc2-s22.blu0.hotmail.com ([65.55.111.97]:24874 "EHLO
+	blu0-omc2-s22.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753311Ab3AGCK1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jan 2013 21:10:27 -0500
+Message-ID: <BLU0-SMTP105F4CBB2D1B6BFD054986EAC250@phx.gbl> (sfid-20130107_031033_278972_38C55C13)
+Subject: Re: [PATCH 2/6] bcma: mips: explicit assign IRQ numbers
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Sun, 6 Jan 2013 18:10:23 -0800
+In-Reply-To: <50E9E001.6060301@hauke-m.de>
+References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
+	 <1357257085-11822-3-git-send-email-hauke@hauke-m.de>
+	 <CACna6rwincxUDM9ev9_CwH-MByS_5tGyd7hpR+wgR6D-rNzgww@mail.gmail.com>
+	 <50E9E001.6060301@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjaWFubywNCg0KSSBhcHBsaWVkIHNvbWUgb2YgdGhlIGNvZGUgY29tbWl0cyB0aGF0
-IHdlcmUgZG9uZSB0byB3bDEyeHggZHJpdmVyIChodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9
-bGludXgva2VybmVsL2dpdC9zdGFibGUvbGludXgtc3RhYmxlLmdpdDthPWhpc3Rvcnk7Zj1k
-cml2ZXJzL25ldC93aXJlbGVzcztoYj1IRUFEO3BnPTIwICk6DQoNCjIwMTItMDQtMTAgIAlF
-eWFsIFNoYXBpcmEgCQl3bDEyeHg6IGluY3JlYXNlIHNjYW4gdGltZW91dCB0byAzMHMNCjIw
-MTItMDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGFkYXB0aXZlIHNjaGVkIHNjYW4gZHdl
-bGwgdGltZXMNCjIwMTItMDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGZpeCBhIG1lbW9y
-eSBsZWFrIG9mIHByb2JlcmVxIHRlbXBsYXRlIHVwb24NCjIwMTItMDQtMTAJRWxpYWQgUGVs
-bGVyCQl3bDEyeHg6IGZyZWUgYXAga2V5cyBvbmx5IGluIGFwIG1vZGUNCjIwMTItMDQtMTAJ
-RXlhbCBTaGFwaXJhCQl3bDEyeHg6IGZpeCByYWNlIGJldHdlZW4gc3VzcGVuZC9yZXN1bWUg
-YW5kIHJlY292ZXJ5DQoyMDEyLTA0LTEwCVZpY3RvciBHb2xkZW5zaHRlaW4Jd2wxMnh4OiBm
-aXggc3RhdGlvbiBjaGFubmVsIHN3aXRjaA0KMjAxMi0wNC0xMAlFbGlhZCBQZWxsZXIJCXds
-MTJ4eDogc2V0IGRvX2pvaW4gb24gQlNTX0NIQU5HRURfQVNTT0MNCg0KQWZ0ZXIgYXBwbHlp
-bmcgdGhlc2UgY2hhbmdlcywgaXQgZ290IGNvbm5lY3RlZCB0byBXUEEyLXBlcnNvbmFsLiBD
-dXJyZW50bHkgZG9pbmcgc29tZSBtb3JlIHRlc3RpbmcNCg0KVGhhbmtzLA0KS2V0YW4NCg0K
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEx1Y2lhbm8gQ29lbGhvIFttYWls
-dG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBNb25kYXksIEphbnVhcnkgMjEsIDIwMTMgMToy
-NiBQTQ0KVG86IEtldGFuIEthbWF0DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4OiBkb2VzIG5vdCBjb25uZWN0IHRvIFdQQTItcGVy
-c29uYWwNCg0KSGkgS2V0YW4sDQoNCk9uIFN1biwgMjAxMy0wMS0yMCBhdCAwODo0NyArMDAw
-MCwgS2V0YW4gS2FtYXQgd3JvdGU6DQo+IEhlbGxvIEx1Y2lhbm8sDQo+IA0KPiB3ZSBhcmUg
-ZmFjaW5nIGEgcHJvYmxlbSB3aXRoIHdsMTI3MSBtb2R1bGUgd2hlbiBjb25uZWN0aW5nIHRv
-IA0KPiBXUEEyLXBlcnNvbmFsIG5ldHdvcmsgd2l0aCBjaXBlciBBRVMuSXQgY29ubmVjdHMg
-YWZ0ZXIgc3VjY2Vzc2Z1bCANCj4gYXV0aGVudGljYXRpb24gKHdpdGhvdXQgZ2V0dGluZyBJ
-UCBhZGRyZXNzKSBhbmQga2VlcHMgcmV0cnlpbmcgZm9yIElQIA0KPiBhZGRyZXNzIGFmdGVy
-IGNvbm5lY3RpbmcgKGFuZCBzdWRkZW5seSBkaXNjb25uZWN0cyBhcyB3ZWxsKS4NCg0KVGhp
-cyBzb3VuZHMgbGlrZSBhbiBlbmNyeXB0aW9uIHByb2JsZW0uDQoNCg0KPiBXZSBhcmUgdXNp
-bmcgdWJ1bnR1IDEyLjA0IHdpdGggbGludXgga2VybmVsIDMuNC43IGJ1aWx0IHVzaW5nIA0K
-PiBzdGFibGUta2VybmVsIHRyZWUuIHdsMTJ4eCBmaXJtd2FyZSBsb2FkZWQgZm9yIHdsMTJ4
-eCBpcyA2LjMuNS4wLjk4LiANCj4gSGFyZHdhcmUgc2V0dXAgY29uc2lzdHMgb2YgYmVhZ2xl
-IGJvYXJkIGNvbm5lY3RlZCB0byB0aGUgY2hpcHNlZSANCj4gbW9kdWxlIHRoYXQgaGFzIHRv
-dWNoc2NyZWVuIGFuZCB0aGUNCj4gd2wxMjcxIG1vZHVsZS4NCj4gDQo+IEkgYW0gbWVudGlv
-bmluZyB0d28gc2NlbmFyaW9zIGhlcmU6DQo+IDEuIEhlcmUgd2UgdXNlIGEgcm91dGVyIHRo
-YXQgd2UgY2FuIGNvbmZpZ3VyZSB0byBkaWZmZXJlbnQgd2lmaSANCj4gc2VjdXJpdHkuIElm
-IHdlIHNldCB0aGUgd2lmaSBuZXR3b3JrIHRvIG9wZW4gaS5lIHNlY3VyaXR5PU5vbmUsIHds
-MTI3MSBtb2R1bGUgZ2V0cyBjb25uZWN0ZWQuDQo+IEhlbmNlIGRvZXMgbm90IHNlZW0gdG8g
-YmUgcHJvYmxlbSByZWxhdGVkIHRvIGFudGVubmEgb3IgcmFuZ2UuDQoNCldoYXQgaXMgdGhl
-IG1vZGVsIG9mIHRoZSBBUCB5b3UncmUgdXNpbmc/DQoNCg0KPiAyLiBJZiBpIHJlbW92ZSBk
-cml2ZXIgZm9yIHdsMTJ4eCBhbmQgY29ubmVjdCBhIFVTQiBkb25nbGUgKHI4NzEydSksIA0K
-PiBhbmQgdHJ5IHRvIGNvbm5lY3QgdG8gdGhlIHNhbWUgV1BBMi1wZXJzb25hbCBuZXR3b3Jr
-Lkl0IHdvcmtzIGFuZCBnZXRzIA0KPiB0aGUgSVAgYWRkcmVzcy5Ib3dldmVyIHdlIHdhbnQg
-dG8gdXNlIG9uIGJvYXJkIHdsMTJ4eCBtb2R1bGUuDQo+IA0KPiBJcyBpdCB0aGUgcHJvYmxl
-bSB3aXRoIHRoZSB3bDEyeHggZHJpdmVyPyBBbnkgZml4IGZvciB0aGlzPw0KDQpJdCBjb3Vs
-ZCBiZSBhIHByb2JsZW0gd2l0aCB0aGUgZmlybXdhcmUuIA0KDQoNCj4gRG9lcyB3cGEyLXBl
-cnNvbmFsIHdvcmsgd2l0aCB3bDEyeHggd2l0aCBsYXRlc3QgTGludXgga2VybmVsICgzLjcu
-Mik/DQoNClllcywgQUVTIHdvcmtzIHdpdGggMy43Lg0KDQoNCj4gQW55IHBvaW50ZXJzIHRv
-d2FyZHMgdGhpcyB3b3VsZCBiZSBvZiBncmVhdCBoZWxwLg0KDQpEaWQgeW91IHRyeSBUS0lQ
-IGluc3RlYWQgb2YgQUVTPyBKdXN0IHRvIGZpbmQgb3V0IGlmIHRoZSBwcm9ibGVtIG9ubHkg
-aGFwcGVucyB3aXRoIEFFUy4NCg0KWW91IGNvdWxkIGFsc28gdHJ5IGNvbXBhdC4gIFRoZXJl
-IGFyZSBsb3RzIG9mIGZpeGVzIGFuZCBpbXByb3ZlbWVudHMgaW4gbmV3ZXIgdmVyc2lvbnMg
-b2YgdGhlIGRyaXZlciBhbmQgZmlybXdhcmUgaXQgdXNlcy4NCg0KSSdsbCB0cnkgYSBuZXdl
-ciBmaXJtd2FyZSBmb3IgMy40IHRoYXQgSSBmb3VuZCBoZXJlIGFuZCBsZXQgeW91IGtub3cg
-aG93IGl0IGdvZXMuDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0KDQoNCkRJU0NMQUlNRVIKPT09
-PT09PT09PQpUaGlzIGUtbWFpbCBtYXkgY29udGFpbiBwcml2aWxlZ2VkIGFuZCBjb25maWRl
-bnRpYWwgaW5mb3JtYXRpb24gd2hpY2ggaXMgdGhlIHByb3BlcnR5IG9mIFBlcnNpc3RlbnQg
-U3lzdGVtcyBMdGQuIEl0IGlzIGludGVuZGVkIG9ubHkgZm9yIHRoZSB1c2Ugb2YgdGhlIGlu
-ZGl2aWR1YWwgb3IgZW50aXR5IHRvIHdoaWNoIGl0IGlzIGFkZHJlc3NlZC4gSWYgeW91IGFy
-ZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgeW91IGFyZSBub3QgYXV0aG9yaXplZCB0
-byByZWFkLCByZXRhaW4sIGNvcHksIHByaW50LCBkaXN0cmlidXRlIG9yIHVzZSB0aGlzIG1l
-c3NhZ2UuIElmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgY29tbXVuaWNhdGlvbiBpbiBlcnJv
-ciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcyBvZiB0
-aGlzIG1lc3NhZ2UuIFBlcnNpc3RlbnQgU3lzdGVtcyBMdGQuIGRvZXMgbm90IGFjY2VwdCBh
-bnkgbGlhYmlsaXR5IGZvciB2aXJ1cyBpbmZlY3RlZCBtYWlscy4NCg==
+On Sun, 2013-01-06 at 21:35 +0100, Hauke Mehrtens wrote:
+> On 01/04/2013 08:43 AM, Rafał Miłecki wrote:
+> > 2013/1/4 Hauke Mehrtens <hauke@hauke-m.de>:
+> >> The assignment of the IRQs to the cores of the chips by iterating over
+> >> the cores is complicated and causes problems with SoC like the BCM4706
+> >> with two GMAC core where just one should get a dedicated IRQ number.
+> > 
+> > Well, the only problem on BCM4706 is that second (broken/dangling)
+> > GMAC core gets it's own IRQ. With such a "waste" of one IRQ line we
+> > may end up using shared IRQ for some other core like PCIE/USB.
+> > This issue can be simply workarounded (with 2 LOC) and sounds sane:
+> > bug in HW, specific workaround in a driver. We already have similar
+> > workarounds for other "dangling" cores.
+> > 
+> > I don't know about any other issues with BCM4706 IRQs.
+> > 
+> > Are there any other (more serious?) issues on different SoCs? Any
+> > advantages of hardcoding IRQs (per chipset) rather than keeping this
+> > simple algorithm? Do the IRQ lines differ? Is this somehow better to
+> > use (just an example) IRQ 3 instead of IRQ 4 for GMAC core?
+> 
+> Normally the boot loader (CFE) assigns IRQs to the cores on the bus. The
+> old code mostly worked because CFE did it correct most of the time.
+> 
+> On my bcm4718 the I2S core (id 0x834) does not get any IRQ from CFE, but
+> at least Nathan (nlhintz) wants to assign an IRQ (shared) to this core.
+This is the way it is in the Broadcom SDK; whether it matters or not, I
+don't know.  It seemed to be working without it too.  How would one tell
+if it is important?
+> 
+> It is also possible to extend the algorithm to solve all these things,
+> but I think the new code is better to understand.
+> 
+> I do not think that there will be any new SoC using bcma and a mips cpu,
+> I haven't seen an announcement for such a SoC at the Broadcom web page,
+> just arm based devices, so I assume this list is complete.
+> 
+> Hauke
+> 
+
+Nathan
+
