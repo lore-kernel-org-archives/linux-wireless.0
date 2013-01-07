@@ -1,632 +1,1641 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab3A1Jij (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:38189 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754145Ab3AGXeJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:38:39 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/37] iwlwifi: add the MVM driver (fw-api-tx)
-Date: Mon, 28 Jan 2013 10:37:18 +0100
-Message-Id: <1359365864-4259-12-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103857_505712_905DF531)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 7 Jan 2013 18:34:09 -0500
+Received: by mail-we0-f176.google.com with SMTP id r5so10270623wey.21
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 15:34:07 -0800 (PST)
+Message-ID: <1357601640.12182.6.camel@canaries64> (sfid-20130108_003415_066564_50DD14C7)
+Subject: [PATCH 1/3] staging: vt6656: change bssdb/rxtx/wpa2 to new
+ structures v2
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 07 Jan 2013 23:34:00 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+rebased version
 
-Newer firmware revisions have a completely new
-firmware API. This is the new driver for this
-new API.
+This patch cleans up function declarations, definitions and local variables
+where appropriate replacing types defined in "type.h" with linux/types.h.
 
-I've listed the people who directly contributed
-code, but many others from various teams have
-contributed in other ways.
-
-Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Amit Beka <amit.beka@intel.com>
-Cc: Amnon Paz <amnonx.paz@intel.com>
-Cc: Assaf Krauss <assaf.krauss@intel.com>
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Dor Shaish <dor.shaish@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Cc: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h | 580 +++++++++++++++++++++++++++
- 1 file changed, 580 insertions(+)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+ drivers/staging/vt6656/bssdb.c | 293 ++++++++--------
+ drivers/staging/vt6656/bssdb.h | 130 ++++---
+ drivers/staging/vt6656/rxtx.c  | 757 +++++++++++++----------------------------
+ drivers/staging/vt6656/rxtx.h  |  31 +-
+ drivers/staging/vt6656/wpa2.c  |  19 +-
+ 5 files changed, 452 insertions(+), 778 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
-new file mode 100644
-index 0000000..2677914
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
-@@ -0,0 +1,580 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *****************************************************************************/
+diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+index d1757cf..59765b0 100644
+--- a/drivers/staging/vt6656/bssdb.c
++++ b/drivers/staging/vt6656/bssdb.c
+@@ -91,9 +91,9 @@ const WORD             awHWRetry1[5][5] = {
+ 
+ /*---------------------  Static Functions  --------------------------*/
+ 
+-void s_vCheckSensitivity(void *hDeviceContext);
+-void s_vCheckPreEDThreshold(void *hDeviceContext);
+-void s_uCalculateLinkQual(void *hDeviceContext);
++static void s_vCheckSensitivity(struct vnt_private *pDevice);
++static void s_vCheckPreEDThreshold(struct vnt_private *pDevice);
++static void s_uCalculateLinkQual(struct vnt_private *pDevice);
+ 
+ /*---------------------  Export Variables  --------------------------*/
+ 
+@@ -114,20 +114,19 @@ void s_uCalculateLinkQual(void *hDeviceContext);
+  *
+ -*/
+ 
+-PKnownBSS BSSpSearchBSSList(void *hDeviceContext,
+-			    PBYTE pbyDesireBSSID,
+-			    PBYTE pbyDesireSSID,
+-			    CARD_PHY_TYPE ePhyType)
++PKnownBSS BSSpSearchBSSList(struct vnt_private *pDevice,
++		u8 *pbyDesireBSSID, u8 *pbyDesireSSID,
++		CARD_PHY_TYPE ePhyType)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    PBYTE           pbyBSSID = NULL;
+-    PWLAN_IE_SSID   pSSID = NULL;
+-    PKnownBSS       pCurrBSS = NULL;
+-    PKnownBSS       pSelect = NULL;
+-    BYTE                 ZeroBSSID[WLAN_BSSID_LEN]={0x00,0x00,0x00,0x00,0x00,0x00};
+-    unsigned int ii = 0;
+-    unsigned int jj = 0;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u8 *pbyBSSID = NULL;
++	PWLAN_IE_SSID pSSID = NULL;
++	PKnownBSS pCurrBSS = NULL;
++	PKnownBSS pSelect = NULL;
++	u8 ZeroBSSID[WLAN_BSSID_LEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
++	int ii = 0;
++	int jj = 0;
 +
-+#ifndef __fw_api_tx_h__
-+#define __fw_api_tx_h__
+     if (pbyDesireBSSID != NULL) {
+ 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
+ 			"BSSpSearchBSSList BSSID[%pM]\n", pbyDesireBSSID);
+@@ -262,11 +261,10 @@ pDevice->bSameBSSMaxNum = jj;
+ -*/
+ 
+
+-void BSSvClearBSSList(void *hDeviceContext, BOOL bKeepCurrBSSID)
++void BSSvClearBSSList(struct vnt_private *pDevice, int bKeepCurrBSSID)
+ {
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            ii;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	int ii;
+ 
+     for (ii = 0; ii < MAX_BSS_NUM; ii++) {
+         if (bKeepCurrBSSID) {
+@@ -298,14 +296,12 @@ void BSSvClearBSSList(void *hDeviceContext, BOOL bKeepCurrBSSID)
+  *    TRUE if found.
+  *
+ -*/
+-PKnownBSS BSSpAddrIsInBSSList(void *hDeviceContext,
+-			      PBYTE abyBSSID,
+-			      PWLAN_IE_SSID pSSID)
++PKnownBSS BSSpAddrIsInBSSList(struct vnt_private *pDevice,
++	u8 *abyBSSID, PWLAN_IE_SSID pSSID)
+ {
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    PKnownBSS       pBSSList = NULL;
+-    unsigned int            ii;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	PKnownBSS pBSSList = NULL;
++	int ii;
+ 
+     for (ii = 0; ii < MAX_BSS_NUM; ii++) {
+         pBSSList = &(pMgmt->sBSSList[ii]);
+@@ -336,32 +332,30 @@ PKnownBSS BSSpAddrIsInBSSList(void *hDeviceContext,
+  *
+ -*/
+ 
+-BOOL BSSbInsertToBSSList(void *hDeviceContext,
+-			 PBYTE abyBSSIDAddr,
++int BSSbInsertToBSSList(struct vnt_private *pDevice,
++			u8 *abyBSSIDAddr,
+ 			u64 qwTimestamp,
+-			 WORD wBeaconInterval,
+-			 WORD wCapInfo,
+-			 BYTE byCurrChannel,
+-			 PWLAN_IE_SSID pSSID,
+-			 PWLAN_IE_SUPP_RATES pSuppRates,
+-			 PWLAN_IE_SUPP_RATES pExtSuppRates,
+-			 PERPObject psERP,
+-			 PWLAN_IE_RSN pRSN,
+-			 PWLAN_IE_RSN_EXT pRSNWPA,
+-			 PWLAN_IE_COUNTRY pIE_Country,
+-			 PWLAN_IE_QUIET pIE_Quiet,
+-			 unsigned int uIELength,
+-			 PBYTE pbyIEs,
+-			 void *pRxPacketContext)
++			u16 wBeaconInterval,
++			u16 wCapInfo,
++			u8 byCurrChannel,
++			PWLAN_IE_SSID pSSID,
++			PWLAN_IE_SUPP_RATES pSuppRates,
++			PWLAN_IE_SUPP_RATES pExtSuppRates,
++			PERPObject psERP,
++			PWLAN_IE_RSN pRSN,
++			PWLAN_IE_RSN_EXT pRSNWPA,
++			PWLAN_IE_COUNTRY pIE_Country,
++			PWLAN_IE_QUIET pIE_Quiet,
++			u32 uIELength,
++			u8 *pbyIEs,
++			void *pRxPacketContext)
+ {
+-
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
+-    PKnownBSS       pBSSList = NULL;
+-    unsigned int            ii;
+-    BOOL            bParsingQuiet = FALSE;
+-
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	struct vnt_rx_mgmt *pRxPacket =
++		(struct vnt_rx_mgmt *)pRxPacketContext;
++	PKnownBSS pBSSList = NULL;
++	unsigned int ii;
++	BOOL bParsingQuiet = FALSE;
+ 
+
+     pBSSList = (PKnownBSS)&(pMgmt->sBSSList[0]);
+@@ -516,31 +510,31 @@ BOOL BSSbInsertToBSSList(void *hDeviceContext,
+ -*/
+ // TODO: input structure modify
+ 
+-BOOL BSSbUpdateToBSSList(void *hDeviceContext,
++int BSSbUpdateToBSSList(struct vnt_private *pDevice,
+ 			u64 qwTimestamp,
+-			 WORD wBeaconInterval,
+-			 WORD wCapInfo,
+-			 BYTE byCurrChannel,
+-			 BOOL bChannelHit,
+-			 PWLAN_IE_SSID pSSID,
+-			 PWLAN_IE_SUPP_RATES pSuppRates,
+-			 PWLAN_IE_SUPP_RATES pExtSuppRates,
+-			 PERPObject psERP,
+-			 PWLAN_IE_RSN pRSN,
+-			 PWLAN_IE_RSN_EXT pRSNWPA,
+-			 PWLAN_IE_COUNTRY pIE_Country,
+-			 PWLAN_IE_QUIET pIE_Quiet,
+-			 PKnownBSS pBSSList,
+-			 unsigned int uIELength,
+-			 PBYTE pbyIEs,
+-			 void *pRxPacketContext)
++			u16 wBeaconInterval,
++			u16 wCapInfo,
++			u8 byCurrChannel,
++			int bChannelHit,
++			PWLAN_IE_SSID pSSID,
++			PWLAN_IE_SUPP_RATES pSuppRates,
++			PWLAN_IE_SUPP_RATES pExtSuppRates,
++			PERPObject psERP,
++			PWLAN_IE_RSN pRSN,
++			PWLAN_IE_RSN_EXT pRSNWPA,
++			PWLAN_IE_COUNTRY pIE_Country,
++			PWLAN_IE_QUIET pIE_Quiet,
++			PKnownBSS pBSSList,
++			u32 uIELength,
++			u8 *pbyIEs,
++			void *pRxPacketContext)
+ {
+-    int             ii, jj;
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
+-    signed long            ldBm, ldBmSum;
+-    BOOL            bParsingQuiet = FALSE;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	struct vnt_rx_mgmt *pRxPacket =
++		(struct vnt_rx_mgmt *)pRxPacketContext;
++	int ii, jj;
++	signed long ldBm, ldBmSum;
++	BOOL bParsingQuiet = FALSE;
+ 
+     if (pBSSList == NULL)
+         return FALSE;
+@@ -658,13 +652,11 @@ BOOL BSSbUpdateToBSSList(void *hDeviceContext,
+  *
+ -*/
+ 
+-BOOL BSSbIsSTAInNodeDB(void *hDeviceContext,
+-		       PBYTE abyDstAddr,
+-		       unsigned int *puNodeIndex)
++int BSSbIsSTAInNodeDB(struct vnt_private *pDevice,
++		u8 *abyDstAddr, u32 *puNodeIndex)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            ii;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	unsigned int ii;
+ 
+     // Index = 0 reserved for AP Node
+     for (ii = 1; ii < (MAX_NODE_NUM + 1); ii++) {
+@@ -692,15 +684,14 @@ BOOL BSSbIsSTAInNodeDB(void *hDeviceContext,
+  *    None
+  *
+ -*/
+-void BSSvCreateOneNode(void *hDeviceContext, unsigned int *puNodeIndex)
++void BSSvCreateOneNode(struct vnt_private *pDevice, u32 *puNodeIndex)
+ {
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	int            ii;
++	u32 BigestCount = 0;
++	u32 SelectIndex;
++	struct sk_buff  *skb;
+ 
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            ii;
+-    unsigned int            BigestCount = 0;
+-    unsigned int            SelectIndex;
+-    struct sk_buff  *skb;
+     // Index = 0 reserved for AP Node (In STA mode)
+     // Index = 0 reserved for Broadcast/MultiCast (In AP mode)
+     SelectIndex = 1;
+@@ -753,13 +744,11 @@ void BSSvCreateOneNode(void *hDeviceContext, unsigned int *puNodeIndex)
+  *
+ -*/
+ 
+-void BSSvRemoveOneNode(void *hDeviceContext, unsigned int uNodeIndex)
++void BSSvRemoveOneNode(struct vnt_private *pDevice, u32 uNodeIndex)
+ {
+-
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    BYTE            byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+-    struct sk_buff  *skb;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u8 byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
++	struct sk_buff  *skb;
+ 
+
+     while ((skb = skb_dequeue(&pMgmt->sNodeDBTable[uNodeIndex].sTxPSQueue)) != NULL)
+@@ -780,14 +769,11 @@ void BSSvRemoveOneNode(void *hDeviceContext, unsigned int uNodeIndex)
+  *
+ -*/
+ 
+-void BSSvUpdateAPNode(void *hDeviceContext,
+-		      PWORD pwCapInfo,
+-		      PWLAN_IE_SUPP_RATES pSuppRates,
+-		      PWLAN_IE_SUPP_RATES pExtSuppRates)
++void BSSvUpdateAPNode(struct vnt_private *pDevice, u16 *pwCapInfo,
++	PWLAN_IE_SUPP_RATES pSuppRates, PWLAN_IE_SUPP_RATES pExtSuppRates)
+ {
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            uRateLen = WLAN_RATES_MAXLEN;
++	struct vnt_manager *pMgmt = &(pDevice->sMgmtObj);
++	u32 uRateLen = WLAN_RATES_MAXLEN;
+ 
+     memset(&pMgmt->sNodeDBTable[0], 0, sizeof(KnownNodeDB));
+ 
+@@ -832,10 +818,9 @@ void BSSvUpdateAPNode(void *hDeviceContext,
+  *
+ -*/
+ 
+-void BSSvAddMulticastNode(void *hDeviceContext)
++void BSSvAddMulticastNode(struct vnt_private *pDevice)
+ {
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+ 
+     if (!pDevice->bEnableHostWEP)
+         memset(&pMgmt->sNodeDBTable[0], 0, sizeof(KnownNodeDB));
+@@ -871,15 +856,14 @@ void BSSvAddMulticastNode(void *hDeviceContext)
+  *
+ -*/
+ 
+-void BSSvSecondCallBack(void *hDeviceContext)
++void BSSvSecondCallBack(struct vnt_private *pDevice)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            ii;
+-    PWLAN_IE_SSID   pItemSSID, pCurrSSID;
+-    unsigned int            uSleepySTACnt = 0;
+-    unsigned int            uNonShortSlotSTACnt = 0;
+-    unsigned int            uLongPreambleSTACnt = 0;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	int ii;
++	PWLAN_IE_SSID pItemSSID, pCurrSSID;
++	u32 uSleepySTACnt = 0;
++	u32 uNonShortSlotSTACnt = 0;
++	u32 uLongPreambleSTACnt = 0;
+ 
+     spin_lock_irq(&pDevice->lock);
+ 
+@@ -925,7 +909,7 @@ if(pDevice->byReAssocCount > 0) {
+ 
+  pMgmt->eLastState = pMgmt->eCurrState ;
+ 
+-   s_uCalculateLinkQual((void *)pDevice);
++	s_uCalculateLinkQual(pDevice);
+ 
+     for (ii = 0; ii < (MAX_NODE_NUM + 1); ii++) {
+ 
+@@ -1065,8 +1049,8 @@ if(pDevice->byReAssocCount > 0) {
+         if (pMgmt->sNodeDBTable[0].bActive) { // Assoc with BSS
+ 
+             if (pDevice->bUpdateBBVGA) {
+-		/* s_vCheckSensitivity((void *) pDevice); */
+-		s_vCheckPreEDThreshold((void *) pDevice);
++		s_vCheckSensitivity(pDevice);
++		s_vCheckPreEDThreshold(pDevice);
+             }
+ 
+     	    if ((pMgmt->sNodeDBTable[0].uInActiveCount >= (LOST_BEACON_COUNT/2)) &&
+@@ -1167,8 +1151,8 @@ else {
+         if (pMgmt->eCurrState == WMAC_STATE_JOINTED) {
+ 
+ 		if (pDevice->bUpdateBBVGA) {
+-			/* s_vCheckSensitivity((void *) pDevice); */
+-			s_vCheckPreEDThreshold((void *) pDevice);
++			s_vCheckSensitivity(pDevice);
++			s_vCheckPreEDThreshold(pDevice);
+ 		}
+         	if (pMgmt->sNodeDBTable[0].uInActiveCount >=ADHOC_LOST_BEACON_COUNT) {
+         	    DBG_PRT(MSG_LEVEL_NOTICE, KERN_INFO "Lost other STA beacon [%d] sec, started !\n", pMgmt->sNodeDBTable[0].uInActiveCount);
+@@ -1205,22 +1189,19 @@ else {
+  *
+ -*/
+ 
+-void BSSvUpdateNodeTxCounter(void *hDeviceContext,
+-			     PSStatCounter pStatistic,
+-			     BYTE byTSR,
+-			     BYTE byPktNO)
++void BSSvUpdateNodeTxCounter(struct vnt_private *pDevice,
++	PSStatCounter pStatistic, u8 byTSR, u8 byPktNO)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            uNodeIndex = 0;
+-    BYTE            byTxRetry;
+-    WORD            wRate;
+-    WORD            wFallBackRate = RATE_1M;
+-    BYTE            byFallBack;
+-    unsigned int            ii;
+-    PBYTE           pbyDestAddr;
+-    BYTE            byPktNum;
+-    WORD            wFIFOCtl;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u32 uNodeIndex = 0;
++	u8 byTxRetry;
++	u16 wRate;
++	u16 wFallBackRate = RATE_1M;
++	u8 byFallBack;
++	int ii;
++	u8 *pbyDestAddr;
++	u8 byPktNum;
++	u16 wFIFOCtl;
+ 
+     byPktNum = (byPktNO & 0x0F) >> 4;
+     byTxRetry = (byTSR & 0xF0) >> 4;
+@@ -1368,13 +1349,11 @@ void BSSvUpdateNodeTxCounter(void *hDeviceContext,
+  *
+ -*/
+ 
+-void BSSvClearNodeDBTable(void *hDeviceContext,
+-			  unsigned int uStartIndex)
++void BSSvClearNodeDBTable(struct vnt_private *pDevice, u32 uStartIndex)
+ {
+-    PSDevice     pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    struct sk_buff  *skb;
+-    unsigned int            ii;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	struct sk_buff  *skb;
++	int ii;
+ 
+     for (ii = uStartIndex; ii < (MAX_NODE_NUM + 1); ii++) {
+         if (pMgmt->sNodeDBTable[ii].bActive) {
+@@ -1390,12 +1369,11 @@ void BSSvClearNodeDBTable(void *hDeviceContext,
+     }
+ };
+ 
+-void s_vCheckSensitivity(void *hDeviceContext)
++static void s_vCheckSensitivity(struct vnt_private *pDevice)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PKnownBSS       pBSSList = NULL;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    int             ii;
++	PKnownBSS pBSSList = NULL;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	int ii;
+ 
+     if ((pMgmt->eCurrState == WMAC_STATE_ASSOC) ||
+         ((pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) && (pMgmt->eCurrState == WMAC_STATE_JOINTED))) {
+@@ -1422,7 +1400,7 @@ void s_vCheckSensitivity(void *hDeviceContext)
+                 if (pDevice->byBBVGANew != pDevice->byBBVGACurrent) {
+                     pDevice->uBBVGADiffCount++;
+                     if (pDevice->uBBVGADiffCount >= BB_VGA_CHANGE_THRESHOLD)
+-			bScheduleCommand((void *) pDevice,
++			bScheduleCommand(pDevice,
+ 					 WLAN_CMD_CHANGE_BBSENSITIVITY,
+ 					 NULL);
+                 } else {
+@@ -1433,13 +1411,12 @@ void s_vCheckSensitivity(void *hDeviceContext)
+     }
+ }
+ 
+-void s_uCalculateLinkQual(void *hDeviceContext)
++static void s_uCalculateLinkQual(struct vnt_private *pDevice)
+ {
+-   PSDevice        pDevice = (PSDevice)hDeviceContext;
+-   unsigned long TxOkRatio, TxCnt;
+-   unsigned long RxOkRatio, RxCnt;
+-   unsigned long RssiRatio;
+-   long ldBm;
++	unsigned long TxOkRatio, TxCnt;
++	unsigned long RxOkRatio, RxCnt;
++	unsigned long RssiRatio;
++	long ldBm;
+ 
+ TxCnt = pDevice->scStatistic.TxNoRetryOkCount +
+ 	      pDevice->scStatistic.TxRetryOkCount +
+@@ -1476,21 +1453,21 @@ else
+    pDevice->scStatistic.TxRetryOkCount = 0;
+ }
+ 
+-void BSSvClearAnyBSSJoinRecord(void *hDeviceContext)
++void BSSvClearAnyBSSJoinRecord(struct vnt_private *pDevice)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int            ii;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	int ii;
+ 
+ 	for (ii = 0; ii < MAX_BSS_NUM; ii++)
+-        pMgmt->sBSSList[ii].bSelected = FALSE;
++		pMgmt->sBSSList[ii].bSelected = FALSE;
 +
-+/**
-+ * enum iwl_tx_flags - bitmasks for tx_flags in TX command
-+ * @TX_CMD_FLG_PROT_REQUIRE: use RTS or CTS-to-self to protect the frame
-+ * @TX_CMD_FLG_ACK: expect ACK from receiving station
-+ * @TX_CMD_FLG_STA_RATE: use RS table with initial index from the TX command.
-+ *	Otherwise, use rate_n_flags from the TX command
-+ * @TX_CMD_FLG_BA: this frame is a block ack
-+ * @TX_CMD_FLG_BAR: this frame is a BA request, immediate BAR is expected
-+ *	Must set TX_CMD_FLG_ACK with this flag.
-+ * @TX_CMD_FLG_TXOP_PROT: protect frame with full TXOP protection
-+ * @TX_CMD_FLG_VHT_NDPA: mark frame is NDPA for VHT beamformer sequence
-+ * @TX_CMD_FLG_HT_NDPA: mark frame is NDPA for HT beamformer sequence
-+ * @TX_CMD_FLG_CSI_FDBK2HOST: mark to send feedback to host (only if good CRC)
-+ * @TX_CMD_FLG_BT_DIS: disable BT priority for this frame
-+ * @TX_CMD_FLG_SEQ_CTL: set if FW should override the sequence control.
-+ *	Should be set for mgmt, non-QOS data, mcast, bcast and in scan command
-+ * @TX_CMD_FLG_MORE_FRAG: this frame is non-last MPDU
-+ * @TX_CMD_FLG_NEXT_FRAME: this frame includes information of the next frame
-+ * @TX_CMD_FLG_TSF: FW should calculate and insert TSF in the frame
-+ *	Should be set for beacons and probe responses
-+ * @TX_CMD_FLG_CALIB: activate PA TX power calibrations
-+ * @TX_CMD_FLG_KEEP_SEQ_CTL: if seq_ctl is set, don't increase inner seq count
-+ * @TX_CMD_FLG_AGG_START: allow this frame to start aggregation
-+ * @TX_CMD_FLG_MH_PAD: driver inserted 2 byte padding after MAC header.
-+ *	Should be set for 26/30 length MAC headers
-+ * @TX_CMD_FLG_RESP_TO_DRV: zero this if the response should go only to FW
-+ * @TX_CMD_FLG_CCMP_AGG: this frame uses CCMP for aggregation acceleration
-+ * @TX_CMD_FLG_TKIP_MIC_DONE: FW already performed TKIP MIC calculation
-+ * @TX_CMD_FLG_CTS_ONLY: send CTS only, no data after that
-+ * @TX_CMD_FLG_DUR: disable duration overwriting used in PS-Poll Assoc-id
-+ * @TX_CMD_FLG_FW_DROP: FW should mark frame to be dropped
-+ * @TX_CMD_FLG_EXEC_PAPD: execute PAPD
-+ * @TX_CMD_FLG_PAPD_TYPE: 0 for reference power, 1 for nominal power
-+ * @TX_CMD_FLG_HCCA_CHUNK: mark start of TSPEC chunk
-+ */
-+enum iwl_tx_flags {
-+	TX_CMD_FLG_PROT_REQUIRE		= BIT(0),
-+	TX_CMD_FLG_ACK			= BIT(3),
-+	TX_CMD_FLG_STA_RATE		= BIT(4),
-+	TX_CMD_FLG_BA			= BIT(5),
-+	TX_CMD_FLG_BAR			= BIT(6),
-+	TX_CMD_FLG_TXOP_PROT		= BIT(7),
-+	TX_CMD_FLG_VHT_NDPA		= BIT(8),
-+	TX_CMD_FLG_HT_NDPA		= BIT(9),
-+	TX_CMD_FLG_CSI_FDBK2HOST	= BIT(10),
-+	TX_CMD_FLG_BT_DIS		= BIT(12),
-+	TX_CMD_FLG_SEQ_CTL		= BIT(13),
-+	TX_CMD_FLG_MORE_FRAG		= BIT(14),
-+	TX_CMD_FLG_NEXT_FRAME		= BIT(15),
-+	TX_CMD_FLG_TSF			= BIT(16),
-+	TX_CMD_FLG_CALIB		= BIT(17),
-+	TX_CMD_FLG_KEEP_SEQ_CTL		= BIT(18),
-+	TX_CMD_FLG_AGG_START		= BIT(19),
-+	TX_CMD_FLG_MH_PAD		= BIT(20),
-+	TX_CMD_FLG_RESP_TO_DRV		= BIT(21),
-+	TX_CMD_FLG_CCMP_AGG		= BIT(22),
-+	TX_CMD_FLG_TKIP_MIC_DONE	= BIT(23),
-+	TX_CMD_FLG_CTS_ONLY		= BIT(24),
-+	TX_CMD_FLG_DUR			= BIT(25),
-+	TX_CMD_FLG_FW_DROP		= BIT(26),
-+	TX_CMD_FLG_EXEC_PAPD		= BIT(27),
-+	TX_CMD_FLG_PAPD_TYPE		= BIT(28),
-+	TX_CMD_FLG_HCCA_CHUNK		= BIT(31)
-+}; /* TX_FLAGS_BITS_API_S_VER_1 */
++	return;
+ }
+ 
+-void s_vCheckPreEDThreshold(void *hDeviceContext)
++static void s_vCheckPreEDThreshold(struct vnt_private *pDevice)
+ {
+-    PSDevice        pDevice = (PSDevice)hDeviceContext;
+-    PKnownBSS       pBSSList = NULL;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
++	PKnownBSS pBSSList = NULL;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+ 
+     if ((pMgmt->eCurrState == WMAC_STATE_ASSOC) ||
+         ((pMgmt->eCurrMode == WMAC_MODE_IBSS_STA) && (pMgmt->eCurrState == WMAC_STATE_JOINTED))) {
+diff --git a/drivers/staging/vt6656/bssdb.h b/drivers/staging/vt6656/bssdb.h
+index 125edc2..9b1bf6a 100644
+--- a/drivers/staging/vt6656/bssdb.h
++++ b/drivers/staging/vt6656/bssdb.h
+@@ -226,80 +226,70 @@ typedef struct tagKnownNodeDB {
+ 
+ /*---------------------  Export Functions  --------------------------*/
+ 
+-PKnownBSS BSSpSearchBSSList(void *hDeviceContext,
+-			    PBYTE pbyDesireBSSID,
+-			    PBYTE pbyDesireSSID,
+-			    CARD_PHY_TYPE ePhyType);
++PKnownBSS BSSpSearchBSSList(struct vnt_private *, u8 *pbyDesireBSSID,
++	u8 *pbyDesireSSID, CARD_PHY_TYPE ePhyType);
+ 
+-PKnownBSS BSSpAddrIsInBSSList(void *hDeviceContext,
+-			      PBYTE abyBSSID,
+-			      PWLAN_IE_SSID pSSID);
++PKnownBSS BSSpAddrIsInBSSList(struct vnt_private *, u8 *abyBSSID,
++	PWLAN_IE_SSID pSSID);
+ 
+-void BSSvClearBSSList(void *hDeviceContext, BOOL bKeepCurrBSSID);
++void BSSvClearBSSList(struct vnt_private *, int bKeepCurrBSSID);
+ 
+-BOOL BSSbInsertToBSSList(void *hDeviceContext,
+-			 PBYTE abyBSSIDAddr,
++int BSSbInsertToBSSList(struct vnt_private *,
++			u8 *abyBSSIDAddr,
+ 			u64 qwTimestamp,
+-			 WORD wBeaconInterval,
+-			 WORD wCapInfo,
+-			 BYTE byCurrChannel,
+-			 PWLAN_IE_SSID pSSID,
+-			 PWLAN_IE_SUPP_RATES pSuppRates,
+-			 PWLAN_IE_SUPP_RATES pExtSuppRates,
+-			 PERPObject psERP,
+-			 PWLAN_IE_RSN pRSN,
+-			 PWLAN_IE_RSN_EXT pRSNWPA,
+-			 PWLAN_IE_COUNTRY pIE_Country,
+-			 PWLAN_IE_QUIET pIE_Quiet,
+-			 unsigned int uIELength,
+-			 PBYTE pbyIEs,
+-			 void *pRxPacketContext);
+-
+-BOOL BSSbUpdateToBSSList(void *hDeviceContext,
++			u16 wBeaconInterval,
++			u16 wCapInfo,
++			u8 byCurrChannel,
++			PWLAN_IE_SSID pSSID,
++			PWLAN_IE_SUPP_RATES pSuppRates,
++			PWLAN_IE_SUPP_RATES pExtSuppRates,
++			PERPObject psERP,
++			PWLAN_IE_RSN pRSN,
++			PWLAN_IE_RSN_EXT pRSNWPA,
++			PWLAN_IE_COUNTRY pIE_Country,
++			PWLAN_IE_QUIET pIE_Quiet,
++			u32 uIELength,
++			u8 *pbyIEs,
++			void *pRxPacketContext);
 +
-+/*
-+ * TX command security control
-+ */
-+#define TX_CMD_SEC_WEP			0x01
-+#define TX_CMD_SEC_CCM			0x02
-+#define TX_CMD_SEC_TKIP			0x03
-+#define TX_CMD_SEC_WEP_KEY_IDX_POS	6
-+#define TX_CMD_SEC_WEP_KEY_IDX_MSK	0xc0
-+#define TX_CMD_SEC_KEY128		0x08
++int BSSbUpdateToBSSList(struct vnt_private *,
+ 			u64 qwTimestamp,
+-			 WORD wBeaconInterval,
+-			 WORD wCapInfo,
+-			 BYTE byCurrChannel,
+-			 BOOL bChannelHit,
+-			 PWLAN_IE_SSID pSSID,
+-			 PWLAN_IE_SUPP_RATES pSuppRates,
+-			 PWLAN_IE_SUPP_RATES pExtSuppRates,
+-			 PERPObject psERP,
+-			 PWLAN_IE_RSN pRSN,
+-			 PWLAN_IE_RSN_EXT pRSNWPA,
+-			 PWLAN_IE_COUNTRY pIE_Country,
+-			 PWLAN_IE_QUIET pIE_Quiet,
+-			 PKnownBSS pBSSList,
+-			 unsigned int uIELength,
+-			 PBYTE pbyIEs,
+-			 void *pRxPacketContext);
+-
+-BOOL BSSbIsSTAInNodeDB(void *hDeviceContext,
+-		       PBYTE abyDstAddr,
+-		       unsigned int *puNodeIndex);
+-
+-void BSSvCreateOneNode(void *hDeviceContext, unsigned int *puNodeIndex);
+-
+-void BSSvUpdateAPNode(void *hDeviceContext,
+-		      PWORD pwCapInfo,
+-		      PWLAN_IE_SUPP_RATES pItemRates,
+-		      PWLAN_IE_SUPP_RATES pExtSuppRates);
+-
+-void BSSvSecondCallBack(void *hDeviceContext);
+-
+-void BSSvUpdateNodeTxCounter(void *hDeviceContext,
+-			     PSStatCounter pStatistic,
+-			     BYTE byTSR,
+-			     BYTE byPktNO);
+-
+-void BSSvRemoveOneNode(void *hDeviceContext,
+-		       unsigned int uNodeIndex);
+-
+-void BSSvAddMulticastNode(void *hDeviceContext);
+-
+-void BSSvClearNodeDBTable(void *hDeviceContext,
+-			  unsigned int uStartIndex);
+-
+-void BSSvClearAnyBSSJoinRecord(void *hDeviceContext);
++			u16 wBeaconInterval,
++			u16 wCapInfo,
++			u8 byCurrChannel,
++			int bChannelHit,
++			PWLAN_IE_SSID pSSID,
++			PWLAN_IE_SUPP_RATES pSuppRates,
++			PWLAN_IE_SUPP_RATES pExtSuppRates,
++			PERPObject psERP,
++			PWLAN_IE_RSN pRSN,
++			PWLAN_IE_RSN_EXT pRSNWPA,
++			PWLAN_IE_COUNTRY pIE_Country,
++			PWLAN_IE_QUIET pIE_Quiet,
++			PKnownBSS pBSSList,
++			u32 uIELength,
++			u8 *pbyIEs,
++			void *pRxPacketContext);
 +
-+/* TODO: how does these values are OK with only 16 bit variable??? */
-+/*
-+ * TX command next frame info
-+ *
-+ * bits 0:2 - security control (TX_CMD_SEC_*)
-+ * bit 3 - immediate ACK required
-+ * bit 4 - rate is taken from STA table
-+ * bit 5 - frame belongs to BA stream
-+ * bit 6 - immediate BA response expected
-+ * bit 7 - unused
-+ * bits 8:15 - Station ID
-+ * bits 16:31 - rate
-+ */
-+#define TX_CMD_NEXT_FRAME_ACK_MSK		(0x8)
-+#define TX_CMD_NEXT_FRAME_STA_RATE_MSK		(0x10)
-+#define TX_CMD_NEXT_FRAME_BA_MSK		(0x20)
-+#define TX_CMD_NEXT_FRAME_IMM_BA_RSP_MSK	(0x40)
-+#define TX_CMD_NEXT_FRAME_FLAGS_MSK		(0xf8)
-+#define TX_CMD_NEXT_FRAME_STA_ID_MSK		(0xff00)
-+#define TX_CMD_NEXT_FRAME_STA_ID_POS		(8)
-+#define TX_CMD_NEXT_FRAME_RATE_MSK		(0xffff0000)
-+#define TX_CMD_NEXT_FRAME_RATE_POS		(16)
++int BSSbIsSTAInNodeDB(struct vnt_private *, PBYTE abyDstAddr,
++	u32 *puNodeIndex);
 +
-+/*
-+ * TX command Frame life time in us - to be written in pm_frame_timeout
-+ */
-+#define TX_CMD_LIFE_TIME_INFINITE	0xFFFFFFFF
-+#define TX_CMD_LIFE_TIME_DEFAULT	2000000 /* 2000 ms*/
-+#define TX_CMD_LIFE_TIME_PROBE_RESP	40000 /* 40 ms */
-+#define TX_CMD_LIFE_TIME_EXPIRED_FRAME	0
++void BSSvCreateOneNode(struct vnt_private *, u32 *puNodeIndex);
 +
-+/*
-+ * TID for non QoS frames - to be written in tid_tspec
-+ */
-+#define IWL_TID_NON_QOS	IWL_MAX_TID_COUNT
++void BSSvUpdateAPNode(struct vnt_private *, u16 *pwCapInfo,
++	PWLAN_IE_SUPP_RATES pItemRates, PWLAN_IE_SUPP_RATES pExtSuppRates);
 +
-+/*
-+ * Limits on the retransmissions - to be written in {data,rts}_retry_limit
-+ */
-+#define IWL_DEFAULT_TX_RETRY			15
-+#define IWL_MGMT_DFAULT_RETRY_LIMIT		3
-+#define IWL_RTS_DFAULT_RETRY_LIMIT		60
-+#define IWL_BAR_DFAULT_RETRY_LIMIT		60
-+#define IWL_LOW_RETRY_LIMIT			7
++void BSSvSecondCallBack(struct vnt_private *);
 +
-+/* TODO: complete documentation for try_cnt and btkill_cnt */
-+/**
-+ * struct iwl_tx_cmd - TX command struct to FW
-+ * ( TX_CMD = 0x1c )
-+ * @len: in bytes of the payload, see below for details
-+ * @next_frame_len: same as len, but for next frame (0 if not applicable)
-+ *	Used for fragmentation and bursting, but not in 11n aggregation.
-+ * @tx_flags: combination of TX_CMD_FLG_*
-+ * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
-+ *	cleared. Combination of RATE_MCS_*
-+ * @sta_id: index of destination station in FW station table
-+ * @sec_ctl: security control, TX_CMD_SEC_*
-+ * @initial_rate_index: index into the the rate table for initial TX attempt.
-+ *	Applied if TX_CMD_FLG_STA_RATE_MSK is set, normally 0 for data frames.
-+ * @key: security key
-+ * @next_frame_flags: TX_CMD_SEC_* and TX_CMD_NEXT_FRAME_*
-+ * @life_time: frame life time (usecs??)
-+ * @dram_lsb_ptr: Physical address of scratch area in the command (try_cnt +
-+ *	btkill_cnd + reserved), first 32 bits. "0" disables usage.
-+ * @dram_msb_ptr: upper bits of the scratch physical address
-+ * @rts_retry_limit: max attempts for RTS
-+ * @data_retry_limit: max attempts to send the data packet
-+ * @tid_spec: TID/tspec
-+ * @pm_frame_timeout: PM TX frame timeout
-+ * @driver_txop: duration od EDCA TXOP, in 32-usec units. Set this if not
-+ *	specified by HCCA protocol
-+ *
-+ * The byte count (both len and next_frame_len) includes MAC header
-+ * (24/26/30/32 bytes)
-+ * + 2 bytes pad if 26/30 header size
-+ * + 8 byte IV for CCM or TKIP (not used for WEP)
-+ * + Data payload
-+ * + 8-byte MIC (not used for CCM/WEP)
-+ * It does not include post-MAC padding, i.e.,
-+ * MIC (CCM) 8 bytes, ICV (WEP/TKIP/CKIP) 4 bytes, CRC 4 bytes.
-+ * Range of len: 14-2342 bytes.
-+ *
-+ * After the struct fields the MAC header is placed, plus any padding,
-+ * and then the actial payload.
-+ */
-+struct iwl_tx_cmd {
-+	__le16 len;
-+	__le16 next_frame_len;
-+	__le32 tx_flags;
-+	/* DRAM_SCRATCH_API_U_VER_1 */
-+	u8 try_cnt;
-+	u8 btkill_cnt;
-+	__le16 reserved;
-+	__le32 rate_n_flags;
-+	u8 sta_id;
-+	u8 sec_ctl;
-+	u8 initial_rate_index;
-+	u8 reserved2;
-+	u8 key[16];
-+	__le16 next_frame_flags;
-+	__le16 reserved3;
-+	__le32 life_time;
-+	__le32 dram_lsb_ptr;
-+	u8 dram_msb_ptr;
-+	u8 rts_retry_limit;
-+	u8 data_retry_limit;
-+	u8 tid_tspec;
-+	__le16 pm_frame_timeout;
-+	__le16 driver_txop;
-+	u8 payload[0];
-+	struct ieee80211_hdr hdr[0];
-+} __packed; /* TX_CMD_API_S_VER_3 */
++void BSSvUpdateNodeTxCounter(struct vnt_private *, PSStatCounter pStatistic,
++	u8 byTSR, u8 byPktNO);
 +
-+/*
-+ * TX response related data
-+ */
++void BSSvRemoveOneNode(struct vnt_private *, u32 uNodeIndex);
 +
-+/*
-+ * enum iwl_tx_status - status that is returned by the fw after attempts to Tx
-+ * @TX_STATUS_SUCCESS:
-+ * @TX_STATUS_DIRECT_DONE:
-+ * @TX_STATUS_POSTPONE_DELAY:
-+ * @TX_STATUS_POSTPONE_FEW_BYTES:
-+ * @TX_STATUS_POSTPONE_BT_PRIO:
-+ * @TX_STATUS_POSTPONE_QUIET_PERIOD:
-+ * @TX_STATUS_POSTPONE_CALC_TTAK:
-+ * @TX_STATUS_FAIL_INTERNAL_CROSSED_RETRY:
-+ * @TX_STATUS_FAIL_SHORT_LIMIT:
-+ * @TX_STATUS_FAIL_LONG_LIMIT:
-+ * @TX_STATUS_FAIL_UNDERRUN:
-+ * @TX_STATUS_FAIL_DRAIN_FLOW:
-+ * @TX_STATUS_FAIL_RFKILL_FLUSH:
-+ * @TX_STATUS_FAIL_LIFE_EXPIRE:
-+ * @TX_STATUS_FAIL_DEST_PS:
-+ * @TX_STATUS_FAIL_HOST_ABORTED:
-+ * @TX_STATUS_FAIL_BT_RETRY:
-+ * @TX_STATUS_FAIL_STA_INVALID:
-+ * @TX_TATUS_FAIL_FRAG_DROPPED:
-+ * @TX_STATUS_FAIL_TID_DISABLE:
-+ * @TX_STATUS_FAIL_FIFO_FLUSHED:
-+ * @TX_STATUS_FAIL_SMALL_CF_POLL:
-+ * @TX_STATUS_FAIL_FW_DROP:
-+ * @TX_STATUS_FAIL_STA_COLOR_MISMATCH: mismatch between color of Tx cmd and
-+ *	STA table
-+ * @TX_FRAME_STATUS_INTERNAL_ABORT:
-+ * @TX_MODE_MSK:
-+ * @TX_MODE_NO_BURST:
-+ * @TX_MODE_IN_BURST_SEQ:
-+ * @TX_MODE_FIRST_IN_BURST:
-+ * @TX_QUEUE_NUM_MSK:
-+ *
-+ * Valid only if frame_count =1
-+ * TODO: complete documentation
-+ */
-+enum iwl_tx_status {
-+	TX_STATUS_MSK = 0x000000ff,
-+	TX_STATUS_SUCCESS = 0x01,
-+	TX_STATUS_DIRECT_DONE = 0x02,
-+	/* postpone TX */
-+	TX_STATUS_POSTPONE_DELAY = 0x40,
-+	TX_STATUS_POSTPONE_FEW_BYTES = 0x41,
-+	TX_STATUS_POSTPONE_BT_PRIO = 0x42,
-+	TX_STATUS_POSTPONE_QUIET_PERIOD = 0x43,
-+	TX_STATUS_POSTPONE_CALC_TTAK = 0x44,
-+	/* abort TX */
-+	TX_STATUS_FAIL_INTERNAL_CROSSED_RETRY = 0x81,
-+	TX_STATUS_FAIL_SHORT_LIMIT = 0x82,
-+	TX_STATUS_FAIL_LONG_LIMIT = 0x83,
-+	TX_STATUS_FAIL_UNDERRUN = 0x84,
-+	TX_STATUS_FAIL_DRAIN_FLOW = 0x85,
-+	TX_STATUS_FAIL_RFKILL_FLUSH = 0x86,
-+	TX_STATUS_FAIL_LIFE_EXPIRE = 0x87,
-+	TX_STATUS_FAIL_DEST_PS = 0x88,
-+	TX_STATUS_FAIL_HOST_ABORTED = 0x89,
-+	TX_STATUS_FAIL_BT_RETRY = 0x8a,
-+	TX_STATUS_FAIL_STA_INVALID = 0x8b,
-+	TX_STATUS_FAIL_FRAG_DROPPED = 0x8c,
-+	TX_STATUS_FAIL_TID_DISABLE = 0x8d,
-+	TX_STATUS_FAIL_FIFO_FLUSHED = 0x8e,
-+	TX_STATUS_FAIL_SMALL_CF_POLL = 0x8f,
-+	TX_STATUS_FAIL_FW_DROP = 0x90,
-+	TX_STATUS_FAIL_STA_COLOR_MISMATCH = 0x91,
-+	TX_STATUS_INTERNAL_ABORT = 0x92,
-+	TX_MODE_MSK = 0x00000f00,
-+	TX_MODE_NO_BURST = 0x00000000,
-+	TX_MODE_IN_BURST_SEQ = 0x00000100,
-+	TX_MODE_FIRST_IN_BURST = 0x00000200,
-+	TX_QUEUE_NUM_MSK = 0x0001f000,
-+	TX_NARROW_BW_MSK = 0x00060000,
-+	TX_NARROW_BW_1DIV2 = 0x00020000,
-+	TX_NARROW_BW_1DIV4 = 0x00040000,
-+	TX_NARROW_BW_1DIV8 = 0x00060000,
-+};
++void BSSvAddMulticastNode(struct vnt_private *);
 +
-+/*
-+ * enum iwl_tx_agg_status - TX aggregation status
-+ * @AGG_TX_STATE_STATUS_MSK:
-+ * @AGG_TX_STATE_TRANSMITTED:
-+ * @AGG_TX_STATE_UNDERRUN:
-+ * @AGG_TX_STATE_BT_PRIO:
-+ * @AGG_TX_STATE_FEW_BYTES:
-+ * @AGG_TX_STATE_ABORT:
-+ * @AGG_TX_STATE_LAST_SENT_TTL:
-+ * @AGG_TX_STATE_LAST_SENT_TRY_CNT:
-+ * @AGG_TX_STATE_LAST_SENT_BT_KILL:
-+ * @AGG_TX_STATE_SCD_QUERY:
-+ * @AGG_TX_STATE_TEST_BAD_CRC32:
-+ * @AGG_TX_STATE_RESPONSE:
-+ * @AGG_TX_STATE_DUMP_TX:
-+ * @AGG_TX_STATE_DELAY_TX:
-+ * @AGG_TX_STATE_TRY_CNT_MSK: Retry count for 1st frame in aggregation (retries
-+ *	occur if tx failed for this frame when it was a member of a previous
-+ *	aggregation block). If rate scaling is used, retry count indicates the
-+ *	rate table entry used for all frames in the new agg.
-+ *@ AGG_TX_STATE_SEQ_NUM_MSK: Command ID and sequence number of Tx command for
-+ *	this frame
-+ *
-+ * TODO: complete documentation
-+ */
-+enum iwl_tx_agg_status {
-+	AGG_TX_STATE_STATUS_MSK = 0x00fff,
-+	AGG_TX_STATE_TRANSMITTED = 0x000,
-+	AGG_TX_STATE_UNDERRUN = 0x001,
-+	AGG_TX_STATE_BT_PRIO = 0x002,
-+	AGG_TX_STATE_FEW_BYTES = 0x004,
-+	AGG_TX_STATE_ABORT = 0x008,
-+	AGG_TX_STATE_LAST_SENT_TTL = 0x010,
-+	AGG_TX_STATE_LAST_SENT_TRY_CNT = 0x020,
-+	AGG_TX_STATE_LAST_SENT_BT_KILL = 0x040,
-+	AGG_TX_STATE_SCD_QUERY = 0x080,
-+	AGG_TX_STATE_TEST_BAD_CRC32 = 0x0100,
-+	AGG_TX_STATE_RESPONSE = 0x1ff,
-+	AGG_TX_STATE_DUMP_TX = 0x200,
-+	AGG_TX_STATE_DELAY_TX = 0x400,
-+	AGG_TX_STATE_TRY_CNT_POS = 12,
-+	AGG_TX_STATE_TRY_CNT_MSK = 0xf << AGG_TX_STATE_TRY_CNT_POS,
-+};
++void BSSvClearNodeDBTable(struct vnt_private *, u32 uStartIndex);
 +
-+#define AGG_TX_STATE_LAST_SENT_MSK  (AGG_TX_STATE_LAST_SENT_TTL| \
-+				     AGG_TX_STATE_LAST_SENT_TRY_CNT| \
-+				     AGG_TX_STATE_LAST_SENT_BT_KILL)
++void BSSvClearAnyBSSJoinRecord(struct vnt_private *);
+ 
+ #endif /* __BSSDB_H__ */
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 83c04e1..bb014c0 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -106,174 +106,64 @@ const WORD wFB_Opt1[2][5] = {
+ 
+ /*---------------------  Static Functions  --------------------------*/
+ 
+-static
+-void
+-s_vSaveTxPktInfo(
+-     PSDevice pDevice,
+-     BYTE byPktNum,
+-     PBYTE pbyDestAddr,
+-     WORD wPktLength,
+-     WORD wFIFOCtl
+-);
+-
+-static
+-void *
+-s_vGetFreeContext(
+-    PSDevice pDevice
+-    );
+-
+-
+-static
+-void
+-s_vGenerateTxParameter(
+-     PSDevice         pDevice,
+-     BYTE             byPktType,
+-     WORD             wCurrentRate,
+-     void *pTxBufHead,
+-     void *pvRrvTime,
+-     void *pvRTS,
+-     void *pvCTS,
+-     unsigned int             cbFrameSize,
+-     BOOL             bNeedACK,
+-     unsigned int             uDMAIdx,
+-     PSEthernetHeader psEthHeader
+-    );
+-
+-
+-static unsigned int s_uFillDataHead(
+-     PSDevice pDevice,
+-     BYTE     byPktType,
+-     WORD     wCurrentRate,
+-     void *pTxDataHead,
+-     unsigned int     cbFrameLength,
+-     unsigned int     uDMAIdx,
+-     BOOL     bNeedAck,
+-     unsigned int     uFragIdx,
+-     unsigned int     cbLastFragmentSize,
+-     unsigned int     uMACfragNum,
+-     BYTE     byFBOption
+-    );
+-
+-
+-
+-
+-static
+-void
+-s_vGenerateMACHeader (
+-     PSDevice         pDevice,
+-     PBYTE            pbyBufferAddr,
+-     WORD             wDuration,
+-     PSEthernetHeader psEthHeader,
+-     BOOL             bNeedEncrypt,
+-     WORD             wFragType,
+-     unsigned int             uDMAIdx,
+-     unsigned int             uFragIdx
+-    );
+-
+-static
+-void
+-s_vFillTxKey(
+-      PSDevice   pDevice,
+-      PBYTE      pbyBuf,
+-      PBYTE      pbyIVHead,
+-      PSKeyItem  pTransmitKey,
+-      PBYTE      pbyHdrBuf,
+-      WORD       wPayloadLen,
+-     PBYTE      pMICHDR
+-    );
+-
+-static
+-void
+-s_vSWencryption (
+-      PSDevice         pDevice,
+-      PSKeyItem        pTransmitKey,
+-      PBYTE            pbyPayloadHead,
+-      WORD             wPayloadSize
+-    );
+-
+-static unsigned int s_uGetTxRsvTime(
+-     PSDevice pDevice,
+-     BYTE     byPktType,
+-     unsigned int     cbFrameLength,
+-     WORD     wRate,
+-     BOOL     bNeedAck
+-    );
+-
+-
+-static unsigned int s_uGetRTSCTSRsvTime(
+-     PSDevice pDevice,
+-     BYTE byRTSRsvType,
+-     BYTE byPktType,
+-     unsigned int cbFrameLength,
+-     WORD wCurrentRate
+-    );
+-
+-static
+-void
+-s_vFillCTSHead (
+-     PSDevice pDevice,
+-     unsigned int     uDMAIdx,
+-     BYTE     byPktType,
+-     void *pvCTS,
+-     unsigned int     cbFrameLength,
+-     BOOL     bNeedAck,
+-     BOOL     bDisCRC,
+-     WORD     wCurrentRate,
+-     BYTE     byFBOption
+-    );
+-
+-static
+-void
+-s_vFillRTSHead(
+-     PSDevice         pDevice,
+-     BYTE             byPktType,
+-     void *pvRTS,
+-     unsigned int             cbFrameLength,
+-     BOOL             bNeedAck,
+-     BOOL             bDisCRC,
+-     PSEthernetHeader psEthHeader,
+-     WORD             wCurrentRate,
+-     BYTE             byFBOption
+-    );
+-
+-static unsigned int s_uGetDataDuration(
+-     PSDevice pDevice,
+-     BYTE     byDurType,
+-     unsigned int     cbFrameLength,
+-     BYTE     byPktType,
+-     WORD     wRate,
+-     BOOL     bNeedAck,
+-     unsigned int     uFragIdx,
+-     unsigned int     cbLastFragmentSize,
+-     unsigned int     uMACfragNum,
+-     BYTE     byFBOption
+-    );
+-
+-
+-static
+-unsigned int
+-s_uGetRTSCTSDuration (
+-     PSDevice pDevice,
+-     BYTE byDurType,
+-     unsigned int cbFrameLength,
+-     BYTE byPktType,
+-     WORD wRate,
+-     BOOL bNeedAck,
+-     BYTE byFBOption
+-    );
++static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
++	u8 *pbyDestAddr, u16 wPktLength, u16 wFIFOCtl);
 +
-+/*
-+ * The mask below describes a status where we are absolutely sure that the MPDU
-+ * wasn't sent. For BA/Underrun we cannot be that sure. All we know that we've
-+ * written the bytes to the TXE, but we know nothing about what the DSP did.
-+ */
-+#define AGG_TX_STAT_FRAME_NOT_SENT (AGG_TX_STATE_FEW_BYTES | \
-+				    AGG_TX_STATE_ABORT | \
-+				    AGG_TX_STATE_SCD_QUERY)
++static void *s_vGetFreeContext(struct vnt_private *pDevice);
 +
-+/*
-+ * REPLY_TX = 0x1c (response)
-+ *
-+ * This response may be in one of two slightly different formats, indicated
-+ * by the frame_count field:
-+ *
-+ * 1)	No aggregation (frame_count == 1).  This reports Tx results for a single
-+ *	frame. Multiple attempts, at various bit rates, may have been made for
-+ *	this frame.
-+ *
-+ * 2)	Aggregation (frame_count > 1).  This reports Tx results for two or more
-+ *	frames that used block-acknowledge.  All frames were transmitted at
-+ *	same rate. Rate scaling may have been used if first frame in this new
-+ *	agg block failed in previous agg block(s).
-+ *
-+ *	Note that, for aggregation, ACK (block-ack) status is not delivered
-+ *	here; block-ack has not been received by the time the device records
-+ *	this status.
-+ *	This status relates to reasons the tx might have been blocked or aborted
-+ *	within the device, rather than whether it was received successfully by
-+ *	the destination station.
-+ */
++static void s_vGenerateTxParameter(struct vnt_private *pDevice,
++	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
++	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
++	PSEthernetHeader psEthHeader);
 +
-+/**
-+ * struct agg_tx_status - per packet TX aggregation status
-+ * @status: enum iwl_tx_agg_status
-+ * @sequence: Sequence # for this frame's Tx cmd (not SSN!)
-+ */
-+struct agg_tx_status {
-+	__le16 status;
-+	__le16 sequence;
-+} __packed;
++static u32 s_uFillDataHead(struct vnt_private *pDevice,
++	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
++	u32 uDMAIdx, int bNeedAck, u32 uFragIdx, u32 cbLastFragmentSize,
++	u32 uMACfragNum, u8 byFBOption);
 +
-+/*
-+ * definitions for initial rate index field
-+ * bits [3:0] initial rate index
-+ * bits [6:4] rate table color, used for the initial rate
-+ * bit-7 invalid rate indication
-+ */
-+#define TX_RES_INIT_RATE_INDEX_MSK 0x0f
-+#define TX_RES_RATE_TABLE_COLOR_MSK 0x70
-+#define TX_RES_INV_RATE_INDEX_MSK 0x80
 +
-+#define IWL_MVM_TX_RES_GET_TID(_ra_tid) ((_ra_tid) & 0x0f)
-+#define IWL_MVM_TX_RES_GET_RA(_ra_tid) ((_ra_tid) >> 4)
++static void s_vGenerateMACHeader(struct vnt_private *pDevice,
++	u8 *pbyBufferAddr, u16 wDuration, PSEthernetHeader psEthHeader,
++	int bNeedEncrypt, u16 wFragType, u32 uDMAIdx, u32 uFragIdx);
 +
-+/**
-+ * struct iwl_mvm_tx_resp - notifies that fw is TXing a packet
-+ * ( REPLY_TX = 0x1c )
-+ * @frame_count: 1 no aggregation, >1 aggregation
-+ * @bt_kill_count: num of times blocked by bluetooth (unused for agg)
-+ * @failure_rts: num of failures due to unsuccessful RTS
-+ * @failure_frame: num failures due to no ACK (unused for agg)
-+ * @initial_rate: for non-agg: rate of the successful Tx. For agg: rate of the
-+ *	Tx of all the batch. RATE_MCS_*
-+ * @wireless_media_time: for non-agg: RTS + CTS + frame tx attempts time + ACK.
-+ *	for agg: RTS + CTS + aggregation tx time + block-ack time.
-+ *	in usec.
-+ * @pa_status: tx power info
-+ * @pa_integ_res_a: tx power info
-+ * @pa_integ_res_b: tx power info
-+ * @pa_integ_res_c: tx power info
-+ * @measurement_req_id: tx power info
-+ * @tfd_info: TFD information set by the FH
-+ * @seq_ctl: sequence control from the Tx cmd
-+ * @byte_cnt: byte count from the Tx cmd
-+ * @tlc_info: TLC rate info
-+ * @ra_tid: bits [3:0] = ra, bits [7:4] = tid
-+ * @frame_ctrl: frame control
-+ * @status: for non-agg:  frame status TX_STATUS_*
-+ *	for agg: status of 1st frame, AGG_TX_STATE_*; other frame status fields
-+ *	follow this one, up to frame_count.
-+ *
-+ * After the array of statuses comes the SSN of the SCD. Look at
-+ * %iwl_mvm_get_scd_ssn for more details.
-+ */
-+struct iwl_mvm_tx_resp {
-+	u8 frame_count;
-+	u8 bt_kill_count;
-+	u8 failure_rts;
-+	u8 failure_frame;
-+	__le32 initial_rate;
-+	__le16 wireless_media_time;
++static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
++	u8 *pbyIVHead, PSKeyItem pTransmitKey, u8 *pbyHdrBuf, u16 wPayloadLen,
++	u8 *pMICHDR);
 +
-+	u8 pa_status;
-+	u8 pa_integ_res_a[3];
-+	u8 pa_integ_res_b[3];
-+	u8 pa_integ_res_c[3];
-+	__le16 measurement_req_id;
-+	__le16 reserved;
++static void s_vSWencryption(struct vnt_private *pDevice,
++	PSKeyItem pTransmitKey, u8 *pbyPayloadHead, u16 wPayloadSize);
 +
-+	__le32 tfd_info;
-+	__le16 seq_ctl;
-+	__le16 byte_cnt;
-+	u8 tlc_info;
-+	u8 ra_tid;
-+	__le16 frame_ctrl;
++static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
++	u32 cbFrameLength, u16 wRate, int bNeedAck);
 +
-+	struct agg_tx_status status;
-+} __packed; /* TX_RSP_API_S_VER_3 */
++static u32 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice, u8 byRTSRsvType,
++	u8 byPktType, u32 cbFrameLength, u16 wCurrentRate);
 +
-+/**
-+ * struct iwl_mvm_ba_notif - notifies about reception of BA
-+ * ( BA_NOTIF = 0xc5 )
-+ * @sta_addr_lo32: lower 32 bits of the MAC address
-+ * @sta_addr_hi16: upper 16 bits of the MAC address
-+ * @sta_id: Index of recipient (BA-sending) station in fw's station table
-+ * @tid: tid of the session
-+ * @seq_ctl:
-+ * @bitmap: the bitmap of the BA notification as seen in the air
-+ * @scd_flow: the tx queue this BA relates to
-+ * @scd_ssn: the index of the last contiguously sent packet
-+ * @txed: number of Txed frames in this batch
-+ * @txed_2_done: number of Acked frames in this batch
-+ */
-+struct iwl_mvm_ba_notif {
-+	__le32 sta_addr_lo32;
-+	__le16 sta_addr_hi16;
-+	__le16 reserved;
++static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
++	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
++	int bDisCRC, u16 wCurrentRate, u8 byFBOption);
 +
-+	u8 sta_id;
-+	u8 tid;
-+	__le16 seq_ctl;
-+	__le64 bitmap;
-+	__le16 scd_flow;
-+	__le16 scd_ssn;
-+	u8 txed;
-+	u8 txed_2_done;
-+	__le16 reserved1;
-+} __packed;
++static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
++	void *pvRTS, u32 cbFrameLength, int bNeedAck, int bDisCRC,
++	PSEthernetHeader psEthHeader, u16 wCurrentRate, u8 byFBOption);
 +
-+/*
-+ * struct iwl_mac_beacon_cmd - beacon template command
-+ * @tx: the tx commands associated with the beacon frame
-+ * @template_id: currently equal to the mac context id of the coresponding
-+ *  mac.
-+ * @tim_idx: the offset of the tim IE in the beacon
-+ * @tim_size: the length of the tim IE
-+ * @frame: the template of the beacon frame
-+ */
-+struct iwl_mac_beacon_cmd {
-+	struct iwl_tx_cmd tx;
-+	__le32 template_id;
-+	__le32 tim_idx;
-+	__le32 tim_size;
-+	struct ieee80211_hdr frame[0];
-+} __packed;
++static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
++	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
++	u32 uFragIdx, u32 cbLastFragmentSize, u32 uMACfragNum,
++	u8 byFBOption);
 +
-+/**
-+ * enum iwl_dump_control - dump (flush) control flags
-+ * @DUMP_TX_FIFO_FLUSH: Dump MSDUs until the the FIFO is empty
-+ *	and the TFD queues are empty.
-+ */
-+enum iwl_dump_control {
-+	DUMP_TX_FIFO_FLUSH	= BIT(1),
-+};
++static unsigned int s_uGetRTSCTSDuration(struct vnt_private *pDevice,
++	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
++	int bNeedAck, u8 byFBOption);
+ 
+
+ /*---------------------  Export Variables  --------------------------*/
+ 
+-static
+-void *
+-s_vGetFreeContext(
+-    PSDevice pDevice
+-    )
++static void *s_vGetFreeContext(struct vnt_private *pDevice)
+ {
+-    PUSB_SEND_CONTEXT   pContext = NULL;
+-    PUSB_SEND_CONTEXT   pReturnContext = NULL;
+-    unsigned int                ii;
++	PUSB_SEND_CONTEXT pContext = NULL;
++	PUSB_SEND_CONTEXT pReturnContext = NULL;
++	int ii;
+ 
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
+ 
+@@ -292,11 +182,10 @@ s_vGetFreeContext(
+ }
+ 
+
+-static
+-void
+-s_vSaveTxPktInfo(PSDevice pDevice, BYTE byPktNum, PBYTE pbyDestAddr, WORD wPktLength, WORD wFIFOCtl)
++static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
++	u8 *pbyDestAddr, u16 wPktLength, u16 wFIFOCtl)
+ {
+-    PSStatCounter           pStatistic=&(pDevice->scStatistic);
++	PSStatCounter pStatistic = &pDevice->scStatistic;
+ 
+     if (is_broadcast_ether_addr(pbyDestAddr))
+         pStatistic->abyTxPktInfo[byPktNum].byBroadMultiUni = TX_PKT_BROAD;
+@@ -312,24 +201,15 @@ s_vSaveTxPktInfo(PSDevice pDevice, BYTE byPktNum, PBYTE pbyDestAddr, WORD wPktLe
+ 	   ETH_ALEN);
+ }
+ 
+-static
+-void
+-s_vFillTxKey (
+-      PSDevice   pDevice,
+-      PBYTE      pbyBuf,
+-      PBYTE      pbyIVHead,
+-      PSKeyItem  pTransmitKey,
+-      PBYTE      pbyHdrBuf,
+-      WORD       wPayloadLen,
+-     PBYTE      pMICHDR
+-    )
++static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
++	u8 *pbyIVHead, PSKeyItem pTransmitKey, u8 *pbyHdrBuf,
++	u16 wPayloadLen, u8 *pMICHDR)
+ {
+-    PDWORD          pdwIV = (PDWORD) pbyIVHead;
+-    PDWORD          pdwExtIV = (PDWORD) ((PBYTE)pbyIVHead+4);
+-    WORD            wValue;
+-    PS802_11Header  pMACHeader = (PS802_11Header)pbyHdrBuf;
+-    DWORD           dwRevIVCounter;
+-
++	u32 *pdwIV = (u32 *)pbyIVHead;
++	u32 *pdwExtIV = (u32 *)((u8 *)pbyIVHead + 4);
++	u16 wValue;
++	PS802_11Header pMACHeader = (PS802_11Header)pbyHdrBuf;
++	u32 dwRevIVCounter;
+ 
+
+     //Fill TXKEY
+@@ -430,18 +310,12 @@ s_vFillTxKey (
+ }
+ 
+
+-static
+-void
+-s_vSWencryption (
+-      PSDevice            pDevice,
+-      PSKeyItem           pTransmitKey,
+-      PBYTE               pbyPayloadHead,
+-      WORD                wPayloadSize
+-    )
++static void s_vSWencryption(struct vnt_private *pDevice,
++	PSKeyItem pTransmitKey, u8 *pbyPayloadHead, u16 wPayloadSize)
+ {
+-    unsigned int   cbICVlen = 4;
+-    DWORD  dwICV = 0xFFFFFFFFL;
+-    PDWORD pdwICV;
++	u32 cbICVlen = 4;
++	u32 dwICV = 0xffffffff;
++	u32 *pdwICV;
+ 
+     if (pTransmitKey == NULL)
+         return;
+@@ -479,17 +353,10 @@ s_vSWencryption (
+              PK_TYPE_11GB    2
+              PK_TYPE_11GA    3
+ */
+-static
+-unsigned int
+-s_uGetTxRsvTime (
+-     PSDevice pDevice,
+-     BYTE     byPktType,
+-     unsigned int     cbFrameLength,
+-     WORD     wRate,
+-     BOOL     bNeedAck
+-    )
++static u32 s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
++	u32 cbFrameLength, u16 wRate, int bNeedAck)
+ {
+-    unsigned int uDataTime, uAckTime;
++	u32 uDataTime, uAckTime;
+ 
+     uDataTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, cbFrameLength, wRate);
+     if (byPktType == PK_TYPE_11B) {//llb,CCK mode
+@@ -507,17 +374,10 @@ s_uGetTxRsvTime (
+ }
+ 
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+-static
+-unsigned int
+-s_uGetRTSCTSRsvTime (
+-     PSDevice pDevice,
+-     BYTE byRTSRsvType,
+-     BYTE byPktType,
+-     unsigned int cbFrameLength,
+-     WORD wCurrentRate
+-    )
++static u32 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice,
++	u8 byRTSRsvType, u8 byPktType, u32 cbFrameLength, u16 wCurrentRate)
+ {
+-    unsigned int uRrvTime  , uRTSTime, uCTSTime, uAckTime, uDataTime;
++	u32 uRrvTime, uRTSTime, uCTSTime, uAckTime, uDataTime;
+ 
+     uRrvTime = uRTSTime = uCTSTime = uAckTime = uDataTime = 0;
+ 
+@@ -549,23 +409,13 @@ s_uGetRTSCTSRsvTime (
+ }
+ 
+ //byFreqType 0: 5GHz, 1:2.4Ghz
+-static
+-unsigned int
+-s_uGetDataDuration (
+-     PSDevice pDevice,
+-     BYTE     byDurType,
+-     unsigned int     cbFrameLength,
+-     BYTE     byPktType,
+-     WORD     wRate,
+-     BOOL     bNeedAck,
+-     unsigned int     uFragIdx,
+-     unsigned int     cbLastFragmentSize,
+-     unsigned int     uMACfragNum,
+-     BYTE     byFBOption
+-    )
++static u32 s_uGetDataDuration(struct vnt_private *pDevice, u8 byDurType,
++	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
++	u32 uFragIdx, u32 cbLastFragmentSize, u32 uMACfragNum,
++	u8 byFBOption)
+ {
+-    BOOL bLastFrag = 0;
+-    unsigned int uAckTime = 0, uNextPktTime = 0;
++	int bLastFrag = 0;
++	u32 uAckTime = 0, uNextPktTime = 0;
+ 
+     if (uFragIdx == (uMACfragNum-1)) {
+         bLastFrag = 1;
+@@ -718,19 +568,11 @@ s_uGetDataDuration (
+ 
+
+ //byFreqType: 0=>5GHZ 1=>2.4GHZ
+-static
+-unsigned int
+-s_uGetRTSCTSDuration (
+-     PSDevice pDevice,
+-     BYTE byDurType,
+-     unsigned int cbFrameLength,
+-     BYTE byPktType,
+-     WORD wRate,
+-     BOOL bNeedAck,
+-     BYTE byFBOption
+-    )
++static u32 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
++	u32 cbFrameLength, u8 byPktType, u16 wRate, int bNeedAck,
++	u8 byFBOption)
+ {
+-    unsigned int uCTSTime = 0, uDurTime = 0;
++	u32 uCTSTime = 0, uDurTime = 0;
+ 
+
+     switch (byDurType) {
+@@ -814,24 +656,10 @@ s_uGetRTSCTSDuration (
+ 
+ }
+ 
+-
+-
+-
+-static
+-unsigned int
+-s_uFillDataHead (
+-     PSDevice pDevice,
+-     BYTE     byPktType,
+-     WORD     wCurrentRate,
+-     void *pTxDataHead,
+-     unsigned int     cbFrameLength,
+-     unsigned int     uDMAIdx,
+-     BOOL     bNeedAck,
+-     unsigned int     uFragIdx,
+-     unsigned int     cbLastFragmentSize,
+-     unsigned int     uMACfragNum,
+-     BYTE     byFBOption
+-    )
++static u32 s_uFillDataHead(struct vnt_private *pDevice,
++	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
++	u32 uDMAIdx, int bNeedAck, u32 uFragIdx, u32 cbLastFragmentSize,
++	u32 uMACfragNum, u8 byFBOption)
+ {
+ 
+     if (pTxDataHead == NULL) {
+@@ -959,25 +787,12 @@ s_uFillDataHead (
+     return 0;
+ }
+ 
+-
+-
+-
+-static
+-void
+-s_vFillRTSHead (
+-     PSDevice         pDevice,
+-     BYTE             byPktType,
+-     void *pvRTS,
+-     unsigned int             cbFrameLength,
+-     BOOL             bNeedAck,
+-     BOOL             bDisCRC,
+-     PSEthernetHeader psEthHeader,
+-     WORD             wCurrentRate,
+-     BYTE             byFBOption
+-    )
++static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
++	void *pvRTS, u32 cbFrameLength, int bNeedAck, int bDisCRC,
++	PSEthernetHeader psEthHeader, u16 wCurrentRate, u8 byFBOption)
+ {
+-    unsigned int uRTSFrameLen = 20;
+-    WORD  wLen = 0x0000;
++	u32 uRTSFrameLen = 20;
++	u16 wLen = 0;
+ 
+     if (pvRTS == NULL)
+     	return;
+@@ -1190,22 +1005,12 @@ s_vFillRTSHead (
+     }
+ }
+ 
+-static
+-void
+-s_vFillCTSHead (
+-     PSDevice pDevice,
+-     unsigned int     uDMAIdx,
+-     BYTE     byPktType,
+-     void *pvCTS,
+-     unsigned int     cbFrameLength,
+-     BOOL     bNeedAck,
+-     BOOL     bDisCRC,
+-     WORD     wCurrentRate,
+-     BYTE     byFBOption
+-    )
++static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
++	u8 byPktType, void *pvCTS, u32 cbFrameLength, int bNeedAck,
++	int bDisCRC, u16 wCurrentRate, u8 byFBOption)
+ {
+-    unsigned int uCTSFrameLen = 14;
+-    WORD  wLen = 0x0000;
++	u32 uCTSFrameLen = 14;
++	u16 wLen = 0;
+ 
+     if (pvCTS == NULL) {
+         return;
+@@ -1290,27 +1095,15 @@ s_vFillCTSHead (
+  *
+ -*/
+ 
+-static
+-void
+-s_vGenerateTxParameter (
+-     PSDevice         pDevice,
+-     BYTE             byPktType,
+-     WORD             wCurrentRate,
+-     void *pTxBufHead,
+-     void *pvRrvTime,
+-     void *pvRTS,
+-     void *pvCTS,
+-     unsigned int             cbFrameSize,
+-     BOOL             bNeedACK,
+-     unsigned int             uDMAIdx,
+-     PSEthernetHeader psEthHeader
+-    )
++static void s_vGenerateTxParameter(struct vnt_private *pDevice,
++	u8 byPktType, u16 wCurrentRate,	void *pTxBufHead, void *pvRrvTime,
++	void *pvRTS, void *pvCTS, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
++	PSEthernetHeader psEthHeader)
+ {
+-	unsigned int cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+-    WORD wFifoCtl;
+-    BOOL bDisCRC = FALSE;
+-    BYTE byFBOption = AUTO_FB_NONE;
+-//    WORD wCurrentRate = pDevice->wCurrentRate;
++	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
++	u16 wFifoCtl;
++	int bDisCRC = FALSE;
++	u8 byFBOption = AUTO_FB_NONE;
+ 
+     //DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_vGenerateTxParameter...\n");
+     PSTxBufHead pFifoHead = (PSTxBufHead)pTxBufHead;
+@@ -1407,52 +1200,37 @@ s_vGenerateTxParameter (
+     unsigned int  cbFragmentSize,//Hdr+payoad+FCS
+ */
+ 
+-
+-BOOL
+-s_bPacketToWirelessUsb(
+-      PSDevice         pDevice,
+-      BYTE             byPktType,
+-      PBYTE            usbPacketBuf,
+-      BOOL             bNeedEncryption,
+-      unsigned int             uSkbPacketLen,
+-      unsigned int             uDMAIdx,
+-      PSEthernetHeader psEthHeader,
+-      PBYTE            pPacket,
+-      PSKeyItem        pTransmitKey,
+-      unsigned int             uNodeIndex,
+-      WORD             wCurrentRate,
+-     unsigned int             *pcbHeaderLen,
+-     unsigned int             *pcbTotalLen
+-    )
++static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
++	u8 *usbPacketBuf, int bNeedEncryption, u32 uSkbPacketLen, u32 uDMAIdx,
++	PSEthernetHeader psEthHeader, u8 *pPacket, PSKeyItem pTransmitKey,
++	u32 uNodeIndex, u16 wCurrentRate, u32 *pcbHeaderLen, u32 *pcbTotalLen)
+ {
+-    PSMgmtObject        pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int cbFrameSize, cbFrameBodySize;
+-    PTX_BUFFER          pTxBufHead;
+-    unsigned int cb802_1_H_len;
+-    unsigned int cbIVlen = 0, cbICVlen = 0, cbMIClen = 0,
+-	    cbMACHdLen = 0, cbFCSlen = 4;
+-    unsigned int cbMICHDR = 0;
+-    BOOL                bNeedACK,bRTS;
+-    PBYTE               pbyType,pbyMacHdr,pbyIVHead,pbyPayloadHead,pbyTxBufferAddr;
+-    BYTE abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
+-    BYTE abySNAP_Bridgetunnel[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0xF8};
+-    unsigned int uDuration;
+-    unsigned int cbHeaderLength = 0, uPadding = 0;
+-    void *pvRrvTime;
+-    PSMICHDRHead        pMICHDR;
+-    void *pvRTS;
+-    void *pvCTS;
+-    void *pvTxDataHd;
+-    BYTE                byFBOption = AUTO_FB_NONE,byFragType;
+-    WORD                wTxBufSize;
+-    DWORD               dwMICKey0,dwMICKey1,dwMIC_Priority,dwCRC;
+-    PDWORD              pdwMIC_L,pdwMIC_R;
+-    BOOL                bSoftWEP = FALSE;
+-
+-
+-
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u32 cbFrameSize, cbFrameBodySize;
++	PTX_BUFFER pTxBufHead;
++	u32 cb802_1_H_len;
++	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbMACHdLen = 0;
++	u32 cbFCSlen = 4, cbMICHDR = 0;
++	int bNeedACK, bRTS;
++	u8 *pbyType, *pbyMacHdr, *pbyIVHead, *pbyPayloadHead, *pbyTxBufferAddr;
++	u8 abySNAP_RFC1042[ETH_ALEN] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00};
++	u8 abySNAP_Bridgetunnel[ETH_ALEN]
++		= {0xAA, 0xAA, 0x03, 0x00, 0x00, 0xF8};
++	u32 uDuration;
++	u32 cbHeaderLength = 0, uPadding = 0;
++	void *pvRrvTime;
++	PSMICHDRHead pMICHDR;
++	void *pvRTS;
++	void *pvCTS;
++	void *pvTxDataHd;
++	u8 byFBOption = AUTO_FB_NONE, byFragType;
++	u16 wTxBufSize;
++	u32 dwMICKey0, dwMICKey1, dwMIC_Priority, dwCRC;
++	u32 *pdwMIC_L, *pdwMIC_R;
++	int bSoftWEP = FALSE;
 +
-+/**
-+ * struct iwl_tx_path_flush_cmd -- queue/FIFO flush command
-+ * @queues_ctl: bitmap of queues to flush
-+ * @flush_ctl: control flags
-+ * @reserved: reserved
-+ */
-+struct iwl_tx_path_flush_cmd {
-+	__le32 queues_ctl;
-+	__le16 flush_ctl;
-+	__le16 reserved;
-+} __packed; /* TX_PATH_FLUSH_CMD_API_S_VER_1 */
-+
-+/**
-+ * iwl_mvm_get_scd_ssn - returns the SSN of the SCD
-+ * @tx_resp: the Tx response from the fw (agg or non-agg)
-+ *
-+ * When the fw sends an AMPDU, it fetches the MPDUs one after the other. Since
-+ * it can't know that everything will go well until the end of the AMPDU, it
-+ * can't know in advance the number of MPDUs that will be sent in the current
-+ * batch. This is why it writes the agg Tx response while it fetches the MPDUs.
-+ * Hence, it can't know in advance what the SSN of the SCD will be at the end
-+ * of the batch. This is why the SSN of the SCD is written at the end of the
-+ * whole struct at a variable offset. This function knows how to cope with the
-+ * variable offset and returns the SSN of the SCD.
-+ */
-+static inline u32 iwl_mvm_get_scd_ssn(struct iwl_mvm_tx_resp *tx_resp)
++	pvRrvTime = pMICHDR = pvRTS = pvCTS = pvTxDataHd = NULL;
+ 
+-    pvRrvTime = pMICHDR = pvRTS = pvCTS = pvTxDataHd = NULL;
+ 	if (bNeedEncryption && pTransmitKey->pvKeyTable) {
+ 		if (((PSKeyTable)&pTransmitKey->pvKeyTable)->bSoftWEP == TRUE)
+ 			bSoftWEP = TRUE; /* WEP 256 */
+@@ -1839,19 +1617,11 @@ s_bPacketToWirelessUsb(
+  *
+ -*/
+ 
+-void
+-s_vGenerateMACHeader (
+-     PSDevice         pDevice,
+-     PBYTE            pbyBufferAddr,
+-     WORD             wDuration,
+-     PSEthernetHeader psEthHeader,
+-     BOOL             bNeedEncrypt,
+-     WORD             wFragType,
+-     unsigned int             uDMAIdx,
+-     unsigned int             uFragIdx
+-    )
++static void s_vGenerateMACHeader(struct vnt_private *pDevice,
++	u8 *pbyBufferAddr, u16 wDuration, PSEthernetHeader psEthHeader,
++	int bNeedEncrypt, u16 wFragType, u32 uDMAIdx, u32 uFragIdx)
+ {
+-    PS802_11Header  pMACHeader = (PS802_11Header)pbyBufferAddr;
++	PS802_11Header pMACHeader = (PS802_11Header)pbyBufferAddr;
+ 
+     memset(pMACHeader, 0, (sizeof(S802_11Header)));  //- sizeof(pMACHeader->dwIV)));
+ 
+@@ -1940,39 +1710,25 @@ s_vGenerateMACHeader (
+  *
+ -*/
+ 
+-CMD_STATUS csMgmt_xmit(
+-      PSDevice pDevice,
+-      PSTxMgmtPacket pPacket
+-    )
++CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
++	struct vnt_tx_mgmt *pPacket)
+ {
+-    BYTE            byPktType;
+-    PBYTE           pbyTxBufferAddr;
+-    void *pvRTS;
+-    PSCTS           pCTS;
+-    void *pvTxDataHd;
+-    unsigned int            uDuration;
+-    unsigned int            cbReqCount;
+-    PS802_11Header  pMACHeader;
+-    unsigned int            cbHeaderSize;
+-    unsigned int            cbFrameBodySize;
+-    BOOL            bNeedACK;
+-    BOOL            bIsPSPOLL = FALSE;
+-    PSTxBufHead     pTxBufHead;
+-    unsigned int            cbFrameSize;
+-    unsigned int            cbIVlen = 0;
+-    unsigned int            cbICVlen = 0;
+-    unsigned int            cbMIClen = 0;
+-    unsigned int            cbFCSlen = 4;
+-    unsigned int            uPadding = 0;
+-    WORD            wTxBufSize;
+-    unsigned int            cbMacHdLen;
+-    SEthernetHeader sEthHeader;
+-    void *pvRrvTime;
+-    void *pMICHDR;
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    WORD            wCurrentRate = RATE_1M;
+-    PTX_BUFFER          pTX_Buffer;
+-    PUSB_SEND_CONTEXT   pContext;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	PTX_BUFFER pTX_Buffer;
++	PSTxBufHead pTxBufHead;
++	PUSB_SEND_CONTEXT pContext;
++	PS802_11Header pMACHeader;
++	PSCTS pCTS;
++	SEthernetHeader sEthHeader;
++	u8 byPktType, *pbyTxBufferAddr;
++	void *pvRTS, *pvTxDataHd, *pvRrvTime, *pMICHDR;
++	u32 uDuration, cbReqCount, cbHeaderSize, cbFrameBodySize, cbFrameSize;
++	int bNeedACK, bIsPSPOLL = FALSE;
++	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbFCSlen = 4;
++	u32 uPadding = 0;
++	u16 wTxBufSize;
++	u32 cbMacHdLen;
++	u16 wCurrentRate = RATE_1M;
+ 
+
+
+@@ -2231,26 +1987,22 @@ CMD_STATUS csMgmt_xmit(
+ }
+ 
+
+-CMD_STATUS
+-csBeacon_xmit(
+-      PSDevice pDevice,
+-      PSTxMgmtPacket pPacket
+-    )
++CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
++	struct vnt_tx_mgmt *pPacket)
+ {
+-
+-    unsigned int                cbFrameSize = pPacket->cbMPDULen + WLAN_FCS_LEN;
+-    unsigned int                cbHeaderSize = 0;
+-    WORD                wTxBufSize = sizeof(STxShortBufHead);
+-    PSTxShortBufHead    pTxBufHead;
+-    PS802_11Header      pMACHeader;
+-    PSTxDataHead_ab     pTxDataHead;
+-    WORD                wCurrentRate;
+-    unsigned int                cbFrameBodySize;
+-    unsigned int                cbReqCount;
+-    PBEACON_BUFFER      pTX_Buffer;
+-    PBYTE               pbyTxBufferAddr;
+-    PUSB_SEND_CONTEXT   pContext;
+-    CMD_STATUS          status;
++	u32 cbFrameSize = pPacket->cbMPDULen + WLAN_FCS_LEN;
++	u32 cbHeaderSize = 0;
++	u16 wTxBufSize = sizeof(STxShortBufHead);
++	PSTxShortBufHead pTxBufHead;
++	PS802_11Header pMACHeader;
++	PSTxDataHead_ab pTxDataHead;
++	u16 wCurrentRate;
++	u32 cbFrameBodySize;
++	u32 cbReqCount;
++	PBEACON_BUFFER pTX_Buffer;
++	u8 *pbyTxBufferAddr;
++	PUSB_SEND_CONTEXT pContext;
++	CMD_STATUS status;
+ 
+
+     pContext = (PUSB_SEND_CONTEXT)s_vGetFreeContext(pDevice);
+@@ -2321,56 +2073,38 @@ csBeacon_xmit(
+ }
+ 
+
+-
+-
+-
+-void
+-vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb) {
+-
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    BYTE            byPktType;
+-    PBYTE           pbyTxBufferAddr;
+-    void *pvRTS;
+-    void *pvCTS;
+-    void *pvTxDataHd;
+-    unsigned int            uDuration;
+-    unsigned int            cbReqCount;
+-    PS802_11Header  pMACHeader;
+-    unsigned int            cbHeaderSize;
+-    unsigned int            cbFrameBodySize;
+-    BOOL            bNeedACK;
+-    BOOL            bIsPSPOLL = FALSE;
+-    PSTxBufHead     pTxBufHead;
+-    unsigned int            cbFrameSize;
+-    unsigned int            cbIVlen = 0;
+-    unsigned int            cbICVlen = 0;
+-    unsigned int            cbMIClen = 0;
+-    unsigned int            cbFCSlen = 4;
+-    unsigned int            uPadding = 0;
+-    unsigned int            cbMICHDR = 0;
+-    unsigned int            uLength = 0;
+-    DWORD           dwMICKey0, dwMICKey1;
+-    DWORD           dwMIC_Priority;
+-    PDWORD          pdwMIC_L;
+-    PDWORD          pdwMIC_R;
+-    WORD            wTxBufSize;
+-    unsigned int            cbMacHdLen;
+-    SEthernetHeader sEthHeader;
+-    void *pvRrvTime;
+-    void *pMICHDR;
+-    WORD            wCurrentRate = RATE_1M;
+-    PUWLAN_80211HDR  p80211Header;
+-    unsigned int             uNodeIndex = 0;
+-    BOOL            bNodeExist = FALSE;
+-    SKeyItem        STempKey;
+-    PSKeyItem       pTransmitKey = NULL;
+-    PBYTE           pbyIVHead;
+-    PBYTE           pbyPayloadHead;
+-    PBYTE           pbyMacHdr;
+-    unsigned int            cbExtSuppRate = 0;
+-    PTX_BUFFER          pTX_Buffer;
+-    PUSB_SEND_CONTEXT   pContext;
+-//    PWLAN_IE        pItem;
++void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
 +{
-+	return le32_to_cpup((__le32 *)&tx_resp->status +
-+			    tx_resp->frame_count) & 0xfff;
-+}
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u8 byPktType;
++	u8 *pbyTxBufferAddr;
++	void *pvRTS, *pvCTS, *pvTxDataHd;
++	u32 uDuration, cbReqCount;
++	PS802_11Header  pMACHeader;
++	u32 cbHeaderSize, cbFrameBodySize;
++	int bNeedACK, bIsPSPOLL = FALSE;
++	PSTxBufHead pTxBufHead;
++	u32 cbFrameSize;
++	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbFCSlen = 4;
++	u32 uPadding = 0;
++	u32 cbMICHDR = 0, uLength = 0;
++	u32 dwMICKey0, dwMICKey1;
++	u32 dwMIC_Priority;
++	u32 *pdwMIC_L, *pdwMIC_R;
++	u16 wTxBufSize;
++	u32 cbMacHdLen;
++	SEthernetHeader sEthHeader;
++	void *pvRrvTime, *pMICHDR;
++	u32 wCurrentRate = RATE_1M;
++	PUWLAN_80211HDR  p80211Header;
++	u32 uNodeIndex = 0;
++	int bNodeExist = FALSE;
++	SKeyItem STempKey;
++	PSKeyItem pTransmitKey = NULL;
++	u8 *pbyIVHead, *pbyPayloadHead, *pbyMacHdr;
++	u32 cbExtSuppRate = 0;
++	PTX_BUFFER pTX_Buffer;
++	PUSB_SEND_CONTEXT pContext;
+ 
+
+     pvRrvTime = pMICHDR = pvRTS = pvCTS = pvTxDataHd = NULL;
+@@ -2729,29 +2463,30 @@ vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb) {
+  * Return Value: NULL
+  */
+ 
+-int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
++int nsDMA_tx_packet(struct vnt_private *pDevice,
++	u32 uDMAIdx, struct sk_buff *skb)
+ {
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int BytesToWrite = 0, uHeaderLen = 0;
+-    unsigned int            uNodeIndex = 0;
+-    BYTE            byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
+-    WORD            wAID;
+-    BYTE            byPktType;
+-    BOOL            bNeedEncryption = FALSE;
+-    PSKeyItem       pTransmitKey = NULL;
+-    SKeyItem        STempKey;
+-    unsigned int            ii;
+-    BOOL            bTKIP_UseGTK = FALSE;
+-    BOOL            bNeedDeAuth = FALSE;
+-    PBYTE           pbyBSSID;
+-    BOOL            bNodeExist = FALSE;
+-    PUSB_SEND_CONTEXT pContext;
+-    BOOL            fConvertedPacket;
+-    PTX_BUFFER      pTX_Buffer;
+-    unsigned int            status;
+-    WORD            wKeepRate = pDevice->wCurrentRate;
+-    struct net_device_stats* pStats = &pDevice->stats;
+-     BOOL            bTxeapol_key = FALSE;
++	struct net_device_stats *pStats = &pDevice->stats;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u32 BytesToWrite = 0, uHeaderLen = 0;
++	u32 uNodeIndex = 0;
++	u8 byMask[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
++	u16 wAID;
++	u8 byPktType;
++	int bNeedEncryption = FALSE;
++	PSKeyItem pTransmitKey = NULL;
++	SKeyItem STempKey;
++	int ii;
++	int bTKIP_UseGTK = FALSE;
++	int bNeedDeAuth = FALSE;
++	u8 *pbyBSSID;
++	int bNodeExist = FALSE;
++	PUSB_SEND_CONTEXT pContext;
++	BOOL fConvertedPacket;
++	PTX_BUFFER pTX_Buffer;
++	u32 status;
++	u16 wKeepRate = pDevice->wCurrentRate;
++	int bTxeapol_key = FALSE;
+ 
+
+     if (pMgmt->eCurrMode == WMAC_MODE_ESS_AP) {
+@@ -3125,28 +2860,22 @@ int nsDMA_tx_packet(PSDevice pDevice, unsigned int uDMAIdx, struct sk_buff *skb)
+  * Return Value: Return TRUE if packet is copy to dma1; otherwise FALSE
+  */
+ 
+-
+-BOOL
+-bRelayPacketSend (
+-      PSDevice pDevice,
+-      PBYTE    pbySkbData,
+-      unsigned int     uDataLen,
+-      unsigned int     uNodeIndex
+-    )
++int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
++	u32 uNodeIndex)
+ {
+-    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+-    unsigned int BytesToWrite = 0, uHeaderLen = 0;
+-    BYTE            byPktType = PK_TYPE_11B;
+-    BOOL            bNeedEncryption = FALSE;
+-    SKeyItem        STempKey;
+-    PSKeyItem       pTransmitKey = NULL;
+-    PBYTE           pbyBSSID;
+-    PUSB_SEND_CONTEXT   pContext;
+-    BYTE            byPktTyp;
+-    BOOL            fConvertedPacket;
+-    PTX_BUFFER      pTX_Buffer;
+-    unsigned int            status;
+-    WORD            wKeepRate = pDevice->wCurrentRate;
++	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
++	u32 BytesToWrite = 0, uHeaderLen = 0;
++	u8 byPktType = PK_TYPE_11B;
++	int bNeedEncryption = FALSE;
++	SKeyItem STempKey;
++	PSKeyItem pTransmitKey = NULL;
++	u8 *pbyBSSID;
++	PUSB_SEND_CONTEXT pContext;
++	u8 byPktTyp;
++	int fConvertedPacket;
++	PTX_BUFFER pTX_Buffer;
++	u32 status;
++	u16 wKeepRate = pDevice->wCurrentRate;
+ 
+
+
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index dd2198a..9f53702 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -665,30 +665,11 @@ typedef struct tagSBEACON_BUFFER
+ 
+ /*---------------------  Export Functions  --------------------------*/
+ 
+-BOOL
+-bPacketToWirelessUsb(
+-      PSDevice         pDevice,
+-      BYTE             byPktType,
+-      PBYTE            usbPacketBuf,
+-      BOOL             bNeedEncrypt,
+-      unsigned int             cbPayloadSize,
+-      unsigned int             uDMAIdx,
+-      PSEthernetHeader psEthHeader,
+-      PBYTE            pPacket,
+-      PSKeyItem        pTransmitKey,
+-      unsigned int             uNodeIndex,
+-      WORD             wCurrentRate,
+-     unsigned int             *pcbHeaderLen,
+-     unsigned int             *pcbTotalLen
+-    );
+-
+-void vDMA0_tx_80211(PSDevice  pDevice, struct sk_buff *skb);
+-int nsDMA_tx_packet(PSDevice pDevice,
+-		    unsigned int uDMAIdx,
+-		    struct sk_buff *skb);
+-CMD_STATUS csMgmt_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket);
+-CMD_STATUS csBeacon_xmit(PSDevice pDevice, PSTxMgmtPacket pPacket);
+-BOOL bRelayPacketSend(PSDevice pDevice, PBYTE pbySkbData,
+-		      unsigned int uDataLen, unsigned int uNodeIndex);
++void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb);
++int nsDMA_tx_packet(struct vnt_private *, u32 uDMAIdx, struct sk_buff *skb);
++CMD_STATUS csMgmt_xmit(struct vnt_private *, struct vnt_tx_mgmt *);
++CMD_STATUS csBeacon_xmit(struct vnt_private *, struct vnt_tx_mgmt *);
++int bRelayPacketSend(struct vnt_private *, u8 *pbySkbData, u32 uDataLen,
++	u32 uNodeIndex);
+ 
+ #endif /* __RXTX_H__ */
+diff --git a/drivers/staging/vt6656/wpa2.c b/drivers/staging/vt6656/wpa2.c
+index 616e24d..99b4589 100644
+--- a/drivers/staging/vt6656/wpa2.c
++++ b/drivers/staging/vt6656/wpa2.c
+@@ -260,19 +260,16 @@ WPA2vParseRSN (
+  * Return Value: length of IEs.
+  *
+ -*/
+-unsigned int
+-WPA2uSetIEs(void *pMgmtHandle,
+-     PWLAN_IE_RSN pRSNIEs
+-    )
++unsigned int WPA2uSetIEs(void *pMgmtHandle, PWLAN_IE_RSN pRSNIEs)
+ {
+-    PSMgmtObject    pMgmt = (PSMgmtObject) pMgmtHandle;
+-    PBYTE           pbyBuffer = NULL;
+-    unsigned int            ii = 0;
+-    PWORD           pwPMKID = NULL;
++	struct vnt_manager *pMgmt = (struct vnt_manager *)pMgmtHandle;
++	u8 *pbyBuffer = NULL;
++	int ii = 0;
++	u16 *pwPMKID = NULL;
 +
-+#endif /* __fw_api_tx_h__ */
++	if (pRSNIEs == NULL)
++		return 0;
+ 
+-    if (pRSNIEs == NULL) {
+-        return(0);
+-    }
+     if (((pMgmt->eAuthenMode == WMAC_AUTH_WPA2) ||
+          (pMgmt->eAuthenMode == WMAC_AUTH_WPA2PSK)) &&
+         (pMgmt->pCurrBSS != NULL)) {
 -- 
 1.8.0
+
+
 
