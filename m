@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19747 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755461Ab3AIKy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 05:54:56 -0500
-Date: Wed, 9 Jan 2013 11:54:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johan Danielsson <joda@kth.se>, linux-wireless@vger.kernel.org
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:63695 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab3AGT5n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 14:57:43 -0500
+Received: by mail-bk0-f41.google.com with SMTP id jg9so8804207bkc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 11:57:42 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johan Danielsson <joda@kth.se>
 Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
-Message-ID: <20130109105437.GB13513@redhat.com> (sfid-20130109_115502_311300_CBB60B1C)
+Date: Mon, 7 Jan 2013 20:53:34 +0100
+Cc: linux-wireless@vger.kernel.org
 References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
- <201301081715.49672.chunkeey@googlemail.com>
- <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
- <201301090038.01984.chunkeey@googlemail.com>
+In-Reply-To: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201301090038.01984.chunkeey@googlemail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301072053.35072.chunkeey@googlemail.com> (sfid-20130107_205747_636688_17DFF4A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Monday, January 07, 2013 11:32:53 AM Johan Danielsson wrote:
+> What does mac80211 expect driver/hw to do when an A-MPDU is received
+> without an existing block ack agreement?
 
-On Wed, Jan 09, 2013 at 12:38:01AM +0100, Christian Lamparter wrote:
-> Yes, this sounds wrong. Was there a historic reason why RX_STOP was put before
-> DELBA? I've traced the code back to Intel's initial A-MPDU RX contribution:
+according to ieee80211_rx_reorder_ampdu in /net/mac80211/rx.c:
+it goes to "goto dont_reorder;"
+ 
+> This may occur when an existing RX BACK agreement times out, and the
+> peer STA fails to hear the DELBA frame.
 > 
-> commit 07db218396650933abff3c5c1ad1e2a6e0cfedeb
-> Author: Ron Rindjunsky <ron.rindjunsky@intel.com>
-> Date:   Tue Dec 25 17:00:33 2007 +0200
+> The best option I can think of would be to drop the subframes and
+> re-transmit the DELBA, but this (at least the second part) should be
+> handled by mac80211 and not the driver.
 > 
->     mac80211: A-MPDU Rx adding basic functionality
-> 
-> 
-> Stanislaw, do you know if iwlegacy needs AGG_RX_STOP before it can sent out
-> the DELBA [Maybe something about flushing an FW internal RX reorder buffer,
-> or anything]?
+> The standard doesn't seem to be clear on this point (not that it's
+> clear on many points).
+802.11-2012 in 10.5.4 should cover your approach:
 
-I think not, AGG_RX_STOP disable in firmware (ht-immediate) BA response,
-when receive AMPDU (for particular station/tid). So ordering: DELBA, then
-AGG_RX_STOP should be fine for iwlegacy and iwlwifi.
+"When a recipient does not have an active Block ack for a TID, but
+receives data MPDUs with the Ack Policy subfield equal to Block Ack,
+it shall discard them and shall send a DELBA frame within its own
+TXOP. [... keep on reading...]"
 
-Thanks
-Stanislaw
+Note: The Ack Policy subfield equal to Block Ack is according to
+Table 8-6 (802.11-2012 8.2.4.5.4) either
+	- 11
+ 	Block Ack according to 9.21
 
+	- 00
+	Which is used for Implicit Block Ack Requests... However it's
+	also used for Normal ACKs.
+
+However, some drivers [not all] set the RX_FLAG_AMPDU_DETAILS flag when
+they receive a AMPDU. So you should be able to extend the checks in 
+ieee80211_rx_reorder_ampdu and generate a delba from there [in a similar
+way of how delba is sent when the stack receives a illegal, fragmented
+frame when a BA session is in place.
+
+Regards,
+	Chr
