@@ -1,192 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48137 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3A2Xo6 (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:44988 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286Ab3AGC5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 18:44:58 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] cfg80211: simplify mesh BSS comparison
-Date: Wed, 30 Jan 2013 00:45:20 +0100
-Message-Id: <1359503120-25685-2-git-send-email-johannes@sipsolutions.net> (sfid-20130130_004507_774030_B7AA3439)
-In-Reply-To: <1359503120-25685-1-git-send-email-johannes@sipsolutions.net>
-References: <1359503120-25685-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 6 Jan 2013 21:57:08 -0500
+Message-ID: <50EA39B3.1050008@gmail.com> (sfid-20130107_035750_465768_B7EA95E3)
+Date: Mon, 07 Jan 2013 10:57:55 +0800
+From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
+MIME-Version: 1.0
+To: Chen Gang <gang.chen@asianux.com>
+CC: Joe Perches <joe@perches.com>, stas.yakovlev@gmail.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of
+ strncpy
+References: <50E82D7D.4090107@asianux.com> <1357396966.21156.4.camel@joe-AO722> <50EA37CE.1090901@asianux.com>
+In-Reply-To: <50EA37CE.1090901@asianux.com>
+Content-Type: multipart/mixed;
+ boundary="------------020805020104070605060406"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a multi-part message in MIME format.
+--------------020805020104070605060406
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Instead of first checking if a BSS is an MBSS
-and then doing the comparisons, inline it all
-into the BSS comparison function. This avoids
-doing the IE searches twice and is also a lot
-less code.
+于 2013年01月07日 10:49, Chen Gang 写道:
+> 于 2013年01月05日 22:42, Joe Perches 写道:
+>> This happens because escaped is declared the wrong size.
+>>
+>> It'd be better to change
+>> 	char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+>> to
+>> 	DECLARE_SSID_BUF(escaped);
+>> and use
+>> 	print_ssid(escaped, network->ssid, network->ssid_len)
+>> in the debug.
+>>
+> 
+>   if what you said is true:
+>     it is better to delete escaped variable
+>     use ssid instead of escaped, directly.
+> 
+   oh, sorry, it is my fault.
+   we need use duplicate buffer to print different contents, at the same time.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/scan.c | 120 +++++++++++++++++-----------------------------------
- 1 file changed, 39 insertions(+), 81 deletions(-)
+   :-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 72ef3b2..5fd7c47 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -288,26 +288,6 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
- }
- EXPORT_SYMBOL(cfg80211_find_vendor_ie);
- 
--static int cmp_ies(u8 num, const u8 *ies1, int len1, const u8 *ies2, int len2)
--{
--	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
--	const u8 *ie2 = cfg80211_find_ie(num, ies2, len2);
--
--	/* equal if both missing */
--	if (!ie1 && !ie2)
--		return 0;
--	/* sort missing IE before (left of) present IE */
--	if (!ie1)
--		return -1;
--	if (!ie2)
--		return 1;
--
--	/* sort by length first, then by contents */
--	if (ie1[1] != ie2[1])
--		return ie2[1] - ie1[1];
--	return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
--}
--
- static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
- 		   const u8 *ssid, size_t ssid_len)
- {
-@@ -331,29 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
- 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
- }
- 
--static bool is_mesh_bss(struct cfg80211_bss *a)
--{
--	const struct cfg80211_bss_ies *ies;
--	const u8 *ie;
--
--	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
--		return false;
--
--	ies = rcu_access_pointer(a->ies);
--	if (!ies)
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
--	if (!ie)
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
--	if (!ie)
--		return false;
--
--	return true;
--}
--
- static bool is_mesh(struct cfg80211_bss *a,
- 		    const u8 *meshid, size_t meshidlen,
- 		    const u8 *meshcfg)
-@@ -391,51 +348,17 @@ static bool is_mesh(struct cfg80211_bss *a,
- 		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
- }
- 
--static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
--{
--	const struct cfg80211_bss_ies *a_ies, *b_ies;
--	int r;
--
--	if (a->channel != b->channel)
--		return b->channel->center_freq - a->channel->center_freq;
--
--	if (is_mesh_bss(a) && is_mesh_bss(b)) {
--		a_ies = rcu_access_pointer(a->ies);
--		if (!a_ies)
--			return -1;
--		b_ies = rcu_access_pointer(b->ies);
--		if (!b_ies)
--			return 1;
--
--		r = cmp_ies(WLAN_EID_MESH_ID,
--			    a_ies->data, a_ies->len,
--			    b_ies->data, b_ies->len);
--		if (r)
--			return r;
--		return cmp_ies(WLAN_EID_MESH_CONFIG,
--			       a_ies->data, a_ies->len,
--			       b_ies->data, b_ies->len);
--	}
--
--	/*
--	 * we can't use compare_ether_addr here since we need a < > operator.
--	 * The binary return value of compare_ether_addr isn't enough
--	 */
--	return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
--}
--
- static int cmp_bss(struct cfg80211_bss *a,
- 		   struct cfg80211_bss *b,
- 		   bool hide_ssid)
- {
- 	const struct cfg80211_bss_ies *a_ies, *b_ies;
--	const u8 *ie1;
--	const u8 *ie2;
-+	const u8 *ie1 = NULL;
-+	const u8 *ie2 = NULL;
- 	int i, r;
- 
--	r = cmp_bss_core(a, b);
--	if (r)
--		return r;
-+	if (a->channel != b->channel)
-+		return b->channel->center_freq - a->channel->center_freq;
- 
- 	a_ies = rcu_access_pointer(a->ies);
- 	if (!a_ies)
-@@ -444,6 +367,41 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	if (!b_ies)
- 		return 1;
- 
-+	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
-+		ie1 = cfg80211_find_ie(WLAN_EID_MESH_ID,
-+				       a_ies->data, a_ies->len);
-+	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
-+		ie2 = cfg80211_find_ie(WLAN_EID_MESH_ID,
-+				       b_ies->data, b_ies->len);
-+	if (ie1 && ie2) {
-+		int mesh_id_cmp;
-+
-+		if (ie1[1] == ie2[1])
-+			mesh_id_cmp = memcmp(ie1 + 2, ie2 + 2, ie1[1]);
-+		else
-+			mesh_id_cmp = ie2[1] - ie1[1];
-+
-+		ie1 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
-+				       a_ies->data, a_ies->len);
-+		ie2 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
-+				       b_ies->data, b_ies->len);
-+		if (ie1 && ie2) {
-+			if (mesh_id_cmp)
-+				return mesh_id_cmp;
-+			if (ie1[1] != ie2[1])
-+				return ie2[1] - ie1[1];
-+			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
-+		}
-+	}
-+
-+	/*
-+	 * we can't use compare_ether_addr here since we need a < > operator.
-+	 * The binary return value of compare_ether_addr isn't enough
-+	 */
-+	r = memcmp(a->bssid, b->bssid, sizeof(a->bssid));
-+	if (r)
-+		return r;
-+
- 	ie1 = cfg80211_find_ie(WLAN_EID_SSID, a_ies->data, a_ies->len);
- 	ie2 = cfg80211_find_ie(WLAN_EID_SSID, b_ies->data, b_ies->len);
- 
+   but I still suggest to keep original author using
+      maybe he intend to keep the print size for output format
+      so I think it is better to only fix bug, not touch the features. 
+
+   Regards
+
+ gchen.
+
+
+
+>   but I think the original author intended to use escaped instead of ssid
+>     DECLARE_SSID_BUF(ssid)  (line 5525, 5737)
+>     use ssid to print debug information directly
+>       (such as: line 5530..5535, 5545..5549, 5745..5749, ...)
+>     when need print additional information, use escaped
+>       (line 5559..5569, 5773..5782, 5791..5799)
+> 
+>   so, I still suggest:
+>     only fix the bug (use strlcpy instead of strncpy)
+>     and not touch original features which orignal author intended using.
+> 
+>   Regards
+> 
+> gchen.
+> 
+> in drivers/net/wireless/ipw2x00/ipw2200.c:
+> 
+>  5519 static int ipw_find_adhoc_network(struct ipw_priv *priv,
+>  5520                                   struct ipw_network_match *match,
+>  5521                                   struct libipw_network *network,
+>  5522                                   int roaming)
+>  5523 {
+>  5524         struct ipw_supported_rates rates;
+>  5525         DECLARE_SSID_BUF(ssid);
+>  5526 
+>  5527         /* Verify that this network's capability is compatible with the
+>  5528          * current mode (AdHoc or Infrastructure) */
+>  5529         if ((priv->ieee->iw_mode == IW_MODE_ADHOC &&
+>  5530              !(network->capability & WLAN_CAPABILITY_IBSS))) {
+>  5531                 IPW_DEBUG_MERGE("Network '%s (%pM)' excluded due to "
+>  5532                                 "capability mismatch.\n",
+>  5533                                 print_ssid(ssid, network->ssid,
+>  5534                                            network->ssid_len),
+>  5535                                 network->bssid);
+>  5536                 return 0;
+>  5537         }
+>  5538 
+>  5539         if (unlikely(roaming)) {
+>  5540                 /* If we are roaming, then ensure check if this is a valid
+>  5541                  * network to try and roam to */
+>  5542                 if ((network->ssid_len != match->network->ssid_len) ||
+>  5543                     memcmp(network->ssid, match->network->ssid,
+>  5544                            network->ssid_len)) {
+>  5545                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
+>  5546                                         "because of non-network ESSID.\n",
+>  5547                                         print_ssid(ssid, network->ssid,
+>  5548                                                    network->ssid_len),
+>  5549                                         network->bssid);
+>  5550                         return 0;
+>  5551                 }
+>  5552         } else {
+>  5553                 /* If an ESSID has been configured then compare the broadcast
+>  5554                  * ESSID to ours */
+>  5555                 if ((priv->config & CFG_STATIC_ESSID) &&
+>  5556                     ((network->ssid_len != priv->essid_len) ||
+>  5557                      memcmp(network->ssid, priv->essid,
+>  5558                             min(network->ssid_len, priv->essid_len)))) {
+>  5559                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+>  5560 
+>  5561                         strncpy(escaped,
+>  5562                                 print_ssid(ssid, network->ssid,
+>  5563                                            network->ssid_len),
+>  5564                                 sizeof(escaped));
+>  5565                         IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
+>  5566                                         "because of ESSID mismatch: '%s'.\n",
+>  5567                                         escaped, network->bssid,
+>  5568                                         print_ssid(ssid, priv->essid,
+>  5569                                                    priv->essid_len));
+>  5570                         return 0;
+>  5571                 }
+>  5572         }
+>  ...
+>  
+>  5732 static int ipw_best_network(struct ipw_priv *priv,
+>  5733                             struct ipw_network_match *match,
+>  5734                             struct libipw_network *network, int roaming)
+>  5735 {
+>  5736         struct ipw_supported_rates rates;
+>  5737         DECLARE_SSID_BUF(ssid);
+>  5738 
+>  5739         /* Verify that this network's capability is compatible with the
+>  5740          * current mode (AdHoc or Infrastructure) */
+>  5741         if ((priv->ieee->iw_mode == IW_MODE_INFRA &&
+>  5742              !(network->capability & WLAN_CAPABILITY_ESS)) ||
+>  5743             (priv->ieee->iw_mode == IW_MODE_ADHOC &&
+>  5744              !(network->capability & WLAN_CAPABILITY_IBSS))) {
+>  5745                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded due to "
+>  5746                                 "capability mismatch.\n",
+>  5747                                 print_ssid(ssid, network->ssid,
+>  5748                                            network->ssid_len),
+>  5749                                 network->bssid);
+>  5750                 return 0;
+>  5751         }
+>  5752 
+>  5753         if (unlikely(roaming)) {
+>  5754                 /* If we are roaming, then ensure check if this is a valid
+>  5755                  * network to try and roam to */
+>  5756                 if ((network->ssid_len != match->network->ssid_len) ||
+>  5757                     memcmp(network->ssid, match->network->ssid,
+>  5758                            network->ssid_len)) {
+>  5759                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
+>  5760                                         "because of non-network ESSID.\n",
+>  5761                                         print_ssid(ssid, network->ssid,
+>  5762                                                    network->ssid_len),
+>  5763                                         network->bssid);
+>  5764                         return 0;
+>  5765                 }
+>  5766         } else {
+>  5767                 /* If an ESSID has been configured then compare the broadcast
+>  5768                  * ESSID to ours */
+>  5769                 if ((priv->config & CFG_STATIC_ESSID) &&
+>  5770                     ((network->ssid_len != priv->essid_len) ||
+>  5771                      memcmp(network->ssid, priv->essid,
+>  5772                             min(network->ssid_len, priv->essid_len)))) {
+>  5773                         char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+>  5774                         strncpy(escaped,
+>  5775                                 print_ssid(ssid, network->ssid,
+>  5776                                            network->ssid_len),
+>  5777                                 sizeof(escaped));
+>  5778                         IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
+>  5779                                         "because of ESSID mismatch: '%s'.\n",
+>  5780                                         escaped, network->bssid,
+>  5781                                         print_ssid(ssid, priv->essid,
+>  5782                                                    priv->essid_len));
+>  5783                         return 0;
+>  5784                 }
+>  5785         }
+>  5786 
+>  5787         /* If the old network rate is better than this one, don't bother
+>  5788          * testing everything else. */
+>  5789         if (match->network && match->network->stats.rssi > network->stats.rssi) {
+>  5790                 char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
+>  5791                 strncpy(escaped,
+>  5792                         print_ssid(ssid, network->ssid, network->ssid_len),
+>  5793                         sizeof(escaped));
+>  5794                 IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
+>  5795                                 "'%s (%pM)' has a stronger signal.\n",
+>  5796                                 escaped, network->bssid,
+>  5797                                 print_ssid(ssid, match->network->ssid,
+>  5798                                            match->network->ssid_len),
+>  5799                                 match->network->bssid);
+>  5800                 return 0;
+>  5801         }
+> 
+
+
 -- 
-1.8.0
+Chen Gang
 
+Flying Transformer
+
+--------------020805020104070605060406
+Content-Type: text/x-vcard; charset=utf-8;
+ name="chen_gang_flying_transformer.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="chen_gang_flying_transformer.vcf"
+
+YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
+ZW5kOnZjYXJkDQoNCg==
+--------------020805020104070605060406--
