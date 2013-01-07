@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:50246 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756955Ab3AYMIs (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:61054 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395Ab3AGDTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 07:08:48 -0500
-Received: by mail-wg0-f45.google.com with SMTP id dq12so190710wgb.12
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:08:47 -0800 (PST)
+	Sun, 6 Jan 2013 22:19:22 -0500
+Date: Mon, 7 Jan 2013 04:19:18 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Nickolai Zeldovich <nickolai@csail.mit.edu>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers/net/wireless/mwl8k.c: avoid use-after-free
+Message-ID: <20130107031918.GA27530@wantstofly.org> (sfid-20130107_041937_376663_CC1D9B8D)
+References: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu>
+ <20130107024827.GZ27530@wantstofly.org>
+ <CADGQE7EYbYqSkZZJfg-b0sF4w7GPrsGtXk+VBdWZ12Z7Xv7tcg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <A06A1995-B025-4841-BCD9-9A940DA58620@gmail.com>
-References: <20121211100419.GA7822@earthship.arig>
-	<A06A1995-B025-4841-BCD9-9A940DA58620@gmail.com>
-Date: Fri, 25 Jan 2013 13:08:46 +0100
-Message-ID: <CAGXE3d_6zsWDAQ6r9UR5jPa+a0iqWOqLEY1w6AoLBfszhqi1UQ@mail.gmail.com> (sfid-20130125_130851_753333_AF51F1C5)
-Subject: Re: [PATCH 3/3] rt2x00: add platform_data mac address
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Daniel Golle <dgolle@allnet.de>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<users@rt2x00.serialmonkey.com>" <users@rt2x00.serialmonkey.com>,
-	"<juhosg@openwrt.org>" <juhosg@openwrt.org>,
-	"<sgruszka@redhat.com>" <sgruszka@redhat.com>,
-	"<john@phrozen.org>" <john@phrozen.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADGQE7EYbYqSkZZJfg-b0sF4w7GPrsGtXk+VBdWZ12Z7Xv7tcg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, Jan 06, 2013 at 10:02:14PM -0500, Nickolai Zeldovich wrote:
 
-On Tue, Dec 11, 2012 at 10:51 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> And for this patch I have the same question as for the previous patch: why do we need to arrange this via platform data,
-> as opposed to using the standard user space ifconfig facility to set a mac address?
+> > Good catch, but the patch would be better titled "mwl8k.c: avoid
+> > having a working driver", as the station_id return code _is_ needed
+> > by the caller in case of success.
+> 
+> I'm not quite sure what you mean -- is there something subtle going on
+> here?  I believe my patch preserves the semantics of the original
+> code: it returns the value of p->station_id if mwl8k_post_cmd()
+> returned 0, but it just does so by reading p->station_id first before
+> calling kfree(cmd).
 
-This looks fine to me. I'd also prefer to pass in a MAC address from
-the platform data on SoC devices
-instead of having to write some user space code. And this is how it is
-done by other drivers as well.
+Oops!  You're right.  Sorry about that.
 
-> As a second question: why is this only implemented for rt61pci, and not the other PCI / SOC drivers?
-
-Good point.
-
-Helmut
+/me goes to order some crow for dinner
