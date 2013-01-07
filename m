@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558Ab3ADMv4 (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:38080 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502Ab3AGRVT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 07:51:56 -0500
-Message-ID: <1357303935.11302.0.camel@jlt4.sipsolutions.net> (sfid-20130104_135203_980872_F8EE4309)
-Subject: Re: [PATCH] mac80211: fix mesh_hwmp kerneldoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org
-Date: Fri, 04 Jan 2013 13:52:15 +0100
-In-Reply-To: <20130103050945.GE13185@localhost> (sfid-20130103_061133_523242_69B6EFAA)
-References: <20130103050945.GE13185@localhost>
-	 (sfid-20130103_061133_523242_69B6EFAA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 7 Jan 2013 12:21:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <20130107095548.GA6931@redhat.com>
+References: <20130107095548.GA6931@redhat.com>
+From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+Date: Mon, 7 Jan 2013 18:20:58 +0100
+Message-ID: <CAHXqBFLQau4iROXA=GL9EQFYJpRGJHpkuW7knt=9YfSqz+_XRQ@mail.gmail.com> (sfid-20130107_182126_853021_C22C5628)
+Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-03 at 00:09 -0500, Bob Copeland wrote:
-> One of the function names was wrong and some parameters were
-> missing.
+2013/1/7 Stanislaw Gruszka <sgruszka@redhat.com>:
+> Since:
+>
+> commit 2c60db037034d27f8c636403355d52872da92f81
+> Author: Eric Dumazet <edumazet@google.com>
+> Date:   Sun Sep 16 09:17:26 2012 +0000
+>
+>     net: provide a default dev->ethtool_ops
+>
+> wireless core does not correctly assign ethtool_ops. In order to fix
+> the problem, and avoid assigning ethtool_ops on each individual cfg80211
+> drivers, we check against default_ethool_ops pointer instead of NULL in
+> wireless core.
+[...]
 
-Applied, thanks.
+You could instead move the assignment of default ethtool_ops to just after
+call_netdevice_notifiers(NETDEV_REGISTER) in register_netdevice() or
+just after call_netdevice_notifiers(NETDEV_POST_INIT) and initialize the default
+wireless ethtool_ops in NETDEV_POST_INIT hook. That will avoid the export.
 
-johannes
+Either way is good because register_netdevice() is called under RTNL, so
+ethtool_ops can't be called until it returns. NETDEV_POST_INIT seams more
+natural to me, but it's not a strong opinion.
 
+Best Regards,
+Michał Mirosław
