@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3914 "EHLO mms3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:31061 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752762Ab3ABOXD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:23:03 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/18] brcmfmac: do not reconfigure refill rx on
- 0-length packet.
-Date: Wed, 2 Jan 2013 15:22:38 +0100
-Message-ID: <1357136572-18273-6-git-send-email-arend@broadcom.com> (sfid-20130102_152313_395252_CE02F1C7)
-In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+	id S1752779Ab3AGJ4C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 04:56:02 -0500
+Date: Mon, 7 Jan 2013 10:55:49 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: [PATCH repost] net,wireless: check against default_ethtool_ops
+Message-ID: <20130107095548.GA6931@redhat.com> (sfid-20130107_105610_098240_EC8E6BA8)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Since:
 
-When USB device gets removed rx complete comes with 0-length
-packets. Do not refill those packets. In some rare cases it can
-cause infinite loop.
+commit 2c60db037034d27f8c636403355d52872da92f81
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sun Sep 16 09:17:26 2012 +0000
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+    net: provide a default dev->ethtool_ops
+
+wireless core does not correctly assign ethtool_ops. In order to fix
+the problem, and avoid assigning ethtool_ops on each individual cfg80211
+drivers, we check against default_ethool_ops pointer instead of NULL in
+wireless core.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Ben Hutchings <bhutchings@solarflare.com>
+Cc: stable@vger.kernel.org # 3.7+
 ---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+This should go directly through net tree since patch include core
+net specific changes.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 914c56f..22eae57 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -467,7 +467,11 @@ static void brcmf_usb_rx_complete(struct urb *urb)
- 			devinfo->bus_pub.bus->dstats.rx_errors++;
- 		} else
- 			brcmf_rx_packet(devinfo->dev, ifidx, skb);
--		brcmf_usb_rx_refill(devinfo, req);
-+		/* zero lenght packets indicate usb "failure". Do not refill */
-+		if (urb->actual_length)
-+			brcmf_usb_rx_refill(devinfo, req);
-+		else
-+			brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
- 	} else {
- 		brcmu_pkt_buf_free_skb(skb);
- 		brcmf_usb_enq(devinfo, &devinfo->rx_freeq, req, NULL);
+ include/linux/netdevice.h |    2 ++
+ net/core/dev.c            |    3 ++-
+ net/wireless/core.c       |    2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index f8eda02..c98e1c3 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -60,6 +60,8 @@ struct wireless_dev;
+ #define SET_ETHTOOL_OPS(netdev,ops) \
+ 	( (netdev)->ethtool_ops = (ops) )
+ 
++extern const struct ethtool_ops default_ethtool_ops;
++
+ /* hardware address assignment types */
+ #define NET_ADDR_PERM		0	/* address is permanent (default) */
+ #define NET_ADDR_RANDOM		1	/* address is generated randomly */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index c0946cb..4cd2168 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -6008,7 +6008,8 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ 	return queue;
+ }
+ 
+-static const struct ethtool_ops default_ethtool_ops;
++const struct ethtool_ops default_ethtool_ops;
++EXPORT_SYMBOL_GPL(default_ethtool_ops);
+ 
+ /**
+  *	alloc_netdev_mqs - allocate network device
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 14d9904..90915d4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -866,7 +866,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+ 
+-		if (!dev->ethtool_ops)
++		if (dev->ethtool_ops == &default_ethtool_ops)
+ 			dev->ethtool_ops = &cfg80211_ethtool_ops;
+ 
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
 -- 
-1.7.10.4
-
+1.7.1
 
