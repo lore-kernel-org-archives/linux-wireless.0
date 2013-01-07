@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40839 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682Ab3ADVY1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 16:24:27 -0500
-Date: Fri, 04 Jan 2013 13:24:26 -0800 (PST)
-Message-Id: <20130104.132426.2174792167438869648.davem@davemloft.net> (sfid-20130104_222457_340154_95D5460D)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-01-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130104205343.GB21871@tuxdriver.com>
-References: <20130104205343.GB21871@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Received: from mx1.redhat.com ([209.132.183.28]:62947 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753541Ab3AGKo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 05:44:27 -0500
+Date: Mon, 7 Jan 2013 11:44:14 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
+Message-ID: <20130107104413.GB6931@redhat.com> (sfid-20130107_114436_425898_F4527982)
+References: <20130107095548.GA6931@redhat.com>
+ <20130107102307.GA1587@minipsycho.orion>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130107102307.GA1587@minipsycho.orion>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 4 Jan 2013 15:53:43 -0500
+On Mon, Jan 07, 2013 at 11:23:07AM +0100, Jiri Pirko wrote:
+> >-static const struct ethtool_ops default_ethtool_ops;
+> >+const struct ethtool_ops default_ethtool_ops;
+> >+EXPORT_SYMBOL_GPL(default_ethtool_ops);
+> 
+> I think that default_ethtool_ops should stay static. Wouldn't it be
+> nicer to introduce a helper like:
+> 
+> bool dev_has_default_ethtool_ops(struct net_device *dev)
+> {
+> 	return dev->ethtool_ops == &default_ethtool_ops;
+> }
 
-> Arend "fixes" a copyright notice in brcmsmac -- seems harmless.
-> 
-> Christian Lamparter adds a device ID to p54usb, and changes the
-> interface combinations reported by carl9170 in order to get it
-> working again.
-> 
-> Geert Uytterhoeven gives us a pair of fixes for Kconfig warnings
-> about bcma and ssb.
-> 
-> Hante Meuleman fixes some IE parsing to get AP mode working with
-> WPA2 security.
-> 
-> Jesper Juhl fixes a urb leak in rtlwifi.
-> 
-> Jussi Kivilinna fixes some mis-usage of usb_alloc_coherent in rtlwifi,
-> avoiding a BUG on ARM.
-> 
-> Larry Finger provides a handful of rtlwifi fixes to avoid some log
-> SPAM due to not checking the return of pci_map_single.
-> 
-> Niels Ole Salscheider changes a usleep_range in brcmsmac to use udelay
-> instead, avoiding a "BUG: scheduling while atomic".
-> 
-> Rafa©© Mi©©ecki fixes an ID for a serial flash in the bcma code.
-> 
-> Sujith Manoharan provides a pair of ath9k fixes, one for a compilation
-> break and one to correct some gain-related initvals.
-> 
-> Tomasz Guszkowski adds a device ID to p54usb.
-> 
-> Vladimir Kondratiev fixes a Kconfig problem which cause ath9k_htc
-> not to build properly.
-> 
-> Please let me know if there are problems!
+Then I still have to export this function. So with your approch, number
+of exported symbols will be the same, but there will be few more lines
+of code.
 
-Pulled, thanks John.
+Stanislaw
