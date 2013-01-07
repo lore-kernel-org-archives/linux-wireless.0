@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:20419 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756262Ab3AXU7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 15:59:11 -0500
-Date: Thu, 24 Jan 2013 21:59:32 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH 1/4] rt2x00: print warning, notice and info as default
-Message-ID: <20130124205931.GB16252@localhost.localdomain> (sfid-20130124_215917_509934_CFACC425)
+Received: from mail-vc0-f172.google.com ([209.85.220.172]:53464 "EHLO
+	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab3AGDCf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jan 2013 22:02:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130107024827.GZ27530@wantstofly.org>
+References: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu> <20130107024827.GZ27530@wantstofly.org>
+From: Nickolai Zeldovich <nickolai@csail.mit.edu>
+Date: Sun, 6 Jan 2013 22:02:14 -0500
+Message-ID: <CADGQE7EYbYqSkZZJfg-b0sF4w7GPrsGtXk+VBdWZ12Z7Xv7tcg@mail.gmail.com> (sfid-20130107_040256_416010_7B0C62A1)
+Subject: Re: [PATCH] drivers/net/wireless/mwl8k.c: avoid use-after-free
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some messages provide useful information, but are disabled without
-CONFIG_RT2X00_DEBUG=y, so enable them by default
+On Sun, Jan 6, 2013 at 9:48 PM, Lennert Buytenhek
+<buytenh@wantstofly.org> wrote:
+> Good catch, but the patch would be better titled "mwl8k.c: avoid
+> having a working driver", as the station_id return code _is_ needed
+> by the caller in case of success.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I'm not quite sure what you mean -- is there something subtle going on
+here?  I believe my patch preserves the semantics of the original
+code: it returns the value of p->station_id if mwl8k_post_cmd()
+returned 0, but it just does so by reading p->station_id first before
+calling kfree(cmd).
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 3e37c19..8ef11b6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -88,11 +88,11 @@
- #define ERROR_PROBE(__msg, __args...) \
- 	DEBUG_PRINTK_PROBE(KERN_ERR, "Error", __msg, ##__args)
- #define WARNING(__dev, __msg, __args...) \
--	DEBUG_PRINTK(__dev, KERN_WARNING, "Warning", __msg, ##__args)
-+	DEBUG_PRINTK_MSG(__dev, KERN_WARNING, "Warning", __msg, ##__args)
- #define NOTICE(__dev, __msg, __args...) \
--	DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
-+	DEBUG_PRINTK_MSG(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
- #define INFO(__dev, __msg, __args...) \
--	DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
-+	DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
- #define DEBUG(__dev, __msg, __args...) \
- 	DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
- #define EEPROM(__dev, __msg, __args...) \
--- 
-1.7.4.4
-
+Nickolai.
