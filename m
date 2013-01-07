@@ -1,101 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:36308 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754194Ab3A3Q4q (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:56621 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379Ab3AGDDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 11:56:46 -0500
-Date: Wed, 30 Jan 2013 17:56:36 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	igalc@ti.com, nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 2/6] cfg80211: check radar interface combinations
-Message-ID: <20130130165636.GA27636@pandem0nium> (sfid-20130130_175650_795976_B776DBA7)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357650251-17425-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359563688.14894.54.camel@cumari.coelho.fi>
+	Sun, 6 Jan 2013 22:03:32 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-In-Reply-To: <1359563688.14894.54.camel@cumari.coelho.fi>
+In-Reply-To: <20130107024827.GZ27530@wantstofly.org>
+References: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu> <20130107024827.GZ27530@wantstofly.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 7 Jan 2013 14:03:10 +1100
+Message-ID: <CAGRGNgVF_s1ux9TjL6TqUDF=NB9e-XS0CQvowEGV=9Vj5r9Osg@mail.gmail.com> (sfid-20130107_040347_969951_9E953170)
+Subject: Re: [PATCH] drivers/net/wireless/mwl8k.c: avoid use-after-free
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Nickolai Zeldovich <nickolai@csail.mit.edu>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Lennert,
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hey Luca,
-
-On Wed, Jan 30, 2013 at 06:34:48PM +0200, Luciano Coelho wrote:
-> [...]
+On Mon, Jan 7, 2013 at 1:48 PM, Lennert Buytenhek
+<buytenh@wantstofly.org> wrote:
+> On Sun, Jan 06, 2013 at 08:27:22PM -0500, Nickolai Zeldovich wrote:
 >
-> > @@ -1195,14 +1196,36 @@ int cfg80211_can_use_iftype_chan(struct cfg8021=
-1_registered_device *rdev,
-> >  	enum cfg80211_chan_mode chmode;
-> >  	int num_different_channels =3D 0;
-> >  	int total =3D 1;
-> > +	bool radar_required;
-> >  	int i, j;
-> > =20
-> >  	ASSERT_RTNL();
-> >  	lockdep_assert_held(&rdev->devlist_mtx);
-> > =20
-> > +	if (WARN_ON(hweight32(radar_detect) > 1))
-> > +		return -EINVAL;
-> > +
-> > +	switch (iftype) {
-> > +	case NL80211_IFTYPE_ADHOC:
-> > +	case NL80211_IFTYPE_AP:
-> > +	case NL80211_IFTYPE_AP_VLAN:
-> > +	case NL80211_IFTYPE_MESH_POINT:
-> > +	case NL80211_IFTYPE_P2P_GO:
-> > +		radar_required =3D !!(chan->flags & IEEE80211_CHAN_RADAR);
-> > +		break;
->=20
-> This code is causing an oops with the wl18xx driver in AP mode.  The
-> problem is that cfg80211_can_change_interface() calls
-> cfg80211_can_use_iftype_chan() with chan =3D=3D NULL.  This code doesn't
-> check if chan is NULL, so this dereference causes the oops.
+>> Do not dereference p->station_id after kfree(cmd) because p
+>> points into the cmd data structure.
+>
+> Good catch, but the patch would be better titled "mwl8k.c: avoid
+> having a working driver", as the station_id return code _is_ needed
+> by the caller in case of success.
 
-Sorry about that - I believe you've found the same bug I've posted a patch
-for a few days ago. Johannes already has this in mac80211-next, but it is
-not yet in wireless-testing:
+Are you sure?
 
-http://article.gmane.org/gmane.linux.kernel.wireless.general/102836/match=
-=3Dsimon
-http://git.kernel.org/?p=3Dlinux/kernel/git/jberg/mac80211-next.git;a=3Dcom=
-mit;h=3D683d41ae6755e6ae297ec09603c229795ab9566e
+>> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+>> index f221b95..83564d3 100644
+>> --- a/drivers/net/wireless/mwl8k.c
+>> +++ b/drivers/net/wireless/mwl8k.c
+>> @@ -4250,9 +4250,11 @@ static int mwl8k_cmd_update_stadb_add(struct ieee80211_hw *hw,
+>>       p->amsdu_enabled = 0;
+>>
+>>       rc = mwl8k_post_cmd(hw, &cmd->header);
+>> +     if (!rc)
+>> +             rc = p->station_id;
+>>       kfree(cmd);
+>>
+>> -     return rc ? rc : p->station_id;
 
->=20
-> I don't have the time right now to fix this, but I'll look into it
-> tomorrow (unless someone comes with a fix before that :P).
+If I'm reading this right, the removed line is equivalent to:
 
-Please have a look at the patch posted above (both links for the same patch=
-).
+if( rc )
+    return rc;
+else
+    return p->station_id;
 
-Cheers,
-	Simon
+which is equivalent to:
 
-> [...]=20
+if( !rc )
+    rc = p->station_id;
 
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+return rc;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAlEJUMQACgkQrzg/fFk7axa0EQCfZoxxH+b8Pfu4JcVZC+uWg0Et
-VeEAn0YJOZlFhdFtpeVMHBIfjGxGSw4H
-=CM6/
------END PGP SIGNATURE-----
+Thanks,
 
---azLHFNyN32YCQGCU--
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
