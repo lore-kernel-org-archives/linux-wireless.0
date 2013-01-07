@@ -1,38 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40142 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755012Ab3AOLWl (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:43335 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754394Ab3AGL5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jan 2013 06:22:41 -0500
-Message-ID: <1358248982.4648.1.camel@jlt4.sipsolutions.net> (sfid-20130115_122248_185420_7BF0235D)
-Subject: Re: Tx AMSDU Support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, nbd@openwrt.org
-Date: Tue, 15 Jan 2013 12:23:02 +0100
-In-Reply-To: <CABPxzYL1LM-XAAb1RomgcM=O9Ma=KJZcbmEgTA678FSFuT8QMg@mail.gmail.com> (sfid-20130115_112135_426942_4624421E)
-References: <CABPxzYL1LM-XAAb1RomgcM=O9Ma=KJZcbmEgTA678FSFuT8QMg@mail.gmail.com>
-	 (sfid-20130115_112135_426942_4624421E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 7 Jan 2013 06:57:23 -0500
+Received: by mail-we0-f172.google.com with SMTP id r3so10043410wey.3
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 03:57:22 -0800 (PST)
+Date: Mon, 7 Jan 2013 12:57:18 +0100
+From: Jiri Pirko <jiri@resnulli.us>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>
+Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
+Message-ID: <20130107115718.GC1587@minipsycho.orion> (sfid-20130107_125730_971120_144864A3)
+References: <20130107095548.GA6931@redhat.com>
+ <20130107102307.GA1587@minipsycho.orion>
+ <20130107104413.GB6931@redhat.com>
+ <20130107111108.GB1587@minipsycho.orion>
+ <20130107112012.GE6931@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130107112012.GE6931@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Mon, Jan 07, 2013 at 12:20:12PM CET, sgruszka@redhat.com wrote:
+>On Mon, Jan 07, 2013 at 12:11:08PM +0100, Jiri Pirko wrote:
+>> Mon, Jan 07, 2013 at 11:44:14AM CET, sgruszka@redhat.com wrote:
+>> >On Mon, Jan 07, 2013 at 11:23:07AM +0100, Jiri Pirko wrote:
+>> >> >-static const struct ethtool_ops default_ethtool_ops;
+>> >> >+const struct ethtool_ops default_ethtool_ops;
+>> >> >+EXPORT_SYMBOL_GPL(default_ethtool_ops);
+>> >> 
+>> >> I think that default_ethtool_ops should stay static. Wouldn't it be
+>> >> nicer to introduce a helper like:
+>> >> 
+>> >> bool dev_has_default_ethtool_ops(struct net_device *dev)
+>> >> {
+>> >> 	return dev->ethtool_ops == &default_ethtool_ops;
+>> >> }
+>> >
+>> >Then I still have to export this function. So with your approch, number
+>> >of exported symbols will be the same, but there will be few more lines
+>> >of code.
+>> 
+>> I think it's always better to add few more lines in order to prevent possible
+>> confusion which exporting default_ethtool_ops might introduce...
+>
+>What possible confusion it might cause?
 
-> Is there any work in progress/planned related to Tx AMSDU logic in mac80211?
+Someone would possibly like to do:
 
-At some point Felix was planning to look at this, but I don't think he
-ever did. I guess he'll correct me if I'm wrong.
+dev->netdev_ops = &default_ethtool_ops
 
-> Even though only Rx is mandatory, but to test the Rx we need the Tx.
-> 
-> I see that the support is there in mwifiex(marvell's) driver. So is
-> there any patent/legal issue before we can implement one?
+in drivers for example...
 
-I'm not aware of any issue. You could probably even take some of that
-code and make it some generic cfg80211 helper library for use by both
-mwifiex and mac80211.
++ I just do not think that exporting structs is the correct way in order
+to do anything.
 
-johannes
-
+>
+>Stanislaw
