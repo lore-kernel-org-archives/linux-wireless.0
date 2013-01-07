@@ -1,92 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41665 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773Ab3A1JhZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:37:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/37] iwlwifi: fix calibration parser
-Date: Mon, 28 Jan 2013 10:37:10 +0100
-Message-Id: <1359365864-4259-4-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103733_980475_4AC4E1F9)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:37816
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751808Ab3AGJOd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 04:14:33 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ath9k_hw: Use helper routines to simplify ar9003_hw_init_cal()
+Date: Mon,  7 Jan 2013 14:43:33 +0530
+Message-Id: <1357550013-26317-1-git-send-email-sujith@msujith.org> (sfid-20130107_101440_080491_79EC0AD8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The firmware TLV for calibration data isn't
-really a u64, but two u32 values. Define a
-struct for that and change the parser.
-
-Change-Id: Ia50f7fcd54ee0edb570eac84397942316b6fafa5
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c |  8 ++++++--
- drivers/net/wireless/iwlwifi/iwl-fw.h  | 15 ++++++++++++++-
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 92 ++++++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/hw.h           |  1 +
+ 2 files changed, 55 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index a7fb5ba..c675196 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -268,7 +268,7 @@ struct fw_sec_parsing {
-  */
- struct iwl_tlv_calib_data {
- 	__le32 ucode_type;
--	__le64 calib;
-+	struct iwl_tlv_calib_ctrl calib;
- } __packed;
- 
- struct iwl_firmware_pieces {
-@@ -358,7 +358,11 @@ static int iwl_set_default_calib(struct iwl_drv *drv, const u8 *data)
- 			ucode_type);
- 		return -EINVAL;
- 	}
--	drv->fw.default_calib[ucode_type] = le64_to_cpu(def_calib->calib);
-+	drv->fw.default_calib[ucode_type].flow_trigger =
-+		def_calib->calib.flow_trigger;
-+	drv->fw.default_calib[ucode_type].event_trigger =
-+		def_calib->calib.event_trigger;
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 15f9b89..9221f32 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -960,22 +960,68 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0);
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 0bc8b6f..1ad31a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -139,6 +139,19 @@ struct fw_img {
- #define IWL_UCODE_API(ver)	(((ver) & 0x0000FF00) >> 8)
- #define IWL_UCODE_SERIAL(ver)	((ver) & 0x000000FF)
- 
-+/*
-+ * Calibration control struct.
-+ * Sent as part of the phy configuration command.
-+ * @flow_trigger: bitmap for which calibrations to perform according to
-+ *		flow triggers.
-+ * @event_trigger: bitmap for which calibrations to perform according to
-+ *		event triggers.
-+ */
-+struct iwl_tlv_calib_ctrl {
-+	__le32 flow_trigger;
-+	__le32 event_trigger;
-+} __packed;
++static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	int i;
 +
- /**
-  * struct iwl_fw - variables associated with the firmware
-  *
-@@ -168,7 +181,7 @@ struct iwl_fw {
- 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
- 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
++	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah))
++		return;
++
++	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++		if (!(ah->rxchainmask & (1 << i)))
++			continue;
++		ar9003_hw_manual_peak_cal(ah, i, IS_CHAN_2GHZ(chan));
++	}
++}
++
++static void ar9003_hw_cl_cal_post_proc(struct ath_hw *ah, bool is_reusable)
++{
++	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
++					  AR_PHY_CL_TAB_1,
++					  AR_PHY_CL_TAB_2 };
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
++	bool txclcal_done = false;
++	int i, j;
++
++	if (!caldata || !(ah->enabled_cals & TX_CL_CAL))
++		return;
++
++	txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
++			  AR_PHY_AGC_CONTROL_CLC_SUCCESS);
++
++	if (caldata->done_txclcal_once) {
++		for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++			if (!(ah->txchainmask & (1 << i)))
++				continue;
++			for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
++				REG_WRITE(ah, CL_TAB_ENTRY(cl_idx[i]),
++					  caldata->tx_clcal[i][j]);
++		}
++	} else if (is_reusable && txclcal_done) {
++		for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++			if (!(ah->txchainmask & (1 << i)))
++				continue;
++			for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
++				caldata->tx_clcal[i][j] =
++					REG_READ(ah, CL_TAB_ENTRY(cl_idx[i]));
++		}
++		caldata->done_txclcal_once = true;
++	}
++}
++
+ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 			       struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+-	bool txiqcal_done = false, txclcal_done = false;
++	bool txiqcal_done = false;
+ 	bool is_reusable = true, status = true;
+ 	bool run_rtt_cal = false, run_agc_cal, sep_iq_cal = false;
+ 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
+ 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
+ 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
+ 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
+-	int i, j;
+-	u32 cl_idx[AR9300_MAX_CHAINS] = { AR_PHY_CL_TAB_0,
+-					  AR_PHY_CL_TAB_1,
+-					  AR_PHY_CL_TAB_2 };
  
--	u64 default_calib[IWL_UCODE_TYPE_MAX];
-+	struct iwl_tlv_calib_ctrl default_calib[IWL_UCODE_TYPE_MAX];
- 	u32 phy_config;
+ 	if (rtt) {
+ 		if (!ar9003_hw_rtt_restore(ah, chan))
+@@ -1060,14 +1106,8 @@ skip_tx_iqcal:
+ 		status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+ 				       AR_PHY_AGC_CONTROL_CAL,
+ 				       0, AH_WAIT_TIMEOUT);
+-		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+-			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-				if (!(ah->rxchainmask & (1 << i)))
+-					continue;
+-				ar9003_hw_manual_peak_cal(ah, i,
+-							  IS_CHAN_2GHZ(chan));
+-			}
+-		}
++
++		ar9003_hw_do_manual_peak_cal(ah, chan);
+ 	}
  
- 	bool mvm_fw;
+ 	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
+@@ -1092,31 +1132,7 @@ skip_tx_iqcal:
+ 	else if (caldata && caldata->done_txiqcal_once)
+ 		ar9003_hw_tx_iq_cal_reload(ah);
+ 
+-#define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
+-	if (caldata && (ah->enabled_cals & TX_CL_CAL)) {
+-		txclcal_done = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) &
+-					   AR_PHY_AGC_CONTROL_CLC_SUCCESS);
+-		if (caldata->done_txclcal_once) {
+-			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-				if (!(ah->txchainmask & (1 << i)))
+-					continue;
+-				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
+-					REG_WRITE(ah, CL_TAB_ENTRY(cl_idx[i]),
+-						  caldata->tx_clcal[i][j]);
+-			}
+-		} else if (is_reusable && txclcal_done) {
+-			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-				if (!(ah->txchainmask & (1 << i)))
+-					continue;
+-				for (j = 0; j < MAX_CL_TAB_ENTRY; j++)
+-					caldata->tx_clcal[i][j] =
+-						REG_READ(ah,
+-						  CL_TAB_ENTRY(cl_idx[i]));
+-			}
+-			caldata->done_txclcal_once = true;
+-		}
+-	}
+-#undef CL_TAB_ENTRY
++	ar9003_hw_cl_cal_post_proc(ah, is_reusable);
+ 
+ 	if (run_rtt_cal && caldata) {
+ 		if (is_reusable) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 809599c..f5332b1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -397,6 +397,7 @@ enum ath9k_int {
+ #define MAX_RTT_TABLE_ENTRY     6
+ #define MAX_IQCAL_MEASUREMENT	8
+ #define MAX_CL_TAB_ENTRY	16
++#define CL_TAB_ENTRY(reg_base)	(reg_base + (4 * j))
+ 
+ struct ath9k_hw_cal_data {
+ 	u16 channel;
 -- 
-1.8.0
+1.8.1
 
