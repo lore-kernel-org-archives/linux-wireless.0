@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:47418 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856Ab3A3J35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 04:29:57 -0500
-Date: Wed, 30 Jan 2013 10:31:40 +0100
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34104 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911Ab3AGTHK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 14:07:10 -0500
+Received: by mail-pa0-f44.google.com with SMTP id hz11so10875711pad.31
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 11:07:09 -0800 (PST)
+Date: Mon, 7 Jan 2013 11:07:05 -0800
 From: Greg KH <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: stable@vger.kernel.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>
-Subject: Re: [PATCH v3.6.y] brcmsmac: handle packet drop on enqueuing
- correctly
-Message-ID: <20130130093140.GA17322@kroah.com> (sfid-20130130_103002_625562_E5E2B8EC)
-References: <1359126493-28270-1-git-send-email-arend@broadcom.com>
+To: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] staging: vt6656: Remove ULONG_PTR/DWORD_PTR from
+ driver.
+Message-ID: <20130107190705.GA11344@kroah.com> (sfid-20130107_200717_827654_D93D0F5E)
+References: <1354137348.2633.3.camel@user64-MCP7A>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359126493-28270-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1354137348.2633.3.camel@user64-MCP7A>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2013 at 04:08:13PM +0100, Arend van Spriel wrote:
-> From: Piotr Haber <phaber@broadcom.com>
+On Wed, Nov 28, 2012 at 09:15:48PM +0000, Malcolm Priestley wrote:
 > 
-> In the event that tx packet can not be queued by the driver
-> the packet is dropped. Propagate that information to the .tx()
-> callback to make sure the freed packet is not accessed after
-> that.
+> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> ---
+>  drivers/staging/vt6656/bssdb.c |   89 +++++++++++++++++++---------------------
+>  drivers/staging/vt6656/ttype.h |    3 --
+>  2 files changed, 42 insertions(+), 50 deletions(-)
 > 
-> This has happened causing slab corruptions as reported by
-> Stanislaw Gruszka.
-> 
-> Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
-> 
-> The patch is backported from:
-> 
-> commit c4dea35e34f5f46e1701156153a09cce429d1ea9 upstream.
-> 
+> diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+> index 539bc1d..d27469e 100644
+> --- a/drivers/staging/vt6656/bssdb.c
+> +++ b/drivers/staging/vt6656/bssdb.c
+> @@ -355,13 +355,13 @@ BOOL BSSbInsertToBSSList(void *hDeviceContext,
+>  			 PBYTE pbyIEs,
+>  			 void *pRxPacketContext)
+>  {
+> -
+> -    PSDevice     pDevice = (PSDevice)hDeviceContext;
+> -    PSMgmtObject    pMgmt = &(pDevice->sMgmtObj);
+> -    PSRxMgmtPacket  pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
+> -    PKnownBSS       pBSSList = NULL;
+> -    unsigned int            ii;
+> -    BOOL            bParsingQuiet = FALSE;
+> +	PSDevice pDevice = (PSDevice)hDeviceContext;
+> +	PSMgmtObject pMgmt = &pDevice->sMgmtObj;
+> +	PSRxMgmtPacket pRxPacket = (PSRxMgmtPacket)pRxPacketContext;
+> +	PKnownBSS pBSSList = NULL;
+> +	unsigned int ii;
+> +	int bParsingQuiet = FALSE;
+> +	u32 uLen;
 
-Why not 3.7-stable?  There is no more 3.6-stable releases, that kernel
-has been end-of-life for a while now.
+This patch also adjusts formatting, making it hard to see that you
+really changed the BOOL variable here, which is not what you said the
+patch was doing :(
+
+Please redo this patch, and _only_ make the changes you say you are
+making.
 
 thanks,
 
