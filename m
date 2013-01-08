@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:46568 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755617Ab3AKUyd (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:42608 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755846Ab3AHKpf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 15:54:33 -0500
-Received: by mail-ee0-f48.google.com with SMTP id b57so1082526eek.21
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 12:54:32 -0800 (PST)
-Message-ID: <50F07C03.3050204@gmail.com> (sfid-20130111_215439_925735_05CC0CF7)
-Date: Fri, 11 Jan 2013 21:54:27 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Tue, 8 Jan 2013 05:45:35 -0500
+Received: by mail-wg0-f41.google.com with SMTP id ds1so355006wgb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 02:45:33 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wireless-regdb@lists.infradead.org
-Subject: Re: wireless-regdb updated, please check!
+In-Reply-To: <201301072053.35072.chunkeey@googlemail.com>
+References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
+	<201301072053.35072.chunkeey@googlemail.com>
+Date: Tue, 8 Jan 2013 11:39:10 +0100
+Message-ID: <CAESKgcitzBNvSYC44Raw2SXbZeGKv1+SB3Q+uwO2MngOP6V5EA@mail.gmail.com> (sfid-20130108_114546_879080_E7A6570F)
+Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
+From: Johan Danielsson <joda@kth.se>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
+> according to ieee80211_rx_reorder_ampdu in /net/mac80211/rx.c:
+> it goes to "goto dont_reorder;"
 
-> I've been sitting on some wireless-regdb patches for some time.
-> Mostly this is because I wasn't sure what to do with some/most of them.
-> I even still have a few more like that...
-> 
-> Anyway, I wanted to at least get the 60GHz bits out, and I pushed a
-> few other changes as well.  Please take a look, and let me know if
-> I merged anything wrong or if there is still something missing.
-> 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+Yes.
 
+> 802.11-2012 in 10.5.4 should cover your approach:
+>
+> "When a recipient does not have an active Block ack for a TID, but
+> receives data MPDUs with the Ack Policy subfield equal to Block Ack,
+> it shall discard them and shall send a DELBA frame within its own
+> TXOP. [... keep on reading...]"
 
-Did you forget CC:wireless-regdb@lists.infradead.org ?
+Well, a HT STA would normally use HT-immediate block acks, so the
+policy will be Normal Ack, not Block Ack (this can be found in
+9.21.7.7).
 
+> So you should be able to extend the checks in
+> ieee80211_rx_reorder_ampdu and generate a delba from there [in a
+> similar way of how delba is sent when the stack receives a illegal,
+> fragmented frame when a BA session is in place.
 
-How about these?
+You could do that, but I'm not convinced it is correct.  It seems more
+reasonable to send the DELBA and wait for an ACK before removing the
+BACK state (with ampdu_action). Currently this is done the other way
+around.
 
-CEPT rules to ES:
-http://lists.infradead.org/pipermail/wireless-regdb/2012-July/000073.html
-http://lists.infradead.org/pipermail/wireless-regdb/2012-July/000074.html
-http://lists.infradead.org/pipermail/wireless-regdb/2012-July/000075.html
+/Johan
