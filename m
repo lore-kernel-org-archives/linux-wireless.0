@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:44084 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754148Ab3ALVgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 16:36:32 -0500
-Received: by mail-wg0-f52.google.com with SMTP id 12so1426958wgh.7
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2013 13:36:31 -0800 (PST)
-Message-ID: <50F1D75B.9010105@gmail.com> (sfid-20130112_223640_155823_74C18324)
-Date: Sat, 12 Jan 2013 22:36:27 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi/rtl8188ee: Add firmware for new driver
-References: <50F03255.4040605@gmail.com> <50F0381A.4010305@lwfinger.net> <50F0AF10.9030200@gmail.com>
-In-Reply-To: <50F0AF10.9030200@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:33648 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750969Ab3AHDL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 22:11:28 -0500
+Message-ID: <1357614687.12749.41.camel@joe-AO722> (sfid-20130108_041155_448267_2C47730D)
+Subject: Re: [RFC PATCH] vsprintf: Add %p*D extension for 80211 SSIDs
+From: Joe Perches <joe@perches.com>
+To: Chen Gang <gang.chen@asianux.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	stas.yakovlev@gmail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Mon, 07 Jan 2013 19:11:27 -0800
+In-Reply-To: <50EB8B1A.9000404@asianux.com>
+References: <50E82D7D.4090107@asianux.com>
+	 <1357396966.21156.4.camel@joe-AO722> <50EA37CE.1090901@asianux.com>
+	 <1357528746.4940.31.camel@joe-AO722> <1357534195.21481.31.camel@joe-AO722>
+	 (sfid-20130107_055017_668200_9F1C3EAF) <1357544828.9912.0.camel@jlt4.sipsolutions.net>
+	 <1357579362.21481.45.camel@joe-AO722> <50EB8B1A.9000404@asianux.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2013 01:32 AM, Xose Vazquez Perez wrote:
-> On 01/11/2013 05:04 PM, Larry Finger wrote:
-> 
->> Yes, I know; however, I have not yet had a chance to test those new
->> firmware files yet. As I have had problems in the past with new Realtek
->> firmware, I am now cautious. Have you tested this new firmware?
-> 
-> No. sorry. Here only one USB realtek device, rtl8192cu.
+On Tue, 2013-01-08 at 10:57 +0800, Chen Gang wrote:
+> 于 2013年01月08日 01:22, Joe Perches 写道:
+> > On Mon, 2013-01-07 at 08:47 +0100, Johannes Berg wrote:
+> >> > print_ssid() is used in two or
+> >> > three legacy drivers only, not in any modern driver, and is unlikely to
+> >> > be used in the more modern drivers due to tracing etc.
+> > Swell.  It was just another way to correct those overrun
+> > errors Chen Gang found.
+> > 
+>   sorry, I am not quite clear about what you said.
 
-Larry, could it be possible to print the *firmware version* in the
-rtlwifi output ?
+You found some overrun errors and proposed a patch.
+Your solution could output incomplete SSIDs.
 
-It's the only interesting thing missing:
+I proposed a different patch that would fully output
+any binary/non-ascii printable SSID.
 
-usb 2-1.4: new high-speed USB device number 5 using ehci_hcd
-usb 2-1.4: New USB device found, idVendor=0bda, idProduct=8176
-usb 2-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-usb 2-1.4: Product: 802.11n WLAN Adapter
-usb 2-1.4: Manufacturer: Realtek
-usb 2-1.4: SerialNumber: 00e04c000001
-rtl8192cu: Chip version 0x10
-rtl8192cu: MAC address: 00:e0:4c:07:dd:45
-rtl8192cu: Board Type 0
-rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
-rtl8192cu: Loading firmware rtlwifi/rtl8192cufw.bin
-usbcore: registered new interface driver rtl8192cu
-ieee80211 phy1: Selected rate control algorithm 'rtl_rc'
-rtlwifi: wireless switch is on
-cfg80211: Calling CRDA for country: ES
+I also proposed a different mechanism to avoid the
+overrun via printk and also avoid possibly excessive
+stack consumption as a means for John Linville to
+select 1 of the above options.
 
+I don't care what is done with any of those proposed
+patches.
 
--thanks-
+Clear?
+
