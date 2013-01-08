@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:33049 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752273Ab3AVWTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 17:19:35 -0500
-Date: Tue, 22 Jan 2013 23:19:35 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
-Message-ID: <20130122221935.GA2193@localhost.localdomain> (sfid-20130122_231938_902922_303F2040)
-References: <20130122164914.GB25134@localhost.localdomain>
- <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
- <50FF00C0.1010402@gmail.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:63546 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724Ab3AHBsW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jan 2013 20:48:22 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so13689223qcr.33
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 17:48:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50FF00C0.1010402@gmail.com>
+In-Reply-To: <20130107110759.GC6931@redhat.com>
+References: <20120418203543.GA16000@x61.home> <20120425122554.GD2466@redhat.com>
+ <20120503182853.GA12461@mac.home> <20121226185425.GA12627@x61.home> <20130107110759.GC6931@redhat.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Tue, 8 Jan 2013 01:48:01 +0000
+Message-ID: <CAJZjf_z71tqE5pdiJtUXpuPj1eCRRF+EdygZb_zQLnem5izxwA@mail.gmail.com> (sfid-20130108_024826_285264_CEE2EA72)
+Subject: Re: Power saving features for iwl4965
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Tino Keitel <tino.keitel@tikei.de>,
+	ML linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 22, 2013 at 10:12:32PM +0100, Xose Vazquez Perez wrote:
-> On 01/22/2013 07:58 PM, Gertjan van Wingerde wrote:
-> 
-> > On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> > 
-> >> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> >> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> >> ---
-> >> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
-> >> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
-> >> 2 files changed, 4 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> >> index 3e37c19..bef449c 100644
-> >> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> >> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> >> @@ -92,7 +92,7 @@
-> >> #define NOTICE(__dev, __msg, __args...) \
-> >>    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
-> >> #define INFO(__dev, __msg, __args...) \
-> >> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
-> >> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
-> >> #define DEBUG(__dev, __msg, __args...) \
-> >>    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
-> >> #define EEPROM(__dev, __msg, __args...) \
-> > 
-> 
-> > I think this change is good, but we should also change WARNING and
-> > NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is
-> > disabled, but INFO will, which would be strange.
+On Mon, Jan 7, 2013 at 11:08 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Hi
+>
+> On Wed, Dec 26, 2012 at 07:54:25PM +0100, Tino Keitel wrote:
+>>
+>> Hi Stanislaw,
+>>
+>> is there any progress regarding this? If not, I could try to implement
+>> it in the current kernel.  However, I don't have any knowlegde about
+>> hardware related features.  If you have, maybe I could use your
+>> knowledge to do it myself.
+>
+> I posted patch here
+> http://marc.info/?l=linux-wireless&m=135601033021616&w=2
+>
+> But I did not review code regarding power save to catch possible
+> problems. Testing are bug reporting are welcome ...
 
-We have those "TX status report missed" messages which spam logs,
-I think we should move them to DEBUG level then.
-
-NOTICE is only used in suspend/resume, it should be DEBUG too and NOTICE
-macro could be removed.
-
-> I believe this patch is so useful and trivial enough to be included,
-> as is, in the next 3.8-rc .
-> 
-> The next steps can be done for 3.9
-
-If Gertjan will be so kind and ACK this patch, I'll post further
-changes as incremental patch :-)
-
-Stanislaw
+Is the firmware crashing only after suspend? Or 'always'? (iwl3945)
