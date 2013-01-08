@@ -1,696 +1,1326 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754629Ab3A1Jib (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:38:31 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/37] iwlwifi: add the MVM driver (fw)
-Date: Mon, 28 Jan 2013 10:37:20 +0100
-Message-Id: <1359365864-4259-14-git-send-email-johannes@sipsolutions.net> (sfid-20130128_104204_982760_291688F2)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+Received: from mga03.intel.com ([143.182.124.21]:18527 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756570Ab3AHO50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 09:57:26 -0500
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: Yuanhan Liu <yuanhan.liu@linux.intel.com>,
+	Stefani Seibold <stefani@seibold.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-mm@kvack.org, dccp@vger.kernel.org,
+	linux-sctp@vger.kernel.org
+Subject: [PATCH 5/5] kfifo: log based kfifo API
+Date: Tue,  8 Jan 2013 22:57:53 +0800
+Message-Id: <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com> (sfid-20130108_155753_011245_FB44C539)
+In-Reply-To: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com>
+References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The current kfifo API take the kfifo size as input, while it rounds
+ _down_ the size to power of 2 at __kfifo_alloc. This may introduce
+potential issue.
 
-Newer firmware revisions have a completely new
-firmware API. This is the new driver for this
-new API.
+Take the code at drivers/hid/hid-logitech-dj.c as example:
 
-I've listed the people who directly contributed
-code, but many others from various teams have
-contributed in other ways.
+	if (kfifo_alloc(&djrcv_dev->notif_fifo,
+                       DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct dj_report),
+                       GFP_KERNEL)) {
 
-Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Amit Beka <amit.beka@intel.com>
-Cc: Amnon Paz <amnonx.paz@intel.com>
-Cc: Assaf Krauss <assaf.krauss@intel.com>
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Dor Shaish <dor.shaish@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Cc: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct dj_report)
+is 15.
+
+Which means it wants to allocate a kfifo buffer which can store 8
+dj_report entries at once. The expected kfifo buffer size would be
+8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
+size to rounddown_power_of_2(120) =  64, and then allocate a buf
+with 64 bytes, which I don't think this is the original author want.
+
+With the new log API, we can do like following:
+
+	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
+					    sizeof(struct dj_report));
+
+	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order, GFP_KERNEL)) {
+
+This make sure we will allocate enough kfifo buffer for holding
+DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
+
+Cc: Stefani Seibold <stefani@seibold.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-omap@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: platform-driver-x86@vger.kernel.org
+Cc: linux-input@vger.kernel.org
+Cc: linux-iio@vger.kernel.org
+Cc: linux-rdma@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: linux-mmc@vger.kernel.org
+Cc: linux-mtd@lists.infradead.org
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: open-iscsi@googlegroups.com
+Cc: linux-scsi@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Cc: linux-serial@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: dccp@vger.kernel.org
+Cc: linux-sctp@vger.kernel.org
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw.c | 644 ++++++++++++++++++++++++++++++++++
- 1 file changed, 644 insertions(+)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw.c
+ arch/arm/plat-omap/Kconfig                  |    2 +-
+ arch/arm/plat-omap/mailbox.c                |    6 +++-
+ arch/powerpc/sysdev/fsl_rmu.c               |    2 +-
+ drivers/char/sonypi.c                       |    9 ++++---
+ drivers/hid/hid-logitech-dj.c               |    7 +++--
+ drivers/iio/industrialio-event.c            |    2 +-
+ drivers/iio/kfifo_buf.c                     |    3 +-
+ drivers/infiniband/hw/cxgb3/cxio_resource.c |    8 ++++--
+ drivers/media/i2c/cx25840/cx25840-ir.c      |    9 +++++--
+ drivers/media/pci/cx23885/cx23888-ir.c      |    9 +++++--
+ drivers/media/pci/meye/meye.c               |    6 +---
+ drivers/media/pci/meye/meye.h               |    2 +
+ drivers/media/rc/ir-raw.c                   |    7 +++--
+ drivers/memstick/host/r592.h                |    2 +-
+ drivers/mmc/card/sdio_uart.c                |    4 ++-
+ drivers/mtd/sm_ftl.c                        |    5 +++-
+ drivers/net/wireless/libertas/main.c        |    4 ++-
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |    5 +--
+ drivers/pci/pcie/aer/aerdrv_core.c          |    3 +-
+ drivers/platform/x86/fujitsu-laptop.c       |    5 ++-
+ drivers/platform/x86/sony-laptop.c          |    6 ++--
+ drivers/rapidio/devices/tsi721.c            |    5 ++-
+ drivers/scsi/libiscsi_tcp.c                 |    6 +++-
+ drivers/staging/omapdrm/omap_plane.c        |    5 +++-
+ drivers/tty/n_gsm.c                         |    4 ++-
+ drivers/tty/nozomi.c                        |    5 +--
+ drivers/tty/serial/ifx6x60.c                |    2 +-
+ drivers/tty/serial/ifx6x60.h                |    3 +-
+ drivers/tty/serial/kgdb_nmi.c               |    7 +++--
+ drivers/usb/host/fhci.h                     |    4 ++-
+ drivers/usb/serial/cypress_m8.c             |    4 +-
+ drivers/usb/serial/io_ti.c                  |    4 +-
+ drivers/usb/serial/ti_usb_3410_5052.c       |    7 +++--
+ drivers/usb/serial/usb-serial.c             |    2 +-
+ include/linux/kfifo.h                       |   31 +++++++++++++--------------
+ include/linux/rio.h                         |    1 +
+ include/media/lirc_dev.h                    |    4 ++-
+ kernel/kfifo.c                              |    9 +------
+ mm/memory-failure.c                         |    3 +-
+ net/dccp/probe.c                            |    6 +++-
+ net/sctp/probe.c                            |    6 +++-
+ samples/kfifo/bytestream-example.c          |    8 +++---
+ samples/kfifo/dma-example.c                 |    5 ++-
+ samples/kfifo/inttype-example.c             |    7 +++--
+ samples/kfifo/record-example.c              |    6 ++--
+ 45 files changed, 142 insertions(+), 108 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-new file mode 100644
-index 0000000..90473c2
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -0,0 +1,644 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include <net/mac80211.h>
-+
-+#include "iwl-trans.h"
-+#include "iwl-op-mode.h"
-+#include "iwl-fw.h"
-+#include "iwl-debug.h"
-+#include "iwl-csr.h" /* for iwl_mvm_rx_card_state_notif */
-+#include "iwl-io.h" /* for iwl_mvm_rx_card_state_notif */
-+#include "iwl-eeprom-parse.h"
-+
-+#include "mvm.h"
-+#include "iwl-phy-db.h"
-+
-+#define MVM_UCODE_ALIVE_TIMEOUT	HZ
-+#define MVM_UCODE_CALIB_TIMEOUT	(2*HZ)
-+
-+#define UCODE_VALID_OK	cpu_to_le32(0x1)
-+
-+/* Default calibration values for WkP - set to INIT image w/o running */
-+static const u8 wkp_calib_values_bb_filter[] = { 0xbf, 0x00, 0x5f, 0x00, 0x2f,
-+						 0x00, 0x18, 0x00 };
-+static const u8 wkp_calib_values_rx_dc[] = { 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
-+					     0x7f, 0x7f, 0x7f };
-+static const u8 wkp_calib_values_tx_lo[] = { 0x00, 0x00, 0x00, 0x00 };
-+static const u8 wkp_calib_values_tx_iq[] = { 0xff, 0x00, 0xff, 0x00, 0x00,
-+					     0x00 };
-+static const u8 wkp_calib_values_rx_iq[] = { 0xff, 0x00, 0x00, 0x00 };
-+static const u8 wkp_calib_values_rx_iq_skew[] = { 0x00, 0x00, 0x01, 0x00 };
-+static const u8 wkp_calib_values_tx_iq_skew[] = { 0x01, 0x00, 0x00, 0x00 };
-+static const u8 wkp_calib_values_xtal[] = { 0xd2, 0xd2 };
-+
-+struct iwl_calib_default_data {
-+	u16 size;
-+	void *data;
-+};
-+
-+#define CALIB_SIZE_N_DATA(_buf) {.size = sizeof(_buf), .data = &_buf}
-+
-+static const struct iwl_calib_default_data wkp_calib_default_data[12] = {
-+	[5] = CALIB_SIZE_N_DATA(wkp_calib_values_rx_dc),
-+	[6] = CALIB_SIZE_N_DATA(wkp_calib_values_bb_filter),
-+	[7] = CALIB_SIZE_N_DATA(wkp_calib_values_tx_lo),
-+	[8] = CALIB_SIZE_N_DATA(wkp_calib_values_tx_iq),
-+	[9] = CALIB_SIZE_N_DATA(wkp_calib_values_tx_iq_skew),
-+	[10] = CALIB_SIZE_N_DATA(wkp_calib_values_rx_iq),
-+	[11] = CALIB_SIZE_N_DATA(wkp_calib_values_rx_iq_skew),
-+};
-+
-+struct iwl_mvm_alive_data {
-+	bool valid;
-+	u32 scd_base_addr;
-+};
-+
-+static inline const struct fw_img *
-+iwl_get_ucode_image(struct iwl_mvm *mvm, enum iwl_ucode_type ucode_type)
-+{
-+	if (ucode_type >= IWL_UCODE_TYPE_MAX)
-+		return NULL;
-+
-+	return &mvm->fw->img[ucode_type];
-+}
-+
-+static int iwl_send_tx_ant_cfg(struct iwl_mvm *mvm, u8 valid_tx_ant)
-+{
-+	struct iwl_tx_ant_cfg_cmd tx_ant_cmd = {
-+		.valid = cpu_to_le32(valid_tx_ant),
-+	};
-+
-+	IWL_DEBUG_HC(mvm, "select valid tx ant: %u\n", valid_tx_ant);
-+	return iwl_mvm_send_cmd_pdu(mvm, TX_ANT_CONFIGURATION_CMD, CMD_SYNC,
-+				    sizeof(tx_ant_cmd), &tx_ant_cmd);
-+}
-+
-+static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
-+			 struct iwl_rx_packet *pkt, void *data)
-+{
-+	struct iwl_mvm *mvm =
-+		container_of(notif_wait, struct iwl_mvm, notif_wait);
-+	struct iwl_mvm_alive_data *alive_data = data;
-+	struct mvm_alive_resp *palive;
-+
-+	palive = (void *)pkt->data;
-+
-+	mvm->error_event_table = le32_to_cpu(palive->error_event_table_ptr);
-+	mvm->log_event_table = le32_to_cpu(palive->log_event_table_ptr);
-+	alive_data->scd_base_addr = le32_to_cpu(palive->scd_base_ptr);
-+
-+	alive_data->valid = le16_to_cpu(palive->status) == IWL_ALIVE_STATUS_OK;
-+	IWL_DEBUG_FW(mvm, "Alive ucode status 0x%04x revision 0x%01X 0x%01X\n",
-+		     le16_to_cpu(palive->status), palive->ver_type,
-+		     palive->ver_subtype);
-+
-+	return true;
-+}
-+
-+static bool iwl_wait_phy_db_entry(struct iwl_notif_wait_data *notif_wait,
-+				  struct iwl_rx_packet *pkt, void *data)
-+{
-+	struct iwl_phy_db *phy_db = data;
-+
-+	if (pkt->hdr.cmd != CALIB_RES_NOTIF_PHY_DB) {
-+		WARN_ON(pkt->hdr.cmd != INIT_COMPLETE_NOTIF);
-+		return true;
-+	}
-+
-+	WARN_ON(iwl_phy_db_set_section(phy_db, pkt, GFP_ATOMIC));
-+
-+	return false;
-+}
-+
-+static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
-+					 enum iwl_ucode_type ucode_type)
-+{
-+	struct iwl_notification_wait alive_wait;
-+	struct iwl_mvm_alive_data alive_data;
-+	const struct fw_img *fw;
-+	int ret, i;
-+	enum iwl_ucode_type old_type = mvm->cur_ucode;
-+	static const u8 alive_cmd[] = { MVM_ALIVE };
-+
-+	mvm->cur_ucode = ucode_type;
-+	fw = iwl_get_ucode_image(mvm, ucode_type);
-+
-+	mvm->ucode_loaded = false;
-+
-+	if (!fw)
-+		return -EINVAL;
-+
-+	iwl_init_notification_wait(&mvm->notif_wait, &alive_wait,
-+				   alive_cmd, ARRAY_SIZE(alive_cmd),
-+				   iwl_alive_fn, &alive_data);
-+
-+	ret = iwl_trans_start_fw(mvm->trans, fw, ucode_type == IWL_UCODE_INIT);
-+	if (ret) {
-+		mvm->cur_ucode = old_type;
-+		iwl_remove_notification(&mvm->notif_wait, &alive_wait);
-+		return ret;
-+	}
-+
-+	/*
-+	 * Some things may run in the background now, but we
-+	 * just wait for the ALIVE notification here.
-+	 */
-+	ret = iwl_wait_notification(&mvm->notif_wait, &alive_wait,
-+				    MVM_UCODE_ALIVE_TIMEOUT);
-+	if (ret) {
-+		mvm->cur_ucode = old_type;
-+		return ret;
-+	}
-+
-+	if (!alive_data.valid) {
-+		IWL_ERR(mvm, "Loaded ucode is not valid!\n");
-+		mvm->cur_ucode = old_type;
-+		return -EIO;
-+	}
-+
-+	iwl_trans_fw_alive(mvm->trans, alive_data.scd_base_addr);
-+
-+	/*
-+	 * Note: all the queues are enabled as part of the interface
-+	 * initialization, but in firmware restart scenarios they
-+	 * could be stopped, so wake them up. In firmware restart,
-+	 * mac80211 will have the queues stopped as well until the
-+	 * reconfiguration completes. During normal startup, they
-+	 * will be empty.
-+	 */
-+
-+	for (i = 0; i < IWL_MAX_HW_QUEUES; i++) {
-+		if (i < IWL_MVM_FIRST_AGG_QUEUE && i != IWL_MVM_CMD_QUEUE)
-+			mvm->queue_to_mac80211[i] = i;
-+		else
-+			mvm->queue_to_mac80211[i] = IWL_INVALID_MAC80211_QUEUE;
-+		atomic_set(&mvm->queue_stop_count[i], 0);
-+	}
-+
-+	mvm->transport_queue_stop = 0;
-+
-+	mvm->ucode_loaded = true;
-+
-+	return 0;
-+}
-+#define IWL_HW_REV_ID_RAINBOW	0x2
-+#define IWL_PROJ_TYPE_LHP	0x5
-+
-+static u32 iwl_mvm_build_phy_cfg(struct iwl_mvm *mvm)
-+{
-+	struct iwl_nvm_data *data = mvm->nvm_data;
-+	/* Temp calls to static definitions, will be changed to CSR calls */
-+	u8 hw_rev_id = IWL_HW_REV_ID_RAINBOW;
-+	u8 project_type = IWL_PROJ_TYPE_LHP;
-+
-+	return data->radio_cfg_dash | (data->radio_cfg_step << 2) |
-+		(hw_rev_id << 4) | ((project_type & 0x7f) << 6) |
-+		(data->valid_tx_ant << 16) | (data->valid_rx_ant << 20);
-+}
-+
-+static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
-+{
-+	struct iwl_phy_cfg_cmd phy_cfg_cmd;
-+	enum iwl_ucode_type ucode_type = mvm->cur_ucode;
-+
-+	/* Set parameters */
-+	phy_cfg_cmd.phy_cfg = cpu_to_le32(iwl_mvm_build_phy_cfg(mvm));
-+	phy_cfg_cmd.calib_control.event_trigger =
-+		mvm->fw->default_calib[ucode_type].event_trigger;
-+	phy_cfg_cmd.calib_control.flow_trigger =
-+		mvm->fw->default_calib[ucode_type].flow_trigger;
-+
-+	IWL_DEBUG_INFO(mvm, "Sending Phy CFG command: 0x%x\n",
-+		       phy_cfg_cmd.phy_cfg);
-+
-+	return iwl_mvm_send_cmd_pdu(mvm, PHY_CONFIGURATION_CMD, CMD_SYNC,
-+				    sizeof(phy_cfg_cmd), &phy_cfg_cmd);
-+}
-+
-+/* Starting with the new PHY DB implementation - New calibs are enabled */
-+/* Value - 0x405e7 */
-+#define IWL_CALIB_DEFAULT_FLOW_INIT	(IWL_CALIB_CFG_XTAL_IDX		|\
-+					 IWL_CALIB_CFG_TEMPERATURE_IDX	|\
-+					 IWL_CALIB_CFG_VOLTAGE_READ_IDX	|\
-+					 IWL_CALIB_CFG_DC_IDX		|\
-+					 IWL_CALIB_CFG_BB_FILTER_IDX	|\
-+					 IWL_CALIB_CFG_LO_LEAKAGE_IDX	|\
-+					 IWL_CALIB_CFG_TX_IQ_IDX	|\
-+					 IWL_CALIB_CFG_RX_IQ_IDX	|\
-+					 IWL_CALIB_CFG_AGC_IDX)
-+
-+#define IWL_CALIB_DEFAULT_EVENT_INIT	0x0
-+
-+/* Value 0x41567 */
-+#define IWL_CALIB_DEFAULT_FLOW_RUN	(IWL_CALIB_CFG_XTAL_IDX		|\
-+					 IWL_CALIB_CFG_TEMPERATURE_IDX	|\
-+					 IWL_CALIB_CFG_VOLTAGE_READ_IDX	|\
-+					 IWL_CALIB_CFG_BB_FILTER_IDX	|\
-+					 IWL_CALIB_CFG_DC_IDX		|\
-+					 IWL_CALIB_CFG_TX_IQ_IDX	|\
-+					 IWL_CALIB_CFG_RX_IQ_IDX	|\
-+					 IWL_CALIB_CFG_SENSITIVITY_IDX	|\
-+					 IWL_CALIB_CFG_AGC_IDX)
-+
-+#define IWL_CALIB_DEFAULT_EVENT_RUN	(IWL_CALIB_CFG_XTAL_IDX		|\
-+					 IWL_CALIB_CFG_TEMPERATURE_IDX	|\
-+					 IWL_CALIB_CFG_VOLTAGE_READ_IDX	|\
-+					 IWL_CALIB_CFG_TX_PWR_IDX	|\
-+					 IWL_CALIB_CFG_DC_IDX		|\
-+					 IWL_CALIB_CFG_TX_IQ_IDX	|\
-+					 IWL_CALIB_CFG_SENSITIVITY_IDX)
-+
-+/*
-+ * Sets the calibrations trigger values that will be sent to the FW for runtime
-+ * and init calibrations.
-+ * The ones given in the FW TLV are not correct.
-+ */
-+static void iwl_set_default_calib_trigger(struct iwl_mvm *mvm)
-+{
-+	struct iwl_tlv_calib_ctrl default_calib;
-+
-+	/*
-+	 * WkP FW TLV calib bits are wrong, overwrite them.
-+	 * This defines the dynamic calibrations which are implemented in the
-+	 * uCode both for init(flow) calculation and event driven calibs.
-+	 */
-+
-+	/* Init Image */
-+	default_calib.event_trigger = cpu_to_le32(IWL_CALIB_DEFAULT_EVENT_INIT);
-+	default_calib.flow_trigger = cpu_to_le32(IWL_CALIB_DEFAULT_FLOW_INIT);
-+
-+	if (default_calib.event_trigger !=
-+	    mvm->fw->default_calib[IWL_UCODE_INIT].event_trigger)
-+		IWL_ERR(mvm,
-+			"Updating the event calib for INIT image: 0x%x -> 0x%x\n",
-+			mvm->fw->default_calib[IWL_UCODE_INIT].event_trigger,
-+			default_calib.event_trigger);
-+	if (default_calib.flow_trigger !=
-+	    mvm->fw->default_calib[IWL_UCODE_INIT].flow_trigger)
-+		IWL_ERR(mvm,
-+			"Updating the flow calib for INIT image: 0x%x -> 0x%x\n",
-+			mvm->fw->default_calib[IWL_UCODE_INIT].flow_trigger,
-+			default_calib.flow_trigger);
-+
-+	memcpy((void *)&mvm->fw->default_calib[IWL_UCODE_INIT],
-+	       &default_calib, sizeof(struct iwl_tlv_calib_ctrl));
-+	IWL_ERR(mvm,
-+		"Setting uCode init calibrations event 0x%x, trigger 0x%x\n",
-+		default_calib.event_trigger,
-+		default_calib.flow_trigger);
-+
-+	/* Run time image */
-+	default_calib.event_trigger = cpu_to_le32(IWL_CALIB_DEFAULT_EVENT_RUN);
-+	default_calib.flow_trigger = cpu_to_le32(IWL_CALIB_DEFAULT_FLOW_RUN);
-+
-+	if (default_calib.event_trigger !=
-+	    mvm->fw->default_calib[IWL_UCODE_REGULAR].event_trigger)
-+		IWL_ERR(mvm,
-+			"Updating the event calib for RT image: 0x%x -> 0x%x\n",
-+			mvm->fw->default_calib[IWL_UCODE_REGULAR].event_trigger,
-+			default_calib.event_trigger);
-+	if (default_calib.flow_trigger !=
-+	    mvm->fw->default_calib[IWL_UCODE_REGULAR].flow_trigger)
-+		IWL_ERR(mvm,
-+			"Updating the flow calib for RT image: 0x%x -> 0x%x\n",
-+			mvm->fw->default_calib[IWL_UCODE_REGULAR].flow_trigger,
-+			default_calib.flow_trigger);
-+
-+	memcpy((void *)&mvm->fw->default_calib[IWL_UCODE_REGULAR],
-+	       &default_calib, sizeof(struct iwl_tlv_calib_ctrl));
-+	IWL_ERR(mvm,
-+		"Setting uCode runtime calibs event 0x%x, trigger 0x%x\n",
-+		default_calib.event_trigger,
-+		default_calib.flow_trigger);
-+}
-+
-+static int iwl_set_default_calibrations(struct iwl_mvm *mvm)
-+{
-+	u8 cmd_raw[16]; /* holds the variable size commands */
-+	struct iwl_set_calib_default_cmd *cmd =
-+		(struct iwl_set_calib_default_cmd *)cmd_raw;
-+	int ret, i;
-+
-+	/* Setting default values for calibrations we don't run */
-+	for (i = 0; i < ARRAY_SIZE(wkp_calib_default_data); i++) {
-+		u16 cmd_len;
-+
-+		if (wkp_calib_default_data[i].size == 0)
-+			continue;
-+
-+		memset(cmd_raw, 0, sizeof(cmd_raw));
-+		cmd_len = wkp_calib_default_data[i].size + sizeof(cmd);
-+		cmd->calib_index = cpu_to_le16(i);
-+		cmd->length = cpu_to_le16(wkp_calib_default_data[i].size);
-+		if (WARN_ONCE(cmd_len > sizeof(cmd_raw),
-+			      "Need to enlarge cmd_raw to %d\n", cmd_len))
-+			break;
-+		memcpy(cmd->data, wkp_calib_default_data[i].data,
-+		       wkp_calib_default_data[i].size);
-+		ret = iwl_mvm_send_cmd_pdu(mvm, SET_CALIB_DEFAULT_CMD, 0,
-+					   sizeof(*cmd) +
-+					   wkp_calib_default_data[i].size,
-+					   cmd);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
-+{
-+	struct iwl_notification_wait calib_wait;
-+	static const u8 init_complete[] = {
-+		INIT_COMPLETE_NOTIF,
-+		CALIB_RES_NOTIF_PHY_DB
-+	};
-+	int ret;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	if (mvm->init_ucode_run)
-+		return 0;
-+
-+	iwl_init_notification_wait(&mvm->notif_wait,
-+				   &calib_wait,
-+				   init_complete,
-+				   ARRAY_SIZE(init_complete),
-+				   iwl_wait_phy_db_entry,
-+				   mvm->phy_db);
-+
-+	/* Will also start the device */
-+	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_INIT);
-+	if (ret) {
-+		IWL_ERR(mvm, "Failed to start INIT ucode: %d\n", ret);
-+		goto error;
-+	}
-+
-+	if (read_nvm) {
-+		/* Read nvm */
-+		ret = iwl_nvm_init(mvm);
-+		if (ret) {
-+			IWL_ERR(mvm, "Failed to read NVM: %d\n", ret);
-+			goto error;
-+		}
-+	}
-+
-+	ret = iwl_nvm_check_version(mvm->nvm_data, mvm->trans);
-+	WARN_ON(ret);
-+
-+	/* Override the calibrations from TLV and the const of fw */
-+	iwl_set_default_calib_trigger(mvm);
-+
-+	/* WkP doesn't have all calibrations, need to set default values */
-+	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
-+		ret = iwl_set_default_calibrations(mvm);
-+		if (ret)
-+			goto error;
-+	}
-+
-+	/*
-+	 * Send phy configurations command to init uCode
-+	 * to start the 16.0 uCode init image internal calibrations.
-+	 */
-+	ret = iwl_send_phy_cfg_cmd(mvm);
-+	if (ret) {
-+		IWL_ERR(mvm, "Failed to run INIT calibrations: %d\n",
-+			ret);
-+		goto error;
-+	}
-+
-+	/*
-+	 * Some things may run in the background now, but we
-+	 * just wait for the calibration complete notification.
-+	 */
-+	ret = iwl_wait_notification(&mvm->notif_wait, &calib_wait,
-+			MVM_UCODE_CALIB_TIMEOUT);
-+	if (!ret)
-+		mvm->init_ucode_run = true;
-+	goto out;
-+
-+error:
-+	iwl_remove_notification(&mvm->notif_wait, &calib_wait);
-+out:
-+	if (!iwlmvm_mod_params.init_dbg) {
-+		iwl_trans_stop_device(mvm->trans);
-+	} else if (!mvm->nvm_data) {
-+		/* we want to debug INIT and we have no NVM - fake */
-+		mvm->nvm_data = kzalloc(sizeof(struct iwl_nvm_data) +
-+					sizeof(struct ieee80211_channel) +
-+					sizeof(struct ieee80211_rate),
-+					GFP_KERNEL);
-+		if (!mvm->nvm_data)
-+			return -ENOMEM;
-+		mvm->nvm_data->valid_rx_ant = 1;
-+		mvm->nvm_data->valid_tx_ant = 1;
-+		mvm->nvm_data->bands[0].channels = mvm->nvm_data->channels;
-+		mvm->nvm_data->bands[0].n_channels = 1;
-+		mvm->nvm_data->bands[0].n_bitrates = 1;
-+		mvm->nvm_data->bands[0].bitrates =
-+			(void *)mvm->nvm_data->channels + 1;
-+		mvm->nvm_data->bands[0].bitrates->hw_value = 10;
-+	}
-+
-+	return ret;
-+}
-+
-+#define UCODE_CALIB_TIMEOUT	(2*HZ)
-+
-+int iwl_mvm_up(struct iwl_mvm *mvm)
-+{
-+	int ret, i;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	ret = iwl_trans_start_hw(mvm->trans);
-+	if (ret)
-+		return ret;
-+
-+	/* If we were in RFKILL during module loading, load init ucode now */
-+	if (!mvm->init_ucode_run) {
-+		ret = iwl_run_init_mvm_ucode(mvm, false);
-+		if (ret && !iwlmvm_mod_params.init_dbg) {
-+			IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", ret);
-+			goto error;
-+		}
-+	}
-+
-+	if (iwlmvm_mod_params.init_dbg)
-+		return 0;
-+
-+	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_REGULAR);
-+	if (ret) {
-+		IWL_ERR(mvm, "Failed to start RT ucode: %d\n", ret);
-+		goto error;
-+	}
-+
-+	ret = iwl_send_tx_ant_cfg(mvm, mvm->nvm_data->valid_tx_ant);
-+	if (ret)
-+		goto error;
-+
-+	/* Send phy db control command and then phy db calibration*/
-+	ret = iwl_send_phy_db_data(mvm->phy_db);
-+	if (ret)
-+		goto error;
-+
-+	ret = iwl_send_phy_cfg_cmd(mvm);
-+	if (ret)
-+		goto error;
-+
-+	/* init the fw <-> mac80211 STA mapping */
-+	for (i = 0; i < IWL_MVM_STATION_COUNT; i++)
-+		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[i], NULL);
-+
-+	/* Add auxiliary station for scanning */
-+	ret = iwl_mvm_add_aux_sta(mvm);
-+	if (ret)
-+		goto error;
-+
-+	IWL_DEBUG_INFO(mvm, "RT uCode started.\n");
-+
-+	return 0;
-+ error:
-+	iwl_trans_stop_device(mvm->trans);
-+	return ret;
-+}
-+
-+int iwl_mvm_load_d3_fw(struct iwl_mvm *mvm)
-+{
-+	int ret, i;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	ret = iwl_trans_start_hw(mvm->trans);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_WOWLAN);
-+	if (ret) {
-+		IWL_ERR(mvm, "Failed to start WoWLAN firmware: %d\n", ret);
-+		goto error;
-+	}
-+
-+	ret = iwl_send_tx_ant_cfg(mvm, mvm->nvm_data->valid_tx_ant);
-+	if (ret)
-+		goto error;
-+
-+	/* Send phy db control command and then phy db calibration*/
-+	ret = iwl_send_phy_db_data(mvm->phy_db);
-+	if (ret)
-+		goto error;
-+
-+	ret = iwl_send_phy_cfg_cmd(mvm);
-+	if (ret)
-+		goto error;
-+
-+	/* init the fw <-> mac80211 STA mapping */
-+	for (i = 0; i < IWL_MVM_STATION_COUNT; i++)
-+		RCU_INIT_POINTER(mvm->fw_id_to_mac_id[i], NULL);
-+
-+	/* Add auxiliary station for scanning */
-+	ret = iwl_mvm_add_aux_sta(mvm);
-+	if (ret)
-+		goto error;
-+
-+	return 0;
-+ error:
-+	iwl_trans_stop_device(mvm->trans);
-+	return ret;
-+}
-+
-+int iwl_mvm_rx_card_state_notif(struct iwl_mvm *mvm,
-+				    struct iwl_rx_cmd_buffer *rxb,
-+				    struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_card_state_notif *card_state_notif = (void *)pkt->data;
-+	u32 flags = le32_to_cpu(card_state_notif->flags);
-+
-+	IWL_DEBUG_RF_KILL(mvm, "Card state received: HW:%s SW:%s CT:%s\n",
-+			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
-+			  (flags & SW_CARD_DISABLED) ? "Kill" : "On",
-+			  (flags & CT_KILL_CARD_DISABLED) ?
-+			  "Reached" : "Not reached");
-+
-+	if (flags & CARD_DISABLED_MSK)
-+		iwl_write32(mvm->trans, CSR_UCODE_DRV_GP1_SET,
-+			    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
-+
-+	return 0;
-+}
-+
-+int iwl_mvm_rx_radio_ver(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
-+			 struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_radio_version_notif *radio_version = (void *)pkt->data;
-+
-+	/* TODO: what to do with that? */
-+	IWL_DEBUG_INFO(mvm,
-+		       "Radio version: flavor: 0x%08x, step 0x%08x, dash 0x%08x\n",
-+		       le32_to_cpu(radio_version->radio_flavor),
-+		       le32_to_cpu(radio_version->radio_step),
-+		       le32_to_cpu(radio_version->radio_dash));
-+	return 0;
-+}
+diff --git a/arch/arm/plat-omap/Kconfig b/arch/arm/plat-omap/Kconfig
+index 665870d..7eda02c 100644
+--- a/arch/arm/plat-omap/Kconfig
++++ b/arch/arm/plat-omap/Kconfig
+@@ -124,7 +124,7 @@ config OMAP_MBOX_FWK
+ 	  DSP, IVA1.0 and IVA2 in OMAP1/2/3.
+ 
+ config OMAP_MBOX_KFIFO_SIZE
+-	int "Mailbox kfifo default buffer size (bytes)"
++	int "Mailbox kfifo default buffer size (bytes, should be power of 2. If not, will roundup to power of 2"
+ 	depends on OMAP_MBOX_FWK
+ 	default 256
+ 	help
+diff --git a/arch/arm/plat-omap/mailbox.c b/arch/arm/plat-omap/mailbox.c
+index 42377ef..848fa0b 100644
+--- a/arch/arm/plat-omap/mailbox.c
++++ b/arch/arm/plat-omap/mailbox.c
+@@ -30,6 +30,7 @@
+ #include <linux/err.h>
+ #include <linux/notifier.h>
+ #include <linux/module.h>
++#include <linux/log2.h>
+ 
+ #include <plat/mailbox.h>
+ 
+@@ -40,7 +41,7 @@ static DEFINE_MUTEX(mbox_configured_lock);
+ 
+ static unsigned int mbox_kfifo_size = CONFIG_OMAP_MBOX_KFIFO_SIZE;
+ module_param(mbox_kfifo_size, uint, S_IRUGO);
+-MODULE_PARM_DESC(mbox_kfifo_size, "Size of omap's mailbox kfifo (bytes)");
++MODULE_PARM_DESC(mbox_kfifo_size, "Size of omap's mailbox kfifo (bytes, should be power of 2. If not, will roundup to power of 2)");
+ 
+ /* Mailbox FIFO handle functions */
+ static inline mbox_msg_t mbox_fifo_read(struct omap_mbox *mbox)
+@@ -218,6 +219,7 @@ static struct omap_mbox_queue *mbox_queue_alloc(struct omap_mbox *mbox,
+ 					void (*tasklet)(unsigned long))
+ {
+ 	struct omap_mbox_queue *mq;
++	int mbox_kfifo_size_order = order_base_2(mbox_kfifo_size);
+ 
+ 	mq = kzalloc(sizeof(struct omap_mbox_queue), GFP_KERNEL);
+ 	if (!mq)
+@@ -225,7 +227,7 @@ static struct omap_mbox_queue *mbox_queue_alloc(struct omap_mbox *mbox,
+ 
+ 	spin_lock_init(&mq->lock);
+ 
+-	if (kfifo_alloc(&mq->fifo, mbox_kfifo_size, GFP_KERNEL))
++	if (kfifo_alloc(&mq->fifo, mbox_kfifo_size_order, GFP_KERNEL))
+ 		goto error;
+ 
+ 	if (work)
+diff --git a/arch/powerpc/sysdev/fsl_rmu.c b/arch/powerpc/sysdev/fsl_rmu.c
+index 14bd522..84d2b8c 100644
+--- a/arch/powerpc/sysdev/fsl_rmu.c
++++ b/arch/powerpc/sysdev/fsl_rmu.c
+@@ -587,7 +587,7 @@ int fsl_rio_port_write_init(struct fsl_rio_pw *pw)
+ 
+ 	INIT_WORK(&pw->pw_work, fsl_pw_dpc);
+ 	spin_lock_init(&pw->pw_fifo_lock);
+-	if (kfifo_alloc(&pw->pw_fifo, RIO_PW_MSG_SIZE * 32, GFP_KERNEL)) {
++	if (kfifo_alloc(&pw->pw_fifo, RIO_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		pr_err("FIFO allocation failed\n");
+ 		rc = -ENOMEM;
+ 		goto err_out_irq;
+diff --git a/drivers/char/sonypi.c b/drivers/char/sonypi.c
+index d780295..39d8dd7 100644
+--- a/drivers/char/sonypi.c
++++ b/drivers/char/sonypi.c
+@@ -429,7 +429,7 @@ static struct sonypi_eventtypes {
+ 	{ 0 }
+ };
+ 
+-#define SONYPI_BUF_SIZE	128
++#define SONYPI_KFIFO_SIZE_ORDER		7
+ 
+ /* Correspondance table between sonypi events and input layer events */
+ static struct {
+@@ -1316,7 +1316,8 @@ static int sonypi_probe(struct platform_device *dev)
+ 			"http://www.linux.it/~malattia/wiki/index.php/Sony_drivers\n");
+ 
+ 	spin_lock_init(&sonypi_device.fifo_lock);
+-	error = kfifo_alloc(&sonypi_device.fifo, SONYPI_BUF_SIZE, GFP_KERNEL);
++	error = kfifo_alloc(&sonypi_device.fifo, SONYPI_KFIFO_SIZE_ORDER,
++			GFP_KERNEL);
+ 	if (error) {
+ 		printk(KERN_ERR "sonypi: kfifo_alloc failed\n");
+ 		return error;
+@@ -1395,8 +1396,8 @@ static int sonypi_probe(struct platform_device *dev)
+ 		}
+ 
+ 		spin_lock_init(&sonypi_device.input_fifo_lock);
+-		error = kfifo_alloc(&sonypi_device.input_fifo, SONYPI_BUF_SIZE,
+-				GFP_KERNEL);
++		error = kfifo_alloc(&sonypi_device.input_fifo,
++				SONYPI_KFIFO_SIZE_ORDER, GFP_KERNEL);
+ 		if (error) {
+ 			printk(KERN_ERR "sonypi: kfifo_alloc failed\n");
+ 			goto err_inpdev_unregister;
+diff --git a/drivers/hid/hid-logitech-dj.c b/drivers/hid/hid-logitech-dj.c
+index 9500f2f..031be77 100644
+--- a/drivers/hid/hid-logitech-dj.c
++++ b/drivers/hid/hid-logitech-dj.c
+@@ -26,6 +26,7 @@
+ #include <linux/hid.h>
+ #include <linux/module.h>
+ #include <linux/usb.h>
++#include <linux/log2.h>
+ #include <asm/unaligned.h>
+ #include "usbhid/usbhid.h"
+ #include "hid-ids.h"
+@@ -730,6 +731,8 @@ static int logi_dj_probe(struct hid_device *hdev,
+ 	struct usb_interface *intf = to_usb_interface(hdev->dev.parent);
+ 	struct dj_receiver_dev *djrcv_dev;
+ 	int retval;
++	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
++					    sizeof(struct dj_report));
+ 
+ 	if (is_dj_device((struct dj_device *)hdev->driver_data))
+ 		return -ENODEV;
+@@ -757,9 +760,7 @@ static int logi_dj_probe(struct hid_device *hdev,
+ 	djrcv_dev->hdev = hdev;
+ 	INIT_WORK(&djrcv_dev->work, delayedwork_callback);
+ 	spin_lock_init(&djrcv_dev->lock);
+-	if (kfifo_alloc(&djrcv_dev->notif_fifo,
+-			DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct dj_report),
+-			GFP_KERNEL)) {
++	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order, GFP_KERNEL)) {
+ 		dev_err(&hdev->dev,
+ 			"%s:failed allocating notif_fifo\n", __func__);
+ 		kfree(djrcv_dev);
+diff --git a/drivers/iio/industrialio-event.c b/drivers/iio/industrialio-event.c
+index 261cae0..9b73680 100644
+--- a/drivers/iio/industrialio-event.c
++++ b/drivers/iio/industrialio-event.c
+@@ -35,7 +35,7 @@
+  */
+ struct iio_event_interface {
+ 	wait_queue_head_t	wait;
+-	DECLARE_KFIFO(det_events, struct iio_event_data, 16);
++	DECLARE_KFIFO(det_events, struct iio_event_data, 4);
+ 
+ 	struct list_head	dev_attr_list;
+ 	unsigned long		flags;
+diff --git a/drivers/iio/kfifo_buf.c b/drivers/iio/kfifo_buf.c
+index 5bc5c86..d8ba52ff 100644
+--- a/drivers/iio/kfifo_buf.c
++++ b/drivers/iio/kfifo_buf.c
+@@ -7,6 +7,7 @@
+ #include <linux/mutex.h>
+ #include <linux/iio/kfifo_buf.h>
+ #include <linux/sched.h>
++#include <linux/log2.h>
+ 
+ struct iio_kfifo {
+ 	struct iio_buffer buffer;
+@@ -23,7 +24,7 @@ static inline int __iio_allocate_kfifo(struct iio_kfifo *buf,
+ 		return -EINVAL;
+ 
+ 	__iio_update_buffer(&buf->buffer, bytes_per_datum, length);
+-	return __kfifo_alloc((struct __kfifo *)&buf->kf, length,
++	return __kfifo_alloc((struct __kfifo *)&buf->kf, order_base_2(length),
+ 			     bytes_per_datum, GFP_KERNEL);
+ }
+ 
+diff --git a/drivers/infiniband/hw/cxgb3/cxio_resource.c b/drivers/infiniband/hw/cxgb3/cxio_resource.c
+index 31f9201..186d05e 100644
+--- a/drivers/infiniband/hw/cxgb3/cxio_resource.c
++++ b/drivers/infiniband/hw/cxgb3/cxio_resource.c
+@@ -36,6 +36,7 @@
+ #include <linux/kfifo.h>
+ #include <linux/spinlock.h>
+ #include <linux/errno.h>
++#include <linux/log2.h>
+ #include "cxio_resource.h"
+ #include "cxio_hal.h"
+ 
+@@ -54,8 +55,9 @@ static int __cxio_init_resource_fifo(struct kfifo *fifo,
+ 	u32 random_bytes;
+ 	u32 rarray[16];
+ 	spin_lock_init(fifo_lock);
++	int kfifo_size_order = order_base_2(nr * sizeof(u32));
+ 
+-	if (kfifo_alloc(fifo, nr * sizeof(u32), GFP_KERNEL))
++	if (kfifo_alloc(fifo, kfifo_size_order, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < skip_low + skip_high; i++)
+@@ -111,11 +113,11 @@ static int cxio_init_resource_fifo_random(struct kfifo *fifo,
+ static int cxio_init_qpid_fifo(struct cxio_rdev *rdev_p)
+ {
+ 	u32 i;
++	int kfifo_size_order = order_base_2(T3_MAX_NUM_QP * sizeof(u32));
+ 
+ 	spin_lock_init(&rdev_p->rscp->qpid_fifo_lock);
+ 
+-	if (kfifo_alloc(&rdev_p->rscp->qpid_fifo, T3_MAX_NUM_QP * sizeof(u32),
+-					      GFP_KERNEL))
++	if (kfifo_alloc(&rdev_p->rscp->qpid_fifo, kfifo_size_order, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+ 	for (i = 16; i < T3_MAX_NUM_QP; i++)
+diff --git a/drivers/media/i2c/cx25840/cx25840-ir.c b/drivers/media/i2c/cx25840/cx25840-ir.c
+index 38ce76e..1da0b6c 100644
+--- a/drivers/media/i2c/cx25840/cx25840-ir.c
++++ b/drivers/media/i2c/cx25840/cx25840-ir.c
+@@ -24,6 +24,7 @@
+ #include <linux/slab.h>
+ #include <linux/kfifo.h>
+ #include <linux/module.h>
++#include <linux/log2.h>
+ #include <media/cx25840.h>
+ #include <media/rc-core.h>
+ 
+@@ -106,8 +107,10 @@ union cx25840_ir_fifo_rec {
+ 	struct ir_raw_event ir_core_data;
+ };
+ 
+-#define CX25840_IR_RX_KFIFO_SIZE    (256 * sizeof(union cx25840_ir_fifo_rec))
+-#define CX25840_IR_TX_KFIFO_SIZE    (256 * sizeof(union cx25840_ir_fifo_rec))
++#define CX25840_IR_RX_KFIFO_SIZE_ORDER	(order_base_2(256 * sizeof(union cx25840_ir_fifo_rec)))
++#define CX25840_IR_RX_KFIFO_SIZE    	(1<<CX25840_IR_RX_KFIFO_SIZE_ORDER)
++#define CX25840_IR_TX_KFIFO_SIZE_ORDER	(order_base_2(256 * sizeof(union cx25840_ir_fifo_rec)))
++#define CX25840_IR_TX_KFIFO_SIZE    	(CX25840_IR_TX_KFIFO_SIZE_ORDER)
+ 
+ struct cx25840_ir_state {
+ 	struct i2c_client *c;
+@@ -1236,7 +1239,7 @@ int cx25840_ir_probe(struct v4l2_subdev *sd)
+ 
+ 	spin_lock_init(&ir_state->rx_kfifo_lock);
+ 	if (kfifo_alloc(&ir_state->rx_kfifo,
+-			CX25840_IR_RX_KFIFO_SIZE, GFP_KERNEL)) {
++			CX25840_IR_RX_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		kfree(ir_state);
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/media/pci/cx23885/cx23888-ir.c b/drivers/media/pci/cx23885/cx23888-ir.c
+index c4bd1e9..4c6e24b 100644
+--- a/drivers/media/pci/cx23885/cx23888-ir.c
++++ b/drivers/media/pci/cx23885/cx23888-ir.c
+@@ -23,6 +23,7 @@
+ 
+ #include <linux/kfifo.h>
+ #include <linux/slab.h>
++#include <linux/log2.h>
+ 
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-chip-ident.h>
+@@ -125,8 +126,10 @@ union cx23888_ir_fifo_rec {
+ 	struct ir_raw_event ir_core_data;
+ };
+ 
+-#define CX23888_IR_RX_KFIFO_SIZE    (256 * sizeof(union cx23888_ir_fifo_rec))
+-#define CX23888_IR_TX_KFIFO_SIZE    (256 * sizeof(union cx23888_ir_fifo_rec))
++#define CX23888_IR_RX_KFIFO_SIZE_ORDER	(order_base_2(256 * sizeof(union cx23888_ir_fifo_rec)))
++#define CX23888_IR_RX_KFIFO_SIZE    	(1<<CX23888_IR_RX_KFIFO_SIZE_ORDER)
++#define CX23888_IR_TX_KFIFO_SIZE_ORDER	(order_base_2(256 * sizeof(union cx23888_ir_fifo_rec)))
++#define CX23888_IR_TX_KFIFO_SIZE    	(1<<CX23888_IR_TX_KFIFO_SIZE_ORDER)
+ 
+ struct cx23888_ir_state {
+ 	struct v4l2_subdev sd;
+@@ -1213,7 +1216,7 @@ int cx23888_ir_probe(struct cx23885_dev *dev)
+ 		return -ENOMEM;
+ 
+ 	spin_lock_init(&state->rx_kfifo_lock);
+-	if (kfifo_alloc(&state->rx_kfifo, CX23888_IR_RX_KFIFO_SIZE, GFP_KERNEL))
++	if (kfifo_alloc(&state->rx_kfifo, CX23888_IR_RX_KFIFO_SIZE_ORDER, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+ 	state->dev = dev;
+diff --git a/drivers/media/pci/meye/meye.c b/drivers/media/pci/meye/meye.c
+index 049e186..3bcde0c 100644
+--- a/drivers/media/pci/meye/meye.c
++++ b/drivers/media/pci/meye/meye.c
+@@ -1759,14 +1759,12 @@ static int meye_probe(struct pci_dev *pcidev, const struct pci_device_id *ent)
+ 	}
+ 
+ 	spin_lock_init(&meye.grabq_lock);
+-	if (kfifo_alloc(&meye.grabq, sizeof(int) * MEYE_MAX_BUFNBRS,
+-				GFP_KERNEL)) {
++	if (kfifo_alloc(&meye.grabq, MEYE_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		v4l2_err(v4l2_dev, "fifo allocation failed\n");
+ 		goto outkfifoalloc1;
+ 	}
+ 	spin_lock_init(&meye.doneq_lock);
+-	if (kfifo_alloc(&meye.doneq, sizeof(int) * MEYE_MAX_BUFNBRS,
+-				GFP_KERNEL)) {
++	if (kfifo_alloc(&meye.doneq, MEYE_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		v4l2_err(v4l2_dev, "fifo allocation failed\n");
+ 		goto outkfifoalloc2;
+ 	}
+diff --git a/drivers/media/pci/meye/meye.h b/drivers/media/pci/meye/meye.h
+index 4bdeb03..5d3ab4f 100644
+--- a/drivers/media/pci/meye/meye.h
++++ b/drivers/media/pci/meye/meye.h
+@@ -260,6 +260,7 @@
+ /* private API definitions */
+ #include <linux/meye.h>
+ #include <linux/mutex.h>
++#include <linux/log2.h>
+ 
+ 
+ /* Enable jpg software correction */
+@@ -270,6 +271,7 @@
+ 
+ /* Maximum number of buffers */
+ #define MEYE_MAX_BUFNBRS	32
++#define MEYE_KFIFO_SIZE_ORDER	(order_base_2(MEYE_MAX_BUFNBRS * sizeof(int)))
+ 
+ /* State of a buffer */
+ #define MEYE_BUF_UNUSED	0	/* not used */
+diff --git a/drivers/media/rc/ir-raw.c b/drivers/media/rc/ir-raw.c
+index 97dc8d1..e4d1ec8 100644
+--- a/drivers/media/rc/ir-raw.c
++++ b/drivers/media/rc/ir-raw.c
+@@ -18,6 +18,7 @@
+ #include <linux/kmod.h>
+ #include <linux/sched.h>
+ #include <linux/freezer.h>
++#include <linux/log2.h>
+ #include "rc-core-priv.h"
+ 
+ /* Define the max number of pulse/space transitions to buffer */
+@@ -252,6 +253,8 @@ int ir_raw_event_register(struct rc_dev *dev)
+ {
+ 	int rc;
+ 	struct ir_raw_handler *handler;
++	int kfifo_size_order = order_base_2(sizeof(struct ir_raw_event) *
++					    MAX_IR_EVENT_SIZE);
+ 
+ 	if (!dev)
+ 		return -EINVAL;
+@@ -262,9 +265,7 @@ int ir_raw_event_register(struct rc_dev *dev)
+ 
+ 	dev->raw->dev = dev;
+ 	dev->raw->enabled_protocols = ~0;
+-	rc = kfifo_alloc(&dev->raw->kfifo,
+-			 sizeof(struct ir_raw_event) * MAX_IR_EVENT_SIZE,
+-			 GFP_KERNEL);
++	rc = kfifo_alloc(&dev->raw->kfifo, kfifo_size_order, GFP_KERNEL);
+ 	if (rc < 0)
+ 		goto out;
+ 
+diff --git a/drivers/memstick/host/r592.h b/drivers/memstick/host/r592.h
+index c5726c1..6fc19f4 100644
+--- a/drivers/memstick/host/r592.h
++++ b/drivers/memstick/host/r592.h
+@@ -143,7 +143,7 @@ struct r592_device {
+ 	struct task_struct *io_thread;
+ 	bool parallel_mode;
+ 
+-	DECLARE_KFIFO(pio_fifo, u8, sizeof(u32));
++	DECLARE_KFIFO(pio_fifo, u8, 2);
+ 
+ 	/* DMA area */
+ 	int dma_capable;
+diff --git a/drivers/mmc/card/sdio_uart.c b/drivers/mmc/card/sdio_uart.c
+index bd57a11..c54a7c5 100644
+--- a/drivers/mmc/card/sdio_uart.c
++++ b/drivers/mmc/card/sdio_uart.c
+@@ -43,12 +43,14 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/log2.h>
+ 
+ 
+ #define UART_NR		8	/* Number of UARTs this driver can handle */
+ 
+ 
+ #define FIFO_SIZE	PAGE_SIZE
++#define FIFO_SIZE_ORDER	PAGE_SHIFT
+ #define WAKEUP_CHARS	256
+ 
+ struct uart_icount {
+@@ -93,7 +95,7 @@ static int sdio_uart_add_port(struct sdio_uart_port *port)
+ 
+ 	mutex_init(&port->func_lock);
+ 	spin_lock_init(&port->write_lock);
+-	if (kfifo_alloc(&port->xmit_fifo, FIFO_SIZE, GFP_KERNEL))
++	if (kfifo_alloc(&port->xmit_fifo, FIFO_SIZE_ORDER, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+ 	spin_lock(&sdio_uart_table_lock);
+diff --git a/drivers/mtd/sm_ftl.c b/drivers/mtd/sm_ftl.c
+index 8dd6ba5..672ef47 100644
+--- a/drivers/mtd/sm_ftl.c
++++ b/drivers/mtd/sm_ftl.c
+@@ -17,6 +17,7 @@
+ #include <linux/bitops.h>
+ #include <linux/slab.h>
+ #include <linux/mtd/nand_ecc.h>
++#include <linux/log2.h>
+ #include "nand/sm_common.h"
+ #include "sm_ftl.h"
+ 
+@@ -766,6 +767,7 @@ static int sm_init_zone(struct sm_ftl *ftl, int zone_num)
+ 	int lba;
+ 	int i = 0;
+ 	int len;
++	int kfifo_size_order;
+ 
+ 	dbg("initializing zone %d", zone_num);
+ 
+@@ -778,7 +780,8 @@ static int sm_init_zone(struct sm_ftl *ftl, int zone_num)
+ 
+ 
+ 	/* Allocate memory for free sectors FIFO */
+-	if (kfifo_alloc(&zone->free_sectors, ftl->zone_size * 2, GFP_KERNEL)) {
++	kfifo_size_order = order_base_2(ftl->zone_size * 2);
++	if (kfifo_alloc(&zone->free_sectors, kfifo_size_order, GFP_KERNEL)) {
+ 		kfree(zone->lba_to_phys_table);
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 0c02f04..ea5ddf4 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -25,6 +25,8 @@
+ #include "cmd.h"
+ #include "mesh.h"
+ 
++#define KFIFO_SIZE_ORDER	6
++
+ #define DRIVER_RELEASE_VERSION "323.p0"
+ const char lbs_driver_version[] = "COMM-USB8388-" DRIVER_RELEASE_VERSION
+ #ifdef  DEBUG
+@@ -914,7 +916,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 	priv->resp_len[0] = priv->resp_len[1] = 0;
+ 
+ 	/* Create the event FIFO */
+-	ret = kfifo_alloc(&priv->event_fifo, sizeof(u32) * 16, GFP_KERNEL);
++	ret = kfifo_alloc(&priv->event_fifo, KFIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (ret) {
+ 		pr_err("Out of memory allocating event FIFO buffer\n");
+ 		goto out;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 44f8b3f..c8f68485 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -979,12 +979,11 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		 * tx_queues * entry_num and round up to the nearest
+ 		 * power of 2.
+ 		 */
+-		int kfifo_size =
+-			roundup_pow_of_two(rt2x00dev->ops->tx_queues *
++		int kfifo_size_order = order_base_2(rt2x00dev->ops->tx_queues *
+ 					   rt2x00dev->ops->tx->entry_num *
+ 					   sizeof(u32));
+ 
+-		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size,
++		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, kfifo_size_order,
+ 				     GFP_KERNEL);
+ 		if (status)
+ 			return status;
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 421bbc5..ec9284a 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -574,7 +574,6 @@ static void handle_error_source(struct pcie_device *aerdev,
+ static void aer_recover_work_func(struct work_struct *work);
+ 
+ #define AER_RECOVER_RING_ORDER		4
+-#define AER_RECOVER_RING_SIZE		(1 << AER_RECOVER_RING_ORDER)
+ 
+ struct aer_recover_entry
+ {
+@@ -585,7 +584,7 @@ struct aer_recover_entry
+ };
+ 
+ static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
+-		    AER_RECOVER_RING_SIZE);
++		    AER_RECOVER_RING_ORDER);
+ /*
+  * Mutual exclusion for writers of aer_recover_ring, reader side don't
+  * need lock, because there is only one reader and lock is not needed
+diff --git a/drivers/platform/x86/fujitsu-laptop.c b/drivers/platform/x86/fujitsu-laptop.c
+index c4c1a54..185bd55 100644
+--- a/drivers/platform/x86/fujitsu-laptop.c
++++ b/drivers/platform/x86/fujitsu-laptop.c
+@@ -66,6 +66,7 @@
+ #include <linux/backlight.h>
+ #include <linux/input.h>
+ #include <linux/kfifo.h>
++#include <linux/log2.h>
+ #include <linux/video_output.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+@@ -116,6 +117,7 @@
+ 
+ #define MAX_HOTKEY_RINGBUFFER_SIZE 100
+ #define RINGBUFFERSIZE 40
++#define KFIFO_SIZE_ORDER	(order_base_2(RINGBUFFERSIZE * sizeof(int)))
+ 
+ /* Debugging */
+ #define FUJLAPTOP_LOG	   ACPI_FUJITSU_HID ": "
+@@ -825,8 +827,7 @@ static int acpi_fujitsu_hotkey_add(struct acpi_device *device)
+ 
+ 	/* kfifo */
+ 	spin_lock_init(&fujitsu_hotkey->fifo_lock);
+-	error = kfifo_alloc(&fujitsu_hotkey->fifo, RINGBUFFERSIZE * sizeof(int),
+-			GFP_KERNEL);
++	error = kfifo_alloc(&fujitsu_hotkey->fifo, KFIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (error) {
+ 		pr_err("kfifo_alloc failed\n");
+ 		goto err_stop;
+diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
+index daaddec..ee57eac 100644
+--- a/drivers/platform/x86/sony-laptop.c
++++ b/drivers/platform/x86/sony-laptop.c
+@@ -183,7 +183,7 @@ static void sony_nc_rfkill_update(void);
+ 
+ /*********** Input Devices ***********/
+ 
+-#define SONY_LAPTOP_BUF_SIZE	128
++#define SONY_LAPTOP_KFIFO_SIZE_ORDER	7
+ struct sony_laptop_input_s {
+ 	atomic_t		users;
+ 	struct input_dev	*jog_dev;
+@@ -447,7 +447,7 @@ static int sony_laptop_setup_input(struct acpi_device *acpi_device)
+ 	/* kfifo */
+ 	spin_lock_init(&sony_laptop_input.fifo_lock);
+ 	error = kfifo_alloc(&sony_laptop_input.fifo,
+-			    SONY_LAPTOP_BUF_SIZE, GFP_KERNEL);
++			    SONY_LAPTOP_KFIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (error) {
+ 		pr_err("kfifo_alloc failed\n");
+ 		goto err_dec_users;
+@@ -3752,7 +3752,7 @@ static int sonypi_compat_init(void)
+ 
+ 	spin_lock_init(&sonypi_compat.fifo_lock);
+ 	error =
+-	 kfifo_alloc(&sonypi_compat.fifo, SONY_LAPTOP_BUF_SIZE, GFP_KERNEL);
++	 kfifo_alloc(&sonypi_compat.fifo, SONY_LAPTOP_KFIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (error) {
+ 		pr_err("kfifo_alloc failed\n");
+ 		return error;
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index 6faba40..a731e87 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -32,6 +32,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/interrupt.h>
+ #include <linux/kfifo.h>
++#include <linux/log2.h>
+ #include <linux/delay.h>
+ 
+ #include "tsi721.h"
+@@ -970,11 +971,11 @@ static void tsi721_init_sr2pc_mapping(struct tsi721_device *priv)
+  */
+ static int tsi721_port_write_init(struct tsi721_device *priv)
+ {
++	int kfifo_size_order = order_base_2(TSI721_RIO_PW_MSG_SIZE * 32);
+ 	priv->pw_discard_count = 0;
+ 	INIT_WORK(&priv->pw_work, tsi721_pw_dpc);
+ 	spin_lock_init(&priv->pw_fifo_lock);
+-	if (kfifo_alloc(&priv->pw_fifo,
+-			TSI721_RIO_PW_MSG_SIZE * 32, GFP_KERNEL)) {
++	if (kfifo_alloc(&priv->pw_fifo, kfifo_size_order, GFP_KERNEL)) {
+ 		dev_err(&priv->pdev->dev, "PW FIFO allocation failed\n");
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index 552e8a2..bdb09bf 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -35,6 +35,7 @@
+ #include <linux/crypto.h>
+ #include <linux/delay.h>
+ #include <linux/kfifo.h>
++#include <linux/log2.h>
+ #include <linux/scatterlist.h>
+ #include <linux/module.h>
+ #include <net/tcp.h>
+@@ -1113,6 +1114,7 @@ int iscsi_tcp_r2tpool_alloc(struct iscsi_session *session)
+ {
+ 	int i;
+ 	int cmd_i;
++	int kfifo_size_order;
+ 
+ 	/*
+ 	 * initialize per-task: R2T pool and xmit queue
+@@ -1135,8 +1137,8 @@ int iscsi_tcp_r2tpool_alloc(struct iscsi_session *session)
+ 		}
+ 
+ 		/* R2T xmit queue */
+-		if (kfifo_alloc(&tcp_task->r2tqueue,
+-		      session->max_r2t * 4 * sizeof(void*), GFP_KERNEL)) {
++		kfifo_size_order = order_base_2(session->max_r2t * 4 * sizeof(void *));
++		if (kfifo_alloc(&tcp_task->r2tqueue, kfifo_size_order, GFP_KERNEL)) {
+ 			iscsi_pool_free(&tcp_task->r2tpool);
+ 			goto r2t_alloc_fail;
+ 		}
+diff --git a/drivers/staging/omapdrm/omap_plane.c b/drivers/staging/omapdrm/omap_plane.c
+index 2a8e5ba..40f057f 100644
+--- a/drivers/staging/omapdrm/omap_plane.c
++++ b/drivers/staging/omapdrm/omap_plane.c
+@@ -28,6 +28,8 @@
+  */
+ #define omap_plane _omap_plane
+ 
++#define OMAP_KFIFO_SIZE_ORDER	4
++
+ /*
+  * plane funcs
+  */
+@@ -508,7 +510,8 @@ struct drm_plane *omap_plane_init(struct drm_device *dev,
+ 
+ 	mutex_init(&omap_plane->unpin_mutex);
+ 
+-	ret = kfifo_alloc(&omap_plane->unpin_fifo, 16, GFP_KERNEL);
++	ret = kfifo_alloc(&omap_plane->unpin_fifo, OMAP_KFIFO_SIZE_ORDER,
++			  GFP_KERNEL);
+ 	if (ret) {
+ 		dev_err(dev->dev, "could not allocate unpin FIFO\n");
+ 		goto fail;
+diff --git a/drivers/tty/n_gsm.c b/drivers/tty/n_gsm.c
+index dcc0430..b3b1b1c 100644
+--- a/drivers/tty/n_gsm.c
++++ b/drivers/tty/n_gsm.c
+@@ -66,6 +66,8 @@
+ static int debug;
+ module_param(debug, int, 0600);
+ 
++#define KFIFO_SIZE_ORDER	12
++
+ /* Defaults: these are from the specification */
+ 
+ #define T1	10		/* 100mS */
+@@ -1636,7 +1638,7 @@ static struct gsm_dlci *gsm_dlci_alloc(struct gsm_mux *gsm, int addr)
+ 	spin_lock_init(&dlci->lock);
+ 	mutex_init(&dlci->mutex);
+ 	dlci->fifo = &dlci->_fifo;
+-	if (kfifo_alloc(&dlci->_fifo, 4096, GFP_KERNEL) < 0) {
++	if (kfifo_alloc(&dlci->_fifo, KFIFO_SIZE_ORDER, GFP_KERNEL) < 0) {
+ 		kfree(dlci);
+ 		return NULL;
+ 	}
+diff --git a/drivers/tty/nozomi.c b/drivers/tty/nozomi.c
+index a0c69ab..8b54da3 100644
+--- a/drivers/tty/nozomi.c
++++ b/drivers/tty/nozomi.c
+@@ -128,8 +128,7 @@ static int debug;
+ #define NTTY_TTY_MAXMINORS	256
+ #define NTTY_FIFO_BUFFER_SIZE	8192
+ 
+-/* Must be power of 2 */
+-#define FIFO_BUFFER_SIZE_UL	8192
++#define FIFO_BUFFER_SIZE_ORDER	13
+ 
+ /* Size of tmp send buffer to card */
+ #define SEND_BUF_MAX		1024
+@@ -1428,7 +1427,7 @@ static int nozomi_card_init(struct pci_dev *pdev,
+ 	}
+ 
+ 	for (i = PORT_MDM; i < MAX_PORT; i++) {
+-		if (kfifo_alloc(&dc->port[i].fifo_ul, FIFO_BUFFER_SIZE_UL,
++		if (kfifo_alloc(&dc->port[i].fifo_ul, FIFO_BUFFER_SIZE_ORDER,
+ 					GFP_KERNEL)) {
+ 			dev_err(&pdev->dev,
+ 					"Could not allocate kfifo buffer\n");
+diff --git a/drivers/tty/serial/ifx6x60.c b/drivers/tty/serial/ifx6x60.c
+index 675d94a..f80dc2c 100644
+--- a/drivers/tty/serial/ifx6x60.c
++++ b/drivers/tty/serial/ifx6x60.c
+@@ -880,7 +880,7 @@ static int ifx_spi_create_port(struct ifx_spi_device *ifx_dev)
+ 	lockdep_set_class_and_subclass(&ifx_dev->fifo_lock,
+ 		&ifx_spi_key, 0);
+ 
+-	if (kfifo_alloc(&ifx_dev->tx_fifo, IFX_SPI_FIFO_SIZE, GFP_KERNEL)) {
++	if (kfifo_alloc(&ifx_dev->tx_fifo, IFX_SPI_FIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		ret = -ENOMEM;
+ 		goto error_ret;
+ 	}
+diff --git a/drivers/tty/serial/ifx6x60.h b/drivers/tty/serial/ifx6x60.h
+index 4fbddc2..da4fd1c 100644
+--- a/drivers/tty/serial/ifx6x60.h
++++ b/drivers/tty/serial/ifx6x60.h
+@@ -31,7 +31,8 @@
+ 
+ #define IFX_SPI_MAX_MINORS		1
+ #define IFX_SPI_TRANSFER_SIZE		2048
+-#define IFX_SPI_FIFO_SIZE		4096
++#define IFX_SPI_FIFO_SIZE_ORDER		12
++#define IFX_SPI_FIFO_SIZE		(1 << IFX_SPI_FIFO_SIZE_ORDER)
+ 
+ #define IFX_SPI_HEADER_OVERHEAD		4
+ #define IFX_RESET_TIMEOUT		msecs_to_jiffies(50)
+diff --git a/drivers/tty/serial/kgdb_nmi.c b/drivers/tty/serial/kgdb_nmi.c
+index 6ac2b79..947dd72 100644
+--- a/drivers/tty/serial/kgdb_nmi.c
++++ b/drivers/tty/serial/kgdb_nmi.c
+@@ -26,6 +26,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/hrtimer.h>
+ #include <linux/tick.h>
++#include <linux/log2.h>
+ #include <linux/kfifo.h>
+ #include <linux/kgdb.h>
+ #include <linux/kdb.h>
+@@ -75,13 +76,13 @@ static struct console kgdb_nmi_console = {
+  * This is usually the maximum rate on debug ports. We make fifo large enough
+  * to make copy-pasting to the terminal usable.
+  */
+-#define KGDB_NMI_BAUD		115200
+-#define KGDB_NMI_FIFO_SIZE	roundup_pow_of_two(KGDB_NMI_BAUD / 8 / HZ)
++#define KGDB_NMI_BAUD			115200
++#define KGDB_NMI_FIFO_SIZE_ORDER	order_base_2(KGDB_NMI_BAUD / 8 / HZ)
+ 
+ struct kgdb_nmi_tty_priv {
+ 	struct tty_port port;
+ 	struct tasklet_struct tlet;
+-	STRUCT_KFIFO(char, KGDB_NMI_FIFO_SIZE) fifo;
++	STRUCT_KFIFO(char, KGDB_NMI_FIFO_SIZE_ORDER) fifo;
+ };
+ 
+ static struct kgdb_nmi_tty_priv *kgdb_nmi_port_to_priv(struct tty_port *port)
+diff --git a/drivers/usb/host/fhci.h b/drivers/usb/host/fhci.h
+index 7cc1c32..e4a0ac6 100644
+--- a/drivers/usb/host/fhci.h
++++ b/drivers/usb/host/fhci.h
+@@ -24,6 +24,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/interrupt.h>
+ #include <linux/kfifo.h>
++#include <linux/log2.h>
+ #include <linux/io.h>
+ #include <linux/usb.h>
+ #include <linux/usb/hcd.h>
+@@ -478,7 +479,8 @@ static inline struct usb_hcd *fhci_to_hcd(struct fhci_hcd *fhci)
+ /* fifo of pointers */
+ static inline int cq_new(struct kfifo *fifo, int size)
+ {
+-	return kfifo_alloc(fifo, size * sizeof(void *), GFP_KERNEL);
++	int kfifo_size_order = order_base_2(size * sizeof(void *));
++	return kfifo_alloc(fifo, kfifo_size_order, GFP_KERNEL);
+ }
+ 
+ static inline void cq_delete(struct kfifo *kfifo)
+diff --git a/drivers/usb/serial/cypress_m8.c b/drivers/usb/serial/cypress_m8.c
+index fd8c35f..a4d7cd1 100644
+--- a/drivers/usb/serial/cypress_m8.c
++++ b/drivers/usb/serial/cypress_m8.c
+@@ -54,7 +54,7 @@ static bool unstable_bauds;
+ #define DRIVER_DESC "Cypress USB to Serial Driver"
+ 
+ /* write buffer size defines */
+-#define CYPRESS_BUF_SIZE	1024
++#define CYPRESS_KFIFO_SIZE_ORDER	10
+ 
+ static const struct usb_device_id id_table_earthmate[] = {
+ 	{ USB_DEVICE(VENDOR_ID_DELORME, PRODUCT_ID_EARTHMATEUSB) },
+@@ -445,7 +445,7 @@ static int cypress_generic_port_probe(struct usb_serial_port *port)
+ 
+ 	priv->comm_is_ok = !0;
+ 	spin_lock_init(&priv->lock);
+-	if (kfifo_alloc(&priv->write_fifo, CYPRESS_BUF_SIZE, GFP_KERNEL)) {
++	if (kfifo_alloc(&priv->write_fifo, CYPRESS_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		kfree(priv);
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/usb/serial/io_ti.c b/drivers/usb/serial/io_ti.c
+index 58184f3..a19018b 100644
+--- a/drivers/usb/serial/io_ti.c
++++ b/drivers/usb/serial/io_ti.c
+@@ -64,7 +64,7 @@
+ 
+ #define EDGE_CLOSING_WAIT	4000	/* in .01 sec */
+ 
+-#define EDGE_OUT_BUF_SIZE	1024
++#define EDGE_KFIFO_SIZE_ORDER	10
+ 
+ 
+ /* Product information read from the Edgeport */
+@@ -2567,7 +2567,7 @@ static int edge_port_probe(struct usb_serial_port *port)
+ 	if (!edge_port)
+ 		return -ENOMEM;
+ 
+-	ret = kfifo_alloc(&edge_port->write_fifo, EDGE_OUT_BUF_SIZE,
++	ret = kfifo_alloc(&edge_port->write_fifo, EDGE_KFIFO_SIZE_ORDER,
+ 								GFP_KERNEL);
+ 	if (ret) {
+ 		kfree(edge_port);
+diff --git a/drivers/usb/serial/ti_usb_3410_5052.c b/drivers/usb/serial/ti_usb_3410_5052.c
+index f2530d2..777e90a 100644
+--- a/drivers/usb/serial/ti_usb_3410_5052.c
++++ b/drivers/usb/serial/ti_usb_3410_5052.c
+@@ -45,7 +45,8 @@
+ 
+ #define TI_FIRMWARE_BUF_SIZE	16284
+ 
+-#define TI_WRITE_BUF_SIZE	1024
++#define TI_KFIFO_SIZE_ORDER	10
++#define TI_KFIFO_SIZE		(1 << TI_KFIFO_SIZE_ORDER)
+ 
+ #define TI_TRANSFER_TIMEOUT	2
+ 
+@@ -434,7 +435,7 @@ static int ti_port_probe(struct usb_serial_port *port)
+ 	tport->tp_closing_wait = closing_wait;
+ 	init_waitqueue_head(&tport->tp_msr_wait);
+ 	init_waitqueue_head(&tport->tp_write_wait);
+-	if (kfifo_alloc(&tport->write_fifo, TI_WRITE_BUF_SIZE, GFP_KERNEL)) {
++	if (kfifo_alloc(&tport->write_fifo, TI_KFIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		kfree(tport);
+ 		return -ENOMEM;
+ 	}
+@@ -1355,7 +1356,7 @@ static int ti_get_serial_info(struct ti_port *tport,
+ 	ret_serial.line = port->serial->minor;
+ 	ret_serial.port = port->number - port->serial->minor;
+ 	ret_serial.flags = tport->tp_flags;
+-	ret_serial.xmit_fifo_size = TI_WRITE_BUF_SIZE;
++	ret_serial.xmit_fifo_size = TI_KFIFO_SIZE;
+ 	ret_serial.baud_base = tport->tp_tdev->td_is_3410 ? 921600 : 460800;
+ 	ret_serial.closing_wait = tport->tp_closing_wait;
+ 
+diff --git a/drivers/usb/serial/usb-serial.c b/drivers/usb/serial/usb-serial.c
+index 64bda13..11ca271 100644
+--- a/drivers/usb/serial/usb-serial.c
++++ b/drivers/usb/serial/usb-serial.c
+@@ -934,7 +934,7 @@ static int usb_serial_probe(struct usb_interface *interface,
+ 	for (i = 0; i < num_bulk_out; ++i) {
+ 		endpoint = bulk_out_endpoint[i];
+ 		port = serial->port[i];
+-		if (kfifo_alloc(&port->write_fifo, PAGE_SIZE, GFP_KERNEL))
++		if (kfifo_alloc(&port->write_fifo, PAGE_SHIFT, GFP_KERNEL))
+ 			goto probe_error;
+ 		buffer_size = serial->type->bulk_out_size;
+ 		if (!buffer_size)
+diff --git a/include/linux/kfifo.h b/include/linux/kfifo.h
+index 4bf984e..28dfe98 100644
+--- a/include/linux/kfifo.h
++++ b/include/linux/kfifo.h
+@@ -76,8 +76,8 @@ struct __kfifo {
+ 	type		buf[((size < 2) || (size & (size - 1))) ? -1 : size]; \
+ }
+ 
+-#define STRUCT_KFIFO(type, size) \
+-	struct __STRUCT_KFIFO(type, size, 0)
++#define STRUCT_KFIFO(type, size_order) \
++	struct __STRUCT_KFIFO(type, (1<<(size_order)), 0)
+ 
+ #define __STRUCT_KFIFO_PTR(type, recsize) \
+ { \
+@@ -93,11 +93,11 @@ struct __kfifo {
+  */
+ struct kfifo __STRUCT_KFIFO_PTR(unsigned char, 0);
+ 
+-#define STRUCT_KFIFO_REC_1(size) \
+-	struct __STRUCT_KFIFO(unsigned char, size, 1)
++#define STRUCT_KFIFO_REC_1(size_order) \
++	struct __STRUCT_KFIFO(unsigned char, (1<<(size_order)), 1)
+ 
+-#define STRUCT_KFIFO_REC_2(size) \
+-	struct __STRUCT_KFIFO(unsigned char, size, 2)
++#define STRUCT_KFIFO_REC_2(size_order) \
++	struct __STRUCT_KFIFO(unsigned char, (1<<(size_order)), 2)
+ 
+ /*
+  * define kfifo_rec types
+@@ -123,9 +123,9 @@ struct kfifo_rec_ptr_2 __STRUCT_KFIFO_PTR(unsigned char, 2);
+  * DECLARE_KFIFO - macro to declare a fifo object
+  * @fifo: name of the declared fifo
+  * @type: type of the fifo elements
+- * @size: the number of elements in the fifo, this must be a power of 2
++ * @size_order: request 2^size_order fifo elements
+  */
+-#define DECLARE_KFIFO(fifo, type, size)	STRUCT_KFIFO(type, size) fifo
++#define DECLARE_KFIFO(fifo, type, size_order)	STRUCT_KFIFO(type, size_order) fifo
+ 
+ /**
+  * INIT_KFIFO - Initialize a fifo declared by DECLARE_KFIFO
+@@ -146,12 +146,12 @@ struct kfifo_rec_ptr_2 __STRUCT_KFIFO_PTR(unsigned char, 2);
+  * DEFINE_KFIFO - macro to define and initialize a fifo
+  * @fifo: name of the declared fifo datatype
+  * @type: type of the fifo elements
+- * @size: the number of elements in the fifo, this must be a power of 2
++ * @size_order: request 2^size_order fifo elements
+  *
+  * Note: the macro can be used for global and local fifo data type variables.
+  */
+-#define DEFINE_KFIFO(fifo, type, size) \
+-	DECLARE_KFIFO(fifo, type, size) = \
++#define DEFINE_KFIFO(fifo, type, size_order) \
++	DECLARE_KFIFO(fifo, type, size_order) = \
+ 	(typeof(fifo)) { \
+ 		{ \
+ 			{ \
+@@ -317,22 +317,21 @@ __kfifo_uint_must_check_helper( \
+ /**
+  * kfifo_alloc - dynamically allocates a new fifo buffer
+  * @fifo: pointer to the fifo
+- * @size: the number of elements in the fifo, this must be a power of 2
++ * @size_order: request 2^size_order fifo elements
+  * @gfp_mask: get_free_pages mask, passed to kmalloc()
+  *
+  * This macro dynamically allocates a new fifo buffer.
+  *
+- * The numer of elements will be rounded-up to a power of 2.
+  * The fifo will be release with kfifo_free().
+  * Return 0 if no error, otherwise an error code.
+  */
+-#define kfifo_alloc(fifo, size, gfp_mask) \
++#define kfifo_alloc(fifo, size_order, gfp_mask) \
+ __kfifo_int_must_check_helper( \
+ ({ \
+ 	typeof((fifo) + 1) __tmp = (fifo); \
+ 	struct __kfifo *__kfifo = &__tmp->kfifo; \
+ 	__is_kfifo_ptr(__tmp) ? \
+-	__kfifo_alloc(__kfifo, size, sizeof(*__tmp->type), gfp_mask) : \
++	__kfifo_alloc(__kfifo, size_order, sizeof(*__tmp->type), gfp_mask) : \
+ 	-EINVAL; \
+ }) \
+ )
+@@ -745,7 +744,7 @@ __kfifo_uint_must_check_helper( \
+ }) \
+ )
+ 
+-extern int __kfifo_alloc(struct __kfifo *fifo, unsigned int size,
++extern int __kfifo_alloc(struct __kfifo *fifo, int size_order,
+ 	size_t esize, gfp_t gfp_mask);
+ 
+ extern void __kfifo_free(struct __kfifo *fifo);
+diff --git a/include/linux/rio.h b/include/linux/rio.h
+index a3e7842..05ff6bb 100644
+--- a/include/linux/rio.h
++++ b/include/linux/rio.h
+@@ -70,6 +70,7 @@
+ #define RIO_OUTB_MBOX_RESOURCE	2
+ 
+ #define RIO_PW_MSG_SIZE		64
++#define RIO_KFIFO_SIZE_ORDER	11	/* 64 * 32 */
+ 
+ /*
+  * A component tag value (stored in the component tag CSR) is used as device's
+diff --git a/include/media/lirc_dev.h b/include/media/lirc_dev.h
+index 168dd0b..7816d39 100644
+--- a/include/media/lirc_dev.h
++++ b/include/media/lirc_dev.h
+@@ -19,6 +19,7 @@
+ #include <linux/ioctl.h>
+ #include <linux/poll.h>
+ #include <linux/kfifo.h>
++#include <linux/log2.h>
+ #include <media/lirc.h>
+ 
+ struct lirc_buffer {
+@@ -50,12 +51,13 @@ static inline int lirc_buffer_init(struct lirc_buffer *buf,
+ 				    unsigned int size)
+ {
+ 	int ret;
++	int kfifo_size_order = order_base_2(size * chunk_size);
+ 
+ 	init_waitqueue_head(&buf->wait_poll);
+ 	spin_lock_init(&buf->fifo_lock);
+ 	buf->chunk_size = chunk_size;
+ 	buf->size = size;
+-	ret = kfifo_alloc(&buf->fifo, size * chunk_size, GFP_KERNEL);
++	ret = kfifo_alloc(&buf->fifo, kfifo_size_order, GFP_KERNEL);
+ 	if (ret == 0)
+ 		buf->fifo_initialized = 1;
+ 
+diff --git a/kernel/kfifo.c b/kernel/kfifo.c
+index d07f480..be1c2a0 100644
+--- a/kernel/kfifo.c
++++ b/kernel/kfifo.c
+@@ -35,15 +35,10 @@ static inline unsigned int kfifo_unused(struct __kfifo *fifo)
+ 	return (fifo->mask + 1) - (fifo->in - fifo->out);
+ }
+ 
+-int __kfifo_alloc(struct __kfifo *fifo, unsigned int size,
++int __kfifo_alloc(struct __kfifo *fifo, int size_order,
+ 		size_t esize, gfp_t gfp_mask)
+ {
+-	/*
+-	 * round down to the next power of 2, since our 'let the indices
+-	 * wrap' technique works only in this case.
+-	 */
+-	if (!is_power_of_2(size))
+-		size = rounddown_pow_of_two(size);
++	unsigned int size = 1 << size_order;
+ 
+ 	fifo->in = 0;
+ 	fifo->out = 0;
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index c6e4dd3..827bbf3 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -1189,7 +1189,6 @@ out:
+ EXPORT_SYMBOL_GPL(memory_failure);
+ 
+ #define MEMORY_FAILURE_FIFO_ORDER	4
+-#define MEMORY_FAILURE_FIFO_SIZE	(1 << MEMORY_FAILURE_FIFO_ORDER)
+ 
+ struct memory_failure_entry {
+ 	unsigned long pfn;
+@@ -1199,7 +1198,7 @@ struct memory_failure_entry {
+ 
+ struct memory_failure_cpu {
+ 	DECLARE_KFIFO(fifo, struct memory_failure_entry,
+-		      MEMORY_FAILURE_FIFO_SIZE);
++		      MEMORY_FAILURE_FIFO_ORDER);
+ 	spinlock_t lock;
+ 	struct work_struct work;
+ };
+diff --git a/net/dccp/probe.c b/net/dccp/probe.c
+index 0a8d6eb..0a12fd5 100644
+--- a/net/dccp/probe.c
++++ b/net/dccp/probe.c
+@@ -31,6 +31,7 @@
+ #include <linux/kfifo.h>
+ #include <linux/vmalloc.h>
+ #include <linux/gfp.h>
++#include <linux/log2.h>
+ #include <net/net_namespace.h>
+ 
+ #include "dccp.h"
+@@ -166,10 +167,11 @@ static __init int setup_jprobe(void)
+ static __init int dccpprobe_init(void)
+ {
+ 	int ret = -ENOMEM;
++	int kfifo_size_order = order_base_2(bufsize);
+ 
+ 	init_waitqueue_head(&dccpw.wait);
+ 	spin_lock_init(&dccpw.lock);
+-	if (kfifo_alloc(&dccpw.fifo, bufsize, GFP_KERNEL))
++	if (kfifo_alloc(&dccpw.fifo, kfifo_size_order, GFP_KERNEL))
+ 		return ret;
+ 	if (!proc_net_fops_create(&init_net, procname, S_IRUSR, &dccpprobe_fops))
+ 		goto err0;
+@@ -200,7 +202,7 @@ module_exit(dccpprobe_exit);
+ MODULE_PARM_DESC(port, "Port to match (0=all)");
+ module_param(port, int, 0);
+ 
+-MODULE_PARM_DESC(bufsize, "Log buffer size (default 64k)");
++MODULE_PARM_DESC(bufsize, "Log buffer size (default 64k , should be power of 2. If not, will roundup to power of 2)");
+ module_param(bufsize, int, 0);
+ 
+ MODULE_AUTHOR("Ian McDonald <ian.mcdonald@jandi.co.nz>");
+diff --git a/net/sctp/probe.c b/net/sctp/probe.c
+index 5f7518d..1736ef4 100644
+--- a/net/sctp/probe.c
++++ b/net/sctp/probe.c
+@@ -33,6 +33,7 @@
+ #include <linux/module.h>
+ #include <linux/kfifo.h>
+ #include <linux/time.h>
++#include <linux/log2.h>
+ #include <net/net_namespace.h>
+ 
+ #include <net/sctp/sctp.h>
+@@ -47,7 +48,7 @@ MODULE_PARM_DESC(port, "Port to match (0=all)");
+ module_param(port, int, 0);
+ 
+ static int bufsize __read_mostly = 64 * 1024;
+-MODULE_PARM_DESC(bufsize, "Log buffer size (default 64k)");
++MODULE_PARM_DESC(bufsize, "Log buffer size (default 64k, should be power of 2. If not, will roundup to power of 2)");
+ module_param(bufsize, int, 0);
+ 
+ static int full __read_mostly = 1;
+@@ -182,10 +183,11 @@ static struct jprobe sctp_recv_probe = {
+ static __init int sctpprobe_init(void)
+ {
+ 	int ret = -ENOMEM;
++	int kfifo_size_order = order_base_2(bufsize);
+ 
+ 	init_waitqueue_head(&sctpw.wait);
+ 	spin_lock_init(&sctpw.lock);
+-	if (kfifo_alloc(&sctpw.fifo, bufsize, GFP_KERNEL))
++	if (kfifo_alloc(&sctpw.fifo, kfifo_size_order, GFP_KERNEL))
+ 		return ret;
+ 
+ 	if (!proc_net_fops_create(&init_net, procname, S_IRUSR,
+diff --git a/samples/kfifo/bytestream-example.c b/samples/kfifo/bytestream-example.c
+index cfe40ad..eb3a46e 100644
+--- a/samples/kfifo/bytestream-example.c
++++ b/samples/kfifo/bytestream-example.c
+@@ -18,7 +18,7 @@
+  */
+ 
+ /* fifo size in elements (bytes) */
+-#define FIFO_SIZE	32
++#define FIFO_SIZE_ORDER	5
+ 
+ /* name of the proc entry */
+ #define	PROC_FIFO	"bytestream-fifo"
+@@ -41,10 +41,10 @@ static DEFINE_MUTEX(write_lock);
+ #ifdef DYNAMIC
+ static struct kfifo test;
+ #else
+-static DECLARE_KFIFO(test, unsigned char, FIFO_SIZE);
++static DECLARE_KFIFO(test, unsigned char, FIFO_SIZE_ORDER);
+ #endif
+ 
+-static const unsigned char expected_result[FIFO_SIZE] = {
++static const unsigned char expected_result[1<<FIFO_SIZE_ORDER] = {
+ 	 3,  4,  5,  6,  7,  8,  9,  0,
+ 	 1, 20, 21, 22, 23, 24, 25, 26,
+ 	27, 28, 29, 30, 31, 32, 33, 34,
+@@ -156,7 +156,7 @@ static int __init example_init(void)
+ #ifdef DYNAMIC
+ 	int ret;
+ 
+-	ret = kfifo_alloc(&test, FIFO_SIZE, GFP_KERNEL);
++	ret = kfifo_alloc(&test, FIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (ret) {
+ 		printk(KERN_ERR "error kfifo_alloc\n");
+ 		return ret;
+diff --git a/samples/kfifo/dma-example.c b/samples/kfifo/dma-example.c
+index 0647379..bbc0787 100644
+--- a/samples/kfifo/dma-example.c
++++ b/samples/kfifo/dma-example.c
+@@ -16,7 +16,8 @@
+  */
+ 
+ /* fifo size in elements (bytes) */
+-#define FIFO_SIZE	32
++#define FIFO_SIZE_ORDER	5
++#define FIFO_SIZE	(1<< FIFO_SIZE_ORDER)
+ 
+ static struct kfifo fifo;
+ 
+@@ -29,7 +30,7 @@ static int __init example_init(void)
+ 
+ 	printk(KERN_INFO "DMA fifo test start\n");
+ 
+-	if (kfifo_alloc(&fifo, FIFO_SIZE, GFP_KERNEL)) {
++	if (kfifo_alloc(&fifo, FIFO_SIZE_ORDER, GFP_KERNEL)) {
+ 		printk(KERN_WARNING "error kfifo_alloc\n");
+ 		return -ENOMEM;
+ 	}
+diff --git a/samples/kfifo/inttype-example.c b/samples/kfifo/inttype-example.c
+index 6f8e79e..bed3229 100644
+--- a/samples/kfifo/inttype-example.c
++++ b/samples/kfifo/inttype-example.c
+@@ -18,7 +18,8 @@
+  */
+ 
+ /* fifo size in elements (ints) */
+-#define FIFO_SIZE	32
++#define FIFO_SIZE_ORDER	5
++#define FIFO_SIZE	(1<< FIFO_SIZE_ORDER)
+ 
+ /* name of the proc entry */
+ #define	PROC_FIFO	"int-fifo"
+@@ -41,7 +42,7 @@ static DEFINE_MUTEX(write_lock);
+ #ifdef DYNAMIC
+ static DECLARE_KFIFO_PTR(test, int);
+ #else
+-static DEFINE_KFIFO(test, int, FIFO_SIZE);
++static DEFINE_KFIFO(test, int, FIFO_SIZE_ORDER);
+ #endif
+ 
+ static const int expected_result[FIFO_SIZE] = {
+@@ -149,7 +150,7 @@ static int __init example_init(void)
+ #ifdef DYNAMIC
+ 	int ret;
+ 
+-	ret = kfifo_alloc(&test, FIFO_SIZE, GFP_KERNEL);
++	ret = kfifo_alloc(&test, FIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (ret) {
+ 		printk(KERN_ERR "error kfifo_alloc\n");
+ 		return ret;
+diff --git a/samples/kfifo/record-example.c b/samples/kfifo/record-example.c
+index 2d7529e..2902eae 100644
+--- a/samples/kfifo/record-example.c
++++ b/samples/kfifo/record-example.c
+@@ -18,7 +18,7 @@
+  */
+ 
+ /* fifo size in elements (bytes) */
+-#define FIFO_SIZE	128
++#define FIFO_SIZE_ORDER	7
+ 
+ /* name of the proc entry */
+ #define	PROC_FIFO	"record-fifo"
+@@ -50,7 +50,7 @@ static DEFINE_MUTEX(write_lock);
+ struct kfifo_rec_ptr_1 test;
+ 
+ #else
+-typedef STRUCT_KFIFO_REC_1(FIFO_SIZE) mytest;
++typedef STRUCT_KFIFO_REC_1(FIFO_SIZE_ORDER) mytest;
+ 
+ static mytest test;
+ #endif
+@@ -163,7 +163,7 @@ static int __init example_init(void)
+ #ifdef DYNAMIC
+ 	int ret;
+ 
+-	ret = kfifo_alloc(&test, FIFO_SIZE, GFP_KERNEL);
++	ret = kfifo_alloc(&test, FIFO_SIZE_ORDER, GFP_KERNEL);
+ 	if (ret) {
+ 		printk(KERN_ERR "error kfifo_alloc\n");
+ 		return ret;
 -- 
-1.8.0
+1.7.7.6
 
