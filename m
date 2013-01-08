@@ -1,96 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55073 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756834Ab3AHSKt (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:59891 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756291Ab3AHONj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 13:10:49 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
+	Tue, 8 Jan 2013 09:13:39 -0500
+Date: Tue, 8 Jan 2013 15:13:28 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] Fixes for problems with off-channel powersave
-Date: Tue,  8 Jan 2013 12:10:42 -0600
-Message-Id: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com> (sfid-20130108_191052_778281_BC63FCDC)
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from
+ outside
+Message-ID: <20130108141328.GA18920@pandem0nium> (sfid-20130108_151343_266869_876F071D)
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com>
+ <1357131499.9839.19.camel@jlt4.sipsolutions.net>
+ <201301021436.55010.chunkeey@googlemail.com>
+ <1357137688.9839.43.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
+In-Reply-To: <1357137688.9839.43.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-When testing with iperf I've been observing very significant problems
-with throughput and packet loss during software scans. Throughput often
-drops to the point where iperf is reporting 0 bits/sec for several
-seconds, and packet loss commonly gets over 20%. I started investigating
-and discovered the following problems:
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- 1. It seems that drivers are responsible for ensuring that PM is set in
-    frame control when powersave is enabled. However drivers are unaware
-    of off-channel powersave, so when the scan is suspended frames may
-    be transmitted that cause the AP to think we've exited powersave. As
-    a result the AP may attempt to deliver frames while we are
-    off-channel.
+On Wed, Jan 02, 2013 at 03:41:28PM +0100, Johannes Berg wrote:
+> On Wed, 2013-01-02 at 14:36 +0100, Christian Lamparter wrote:
+>=20
+> > I can't find anything useful in the 802.11-2012 spec either. There's
+> > something vague in 4.7 "Difference between ESS and IBSS LANs" on page 8=
+0:
+> > "The services that apply to an IBSS are the SSs [Station ServiceS]. [..=
+=2E].
+> > The parameters that  control differentiation of the delivery of MSDUs w=
+ith
+> > different priority using EDCA are >FIXED<. [...]".
+> >=20
+> > But what does this mean? Does it translate into: "Every peer of an IBSS
+> > truly independent of each other when it comes to the WMM parameters.
+> > Each peer can advertise (in beacons, probes, ...) and have its own set
+> > of fixed parameters and no one needs to sync those from anyone else"?
+> >=20
+> > Or does "fixed" just mean that everyone has to go with the default WMM
+> > parameters from 8-105 [i.e.: no one can change them at all]?
+>=20
+> Yeah it's a little vague, but I think it means *fixed* as you describe.
+> The WMM spec describes them as fixed and also doesn't include the WMM
+> Parameter IE in beacons/probe responses, so all of this would be an
+> extension to the spec and we have to be careful not to break the spec
+> (default) case (which is correct right now, afaict, with default
+> parameters and no parameters IE)
 
- 2. There's no flushing of the hardware queues after queueing the
-    nullfunc frame to enable off-channel powersave before going
-    off-channel, so it's possible to go off-channel before the frame is
-    transmitted.
+It appears that WMM IEs never carry EDCA parameters, and this is also not
+specified anywhere that IBSS-stations should do that. All I can find is to =
+use
+the default EDCA parameters, and this is done right now in Linux - external=
+ WMM
+IEs are ignored.
 
- 3. There's no flush of pending frames prior to queueing the nullfunc
-    frame to enable powersave. That frame is sent at a high priority,
-    and drivers supporting QoS may have lower-priority frames queued
-    with PM cleared. Those frames will be sent after the nullfunc, and
-    the AP may try to deliver frames while we are off-channel.
+For the original patch, I'd still opt to have it integrated:
+ * if no WMM EDCA parameters are provided from userspace, the default behav=
+iour
+   is still to use the default EDCA parameters - 99% of the people won't ch=
+ange
+   that
+ * changed parameter sets don't have to be exposed to other nodes - the BSS
+   won't break if nodes will have other parameters, it might just behave
+   unexpected in terms of priority. Normal users won't tamper with EDCA par=
+ameters
+   and shouldn't notice that at all.
+ * Exposing EDCA parameters in the WMM IEs is technically possible, but will
+   probably give us more headache (syncing them, most clients won't support=
+ that,
+   etc) then solve problems.
 
- 4. During a scan we won't process beacon frames from our associated AP,
-    which prevents PS-Poll from starting when the scan is suspended.
-    Even if we process the beacons we won't start PS-Poll unless
-    powersave is actually enabled, which isn't the case during a scan.
+With the current patch, one can just set the parameters locally, using the
+already existing nl80211-commands for AP. One thing we still need to consid=
+er
+is the ibss-merge case (mac80211 will reset to EDCA defaults then, we want
+to keep the custom values). I can provide a patch for that, of course.
 
- 5. The SCAN_SUSPEND state uses a fixed timeout, so if we do start
-    PS-Poll there's no guarantee that it will receive all buffered
-    frames from the AP before going back off-channel.
+>=20
+> Interoperating with FreeBSD would be useful though.
 
-The following RFC patches contain fixes for problems 1, 2, and 3. I
-toyed around with fixing 4 and 5, but the results really aren't much
-better than before. Even with PS-Poll working properly during scans I
-was seeing poor throughput and high packet loss with iperf. So instead I
-tried disabling off-channel powersave when the scan is suspended, and
-the results were fantastic. The implementation is trivial, packet loss
-is completely eliminated, and the performance drops during scans are
-modest. Therefore I've included a patch which does this rather than
-fixing PS-Poll during scans.
+Yeah I agree. Don't know what the state in FreeBSD is now, but I'd still su=
+ggest
+to not use EDCA-parameters in WMM IEs for reasons above. Even if Linux and =
+FreeBSD
+supports it in their open source drivers, there will probably tons of other=
+ drivers
+not supporting these parameters and breaking the mechanism - this is not st=
+andard
+behaviour, after all.
 
-These changes aren't quite complete, although they currently work very
-well with ath9k and brcmsmac. I'm hoping to get some feedback on the
-changes and answers to some questions before I proceed.
+Adrian, others, what do you think?
 
-It turns out that fixing problem #1 (i.e. patch 2) probably isn't
-necessary with the other changes, as no frames should be sent while
-off-channel PS is enabled. Does this still seem like a problem worth
-fixing?
+Cheers,
+	Simon
 
-If so, there's one other change I had considered making. Currently patch
-2 will require all drivers to have some amount of powersave support for
-off-channel PS to make sure PM is set. Would it make sense to set PM in
-mac80211 when IEEE80211_HW_PS_NULLFUNC_STACK is set?
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Thanks,
-Seth
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iEYEARECAAYFAlDsKYgACgkQrzg/fFk7axaDQACcCJe50ie4hOyVg3WCYsrIvivB
+wkYAnj0PQBb4JCQIJAY+BZR4EwGxU3TY
+=2cJj
+-----END PGP SIGNATURE-----
 
-Seth Forshee (3):
-  mac80211: Add flushes to ensure off-channel PS is enabled during sw
-    scans
-  mac80211: Convey information about off-channel powersave to drivers
-  mac80211: Disable off-channel powersave when software scans are
-    suspended
-
- drivers/net/wireless/ath/ath9k/main.c              |    2 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   16 +++++--
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   10 ++++
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    3 ++
- include/net/mac80211.h                             |   23 ++++++++++
- net/mac80211/mlme.c                                |   19 +++++---
- net/mac80211/offchannel.c                          |   48 +++++++++++++++-----
- net/mac80211/scan.c                                |   20 +++++---
- net/mac80211/util.c                                |    2 +-
- 9 files changed, 113 insertions(+), 30 deletions(-)
-
+--XsQoSWH+UP9D9v3l--
