@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tirith.ics.muni.cz ([147.251.4.36]:50854 "EHLO
-	tirith.ics.muni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab3ABAWE (ORCPT
+Received: from mail-da0-f43.google.com ([209.85.210.43]:58824 "EHLO
+	mail-da0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755213Ab3AHQJ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jan 2013 19:22:04 -0500
-Received: from anxur.fi.muni.cz (anxur.fi.muni.cz [147.251.48.3])
-	by tirith.ics.muni.cz (8.13.8/8.13.8/SuSE Linux 0.8) with ESMTP id r0209qSd009891
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Jan 2013 01:09:53 +0100
-Received: from ledge.localnet (unknown [212.4.155.64])
-	by anxur.fi.muni.cz (Postfix) with ESMTPSA id 1B73961380
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jan 2013 01:09:52 +0100 (CET)
-From: Vojtech Havel <xhavel1@fi.muni.cz>
-To: linux-wireless@vger.kernel.org
-Subject: bugreport brcmsmac weak signal
-Date: Wed, 02 Jan 2013 01:09:16 +0100
-Message-ID: <1707792.Sg5XObDUQq@ledge> (sfid-20130102_012209_246059_E32DC89C)
+	Tue, 8 Jan 2013 11:09:29 -0500
+Message-ID: <50EC44B5.6020605@lwfinger.net> (sfid-20130108_170951_022075_5AC37106)
+Date: Tue, 08 Jan 2013 10:09:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: Fix skb leaks
+References: <1357098567-8558-1-git-send-email-Larry.Finger@lwfinger.net> <20707.47067.474241.813195@gargle.gargle.HOWL> <50E3BE23.3010102@lwfinger.net> <20707.50445.510814.481023@gargle.gargle.HOWL>
+In-Reply-To: <20707.50445.510814.481023@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksCgpJIGhhdmUgcHJvYmxlbXMgd2l0aCBteSBCcm9hZGNvbSBCQ000MzEzIHdpZmkgY2FyZCB3
-aGlsZSB1c2luZyBicmNtc21hYyBtb2R1bGUuCgpUaGUgd2lmaSBzaWduYWwgaXMgdGVycmlibHkg
-d2Vhay4gV2hlbiB0aGUgZGlzdGFuY2UgYmV0d2VlbiBteSBsYXB0b3AgYW5kIEFQIGlzIAptb3Jl
-IHRoYW4gfjUgbSB0aGUgbmV0d29yayBpcyBub3QgdmlzaWJsZSBhdCBhbGwuIFdoZW4gdGhlIGxh
-cHRvcCBpcyBjbG9zZXIsIAppdCBjb25uZWN0cywgYnV0IGl0IGlzIHZlcnkgc2xvdyBkdWUgdG8g
-d2VhayBzaWduYWwuIEkgaGF2ZSB0byBzaXQgbmV4dCB0byBBUCAKd2hlbiBJIHdhbnQgbGluayBx
-dWFsaXR5IG1vcmUgdGhhbiA2MC83MC4KCklmIEkgdXNlIEJyb2FkY29tIGh5YnJpZCBkcml2ZXIg
-LSB3bCAtIGl0IHdvcmtzIG5vcm1hbGx5IChidXQgaGFzIGRpZmZlcmVudCAKcHJvYmxlbXMuLi4p
-LgoKSSB0cmllZCB0byB1c2UgdGhyZWUgZGlmZmVyZW50IHdpZmkgbmV0d29ya3Mgd2l0aCB0aGlz
-IGNvbWJpbmF0aW9uIGFuZCBhbGwgb2YgCnRoZW0gaGFkIHRoZSBzYW1lIHByb2JsZW0uCgotLS0t
-LQpNeSBzZXR0aW5nOgokIHVuYW1lIC1yCjMuOC4wLXJjMQoKSSBhcHBsaWVkIHRoZSBwYXRjaCBm
-cm9tOgpodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXdpcmVsZXNzJm09MTM1NjM1MDkwMTIxMTU0
-Jnc9MgoKVGhlIHNhbWUgd2l0aCAzLjUuNyBnZW50b28ga2VybmVsLgotLS0tLQp3YXZlbW9uIGlu
-Zm86ICh3aXRoIGJyY21zbWFjLCB+NSBtIGJldHdlZW4gbXkgbGFwdG9wIGFuZCB0aGUgYXApCgri
-lIzilIBJbnRlcmZhY2XilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAK4pSCd2xhbjAgKElF
-RUUgODAyLjExYmduLCBXUEEvV1BBMiksICBFU1NJRDogImlob21lIiAgICAgICAgIArilJzilIBM
-ZXZlbHPilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAK4pSCICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIArilIJsaW5r
-IHF1YWxpdHk6IDIzLzcwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCuKU
-gj09PT09PT09PT09PT09PT09PT09PT0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAK4pSCICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIArilIJzaWduYWwgbGV2ZWw6IC04NyBkQm0gKDIsMDAgcFcpICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgCuKUgj09PT09PT09ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAK4pSCICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIArilIIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgCuKUnOKUgFN0YXRpc3RpY3PilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIAK4pSCUlg6IDMgODE3OCgyLDQxIE1pQiksIGludmFsaWQ6IDAgbndpZCwg
-MCBjcnlwdCwgMCBmcmFnLCAzIG1pc2MK4pSCVFg6IDQgMTc4OSg3NzksNjE5S2lCKSwgbWFjIHJl
-dHJpZXM6IDMxLCBtaXNzZWQgYmVhY29uczogMArilJzilIBJbmZv4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACuKUgm1vZGU6IE1hbmFnZWQsICBhY2Nlc3MgcG9p
-bnQ6IChub3QgcmVsZXZhbnQgOi0pKSAgICAgICAgICAgCuKUgmZyZXE6IDIsNDM3IEdIeiwgY2hh
-bm5lbDogNiwgIGJpdHJhdGU6IDUsNSBNYml0L3MgICAgICAgICAK4pSCcG93ZXIgbWd0OiBvZmYs
-ICB0eC1wb3dlcjogMTkgZEJtICg3OSw0MyBtVykgICAgICAgICAgICAgCuKUgnJldHJ5OiBsb25n
-IGxpbWl0IDcsICBydHMvY3RzOiBvZmYsICBmcmFnOiBvZmYgICAgICAgICAgICAK4pSCZW5jcnlw
-dGlvbjogbi9hIChyZXF1aXJlcyBDQVBfTkVUX0FETUlOIHBlcm1pc3Npb25zKSAgICAgIArilJzi
-lIBOZXR3b3Jr4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACuKUgndsYW4wIChV
-UCBSVU5OSU5HIEJST0FEQ0FTVCBNVUxUSUNBU1QpICAgICAgICAgICAgICAgICAgICAK4pSCbWFj
-OiAobm90IHJlbGV2YW50IDotKSksIHFsZW46IDEwMDAgICAgICAgICAgICAgICAgICAgICAgICAK
-4pSCaXA6IDE5Mi4xNjguMS4xMDMvMjQsICBiY2FzdDogMjU1LjI1NS4yNTUuMjU1ICAgICAgICAg
-ICAgIArilJTilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIA=
+On 01/01/2013 11:26 PM, Sujith Manoharan wrote:
+> Larry Finger wrote:
+>> My only counter argument is that none of the other paths that get to
+>> ath9k_htc_txcompletion_cb() leak the skb. It only happens for the path that goes
+>> through htc_connect_service().
+>
+> Sure, but the TX completion handler would be invoked for every skb that is passed
+> to the USB layer, including the ones that are allocated in htc_hst.c. When this
+> skb goes down to hif_usb.c, a URB is allocated and I am not sure how freeing
+> the skb before the USB layer invokes the completion handler for the URB is correct.
+>
+> I'll come up with a patch and see if kmemleak still complains.
+
+Did I miss your posting on this issue?
+
+Larry
+
 
