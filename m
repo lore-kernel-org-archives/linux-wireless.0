@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:45085 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756885Ab3AYK5W (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55079 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756834Ab3AHSK4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:57:22 -0500
-Received: by mail-lb0-f179.google.com with SMTP id j14so481551lbo.10
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:57:18 -0800 (PST)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Unable to set HT40 for ath9k
-Date: Fri, 25 Jan 2013 11:57:15 +0100
-Message-ID: <3156554.OnlXenjCFv@sylvesterjr.pats.ua.ac.be> (sfid-20130125_115727_883785_D5758769)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 8 Jan 2013 13:10:56 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 3/3] mac80211: Disable off-channel powersave when software scans are suspended
+Date: Tue,  8 Jan 2013 12:10:45 -0600
+Message-Id: <1357668645-5101-4-git-send-email-seth.forshee@canonical.com> (sfid-20130108_191058_720741_DC08EF27)
+In-Reply-To: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Leaving powersave enabled while the scan is suspended requires the use
+of PS-Poll to retrieve frames buffered at the AP. PS-Poll isn't a very
+efficient means of data transfer and may not even work with drivers not
+supporting powersave. These problems can largely be avoided by simply
+disabling off-channel powersave when the scan is suspended and enabling
+it again when returning to off-channel operation.
 
-I have been trying to set up a wireless network (tested both managed 
-and ad-hoc mode) with HT40 enabled using Atheros chipsets and thus 
-the ath9k driver. In both cases, iw responded with:
-Command failed: Invalid argument (-22)
+The results of this change are fantastic. Previously when using iperf I
+would see greatly decreased throughput (often dropping to 0 bits/sec for
+several seconds) and very high packet loss during software scans. This
+patch completely eliminates the packet loss and reduces the loss in
+throughput to very reasonable levels.
 
-when e.g. executing the command:
-iw dev wlan0 ibss join network 5180 HT40+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ net/mac80211/scan.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Is this not implemented or is this a (known) bug?
-
-System: 
-Linux OpenWrt 3.3.8
-driver: ath9k
-
-Best regards,
-Erwin
-
-
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index a875f74..f982dda 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -699,11 +699,11 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+ 	/*
+-	 * Re-enable vifs and beaconing.  Leave PS
+-	 * in off-channel state..will put that back
+-	 * on-channel at the end of scanning.
++	 * Re-enable vifs and beaconing.  Disable PS
++	 * while the scan is suspended for more
++	 * efficient frame rx than with PS-Poll.
+ 	 */
+-	ieee80211_offchannel_return(local, false);
++	ieee80211_offchannel_return(local, true);
+ 
+ 	*next_delay = HZ / 5;
+ 	/* afterwards, resume scan & go to next channel */
+@@ -713,8 +713,8 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
+ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
+ 					unsigned long *next_delay)
+ {
+-	/* PS already is in off-channel mode */
+-	ieee80211_offchannel_stop_vifs(local, false);
++	/* Put PS back in off-channel mode */
++	ieee80211_offchannel_stop_vifs(local, true);
+ 
+ 	if (local->ops->flush) {
+ 		drv_flush(local, false);
+-- 
+1.7.9.5
 
