@@ -1,108 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56171 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217Ab3AKJTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 04:19:30 -0500
-Date: Fri, 11 Jan 2013 10:19:10 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>,
-	Ben Greear <greearb@candelatech.com>,
-	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	=?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v3] net, wireless: overwrite default_ethtool_ops
-Message-ID: <20130111091909.GA2347@redhat.com> (sfid-20130111_101938_088871_22B76855)
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:48865 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756812Ab3AHXiG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 18:38:06 -0500
+Received: by mail-bk0-f47.google.com with SMTP id j4so582016bkw.6
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 15:38:05 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johan Danielsson <joda@kth.se>
+Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
+Date: Wed, 9 Jan 2013 00:38:01 +0100
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com> <201301081715.49672.chunkeey@googlemail.com> <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
+In-Reply-To: <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301090038.01984.chunkeey@googlemail.com> (sfid-20130109_003827_192837_F2D7BAE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since:
+Hello Johan,
 
-commit 2c60db037034d27f8c636403355d52872da92f81
-Author: Eric Dumazet <edumazet@google.com>
-Date:   Sun Sep 16 09:17:26 2012 +0000
+On Tuesday, January 08, 2013 10:47:22 PM Johan Danielsson wrote:
+> Maybe I'm incomprehensible, so let me try to clarify my question.
+Thanks! Hopefully we can clear up some confusion.
 
-    net: provide a default dev->ethtool_ops
+> The normal sequence of events for HT A-MPDU BlockAck agreements are:
+> 
+> 1) we receive an ADDBA
+> 2) ampdu_action is called with RX_START
+> 3) we send an ADDBA response
+> 4) time passes with no activity
+> 5) ampdu_action is called with RX_STOP
+> 6) a DELBA is sent to the peer STA
+> 7) everything is cool and froody
+> 
+> However if 6 results in a failed transmission, mac80211 doesn't care,
+> and we have a situation where the peer may continue to send A-MPDU:s,
+> but we don't have any agreement, so we can't properly ACK.
 
-wireless core does not correctly assign ethtool_ops.
+Ah, I think I didn't get the "This may occur when an existing RX BACK
+agreement times out, and the peer STA fails to hear the DELBA frame."
+sentence in your original post.
 
-After alloc_netdev*() call, some cfg80211 drivers provide they own
-ethtool_ops, but some do not. For them, wireless core provide generic
-cfg80211_ethtool_ops, which is assigned in NETDEV_REGISTER notify call:
+I thought that this was just an example. But a semi-rogue device can
+sent AMPDUs to anyone at anytime, so I argued that if we have no (or
+no longer) a BA agreement [even if the peer never got the DELBA] we can
+discard the AMPDU data and sent a DELBAs to the HT peer once it tries
+sent us an A-MPDU (again). This is actually what we should do according
+to 802.11-2012 10.5.4 - instead of calling dont_reorder. This would also
+cover your case where a HT peer suddenly reappears again. Because once
+the HT peer sends an AMPDU and the BA agreement has timed out on our side,
+it will get a DELBA back the stale BA agreement on the Phoenix HT peer
+will be torn down [but the peer can be established it again by sending
+out a new ADDBA].
 
-        if (!dev->ethtool_ops)
-                dev->ethtool_ops = &cfg80211_ethtool_ops;
+> My feeling is that nothing in 802.11-2012 covers this scenario. There
+> are some paragraphs that deal with similar situations when using the
+> other flavour of BlockAcks (originally defined in 802.11e I believe),
+> but in my experience, you can't assume much based in this.
+> 
+> And even if the DELBA in 6 is sent ok, there is a race between 5 and
+> 6, where the originator has block ack state, but the recipient does not.
 
-But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
-drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+Yes, this sounds wrong. Was there a historic reason why RX_STOP was put before
+DELBA? I've traced the code back to Intel's initial A-MPDU RX contribution:
 
-In order to fix the problem, provide function which will overwrite
-default_ethtool_ops and use it by wireless core.
+commit 07db218396650933abff3c5c1ad1e2a6e0cfedeb
+Author: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Date:   Tue Dec 25 17:00:33 2007 +0200
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2: change order of default_ethtool_ops initialization to avoid
-the problem. Change the subject accordingly.
+    mac80211: A-MPDU Rx adding basic functionality
 
-v2 -> v3: provide function to overwrite default_ethtool_ops, describe
-problem a bit more detailed in the changelog
 
- include/linux/netdevice.h |    3 +++
- net/core/dev.c            |    8 ++++++++
- net/wireless/core.c       |    3 +--
- 3 files changed, 12 insertions(+), 2 deletions(-)
+Stanislaw, do you know if iwlegacy needs AGG_RX_STOP before it can sent out
+the DELBA [Maybe something about flushing an FW internal RX reorder buffer,
+or anything]?
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index c599e47..9ef07d0 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -60,6 +60,9 @@ struct wireless_dev;
- #define SET_ETHTOOL_OPS(netdev,ops) \
- 	( (netdev)->ethtool_ops = (ops) )
+> So, my question now is: Does this reasoning make sense, or have I
+> missed anything?
  
-+extern void netdev_set_default_ethtool_ops(struct net_device *dev,
-+					   const struct ethtool_ops *ops);
-+
- /* hardware address assignment types */
- #define NET_ADDR_PERM		0	/* address is permanent (default) */
- #define NET_ADDR_RANDOM		1	/* address is generated randomly */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 515473e..f64e439 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -6121,6 +6121,14 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
- 
- static const struct ethtool_ops default_ethtool_ops;
- 
-+void netdev_set_default_ethtool_ops(struct net_device *dev,
-+				    const struct ethtool_ops *ops)
-+{
-+	if (dev->ethtool_ops == &default_ethtool_ops)
-+		dev->ethtool_ops = ops;
-+}
-+EXPORT_SYMBOL_GPL(netdev_set_default_ethtool_ops);
-+
- /**
-  *	alloc_netdev_mqs - allocate network device
-  *	@sizeof_priv:	size of private data to allocate space for
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 747dd93..7cbd3bf 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -858,8 +858,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		/* allow mac80211 to determine the timeout */
- 		wdev->ps_timeout = -1;
- 
--		if (!dev->ethtool_ops)
--			dev->ethtool_ops = &cfg80211_ethtool_ops;
-+		netdev_set_default_ethtool_ops(dev, &cfg80211_ethtool_ops);
- 
- 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
- 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
--- 
-1.7.1
+I think reordering 5 and 6 won't stop the race entirely. ACKs are 
+usually generated by hardware (or firmware) right away when the received
+frame passed the CRC checks and found a place to stay in the HW's FIFOs.
+However by the time DELBA is processed by the peers' 802.11 stack, some
+frames on the tx-path might have left the DELBA in the dust [keep-alives
+and friends].
 
+[Note: Action frames like DELBA have to be encrypted/decrypted when 
+MFP/802.11w is enabled on the link and some HW/FW can't do that. So
+it takes even longer to react to those.]
+
+[Note2: Some hardware (rtlwifi) only have some sort of "fire and forget"
+TX. The we don't know when, or even if a frame (like a DELBA) was received...]
+
+[Note3: What will happen to DELBAs if they aren't acked? Is there a timeout
+or are they retried until the peer is dropped by other means?
+I'm asking this because with some hardware we have to be greedy with the
+number of open BA Agreements. For example ti's wl12xx can only support a
+limited number of open RX BA Agreements.]
+
+Regards,
+	Chr
