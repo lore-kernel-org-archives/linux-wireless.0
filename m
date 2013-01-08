@@ -1,114 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3957 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752783Ab3ABOXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:23:08 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/18] brcmfmac: assure USB dongle firmware is reset
- upon module unload
-Date: Wed, 2 Jan 2013 15:22:40 +0100
-Message-ID: <1357136572-18273-8-git-send-email-arend@broadcom.com> (sfid-20130102_152316_775255_BB41A7AD)
-In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:35080 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695Ab3AHWRm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 17:17:42 -0500
+Received: by mail-wg0-f53.google.com with SMTP id fn15so712643wgb.20
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 14:17:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ-Vmom8XFaPwOamGwqcG1sZaDyjodUbhgPFNHONBAYnr1eEBA@mail.gmail.com>
+References: <1357652938-18836-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	<CAJ-VmomJiw8cZqiPRCa8iDrTJdhwtWTTVQwMcHnnyft+DquR1Q@mail.gmail.com>
+	<CAJ-Vmom8XFaPwOamGwqcG1sZaDyjodUbhgPFNHONBAYnr1eEBA@mail.gmail.com>
+Date: Tue, 8 Jan 2013 14:17:40 -0800
+Message-ID: <CAJ-Vmomz-iqz5h-rdzd9Z-0DQdMrWBq2cdXq+DHvNUrVWmS0Gw@mail.gmail.com> (sfid-20130108_231749_027110_8D577BEC)
+Subject: Re: [PATCH] ath9k: add spectral scan feature
+From: Adrian Chadd <adrian@freebsd.org>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon unloading the brcmfmac module the USB firmware should be reset
-as the device remains powered. The reset assures a known device
-state when a new brcmfmac driver load is being done.
+.. my turn to impress :-)
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h       |    1 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h   |    3 ++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |   11 +++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/usb.c       |   13 +++++++++++++
- 4 files changed, 27 insertions(+), 1 deletion(-)
+I've peverted your code in the worst possible way and made it work on
+a live data stream.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index fd672bf..7245b17 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -39,6 +39,7 @@
- #define BRCMF_C_GET_BSSID			23
- #define BRCMF_C_GET_SSID			25
- #define BRCMF_C_SET_SSID			26
-+#define BRCMF_C_TERMINATED			28
- #define BRCMF_C_GET_CHANNEL			29
- #define BRCMF_C_SET_CHANNEL			30
- #define BRCMF_C_GET_SRL				31
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index dd38b78..358b54f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -154,7 +154,8 @@ static inline void brcmf_rx_packet(struct device *dev, int ifidx,
- extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
- /* Indication from bus module regarding removal/absence of dongle */
- extern void brcmf_detach(struct device *dev);
--
-+/* Indication from bus module that dongle should be reset */
-+extern void brcmf_dev_reset(struct device *dev);
- /* Indication from bus module to change flow-control state */
- extern void brcmf_txflowblock(struct device *dev, bool state);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 74a616b..16efcb4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -845,6 +845,17 @@ static void brcmf_bus_detach(struct brcmf_pub *drvr)
- 	}
- }
- 
-+void brcmf_dev_reset(struct device *dev)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
-+
-+	if (drvr == NULL)
-+		return;
-+
-+	brcmf_fil_cmd_int_set(drvr->iflist[0], BRCMF_C_TERMINATED, 1);
-+}
-+
- void brcmf_detach(struct device *dev)
- {
- 	int i;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 22eae57..1df8595 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1524,10 +1524,23 @@ static void brcmf_release_fw(struct list_head *q)
- 	}
- }
- 
-+static int brcmf_usb_reset_device(struct device *dev, void *notused)
-+{
-+	/* device past is the usb interface so we
-+	 * need to use parent here.
-+	 */
-+	brcmf_dev_reset(dev->parent);
-+	return 0;
-+}
- 
- void brcmf_usb_exit(void)
- {
-+	struct device_driver *drv = &brcmf_usbdrvr.drvwrap.driver;
-+	int ret;
-+
- 	brcmf_dbg(USB, "Enter\n");
-+	ret = driver_for_each_device(drv, NULL, NULL,
-+				     brcmf_usb_reset_device);
- 	usb_deregister(&brcmf_usbdrvr);
- 	brcmf_release_fw(&fw_image_list);
- }
--- 
-1.7.10.4
+http://people.freebsd.org/~adrian/ath/fft_snapshot_5ghz.png
+
+:-)
+
+I have FreeBSD's ath driver now enabling and triggering spectral scan
+(if configured this way) on each channel reset/change, so I can gather
+spectral samples during a scan.
+
+I'll tinker with this a little more, but I'm honestly at the point
+where I think you and I should just agree on a javascript-friendly
+encoding scheme and write a HTTP server app that just reads in a live
+or recorded data stream, then feeds it serialised out HTTP. That way
+people can just write HTML5 renderers (which leverage all the
+GL/accelaration they want) and we can benefit from having a shared
+visualisation tool. :-)
+
+What do you think?
 
 
+
+Adrian
