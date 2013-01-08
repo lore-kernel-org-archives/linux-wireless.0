@@ -1,120 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:63352 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116Ab3ARMFn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 07:05:43 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1944200bkw.5
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 04:05:42 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Subject: [PATCH 2/3] iw: add default mesh Power Mode and Awake Window to mesh config
-Date: Fri, 18 Jan 2013 13:05:31 +0100
-Message-Id: <1358510732-32767-3-git-send-email-marco@cozybit.com> (sfid-20130118_130547_213757_A71CD006)
-In-Reply-To: <1358510732-32767-1-git-send-email-marco@cozybit.com>
-References: <1358510732-32767-1-git-send-email-marco@cozybit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40954 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756676Ab3AHPjH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 10:39:07 -0500
+Date: Tue, 8 Jan 2013 16:38:51 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	=?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>
+Subject: [PATCH v2] net: set default_ethtool_ops in register_netdevice
+Message-ID: <20130108153850.GA10464@redhat.com> (sfid-20130108_163919_074822_A01C0731)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default mesh power mode is the power mode that will be
-assigned to newly established peer links.
-The awake window is the duration the local STA will stay awake
-after sending its own beacon in PS mode.
-Both values can be modified as part of the mesh params.
+Since:
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+commit 2c60db037034d27f8c636403355d52872da92f81
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sun Sep 16 09:17:26 2012 +0000
+
+    net: provide a default dev->ethtool_ops
+
+wireless core does not correctly assign ethtool_ops. In order to fix
+the problem, move assignement of default_ethtool_ops to
+register_netdevice(). This is safe because both register_netdevice()
+and dev_ethtool() are protected by RTNL lock.
+
+Patch is besed on hint of Michał Mirosław.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: stable@vger.kernel.org # 3.7+
 ---
- mesh.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 50 insertions(+), 2 deletions(-)
+v1 -> v2: change order of default_ethtool_ops initialization to avoid
+the problem. Change the subject accordingly.
 
-diff --git a/mesh.c b/mesh.c
-index 958c2c0..5a09b62 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -109,6 +109,23 @@ static uint32_t _parse_s32(const char *str, _any *ret)
+ net/core/dev.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 515473e..3196820 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -5710,6 +5710,8 @@ static int netif_alloc_netdev_queues(struct net_device *dev)
  	return 0;
  }
  
-+static uint32_t _parse_u32_power_mode(const char *str, _any *ret)
-+{
-+	unsigned long int v;
++static const struct ethtool_ops default_ethtool_ops;
 +
-+	/* Parse attribute for the name of power mode */
-+	if (!strcmp(str, "active"))
-+		v = NL80211_MESH_POWER_ACTIVE;
-+	else if (!strcmp(str, "light"))
-+		v = NL80211_MESH_POWER_LIGHT_SLEEP;
-+	else if (!strcmp(str, "deep"))
-+		v = NL80211_MESH_POWER_DEEP_SLEEP;
-+	else
-+		return 0xff;
-+
-+	ret->u.as_32 = (uint32_t)v;
-+	return 0;
-+}
+ /**
+  *	register_netdevice	- register a network device
+  *	@dev: device to register
+@@ -5830,6 +5832,8 @@ int register_netdevice(struct net_device *dev)
+ 	    dev->rtnl_link_state == RTNL_LINK_INITIALIZED)
+ 		rtmsg_ifinfo(RTM_NEWLINK, dev, ~0U);
  
- static void _print_u8(struct nlattr *a)
- {
-@@ -145,6 +162,26 @@ static void _print_u32_in_TUs(struct nlattr *a)
- 	printf("%d TUs", nla_get_u32(a));
++	if (!dev->ethtool_ops)
++		dev->ethtool_ops = &default_ethtool_ops;
+ out:
+ 	return ret;
+ 
+@@ -6119,8 +6123,6 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ 	return queue;
  }
  
-+static void _print_u32_power_mode(struct nlattr *a)
-+{
-+	unsigned long v = nla_get_u32(a);
-+
-+	switch (v) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		printf("active");
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		printf("light");
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		printf("deep");
-+		break;
-+	default:
-+		printf("undefined");
-+		break;
-+	}
-+}
-+
- static void _print_s32_in_dBm(struct nlattr *a)
- {
- 	printf("%d dBm", (int32_t) nla_get_u32(a));
-@@ -217,6 +254,10 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
- 	{"mesh_hwmp_confirmation_interval",
- 	NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
- 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
-+	{"mesh_power_mode", NL80211_MESHCONF_POWER_MODE,
-+	_my_nla_put_u32, _parse_u32_power_mode, _print_u32_power_mode},
-+	{"mesh_awake_window", NL80211_MESHCONF_AWAKE_WINDOW,
-+	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
- };
+-static const struct ethtool_ops default_ethtool_ops;
+-
+ /**
+  *	alloc_netdev_mqs - allocate network device
+  *	@sizeof_priv:	size of private data to allocate space for
+@@ -6208,8 +6210,6 @@ struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
  
- static void print_all_mesh_param_descr(void)
-@@ -294,8 +335,15 @@ static int set_interface_meshparam(struct nl80211_state *state,
- 		/* Parse the new value */
- 		ret = mdescr->parse_fn(value, &any);
- 		if (ret != 0) {
--			printf("%s must be set to a number "
--			       "between 0 and %u\n", mdescr->name, ret);
-+			if (mdescr->mesh_param_num
-+			    == NL80211_MESHCONF_POWER_MODE)
-+				printf("%s must be set to active, light or "
-+					"deep.\n", mdescr->name);
-+			else
-+				printf("%s must be set to a number "
-+					"between 0 and %u\n",
-+					mdescr->name, ret);
-+
- 			return 2;
- 		}
+ 	strcpy(dev->name, name);
+ 	dev->group = INIT_NETDEV_GROUP;
+-	if (!dev->ethtool_ops)
+-		dev->ethtool_ops = &default_ethtool_ops;
+ 	return dev;
  
+ free_all:
 -- 
-1.7.9.5
+1.7.1
 
