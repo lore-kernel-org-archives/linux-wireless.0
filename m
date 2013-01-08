@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.pc-advies.be ([83.149.101.17]:42123 "EHLO
-	spo001.leaseweb.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757764Ab3AIMpn (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:59282 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753114Ab3AHVz1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 07:45:43 -0500
-Date: Wed, 9 Jan 2013 13:45:36 +0100
-From: Wim Van Sebroeck <wim@iguana.be>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
-	linux-mips@linux-mips.org
-Subject: Re: [PATCH v3 00/11] watchdog/bcm47xx/bcma/ssb: add support for SoCs with PMU
-Message-ID: <20130109124536.GG10667@spo001.leaseweb.com> (sfid-20130109_134546_181755_E87A7C72)
-References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de> <CACna6rzcYReMs1ZxKuMDjAte+3bX_rjvd3Jd7265tgkMF2E-oA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rzcYReMs1ZxKuMDjAte+3bX_rjvd3Jd7265tgkMF2E-oA@mail.gmail.com>
+	Tue, 8 Jan 2013 16:55:27 -0500
+Received: by mail-wg0-f43.google.com with SMTP id e12so671692wge.34
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 13:55:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201301081715.49672.chunkeey@googlemail.com>
+References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
+	<201301072053.35072.chunkeey@googlemail.com>
+	<CAESKgcitzBNvSYC44Raw2SXbZeGKv1+SB3Q+uwO2MngOP6V5EA@mail.gmail.com>
+	<201301081715.49672.chunkeey@googlemail.com>
+Date: Tue, 8 Jan 2013 22:47:22 +0100
+Message-ID: <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com> (sfid-20130108_225531_160460_497D4F8A)
+Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
+From: Johan Danielsson <joda@kth.se>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafal,
+Hello Christian,
 
-this will probably be done after I reviewed the v2 watchdog part first.
+Maybe I'm incomprehensible, so let me try to clarify my question.
 
-Kind regards,
-Wim.
+The normal sequence of events for HT A-MPDU BlockAck agreements are:
 
-> 2012/12/5 Hauke Mehrtens <hauke@hauke-m.de>:
-> > This patch series improves the functions for setting the watchdog
-> > driver in ssb amd bcma. It also makes ssb and bcma register a platform
-> > device which could be used by a watchdog driver to better set the times
-> > where the system should restart. The patches for the watchdog driver
-> > will be send later and were removed in v3.
-> >
-> > This code is currently based on the wireless-testing/master tree by
-> > John Linville.
-> >
-> > v3:
-> >  * Remove changes done to the watchdog driver so John could pull this
-> >    into wireless-testing, this sill works with the old watchdog driver.
-> >    The patches changing the watchdog driver will be send later.
-> >    This was done to get this into 3.8 because Wim Van Sebroeck is
-> >    neither giving an Ack or a Nack on these patches and we want to do
-> >    more changes to bcma/ssb on top of these.
-> 
-> Your changes are already in Linus's tree, do you plan to re-send
-> watchdog patches dropped in V3 through linux-watchdog? Can you take
-> care of this?
-> 
-> -- 
-> Rafał
+1) we receive an ADDBA
+2) ampdu_action is called with RX_START
+3) we send an ADDBA response
+4) time passes with no activity
+5) ampdu_action is called with RX_STOP
+6) a DELBA is sent to the peer STA
+7) everything is cool and froody
+
+However if 6 results in a failed transmission, mac80211 doesn't care,
+and we have a situation where the peer may continue to send A-MPDU:s,
+but we don't have any agreement, so we can't properly ACK.
+
+My feeling is that nothing in 802.11-2012 covers this scenario. There
+are some paragraphs that deal with similar situations when using the
+other flavour of BlockAcks (originally defined in 802.11e I believe),
+but in my experience, you can't assume much based in this.
+
+And even if the DELBA in 6 is sent ok, there is a race between 5 and
+6, where the originator has block ack state, but the recipient does not.
+
+Swapping 5 and 6, would prevent this from happening, if there are
+enough retransmissions of the DELBA.
+
+So, my question now is: Does this reasoning make sense, or have I
+missed anything?
+
+/Johan
