@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:38091 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439Ab3AAW25 (ORCPT
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:57517 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751241Ab3AHEwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jan 2013 17:28:57 -0500
-Received: by mail-pa0-f47.google.com with SMTP id fa10so7640580pad.34
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jan 2013 14:28:56 -0800 (PST)
-Message-ID: <50E36325.3090502@lwfinger.net> (sfid-20130101_232901_088474_E2E0DA89)
-Date: Tue, 01 Jan 2013 16:28:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 7 Jan 2013 23:52:07 -0500
+Date: Tue, 8 Jan 2013 10:14:59 +0530
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Wake up queues in mwl8k_start
+Message-ID: <20130108044455.GA12979@markyou.marvell.com> (sfid-20130108_055211_379163_B756AA3E)
 MIME-Version: 1.0
-To: Julian Wollrath <jwollrath@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: WARNING: at net/wireless/mlme.c:517
-References: <20130101154507.351dfb03@ilfaris> <50E325B5.205@lwfinger.net> <20130101231544.430cf1fe@ilfaris>
-In-Reply-To: <20130101231544.430cf1fe@ilfaris>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/01/2013 04:15 PM, Julian Wollrath wrote:
->> This one indicates that there was a call to disassociate when the
->> device was not associated. It might have been informative to have
->> seen the logged messages earlier than 436.155474 seconds.
-> Some of the earlier messages can be found below together with the trace
-> with hopefully not mest up formatting like in my first mail. Basically
-> the device tries all the time to connect to the AP and it fails in most
-> cases to connect, a problem, which sounds very similar to what Borislav
-> Petkov mentioned in the "dire state of rtl driver in 3.7". By the way,
-> if you have a suggestion how to investigate connection problems (in my
-> case: often not possible to connect to the AP, even if the signal is
-> not very weak and when finally connected and the pings sometimes take
-> time in the order of 10^2 and the sometimes time in the order of 10^4
-> or even 10^5) which are there with both the vendor driver and the
-> native kernel driver, I would appreciate it.
+From: Nishant Sarmukadam <nishants@marvell.com>
 
-As you have probably seen, I cannot duplicate the problems that Borislav sees, 
-nor do I ever see the ones you state here.
+If queues are stopped in mwl8k_stop,
+these should be started in mwl8k_start
 
-If this condition is easy to replicate, please unload rtl8192ce, and reload with 
-the command 'sudo modprobe -v rtl8192ce debug=4'. That will generate a lot of 
-logging, thus you probably do not want to let it run too long.
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 696848d..5c3c764 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -4533,7 +4533,8 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 		priv->irq = -1;
+ 		tasklet_disable(&priv->poll_tx_task);
+ 		tasklet_disable(&priv->poll_rx_task);
+-	}
++	} else
++		ieee80211_wake_queues(hw);
+ 
+ 	return rc;
+ }
+-- 
+1.8.0.3
 
