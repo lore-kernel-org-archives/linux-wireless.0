@@ -1,156 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53440 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756878Ab3AQA2j (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41516 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932106Ab3AITaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 19:28:39 -0500
-Message-ID: <1358382542.15012.109.camel@jlt4.sipsolutions.net> (sfid-20130117_012844_264203_0DEE0104)
-Subject: Re: [RFC] Fixes for problems with off-channel powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 17 Jan 2013 01:29:02 +0100
-In-Reply-To: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com> (sfid-20130108_191052_778281_BC63FCDC)
-References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
-	 (sfid-20130108_191052_778281_BC63FCDC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 9 Jan 2013 14:30:19 -0500
+Date: Wed, 9 Jan 2013 14:18:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2013-01-09
+Message-ID: <20130109191817.GA17321@tuxdriver.com> (sfid-20130109_203044_515475_7C0381CC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Seth, all,
+Dave,
 
-> [points 1-5, go to the previous email to read them]
+Please pull this batch of fixes (and a new driver) for the 3.8 stream...
 
-All of these issues, btw, are, I think, shortcomings of the way
-powersave and scanning is currently implemented in mac80211.
+Included is a mac80211 pull, of which Johannes says the following:
 
-First, I think it is instructive to compare it to HW scan/powersave:
-mac80211 can transmit/receive quite normally, process everything pretty
-much just as it normally would, etc. Queues might be stopped by the
-driver while it's scanning or become full quicker while, but
-fundamentally that's not really different from regular operation.
+'This includes a number of fixes for various pieces of mac80211. I've
+also included Thomas's memory RMC hash table optimisation since it
+saves so much memory.'
 
-Now let's go back to the software case: the real cause of all of these
-problems is that mac80211 does the scan/PS TX via the regular TX
-mechanism. This is *wrong*, it's not a regular TX that should be
-subjected to stopped queues etc., it's *special*. For this reason we
-can't properly stop the queues, and thus the saga of all these bugs
-begins, with flushing, etc.
+Also from Johannes is an iwlwifi pull:
 
-I actually think that our (your) time would be much better spent
-implementing a new powersave/scan/offchannel module that, in a way, sits
-between the driver and mac80211. Using that module, drivers could
-implement the HW scan and HW offchannel callbacks, and powersave.
+'I have two fixes for iwlwifi: one to fix a lost return value that was
+dropped in a previous patch and could cause "nobody cared" IRQ messages,
+and one to work around a firmware issue.'
 
-Obviously, all of this could be implemented directly in mac80211, with
-if()s etc. However, I think splitting it out would actually create a
-cleaner and easier to understand solution -- I'm hoping you might agree
-by the end of this email :-)
+Amitkumar Karwar brings an mwifiex for a typo in an comparison.
 
-So let's see what such a module would look like. I'm going to call it
-"swpso" for "software Powersave/Scan/Offchannel" for now.
+Bing Zhao gives us an mwifiex fix to properly check the return value
+from wait_event_interruptible and handle it properly.
 
-Obviously, it has to provide helper functions to implement
- * hw_scan
- * cancel_hw_scan
- * remain_on_channel
- * cancel_remain_on_channel
+Chen Gang provides a fix to make iwlegacy use strlcpy instead of
+strncpy, avoiding a potential buffer underflow.
 
-If we allow this module to have a single pointer in "struct
-ieee80211_hw" (which we can, it should be logically part of mac80211)
-then we can even have the module export functions that can directly be
-assigned, so let's say it does that:
+Julian Wollrath fixes a typo in an error message in rtlwifi.
 
-int ieee80211_swpso_scan(...) // prototype matching hw_scan
-// etc.
+Larry Finger brings a b43 fix for a firmware loading problem.
 
-Then drivers can just do
-	.hw_scan = ieee80211_swpso_scan,
-	.remain_on_channel = ieee80211_swpso_roc,
-etc.
+Nickolai Zeldovich avoids a use-after-free in the mwl8k driver.
 
-The module also needs to provide a function that the driver can call in
-the TX path, for dynamic powersave. This would adjust the timers in the
-TX path etc.
+Vladimir Kondratiev brings the last big piece, the new Qualcomm/Atheros
+wil6210 802.11ad driver.  Since it is for new hardware, I hope that
+taking it for 3.8 is not a problem.
 
-Additionally, the module might require queue control wrappers, so
-drivers would call ieee80211_swpso_stop_queue() and
-ieee80211_swpso_wake_queue() instead of the normal versions, obviously
-it would forward there, but only after some own internal checking.
+Please let me know if there are problems!
 
+Thanks,
 
-So how would this work? Let's consider remain-on-channel, instead of
-scan, since scan is really just a bunch of remain-on-channels one after
-another.
+John
 
-On receiving ROC, it would first call mac80211 to stop all queues
-(except the, possibly entirely virtual, offchannel queue!), and
-internally mark the queues as SWPSO-stopped. It also has to continually
-maintain driver-stopped, hence the wrappers I talked about earlier. If
-the queues are SWPSO-stopped, and the driver wakes it, this wake doesn't
-propagate to mac80211. This really works much like
-__ieee80211_wake_queue() and it could actually be combined into that
-function since SWPSO would be a part of mac80211. Then drivers also
-wouldn't need the wrappers here, that seems sensible.
+---
 
-Then, it would flush all queues in the driver, to make sure that nothing
-is there. (1) After that, it would call ->tx() to send out any nulldata
-frame(s). Since the queues are empty, this must succeed (2). If the
-flush caused the driver to wake a queue because it was stopped, this
-won't propagate to mac80211, where it would cause all kinds of issues.
+The following changes since commit c9be4a5c49cf51cc70a993f004c5bb30067a65ce:
 
-Now switch channel, obviously.
+  net: prevent setting ttl=0 via IP_TTL (2013-01-08 17:57:10 -0800)
 
-This is ROC, so SWPSO has done its job. Any packets that now get
-transmitted on the offchannel queue by mac80211 are transmitted
-normally, on the normal queue, by the driver (it needs a bit of extra
-logic for that). If it was scanning, it would now also transmit the
-probe request.
+are available in the git repository at:
 
-Upon finishing with the channel, it just has to switch the channel back,
-send nulldata frames and re-enable the queues.
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
 
+for you to fetch changes up to a9b8a894ad7d0b90b0464c9ac7e8e5c1687edcae:
 
-Ok and now that I've typed it all up, I think it points to how we can do
-it much more easily without a separate module and without really
-changing the drivers.
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2013-01-09 11:01:37 -0500)
 
-Do a few things:
- * introduce IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL
- * stop all queues, using the new reason, before going offchannel
- * then flush
- * then *directly* tell the driver to transmit the nulldata packets,
-   checking only if the driver has the queue stopped, in which case we
-   have IEEE80211_QUEUE_STOP_REASON_DRIVER set; if it does, fail going
-   off channel
- * similarly, *directly* tell the driver to transmit probe requests and
-   offchannel packets from cfg80211, if it fails (stop reason driver)
-   then do nothing (probe request) or return a failure to userspace
-   (offchannel TX)
+----------------------------------------------------------------
 
-In fact the last two bullets should probably be implemented by passing
-some sort of "offchan_tx_ok" to ieee80211_tx_skb() and friends, and
-checking queue_stop_reasons more carefully in ieee80211_tx_frags().
+Amitkumar Karwar (1):
+      mwifiex: fix typo in setting up ibss network parameters
 
-I'll address powersave another day, but it also needs major rework. I
-also think that the framework should somehow better integrate with
-multi-channel, although I'm not sure anyone really wants to implement
-that in software. It should be possible with some HW though, if it has
-enough queues etc.
+Bing Zhao (1):
+      mwifiex: check wait_event_interruptible return value
 
-johannes
+Chaitanya (1):
+      mac80211: fix maximum MTU
 
+Chen Gang (1):
+      drivers/net/wireless/iwlegacy: use strlcpy instead of strncpy
 
-(1) Actually ... this whole queue stopping business could be improved
-even further, if the driver has a hardware queue it can dedicate to the
-transmissions we need here. Then, the driver could stop the *hardware*
-queues, possibly leaving frames sitting on them. However, for ROC/scan
-this really isn't interesting. It becomes interesting only for SW
-multi-channel. It also cannot be implemented with all drivers, certainly
-not with USB devices I think.
+Emmanuel Grumbach (1):
+      iwlwifi: fix the reclaimed packet tracking upon flush queue
 
-(2) I think there's a single driver that only accepts one packet at a
-time, but that's not a big deal, since it also only support a single
-virtual interface
+Felix Fietkau (1):
+      mac80211: flush AP_VLAN stations when tearing down the BSS AP
 
+Johannes Berg (5):
+      mac80211: assign VLAN channel contexts
+      mac80211: fix station destruction in AP/mesh modes
+      mac80211: use del_timer_sync for final sta cleanup timer deletion
+      mac80211: fix dtim_period in hidden SSID AP association
+      iwlwifi: fix PCIe interrupt handle return value
+
+John W. Linville (3):
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
+
+Julian Wollrath (1):
+      rtlwifi: Fix typo in debug output of rtl8192c and rtl8723ae
+
+Larry Finger (1):
+      b43: Fix firmware loading when driver is built into the kernel
+
+Nickolai Zeldovich (1):
+      drivers/net/wireless/mwl8k.c: avoid use-after-free
+
+Stanislaw Gruszka (1):
+      mac80211: fix ibss scanning
+
+Thomas Pedersen (1):
+      mac80211: RMC buckets are just list heads
+
+Vladimir Kondratiev (1):
+      wireless: add new wil6210 802.11ad 60GHz driver
+
+ MAINTAINERS                                        |    8 +
+ drivers/net/wireless/ath/Kconfig                   |    1 +
+ drivers/net/wireless/ath/Makefile                  |    1 +
+ drivers/net/wireless/ath/wil6210/Kconfig           |   29 +
+ drivers/net/wireless/ath/wil6210/Makefile          |   13 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  573 ++++++++++
+ drivers/net/wireless/ath/wil6210/dbg_hexdump.h     |   30 +
+ drivers/net/wireless/ath/wil6210/debugfs.c         |  603 +++++++++++
+ drivers/net/wireless/ath/wil6210/interrupt.c       |  471 +++++++++
+ drivers/net/wireless/ath/wil6210/main.c            |  407 +++++++
+ drivers/net/wireless/ath/wil6210/netdev.c          |  157 +++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c        |  223 ++++
+ drivers/net/wireless/ath/wil6210/txrx.c            |  871 +++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.h            |  362 +++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h         |  363 +++++++
+ drivers/net/wireless/ath/wil6210/wmi.c             |  975 +++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h             | 1116 ++++++++++++++++++++
+ drivers/net/wireless/b43/b43.h                     |    5 +
+ drivers/net/wireless/b43/main.c                    |   54 +-
+ drivers/net/wireless/b43/main.h                    |    5 +-
+ drivers/net/wireless/iwlegacy/3945-mac.c           |    2 +-
+ drivers/net/wireless/iwlwifi/dvm/tx.c              |   24 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c             |    1 +
+ drivers/net/wireless/mwifiex/cfg80211.c            |    2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c           |   21 +-
+ drivers/net/wireless/mwl8k.c                       |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |    2 +-
+ net/mac80211/cfg.c                                 |    2 +
+ net/mac80211/chan.c                                |   38 +
+ net/mac80211/ibss.c                                |    9 +-
+ net/mac80211/ieee80211_i.h                         |   16 +-
+ net/mac80211/iface.c                               |   48 +-
+ net/mac80211/mesh.c                                |    8 +-
+ net/mac80211/mesh.h                                |    2 +-
+ net/mac80211/mlme.c                                |   75 +-
+ net/mac80211/scan.c                                |   46 +-
+ net/mac80211/sta_info.c                            |   46 +-
+ net/mac80211/sta_info.h                            |    3 +-
+ 39 files changed, 6488 insertions(+), 130 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/Kconfig
+ create mode 100644 drivers/net/wireless/ath/wil6210/Makefile
+ create mode 100644 drivers/net/wireless/ath/wil6210/cfg80211.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/dbg_hexdump.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/debugfs.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/interrupt.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/main.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/netdev.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/pcie_bus.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wil6210.h
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/wmi.h
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
