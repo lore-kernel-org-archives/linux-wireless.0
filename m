@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46924 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220Ab3A3Fxt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 00:53:49 -0500
-Message-ID: <5108B569.9090005@candelatech.com> (sfid-20130130_065353_500100_F95ED651)
-Date: Tue, 29 Jan 2013 21:53:45 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/beacon.c:362 ath9k_beacon_tasklet+0xcc/0x5f0)
-References: <5108AD09.9020308@candelatech.com> <20744.44999.48237.463434@gargle.gargle.HOWL>
-In-Reply-To: <20744.44999.48237.463434@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:36320 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757534Ab3AINSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 08:18:00 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@qca.qualcomm.com
+Subject: [PATCH] compat: fix compile errors when assembly is built into modules
+Date: Wed,  9 Jan 2013 14:17:57 +0100
+Message-Id: <1357737477-39830-1-git-send-email-nbd@openwrt.org> (sfid-20130109_141802_734748_DC394B9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2013 09:29 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> I hit this warning in ath9k.  Shortly after the machine blew up elsewhere,
->> but not sure if this is to blame or not.
->>
->> Code is slightly modified 3.7.5 (just a few patches, not my normal mass of hackings!)
->>
->> The warning that hit is the one below:
->>
->> 	bf = ath9k_beacon_generate(sc->hw, vif);
->> 	WARN_ON(!bf);
->>
->> Test case is dual-core Atom system with ath9k NIC, 10 or so virtual stations,
->> two virtual APs.  Two stations send traffic to each other once everything associates, but
->> not sure it got that far when this crash happened.
->>
->
-> Are these patches in your tree ?
+On powerpc, modules can be compiled and linked with an assembly file, adding
+missing symbols that the compiler references when using -Os.
 
-They were not.  I see the second was queued to stable, should the first one
-be a stable candidate as well?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/linux/compat-2.6.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks,
-Ben
-
->
-> commit 1381559ba48a04ca7c98f1b4c487bd44d0b75db5
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Sun Jan 20 18:51:53 2013 +0100
->
->      ath9k: clean up processing of pending tx frames on reset
->
->      Dropping packets from aggregation sessions is usually not a good idea, as
->      it might upset the synchronization of the BlockAck receive window of the
->      remote node. The use of the retry_tx parameter to reset/tx-drain functions
->      also seemed a bit arbitrary.
->      This patch removes this parameter altogether and ensures that pending tx
->      frames are not dropped for no good reason.
->
->      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->      Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> commit 3adcf20afb585993ffee24de36d1975f6b26b120
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Wed Jan 9 16:16:54 2013 +0100
->
->      ath9k: remove the WARN_ON that triggers if generating a beacon fails
->
->      During teardown, mac80211 will not return a new beacon. This is normal and
->      handled properly in the driver, so there's no need to spam the user with a kernel
->      warning here.
->
->      Cc: stable@vger.kernel.org
->      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->      Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
->
-> Sujith
->
-
-
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index 00a5eda..34c49e6 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -1,6 +1,8 @@
+ #ifndef LINUX_26_COMPAT_H
+ #define LINUX_26_COMPAT_H
+ 
++#ifndef __ASSEMBLY__
++
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
+ #include <linux/kconfig.h>
+@@ -68,4 +70,6 @@ void compat_dependency_symbol(void);
+ #include <linux/compat-3.7.h>
+ #include <linux/compat-3.8.h>
+ 
++#endif /* __ASSEMBLY__ */
++
+ #endif /* LINUX_26_COMPAT_H */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0.2
 
