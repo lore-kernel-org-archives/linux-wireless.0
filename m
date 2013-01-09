@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:55282 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751532Ab3ANHBM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 02:01:12 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Q: how to update platform power state for the network driver
-References: <6929081.7c7blFVDp4@lx-vladimir>
-	<87ehhsu38q.fsf@purkki.adurom.net> <1550342.hytzsOV4KI@lx-vladimir>
-Date: Mon, 14 Jan 2013 09:01:10 +0200
-In-Reply-To: <1550342.hytzsOV4KI@lx-vladimir> (Vladimir Kondratiev's message
-	of "Sun, 13 Jan 2013 09:33:54 +0200")
-Message-ID: <8738y41c5l.fsf@purkki.adurom.net> (sfid-20130114_080116_396614_7B618883)
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:52703 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757487Ab3AIJYi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 04:24:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+References: <1354729568-19993-1-git-send-email-hauke@hauke-m.de>
+Date: Wed, 9 Jan 2013 10:24:36 +0100
+Message-ID: <CACna6rzcYReMs1ZxKuMDjAte+3bX_rjvd3Jd7265tgkMF2E-oA@mail.gmail.com> (sfid-20130109_102444_742229_8110CCE0)
+Subject: Re: [PATCH v3 00/11] watchdog/bcm47xx/bcma/ssb: add support for SoCs
+ with PMU
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, wim@iguana.be,
+	linux-wireless@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	castet.matthieu@free.fr, biblbroks@sezampro.rs, m@bues.ch,
+	linux-mips@linux-mips.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
-
-> On Thursday, January 10, 2013 11:39:33 PM Kalle Valo wrote:
->> Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
->> 
->> > in 60g spec (802.11ad, references to this doc.), station should set "power source" bit in the:
-> [skip]
->> 
->> Scary! Just of curiosity, how is this bit supposed to be used in real life?
->> 
+2012/12/5 Hauke Mehrtens <hauke@hauke-m.de>:
+> This patch series improves the functions for setting the watchdog
+> driver in ssb amd bcma. It also makes ssb and bcma register a platform
+> device which could be used by a watchdog driver to better set the times
+> where the system should restart. The patches for the watchdog driver
+> will be send later and were removed in v3.
 >
-> In 60g, you have new ah-hoc network type, PBSS, that should be used for P2P (spec mandates it)
-> In PBSS, there is AP-like entity called PCP. Instead of P2P GO negotiation, GO choosen before,
-> on lower layer, when selecting PCP. In this decision, "best suitable" candidate selected PCP,
-> based on "PCP factor" calculated for each peer. Most significant bit there is "power" since
-> one who is AC powered is better candidate.
+> This code is currently based on the wireless-testing/master tree by
+> John Linville.
 >
-> Bottom line - this is to elect as P2P GO AC-powered one (if there is such peer).
+> v3:
+>  * Remove changes done to the watchdog driver so John could pull this
+>    into wireless-testing, this sill works with the old watchdog driver.
+>    The patches changing the watchdog driver will be send later.
+>    This was done to get this into 3.8 because Wim Van Sebroeck is
+>    neither giving an Ack or a Nack on these patches and we want to do
+>    more changes to bcma/ssb on top of these.
 
-Ok, so it's just a sort of priority bit. That's not bad.
+Your changes are already in Linus's tree, do you plan to re-send
+watchdog patches dropped in V3 through linux-watchdog? Can you take
+care of this?
 
 -- 
-Kalle Valo
+Rafał
