@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40097 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291Ab3AQFfb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 00:35:31 -0500
-Date: Wed, 16 Jan 2013 23:35:28 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Fixes for problems with off-channel powersave
-Message-ID: <20130117053528.GD31449@thinkpad-t410> (sfid-20130117_063533_673424_A4AFA9E2)
-References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
- <1358382542.15012.109.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1358382542.15012.109.camel@jlt4.sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:52779 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757840Ab3AIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 07:39:38 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.8 2/5] ath9k: fix double-free bug on beacon generate failure
+Date: Wed,  9 Jan 2013 13:39:26 +0100
+Message-Id: <1357735169-91597-2-git-send-email-nbd@openwrt.org> (sfid-20130109_133942_882181_14E173BD)
+In-Reply-To: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
+References: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 01:29:02AM +0100, Johannes Berg wrote:
-> Ok and now that I've typed it all up, I think it points to how we can do
-> it much more easily without a separate module and without really
-> changing the drivers.
-> 
-> Do a few things:
->  * introduce IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL
->  * stop all queues, using the new reason, before going offchannel
->  * then flush
->  * then *directly* tell the driver to transmit the nulldata packets,
->    checking only if the driver has the queue stopped, in which case we
->    have IEEE80211_QUEUE_STOP_REASON_DRIVER set; if it does, fail going
->    off channel
->  * similarly, *directly* tell the driver to transmit probe requests and
->    offchannel packets from cfg80211, if it fails (stop reason driver)
->    then do nothing (probe request) or return a failure to userspace
->    (offchannel TX)
-> 
-> In fact the last two bullets should probably be implemented by passing
-> some sort of "offchan_tx_ok" to ieee80211_tx_skb() and friends, and
-> checking queue_stop_reasons more carefully in ieee80211_tx_frags().
+When the next beacon is sent, the ath_buf from the previous run is reused.
+If getting a new beacon from mac80211 fails, bf->bf_mpdu is not reset, yet
+the skb is freed, leading to a double-free on the next beacon tx attempt,
+resulting in a system crash.
 
-That looks like it would work well. I'll start working on these changes.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> I'll address powersave another day, but it also needs major rework.
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 531fffd..4eb269d 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -147,6 +147,7 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_buf_addr = 0;
++		bf->bf_mpdu = NULL;
+ 	}
+ 
+ 	skb = ieee80211_beacon_get(hw, vif);
+-- 
+1.8.0.2
 
-I can't completely ignore powersave if I want to get brcmsmac working
-properly. The hardware seems to be actively setting or clearing PM based
-on its configuration, so I need a way to tell the driver that PM should
-be set. Making off-channel an explicit powersave state lets me do this,
-and while it doesn't fix any of the other powersave problems I do think
-it make the code clearer than the psuedo-state used now for off-channel.
-
-What I've got locally now for this is code to expand the PS config flag
-to two bits to support three PS states: disabled, enabled, and
-off-channel. Doing this is working well enough with the two machines
-I've been testing with (brcmsmac and ath9k). There's an odd side effect
-on brcmsmac of having PM set in probe request frames during scans, but
-according to the spec PM should be reserved in those frames anyway.
-
-I pushed the changes to the following if you're interested in taking a
-look:
-
-  git://kernel.ubuntu.com/sforshee/linux.git mac80211-offchannel
-
-I'm possibly still missing some driver updates that would need to be
-done, but otherwise the changes should be fairly complete. A major
-rework of the powersave code is likely to take some time, so is there
-any chance of getting something like this in place to fix things in the
-short term?
-
-Seth
