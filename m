@@ -1,87 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55075 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756834Ab3AHSKv (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56532 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755725Ab3AIOdQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 13:10:51 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 1/3] mac80211: Add flushes to ensure off-channel PS is enabled during sw scans
-Date: Tue,  8 Jan 2013 12:10:43 -0600
-Message-Id: <1357668645-5101-2-git-send-email-seth.forshee@canonical.com> (sfid-20130108_191054_124563_03088B9D)
-In-Reply-To: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
-References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+	Wed, 9 Jan 2013 09:33:16 -0500
+Date: Wed, 9 Jan 2013 15:33:04 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from
+ outside
+Message-ID: <20130109143304.GA23469@pandem0nium> (sfid-20130109_153319_972408_43D83857)
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <CAJ-Vmom91BS5fPas+FWsaqQwm-ZVcZckUXB2vQgoEXtKiOH6mA@mail.gmail.com>
+ <20130109131540.GA22836@pandem0nium>
+ <201301091510.49723.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
+In-Reply-To: <201301091510.49723.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've got a couple of races when enabling powersave with an AP for
-off-channel operation. The first is fairly simple. If we go off-channel
-prior to the nullfunc frame to enable PS is actually transmitted then it
-may not be received by the AP. Add a flush after enabling off-channel PS
-to prevent this from happening.
 
-The second race is a bit more subtle. If the driver supports QoS and has
-frames queued when the nullfunc frame is queued, those frames may get
-transmitted after the nullfunc frame. If PM is not set then the AP is
-being told that we've exited PS before we go off-channel and may try to
-deliver frames. To prevent this, add a flush after stopping the netdev
-queues but before passing the nullfunc frame to the driver.
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- net/mac80211/offchannel.c |   17 ++++++++++++++++-
- net/mac80211/scan.c       |    8 ++++++++
- 2 files changed, 24 insertions(+), 1 deletion(-)
+Hello Christian,
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index a5379ae..ccb91a2 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -136,8 +136,23 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 			netif_tx_stop_all_queues(sdata->dev);
- 			if (offchannel_ps_enable &&
- 			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
--			    sdata->u.mgd.associated)
-+			    sdata->u.mgd.associated) {
-+				/*
-+				 * Need to flush frames in driver queues
-+				 * before sending nullfunc. Otherwise
-+				 * devices which support QoS may send the
-+				 * nullfunc before these queued frames, and
-+				 * those frames may not have PM set.
-+				 *
-+				 * XXX: Would be nice to not flush for each
-+				 * vif, however I don't see that there's any
-+				 * protection to prevent frames being handed
-+				 * to the driver before stopping the netdev
-+				 * queue.
-+				 */
-+				drv_flush(local, false);
- 				ieee80211_offchannel_ps_enable(sdata);
-+			}
- 		}
- 	}
- 	mutex_unlock(&local->iflist_mtx);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8ed83dc..a875f74 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -355,6 +355,14 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 
- 	ieee80211_offchannel_stop_vifs(local, true);
- 
-+	/*
-+	 * Flush hw queues to ensure that the nullfunc to enable powersave
-+	 * gets sent before going off-channel.
-+	 *
-+	 * XXX: Delay for drivers not supporting flush?
-+	 */
-+	drv_flush(local, false);
-+
- 	ieee80211_configure_filter(local);
- 
- 	/* We need to set power level at maximum rate for scanning. */
--- 
-1.7.9.5
+On Wed, Jan 09, 2013 at 03:10:49PM +0100, Christian Lamparter wrote:
+> On Wednesday, January 09, 2013 02:15:40 PM Simon Wunderlich wrote:
+> > On Tue, Jan 08, 2013 at 09:28:44AM -0800, Adrian Chadd wrote:
+> > > I still populate the WME fields; I need to "fix" paying attention to
+> > > them in the adhoc case.
+> >=20
+> > Applying the EDCA parameters in the hardware and sending "standard" WME=
+ IEs
+> > (without EDCA parameter sets) is understandable, Linux does that too.=
+=20
+>=20
+> Well, the WFA WMM Specification v1.2 costs $99 (last time I checked, whic=
+h wasn't
+> too long ago). However Johannes told me that the WMM IE should not be add=
+ed
+> to IBSS beacons.
 
+I don't have the spec, and I don't intend to buy it. :)
+
+But: We do have WMM IE sent by Linux IBSS STAs even today. The difference t=
+o the AP
+WMM IEs is that it doesn't include EDCA parameters (cwmin/max, aifs, ...). =
+But still,
+this is useful to detect that the other IBBS station is WMM-capable: we can=
+ then
+use QOS_DATA frames, use noack, etc ...
+>=20
+> However, we can still pack some EDCA parameters into beacons, probe/(re-)=
+assoc
+> resps because there's an alternative IE. The "EDCA Parameter Set IE" is p=
+art of
+> 802.11-2012 8.4.2.31 - The Element ID is 12 [Table 8-54].
+
+Ah didn't know that - thanks for pointing that out. Although I'm still in f=
+avor of
+not sending anything in IBSS and do local changes only. :)
+>=20
+> [Note: It's worth mentioning that the WFA WMM spec was just a stop-gap me=
+asure
+> until 802.11e was ready. Here's an article which explains this weird bit =
+of
+> history, unfortunately it is in German
+> <http://www.heise.de/netze/artikel/Parallelnorm-WMM-223736.html>]
+>=20
+> Regards,
+> 	Chr
+
+--jI8keyz6grp/JLjh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDtf6AACgkQrzg/fFk7axbEFQCgpThv1yKA5DPIT57EEmuNcWCq
+2PkAoIzve77LmHmcGRkKlgzQ6DQ4BseM
+=tXBG
+-----END PGP SIGNATURE-----
+
+--jI8keyz6grp/JLjh--
