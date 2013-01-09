@@ -1,99 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s27.blu0.hotmail.com ([65.55.111.102]:21664 "EHLO
-	blu0-omc2-s27.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752618Ab3ALKrM (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59175 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757476Ab3AIN2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 05:47:12 -0500
-Message-ID: <BLU0-SMTP98B4D57175D7A700330D59AC280@phx.gbl> (sfid-20130112_114717_852536_D2EEAD3C)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH 3/5] bcma: don't map/unmap a subset of the PCI config space
-Date: Sat, 12 Jan 2013 02:46:15 -0800
-In-Reply-To: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
-References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
+	Wed, 9 Jan 2013 08:28:03 -0500
+Date: Wed, 9 Jan 2013 07:27:53 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/3] mac80211: Disable off-channel powersave when software
+ scans are suspended
+Message-ID: <20130109132753.GB18778@thinkpad-t410> (sfid-20130109_142807_675975_87EED14F)
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+ <1357668645-5101-4-git-send-email-seth.forshee@canonical.com>
+ <20130109110343.GA13544@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130109110343.GA13544@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For PCI config space access offsets < 256 for device '0',
-bcma_extpci_write_config performs an 'ioremap_nocache' on a 4 byte
-section of the PCI config space (an area that has already
-previously been mapped), and then subsequently unmaps that 4 byte
-section.  This can't be a good thing for future read access from
-that now unmapped location.  Modify the config space writes to use
-the existing access functions (similar to how it is done for the reads).
+On Wed, Jan 09, 2013 at 12:03:44PM +0100, Stanislaw Gruszka wrote:
+> Hi
+> 
+> On Tue, Jan 08, 2013 at 12:10:45PM -0600, Seth Forshee wrote:
+> > Leaving powersave enabled while the scan is suspended requires the use
+> > of PS-Poll to retrieve frames buffered at the AP. PS-Poll isn't a very
+> > efficient means of data transfer and may not even work with drivers not
+> > supporting powersave. These problems can largely be avoided by simply
+> > disabling off-channel powersave when the scan is suspended and enabling
+> > it again when returning to off-channel operation.
+> > 
+> > The results of this change are fantastic. Previously when using iperf I
+> > would see greatly decreased throughput (often dropping to 0 bits/sec for
+> > several seconds) and very high packet loss during software scans. This
+> > patch completely eliminates the packet loss and reduces the loss in
+> > throughput to very reasonable levels.
+> 
+> I posted a patch, which remove offchannel_ps_disable argument from
+> ieee80211_offchannel_return, since there were possible AP and STA power
+> save state mismash:
+> 
+> http://marc.info/?l=linux-wireless&m=135601089321822&w=2
+> 
+> It should give the same effect on performance as this patch.
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/driver_pci_host.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+I guess I missed that one in my pile of post-holiday emails. I agree, it
+ought to have the same effect as this patch.
 
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index 187cc9f..e1381ba 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -149,7 +149,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 				   const void *buf, int len)
- {
- 	int err = -EINVAL;
--	u32 addr = 0, val = 0;
-+	u32 addr, val;
- 	void __iomem *mmio = 0;
- 	u16 chipid = pc->core->bus->chipinfo.id;
- 
-@@ -165,12 +165,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 		 * requires indirect access.
- 		 */
- 		if (off < PCI_CONFIG_SPACE_SIZE) {
--			addr = pc->core->addr + BCMA_CORE_PCI_PCICFG0;
-+			addr = BCMA_CORE_PCI_PCICFG0;
- 			addr |= (func << 8);
- 			addr |= (off & 0xfc);
--			mmio = ioremap_nocache(addr, sizeof(val));
--			if (!mmio)
--				goto out;
-+			val = pcicore_read32(pc, addr);
- 		}
- 	} else {
- 		addr = bcma_get_cfgspace_addr(pc, dev, func, off);
-@@ -189,12 +187,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 
- 	switch (len) {
- 	case 1:
--		val = readl(mmio);
- 		val &= ~(0xFF << (8 * (off & 3)));
- 		val |= *((const u8 *)buf) << (8 * (off & 3));
- 		break;
- 	case 2:
--		val = readl(mmio);
- 		val &= ~(0xFFFF << (8 * (off & 3)));
- 		val |= *((const u16 *)buf) << (8 * (off & 3));
- 		break;
-@@ -202,13 +198,17 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 		val = *((const u32 *)buf);
- 		break;
- 	}
--	if (dev == 0 && !addr) {
-+	if (dev == 0) {
- 		/* accesses to config registers with offsets >= 256
- 		 * requires indirect access.
- 		 */
--		addr = (func << 12);
--		addr |= (off & 0x0FFF);
--		bcma_pcie_write_config(pc, addr, val);
-+		if (off >= PCI_CONFIG_SPACE_SIZE) {
-+			addr = (func << 12);
-+			addr |= (off & 0x0FFF);
-+			bcma_pcie_write_config(pc, addr, val);
-+		} else {
-+			pcicore_write32(pc, addr, val);
-+		}
- 	} else {
- 		writel(val, mmio);
- 
--- 
-1.7.7.6
-
+Seth
