@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39939 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752412Ab3ATRwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 12:52:10 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:58311 "EHLO
+	na3sys009aog135.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756217Ab3AIB5C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 20:57:02 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 8/8] ath9k_hw: remove a useless WARN_ON
-Date: Sun, 20 Jan 2013 18:51:59 +0100
-Message-Id: <1358704319-81749-8-git-send-email-nbd@openwrt.org> (sfid-20130120_185216_571085_314AF073)
-In-Reply-To: <1358704319-81749-7-git-send-email-nbd@openwrt.org>
-References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
- <1358704319-81749-2-git-send-email-nbd@openwrt.org>
- <1358704319-81749-3-git-send-email-nbd@openwrt.org>
- <1358704319-81749-4-git-send-email-nbd@openwrt.org>
- <1358704319-81749-5-git-send-email-nbd@openwrt.org>
- <1358704319-81749-6-git-send-email-nbd@openwrt.org>
- <1358704319-81749-7-git-send-email-nbd@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.8] mwifiex: correct config_bands handling for ibss network
+Date: Tue,  8 Jan 2013 17:53:11 -0800
+Message-Id: <1357696391-9396-2-git-send-email-bzhao@marvell.com> (sfid-20130109_025707_557258_49E22DB9)
+In-Reply-To: <1357696391-9396-1-git-send-email-bzhao@marvell.com>
+References: <1357696391-9396-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-&ah->curchan->ani can never be NULL
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+BAND_G is implicit when BAND_GN is present.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index a9218a1..7ecd40f 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -419,9 +419,6 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		return;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b4dbe22..9eab21d 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1695,7 +1695,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
  
- 	aniState = &ah->curchan->ani;
--	if (WARN_ON(!aniState))
--		return;
--
- 	if (!ath9k_hw_ani_read_counters(ah))
- 		return;
- 
+ 		if (cfg80211_get_chandef_type(&params->chandef) !=
+ 						NL80211_CHAN_NO_HT)
+-			config_bands |= BAND_GN;
++			config_bands |= BAND_G | BAND_GN;
+ 	} else {
+ 		if (cfg80211_get_chandef_type(&params->chandef) ==
+ 						NL80211_CHAN_NO_HT)
 -- 
-1.8.0.2
+1.7.0.2
 
