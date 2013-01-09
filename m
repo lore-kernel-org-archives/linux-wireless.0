@@ -1,71 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54547 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948Ab3AJKHd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 05:07:33 -0500
-Date: Thu, 10 Jan 2013 02:07:29 -0800 (PST)
-Message-Id: <20130110.020729.1358020934840866117.davem@davemloft.net> (sfid-20130110_110743_979796_44220431)
-To: sgruszka@redhat.com
-Cc: netdev@vger.kernel.org, edumazet@google.com,
-	greearb@candelatech.com, bjorn@mork.no,
-	linux-wireless@vger.kernel.org, bhutchings@solarflare.com,
-	mirqus@gmail.com
-Subject: Re: [PATCH v2] net: set default_ethtool_ops in register_netdevice
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130110083641.GA5637@redhat.com>
-References: <20130108153850.GA10464@redhat.com>
-	<20130109.235738.467651533138068641.davem@davemloft.net>
-	<20130110083641.GA5637@redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Received: from mga01.intel.com ([192.55.52.88]:36771 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755884Ab3AICls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jan 2013 21:41:48 -0500
+Date: Wed, 9 Jan 2013 10:42:26 +0800
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Stefani Seibold <stefani@seibold.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-mm@kvack.org, dccp@vger.kernel.org,
+	linux-sctp@vger.kernel.org
+Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
+Message-ID: <20130109024226.GD304@yliu-dev.sh.intel.com> (sfid-20130109_034205_590622_E79688A6)
+References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com>
+ <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com>
+ <20130108181645.GA7972@core.coreip.homeip.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130108181645.GA7972@core.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Thu, 10 Jan 2013 09:36:42 +0100
+On Tue, Jan 08, 2013 at 10:16:46AM -0800, Dmitry Torokhov wrote:
+> Hi Yuanhan,
+> 
+> On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
+> > The current kfifo API take the kfifo size as input, while it rounds
+> >  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
+> > potential issue.
+> > 
+> > Take the code at drivers/hid/hid-logitech-dj.c as example:
+> > 
+> > 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
+> >                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct dj_report),
+> >                        GFP_KERNEL)) {
+> > 
+> > Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct dj_report)
+> > is 15.
+> > 
+> > Which means it wants to allocate a kfifo buffer which can store 8
+> > dj_report entries at once. The expected kfifo buffer size would be
+> > 8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
+> > size to rounddown_power_of_2(120) =  64, and then allocate a buf
+> > with 64 bytes, which I don't think this is the original author want.
+> > 
+> > With the new log API, we can do like following:
+> > 
+> > 	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
+> > 					    sizeof(struct dj_report));
+> > 
+> > 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order, GFP_KERNEL)) {
+> > 
+> > This make sure we will allocate enough kfifo buffer for holding
+> > DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
+> 
+> Why don't you simply change __kfifo_alloc to round the allocation up
+> instead of down?
 
-> On Wed, Jan 09, 2013 at 11:57:38PM -0800, David Miller wrote:
->> From: Stanislaw Gruszka <sgruszka@redhat.com>
->> Date: Tue, 8 Jan 2013 16:38:51 +0100
->> 
->> > Since:
->> > 
->> > commit 2c60db037034d27f8c636403355d52872da92f81
->> > Author: Eric Dumazet <edumazet@google.com>
->> > Date:   Sun Sep 16 09:17:26 2012 +0000
->> > 
->> >     net: provide a default dev->ethtool_ops
->> > 
->> > wireless core does not correctly assign ethtool_ops. In order to fix
->> > the problem, move assignement of default_ethtool_ops to
->> > register_netdevice(). This is safe because both register_netdevice()
->> > and dev_ethtool() are protected by RTNL lock.
->> > 
->> > Patch is besed on hint of Micha©© Miros©©aw.
->> > 
->> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> > Cc: stable@vger.kernel.org # 3.7+
->> > ---
->> > v1 -> v2: change order of default_ethtool_ops initialization to avoid
->> > the problem. Change the subject accordingly.
->> 
->> I don't understand this.  Why is the assignment of default_ethtool_ops
->> at netdev allocation time not working?  Is wireless really not using
->> alloc_netdev*()?
-> 
-> It does. This is done on individual cfg80211 drivers , i.e. on mac80211
-> or full mac drivers. After alloc_netdev*() call, some cfg80211 drivers
-> provide they own ethtool_ops, but some do not. For them, wireless core
-> provide generic cfg80211_ethtool_ops, which is assigned in
-> NETDEV_REGISTER notify call: 
-> 
-> 	if (!dev->ethtool_ops)
-> 		dev->ethtool_ops = &cfg80211_ethtool_ops;
-> 
-> But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
-> drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+Hi Dmitry,
 
-The whole idea is to remove these kinds of NULL tests against
-dev->ethtool_ops, thus creating the invariant that given any netdev
-one must never be able to see a non-NULL value there.
+Yes, it would be neat and that was my first reaction as well. I then
+sent out a patch, but it was NACKed by Stefani(the original kfifo
+author). Here is the link:
+
+    https://lkml.org/lkml/2012/10/26/144
+
+Then Stefani proposed to change the API to take log of size as input to
+root fix this kind of issues. And here it is.
+
+Thanks.
+
+	--yliu
