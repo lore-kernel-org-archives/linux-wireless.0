@@ -1,173 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f51.google.com ([209.85.210.51]:48428 "EHLO
-	mail-da0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413Ab3AGDlX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359Ab3AILFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2013 22:41:23 -0500
-Message-ID: <50EA4414.6070407@gmail.com> (sfid-20130107_044133_639795_96324314)
-Date: Mon, 07 Jan 2013 11:42:12 +0800
-From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Chen Gang <gang.chen@asianux.com>, stas.yakovlev@gmail.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of
- strncpy
-References: <50E82D7D.4090107@asianux.com>  <1357396966.21156.4.camel@joe-AO722> <50EA37CE.1090901@asianux.com> <1357528746.4940.31.camel@joe-AO722>
-In-Reply-To: <1357528746.4940.31.camel@joe-AO722>
-Content-Type: multipart/mixed;
- boundary="------------090907000102010505060005"
+	Wed, 9 Jan 2013 06:05:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] regulatory: fix uevent
+Date: Wed,  9 Jan 2013 12:06:01 +0100
+Message-Id: <1357729561-31054-1-git-send-email-johannes@sipsolutions.net> (sfid-20130109_120539_429369_BFC6C649)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090907000102010505060005
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Johannes Berg <johannes.berg@intel.com>
 
-于 2013年01月07日 11:19, Joe Perches 写道:
-> On Mon, 2013-01-07 at 10:49 +0800, Chen Gang wrote:
->>   but I think the original author intended to use escaped instead of ssid
->>     DECLARE_SSID_BUF(ssid)  (line 5525, 5737)
->>     use ssid to print debug information directly
->>       (such as: line 5530..5535, 5545..5549, 5745..5749, ...)
->>     when need print additional information, use escaped
->>       (line 5559..5569, 5773..5782, 5791..5799)
->>
->>   so, I still suggest:
->>     only fix the bug (use strlcpy instead of strncpy)
->>     and not touch original features which orignal author intended using.
-> 
-> More likely John Linville just missed the conversions.
-> 4+ years ago.
-> 
+The uevent callback doesn't protect its access to
+last_request, which now causes a warning since
+the conversion to get_last_request(). Fix this by
+allowing to use RCU protection for last_request.
 
-  I wonder why it is not integrated into main branch.
-    maybe we miss it.
-      if so, I suggest to integrate it (better also add Reported-by gang.chen@asianux.com  :-) )
-    maybe original author intended using short length.
-      if so, I suggest to integrate my patch (using strlcpy instead of strncpy).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-  for me:
-    using long size instead of original short size, will change the output format.
-    it seems not a good idea to change the original output format.
-      (especially, the original output format has existence 4+ years).
-
-  so, at least:
-    for only fixing bug, not touching original features
-      it is an executable method (is a valuable patch).
-      although maybe it is not a best method (is not a very good patch).
-
- Regards
-
-gchen.
-
-> commit 9387b7caf3049168fc97a8a9111af8fe2143af18
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Tue Sep 30 20:59:05 2008 -0400
-> 
->     wireless: use individual buffers for printing ssid values
->   
->     Also change escape_ssid to print_ssid to match print_mac semantics.
->     
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Maybe these days this should be another vsprintf %p extension
-> like %pM when the DECLARE_MAC_BUF/print_mac uses were converted.
-> 
-> (or maybe extend %ph for ssids with %*phs, length, array)
-> 
-> But if and until then, I suggest this instead:
-> 
->  drivers/net/wireless/ipw2x00/ipw2200.c | 38 ++++++++++++++--------------------
->  1 file changed, 15 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index 844f201..3dc6a92 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -5556,15 +5556,12 @@ static int ipw_find_adhoc_network(struct ipw_priv *priv,
->  		    ((network->ssid_len != priv->essid_len) ||
->  		     memcmp(network->ssid, priv->essid,
->  			    min(network->ssid_len, priv->essid_len)))) {
-> -			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> +			DECLARE_SSID_BUF(escaped);
->  
-> -			strncpy(escaped,
-> -				print_ssid(ssid, network->ssid,
-> -					   network->ssid_len),
-> -				sizeof(escaped));
-> -			IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
-> -					"because of ESSID mismatch: '%s'.\n",
-> -					escaped, network->bssid,
-> +			IPW_DEBUG_MERGE("Network '%s (%pM)' excluded because of ESSID mismatch: '%s'\n",
-> +					print_ssid(escaped, network->ssid,
-> +						   network->ssid_len),
-> +					network->bssid,
->  					print_ssid(ssid, priv->essid,
->  						   priv->essid_len));
->  			return 0;
-> @@ -5770,14 +5767,11 @@ static int ipw_best_network(struct ipw_priv *priv,
->  		    ((network->ssid_len != priv->essid_len) ||
->  		     memcmp(network->ssid, priv->essid,
->  			    min(network->ssid_len, priv->essid_len)))) {
-> -			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> -			strncpy(escaped,
-> -				print_ssid(ssid, network->ssid,
-> -					   network->ssid_len),
-> -				sizeof(escaped));
-> -			IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
-> -					"because of ESSID mismatch: '%s'.\n",
-> -					escaped, network->bssid,
-> +			DECLARE_SSID_BUF(escaped);
-> +			IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because of ESSID mismatch: '%s'\n",
-> +					print_ssid(escaped, network->ssid,
-> +						   network->ssid_len),
-> +					network->bssid,
->  					print_ssid(ssid, priv->essid,
->  						   priv->essid_len));
->  			return 0;
-> @@ -5787,13 +5781,11 @@ static int ipw_best_network(struct ipw_priv *priv,
->  	/* If the old network rate is better than this one, don't bother
->  	 * testing everything else. */
->  	if (match->network && match->network->stats.rssi > network->stats.rssi) {
-> -		char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> -		strncpy(escaped,
-> -			print_ssid(ssid, network->ssid, network->ssid_len),
-> -			sizeof(escaped));
-> -		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
-> -				"'%s (%pM)' has a stronger signal.\n",
-> -				escaped, network->bssid,
-> +		DECLARE_SSID_BUF(escaped);
-> +		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because '%s (%pM)' has a stronger signal\n",
-> +				print_ssid(escaped, network->ssid,
-> +					   network->ssid_len),
-> +				network->bssid,
->  				print_ssid(ssid, match->network->ssid,
->  					   match->network->ssid_len),
->  				match->network->bssid);
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 0b35de0..2193f62 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -140,8 +140,8 @@ static void rcu_free_regdom(const struct ieee80211_regdomain *r)
+ 
+ static struct regulatory_request *get_last_request(void)
+ {
+-	return rcu_dereference_protected(last_request,
+-					 lockdep_is_held(&reg_mutex));
++	return rcu_dereference_check(last_request,
++				     lockdep_is_held(&reg_mutex));
+ }
+ 
+ /* Used to queue up regulatory hints */
+@@ -2250,14 +2250,21 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ #ifdef CONFIG_HOTPLUG
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+-	struct regulatory_request *lr = get_last_request();
++	struct regulatory_request *lr;
++	u8 alpha2[2];
++	bool add = false;
+ 
++	rcu_read_lock();
++	lr = get_last_request();
+ 	if (lr && !lr->processed) {
+-		if (add_uevent_var(env, "COUNTRY=%c%c",
+-				   lr->alpha2[0], lr->alpha2[1]))
+-			return -ENOMEM;
++		memcpy(alpha2, lr->alpha2, 2);
++		add = true;
+ 	}
++	rcu_read_unlock();
+ 
++	if (add)
++		return add_uevent_var(env, "COUNTRY=%c%c",
++				      alpha2[0], alpha2[1]);
+ 	return 0;
+ }
+ #else
 -- 
-Chen Gang
+1.8.0
 
-Flying Transformer
-
---------------090907000102010505060005
-Content-Type: text/x-vcard; charset=utf-8;
- name="chen_gang_flying_transformer.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="chen_gang_flying_transformer.vcf"
-
-YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
-ZW5kOnZjYXJkDQoNCg==
---------------090907000102010505060005--
