@@ -1,50 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:54871 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824Ab3AQVYx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 16:24:53 -0500
-Received: by mail-ea0-f176.google.com with SMTP id a13so920655eaa.21
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 13:24:52 -0800 (PST)
-Message-ID: <1358457883.5641.7.camel@canaries64> (sfid-20130117_222457_303011_88648EA2)
-Subject: Re: [PATCH 3/3] staging: vt6656: staging: vt6656 change remaining
- to vnt_mgmt and remove typedef v2
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 17 Jan 2013 21:24:43 +0000
-In-Reply-To: <20130117211256.GA23334@kroah.com>
-References: <1357602156.12182.11.camel@canaries64>
-	 <20130117211256.GA23334@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53969 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757843Ab3AIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 07:39:38 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.8 5/5] ath9k: fix rx flush handling
+Date: Wed,  9 Jan 2013 13:39:29 +0100
+Message-Id: <1357735169-91597-5-git-send-email-nbd@openwrt.org> (sfid-20130109_133946_652549_0901C41F)
+In-Reply-To: <1357735169-91597-4-git-send-email-nbd@openwrt.org>
+References: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
+ <1357735169-91597-2-git-send-email-nbd@openwrt.org>
+ <1357735169-91597-3-git-send-email-nbd@openwrt.org>
+ <1357735169-91597-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-17 at 13:12 -0800, Greg KH wrote:
-> On Mon, Jan 07, 2013 at 11:42:36PM +0000, Malcolm Priestley wrote:
-> > 
-> > rebased version
-> > 
-> > after this patch continue on wards with
-> > [10/11] staging: vt6656: clean up struct vnt_private.
-> > [11/11] staging: vt6656: clean up struct vnt manager
-> 
-> What do you mean by this?  Can you please just send the entire series of
-> patches?  I don't have these anymore in any tree.  For now, I'll just
-> drop all of these and wait for your resend.
-> 
+Right now the rx flush is not doing anything useful on AR9003+, as it only
+works if the buffers in the rx FIFO have not been purged yet, as is done
+by ath_stoprecv.
 
-Part of the series is already in staging-next.
+To fix this, always call ath_flushrecv from within ath_stoprecv before
+the FIFO is emptied, but still after the hw receive path has been stopped.
 
-However, the driver is currently broken in staging-next, these three
-patches bring the driver up.
+This ensures that frames received (and ACKed by the hardware) shortly before
+a reset will be seen by the software, which should improve A-MPDU session
+stability.
 
-Those two clean up patches can be dropped for now, and I will resend
-them later.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 16 +++-------------
+ drivers/net/wireless/ath/ath9k/recv.c | 16 +++++++++-------
+ 2 files changed, 12 insertions(+), 20 deletions(-)
 
-
-Malcolm
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6d04654..eced021 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -182,7 +182,7 @@ static void ath_restart_work(struct ath_softc *sc)
+ 	ath_start_ani(sc);
+ }
+ 
+-static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
++static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	bool ret = true;
+@@ -204,14 +204,6 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
+ 	if (!ath_drain_all_txq(sc, retry_tx))
+ 		ret = false;
+ 
+-	if (!flush) {
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+-			ath_rx_tasklet(sc, 1, true);
+-		ath_rx_tasklet(sc, 1, false);
+-	} else {
+-		ath_flushrecv(sc);
+-	}
+-
+ 	tasklet_enable(&sc->intr_tq);
+ 
+ 	return ret;
+@@ -266,7 +258,6 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = NULL;
+ 	bool fastcc = true;
+-	bool flush = false;
+ 	int r;
+ 
+ 	__ath_cancel_work(sc);
+@@ -280,11 +271,10 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+ 
+ 	if (!hchan) {
+ 		fastcc = false;
+-		flush = true;
+ 		hchan = ah->curchan;
+ 	}
+ 
+-	if (!ath_prepare_reset(sc, retry_tx, flush))
++	if (!ath_prepare_reset(sc, retry_tx))
+ 		fastcc = false;
+ 
+ 	ath_dbg(common, CONFIG, "Reset to %u MHz, HT40: %d fastcc: %d\n",
+@@ -808,7 +798,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ 	}
+ 
+-	ath_prepare_reset(sc, false, true);
++	ath_prepare_reset(sc, false);
+ 
+ 	if (sc->rx.frag) {
+ 		dev_kfree_skb_any(sc->rx.frag);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index b782974..17325a8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -463,6 +463,13 @@ start_recv:
+ 	return 0;
+ }
+ 
++static void ath_flushrecv(struct ath_softc *sc)
++{
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++		ath_rx_tasklet(sc, 1, true);
++	ath_rx_tasklet(sc, 1, false);
++}
++
+ bool ath_stoprecv(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -473,6 +480,8 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	ath9k_hw_setrxfilter(ah, 0);
+ 	stopped = ath9k_hw_stopdmarecv(ah, &reset);
+ 
++	ath_flushrecv(sc);
++
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+ 		ath_edma_stop_recv(sc);
+ 	else
+@@ -489,13 +498,6 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	return stopped && !reset;
+ }
+ 
+-void ath_flushrecv(struct ath_softc *sc)
+-{
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+-		ath_rx_tasklet(sc, 1, true);
+-	ath_rx_tasklet(sc, 1, false);
+-}
+-
+ static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
+ {
+ 	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
+-- 
+1.8.0.2
 
