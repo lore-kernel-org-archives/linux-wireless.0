@@ -1,88 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:42016 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464Ab3AJKOm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43247 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab3AIMC0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 05:14:42 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20130109191817.GA17321@tuxdriver.com>
-References: <20130109191817.GA17321@tuxdriver.com>
-Date: Thu, 10 Jan 2013 11:14:41 +0100
-Message-ID: <CA+icZUV9+JgZcYKZ4DAoj69D89hF-1cqr_bTpJvfgzWZZJ41kQ@mail.gmail.com> (sfid-20130110_111510_475584_7BC59C08)
-Subject: Re: pull request: wireless 2013-01-09
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Jan 2013 07:02:26 -0500
+Message-ID: <1357732965.9757.4.camel@jlt4.sipsolutions.net> (sfid-20130109_130235_428725_25E5D1E3)
+Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johan Danielsson <joda@kth.se>, linux-wireless@vger.kernel.org,
+	sgruszka@redhat.com
+Date: Wed, 09 Jan 2013 13:02:45 +0100
+In-Reply-To: <201301090038.01984.chunkeey@googlemail.com> (sfid-20130109_003827_192837_F2D7BAE7)
+References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
+	 <201301081715.49672.chunkeey@googlemail.com>
+	 <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
+	 <201301090038.01984.chunkeey@googlemail.com>
+	 (sfid-20130109_003827_192837_F2D7BAE7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> Dave,
->
-> Please pull this batch of fixes (and a new driver) for the 3.8 stream...
->
-> Included is a mac80211 pull, of which Johannes says the following:
->
-> 'This includes a number of fixes for various pieces of mac80211. I've
-> also included Thomas's memory RMC hash table optimisation since it
-> saves so much memory.'
->
-> Also from Johannes is an iwlwifi pull:
->
-> 'I have two fixes for iwlwifi: one to fix a lost return value that was
-> dropped in a previous patch and could cause "nobody cared" IRQ messages,
-> and one to work around a firmware issue.'
->
-> Amitkumar Karwar brings an mwifiex for a typo in an comparison.
->
-> Bing Zhao gives us an mwifiex fix to properly check the return value
-> from wait_event_interruptible and handle it properly.
->
-> Chen Gang provides a fix to make iwlegacy use strlcpy instead of
-> strncpy, avoiding a potential buffer underflow.
->
-> Julian Wollrath fixes a typo in an error message in rtlwifi.
->
-> Larry Finger brings a b43 fix for a firmware loading problem.
->
-> Nickolai Zeldovich avoids a use-after-free in the mwl8k driver.
->
-> Vladimir Kondratiev brings the last big piece, the new Qualcomm/Atheros
-> wil6210 802.11ad driver.  Since it is for new hardware, I hope that
-> taking it for 3.8 is not a problem.
->
-> Please let me know if there are problems!
->
-> Thanks,
->
-> John
->
-> ---
->
-> The following changes since commit c9be4a5c49cf51cc70a993f004c5bb30067a65ce:
->
->   net: prevent setting ttl=0 via IP_TTL (2013-01-08 17:57:10 -0800)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
->
-> for you to fetch changes up to a9b8a894ad7d0b90b0464c9ac7e8e5c1687edcae:
->
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2013-01-09 11:01:37 -0500)
->
-> ----------------------------------------------------------------
+On Wed, 2013-01-09 at 00:38 +0100, Christian Lamparter wrote:
 
-Hi John,
+> > My feeling is that nothing in 802.11-2012 covers this scenario. There
+> > are some paragraphs that deal with similar situations when using the
+> > other flavour of BlockAcks (originally defined in 802.11e I believe),
+> > but in my experience, you can't assume much based in this.
+> > 
+> > And even if the DELBA in 6 is sent ok, there is a race between 5 and
+> > 6, where the originator has block ack state, but the recipient does not.
+> 
+> Yes, this sounds wrong. Was there a historic reason why RX_STOP was put before
+> DELBA? I've traced the code back to Intel's initial A-MPDU RX contribution:
 
-if I look at for-davem GIT branch (online GitWeb interface) [1], this
-has no tag "master-2013-01-09" like in master branch.
-Comments?
+I'm not aware of any particular reason. However, not all devices/drivers
+properly report TX status, so waiting for TX status won't be feasible
+with all devices/drivers.
 
-Regards,
-- Sedat -
+> > So, my question now is: Does this reasoning make sense, or have I
+> > missed anything?
+>  
+> I think reordering 5 and 6 won't stop the race entirely. ACKs are 
+> usually generated by hardware (or firmware) right away when the received
+> frame passed the CRC checks and found a place to stay in the HW's FIFOs.
+> However by the time DELBA is processed by the peers' 802.11 stack, some
+> frames on the tx-path might have left the DELBA in the dust [keep-alives
+> and friends].
+> 
+> [Note: Action frames like DELBA have to be encrypted/decrypted when 
+> MFP/802.11w is enabled on the link and some HW/FW can't do that. So
+> it takes even longer to react to those.]
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=shortlog;h=refs/heads/for-davem
+Actually no: HT action frames aren't robust management frames.
+
+FWIW, our (Intel's) firmware will send frames from the aggregation
+queues unaggregated as soon as it receives a DelBA frame from the peer,
+so as long as it receives it there's no issue.
+
+> [Note2: Some hardware (rtlwifi) only have some sort of "fire and forget"
+> TX. The we don't know when, or even if a frame (like a DELBA) was received...]
+> 
+> [Note3: What will happen to DELBAs if they aren't acked? Is there a timeout
+> or are they retried until the peer is dropped by other means?
+> I'm asking this because with some hardware we have to be greedy with the
+> number of open BA Agreements. For example ti's wl12xx can only support a
+> limited number of open RX BA Agreements.]
+
+DelBA frames are unicast frames, so they're retried normally.
+
+johannes
+
+
