@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51706 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755256Ab3AQN2y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 08:28:54 -0500
-Date: Thu, 17 Jan 2013 14:28:43 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 2/6] cfg80211: check radar interface combinations
-Message-ID: <20130117132843.GB19552@pandem0nium> (sfid-20130117_142903_019265_3B2FC637)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357650251-17425-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1358376177.15012.31.camel@jlt4.sipsolutions.net>
- <1358376287.15012.32.camel@jlt4.sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:19747 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755461Ab3AIKy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 05:54:56 -0500
+Date: Wed, 9 Jan 2013 11:54:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johan Danielsson <joda@kth.se>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
+Message-ID: <20130109105437.GB13513@redhat.com> (sfid-20130109_115502_311300_CBB60B1C)
+References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com>
+ <201301081715.49672.chunkeey@googlemail.com>
+ <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
+ <201301090038.01984.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0eh6TmSyL6TZE2Uz"
-In-Reply-To: <1358376287.15012.32.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201301090038.01984.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi
 
---0eh6TmSyL6TZE2Uz
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jan 09, 2013 at 12:38:01AM +0100, Christian Lamparter wrote:
+> Yes, this sounds wrong. Was there a historic reason why RX_STOP was put before
+> DELBA? I've traced the code back to Intel's initial A-MPDU RX contribution:
+> 
+> commit 07db218396650933abff3c5c1ad1e2a6e0cfedeb
+> Author: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> Date:   Tue Dec 25 17:00:33 2007 +0200
+> 
+>     mac80211: A-MPDU Rx adding basic functionality
+> 
+> 
+> Stanislaw, do you know if iwlegacy needs AGG_RX_STOP before it can sent out
+> the DELBA [Maybe something about flushing an FW internal RX reorder buffer,
+> or anything]?
 
-On Wed, Jan 16, 2013 at 11:44:47PM +0100, Johannes Berg wrote:
-> On Wed, 2013-01-16 at 23:42 +0100, Johannes Berg wrote:
-> > On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
-> > > To ease further DFS development regarding interface combinations, use
-> > > the interface combinations structure to test for radar capabilities.
-> > > Drivers can specify which channel widths they support, and in which
-> > > modes. Drivers should first allow AP mode only, but can later allow
-> > > MultiSSID APs, AP+Ad-Hoc, etc.
-> >=20
-> > Applied.
->=20
-> Btw, an iw patch would be nice.
+I think not, AGG_RX_STOP disable in firmware (ht-immediate) BA response,
+when receive AMPDU (for particular station/tid). So ordering: DELBA, then
+AGG_RX_STOP should be fine for iwlegacy and iwlwifi.
 
-OK, will put that on my TODO.
+Thanks
+Stanislaw
 
---0eh6TmSyL6TZE2Uz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlD3/IsACgkQrzg/fFk7axZvpwCg47gaDz7U6mOMdUZSTXxE5yQO
-q/oAoLLac5uqSQv3ar/DPd/3xYW4AJgv
-=/coX
------END PGP SIGNATURE-----
-
---0eh6TmSyL6TZE2Uz--
