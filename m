@@ -1,84 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54401 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754077Ab3AaKll (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:44777 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757436Ab3AIN1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 05:41:41 -0500
-Message-ID: <1359628924.8415.5.camel@jlt4.sipsolutions.net> (sfid-20130131_114145_323910_47F0D30E)
-Subject: Re: [RFC] Expand byte counters in struct station_info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 31 Jan 2013 11:42:04 +0100
-In-Reply-To: <6017229.5ECEUbBVAL@lx-vladimir>
-References: <6017229.5ECEUbBVAL@lx-vladimir>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 9 Jan 2013 08:27:18 -0500
+Date: Wed, 9 Jan 2013 14:27:11 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: Re: [PATCH] ath9k: add spectral scan feature
+Message-ID: <20130109132711.GB22836@pandem0nium> (sfid-20130109_142731_328044_196C1F33)
+References: <1357652938-18836-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <CAJ-VmomJiw8cZqiPRCa8iDrTJdhwtWTTVQwMcHnnyft+DquR1Q@mail.gmail.com>
+ <CAJ-Vmom8XFaPwOamGwqcG1sZaDyjodUbhgPFNHONBAYnr1eEBA@mail.gmail.com>
+ <CAJ-Vmomz-iqz5h-rdzd9Z-0DQdMrWBq2cdXq+DHvNUrVWmS0Gw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="hQiwHBbRI9kgIhsi"
+In-Reply-To: <CAJ-Vmomz-iqz5h-rdzd9Z-0DQdMrWBq2cdXq+DHvNUrVWmS0Gw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-31 at 11:46 +0200, Vladimir Kondratiev wrote:
-> Hi,
-> 
-> Now wifi drivers reports per-station info using struct station_info;
-> and currently for the data counters it has:
-> 	u32 rx_bytes;
-> 	u32 tx_bytes;
-> 
-> while for device-wide statistics one can use ndo_get_stats64() to fill
-> 64-bit counters in the struct rtnl_link_stats64, per-station statistics
-> are 32-bit.
-> 
-> This becomes problematic with gigabit speeds now observed for .11ac and .11ad -
-> counters overflown every few seconds.
-> 
-> I'd like to extend rx and tx byte counters to 64-bit.
-> 
-> What is better - expand existing fields in struct station_info as:
-> 	u64 rx_bytes;
-> 	u64 tx_bytes;
 
-This.
+--hQiwHBbRI9kgIhsi
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> or add ne ones like:
-> 	u64 rx_bytes64;
-> 	u64 tx_bytes64;
+Hey Adrian,
 
-I don't see a reason to do this.
 
-> 
-> Then, I'll add
-> 	NL80211_STA_INFO_RX_BYTES64,
-> 	NL80211_STA_INFO_TX_BYTES64,
-> to the enum nl80211_sta_info
-> 
-> Before doing patch, I'd like to hear comments.
-> Any consideration why is this not to be done or done differently?
+On Tue, Jan 08, 2013 at 02:17:40PM -0800, Adrian Chadd wrote:
+> .. my turn to impress :-)
+>=20
+> I've peverted your code in the worst possible way and made it work on
+> a live data stream.
+>=20
+> http://people.freebsd.org/~adrian/ath/fft_snapshot_5ghz.png
+>=20
+> :-)
 
-Sounds good to me.
+Cool, that's actually pretty nice!
 
-Two points:
+Wanna share your code? The original program was just a simple proof of
+concept, but we can integrate code there. live data was on my wishlist
+as well. :)
 
-1) You should provide the RX_TX_BYTES attributes, but I think only if
-the value fits into 32 bits. That way, we don't report invalid
-information.
+BTW, what happened to your QT visualizer?
 
-2a) Need to be careful in downstream drivers/mac80211, they should also
-be converted to use 64-bit counters when gathering the data. Otherwise,
-userspace might assume the value is actually 64-bit, when it rolled over
-in mac80211.
+>=20
+> I have FreeBSD's ath driver now enabling and triggering spectral scan
+> (if configured this way) on each channel reset/change, so I can gather
+> spectral samples during a scan.
 
-2b) An alternative to converting all the non-mac80211 drivers and
-mac80211 would be to add new station info flags: STATION_INFO_TX_BYTES64
-and STATION_INFO_RX_BYTES64. You'd still fill the rx_bytes/tx_bytes
-values, but if the driver sets STATION_INFO_TX_BYTES you'd never use a
-64-bit attribute in nl80211.
+That's similar to what is included in the Linux patch.
 
-I think 2a is preferable, but it'd be a bunch of work to make sure to
-catch all drivers, and some devices might not actually have 64-bit
-counters (if the data comes from firmware)? So 2b might be a better
-choice.
+>=20
+> I'll tinker with this a little more, but I'm honestly at the point
+> where I think you and I should just agree on a javascript-friendly
+> encoding scheme and write a HTTP server app that just reads in a live
+> or recorded data stream, then feeds it serialised out HTTP. That way
+> people can just write HTML5 renderers (which leverage all the
+> GL/accelaration they want) and we can benefit from having a shared
+> visualisation tool. :-)
+>=20
+> What do you think?
 
-johannes
+Putting all together into one "standard output" is a great idea!
 
+Actually I'm not much of a webdeveloper and have no idea of HTML5 etc, or h=
+ow to
+design such a "java-script friendly HTTP server app" - implementing yet ano=
+ther
+HTTP server is probably not a good idea? But any proposals is welcome
+- maybe something which can run on OpenWRT as well so these guys can enjoy
+the spectral features on their WRT and TP-Link routers. :)
+
+Cheers,
+	Simon
+
+--hQiwHBbRI9kgIhsi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlDtcC8ACgkQrzg/fFk7axb37wCg0aIwmwtjas0UMufZMxnnd3Vu
+imQAoJ8D7k+Lc33/RM7k98kUP+Ttr3FV
+=xezx
+-----END PGP SIGNATURE-----
+
+--hQiwHBbRI9kgIhsi--
