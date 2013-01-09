@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37695 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945Ab3APODW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 09:03:22 -0500
-Message-ID: <1358345026.22862.6.camel@jlt4.sipsolutions.net> (sfid-20130116_150325_298423_C3765D34)
-Subject: Re: [PATCH] mac80211: fix FT roaming
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:54173 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757784Ab3AIMnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 07:43:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: cedric.debarge@acksys.fr
-Date: Wed, 16 Jan 2013 15:03:46 +0100
-In-Reply-To: <1357911819-9504-1-git-send-email-johannes@sipsolutions.net> (sfid-20130111_144321_886241_D82FE615)
-References: <1357911819-9504-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130111_144321_886241_D82FE615)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 3.8 1/5] ath9k: do not link receive buffers during flush
+Date: Wed,  9 Jan 2013 13:43:09 +0100
+Message-Id: <1357735393-93564-1-git-send-email-nbd@openwrt.org> (sfid-20130109_134321_521065_5DED4EE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-01-11 at 14:43 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> During FT roaming, wpa_supplicant attempts to set the
-> key before association. This used to be rejected, but
-> as a side effect of my commit 66e67e418908442389d3a9e
-> ("mac80211: redesign auth/assoc") the key was accepted
-> causing hardware crypto to not be used for it as the
-> station isn't added to the driver yet.
-> 
-> It would be possible to accept the key and then add it
-> to the driver when the station has been added. However,
-> this may run into issues with drivers using the state-
-> based station adding if they accept the key only after
-> association like it used to be.
-> 
-> For now, revert to the behaviour from before the auth
-> and assoc change.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Cédric Debarge <cedric.debarge@acksys.fr>
-> Tested-by: Cédric Debarge <cedric.debarge@acksys.fr>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On AR9300 the rx FIFO needs to be empty during reset to ensure that no
+further DMA activity is generated, otherwise it might lead to memory
+corruption issues.
 
-Applied.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 3d236ae..db4562d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -735,6 +735,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 			return NULL;
+ 	}
+ 
++	list_del(&bf->list);
+ 	if (!bf->bf_mpdu)
+ 		return bf;
+ 
+@@ -1245,14 +1246,15 @@ requeue_drop_frag:
+ 			sc->rx.frag = NULL;
+ 		}
+ requeue:
++		list_add_tail(&bf->list, &sc->rx.rxbuf);
++		if (!flush)
++			continue;
++
+ 		if (edma) {
+-			list_add_tail(&bf->list, &sc->rx.rxbuf);
+ 			ath_rx_edma_buf_link(sc, qtype);
+ 		} else {
+-			list_move_tail(&bf->list, &sc->rx.rxbuf);
+ 			ath_rx_buf_link(sc, bf);
+-			if (!flush)
+-				ath9k_hw_rxena(ah);
++			ath9k_hw_rxena(ah);
+ 		}
+ 	} while (1);
+ 
+-- 
+1.8.0.2
 
