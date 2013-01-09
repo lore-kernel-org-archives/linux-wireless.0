@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:52937 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408Ab3AUI7d (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:51449 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757985Ab3AIRhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 03:59:33 -0500
-Message-ID: <1358758714.6252.135.camel@cumari.coelho.fi> (sfid-20130121_095944_398787_9B7C5BBE)
-Subject: Re: wl12xx: does not connect to WPA2-personal
-From: Luciano Coelho <coelho@ti.com>
-To: Ketan Kamat <Ketan_Kamat@persistent.co.in>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 21 Jan 2013 10:58:34 +0200
-In-Reply-To: <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
-References: <loom.20130120T094649-416@post.gmane.org>
-	 <1358754973.6252.131.camel@cumari.coelho.fi>
-	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Wed, 9 Jan 2013 12:37:00 -0500
+Received: by mail-ie0-f173.google.com with SMTP id e13so2431929iej.32
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 09:37:00 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] mac80211: set NEED_TXPROCESSING for PERR frames
+Date: Wed,  9 Jan 2013 12:34:55 -0500
+Message-Id: <1357752896-17497-1-git-send-email-me@bobcopeland.com> (sfid-20130109_183706_323729_79D5D5E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-21 at 08:42 +0000, Ketan Kamat wrote:
-> Hi Luciano,
-> 
-> I applied some of the code commits that were done to wl12xx driver (http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=history;f=drivers/net/wireless;hb=HEAD;pg=20 ):
-> 
-> 2012-04-10  	Eyal Shapira 		wl12xx: increase scan timeout to 30s
-> 2012-04-10	Eyal Shapira		wl12xx: adaptive sched scan dwell times
-> 2012-04-10	Eyal Shapira		wl12xx: fix a memory leak of probereq template upon
-> 2012-04-10	Eliad Peller		wl12xx: free ap keys only in ap mode
-> 2012-04-10	Eyal Shapira		wl12xx: fix race between suspend/resume and recovery
-> 2012-04-10	Victor Goldenshtein	wl12xx: fix station channel switch
-> 2012-04-10	Eliad Peller		wl12xx: set do_join on BSS_CHANGED_ASSOC
-> 
-> After applying these changes, it got connected to WPA2-personal. Currently doing some more testing
+A user reported warnings in ath5k due to transmitting frames with no
+rates set up.  The frames were Mesh PERR frames, and some debugging
+showed an empty control block with just the vif pointer:
 
-This sounds quiet weird.  I don't think any of the patches you applied
-have any influence in AES connections.  Are you sure you didn't change
-anything else?
+>  [  562.522682] XXX txinfo: 00000000: 00 00 00 00 00 00 00 00 00 00 00
+>  00 00 00 00 00  ................
+>  [  562.522688] XXX txinfo: 00000010: 00 00 00 00 00 00 00 00 54 b8 f2
+>  db 00 00 00 00  ........T.......
+>  [  562.522693] XXX txinfo: 00000020: 00 00 00 00 00 00 00 00 00 00 00
+>  00 00 00 00 00  ................
 
-I just tried vanilla 3.4 and I didn't have problems connecting from my
-wl127x chip to a wl18xx running hostapd with WPA2/AES.
+Set the IEEE80211_TX_INTFL_NEED_TXPROCESSING flag to ensure that
+rate control gets run before the frame is sent.
 
---
-Cheers,
-Luca. 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/mac80211/mesh_hwmp.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f0b384e..e3b3959 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -215,6 +215,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
+ 	skb->priority = 7;
+ 
+ 	info->control.vif = &sdata->vif;
++	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ }
+ 
+-- 
+1.7.10.4
 
