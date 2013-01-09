@@ -1,29 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:42336 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab3AOKVP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jan 2013 05:21:15 -0500
-Received: by mail-wi0-f177.google.com with SMTP id hm2so2123355wib.16
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jan 2013 02:21:14 -0800 (PST)
-MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 15 Jan 2013 15:50:54 +0530
-Message-ID: <CABPxzYL1LM-XAAb1RomgcM=O9Ma=KJZcbmEgTA678FSFuT8QMg@mail.gmail.com> (sfid-20130115_112124_687568_C4A212A9)
-Subject: Tx AMSDU Support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:55803 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755945Ab3AIPRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 10:17:05 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 3.8 1/5] ath9k: do not link receive buffers during flush
+Date: Wed,  9 Jan 2013 16:16:52 +0100
+Message-Id: <1357744616-63257-1-git-send-email-nbd@openwrt.org> (sfid-20130109_161710_131753_FFF19B2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On AR9300 the rx FIFO needs to be empty during reset to ensure that no
+further DMA activity is generated, otherwise it might lead to memory
+corruption issues.
 
-Is there any work in progress/planned related to Tx AMSDU logic in mac80211?
-Even though only Rx is mandatory, but to test the Rx we need the Tx.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-I see that the support is there in mwifiex(marvell's) driver. So is
-there any patent/legal issue before we can implement one?
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 3d236ae..8fb6d3b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -735,6 +735,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 			return NULL;
+ 	}
+ 
++	list_del(&bf->list);
+ 	if (!bf->bf_mpdu)
+ 		return bf;
+ 
+@@ -1245,14 +1246,15 @@ requeue_drop_frag:
+ 			sc->rx.frag = NULL;
+ 		}
+ requeue:
++		list_add_tail(&bf->list, &sc->rx.rxbuf);
++		if (flush)
++			continue;
++
+ 		if (edma) {
+-			list_add_tail(&bf->list, &sc->rx.rxbuf);
+ 			ath_rx_edma_buf_link(sc, qtype);
+ 		} else {
+-			list_move_tail(&bf->list, &sc->rx.rxbuf);
+ 			ath_rx_buf_link(sc, bf);
+-			if (!flush)
+-				ath9k_hw_rxena(ah);
++			ath9k_hw_rxena(ah);
+ 		}
+ 	} while (1);
+ 
+-- 
+1.8.0.2
 
-Regards,
-Chaitanya T K.
