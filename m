@@ -1,93 +1,423 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41467 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183Ab3AQN2L (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23856 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756837Ab3AIE4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 08:28:11 -0500
-Date: Thu, 17 Jan 2013 14:27:56 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 1/6] nl80211: check if channel can be used in
- join_ibss
-Message-ID: <20130117132755.GA19552@pandem0nium> (sfid-20130117_142815_407389_6CFA8C07)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357650251-17425-2-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1358375759.15012.30.camel@jlt4.sipsolutions.net>
+	Tue, 8 Jan 2013 23:56:31 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <djindal@qti.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH V8 2/2] cfg80211/nl80211: Enable drivers to implement MAC address based ACL
+Date: Wed, 9 Jan 2013 10:26:12 +0530
+Message-ID: <1357707372-12273-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20130109_055640_654262_93E98571)
+In-Reply-To: <1357707372-12273-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1357707372-12273-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fdj2RfSjLxBAspz7"
-In-Reply-To: <1358375759.15012.30.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch enables drivers to implement MAC address based
+access control in AP/P2P GO mode. Capable driver advertises
+this capability by setting the maximum number of MAC addresses
+that driver supports, wiphy->max_acl_mac_addrs.
 
---fdj2RfSjLxBAspz7
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Driver enables its ACL either with the initial list passed
+through NL80211_CMD_START_AP or a list passed through
+NL80211_CMD_SET_MAC_ACL. ACL information passed in these
+commands contains ACL policy and the list of stations' MAC
+address to be configured under this policy. With the ACL policy as
+NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED, driver will reject any
+connection request from stations whose MAC address is part of the MAC
+list, all stations which are not part of the MAC list will be allowed to
+connect. When ACL policy is NL80211_ACL_POLICY_DENY_UNLESS_LISTED,
+driver will allow the stations which are part of the MAC list, all other
+stations are rejected. When a station's connection request is rejected
+due to ACL an event is notified to userspace with reason code
+NL80211_CONN_FAIL_BLOCKED_CLIENT in NL80211_CMD_CONN_FAILED. Driver must
+make sure to clear its acl list when doing stop_ap.
 
-On Wed, Jan 16, 2013 at 11:35:59PM +0100, Johannes Berg wrote:
-> On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
-> > IBSS should also consider interface combinations.
-> >=20
-> > Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-> > ---
-> >  net/wireless/nl80211.c |   10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >=20
-> > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> > index 9bd8340..62e98f5 100644
-> > --- a/net/wireless/nl80211.c
-> > +++ b/net/wireless/nl80211.c
-> > @@ -5463,6 +5463,7 @@ static int nl80211_join_ibss(struct sk_buff *skb,=
- struct genl_info *info)
-> >  {
-> >  	struct cfg80211_registered_device *rdev =3D info->user_ptr[0];
-> >  	struct net_device *dev =3D info->user_ptr[1];
-> > +	struct wireless_dev *wdev =3D dev->ieee80211_ptr;
-> >  	struct cfg80211_ibss_params ibss;
-> >  	struct wiphy *wiphy;
-> >  	struct cfg80211_cached_keys *connkeys =3D NULL;
-> > @@ -5524,6 +5525,15 @@ static int nl80211_join_ibss(struct sk_buff *skb=
-, struct genl_info *info)
-> >  	ibss.channel_fixed =3D !!info->attrs[NL80211_ATTR_FREQ_FIXED];
-> >  	ibss.privacy =3D !!info->attrs[NL80211_ATTR_PRIVACY];
-> > =20
-> > +	mutex_lock(&rdev->devlist_mtx);
-> > +	err =3D cfg80211_can_use_chan(rdev, wdev, ibss.chandef.chan,
-> > +				    ibss.channel_fixed ? CHAN_MODE_SHARED :
-> > +							 CHAN_MODE_EXCLUSIVE);
-> > +	mutex_unlock(&rdev->devlist_mtx);
-> > +
-> > +	if (err)
-> > +		return -EINVAL;
-> > +
->=20
-> This is already in __cfg80211_join_ibss()
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ include/net/cfg80211.h       |   33 ++++++++++++
+ include/uapi/linux/nl80211.h |   54 ++++++++++++++++++-
+ net/wireless/core.c          |    5 ++
+ net/wireless/nl80211.c       |  119 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 209 insertions(+), 2 deletions(-)
 
-Whoops, missed that, sorry. Then we can skip this patch.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9cd9248..7e4c612 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -526,6 +526,21 @@ struct mac_address {
+ };
+ 
+ /**
++ * struct cfg80211_acl_data - Access control list data
++ * @acl_policy: ACL policy to be applied on the station's
++	entry specified by mac_addr
++ * @n_acl_entries: Number of MAC address entries passed
++ * @mac_addrs: List of MAC addresses of stations to be used for ACL
++ */
++struct cfg80211_acl_data {
++	enum nl80211_acl_policy_attr acl_policy;
++	int n_acl_entries;
++
++	/* Keep it last */
++	struct mac_address mac_addrs[];
++};
++
++/**
+  * struct cfg80211_ap_settings - AP configuration
+  *
+  * Used to configure an AP interface.
+@@ -544,6 +559,8 @@ struct mac_address {
+  * @inactivity_timeout: time in seconds to determine station's inactivity.
+  * @p2p_ctwindow: P2P CT Window
+  * @p2p_opp_ps: P2P opportunistic PS
++ * @acl: ACL configuration used by the drivers which has support for
++ *	MAC address based access control
+  */
+ struct cfg80211_ap_settings {
+ 	struct cfg80211_chan_def chandef;
+@@ -560,6 +577,7 @@ struct cfg80211_ap_settings {
+ 	int inactivity_timeout;
+ 	u8 p2p_ctwindow;
+ 	bool p2p_opp_ps;
++	struct cfg80211_acl_data *acl;
+ };
+ 
+ /**
+@@ -1767,6 +1785,13 @@ struct cfg80211_gtk_rekey_data {
+  *
+  * @start_p2p_device: Start the given P2P device.
+  * @stop_p2p_device: Stop the given P2P device.
++ *
++ * @set_mac_acl: Sets MAC address control list in AP and P2P GO mode.
++ *	Parameters include ACL policy, an array of MAC address of stations
++ *	and the number of MAC addresses. If there is already a list in driver
++ *	this new list replaces the existing one. Driver has to clear its ACL
++ *	when number of MAC addresses entries is passed as 0. Drivers which
++ *	advertise the support for MAC based ACL have to implement this callback.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1987,6 +2012,9 @@ struct cfg80211_ops {
+ 				    struct wireless_dev *wdev);
+ 	void	(*stop_p2p_device)(struct wiphy *wiphy,
+ 				   struct wireless_dev *wdev);
++
++	int	(*set_mac_acl)(struct wiphy *wiphy, struct net_device *dev,
++			       struct cfg80211_acl_data *params);
+ };
+ 
+ /*
+@@ -2290,6 +2318,9 @@ struct wiphy_wowlan_support {
+  * @ap_sme_capa: AP SME capabilities, flags from &enum nl80211_ap_sme_features.
+  * @ht_capa_mod_mask:  Specify what ht_cap values can be over-ridden.
+  *	If null, then none can be over-ridden.
++ *
++ * @max_acl_mac_addrs: Maximum number of MAC addresses that the device
++ *	supports for ACL.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -2392,6 +2423,8 @@ struct wiphy {
+ 	const struct iw_handler_def *wext;
+ #endif
+ 
++	u16 max_acl_mac_addrs;
++
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5470171..11d6299 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -170,7 +170,8 @@
+  *	%NL80211_ATTR_HIDDEN_SSID, %NL80211_ATTR_CIPHERS_PAIRWISE,
+  *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
+  *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
+- *	%NL80211_ATTR_AUTH_TYPE and %NL80211_ATTR_INACTIVITY_TIMEOUT.
++ *	%NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_INACTIVITY_TIMEOUT,
++ *	%NL80211_ATTR_ACL_POLICY and %NL80211_ATTR_MAC_ADDRS.
+  *	The channel to use can be set on the interface or be given using the
+  *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel width.
+  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
+@@ -586,6 +587,16 @@
+  * @NL80211_CMD_SET_MCAST_RATE: Change the rate used to send multicast frames
+  *	for IBSS or MESH vif.
+  *
++ * @NL80211_CMD_SET_MAC_ACL: sets ACL for MAC address based access control.
++ *	This is to be used with the drivers advertising the support of MAC
++ *	address based access control. List of MAC addresses is passed in
++ *	%NL80211_ATTR_MAC_ADDRS and ACL policy is passed in
++ *	%NL80211_ATTR_ACL_POLICY. Driver will enable ACL with this list, if it
++ *	is not already done. The new list will replace any existing list. Driver
++ *	will clear its ACL when the list of MAC addresses passed is empty. This
++ *	command is used in AP/P2P GO mode. Driver has to make sure to clear its
++ *	ACL list during %NL80211_CMD_STOP_AP.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -736,6 +747,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_MCAST_RATE,
+ 
++	NL80211_CMD_SET_MAC_ACL,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1310,6 +1323,15 @@ enum nl80211_commands {
+  *	if not given in START_AP 0 is assumed, if not given in SET_BSS
+  *	no change is made.
+  *
++ * @NL80211_ATTR_ACL_POLICY: ACL policy, see &enum nl80211_acl_policy_attr.
++ *
++ * @NL80211_ATTR_MAC_ADDRS: Array of nested MAC addresses, used for
++ *	MAC ACL.
++ *
++ * @NL80211_ATTR_MAC_ACL_MAX: u32 attribute to advertise the maximum
++ *	number of MAC addresses that a device can support for MAC
++ *	ACL.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1580,6 +1602,12 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_P2P_CTWINDOW,
+ 	NL80211_ATTR_P2P_OPPPS,
+ 
++	NL80211_ATTR_ACL_POLICY,
++
++	NL80211_ATTR_MAC_ADDRS,
++
++	NL80211_ATTR_MAC_ACL_MAX,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3198,7 +3226,7 @@ enum nl80211_probe_resp_offload_support_attr {
+  * enum nl80211_connect_failed_reason - connection request failed reasons
+  * @NL80211_CONN_FAIL_MAX_CLIENTS: Maximum number of clients that can be
+  *	handled by the AP is reached.
+- * @NL80211_CONN_FAIL_BLOCKED_CLIENT: Client's MAC is in the AP's blocklist.
++ * @NL80211_CONN_FAIL_BLOCKED_CLIENT: Connection request is rejected due to ACL.
+  */
+ enum nl80211_connect_failed_reason {
+ 	NL80211_CONN_FAIL_MAX_CLIENTS,
+@@ -3226,4 +3254,26 @@ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_AP				= 1<<2,
+ };
+ 
++/**
++ * enum nl80211_acl_policy_attr - The access control policy which needs to be
++ *	applied on a MAC list set by %NL80211_CMD_START_AP and
++ *	%NL80211_CMD_SET_MAC_ACL. To be used with %NL80211_ATTR_ACL_POLICY.
++ *
++ * @NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED: Deny stations which are
++ *	listed in ACL, i.e. allow all the stations which are not listed
++ *	in ACL to authenticate.
++ * @NL80211_ACL_POLICY_DENY_UNLESS_LISTED: Allow the stations which are listed
++ *	in ACL, i.e. deny all the stations which are not listed in ACL.
++ * @__NL80211_ACL_POLICY_AFTER_LAST: Internal use
++ * @NL80211_ACL_POLICY_MAX: Highest acl policy attribute
++ */
++enum nl80211_acl_policy_attr {
++	NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED,
++	NL80211_ACL_POLICY_DENY_UNLESS_LISTED,
++
++	/* Keep last */
++	__NL80211_ACL_POLICY_AFTER_LAST,
++	NL80211_ACL_POLICY_MAX = __NL80211_ACL_POLICY_AFTER_LAST - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 747dd93..885abe1 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -470,6 +470,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 			   ETH_ALEN)))
+ 		return -EINVAL;
+ 
++	if (WARN_ON((wiphy->max_acl_mac_addrs) &&
++		    (!(wiphy->flags & WIPHY_FLAG_HAVE_AP_SME) ||
++		     !rdev->ops->set_mac_acl)))
++		return -EINVAL;
++
+ 	if (wiphy->addresses)
+ 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9bd8340..829e6c7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -365,6 +365,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_P2P_CTWINDOW] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_P2P_OPPPS] = { .type = NLA_U8 },
++	[NL80211_ATTR_ACL_POLICY] = {. type = NLA_U8 },
++	[NL80211_ATTR_MAC_ADDRS] = { .type = NLA_NESTED },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1265,6 +1267,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 		    dev->wiphy.ht_capa_mod_mask))
+ 		goto nla_put_failure;
+ 
++	if ((dev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
++	    nla_put_u32(msg, NL80211_ATTR_MAC_ACL_MAX,
++			dev->wiphy.max_acl_mac_addrs))
++		goto nla_put_failure;
++
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
+@@ -2481,6 +2488,98 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++/* This function returns an error or the number of nested attributes */
++static int validate_acl_mac_addrs(struct nlattr *nl_attr)
++{
++	struct nlattr *attr;
++	int n_entries = 0, tmp;
++
++	nla_for_each_nested(attr, nl_attr, tmp) {
++		if (nla_len(attr) != ETH_ALEN)
++			return -EINVAL;
++
++		if (!is_valid_ether_addr(nla_data(attr)))
++			return -EINVAL;
++
++		n_entries++;
++	}
++
++	return n_entries;
++}
++
++/*
++ * This function parses ACL information and allocates memory for ACL data.
++ * On successful return, the calling function is responsible to free the
++ * ACL buffer returned by this function.
++ */
++static int parse_acl_data(struct wiphy *wiphy, struct genl_info *info,
++			  struct cfg80211_acl_data **acl)
++{
++	enum nl80211_acl_policy_attr acl_policy;
++	struct nlattr *attr;
++	int i = 0, n_entries, tmp;
++
++	if (!info->attrs[NL80211_ATTR_ACL_POLICY])
++		return -EINVAL;
++
++	acl_policy = nla_get_u8(info->attrs[NL80211_ATTR_ACL_POLICY]);
++	if (acl_policy > NL80211_ACL_POLICY_MAX)
++		return -EINVAL;
++
++	if (!info->attrs[NL80211_ATTR_MAC_ADDRS])
++		return -EINVAL;
++
++	n_entries = validate_acl_mac_addrs(info->attrs[NL80211_ATTR_MAC_ADDRS]);
++	if (n_entries < 0)
++		return n_entries;
++
++	if (n_entries > wiphy->max_acl_mac_addrs)
++		return -ENOTSUPP;
++
++	*acl = kzalloc(sizeof(**acl) + (sizeof(struct mac_address) * n_entries),
++		       GFP_KERNEL);
++	if (!(*acl))
++		return -ENOMEM;
++
++	nla_for_each_nested(attr, info->attrs[NL80211_ATTR_MAC_ADDRS], tmp) {
++		memcpy((*acl)->mac_addrs[i].addr, nla_data(attr), ETH_ALEN);
++		i++;
++	}
++
++	(*acl)->n_acl_entries = n_entries;
++	(*acl)->acl_policy = acl_policy;
++
++	return 0;
++}
++
++static int nl80211_set_mac_acl(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct cfg80211_acl_data *acl;
++	int err;
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
++		return -EOPNOTSUPP;
++
++	if (!dev->ieee80211_ptr->beacon_interval)
++		return -EINVAL;
++
++	if (!rdev->wiphy.max_acl_mac_addrs)
++		return -EOPNOTSUPP;
++
++	err = parse_acl_data(&rdev->wiphy, info, &acl);
++	if (err)
++		return err;
++
++	err = rdev->ops->set_mac_acl(&rdev->wiphy, dev, acl);
++
++	kfree(acl);
++
++	return err;
++}
++
+ static int nl80211_parse_beacon(struct genl_info *info,
+ 				struct cfg80211_beacon_data *bcn)
+ {
+@@ -2724,6 +2823,15 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+ 
++	if (info->attrs[NL80211_ATTR_ACL_POLICY]) {
++		if (!rdev->wiphy.max_acl_mac_addrs)
++			return -ENOTSUPP;
++
++		err = parse_acl_data(&rdev->wiphy, info, &params.acl);
++		if (err)
++			return err;
++	}
++
+ 	err = rdev_start_ap(rdev, dev, &params);
+ 	if (!err) {
+ 		wdev->preset_chandef = params.chandef;
+@@ -2732,6 +2840,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		wdev->ssid_len = params.ssid_len;
+ 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
+ 	}
++
++	kfree(params.acl);
++
+ 	return err;
+ }
+ 
+@@ -7792,6 +7903,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_MAC_ACL,
++		.doit = nl80211_set_mac_acl,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+-- 
+1.7.0.4
 
-Cheers,
-	Simon
-
---fdj2RfSjLxBAspz7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlD3/FsACgkQrzg/fFk7axbdkACggoYcMpIua2Us73WH6HMPWCje
-Z6MAoLHbRu1u0JjsSY2DW/PBuynLUDPm
-=hcfe
------END PGP SIGNATURE-----
-
---fdj2RfSjLxBAspz7--
