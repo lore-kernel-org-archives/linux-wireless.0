@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from maikjaekel.de ([79.143.179.117]:48111 "EHLO maikjaekel.de"
+Received: from nbd.name ([46.4.11.11]:55804 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659Ab3ABUFJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 15:05:09 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by maikjaekel.de (Postfix) with ESMTP id 00BE21CE341
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jan 2013 20:58:15 +0100 (CET)
-Received: from maikjaekel.de ([127.0.0.1])
-	by localhost (maikjaekel.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id f-S7PLeZgwNn for <linux-wireless@vger.kernel.org>;
-	Wed,  2 Jan 2013 20:58:14 +0100 (CET)
-Received: from maikjaekel.de (maikjaekel.de [127.0.1.1])
-	by maikjaekel.de (Postfix) with ESMTP id 596D21CE340
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jan 2013 20:58:14 +0100 (CET)
-Date: Wed, 2 Jan 2013 20:58:14 +0100 (CET)
-From: Maik =?utf-8?Q?J=C3=A4kel?= <email@maikjaekel.de>
+	id S1756339Ab3AIPRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 10:17:05 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Message-ID: <25833857.43311.1357156694151.JavaMail.root@maikjaekel.de> (sfid-20130102_210513_391024_40DC07F9)
-Subject: Adding a nanosecond timestamp to the beacon frame
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 3.8 2/5] ath9k: fix double-free bug on beacon generate failure
+Date: Wed,  9 Jan 2013 16:16:53 +0100
+Message-Id: <1357744616-63257-2-git-send-email-nbd@openwrt.org> (sfid-20130109_161719_735547_2BB228D1)
+In-Reply-To: <1357744616-63257-1-git-send-email-nbd@openwrt.org>
+References: <1357744616-63257-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey everyone,
+When the next beacon is sent, the ath_buf from the previous run is reused.
+If getting a new beacon from mac80211 fails, bf->bf_mpdu is not reset, yet
+the skb is freed, leading to a double-free on the next beacon tx attempt,
+resulting in a system crash.
 
-I'm trying to add a timestamp with nanosecond resolution to my beacon frames. After searching through the code I cannot decide at which I place I have to add the timestamp... 
-My target device uses an Ralink Rt305x chipset but I thought that this modification should not be depending on the hardware it is running on. So my question is:
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Where and how do I have to add the nanosecond timestamp?
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 531fffd..4eb269d 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -147,6 +147,7 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_buf_addr = 0;
++		bf->bf_mpdu = NULL;
+ 	}
+ 
+ 	skb = ieee80211_beacon_get(hw, vif);
+-- 
+1.8.0.2
 
-
-Best regards and thanks in advance,
-Maik Jäkel
