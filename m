@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2170 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752090Ab3ABMGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 07:06:04 -0500
-Message-ID: <50E4229D.5000900@broadcom.com> (sfid-20130102_130609_065028_4F035A48)
-Date: Wed, 2 Jan 2013 13:05:49 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:50328 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757843Ab3AIOKz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jan 2013 09:10:55 -0500
+Received: by mail-bk0-f44.google.com with SMTP id w11so927843bku.17
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 06:10:53 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
+Date: Wed, 9 Jan 2013 15:10:49 +0100
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de> <CAJ-Vmom91BS5fPas+FWsaqQwm-ZVcZckUXB2vQgoEXtKiOH6mA@mail.gmail.com> <20130109131540.GA22836@pandem0nium>
+In-Reply-To: <20130109131540.GA22836@pandem0nium>
 MIME-Version: 1.0
-To: "Linus Torvalds" <torvalds@linux-foundation.org>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: WARNING: at
- drivers/net/wireless/brcm80211/brcmsmac/main.c:7539
-References: <CA+55aFwpdyrtvE=86e1aHE9L5TR+_xP7e4PBBKtdcey3=f+Suw@mail.gmail.com>
-In-Reply-To: <CA+55aFwpdyrtvE=86e1aHE9L5TR+_xP7e4PBBKtdcey3=f+Suw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301091510.49723.chunkeey@googlemail.com> (sfid-20130109_151059_114953_0353FAF6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/28/2012 07:07 AM, Linus Torvalds wrote:
-> Ok, maybe somebody is interested in this.. I don't know what triggered
-> it, but maybe the few lines around it give some clue.
-
-Hi Linus,
-
-I am interested (being paid for it kinda helps). The warning itself does
-not necessarily have to be a problem, but the frameid mismatch between
-tx status info and the related buffer taken from the DMA ring does.
-Smells like a race condition, but I need to investigate that.
-
-> I think it's new to 3.8-rc1, because I haven't seen it before (well,
-> I'm running current -git - v3.8.0-rc1-00035-g101e5c7470eb to be exact
-> - but the networking changes since -rc1 are small and seem unrelated).
-> But maybe it just happens under certain circumstances.
-
-We had a big contribution from Canonical (cc-ed Seth) in brcmsmac
-itself. Not playing the blame game, but I suspect it has altered
-circumstances making the real issue (that was already there) more likely
-to happen. Hope that helps us nailing it down.
-
->                     Linus
+On Wednesday, January 09, 2013 02:15:40 PM Simon Wunderlich wrote:
+> On Tue, Jan 08, 2013 at 09:28:44AM -0800, Adrian Chadd wrote:
+> > I still populate the WME fields; I need to "fix" paying attention to
+> > them in the adhoc case.
 > 
+> Applying the EDCA parameters in the hardware and sending "standard" WME IEs
+> (without EDCA parameter sets) is understandable, Linux does that too. 
+
+Well, the WFA WMM Specification v1.2 costs $99 (last time I checked, which wasn't
+too long ago). However Johannes told me that the WMM IE should not be added
+to IBSS beacons.
+
+However, we can still pack some EDCA parameters into beacons, probe/(re-)assoc
+resps because there's an alternative IE. The "EDCA Parameter Set IE" is part of
+802.11-2012 8.4.2.31 - The Element ID is 12 [Table 8-54].
+
+[Note: It's worth mentioning that the WFA WMM spec was just a stop-gap measure
+until 802.11e was ready. Here's an article which explains this weird bit of
+history, unfortunately it is in German
+<http://www.heise.de/netze/artikel/Parallelnorm-WMM-223736.html>]
 
 Regards,
-Arend
-
-> ---
-> [  573.596631] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp
-> filtering: enabled true, count 1 (implement)
-> [  584.154535] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
-> Pkt tx suppressed, illegal channel possibly 1
-> [  584.154628] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete:
-> Pkt tx suppressed, illegal channel possibly 1
-> [  584.925487] ------------[ cut here ]------------
-> [  584.925521] WARNING: at
-> drivers/net/wireless/brcm80211/brcmsmac/main.c:7539
-> brcms_c_wait_for_tx_completion+0xa3/0xc0 [brcmsmac]()
-
-
+	Chr
