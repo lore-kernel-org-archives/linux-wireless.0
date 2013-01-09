@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s30.blu0.hotmail.com ([65.55.111.105]:31849 "EHLO
-	blu0-omc2-s30.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752618Ab3ALKrT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43126 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755530Ab3AILTG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 05:47:19 -0500
-Message-ID: <BLU0-SMTP988620BB0129B03EE7F0EBAC280@phx.gbl> (sfid-20130112_114721_844981_C6A69486)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH 5/5] bcma: use consistent case for 'hex' constants
-Date: Sat, 12 Jan 2013 02:46:17 -0800
-In-Reply-To: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
-References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 9 Jan 2013 06:19:06 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TstgW-0007dx-69
+	for linux-wireless@vger.kernel.org; Wed, 09 Jan 2013 12:19:04 +0100
+Message-ID: <1357730368.9757.0.camel@jlt4.sipsolutions.net> (sfid-20130109_121911_499337_8CBF2E3F)
+Subject: Re: [PATCH v2] regulatory: fix uevent
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 09 Jan 2013 12:19:28 +0100
+In-Reply-To: <1357729561-31054-1-git-send-email-johannes@sipsolutions.net> (sfid-20130109_120539_429369_BFC6C649)
+References: <1357729561-31054-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130109_120539_429369_BFC6C649)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2013-01-09 at 12:06 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The uevent callback doesn't protect its access to
+> last_request, which now causes a warning since
+> the conversion to get_last_request(). Fix this by
+> allowing to use RCU protection for last_request.
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/driver_pci_host.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+Applied.
 
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index 92800b4..d3bde6c 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -106,7 +106,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
- 		} else {
- 			addr = BCMA_CORE_PCI_PCICFG0;
- 			addr |= (func << 8);
--			addr |= (off & 0xfc);
-+			addr |= (off & 0xFC);
- 			val = pcicore_read32(pc, addr);
- 		}
- 	} else {
-@@ -119,7 +119,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
- 			goto out;
- 
- 		if (mips_busprobe32(val, mmio)) {
--			val = 0xffffffff;
-+			val = 0xFFFFFFFF;
- 			goto unmap;
- 		}
- 	}
-@@ -171,7 +171,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 		} else {
- 			addr = BCMA_CORE_PCI_PCICFG0;
- 			addr |= (func << 8);
--			addr |= (off & 0xfc);
-+			addr |= (off & 0xFC);
- 			val = pcicore_read32(pc, addr);
- 		}
- 	} else {
-@@ -184,7 +184,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
- 			goto out;
- 
- 		if (mips_busprobe32(val, mmio)) {
--			val = 0xffffffff;
-+			val = 0xFFFFFFFF;
- 			goto unmap;
- 		}
- 	}
-@@ -279,7 +279,7 @@ static u8 bcma_find_pci_capability(struct bcma_drv_pci *pc, unsigned int dev,
- 	/* check for Header type 0 */
- 	bcma_extpci_read_config(pc, dev, func, PCI_HEADER_TYPE, &byte_val,
- 				sizeof(u8));
--	if ((byte_val & 0x7f) != PCI_HEADER_TYPE_NORMAL)
-+	if ((byte_val & 0x7F) != PCI_HEADER_TYPE_NORMAL)
- 		return cap_ptr;
- 
- 	/* check if the capability pointer field exists */
--- 
-1.7.7.6
+johannes
 
