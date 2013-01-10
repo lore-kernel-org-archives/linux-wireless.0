@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56757 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932348Ab3AYOPV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 09:15:21 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@list.infradead.org
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 16/19] mac80211: avoid a build warning
-Date: Fri, 25 Jan 2013 14:14:33 +0000
-Message-Id: <1359123276-15833-17-git-send-email-arnd@arndb.de> (sfid-20130125_151611_354493_9C844E95)
-In-Reply-To: <1359123276-15833-1-git-send-email-arnd@arndb.de>
-References: <1359123276-15833-1-git-send-email-arnd@arndb.de>
+Received: from sg2plsmtpa01-01.prod.sin2.secureserver.net ([182.50.145.6]:53095
+	"EHLO sg2plsmtpa01-01.prod.sin2.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237Ab3AJQEu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2013 11:04:50 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] Revert "ath9k_hw: Fix calibration for AR9340"
+Date: Thu, 10 Jan 2013 21:33:50 +0530
+Message-Id: <1357833830-24005-1-git-send-email-sujith@msujith.org> (sfid-20130110_170454_400213_00E19FB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc cannot prove that the value of sdata->vif.type does not
-change between the switch() statement and the second
-comparison to NL80211_IFTYPE_AP, causing a harmless
-warning.
-Slightly reordering the code makes the warning go away
-with no functional change.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Without this patch, building ARM at91sam9g45_defconfig with
-gcc-4.6 results in:
+This reverts commit 03c2dc73581ad4ae54f1ccfc1463929b16b8b736.
 
-net/mac80211/tx.c: In function 'ieee80211_subif_start_xmit':
-net/mac80211/tx.c:1797:22: warning: 'chanctx_conf' may be used uninitialized in this function [-Wuninitialized]
+The change for AR9340 breaks TP-Link TL-WDR4300, we can re-submit this
+change once the HW differences are identified and appropriate code
+changes have been made.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
+Reported-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/tx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e9eadc4..df589bf 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1784,16 +1784,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			break;
- 		/* fall through */
- 	case NL80211_IFTYPE_AP:
-+		if (sdata->vif.type == NL80211_IFTYPE_AP)
-+			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+		if (!chanctx_conf)
-+			goto fail_rcu;
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		/* DA BSSID SA */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
- 		memcpy(hdr.addr2, sdata->vif.addr, ETH_ALEN);
- 		memcpy(hdr.addr3, skb->data + ETH_ALEN, ETH_ALEN);
- 		hdrlen = 24;
--		if (sdata->vif.type == NL80211_IFTYPE_AP)
--			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--		if (!chanctx_conf)
--			goto fail_rcu;
- 		band = chanctx_conf->def.chan->band;
- 		break;
- 	case NL80211_IFTYPE_WDS:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 9221f32..4caa80b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -319,7 +319,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ah->enabled_cals |= TX_IQ_CAL;
+-		if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah))
++		if (AR_SREV_9485_OR_LATER(ah))
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+ 	}
+ 
 -- 
-1.8.0
+1.8.1
 
