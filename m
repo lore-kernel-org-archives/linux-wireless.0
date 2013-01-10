@@ -1,101 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:41212 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224Ab3A2Owg (ORCPT
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:35208 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091Ab3AJIkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 09:52:36 -0500
-Date: Tue, 29 Jan 2013 15:52:28 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 0/3] Add DFS master ability
-Message-ID: <20130129145228.GC23425@pandem0nium> (sfid-20130129_155240_598568_ADC4CED5)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <5107CB32.2070908@neratec.com>
+	Thu, 10 Jan 2013 03:40:40 -0500
+Received: by mail-yh0-f45.google.com with SMTP id f64so37079yha.18
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2013 00:40:40 -0800 (PST)
+Date: Thu, 10 Jan 2013 05:34:23 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-01-10
+Message-ID: <20130110073423.GE18821@joana> (sfid-20130110_094044_133983_8E6C785D)
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OBd5C1Lgu00Gd/Tn"
-In-Reply-To: <5107CB32.2070908@neratec.com>
+	protocol="application/pgp-signature"; boundary="0OAP2g/MAC+5xKAE"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---OBd5C1Lgu00Gd/Tn
-Content-Type: text/plain; charset=utf-8
+--0OAP2g/MAC+5xKAE
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hey Zefir,
+Hi John,
 
-On Tue, Jan 29, 2013 at 02:14:26PM +0100, Zefir Kurtisi wrote:
-> On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
-> > [...]
-> >=20
-> > The channel states are now implemented in cfg80211. Shall we inform use=
-rspace
-> > about channel changes? If yes, how should we do that? We could add chan=
-nel states
-> > to the channel list, and give "channel list changed" events to userspac=
-e as it
-> > happens now, or define a new kind of event ("channel-available-again-ev=
-ent").
-> > Suggestions welcome. :)
-> >=20
-> An event whenever a channel state changes is perfect, ideally provided wi=
-th the
-> time-stamp when this change happened.
+A few fixes for 3.8. Five of them are just new devices ids addition.
+Apart from the that there is fix to a kernel memory leak to userspace from
+Anderson Lizardo, two interoperability fixes from Jaganath Kanakkassery and
+Szymon Janc. And a crash fix by me.
 
-Yeah. "channel list changed" events are already available (at least I get t=
-hem in
-hostapd). If we put the current state + timestamp when entered into the cha=
-nnel list,
-we would have what you want, too.
+Please pull, or let me know of any problem with these patches. Thanks.
 
->=20
-> With the centralized channel state handling proposed here, the required
-> modification to allow managed DFS operation can be minimized to a proprie=
-tary (or
-> even upstreamed but CONFIG_CFG80211_CERTIFICATION_ONUS guarded) function =
-to modify
-> channel states.
+	Gustavo
+--
 
-Yes, the idea is that one can have a small proprietary patch or default-off=
- command
-(CONFIG_CFG80211_CERTIFICATION_ONUS sounds good) or something like that to =
-change a
-DFS state with the new cfg80211 function. I also thought about having a nl8=
-0211-command
-without implementing an iw counter part or keeping a special "state change"=
- program
-somewhere with appropriate warnings. But this might still be too "liberal" =
-for the
-regulatory statement. :)
->=20
-> Can't contribute much to code review, but full ACK for the updated concep=
-t.
->=20
+The following changes since commit 5e20a4b53094651d80f856ff55a916b999dbb57a:
 
-Cool, also thanks for the code comments!
+  b43: Fix firmware loading when driver is built into the kernel (2013-01-07 14:34:45 -0500)
 
-Cheers,
-	Simon
+are available in the git repository at:
 
---OBd5C1Lgu00Gd/Tn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to b7e98b5100aad9290d7f06fcb9d1e80f7f62f05f:
+
+  Bluetooth: Check if the hci connection exists in SCO shutdown (2013-01-10 03:53:32 -0200)
+
+----------------------------------------------------------------
+AceLan Kao (3):
+      Bluetooth: Add support for IMC Networks [13d3:3393]
+      Bluetooth: Add support for Foxconn / Hon Hai [0489:e04e]
+      Bluetooth: Add support for Foxconn / Hon Hai [0489:e056]
+
+Anderson Lizardo (1):
+      Bluetooth: Fix incorrect strncpy() in hidp_setup_hid()
+
+Daniel Schaal (1):
+      Bluetooth: Add support for GC-WB300D PCIe [04ca:3006] to ath3k.
+
+Gustavo Padovan (1):
+      Bluetooth: Check if the hci connection exists in SCO shutdown
+
+Jaganath Kanakkassery (1):
+      Bluetooth: Fix authentication if acl data comes before remote feature evt
+
+Sergio Cambra (1):
+      Bluetooth device 04ca:3008 should use ath3k
+
+Szymon Janc (1):
+      Bluetooth: Fix sending HCI commands after reset
+
+ drivers/bluetooth/ath3k.c  | 10 ++++++++++
+ drivers/bluetooth/btusb.c  |  5 +++++
+ net/bluetooth/hci_core.c   |  8 --------
+ net/bluetooth/hci_event.c  |  2 +-
+ net/bluetooth/hidp/core.c  |  2 +-
+ net/bluetooth/l2cap_core.c | 11 +++++++++++
+ net/bluetooth/sco.c        |  2 +-
+ 7 files changed, 29 insertions(+), 11 deletions(-)
+
+
+--0OAP2g/MAC+5xKAE
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlEH4iwACgkQrzg/fFk7axbhqwCg8jyR2CzPBAZG6WUQRChMsGZI
-LS0An3elaD5pw39ZEH0u9AjXpWPbQTiS
-=bUFt
+iQIcBAEBAgAGBQJQ7m7+AAoJEPs3PUX4s20om3sP/1j3grsJYyfloizebfbJNMre
+ctSSnZm2SZJyLztRozcgs47ucdc8++09VFisEvv+cxf7SCfY9ZeJjTGVfHIiQIjX
+mnL/gpHmIN68hTLF2x/pV5umaMDcUs+FNgtysZbQY6CetgXA2Eso37Abwk5sB+pU
+CIwvLJBC6YDm6xv995eMPPbI+F4QKZQPe+lv9dybIK5eG9/v1ZrvF91EAIPFIthf
+WZ+jWwerhTYQZI0F8yTITbG8pSqA8WukGbMcot/GsJbkrWylkVIhQv67kbEiKvBm
+EYIHdCxFKtBzCpg2UVcLSo5zM738wkAmkkBSCviE42PLCkFCZLtmbKPWGMpzeVu/
+OEtIWhkakxWd+IX015B7kkmhnUirUzd0pKlNRffm2E2he/juHotyx+o1BeMlrxXJ
+rBob+unWhUzbj78+bbRUPKOLbVS+wu3GyBeIXZ04hmIIn+3irCsYvVDQQUk5N0VI
+qubb80bdBdWMgQAhVNR/ySYg00F4zIhsBUkI9H1Q3fWRmgq2b/owg6MS+IURy/mW
+qbvjhJ8BlYbBIa5LKmT+4fHup2DbrjC23LoPK/YRZuByJ5MGRCqcEYHO6FxrIEO8
+QMXJqkvpq1QxOB8K27+7A/KYq/NPoL5I891zEVgp2W+kL1tG5yRJQhG+AFssm8ki
+C3d6A4pzjuE/38uTJRXb
+=PkuK
 -----END PGP SIGNATURE-----
 
---OBd5C1Lgu00Gd/Tn--
+--0OAP2g/MAC+5xKAE--
