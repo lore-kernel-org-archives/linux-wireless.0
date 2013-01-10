@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16412 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755579Ab3AMUDe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2013 15:03:34 -0500
-Date: Sun, 13 Jan 2013 23:03:09 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] b43: N-PHY: fix gain in
- b43_nphy_get_gain_ctl_workaround_ent()
-Message-ID: <20130113200309.GB5907@elgon.mountain> (sfid-20130113_210339_147944_8E467C1D)
+Received: from mms1.broadcom.com ([216.31.210.17]:3544 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752298Ab3AJKVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2013 05:21:01 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>, stable@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for 3.8] brcmsmac: increase timer reference count for
+ new timers only
+Date: Thu, 10 Jan 2013 11:20:48 +0100
+Message-ID: <1357813248-10630-1-git-send-email-arend@broadcom.com> (sfid-20130110_112109_014127_7F2E2F69)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were no break statements in this switch statement so everything
-used the default settings.
+From: Piotr Haber <phaber@broadcom.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On hardware reintialization reference count of
+already existing timers would be increased again.
+This leads to problems on module unloading.
+
+Cc: stable@vger.kernel.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Static checker stuff.  Untested.
+Hi John,
 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 97d4e27..6a1c838 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3259,20 +3259,28 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 		switch (tr_iso) {
- 		case 0:
- 			e->cliplo_gain = 0x0062;
-+			break;
- 		case 1:
- 			e->cliplo_gain = 0x0064;
-+			break;
- 		case 2:
- 			e->cliplo_gain = 0x006a;
-+			break;
- 		case 3:
- 			e->cliplo_gain = 0x106a;
-+			break;
- 		case 4:
- 			e->cliplo_gain = 0x106c;
-+			break;
- 		case 5:
- 			e->cliplo_gain = 0x1074;
-+			break;
- 		case 6:
- 			e->cliplo_gain = 0x107c;
-+			break;
- 		case 7:
- 			e->cliplo_gain = 0x207c;
-+			break;
- 		default:
- 			e->cliplo_gain = 0x106a;
- 		}
+This patch fixes driver unload issue after driver restart due
+to fatal hardware problem. Because for 3.8 brcmsmac has been
+reported to restart (looking into that) this fix may be helpful
+to at least get the driver removed.
+
+Gr. AvS
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 1fbd8ec..0f71d1d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1407,9 +1407,10 @@ void brcms_add_timer(struct brcms_timer *t, uint ms, int periodic)
+ #endif
+ 	t->ms = ms;
+ 	t->periodic = (bool) periodic;
+-	t->set = true;
+-
+-	atomic_inc(&t->wl->callbacks);
++	if (!t->set) {
++		t->set = true;
++		atomic_inc(&t->wl->callbacks);
++	}
+ 
+ 	ieee80211_queue_delayed_work(hw, &t->dly_wrk, msecs_to_jiffies(ms));
+ }
+-- 
+1.7.10.4
+
+
