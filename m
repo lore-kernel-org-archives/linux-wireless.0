@@ -1,78 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:45816 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345Ab3ANWyR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 17:54:17 -0500
-Received: by mail-ie0-f172.google.com with SMTP id c13so6157938ieb.31
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 14:54:14 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:1044 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750785Ab3AJIg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2013 03:36:57 -0500
+Date: Thu, 10 Jan 2013 09:36:42 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, edumazet@google.com,
+	greearb@candelatech.com, bjorn@mork.no,
+	linux-wireless@vger.kernel.org, bhutchings@solarflare.com,
+	mirqus@gmail.com
+Subject: Re: [PATCH v2] net: set default_ethtool_ops in register_netdevice
+Message-ID: <20130110083641.GA5637@redhat.com> (sfid-20130110_093705_585160_D074AE80)
+References: <20130108153850.GA10464@redhat.com>
+ <20130109.235738.467651533138068641.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <1358179006-72370-1-git-send-email-nbd@openwrt.org>
-References: <1358179006-72370-1-git-send-email-nbd@openwrt.org>
-From: Robert Shade <robert.shade@gmail.com>
-Date: Mon, 14 Jan 2013 17:53:54 -0500
-Message-ID: <CAMgrJ3bVzSP7CYpaG7m42nyE-jTR_eQ2z4TT6RjDQojBv2M5Ug@mail.gmail.com> (sfid-20130114_235421_585322_5675920B)
-Subject: Re: [PATCH 3.8] ath9k: disable the tasklet before taking the PCU lock
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130109.235738.467651533138068641.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the quick turnaround.  I've been testing it for 6+ hrs now
-with no issue.
+On Wed, Jan 09, 2013 at 11:57:38PM -0800, David Miller wrote:
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date: Tue, 8 Jan 2013 16:38:51 +0100
+> 
+> > Since:
+> > 
+> > commit 2c60db037034d27f8c636403355d52872da92f81
+> > Author: Eric Dumazet <edumazet@google.com>
+> > Date:   Sun Sep 16 09:17:26 2012 +0000
+> > 
+> >     net: provide a default dev->ethtool_ops
+> > 
+> > wireless core does not correctly assign ethtool_ops. In order to fix
+> > the problem, move assignement of default_ethtool_ops to
+> > register_netdevice(). This is safe because both register_netdevice()
+> > and dev_ethtool() are protected by RTNL lock.
+> > 
+> > Patch is besed on hint of Michał Mirosław.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > Cc: stable@vger.kernel.org # 3.7+
+> > ---
+> > v1 -> v2: change order of default_ethtool_ops initialization to avoid
+> > the problem. Change the subject accordingly.
+> 
+> I don't understand this.  Why is the assignment of default_ethtool_ops
+> at netdev allocation time not working?  Is wireless really not using
+> alloc_netdev*()?
 
-On Mon, Jan 14, 2013 at 10:56 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Fixes a reported CPU soft lockup where the tasklet tries to acquire the
-> lock and blocks while ath_prepare_reset (holding the lock) waits for it
-> to complete.
->
-> Cc: stable@vger.kernel.org
-> Reported-by: Robert Shade <robert.shade@gmail.com>
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 17a5eec..0fb53d6 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -196,16 +196,12 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx)
->         ath9k_debug_samp_bb_mac(sc);
->         ath9k_hw_disable_interrupts(ah);
->
-> -       tasklet_disable(&sc->intr_tq);
-> -
->         if (!ath_stoprecv(sc))
->                 ret = false;
->
->         if (!ath_drain_all_txq(sc, retry_tx))
->                 ret = false;
->
-> -       tasklet_enable(&sc->intr_tq);
-> -
->         return ret;
->  }
->
-> @@ -262,6 +258,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->
->         __ath_cancel_work(sc);
->
-> +       tasklet_disable(&sc->intr_tq);
->         spin_lock_bh(&sc->sc_pcu_lock);
->
->         if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
-> @@ -296,6 +293,8 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
->
->  out:
->         spin_unlock_bh(&sc->sc_pcu_lock);
-> +       tasklet_enable(&sc->intr_tq);
-> +
->         return r;
->  }
->
-> --
-> 1.8.0.2
->
+It does. This is done on individual cfg80211 drivers , i.e. on mac80211
+or full mac drivers. After alloc_netdev*() call, some cfg80211 drivers
+provide they own ethtool_ops, but some do not. For them, wireless core
+provide generic cfg80211_ethtool_ops, which is assigned in
+NETDEV_REGISTER notify call: 
+
+	if (!dev->ethtool_ops)
+		dev->ethtool_ops = &cfg80211_ethtool_ops;
+
+But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
+drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+
+Stanislaw
