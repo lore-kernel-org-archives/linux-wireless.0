@@ -1,88 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:34879 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752834Ab3ACAHn (ORCPT
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:42016 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464Ab3AJKOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 19:07:43 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tim Shepard <shep@laptop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>, "3.6+" <stable@vger.kernel.org>
-Subject: [PATCH 3.8] mwifiex: check wait_event_interruptible return value
-Date: Wed,  2 Jan 2013 16:07:35 -0800
-Message-Id: <1357171655-26850-1-git-send-email-bzhao@marvell.com> (sfid-20130103_010747_368256_3DD933A9)
+	Thu, 10 Jan 2013 05:14:42 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20130109191817.GA17321@tuxdriver.com>
+References: <20130109191817.GA17321@tuxdriver.com>
+Date: Thu, 10 Jan 2013 11:14:41 +0100
+Message-ID: <CA+icZUV9+JgZcYKZ4DAoj69D89hF-1cqr_bTpJvfgzWZZJ41kQ@mail.gmail.com> (sfid-20130110_111510_475584_7BC59C08)
+Subject: Re: pull request: wireless 2013-01-09
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_event_interruptible function returns -ERESTARTSYS if it's
-interrupted by a signal. Driver should check the return value
-and handle this case properly.
+On Wed, Jan 9, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> Dave,
+>
+> Please pull this batch of fixes (and a new driver) for the 3.8 stream...
+>
+> Included is a mac80211 pull, of which Johannes says the following:
+>
+> 'This includes a number of fixes for various pieces of mac80211. I've
+> also included Thomas's memory RMC hash table optimisation since it
+> saves so much memory.'
+>
+> Also from Johannes is an iwlwifi pull:
+>
+> 'I have two fixes for iwlwifi: one to fix a lost return value that was
+> dropped in a previous patch and could cause "nobody cared" IRQ messages,
+> and one to work around a firmware issue.'
+>
+> Amitkumar Karwar brings an mwifiex for a typo in an comparison.
+>
+> Bing Zhao gives us an mwifiex fix to properly check the return value
+> from wait_event_interruptible and handle it properly.
+>
+> Chen Gang provides a fix to make iwlegacy use strlcpy instead of
+> strncpy, avoiding a potential buffer underflow.
+>
+> Julian Wollrath fixes a typo in an error message in rtlwifi.
+>
+> Larry Finger brings a b43 fix for a firmware loading problem.
+>
+> Nickolai Zeldovich avoids a use-after-free in the mwl8k driver.
+>
+> Vladimir Kondratiev brings the last big piece, the new Qualcomm/Atheros
+> wil6210 802.11ad driver.  Since it is for new hardware, I hope that
+> taking it for 3.8 is not a problem.
+>
+> Please let me know if there are problems!
+>
+> Thanks,
+>
+> John
+>
+> ---
+>
+> The following changes since commit c9be4a5c49cf51cc70a993f004c5bb30067a65ce:
+>
+>   net: prevent setting ttl=0 via IP_TTL (2013-01-08 17:57:10 -0800)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+>
+> for you to fetch changes up to a9b8a894ad7d0b90b0464c9ac7e8e5c1687edcae:
+>
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2013-01-09 11:01:37 -0500)
+>
+> ----------------------------------------------------------------
 
-In mwifiex_wait_queue_complete() routine, as we are now checking
-wait_event_interruptible return value, the condition check is not
-required. Also, we have removed mwifiex_cancel_pending_ioctl()
-call to avoid a chance of sending second command to FW by other path
-as soon as we clear current command node. FW can not handle two
-commands simultaneously.
+Hi John,
 
-Cc: "3.6+" <stable@vger.kernel.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_ioctl.c |   21 ++++++++++-----------
- 1 files changed, 10 insertions(+), 11 deletions(-)
+if I look at for-davem GIT branch (online GitWeb interface) [1], this
+has no tag "master-2013-01-09" like in master branch.
+Comments?
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index cb68256..60e88b5 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -56,7 +56,6 @@ int mwifiex_copy_mcast_addr(struct mwifiex_multicast_list *mlist,
-  */
- int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- {
--	bool cancel_flag = false;
- 	int status;
- 	struct cmd_ctrl_node *cmd_queued;
- 
-@@ -70,14 +69,11 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- 	atomic_inc(&adapter->cmd_pending);
- 
- 	/* Wait for completion */
--	wait_event_interruptible(adapter->cmd_wait_q.wait,
--				 *(cmd_queued->condition));
--	if (!*(cmd_queued->condition))
--		cancel_flag = true;
--
--	if (cancel_flag) {
--		mwifiex_cancel_pending_ioctl(adapter);
--		dev_dbg(adapter->dev, "cmd cancel\n");
-+	status = wait_event_interruptible(adapter->cmd_wait_q.wait,
-+					  *(cmd_queued->condition));
-+	if (status) {
-+		dev_err(adapter->dev, "cmd_wait_q terminated: %d\n", status);
-+		return status;
- 	}
- 
- 	status = adapter->cmd_wait_q.status;
-@@ -496,8 +492,11 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- 		return false;
- 	}
- 
--	wait_event_interruptible(adapter->hs_activate_wait_q,
--				 adapter->hs_activate_wait_q_woken);
-+	if (wait_event_interruptible(adapter->hs_activate_wait_q,
-+				     adapter->hs_activate_wait_q_woken)) {
-+		dev_err(adapter->dev, "hs_activate_wait_q terminated\n");
-+		return false;
-+	}
- 
- 	return true;
- }
--- 
-1.7.0.2
+Regards,
+- Sedat -
 
+[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=shortlog;h=refs/heads/for-davem
