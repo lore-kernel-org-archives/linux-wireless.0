@@ -1,101 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46273 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756937Ab3A2MkQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 07:40:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/2] mac80211: always allow calling ieee80211_connection_loss()
-Date: Tue, 29 Jan 2013 13:40:36 +0100
-Message-Id: <1359463236-14809-2-git-send-email-johannes@sipsolutions.net> (sfid-20130129_134023_241298_4079D95A)
-In-Reply-To: <1359463236-14809-1-git-send-email-johannes@sipsolutions.net>
-References: <1359463236-14809-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58819 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755135Ab3AJQwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2013 11:52:50 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] bcma: fix compile error
+Date: Thu, 10 Jan 2013 17:52:38 +0100
+Message-Id: <1357836758-12422-1-git-send-email-hauke@hauke-m.de> (sfid-20130110_175305_049885_A0B23AF4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This error was introduced in:
+commit e3f05a42faac627d8704c76c1927e09b22443b7b
+Author: Hauke Mehrtens <hauke@hauke-m.de>
+Date:   Fri Jan 4 00:51:21 2013 +0100
 
-With multi-channel, there's a corner case where a driver
-doesn't receive a beacon soon enough to be able to sync
-its timers with the AP. In this case, the only recovery
-(after trying again) is to disconnect from the AP. Allow
-calling ieee80211_connection_loss() for such cases. To
-make that possible, modify the work function to not rely
-on the IEEE80211_HW_CONNECTION_MONITOR flag but use new
-state kept in the interface instead.
+    bcma: mips: explicit assign IRQ numbers
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  CC      drivers/bcma/driver_mips.o
+drivers/bcma/driver_mips.c: In function 'bcma_core_mips_init':
+drivers/bcma/driver_mips.c:302:4: error: implicit declaration of
+function 'bcma_core_irq' [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
+make[6]: *** [drivers/bcma/driver_mips.o] Error 1
+
+Reported-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- include/net/mac80211.h     | 2 ++
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/mlme.c        | 6 ++++--
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/bcma/driver_mips.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 21831ee..c4642b3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3872,6 +3872,8 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
-  * When beacon filtering is enabled with %IEEE80211_VIF_BEACON_FILTER, and
-  * %IEEE80211_CONF_PS and %IEEE80211_HW_CONNECTION_MONITOR are set, the driver
-  * needs to inform if the connection to the AP has been lost.
-+ * The function may also be called if the connection needs to be terminated
-+ * for some other reason, even if %IEEE80211_HW_CONNECTION_MONITOR isn't set.
-  *
-  * This function will cause immediate change to disassociated state,
-  * without connection recovery attempts.
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cbb1b73..f409ce6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -425,6 +425,7 @@ struct ieee80211_if_managed {
- 	unsigned long probe_timeout;
- 	int probe_send_count;
- 	bool nullfunc_failed;
-+	bool connection_loss;
- 
- 	struct mutex mtx;
- 	struct cfg80211_bss *associated;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e3f90af..90893bc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1866,7 +1866,7 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
- 		rcu_read_unlock();
- 	}
- 
--	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR) {
-+	if (ifmgd->connection_loss) {
- 		sdata_info(sdata, "Connection to AP %pM lost\n",
- 			   ifmgd->bssid);
- 		__ieee80211_disconnect(sdata);
-@@ -1894,6 +1894,7 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
- 	trace_api_beacon_loss(sdata);
- 
- 	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
-+	sdata->u.mgd.connection_loss = false;
- 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
- EXPORT_SYMBOL(ieee80211_beacon_loss);
-@@ -1905,7 +1906,7 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif)
- 
- 	trace_api_connection_loss(sdata);
- 
--	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
-+	sdata->u.mgd.connection_loss = true;
- 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
- EXPORT_SYMBOL(ieee80211_connection_loss);
-@@ -3080,6 +3081,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
- 
-+	sdata->u.mgd.connection_loss = false;
- 	ieee80211_queue_work(&sdata->local->hw,
- 			     &sdata->u.mgd.beacon_connection_loss_work);
- }
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 8a51c79..90f20a2 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -299,7 +299,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
+ 		break;
+ 	default:
+ 		list_for_each_entry(core, &bus->cores, list) {
+-			core->irq = bcma_core_irq(core);
++			core->irq = bcma_core_mips_irq(core) + 2;
+ 		}
+ 		bcma_err(bus,
+ 			 "Unknown device (0x%x) found, can not configure IRQs\n",
 -- 
-1.8.0
+1.7.10.4
 
