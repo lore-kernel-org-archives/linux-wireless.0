@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56309 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab3AaUv0 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:64714 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab3AJInI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 15:51:26 -0500
-Message-ID: <1359665497.8415.102.camel@jlt4.sipsolutions.net> (sfid-20130131_215158_475807_F0B47CF5)
-Subject: Re: [PATCH] nl80211: avoid "wdev_id may be used uninitialized"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
-Date: Thu, 31 Jan 2013 21:51:37 +0100
-In-Reply-To: <51094F10.60605@wwwdotorg.org>
-References: <1359504662-23561-1-git-send-email-swarren@wwwdotorg.org>
-	  (sfid-20130130_011118_335925_03B80596) <1359532679.8010.1.camel@jlt4.sipsolutions.net>
-	 <51094F10.60605@wwwdotorg.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 10 Jan 2013 03:43:08 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Q: offchannel operations
+Date: Thu, 10 Jan 2013 10:43:04 +0200
+Message-ID: <1690590.qQcKllxmg2@lx-vladimir> (sfid-20130110_094313_310385_C41C27AB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-30 at 09:49 -0700, Stephen Warren wrote:
-> On 01/30/2013 12:57 AM, Johannes Berg wrote:
-> > On Tue, 2013-01-29 at 17:11 -0700, Stephen Warren wrote:
-> >> From: Stephen Warren <swarren@nvidia.com>
-> >>
-> >> Silence the following:
-> >> net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs.clone.119':
-> >> net/wireless/nl80211.c:57:6: warning: 'wdev_id' may be used uninitialized in this function
-> >>
-> >> ... by always initializing wdev_id to zero. I assume that wiphy_idx and
-> >> ifidx are set to -1 for similar reasons, so this change simply propagates
-> >> the same workaround.
-> >>
-> >> In practice, this warning is false, since wdev_id is both set and used
-> >> under the condition if (have_wdev_id). However, at least my compiler
-> >> can't be coerced into realizing this; almost any code between the if
-> >> blocks that set and use the variable causes this warning.
-> > 
-> > I don't see this warning? What compiler are you using?
-> 
-> I'm using gcc-4.5.3 for ARM. I checked with gcc-4.6.3 and gcc-4.7.2 and
-> indeed I don't see the warning there.
+Hi,
 
-Interesting. So should I keep it or remove it? I guess in this
-particular instance it doesn't matter all that much. In other cases I'd
-be more against changing it I guess.
+There are 2 similar operations in the struct cfg80211_ops:
+remain_on_channel() and mgmt_tx(). Actually, mgmt_tx() when called for
+off-channel operation, is the same as remain_on_channel() except it
+transmits frame at the beginning.
 
-johannes
+What I am interesting about, is notifications to cfg80211. For
+remain_on_channel(), there are 2: cfg80211_ready_on_channel() when
+channel tuned, and cfg80211_remain_on_channel_expired() when tuned off
+requested channel. In contrast, if mgmt_tx() called for off-channel
+with duration, 2 above notifications are not used. Instead, only
+cfg80211_mgmt_tx_status() called after tx.
 
+My question is why don't mgmt_tx() call cfg80211_ready_on_channel() and
+cfg80211_remain_on_channel_expired() ? It seems logical to notify about
+off-channel status. Otherwise, how can upper layers know when off-channel
+started/finished in context of mgmt_tx()?
+
+Comments?
+
+Thanks, Vladimir
