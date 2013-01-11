@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52779 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757840Ab3AIMji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 07:39:38 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.8 2/5] ath9k: fix double-free bug on beacon generate failure
-Date: Wed,  9 Jan 2013 13:39:26 +0100
-Message-Id: <1357735169-91597-2-git-send-email-nbd@openwrt.org> (sfid-20130109_133942_882181_14E173BD)
-In-Reply-To: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
-References: <1357735169-91597-1-git-send-email-nbd@openwrt.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58411 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193Ab3AKAxo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jan 2013 19:53:44 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so940605lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2013 16:53:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1363680.r8KF83dygC@lx-vladimir>
+References: <6929081.7c7blFVDp4@lx-vladimir> <1363680.r8KF83dygC@lx-vladimir>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 11 Jan 2013 11:45:43 +1100
+Message-ID: <CAGRGNgVUq=8H-r=tA3W5ojyfWPfPt8YHB2zDVpK5EWeF-=5unw@mail.gmail.com> (sfid-20130111_015349_148005_F18A4429)
+Subject: Re: Q: how to update platform power state for the network driver
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the next beacon is sent, the ath_buf from the previous run is reused.
-If getting a new beacon from mac80211 fails, bf->bf_mpdu is not reset, yet
-the skb is freed, leading to a double-free on the next beacon tx attempt,
-resulting in a system crash.
+Hi Vladimir,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c | 1 +
- 1 file changed, 1 insertion(+)
+On Thu, Jan 10, 2013 at 11:06 PM, Vladimir Kondratiev
+<qca_vkondrat@qca.qualcomm.com> wrote:
+> On Wednesday, January 09, 2013 07:20:06 PM Vladimir Kondratiev wrote:
+>> What is the best way to obtain this info in the network driver?
+>>
+>
+> Found:
+>
+> #include <linux/power_supply.h>
+> int power_supply_is_system_supplied(void);
+>
+> returns:
+> positive if system is AC supplied,
+> 0 if battery supplied
+> negative on error
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 531fffd..4eb269d 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -147,6 +147,7 @@ static struct ath_buf *ath9k_beacon_generate(struct ieee80211_hw *hw,
- 				 skb->len, DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 		bf->bf_buf_addr = 0;
-+		bf->bf_mpdu = NULL;
- 	}
- 
- 	skb = ieee80211_beacon_get(hw, vif);
+One minor point: you might want to add the ability to override this,
+even if it's only through debugfs so that people testing the code, or
+with unusual requirements can set this how they want / need it.
+
+Thanks,
+
 -- 
-1.8.0.2
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
