@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48224 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752492Ab3A3OR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 09:17:26 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k has buggy promiscuous mode
-References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be>
-	<87txq1crst.fsf@purkki.adurom.net>
-	<1628374.rykW5SrKvm@sylvesterjr.pats.ua.ac.be>
-	<15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be>
-Date: Wed, 30 Jan 2013 16:17:25 +0200
-In-Reply-To: <15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be> (Erwin Van de
-	Velde's message of "Wed, 30 Jan 2013 11:09:32 +0100")
-Message-ID: <87622edabu.fsf@purkki.adurom.net> (sfid-20130130_151729_860652_D844130A)
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:47735 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755004Ab3AKQEq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jan 2013 11:04:46 -0500
+Received: by mail-pb0-f44.google.com with SMTP id uo1so1027363pbc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 08:04:45 -0800 (PST)
+Message-ID: <50F0381A.4010305@lwfinger.net> (sfid-20130111_170456_913590_8F2D26F0)
+Date: Fri, 11 Jan 2013 10:04:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi/rtl8188ee: Add firmware for new driver
+References: <50F03255.4040605@gmail.com>
+In-Reply-To: <50F03255.4040605@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erwin Van de Velde <erwin.vandevelde@gmail.com> writes:
+On 01/11/2013 09:40 AM, Xose Vazquez Perez wrote:
+> Larry Finger wrote:
+>
+>>   --------------------------------------------------------------------------
+>> +Driver: rtl8188ee - Realtek 802.11n WLAN driver for RTL8188EE
+>> +
+>> +Info: Taken from Realtek version rtl_92ce_92se_92de_8723ae_88ee_linux_mac80211_0010.0109.2013
+>
+> FYI linux_mac80211_0010.0109.2013.tar.bz2 also brings new
+> releases of rtl8192cfw.bin and rtl8192defw.bin
 
-> I have had a look at the source code of the driver and as far as I can see, 
-> the driver just never looks at the software configuration when enabling 
-> promiscuous mode and thus does not pass this information to the 
-> system, which explains why packets are never captured in promiscuous 
-> mode, even when the user configures the interface that way.
+Yes, I know; however, I have not yet had a chance to test those new firmware 
+files yet. As I have had problems in the past with new Realtek firmware, I am 
+now cautious. Have you tested this new firmware?
 
-I don't understand, what do you mean software configuration?
+Thanks for the tip,
 
-A quick grep show that at least ath9k checks for the promisc filter:
+Larry
 
-ath9k/htc_drv_main.c:   (FIF_PROMISC_IN_BSS |                   \
-ath9k/htc_drv_txrx.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS
-is enabled for station
-ath9k/htc_drv_txrx.c:        (priv->rxfilter & FIF_PROMISC_IN_BSS)) ||
-ath9k/main.c:   (FIF_PROMISC_IN_BSS |                   \
-ath9k/recv.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS is
-enabled for station
 
--- 
-Kalle Valo
