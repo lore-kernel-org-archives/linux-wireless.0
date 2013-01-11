@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:37876 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754304Ab3ALWjw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911Ab3AKKv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 17:39:52 -0500
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Daniel Drake <dsd@laptop.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] linux-firmware: add MISSING file
-Date: Sat, 12 Jan 2013 23:39:43 +0100
-Message-Id: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130112_234012_146785_5AF87F8F)
-To: unlisted-recipients:; (no To-header on input)
+	Fri, 11 Jan 2013 05:51:28 -0500
+Message-ID: <1357901507.9767.0.camel@jlt4.sipsolutions.net> (sfid-20130111_115136_425480_4A492396)
+Subject: Re: [PATCH v3] net, wireless: overwrite default_ethtool_ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	=?UTF-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirqus@gmail.com>
+Date: Fri, 11 Jan 2013 11:51:47 +0100
+In-Reply-To: <20130111091909.GA2347@redhat.com> (sfid-20130111_101938_088871_22B76855)
+References: <20130111091909.GA2347@redhat.com>
+	 (sfid-20130111_101938_088871_22B76855)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to document the reason why a firmware is not present
+On Fri, 2013-01-11 at 10:19 +0100, Stanislaw Gruszka wrote:
+> Since:
+> 
+> commit 2c60db037034d27f8c636403355d52872da92f81
+> Author: Eric Dumazet <edumazet@google.com>
+> Date:   Sun Sep 16 09:17:26 2012 +0000
+> 
+>     net: provide a default dev->ethtool_ops
+> 
+> wireless core does not correctly assign ethtool_ops.
+> 
+> After alloc_netdev*() call, some cfg80211 drivers provide they own
+> ethtool_ops, but some do not. For them, wireless core provide generic
+> cfg80211_ethtool_ops, which is assigned in NETDEV_REGISTER notify call:
+> 
+>         if (!dev->ethtool_ops)
+>                 dev->ethtool_ops = &cfg80211_ethtool_ops;
+> 
+> But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
+> drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+> 
+> In order to fix the problem, provide function which will overwrite
+> default_ethtool_ops and use it by wireless core.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Cc: Daniel Drake <dsd@laptop.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- MISSING | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
- create mode 100644 MISSING
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/MISSING b/MISSING
-new file mode 100644
-index 0000000..f228099
---- /dev/null
-+++ b/MISSING
-@@ -0,0 +1,20 @@
-+             ***********
-+             * MISSING *
-+             ***********
-+
-+This file attempts to document the reason why a firmware is not present
-+in this bundle.
-+
-+--------------------------------------------------------------------------
-+
-+Driver: zd1211rw -- ZyDAS/Atheros ZD1211/ZD1211B/AR5007UG wireless driver
-+
-+Trouble: Allegedly GPLv2, but no source visible. Found in hex form in the
-+         vendor driver.
-+
-+URL: http://sf.net/projects/zd1211/files/
-+
-+Implication: CRITICAL, hardware undetected.
-+
-+--------------------------------------------------------------------------
-+
--- 
-1.7.11.7
+This will work nicely, clearly I didn't understand davem's suggestion :)
+
+johannes
 
