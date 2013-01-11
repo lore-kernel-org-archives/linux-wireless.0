@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649Ab3ABNTw (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:48504 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755430Ab3AKX7h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 08:19:52 -0500
-Message-ID: <1357132813.9839.21.camel@jlt4.sipsolutions.net> (sfid-20130102_141954_551859_2C0942BE)
-Subject: Re: wireless regression with 3.7 on MSI MS-1013 notebook
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?J=F6rg-Volker?= Peetz <jvpeetz@web.de>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 02 Jan 2013 14:20:13 +0100
-In-Reply-To: <50E42DBF.7070206@web.de> (sfid-20130102_141003_824152_0268C4BC)
-References: <50E42DBF.7070206@web.de> (sfid-20130102_141003_824152_0268C4BC)
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 11 Jan 2013 18:59:37 -0500
+Date: Fri, 11 Jan 2013 15:59:36 -0800 (PST)
+Message-Id: <20130111.155936.1799008114956712424.davem@davemloft.net> (sfid-20130112_005944_523430_B6782655)
+To: bhutchings@solarflare.com
+Cc: sgruszka@redhat.com, netdev@vger.kernel.org, edumazet@google.com,
+	greearb@candelatech.com, bjorn@mork.no,
+	linux-wireless@vger.kernel.org, mirqus@gmail.com,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH v3] net, wireless: overwrite default_ethtool_ops
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1357934432.2643.4.camel@bwh-desktop.uk.solarflarecom.com>
+References: <20130111091909.GA2347@redhat.com>
+	<1357934432.2643.4.camel@bwh-desktop.uk.solarflarecom.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-02 at 13:53 +0100, Jörg-Volker Peetz wrote:
+From: Ben Hutchings <bhutchings@solarflare.com>
+Date: Fri, 11 Jan 2013 20:00:32 +0000
 
->    WARNING: at net/wireless/core.c:389 wiphy_register+0x5c0/0x600 [cfg80211]()
+> On Fri, 2013-01-11 at 10:19 +0100, Stanislaw Gruszka wrote:
+>> Since:
+>> 
+>> commit 2c60db037034d27f8c636403355d52872da92f81
+>> Author: Eric Dumazet <edumazet@google.com>
+>> Date:   Sun Sep 16 09:17:26 2012 +0000
+>> 
+>>     net: provide a default dev->ethtool_ops
+>> 
+>> wireless core does not correctly assign ethtool_ops.
+>> 
+>> After alloc_netdev*() call, some cfg80211 drivers provide they own
+>> ethtool_ops, but some do not. For them, wireless core provide generic
+>> cfg80211_ethtool_ops, which is assigned in NETDEV_REGISTER notify call:
+>> 
+>>         if (!dev->ethtool_ops)
+>>                 dev->ethtool_ops = &cfg80211_ethtool_ops;
+>> 
+>> But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
+>> drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+>> 
+>> In order to fix the problem, provide function which will overwrite
+>> default_ethtool_ops and use it by wireless core.
+>> 
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> [...]
+> 
+> Acked-by: Ben Hutchings <bhutchings@solarflare.com>
 
-
-> and the module rt2500pci fails to load.
-
-This issue was introduced by Gertjan's commit
-55d2e9da744ba11eae900b4bfc2da72eace3c1e1 and subsequently fixed by
-Helmut's patch f5685ba675449b072feab6a5391a9ef9f604bc94 which is already
-on the stable track.
-
-johannes
-
+Applied.
