@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754710Ab3AZXD7 (ORCPT
+Received: from blu0-omc2-s27.blu0.hotmail.com ([65.55.111.102]:56352 "EHLO
+	blu0-omc2-s27.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753613Ab3AKGYT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 18:03:59 -0500
-Message-ID: <1359241463.9086.4.camel@jlt4.sipsolutions.net> (sfid-20130127_000405_983252_F2702587)
-Subject: Re: [PATCH v2] mac80211: dynamic short slot time for MBSSs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Sun, 27 Jan 2013 00:04:23 +0100
-In-Reply-To: <1359232645-10563-1-git-send-email-thomas@cozybit.com> (sfid-20130126_213837_005675_90531EEB)
-References: <1359232645-10563-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130126_213837_005675_90531EEB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 11 Jan 2013 01:24:19 -0500
+Message-ID: <BLU0-SMTP192A924AF0576BE01AD99ACAC290@phx.gbl> (sfid-20130111_072421_835952_C6B7BF0A)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH] bcma: update pci configuration for bcm4706/bcm4716
+Date: Thu, 10 Jan 2013 22:24:03 -0800
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Update the PCI configuration for BCM4706 and BCM4716 per the 2011
+Broadcom SDK.
 
-> +	sband = local->hw.wiphy->bands[band];
-> +	bitrates = sband->bitrates;
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+---
+ drivers/bcma/driver_pci_host.c       |   13 ++++++++++++-
+ include/linux/bcma/bcma_driver_pci.h |    2 ++
+ 2 files changed, 14 insertions(+), 1 deletions(-)
 
-It might be interesting to loop once here and build a bitmap (in an
-unsigned long) of rates marked ERP_G. Something like
-
-erp_rates = 0;
-for (i = 0; i < sband->n_bitrates; i++)
-	if (bitrates[i].flags & ...)
-		erp_rates |= BIT(i);
-
-
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-> +		if (sdata != sta->sdata ||
-> +		    sta->plink_state != NL80211_PLINK_ESTAB)
-> +			continue;
-> +
-> +		short_slot = false;
-> +		rates = sta->sta.supp_rates[band];
-> +		for_each_set_bit(i, (unsigned long *)&rates,
-> +				 sizeof(rates) * BITS_PER_BYTE) {
-> +			if (bitrates[i].flags & IEEE80211_RATE_ERP_G) {
-> +				short_slot = true;
-> +				break;
-> +			}
-> +		}
-> +
-> +		if (!short_slot)
-> +			break;
-
-Then the inner bitrate loop here becomes just
-
-		if (!(rates & erp_rates)) {
-			short_slot = false;
-			break;
-		}
-
-which assumes "short_slot = true" as a precondition to going into the
-sta loop.
-
-(although that does change the overall logic to enable short slot when
-NO stations are present)
-
-johannes
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index af0c9fa..88f8687 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -426,7 +426,7 @@ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+ 	/* Reset RC */
+ 	usleep_range(3000, 5000);
+ 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST_OE);
+-	usleep_range(1000, 2000);
++	msleep(50);
+ 	pcicore_write32(pc, BCMA_CORE_PCI_CTL, BCMA_CORE_PCI_CTL_RST |
+ 			BCMA_CORE_PCI_CTL_RST_OE);
+ 
+@@ -488,6 +488,17 @@ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+ 
+ 	bcma_core_pci_enable_crs(pc);
+ 
++	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706 ||
++	    bus->chipinfo.id == BCMA_CHIP_ID_BCM4716) {
++		u16 val16;
++		bcma_extpci_read_config(pc, 0, 0, BCMA_CORE_PCI_CFG_DEVCTRL,
++					&val16, sizeof(val16));
++		val16 |= (2 << 5);	/* Max payload size of 512 */
++		val16 |= (2 << 12);	/* MRRS 512 */
++		bcma_extpci_write_config(pc, 0, 0, BCMA_CORE_PCI_CFG_DEVCTRL,
++					 &val16, sizeof(val16));
++	}
++
+ 	/* Enable PCI bridge BAR0 memory & master access */
+ 	tmp = PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY;
+ 	bcma_extpci_write_config(pc, 0, 0, PCI_COMMAND, &tmp, sizeof(tmp));
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index c48d98d..424760f 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -179,6 +179,8 @@ struct pci_dev;
+ #define BCMA_CORE_PCI_CFG_FUN_MASK		7	/* Function mask */
+ #define BCMA_CORE_PCI_CFG_OFF_MASK		0xfff	/* Register mask */
+ 
++#define BCMA_CORE_PCI_CFG_DEVCTRL		0xd8
++
+ /* PCIE Root Capability Register bits (Host mode only) */
+ #define BCMA_CORE_PCI_RC_CRS_VISIBILITY		0x0001
+ 
+-- 
+1.7.7.6
 
