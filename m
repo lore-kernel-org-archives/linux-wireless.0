@@ -1,133 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:44328 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217Ab3AGPFE (ORCPT
+Received: from blu0-omc2-s23.blu0.hotmail.com ([65.55.111.98]:43416 "EHLO
+	blu0-omc2-s23.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753417Ab3AKGXe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 10:05:04 -0500
-Received: by mail-bk0-f44.google.com with SMTP id w11so8612238bku.31
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 07:05:03 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCHv2 2/6] mac80211: update mesh peer link counter during userspace peering
-Date: Mon,  7 Jan 2013 16:04:49 +0100
-Message-Id: <1357571093-12868-3-git-send-email-marco@cozybit.com> (sfid-20130107_160515_136359_0957AC6C)
-In-Reply-To: <1357571093-12868-1-git-send-email-marco@cozybit.com>
-References: <1357571093-12868-1-git-send-email-marco@cozybit.com>
+	Fri, 11 Jan 2013 01:23:34 -0500
+Message-ID: <BLU0-SMTP170F868AA41C395F4961031AC290@phx.gbl> (sfid-20130111_072337_336216_5EC6EBFB)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH] bcma: fix bcm4716/bcm4748 i2s irqflag
+Date: Thu, 10 Jan 2013 22:23:17 -0800
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The established peer link count is indicated in mesh beacons and used for
-other internal tasks. Previously it was not updated when authenticated peering
-is performed in userspace.
+The default irqflag assignment for the I2S core on some Broadcom
+4716/4748 devices is invalid and needs to be corrected (from the
+Broadcom SDK).
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
 ---
- net/mac80211/cfg.c        |   22 +++++++++++++++++++---
- net/mac80211/mesh.h       |   14 ++++++++++++++
- net/mac80211/mesh_plink.c |   14 --------------
- 3 files changed, 33 insertions(+), 17 deletions(-)
+ drivers/bcma/driver_mips.c            |   28 ++++++++++++++++++++++++++++
+ include/linux/bcma/bcma_driver_mips.h |    1 +
+ 2 files changed, 29 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 47e0aca..def81d6 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1211,18 +1211,33 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 8a51c79..cf74858 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -250,6 +250,32 @@ void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
+ 	mcore->early_setup_done = true;
+ }
  
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
--		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
-+		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED) {
-+			u32 changed = 0;
-+
- 			switch (params->plink_state) {
--			case NL80211_PLINK_LISTEN:
- 			case NL80211_PLINK_ESTAB:
-+				if (sta->plink_state != NL80211_PLINK_ESTAB)
-+					changed = mesh_plink_inc_estab_count(
-+							sdata);
-+				sta->plink_state = params->plink_state;
-+				break;
-+			case NL80211_PLINK_LISTEN:
- 			case NL80211_PLINK_BLOCKED:
-+			case NL80211_PLINK_OPN_SNT:
-+			case NL80211_PLINK_OPN_RCVD:
-+			case NL80211_PLINK_CNF_RCVD:
-+			case NL80211_PLINK_HOLDING:
-+				if (sta->plink_state == NL80211_PLINK_ESTAB)
-+					changed = mesh_plink_dec_estab_count(
-+							sdata);
- 				sta->plink_state = params->plink_state;
- 				break;
- 			default:
- 				/*  nothing  */
- 				break;
- 			}
--		else
-+			ieee80211_bss_info_change_notify(sdata, changed);
-+		} else {
- 			switch (params->plink_action) {
- 			case PLINK_ACTION_OPEN:
- 				mesh_plink_open(sta);
-@@ -1231,6 +1246,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 				mesh_plink_block(sta);
- 				break;
- 			}
-+		}
- #endif
- 	}
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 84c28c6..c07f6fc 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -307,6 +307,20 @@ extern int mesh_paths_generation;
- #ifdef CONFIG_MAC80211_MESH
- extern int mesh_allocated;
- 
-+static inline
-+u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
++static void bcma_fix_i2s_irqflag(struct bcma_bus *bus)
 +{
-+	atomic_inc(&sdata->u.mesh.estab_plinks);
-+	return mesh_accept_plinks_update(sdata);
++	struct bcma_device *cpu, *pcie, *i2s;
++
++	/* Fixup the interrupts in 4716/4748 for i2s core (2010 Broadcom SDK)
++	 * (IRQ flags > 7 are ignored when setting the interrupt masks)
++	 */
++	if (bus->chipinfo.id != BCMA_CHIP_ID_BCM4716 &&
++	    bus->chipinfo.id != BCMA_CHIP_ID_BCM4748)
++		return;
++
++	cpu = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
++	pcie = bcma_find_core(bus, BCMA_CORE_PCIE);
++	i2s = bcma_find_core(bus, BCMA_CORE_I2S);
++	if ((cpu && pcie && i2s) &&
++	    (bcma_aread32(cpu, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
++	     bcma_aread32(pcie, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
++	     bcma_aread32(i2s, BCMA_MIPS_OOBSELOUTA30) == 0x88)) {
++		bcma_awrite32(cpu, BCMA_MIPS_OOBSELINA74, 0x07060504);
++		bcma_awrite32(pcie, BCMA_MIPS_OOBSELINA74, 0x07060504);
++		bcma_awrite32(i2s, BCMA_MIPS_OOBSELOUTA30, 0x87);
++		bcma_info(bus,
++			  "Moved i2s interrupt to oob line 7 instead of 8\n");
++	}
 +}
 +
-+static inline
-+u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
-+{
-+	atomic_dec(&sdata->u.mesh.estab_plinks);
-+	return mesh_accept_plinks_update(sdata);
-+}
-+
- static inline int mesh_plink_free_count(struct ieee80211_sub_if_data *sdata)
+ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
  {
- 	return sdata->u.mesh.mshcfg.dot11MeshMaxPeerLinks -
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4b274e9..9e04166 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -41,20 +41,6 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		enum ieee80211_self_protected_actioncode action,
- 		u8 *da, __le16 llid, __le16 plid, __le16 reason);
+ 	struct bcma_bus *bus;
+@@ -263,6 +289,8 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
  
--static inline
--u32 mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
--{
--	atomic_inc(&sdata->u.mesh.estab_plinks);
--	return mesh_accept_plinks_update(sdata);
--}
--
--static inline
--u32 mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
--{
--	atomic_dec(&sdata->u.mesh.estab_plinks);
--	return mesh_accept_plinks_update(sdata);
--}
--
- /**
-  * mesh_plink_fsm_restart - restart a mesh peer link finite state machine
-  *
+ 	bcma_core_mips_early_init(mcore);
+ 
++	bcma_fix_i2s_irqflag(bus);
++
+ 	switch (bus->chipinfo.id) {
+ 	case BCMA_CHIP_ID_BCM4716:
+ 	case BCMA_CHIP_ID_BCM4748:
+diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
+index 6495579..27e6ee9 100644
+--- a/include/linux/bcma/bcma_driver_mips.h
++++ b/include/linux/bcma/bcma_driver_mips.h
+@@ -28,6 +28,7 @@
+ #define BCMA_MIPS_MIPS74K_GPIOEN	0x0048
+ #define BCMA_MIPS_MIPS74K_CLKCTLST	0x01E0
+ 
++#define BCMA_MIPS_OOBSELINA74		0x004
+ #define BCMA_MIPS_OOBSELOUTA30		0x100
+ 
+ struct bcma_device;
 -- 
-1.7.9.5
+1.7.7.6
 
