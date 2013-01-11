@@ -1,48 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:64493 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753249Ab3AIRZT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 12:25:19 -0500
-Received: by mail-qc0-f178.google.com with SMTP id j34so1696617qco.23
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 09:25:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1357749133.9757.16.camel@jlt4.sipsolutions.net>
-References: <1357654597-8493-1-git-send-email-victorg@ti.com>
- <1357735100.9757.9.camel@jlt4.sipsolutions.net> <50ED94F7.9000709@ti.com> <1357749133.9757.16.camel@jlt4.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 9 Jan 2013 19:25:03 +0200
-Message-ID: <CA+XVXfc+zyLybv9bush3B-Ax65HNTeKOt-FAzT281gQytr3ABA@mail.gmail.com> (sfid-20130109_182523_650455_53ABC04C)
-Subject: Re: [PATCH] mac80211: fix delayed ADDBA response
-To: Victor Goldenshtein <victorg@ti.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:56171 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753217Ab3AKJTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jan 2013 04:19:30 -0500
+Date: Fri, 11 Jan 2013 10:19:10 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>,
+	Ben Greear <greearb@candelatech.com>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	linux-wireless@vger.kernel.org,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	=?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
 	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH v3] net, wireless: overwrite default_ethtool_ops
+Message-ID: <20130111091909.GA2347@redhat.com> (sfid-20130111_101938_088871_22B76855)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 6:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2013-01-09 at 18:04 +0200, Victor Goldenshtein wrote:
->> On 09/01/13 14:38, Johannes Berg wrote:
->> > Do we really want to allow arbitrary changes to the interfaces while
->> > scanning? This could process a deauth frame for example, I'm worried
->> > that might break things.
->> >
->>
->> Can you please elaborate why we shouldn't process deauth frames during
->> HW scan ? This fix was tested with our 18xx, don't see how it can break
->> things, but it's up to you whether to take it..
->
-> But did you test disassociating in the middle of the scan? I suspect
-> that some devices at least might have trouble with reprogramming the
-> device completely while it's scanning.
->
-> Maybe you can make this behaviour opt-in with a hardware flag?
->
+Since:
 
-This is just a speed optimization for BA session management, so I'm
-pretty sure the above was not tested.
+commit 2c60db037034d27f8c636403355d52872da92f81
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sun Sep 16 09:17:26 2012 +0000
 
-Maybe we can make the "if" stricter and only allow it to pass if it's
-hw_scanning and mgmt->u.action.category == WLAN_CATEGORY_BACK ? Would
-that make sense?
+    net: provide a default dev->ethtool_ops
+
+wireless core does not correctly assign ethtool_ops.
+
+After alloc_netdev*() call, some cfg80211 drivers provide they own
+ethtool_ops, but some do not. For them, wireless core provide generic
+cfg80211_ethtool_ops, which is assigned in NETDEV_REGISTER notify call:
+
+        if (!dev->ethtool_ops)
+                dev->ethtool_ops = &cfg80211_ethtool_ops;
+
+But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
+drivers without custom ethtool_ops), but points to &default_ethtool_ops.
+
+In order to fix the problem, provide function which will overwrite
+default_ethtool_ops and use it by wireless core.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2: change order of default_ethtool_ops initialization to avoid
+the problem. Change the subject accordingly.
+
+v2 -> v3: provide function to overwrite default_ethtool_ops, describe
+problem a bit more detailed in the changelog
+
+ include/linux/netdevice.h |    3 +++
+ net/core/dev.c            |    8 ++++++++
+ net/wireless/core.c       |    3 +--
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index c599e47..9ef07d0 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -60,6 +60,9 @@ struct wireless_dev;
+ #define SET_ETHTOOL_OPS(netdev,ops) \
+ 	( (netdev)->ethtool_ops = (ops) )
+ 
++extern void netdev_set_default_ethtool_ops(struct net_device *dev,
++					   const struct ethtool_ops *ops);
++
+ /* hardware address assignment types */
+ #define NET_ADDR_PERM		0	/* address is permanent (default) */
+ #define NET_ADDR_RANDOM		1	/* address is generated randomly */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 515473e..f64e439 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -6121,6 +6121,14 @@ struct netdev_queue *dev_ingress_queue_create(struct net_device *dev)
+ 
+ static const struct ethtool_ops default_ethtool_ops;
+ 
++void netdev_set_default_ethtool_ops(struct net_device *dev,
++				    const struct ethtool_ops *ops)
++{
++	if (dev->ethtool_ops == &default_ethtool_ops)
++		dev->ethtool_ops = ops;
++}
++EXPORT_SYMBOL_GPL(netdev_set_default_ethtool_ops);
++
+ /**
+  *	alloc_netdev_mqs - allocate network device
+  *	@sizeof_priv:	size of private data to allocate space for
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 747dd93..7cbd3bf 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -858,8 +858,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+ 
+-		if (!dev->ethtool_ops)
+-			dev->ethtool_ops = &cfg80211_ethtool_ops;
++		netdev_set_default_ethtool_ops(dev, &cfg80211_ethtool_ops);
+ 
+ 		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+-- 
+1.7.1
+
