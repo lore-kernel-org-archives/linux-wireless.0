@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab3AaPkK (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:40187 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab3AKKer convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:40:10 -0500
-Message-ID: <1359646831.8415.82.camel@jlt4.sipsolutions.net> (sfid-20130131_164017_824529_1165CD29)
-Subject: Re: [PATCH] iw:  Print beacon-loss-event string.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 31 Jan 2013 16:40:31 +0100
-In-Reply-To: <1359610289-4578-1-git-send-email-greearb@candelatech.com> (sfid-20130131_063151_387238_C974953B)
-References: <1359610289-4578-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130131_063151_387238_C974953B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 11 Jan 2013 05:34:47 -0500
+Received: by mail-wi0-f182.google.com with SMTP id hn14so927446wib.3
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 02:34:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <BLU0-SMTP170F868AA41C395F4961031AC290@phx.gbl>
+References: <BLU0-SMTP170F868AA41C395F4961031AC290@phx.gbl>
+Date: Fri, 11 Jan 2013 11:34:45 +0100
+Message-ID: <CACna6rwmOBqmzjvAv3n5MLdZxtfBOK3RjY4M3p5Hwm3Hbta2GA@mail.gmail.com> (sfid-20130111_113451_163575_19C4F5B6)
+Subject: Re: [PATCH] bcma: fix bcm4716/bcm4748 i2s irqflag
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Nathan Hintz <nlhintz@hotmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	hauke@hauke-m.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-30 at 21:31 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> There are now three possible threshold events.  The old
-> code assumed only above/below RSSI, and printed out 'low'
-> for beacon-loss-event.
-> 
-> Fix that, and do so with a switch statement so the compiler
-> can warn if the enum is further expanded w/out updating this
-> code.
-> 
-> Shorten 'connection quality monitor' to CQM to keep total string
-> relatively short.
+2013/1/11 Nathan Hintz <nlhintz@hotmail.com>:
+> +       if ((cpu && pcie && i2s) &&
 
-Applied.
+Braces not needed
 
-johannes
 
+> +           (bcma_aread32(cpu, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
+> +            bcma_aread32(pcie, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
+> +            bcma_aread32(i2s, BCMA_MIPS_OOBSELOUTA30) == 0x88)) {
+> +               bcma_awrite32(cpu, BCMA_MIPS_OOBSELINA74, 0x07060504);
+> +               bcma_awrite32(pcie, BCMA_MIPS_OOBSELINA74, 0x07060504);
+> +               bcma_awrite32(i2s, BCMA_MIPS_OOBSELOUTA30, 0x87);
+> +               bcma_info(bus,
+> +                         "Moved i2s interrupt to oob line 7 instead of 8\n");
+
+I just wonder if it's worth "info" level?
+
+-- 
+Rafał
