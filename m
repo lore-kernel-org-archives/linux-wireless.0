@@ -1,96 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:1586 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757398Ab3A1Qix (ORCPT
+Received: from blu0-omc2-s13.blu0.hotmail.com ([65.55.111.88]:9075 "EHLO
+	blu0-omc2-s13.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752618Ab3ALKrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 11:38:53 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/14] wil6210: Never delete Rx chain with firmware
-Date: Mon, 28 Jan 2013 18:31:08 +0200
-Message-ID: <1359390669-9310-14-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173902_196352_D9A2A614)
-In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sat, 12 Jan 2013 05:47:15 -0500
+Message-ID: <BLU0-SMTP989EDC8A841E1B9D693EC8AC280@phx.gbl> (sfid-20130112_114719_535353_EBBECE28)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH 4/5] bcma: add support for 1 and 2 byte extended config space access
+Date: Sat, 12 Jan 2013 02:46:16 -0800
+In-Reply-To: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
+References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware crash on attempt to delete Rx chain.
-Driver part of Rx chain removed only in preparation for the target reset;
-as reset is the only flow that removes Rx chain in the firmware.
+The sanity checks allow 1 and 2 byte reads/writes of the extended
+PCI config space to proceed; however, the code only supports 4
+byte reads/writes.  This patch adds support for 1 and 2 byte
+reads/writes of the extended PCI config space.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c    |    4 +---
- drivers/net/wireless/ath/wil6210/wil6210.h |    1 -
- drivers/net/wireless/ath/wil6210/wmi.c     |   22 ----------------------
- 3 files changed, 1 insertion(+), 26 deletions(-)
+ drivers/bcma/driver_pci_host.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 48cfa7e..1985951 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -511,10 +511,8 @@ void wil_rx_fini(struct wil6210_priv *wil)
- {
- 	struct vring *vring = &wil->vring_rx;
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index e1381ba..92800b4 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -101,7 +101,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		 */
+ 		if (off >= PCI_CONFIG_SPACE_SIZE) {
+ 			addr = (func << 12);
+-			addr |= (off & 0x0FFF);
++			addr |= (off & 0x0FFC);
+ 			val = bcma_pcie_read_config(pc, addr);
+ 		} else {
+ 			addr = BCMA_CORE_PCI_PCICFG0;
+@@ -164,7 +164,11 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		/* accesses to config registers with offsets >= 256
+ 		 * requires indirect access.
+ 		 */
+-		if (off < PCI_CONFIG_SPACE_SIZE) {
++		if (off >= PCI_CONFIG_SPACE_SIZE) {
++			addr = (func << 12);
++			addr |= (off & 0x0FFC);
++			val = bcma_pcie_read_config(pc, addr);
++		} else {
+ 			addr = BCMA_CORE_PCI_PCICFG0;
+ 			addr |= (func << 8);
+ 			addr |= (off & 0xfc);
+@@ -202,13 +206,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		/* accesses to config registers with offsets >= 256
+ 		 * requires indirect access.
+ 		 */
+-		if (off >= PCI_CONFIG_SPACE_SIZE) {
+-			addr = (func << 12);
+-			addr |= (off & 0x0FFF);
++		if (off >= PCI_CONFIG_SPACE_SIZE)
+ 			bcma_pcie_write_config(pc, addr, val);
+-		} else {
++		else
+ 			pcicore_write32(pc, addr, val);
+-		}
+ 	} else {
+ 		writel(val, mmio);
  
--	if (vring->va) {
--		wmi_rx_chain_del(wil);
-+	if (vring->va)
- 		wil_vring_free(wil, vring, 0);
--	}
- }
- 
- int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 69e5162..aea961f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -327,7 +327,6 @@ int wmi_add_cipher_key(struct wil6210_priv *wil, u8 key_index,
- 		       const void *mac_addr, int key_len, const void *key);
- int wmi_echo(struct wil6210_priv *wil);
- int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie);
--int wmi_rx_chain_del(struct wil6210_priv *wil);
- int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring);
- 
- int wil6210_init_irq(struct wil6210_priv *wil, int irq);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 8178cc0..0b70e17 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -902,28 +902,6 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
- 	return rc;
- }
- 
--int wmi_rx_chain_del(struct wil6210_priv *wil)
--{
--	int rc;
--	struct wmi_cfg_rx_chain_cmd cmd = {
--		.action = cpu_to_le32(WMI_RX_CHAIN_DEL),
--		.rx_sw_ring = {
--			.max_mpdu_size = cpu_to_le16(RX_BUF_LEN),
--		},
--	};
--	struct {
--		struct wil6210_mbox_hdr_wmi wmi;
--		struct wmi_cfg_rx_chain_done_event cfg;
--	} __packed wmi_rx_cfg_reply;
--
--	rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
--		      WMI_CFG_RX_CHAIN_DONE_EVENTID,
--		      &wmi_rx_cfg_reply, sizeof(wmi_rx_cfg_reply),
--		      100);
--
--	return rc;
--}
--
- void wmi_event_flush(struct wil6210_priv *wil)
- {
- 	struct pending_wmi_event *evt, *t;
 -- 
-1.7.10.4
+1.7.7.6
 
