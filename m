@@ -1,98 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53226 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755306Ab3APXWl (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:64446 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755031Ab3ALARF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 18:22:41 -0500
-Message-ID: <1358378574.15012.62.camel@jlt4.sipsolutions.net> (sfid-20130117_002245_764576_3F06BD68)
-Subject: Re: [PATCHv6 0/6] Add DFS master ability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 17 Jan 2013 00:22:54 +0100
-In-Reply-To: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130108_140456_234943_569332EE)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 (sfid-20130108_140456_234943_569332EE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 11 Jan 2013 19:17:05 -0500
+Received: by mail-we0-f171.google.com with SMTP id u3so1092100wey.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 16:17:03 -0800 (PST)
+Message-ID: <50F0AB7C.6030609@gmail.com> (sfid-20130112_011710_390508_6A2AAA5E)
+Date: Sat, 12 Jan 2013 01:17:00 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] linux-firmware: add zd1211rw firmware
+References: <1342543168-6666-1-git-send-email-xose.vazquez@gmail.com> <1342662412.11373.81.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1342662412.11373.81.camel@deadeye.wl.decadent.org.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
+On 07/19/2012 03:46 AM, Ben Hutchings wrote:
 
-> Any comment/review/etc are very much appreciated!
+> On Tue, 2012-07-17 at 18:39 +0200, Xose Vazquez Perez wrote:
+>> firmware for zd1211rw, ZyDAS/Atheros ZD1211/ZD1211B/AR5007UG wireless driver.
+>>
+>> Cc: Daniel Drake <dsd@gentoo.org>
+>> Cc: Ulrich Kunitz <kune@deine-taler.de>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: David Woodhouse <dwmw2@infradead.org>
+>> Cc: Ben Hutchings <ben@decadent.org.uk>
+>> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>> ---
+>> README
+>>
+>> This distribution contains the firmware files for the
+>> ZD1211 chip, which is used in WLAN USB sticks. Copy the zd1211_* files to
+>> /lib/firmware/zd1211, where they can be loaded by the rewritten
+>> zd1211 driver.
+>>
+>> The files are generated from C header files distributed in the
+>> original ZyDAS ZD1211 driver under the GNU Public License.
+>>
+>> The full source of the original ZYDAS driver is available from
+>> http://zd1211.wiki.sourceforge.net/VendorDriver
+>>
+>> The GPL-licensed header files used to produce the firmware blobs are also
+>> present in this distribution.
+> [...]
+> 
+> Not in this patch, though.
+> 
+> And if you're referring to C sources with arrays of bytes - this is not
+> really the preferred form for modification, so the blobs cannot be
+> distributed under the GNU GPL.  This is surely a mistake by the
+> copyright holder, but they need to clarify the licence that was really
+> intended for the firmware.
+> 
+> (There were some in-tree drivers where this same mistake was made, for
+> which you will see in WHENCE: 'Allegedly GPLv2+, but no source visible'.
+> These are kept in linux-firmware to avoid regression of those drivers.
+> The unclear licence does pose some legal risk, but hopefully no more
+> than previously existed with the blobs embedded in the kernel source.
+> However, I don't see any reason to accept bogus licence information for
+> blobs that were not previously included in the kernel source.)
 
-I'm still confused about what the desired behaviour should be.
+Well, there is no source code of this firmware. And the original
+hardware manufacturer was bought a long time ago by Atheros, later
+Atheros by Qualcomm. So there is no one to contact.
 
->From what we discussed the following are valid use cases:
+This is a dead end for me, I can't do any more.
 
- 1) do CAC on all channels, select one that is usable later
- 2) do CAC with one NIC, use it with another NIC (hot standby)
+If someone needs this firmware, it can be downloaded from:
+http://sourceforge.net/projects/zd1211/files/
 
-We can address 2) by storing the "channel is clear" evaluation in the
-channel struct -- although then it'll only work with the same driver
-etc. This can be resolved later anyway.
-
-Case 1) certainly implies that we need something like "channel
-considered usable until ..." timer. You don't have that at all. Instead,
-you seem to consider it clear until an AP interface is started & stopped
-on that channel, or otherwise forever. That seems wrong.
-
-So I think that in the channel struct/globally we really only need the
-"channel_usable_until" value, which is X seconds (? I don't know what
-the reg rules say) after the radar detection completed.
-
-Actually with your current patch 2) cannot be implemented at all because
-the initial CAC never really finishes?
-
-I think the operations here should be like this:
-
- * start radar detection
-   - cfg80211: store radar detect chandef in wdev struct to use it in
-               cfg80211_get_chan_state()
-   - mac80211: configure chanctx, call driver
-   - driver: start radar detection
- * radar detection finished:
-   - driver: call mac80211 with result (radar detected or not)
-   - mac80211: free up channel context (probably needs workqueue!)
-               pass result to cfg80211
-   - cfg80211: clear wdev radar detect chandef
-               if OK to use: store availability in channel struct
-               send result to userspace
- * start AP:
-   - cfg80211: check channel availability
-   - cfg80211/mac80211/driver? - enable radar detection while operating
- * AP channel switch:
-   - if due to radar, mark channel as not clear
-   - if not due to radar, mark channel as clear until X seconds in the
-     future
- * stop AP:
-   - cfg80211: mark channel as clear until X seconds in the future,
-               unless it was marked not clear by a radar detect event
- * radar detected event:
-   - cfg80211: mark channel as not clear
-
-
-Note how I'm also letting the drivers determine the duration of the
-radar check. Maybe the duration should be passed to the driver, or maybe
-not, but I think for full-MAC chips it would be more likely that they
-get an event for both cases from the device, not just the timeout you
-have in software ...
-
-
-Actually, now that I think about it, I have my doubts about the mac80211
-"start_radar_detect()" API. It seems that it really just starts the
-detection, and has no way to stop it etc. So maybe that timer should be
-in *mac80211* (for the current drivers), and should also be called after
-adding a chanctx when starting the AP vif. Or maybe it should actually
-be tied to "add_chanctx()" (or "config()" for backward compat) -- when a
-channel requiring radar detection is configured, detection should be
-enabled?
-
-johannes
-
+-thank you-
