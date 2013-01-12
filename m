@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:44625 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756319Ab3AHNEx (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:37876 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304Ab3ALWjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 08:04:53 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 1/6] nl80211: check if channel can be used in join_ibss
-Date: Tue,  8 Jan 2013 14:04:06 +0100
-Message-Id: <1357650251-17425-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130108_140509_128641_593D2DBE)
-In-Reply-To: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Sat, 12 Jan 2013 17:39:52 -0500
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Daniel Drake <dsd@laptop.org>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] linux-firmware: add MISSING file
+Date: Sat, 12 Jan 2013 23:39:43 +0100
+Message-Id: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130112_234012_146785_5AF87F8F)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS should also consider interface combinations.
+to document the reason why a firmware is not present
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Cc: Daniel Drake <dsd@laptop.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: Ben Hutchings <ben@decadent.org.uk>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- net/wireless/nl80211.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ MISSING | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+ create mode 100644 MISSING
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9bd8340..62e98f5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5463,6 +5463,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ibss_params ibss;
- 	struct wiphy *wiphy;
- 	struct cfg80211_cached_keys *connkeys = NULL;
-@@ -5524,6 +5525,15 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
- 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
- 
-+	mutex_lock(&rdev->devlist_mtx);
-+	err = cfg80211_can_use_chan(rdev, wdev, ibss.chandef.chan,
-+				    ibss.channel_fixed ? CHAN_MODE_SHARED :
-+							 CHAN_MODE_EXCLUSIVE);
-+	mutex_unlock(&rdev->devlist_mtx);
+diff --git a/MISSING b/MISSING
+new file mode 100644
+index 0000000..f228099
+--- /dev/null
++++ b/MISSING
+@@ -0,0 +1,20 @@
++             ***********
++             * MISSING *
++             ***********
 +
-+	if (err)
-+		return -EINVAL;
++This file attempts to document the reason why a firmware is not present
++in this bundle.
 +
- 	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
- 		u8 *rates =
- 			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++--------------------------------------------------------------------------
++
++Driver: zd1211rw -- ZyDAS/Atheros ZD1211/ZD1211B/AR5007UG wireless driver
++
++Trouble: Allegedly GPLv2, but no source visible. Found in hex form in the
++         vendor driver.
++
++URL: http://sf.net/projects/zd1211/files/
++
++Implication: CRITICAL, hardware undetected.
++
++--------------------------------------------------------------------------
++
 -- 
-1.7.10.4
+1.7.11.7
 
