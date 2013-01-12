@@ -1,220 +1,617 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60833 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335Ab3ARUyb (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:36799 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921Ab3ALOGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 15:54:31 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TwIxJ-0003iz-HQ
-	for linux-wireless@vger.kernel.org; Fri, 18 Jan 2013 21:54:29 +0100
-Message-ID: <1358542494.7922.3.camel@jlt4.sipsolutions.net> (sfid-20130118_215436_637859_B6251102)
-Subject: Re: [PATCH] mac80211: improve aggregation debug messages
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 12 Jan 2013 09:06:31 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
-Date: Fri, 18 Jan 2013 21:54:54 +0100
-In-Reply-To: <1358340217-22419-1-git-send-email-johannes@sipsolutions.net> (sfid-20130116_134319_101644_09148CE1)
-References: <1358340217-22419-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130116_134319_101644_09148CE1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 05/15] cw1200: v3: firmware loading
+Date: Sat, 12 Jan 2013 09:06:05 -0500
+Message-Id: <1357999575-12838-6-git-send-email-pizza@shaftnet.org> (sfid-20130112_150634_855751_A820895C)
+In-Reply-To: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
+References: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-16 at 13:43 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> A lot of the aggregation messages don't indicate the
-> station so they're hard to understand if there are
-> multiple sessions in progress. Make that easier by
-> adding the MAC address to most messages. Also add
-> the TID if it wasn't already there.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/agg-rx.c | 14 +++++++++-----
->  net/mac80211/agg-tx.c | 44 +++++++++++++++++++++++++++-----------------
->  2 files changed, 36 insertions(+), 22 deletions(-)
-> 
-> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-> index 808338a..31bf258 100644
-> --- a/net/mac80211/agg-rx.c
-> +++ b/net/mac80211/agg-rx.c
-> @@ -83,8 +83,8 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
->  	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
->  			     &sta->sta, tid, NULL, 0))
->  		sdata_info(sta->sdata,
-> -			   "HW problem - can not stop rx aggregation for tid %d\n",
-> -			   tid);
-> +			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
-> +			   sta->sta.addr, tid);
->  
->  	/* check if this is a self generated aggregation halt */
->  	if (initiator == WLAN_BACK_RECIPIENT && tx)
-> @@ -159,7 +159,8 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
->  	}
->  	rcu_read_unlock();
->  
-> -	ht_dbg(sta->sdata, "rx session timer expired on tid %d\n", (u16)*ptid);
-> +	ht_dbg(sta->sdata, "RX session timer expired on %pM tid %d\n",
-> +	       sta->sta.addr, (u16)*ptid);
->  
->  	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
->  	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
-> @@ -247,7 +248,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
->  	status = WLAN_STATUS_REQUEST_DECLINED;
->  
->  	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
-> -		ht_dbg(sta->sdata, "Suspend in progress - Denying ADDBA request\n");
-> +		ht_dbg(sta->sdata,
-> +		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
-> +		       sta->sta.addr, tid);
->  		goto end_no_lock;
->  	}
->  
-> @@ -317,7 +320,8 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
->  
->  	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
->  			       &sta->sta, tid, &start_seq_num, 0);
-> -	ht_dbg(sta->sdata, "Rx A-MPDU request on tid %d result %d\n", tid, ret);
-> +	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
-> +	       sta->sta.addr, tid, ret);
->  	if (ret) {
->  		kfree(tid_agg_rx->reorder_buf);
->  		kfree(tid_agg_rx->reorder_time);
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-> index 2f0ccbc..e909118 100644
-> --- a/net/mac80211/agg-tx.c
-> +++ b/net/mac80211/agg-tx.c
-> @@ -387,12 +387,13 @@ static void sta_addba_resp_timer_expired(unsigned long data)
->  	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
->  		rcu_read_unlock();
->  		ht_dbg(sta->sdata,
-> -		       "timer expired on tid %d but we are not (or no longer) expecting addBA response there\n",
-> -		       tid);
-> +		       "timer expired on %pM tid %d but we are not (or no longer) expecting addBA response there\n",
-> +		       sta->sta.addr, tid);
->  		return;
->  	}
->  
-> -	ht_dbg(sta->sdata, "addBA response timer expired on tid %d\n", tid);
-> +	ht_dbg(sta->sdata, "addBA response timer expired on %pM tid %d\n",
-> +	       sta->sta.addr, tid);
->  
->  	ieee80211_stop_tx_ba_session(&sta->sta, tid);
->  	rcu_read_unlock();
-> @@ -429,7 +430,8 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
->  			       &sta->sta, tid, &start_seq_num, 0);
->  	if (ret) {
->  		ht_dbg(sdata,
-> -		       "BA request denied - HW unavailable for tid %d\n", tid);
-> +		       "BA request denied - HW unavailable for %pM tid %d\n",
-> +		       sta->sta.addr, tid);
->  		spin_lock_bh(&sta->lock);
->  		ieee80211_agg_splice_packets(sdata, tid_tx, tid);
->  		ieee80211_assign_tid_tx(sta, tid, NULL);
-> @@ -442,7 +444,8 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
->  
->  	/* activate the timer for the recipient's addBA response */
->  	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
-> -	ht_dbg(sdata, "activated addBA response timer on tid %d\n", tid);
-> +	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
-> +	       sta->sta.addr, tid);
->  
->  	spin_lock_bh(&sta->lock);
->  	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
-> @@ -489,7 +492,8 @@ static void sta_tx_agg_session_timer_expired(unsigned long data)
->  
->  	rcu_read_unlock();
->  
-> -	ht_dbg(sta->sdata, "tx session timer expired on tid %d\n", (u16)*ptid);
-> +	ht_dbg(sta->sdata, "tx session timer expired on %pM tid %d\n",
-> +	       sta->sta.addr, (u16)*ptid);
->  
->  	ieee80211_stop_tx_ba_session(&sta->sta, *ptid);
->  }
-> @@ -525,7 +529,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
->  
->  	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
->  		ht_dbg(sdata,
-> -		       "BA sessions blocked - Denying BA session request\n");
-> +		       "BA sessions blocked - Denying BA session request %pM tid %d\n",
-> +		       sta->sta.addr, tid);
->  		return -EINVAL;
->  	}
->  
-> @@ -566,8 +571,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
->  	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
->  			HT_AGG_RETRIES_PERIOD)) {
->  		ht_dbg(sdata,
-> -		       "BA request denied - waiting a grace period after %d failed requests on tid %u\n",
-> -		       sta->ampdu_mlme.addba_req_num[tid], tid);
-> +		       "BA request denied - waiting a grace period after %d failed requests on %pM tid %u\n",
-> +		       sta->ampdu_mlme.addba_req_num[tid], sta->sta.addr, tid);
->  		ret = -EBUSY;
->  		goto err_unlock_sta;
->  	}
-> @@ -576,8 +581,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
->  	/* check if the TID is not in aggregation flow already */
->  	if (tid_tx || sta->ampdu_mlme.tid_start_tx[tid]) {
->  		ht_dbg(sdata,
-> -		       "BA request denied - session is not idle on tid %u\n",
-> -		       tid);
-> +		       "BA request denied - session is not idle on %pM tid %u\n",
-> +		       sta->sta.addr, tid);
->  		ret = -EAGAIN;
->  		goto err_unlock_sta;
->  	}
-> @@ -632,7 +637,8 @@ static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
->  
->  	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
->  
-> -	ht_dbg(sta->sdata, "Aggregation is on for tid %d\n", tid);
-> +	ht_dbg(sta->sdata, "Aggregation is on for %pM tid %d\n",
-> +	       sta->sta.addr, tid);
->  
->  	drv_ampdu_action(local, sta->sdata,
->  			 IEEE80211_AMPDU_TX_OPERATIONAL,
-> @@ -802,7 +808,9 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
->  	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
->  
->  	if (!tid_tx || !test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
-> -		ht_dbg(sdata, "unexpected callback to A-MPDU stop\n");
-> +		ht_dbg(sdata,
-> +		       "unexpected callback to A-MPDU stop for %pM tid %d\n",
-> +		       sta->sta.addr, tid);
->  		goto unlock_sta;
->  	}
->  
-> @@ -861,13 +869,15 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
->  		goto out;
->  
->  	if (mgmt->u.action.u.addba_resp.dialog_token != tid_tx->dialog_token) {
-> -		ht_dbg(sta->sdata, "wrong addBA response token, tid %d\n", tid);
-> +		ht_dbg(sta->sdata, "wrong addBA response token, %pM tid %d\n",
-> +		       sta->sta.addr, tid);
->  		goto out;
->  	}
->  
->  	del_timer_sync(&tid_tx->addba_resp_timer);
->  
-> -	ht_dbg(sta->sdata, "switched off addBA timer for tid %d\n", tid);
-> +	ht_dbg(sta->sdata, "switched off addBA timer for %pM tid %d\n",
-> +	       sta->sta.addr, tid);
->  
->  	/*
->  	 * addba_resp_timer may have fired before we got here, and
-> @@ -877,8 +887,8 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
->  	if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state) ||
->  	    test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
->  		ht_dbg(sta->sdata,
-> -		       "got addBA resp for tid %d but we already gave up\n",
-> -		       tid);
-> +		       "got addBA resp for %pM tid %d but we already gave up\n",
-> +		       sta->sta.addr, tid);
->  		goto out;
->  	}
->  
 
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ drivers/staging/cw1200/fwio.c | 535 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/staging/cw1200/fwio.h |  41 ++++
+ 2 files changed, 576 insertions(+)
+ create mode 100644 drivers/staging/cw1200/fwio.c
+ create mode 100644 drivers/staging/cw1200/fwio.h
+
+diff --git a/drivers/staging/cw1200/fwio.c b/drivers/staging/cw1200/fwio.c
+new file mode 100644
+index 0000000..1485d96
+--- /dev/null
++++ b/drivers/staging/cw1200/fwio.c
+@@ -0,0 +1,535 @@
++/*
++ * Firmware I/O code for mac80211 ST-Ericsson CW1200 drivers
++ *
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * Based on:
++ * ST-Ericsson UMAC CW1200 driver which is
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/vmalloc.h>
++#include <linux/sched.h>
++#include <linux/firmware.h>
++
++#include "cw1200.h"
++#include "fwio.h"
++#include "hwio.h"
++#include "sbus.h"
++#include "bh.h"
++
++static int cw1200_get_hw_type(u32 config_reg_val, int *major_revision)
++{
++	int hw_type = -1;
++	u32 silicon_type = (config_reg_val >> 24) & 0x3;
++	u32 silicon_vers = (config_reg_val >> 31) & 0x1;
++
++	/* Check if we have CW1200 or STLC9000 */
++	if ((silicon_type == 0x1) || (silicon_type == 0x2)) {
++		*major_revision = silicon_type;
++		if (silicon_vers)
++			hw_type = HIF_8601_VERSATILE;
++		else
++			hw_type = HIF_8601_SILICON;
++	} else {
++		*major_revision = 1;
++		hw_type = HIF_9000_SILICON_VERSTAILE;
++	}
++
++	return hw_type;
++}
++
++static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
++{
++	int ret, block, num_blocks;
++	unsigned i;
++	u32 val32;
++	u32 put = 0, get = 0;
++	u8 *buf = NULL;
++	const char *fw_path;
++	const struct firmware *firmware = NULL;
++
++	/* Macroses are local. */
++#define APB_WRITE(reg, val) \
++	do { \
++		ret = cw1200_apb_write_32(priv, CW12000_APB(reg), (val)); \
++		if (ret < 0) { \
++			pr_err("%s: can't write %s at line %d.\n", \
++				__func__, #reg, __LINE__); \
++			goto error; \
++		} \
++	} while (0)
++#define APB_READ(reg, val) \
++	do { \
++		ret = cw1200_apb_read_32(priv, CW12000_APB(reg), &(val)); \
++		if (ret < 0) { \
++			pr_err("%s: can't read %s at line %d.\n", \
++				__func__, #reg, __LINE__); \
++			goto error; \
++		} \
++	} while (0)
++#define REG_WRITE(reg, val) \
++	do { \
++		ret = cw1200_reg_write_32(priv, (reg), (val)); \
++		if (ret < 0) { \
++			pr_err("%s: can't write %s at line %d.\n", \
++				__func__, #reg, __LINE__); \
++			goto error; \
++		} \
++	} while (0)
++#define REG_READ(reg, val) \
++	do { \
++		ret = cw1200_reg_read_32(priv, (reg), &(val)); \
++		if (ret < 0) { \
++			pr_err("%s: can't read %s at line %d.\n", \
++				__func__, #reg, __LINE__); \
++			goto error; \
++		} \
++	} while (0)
++
++	switch (priv->hw_revision) {
++	case CW1200_HW_REV_CUT10:
++		fw_path = FIRMWARE_CUT10;
++		if (!priv->sdd_path)
++			priv->sdd_path = SDD_FILE_10;
++		break;
++	case CW1200_HW_REV_CUT11:
++		fw_path = FIRMWARE_CUT11;
++		if (!priv->sdd_path)
++			priv->sdd_path = SDD_FILE_11;
++		break;
++	case CW1200_HW_REV_CUT20:
++		fw_path = FIRMWARE_CUT20;
++		if (!priv->sdd_path)
++			priv->sdd_path = SDD_FILE_20;
++		break;
++	case CW1200_HW_REV_CUT22:
++		fw_path = FIRMWARE_CUT22;
++		if (!priv->sdd_path)
++			priv->sdd_path = SDD_FILE_22;
++		break;
++	default:
++		pr_err("%s: invalid silicon revision %d.\n",
++			__func__, priv->hw_revision);
++		return -EINVAL;
++	}
++
++	/* Initialize common registers */
++	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, DOWNLOAD_ARE_YOU_HERE);
++	APB_WRITE(DOWNLOAD_PUT_REG, 0);
++	APB_WRITE(DOWNLOAD_GET_REG, 0);
++	APB_WRITE(DOWNLOAD_STATUS_REG, DOWNLOAD_PENDING);
++	APB_WRITE(DOWNLOAD_FLAGS_REG, 0);
++
++	/* Write the NOP Instruction */
++	REG_WRITE(ST90TDS_SRAM_BASE_ADDR_REG_ID, 0xFFF20000);
++	REG_WRITE(ST90TDS_AHB_DPORT_REG_ID, 0xEAFFFFFE);
++
++	/* Release CPU from RESET */
++	REG_READ(ST90TDS_CONFIG_REG_ID, val32);
++	val32 &= ~ST90TDS_CONFIG_CPU_RESET_BIT;
++	REG_WRITE(ST90TDS_CONFIG_REG_ID, val32);
++
++	/* Enable Clock */
++	val32 &= ~ST90TDS_CONFIG_CPU_CLK_DIS_BIT;
++	REG_WRITE(ST90TDS_CONFIG_REG_ID, val32);
++
++#ifdef CONFIG_CW1200_ETF
++	if (etf_mode)
++		fw_path = etf_firmware;
++#endif
++
++	/* Load a firmware file */
++	ret = request_firmware(&firmware, fw_path, priv->pdev);
++	if (ret) {
++		pr_err("%s: can't load firmware file %s.\n",
++		       __func__, fw_path);
++		goto error;
++	}
++	BUG_ON(!firmware->data);
++
++	buf = kmalloc(DOWNLOAD_BLOCK_SIZE, GFP_KERNEL | GFP_DMA);
++	if (!buf) {
++		pr_err("%s: can't allocate firmware buffer.\n", __func__);
++		ret = -ENOMEM;
++		goto error;
++	}
++
++	/* Check if the bootloader is ready */
++	for (i = 0; i < 100; i += 1 + i / 2) {
++		APB_READ(DOWNLOAD_IMAGE_SIZE_REG, val32);
++		if (val32 == DOWNLOAD_I_AM_HERE)
++			break;
++		mdelay(i);
++	} /* End of for loop */
++
++	if (val32 != DOWNLOAD_I_AM_HERE) {
++		pr_err("%s: bootloader is not ready.\n", __func__);
++		ret = -ETIMEDOUT;
++		goto error;
++	}
++
++	/* Calculcate number of download blocks */
++	num_blocks = (firmware->size - 1) / DOWNLOAD_BLOCK_SIZE + 1;
++
++	/* Updating the length in Download Ctrl Area */
++	val32 = firmware->size; /* Explicit cast from size_t to u32 */
++	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, val32);
++
++	/* Firmware downloading loop */
++	for (block = 0; block < num_blocks ; block++) {
++		size_t tx_size;
++		size_t block_size;
++
++		/* check the download status */
++		APB_READ(DOWNLOAD_STATUS_REG, val32);
++		if (val32 != DOWNLOAD_PENDING) {
++			pr_err("%s: bootloader reported error %d.\n",
++			       __func__, val32);
++			ret = -EIO;
++			goto error;
++		}
++
++		/* loop until put - get <= 24K */
++		for (i = 0; i < 100; i++) {
++			APB_READ(DOWNLOAD_GET_REG, get);
++			if ((put - get) <=
++			    (DOWNLOAD_FIFO_SIZE - DOWNLOAD_BLOCK_SIZE))
++				break;
++			mdelay(i);
++		}
++
++		if ((put - get) > (DOWNLOAD_FIFO_SIZE - DOWNLOAD_BLOCK_SIZE)) {
++			pr_err("%s: Timeout waiting for FIFO.\n",
++			       __func__);
++			return -ETIMEDOUT;
++		}
++
++		/* calculate the block size */
++		tx_size = block_size = min((size_t)(firmware->size - put),
++			(size_t)DOWNLOAD_BLOCK_SIZE);
++
++		memcpy(buf, &firmware->data[put], block_size);
++		if (block_size < DOWNLOAD_BLOCK_SIZE) {
++			memset(&buf[block_size],
++				0, DOWNLOAD_BLOCK_SIZE - block_size);
++			tx_size = DOWNLOAD_BLOCK_SIZE;
++		}
++
++		/* send the block to sram */
++		ret = cw1200_apb_write(priv,
++			CW12000_APB(DOWNLOAD_FIFO_OFFSET +
++				(put & (DOWNLOAD_FIFO_SIZE - 1))),
++			buf, tx_size);
++		if (ret < 0) {
++			pr_err("%s: can't write block at line %d.\n",
++			       __func__, __LINE__);
++			goto error;
++		}
++
++		/* update the put register */
++		put += block_size;
++		APB_WRITE(DOWNLOAD_PUT_REG, put);
++	} /* End of firmware download loop */
++
++	/* Wait for the download completion */
++	for (i = 0; i < 300; i += 1 + i / 2) {
++		APB_READ(DOWNLOAD_STATUS_REG, val32);
++		if (val32 != DOWNLOAD_PENDING)
++			break;
++		mdelay(i);
++	}
++	if (val32 != DOWNLOAD_SUCCESS) {
++		pr_err("%s: wait for download completion failed. Read: 0x%.8X\n", __func__, val32);
++		ret = -ETIMEDOUT;
++		goto error;
++	} else {
++		pr_info("Firmware download completed.\n");
++		ret = 0;
++	}
++
++error:
++	kfree(buf);
++	if (firmware)
++		release_firmware(firmware);
++	return ret;
++
++#undef APB_WRITE
++#undef APB_READ
++#undef REG_WRITE
++#undef REG_READ
++}
++
++
++static int config_reg_read(struct cw1200_common *priv, u32 *val)
++{
++	switch (priv->hw_type) {
++	case HIF_9000_SILICON_VERSTAILE: {
++		u16 val16;
++		int ret = cw1200_reg_read_16(priv, ST90TDS_CONFIG_REG_ID, &val16);
++		if (ret < 0)
++			return ret;
++		*val = val16;
++		return 0;
++	}
++	case HIF_8601_VERSATILE:
++	case HIF_8601_SILICON:
++	default:
++		cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, val);
++		break;
++	}
++	return 0;
++}
++
++static int config_reg_write(struct cw1200_common *priv, u32 val)
++{
++	switch (priv->hw_type) {
++	case HIF_9000_SILICON_VERSTAILE:
++		return cw1200_reg_write_16(priv, ST90TDS_CONFIG_REG_ID, (u16)val);
++	case HIF_8601_VERSATILE:
++	case HIF_8601_SILICON:
++	default:
++		return cw1200_reg_write_32(priv, ST90TDS_CONFIG_REG_ID, val);
++		break;
++	}
++	return 0;
++}
++
++int cw1200_load_firmware(struct cw1200_common *priv)
++{
++	int ret;
++	int i;
++	u32 val32;
++	u16 val16;
++	int major_revision;
++
++	BUG_ON(!priv);
++
++	/* Read CONFIG Register */
++	ret = cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
++	if (ret < 0) {
++		pr_err("%s: can't read config register.\n", __func__);
++		goto out;
++	}
++
++	if (val32 == 0 || val32 == 0xffffffff) {
++		pr_err("%s: bad config register value (0x%08x)\n", __func__, val32);
++		ret = -EIO;
++		goto out;
++	}
++
++	priv->hw_type = cw1200_get_hw_type(val32, &major_revision);
++	if (priv->hw_type < 0) {
++		pr_err("%s: can't deduct hardware type.\n", __func__);
++		ret = -ENOTSUPP;
++		goto out;
++	}
++
++	/* Set DPLL Reg value, and read back to confirm writes work */
++	ret = cw1200_reg_write_32(priv, ST90TDS_TSET_GEN_R_W_REG_ID, cw1200_dpll_from_clk(priv->hw_refclk));
++	if (ret < 0) {
++		pr_err("%s: can't write DPLL register.\n", __func__);
++		goto out;
++	}
++
++	msleep(20);
++
++	ret = cw1200_reg_read_32(priv,
++		ST90TDS_TSET_GEN_R_W_REG_ID, &val32);
++	if (ret < 0) {
++		pr_err("%s: can't read DPLL register.\n", __func__);
++		goto out;
++	}
++
++	if (val32 != cw1200_dpll_from_clk(priv->hw_refclk)) {
++		pr_err("%s: unable to initialise DPLL register. Wrote 0x%.8X, read 0x%.8X.\n",
++			__func__, cw1200_dpll_from_clk(priv->hw_refclk), val32);
++		ret = -EIO;
++		goto out;
++	}
++
++	/* Set wakeup bit in device */
++	ret = cw1200_reg_read_16(priv, ST90TDS_CONTROL_REG_ID, &val16);
++	if (ret < 0) {
++		pr_err("%s: set_wakeup: can't read control register.\n", __func__);
++		goto out;
++	}
++
++	ret = cw1200_reg_write_16(priv, ST90TDS_CONTROL_REG_ID,
++		val16 | ST90TDS_CONT_WUP_BIT);
++	if (ret < 0) {
++		pr_err("%s: set_wakeup: can't write control register.\n", __func__);
++		goto out;
++	}
++
++	/* Wait for wakeup */
++	for (i = 0 ; i < 300 ; i += 1 + i / 2) {
++		ret = cw1200_reg_read_16(priv,
++			ST90TDS_CONTROL_REG_ID, &val16);
++		if (ret < 0) {
++			pr_err("%s: wait_for_wakeup: can't read control register.\n", __func__);
++			goto out;
++		}
++
++		if (val16 & ST90TDS_CONT_RDY_BIT)
++			break;
++
++		msleep(i);
++	}
++
++	if ((val16 & ST90TDS_CONT_RDY_BIT) == 0) {
++		pr_err("%s: wait_for_wakeup: device is not responding.\n",
++			__func__);
++		ret = -ETIMEDOUT;
++		goto out;
++	}
++
++	if (major_revision == 1) {
++		/* CW1200 Hardware detection logic : Check for CUT1.1 */
++		ret = cw1200_ahb_read_32(priv, CW1200_CUT_ID_ADDR, &val32);
++		if (ret) {
++			pr_err("%s: HW detection: can't read CUT ID.\n",
++			       __func__);
++			goto out;
++		}
++
++		switch (val32) {
++		case CW1200_CUT_11_ID_STR:
++			pr_info("Cut 1.1 silicon is detected.\n");
++			priv->hw_revision = CW1200_HW_REV_CUT11;
++			break;
++		default:
++			pr_info("Cut 1.0 silicon is detected.\n");
++			priv->hw_revision = CW1200_HW_REV_CUT10;
++			break;
++		}
++	} else if (major_revision == 2) {
++		u32 ar1, ar2, ar3;
++		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR, &ar1);
++		if (ret) {
++			pr_err("%s: (1) HW detection: can't read CUT ID.\n",
++			       __func__);
++			goto out;
++		}
++		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR + 4, &ar2);
++		if (ret) {
++			pr_err("%s: (2) HW detection: can't read CUT ID.\n",
++			       __func__);
++			goto out;
++		}
++
++		ret = cw1200_ahb_read_32(priv, CW1200_CUT2_ID_ADDR + 8, &ar3);
++		if (ret) {
++			pr_err(
++				"%s: (3) HW detection: can't read CUT ID.\n",
++				__func__);
++			goto out;
++		}
++
++		if (ar1 == CW1200_CUT_22_ID_STR1 &&
++		    ar2 == CW1200_CUT_22_ID_STR2 &&
++		    ar3 == CW1200_CUT_22_ID_STR3) {
++			pr_info("Cut 2.2 silicon is detected.\n");
++			priv->hw_revision = CW1200_HW_REV_CUT22;
++		} else {
++			pr_info("Cut 2.0 silicon is detected.\n");
++			priv->hw_revision = CW1200_HW_REV_CUT20;
++		}
++	} else {
++		pr_err("%s: unsupported silicon major revision %d.\n",
++		       __func__, major_revision);
++		ret = -ENOTSUPP;
++		goto out;
++	}
++
++	/* Checking for access mode */
++	ret = config_reg_read(priv, &val32);
++	if (ret < 0) {
++		pr_err("%s: check_access_mode: can't read config register.\n", __func__);
++		goto out;
++	}
++
++	if (!(val32 & ST90TDS_CONFIG_ACCESS_MODE_BIT)) {
++		pr_err("%s: check_access_mode: device is already in QUEUE mode.\n", __func__);
++			ret = -EINVAL;
++			goto out;
++	}
++
++	switch (priv->hw_type)  {
++	case HIF_8601_SILICON:
++		pr_info("%s: CW1200 detected.\n", __func__);
++		ret = cw1200_load_firmware_cw1200(priv);
++		break;
++	case HIF_8601_VERSATILE:
++		/* TODO: Not implemented yet!
++		   ret = cw1200_load_firmware_cw1100(priv);
++		*/
++		ret = -ENOTSUPP;
++		goto out;
++	case HIF_9000_SILICON_VERSTAILE:
++		/* TODO: Not implemented yet!
++		   ret = cw1200_load_firmware_stlc9000(priv);
++		*/
++		ret = -ENOTSUPP;
++		goto out;
++	default:
++		pr_err("%s: Unknown hardware: %d.\n",
++		       __func__, priv->hw_type);
++		ret = -ENOTSUPP;
++		goto out;
++	}
++	if (ret < 0) {
++		pr_err("%s: can't download firmware.\n", __func__);
++		goto out;
++	}
++
++#ifndef CONFIG_CW1200_POLL_IRQ
++	/* Register Interrupt Handler */
++	ret = priv->sbus_ops->irq_subscribe(priv->sbus_priv);
++	if (ret < 0) {
++		pr_err("%s: can't register IRQ handler.\n", __func__);
++		goto out;
++	}
++#endif
++
++	priv->sbus_ops->lock(priv->sbus_priv);
++	ret = __cw1200_irq_enable(priv, 1);
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	if (ret < 0)
++		goto unsubscribe;
++
++	/* Configure device for MESSSAGE MODE */
++	ret = config_reg_read(priv, &val32);
++	if (ret < 0) {
++		pr_err("%s: set_mode: can't read config register.\n",
++		       __func__);
++		goto unsubscribe;
++	}
++	ret = config_reg_write(priv, val32 & ~ST90TDS_CONFIG_ACCESS_MODE_BIT);
++	if (ret < 0) {
++		pr_err("%s: set_mode: can't write config register.\n",
++		       __func__);
++		goto unsubscribe;
++	}
++
++	/* Unless we read the CONFIG Register we are
++	 * not able to get an interrupt */
++	mdelay(10);
++	config_reg_read(priv, &val32);
++
++out:
++	return ret;
++
++unsubscribe:
++#ifndef CONFIG_CW1200_POLL_IRQ
++	priv->sbus_ops->irq_unsubscribe(priv->sbus_priv);
++#endif
++	return ret;
++}
+diff --git a/drivers/staging/cw1200/fwio.h b/drivers/staging/cw1200/fwio.h
+new file mode 100644
+index 0000000..5ec972f
+--- /dev/null
++++ b/drivers/staging/cw1200/fwio.h
+@@ -0,0 +1,41 @@
++/*
++ * Firmware API for mac80211 ST-Ericsson CW1200 drivers
++ *
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * Based on:
++ * ST-Ericsson UMAC CW1200 driver which is
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef FWIO_H_INCLUDED
++#define FWIO_H_INCLUDED
++
++#define FIRMWARE_CUT22		"wsm_22.bin"
++#define FIRMWARE_CUT20		"wsm_20.bin"
++#define FIRMWARE_CUT11		"wsm_11.bin"
++#define FIRMWARE_CUT10		"wsm_10.bin"
++#define SDD_FILE_22		"sdd_22.bin"
++#define SDD_FILE_20		"sdd_20.bin"
++#define SDD_FILE_11		"sdd_11.bin"
++#define SDD_FILE_10		"sdd_10.bin"
++
++#define CW1200_HW_REV_CUT10	(10)
++#define CW1200_HW_REV_CUT11	(11)
++#define CW1200_HW_REV_CUT20	(20)
++#define CW1200_HW_REV_CUT22	(22)
++
++int cw1200_load_firmware(struct cw1200_common *priv);
++
++/* SDD definitions */
++#define SDD_PTA_CFG_ELT_ID 0xEB
++#define SDD_REFERENCE_FREQUENCY_ELT_ID 0xc5
++u32 cw1200_dpll_from_clk(u16 clk);
++
++#endif
+-- 
+1.7.11.7
 
