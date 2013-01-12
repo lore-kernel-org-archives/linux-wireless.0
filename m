@@ -1,227 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39961 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462Ab3ATRwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 12:52:21 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:53624 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753743Ab3ALOHD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2013 09:07:03 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 5/8] ath9k_hw: make various ar5416/ar91xx rf banks const
-Date: Sun, 20 Jan 2013 18:51:56 +0100
-Message-Id: <1358704319-81749-5-git-send-email-nbd@openwrt.org> (sfid-20130120_185225_743968_4D928769)
-In-Reply-To: <1358704319-81749-4-git-send-email-nbd@openwrt.org>
-References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
- <1358704319-81749-2-git-send-email-nbd@openwrt.org>
- <1358704319-81749-3-git-send-email-nbd@openwrt.org>
- <1358704319-81749-4-git-send-email-nbd@openwrt.org>
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 14/15] cw1200: v3: Kbuild integration
+Date: Sat, 12 Jan 2013 09:06:14 -0500
+Message-Id: <1357999575-12838-15-git-send-email-pizza@shaftnet.org> (sfid-20130112_152321_389889_7756C6AD)
+In-Reply-To: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
+References: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Banks 0-3,7 are neither modified at run time, nor SREV dependent.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 75 ++++++++---------------------
- drivers/net/wireless/ath/ath9k/ar9002_hw.c  |  6 ---
- drivers/net/wireless/ath/ath9k/calib.h      |  6 +++
- drivers/net/wireless/ath/ath9k/hw.h         | 10 ----
- 4 files changed, 26 insertions(+), 71 deletions(-)
+ drivers/staging/cw1200/Kconfig  | 78 +++++++++++++++++++++++++++++++++++++++++
+ drivers/staging/cw1200/Makefile | 23 ++++++++++++
+ 2 files changed, 101 insertions(+)
+ create mode 100644 drivers/staging/cw1200/Kconfig
+ create mode 100644 drivers/staging/cw1200/Makefile
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 93f8f96..391da5a 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -18,6 +18,7 @@
- #include "hw-ops.h"
- #include "../regd.h"
- #include "ar9002_phy.h"
-+#include "ar5008_initvals.h"
- 
- /* All code below is for AR5008, AR9001, AR9002 */
- 
-@@ -43,23 +44,16 @@ static const int m2ThreshLowExt_off = 127;
- static const int m1ThreshExt_off = 127;
- static const int m2ThreshExt_off = 127;
- 
-+static const struct ar5416IniArray bank0 = STATIC_INI_ARRAY(ar5416Bank0);
-+static const struct ar5416IniArray bank1 = STATIC_INI_ARRAY(ar5416Bank1);
-+static const struct ar5416IniArray bank2 = STATIC_INI_ARRAY(ar5416Bank2);
-+static const struct ar5416IniArray bank3 = STATIC_INI_ARRAY(ar5416Bank3);
-+static const struct ar5416IniArray bank7 = STATIC_INI_ARRAY(ar5416Bank7);
- 
--static void ar5008_rf_bank_setup(u32 *bank, struct ar5416IniArray *array,
--				 int col)
--{
--	int i;
--
--	for (i = 0; i < array->ia_rows; i++)
--		bank[i] = INI_RA(array, i, col);
--}
--
--
--#define REG_WRITE_RF_ARRAY(iniarray, regData, regWr) \
--	ar5008_write_rf_array(ah, iniarray, regData, &(regWr))
--
--static void ar5008_write_rf_array(struct ath_hw *ah, struct ar5416IniArray *array,
--				  u32 *data, unsigned int *writecnt)
-+static void ar5008_write_bank6(struct ath_hw *ah, unsigned int *writecnt)
- {
-+	struct ar5416IniArray *array = &ah->iniBank6;
-+	u32 *data = ah->analogBank6Data;
- 	int r;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -165,7 +159,7 @@ static void ar5008_hw_force_bias(struct ath_hw *ah, u16 synth_freq)
- 	ar5008_hw_phy_modify_rx_buffer(ah->analogBank6Data, tmp_reg, 3, 181, 3);
- 
- 	/* write Bank 6 with new params */
--	REG_WRITE_RF_ARRAY(&ah->iniBank6, ah->analogBank6Data, reg_writes);
-+	ar5008_write_bank6(ah, &reg_writes);
- }
- 
- /**
-@@ -469,29 +463,16 @@ static void ar5008_hw_spur_mitigate(struct ath_hw *ah,
-  */
- static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
- {
--#define ATH_ALLOC_BANK(bank, size) do { \
--		bank = devm_kzalloc(ah->dev, sizeof(u32) * size, GFP_KERNEL); \
--		if (!bank) \
--			goto error; \
--	} while (0);
--
--	struct ath_common *common = ath9k_hw_common(ah);
-+	int size = ah->iniBank6.ia_rows * sizeof(u32);
- 
- 	if (AR_SREV_9280_20_OR_LATER(ah))
- 	    return 0;
- 
--	ATH_ALLOC_BANK(ah->analogBank0Data, ah->iniBank0.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank1Data, ah->iniBank1.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank2Data, ah->iniBank2.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank3Data, ah->iniBank3.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
-+	ah->analogBank6Data = devm_kzalloc(ah->dev, size, GFP_KERNEL);
-+	if (!ah->analogBank6Data)
-+		return -ENOMEM;
- 
- 	return 0;
--#undef ATH_ALLOC_BANK
--error:
--	ath_err(common, "Cannot allocate RF banks\n");
--	return -ENOMEM;
- }
- 
- 
-@@ -528,19 +509,6 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 	/* Setup rf parameters */
- 	eepMinorRev = ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV);
- 
--	/* Setup Bank 0 Write */
--	ar5008_rf_bank_setup(ah->analogBank0Data, &ah->iniBank0, 1);
--
--	/* Setup Bank 1 Write */
--	ar5008_rf_bank_setup(ah->analogBank1Data, &ah->iniBank1, 1);
--
--	/* Setup Bank 2 Write */
--	ar5008_rf_bank_setup(ah->analogBank2Data, &ah->iniBank2, 1);
--
--	/* Setup Bank 6 Write */
--	ar5008_rf_bank_setup(ah->analogBank3Data, &ah->iniBank3,
--		      modesIndex);
--
- 	for (i = 0; i < ah->iniBank6.ia_rows; i++)
- 		ah->analogBank6Data[i] = INI_RA(&ah->iniBank6, i, modesIndex);
- 
-@@ -563,16 +531,13 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 		}
- 	}
- 
--	/* Setup Bank 7 Setup */
--	ar5008_rf_bank_setup(ah->analogBank7Data, &ah->iniBank7, 1);
--
- 	/* Write Analog registers */
--	REG_WRITE_RF_ARRAY(&ah->iniBank0, ah->analogBank0Data, regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank1, ah->analogBank1Data, regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank2, ah->analogBank2Data, regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank3, ah->analogBank3Data, regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank6, ah->analogBank6Data, regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank7, ah->analogBank7Data, regWrites);
-+	REG_WRITE_ARRAY(&bank0, 1, regWrites);
-+	REG_WRITE_ARRAY(&bank1, 1, regWrites);
-+	REG_WRITE_ARRAY(&bank2, 1, regWrites);
-+	REG_WRITE_ARRAY(&bank3, modesIndex, regWrites);
-+	ar5008_write_bank6(ah, &regWrites);
-+	REG_WRITE_ARRAY(&bank7, 1, regWrites);
- 
- 	return true;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index a4654d3..830daa1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -78,12 +78,6 @@ static int ar9002_hw_init_mode_regs(struct ath_hw *ah)
- 		/* Common for AR5416, AR913x, AR9160 */
- 		INIT_INI_ARRAY(&ah->iniBB_RfGain, ar5416BB_RfGain);
- 
--		INIT_INI_ARRAY(&ah->iniBank0, ar5416Bank0);
--		INIT_INI_ARRAY(&ah->iniBank1, ar5416Bank1);
--		INIT_INI_ARRAY(&ah->iniBank2, ar5416Bank2);
--		INIT_INI_ARRAY(&ah->iniBank3, ar5416Bank3);
--		INIT_INI_ARRAY(&ah->iniBank7, ar5416Bank7);
--
- 		/* Common for AR913x, AR9160 */
- 		if (!AR_SREV_5416(ah))
- 			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6TPC_9100);
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 60dcb6c..3d70b8c 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -33,6 +33,12 @@ struct ar5416IniArray {
- 	u32 ia_columns;
- };
- 
-+#define STATIC_INI_ARRAY(array) {			\
-+		.ia_array = (u32 *)(array),		\
-+		.ia_rows = ARRAY_SIZE(array),		\
-+		.ia_columns = ARRAY_SIZE(array[0]),	\
-+	}
+diff --git a/drivers/staging/cw1200/Kconfig b/drivers/staging/cw1200/Kconfig
+new file mode 100644
+index 0000000..6d59094
+--- /dev/null
++++ b/drivers/staging/cw1200/Kconfig
+@@ -0,0 +1,78 @@
++config CW1200
++       tristate "CW1200 WLAN support"
++       depends on MAC80211 && CFG80211
++       help
++         This is driver for the ST-E CW1100 & CW1200 WLAN chipsets.
++         This option just enables the driver core, see below for 
++	 specific bus support.
 +
- #define INIT_INI_ARRAY(iniarray, array) do {	\
- 		(iniarray)->ia_array = (u32 *)(array);		\
- 		(iniarray)->ia_rows = ARRAY_SIZE(array);	\
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5c89aed..639d60d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -848,12 +848,7 @@ struct ath_hw {
- 	struct ath_hw_ops ops;
- 
- 	/* Used to program the radio on non single-chip devices */
--	u32 *analogBank0Data;
--	u32 *analogBank1Data;
--	u32 *analogBank2Data;
--	u32 *analogBank3Data;
- 	u32 *analogBank6Data;
--	u32 *analogBank7Data;
- 
- 	int coverage_class;
- 	u32 slottime;
-@@ -888,13 +883,8 @@ struct ath_hw {
- 
- 	struct ar5416IniArray iniModes;
- 	struct ar5416IniArray iniCommon;
--	struct ar5416IniArray iniBank0;
- 	struct ar5416IniArray iniBB_RfGain;
--	struct ar5416IniArray iniBank1;
--	struct ar5416IniArray iniBank2;
--	struct ar5416IniArray iniBank3;
- 	struct ar5416IniArray iniBank6;
--	struct ar5416IniArray iniBank7;
- 	struct ar5416IniArray iniAddac;
- 	struct ar5416IniArray iniPcieSerdes;
- #ifdef CONFIG_PM_SLEEP
++if CW1200
++
++config CW1200_WLAN_SDIO
++       tristate "Support SDIO platforms"
++       depends on CW1200 && MMC
++       help
++         This enables support for the CW1200 via an SDIO bus.
++
++config CW1200_WLAN_SPI
++       tristate "Support SPI platforms"
++       select CW1200_USE_GPIO_IRQ
++       depends on CW1200 && SPI
++       help
++         This enables support for the CW1200 via a SPI bus.
++
++config CW1200_NON_POWER_OF_TWO_BLOCKSIZES
++      bool "Platform supports non-power-of-two SDIO transfer"
++      depends on CW1200_SDIO
++      help
++        Say N here only if you are running the driver on a platform
++        which does not have support for non-power-of-two SDIO transfer.
++        If unsure, say Y.
++
++config CW1200_USE_GPIO_IRQ
++      bool "Use GPIO interrupt"
++      depends on CW1200_SDIO
++      help
++        Say Y here if you want to include GPIO IRQ support instead of 
++	SDIO IRQ.  Note that you will be limited to 1-bit SDIO operation.
++        If unsure, say N.
++
++config CW1200_POLL_IRQ
++       bool "Poll for data to work around irq delivery bugs"
++       help
++         You should say Y if your board has problems with IRQ delibery.
++	 Otherwise say N.
++
++config CW1200_5GHZ_SUPPORT
++      bool "5GHz band support"
++      depends on CW1200
++      help
++        Say Y if your device supports 5GHz band. Should be disabled for
++        CW1100 silicon.
++        If unsure, say N.
++
++config CW1200_PM
++      bool "Enable CW1200 advanced power management"
++      depends on CW1200 && PM
++
++menu "Driver debug features"
++      depends on CW1200
++
++config CW1200_DEBUGFS
++      bool "Expose driver internals to DebugFS (DEVELOPMENT)"
++
++config CW1200_ETF
++       bool "Enable CW1200 Engineering Test Framework hooks"
++       depends on CW1200_DEBUGFS
++       help 
++       	 If you don't know what this is, just say N.
++
++config CW1200_ITP
++       bool "Enable ITP access"
++       depends on CW1200_DEBUGFS
++	 help 
++	 If you don't know what this is, just say N.
++
++endmenu
++
++endif
+diff --git a/drivers/staging/cw1200/Makefile b/drivers/staging/cw1200/Makefile
+new file mode 100644
+index 0000000..2d5e8ad
+--- /dev/null
++++ b/drivers/staging/cw1200/Makefile
+@@ -0,0 +1,23 @@
++cw1200_core-y := \
++		fwio.o \
++		txrx.o \
++		main.o \
++		queue.o \
++		hwio.o \
++		bh.o \
++		wsm.o \
++		sta.o \
++		ap.o \
++		scan.o
++cw1200_core-$(CONFIG_CW1200_DEBUGFS)	+= debug.o
++cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
++cw1200_core-$(CONFIG_CW1200_PM)		+= pm.o
++
++cw1200_wlan_sdio-y := cw1200_sdio.o
++cw1200_wlan_spi-y := cw1200_spi.o
++
++obj-$(CONFIG_CW1200) += cw1200_core.o
++obj-$(CONFIG_CW1200_WLAN_SDIO) += cw1200_wlan_sdio.o
++obj-$(CONFIG_CW1200_WLAN_SPI) += cw1200_wlan_spi.o
++
++
 -- 
-1.8.0.2
+1.7.11.7
 
