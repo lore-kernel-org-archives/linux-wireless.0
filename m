@@ -1,190 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab3A3HyW (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:34271 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444Ab3ALXJr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 02:54:22 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] cfg80211: simplify mesh BSS comparison
-Date: Wed, 30 Jan 2013 08:54:24 +0100
-Message-Id: <1359532464-25555-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_085427_341396_725C3C25)
+	Sat, 12 Jan 2013 18:09:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
+References: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
+Date: Sun, 13 Jan 2013 00:09:46 +0100
+Message-ID: <CAFLxGvxTenzaaypsUz6pYmjiyEeUtkNGDKwBNeAVFUb5ZZgonQ@mail.gmail.com> (sfid-20130113_001011_914994_B6935D79)
+Subject: Re: [PATCH] linux-firmware: add MISSING file
+From: richard -rw- weinberger <richard.weinberger@gmail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Daniel Drake <dsd@laptop.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Jan 12, 2013 at 11:39 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> to document the reason why a firmware is not present
+>
+> Cc: Daniel Drake <dsd@laptop.org>
+> Cc: Ulrich Kunitz <kune@deine-taler.de>
+> Cc: David Woodhouse <dwmw2@infradead.org>
+> Cc: Ben Hutchings <ben@decadent.org.uk>
+> Cc: <linux-wireless@vger.kernel.org>
+> Cc: <linux-kernel@vger.kernel.org>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> ---
+>  MISSING | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>  create mode 100644 MISSING
+>
+> diff --git a/MISSING b/MISSING
+> new file mode 100644
+> index 0000000..f228099
+> --- /dev/null
+> +++ b/MISSING
+> @@ -0,0 +1,20 @@
+> +             ***********
+> +             * MISSING *
+> +             ***********
+> +
+> +This file attempts to document the reason why a firmware is not present
+> +in this bundle.
 
-Instead of first checking if a BSS is an MBSS
-and then doing the comparisons, inline it all
-into the BSS comparison function. This avoids
-doing the IE searches twice and is also a lot
-less code.
+>From the user's point of view this not really helpful.
+Wouldn't a in-kernel table of known but missing firmware files make more sense?
+The kernel could write a log like "Yeah, I know this firmware but
+sadly I don't have it because of ..."
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/scan.c | 120 +++++++++++++++++-----------------------------------
- 1 file changed, 39 insertions(+), 81 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index cfc4e1a..46351ba 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -288,26 +288,6 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
- }
- EXPORT_SYMBOL(cfg80211_find_vendor_ie);
- 
--static int cmp_ies(u8 num, const u8 *ies1, int len1, const u8 *ies2, int len2)
--{
--	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
--	const u8 *ie2 = cfg80211_find_ie(num, ies2, len2);
--
--	/* equal if both missing */
--	if (!ie1 && !ie2)
--		return 0;
--	/* sort missing IE before (left of) present IE */
--	if (!ie1)
--		return -1;
--	if (!ie2)
--		return 1;
--
--	/* sort by length first, then by contents */
--	if (ie1[1] != ie2[1])
--		return ie2[1] - ie1[1];
--	return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
--}
--
- static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
- 		   const u8 *ssid, size_t ssid_len)
- {
-@@ -331,29 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
- 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
- }
- 
--static bool is_mesh_bss(struct cfg80211_bss *a)
--{
--	const struct cfg80211_bss_ies *ies;
--	const u8 *ie;
--
--	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
--		return false;
--
--	ies = rcu_access_pointer(a->ies);
--	if (!ies)
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
--	if (!ie)
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
--	if (!ie)
--		return false;
--
--	return true;
--}
--
- static bool is_mesh(struct cfg80211_bss *a,
- 		    const u8 *meshid, size_t meshidlen,
- 		    const u8 *meshcfg)
-@@ -391,51 +348,17 @@ static bool is_mesh(struct cfg80211_bss *a,
- 		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
- }
- 
--static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
--{
--	const struct cfg80211_bss_ies *a_ies, *b_ies;
--	int r;
--
--	if (a->channel != b->channel)
--		return b->channel->center_freq - a->channel->center_freq;
--
--	if (is_mesh_bss(a) && is_mesh_bss(b)) {
--		a_ies = rcu_access_pointer(a->ies);
--		if (!a_ies)
--			return -1;
--		b_ies = rcu_access_pointer(b->ies);
--		if (!b_ies)
--			return 1;
--
--		r = cmp_ies(WLAN_EID_MESH_ID,
--			    a_ies->data, a_ies->len,
--			    b_ies->data, b_ies->len);
--		if (r)
--			return r;
--		return cmp_ies(WLAN_EID_MESH_CONFIG,
--			       a_ies->data, a_ies->len,
--			       b_ies->data, b_ies->len);
--	}
--
--	/*
--	 * we can't use compare_ether_addr here since we need a < > operator.
--	 * The binary return value of compare_ether_addr isn't enough
--	 */
--	return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
--}
--
- static int cmp_bss(struct cfg80211_bss *a,
- 		   struct cfg80211_bss *b,
- 		   bool hide_ssid)
- {
- 	const struct cfg80211_bss_ies *a_ies, *b_ies;
--	const u8 *ie1;
--	const u8 *ie2;
-+	const u8 *ie1 = NULL;
-+	const u8 *ie2 = NULL;
- 	int i, r;
- 
--	r = cmp_bss_core(a, b);
--	if (r)
--		return r;
-+	if (a->channel != b->channel)
-+		return b->channel->center_freq - a->channel->center_freq;
- 
- 	a_ies = rcu_access_pointer(a->ies);
- 	if (!a_ies)
-@@ -444,6 +367,41 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	if (!b_ies)
- 		return 1;
- 
-+	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
-+		ie1 = cfg80211_find_ie(WLAN_EID_MESH_ID,
-+				       a_ies->data, a_ies->len);
-+	if (WLAN_CAPABILITY_IS_STA_BSS(b->capability))
-+		ie2 = cfg80211_find_ie(WLAN_EID_MESH_ID,
-+				       b_ies->data, b_ies->len);
-+	if (ie1 && ie2) {
-+		int mesh_id_cmp;
-+
-+		if (ie1[1] == ie2[1])
-+			mesh_id_cmp = memcmp(ie1 + 2, ie2 + 2, ie1[1]);
-+		else
-+			mesh_id_cmp = ie2[1] - ie1[1];
-+
-+		ie1 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
-+				       a_ies->data, a_ies->len);
-+		ie2 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
-+				       b_ies->data, b_ies->len);
-+		if (ie1 && ie2) {
-+			if (mesh_id_cmp)
-+				return mesh_id_cmp;
-+			if (ie1[1] != ie2[1])
-+				return ie2[1] - ie1[1];
-+			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
-+		}
-+	}
-+
-+	/*
-+	 * we can't use compare_ether_addr here since we need a < > operator.
-+	 * The binary return value of compare_ether_addr isn't enough
-+	 */
-+	r = memcmp(a->bssid, b->bssid, sizeof(a->bssid));
-+	if (r)
-+		return r;
-+
- 	ie1 = cfg80211_find_ie(WLAN_EID_SSID, a_ies->data, a_ies->len);
- 	ie2 = cfg80211_find_ie(WLAN_EID_SSID, b_ies->data, b_ies->len);
- 
 -- 
-1.8.0
-
+Thanks,
+//richard
