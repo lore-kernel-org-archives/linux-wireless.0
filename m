@@ -1,57 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44514 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004Ab3AXJNY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 04:13:24 -0500
-Message-ID: <1359018746.6252.189.camel@cumari.coelho.fi> (sfid-20130124_101329_398507_EEB4F384)
-Subject: Re: [RFC v2] cfg80211/mac80211: support reporting wakeup reason
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 24 Jan 2013 11:12:26 +0200
-In-Reply-To: <1359018633.4639.2.camel@jlt4.sipsolutions.net>
-References: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
-	 <1359010005.6252.185.camel@cumari.coelho.fi>
-	 <1359018633.4639.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54694 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753292Ab3ALOjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2013 09:39:12 -0500
+Message-ID: <50F17583.2000309@hauke-m.de> (sfid-20130112_153915_232835_0F85EFFC)
+Date: Sat, 12 Jan 2013 15:38:59 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: Nathan Hintz <nlhintz@hotmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] bcma: don't map/unmap a subset of the PCI config
+ space
+References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com> <BLU0-SMTP98B4D57175D7A700330D59AC280@phx.gbl>
+In-Reply-To: <BLU0-SMTP98B4D57175D7A700330D59AC280@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-24 at 10:10 +0100, Johannes Berg wrote:
-> On Thu, 2013-01-24 at 08:46 +0200, Luciano Coelho wrote:
+On 01/12/2013 11:46 AM, Nathan Hintz wrote:
+> For PCI config space access offsets < 256 for device '0',
+> bcma_extpci_write_config performs an 'ioremap_nocache' on a 4 byte
+> section of the PCI config space (an area that has already
+> previously been mapped), and then subsequently unmaps that 4 byte
+> section.  This can't be a good thing for future read access from
+> that now unmapped location.  Modify the config space writes to use
+> the existing access functions (similar to how it is done for the reads).
 > 
-> > > Change-Id: I7766f071273f3e31020395cc74eabcc6d165fa3a
+> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+> ---
+>  drivers/bcma/driver_pci_host.c |   22 +++++++++++-----------
+>  1 files changed, 11 insertions(+), 11 deletions(-)
 > 
-> > As I asked on IRC, what are these Change-Id tags you've been using
-> > recently? Just curious.
-> 
-> For gerrit. We use it internally, and I was sending the review patches
-> from my internal review tree. Usually I strip them when applying to my
-> kernel tree(s), but sometimes I forget.
+> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+> index 187cc9f..e1381ba 100644
+> --- a/drivers/bcma/driver_pci_host.c
+> +++ b/drivers/bcma/driver_pci_host.c
+> @@ -149,7 +149,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+>  				   const void *buf, int len)
+>  {
+>  	int err = -EINVAL;
+> -	u32 addr = 0, val = 0;
+> +	u32 addr, val;
+>  	void __iomem *mmio = 0;
+>  	u16 chipid = pc->core->bus->chipinfo.id;
+>  
+> @@ -165,12 +165,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+>  		 * requires indirect access.
+>  		 */
+>  		if (off < PCI_CONFIG_SPACE_SIZE) {
+> -			addr = pc->core->addr + BCMA_CORE_PCI_PCICFG0;
+> +			addr = BCMA_CORE_PCI_PCICFG0;
+>  			addr |= (func << 8);
+>  			addr |= (off & 0xfc);
+> -			mmio = ioremap_nocache(addr, sizeof(val));
+> -			if (!mmio)
+> -				goto out;
+> +			val = pcicore_read32(pc, addr);
+>  		}
 
-Okay, fair enough. ;)
+off >= PCI_CONFIG_SPACE_SIZE is not handled here, but I think it should
+be. This part of the function should use the same code as used in
+bcma_extpci_read_config().
 
-> > > + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8022_LEN: Original length of the 802.3
-> > > + *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023
-> > > + *	attribute if the packet was truncated somewhere.
-> > 
-> > This seems wrong.  Why PKT_8023 and PKT_8022_LEN?
-> 
-> Yeah, typo.
-> 
-> > Also, is there any specific reason you want to know the original length?
-> > Just to check whether the packet was truncated or not?
-> 
-> Yeah our device has a certain buffer size only (it's pretty large) but
-> the packet could be truncated due to that, so I added that to be able to
-> see that truncation.
+Your patch improves this, but I think there is an other flaw in the code.
 
-The actual length of the packet is irrelevant isn't it? Maybe a boolean
-just indicating it's truncated? Not really that important though, just
-for a bit more clarity.
-
---
-Luca.
+>  	} else {
+>  		addr = bcma_get_cfgspace_addr(pc, dev, func, off);
+> @@ -189,12 +187,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+>  
+>  	switch (len) {
+>  	case 1:
+> -		val = readl(mmio);
+>  		val &= ~(0xFF << (8 * (off & 3)));
+>  		val |= *((const u8 *)buf) << (8 * (off & 3));
+>  		break;
+>  	case 2:
+> -		val = readl(mmio);
+>  		val &= ~(0xFFFF << (8 * (off & 3)));
+>  		val |= *((const u16 *)buf) << (8 * (off & 3));
+>  		break;
+> @@ -202,13 +198,17 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+>  		val = *((const u32 *)buf);
+>  		break;
+>  	}
+> -	if (dev == 0 && !addr) {
+> +	if (dev == 0) {
+>  		/* accesses to config registers with offsets >= 256
+>  		 * requires indirect access.
+>  		 */
+> -		addr = (func << 12);
+> -		addr |= (off & 0x0FFF);
+> -		bcma_pcie_write_config(pc, addr, val);
+> +		if (off >= PCI_CONFIG_SPACE_SIZE) {
+> +			addr = (func << 12);
+> +			addr |= (off & 0x0FFF);
+> +			bcma_pcie_write_config(pc, addr, val);
+> +		} else {
+> +			pcicore_write32(pc, addr, val);
+> +		}
+>  	} else {
+>  		writel(val, mmio);
+>  
+> 
 
