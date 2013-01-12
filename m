@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6444 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754287Ab3A1Nmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 08:42:35 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mac80211: remove IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
-Date: Mon, 28 Jan 2013 14:42:30 +0100
-Message-Id: <1359380550-7798-1-git-send-email-sgruszka@redhat.com> (sfid-20130128_144239_711444_4033B184)
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:44084 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148Ab3ALVgc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jan 2013 16:36:32 -0500
+Received: by mail-wg0-f52.google.com with SMTP id 12so1426958wgh.7
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jan 2013 13:36:31 -0800 (PST)
+Message-ID: <50F1D75B.9010105@gmail.com> (sfid-20130112_223640_155823_74C18324)
+Date: Sat, 12 Jan 2013 22:36:27 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi/rtl8188ee: Add firmware for new driver
+References: <50F03255.4040605@gmail.com> <50F0381A.4010305@lwfinger.net> <50F0AF10.9030200@gmail.com>
+In-Reply-To: <50F0AF10.9030200@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is basically a revert of:
+On 01/12/2013 01:32 AM, Xose Vazquez Perez wrote:
+> On 01/11/2013 05:04 PM, Larry Finger wrote:
+> 
+>> Yes, I know; however, I have not yet had a chance to test those new
+>> firmware files yet. As I have had problems in the past with new Realtek
+>> firmware, I am now cautious. Have you tested this new firmware?
+> 
+> No. sorry. Here only one USB realtek device, rtl8192cu.
 
-commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Mon Dec 3 12:56:33 2012 +0100
+Larry, could it be possible to print the *firmware version* in the
+rtlwifi output ?
 
-    mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+It's the only interesting thing missing:
 
-We do not need this flag any longer, rt2x00 BAR/BA problem was fixed
-correctly by wireless-testing commit:
+usb 2-1.4: new high-speed USB device number 5 using ehci_hcd
+usb 2-1.4: New USB device found, idVendor=0bda, idProduct=8176
+usb 2-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 2-1.4: Product: 802.11n WLAN Adapter
+usb 2-1.4: Manufacturer: Realtek
+usb 2-1.4: SerialNumber: 00e04c000001
+rtl8192cu: Chip version 0x10
+rtl8192cu: MAC address: 00:e0:4c:07:dd:45
+rtl8192cu: Board Type 0
+rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
+rtl8192cu: Loading firmware rtlwifi/rtl8192cufw.bin
+usbcore: registered new interface driver rtl8192cu
+ieee80211 phy1: Selected rate control algorithm 'rtl_rc'
+rtlwifi: wireless switch is on
+cfg80211: Calling CRDA for country: ES
 
-commit 84e9e8ebd369679a958200a8baca96aafb2393bb
-Author: Helmut Schaa <helmut.schaa@googlemail.com>
-Date:   Thu Jan 17 17:34:32 2013 +0100
 
-    rt2x00: Improve TX status handling for BlockAckReq frames
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/mac80211.h |    5 -----
- net/mac80211/status.c  |    6 +-----
- 2 files changed, 1 insertions(+), 10 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3037f49..6cc805c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1369,10 +1369,6 @@ struct ieee80211_tx_control {
-  * @IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF: Use the P2P Device address for any
-  *	P2P Interface. This will be honoured even if more than one interface
-  *	is supported.
-- *
-- * @IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL: On this hardware TX BA session
-- *	should be tear down once BAR frame will not be acked.
-- *
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1401,7 +1397,6 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
- 	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
- 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
--	IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL		= 1<<26,
- };
- 
- /**
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 07d9957..ab50285 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -502,11 +502,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				       IEEE80211_BAR_CTRL_TID_INFO_MASK) >>
- 				      IEEE80211_BAR_CTRL_TID_INFO_SHIFT;
- 
--				if (local->hw.flags &
--				    IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL)
--					ieee80211_stop_tx_ba_session(&sta->sta, tid);
--				else
--					ieee80211_set_bar_pending(sta, tid, ssn);
-+				ieee80211_set_bar_pending(sta, tid, ssn);
- 			}
- 		}
- 
--- 
-1.7.1
-
+-thanks-
