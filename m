@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55269 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754610Ab3AaPP1 (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:53624 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733Ab3ALOHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:15:27 -0500
-Message-ID: <1359645350.8415.74.camel@jlt4.sipsolutions.net> (sfid-20130131_161531_332406_C94EFA0D)
-Subject: Re: [PATCH 3/7] mac80211: Improve error handling for off-channel
- operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Thu, 31 Jan 2013 16:15:50 +0100
-In-Reply-To: <1359503255-18270-4-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-	 <1359503255-18270-4-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 12 Jan 2013 09:07:04 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 15/15] cw1200: v3: Add to drivers/staging, and a MAINTAINERS entry
+Date: Sat, 12 Jan 2013 09:06:15 -0500
+Message-Id: <1357999575-12838-16-git-send-email-pizza@shaftnet.org> (sfid-20130112_152321_919876_BBAE247F)
+In-Reply-To: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
+References: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
-> Errors in sending nullfunc or probe request frames during off-channel
-> operation may have undesirable consequences, e.g. failure to set
-> powersave at the AP. Add error handling for failures to transmit these
-> frames. In the case of a nullfunc failure, fail to go off-channel and
-> return an error to userspace. In the case of a failed probe request,
-> abort the scan.
 
-That latter part seems excessive? Maybe increase the time to use a
-passive scan? But if there are multiple scan requests ...
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ MAINTAINERS              | 5 +++++
+ drivers/staging/Kconfig  | 2 ++
+ drivers/staging/Makefile | 1 +
+ 3 files changed, 8 insertions(+)
 
-Is all of this really worth the effort? The driver queues should be
-empty after the flush, after all, and the driver doesn't return any TX
-status. So what can really happen?
-
-johannes
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 51ff2ae..faa4d59 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7247,6 +7247,11 @@ M:	Manu Abraham <abraham.manu@gmail.com>
+ S:	Odd Fixes
+ F:	drivers/staging/crystalhd/
+ 
++STAGING - CW1200 WLAN DRIVER
++M:	Solomon Peachy <pizza@shaftnet.org>
++S:	Maintained
++F:	drivers/staging/cw1200/
++
+ STAGING - ECHO CANCELLER
+ M:	Steve Underwood <steveu@coppice.org>
+ M:	David Rowe <david@rowetel.com>
+diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
+index 329bdb4..ca8b790 100644
+--- a/drivers/staging/Kconfig
++++ b/drivers/staging/Kconfig
+@@ -142,4 +142,6 @@ source "drivers/staging/sb105x/Kconfig"
+ 
+ source "drivers/staging/fwserial/Kconfig"
+ 
++source "drivers/staging/cw1200/Kconfig"
++
+ endif # STAGING
+diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
+index c7ec486..58b56c6 100644
+--- a/drivers/staging/Makefile
++++ b/drivers/staging/Makefile
+@@ -63,3 +63,4 @@ obj-$(CONFIG_DRM_IMX)		+= imx-drm/
+ obj-$(CONFIG_DGRP)		+= dgrp/
+ obj-$(CONFIG_SB105X)		+= sb105x/
+ obj-$(CONFIG_FIREWIRE_SERIAL)	+= fwserial/
++obj-#(CONFIG_CW1200)		+= cw1200/
+-- 
+1.7.11.7
 
