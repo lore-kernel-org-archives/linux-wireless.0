@@ -1,49 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:50328 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757843Ab3AIOKz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 09:10:55 -0500
-Received: by mail-bk0-f44.google.com with SMTP id w11so927843bku.17
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 06:10:53 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
-Date: Wed, 9 Jan 2013 15:10:49 +0100
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de> <CAJ-Vmom91BS5fPas+FWsaqQwm-ZVcZckUXB2vQgoEXtKiOH6mA@mail.gmail.com> <20130109131540.GA22836@pandem0nium>
-In-Reply-To: <20130109131540.GA22836@pandem0nium>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301091510.49723.chunkeey@googlemail.com> (sfid-20130109_151059_114953_0353FAF6)
+Received: from nbd.name ([46.4.11.11]:34595 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754795Ab3AMSzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jan 2013 13:55:13 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.8 1/2] ath9k_hw: clean up RF Bank6 handling on AR5416/AR91xx
+Date: Sun, 13 Jan 2013 19:54:57 +0100
+Message-Id: <1358103298-4017-1-git-send-email-nbd@openwrt.org> (sfid-20130113_195527_085821_FD08AC17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, January 09, 2013 02:15:40 PM Simon Wunderlich wrote:
-> On Tue, Jan 08, 2013 at 09:28:44AM -0800, Adrian Chadd wrote:
-> > I still populate the WME fields; I need to "fix" paying attention to
-> > them in the adhoc case.
-> 
-> Applying the EDCA parameters in the hardware and sending "standard" WME IEs
-> (without EDCA parameter sets) is understandable, Linux does that too. 
+There are two sets of initvals for this RF bank, one with TPC support and
+one without.
+The TPC one always gets used, so remove the other one to avoid confusion.
 
-Well, the WFA WMM Specification v1.2 costs $99 (last time I checked, which wasn't
-too long ago). However Johannes told me that the WMM IE should not be added
-to IBSS beacons.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 31 ++++++++++-------------------
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c  | 11 +++-------
+ drivers/net/wireless/ath/ath9k/hw.h         |  3 ---
+ 3 files changed, 13 insertions(+), 32 deletions(-)
 
-However, we can still pack some EDCA parameters into beacons, probe/(re-)assoc
-resps because there's an alternative IE. The "EDCA Parameter Set IE" is part of
-802.11-2012 8.4.2.31 - The Element ID is 12 [Table 8-54].
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index fd69376..93f8f96 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -485,9 +485,7 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
+ 	ATH_ALLOC_BANK(ah->analogBank2Data, ah->iniBank2.ia_rows);
+ 	ATH_ALLOC_BANK(ah->analogBank3Data, ah->iniBank3.ia_rows);
+ 	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
+-	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
+ 	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
+-	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
+ 
+ 	return 0;
+ #undef ATH_ALLOC_BANK
+@@ -517,6 +515,7 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
+ 	u32 ob5GHz = 0, db5GHz = 0;
+ 	u32 ob2GHz = 0, db2GHz = 0;
+ 	int regWrites = 0;
++	int i;
+ 
+ 	/*
+ 	 * Software does not need to program bank data
+@@ -541,13 +540,9 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
+ 	/* Setup Bank 6 Write */
+ 	ar5008_rf_bank_setup(ah->analogBank3Data, &ah->iniBank3,
+ 		      modesIndex);
+-	{
+-		int i;
+-		for (i = 0; i < ah->iniBank6TPC.ia_rows; i++) {
+-			ah->analogBank6Data[i] =
+-			    INI_RA(&ah->iniBank6TPC, i, modesIndex);
+-		}
+-	}
++
++	for (i = 0; i < ah->iniBank6.ia_rows; i++)
++		ah->analogBank6Data[i] = INI_RA(&ah->iniBank6, i, modesIndex);
+ 
+ 	/* Only the 5 or 2 GHz OB/DB need to be set for a mode */
+ 	if (eepMinorRev >= 2) {
+@@ -572,18 +567,12 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
+ 	ar5008_rf_bank_setup(ah->analogBank7Data, &ah->iniBank7, 1);
+ 
+ 	/* Write Analog registers */
+-	REG_WRITE_RF_ARRAY(&ah->iniBank0, ah->analogBank0Data,
+-			   regWrites);
+-	REG_WRITE_RF_ARRAY(&ah->iniBank1, ah->analogBank1Data,
+-			   regWrites);
+-	REG_WRITE_RF_ARRAY(&ah->iniBank2, ah->analogBank2Data,
+-			   regWrites);
+-	REG_WRITE_RF_ARRAY(&ah->iniBank3, ah->analogBank3Data,
+-			   regWrites);
+-	REG_WRITE_RF_ARRAY(&ah->iniBank6TPC, ah->analogBank6Data,
+-			   regWrites);
+-	REG_WRITE_RF_ARRAY(&ah->iniBank7, ah->analogBank7Data,
+-			   regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank0, ah->analogBank0Data, regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank1, ah->analogBank1Data, regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank2, ah->analogBank2Data, regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank3, ah->analogBank3Data, regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank6, ah->analogBank6Data, regWrites);
++	REG_WRITE_RF_ARRAY(&ah->iniBank7, ah->analogBank7Data, regWrites);
+ 
+ 	return true;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 54da026..82f2083 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -67,12 +67,10 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 	} else if (AR_SREV_9100_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModes, ar5416Modes_9100);
+ 		INIT_INI_ARRAY(&ah->iniCommon, ar5416Common_9100);
+-		INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6_9100);
+ 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac_9100);
+ 	} else {
+ 		INIT_INI_ARRAY(&ah->iniModes, ar5416Modes);
+ 		INIT_INI_ARRAY(&ah->iniCommon, ar5416Common);
+-		INIT_INI_ARRAY(&ah->iniBank6TPC, ar5416Bank6TPC);
+ 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac);
+ 	}
+ 
+@@ -86,14 +84,11 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniBank3, ar5416Bank3);
+ 		INIT_INI_ARRAY(&ah->iniBank7, ar5416Bank7);
+ 
+-		/* Common for AR5416, AR9160 */
+-		if (!AR_SREV_9100(ah))
+-			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6);
+-
+ 		/* Common for AR913x, AR9160 */
+ 		if (!AR_SREV_5416(ah))
+-			INIT_INI_ARRAY(&ah->iniBank6TPC,
+-				      ar5416Bank6TPC_9100);
++			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6TPC_9100);
++		else
++			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6TPC);
+ 	}
+ 
+ 	/* iniAddac needs to be modified for these chips */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index d32ebf7..2e292f9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -855,9 +855,7 @@ struct ath_hw {
+ 	u32 *analogBank2Data;
+ 	u32 *analogBank3Data;
+ 	u32 *analogBank6Data;
+-	u32 *analogBank6TPCData;
+ 	u32 *analogBank7Data;
+-	u32 *bank6Temp;
+ 
+ 	int coverage_class;
+ 	u32 slottime;
+@@ -898,7 +896,6 @@ struct ath_hw {
+ 	struct ar5416IniArray iniBank2;
+ 	struct ar5416IniArray iniBank3;
+ 	struct ar5416IniArray iniBank6;
+-	struct ar5416IniArray iniBank6TPC;
+ 	struct ar5416IniArray iniBank7;
+ 	struct ar5416IniArray iniAddac;
+ 	struct ar5416IniArray iniPcieSerdes;
+-- 
+1.8.0.2
 
-[Note: It's worth mentioning that the WFA WMM spec was just a stop-gap measure
-until 802.11e was ready. Here's an article which explains this weird bit of
-history, unfortunately it is in German
-<http://www.heise.de/netze/artikel/Parallelnorm-WMM-223736.html>]
-
-Regards,
-	Chr
