@@ -1,48 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40121 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755040Ab3ADVPL (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:63321 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755063Ab3AMO1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 16:15:11 -0500
-Date: Fri, 4 Jan 2013 16:12:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-01-03
-Message-ID: <20130104211254.GC21871@tuxdriver.com> (sfid-20130104_221521_417007_39196645)
-References: <1357221075.9741.4.camel@jlt4.sipsolutions.net>
+	Sun, 13 Jan 2013 09:27:46 -0500
+Received: by mail-ee0-f53.google.com with SMTP id c1so1526803eek.26
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jan 2013 06:27:45 -0800 (PST)
+Message-ID: <50F2C45D.5080204@gmail.com> (sfid-20130113_152750_513228_E45869DC)
+Date: Sun, 13 Jan 2013 15:27:41 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357221075.9741.4.camel@jlt4.sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k bugs
+References: <50F2C327.3040302@gmail.com>
+In-Reply-To: <50F2C327.3040302@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 03, 2013 at 02:51:15PM +0100, Johannes Berg wrote:
-> John,
-> 
-> Please pull (per below). This includes a number of fixes for various
-> pieces of mac80211. I've also included Thomas's memory RMC hash table
-> optimisation since it saves so much memory.
-> 
-> Thanks,
-> Johannes
-> 
-> 
-> 
-> The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565:
-> 
->   Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 09b1426e7fcec510aba55a761da5004e47a11ce3:
-> 
->   mac80211: fix maximum MTU (2013-01-03 13:00:01 +0100)
+On 01/13/2013 03:22 PM, Xose Vazquez Perez wrote:
 
-I'm pulling this, intending to forward it to Dave early next week.
+> I also see the same bug with openwrt ATTITUDE ADJUSTMENT (12.09-rc1, r34185)
+> on a Buffalo WZR-HP-G300NH device:
+> https://dev.openwrt.org/ticket/9654
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+sorry, this was https://dev.openwrt.org/ticket/12623
+
