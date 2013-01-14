@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:48980 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752581Ab3AUBUs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 20:20:48 -0500
-Message-ID: <1358731234.24121.230.camel@deadeye.wl.decadent.org.uk> (sfid-20130121_022104_897212_22955D7F)
-Subject: Re: [PATCH] rtlwifi/rtl8188ee: Add firmware for new driver
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	dwmw2@infradead.org
-Date: Mon, 21 Jan 2013 01:20:34 +0000
-In-Reply-To: <1357882244-8853-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1357882244-8853-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-+cZ2NcGb0B4DGDgPLZM0"
+Received: from c60.cesmail.net ([216.154.195.49]:52164 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754929Ab3ANWzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2013 17:55:45 -0500
+Date: Mon, 14 Jan 2013 17:55:33 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: richard -rw- weinberger <richard.weinberger@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Daniel Drake <dsd@laptop.org>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] linux-firmware: add MISSING file
+Message-ID: <20130114175533.4f184cd3@mj> (sfid-20130114_235548_575052_C86F1189)
+In-Reply-To: <CAFLxGvxTenzaaypsUz6pYmjiyEeUtkNGDKwBNeAVFUb5ZZgonQ@mail.gmail.com>
+References: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
+	<CAFLxGvxTenzaaypsUz6pYmjiyEeUtkNGDKwBNeAVFUb5ZZgonQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 13 Jan 2013 00:09:46 +0100
+richard -rw- weinberger <richard.weinberger@gmail.com> wrote:
 
---=-+cZ2NcGb0B4DGDgPLZM0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> > +This file attempts to document the reason why a firmware is not
+> > present +in this bundle.
+> 
+> From the user's point of view this not really helpful.
+> Wouldn't a in-kernel table of known but missing firmware files make
+> more sense? The kernel could write a log like "Yeah, I know this
+> firmware but sadly I don't have it because of ..."
 
-On Thu, 2013-01-10 at 23:30 -0600, Larry Finger wrote:
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  WHENCE                 |    8 ++++++++
->  rtlwifi/rtl8188efw.bin |  Bin 0 -> 11216 bytes
->  2 files changed, 8 insertions(+)
->  create mode 100644 rtlwifi/rtl8188efw.bin
-[...]
+The firmware file may be absent on the system even if it's in the
+linux-firmware tree.  Conversely, the firmware may be present on the
+system but not in the linux-firmware tree.
 
-Applied, thanks.
+The kernel doesn't know whether the firmware is missing due to
+licensing issues or due to misconfiguration.  The kernel cannot know
+that.  And I don't think the kernel should include as much information
+as the MISSING file would include.
 
-Ben.
-
---=20
-Ben Hutchings
-Q.  Which is the greater problem in the world today, ignorance or apathy?
-A.  I don't know and I couldn't care less.
-
---=-+cZ2NcGb0B4DGDgPLZM0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUPyX4ue/yOyVhhEJAQq93RAAxIYCTs65tmYib1BKVAFUn/st1d0bBL9L
-IElYm7d7YUEmQDkcBUuh+AQIC5XYNo4r7kyiHFpVq1Z7Hf9WmNsEBchHc1EG6m6a
-JGAySv4qPwAbknsojnwQ5RrMRoCV1MOJIbjJnn5uMeiJqJWHB9iAB8RjNacqhIOk
-7QtmYou5ieoclHIgWZQgcc88IndSoOotgeNFmbyyAaoGZiFvaesdQmp39AAl70CS
-YuTEFVhO3Zu0jTlYkUw85W1BJ9DsSe20VP2f9uV2w91YBLM59V6m0jP0B+xAfeif
-R1g8RTu40E3QDTdpu4g9QjbANZ8a0YfybfxNbSPUM/WOVH1l17XmC86/KY9O60Iy
-7UxWEcdwX3I1n5IBZldfM20y5Qwrrak84DELi3wTH5cZNXdTDwiqjcHot12jvfAT
-OTpSGmJ4/6vX0/wgk8HQr8KPpn5clKHsIIlG51/vZpotLLMLGuX8G4pzIjbJdCnv
-xMqR5T6mOTpYtITLVBuT/xhrjILYcZAL/jbCdv6ZvGsuo/k2CxYGThRJYDrS1i7n
-AGS8iDolpqnfXLkFyP+mpUPfVnMMGbEP7XYKpUyL7F+J2cb8VaAM0jDRylvTPwxt
-C7UV612PCKeykybV+LPseGIqxpJePFfFmOa1AcBlxmUY5Ul8AejpdbyJBAjgNrOA
-zSXGPDEI/Wc=
-=nGmM
------END PGP SIGNATURE-----
-
---=-+cZ2NcGb0B4DGDgPLZM0--
+-- 
+Regards,
+Pavel Roskin
