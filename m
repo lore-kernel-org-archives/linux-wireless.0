@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:44986 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977Ab3A1W5U (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:40070 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756327Ab3ANMRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 17:57:20 -0500
-Date: Mon, 28 Jan 2013 23:56:57 +0100
-From: Mathieu Chouquet-Stringer <mathieu@csetco.com>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: ilw@linux.intel.com, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com
-Subject: iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost unusable on
- 3.8.0-rc5)
-Message-ID: <20130128225657.GA17533@kashmir> (sfid-20130128_235725_067384_61215011)
+	Mon, 14 Jan 2013 07:17:14 -0500
+Received: by mail-lb0-f181.google.com with SMTP id ge1so2902119lbb.12
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 04:17:12 -0800 (PST)
+Message-ID: <50F3F743.1000802@gmail.com> (sfid-20130114_131733_389290_4BF3087E)
+Date: Mon, 14 Jan 2013 13:17:07 +0100
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Solomon Peachy <pizza@shaftnet.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RFCv3: ST-E CW1200 WLAN driver
+References: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
+In-Reply-To: <1357999575-12838-1-git-send-email-pizza@shaftnet.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hello all,
+On 2013-01-12 15:06, Solomon Peachy wrote:
+> Here's the third patch series, still under drivers/staging.
+>
 
-Oh the irony, I was just starting an email saying wifi is almost
-unusable for me with 3.8 and my machine (a thinkpad t530) completely
-froze while typing it...
+I believe this driver should go into driver/net/wireless considering 
+that we have a maintainer, it has passed wifi cert and is in use in 
+production devices.
 
-I was going to say I'm getting a lot of:
-iwlwifi 0000:03:00.0: fail to flush all tx fifo queues
-
-with this device:
-03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 3e)
-        Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN
-        Kernel driver in use: iwlwifi
-
-But now I will be able to give you links to the actual soft lockup:
-http://mathieu.csetco.com/iwlwifi/iwlwifi-oops1.jpeg
-http://mathieu.csetco.com/iwlwifi/iwlwifi-oops2.jpeg
-http://mathieu.csetco.com/iwlwifi/iwlwifi-oops3.jpeg
-
-The same machine works perfectly fine with a vanilla 3.7.  On 3.8,
-before the machine froze I could see my download speed going up and down
-like crazy (that's what prompted the "almost unusable" comment, it's so
-painful loading a web page feels like being on dialup).
-
-A rough text version is a follow:
-BUG: soft lockup - CPU#1 stuck for 23s!
-[...]
-Call Trace:
-iwl_trans_pcie_stop_device+0x15c/0x1c0 [iwlwifi]
-iwl_down+0x1fd/0x300 [iwldvm]
-iwlagn_prepare_restart+0x4f/0xd0 [iwldvm]
-? idle_balance+0x110/0x2f0
-iwl_bg_restart+0x52/0xe0 [iwldvm]
-process_one_work+0x147/0x490
-? iwl_op_mode_dvm_start+0xa50/0xa50 [iwldvm]
-[...]
-
-After that I the whole thing was frozen: keyboard/mouse would still work
-but no IO would go whatsoever (even disk)...
-
-The "fail to flush all tx fifo queues" are easy to reproduce: I get that
-by copying file around / downloading and browsing the web.
-
-Let me know if I can help in any way (like decoding addresses).
+I have a few patches queued up for you that fixes the last sparse 
+warnings too...
 
 Cheers,
--- 
-Mathieu Chouquet-Stringer                         mathieu@csetco.com
-            The sun itself sees not till heaven clears.
-	             -- William Shakespeare --
+
+Pontus
+
