@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52638 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753666Ab3AaQOJ (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:65508 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756238Ab3ANMM6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 11:14:09 -0500
-Date: Thu, 31 Jan 2013 10:14:04 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 2/7] mac80211: Fix tx queue handling during scans
-Message-ID: <20130131161404.GC28799@thinkpad-t410> (sfid-20130131_171413_372016_81866123)
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
- <1359503255-18270-3-git-send-email-seth.forshee@canonical.com>
- <1359645245.8415.72.camel@jlt4.sipsolutions.net>
+	Mon, 14 Jan 2013 07:12:58 -0500
+Received: by mail-la0-f53.google.com with SMTP id fn20so3676541lab.26
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 04:12:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359645245.8415.72.camel@jlt4.sipsolutions.net>
+In-Reply-To: <CAMvjH0BkRS0HpjqHQyFOmnqmQs4AR9HGWh07FSz2yh3TiTBy6w@mail.gmail.com>
+References: <CAMvjH0A69ZBCZc5qjm_cUYj3bDzSmneaz1u9CsPcJEm2T0Q1iw@mail.gmail.com>
+ <87txqkz0yk.fsf@purkki.adurom.net> <CAMvjH0BkRS0HpjqHQyFOmnqmQs4AR9HGWh07FSz2yh3TiTBy6w@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 14 Jan 2013 23:12:36 +1100
+Message-ID: <CAGRGNgXBNSRTK+zjaxg5eD-zDv6OE_S_iU7Gb3v5W=M_92qdrg@mail.gmail.com> (sfid-20130114_131315_807201_93A804EF)
+Subject: Re: Custom commands for cfg80211 based driver (like iwpriv)
+To: Eugene <wifi.mailing.list@gmail.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 04:14:05PM +0100, Johannes Berg wrote:
-> On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
-> 
-> > +		if (offchan_tx_ok) {
-> 
-> unlikely(), this is one of the hottest code paths in mac80211 after
-> all :-)
+Hi Eugene,
 
-Ack, I'll change this for v2.
+On Mon, Jan 14, 2013 at 9:01 PM, Eugene <wifi.mailing.list@gmail.com> wrote:
+> 2013/1/14 Kalle Valo <kvalo@adurom.com>:
+>> Eugene <wifi.mailing.list@gmail.com> writes:
+>>
+>>> How to add custom configuration command for cfg80211 based driver.
+>>>
+>>> For WEXT was private IOCtls (iwpriv).
+>>>
+>>> What the recommended way for nl80211/cfg80211?
+>>
+>> Luckily private commands are now banned, it was such a mess. Now you add
+>> a new generic command to nl80211/cfg80211 so that all drivers can use
+>> it. The benefit is that the driver can be changed without any
+>> modifications to user space.
+>
+> That's really good benefit.
+> But as a disadvantage for that approach required changes for kernel,
+> which cannot be done real-time (insmod for example).
 
-> > +			/*
-> > +			 * Always directly transmit off-channel frames
-> > +			 * unless the driver has stopped the queues.
-> > +			 */
-> > +			if (test_bit(IEEE80211_QUEUE_STOP_REASON_DRIVER,
-> > +				     &local->queue_stop_reasons[q])) {
-> 
-> might there be other reasons to TX, i.e. ignore only
-> STOP_REASON_OFFCHANNEL?
+How so? If you have some new mode or feature, you implement support
+for it in cfg80211 and (if needed) mac80211, tell userspace about it
+through nl80211, build a driver that indicates that it has support for
+this feature, then add or patch user-space utilities to make use of
+it.
 
-I originally wrote it that way, but I'm not sure that all of the stop
-reasons need to block tx here. I'll take another look.
+>> Only exceptions are NL80211_CMD_TESTMODE for low level factory/RF tests
+>> and debugfs for developer debugging purposes.
+>>
+>
+> Hmm...
+> That's good point for testing, but still unusable for production.
 
-> That might be more efficient too:
-> 
-> offchflag = offchan_tx_ok << log2(STOP_REASON_OFFCHANNEL);
-> 
-> > +		} else if (local->queue_stop_reasons[q] ||
-> 
-> if (local->queue_stop_reasons[q] & ~offchflag || ...
-> 
-> OTOH, I guess you want a different return value too. But that's in a
-> relatively unlikely code path again, so might still be better to then
-> again differentiate within that if.
+debugfs is for exposing internal state which would be useful for
+debugging, e.g. register values, low level statistics, etc.
 
-Good suggestions, I'll take a look at applying them in some form.
+> Why kernel do not support custom commands, like TESTMODE?
 
-Seth
+The goal, as I understand it, is to work out a framework for how
+TESTMODE could be implemented in a unified manner across all the
+drivers for all hardware which supports it. I'm not sure that any real
+progress has been made.
+
+> The reason is to unify all drivers?
+
+Precisely. User space shouldn't have to do anything "special" for any
+particular driver.
+
+I should be able to swap from an Atheros card to an Intel card and,
+providing the Intel card supports the features I'm using, userspace
+should continue on without any significant configuration changes.
+
+> But what about new (or proprietary) features, use kernel patches only?
+
+New features should be written into the wireless stack as I described above.
+
+Proprietary features ... well that's a tricky one. Unless there's a
+real compelling reason to do so, they're most likely going to be
+ignored unless other chipsets implement compatible features and a
+unified interface for utilising them can be figured out.
+
+Exactly what features are you wanting to implement?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
