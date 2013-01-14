@@ -1,82 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34168 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754120Ab3AZUke (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 15:40:34 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] bcma: add gpio_to_irq
-Date: Sat, 26 Jan 2013 21:39:44 +0100
-Message-Id: <1359232784-15832-1-git-send-email-hauke@hauke-m.de> (sfid-20130126_214038_262235_17B32086)
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:51982 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755877Ab3ANMuG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jan 2013 07:50:06 -0500
+Received: by mail-wi0-f179.google.com with SMTP id o1so1211712wic.12
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 04:50:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgXBNSRTK+zjaxg5eD-zDv6OE_S_iU7Gb3v5W=M_92qdrg@mail.gmail.com>
+References: <CAMvjH0A69ZBCZc5qjm_cUYj3bDzSmneaz1u9CsPcJEm2T0Q1iw@mail.gmail.com>
+	<87txqkz0yk.fsf@purkki.adurom.net>
+	<CAMvjH0BkRS0HpjqHQyFOmnqmQs4AR9HGWh07FSz2yh3TiTBy6w@mail.gmail.com>
+	<CAGRGNgXBNSRTK+zjaxg5eD-zDv6OE_S_iU7Gb3v5W=M_92qdrg@mail.gmail.com>
+Date: Mon, 14 Jan 2013 14:50:04 +0200
+Message-ID: <CAMvjH0CG3fL-o=HkSeDkXE7KoVo-UEahkYRGqPok-Gpw09YaUw@mail.gmail.com> (sfid-20130114_135011_826786_310EA63D)
+Subject: Re: Custom commands for cfg80211 based driver (like iwpriv)
+From: Eugene <wifi.mailing.list@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old bcm47xx gpio code had support for gpio_to_irq, but the new
-code did not provide this function, but returned -ENXIO all the time.
-This patch adds the missing function.
+2013/1/14 Julian Calaby <julian.calaby@gmail.com>:
+> Hi Eugene,
+>
+> On Mon, Jan 14, 2013 at 9:01 PM, Eugene <wifi.mailing.list@gmail.com> wrote:
+>> 2013/1/14 Kalle Valo <kvalo@adurom.com>:
+>>> Eugene <wifi.mailing.list@gmail.com> writes:
+>>>
+>>>> How to add custom configuration command for cfg80211 based driver.
+>>>>
+>>>> For WEXT was private IOCtls (iwpriv).
+>>>>
+>>>> What the recommended way for nl80211/cfg80211?
+>>>
+>>> Luckily private commands are now banned, it was such a mess. Now you add
+>>> a new generic command to nl80211/cfg80211 so that all drivers can use
+>>> it. The benefit is that the driver can be changed without any
+>>> modifications to user space.
+>>
+>> That's really good benefit.
+>> But as a disadvantage for that approach required changes for kernel,
+>> which cannot be done real-time (insmod for example).
+>
+> How so? If you have some new mode or feature, you implement support
+> for it in cfg80211 and (if needed) mac80211, tell userspace about it
+> through nl80211, build a driver that indicates that it has support for
+> this feature, then add or patch user-space utilities to make use of
+> it.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_gpio.c            |   11 +++++++++++
- include/linux/bcma/bcma_driver_mips.h |    9 +++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+Sure, at any time I can patch the framework {nl,cfg}80211.
+But that is useful for feature, which can be reused by other drivers.
+And for sure I'll go by that way if so.
 
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index 9a6f585..0b5df53 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -73,6 +73,16 @@ static void bcma_gpio_free(struct gpio_chip *chip, unsigned gpio)
- 	bcma_chipco_gpio_pullup(cc, 1 << gpio, 0);
- }
- 
-+static int bcma_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct bcma_drv_cc *cc = bcma_gpio_get_cc(chip);
-+
-+	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		return bcma_core_irq(cc->core);
-+	else
-+		return -EINVAL;
-+}
-+
- int bcma_gpio_init(struct bcma_drv_cc *cc)
- {
- 	struct gpio_chip *chip = &cc->gpio;
-@@ -85,6 +95,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 	chip->set		= bcma_gpio_set_value;
- 	chip->direction_input	= bcma_gpio_direction_input;
- 	chip->direction_output	= bcma_gpio_direction_output;
-+	chip->to_irq		= bcma_gpio_to_irq;
- 	chip->ngpio		= 16;
- 	/* There is just one SoC in one device and its GPIO addresses should be
- 	 * deterministic to address them more easily. The other buses could get
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index 0d1ea29..fb61f3f 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -42,13 +42,18 @@ struct bcma_drv_mips {
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
- extern void bcma_core_mips_early_init(struct bcma_drv_mips *mcore);
-+
-+extern unsigned int bcma_core_irq(struct bcma_device *core);
- #else
- static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
- static inline void bcma_core_mips_early_init(struct bcma_drv_mips *mcore) { }
-+
-+static inline unsigned int bcma_core_irq(struct bcma_device *core)
-+{
-+	return 0;
-+}
- #endif
- 
- extern u32 bcma_cpu_clock(struct bcma_drv_mips *mcore);
- 
--extern unsigned int bcma_core_irq(struct bcma_device *core);
--
- #endif /* LINUX_BCMA_DRIVER_MIPS_H_ */
--- 
-1.7.10.4
+>
+>>> Only exceptions are NL80211_CMD_TESTMODE for low level factory/RF tests
+>>> and debugfs for developer debugging purposes.
+>>>
+>>
+>> Hmm...
+>> That's good point for testing, but still unusable for production.
+>
+> debugfs is for exposing internal state which would be useful for
+> debugging, e.g. register values, low level statistics, etc.
+>
+>> Why kernel do not support custom commands, like TESTMODE?
+>
+> The goal, as I understand it, is to work out a framework for how
+> TESTMODE could be implemented in a unified manner across all the
+> drivers for all hardware which supports it. I'm not sure that any real
+> progress has been made.
+>
+>> The reason is to unify all drivers?
+>
+> Precisely. User space shouldn't have to do anything "special" for any
+> particular driver.
+>
+> I should be able to swap from an Atheros card to an Intel card and,
+> providing the Intel card supports the features I'm using, userspace
+> should continue on without any significant configuration changes.
+>
 
+That is explain a lot.
+
+>> But what about new (or proprietary) features, use kernel patches only?
+>
+> New features should be written into the wireless stack as I described above.
+>
+> Proprietary features ... well that's a tricky one. Unless there's a
+> real compelling reason to do so, they're most likely going to be
+> ignored unless other chipsets implement compatible features and a
+> unified interface for utilising them can be figured out.
+>
+> Exactly what features are you wanting to implement?
+
+Can be a lot... like custom bridging.
+Of course each of them should be individually investigated.
+
+But currently my question is common.
+And I think, that I got all the answers.
+
+Thanks to everybody.
+
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
