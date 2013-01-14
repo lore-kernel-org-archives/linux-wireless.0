@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37190 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab3AaFbr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44772 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757557Ab3ANUAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 00:31:47 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] iw:  Print beacon-loss-event string.
-Date: Wed, 30 Jan 2013 21:31:29 -0800
-Message-Id: <1359610289-4578-1-git-send-email-greearb@candelatech.com> (sfid-20130131_063151_387238_C974953B)
+	Mon, 14 Jan 2013 15:00:20 -0500
+Date: Mon, 14 Jan 2013 14:58:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.8 2/2] ath9k_hw: fix RF bank initialization
+Message-ID: <20130114195851.GB12018@tuxdriver.com> (sfid-20130114_210029_512380_5F1EE0CC)
+References: <1358103298-4017-1-git-send-email-nbd@openwrt.org>
+ <1358103298-4017-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1358103298-4017-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Sun, Jan 13, 2013 at 07:54:58PM +0100, Felix Fietkau wrote:
+> ar900*_init_mode_regs needs to be called before RF banks are allocated,
+> otherwise the storage size of RF banks isn't known. This patch fixes
+> a memory overrun that can show up as a crash on unloading the module.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-There are now three possible threshold events.  The old
-code assumed only above/below RSSI, and printed out 'low'
-for beacon-loss-event.
+<snip>
 
-Fix that, and do so with a switch statement so the compiler
-can warn if the enum is further expanded w/out updating this
-code.
+> @@ -410,7 +411,10 @@ int ar9002_hw_attach_ops(struct ath_hw *ah)
+>  	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+>  	int ret;
+>  
+> -	priv_ops->init_mode_regs = ar9002_hw_init_mode_regs;
+> +	ret = ar9002_hw_init_mode_regs(ah);
+> +	if (ret)
+> +		return ret;
+> +
+>  	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
+>  
+>  	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
 
-Shorten 'connection quality monitor' to CQM to keep total string
-relatively short.
+This hunk depends on "ath9k_hw: use the devres API for allocations",
+which is queue for 3.9.  Can you revise this for 3.8?  If not, should
+I hold just this one for 3.9?  Or the earlier patch in the series
+as well?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 6f7027f... cb80bf8... M	event.c
- event.c |   21 +++++++++++++++++----
- 1 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/event.c b/event.c
-index 6f7027f..cb80bf8 100644
---- a/event.c
-+++ b/event.c
-@@ -110,7 +110,7 @@ static void parse_cqm_event(struct nlattr **attrs)
- 	struct nlattr *cqm[NL80211_ATTR_CQM_MAX + 1];
- 	struct nlattr *cqm_attr = attrs[NL80211_ATTR_CQM];
- 
--	printf("connection quality monitor event: ");
-+	printf("CQM event: ");
- 
- 	if (!cqm_attr ||
- 	    nla_parse_nested(cqm, NL80211_ATTR_CQM_MAX, cqm_attr, cqm_policy)) {
-@@ -120,11 +120,24 @@ static void parse_cqm_event(struct nlattr **attrs)
- 
- 	if (cqm[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT]) {
- 		enum nl80211_cqm_rssi_threshold_event rssi_event;
-+                bool found_one = false;
- 		rssi_event = nla_get_u32(cqm[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT]);
--		if (rssi_event == NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH)
--			printf("RSSI went above threshold\n");
--		else
-+		switch(rssi_event) {
-+                case NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH:
-+                        printf("RSSI went above threshold\n");
-+                        found_one = true;
-+                        break;
-+                case NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW:
- 			printf("RSSI went below threshold\n");
-+                        found_one = true;
-+                        break;
-+                case NL80211_CQM_RSSI_BEACON_LOSS_EVENT:
-+			printf("Beacon loss detected\n");
-+                        found_one = true;
-+                        break;
-+                }/* switch */
-+                if (!found_one)
-+                        printf("Unknown event type: %i\n", rssi_event);
- 	} else if (cqm[NL80211_ATTR_CQM_PKT_LOSS_EVENT] &&
- 		   attrs[NL80211_ATTR_MAC]) {
- 		uint32_t frames;
+John
 -- 
-1.7.3.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
