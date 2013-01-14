@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48063 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592Ab3A1ICV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756212Ab3ANOU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 03:02:21 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Q: offchannel operations
-Date: Mon, 28 Jan 2013 10:02:17 +0200
-Message-ID: <1782786.GNue92Gz0e@lx-vladimir> (sfid-20130128_090224_842098_6B8786B1)
-In-Reply-To: <1359155773.4655.54.camel@jlt4.sipsolutions.net>
-References: <1690590.qQcKllxmg2@lx-vladimir> <1359155773.4655.54.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 14 Jan 2013 09:20:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix resume from WoWLAN
+Date: Mon, 14 Jan 2013 15:21:24 +0100
+Message-Id: <1358173284-18342-1-git-send-email-johannes@sipsolutions.net> (sfid-20130114_152102_496746_2FB56243)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, January 26, 2013 12:16:13 AM Johannes Berg wrote:
-> On Thu, 2013-01-10 at 10:43 +0200, Vladimir Kondratiev wrote:
-> > Hi,
-> > 
-> > There are 2 similar operations in the struct cfg80211_ops:
-> > remain_on_channel() and mgmt_tx(). Actually, mgmt_tx() when called for
-> > off-channel operation, is the same as remain_on_channel() except it
-> > transmits frame at the beginning.
-> > 
-> > What I am interesting about, is notifications to cfg80211. For
-> > remain_on_channel(), there are 2: cfg80211_ready_on_channel() when
-> > channel tuned, and cfg80211_remain_on_channel_expired() when tuned off
-> > requested channel. In contrast, if mgmt_tx() called for off-channel
-> > with duration, 2 above notifications are not used. Instead, only
-> > cfg80211_mgmt_tx_status() called after tx.
-> > 
-> > My question is why don't mgmt_tx() call cfg80211_ready_on_channel() and
-> > cfg80211_remain_on_channel_expired() ? It seems logical to notify about
-> > off-channel status. Otherwise, how can upper layers know when off-channel
-> > started/finished in context of mgmt_tx()?
-> 
-> If all they care about is transmitting a frame, why would they want to
-> know?
-> 
-> johannes
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-My understanding is that mgmt_tx() with delay intended for the flows
-when one expect to rx some frame(s) solicited by original tx.
-Ex: active scan - one tx probe and waits for probe resp on the same channel;
-other example may be GO negotiation.
-So, actually tx_mgmt() is like remain_on_channel() but with initial tx. That's
-why it is strange to see different notification policy.
+My commit 529ba6e9313dbe60dab7e72c6fdf647a012e9f5b
+("mac80211: clean up association better in suspend")
+introduced a bug when resuming from WoWLAN when a
+device reset is desired. This case must not use the
+suspend_bss_conf as it hasn't been stored.
 
-For practical example, let's see fragmented scan while connected -
-upper layers issue mgmt_tx() for probe with delay about 10 ms; and use
-start/end offchannel notification to pause/resume tx. Currently, one can't
-do this; and need to call remain_on_channel() following mgmt_tx() upon
-receiving cfg80211_ready_on_channel notification.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/util.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index fed2112..2ba21e3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1365,8 +1365,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	struct ieee80211_chanctx *ctx;
+ 	struct sta_info *sta;
+ 	int res, i;
+-
+ #ifdef CONFIG_PM
++	bool reconfig_due_to_wowlan = false;
++
+ 	if (local->suspended)
+ 		local->resuming = true;
+ 
+@@ -1384,6 +1385,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		 * res is 1, which means the driver requested
+ 		 * to go through a regular reset on wakeup.
+ 		 */
++		reconfig_due_to_wowlan = true;
+ 	}
+ #endif
+ 	/* everything else happens only if HW was up & running */
+@@ -1534,7 +1536,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			  BSS_CHANGED_TXPOWER;
+ 
+ #ifdef CONFIG_PM
+-		if (local->resuming)
++		if (local->resuming && !reconfig_due_to_wowlan)
+ 			sdata->vif.bss_conf = sdata->suspend_bss_conf;
+ #endif
+ 
+-- 
+1.8.0
 
