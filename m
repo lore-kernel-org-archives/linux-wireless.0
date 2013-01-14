@@ -1,96 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55407 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757065Ab3A2On5 (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:45351 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756496Ab3ANQNh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 09:43:57 -0500
-Date: Tue, 29 Jan 2013 15:43:48 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
-Message-ID: <20130129144348.GB23425@pandem0nium> (sfid-20130129_154406_145910_EED39A75)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <5107CE12.3090209@neratec.com>
+	Mon, 14 Jan 2013 11:13:37 -0500
+Received: by mail-la0-f46.google.com with SMTP id fq13so4062084lab.33
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 08:13:36 -0800 (PST)
+Message-ID: <50F42EAC.40005@gmail.com> (sfid-20130114_171341_687740_A5C766A1)
+Date: Mon, 14 Jan 2013 17:13:32 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2B/JsCI69OhZNC5r"
-In-Reply-To: <5107CE12.3090209@neratec.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: ath9k-devel@lists.ath9k.org dead ??  Fwd: Delivery Status Notification
+ (Delay)
+References: <047d7b621b90b55bd304d341d180@google.com>
+In-Reply-To: <047d7b621b90b55bd304d341d180@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+hi,
 
---2B/JsCI69OhZNC5r
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+is ath9k-devel@lists.ath9k.org alive ?
 
-Hey,
+-------- Original Message --------
+Subject: Delivery Status Notification (Delay)
+Date: Mon, 14 Jan 2013 16:05:51 +0000
+From: Mail Delivery Subsystem <mailer-daemon@googlemail.com>
+To: xose.vazquez@gmail.com
 
-On Tue, Jan 29, 2013 at 02:26:42PM +0100, Zefir Kurtisi wrote:
-> On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
-> > From: Victor Goldenshtein <victorg@ti.com>
-> >=20
-> > [...]
-> > @@ -2080,7 +2087,7 @@ enum ieee80211_frame_release_type {
-> >   * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
-> >   * @IEEE80211_RC_SUPP_RATES_CHANGED: The supported rate set of this pe=
-er
-> >   *	changed (in IBSS mode) due to discovering more information about
-> > - *	the peer.
-> > + *	the peern.
-> >   */
-> typo?
+This is an automatically generated Delivery Status Notification
 
-yup ... sorry about that.
+THIS IS A WARNING MESSAGE ONLY.
 
-> > [...]
-> > +	/* TODO: some channels (e.g. ETSI weather channels between 5.600 and
-> > +	 * 5.6500 require longer waiting time, if we want to support them at
-> > +	 * all.
-> > +	 */
-> > +	timeout =3D msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
-> > +	ieee80211_queue_delayed_work(&sdata->local->hw,
-> > +				     &sdata->dfs_cac_timer_work, timeout);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> The required minimum detection probability for weather channels is purpos=
-ely
-> defined such that it can't be reached, so it is safe to assume they will =
-never be
-> supported. As for CAC and NOP timings, they are luckily same for ETSI and=
- FCC
-> right now, and if they differ in the future, we have the countrycode's DFS
-> regulatory domain available to differentiate.
+YOU DO NOT NEED TO RESEND YOUR MESSAGE.
 
-Ah ok, good that they are the same :)
+Delivery to the following recipient has been delayed:
 
-I agree about weather channels, 99.9% detection rate just appears not feasi=
-ble.
-Will remove the comment then.
+     ath9k-devel@lists.ath9k.org
 
-Cheers,
-	Simon
+Message will be retried for 2 more day(s)
 
---2B/JsCI69OhZNC5r
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Technical details of temporary failure: 
+The recipient server did not accept our requests to connect. Learn more at http://support.google.com/mail/bin/answer.py?answer=7720 
+[(0) lists.ath9k.org. [194.45.26.84]:25: Connection refused]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+----- Original message -----
 
-iEYEARECAAYFAlEH4CQACgkQrzg/fFk7axYGUwCgrmiHDJI9gASPrGtt/Xl2u/Bl
-318AnillUUtRQemL4jVvgvhoT4RO/1yE
-=KJBu
------END PGP SIGNATURE-----
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=x-received:message-id:date:from:user-agent:mime-version:to:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=xqctgQzI0LK3bCpj+73VZ3QyMn2PV0OVIHeGJAfJHCU=;
+        b=M9s64jWFyUQC/7YyUYCEyYKDvZWI7dKIZqzIco1CkTe2++8wGYSfkuA55hattkPhXM
+         VrYTuU3xcSmnju2/vRYcUmBoZ3m/rfn3bTxu99sK+rfpdEPsYcZkZGLSpxAyUNWn3ArV
+         SqBZzJUlDbYAR/D2Yhh1lotLdl4luuFmQV5ehE15Yd2e9QhUUPz7RjDZM4Jz2kXL7NZH
+         x3E7ZHHR1O7KgpYA82u/LpE/XBXMwakBOR8tf2OqbMgObFvuTCXox0idsR02kdp0PNqQ
+         04YxxXMVXAHh3uoP4BjgQ8YJ8sjaAmOiRtzSj1LTrIzL2Pu0mGJnJVbVD6P9/tHjK1SB
+         Hrtw==
+X-Received: by 10.14.219.3 with SMTP id l3mr220164547eep.5.1358087265412;
+        Sun, 13 Jan 2013 06:27:45 -0800 (PST)
+Return-Path: <xose.vazquez@gmail.com>
+Received: from localhost (88.45.218.87.dynamic.jazztel.es. [87.218.45.88])
+        by mx.google.com with ESMTPS id f6sm17558343eeo.7.2013.01.13.06.27.43
+        (version=TLSv1 cipher=RC4-SHA bits=128/128);
+        Sun, 13 Jan 2013 06:27:44 -0800 (PST)
+Message-ID: <50F2C45D.5080204@gmail.com>
+Date: Sun, 13 Jan 2013 15:27:41 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+User-Agent: Polo rio abaixo vai unha troita de pe, corre que te corre, quen a puidera coller...
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>, 
+ ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k bugs
+References: <50F2C327.3040302@gmail.com>
+In-Reply-To: <50F2C327.3040302@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
---2B/JsCI69OhZNC5r--
+On 01/13/2013 03:22 PM, Xose Vazquez Perez wrote:
+
+> I also see the same bug with openwrt ATTITUDE ADJUSTMENT (12.09-rc1, r34185)
+> on a Buffalo WZR-HP-G300NH device:
+> https://dev.openwrt.org/ticket/9654
+
+sorry, this was https://dev.openwrt.org/ticket/12623
+
+
+
+
