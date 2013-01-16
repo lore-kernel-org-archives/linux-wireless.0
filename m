@@ -1,103 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:36557 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754520Ab3ASDGu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53271 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755275Ab3APXcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 22:06:50 -0500
-Date: Sat, 19 Jan 2013 12:06:47 +0900
-From: Norbert Preining <preining@logic.at>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: dire state of rtl8192se driver in 3.7
-Message-ID: <20130119030647.GG31262@gamma.logic.tuwien.ac.at> (sfid-20130119_040721_171567_44590FCF)
-References: <20121222150909.GA3979@gamma.logic.tuwien.ac.at> <50D5E194.3050503@lwfinger.net> <20121222225543.GA21544@gamma.logic.tuwien.ac.at> <50D66313.3000208@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50D66313.3000208@lwfinger.net>
+	Wed, 16 Jan 2013 18:32:18 -0500
+Message-ID: <1358379163.15012.69.camel@jlt4.sipsolutions.net> (sfid-20130117_003223_691688_5FD5DF69)
+Subject: Re: [RFC] Fixes for problems with off-channel powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 17 Jan 2013 00:32:43 +0100
+In-Reply-To: <20130109134059.GC18778@thinkpad-t410>
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+	 <20130109134059.GC18778@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry, hi all,
+On Wed, 2013-01-09 at 07:40 -0600, Seth Forshee wrote:
 
-it is some time that I didn't post, but here I want to come back to
-this item.
+> > It turns out that fixing problem #1 (i.e. patch 2) probably isn't
+> > necessary with the other changes, as no frames should be sent while
+> > off-channel PS is enabled. Does this still seem like a problem worth
+> > fixing?
+> 
+> This is incorrect. We actually do need patch 2 for some hardware. I
+> forgot that when I was testing with BCM43224 I found that PM gets
+> actively set or cleared based on the device configuration. It's
+> impossible to enable PS at the AP without informing the driver.
 
-On Sa, 22 Dez 2012, Larry Finger wrote:
->> But the DMAR item I also reported points to a real problem I guess.
->
-> Yes, I would agree.
+Hm, don't understand. If we're not sending any packets to the AP, why
+does this matter?
 
-That seems to be gone with current kernels 3.8.0-rc3
+Or are you saying it wants nullfunc frames generated in software, but
+then changes the PM bit in them?
 
-I have had the hanging issue today again, but this time it showed 
-a very interesting rythm, that might help to understand.
-Pinging my router I normally have about ~1ms response time.
-When it hanged (and this is now several thousand seconds long test)
-the hang times are *always very close:
-	4sec
-	3sec
-	2sec
-	1sec
-is one block. This block might repeat a few times, or only once, but it
-is always in this rythm:
-64 bytes from 192.168.0.1: icmp_req=407 ttl=255 time=1.23 ms
-64 bytes from 192.168.0.1: icmp_req=408 ttl=255 time=1.89 ms
-64 bytes from 192.168.0.1: icmp_req=409 ttl=255 time=3925 ms
-64 bytes from 192.168.0.1: icmp_req=410 ttl=255 time=2918 ms
-64 bytes from 192.168.0.1: icmp_req=411 ttl=255 time=1910 ms
-64 bytes from 192.168.0.1: icmp_req=412 ttl=255 time=903 ms
-64 bytes from 192.168.0.1: icmp_req=413 ttl=255 time=1.15 ms
-...
-64 bytes from 192.168.0.1: icmp_req=418 ttl=255 time=1.16 ms
-64 bytes from 192.168.0.1: icmp_req=419 ttl=255 time=4040 ms
-64 bytes from 192.168.0.1: icmp_req=420 ttl=255 time=3033 ms
-64 bytes from 192.168.0.1: icmp_req=421 ttl=255 time=2025 ms
-64 bytes from 192.168.0.1: icmp_req=422 ttl=255 time=1018 ms
-64 bytes from 192.168.0.1: icmp_req=423 ttl=255 time=4087 ms
-64 bytes from 192.168.0.1: icmp_req=424 ttl=255 time=3081 ms
-64 bytes from 192.168.0.1: icmp_req=425 ttl=255 time=2073 ms
-64 bytes from 192.168.0.1: icmp_req=426 ttl=255 time=1065 ms
-64 bytes from 192.168.0.1: icmp_req=427 ttl=255 time=4124 ms
-64 bytes from 192.168.0.1: icmp_req=428 ttl=255 time=3121 ms
-64 bytes from 192.168.0.1: icmp_req=429 ttl=255 time=2114 ms
-64 bytes from 192.168.0.1: icmp_req=430 ttl=255 time=1109 ms
-64 bytes from 192.168.0.1: icmp_req=431 ttl=255 time=4169 ms
-64 bytes from 192.168.0.1: icmp_req=432 ttl=255 time=3163 ms
-64 bytes from 192.168.0.1: icmp_req=433 ttl=255 time=2155 ms
-64 bytes from 192.168.0.1: icmp_req=434 ttl=255 time=1147 ms
-....
-64 bytes from 192.168.0.1: icmp_req=521 ttl=255 time=1.30 ms
-64 bytes from 192.168.0.1: icmp_req=522 ttl=255 time=1.25 ms
-64 bytes from 192.168.0.1: icmp_req=523 ttl=255 time=4300 ms
-64 bytes from 192.168.0.1: icmp_req=524 ttl=255 time=3293 ms
-64 bytes from 192.168.0.1: icmp_req=525 ttl=255 time=2295 ms
-64 bytes from 192.168.0.1: icmp_req=526 ttl=255 time=1287 ms
-64 bytes from 192.168.0.1: icmp_req=527 ttl=255 time=4357 ms
-64 bytes from 192.168.0.1: icmp_req=528 ttl=255 time=3351 ms
-64 bytes from 192.168.0.1: icmp_req=529 ttl=255 time=2344 ms
-64 bytes from 192.168.0.1: icmp_req=530 ttl=255 time=1336 ms
-64 bytes from 192.168.0.1: icmp_req=531 ttl=255 time=4408 ms
-64 bytes from 192.168.0.1: icmp_req=532 ttl=255 time=3403 ms
-64 bytes from 192.168.0.1: icmp_req=533 ttl=255 time=2395 ms
-64 bytes from 192.168.0.1: icmp_req=534 ttl=255 time=1387 ms
-64 bytes from 192.168.0.1: icmp_req=535 ttl=255 time=4453 ms
-64 bytes from 192.168.0.1: icmp_req=536 ttl=255 time=3449 ms
-64 bytes from 192.168.0.1: icmp_req=537 ttl=255 time=2441 ms
-64 bytes from 192.168.0.1: icmp_req=538 ttl=255 time=1433 ms
-64 bytes from 192.168.0.1: icmp_req=539 ttl=255 time=4499 ms
-...
+johannes
 
-In addition, the responses for these blocks come *together*,
-not after 4sec the first, then after 3 sec the next. No.
-It is wait 10 sec, bammmm, all 4, wait 10secs, bam all 4.
-
-Does that ring *any* bell*
-
-
-Norbert
-
-------------------------------------------------------------------------
-PREINING, Norbert                               http://www.preining.info
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
