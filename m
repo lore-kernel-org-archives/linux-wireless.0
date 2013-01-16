@@ -1,37 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:51035 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753Ab3ABWpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 17:45:07 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr12so6606644wgb.23
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 14:45:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1357131065.9839.14.camel@jlt4.sipsolutions.net>
-References: <1356644636-5309-1-git-send-email-thomas@cozybit.com>
- <1356644636-5309-2-git-send-email-thomas@cozybit.com> <1357131065.9839.14.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 2 Jan 2013 14:44:45 -0800
-Message-ID: <CAG6hwVNK9Xt-OAjF-vioAyVXFQBzhF-xUdd1cY0GQRBfXusqQA@mail.gmail.com> (sfid-20130102_234511_161787_A8975322)
-Subject: Re: [PATCH 2/4] mac80211_hwsim: hrtimer beacon
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.org, j@w1.fi, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:36969 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759000Ab3APKpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 05:45:40 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.8] iwlegacy: fix IBSS cleanup
+Date: Wed, 16 Jan 2013 11:45:15 +0100
+Message-Id: <1358333115-2489-1-git-send-email-sgruszka@redhat.com> (sfid-20130116_114554_937220_902BA750)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 2, 2013 at 4:51 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2012-12-27 at 13:43 -0800, Thomas Pedersen wrote:
->
->>       ieee80211_iterate_active_interfaces_atomic(
->>               hw, IEEE80211_IFACE_ITER_NORMAL,
->> -             mac80211_hwsim_beacon_tx, hw);
->> +             mac80211_hwsim_beacon_tx, data);
->
-> This change belongs to another patch, please respin cleanly.
+We do not correctly change interface type when switching from
+IBSS mode to STA mode, that results in microcode errors. 
 
-D'oh. Yes it does, will send a v2 shortly.
+Resolves:
+https://bugzilla.redhat.com/show_bug.cgi?id=886946
 
-Thanks,
+Reported-by: Jaroslav Skarvada <jskarvad@redhat.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c | 35 ++++++++++++++--------------------
+ 1 file changed, 14 insertions(+), 21 deletions(-)
 
-Thomas
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7e16d10..90b8970 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -3958,17 +3958,21 @@ il_connection_init_rx_config(struct il_priv *il)
+ 
+ 	memset(&il->staging, 0, sizeof(il->staging));
+ 
+-	if (!il->vif) {
++	switch (il->iw_mode) {
++	case NL80211_IFTYPE_UNSPECIFIED:
+ 		il->staging.dev_type = RXON_DEV_TYPE_ESS;
+-	} else if (il->vif->type == NL80211_IFTYPE_STATION) {
++		break;
++	case NL80211_IFTYPE_STATION:
+ 		il->staging.dev_type = RXON_DEV_TYPE_ESS;
+ 		il->staging.filter_flags = RXON_FILTER_ACCEPT_GRP_MSK;
+-	} else if (il->vif->type == NL80211_IFTYPE_ADHOC) {
++		break;
++	case NL80211_IFTYPE_ADHOC:
+ 		il->staging.dev_type = RXON_DEV_TYPE_IBSS;
+ 		il->staging.flags = RXON_FLG_SHORT_PREAMBLE_MSK;
+ 		il->staging.filter_flags =
+ 		    RXON_FILTER_BCON_AWARE_MSK | RXON_FILTER_ACCEPT_GRP_MSK;
+-	} else {
++		break;
++	default:
+ 		IL_ERR("Unsupported interface type %d\n", il->vif->type);
+ 		return;
+ 	}
+@@ -4550,8 +4554,7 @@ out:
+ EXPORT_SYMBOL(il_mac_add_interface);
+ 
+ static void
+-il_teardown_interface(struct il_priv *il, struct ieee80211_vif *vif,
+-		      bool mode_change)
++il_teardown_interface(struct il_priv *il, struct ieee80211_vif *vif)
+ {
+ 	lockdep_assert_held(&il->mutex);
+ 
+@@ -4560,9 +4563,7 @@ il_teardown_interface(struct il_priv *il, struct ieee80211_vif *vif,
+ 		il_force_scan_end(il);
+ 	}
+ 
+-	if (!mode_change)
+-		il_set_mode(il);
+-
++	il_set_mode(il);
+ }
+ 
+ void
+@@ -4575,8 +4576,8 @@ il_mac_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 
+ 	WARN_ON(il->vif != vif);
+ 	il->vif = NULL;
+-
+-	il_teardown_interface(il, vif, false);
++	il->iw_mode = NL80211_IFTYPE_UNSPECIFIED;
++	il_teardown_interface(il, vif);
+ 	memset(il->bssid, 0, ETH_ALEN);
+ 
+ 	D_MAC80211("leave\n");
+@@ -4685,18 +4686,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	/* success */
+-	il_teardown_interface(il, vif, true);
+ 	vif->type = newtype;
+ 	vif->p2p = false;
+-	err = il_set_mode(il);
+-	WARN_ON(err);
+-	/*
+-	 * We've switched internally, but submitting to the
+-	 * device may have failed for some reason. Mask this
+-	 * error, because otherwise mac80211 will not switch
+-	 * (and set the interface type back) and we'll be
+-	 * out of sync with it.
+-	 */
++	il->iw_mode = newtype;
++	il_teardown_interface(il, vif);
+ 	err = 0;
+ 
+ out:
+-- 
+1.8.0.2
+
