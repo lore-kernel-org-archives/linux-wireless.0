@@ -1,149 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34595 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754795Ab3AMSzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jan 2013 13:55:13 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:37440 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033Ab3APMnP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 07:43:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.8 1/2] ath9k_hw: clean up RF Bank6 handling on AR5416/AR91xx
-Date: Sun, 13 Jan 2013 19:54:57 +0100
-Message-Id: <1358103298-4017-1-git-send-email-nbd@openwrt.org> (sfid-20130113_195527_085821_FD08AC17)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: improve aggregation debug messages
+Date: Wed, 16 Jan 2013 13:43:37 +0100
+Message-Id: <1358340217-22419-1-git-send-email-johannes@sipsolutions.net> (sfid-20130116_134319_101644_09148CE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two sets of initvals for this RF bank, one with TPC support and
-one without.
-The TPC one always gets used, so remove the other one to avoid confusion.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+A lot of the aggregation messages don't indicate the
+station so they're hard to understand if there are
+multiple sessions in progress. Make that easier by
+adding the MAC address to most messages. Also add
+the TID if it wasn't already there.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 31 ++++++++++-------------------
- drivers/net/wireless/ath/ath9k/ar9002_hw.c  | 11 +++-------
- drivers/net/wireless/ath/ath9k/hw.h         |  3 ---
- 3 files changed, 13 insertions(+), 32 deletions(-)
+ net/mac80211/agg-rx.c | 14 +++++++++-----
+ net/mac80211/agg-tx.c | 44 +++++++++++++++++++++++++++-----------------
+ 2 files changed, 36 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index fd69376..93f8f96 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -485,9 +485,7 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
- 	ATH_ALLOC_BANK(ah->analogBank2Data, ah->iniBank2.ia_rows);
- 	ATH_ALLOC_BANK(ah->analogBank3Data, ah->iniBank3.ia_rows);
- 	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
--	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
- 	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
--	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 808338a..31bf258 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -83,8 +83,8 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
+ 			     &sta->sta, tid, NULL, 0))
+ 		sdata_info(sta->sdata,
+-			   "HW problem - can not stop rx aggregation for tid %d\n",
+-			   tid);
++			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
++			   sta->sta.addr, tid);
  
- 	return 0;
- #undef ATH_ALLOC_BANK
-@@ -517,6 +515,7 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 	u32 ob5GHz = 0, db5GHz = 0;
- 	u32 ob2GHz = 0, db2GHz = 0;
- 	int regWrites = 0;
-+	int i;
+ 	/* check if this is a self generated aggregation halt */
+ 	if (initiator == WLAN_BACK_RECIPIENT && tx)
+@@ -159,7 +159,8 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
+ 	}
+ 	rcu_read_unlock();
+ 
+-	ht_dbg(sta->sdata, "rx session timer expired on tid %d\n", (u16)*ptid);
++	ht_dbg(sta->sdata, "RX session timer expired on %pM tid %d\n",
++	       sta->sta.addr, (u16)*ptid);
+ 
+ 	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
+ 	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
+@@ -247,7 +248,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 	status = WLAN_STATUS_REQUEST_DECLINED;
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
+-		ht_dbg(sta->sdata, "Suspend in progress - Denying ADDBA request\n");
++		ht_dbg(sta->sdata,
++		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
++		       sta->sta.addr, tid);
+ 		goto end_no_lock;
+ 	}
+ 
+@@ -317,7 +320,8 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 
+ 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
+ 			       &sta->sta, tid, &start_seq_num, 0);
+-	ht_dbg(sta->sdata, "Rx A-MPDU request on tid %d result %d\n", tid, ret);
++	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
++	       sta->sta.addr, tid, ret);
+ 	if (ret) {
+ 		kfree(tid_agg_rx->reorder_buf);
+ 		kfree(tid_agg_rx->reorder_time);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 2f0ccbc..e909118 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -387,12 +387,13 @@ static void sta_addba_resp_timer_expired(unsigned long data)
+ 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
+ 		rcu_read_unlock();
+ 		ht_dbg(sta->sdata,
+-		       "timer expired on tid %d but we are not (or no longer) expecting addBA response there\n",
+-		       tid);
++		       "timer expired on %pM tid %d but we are not (or no longer) expecting addBA response there\n",
++		       sta->sta.addr, tid);
+ 		return;
+ 	}
+ 
+-	ht_dbg(sta->sdata, "addBA response timer expired on tid %d\n", tid);
++	ht_dbg(sta->sdata, "addBA response timer expired on %pM tid %d\n",
++	       sta->sta.addr, tid);
+ 
+ 	ieee80211_stop_tx_ba_session(&sta->sta, tid);
+ 	rcu_read_unlock();
+@@ -429,7 +430,8 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 			       &sta->sta, tid, &start_seq_num, 0);
+ 	if (ret) {
+ 		ht_dbg(sdata,
+-		       "BA request denied - HW unavailable for tid %d\n", tid);
++		       "BA request denied - HW unavailable for %pM tid %d\n",
++		       sta->sta.addr, tid);
+ 		spin_lock_bh(&sta->lock);
+ 		ieee80211_agg_splice_packets(sdata, tid_tx, tid);
+ 		ieee80211_assign_tid_tx(sta, tid, NULL);
+@@ -442,7 +444,8 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 
+ 	/* activate the timer for the recipient's addBA response */
+ 	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
+-	ht_dbg(sdata, "activated addBA response timer on tid %d\n", tid);
++	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
++	       sta->sta.addr, tid);
+ 
+ 	spin_lock_bh(&sta->lock);
+ 	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
+@@ -489,7 +492,8 @@ static void sta_tx_agg_session_timer_expired(unsigned long data)
+ 
+ 	rcu_read_unlock();
+ 
+-	ht_dbg(sta->sdata, "tx session timer expired on tid %d\n", (u16)*ptid);
++	ht_dbg(sta->sdata, "tx session timer expired on %pM tid %d\n",
++	       sta->sta.addr, (u16)*ptid);
+ 
+ 	ieee80211_stop_tx_ba_session(&sta->sta, *ptid);
+ }
+@@ -525,7 +529,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 
+ 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
+ 		ht_dbg(sdata,
+-		       "BA sessions blocked - Denying BA session request\n");
++		       "BA sessions blocked - Denying BA session request %pM tid %d\n",
++		       sta->sta.addr, tid);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -566,8 +571,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
+ 			HT_AGG_RETRIES_PERIOD)) {
+ 		ht_dbg(sdata,
+-		       "BA request denied - waiting a grace period after %d failed requests on tid %u\n",
+-		       sta->ampdu_mlme.addba_req_num[tid], tid);
++		       "BA request denied - waiting a grace period after %d failed requests on %pM tid %u\n",
++		       sta->ampdu_mlme.addba_req_num[tid], sta->sta.addr, tid);
+ 		ret = -EBUSY;
+ 		goto err_unlock_sta;
+ 	}
+@@ -576,8 +581,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	/* check if the TID is not in aggregation flow already */
+ 	if (tid_tx || sta->ampdu_mlme.tid_start_tx[tid]) {
+ 		ht_dbg(sdata,
+-		       "BA request denied - session is not idle on tid %u\n",
+-		       tid);
++		       "BA request denied - session is not idle on %pM tid %u\n",
++		       sta->sta.addr, tid);
+ 		ret = -EAGAIN;
+ 		goto err_unlock_sta;
+ 	}
+@@ -632,7 +637,8 @@ static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+ 
+-	ht_dbg(sta->sdata, "Aggregation is on for tid %d\n", tid);
++	ht_dbg(sta->sdata, "Aggregation is on for %pM tid %d\n",
++	       sta->sta.addr, tid);
+ 
+ 	drv_ampdu_action(local, sta->sdata,
+ 			 IEEE80211_AMPDU_TX_OPERATIONAL,
+@@ -802,7 +808,9 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+ 
+ 	if (!tid_tx || !test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
+-		ht_dbg(sdata, "unexpected callback to A-MPDU stop\n");
++		ht_dbg(sdata,
++		       "unexpected callback to A-MPDU stop for %pM tid %d\n",
++		       sta->sta.addr, tid);
+ 		goto unlock_sta;
+ 	}
+ 
+@@ -861,13 +869,15 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 		goto out;
+ 
+ 	if (mgmt->u.action.u.addba_resp.dialog_token != tid_tx->dialog_token) {
+-		ht_dbg(sta->sdata, "wrong addBA response token, tid %d\n", tid);
++		ht_dbg(sta->sdata, "wrong addBA response token, %pM tid %d\n",
++		       sta->sta.addr, tid);
+ 		goto out;
+ 	}
+ 
+ 	del_timer_sync(&tid_tx->addba_resp_timer);
+ 
+-	ht_dbg(sta->sdata, "switched off addBA timer for tid %d\n", tid);
++	ht_dbg(sta->sdata, "switched off addBA timer for %pM tid %d\n",
++	       sta->sta.addr, tid);
  
  	/*
- 	 * Software does not need to program bank data
-@@ -541,13 +540,9 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 	/* Setup Bank 6 Write */
- 	ar5008_rf_bank_setup(ah->analogBank3Data, &ah->iniBank3,
- 		      modesIndex);
--	{
--		int i;
--		for (i = 0; i < ah->iniBank6TPC.ia_rows; i++) {
--			ah->analogBank6Data[i] =
--			    INI_RA(&ah->iniBank6TPC, i, modesIndex);
--		}
--	}
-+
-+	for (i = 0; i < ah->iniBank6.ia_rows; i++)
-+		ah->analogBank6Data[i] = INI_RA(&ah->iniBank6, i, modesIndex);
- 
- 	/* Only the 5 or 2 GHz OB/DB need to be set for a mode */
- 	if (eepMinorRev >= 2) {
-@@ -572,18 +567,12 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 	ar5008_rf_bank_setup(ah->analogBank7Data, &ah->iniBank7, 1);
- 
- 	/* Write Analog registers */
--	REG_WRITE_RF_ARRAY(&ah->iniBank0, ah->analogBank0Data,
--			   regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank1, ah->analogBank1Data,
--			   regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank2, ah->analogBank2Data,
--			   regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank3, ah->analogBank3Data,
--			   regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank6TPC, ah->analogBank6Data,
--			   regWrites);
--	REG_WRITE_RF_ARRAY(&ah->iniBank7, ah->analogBank7Data,
--			   regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank0, ah->analogBank0Data, regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank1, ah->analogBank1Data, regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank2, ah->analogBank2Data, regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank3, ah->analogBank3Data, regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank6, ah->analogBank6Data, regWrites);
-+	REG_WRITE_RF_ARRAY(&ah->iniBank7, ah->analogBank7Data, regWrites);
- 
- 	return true;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 54da026..82f2083 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -67,12 +67,10 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- 	} else if (AR_SREV_9100_OR_LATER(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModes, ar5416Modes_9100);
- 		INIT_INI_ARRAY(&ah->iniCommon, ar5416Common_9100);
--		INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6_9100);
- 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac_9100);
- 	} else {
- 		INIT_INI_ARRAY(&ah->iniModes, ar5416Modes);
- 		INIT_INI_ARRAY(&ah->iniCommon, ar5416Common);
--		INIT_INI_ARRAY(&ah->iniBank6TPC, ar5416Bank6TPC);
- 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac);
+ 	 * addba_resp_timer may have fired before we got here, and
+@@ -877,8 +887,8 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	if (test_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state) ||
+ 	    test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
+ 		ht_dbg(sta->sdata,
+-		       "got addBA resp for tid %d but we already gave up\n",
+-		       tid);
++		       "got addBA resp for %pM tid %d but we already gave up\n",
++		       sta->sta.addr, tid);
+ 		goto out;
  	}
  
-@@ -86,14 +84,11 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniBank3, ar5416Bank3);
- 		INIT_INI_ARRAY(&ah->iniBank7, ar5416Bank7);
- 
--		/* Common for AR5416, AR9160 */
--		if (!AR_SREV_9100(ah))
--			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6);
--
- 		/* Common for AR913x, AR9160 */
- 		if (!AR_SREV_5416(ah))
--			INIT_INI_ARRAY(&ah->iniBank6TPC,
--				      ar5416Bank6TPC_9100);
-+			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6TPC_9100);
-+		else
-+			INIT_INI_ARRAY(&ah->iniBank6, ar5416Bank6TPC);
- 	}
- 
- 	/* iniAddac needs to be modified for these chips */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index d32ebf7..2e292f9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -855,9 +855,7 @@ struct ath_hw {
- 	u32 *analogBank2Data;
- 	u32 *analogBank3Data;
- 	u32 *analogBank6Data;
--	u32 *analogBank6TPCData;
- 	u32 *analogBank7Data;
--	u32 *bank6Temp;
- 
- 	int coverage_class;
- 	u32 slottime;
-@@ -898,7 +896,6 @@ struct ath_hw {
- 	struct ar5416IniArray iniBank2;
- 	struct ar5416IniArray iniBank3;
- 	struct ar5416IniArray iniBank6;
--	struct ar5416IniArray iniBank6TPC;
- 	struct ar5416IniArray iniBank7;
- 	struct ar5416IniArray iniAddac;
- 	struct ar5416IniArray iniPcieSerdes;
 -- 
-1.8.0.2
+1.8.0
 
