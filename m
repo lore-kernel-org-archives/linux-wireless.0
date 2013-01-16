@@ -1,131 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:44202 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752488Ab3ABUe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 15:34:56 -0500
-Message-ID: <1357158897.25181.5.camel@joe-AO722> (sfid-20130102_213500_596369_1BB3011D)
-Subject: Re: [PATCH v2 08/18] brcmfmac: define pr_fmt in one place
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Wed, 02 Jan 2013 12:34:57 -0800
-In-Reply-To: <1357158010-9767-1-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-	 <1357158010-9767-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:37678 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193Ab3APN6Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 08:58:16 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/6] iwlwifi: simplify scheduler memory clearing
+Date: Wed, 16 Jan 2013 14:58:37 +0100
+Message-Id: <1358344719-26486-4-git-send-email-johannes@sipsolutions.net> (sfid-20130116_145848_850721_2D12EA4C)
+In-Reply-To: <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
+References: <1358344682.22862.4.camel@jlt4.sipsolutions.net>
+ <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-02 at 21:20 +0100, Arend van Spriel wrote:
-> Several source files (but not all) define the pr_fmt() macro in exactly
-> the same way. Instead this commit defines it in a header file so driver
-> logging is consistent.
-> 
-> Cc: Joe Perches <joe@perches.com>
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Hi John,
-> 
-> Joe caught this so here is the replacement patch for previous patch with
-> message id: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-> 
-> Regards,
-> Arend
-> ---
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c       |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c      |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h      |    4 ++++
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c     |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    2 --
->  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 --
->  9 files changed, 4 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index be35a2f..11fd1c7 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -15,8 +15,6 @@
->   */
->  /* ****************** SDIO CARD Interface Functions **************************/
->  
-> -#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> -
->  #include <linux/types.h>
->  #include <linux/netdevice.h>
->  #include <linux/export.h>
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> index d33e559..d92d373 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> @@ -14,8 +14,6 @@
->   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->   */
->  
-> -#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> -
->  #include <linux/types.h>
->  #include <linux/netdevice.h>
->  #include <linux/mmc/sdio.h>
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-> index 8392355..0c83998 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-> @@ -19,8 +19,6 @@
->   * For certain dcmd codes, the dongle interprets string data from the host.
->   ******************************************************************************/
->  
-> -#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> -
->  #include <linux/types.h>
->  #include <linux/netdevice.h>
->  
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> index f8b52e5..4544342 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-> @@ -14,8 +14,6 @@
->   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->   */
->  
-> -#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> -
->  #include <linux/kernel.h>
->  #include <linux/string.h>
->  #include <linux/netdevice.h>
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-> index f2ab01c..ea3f5f5 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-> @@ -34,6 +34,10 @@
->  #define BRCMF_SCAN_VAL	0x4000
->  #define BRCMF_CONN_VAL	0x8000
->  
-> +/* set default print format */
-> +#undef pr_fmt
-> +#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
-> +
+From: Johannes Berg <johannes.berg@intel.com>
 
-The only negative I see to this is that
-any pr_<level> in any include file like:
+Writing 130 dwords into the device one by one is
+rather inefficient, every one needs to lock, grab
+NIC access (a few register reads/writes) and then
+write the address and data registers.
 
-include/linux/netdevice.h:1892:              pr_info("netif_stop_queue() cannot be called before register_netdev()\n");
+Use the new memory clearing function to make this
+easier and faster.
 
-may not be prefixed.
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 22 +++++++---------------
+ 1 file changed, 7 insertions(+), 15 deletions(-)
 
-I expect that one day all these 
-#define pr_fmt(fmt) KBUILD_MODNAME etc...
-will be made unnecessary as kernel.h should
-be eventually changed to make it the default.
-
-Something like:
-
-https://lkml.org/lkml/2012/3/27/247
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 3ff3e8b..d3c4e8f 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -641,9 +641,11 @@ static void iwl_pcie_txq_set_sched(struct iwl_trans *trans, u32 mask)
+ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	u32 a;
++	int nq = trans->cfg->base_params->num_of_queues;
+ 	int chan;
+ 	u32 reg_val;
++	int clear_dwords = (SCD_TRANS_TBL_OFFSET_QUEUE(nq) -
++				SCD_CONTEXT_MEM_LOWER_BOUND) / sizeof(u32);
+ 
+ 	/* make sure all queue are not stopped/used */
+ 	memset(trans_pcie->queue_stopped, 0, sizeof(trans_pcie->queue_stopped));
+@@ -655,20 +657,10 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ 	WARN_ON(scd_base_addr != 0 &&
+ 		scd_base_addr != trans_pcie->scd_base_addr);
+ 
+-	a = trans_pcie->scd_base_addr + SCD_CONTEXT_MEM_LOWER_BOUND;
+-	/* reset conext data memory */
+-	for (; a < trans_pcie->scd_base_addr + SCD_CONTEXT_MEM_UPPER_BOUND;
+-		a += 4)
+-		iwl_trans_write_mem32(trans, a, 0);
+-	/* reset tx status memory */
+-	for (; a < trans_pcie->scd_base_addr + SCD_TX_STTS_MEM_UPPER_BOUND;
+-		a += 4)
+-		iwl_trans_write_mem32(trans, a, 0);
+-	for (; a < trans_pcie->scd_base_addr +
+-	       SCD_TRANS_TBL_OFFSET_QUEUE(
+-				trans->cfg->base_params->num_of_queues);
+-	       a += 4)
+-		iwl_trans_write_mem32(trans, a, 0);
++	/* reset context data, TX status and translation data */
++	iwl_trans_write_mem(trans, trans_pcie->scd_base_addr +
++				   SCD_CONTEXT_MEM_LOWER_BOUND,
++			    NULL, clear_dwords);
+ 
+ 	iwl_write_prph(trans, SCD_DRAM_BASE_ADDR,
+ 		       trans_pcie->scd_bc_tbls.dma >> 10);
+-- 
+1.8.0
 
