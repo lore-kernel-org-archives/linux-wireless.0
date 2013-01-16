@@ -1,52 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:48948 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751422Ab3ACH5c (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466Ab3APOJU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 02:57:32 -0500
-Date: Thu, 3 Jan 2013 13:21:25 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: set ack policy to normal
-Message-ID: <20130103075120.GA20062@markyou.marvell.com> (sfid-20130103_085736_677717_C34842E3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 16 Jan 2013 09:09:20 -0500
+Message-ID: <1358345384.22862.9.camel@jlt4.sipsolutions.net> (sfid-20130116_150923_731067_6FDF135C)
+Subject: Re: [PATCH] mac80211: fix monitor mode injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 16 Jan 2013 15:09:44 +0100
+In-Reply-To: <1358115026-6090-1-git-send-email-nbd@openwrt.org>
+References: <1358115026-6090-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set ACK policy to NORMAL when its not going to
-be an AMPDU packet.
+On Sun, 2013-01-13 at 23:10 +0100, Felix Fietkau wrote:
+> Channel contexts are not always used with monitor interfaces. If no channel
+> context is set, use the oper channel, otherwise tx fails.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Applied, but I also added a check for local->use_chanctx.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 93dd0ef..c9c9c99 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1926,6 +1926,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 		stream = mwl8k_lookup_stream(hw, sta->addr, tid);
- 		if (stream != NULL) {
- 			if (stream->state == AMPDU_STREAM_ACTIVE) {
-+				WARN_ON(!(qos & MWL8K_QOS_ACK_POLICY_BLOCKACK));
- 				txpriority = stream->idx + MWL8K_TX_WMM_QUEUES;
- 				index = stream->idx + MWL8K_TX_WMM_QUEUES;
- 			} else if (stream->state == AMPDU_STREAM_NEW) {
-@@ -1969,6 +1970,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 			}
- 		}
- 		spin_unlock(&priv->stream_lock);
-+	} else {
-+		qos &= ~MWL8K_QOS_ACK_POLICY_MASK;
-+		qos |= MWL8K_QOS_ACK_POLICY_NORMAL;
- 	}
- 
- 	dma = pci_map_single(priv->pdev, skb->data,
--- 
-1.8.0.3
+johannes
 
