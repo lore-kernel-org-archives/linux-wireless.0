@@ -1,97 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:60643 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754708Ab3A1V4p (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53110 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757690Ab3APWvB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 16:56:45 -0500
-Received: by mail-qa0-f46.google.com with SMTP id o13so1041960qaj.12
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 13:56:45 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1359387506.8120.20.camel@jlt4.sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-	<1359377405.8120.16.camel@jlt4.sipsolutions.net>
-	<87pq0pcrpy.fsf@purkki.adurom.net>
-	<CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com>
-	<CA+icZUXx+Pt2vwMgvOCGdT5GiwASQ_mMfLBt_vxUJCPu4aXe9w@mail.gmail.com>
-	<1359387506.8120.20.camel@jlt4.sipsolutions.net>
-Date: Mon, 28 Jan 2013 22:56:44 +0100
-Message-ID: <CA+icZUUPU7QMdhDdZyw7BCPZ85bUj1ArKuJxTEjW+aWLd1BiyQ@mail.gmail.com> (sfid-20130128_225651_526776_89FA07D0)
-Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Jan 2013 17:51:01 -0500
+Message-ID: <1358376672.15012.37.camel@jlt4.sipsolutions.net> (sfid-20130116_235106_962854_6926B9ED)
+Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
+ command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 16 Jan 2013 23:51:12 +0100
+In-Reply-To: <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 4:38 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-01-28 at 16:17 +0100, Sedat Dilek wrote:
->> On Mon, Jan 28, 2013 at 4:10 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
->> > On Mon, Jan 28, 2013 at 3:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
->> >> Johannes Berg <johannes@sipsolutions.net> writes:
->> >>
->> >>> Question for the list ...
->> >>>
->> >>> Internally, we've identified patches to this new driver as
->> >>>
->> >>> "iwlwifi (MVM):"
->> >>>
->> >>> rather than just "iwlwifi:"
->> >>>
->> >>> We can continue doing so (and would probably also tag patches with
->> >>> "iwlwifi" for core and "iwlwifi (DVM)" for the DVM part.
->> >>>
->> >>> Would "iwlmvm"/"iwldvm"/"iwlwifi" make more sense as that's the module
->> >>> names? It's harder to filter though, I guess.
->> >>
->> >> I would use this:
->> >>
->> >> "iwlwifi: mvm: fix foo"
->> >>
->> >
->> > If two-items notation then "item1: item2: Subject" is better than the
->> > commata notation "iwlwifi, mwm: Fix foo" should simply die...
->> >
->> > More Like-it (mostly seen in media):
->> >
->> > [subtree|driver-family|etc.] special-driver|script|etc: Subject
->> >
->> > For example:
->> >
->> > "[kbuild] deb-pkg: Bump year in copyright
->> >
->> > (kbuild subtree and debbuild script (aka make deb-pkg).
->> >
->> > And yes, I like capital letter in the first word of subject (after ":").
->> >
->> > Two items is OK.
->> > But more items seen for rtlwifi sth. like "rtlwifi: rtlX: rtlY: rtlZ:
->> > Here now what I wanted to fix" is IMHO bad for extracting patches with
->> > git.
->> >
->> > BTW, why do you need two items?
->> > Is there somewhere a mvm driver in another subtree?
->> > Or new buzz-word: What about "iwlmvm"?
->> > iwlegacy - iwlwifi - iwlmvm...
->> >
->>
->> Better than buzz-words and personal likes/dislikes is the quality of
->> the patches, the embedded (descriptive) text in changelog and a well
->> documented source-code.
->
-> I'm sorry, did you read the patches?
->
+On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
 
-NO, I gave my two cents only on general stuff about the label-name(s)
-you asked and the pointer to the fantastic blog-article of Peter.
-This was no blame to you as I always enjoy to read your changelogs -
-just a hint for all people reading here on the ML.
-If tons of patches would have followed Peter's article the
-Linux-kernel development would really improve!
 
-- Sedat -
+> + * @radar_detect_timeout: this timeout indicates the end of the channel
+> + *     availability check for radar channels (in jiffies), only after this
+> + *     period the user may initiate the tx on the channel.
+> + * @cac_started: indicates that channel availability check is started for this
+> + *     channel type.
 
-> johannes
->
+So you're enforcing a certain CAC time, but not the time we are allowed
+to treat the channel as clear? Shouldn't *that* be in each channel
+struct, rather than the other stuff?
+
+It also seems to me that "cac_started" isn't really all that relevant in
+the channel struct either. What seems relevant is the *result* of the
+CAC, and how long it's still valid, no?
+
+> +++ b/net/wireless/chan.c
+> @@ -287,14 +287,18 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+>  			     struct cfg80211_chan_def *chandef)
+>  {
+>  	bool res;
+> +	u32 prohibited_flags;
+>  
+>  	trace_cfg80211_reg_can_beacon(wiphy, chandef);
+>  
+> -	res = cfg80211_chandef_usable(wiphy, chandef,
+> -				      IEEE80211_CHAN_DISABLED |
+> -				      IEEE80211_CHAN_PASSIVE_SCAN |
+> -				      IEEE80211_CHAN_NO_IBSS |
+> -				      IEEE80211_CHAN_RADAR);
+> +	prohibited_flags = IEEE80211_CHAN_DISABLED;
+> +
+> +	if (!(wiphy->features & NL80211_FEATURE_DFS))
+> +		prohibited_flags |= IEEE80211_CHAN_PASSIVE_SCAN |
+> +				    IEEE80211_CHAN_NO_IBSS |
+> +				    IEEE80211_CHAN_RADAR;
+
+I have a feeling this change should take into account the channel width,
+and whether CAC completed successfully?
+
+
+> +static int nl80211_start_radar_detection(struct sk_buff *skb,
+> +					 struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct net_device *dev = info->user_ptr[1];
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct cfg80211_chan_def chandef;
+> +	int err;
+> +
+> +	if (!(rdev->wiphy.features & NL80211_FEATURE_DFS))
+> +		return -EOPNOTSUPP;
+> +
+> +	err = nl80211_parse_chandef(rdev, info, &chandef);
+> +	if (err)
+> +		return err;
+> +
+> +	if (!(chandef.chan->flags & IEEE80211_CHAN_RADAR))
+> +		return -EINVAL;
+> +
+> +	if (chandef.chan->cac_started)
+> +		return -EBUSY;
+> +
+> +	if (!rdev->ops->start_radar_detection)
+> +		return -EOPNOTSUPP;
+> +
+> +	mutex_lock(&rdev->devlist_mtx);
+> +	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+> +					   chandef.chan, CHAN_MODE_SHARED,
+> +					   BIT(chandef.width));
+> +	mutex_unlock(&rdev->devlist_mtx);
+> +
+> +	if (err)
+> +		return err;
+> +
+> +	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
+> +	if (!err) {
+> +		wdev->preset_chandef = chandef;
+> +		chandef.chan->cac_started = true;
+> +		chandef.chan->radar_detect_timeout = jiffies +
+> +			msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
+> +	}
+> +
+> +	return err;
+> +}
+
+This still seems somewhat wrong. For the duration of the CAC, the
+channel should be "locked" in some way, no? As it stands now, nothing
+prevents userspace from adding another vif and using it for something
+entirely different, while cfg80211 thinks the CAC is actually running.
+
+> +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+> +	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
+> +	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, chan->center_freq))
+> +		goto nla_put_failure;
+
+That should be the entire chandef info, and possibly the WDEV_ID too.
+
+johannes
+
