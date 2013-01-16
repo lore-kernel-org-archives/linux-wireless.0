@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43886 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37243 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909Ab3AURre (ORCPT
+	with ESMTP id S1754976Ab3APLbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 12:47:34 -0500
-Message-ID: <1358790474.5190.6.camel@jlt4.sipsolutions.net> (sfid-20130121_184737_700042_65E52F17)
-Subject: Re: [PATCH 3/3] cfg80211: move world roaming check for beacon hints
+	Wed, 16 Jan 2013 06:31:52 -0500
+Message-ID: <1358335933.12297.0.camel@jlt4.sipsolutions.net> (sfid-20130116_123156_474184_46CF6914)
+Subject: Re: [PATCHv2 0/6] mesh power save - basics
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 21 Jan 2013 18:47:54 +0100
-In-Reply-To: <50FD7D34.4050203@candelatech.com>
-References: <1355943184-966-1-git-send-email-mcgrof@do-not-panic.com>
-	  <1355943184-966-4-git-send-email-mcgrof@do-not-panic.com>
-	  (sfid-20121219_200036_196307_E48D6F1B) <1356628591.15149.14.camel@jlt4.sipsolutions.net>
-	 <50FD7D34.4050203@candelatech.com>
+To: Marco Porsch <marco@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Wed, 16 Jan 2013 12:32:13 +0100
+In-Reply-To: <50F677B4.7040609@cozybit.com> (sfid-20130116_115641_363108_7D18C6FC)
+References: <1357571093-12868-1-git-send-email-marco@cozybit.com>
+	 <50F677B4.7040609@cozybit.com> (sfid-20130116_115641_363108_7D18C6FC)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-21 at 09:39 -0800, Ben Greear wrote:
-> On 12/27/2012 09:16 AM, Johannes Berg wrote:
-> > On Wed, 2012-12-19 at 10:53 -0800, Luis R. Rodriguez wrote:
-> >> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> >>
-> >> We should not add new beacon hints even if the wiphy
-> >> is not world roaming. Without this we were always adding
-> >> a beacon hint if not world roaming for every non world
-> >> roaming wiphy interface.
-> >
-> > This introduced a locking bug, lockdep splat below. I'm going to drop
-> > the series for my pull request, please respin.
+On Wed, 2013-01-16 at 10:49 +0100, Marco Porsch wrote:
+> Hi Johannes,
 > 
-> Were new patches ever posted for this?
+> I just checked back on the status of my patches and see no further 
+> comments while they are not applied yet. Is there anything odd about them?
 
-I fixed it and applied the patches.
+No, I've just been very backlogged for a while ...
 
 johannes
 
