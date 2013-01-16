@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:44725 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828Ab3ALAk2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776Ab3APN6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 19:40:28 -0500
-Received: by mail-wg0-f42.google.com with SMTP id dr1so184013wgb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 16:40:27 -0800 (PST)
-Message-ID: <50F0AF10.9030200@gmail.com> (sfid-20130112_014032_236002_CA8AE7C8)
-Date: Sat, 12 Jan 2013 01:32:16 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi/rtl8188ee: Add firmware for new driver
-References: <50F03255.4040605@gmail.com> <50F0381A.4010305@lwfinger.net>
-In-Reply-To: <50F0381A.4010305@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Jan 2013 08:58:16 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/6] iwlwifi: don't enable all interrupts on resuming
+Date: Wed, 16 Jan 2013 14:58:35 +0100
+Message-Id: <1358344719-26486-2-git-send-email-johannes@sipsolutions.net> (sfid-20130116_145824_784536_02A43FFB)
+In-Reply-To: <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
+References: <1358344682.22862.4.camel@jlt4.sipsolutions.net>
+ <1358344719-26486-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2013 05:04 PM, Larry Finger wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Yes, I know; however, I have not yet had a chance to test those new
-> firmware files yet. As I have had problems in the past with new Realtek
-> firmware, I am now cautious. Have you tested this new firmware?
+Enabling the RF-kill interrupt is sufficient for getting
+RF-kill notifications, and no other interrupt is needed
+as the device isn't functional when suspended and will be
+restarted/reconfigured when mac80211 resumes it later.
 
-No. sorry. Here only one USB realtek device, rtl8192cu.
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index db3b055..2de5770 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -719,9 +719,6 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ 	hw_rfkill = iwl_is_rfkill_set(trans);
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+-	if (!hw_rfkill)
+-		iwl_enable_interrupts(trans);
+-
+ 	return 0;
+ }
+ #endif /* CONFIG_PM_SLEEP */
+-- 
+1.8.0
+
