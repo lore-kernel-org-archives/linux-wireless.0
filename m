@@ -1,46 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:55776 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab3AJJKZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 04:10:25 -0500
-Received: by mail-wg0-f45.google.com with SMTP id dq12so134276wgb.12
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jan 2013 01:10:24 -0800 (PST)
+Received: from bear.ext.ti.com ([192.94.94.41]:48953 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751699Ab3APPq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 10:46:59 -0500
+Message-ID: <1358351162.6252.7.camel@cumari.coelho.fi> (sfid-20130116_164704_013958_73397F6E)
+Subject: Re: [RFC] mac80211: remove ARP filter enable/disable logic
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 16 Jan 2013 17:46:02 +0200
+In-Reply-To: <1358178202-18727-1-git-send-email-johannes@sipsolutions.net>
+References: <1358178202-18727-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
-References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
-Date: Thu, 10 Jan 2013 10:04:07 +0100
-Message-ID: <CACna6rwPnx-PgNZ1QHczBTLKB5dmcJx1zpDYtbFtALBbvCNu9g@mail.gmail.com> (sfid-20130110_101031_419584_3415D7B4)
-Subject: Re: [PATCH 0/6] bcma: some fixes for mips IRQ assignment
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nlhintz@hotmail.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/1/4 Hauke Mehrtens <hauke@hauke-m.de>:
-> This improves IRQ assignment to cores on a mips SoC.
->
-> Hauke Mehrtens (6):
->   bcma: make bcma_find_core_unit() accessible
->   bcma: mips: explicit assign IRQ numbers
->   bcma: mips: make some info messages debug messages
->   bcma: mips: show also disabled IRQs
->   bcma: mips: remove assigned_irqs from structure
->   bcma: mips: rename oldirqflag to irqinitmask
+Hi,
 
-OK, well, the patchset was applied... did someone at least tried to compile it?
+On Mon, 2013-01-14 at 16:43 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Depending on the driver, having ARP filtering for
+> some addresses may be possible. Remove the logic
+> that tracks whether ARP filter is enabled or not
+> and give the driver the total number of addresses
+> instead of the length of the list so it can make
+> its own decision.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
 
-  CC      drivers/bcma/driver_mips.o
-drivers/bcma/driver_mips.c: In function 'bcma_core_mips_init':
-drivers/bcma/driver_mips.c:302:4: error: implicit declaration of
-function 'bcma_core_irq' [-Werror=implicit-function-declaration]
-cc1: some warnings being treated as errors
-make[6]: *** [drivers/bcma/driver_mips.o] Error 1
+As we discussed on IRC, I checked this change (the mac80211 part) and it
+looks good to me.
 
-Am I missing something?
+[...]
 
--- 
-Rafał
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index ce6e62a..c2497b0 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -4107,14 +4107,14 @@ sta_not_found:
+>  	}
+>  
+>  	/* Handle arp filtering. Done after join. */
+> -	if ((changed & BSS_CHANGED_ARP_FILTER) ||
+> -	    (!is_ibss && (changed & BSS_CHANGED_QOS))) {
+> +	if (bss_conf->assoc &&
+> +	    ((changed & BSS_CHANGED_ARP_FILTER) ||
+> +	     (!is_ibss && (changed & BSS_CHANGED_QOS)))) {
+>  		__be32 addr = bss_conf->arp_addr_list[0];
+>  		wlvif->sta.qos = bss_conf->qos;
+>  		WARN_ON(wlvif->bss_type != BSS_TYPE_STA_BSS);
+>  
+> -		if (bss_conf->arp_addr_cnt == 1 &&
+> -		    bss_conf->arp_filter_enabled) {
+> +		if (bss_conf->arp_addr_cnt == 1) {
+>  			wlvif->ip_addr = addr;
+>  			/*
+>  			 * The template should have been configured only upon
+
+This part, though, I think it's safer to do slightly different:
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index d7de063..88fb587 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4115,8 +4115,8 @@ sta_not_found:
+                wlvif->sta.qos = bss_conf->qos;
+                WARN_ON(wlvif->bss_type != BSS_TYPE_STA_BSS);
+ 
+-               if (bss_conf->arp_addr_cnt == 1 &&
+-                   bss_conf->arp_filter_enabled) {
++               if (bss_conf->assoc &&
++                   bss_conf->arp_addr_cnt == 1) {
+                        wlvif->ip_addr = addr;
+                        /*
+                         * The template should have been configured only upon
+
+This is because the WiLink firmwares are quite finicky and in many cases
+they don't clean things up on disassoc, so we can get into weird bugs.
+
+So I think it's good to keep the wl1271_acx_arp_ip_filter() call to
+explicitly disable ARP filtering when we get a BSS_CHANGED_ARP_FILTER
+during disassociation (and bss_conf->assoc is false).
+
+--
+Luca.
+
