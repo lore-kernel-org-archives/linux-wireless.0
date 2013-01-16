@@ -1,64 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50152 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422Ab3ACFr6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 00:47:58 -0500
-Message-ID: <50E51B7F.7000607@qca.qualcomm.com> (sfid-20130103_064803_512804_CCC9E21E)
-Date: Thu, 3 Jan 2013 11:17:43 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Received: from mail.neratec.com ([80.75.119.105]:41697 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758610Ab3APJxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 04:53:25 -0500
+Message-ID: <50F6788B.9050409@neratec.com> (sfid-20130116_114555_011992_695C247A)
+Date: Wed, 16 Jan 2013 10:53:15 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V4 2/2] cfg80211/nl80211: Enable drivers to implement
- mac address based ACL
-References: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com>   <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>   <1356694308.9922.1.camel@jlt4.sipsolutions.net>   (sfid-20121228_123135_896103_E2B28BED) <1356699373.9922.2.camel@jlt4.sipsolutions.net>  <50E11F43.4010006@qca.qualcomm.com> <1357131412.9839.17.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1357131412.9839.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: Sven Eckelmann <sven@open-mesh.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	tobias.steinicke@net.t-labs.tu-berlin.de,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	"Chadd, Adrian" <achadd@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: Save spectral scan data in network byteorder
+References: <1358251363-14385-1-git-send-email-sven@open-mesh.com> <20130116085931.GA13648@pandem0nium>
+In-Reply-To: <20130116085931.GA13648@pandem0nium>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Wednesday 02 January 2013 06:26 PM, Johannes Berg wrote:
-> On Mon, 2012-12-31 at 10:44 +0530, Vasanthakumar Thiagarajan wrote:
+On 01/16/2013 09:59 AM, Simon Wunderlich wrote:
+> On Tue, Jan 15, 2013 at 01:02:43PM +0100, Sven Eckelmann wrote:
+>> The sample data received through the spectral scan can be either in big or
+>> little endian byteorder. This information isn't stored in the output file.
+>> Therefore it is not possible for the analyzer software to find the correct byte
+>> order.
 >>
->> On Friday 28 December 2012 06:26 PM, Johannes Berg wrote:
->>> On Fri, 2012-12-28 at 12:31 +0100, Johannes Berg wrote:
->>>> On Fri, 2012-12-28 at 15:51 +0530, Vasanthakumar Thiagarajan wrote:
->>>>
->>>>> V4:
->>>>> 	- Change it accordingly so that at any time the driver can
->>>>> 	  support either white or black list not both.
->>>>
->>>> I was under the impression you needed both. Unless I get confirmation
->>>> from Kalle and/or Jouni I'll not apply this lest it needs to be changed
->>>> in yet again incompatible ways later ...
->>>
->>> Actually I just talked to Jouni again and it seems that the best way to
->>> think of the combined black/whitelist is to treat it as a whitelist +
->>> "notification avoidance optimisation list". The key here being
->>> optimisation, we don't really have to worry about it in terms of feature
->>> advertising etc. since it can be ignored/managed by the driver.
+>> It is relative common to get the data from a low end AP in big endian mode and
+>> transfer it to another computer in little endian mode to analyze it. Therefore,
+>> it would be better to store it in network (big endian) byte order.
+> 
+> I'd agree that changing the byteorder to the "general" network order format is
+> a good idea, although we will break compatibility again - which should hopefully
+> be no problem as the original patch is pretty new anyway.
+> 
+> I was pondering about performance loss when we run spectral on the same machine
+> (i.e. maybe adding two useless byteswaps per value). OTOH the byteswaps are pretty
+> cheap and we do some computations anyway, so the performance difference should be quite
+> small.
+> 
+> Therefore,
+> 
+> Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> 
+> (I've CCd some more people in the reply so they can scream if they don't like it. ;])
+> 
+> Thanks,
+> 	Simon
+> 
+Hi Simon,
+
+at this point, I'd like to advocate the approach I am currently using that does
+the conversion fully in user space. There, each sample provided consists of the
+fft data as bytes plus the values required to scale the magnitude values back to
+absolute power numbers (i.e. the 'bug-fixed' raw data).
+
+Since for the scaling an user space component is mandatory (FP calculations), I
+miss to see the benefit of splitting post-processing in the kernel (shifting bins)
+and user space. This step doubles fft data size and introduces endianess issues
+for no (at least to me) evident reason.
+
+Maybe you have a host application in mind where it does not really matter where
+the processing is done. Whereas, if you operate an AP as continuous spectral
+scanner, shifting the post-processing to the point where it is evaluated /
+displayed (usually your fat PC) significantly impacts your AP's load and its
+capability to provide higher sampling rates.
+
+I'd assume Adrian's proposal to just push out the raw spectral data to user-space
+is also targeting at that, which I fully support. The only thing I would keep in
+the driver is fixing the fft data corruption caused by known chip bugs.
+
+
+Cheers,
+Zefir
 >>
->> Sure. Is the assumption here is the stations in optimisation list \
->> either be denied or allowed which is specific to driver?.
->
-> ?
-> Basically we would have two modes:
->   * whitelist
->   * blacklist
->
-> (each might or might not be supported by the driver)
->
-> When a station is on the blacklist it's ignored. When it's on the
-> whitelist it's allowed. When it's on neither, but a list is configured,
-> an event might be sent. When there's a black-&  whitelist, the blacklist
-> is this an optimisation to suppress the event, so we don't need a third
-> mode "black- and whitelist supported".
+>> Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+>> Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+>> ---
+>> A patch for FFT_eval was also sent to the author.
+>>
+>>  drivers/net/wireless/ath/ath9k/recv.c |   10 +++++++---
+>>  1 file changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index d7c129b..2fac787 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -1064,8 +1064,9 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+>>  
+>>  	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
+>>  	fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
+>> +	fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
+>>  
+>> -	fft_sample.freq = ah->curchan->chan->center_freq;
+>> +	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
+>>  	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
+>>  	fft_sample.noise = ah->noise;
+>>  
+>> @@ -1106,13 +1107,16 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+>>  	mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
+>>  
+>>  	/* Apply exponent and grab further auxiliary information. */
+>> -	for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++)
+>> +	for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++) {
+>>  		fft_sample.data[i] = bins[i] << mag_info->max_exp;
+>> +		fft_sample.data[i] = __cpu_to_be16(fft_sample.data[i]);
+>> +	}
+>>  
+>>  	fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+>> +	fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
+>>  	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
+>>  	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
+>> -	fft_sample.tsf = tsf;
+>> +	fft_sample.tsf = __cpu_to_be64(tsf);
+>>  
+>>  	ath_debug_send_fft_sample(sc, &fft_sample.tlv);
+>>  #endif
+>> -- 
+>> 1.7.10.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks!, I was really confused with this optimization part.
-If I get it correctly, there needs to be a mechanism for
-driver to advertise its dual list capability to user space.
-
-Vasanth
