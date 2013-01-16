@@ -1,364 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41675 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029Ab3A1Jh3 (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:51260 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759043Ab3APJto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:37:29 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/37] iwlwifi: add the MVM driver (fw-api-rs)
-Date: Mon, 28 Jan 2013 10:37:15 +0100
-Message-Id: <1359365864-4259-9-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103740_278366_CF0B0F49)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 16 Jan 2013 04:49:44 -0500
+Received: by mail-la0-f46.google.com with SMTP id fq13so1131606lab.5
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jan 2013 01:49:43 -0800 (PST)
+Message-ID: <50F677B4.7040609@cozybit.com> (sfid-20130116_114554_819120_D972F8D6)
+Date: Wed, 16 Jan 2013 10:49:40 +0100
+From: Marco Porsch <marco@cozybit.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Subject: Re: [PATCHv2 0/6] mesh power save - basics
+References: <1357571093-12868-1-git-send-email-marco@cozybit.com>
+In-Reply-To: <1357571093-12868-1-git-send-email-marco@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Johannes,
 
-Newer firmware revisions have a completely new
-firmware API. This is the new driver for this
-new API.
+I just checked back on the status of my patches and see no further 
+comments while they are not applied yet. Is there anything odd about them?
 
-I've listed the people who directly contributed
-code, but many others from various teams have
-contributed in other ways.
+Regards,
+Marco
 
-Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Amit Beka <amit.beka@intel.com>
-Cc: Amnon Paz <amnonx.paz@intel.com>
-Cc: Assaf Krauss <assaf.krauss@intel.com>
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Dor Shaish <dor.shaish@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Cc: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h | 312 +++++++++++++++++++++++++++
- 1 file changed, 312 insertions(+)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
-new file mode 100644
-index 0000000..aa3474d
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
-@@ -0,0 +1,312 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *****************************************************************************/
-+
-+#ifndef __fw_api_rs_h__
-+#define __fw_api_rs_h__
-+
-+#include "fw-api-mac.h"
-+
-+/*
-+ * These serve as indexes into
-+ * struct iwl_rate_info fw_rate_idx_to_plcp[IWL_RATE_COUNT];
-+ */
-+enum {
-+	IWL_RATE_1M_INDEX = 0,
-+	IWL_FIRST_CCK_RATE = IWL_RATE_1M_INDEX,
-+	IWL_RATE_2M_INDEX,
-+	IWL_RATE_5M_INDEX,
-+	IWL_RATE_11M_INDEX,
-+	IWL_LAST_CCK_RATE = IWL_RATE_11M_INDEX,
-+	IWL_RATE_6M_INDEX,
-+	IWL_FIRST_OFDM_RATE = IWL_RATE_6M_INDEX,
-+	IWL_RATE_9M_INDEX,
-+	IWL_RATE_12M_INDEX,
-+	IWL_RATE_18M_INDEX,
-+	IWL_RATE_24M_INDEX,
-+	IWL_RATE_36M_INDEX,
-+	IWL_RATE_48M_INDEX,
-+	IWL_RATE_54M_INDEX,
-+	IWL_LAST_NON_HT_RATE = IWL_RATE_54M_INDEX,
-+	IWL_RATE_60M_INDEX,
-+	IWL_LAST_OFDM_RATE = IWL_RATE_60M_INDEX,
-+	IWL_RATE_COUNT_LEGACY = IWL_LAST_NON_HT_RATE + 1,
-+	IWL_RATE_COUNT,
-+};
-+
-+#define IWL_RATE_BIT_MSK(r) BIT(IWL_RATE_##r##M_INDEX)
-+
-+/* fw API values for legacy bit rates, both OFDM and CCK */
-+enum {
-+	IWL_RATE_6M_PLCP  = 13,
-+	IWL_RATE_9M_PLCP  = 15,
-+	IWL_RATE_12M_PLCP = 5,
-+	IWL_RATE_18M_PLCP = 7,
-+	IWL_RATE_24M_PLCP = 9,
-+	IWL_RATE_36M_PLCP = 11,
-+	IWL_RATE_48M_PLCP = 1,
-+	IWL_RATE_54M_PLCP = 3,
-+	IWL_RATE_1M_PLCP  = 10,
-+	IWL_RATE_2M_PLCP  = 20,
-+	IWL_RATE_5M_PLCP  = 55,
-+	IWL_RATE_11M_PLCP = 110,
-+};
-+
-+/*
-+ * rate_n_flags bit fields
-+ *
-+ * The 32-bit value has different layouts in the low 8 bites depending on the
-+ * format. There are three formats, HT, VHT and legacy (11abg, with subformats
-+ * for CCK and OFDM).
-+ *
-+ * High-throughput (HT) rate format
-+ *	bit 8 is 1, bit 26 is 0, bit 9 is 0 (OFDM)
-+ * Very High-throughput (VHT) rate format
-+ *	bit 8 is 0, bit 26 is 1, bit 9 is 0 (OFDM)
-+ * Legacy OFDM rate format for bits 7:0
-+ *	bit 8 is 0, bit 26 is 0, bit 9 is 0 (OFDM)
-+ * Legacy CCK rate format for bits 7:0:
-+ *	bit 8 is 0, bit 26 is 0, bit 9 is 1 (CCK)
-+ */
-+
-+/* Bit 8: (1) HT format, (0) legacy or VHT format */
-+#define RATE_MCS_HT_POS 8
-+#define RATE_MCS_HT_MSK (1 << RATE_MCS_HT_POS)
-+
-+/* Bit 9: (1) CCK, (0) OFDM.  HT (bit 8) must be "0" for this bit to be valid */
-+#define RATE_MCS_CCK_POS 9
-+#define RATE_MCS_CCK_MSK (1 << RATE_MCS_CCK_POS)
-+
-+/* Bit 26: (1) VHT format, (0) legacy format in bits 8:0 */
-+#define RATE_MCS_VHT_POS 26
-+#define RATE_MCS_VHT_MSK (1 << RATE_MCS_VHT_POS)
-+
-+
-+/*
-+ * High-throughput (HT) rate format for bits 7:0
-+ *
-+ *  2-0:  MCS rate base
-+ *        0)   6 Mbps
-+ *        1)  12 Mbps
-+ *        2)  18 Mbps
-+ *        3)  24 Mbps
-+ *        4)  36 Mbps
-+ *        5)  48 Mbps
-+ *        6)  54 Mbps
-+ *        7)  60 Mbps
-+ *  4-3:  0)  Single stream (SISO)
-+ *        1)  Dual stream (MIMO)
-+ *        2)  Triple stream (MIMO)
-+ *    5:  Value of 0x20 in bits 7:0 indicates 6 Mbps HT40 duplicate data
-+ *  (bits 7-6 are zero)
-+ *
-+ * Together the low 5 bits work out to the MCS index because we don't
-+ * support MCSes above 15/23, and 0-7 have one stream, 8-15 have two
-+ * streams and 16-23 have three streams. We could also support MCS 32
-+ * which is the duplicate 20 MHz MCS (bit 5 set, all others zero.)
-+ */
-+#define RATE_HT_MCS_RATE_CODE_MSK	0x7
-+
-+/* Bit 10: (1) Use Green Field preamble */
-+#define RATE_HT_MCS_GF_POS		10
-+#define RATE_HT_MCS_GF_MSK		(1 << RATE_HT_MCS_GF_POS)
-+
-+#define RATE_HT_MCS_INDEX_MSK		0x3f
-+
-+/*
-+ * Very High-throughput (VHT) rate format for bits 7:0
-+ *
-+ *  3-0:  VHT MCS (0-9)
-+ *  5-4:  number of streams - 1:
-+ *        0)  Single stream (SISO)
-+ *        1)  Dual stream (MIMO)
-+ *        2)  Triple stream (MIMO)
-+ */
-+
-+/* Bit 4-5: (0) SISO, (1) MIMO2 (2) MIMO3 */
-+#define RATE_VHT_MCS_RATE_CODE_MSK	0xf
-+#define RATE_VHT_MCS_NSS_POS		4
-+#define RATE_VHT_MCS_NSS_MSK		(3 << RATE_VHT_MCS_NSS_POS)
-+
-+/*
-+ * Legacy OFDM rate format for bits 7:0
-+ *
-+ *  3-0:  0xD)   6 Mbps
-+ *        0xF)   9 Mbps
-+ *        0x5)  12 Mbps
-+ *        0x7)  18 Mbps
-+ *        0x9)  24 Mbps
-+ *        0xB)  36 Mbps
-+ *        0x1)  48 Mbps
-+ *        0x3)  54 Mbps
-+ * (bits 7-4 are 0)
-+ *
-+ * Legacy CCK rate format for bits 7:0:
-+ * bit 8 is 0, bit 26 is 0, bit 9 is 1 (CCK):
-+ *
-+ *  6-0:   10)  1 Mbps
-+ *         20)  2 Mbps
-+ *         55)  5.5 Mbps
-+ *        110)  11 Mbps
-+ * (bit 7 is 0)
-+ */
-+#define RATE_LEGACY_RATE_MSK 0xff
-+
-+
-+/*
-+ * Bit 11-12: (0) 20MHz, (1) 40MHz, (2) 80MHz, (3) 160MHz
-+ * 0 and 1 are valid for HT and VHT, 2 and 3 only for VHT
-+ */
-+#define RATE_MCS_CHAN_WIDTH_POS		11
-+#define RATE_MCS_CHAN_WIDTH_MSK		(3 << RATE_MCS_CHAN_WIDTH_POS)
-+#define RATE_MCS_CHAN_WIDTH_20		(0 << RATE_MCS_CHAN_WIDTH_POS)
-+#define RATE_MCS_CHAN_WIDTH_40		(1 << RATE_MCS_CHAN_WIDTH_POS)
-+#define RATE_MCS_CHAN_WIDTH_80		(2 << RATE_MCS_CHAN_WIDTH_POS)
-+#define RATE_MCS_CHAN_WIDTH_160		(3 << RATE_MCS_CHAN_WIDTH_POS)
-+
-+/* Bit 13: (1) Short guard interval (0.4 usec), (0) normal GI (0.8 usec) */
-+#define RATE_MCS_SGI_POS		13
-+#define RATE_MCS_SGI_MSK		(1 << RATE_MCS_SGI_POS)
-+
-+/* Bit 14-16: Antenna selection (1) Ant A, (2) Ant B, (4) Ant C */
-+#define RATE_MCS_ANT_POS		14
-+#define RATE_MCS_ANT_A_MSK		(1 << RATE_MCS_ANT_POS)
-+#define RATE_MCS_ANT_B_MSK		(2 << RATE_MCS_ANT_POS)
-+#define RATE_MCS_ANT_C_MSK		(4 << RATE_MCS_ANT_POS)
-+#define RATE_MCS_ANT_AB_MSK		(RATE_MCS_ANT_A_MSK | \
-+					 RATE_MCS_ANT_B_MSK)
-+#define RATE_MCS_ANT_ABC_MSK		(RATE_MCS_ANT_AB_MSK | \
-+					 RATE_MCS_ANT_C_MSK)
-+#define RATE_MCS_ANT_MSK		RATE_MCS_ANT_ABC_MSK
-+#define RATE_MCS_ANT_NUM 3
-+
-+/* Bit 17-18: (0) SS, (1) SS*2 */
-+#define RATE_MCS_STBC_POS		17
-+#define RATE_MCS_STBC_MSK		(1 << RATE_MCS_STBC_POS)
-+
-+/* Bit 19: (0) Beamforming is off, (1) Beamforming is on */
-+#define RATE_MCS_BF_POS			19
-+#define RATE_MCS_BF_MSK			(1 << RATE_MCS_BF_POS)
-+
-+/* Bit 20: (0) ZLF is off, (1) ZLF is on */
-+#define RATE_MCS_ZLF_POS		20
-+#define RATE_MCS_ZLF_MSK		(1 << RATE_MCS_ZLF_POS)
-+
-+/* Bit 24-25: (0) 20MHz (no dup), (1) 2x20MHz, (2) 4x20MHz, 3 8x20MHz */
-+#define RATE_MCS_DUP_POS		24
-+#define RATE_MCS_DUP_MSK		(3 << RATE_MCS_DUP_POS)
-+
-+/* Bit 27: (1) LDPC enabled, (0) LDPC disabled */
-+#define RATE_MCS_LDPC_POS		27
-+#define RATE_MCS_LDPC_MSK		(1 << RATE_MCS_LDPC_POS)
-+
-+
-+/* Link Quality definitions */
-+
-+/* # entries in rate scale table to support Tx retries */
-+#define  LQ_MAX_RETRY_NUM 16
-+
-+/* Link quality command flags, only this one is available */
-+#define  LQ_FLAG_SET_STA_TLC_RTS_MSK	BIT(0)
-+
-+/**
-+ * struct iwl_lq_cmd - link quality command
-+ * @sta_id: station to update
-+ * @control: not used
-+ * @flags: combination of LQ_FLAG_*
-+ * @mimo_delim: the first SISO index in rs_table, which separates MIMO
-+ *	and SISO rates
-+ * @single_stream_ant_msk: best antenna for SISO (can be dual in CDD).
-+ *	Should be ANT_[ABC]
-+ * @dual_stream_ant_msk: best antennas for MIMO, combination of ANT_[ABC]
-+ * @initial_rate_index: first index from rs_table per AC category
-+ * @agg_time_limit: aggregation max time threshold in usec/100, meaning
-+ *	value of 100 is one usec. Range is 100 to 8000
-+ * @agg_disable_start_th: try-count threshold for starting aggregation.
-+ *	If a frame has higher try-count, it should not be selected for
-+ *	starting an aggregation sequence.
-+ * @agg_frame_cnt_limit: max frame count in an aggregation.
-+ *	0: no limit
-+ *	1: no aggregation (one frame per aggregation)
-+ *	2 - 0x3f: maximal number of frames (up to 3f == 63)
-+ * @rs_table: array of rates for each TX try, each is rate_n_flags,
-+ *	meaning it is a combination of RATE_MCS_* and IWL_RATE_*_PLCP
-+ * @bf_params: beam forming params, currently not used
-+ */
-+struct iwl_lq_cmd {
-+	u8 sta_id;
-+	u8 reserved1;
-+	u16 control;
-+	/* LINK_QUAL_GENERAL_PARAMS_API_S_VER_1 */
-+	u8 flags;
-+	u8 mimo_delim;
-+	u8 single_stream_ant_msk;
-+	u8 dual_stream_ant_msk;
-+	u8 initial_rate_index[AC_NUM];
-+	/* LINK_QUAL_AGG_PARAMS_API_S_VER_1 */
-+	__le16 agg_time_limit;
-+	u8 agg_disable_start_th;
-+	u8 agg_frame_cnt_limit;
-+	__le32 reserved2;
-+	__le32 rs_table[LQ_MAX_RETRY_NUM];
-+	__le32 bf_params;
-+}; /* LINK_QUALITY_CMD_API_S_VER_1 */
-+#endif /* __fw_api_rs_h__ */
--- 
-1.8.0
+On 01/07/2013 04:04 PM, Marco Porsch wrote:
+> Commits #5 and #6 cover the basic subset of functions, that each mesh node
+> must support to communicate in the presence of power saving nodes.
+> The current patchset does not implement any actual power savings yet (no
+> hardware configuration, no doze state).
+>
+> Mesh powersave is different from client mode powersave in the sense that
+> 1) there is not just a singular power mode towards the access point, but a
+>     link-specific power mode towards each peer instead
+> 2) peers also maintain a power mode towards us (the local STA)
+> 3) each node has to buffer frames towards power saving neighbors
+>
+> changes since PATCHv1:
+> - explicitly clear QoS control field in mps_qos_null_get
+> - beautify FILL_IN_MESH_PARAM_IF_SET macro
+>
+> Marco Porsch (6):
+>    nl80211: add range checks to mesh parameters
+>    mac80211: update mesh peer link counter during userspace peering
+>    mac80211: move add_tim to subfunction
+>    {cfg,nl,mac}80211: set beacon interval and DTIM period on mesh join
+>    {cfg,nl}80211: mesh power mode primitives and userspace access
+>    mac80211: mesh power save basics
+>
+>   include/linux/ieee80211.h     |   17 ++
+>   include/net/cfg80211.h        |   25 ++
+>   include/uapi/linux/nl80211.h  |   47 +++
+>   net/mac80211/Kconfig          |   11 +
+>   net/mac80211/Makefile         |    3 +-
+>   net/mac80211/cfg.c            |   54 +++-
+>   net/mac80211/debug.h          |   10 +
+>   net/mac80211/debugfs_netdev.c |    5 +
+>   net/mac80211/debugfs_sta.c    |    5 +-
+>   net/mac80211/ieee80211_i.h    |    7 +
+>   net/mac80211/mesh.c           |   37 ++-
+>   net/mac80211/mesh.h           |   35 ++-
+>   net/mac80211/mesh_hwmp.c      |    7 +
+>   net/mac80211/mesh_pathtbl.c   |    1 +
+>   net/mac80211/mesh_plink.c     |   35 ++-
+>   net/mac80211/mesh_ps.c        |  640 +++++++++++++++++++++++++++++++++++++++++
+>   net/mac80211/rx.c             |    7 +
+>   net/mac80211/sta_info.c       |   18 +-
+>   net/mac80211/sta_info.h       |   17 ++
+>   net/mac80211/status.c         |    5 +
+>   net/mac80211/tx.c             |   81 ++++--
+>   net/mac80211/util.c           |    4 +
+>   net/mac80211/wme.c            |   13 +-
+>   net/wireless/mesh.c           |    8 +
+>   net/wireless/nl80211.c        |  137 ++++++---
+>   25 files changed, 1137 insertions(+), 92 deletions(-)
+>   create mode 100644 net/mac80211/mesh_ps.c
+>
 
