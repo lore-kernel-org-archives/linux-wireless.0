@@ -1,64 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:51997 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755248Ab3AWOli (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 09:41:38 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0NEfbOB018117
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:37 -0600
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0NEfbZt025993
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:37 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>
-Subject: [PATCH 4/5] wlcore: use PLATFORM_DEVID_AUTO for plat dev creation to avoid conflicts
-Date: Wed, 23 Jan 2013 16:40:37 +0200
-Message-ID: <1358952038-5982-5-git-send-email-coelho@ti.com> (sfid-20130123_154144_508611_D12E5E69)
-In-Reply-To: <1358952038-5982-1-git-send-email-coelho@ti.com>
-References: <1358952038-5982-1-git-send-email-coelho@ti.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48251 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757340Ab3APVjg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jan 2013 16:39:36 -0500
+From: "Chadd, Adrian" <achadd@qca.qualcomm.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: Sven Eckelmann <sven@open-mesh.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	"tobias.steinicke@net.t-labs.tu-berlin.de"
+	<tobias.steinicke@net.t-labs.tu-berlin.de>,
+	"mathias.kretschmer@fokus.fraunhofer.de"
+	<mathias.kretschmer@fokus.fraunhofer.de>
+Subject: RE: [PATCH] ath9k: Save spectral scan data in network byteorder
+Date: Wed, 16 Jan 2013 21:39:35 +0000
+Message-ID: <48EC4E8D43A28947B1AB2639FA97CDB920AD4657@nasanexd02a.na.qualcomm.com> (sfid-20130116_223941_551593_E4681284)
+References: <1358251363-14385-1-git-send-email-sven@open-mesh.com>
+ <20130116085931.GA13648@pandem0nium>,<50F6788B.9050409@neratec.com>
+In-Reply-To: <50F6788B.9050409@neratec.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The platform devices can be created by both wlcore_sdio and
-wlcore_spi.  Theoretically, if both are connected to the same board,
-there will be a conflict.
+Hi,
 
-Reported-by: Felipe Balbi <balbi@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |    2 +-
- drivers/net/wireless/ti/wlcore/spi.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Yes, I advocate doing it all in userspace.
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 6d2884f..198028d 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -280,7 +280,7 @@ static int wl1271_probe(struct sdio_func *func,
- 	else
- 		chip_family = "wl12xx";
- 
--	glue->core = platform_device_alloc(chip_family, -1);
-+	glue->core = platform_device_alloc(chip_family, PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device");
- 		ret = -ENOMEM;
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index d62a20b..5ad2e10 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -366,7 +366,7 @@ static int wl1271_probe(struct spi_device *spi)
- 		goto out_free_glue;
- 	}
- 
--	glue->core = platform_device_alloc("wl12xx", -1);
-+	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
- 		ret = -ENOMEM;
--- 
-1.7.10.4
+I'm just exporting the raw PHY errors via bpf, so I can just expose all PHY errors this way and let the userland application do what it wants with this.
+
+I do the same with radar data too, fwiw.
+
+
+
+Adrian
+
+________________________________________
+From: Zefir Kurtisi [zefir.kurtisi@neratec.com]
+Sent: Wednesday, 16 January 2013 1:53 AM
+To: Simon Wunderlich
+Cc: Sven Eckelmann; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; Simon Wunderlich; tobias.steinicke@net.t-labs.tu-berlin.de; mathias.kretschmer@fokus.fraunhofer.de; Chadd, Adrian
+Subject: Re: [PATCH] ath9k: Save spectral scan data in network byteorder
+
+On 01/16/2013 09:59 AM, Simon Wunderlich wrote:
+> On Tue, Jan 15, 2013 at 01:02:43PM +0100, Sven Eckelmann wrote:
+>> The sample data received through the spectral scan can be either in big or
+>> little endian byteorder. This information isn't stored in the output file.
+>> Therefore it is not possible for the analyzer software to find the correct byte
+>> order.
+>>
+>> It is relative common to get the data from a low end AP in big endian mode and
+>> transfer it to another computer in little endian mode to analyze it. Therefore,
+>> it would be better to store it in network (big endian) byte order.
+>
+> I'd agree that changing the byteorder to the "general" network order format is
+> a good idea, although we will break compatibility again - which should hopefully
+> be no problem as the original patch is pretty new anyway.
+>
+> I was pondering about performance loss when we run spectral on the same machine
+> (i.e. maybe adding two useless byteswaps per value). OTOH the byteswaps are pretty
+> cheap and we do some computations anyway, so the performance difference should be quite
+> small.
+>
+> Therefore,
+>
+> Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+>
+> (I've CCd some more people in the reply so they can scream if they don't like it. ;])
+>
+> Thanks,
+>       Simon
+>
+Hi Simon,
+
+at this point, I'd like to advocate the approach I am currently using that does
+the conversion fully in user space. There, each sample provided consists of the
+fft data as bytes plus the values required to scale the magnitude values back to
+absolute power numbers (i.e. the 'bug-fixed' raw data).
+
+Since for the scaling an user space component is mandatory (FP calculations), I
+miss to see the benefit of splitting post-processing in the kernel (shifting bins)
+and user space. This step doubles fft data size and introduces endianess issues
+for no (at least to me) evident reason.
+
+Maybe you have a host application in mind where it does not really matter where
+the processing is done. Whereas, if you operate an AP as continuous spectral
+scanner, shifting the post-processing to the point where it is evaluated /
+displayed (usually your fat PC) significantly impacts your AP's load and its
+capability to provide higher sampling rates.
+
+I'd assume Adrian's proposal to just push out the raw spectral data to user-space
+is also targeting at that, which I fully support. The only thing I would keep in
+the driver is fixing the fft data corruption caused by known chip bugs.
+
+
+Cheers,
+Zefir
+>>
+>> Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+>> Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+>> ---
+>> A patch for FFT_eval was also sent to the author.
+>>
+>>  drivers/net/wireless/ath/ath9k/recv.c |   10 +++++++---
+>>  1 file changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index d7c129b..2fac787 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -1064,8 +1064,9 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+>>
+>>      fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
+>>      fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
+>> +    fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
+>>
+>> -    fft_sample.freq = ah->curchan->chan->center_freq;
+>> +    fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
+>>      fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
+>>      fft_sample.noise = ah->noise;
+>>
+>> @@ -1106,13 +1107,16 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+>>      mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
+>>
+>>      /* Apply exponent and grab further auxiliary information. */
+>> -    for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++)
+>> +    for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++) {
+>>              fft_sample.data[i] = bins[i] << mag_info->max_exp;
+>> +            fft_sample.data[i] = __cpu_to_be16(fft_sample.data[i]);
+>> +    }
+>>
+>>      fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+>> +    fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
+>>      fft_sample.max_index = spectral_max_index(mag_info->all_bins);
+>>      fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
+>> -    fft_sample.tsf = tsf;
+>> +    fft_sample.tsf = __cpu_to_be64(tsf);
+>>
+>>      ath_debug_send_fft_sample(sc, &fft_sample.tlv);
+>>  #endif
+>> --
+>> 1.7.10.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
