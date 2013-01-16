@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:38008 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752795Ab3AXElO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37771 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471Ab3APOTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 23:41:14 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 16 Jan 2013 09:19:09 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TvTpc-0000TY-CG
+	for linux-wireless@vger.kernel.org; Wed, 16 Jan 2013 15:19:08 +0100
+Message-ID: <1358345974.22862.14.camel@jlt4.sipsolutions.net> (sfid-20130116_151913_912971_9BEC3F94)
+Subject: Re: [RFC] mac80211: allow drivers to access IPv6 information
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] ieee80211: define AKM suite selectors type 5 and 6
-Date: Wed, 23 Jan 2013 20:33:58 -0800
-Message-Id: <1359002038-8308-1-git-send-email-bzhao@marvell.com> (sfid-20130124_054117_939434_CA4D23A2)
+Date: Wed, 16 Jan 2013 15:19:34 +0100
+In-Reply-To: <1358173010-16985-1-git-send-email-johannes@sipsolutions.net> (sfid-20130114_151631_494051_DB12C072)
+References: <1358173010-16985-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130114_151631_494051_DB12C072)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reference: IEEE P802.11w(TM)/D7.0, December 2008: 7.3.2.25.2
+On Mon, 2013-01-14 at 15:16 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> To be able to implement NS response offloading (in
+> regular operation or while in WoWLAN) drivers need
+> to know the IPv6 addresses assigned to interfaces.
+> Implement an IPv6 notifier in mac80211 to call the
+> driver when addresses change.
+> 
+> Unlike for IPv4, implement it as a callback rather
+> than as a list in the BSS configuration, that is
+> more flexible.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/ieee80211.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Applied the fixed version.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ccf9ee1..2ed19b6 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1898,6 +1898,8 @@ enum ieee80211_sa_query_action {
- /* AKM suite selectors */
- #define WLAN_AKM_SUITE_8021X		0x000FAC01
- #define WLAN_AKM_SUITE_PSK		0x000FAC02
-+#define WLAN_AKM_SUITE_8021X_SHA256	0x000FAC05
-+#define WLAN_AKM_SUITE_PSK_SHA256	0x000FAC06
- #define WLAN_AKM_SUITE_SAE			0x000FAC08
- #define WLAN_AKM_SUITE_FT_OVER_SAE	0x000FAC09
- 
--- 
-1.7.0.2
+johannes
 
