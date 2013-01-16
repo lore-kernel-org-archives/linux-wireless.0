@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:39522 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755618Ab3AYKy1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37695 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945Ab3APODW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:54:27 -0500
-Date: Fri, 25 Jan 2013 16:17:56 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: Move tx/rx antenna configuration to mwl8k_probe_hw
-Message-ID: <20130125104756.GA9180@markyou.marvell.com> (sfid-20130125_115430_116576_CA8169FE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 16 Jan 2013 09:03:22 -0500
+Message-ID: <1358345026.22862.6.camel@jlt4.sipsolutions.net> (sfid-20130116_150325_298423_C3765D34)
+Subject: Re: [PATCH] mac80211: fix FT roaming
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: cedric.debarge@acksys.fr
+Date: Wed, 16 Jan 2013 15:03:46 +0100
+In-Reply-To: <1357911819-9504-1-git-send-email-johannes@sipsolutions.net> (sfid-20130111_144321_886241_D82FE615)
+References: <1357911819-9504-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130111_144321_886241_D82FE615)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This avoids calling mwl8k_cmd_rf_antenna functions every
-time mwl8k_config function is called.
+On Fri, 2013-01-11 at 14:43 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> During FT roaming, wpa_supplicant attempts to set the
+> key before association. This used to be rejected, but
+> as a side effect of my commit 66e67e418908442389d3a9e
+> ("mac80211: redesign auth/assoc") the key was accepted
+> causing hardware crypto to not be used for it as the
+> station isn't added to the driver yet.
+> 
+> It would be possible to accept the key and then add it
+> to the driver when the station has been added. However,
+> this may run into issues with drivers using the state-
+> based station adding if they accept the key only after
+> association like it used to be.
+> 
+> For now, revert to the behaviour from before the auth
+> and assoc change.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Cédric Debarge <cedric.debarge@acksys.fr>
+> Tested-by: Cédric Debarge <cedric.debarge@acksys.fr>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+Applied.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a48b137..b53f9fc 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -4814,12 +4814,6 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
- 				goto out;
- 		}
- 
--		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_RX, 0x3);
--		if (rc)
--			wiphy_warn(hw->wiphy, "failed to set # of RX antennas");
--		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_TX, 0x7);
--		if (rc)
--			wiphy_warn(hw->wiphy, "failed to set # of TX antennas");
- 
- 	} else {
- 		rc = mwl8k_cmd_rf_tx_power(hw, conf->power_level);
-@@ -5709,6 +5703,15 @@ static int mwl8k_probe_hw(struct ieee80211_hw *hw)
- 		goto err_free_irq;
- 	}
- 
-+	/* Configure Antennas */
-+	rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_RX, 0x3);
-+	if (rc)
-+		wiphy_warn(hw->wiphy, "failed to set # of RX antennas");
-+	rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_TX, 0x7);
-+	if (rc)
-+		wiphy_warn(hw->wiphy, "failed to set # of TX antennas");
-+
-+
- 	/* Disable interrupts */
- 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
- 	free_irq(priv->pdev->irq, hw);
--- 
-1.8.0.3
+johannes
 
