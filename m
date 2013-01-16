@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46157 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37705 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180Ab3A2LxC (ORCPT
+	with ESMTP id S1754130Ab3APOGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 06:53:02 -0500
-Message-ID: <1359460403.8108.17.camel@jlt4.sipsolutions.net> (sfid-20130129_125306_967380_81B0C468)
-Subject: Re: [PATCHv4] mac80211: mesh power save basics
+	Wed, 16 Jan 2013 09:06:33 -0500
+Message-ID: <1358345216.22862.8.camel@jlt4.sipsolutions.net> (sfid-20130116_150641_579482_DED515F6)
+Subject: Re: [PATCH 1/2] mac80211: synchronize scan off/on-channel and PS
+ states
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Tue, 29 Jan 2013 12:53:23 +0100
-In-Reply-To: <1358767080-21758-1-git-send-email-marco@cozybit.com> (sfid-20130121_121831_158137_E5D23643)
-References: <1358767080-21758-1-git-send-email-marco@cozybit.com>
-	 (sfid-20130121_121831_158137_E5D23643)
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Date: Wed, 16 Jan 2013 15:06:56 +0100
+In-Reply-To: <20130114164906.GA3596@thinkpad-t410>
+References: <1356010879-10054-1-git-send-email-sgruszka@redhat.com>
+	 <20130114164906.GA3596@thinkpad-t410>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-21 at 12:18 +0100, Marco Porsch wrote:
-[long changelog]
+On Mon, 2013-01-14 at 10:49 -0600, Seth Forshee wrote:
+> On Thu, Dec 20, 2012 at 02:41:18PM +0100, Stanislaw Gruszka wrote:
+> > Since:
+> > 
+> > commit b23b025fe246f3acc2988eb6d400df34c27cb8ae
+> > Author: Ben Greear <greearb@candelatech.com>
+> > Date:   Fri Feb 4 11:54:17 2011 -0800
+> > 
+> >     mac80211: Optimize scans on current operating channel.
+> > 
+> > we do not disable PS while going back to operational channel (on
+> > ieee80211_scan_state_suspend) and deffer that until scan finish.
+> > But since we are allowed to send frames, we can send a frame to AP
+> > without PM bit set, so disable PS on AP side. Then when we switch
+> > to off-channel (in ieee80211_scan_state_resume) we do not enable PS.
+> > Hence we are off-channel with PS disabled, frames are not buffered
+> > by AP.
+> > 
+> > To fix remove offchannel_ps_disable argument and always enable PS when
+> > going off-channel and disable it when going on-channel, like it was
+> > before.
+> > 
+> > Cc: stable@vger.kernel.org # 2.6.39+
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 
+> This patch makes a huge difference in performance and packet loss during
+> software scans in my testing with iperf.
+> 
+> Tested-by: Seth Forshee <seth.forshee@canonical.com>
 
-I think the changelog is pretty much unreadable. Can you boil it down,
-or maybe start with a "tl;dr" version? All the little technical details
-are also less important (like debugfs files, who cares).
+Applied, sorry about the delay.
 
-
-> @@ -656,6 +684,13 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
->  	sta_info_flush(sdata);
->  	mesh_path_flush_by_iface(sdata);
->  
-> +	atomic_set(&ifmsh->ps.num_sta_ps, 0); /* not reset by sta_info_flush */
-> +	atomic_set(&ifmsh->num_mpsp, 0);
-
-This comment tells me that you have bugs elsewhere, in particular in
-mesh housekeeping. In fact, looking there, I see nothing that causes a
-sleeping station to be accounted for correctly when it expires.
-
-
-> +static void mps_set_sta_peer_pm(struct sta_info *sta,
-> +				struct ieee80211_hdr *hdr)
-
-> +void ieee80211_mpsp_trigger_process(struct ieee80211_hdr *hdr,
-> +				    struct sta_info *sta, bool tx, bool acked)
-
-I wonder if these functions should get the QoS CTL field instead of the
-header, as otherwise nothing really verifies that they're passed QoS
-frames to start with. Yes, that's the case today, but it's not obvious
-that this is really a requirement.
- 
 johannes
 
