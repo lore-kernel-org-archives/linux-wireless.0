@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:39173 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687Ab3AAXqb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37672 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab3APN6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jan 2013 18:46:31 -0500
-Received: by mail-we0-f170.google.com with SMTP id r1so6411412wey.15
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jan 2013 15:46:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121230233304.GB16767@pandem0nium>
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<1354042232-32428-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	<1354111295.9345.25.camel@jlt4.sipsolutions.net>
-	<20121130134311.GA19037@pandem0nium>
-	<1356707102.9922.26.camel@jlt4.sipsolutions.net>
-	<20121230233304.GB16767@pandem0nium>
-Date: Tue, 1 Jan 2013 15:46:30 -0800
-Message-ID: <CAJ-Vmok_UDVykup4xHCigrBbzErOhUQOZMATJ+=qkBFOHQS+Bg@mail.gmail.com> (sfid-20130102_004635_878429_676C188D)
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from outside
-From: Adrian Chadd <adrian@freebsd.org>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Jan 2013 08:58:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/6] iwlwifi: don't memset scalar values
+Date: Wed, 16 Jan 2013 14:58:34 +0100
+Message-Id: <1358344719-26486-1-git-send-email-johannes@sipsolutions.net> (sfid-20130116_145824_066846_E3E7B900)
+In-Reply-To: <1358344682.22862.4.camel@jlt4.sipsolutions.net>
+References: <1358344682.22862.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been looking at WME parameter handling for FreeBSD's net80211
-stack (with and without 802.11n support.)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes, the problem is figuring out what the actual BSS configuration
-_should_ be. You could potentially hear a variety of different WMM
-parameters from a variety of different nodes in the BSS (depending
-upon how buggy their WMM IE handling in adhoc mode is, I guess) so you
-can't just simply update the WMM parameters based on what you hear
-from peers.
+The dma_addr_t type is a scalar value, so it should
+just be assigned, not memset.
 
-What I have thus far:
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 6 +++---
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-* When creating a BSS, used the stored values;
-* When joining a BSS, use the configuration from the BSS node you've
-initially decided to "join" against, and hope they're actually
-"correct";
-* When doing a BSS merge, use the configuration from the BSS node that
-you're joining to;
-* If a different BSS configuration is heard from the node you joined
-against, update your local configuration;
-* .. and set a timer that enforces you don't change your configuration
-for another 'n' ms (for n > 1000?) even if the joined/merged BSS ID
-changes its config.
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 02c9016..ea9e991 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -436,7 +436,7 @@ static int iwl_pcie_rx_alloc(struct iwl_trans *trans)
+ err_rb_stts:
+ 	dma_free_coherent(dev, sizeof(__le32) * RX_QUEUE_SIZE,
+ 			  rxq->bd, rxq->bd_dma);
+-	memset(&rxq->bd_dma, 0, sizeof(rxq->bd_dma));
++	rxq->bd_dma = 0;
+ 	rxq->bd = NULL;
+ err_bd:
+ 	return -ENOMEM;
+@@ -553,7 +553,7 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 
+ 	dma_free_coherent(trans->dev, sizeof(__le32) * RX_QUEUE_SIZE,
+ 			  rxq->bd, rxq->bd_dma);
+-	memset(&rxq->bd_dma, 0, sizeof(rxq->bd_dma));
++	rxq->bd_dma = 0;
+ 	rxq->bd = NULL;
+ 
+ 	if (rxq->rb_stts)
+@@ -562,7 +562,7 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 				  rxq->rb_stts, rxq->rb_stts_dma);
+ 	else
+ 		IWL_DEBUG_INFO(trans, "Free rxq->rb_stts which is NULL\n");
+-	memset(&rxq->rb_stts_dma, 0, sizeof(rxq->rb_stts_dma));
++	rxq->rb_stts_dma = 0;
+ 	rxq->rb_stts = NULL;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index d25fc8a..3ff3e8b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -615,7 +615,7 @@ static void iwl_pcie_txq_free(struct iwl_trans *trans, int txq_id)
+ 	if (txq->q.n_bd) {
+ 		dma_free_coherent(dev, sizeof(struct iwl_tfd) *
+ 				  txq->q.n_bd, txq->tfds, txq->q.dma_addr);
+-		memset(&txq->q.dma_addr, 0, sizeof(txq->q.dma_addr));
++		txq->q.dma_addr = 0;
+ 	}
+ 
+ 	kfree(txq->entries);
+-- 
+1.8.0
 
-STA mode operation has the STA listening to changes in the BSS. It
-only hears these frames from the active AP so you don't have churn if
-you hear different WMM IEs from different APs (in the same SSID.)
-adhoc is slightly crazier there.
-
-My only concern is having oscillating BSS updates propagate across the
-network in a rather silly looking fashion. Hence the BGP 'route
-dampening' style timer to try and ensure that doesn't occur.
-
-It'd be nice if we could come up with a unified way of doing this and
-have it interoperate between FreeBSD/Linux (and any other vendor
-adhoc+wmm implementations out there.)
-
-Thanks,
-
-
-
-Adrian
