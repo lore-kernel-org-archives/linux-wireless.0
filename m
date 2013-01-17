@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4921 "EHLO mms3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39826 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752709Ab3ABOMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:12:55 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: [PATCH for 3.8 1/2] brcmsmac: add copyright information for
- Canonical
-Date: Wed, 2 Jan 2013 15:12:38 +0100
-Message-ID: <1357135959-16696-1-git-send-email-arend@broadcom.com> (sfid-20130102_151300_147884_C6261642)
+	id S1756710Ab3AQPSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2013 10:18:37 -0500
+Date: Thu, 17 Jan 2013 16:18:27 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: linux-wireless@vger.kernel.org,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Paul Stewart <pstew@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: Re: [RFC] mac80211: soft scan vs latency
+Message-ID: <20130117151826.GA2341@redhat.com> (sfid-20130117_161847_745086_AF7FCD1E)
+References: <20130114145558.GA24250@redhat.com>
+ <20130116140102.GA10746@redhat.com>
+ <20130117122504.1bf51f82@dualc.maya.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130117122504.1bf51f82@dualc.maya.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patches from Canonical involved the introduction of new source
-files debug.[ch]. That coincided with other patches from Broadcom
-introducing the same files.
+On Thu, Jan 17, 2013 at 12:25:04PM +0100, Andreas Hartmann wrote:
+> On Wed, 16 Jan 2013 15:01:02 +0100
+> Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> 
+> > On Mon, Jan 14, 2013 at 03:55:58PM +0100, Stanislaw Gruszka wrote:
+> > > Except latency, patch perhaps also improve throughput, since we
+> > > spend more time on-channel while scanning. But I'm not quite sure,
+> > > since overall scanning time is bigger. I did not test influence of
+> > > the patch on throughput.
+> > > 
+> > > I tested patch by doing:
+> > > 
+> > > while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
+> > 
+> > I can see slight throughput improvement with patch, measured by scp:
+> > 
+> > Upload to periodical scanning machine:
+> > scp -B Fedora-18-Beta-i686-Live-Desktop.iso stasiu@192.168.1.105:~/
+> > 
+> > Unpatched: 3.9MB/s   03:15    
+> > Patched:   4.3MB/s   02:58
+> 
+> W/o any scan?
+> 
+> > Download from periodical scanning machine:
+> > scp -B stasiu@192.168.1.105:~/Fedora-18-Beta-i686-Live-Desktop.iso .
+> > 
+> > Unpatched: 5.5MB/s   02:17
+> > Patched:   6.2MB/s   02:02
+> 
+> W/o any scan?
 
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
+On target machine I performed periodical scan every 3 second i.e.
+run command: "while true; do iw dev wlan0 scan; sleep 3; done" .
+Source machine was connected to AP by wire.
 
-Not really a bug fix, but giving credit where it is due.
-
-Gr. AvS
----
- drivers/net/wireless/brcm80211/brcmsmac/debug.h |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.h b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-index 796836b..822781c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012 Broadcom Corporation
-+ * Copyright (c) 2012 Canonical Ltd.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
--- 
-1.7.10.4
-
+Stanislaw 
 
