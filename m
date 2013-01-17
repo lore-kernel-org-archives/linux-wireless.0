@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40803 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982Ab3AYSLt (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40090 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714Ab3AQFeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 13:11:49 -0500
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0PIBiEu030028
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 10:11:48 -0800
-Message-ID: <5102CADE.2010900@candelatech.com> (sfid-20130125_191153_365070_17ACB728)
-Date: Fri, 25 Jan 2013 10:11:42 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 17 Jan 2013 00:34:17 -0500
+Date: Wed, 16 Jan 2013 23:34:13 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] Fixes for problems with off-channel powersave
+Message-ID: <20130117053413.GB31449@thinkpad-t410> (sfid-20130117_063421_512663_EE3D98C2)
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+ <20130109134059.GC18778@thinkpad-t410>
+ <1358379163.15012.69.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Increasing throughput on 3-radio system?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1358379163.15012.69.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've put 3 ath9k AR9380 NICs into a single system (core-i7).  Each is
-configured for an AP on a separate 5Ghz channel (40Mhz wide).
+On Thu, Jan 17, 2013 at 12:32:43AM +0100, Johannes Berg wrote:
+> On Wed, 2013-01-09 at 07:40 -0600, Seth Forshee wrote:
+> 
+> > > It turns out that fixing problem #1 (i.e. patch 2) probably isn't
+> > > necessary with the other changes, as no frames should be sent while
+> > > off-channel PS is enabled. Does this still seem like a problem worth
+> > > fixing?
+> > 
+> > This is incorrect. We actually do need patch 2 for some hardware. I
+> > forgot that when I was testing with BCM43224 I found that PM gets
+> > actively set or cleared based on the device configuration. It's
+> > impossible to enable PS at the AP without informing the driver.
+> 
+> Hm, don't understand. If we're not sending any packets to the AP, why
+> does this matter?
+> 
+> Or are you saying it wants nullfunc frames generated in software, but
+> then changes the PM bit in them?
 
-Individually, I can get about 300Mbps transmit towards the AP on any
-particular radio, but when running all together, total throughput is
-only about 475Mbps.
+Exactly. At least that's what it looks like to me. I lack detailed
+knowledge of how to handle powersave on Broadcom, but I do know that the
+PM bit is under the control of the MCTL_HPS field.  Experimentally it
+appears that the hardware actively clears PM when this field is 0 and
+actively sets it when this field is 1, for all frames including
+nullfuncs.
 
-I assume there is some cross-channel bleeding or similar.
-
-The APs are close by, so I was wondering if perhaps there was a way
-to configure the radios to be less sensitive and thus pay less
-attention to channel cross-talk?
-
-Any suggestions for things to try are appreciated!
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Seth
