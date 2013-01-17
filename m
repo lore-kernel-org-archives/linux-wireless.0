@@ -1,87 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:36618 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270Ab3AJN2U convert rfc822-to-8bit (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55611 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198Ab3AQNwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 08:28:20 -0500
-From: =?UTF-8?Q?C=C3=A9dric_Debarge_-_ACKSYS?= <cedric.debarge@acksys.fr>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319014B7055@sbs2003.acksys.local>		 (sfid-20130108_123142_580099_93DD6C6E) <1357734417.9757.6.camel@jlt4.sipsolutions.net>	 <018801cdef1b$dca15b10$95e41130$@acksys.fr> <1357821050.17902.10.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1357821050.17902.10.camel@jlt4.sipsolutions.net>
-Subject: RE: missing RX_FLAG_DECRIPTED in ieee80211_rx_status after first reassociation in 802.11R
-Date: Thu, 10 Jan 2013 14:28:15 +0100
-Message-ID: <018c01cdef36$58f1da90$0ad58fb0$@acksys.fr> (sfid-20130110_142824_746802_F9866EE8)
+	Thu, 17 Jan 2013 08:52:40 -0500
+Date: Thu, 17 Jan 2013 14:52:28 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv6 4/6] mac80211: add radar detection command/event
+Message-ID: <20130117135228.GD19552@pandem0nium> (sfid-20130117_145245_276660_E37A403B)
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1357650251-17425-5-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1358377171.15012.45.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="MAH+hnPXVZWQ5cD/"
+In-Reply-To: <1358377171.15012.45.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks a lot !
 
-I have successfully tested your patch on my system. 
-It is now using hardware encryption available in the radio card.
+--MAH+hnPXVZWQ5cD/
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Best regards,
+On Wed, Jan 16, 2013 at 11:59:31PM +0100, Johannes Berg wrote:
+> On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
+>=20
+> > +static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+> > +					   struct net_device *dev,
+> > +					   struct cfg80211_chan_def *chandef)
+> > +{
+> > +	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
+> > +	struct ieee80211_local *local =3D sdata->local;
+> > +	int res;
+> > +
+> > +	if (!local->ops->start_radar_detection)
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	/* whatever, but channel contexts should not complain about that one =
+*/
+> > +	sdata->smps_mode =3D IEEE80211_SMPS_OFF;
+> > +	sdata->needed_rx_chains =3D local->rx_chains;
+> > +
+> > +	if (ieee80211_vif_use_channel(sdata, chandef,
+> > +				      IEEE80211_CHANCTX_SHARED))
+> > +		return -EBUSY;
+>=20
+> Should probably return whatever error vif_use_channel() returned?
+>=20
 
-Cédric DEBARGE	
+OK
 
------Message d'origine-----
-De : Johannes Berg [mailto:johannes@sipsolutions.net] 
-Envoyé : jeudi 10 janvier 2013 13:31
-À : Cédric Debarge - ACKSYS
-Cc : linux-wireless@vger.kernel.org
-Objet : Re: missing RX_FLAG_DECRIPTED in ieee80211_rx_status after first reassociation in 802.11R
+> > +	res =3D drv_start_radar_detection(local, sdata, chandef);
+>=20
+> If the vif is assigned the channel, why also pass it to the
+> start_radar_detection command? That seems pointless, they can't be
+> different?
+>=20
+In the initial phase, __nl80211_set_channel() should not be able to set
+the channel (no CAC yet), and will fail for IBSS (to be implemented later)
+generally, at least as it's implemented now.
 
-Hi Cédric,
+But what we can do is set the channel from mac80211 and call the driver
+function without the channel argument, as it'll be pointless in this case.
+Is this what you mean?
 
-> 	I attached the trace file since it is quite long (about 1400 lines).
-> 	Here are some pointers : 
-> 		Original AP = 90:A4:DE:AA:42:94, channel : 132, ssid : acksyscdtest
-> 		Second AP = 90:A4:DE:AA:41:ED, channel : 132, ssid : acksyscdtest
-> 
-> 		When wpa_supplicant is launched, it associates directly with 
-> 90:A4:DE:AA:42:94.
-> 		The roaming order is given by the wpa_cli roam command (roam 
-> 90:A4:DE:AA:41:ED). You can find it at line 1042 of the traces.
-> 		I used the -T option of wpa_supplicant.
-> 
-> 	In order to get cfg80211 traces I had to switch to compat wireless 
-> version 2012-12-06 (previous was 2012-09-07). Nevertheless, the 
-> behavior seems to remain the same (same exit in 
-> ieee80211_key_enable_hw_accel at the first roam).
+> > +++ b/net/mac80211/iface.c
+> > @@ -826,6 +826,10 @@ static void ieee80211_do_stop(struct ieee80211_sub=
+_if_data *sdata,
+> >  					 u.vlan.list)
+> >  			dev_close(vlan->dev);
+> >  		WARN_ON(!list_empty(&sdata->u.ap.vlans));
+> > +
+> > +		/* reset DFS channel availability check */
+> > +		if (local->_oper_channel)
+> > +			local->_oper_channel->cac_started =3D false;
+>=20
+> That doesn't really belong here, does it? Seems like it should be in
+> cfg80211. Actually, should it be there at all?
 
-Thanks for the trace! That allowed me to understand the bug very easily, I didn't realize you had used FT.
+Actually, no, you are right. After stopping an AP and no radar is detected,
+the channel should go from "operational" back to "available" state. Quoting
+=66rom ETSI EN 3001-893 v1.7.1
 
-It looks like this bug was introduced by my
+4.7.1.3/Master Devices/
 
-commit 66e67e418908442389d3a9e6509985f01cbaf9b0
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Jan 20 13:55:27 2012 +0100
+c) Once the RLAN has started operations on an Available Channel, then that =
+channel becomes an Operating Channel. During normal operation, the master d=
+evice shall monitor all Operating Channels (In-Service Monitoring) to ensur=
+e that there is no radar operating within these channel(s). If no radar was=
+ detected on an Operating Channel but the RLAN stops operating on that chan=
+nel, then the channel becomes an Available Channel.
 
-    mac80211: redesign auth/assoc
+I'll change that.
 
-This changed the way mac80211 allocates stations when it connects to an AP, to allocate it before associating. wpa_supplicant can deal with key setting being rejected before association and will set the key again after association, which is the code path that was used before this code change in mac80211, but now mac80211 would accept the key even before that.
+>=20
+> If we allow using the channel for some amount of time after doing the
+> CAC, even if we haven't been on the channel continuously, then we should
+> also allow using the channel after stopping the AP for that much time.
+>=20
+> IOW -- deactivating should cause the timeout to start running.
 
-I think the patch below might work to restore the old behaviour:
+As stated in a mail earlier from this patchset, a timeout ist not neccessar=
+y.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c index 7d290bc..48a03b0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -164,7 +164,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			sta = sta_info_get(sdata, mac_addr);
- 		else
- 			sta = sta_info_get_bss(sdata, mac_addr);
--		if (!sta) {
-+		if (!sta || !test_sta_flag(sta, WLAN_STA_ASSOC)) {
- 			ieee80211_key_free(sdata->local, key);
- 			err = -ENOENT;
- 			goto out_unlock;
+I'd skip this patch entirely.
 
+>=20
+> Actually that raises another question: If we have "external" radar
+> detection, say by a different NIC, then shouldn't we still ask the
+> driver to start radar detection when using the channel? Or is that
+> implicit, does the driver have to check?
 
-That would probably be a reasonable patch for stable. I think the other way we could handle this is accept the key, and only upload it to the hardware after the station has been marked associated.
+That is a good question, I didn't consider that. In the "simple process"
+we first start radar detection and start the ap on the same channel.
+For external CAC that won't work, of course. What about mac80211 checking
+the channel in start_ap(), and if the channel requires DFS, pass some flag
+to the driver that radar detection should be enabled?
 
-johannes
+>=20
+> It seems the driver API needs a lot more documentation :-)
 
+Agreed, but I guess we still need to discuss some corner cases to get the
+neccesary input for documentation. ;)
 
+>=20
+>=20
+> > +++ b/net/mac80211/trace.h
+> > @@ -45,6 +45,35 @@
+> >  			__entry->center_freq1, __entry->center_freq2,		\
+> >  			__entry->rx_chains_static, __entry->rx_chains_dynamic
+> > =20
+> > +#define CHAN_DEF_ENTRY __field(enum ieee80211_band, band)		\
+>=20
+> I'll apply my "mac80211: split out chandef tracing macros" patch
+> instead.
+
+OK.
+>=20
+>=20
+> Also: once the CAC is completed, shouldn't the channel context be freed
+> up in mac80211, or something like that?
+
+Currently we don't handle the event "CAC finished" explicitly - we only have
+the cac_started/timeout fields. More on that later ...
+
+Cheers,
+	Simon
+
+--MAH+hnPXVZWQ5cD/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlD4AhwACgkQrzg/fFk7axZHhgCguQco+1K74CleWtaM7IkypRKT
+5+4AoMXwOdETKeJK2Niw88r5k4O9j2Sr
+=ikoq
+-----END PGP SIGNATURE-----
+
+--MAH+hnPXVZWQ5cD/--
