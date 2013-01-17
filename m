@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43903 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752624Ab3ABRwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 12:52:38 -0500
-Message-ID: <1357149158.17061.45.camel@joe-AO722> (sfid-20130102_185246_736121_7787F076)
-Subject: Re: [PATCH 08/18] brcmfmac: define pr_fmt in one place
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Wed, 02 Jan 2013 09:52:38 -0800
-In-Reply-To: <1357136572-18273-9-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-	 <1357136572-18273-9-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:47702 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632Ab3AQRQV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2013 12:16:21 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j5so1509209bkw.40
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 09:16:20 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
+Date: Thu, 17 Jan 2013 18:16:15 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ivdoorn@gmail.com, gwingerde@gmail.com, stf_xl@wp.pl,
+	andihartmann@01019freenet.de,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+References: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com>
+In-Reply-To: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301171816.15309.chunkeey@googlemail.com> (sfid-20130117_181626_507402_29A35013)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-02 at 15:22 +0100, Arend van Spriel wrote:
-> Several source files (but not all) define the pr_fmt() macro in exactly
-> the same way. Instead this commit defines it in a header file so driver
-> logging is consistent.
+On Thursday, January 17, 2013 05:34:32 PM Helmut Schaa wrote:
+> Since rt2800 hardware isn't capable of reporting the TX status of
+> BlockAckReq frames implement the TX status handling of BARs in
+> rt2x00lib. We keep track of all BARs that are send out and try to
+> match incoming BAs to the appropriate BARs. This allows us to report a
+> more or less accurate TX status for BAR frames which in turn improves
+> BA session stability.
+---
+What about:
+> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Mon Dec 3 12:56:33 2012 +0100
+> mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
 
-The commit message doesn't describe the change to brcm_err
+Should it be kept or dropped (as no driver uses it anymore?)
 
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-[]
-> @@ -34,19 +34,12 @@
->  #define BRCMF_SCAN_VAL	0x4000
->  #define BRCMF_CONN_VAL	0x8000
->  
-> -/* Macro for error messages. net_ratelimit() is used when driver
-> - * debugging is not selected. When debugging the driver error
-> - * messages are as important as other tracing or even more so.
-> - */
-> -#ifdef CONFIG_BRCMDBG
-> +/* set default print format */
-> +#undef pr_fmt
-> +#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
-> +
-> +/* error messages are always logged */
->  #define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
-> -#else
-> -#define brcmf_err(fmt, ...)						\
-> -	do {								\
-> -		if (net_ratelimit())					\
-> -			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
-> -	} while (0)
-> -#endif
-
-
+Regards,
+	Chr
