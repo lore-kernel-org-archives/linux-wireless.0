@@ -1,140 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40763 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823Ab3AWMts (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:52610 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755033Ab3AQTu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 07:49:48 -0500
-Date: Wed, 23 Jan 2013 13:49:42 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
- command/event
-Message-ID: <20130123124942.GB23989@pandem0nium> (sfid-20130123_135002_817949_D07834AB)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1358376672.15012.37.camel@jlt4.sipsolutions.net>
- <20130117134034.GC19552@pandem0nium>
- <1358546080.7922.36.camel@jlt4.sipsolutions.net>
- <50FD1C06.1050300@neratec.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="CdrF4e02JqNVZeln"
-In-Reply-To: <50FD1C06.1050300@neratec.com>
+	Thu, 17 Jan 2013 14:50:59 -0500
+Date: Thu, 17 Jan 2013 14:50:56 -0500 (EST)
+Message-Id: <20130117.145056.60689530330513006.davem@davemloft.net> (sfid-20130117_205122_948409_311A888F)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-01-17
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130117173239.GA2098@tuxdriver.com>
+References: <20130117173239.GA2098@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 17 Jan 2013 12:32:40 -0500
 
---CdrF4e02JqNVZeln
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> This batch of fixes is intended for 3.8...
+> 
+> Included is a Bluetooth pull.  Gustavo says:
+> 
+> "A few fixes for 3.8. Five of them are just new devices ids addition.
+> Apart from the that there is fix to a kernel memory leak to userspace from
+> Anderson Lizardo, two interoperability fixes from Jaganath Kanakkassery and
+> Szymon Janc. And a crash fix by me."
+> 
+> Along with that, Amitkumar Karwar brings a pair of mwifiex fixes for
+> problems related to handling of band information within the driver.
+> These problems can lead to association failures.
+> 
+> Sujith Manoharan fixes a memory leak in the ath9k_htc code (originally
+> reported by Larry Finger).
+> 
+> The big hero this round is Felix Fietkau.  Felix gives us seven
+> ath9k fixes, including a fix for a race condition, the removal of a
+> double-free, and a fix for a deadlock, among others.
+> 
+> These have all been in linux-next for at least a couple of days,
+> with no complaints so far.  Please let me know if there are problems!
 
-Hey Zefir,
-
-On Mon, Jan 21, 2013 at 11:44:22AM +0100, Zefir Kurtisi wrote:
-> On 01/18/2013 10:54 PM, Johannes Berg wrote:
-> > On Thu, 2013-01-17 at 14:40 +0100, Simon Wunderlich wrote:
-> >=20
-> >> Actually there is no limit how long a channel is considered "available=
-", at
-> >> least in ETSI. ETSI EN 301-893 v1.4.1 had a limit of 24 hours for that,
-> >> but that was removed in v1.5.1 and didn't re-appear since then (curren=
-t is
-> >> v1.7.1).
-> >=20
-> > Huh indeed, I would have expected that to be there. It does have a
-> > non-occupancy time though (30 minutes), maybe we should implement that?
-> >=20
-> No, why be more restrictive than regulatory demands?
->=20
-> With the recent incremental updates, a general note: Victor's initial app=
-roach was
-> to keep all logic in hostapd and minimize the modifications in mac by only
-> ensuring CAC times there. If NOP handling is also added to mac, we'd have
-> everything needed to handle DFS channel states available. With hostapd on=
-ly left
-> to do the selection of the channel to switch to after a radar detection, =
-it might
-> make sense to move everything down to mac. I understand that questioning =
-the
-> design that late is not helpful, at the same time and since the initial p=
-ath was
-> left, it might be worth considering.
-
-Actually questioning the design NOW is a good idea, we are already question=
-ing it
-through the last patches and better bring up the issues now than later. We =
-have started from the
-simple hostap-handles-everything approach and have seen some points are mis=
-sing when
-we think about multi interfaces etc for the future (and implementation issu=
-es of course).
-
-If we move channel states (available/unavailable) already into the kernel s=
-pace, we might
-as well check for other states (already doing CAC, not valid until). Maybe =
-it's better like
-this than splitting the management over hostapd and cfg/mac80211?
-
-> > I'm also thinking with the next regdb format update we should allow
-> > specifying these timeouts etc. there.
-> >=20
-> > Does anyone have the relevant FCC rules? I can't find anything with
-> > google ...
-> >=20
-> The FCC 06-96 document (freely available, e.g.
-> http://hraunfoss.fcc.gov/edocs_public/attachmatch/FCC-06-96A1.pdf) seems =
-to be the
-> most recent one. Skimming over I did not find a requirement for the valid=
-ity
-> period after CAC.
->=20
-
-Thanks for pointing us to that doc. Couldn't find anything either, so I'd j=
-ust
-skip any "validity" for now.
-
-> >> But we can move the CAC/timeout in the wdev and have keep a flag field=
- in
-> >> the channel struct instead, marking the channel as available, unavaila=
-ble, etc.
-> >>
-> >> What do you think?
-> >=20
-> > I think that would make sense. Probably available/unavailable and
-> > "non-occupancy until"?
-> >=20
-> At that stage, we would have half of all potential states (UNKNOWN, AVAIL=
-ABLE,
-> OPERATING, UNAVAILABLE, USABLE, SCANNING) covered, so a current state per=
- channel
-> and the time it was entered would give everything required for the comple=
-te state
-> machine in mac.
-
-Sounds good! Will look into this ...
-
-Thanks,
-	Simon
-
---CdrF4e02JqNVZeln
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlD/3GUACgkQrzg/fFk7axZH3gCgipBMAWROM3ksgx2eMXcxRFAA
-Qe0AoL46+T3mLpGMg9K48qPLWO5AhBfT
-=s2iO
------END PGP SIGNATURE-----
-
---CdrF4e02JqNVZeln--
+Pulled, thanks John.
