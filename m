@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:47339 "EHLO mout3.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750834Ab3AQLn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 06:43:58 -0500
-Date: Thu, 17 Jan 2013 12:25:04 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: Re: [RFC] mac80211: soft scan vs latency
-Message-ID: <20130117122504.1bf51f82@dualc.maya.org> (sfid-20130117_124404_116951_831777D9)
-In-Reply-To: <20130116140102.GA10746@redhat.com>
-References: <20130114145558.GA24250@redhat.com>
-	<20130116140102.GA10746@redhat.com>
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:54871 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824Ab3AQVYx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2013 16:24:53 -0500
+Received: by mail-ea0-f176.google.com with SMTP id a13so920655eaa.21
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 13:24:52 -0800 (PST)
+Message-ID: <1358457883.5641.7.camel@canaries64> (sfid-20130117_222457_303011_88648EA2)
+Subject: Re: [PATCH 3/3] staging: vt6656: staging: vt6656 change remaining
+ to vnt_mgmt and remove typedef v2
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 17 Jan 2013 21:24:43 +0000
+In-Reply-To: <20130117211256.GA23334@kroah.com>
+References: <1357602156.12182.11.camel@canaries64>
+	 <20130117211256.GA23334@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 16 Jan 2013 15:01:02 +0100
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-
-> On Mon, Jan 14, 2013 at 03:55:58PM +0100, Stanislaw Gruszka wrote:
-> > Except latency, patch perhaps also improve throughput, since we
-> > spend more time on-channel while scanning. But I'm not quite sure,
-> > since overall scanning time is bigger. I did not test influence of
-> > the patch on throughput.
+On Thu, 2013-01-17 at 13:12 -0800, Greg KH wrote:
+> On Mon, Jan 07, 2013 at 11:42:36PM +0000, Malcolm Priestley wrote:
 > > 
-> > I tested patch by doing:
+> > rebased version
 > > 
-> > while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
+> > after this patch continue on wards with
+> > [10/11] staging: vt6656: clean up struct vnt_private.
+> > [11/11] staging: vt6656: clean up struct vnt manager
 > 
-> I can see slight throughput improvement with patch, measured by scp:
+> What do you mean by this?  Can you please just send the entire series of
+> patches?  I don't have these anymore in any tree.  For now, I'll just
+> drop all of these and wait for your resend.
 > 
-> Upload to periodical scanning machine:
-> scp -B Fedora-18-Beta-i686-Live-Desktop.iso stasiu@192.168.1.105:~/
-> 
-> Unpatched: 3.9MB/s   03:15    
-> Patched:   4.3MB/s   02:58
 
-W/o any scan?
+Part of the series is already in staging-next.
 
-> Download from periodical scanning machine:
-> scp -B stasiu@192.168.1.105:~/Fedora-18-Beta-i686-Live-Desktop.iso .
-> 
-> Unpatched: 5.5MB/s   02:17
-> Patched:   6.2MB/s   02:02
+However, the driver is currently broken in staging-next, these three
+patches bring the driver up.
 
-W/o any scan?
+Those two clean up patches can be dropped for now, and I will resend
+them later.
 
 
-I saw this problem some days ago, too. And: You are right. Using
-realtime applications is quite unusable with stock sw-stack. That's one
-reason amongst others why I don't use networkmanager at all, but
-solely wpa_supplicant and managed dhcpcd via wpa_supplicant logfile
-while starting.
-
-But this is not the only point, which breaks realtime applications.
-Another one is rekeying (4 way handshake), which is broken when
-executed while network load.
+Malcolm
 
 
 
-Kind regards,
-Andreas Hartmann
