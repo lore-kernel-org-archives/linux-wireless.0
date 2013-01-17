@@ -1,80 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:50261 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751070Ab3ARUf7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 15:35:59 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Lubomir Rintel <lkundrak@v3.sk>, Harro Haan <hrhaan@gmail.com>,
-	Dan Williams <dcbw@redhat.com>
-CC: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+Received: from mail.ultra-3eti.com ([173.13.207.162]:55148 "EHLO
+	mail.ultra-3eti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757065Ab3AQQ0Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2013 11:26:24 -0500
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+CC: Georgiewskiy Yuriy <bottleman@icf.org.ru>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Fri, 18 Jan 2013 12:28:17 -0800
-Subject: RE: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
-Message-ID: <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com> (sfid-20130118_213624_108763_486A7B16)
-References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
-In-Reply-To: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
+	open11s <devel@lists.open80211s.org>
+Subject: RE: help: 802.11s bad performance with 802.11n enabled
+Date: Thu, 17 Jan 2013 16:14:33 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1AF64@RockMX01.rock.corp> (sfid-20130117_172628_547128_78FA8BD0)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D07C1256F@RockMX01.rock.corp>
+ <alpine.DEB.2.02.1212031842350.27546@icf.org.ru>
+ <CAG6hwVM3GFe-v7fONDR_2wuggT+z_ZhDQN-pH7BA1gyxLZzDQQ@mail.gmail.com>
+ <alpine.DEB.2.02.1212080721070.8165@icf.org.ru>
+ <alpine.DEB.2.02.1212080726150.22564@icf.org.ru>
+ <CAG6hwVMsghDHzgyk1ZJE7YoMi2+t-LKNGtgw_ha2DdEwHc71hg@mail.gmail.com>
+ <alpine.DEB.2.02.1212080739540.23821@icf.org.ru>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D07C12939@RockMX01.rock.corp>
+ <CAG6hwVMVd0azJotzVqcz+Uu7vpDtxJa+4XfK0BS_31=gBPD2vA@mail.gmail.com>
+In-Reply-To: <CAG6hwVMVd0azJotzVqcz+Uu7vpDtxJa+4XfK0BS_31=gBPD2vA@mail.gmail.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lubomir,
 
-> It actually times out on a 8688 present in GuruPlug with sd8688.bin
-> (md5=7233401e9687f8c880da547beed4324e) firmware (that's present in
-> linux-firmware tree), but the adapter works fine.
-> 
-> For that firmware times out with libertas_uap [1] as well, though it succeeds
-> with sd8688_ap.bin (md5=52cd8f8296b9a7e1d3835d57416256b2) that was originally
-> shipped with GuruPlug. That firmware is not in linux-firmware tree and btmrvl
-> driver might win the race programming the 8688 with sd8688.bin anyway.
-> 
-> [1] https://github.com/lkundrak/linux/tree/libertas_uap
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   14 --------------
->  1 files changed, 0 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 2ecab49..3c4c555 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -825,20 +825,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
-> 
->  	sdio_release_host(func);
-> 
-> -	/*
-> -	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
-> -	 */
-> -	if (card->model == MODEL_8688) {
-> -		struct cmd_header cmd;
-> -
-> -		memset(&cmd, 0, sizeof(cmd));
-> -
-> -		lbs_deb_sdio("send function INIT command\n");
-> -		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
-> -				lbs_cmd_copyback, (unsigned long) &cmd))
-> -			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
-> -	}
-> -
+TP> We recently applied
+TP> https://github.com/cozybit/authsae/commit/0e5c65c3f773db820d6cee7b365cd4a70181c72d
+which may fix your issue.
 
-Removing FUNC_INIT could break things in some scenarios.
-Could you please test the following case?
+All, I just find that the patch above introduce a segmentation fault.
 
-1. insmod liberates -> download firmware, send FUNC_INIT, ...
-2. rmmod libertas -> send FUNC_SHUTDOWN command to firmware; BT is still working.
-3. insmod libertas -> skip firmware downloading, send FUNC_INIT, ...
+Below is the patch content. Look at line 970, "cand->state" would dereference a NULL pointer because the "if"  statement makes sure "cand" is NULL.
 
-If FUNC_INIT is removed, I don't expect step 3 to work.
 
-Thanks,
-Bing
 
->  	priv->fw_ready = 1;
->  	wake_up(&card->pwron_waitq);
-> 
-> --
-> 1.7.1
+if ((cand = find_peer(mgmt->sa, 0)) == NULL) {
+
+968 	  	
+
+-    sae_debug(AMPE_DEBUG_FSM, "Mesh plink: plink open from unauthed peer\n");
+
+  	967 	
+
++    /* "1" here means only get peers in SAE_ACCEPTED */
+
+  	968 	
+
++    if ((cand = find_peer(mgmt->sa, 1)) == NULL) {
+
+  	969 	
+
++    sae_debug(AMPE_DEBUG_FSM, "Mesh plink: plink open from unauthed peer "MACSTR" state=%d\n",
+
+  	970 	
+
++                  MAC2STR(mgmt->sa), cand->state);
+
+969 	971 	
+
+         return 0;
+
+970 	972 	
+
+     }
+
+
