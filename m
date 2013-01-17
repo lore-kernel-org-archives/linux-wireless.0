@@ -1,176 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753761Ab3A3VBo (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:53889 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350Ab3AQNkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 16:01:44 -0500
-Message-ID: <1359579712.8010.30.camel@jlt4.sipsolutions.net> (sfid-20130130_220148_052629_E172F315)
-Subject: pull-request: iwlwifi-next 2013-01-30
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 30 Jan 2013 22:01:52 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-U4sZTpM6q5/NP3/25YbD"
-Mime-Version: 1.0
+	Thu, 17 Jan 2013 08:40:47 -0500
+Date: Thu, 17 Jan 2013 14:40:34 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
+ command/event
+Message-ID: <20130117134034.GC19552@pandem0nium> (sfid-20130117_144052_078395_A7029950)
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1358376672.15012.37.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="s9fJI615cBHmzTOP"
+In-Reply-To: <1358376672.15012.37.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-U4sZTpM6q5/NP3/25YbD
-Content-Type: text/plain; charset="UTF-8"
+--s9fJI615cBHmzTOP
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-John,
+On Wed, Jan 16, 2013 at 11:51:12PM +0100, Johannes Berg wrote:
+> On Tue, 2013-01-08 at 14:04 +0100, Simon Wunderlich wrote:
+>=20
+>=20
+> > + * @radar_detect_timeout: this timeout indicates the end of the channel
+> > + *     availability check for radar channels (in jiffies), only after =
+this
+> > + *     period the user may initiate the tx on the channel.
+> > + * @cac_started: indicates that channel availability check is started =
+for this
+> > + *     channel type.
+>=20
+> So you're enforcing a certain CAC time, but not the time we are allowed
+> to treat the channel as clear? Shouldn't *that* be in each channel
+> struct, rather than the other stuff?
+>=20
+> It also seems to me that "cac_started" isn't really all that relevant in
+> the channel struct either. What seems relevant is the *result* of the
+> CAC, and how long it's still valid, no?
+>=20
 
-I was only waiting for you to merge mac80211-next, so I could merge
-wireless-next into iwlwifi-next and send you a new pull request :-)
+Actually there is no limit how long a channel is considered "available", at
+least in ETSI. ETSI EN 301-893 v1.4.1 had a limit of 24 hours for that,
+but that was removed in v1.5.1 and didn't re-appear since then (current is
+v1.7.1).
 
-So here it is, just the patches with the new driver I posted earlier.
-This is the MVM driver for the new firmware API for 7000 series devices.
+But we can move the CAC/timeout in the wdev and have keep a flag field in
+the channel struct instead, marking the channel as available, unavailable, =
+etc.
 
-Please pull (or let me know if it's broken :) )
+What do you think?
 
-johannes
+> > +++ b/net/wireless/chan.c
+> > @@ -287,14 +287,18 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+> >  			     struct cfg80211_chan_def *chandef)
+> >  {
+> >  	bool res;
+> > +	u32 prohibited_flags;
+> > =20
+> >  	trace_cfg80211_reg_can_beacon(wiphy, chandef);
+> > =20
+> > -	res =3D cfg80211_chandef_usable(wiphy, chandef,
+> > -				      IEEE80211_CHAN_DISABLED |
+> > -				      IEEE80211_CHAN_PASSIVE_SCAN |
+> > -				      IEEE80211_CHAN_NO_IBSS |
+> > -				      IEEE80211_CHAN_RADAR);
+> > +	prohibited_flags =3D IEEE80211_CHAN_DISABLED;
+> > +
+> > +	if (!(wiphy->features & NL80211_FEATURE_DFS))
+> > +		prohibited_flags |=3D IEEE80211_CHAN_PASSIVE_SCAN |
+> > +				    IEEE80211_CHAN_NO_IBSS |
+> > +				    IEEE80211_CHAN_RADAR;
+>=20
+> I have a feeling this change should take into account the channel width,
+> and whether CAC completed successfully?
+>=20
 
+All channels used for operation are checked already in cfg80211_chandef_usa=
+ble()
+for the flags.
 
-The following changes since commit c331997b6c9ad7f4b8075e6e60d3caa6e36f5938=
-:
+If the channel width is supported at all is checked with cfg80211_can_use_i=
+ftype_chan()
+before/after.
 
-  wil6210: fix wil_vring_init_tx status (2013-01-30 15:07:19 -0500)
+So I don't see the neccesity for further checking width, or am I missing so=
+mething?
 
-are available in the git repository at:
+The CAC completed check is performed outside right now, but when we introdu=
+ce
+the available/unavailable flags as suggested above we can as well move this=
+ check
+into cfg80211_reg_can_beacon().
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
+> > +static int nl80211_start_radar_detection(struct sk_buff *skb,
+> > +					 struct genl_info *info)
+> > +{
+> > +	struct cfg80211_registered_device *rdev =3D info->user_ptr[0];
+> > +	struct net_device *dev =3D info->user_ptr[1];
+> > +	struct wireless_dev *wdev =3D dev->ieee80211_ptr;
+> > +	struct cfg80211_chan_def chandef;
+> > +	int err;
+> > +
+> > +	if (!(rdev->wiphy.features & NL80211_FEATURE_DFS))
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	err =3D nl80211_parse_chandef(rdev, info, &chandef);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	if (!(chandef.chan->flags & IEEE80211_CHAN_RADAR))
+> > +		return -EINVAL;
+> > +
+> > +	if (chandef.chan->cac_started)
+> > +		return -EBUSY;
+> > +
+> > +	if (!rdev->ops->start_radar_detection)
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	mutex_lock(&rdev->devlist_mtx);
+> > +	err =3D cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
+> > +					   chandef.chan, CHAN_MODE_SHARED,
+> > +					   BIT(chandef.width));
+> > +	mutex_unlock(&rdev->devlist_mtx);
+> > +
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	err =3D rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
+> > +	if (!err) {
+> > +		wdev->preset_chandef =3D chandef;
+> > +		chandef.chan->cac_started =3D true;
+> > +		chandef.chan->radar_detect_timeout =3D jiffies +
+> > +			msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
+> > +	}
+> > +
+> > +	return err;
+> > +}
+>=20
+> This still seems somewhat wrong. For the duration of the CAC, the
+> channel should be "locked" in some way, no? As it stands now, nothing
+> prevents userspace from adding another vif and using it for something
+> entirely different, while cfg80211 thinks the CAC is actually running.
+>=20
 
-for you to fetch changes up to 5f4c5fa8a6ab5f23bba87b159e80f1edf4885ba5:
+Hmm, we can put the "CAC state" in the wdev then, and use it for locking?
 
-  iwlwifi: add the MVM driver (2013-01-30 21:46:23 +0100)
+> > +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+> > +	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
+> > +	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, chan->center_freq))
+> > +		goto nla_put_failure;
+>=20
+> That should be the entire chandef info, and possibly the WDEV_ID too.
 
-----------------------------------------------------------------
-Johannes Berg (7):
-      iwlwifi: include debugfs.h
-      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
-      iwlwifi: add 7000 series device configuration
-      iwlwifi: clean up CMD_MODE enum
-      iwlwifi: fix calibration parser
-      iwlwifi: add NVM and PHY DB code for new MVM driver
-      iwlwifi: add the MVM driver
+OK
 
- drivers/net/wireless/iwlwifi/Kconfig            |   14 +-
- drivers/net/wireless/iwlwifi/Makefile           |    3 +
- drivers/net/wireless/iwlwifi/iwl-config.h       |    1 +
- drivers/net/wireless/iwlwifi/iwl-debug.h        |    2 +
- drivers/net/wireless/iwlwifi/iwl-drv.c          |   23 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |   14 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h |    9 +
- drivers/net/wireless/iwlwifi/iwl-fh.h           |    1 +
- drivers/net/wireless/iwlwifi/iwl-fw.h           |   16 +-
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c    |  346 +++
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.h    |   80 +
- drivers/net/wireless/iwlwifi/iwl-op-mode.h      |    2 +
- drivers/net/wireless/iwlwifi/iwl-phy-db.c       |  514 ++++
- drivers/net/wireless/iwlwifi/iwl-phy-db.h       |   82 +
- drivers/net/wireless/iwlwifi/iwl-prph.h         |    3 +
- drivers/net/wireless/iwlwifi/iwl-trans.h        |   10 +-
- drivers/net/wireless/iwlwifi/mvm/Makefile       |   10 +
- drivers/net/wireless/iwlwifi/mvm/binding.c      |  197 ++
- drivers/net/wireless/iwlwifi/mvm/d3.c           |  841 ++++++
- drivers/net/wireless/iwlwifi/mvm/debugfs.c      |  378 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h    |  282 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h   |  369 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  140 +
- drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h    |  312 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h  |  561 ++++
- drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h   |  380 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h    |  580 +++++
- drivers/net/wireless/iwlwifi/mvm/fw-api.h       |  949 +++++++
- drivers/net/wireless/iwlwifi/mvm/fw.c           |  644 +++++
- drivers/net/wireless/iwlwifi/mvm/led.c          |  134 +
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c     |  951 +++++++
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     | 1310 ++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h          |  500 ++++
- drivers/net/wireless/iwlwifi/mvm/nvm.c          |  311 +++
- drivers/net/wireless/iwlwifi/mvm/ops.c          |  679 +++++
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c     |  292 +++
- drivers/net/wireless/iwlwifi/mvm/power.c        |  207 ++
- drivers/net/wireless/iwlwifi/mvm/quota.c        |  178 ++
- drivers/net/wireless/iwlwifi/mvm/rs.c           | 3096 +++++++++++++++++++=
-++++
- drivers/net/wireless/iwlwifi/mvm/rs.h           |  393 +++
- drivers/net/wireless/iwlwifi/mvm/rx.c           |  355 +++
- drivers/net/wireless/iwlwifi/mvm/scan.c         |  437 ++++
- drivers/net/wireless/iwlwifi/mvm/sta.c          | 1211 +++++++++
- drivers/net/wireless/iwlwifi/mvm/sta.h          |  368 +++
- drivers/net/wireless/iwlwifi/mvm/time-event.c   |  569 +++++
- drivers/net/wireless/iwlwifi/mvm/time-event.h   |  214 ++
- drivers/net/wireless/iwlwifi/mvm/tx.c           |  916 +++++++
- drivers/net/wireless/iwlwifi/mvm/utils.c        |  472 ++++
- drivers/net/wireless/iwlwifi/pcie/7000.c        |  111 +
- drivers/net/wireless/iwlwifi/pcie/cfg.h         |    2 +
- drivers/net/wireless/iwlwifi/pcie/drv.c         |    6 +
- 51 files changed, 19454 insertions(+), 21 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-phy-db.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-phy-db.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/Makefile
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/binding.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/d3.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/debugfs.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/led.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/mac80211.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/mvm.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/nvm.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/ops.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/power.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/quota.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/rs.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/rs.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/rx.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/scan.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/sta.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/sta.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/time-event.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/time-event.h
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/tx.c
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/utils.c
- create mode 100644 drivers/net/wireless/iwlwifi/pcie/7000.c
-
-
---=-U4sZTpM6q5/NP3/25YbD
+--s9fJI615cBHmzTOP
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAABCAAGBQJRCYpAAAoJEDBSmw7B7bqrexgP/R1kIxvSc/tRZiOcA/FK/PQE
-CwmfHG6+L+ePswwXov5BTIeztJVUrkgPsxCGb891VKCq4mvjjHRSR6a0BS5fIgyc
-iTY8H3YkuU+r5cnaFVTMzD/X4hxiUNr8yhns81cX7VF4V90suf7+ldbwKgh3TDQT
-S2kwXF5dlkBHDm/m5bZvUWs1OWd+A9mGIdIhdWqoyVznMC/S+W+rPkq+iwQwKoH2
-Bi2wxKCoHqiTIYAAzK1nwq3tRc3hwftNllL+nEc4nFP96OOdR2PyIw6XM8gyle/H
-Amn+A9daNFwTyuHqbmE1R0yuCWn7IbdPoxwGVk72GfL8JkikKPgCFsIe4n662v0y
-RN7wrsD1wohu1taNpe5groQQV2ZE9kPwkWBvbAPKhFwSo/Y+Zq7gMjhZu2Iuuj4Z
-bsWpK5W2aRD7tjdADLfaEWlCz14lDRGOZJMoP7ZiDy5msAhzFHbrwP8NQtgcrml7
-bNRxvACKyyrlBY3yJo3h+2lrpwWwODGqnrnsSBMFwkuPxD84TEy1It+3LUtAs4Sf
-IQJkQYLQPB3G68P/IEHOCNyloHQtspBTeEfBKW688VbE+G3X8+9hvxuMShKLUzSd
-BCk3kycTBj4bvM4YaK/LhYi0SpBawWqUFowyApLl03uE4dMfvqDDOi/GlvvbrGrM
-ZDFMv1FhkpYwnqJbnJGw
-=3SnS
+iEYEARECAAYFAlD3/1IACgkQrzg/fFk7axauxwCgsFuNN/piUUqy6vL01wnaCLSO
+axAAnjSnGHsVai+t3HiYP3ybsFI9A9Ws
+=oXqB
 -----END PGP SIGNATURE-----
 
---=-U4sZTpM6q5/NP3/25YbD--
-
+--s9fJI615cBHmzTOP--
