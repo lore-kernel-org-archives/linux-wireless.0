@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54173 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab3AWVXA (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:65002 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab3AQXwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 16:23:00 -0500
-Date: Wed, 23 Jan 2013 13:22:59 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] lockdep: make lockdep_assert_held() not have a return
- value
-Message-Id: <20130123132259.27dcbace.akpm@linux-foundation.org> (sfid-20130123_222306_287302_8776B7A1)
-In-Reply-To: <1358548303-21732-1-git-send-email-johannes@sipsolutions.net>
-References: <1358548303-21732-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 17 Jan 2013 18:52:13 -0500
+Received: by mail-ee0-f48.google.com with SMTP id t10so1524105eei.35
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 15:52:11 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH] linux-firmware: add carl9170 firmware
+Date: Fri, 18 Jan 2013 00:52:06 +0100
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan =?iso-8859-15?q?Hor=E1k?= <dan@danny.cz>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+References: <1342353398-3147-1-git-send-email-xose.vazquez@gmail.com> <50F5DD2F.2000907@gmail.com> <1358458004.15692.147.camel@deadeye.wl.decadent.org.uk>
+In-Reply-To: <1358458004.15692.147.camel@deadeye.wl.decadent.org.uk>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301180052.07145.chunkeey@googlemail.com> (sfid-20130118_005217_868996_92D9649D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Jan 2013 23:31:43 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thursday, January 17, 2013 10:26:44 PM Ben Hutchings wrote:
+> On Tue, 2013-01-15 at 23:50 +0100, Xose Vazquez Perez wrote:
+> > On 01/14/2013 12:27 PM, Ben Hutchings wrote:
+> > 
+> > > OK, I've worked this out now: there are two post-processing steps
+> > > required, one of which is done by './autogen.sh install', and one of
+> > > which (add a checksum) is not done at all.  I've added that step to it
+> > > and can now rebuild a bit-identical image.
+> > > 
+> > > So I've applied this, made a few fixes, and pushed.
+> > 
+> > Sorry, I took half sabbatical. Now cleaning inbox.
+> > 
+> > I believe Christian releases a new version(1.9.7) recently,
+> > and I did send 1.9.6 months ago. It should be updated.
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> I recently made the mistake of writing:
-> 
-> foo = lockdep_dereference_protected(..., lockdep_assert_held(...));
-> 
-> which is clearly bogus. If lockdep is disabled in the
-> config this would cause a compile failure, if it is
-> enabled then it compiles and causes a puzzling warning
-> about dereferencing without the correct protection.
-> 
-> Wrap the macro in "do { ... } while (0)" to also fail
-> compile for this when lockdep is enabled.
-> 
-> ...
->
-> --- a/include/linux/lockdep.h
-> +++ b/include/linux/lockdep.h
-> @@ -359,7 +359,9 @@ extern void lockdep_trace_alloc(gfp_t mask);
->  
->  #define lockdep_depth(tsk)	(debug_locks ? (tsk)->lockdep_depth : 0)
->  
-> -#define lockdep_assert_held(l)	WARN_ON(debug_locks && !lockdep_is_held(l))
-> +#define lockdep_assert_held(l)	do {				\
-> +		WARN_ON(debug_locks && !lockdep_is_held(l));	\
-> +	} while (0)
->  
->  #define lockdep_recursing(tsk)	((tsk)->lockdep_recursion)
+Depends. [This would be another question... what qualifies for
+a new push to linux-firmware? Should there be one for every 
+series-of-related-patches? release e.g.: 1.9.7, 1.9.8? Or after
+the firmware passed the test of time?]
 
-A sane fix would be to convert lockdep_assert_held() into a static
-inline void C function.  But, alas, much of the lockdep API is designed
-to work on "any type which has a field called dep_map", which was
-rather a silly stunt IMO.
+Anyway, the biggest 'new thing' in 1.9.7 was getting "Link Time 
+Optimization" ready [1].
+ 
+> I'm happy to take either a single patch for the new release or
+> one patch for each commit in your repository, whichever you prefer.
+Would it be possible to attach a carl9170fw-x.y.z-source.tar.xz/bz2/gz/zip
+along the carl9170-1.fw binary instead of the source dump in carl9170fw/?
+I've picked up all of Ben's carl9170fw patches and added them into 
+carl9170fw-master. So in theory we are good to go.
 
-lockdep_depth() and lockdep_assert_held() may or may not evaluate their
-argument, and this is runtime controllable.  whee.
+Regards
+
+Christian
+
+[1] <https://github.com/chunkeey/carl9170fw/commit/1a2fbaf4f621cbb37f36637b1d4101f453474f7a>
