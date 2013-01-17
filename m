@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:57099 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861Ab3ACBgf (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40092 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753734Ab3AQFeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 20:36:35 -0500
-Received: by mail-we0-f174.google.com with SMTP id x10so6932559wey.5
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 17:36:34 -0800 (PST)
+	Thu, 17 Jan 2013 00:34:37 -0500
+Date: Wed, 16 Jan 2013 23:34:34 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: Add flushes to ensure off-channel PS is
+ enabled during sw scans
+Message-ID: <20130117053434.GC31449@thinkpad-t410> (sfid-20130117_063440_248007_3DED9D52)
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+ <1357668645-5101-2-git-send-email-seth.forshee@canonical.com>
+ <1358379254.15012.70.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <50E4C133.8020909@openwrt.org>
-References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local>
-	<CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>
-	<CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>
-	<50E2FE5E.6040300@openwrt.org>
-	<CAJ-Vmo=kbvLSdA8wGaRacAOvoZBdksJwQZ+Z52RbiUAq-T4weA@mail.gmail.com>
-	<016301cde8eb$8b92ba60$a2b82f20$@acksys.fr>
-	<CAJ-VmokpOeKc6zR+JUWqzZ1tsRNdWR8gK9OTRb5HsUnKYVE__w@mail.gmail.com>
-	<018d01cde90c$c7145410$553cfc30$@acksys.fr>
-	<CAJ-VmomkzNgSyicAwcj_TWg24v-DH+Q7U6ifXFFognx-7nEZvw@mail.gmail.com>
-	<50E49D03.60207@openwrt.org>
-	<CAJ-Vmonp=PZckQgH76xLCf7G56VaZP01cSKxAjC8sr9D+RG3zw@mail.gmail.com>
-	<50E4C133.8020909@openwrt.org>
-Date: Wed, 2 Jan 2013 17:36:33 -0800
-Message-ID: <CAJ-VmonMErMLnPOeFBj_qowS4G6oc+-P5kcun9nk60fE7vLWaw@mail.gmail.com> (sfid-20130103_023641_139881_03C49C72)
-Subject: Re: [RFC] ATH9K: infinite loop in Tasklet
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: voncken <cedric.voncken@acksys.fr>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1358379254.15012.70.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2013 15:22, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2013-01-03 12:12 AM, Adrian Chadd wrote:
->> .. in the longer term, sure. Right now, is the driver setup for the
->> interrupt hijinx you may need for NAPI? (ie, killing and restarting RX
->> interrupts as needed?)
-> Should be easy enough to add. I'll look into this when I find the time.
+On Thu, Jan 17, 2013 at 12:34:14AM +0100, Johannes Berg wrote:
+> On Tue, 2013-01-08 at 12:10 -0600, Seth Forshee wrote:
+> 
+> > +++ b/net/mac80211/offchannel.c
+> > @@ -136,8 +136,23 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+> >  			netif_tx_stop_all_queues(sdata->dev);
+> >  			if (offchannel_ps_enable &&
+> >  			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
+> > -			    sdata->u.mgd.associated)
+> > +			    sdata->u.mgd.associated) {
+> > +				/*
+> > +				 * Need to flush frames in driver queues
+> > +				 * before sending nullfunc. Otherwise
+> > +				 * devices which support QoS may send the
+> > +				 * nullfunc before these queued frames, and
+> > +				 * those frames may not have PM set.
+> > +				 *
+> > +				 * XXX: Would be nice to not flush for each
+> > +				 * vif, however I don't see that there's any
+> > +				 * protection to prevent frames being handed
+> > +				 * to the driver before stopping the netdev
+> > +				 * queue.
+> > +				 */
+> > +				drv_flush(local, false);
+> >  				ieee80211_offchannel_ps_enable(sdata);
+> 
+> Could we split the loop, and send the frames in a second loop, to
+> combine the flushes into a single one?
 
-Cool, thanks. I'll go back and lurk, at least until there's more
-spectral/DFS/IBSS stuff to figure out.
+I started thinking about just that earlier today. Seems like it ought to
+be possible.
 
-
-
-Adrian
+Seth
