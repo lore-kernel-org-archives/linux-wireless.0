@@ -1,259 +1,314 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41693 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200Ab3A1JiZ (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:46096 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756903Ab3AQQem (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:38:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 25/37] iwlwifi: add the MVM driver (power)
-Date: Mon, 28 Jan 2013 10:37:32 +0100
-Message-Id: <1359365864-4259-26-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103828_954159_E0FDC63B)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 17 Jan 2013 11:34:42 -0500
+Received: by mail-bk0-f45.google.com with SMTP id jk13so1472179bkc.4
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 08:34:41 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ivdoorn@gmail.com,
+	gwingerde@gmail.com, stf_xl@wp.pl, andihartmann@01019freenet.de,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
+Date: Thu, 17 Jan 2013 17:34:32 +0100
+Message-Id: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20130117_173446_872626_35BE87A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Since rt2800 hardware isn't capable of reporting the TX status of
+BlockAckReq frames implement the TX status handling of BARs in
+rt2x00lib. We keep track of all BARs that are send out and try to
+match incoming BAs to the appropriate BARs. This allows us to report a
+more or less accurate TX status for BAR frames which in turn improves
+BA session stability.
 
-Newer firmware revisions have a completely new
-firmware API. This is the new driver for this
-new API.
+This is loosley based on Christian Lamparter's patch for carl9170
+"carl9170: fix HT peer BA session corruption".
 
-I've listed the people who directly contributed
-code, but many others from various teams have
-contributed in other ways.
+We have to walk the list of pending BARs for every rx'red BA even
+though most BAs don't belong to any of these BARs as they are just
+acknowledging an AMPDU. To keep that overhead low use RCU which allows
+us to walk the list of pending BARs without the need to acquire a lock.
+This however requires us to _copy_ relevant information from the BAR
+(RA, TA, control field, start sequence number) into our BAR list entry.
 
-Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Amit Beka <amit.beka@intel.com>
-Cc: Amnon Paz <amnonx.paz@intel.com>
-Cc: Assaf Krauss <assaf.krauss@intel.com>
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Dor Shaish <dor.shaish@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Cc: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/power.c | 207 +++++++++++++++++++++++++++++++
- 1 file changed, 207 insertions(+)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/power.c
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00.h      |   20 ++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |  101 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   47 +++++++++++++
+ 4 files changed, 169 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-new file mode 100644
-index 0000000..719bfa9
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -0,0 +1,207 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
+Andreas, if you like you can add your tested-by ...
+
+Thanks,
+Helmut
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index f139a91..a5c694f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1296,8 +1296,7 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL,
+ 			   !(filter_flags & FIF_PSPOLL));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA,
+-			   !(filter_flags & FIF_CONTROL));
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 0);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
+@@ -5146,8 +5145,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	    IEEE80211_HW_SUPPORTS_PS |
+ 	    IEEE80211_HW_PS_NULLFUNC_STACK |
+ 	    IEEE80211_HW_AMPDU_AGGREGATION |
+-	    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+-	    IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL;
++	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+ 	/*
+ 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 0751b35..b52512b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -1016,6 +1016,26 @@ struct rt2x00_dev {
+ 	 * Protect the interrupt mask register.
+ 	 */
+ 	spinlock_t irqmask_lock;
 +
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/init.h>
++	/*
++	 * List of BlockAckReq TX entries that need driver BlockAck processing.
++	 */
++	struct list_head bar_list;
++	spinlock_t bar_list_lock;
++};
 +
-+#include <net/mac80211.h>
++struct rt2x00_bar_list_entry {
++	struct list_head list;
++	struct rcu_head head;
 +
-+#include "iwl-debug.h"
-+#include "mvm.h"
-+#include "iwl-modparams.h"
-+#include "fw-api-power.h"
++	struct queue_entry *entry;
++	int block_acked;
 +
-+#define POWER_KEEP_ALIVE_PERIOD_SEC    25
-+
-+static void iwl_power_build_cmd(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				struct iwl_powertable_cmd *cmd)
++	/* Relevant parts of the IEEE80211 BAR header */
++	__u8 ra[6];
++	__u8 ta[6];
++	__le16 control;
++	__le16 start_seq_num;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 44f8b3f..b40a538 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -271,6 +271,50 @@ void rt2x00lib_dmadone(struct queue_entry *entry)
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_dmadone);
+ 
++static inline int rt2x00lib_txdone_bar_status(struct queue_entry *entry)
 +{
-+	struct ieee80211_hw *hw = mvm->hw;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct ieee80211_channel *chan;
-+	int dtimper, dtimper_msec;
-+	int keep_alive;
-+	bool radar_detect = false;
++	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct ieee80211_bar *bar = (void *) entry->skb->data;
++	struct rt2x00_bar_list_entry *bar_entry;
++	int ret;
 +
-+	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
-+							    mvmvif->color));
-+	cmd->action = cpu_to_le32(FW_CTXT_ACTION_MODIFY);
++	if (likely(!ieee80211_is_back_req(bar->frame_control)))
++		return 0;
 +
-+	if ((!vif->bss_conf.ps) ||
-+	    (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_CAM))
-+		return;
-+
-+	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
-+
-+	dtimper = hw->conf.ps_dtim_period ?: 1;
-+
-+	/* Check if radar detection is required on current channel */
++	/*
++	 * Unlike all other frames, the status report for BARs does
++	 * not directly come from the hardware as it is incapable of
++	 * matching a BA to a previously send BAR. The hardware will
++	 * report all BARs as if they weren't acked at all.
++	 *
++	 * Instead the RX-path will scan for incoming BAs and set the
++	 * block_acked flag if it sees one that was likely caused by
++	 * a BAR from us.
++	 *
++	 * Remove remaining BARs here and return their status for
++	 * TX done processing.
++	 */
++	ret = 0;
 +	rcu_read_lock();
-+	chanctx_conf = rcu_dereference(vif->chanctx_conf);
-+	WARN_ON(!chanctx_conf);
-+	if (chanctx_conf) {
-+		chan = chanctx_conf->def.chan;
-+		radar_detect = chan->flags & IEEE80211_CHAN_RADAR;
++	list_for_each_entry_rcu(bar_entry, &rt2x00dev->bar_list, list) {
++		if (bar_entry->entry != entry)
++			continue;
++
++		spin_lock_bh(&rt2x00dev->bar_list_lock);
++		/* Return whether this BAR was blockacked or not */
++		ret = bar_entry->block_acked;
++		/* Remove the BAR from our checklist */
++		list_del_rcu(&bar_entry->list);
++		spin_unlock_bh(&rt2x00dev->bar_list_lock);
++		kfree_rcu(bar_entry, head);
++
++		break;
 +	}
 +	rcu_read_unlock();
 +
-+	/* Check skip over DTIM conditions */
-+	if (!radar_detect && (dtimper <= 10) &&
-+	    (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_LP)) {
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_SLEEP_OVER_DTIM_MSK);
-+		cmd->num_skip_dtim = 2;
-+	}
-+
-+	/* Check that keep alive period is at least 3 * DTIM */
-+	dtimper_msec = dtimper * vif->bss_conf.beacon_int;
-+	keep_alive = max_t(int, 3 * dtimper_msec,
-+			   MSEC_PER_SEC * POWER_KEEP_ALIVE_PERIOD_SEC);
-+	keep_alive = DIV_ROUND_UP(keep_alive, MSEC_PER_SEC);
-+
-+	cmd->keep_alive_seconds = cpu_to_le16(keep_alive);
-+
-+	if (iwlmvm_mod_params.power_scheme == IWL_POWER_SCHEME_LP) {
-+		/* TODO: Also for D3 (device sleep / WoWLAN) */
-+		cmd->rx_data_timeout = cpu_to_le32(10);
-+		cmd->tx_data_timeout = cpu_to_le32(10);
-+	} else {
-+		cmd->rx_data_timeout = cpu_to_le32(50);
-+		cmd->tx_data_timeout = cpu_to_le32(50);
-+	}
++	return ret;
 +}
 +
-+int iwl_power_update_mode(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc)
+ {
+@@ -324,9 +368,12 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TXDONE, entry->skb);
+ 
+ 	/*
+-	 * Determine if the frame has been successfully transmitted.
++	 * Determine if the frame has been successfully transmitted and
++	 * remove BARs from our check list while checking for their
++	 * TX status.
+ 	 */
+ 	success =
++	    rt2x00lib_txdone_bar_status(entry) ||
+ 	    test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
+ 	    test_bit(TXDONE_UNKNOWN, &txdesc->flags);
+ 
+@@ -491,6 +538,50 @@ static void rt2x00lib_sleep(struct work_struct *work)
+ 				 IEEE80211_CONF_CHANGE_PS);
+ }
+ 
++static void rt2x00lib_rxdone_check_ba(struct rt2x00_dev *rt2x00dev,
++				      struct sk_buff *skb,
++				      struct rxdone_entry_desc *rxdesc)
 +{
-+	struct iwl_powertable_cmd cmd = {};
++	struct rt2x00_bar_list_entry *entry;
++	struct ieee80211_bar *ba = (void *)skb->data;
 +
-+	if (!iwlwifi_mod_params.power_save) {
-+		IWL_DEBUG_POWER(mvm, "Power management is not allowed\n");
-+		return 0;
++	if (likely(!ieee80211_is_back(ba->frame_control)))
++		return;
++
++	if (rxdesc->size < sizeof(*ba) + FCS_LEN)
++		return;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(entry, &rt2x00dev->bar_list, list) {
++
++		if (ba->start_seq_num != entry->start_seq_num)
++			continue;
++
++#define TID_CHECK(a, b) (						\
++	((a) & cpu_to_le16(IEEE80211_BAR_CTRL_TID_INFO_MASK)) ==	\
++	((b) & cpu_to_le16(IEEE80211_BAR_CTRL_TID_INFO_MASK)))		\
++
++		if (!TID_CHECK(ba->control, entry->control))
++			continue;
++
++#undef TID_CHECK
++
++		if (compare_ether_addr(ba->ra, entry->ta))
++			continue;
++
++		if (compare_ether_addr(ba->ta, entry->ra))
++			continue;
++
++		/* Mark BAR since we received the according BA */
++		spin_lock_bh(&rt2x00dev->bar_list_lock);
++		entry->block_acked = 1;
++		spin_unlock_bh(&rt2x00dev->bar_list_lock);
++		break;
 +	}
++	rcu_read_unlock();
 +
-+	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
-+		return 0;
-+
-+	iwl_power_build_cmd(mvm, vif, &cmd);
-+
-+	IWL_DEBUG_POWER(mvm,
-+			"Sending power table command on mac id 0x%X for power level %d, flags = 0x%X\n",
-+			cmd.id_and_color, iwlmvm_mod_params.power_scheme,
-+			le16_to_cpu(cmd.flags));
-+
-+	if (cmd.flags & cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK)) {
-+		IWL_DEBUG_POWER(mvm, "Keep alive = %u sec\n",
-+				le16_to_cpu(cmd.keep_alive_seconds));
-+		IWL_DEBUG_POWER(mvm, "Rx timeout = %u usec\n",
-+				le32_to_cpu(cmd.rx_data_timeout));
-+		IWL_DEBUG_POWER(mvm, "Tx timeout = %u usec\n",
-+				le32_to_cpu(cmd.tx_data_timeout));
-+		IWL_DEBUG_POWER(mvm, "Rx timeout (uAPSD) = %u usec\n",
-+				le32_to_cpu(cmd.rx_data_timeout_uapsd));
-+		IWL_DEBUG_POWER(mvm, "Tx timeout = %u usec\n",
-+				le32_to_cpu(cmd.tx_data_timeout_uapsd));
-+		IWL_DEBUG_POWER(mvm, "LP RX RSSI threshold = %u\n",
-+				cmd.lprx_rssi_threshold);
-+		IWL_DEBUG_POWER(mvm, "DTIMs to skip = %u\n", cmd.num_skip_dtim);
-+	}
-+
-+	return iwl_mvm_send_cmd_pdu(mvm, POWER_TABLE_CMD, CMD_SYNC,
-+				    sizeof(cmd), &cmd);
 +}
 +
-+int iwl_power_disable(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
+ 				      struct sk_buff *skb,
+ 				      struct rxdone_entry_desc *rxdesc)
+@@ -674,6 +765,12 @@ void rt2x00lib_rxdone(struct queue_entry *entry, gfp_t gfp)
+ 	rt2x00lib_rxdone_check_ps(rt2x00dev, entry->skb, &rxdesc);
+ 
+ 	/*
++	 * Check for incoming BlockAcks to match to the BlockAckReqs
++	 * we've send out.
++	 */
++	rt2x00lib_rxdone_check_ba(rt2x00dev, entry->skb, &rxdesc);
++
++	/*
+ 	 * Update extra components
+ 	 */
+ 	rt2x00link_update_stats(rt2x00dev, entry->skb, &rxdesc);
+@@ -1183,6 +1280,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 
+ 	spin_lock_init(&rt2x00dev->irqmask_lock);
+ 	mutex_init(&rt2x00dev->csr_mutex);
++	INIT_LIST_HEAD(&rt2x00dev->bar_list);
++	spin_lock_init(&rt2x00dev->bar_list_lock);
+ 
+ 	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index e488b94..f35d85a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -582,6 +582,48 @@ static void rt2x00queue_kick_tx_queue(struct data_queue *queue,
+ 		queue->rt2x00dev->ops->lib->kick_queue(queue);
+ }
+ 
++static void rt2x00queue_bar_check(struct queue_entry *entry)
 +{
-+	struct iwl_powertable_cmd cmd = {};
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct ieee80211_bar *bar = (void *) (entry->skb->data +
++				    rt2x00dev->ops->extra_tx_headroom);
++	struct rt2x00_bar_list_entry *bar_entry;
 +
-+	if (!iwlwifi_mod_params.power_save) {
-+		IWL_DEBUG_POWER(mvm, "Power management is not allowed\n");
-+		return 0;
-+	}
++	if (likely(!ieee80211_is_back_req(bar->frame_control)))
++		return;
 +
-+	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
-+		return 0;
++	bar_entry = kmalloc(sizeof(*bar_entry), GFP_ATOMIC);
 +
-+	cmd.id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
-+							    mvmvif->color));
-+	cmd.action = cpu_to_le32(FW_CTXT_ACTION_MODIFY);
++	/*
++	 * If the alloc fails we still send the BAR out but just don't track
++	 * it in our bar list. And as a result we will report it to mac80211
++	 * back as failed.
++	 */
++	if (!bar_entry)
++		return;
 +
-+	IWL_DEBUG_POWER(mvm,
-+			"Sending power table command on mac id 0x%X for power level %d, flags = 0x%X\n",
-+			cmd.id_and_color, iwlmvm_mod_params.power_scheme,
-+			le16_to_cpu(cmd.flags));
++	bar_entry->entry = entry;
++	bar_entry->block_acked = 0;
 +
-+	return iwl_mvm_send_cmd_pdu(mvm, POWER_TABLE_CMD, CMD_SYNC,
-+				    sizeof(cmd), &cmd);
++	/*
++	 * Copy the relevant parts of the 802.11 BAR into out check list
++	 * such that we can use RCU for less-overhead in the RX path since
++	 * sending BARs and processing the according BlockAck should be
++	 * the exception.
++	 */
++	memcpy(bar_entry->ra, bar->ra, sizeof(bar->ra));
++	memcpy(bar_entry->ta, bar->ta, sizeof(bar->ta));
++	bar_entry->control = bar->control;
++	bar_entry->start_seq_num = bar->start_seq_num;
++
++	/*
++	 * Insert BAR into our BAR check list.
++	 */
++	spin_lock_bh(&rt2x00dev->bar_list_lock);
++	list_add_tail_rcu(&bar_entry->list, &rt2x00dev->bar_list);
++	spin_unlock_bh(&rt2x00dev->bar_list_lock);
 +}
 +
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+void iwl_power_get_params(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			  struct iwl_powertable_cmd *cmd)
-+{
-+	iwl_power_build_cmd(mvm, vif, cmd);
-+}
-+#endif /* CONFIG_IWLWIFI_DEBUGFS */
+ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 			       bool local)
+ {
+@@ -680,6 +722,11 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 		goto out;
+ 	}
+ 
++	/*
++	 * Put BlockAckReqs into our check list for driver BA processing.
++	 */
++	rt2x00queue_bar_check(entry);
++
+ 	set_bit(ENTRY_DATA_PENDING, &entry->flags);
+ 
+ 	rt2x00queue_index_inc(entry, Q_INDEX);
 -- 
-1.8.0
+1.7.7
 
