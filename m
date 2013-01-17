@@ -1,105 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43093 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119Ab3A2Xr7 (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:62658 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584Ab3AQOIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 18:47:59 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 7/7] brcmsmac: Add support for off-channel powersave
-Date: Tue, 29 Jan 2013 17:47:35 -0600
-Message-Id: <1359503255-18270-8-git-send-email-seth.forshee@canonical.com> (sfid-20130130_004807_474976_71799C61)
-In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+	Thu, 17 Jan 2013 09:08:19 -0500
+Received: by mail-la0-f54.google.com with SMTP id gw10so1836736lab.41
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 06:08:17 -0800 (PST)
+Message-ID: <50F805CD.6020302@cozybit.com> (sfid-20130117_150827_984835_798EC160)
+Date: Thu, 17 Jan 2013 15:08:13 +0100
+From: Marco Porsch <marco@cozybit.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Subject: Re: [PATCHv2 6/6] mac80211: mesh power save basics
+References: <1357571093-12868-1-git-send-email-marco@cozybit.com>  <1357571093-12868-7-git-send-email-marco@cozybit.com>  (sfid-20130107_160510_532684_9863E9B0) <1358374485.15012.20.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1358374485.15012.20.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom hardware sets the value of the PM flag in frame control based
-on the value of MCTL_HPS, which seems to include actively clearing PM
-if MCTL_HPS is not set. brcmsmac needs to suppor the off-channel
-powersave state in order to enable powersave at the AP at all.
+On 01/16/2013 11:14 PM, Johannes Berg wrote:
+> On Mon, 2013-01-07 at 16:04 +0100, Marco Porsch wrote:
+>
+>> mode determines when non-peer mesh STA may send Probe Requests and Mesh Peering
+>
+> Please break lines to less than 72 characters, I personally prefer
+> around 60 or so but I'll apply 72 too.
+>
+>> +static inline bool ieee80211_has_qos_mesh_ps(__le16 qc)
+>> +{
+>> +	return (qc & cpu_to_le16(IEEE80211_QOS_CTL_MESH_PS_LEVEL)) != 0;
+>
+> bool means you don't need the !=0 and parentheses.
+>
+>
+>> @@ -1208,6 +1214,7 @@ struct ieee802_11_elems {
+>>   	struct ieee80211_meshconf_ie *mesh_config;
+>>   	u8 *mesh_id;
+>>   	u8 *peering;
+>> +	u8 *awake_window;
+>
+> maybe that should be an __le16 pointer?
+>
+>> +			/* we need some delay here, otherwise the announcement
+>> +			 * Null would arrive before the CONFIRM
+>> +			 */
+>> +			ieee80211_mps_set_sta_local_pm(sta, mshcfg->power_mode,
+>> +						       100);
+>
+> ???
+>
+> How can a *delay* ever cause correctness? That doesn't seem right.
 
-Add limited support for powersave to brcmsmac to prevent frame loss
-during background scans. Full powersave supoprt remains unimplemented,
-but switching between the off-channel and disabled states is possible.
+That was needed because a QoS Null used to inform the peer was often 
+received before the Peer Link Confirm frame and thus thrown away. 
+Luckily, after testing that once again, the problem has magically 
+vanished. I'll remove the whole timer thing--never liked having that 
+anyway.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   15 +++++++++++----
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    9 +++++++++
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    1 +
- 3 files changed, 21 insertions(+), 4 deletions(-)
+>> +	/* announce peer-specific power mode transition
+>> +	 * see IEEE802.11-2012 13.14.3.2 and 13.14.3.3
+>> +	 */
+>
+> I feel a bit bad about asking this, but mac80211 actually doesn't use
+> the "networking" style, all other comments have
+>
+>   /*
+>    * announce ...
+>    * ...
+>    */
+>
+> so please adjust yours as well.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index be3820e..408eb94 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -393,10 +393,17 @@ static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
- 		brcms_dbg_info(core, "%s: change monitor mode: %s\n",
- 			       __func__, conf->flags & IEEE80211_CONF_MONITOR ?
- 			       "true" : "false");
--	if (changed & IEEE80211_CONF_CHANGE_PS)
--		brcms_err(core, "%s: change power-save mode: %s (implement)\n",
--			  __func__, ieee80211_is_ps_enabled(conf) ?
--			  "true" : "false");
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		/*
-+		 * brcmsmac doesn't support powersave, but it does support
-+		 * setting the PM bit in frame control for off-channel PS
-+		 */
-+		if (ieee80211_is_ps_enabled(conf))
-+			brcms_err(core, "%s: cannot enable power-save mode (implement)\n",
-+				  __func__);
-+		else
-+			brcms_c_set_ps(wl->wlc);
-+	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
- 		err = brcms_c_set_tx_power(wl->wlc, conf->power_level);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index c26992a..3fb71c9 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3054,6 +3054,10 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- {
- 	struct brcms_bss_cfg *cfg = wlc->bsscfg;
- 
-+	/* allow PS when off-channel PS is enabled */
-+	if (ieee80211_is_ps_offchannel(&wlc->pub->ieee_hw->conf))
-+		return true;
-+
- 	/* disallow PS when one of the following global conditions meets */
- 	if (!wlc->pub->associated)
- 		return false;
-@@ -7545,6 +7549,11 @@ void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 interval)
- 		brcms_c_bcn_li_upd(wlc);
- }
- 
-+void brcms_c_set_ps(struct brcms_c_info *wlc)
-+{
-+	brcms_c_set_ps_ctrl(wlc);
-+}
-+
- int brcms_c_set_tx_power(struct brcms_c_info *wlc, int txpwr)
- {
- 	uint qdbm;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 4fb2834..5482fae 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -328,6 +328,7 @@ extern void brcms_c_set_shortslot_override(struct brcms_c_info *wlc,
- 				    s8 sslot_override);
- extern void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc,
- 					u8 interval);
-+extern void brcms_c_set_ps(struct brcms_c_info *wlc);
- extern int brcms_c_set_tx_power(struct brcms_c_info *wlc, int txpwr);
- extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
- extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
--- 
-1.7.9.5
+Oops. checkpatch fooled me here.
+
+> I think I deleted this, but nonetheless:
+>
+>
+>> static void mpsp_trigger_send(struct sta_info *sta,
+>>                                bool rspi, bool eosp)
+>
+> that easily fits on one line.
+>
+>
+>> +/**
+>> + * mps_frame_deliver - transmit frames during mesh powersave
+>> + *
+>> + * @sta: STA info to transmit to
+>> + * @n_frames: number of frames to transmit. -1 for all
+>> + */
+>> +static void mps_frame_deliver(struct sta_info *sta, int n_frames)
+>> +{
+>> +	struct ieee80211_sub_if_data *sdata = sta->sdata;
+>> +	struct ieee80211_local *local = sdata->local;
+>> +	int ac;
+>> +	struct sk_buff_head frames;
+>> +	struct sk_buff *skb;
+>> +	bool more_data = false;
+>> +
+>> +	skb_queue_head_init(&frames);
+>
+> You really don't need a spinlock for on-stack queues, so you should use
+> the __ versions of the functions modifying "frames".
+
+Yeah, right. The skb_queue_head_init needs to stay, though, because of 
+ieee80211_add_pending_skbs_fn.
+
+>
+>> +			if (!skb)
+>> +				break;
+>> +			n_frames--;
+>
+> I guess you're assuming there never will be > 2^31 frames ;-)
+
+In that case something else would crash first, I hope =)
+Btw, that code is very similar to ieee80211_sta_ps_deliver_response.
+
+>> +			skb_queue_tail(&frames, skb);
+>
+> __skb_queue_tail(), etc.
+>
+>> +		}
+>> +
+>> +		if (!skb_queue_empty(&sta->tx_filtered[ac]) ||
+>> +		    !skb_queue_empty(&sta->ps_tx_buf[ac])) {
+>> +			more_data = true;
+>> +		}
+>
+> No need for the braces
+>
+>> +	/* in a MPSP make sure the last skb is a QoS Data frame */
+>> +	if (test_sta_flag(sta, WLAN_STA_MPSP_OWNER))
+>> +		mpsp_qos_null_append(sta, &frames);
+>
+>
+>
+>> +	mps_dbg(sta->sdata, "sending %d frames to PS STA %pM\n",
+>> +		skb_queue_len(&frames), sta->sta.addr);
+>> +
+>> +	/* prepare collected frames for transmission */
+>> +	skb_queue_walk(&frames, skb) {
+>> +		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>> +		struct ieee80211_hdr *hdr = (void *) skb->data;
+>> +
+>> +		/* Tell TX path to send this frame even though the
+>> +		 * STA may still remain is PS mode after this frame
+>> +		 * exchange.
+>> +		 */
+>> +		info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
+>
+> I'm not convinced that the PS integration with drivers here is correct
+> at all, but I don't really care all that much either.
+
+That flag is picked up by the mac80211 TX handlers to bypass the TX 
+buffer. We currently do not support any driver/HW that buffers frames 
+itself; even aggregation is causing trouble already.
+
+>> + * @WLAN_STA_MPSP_OWNER: local STA is owner of a mesh Peer Service Period.
+>> + * @WLAN_STA_MPSP_RECIPIENT: local STA is recipient of a MPSP.
+>> + * @WLAN_STA_MPS_WAIT_FOR_BEACON: STA beacon is imminent -> stay awake
+>> + * @WLAN_STA_MPS_WAIT_FOR_CAB: STA multicast frames are imminent -> stay awake
+>
+> ??
+
+Oops, that belongs into a following commit on device sleep for actual 
+power savings that I am currently testing.
+
+> There's also a compiler warning -- variable shadowing -- that this
+> probably solves:
+>
+> @@ -487,8 +487,6 @@ static void mps_frame_deliver(struct sta_info *sta,
+> int n_frames)
+>
+>          /* collect frame(s) from buffers */
+>          for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+> -               struct sk_buff *skb;
+> -
+>                  while (n_frames != 0) {
+>                          skb = skb_dequeue(&sta->tx_filtered[ac]);
+>                          if (!skb) {
+>
+>
+> johannes
+>
 
