@@ -1,74 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1507 "EHLO mms1.broadcom.com"
+Received: from mx01.sz.bfs.de ([194.94.69.103]:62198 "EHLO mx01.sz.bfs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754904Ab3AYJ0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 04:26:54 -0500
-Message-ID: <51024FD6.7060407@broadcom.com> (sfid-20130125_102701_337004_5B67DED3)
-Date: Fri, 25 Jan 2013 10:26:46 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+	id S1752791Ab3AQTOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jan 2013 14:14:07 -0500
+Message-ID: <50F84AF3.5070901@bfs.de> (sfid-20130117_201413_453238_5282C3F3)
+Date: Thu, 17 Jan 2013 20:03:15 +0100
+From: walter harms <wharms@bfs.de>
+Reply-To: wharms@bfs.de
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "Rafal Milecki" <zajec5@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: bcma: trouble with gpio
-References: <50F95D45.6060601@broadcom.com>
- <50FAD54F.8080601@hauke-m.de>
-In-Reply-To: <50FAD54F.8080601@hauke-m.de>
-Content-Type: text/plain;
- charset=windows-1252
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] b43: N-PHY: fix gain in b43_nphy_get_gain_ctl_workaround_ent()
+References: <20130113200309.GB5907@elgon.mountain> <20130114200417.GC12018@tuxdriver.com>
+In-Reply-To: <20130114200417.GC12018@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/13 18:18, Hauke Mehrtens wrote:
-> On 01/18/2013 03:33 PM, Piotr Haber wrote:
->> Hi,
+
+
+Am 14.01.2013 21:04, schrieb John W. Linville:
+> On Sun, Jan 13, 2013 at 11:03:09PM +0300, Dan Carpenter wrote:
+>> There were no break statements in this switch statement so everything
+>> used the default settings.
+
+great :)
+
 >>
->> I turned GPIO support in bcma (CONFIG_BCMA_DRIVER_GPIO)
->> and get this in log:
+>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> ---
+>> Static checker stuff.  Untested.
 >>
->> bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and package 0x0A
->> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
->> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
->> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
->> bcma: bus0: Found rev 6 PMU (capabilities 0x108C2606)
->> bcma: bus0: SPROM offset 0x830
->> bcma: bus0: PMU resource config unknown or not needed for device 0xA8D8
->> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->> bcma: bus0: Error registering GPIO driver: -28
->> bcma: bus0: Bus registered
->> bcma: bus1: Found chip with id 0x4313, rev 0x01 and package 0x08
->> bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
->> bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
->> bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
->> bcma: bus1: Found rev 8 PMU (capabilities 0x084C3008)
->> bcma: bus1: SPROM offset 0x830
->> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->> bcma: bus1: Error registering GPIO driver: -28
->> bcma: bus1: Bus registered
->> bcma: bus2: Found chip with id 0x4313, rev 0x01 and package 0x08
->> bcma: bus2: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
->> bcma: bus2: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
->> bcma: bus2: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
->> bcma: bus2: Found rev 8 PMU (capabilities 0x084C3008)
->> bcma: bus2: SPROM offset 0x830
->> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->> bcma: bus2: Error registering GPIO driver: -28
->> bcma: bus2: Bus registered
->>
->> does that mean that gpio is not usable?
+>> diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+>> index 97d4e27..6a1c838 100644
+>> --- a/drivers/net/wireless/b43/tables_nphy.c
+>> +++ b/drivers/net/wireless/b43/tables_nphy.c
+>> @@ -3259,20 +3259,28 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+>>  		switch (tr_iso) {
+>>  		case 0:
+>>  			e->cliplo_gain = 0x0062;
+>> +			break;
+>>  		case 1:
+>>  			e->cliplo_gain = 0x0064;
+>> +			break;
+>>  		case 2:
+>>  			e->cliplo_gain = 0x006a;
+>> +			break;
+>>  		case 3:
+>>  			e->cliplo_gain = 0x106a;
+>> +			break;
+>>  		case 4:
+>>  			e->cliplo_gain = 0x106c;
+>> +			break;
+>>  		case 5:
+>>  			e->cliplo_gain = 0x1074;
+>> +			break;
+>>  		case 6:
+>>  			e->cliplo_gain = 0x107c;
+>> +			break;
+>>  		case 7:
+>>  			e->cliplo_gain = 0x207c;
+>> +			break;
+>>  		default:
+>>  			e->cliplo_gain = 0x106a;
+>>  		}
 > 
-> At least it is not usable through the standard linux gpio interface.
+> Wow...nice find!
 > 
->> what might be the problem?
+> This seems like it could be significant.  Any comments from the
+> b43 folks?  Should this go to 3.8?
 > 
-> Is this -28 (ENOSPC) originally returned in gpiochip_find_base() in
-> drivers/gpio/gpiolib.c?
-> I have no idea what's going wrong here, could you provide me with your
-> kernel config and what kernel version are you using?
-> 
-i'm on v3.8-rc2,
-will update to latest wireless-testing and give it a try again
+
+perhaps an array would be more simple here ?
 
 
+if (tr_iso > 7 )
+ e->cliplo_gain = 0x106a;
+{
+ int data[]={0x0062,0x0064,0x006a,0x106a,0x106c,0x1074,0x107c,0x207c};
+  e->cliplo_gain = data[tr_iso];
 
-
-
+}
