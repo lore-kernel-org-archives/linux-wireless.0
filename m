@@ -1,93 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58614 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755370Ab3A2MYO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32975 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070Ab3ARXBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 07:24:14 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Fri, 18 Jan 2013 18:01:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv7 0/3] Add DFS master ability
-Date: Tue, 29 Jan 2013 13:21:57 +0100
-Message-Id: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130129_132419_496284_5AB9407C)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] mac80211: fix aggregation state with older drivers
+Date: Sat, 19 Jan 2013 00:01:22 +0100
+Message-Id: <1358550082-24185-1-git-send-email-johannes@sipsolutions.net> (sfid-20130119_000105_716434_54602D73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is patch series version 7 of the DFS master ability, based on Victor
-Goldenshteins original work. See changelog in the various patches for
-details. The main changes to v6 are:
+From: Johannes Berg <johannes.berg@intel.com>
 
- * change to channel state handling within cfg80211/mac80211. This moves
-   the channel state management from hostapd to the kernel driver, as
-   we discussed in previous mails - a change from the original concept.
-   We can hopefully support scenarios like multiple interfaces, full DFS
-   spectrum scans before enabling an AP, etc better. 
- * also add CAC/NOP handling
- * remove mac80211 start_radar_detection command, use hardware config
-   flags instead. the nl80211/cfg80211 command will remain
- * add/change cfg80211 channel checking functions (set channel state,
-   get info if radar is required, adapt reg_can_beacon())
- * add/fix tracing
- * more chandef usage
- * rebased on latest master, of course
+For drivers that don't actually flush their queues when
+aggregation stop with the IEEE80211_AMPDU_TX_STOP_FLUSH
+or IEEE80211_AMPDU_TX_STOP_FLUSH_CONT reasons is done,
+like iwlwifi or iwlegacy, mac80211 can then transmit on
+a TID that the driver still considers busy. This happens
+in the following way:
 
-Thanks again to Johannes and Zefir for the valuable input! I've verified
-the implementation (again) with ath9k a patched hostapd (patches to be
-released later). This patchset is more an RFC with a few open questions,
-any comment/review/etc are very much appreciated. 
+ - IEEE80211_AMPDU_TX_STOP_FLUSH requested
+ - driver marks TID as emptying
+ - mac80211 removes tid_tx data, this can copy packets
+   to the TX pending queues and also let new packets
+   through to the driver
+ - driver gets unexpected TX as it wasn't completely
+   converted to the new API
 
-Questions:
+In iwlwifi, this lead to the following warning:
 
-Right now, channels at least on my machine have the NO IBSS and PASSIVE SCAN
-flags set, which prevents reg_can_beacon from returning true, even if we do
-have radar support. This is due to my reg database setting these flags for
-country code 00, and this is still kept when changing the country code to
-something else (DE in my case). How should we proceed with this? Shouldn't
-these flags be removed when selecting a country code?
+WARNING: at drivers/net/wireless/iwlwifi/dvm/tx.c:442 iwlagn_tx_skb+0xc47/0xce0
+Tx while agg.state = 4
+Modules linked in: [...]
+Pid: 0, comm: kworker/0:0 Tainted: G        W   3.1.0 #1
+Call Trace:
+ [<c1046e42>] warn_slowpath_common+0x72/0xa0
+ [<c1046f13>] warn_slowpath_fmt+0x33/0x40
+ [<fddffa17>] iwlagn_tx_skb+0xc47/0xce0 [iwldvm]
+ [<fddfcaa3>] iwlagn_mac_tx+0x23/0x40 [iwldvm]
+ [<fd8c98b6>] __ieee80211_tx+0xf6/0x3c0 [mac80211]
+ [<fd8cbe00>] ieee80211_tx+0xd0/0x100 [mac80211]
+ [<fd8cc176>] ieee80211_xmit+0x96/0xe0 [mac80211]
+ [<fd8cc578>] ieee80211_subif_start_xmit+0x348/0xc80 [mac80211]
+ [<c1445207>] dev_hard_start_xmit+0x337/0x6d0
+ [<c145eee9>] sch_direct_xmit+0xa9/0x210
+ [<c14462c0>] dev_queue_xmit+0x1b0/0x8e0
 
-The channel states are now implemented in cfg80211. Shall we inform userspace
-about channel changes? If yes, how should we do that? We could add channel states
-to the channel list, and give "channel list changed" events to userspace as it
-happens now, or define a new kind of event ("channel-available-again-event").
-Suggestions welcome. :)
+Fortunately, solving this problem is easy as the station
+is being destroyed, so such transmit packets can only
+happen due to races. Instead of trying to close the race
+just let the race not reach the drivers by making two
+changes:
+ 1) remove the explicit aggregation session teardown in
+    the managed mode code, the same thing will be done
+    when the station is removed, in __sta_info_destroy.
+ 2) When aggregation stop with AGG_STOP_DESTROY_STA is
+    requested, leave the tid_tx data around as stopped.
+    It will be cleared and freed in cleanup_single_sta
+    later, but until then any racy packets will be put
+    onto the tid_tx pending queue instead of transmitted
+    which is fine since the station is being removed.
 
-If you prefer, I can split off the channel state stuff from the radar detect
-patches.
+Change-Id: I0ebd814e720a3e734d73f37c1fabef5eb34a2101
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-tx.c | 17 ++++++++++-------
+ net/mac80211/mlme.c   |  9 ---------
+ 2 files changed, 10 insertions(+), 16 deletions(-)
 
-Cheers,
-	Simon
-
-Simon Wunderlich (1):
-  nl80211: allow DFS in start_ap
-
-Victor Goldenshtein (2):
-  nl80211/cfg80211: add radar detection command/event
-  mac80211: add radar detection command/event
-
- include/net/cfg80211.h       |   57 ++++++++++++++++++
- include/net/mac80211.h       |   18 +++++-
- include/uapi/linux/nl80211.h |   31 ++++++++++
- net/mac80211/cfg.c           |   43 +++++++++++++-
- net/mac80211/chan.c          |   31 ++++++++++
- net/mac80211/ieee80211_i.h   |   11 ++++
- net/mac80211/iface.c         |   12 ++++
- net/mac80211/mlme.c          |   32 +++++++++++
- net/mac80211/scan.c          |    3 +
- net/mac80211/trace.h         |   19 ++++++
- net/wireless/chan.c          |  130 +++++++++++++++++++++++++++++++++++++++++-
- net/wireless/core.c          |    3 +
- net/wireless/core.h          |    8 +++
- net/wireless/mlme.c          |  111 ++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.c       |  119 +++++++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.h       |    7 +++
- net/wireless/reg.c           |    3 +
- net/wireless/trace.h         |   33 +++++++++++
- 18 files changed, 665 insertions(+), 6 deletions(-)
-
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 2f0ccbc..e6e1056 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -296,7 +296,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				       IEEE80211_AMPDU_TX_STOP_FLUSH_CONT,
+ 				       &sta->sta, tid, NULL, 0);
+ 		WARN_ON_ONCE(ret);
+-		goto remove_tid_tx;
++		return 0;
+ 	}
+ 
+ 	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+@@ -354,12 +354,15 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 		 */
+ 	}
+ 
+-	if (reason == AGG_STOP_DESTROY_STA) {
+- remove_tid_tx:
+-		spin_lock_bh(&sta->lock);
+-		ieee80211_remove_tid_tx(sta, tid);
+-		spin_unlock_bh(&sta->lock);
+-	}
++	/*
++	 * In the case of AGG_STOP_DESTROY_STA, the driver won't
++	 * necessarily call ieee80211_stop_tx_ba_cb(), so this may
++	 * seem like we can leave the tid_tx data pending forever.
++	 * This is true, in a way, but "forever" is only until the
++	 * station struct is actually destroyed. In the meantime,
++	 * leaving it around ensures that we don't transmit packets
++	 * to the driver on this TID which might confuse it.
++	 */
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d90c07b..ed029ac 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1489,7 +1489,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sta_info *sta;
+ 	u32 changed = 0;
+ 
+ 	ASSERT_MGD_MTX(ifmgd);
+@@ -1521,14 +1520,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+-	mutex_lock(&local->sta_mtx);
+-	sta = sta_info_get(sdata, ifmgd->bssid);
+-	if (sta) {
+-		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
+-		ieee80211_sta_tear_down_BA_sessions(sta, AGG_STOP_DESTROY_STA);
+-	}
+-	mutex_unlock(&local->sta_mtx);
+-
+ 	/*
+ 	 * if we want to get out of ps before disassoc (why?) we have
+ 	 * to do it before sending disassoc, as otherwise the null-packet
 -- 
-1.7.10.4
+1.8.0
 
