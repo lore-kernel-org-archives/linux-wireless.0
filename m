@@ -1,37 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:61836 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3AISGD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 13:06:03 -0500
-Received: by mail-bk0-f49.google.com with SMTP id jm19so1091373bkc.22
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 10:06:01 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
-Date: Wed, 9 Jan 2013 19:05:57 +0100
-Cc: Johan Danielsson <joda@kth.se>, linux-wireless@vger.kernel.org
-References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com> <201301091446.44597.chunkeey@googlemail.com> <1357739673.9757.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1357739673.9757.15.camel@jlt4.sipsolutions.net>
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:50261 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751070Ab3ARUf7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2013 15:35:59 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Lubomir Rintel <lkundrak@v3.sk>, Harro Haan <hrhaan@gmail.com>,
+	Dan Williams <dcbw@redhat.com>
+CC: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 18 Jan 2013 12:28:17 -0800
+Subject: RE: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
+Message-ID: <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com> (sfid-20130118_213624_108763_486A7B16)
+References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
+In-Reply-To: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201301091905.58042.chunkeey@googlemail.com> (sfid-20130109_190607_702688_F51AC36B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, January 09, 2013 02:54:33 PM Johannes Berg wrote:
-> On Wed, 2013-01-09 at 14:46 +0100, Christian Lamparter wrote:
-> Why do we even tear down RX sessions at all?
+Hi Lubomir,
 
-ti's wl1271 has fixed rx ba agreement limit.
+> It actually times out on a 8688 present in GuruPlug with sd8688.bin
+> (md5=7233401e9687f8c880da547beed4324e) firmware (that's present in
+> linux-firmware tree), but the adapter works fine.
+> 
+> For that firmware times out with libertas_uap [1] as well, though it succeeds
+> with sd8688_ap.bin (md5=52cd8f8296b9a7e1d3835d57416256b2) that was originally
+> shipped with GuruPlug. That firmware is not in linux-firmware tree and btmrvl
+> driver might win the race programming the 8688 with sd8688.bin anyway.
+> 
+> [1] https://github.com/lkundrak/linux/tree/libertas_uap
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |   14 --------------
+>  1 files changed, 0 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 2ecab49..3c4c555 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -825,20 +825,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
+> 
+>  	sdio_release_host(func);
+> 
+> -	/*
+> -	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
+> -	 */
+> -	if (card->model == MODEL_8688) {
+> -		struct cmd_header cmd;
+> -
+> -		memset(&cmd, 0, sizeof(cmd));
+> -
+> -		lbs_deb_sdio("send function INIT command\n");
+> -		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
+> -				lbs_cmd_copyback, (unsigned long) &cmd))
+> -			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
+> -	}
+> -
 
-Also 802.11-2012 10.5.4 states:
+Removing FUNC_INIT could break things in some scenarios.
+Could you please test the following case?
 
-"Every STA shall maintain an inactivity timer for every negotiated
-Block Ack Setup. [then it goes on what the originator and recipient
-should do...]". The recipient needs to be able to tear down BA 
-session too.
+1. insmod liberates -> download firmware, send FUNC_INIT, ...
+2. rmmod libertas -> send FUNC_SHUTDOWN command to firmware; BT is still working.
+3. insmod libertas -> skip firmware downloading, send FUNC_INIT, ...
 
-Regards,
-	Chr
+If FUNC_INIT is removed, I don't expect step 3 to work.
+
+Thanks,
+Bing
+
+>  	priv->fw_ready = 1;
+>  	wake_up(&card->pwron_waitq);
+> 
+> --
+> 1.7.1
