@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:38062 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751275Ab3AYKzt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755209Ab3ARUxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:55:49 -0500
-Date: Fri, 25 Jan 2013 16:19:00 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 0/7] mwl8k: Adding support for simultaneous AP-STA
- functionality
-Message-ID: <20130125104900.GA9305@markyou.marvell.com> (sfid-20130125_115552_237907_E554D217)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 18 Jan 2013 15:53:53 -0500
+Message-ID: <1358542457.7922.2.camel@jlt4.sipsolutions.net> (sfid-20130118_215405_296335_37BFA037)
+Subject: Re: [PATCH] mac80211: remove ARP filter enable/disable logic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Date: Fri, 18 Jan 2013 21:54:17 +0100
+In-Reply-To: <1358369001-19722-1-git-send-email-johannes@sipsolutions.net> (sfid-20130116_214305_761725_51CBFC89)
+References: <1358369001-19722-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130116_214305_761725_51CBFC89)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding support for simultaneous AP-STA functionality.
-This is preparation for enabling 4-address mode for AP
-and client mode. For details about 4-address mode
-please refer
-http://wireless.kernel.org/en/users/Documentation/iw?highlight=%28WDS%29#Using_4-address_for_AP_and_client_mode
+On Wed, 2013-01-16 at 21:43 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Depending on the driver, having ARP filtering for
+> some addresses may be possible. Remove the logic
+> that tracks whether ARP filter is enabled or not
+> and give the driver the total number of addresses
+> instead of the length of the list so it can make
+> its own decision.
 
+Applied.
 
-Yogesh Ashok Powar (7):
-  mwl8k: Announce simultaneous AP-STA support on AP fw
-  mwl8k: Allow adding station interface on AP firmware
-  mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
-  mwl8k: Enable hw encryption for STA mode on AP fw
-  mwl8k: Add/Del self entry for AP interface only
-  mwl8k: Choose interface specific calls on vif type
-  mwl8k: Do not call STA specific cmds not supported by the AP fw
-
- drivers/net/wireless/mwl8k.c | 66 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 48 insertions(+), 18 deletions(-)
-
--- 
-1.8.0.3
+johannes
 
