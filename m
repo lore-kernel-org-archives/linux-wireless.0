@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:45447 "EHLO comal.ext.ti.com"
+Received: from norkia.v3.sk ([91.210.183.14]:59122 "EHLO norkia.v3.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750759Ab3ARIlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 03:41:12 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0I8fBlS004600
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 02:41:11 -0600
-Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0I8fBg6017888
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 02:41:11 -0600
-Received: from [172.24.78.17] (h78-17.vpn.ti.com [172.24.78.17])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0I8fAU3004682	for
- <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 02:41:10 -0600
-Message-ID: <1358498419.6252.76.camel@cumari.coelho.fi> (sfid-20130118_094115_014721_8B941BDD)
-Subject: wl12xx/master branch has been rebased (3.8-rc3)
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Fri, 18 Jan 2013 10:40:19 +0200
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	id S1750772Ab3ARHuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2013 02:50:35 -0500
+From: Lubomir Rintel <lkundrak@v3.sk>
+To: Harro Haan <hrhaan@gmail.com>, Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lubomir Rintel <lkundrak@v3.sk>
+Subject: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
+Date: Fri, 18 Jan 2013 08:24:43 +0100
+Message-Id: <1358493883-28433-1-git-send-email-lkundrak@v3.sk> (sfid-20130118_085039_431557_CAA6CF7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+It actually times out on a 8688 present in GuruPlug with sd8688.bin
+(md5=7233401e9687f8c880da547beed4324e) firmware (that's present in
+linux-firmware tree), but the adapter works fine.
 
-I have rebased the master branch of the wl12xx.git tree to sync with
-John's latest tree (based on 3.8-rc3). 
+For that firmware times out with libertas_uap [1] as well, though it succeeds
+with sd8688_ap.bin (md5=52cd8f8296b9a7e1d3835d57416256b2) that was originally
+shipped with GuruPlug. That firmware is not in linux-firmware tree and btmrvl
+driver might win the race programming the 8688 with sd8688.bin anyway.
 
-Please update your local copies.
+[1] https://github.com/lkundrak/linux/tree/libertas_uap
+---
+ drivers/net/wireless/libertas/if_sdio.c |   14 --------------
+ 1 files changed, 0 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 2ecab49..3c4c555 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -825,20 +825,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
+ 
+ 	sdio_release_host(func);
+ 
+-	/*
+-	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
+-	 */
+-	if (card->model == MODEL_8688) {
+-		struct cmd_header cmd;
+-
+-		memset(&cmd, 0, sizeof(cmd));
+-
+-		lbs_deb_sdio("send function INIT command\n");
+-		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
+-				lbs_cmd_copyback, (unsigned long) &cmd))
+-			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
+-	}
+-
+ 	priv->fw_ready = 1;
+ 	wake_up(&card->pwron_waitq);
+ 
 -- 
-Cheers,
-Luca.
-
-
-
-
+1.7.1
 
