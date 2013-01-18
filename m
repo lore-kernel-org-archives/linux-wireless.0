@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab3A2Vqg (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:33203 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab3ARIv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 16:46:36 -0500
-Message-ID: <1359496013.8108.22.camel@jlt4.sipsolutions.net> (sfid-20130129_224638_974298_32A607BC)
-Subject: Re: WARNING: at net/mac80211/agg-tx.c:625  (3.7.5)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 29 Jan 2013 22:46:53 +0100
-In-Reply-To: <510842C4.3040608@candelatech.com> (sfid-20130129_224440_836761_5DE244B3)
-References: <510842C4.3040608@candelatech.com>
-	 (sfid-20130129_224440_836761_5DE244B3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 18 Jan 2013 03:51:28 -0500
+Received: by mail-we0-f177.google.com with SMTP id x48so721595wey.22
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 00:51:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com>
+References: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com>
+	<201301171816.15309.chunkeey@googlemail.com>
+	<13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com>
+Date: Fri, 18 Jan 2013 09:51:27 +0100
+Message-ID: <CAGXE3d86-2bDmcZddU=3nFmhdoYsFf=Zis=50eeMXJz3DUG3yw@mail.gmail.com> (sfid-20130118_095133_588778_A99CCF2B)
+Subject: Re: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
+	"stf_xl@wp.pl" <stf_xl@wp.pl>,
+	"andihartmann@01019freenet.de" <andihartmann@01019freenet.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 13:44 -0800, Ben Greear wrote:
-> This is in 3.7.5, plus one ath9k patch to over-ride eeprom regdomain.
-> 
-> Code that causes this is here...I seem to have a good test case for
-> this currently, so if there is any other debugging I could put here
-> that would be useful, let me know.
-> 
-> 	if (WARN_ON(!tid_tx)) {
-> 		ht_dbg(sdata, "addBA was not requested!\n");
-> 		goto unlock;
-> 	}
+On Thu, Jan 17, 2013 at 7:42 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> On 17 jan. 2013, at 18:16, Christian Lamparter <chunkeey@googlemail.com> wrote:
+>
+>> On Thursday, January 17, 2013 05:34:32 PM Helmut Schaa wrote:
+>>> Since rt2800 hardware isn't capable of reporting the TX status of
+>>> BlockAckReq frames implement the TX status handling of BARs in
+>>> rt2x00lib. We keep track of all BARs that are send out and try to
+>>> match incoming BAs to the appropriate BARs. This allows us to report a
+>>> more or less accurate TX status for BAR frames which in turn improves
+>>> BA session stability.
+>> ---
+>> What about:
+>>> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
+>>> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+>>> Date:   Mon Dec 3 12:56:33 2012 +0100
+>>> mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+>>
+>> Should it be kept or dropped (as no driver uses it anymore?)
+>
+> I guess it should be dropped. I guess we could create a revert patch for that once this patch has been merged.
 
-Heh, I think Kalle just had the same. Do you have the ht_dbg()
-statements (i.e. HT debugging) enabled?
-
-johannes
-
+Agreed, if it's unused now I'm in favor of reverting it.
+Helmut
