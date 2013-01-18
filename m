@@ -1,39 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:52072 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750936Ab3ADFWh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab3ARVyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 00:22:37 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/5] mwifiex_pcie enhancement for 3.9
-Date: Thu,  3 Jan 2013 21:21:27 -0800
-Message-Id: <1357276892-32759-1-git-send-email-bzhao@marvell.com> (sfid-20130104_062241_233502_6A8E5DB8)
+	Fri, 18 Jan 2013 16:54:25 -0500
+Message-ID: <1358546080.7922.36.camel@jlt4.sipsolutions.net> (sfid-20130118_225429_846877_EC8618BB)
+Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
+ command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 18 Jan 2013 22:54:40 +0100
+In-Reply-To: <20130117134034.GC19552@pandem0nium>
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1358376672.15012.37.camel@jlt4.sipsolutions.net>
+	 <20130117134034.GC19552@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of mwifiex_pcie enhancement patches are intended for 3.9.
+On Thu, 2013-01-17 at 14:40 +0100, Simon Wunderlich wrote:
 
-Avinash Patil (5):
-  mwifiex: access interrupt status only while holding lock
-  mwifiex: add init_fw_port handler for PCIe interface
-  mwifiex: use pci_alloc/free_consistent APIs for PCIe
-  mwifiex: flush TX ring for PCIe after disconnect or bss stop
-  mwifiex: use map/unmap APIs in TX and RX to reduce memcpy
+> Actually there is no limit how long a channel is considered "available", at
+> least in ETSI. ETSI EN 301-893 v1.4.1 had a limit of 24 hours for that,
+> but that was removed in v1.5.1 and didn't re-appear since then (current is
+> v1.7.1).
 
- drivers/net/wireless/mwifiex/11n_aggr.c |    6 +-
- drivers/net/wireless/mwifiex/init.c     |    6 +
- drivers/net/wireless/mwifiex/main.h     |    2 +
- drivers/net/wireless/mwifiex/pcie.c     |  654 +++++++++++++++++++++----------
- drivers/net/wireless/mwifiex/pcie.h     |   33 ++-
- drivers/net/wireless/mwifiex/sta_cmd.c  |   10 +-
- drivers/net/wireless/mwifiex/txrx.c     |    6 +-
- drivers/net/wireless/mwifiex/util.h     |    8 +-
- drivers/net/wireless/mwifiex/wmm.c      |    8 +-
- 9 files changed, 511 insertions(+), 222 deletions(-)
+Huh indeed, I would have expected that to be there. It does have a
+non-occupancy time though (30 minutes), maybe we should implement that?
+
+I'm also thinking with the next regdb format update we should allow
+specifying these timeouts etc. there.
+
+Does anyone have the relevant FCC rules? I can't find anything with
+google ...
+
+> But we can move the CAC/timeout in the wdev and have keep a flag field in
+> the channel struct instead, marking the channel as available, unavailable, etc.
+> 
+> What do you think?
+
+I think that would make sense. Probably available/unavailable and
+"non-occupancy until"?
+
+> > I have a feeling this change should take into account the channel width,
+> > and whether CAC completed successfully?
+> > 
+> 
+> All channels used for operation are checked already in cfg80211_chandef_usable()
+> for the flags.
+> 
+> If the channel width is supported at all is checked with cfg80211_can_use_iftype_chan()
+> before/after.
+> 
+> So I don't see the neccesity for further checking width, or am I missing something?
+
+Hmm, cfg80211_reg_can_beacon() is exported and usable by other modules,
+so it should probably do more checking?
+
+> > > +	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
+> > > +	if (!err) {
+> > > +		wdev->preset_chandef = chandef;
+> > > +		chandef.chan->cac_started = true;
+> > > +		chandef.chan->radar_detect_timeout = jiffies +
+> > > +			msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
+> > > +	}
+> > > +
+> > > +	return err;
+> > > +}
+> > 
+> > This still seems somewhat wrong. For the duration of the CAC, the
+> > channel should be "locked" in some way, no? As it stands now, nothing
+> > prevents userspace from adding another vif and using it for something
+> > entirely different, while cfg80211 thinks the CAC is actually running.
+> > 
+> 
+> Hmm, we can put the "CAC state" in the wdev then, and use it for locking?
+
+I think it may need to be the CAC chandef? Not sure, but we definitely
+need something to use in cfg80211_get_chan_state().
+
+johannes
 
