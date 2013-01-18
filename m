@@ -1,138 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32975 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab3ARXBA (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:50661 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754257Ab3AZVgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 18:01:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 26 Jan 2013 16:36:44 -0500
+Received: by mail-ee0-f42.google.com with SMTP id b47so755243eek.29
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2013 13:36:43 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 18 Jan 2013 23:47:19 +0100
+Subject: [PATCH 2/2] iwl4965: report A-MPDU status
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] mac80211: fix aggregation state with older drivers
-Date: Sat, 19 Jan 2013 00:01:22 +0100
-Message-Id: <1358550082-24185-1-git-send-email-johannes@sipsolutions.net> (sfid-20130119_000105_716434_54602D73)
+Cc: sgruszka@redhat.com, John Linville <linville@tuxdriver.com>
+Message-Id: <E1TzDQV-0001Fa-Sp@debian64.localnet> (sfid-20130126_223654_767976_F5E367D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch is based on "iwlwifi: report A-MPDU status".
+(12bf6f45d1703858)
 
-For drivers that don't actually flush their queues when
-aggregation stop with the IEEE80211_AMPDU_TX_STOP_FLUSH
-or IEEE80211_AMPDU_TX_STOP_FLUSH_CONT reasons is done,
-like iwlwifi or iwlegacy, mac80211 can then transmit on
-a TID that the driver still considers busy. This happens
-in the following way:
+Since the firmware will give us an A-MPDU bit and
+only a single PHY information packet for all the
+subframes in an A-MPDU, we can easily report the
+minimal A-MPDU information for radiotap.
 
- - IEEE80211_AMPDU_TX_STOP_FLUSH requested
- - driver marks TID as emptying
- - mac80211 removes tid_tx data, this can copy packets
-   to the TX pending queues and also let new packets
-   through to the driver
- - driver gets unexpected TX as it wasn't completely
-   converted to the new API
-
-In iwlwifi, this lead to the following warning:
-
-WARNING: at drivers/net/wireless/iwlwifi/dvm/tx.c:442 iwlagn_tx_skb+0xc47/0xce0
-Tx while agg.state = 4
-Modules linked in: [...]
-Pid: 0, comm: kworker/0:0 Tainted: G        W   3.1.0 #1
-Call Trace:
- [<c1046e42>] warn_slowpath_common+0x72/0xa0
- [<c1046f13>] warn_slowpath_fmt+0x33/0x40
- [<fddffa17>] iwlagn_tx_skb+0xc47/0xce0 [iwldvm]
- [<fddfcaa3>] iwlagn_mac_tx+0x23/0x40 [iwldvm]
- [<fd8c98b6>] __ieee80211_tx+0xf6/0x3c0 [mac80211]
- [<fd8cbe00>] ieee80211_tx+0xd0/0x100 [mac80211]
- [<fd8cc176>] ieee80211_xmit+0x96/0xe0 [mac80211]
- [<fd8cc578>] ieee80211_subif_start_xmit+0x348/0xc80 [mac80211]
- [<c1445207>] dev_hard_start_xmit+0x337/0x6d0
- [<c145eee9>] sch_direct_xmit+0xa9/0x210
- [<c14462c0>] dev_queue_xmit+0x1b0/0x8e0
-
-Fortunately, solving this problem is easy as the station
-is being destroyed, so such transmit packets can only
-happen due to races. Instead of trying to close the race
-just let the race not reach the drivers by making two
-changes:
- 1) remove the explicit aggregation session teardown in
-    the managed mode code, the same thing will be done
-    when the station is removed, in __sta_info_destroy.
- 2) When aggregation stop with AGG_STOP_DESTROY_STA is
-    requested, leave the tid_tx data around as stopped.
-    It will be cleared and freed in cleanup_single_sta
-    later, but until then any racy packets will be put
-    onto the tid_tx pending queue instead of transmitted
-    which is fine since the station is being removed.
-
-Change-Id: I0ebd814e720a3e734d73f37c1fabef5eb34a2101
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- net/mac80211/agg-tx.c | 17 ++++++++++-------
- net/mac80211/mlme.c   |  9 ---------
- 2 files changed, 10 insertions(+), 16 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |   11 +++++++++++
+ drivers/net/wireless/iwlegacy/commands.h |    1 +
+ drivers/net/wireless/iwlegacy/common.h   |    1 +
+ 3 files changed, 13 insertions(+)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 2f0ccbc..e6e1056 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -296,7 +296,7 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				       IEEE80211_AMPDU_TX_STOP_FLUSH_CONT,
- 				       &sta->sta, tid, NULL, 0);
- 		WARN_ON_ONCE(ret);
--		goto remove_tid_tx;
-+		return 0;
- 	}
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index f1dc040..2afc548 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -725,6 +725,16 @@ il4965_hdl_rx(struct il_priv *il, struct il_rx_buf *rxb)
+ 	if (rate_n_flags & RATE_MCS_SGI_MSK)
+ 		rx_status.flag |= RX_FLAG_SHORT_GI;
  
- 	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
-@@ -354,12 +354,15 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 		 */
- 	}
- 
--	if (reason == AGG_STOP_DESTROY_STA) {
-- remove_tid_tx:
--		spin_lock_bh(&sta->lock);
--		ieee80211_remove_tid_tx(sta, tid);
--		spin_unlock_bh(&sta->lock);
--	}
-+	/*
-+	 * In the case of AGG_STOP_DESTROY_STA, the driver won't
-+	 * necessarily call ieee80211_stop_tx_ba_cb(), so this may
-+	 * seem like we can leave the tid_tx data pending forever.
-+	 * This is true, in a way, but "forever" is only until the
-+	 * station struct is actually destroyed. In the meantime,
-+	 * leaving it around ensures that we don't transmit packets
-+	 * to the driver on this TID which might confuse it.
-+	 */
- 
- 	return 0;
++	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_AGG_MSK) {
++		/* We know which subframes of an A-MPDU belong
++		 * together since we get a single PHY response
++		 * from the firmware for all of them.
++		 */
++
++		rx_status.flag |= RX_FLAG_AMPDU_DETAILS;
++		rx_status.ampdu_reference = il->_4965.ampdu_ref;
++	}
++
+ 	il4965_pass_packet_to_mac80211(il, header, len, ampdu_status, rxb,
+ 				       &rx_status);
  }
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d90c07b..ed029ac 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1489,7 +1489,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+@@ -736,6 +746,7 @@ il4965_hdl_rx_phy(struct il_priv *il, struct il_rx_buf *rxb)
  {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
- 	u32 changed = 0;
+ 	struct il_rx_pkt *pkt = rxb_addr(rxb);
+ 	il->_4965.last_phy_res_valid = true;
++	il->_4965.ampdu_ref++;
+ 	memcpy(&il->_4965.last_phy_res, pkt->u.raw,
+ 	       sizeof(struct il_rx_phy_res));
+ }
+diff --git a/drivers/net/wireless/iwlegacy/commands.h b/drivers/net/wireless/iwlegacy/commands.h
+index 829d3b9..3b6c994 100644
+--- a/drivers/net/wireless/iwlegacy/commands.h
++++ b/drivers/net/wireless/iwlegacy/commands.h
+@@ -1136,6 +1136,7 @@ struct il_wep_cmd {
+ #define RX_RES_PHY_FLAGS_NARROW_BAND_MSK	cpu_to_le16(1 << 3)
+ #define RX_RES_PHY_FLAGS_ANTENNA_MSK		0x70
+ #define RX_RES_PHY_FLAGS_ANTENNA_POS		4
++#define RX_RES_PHY_FLAGS_AGG_MSK	cpu_to_le16(1 << 7)
  
- 	ASSERT_MGD_MTX(ifmgd);
-@@ -1521,14 +1520,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
+ #define RX_RES_STATUS_SEC_TYPE_MSK	(0x7 << 8)
+ #define RX_RES_STATUS_SEC_TYPE_NONE	(0x0 << 8)
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 37fe553..96f2025 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1356,6 +1356,7 @@ struct il_priv {
+ 		struct {
+ 			struct il_rx_phy_res last_phy_res;
+ 			bool last_phy_res_valid;
++			u32 ampdu_ref;
  
--	mutex_lock(&local->sta_mtx);
--	sta = sta_info_get(sdata, ifmgd->bssid);
--	if (sta) {
--		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
--		ieee80211_sta_tear_down_BA_sessions(sta, AGG_STOP_DESTROY_STA);
--	}
--	mutex_unlock(&local->sta_mtx);
--
- 	/*
- 	 * if we want to get out of ps before disassoc (why?) we have
- 	 * to do it before sending disassoc, as otherwise the null-packet
+ 			struct completion firmware_loading_complete;
+ 
 -- 
-1.8.0
+1.7.10.4
 
