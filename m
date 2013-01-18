@@ -1,341 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:63313 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752298Ab3AQXTp (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:40473 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402Ab3ARMFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 18:19:45 -0500
-Received: by mail-we0-f172.google.com with SMTP id r3so555922wey.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 15:19:44 -0800 (PST)
-Message-ID: <1358464777.7205.33.camel@canaries64> (sfid-20130118_001949_457479_F23A9777)
-Subject: [PATCH 3/5] staging: vt6656: staging: vt6656 change remaining to
- vnt_mgmt and remove typedef.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 17 Jan 2013 23:19:37 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 18 Jan 2013 07:05:45 -0500
+Received: by mail-bk0-f49.google.com with SMTP id jm19so1947408bkc.22
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 04:05:44 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Subject: [PATCH 3/3] iw: add support for link-specific mesh power modes
+Date: Fri, 18 Jan 2013 13:05:32 +0100
+Message-Id: <1358510732-32767-4-git-send-email-marco@cozybit.com> (sfid-20130118_130548_922080_EC2DC952)
+In-Reply-To: <1358510732-32767-1-git-send-email-marco@cozybit.com>
+References: <1358510732-32767-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The different power modes of links towards neighbor STA can be
+read using
+iw <dev> station get
+-or-
+iw <dev> station dump
 
-Use
-struct vnt_manager
+The different power modes shown are:
+- mesh local PS mode
+- mesh peer PS mode
+- mesh non-peer PS mode
+where the local PS mode is "our" mode towards the neighbor, the
+peer PS mode is the neighbor's mode towards us, and the non-peer
+PS mode is the neighbor's non-peer PS mode as indicated in
+beacons and management frames.
 
-Move vnt_manager from sMgmtObj to vnt_mgmt.
+The local PS mode can be modified for each neighbor using
+iw <dev> station set <mac-addr> mesh_power_mode
+<active|light|deep>
 
-and remove typedef from structures
-vnt_private
-vnt_manager
-vnt_rx_mgmt
-vnt_tx_mgmt
-
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
+Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
 ---
- drivers/staging/vt6656/bssdb.c    |  2 +-
- drivers/staging/vt6656/card.c     | 16 ++++++++--------
- drivers/staging/vt6656/device.h   |  7 +++----
- drivers/staging/vt6656/dpc.c      | 10 +++++-----
- drivers/staging/vt6656/mac.c      |  7 +++----
- drivers/staging/vt6656/main_usb.c | 17 +++++++----------
- drivers/staging/vt6656/rf.c       | 24 ++++++++++++++++--------
- drivers/staging/vt6656/rxtx.c     |  8 ++++----
- drivers/staging/vt6656/wmgr.h     | 12 ++++++------
- 9 files changed, 53 insertions(+), 50 deletions(-)
+ station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 89 insertions(+)
 
-diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
-index 59765b0..79339fd 100644
---- a/drivers/staging/vt6656/bssdb.c
-+++ b/drivers/staging/vt6656/bssdb.c
-@@ -772,7 +772,7 @@ void BSSvRemoveOneNode(struct vnt_private *pDevice, u32 uNodeIndex)
- void BSSvUpdateAPNode(struct vnt_private *pDevice, u16 *pwCapInfo,
- 	PWLAN_IE_SUPP_RATES pSuppRates, PWLAN_IE_SUPP_RATES pExtSuppRates)
- {
--	struct vnt_manager *pMgmt = &(pDevice->sMgmtObj);
-+	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	u32 uRateLen = WLAN_RATES_MAXLEN;
+diff --git a/station.c b/station.c
+index 247f445..eb02b0c 100644
+--- a/station.c
++++ b/station.c
+@@ -29,6 +29,25 @@ enum plink_actions {
+ 	PLINK_ACTION_BLOCK,
+ };
  
-     memset(&pMgmt->sNodeDBTable[0], 0, sizeof(KnownNodeDB));
-diff --git a/drivers/staging/vt6656/card.c b/drivers/staging/vt6656/card.c
-index 93983d9..7d725bb 100644
---- a/drivers/staging/vt6656/card.c
-+++ b/drivers/staging/vt6656/card.c
-@@ -513,7 +513,7 @@ void vUpdateIFS(struct vnt_private *pDevice)
-         }
-         pDevice->uDIFS = C_SIFS_BG + 2*pDevice->uSlot;
- 
--        pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->sMgmtObj.abyCurrSuppRates;
-+	pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->vnt_mgmt.abyCurrSuppRates;
-         for (ii = 0; ii < pItemRates->len; ii++) {
-             byRate = (BYTE)(pItemRates->abyRates[ii]&0x7F);
-             if (RATEwGetRateIdx(byRate) > RATE_11M) {
-@@ -522,7 +522,8 @@ void vUpdateIFS(struct vnt_private *pDevice)
-             }
-         }
-         if (bOFDMRate == FALSE) {
--            pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->sMgmtObj.abyCurrExtSuppRates;
-+		pItemRates = (PWLAN_IE_SUPP_RATES)pDevice->vnt_mgmt
-+			.abyCurrExtSuppRates;
-             for (ii = 0; ii < pItemRates->len; ii++) {
-                 byRate = (BYTE)(pItemRates->abyRates[ii]&0x7F);
-                 if (RATEwGetRateIdx(byRate) > RATE_11M) {
-@@ -1035,12 +1036,11 @@ int CARDbChannelSwitch(struct vnt_private *pDevice, u8 byMode,
- {
- 	int bResult = TRUE;
- 
--    if (byCount == 0) {
--        pDevice->sMgmtObj.uCurrChannel = byNewChannel;
--	CARDbSetMediaChannel(pDevice, byNewChannel);
--
--	return bResult;
--    }
-+	if (byCount == 0) {
-+		pDevice->vnt_mgmt.uCurrChannel = byNewChannel;
-+		CARDbSetMediaChannel(pDevice, byNewChannel);
-+		return bResult;
++static void print_power_mode(struct nlattr *a)
++{
++	enum nl80211_mesh_power_mode pm = nla_get_u32(a);
++
++	switch (pm) {
++	case NL80211_MESH_POWER_ACTIVE:
++		printf("ACTIVE");
++		break;
++	case NL80211_MESH_POWER_LIGHT_SLEEP:
++		printf("LIGHT SLEEP");
++		break;
++	case NL80211_MESH_POWER_DEEP_SLEEP:
++		printf("DEEP SLEEP");
++		break;
++	default:
++		printf("UNKNOWN");
++		break;
 +	}
-     pDevice->byChannelSwitchCount = byCount;
-     pDevice->byNewChannel = byNewChannel;
-     pDevice->bChannelSwitch = TRUE;
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index eb8a311..1d2e234 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -392,7 +392,7 @@ typedef struct __device_opt {
- } OPTIONS, *POPTIONS;
++}
  
-
--typedef struct vnt_private {
-+struct vnt_private {
- 
- // netdev
- 	struct usb_device*          usb;
-@@ -524,9 +524,8 @@ typedef struct vnt_private {
-     unsigned long                       RcvBuffersInUse;
- 
-
--    // 802.11 management
-+	/* 802.11 management */
- 	struct vnt_manager vnt_mgmt;
--    SMgmtObject                 sMgmtObj;
- 
- 	u64 qwCurrTSF;
-     unsigned int                        cbBulkInMax;
-@@ -815,7 +814,7 @@ typedef struct vnt_private {
- 	struct iw_statistics	wstats;		// wireless stats
-     BOOL                    bCommit;
- 
--} DEVICE_INFO, *PSDevice;
-+};
- 
-
-
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index b627860..6c98172 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -850,9 +850,9 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, PRCB pRCB,
-             RSC += wRxTSC15_0;
- 		memcpy(&(pKey->KeyRSC), &RSC,  sizeof(u64));
- 
--            if ( (pDevice->sMgmtObj.eCurrMode == WMAC_MODE_ESS_STA) &&
--                 (pDevice->sMgmtObj.eCurrState == WMAC_STATE_ASSOC)) {
--                // check RSC
-+		if (pDevice->vnt_mgmt.eCurrMode == WMAC_MODE_ESS_STA &&
-+			pDevice->vnt_mgmt.eCurrState == WMAC_STATE_ASSOC) {
-+			/* check RSC */
-                 if ( (wRxTSC15_0 < wLocalTSC15_0) &&
-                      (dwRxTSC47_16 <= dwLocalTSC47_16) &&
-                      !((dwRxTSC47_16 == 0) && (dwLocalTSC47_16 == 0xFFFFFFFF))) {
-@@ -927,7 +927,7 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, PRCB pRCB,
- static int s_bAPModeRxCtl(struct vnt_private *pDevice, u8 *pbyFrame,
- 	s32 iSANodeIndex)
+ static int print_sta_handler(struct nl_msg *msg, void *arg)
  {
--	struct vnt_manager *pMgmt = &(pDevice->sMgmtObj);
-+	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	PS802_11Header p802_11Header;
- 	CMD_STATUS Status;
+@@ -54,6 +73,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_STA_FLAGS] =
+ 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
++		[NL80211_STA_INFO_LOCAL_PM] = { .type = NLA_U32},
++		[NL80211_STA_INFO_PEER_PM] = { .type = NLA_U32},
++		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
+ 	};
  
-@@ -1456,7 +1456,7 @@ void RXvMngWorkItem(struct vnt_private *pDevice)
-         }
-         ASSERT(pRCB);// cannot be NULL
-         pRxPacket = &(pRCB->sMngPacket);
--	vMgrRxManagePacket((void *) pDevice, &(pDevice->sMgmtObj), pRxPacket);
-+	vMgrRxManagePacket(pDevice, &pDevice->vnt_mgmt, pRxPacket);
-         pRCB->Ref--;
-         if(pRCB->Ref == 0) {
-             DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"RxvFreeMng %d %d\n",pDevice->NumRecvFreeList, pDevice->NumRecvMngList);
-diff --git a/drivers/staging/vt6656/mac.c b/drivers/staging/vt6656/mac.c
-index dd732bc..76d307b 100644
---- a/drivers/staging/vt6656/mac.c
-+++ b/drivers/staging/vt6656/mac.c
-@@ -246,10 +246,9 @@ void MACvSetKeyEntry(struct vnt_private *pDevice, u16 wKeyCtl, u32 uEntryIdx,
- 	int ii;
- 	u8 pbyData[24];
- 
--    if ( pDevice->byLocalID <= MAC_REVISION_A1 ) {
--        if ( pDevice->sMgmtObj.byCSSPK == KEY_CTL_CCMP )
--            return;
--    }
-+	if (pDevice->byLocalID <= MAC_REVISION_A1)
-+		if (pDevice->vnt_mgmt.byCSSPK == KEY_CTL_CCMP)
-+			return;
- 
-     wOffset = MISCFIFO_KEYETRY0;
-     wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index a316d89..99ac7eb 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -706,7 +706,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	spin_lock_init(&pDevice->lock);
- 
- 	pDevice->tx_80211 = device_dma0_tx_80211;
--	pDevice->sMgmtObj.pAdapter = (void *) pDevice;
-+	pDevice->vnt_mgmt.pAdapter = (void *) pDevice;
- 
- 	netdev->netdev_ops = &device_netdev_ops;
- 	netdev->wireless_handlers =
-@@ -986,7 +986,8 @@ static int  device_open(struct net_device *dev)
-     // Init for Key Management
- 
-     KeyvInitTable(pDevice,&pDevice->sKey);
--    memcpy(pDevice->sMgmtObj.abyMACAddr, pDevice->abyCurrentNetAddr, ETH_ALEN);
-+	memcpy(pDevice->vnt_mgmt.abyMACAddr,
-+		pDevice->abyCurrentNetAddr, ETH_ALEN);
-     memcpy(pDevice->dev->dev_addr, pDevice->abyCurrentNetAddr, ETH_ALEN);
-     pDevice->bStopTx0Pkt = FALSE;
-     pDevice->bStopDataPkt = FALSE;
-@@ -1001,7 +1002,7 @@ static int  device_open(struct net_device *dev)
-     tasklet_init(&pDevice->RxMngWorkItem, (void *)RXvMngWorkItem, (unsigned long)pDevice);
-     tasklet_init(&pDevice->ReadWorkItem, (void *)RXvWorkItem, (unsigned long)pDevice);
-     tasklet_init(&pDevice->EventWorkItem, (void *)INTvWorkItem, (unsigned long)pDevice);
--    add_timer(&(pDevice->sMgmtObj.sTimerSecondCallback));
-+	add_timer(&pDevice->vnt_mgmt.sTimerSecondCallback);
-     pDevice->int_interval = 100;  //Max 100 microframes.
-     pDevice->eEncryptionStatus = Ndis802_11EncryptionDisabled;
- 
-@@ -1035,14 +1036,10 @@ static int  device_open(struct net_device *dev)
-          pDevice->eEncryptionStatus = Ndis802_11Encryption1Enabled;
-     }
- 
--    if (pDevice->sMgmtObj.eConfigMode == WMAC_CONFIG_AP) {
-+	if (pDevice->vnt_mgmt.eConfigMode == WMAC_CONFIG_AP)
- 		bScheduleCommand((void *) pDevice, WLAN_CMD_RUN_AP, NULL);
--	}
--	else {
--	//mike:mark@2008-11-10
--	  bScheduleCommand((void *) pDevice, WLAN_CMD_BSSID_SCAN, NULL);
--	  /* bScheduleCommand((void *) pDevice, WLAN_CMD_SSID, NULL); */
--    }
-+	else
-+		bScheduleCommand((void *) pDevice, WLAN_CMD_BSSID_SCAN, NULL);
- 
-
-     netif_stop_queue(pDevice->dev);
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index 06cff8b..5785eec 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -888,14 +888,22 @@ int RFbRawSetPower(struct vnt_private *pDevice, u8 byPwr, u32 uRATE)
-                 bResult &= IFRFbWriteEmbedded(pDevice, dwVT3226Pwr);
- 
-                 bResult &= IFRFbWriteEmbedded(pDevice, 0x03C6A200+(BY_VT3226_REG_LEN<<3)+IFREGCTL_REGW);
--                if (pDevice->sMgmtObj.eScanState != WMAC_NO_SCANNING) {
--                    // scanning, the channel number is pDevice->uScanChannel
--                    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"@@@@ RFbRawSetPower> 11B mode uCurrChannel[%d]\n", pDevice->sMgmtObj.uScanChannel);
--                    bResult &= IFRFbWriteEmbedded(pDevice, dwVT3226D0LoCurrentTable[pDevice->sMgmtObj.uScanChannel-1]); //RobertYu:20060420, sometimes didn't change channel just set power with different rate
--                } else {
--                    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"@@@@ RFbRawSetPower> 11B mode uCurrChannel[%d]\n", pDevice->sMgmtObj.uCurrChannel);
--                    bResult &= IFRFbWriteEmbedded(pDevice, dwVT3226D0LoCurrentTable[pDevice->sMgmtObj.uCurrChannel-1]); //RobertYu:20060420, sometimes didn't change channel just set power with different rate
--                }
-+		if (pDevice->vnt_mgmt.eScanState != WMAC_NO_SCANNING) {
-+			/* scanning, channel number is pDevice->uScanChannel */
-+			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+				"RFbRawSetPower> 11B mode uCurrChannel[%d]\n",
-+				pDevice->vnt_mgmt.uScanChannel);
-+			bResult &= IFRFbWriteEmbedded(pDevice,
-+				dwVT3226D0LoCurrentTable[pDevice->
-+					vnt_mgmt.uScanChannel - 1]);
-+		} else {
-+			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
-+				"RFbRawSetPower> 11B mode uCurrChannel[%d]\n",
-+				pDevice->vnt_mgmt.uCurrChannel);
-+			bResult &= IFRFbWriteEmbedded(pDevice,
-+				dwVT3226D0LoCurrentTable[pDevice->
-+					vnt_mgmt.uCurrChannel - 1]);
-+		}
- 
-                 bResult &= IFRFbWriteEmbedded(pDevice, 0x015C0800+(BY_VT3226_REG_LEN<<3)+IFREGCTL_REGW); //RobertYu:20060420, ok now, new switching power (mini-pci can have bigger power consumption)
-             } else {
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index bb014c0..536d314 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1511,10 +1511,10 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 
-         ///////////////////////////////////////////////////////////////////
- 
--        if (pDevice->sMgmtObj.eAuthenMode == WMAC_AUTH_WPANONE) {
--            dwMICKey0 = *(PDWORD)(&pTransmitKey->abyKey[16]);
--            dwMICKey1 = *(PDWORD)(&pTransmitKey->abyKey[20]);
--        }
-+	if (pDevice->vnt_mgmt.eAuthenMode == WMAC_AUTH_WPANONE) {
-+		dwMICKey0 = *(u32 *)(&pTransmitKey->abyKey[16]);
-+		dwMICKey1 = *(u32 *)(&pTransmitKey->abyKey[20]);
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+@@ -177,6 +199,18 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		}
+ 		printf("\n\tmesh plink:\t%s", state_name);
+ 	}
++	if (sinfo[NL80211_STA_INFO_LOCAL_PM]) {
++		printf("\n\tmesh local PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_LOCAL_PM]);
 +	}
-         else if ((pTransmitKey->dwKeyIndex & AUTHENTICATOR_KEY) != 0) {
-             dwMICKey0 = *(PDWORD)(&pTransmitKey->abyKey[16]);
-             dwMICKey1 = *(PDWORD)(&pTransmitKey->abyKey[20]);
-diff --git a/drivers/staging/vt6656/wmgr.h b/drivers/staging/vt6656/wmgr.h
-index 86c1505..5112f53 100644
---- a/drivers/staging/vt6656/wmgr.h
-+++ b/drivers/staging/vt6656/wmgr.h
-@@ -219,15 +219,15 @@ typedef enum tagWMAC_POWER_MODE {
++	if (sinfo[NL80211_STA_INFO_PEER_PM]) {
++		printf("\n\tmesh peer PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_PEER_PM]);
++	}
++	if (sinfo[NL80211_STA_INFO_NONPEER_PM]) {
++		printf("\n\tmesh non-peer PS mode:\t");
++		print_power_mode(sinfo[NL80211_STA_INFO_NONPEER_PM]);
++	}
  
-
- /* Tx Management Packet descriptor */
--typedef struct vnt_tx_mgmt {
-+struct vnt_tx_mgmt {
- 	PUWLAN_80211HDR p80211Header;
- 	u32 cbMPDULen;
- 	u32 cbPayloadLen;
--} STxMgmtPacket, *PSTxMgmtPacket;
-+};
+ 	if (sinfo[NL80211_STA_INFO_STA_FLAGS]) {
+ 		sta_flags = (struct nl80211_sta_flag_update *)
+@@ -274,6 +308,7 @@ COMMAND(station, del, "<MAC address>",
  
-
- /* Rx Management Packet descriptor */
--typedef struct vnt_rx_mgmt {
-+struct vnt_rx_mgmt {
- 	PUWLAN_80211HDR p80211Header;
- 	u64 qwLocalTSF;
- 	u32 cbMPDULen;
-@@ -236,10 +236,10 @@ typedef struct vnt_rx_mgmt {
- 	u8 bySQ;
- 	u8 byRxRate;
- 	u8 byRxChannel;
--} SRxMgmtPacket, *PSRxMgmtPacket;
-+};
+ static const struct cmd *station_set_plink;
+ static const struct cmd *station_set_vlan;
++static const struct cmd *station_set_mesh_power_mode;
  
-
--typedef struct vnt_manager {
-+struct vnt_manager {
- 	void *pAdapter;
-     // MAC address
-     BYTE                    abyMACAddr[WLAN_ADDR_LEN];
-@@ -391,7 +391,7 @@ typedef struct vnt_manager {
+ static const struct cmd *select_station_cmd(int argc, char **argv)
+ {
+@@ -283,6 +318,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
+ 		return station_set_plink;
+ 	if (strcmp(argv[1], "vlan") == 0)
+ 		return station_set_vlan;
++	if (strcmp(argv[1], "mesh_power_mode") == 0)
++		return station_set_mesh_power_mode;
+ 	return NULL;
+ }
  
-     struct sk_buff  skb;
+@@ -384,6 +421,58 @@ COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
+ 	"Set an AP VLAN for this station.",
+ 	select_station_cmd, station_set_vlan);
  
--} SMgmtObject, *PSMgmtObject;
-+};
++static int handle_station_set_mesh_power_mode(struct nl80211_state *state,
++					      struct nl_cb *cb,
++					      struct nl_msg *msg,
++					      int argc, char **argv,
++					      enum id_input id)
++{
++	unsigned char mesh_power_mode;
++	unsigned char mac_addr[ETH_ALEN];
++
++	if (argc < 3)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (strcmp("mesh_power_mode", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
++
++	if (strcmp("active", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_ACTIVE;
++	else if (strcmp("light", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
++	else if (strcmp("deep", argv[0]) == 0)
++		mesh_power_mode = NL80211_MESH_POWER_DEEP_SLEEP;
++	else {
++		fprintf(stderr, "unknown mesh power mode\n");
++		return 2;
++	}
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	NLA_PUT_U32(msg, NL80211_ATTR_LOCAL_MESH_POWER_MODE, mesh_power_mode);
++
++	return 0;
++nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
++	"<active|light|deep>", NL80211_CMD_SET_STATION, 0, CIB_NETDEV,
++	handle_station_set_mesh_power_mode,
++	"Set link-specific mesh power mode for this station",
++	select_station_cmd, station_set_mesh_power_mode);
  
- /*---------------------  Export Macros ------------------------------*/
- 
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_cb *cb,
 -- 
-1.8.0
-
-
-
+1.7.9.5
 
