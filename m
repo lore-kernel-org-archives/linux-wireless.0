@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41663 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab3A1JhZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 04:37:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/37] iwlwifi: clean up CMD_MODE enum
-Date: Mon, 28 Jan 2013 10:37:09 +0100
-Message-Id: <1359365864-4259-3-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103731_996703_4D110762)
-In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
-References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.ispras.ru ([83.149.199.43]:35128 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755257Ab3ARVYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jan 2013 16:24:31 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] mwl8k: don't return zero on failure paths in mwl8k_probe[_hw]()
+Date: Sat, 19 Jan 2013 01:24:01 +0400
+Message-Id: <1358544241-13032-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130118_222815_300164_957558D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+If pci_iomap() fails in mwl8k_probe(), it breaks off initialization,
+deallocates all resources, but returns zero.
+There is a similar issue when priv->rxd_ops is NULL in mwl8k_probe_hw().
 
-Just format the enum better.
+The patch adds proper error code return values.
 
-Change-Id: I16cfc815676e12fadea1640f3496a91a6b804c0a
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwl8k.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index ce878b9..d4ab24b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -193,11 +193,11 @@ struct iwl_rx_packet {
-  * @CMD_ON_DEMAND: This command is sent by the test mode pipe.
-  */
- enum CMD_MODE {
--	CMD_SYNC = 0,
--	CMD_ASYNC = BIT(0),
--	CMD_WANT_SKB = BIT(1),
--	CMD_WANT_HCMD = BIT(2),
--	CMD_ON_DEMAND = BIT(3),
-+	CMD_SYNC		= 0,
-+	CMD_ASYNC		= BIT(0),
-+	CMD_WANT_SKB		= BIT(1),
-+	CMD_WANT_HCMD		= BIT(2),
-+	CMD_ON_DEMAND		= BIT(3),
- };
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index f221b95..018f442 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5462,6 +5462,7 @@ static int mwl8k_probe_hw(struct ieee80211_hw *hw)
+ 		if (priv->rxd_ops == NULL) {
+ 			wiphy_err(hw->wiphy,
+ 				  "Driver does not have AP firmware image support for this hardware\n");
++			rc = -ENOENT;
+ 			goto err_stop_firmware;
+ 		}
+ 	} else {
+@@ -5807,6 +5808,7 @@ static int mwl8k_probe(struct pci_dev *pdev,
+ 	priv->sram = pci_iomap(pdev, 0, 0x10000);
+ 	if (priv->sram == NULL) {
+ 		wiphy_err(hw->wiphy, "Cannot map device SRAM\n");
++		rc = -EIO;
+ 		goto err_iounmap;
+ 	}
  
- #define DEF_CMD_PAYLOAD_SIZE 320
+@@ -5819,6 +5821,7 @@ static int mwl8k_probe(struct pci_dev *pdev,
+ 		priv->regs = pci_iomap(pdev, 2, 0x10000);
+ 		if (priv->regs == NULL) {
+ 			wiphy_err(hw->wiphy, "Cannot map device registers\n");
++			rc = -EIO;
+ 			goto err_iounmap;
+ 		}
+ 	}
 -- 
-1.8.0
+1.7.9.5
 
