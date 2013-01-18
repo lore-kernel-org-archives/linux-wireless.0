@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:55331 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593Ab3ABUNG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60837 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753972Ab3ARUz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 15:13:06 -0500
-Received: by mail-wg0-f42.google.com with SMTP id dr1so6132699wgb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 12:13:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <018d01cde90c$c7145410$553cfc30$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local>
-	<CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>
-	<CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com>
-	<50E2FE5E.6040300@openwrt.org>
-	<CAJ-Vmo=kbvLSdA8wGaRacAOvoZBdksJwQZ+Z52RbiUAq-T4weA@mail.gmail.com>
-	<016301cde8eb$8b92ba60$a2b82f20$@acksys.fr>
-	<CAJ-VmokpOeKc6zR+JUWqzZ1tsRNdWR8gK9OTRb5HsUnKYVE__w@mail.gmail.com>
-	<018d01cde90c$c7145410$553cfc30$@acksys.fr>
-Date: Wed, 2 Jan 2013 12:13:05 -0800
-Message-ID: <CAJ-VmomkzNgSyicAwcj_TWg24v-DH+Q7U6ifXFFognx-7nEZvw@mail.gmail.com> (sfid-20130102_211311_413909_64D6B932)
-Subject: Re: [RFC] ATH9K: infinite loop in Tasklet
-From: Adrian Chadd <adrian@freebsd.org>
-To: voncken <cedric.voncken@acksys.fr>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 18 Jan 2013 15:55:58 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TwIyj-0003le-6K
+	for linux-wireless@vger.kernel.org; Fri, 18 Jan 2013 21:55:57 +0100
+Message-ID: <1358542582.7922.10.camel@jlt4.sipsolutions.net> (sfid-20130118_215604_302841_CC7CB11A)
+Subject: Re: [PATCH] mac80211: improve aggregation debug messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 18 Jan 2013 21:56:22 +0100
+In-Reply-To: <1358340217-22419-1-git-send-email-johannes@sipsolutions.net> (sfid-20130116_134319_101644_09148CE1)
+References: <1358340217-22419-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130116_134319_101644_09148CE1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2013 09:15, voncken <cedric.voncken@acksys.fr> wrote:
->         Yes,
->
->         I used an mpc8314 at 400Mhz, with 128 Mbit of RAM for my test.
+On Wed, 2013-01-16 at 13:43 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> A lot of the aggregation messages don't indicate the
+> station so they're hard to understand if there are
+> multiple sessions in progress. Make that easier by
+> adding the MAC address to most messages. Also add
+> the TID if it wasn't already there.
 
-Ah!
+Applied.
 
->         To find it, I measured the time elapsing in ath_rxbuf_alloc(..) with
-> the kernel function local_clock().
->
->         With SLOB I found around 123 us (and I have an infinite loop in
-> ath9k tasklet, because when I have consumed one packet the next packet is
-> ready to rx process)
->         With SLAB I found around 22 us
->         With SLUB I found around 10 us
+johannes
 
-Cool. That's significantly more CPU.. :-)
-
-So yes, the right thing to do here is to break out after a limit is
-reached, and if we hit that limit, re-schedule that tasklet to run.
-
-
-Adrian
