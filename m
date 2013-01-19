@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34271 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3ALXJr (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:50257 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751555Ab3AST1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 18:09:47 -0500
+	Sat, 19 Jan 2013 14:27:50 -0500
+Message-ID: <50FAF3FA.4050400@infradead.org> (sfid-20130119_202808_163643_950C38ED)
+Date: Sat, 19 Jan 2013 11:28:58 -0800
+From: Randy Dunlap <rdunlap@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
-References: <1358030383-15609-1-git-send-email-xose.vazquez@gmail.com>
-Date: Sun, 13 Jan 2013 00:09:46 +0100
-Message-ID: <CAFLxGvxTenzaaypsUz6pYmjiyEeUtkNGDKwBNeAVFUb5ZZgonQ@mail.gmail.com> (sfid-20130113_001011_914994_B6935D79)
-Subject: Re: [PATCH] linux-firmware: add MISSING file
-From: richard -rw- weinberger <richard.weinberger@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Daniel Drake <dsd@laptop.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: akpm@linux-foundation.org
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: mmotm 2013-01-18-15-48 uploaded (ath9k)
+References: <20130118234944.5C99C31C240@corp2gmr1-1.hot.corp.google.com>
+In-Reply-To: <20130118234944.5C99C31C240@corp2gmr1-1.hot.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 12, 2013 at 11:39 PM, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> to document the reason why a firmware is not present
->
-> Cc: Daniel Drake <dsd@laptop.org>
-> Cc: Ulrich Kunitz <kune@deine-taler.de>
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: Ben Hutchings <ben@decadent.org.uk>
-> Cc: <linux-wireless@vger.kernel.org>
-> Cc: <linux-kernel@vger.kernel.org>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->  MISSING | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->  create mode 100644 MISSING
->
-> diff --git a/MISSING b/MISSING
-> new file mode 100644
-> index 0000000..f228099
-> --- /dev/null
-> +++ b/MISSING
-> @@ -0,0 +1,20 @@
-> +             ***********
-> +             * MISSING *
-> +             ***********
-> +
-> +This file attempts to document the reason why a firmware is not present
-> +in this bundle.
+On 01/18/13 15:49, akpm@linux-foundation.org wrote:
+> The mm-of-the-moment snapshot 2013-01-18-15-48 has been uploaded to
+> 
+>    http://www.ozlabs.org/~akpm/mmotm/
+> 
+> mmotm-readme.txt says
+> 
+> README for mm-of-the-moment:
+> 
+> http://www.ozlabs.org/~akpm/mmotm/
+> 
+> This is a snapshot of my -mm patch queue.  Uploaded at random hopefully
+> more than once a week.
+> 
 
->From the user's point of view this not really helpful.
-Wouldn't a in-kernel table of known but missing firmware files make more sense?
-The kernel could write a log like "Yeah, I know this firmware but
-sadly I don't have it because of ..."
+
+on i386:
+
+drivers/net/wireless/ath/ath9k/recv.c: In function 'ath_process_fft':
+drivers/net/wireless/ath/ath9k/recv.c:1117:2: error: implicit declaration of function 'ath_debug_send_fft_sample' [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
+make[6]: *** [drivers/net/wireless/ath/ath9k/recv.o] Error 1
+
+
 
 -- 
-Thanks,
-//richard
+~Randy
