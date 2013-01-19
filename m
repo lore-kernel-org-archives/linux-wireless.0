@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45835 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755202Ab3AKNXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 08:23:04 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] wireless: fix regulatory HT40 allowed check
-Date: Fri, 11 Jan 2013 14:22:58 +0100
-Message-Id: <1357910578-6988-1-git-send-email-nbd@openwrt.org> (sfid-20130111_142312_913948_5FDEB381)
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:44320 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138Ab3ASShH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jan 2013 13:37:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
+Subject: [PATCH] rtlwifi: Fix build warning introduced by commit a290593
+Date: Sat, 19 Jan 2013 12:36:49 -0600
+Message-Id: <1358620609-9794-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130119_193730_610363_7EF03175)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 1a9193185f462a51815fe48491f8a6fb6b942551 "regulatory: code cleanup"
-changed is_ht40_allowed without considering that IEEE80211_CHAN_NO_HT40 is
-not just one flag, but two.
-This is causing HT40- to be blocked completely.
+The kbuild test robot reports the following warning with x86_64-randconfig-x955:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+warning: (RTL8192CE && RTL8192SE && RTL8192DE && RTL8723AE && RTL8192CU) selects
+ RTLWIFI which has unmet direct dependencies (NETDEVICES && WLAN &&
+ (RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE))
+
+This warning was introduced in commit a290593, "rtlwifi: Modify files for addition
+of rtl8723ae", and is d ue to a missing dependence of RTLWIFI on RTL8723AE.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kbuild test robot <fengguang.wu@intel.com>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
 ---
- net/wireless/reg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/Kconfig |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index a21d703..de02d63 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1123,7 +1123,9 @@ static bool is_ht40_allowed(struct ieee80211_channel *chan)
- 	if (chan->flags & IEEE80211_CHAN_DISABLED)
- 		return false;
- 	/* This would happen when regulatory rules disallow HT40 completely */
--	return !(chan->flags & IEEE80211_CHAN_NO_HT40);
-+	if ((chan->flags & IEEE80211_CHAN_NO_HT40) == IEEE80211_CHAN_NO_HT40)
-+		return false;
-+	return true;
- }
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index 21b1bbb..b80bc46 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -57,12 +57,12 @@ config RTL8192CU
  
- static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ config RTLWIFI
+ 	tristate
+-	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
++	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
+ 	default m
+ 
+ config RTLWIFI_DEBUG
+ 	bool "Additional debugging output"
+-	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
++	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
+ 	default y
+ 
+ config RTL8192C_COMMON
 -- 
-1.8.0.2
+1.7.10.4
 
