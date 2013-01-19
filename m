@@ -1,89 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50727 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756772Ab3A3TaY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 14:30:24 -0500
-Date: Wed, 30 Jan 2013 14:27:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Lubomir Rintel <lkundrak@v3.sk>, Harro Haan <hrhaan@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
-Message-ID: <20130130192700.GF2167@tuxdriver.com> (sfid-20130130_203104_660592_810037BC)
-References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
- <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44545 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752024Ab3ASRST (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jan 2013 12:18:19 -0500
+Message-ID: <50FAD54F.8080601@hauke-m.de> (sfid-20130119_181824_491223_EC2AB5FC)
+Date: Sat, 19 Jan 2013 18:18:07 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com>
+To: Piotr Haber <phaber@broadcom.com>
+CC: Rafal Milecki <zajec5@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: bcma: trouble with gpio
+References: <50F95D45.6060601@broadcom.com>
+In-Reply-To: <50F95D45.6060601@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 18, 2013 at 12:28:17PM -0800, Bing Zhao wrote:
-> Hi Lubomir,
+On 01/18/2013 03:33 PM, Piotr Haber wrote:
+> Hi,
 > 
-> > It actually times out on a 8688 present in GuruPlug with sd8688.bin
-> > (md5=7233401e9687f8c880da547beed4324e) firmware (that's present in
-> > linux-firmware tree), but the adapter works fine.
-> > 
-> > For that firmware times out with libertas_uap [1] as well, though it succeeds
-> > with sd8688_ap.bin (md5=52cd8f8296b9a7e1d3835d57416256b2) that was originally
-> > shipped with GuruPlug. That firmware is not in linux-firmware tree and btmrvl
-> > driver might win the race programming the 8688 with sd8688.bin anyway.
-> > 
-> > [1] https://github.com/lkundrak/linux/tree/libertas_uap
-> > ---
-> >  drivers/net/wireless/libertas/if_sdio.c |   14 --------------
-> >  1 files changed, 0 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> > index 2ecab49..3c4c555 100644
-> > --- a/drivers/net/wireless/libertas/if_sdio.c
-> > +++ b/drivers/net/wireless/libertas/if_sdio.c
-> > @@ -825,20 +825,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
-> > 
-> >  	sdio_release_host(func);
-> > 
-> > -	/*
-> > -	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
-> > -	 */
-> > -	if (card->model == MODEL_8688) {
-> > -		struct cmd_header cmd;
-> > -
-> > -		memset(&cmd, 0, sizeof(cmd));
-> > -
-> > -		lbs_deb_sdio("send function INIT command\n");
-> > -		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
-> > -				lbs_cmd_copyback, (unsigned long) &cmd))
-> > -			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
-> > -	}
-> > -
+> I turned GPIO support in bcma (CONFIG_BCMA_DRIVER_GPIO)
+> and get this in log:
 > 
-> Removing FUNC_INIT could break things in some scenarios.
-> Could you please test the following case?
+> bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and package 0x0A
+> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
+> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
+> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
+> bcma: bus0: Found rev 6 PMU (capabilities 0x108C2606)
+> bcma: bus0: SPROM offset 0x830
+> bcma: bus0: PMU resource config unknown or not needed for device 0xA8D8
+> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
+> bcma: bus0: Error registering GPIO driver: -28
+> bcma: bus0: Bus registered
+> bcma: bus1: Found chip with id 0x4313, rev 0x01 and package 0x08
+> bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
+> bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
+> bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
+> bcma: bus1: Found rev 8 PMU (capabilities 0x084C3008)
+> bcma: bus1: SPROM offset 0x830
+> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
+> bcma: bus1: Error registering GPIO driver: -28
+> bcma: bus1: Bus registered
+> bcma: bus2: Found chip with id 0x4313, rev 0x01 and package 0x08
+> bcma: bus2: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
+> bcma: bus2: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
+> bcma: bus2: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
+> bcma: bus2: Found rev 8 PMU (capabilities 0x084C3008)
+> bcma: bus2: SPROM offset 0x830
+> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
+> bcma: bus2: Error registering GPIO driver: -28
+> bcma: bus2: Bus registered
 > 
-> 1. insmod liberates -> download firmware, send FUNC_INIT, ...
-> 2. rmmod libertas -> send FUNC_SHUTDOWN command to firmware; BT is still working.
-> 3. insmod libertas -> skip firmware downloading, send FUNC_INIT, ...
+> does that mean that gpio is not usable?
+
+At least it is not usable through the standard linux gpio interface.
+
+> what might be the problem?
+
+Is this -28 (ENOSPC) originally returned in gpiochip_find_base() in
+drivers/gpio/gpiolib.c?
+I have no idea what's going wrong here, could you provide me with your
+kernel config and what kernel version are you using?
+
 > 
-> If FUNC_INIT is removed, I don't expect step 3 to work.
-> 
-> Thanks,
-> Bing
-> 
-> >  	priv->fw_ready = 1;
-> >  	wake_up(&card->pwron_waitq);
-> > 
-> > --
-> > 1.7.1
+> Kind regards
+> Piotr
 > 
 
-Lubomir, any reply?  Should I drop this one?
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
