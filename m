@@ -1,62 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53007 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681Ab3A2Voh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 16:44:37 -0500
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0TLiaOc023339
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2013 13:44:36 -0800
-Message-ID: <510842C4.3040608@candelatech.com> (sfid-20130129_224440_836761_5DE244B3)
-Date: Tue, 29 Jan 2013 13:44:36 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: WARNING: at net/mac80211/agg-tx.c:625  (3.7.5)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:39943 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752462Ab3ATRwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2013 12:52:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 7/8] ath9k_hw: reduce struct ar5416AniState size
+Date: Sun, 20 Jan 2013 18:51:58 +0100
+Message-Id: <1358704319-81749-7-git-send-email-nbd@openwrt.org> (sfid-20130120_185223_554102_D87ABB1C)
+In-Reply-To: <1358704319-81749-6-git-send-email-nbd@openwrt.org>
+References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-2-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-3-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-4-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-5-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is in 3.7.5, plus one ath9k patch to over-ride eeprom regdomain.
+It is kept per-channel, so removing unnecessary (or constant) fields from
+it can save quite a bit of memory.
 
-Code that causes this is here...I seem to have a good test case for
-this currently, so if there is any other debugging I could put here
-that would be useful, let me know.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c | 13 ++++++-------
+ drivers/net/wireless/ath/ath9k/ani.h |  7 -------
+ 2 files changed, 6 insertions(+), 14 deletions(-)
 
-	if (WARN_ON(!tid_tx)) {
-		ht_dbg(sdata, "addBA was not requested!\n");
-		goto unlock;
-	}
-
-
-[  104.499464] ------------[ cut here ]------------
-[  104.509486] WARNING: at /home/greearb/git/linux-3.7.dev.y/net/mac80211/agg-tx.c:625 ieee80211_start_tx_ba_cb+0xcb/0xd0 [mac80211]()
-[  104.534083] Hardware name: To Be Filled By O.E.M.
-[  104.542979] Modules linked in: xt_CT[  104.543121] Pid: 44, comm: kworker/u:1 Tainted: G         C   3.7.5+ #35
-[  104.543124] Call Trace:
-[  104.543132]  [<c04440dd>] warn_slowpath_common+0x6d/0xa0
-[  104.543148]  [<f8baeaab>] ? ieee80211_start_tx_ba_cb+0xcb/0xd0 [mac80211]
-[  104.543179]  [<f8baeaab>] ? ieee80211_start_tx_ba_cb+0xcb/0xd0 [mac80211]
-[  104.543205]  [<c044412d>] warn_slowpath_null+0x1d/0x20
-[  104.543216]  [<f8baeaab>] ieee80211_start_tx_ba_cb+0xcb/0xd0 [mac80211]
-[  104.543243]  [<f8bb221f>] ieee80211_iface_work+0x1ff/0x300 [mac80211]
-[  104.543270]  [<c0459327>] process_one_work+0x127/0x2f0
-[  104.543280]  [<f8bb2020>] ? ieee80211_netdev_select_queue+0x10/0x10 [mac80211]
-[  104.543306]  [<c045bea2>] worker_thread+0x102/0x380
-[  104.543314]  [<c045fedc>] kthread+0x9c/0xa0
-[  104.543321]  [<c045bda0>] ? manage_workers+0x2b0/0x2b0
-[  104.543328]  [<c0460000>] ? kthread_stop+0x10/0x70
-[  104.543336]  [<c0917177>] ret_from_kernel_thread+0x1b/0x28
-[  104.543345]  [<c045fe40>] ? kthread_freezable_should_stop+0x50/0x50
-[  104.543357] ---[ end trace 84f17e8f8b9c9dda ]---
-
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 2978287..a9218a1 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -152,7 +152,8 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 	ath_dbg(common, ANI, "**** ofdmlevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+ 		aniState->ofdmNoiseImmunityLevel,
+ 		immunityLevel, BEACON_RSSI(ah),
+-		aniState->rssiThrLow, aniState->rssiThrHigh);
++		ATH9K_ANI_RSSI_THR_LOW,
++		ATH9K_ANI_RSSI_THR_HIGH);
+ 
+ 	if (!scan)
+ 		aniState->ofdmNoiseImmunityLevel = immunityLevel;
+@@ -173,7 +174,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 
+ 	weak_sig = entry_ofdm->ofdm_weak_signal_on;
+ 	if (ah->opmode == NL80211_IFTYPE_STATION &&
+-	    BEACON_RSSI(ah) <= aniState->rssiThrHigh)
++	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_HIGH)
+ 		weak_sig = true;
+ 
+ 	if (aniState->ofdmWeakSigDetect != weak_sig)
+@@ -216,11 +217,11 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ 
+ 	ath_dbg(common, ANI, "**** ccklevel %d=>%d, rssi=%d[lo=%d hi=%d]\n",
+ 		aniState->cckNoiseImmunityLevel, immunityLevel,
+-		BEACON_RSSI(ah), aniState->rssiThrLow,
+-		aniState->rssiThrHigh);
++		BEACON_RSSI(ah), ATH9K_ANI_RSSI_THR_LOW,
++		ATH9K_ANI_RSSI_THR_HIGH);
+ 
+ 	if (ah->opmode == NL80211_IFTYPE_STATION &&
+-	    BEACON_RSSI(ah) <= aniState->rssiThrLow &&
++	    BEACON_RSSI(ah) <= ATH9K_ANI_RSSI_THR_LOW &&
+ 	    immunityLevel > ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI)
+ 		immunityLevel = ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI;
+ 
+@@ -514,8 +515,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 
+ 		ani->ofdmsTurn = true;
+ 
+-		ani->rssiThrHigh = ATH9K_ANI_RSSI_THR_HIGH;
+-		ani->rssiThrLow = ATH9K_ANI_RSSI_THR_LOW;
+ 		ani->ofdmWeakSigDetect = ATH9K_ANI_USE_OFDM_WEAK_SIG;
+ 		ani->cckNoiseImmunityLevel = ATH9K_ANI_CCK_DEF_LEVEL;
+ 		ani->ofdmNoiseImmunityLevel = ATH9K_ANI_OFDM_DEF_LEVEL;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 385bdba..dddb136 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -104,7 +104,6 @@ struct ath9k_ani_default {
+ };
+ 
+ struct ar5416AniState {
+-	struct ath9k_channel *c;
+ 	u8 noiseImmunityLevel;
+ 	u8 ofdmNoiseImmunityLevel;
+ 	u8 cckNoiseImmunityLevel;
+@@ -113,15 +112,9 @@ struct ar5416AniState {
+ 	u8 spurImmunityLevel;
+ 	u8 firstepLevel;
+ 	u8 ofdmWeakSigDetect;
+-	u8 cckWeakSigThreshold;
+ 	u32 listenTime;
+-	int32_t rssiThrLow;
+-	int32_t rssiThrHigh;
+ 	u32 ofdmPhyErrCount;
+ 	u32 cckPhyErrCount;
+-	int16_t pktRssi[2];
+-	int16_t ofdmErrRssi[2];
+-	int16_t cckErrRssi[2];
+ 	struct ath9k_ani_default iniDef;
+ };
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0.2
 
