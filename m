@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2531 "EHLO mms2.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:25302 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756453Ab3ANR4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 12:56:50 -0500
-Message-ID: <50F4469F.3030407@broadcom.com> (sfid-20130114_185654_099830_2F772112)
-Date: Mon, 14 Jan 2013 18:55:43 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1750793Ab3ATGkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2013 01:40:51 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	Hugh Dickins <hughd@google.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: iwlwifi: regression in 3.8-rc4 and 3.7.3
+Date: Sun, 20 Jan 2013 06:39:30 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com> (sfid-20130120_074124_939055_601EF501)
+References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
+ <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
+In-Reply-To: <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "Xose Vazquez Perez" <xose.vazquez@gmail.com>
-cc: wireless-regdb@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [wireless-regdb] wireless-regdb updated, please check!
-References: <50F07C03.3050204@gmail.com>
- <20130111212659.GH2170@tuxdriver.com> <50F2B912.3060902@gmail.com>
- <50F2C154.2040807@broadcom.com> <50F3D145.7060004@gmail.com>
-In-Reply-To: <50F3D145.7060004@gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/14/2013 10:35 AM, Xose Vazquez Perez wrote:
-> On 01/13/2013 03:14 PM, Arend van Spriel wrote:
-> 
->> On 01/13/2013 02:39 PM, Xose Vazquez Perez wrote:
-> 
->>> On 01/11/2013 10:26 PM, John W. Linville wrote:
-> 
->>>>> On Fri, Jan 11, 2013 at 09:54:27PM +0100, Xose Vazquez Perez wrote:
->>>>>>> Did you forget CC:wireless-regdb at lists.infradead.org ?
-> 
->>>>> Well, sorta...but I'm not sure that you can prove that anyone actually
->>>>> reads that list anyway... :-(
->>> 40 people:
-> 
->> I would put my money on it that most of those are also keeping taps on
->> the linux-wireless list. I know I do.
-> 
-> If people believe wireless-regdb ml is superfluous, should it be
-> removed ?
-
-Not entirely what I said, but maybe John implied it. The added value of
-it would be that regulatory patches are archived separately. I can see
-that announcements are a gray area as you may want to reach a bigger crowd.
-
-Gr. AvS
-
-
-
+PiANCj4gT24gU3VuLCBKYW4gMjAsIDIwMTMgYXQgNjo1NiBBTSwgSHVnaCBEaWNraW5zIDxodWdo
+ZEBnb29nbGUuY29tPiB3cm90ZToNCj4gPiBBZnRlciBzZW5kaW5nIHRoZSBmaXJzdCAyTUIsIHNj
+cCBvdmVyIHdpcmVsZXNzIGJlY29tZXMgdW5iZWFyYWJseQ0KPiA+IHNsb3csIHdpdGggZnJlcXVl
+bnQgc3RhbGxzOiBvbiB0aGlzIFRoaW5rUGFkIFQ0MjBzIHJ1bm5pbmcgMy44LXJjNCBvciAzLjcu
+My4NCj4gPiBOb3QgYWx3YXlzLCBidXQgb2Z0ZW4uDQo+ID4NCj4gDQo+IFRoZXJlIGlzIG9uZSBw
+ZW5kaW5nIGl3bHdpZmktZml4ZXMsIGR1bm5vIGlmIGl0IHdpbGwgZml4IHlvdXIgaXNzdWUuDQo+
+IFsxXSBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3
+bHdpZmktDQo+IGZpeGVzLmdpdDthPWNvbW1pdGRpZmY7aD1jM2U1ZDcxODFhZmI2NjY1NzM5MzA2
+NmJjY2NlMDk1NmZhYjA5YWIzDQoNClJpZ2h0IC0gc28gdGhlIDIgcGF0Y2hlcyBhcmUgdW5yZWxh
+dGVkLCBhbmQgdGhlIG9uZSBTZWRhdCBpcyBwb2ludGluZyBhdCBpcyByZWxldmFudCBmb3IgMy44
+IG9ubHkuIEl0IGZpeGVzIGEgYnVnIHRoYXQgaGFzIGJlZW4gaW50cm9kdWNlZCBpbiAzLjguDQpS
+ZWdhcmRpbmcgdGhlIGlzc3VlIEh1Z2ggaXMgc3VmZmVyaW5nIGZyb20sIEkgaGF2ZSB0byBzYXkg
+dGhhdCBJIGFtIGEgbGl0dGxlIGNvbmZ1c2VkIHNpbmNlIEkgYW0gcHJldHR5IHN1cmUgdGhlIHBh
+dGNoIGlzIHJpZ2h0LiBOb3csIGl0IG1pZ2h0IHVuY292ZXIgb3RoZXIgcHJlLWV4aXN0aW5nIGJ1
+Z3MuIEFsbCBJIGNhbiBzYXkgaXMgdGhhdCBJIGRvbid0IHRoaW5rIHRoYXQgcmV2ZXJ0aW5nIHRo
+ZSBwYXRjaCBpcyAqc28qIHByb2JsZW1hdGljIHNpbmNlIHRoZSBwYXRjaCByZWFsbHkgd2FudHMg
+dG8gc29sdmUgYSByYXJlIGNhc2UuIElmIGl0IGNhdXNlcyBpc3N1ZXMsIHdlIGNhbiBzaW1wbHkg
+cmV2ZXJ0IGl0LiBJdCBvbmx5IG1lYW5zIHRoYXQgd2hlbiBJIHdpbGwgZ2V0IGEgbGl0dGxlIGJp
+dCBvZiB0aW1lLCBJIG1pZ2h0IG5lZWQgdG8gYXNrIHlvdSBhIGZldyBsb2dzLiBUaGFua3MgZm9y
+IHRoZSByZXBvcnQgKGFuZCB0aGUgYmlzZWN0aW9uKS4NCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpBIG1lbWJlciBv
+ZiB0aGUgSW50ZWwgQ29ycG9yYXRpb24gZ3JvdXAgb2YgY29tcGFuaWVzCgpUaGlzIGUtbWFpbCBh
+bmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IK
+dGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3Ig
+ZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJl
+IG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFu
+ZCBkZWxldGUgYWxsIGNvcGllcy4K
 
