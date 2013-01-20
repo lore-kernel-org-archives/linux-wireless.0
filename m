@@ -1,122 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55410 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab3AXQh4 (ORCPT
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:61826 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793Ab3ATGNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 11:37:56 -0500
-Message-ID: <1359045496.21908.11.camel@jlt4.sipsolutions.net> (sfid-20130124_173759_769373_43373817)
-Subject: pull-request: mac80211-next 2013-01-24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 24 Jan 2013 17:38:16 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-/pliA9o90tucsz40NWGN"
-Mime-Version: 1.0
+	Sun, 20 Jan 2013 01:13:08 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
+References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
+Date: Sun, 20 Jan 2013 07:13:07 +0100
+Message-ID: <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com> (sfid-20130120_071327_281600_A1C02444)
+Subject: Re: iwlwifi: regression in 3.8-rc4 and 3.7.3
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Hugh Dickins <hughd@google.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jan 20, 2013 at 6:56 AM, Hugh Dickins <hughd@google.com> wrote:
+> After sending the first 2MB, scp over wireless becomes unbearably slow,
+> with frequent stalls: on this ThinkPad T420s running 3.8-rc4 or 3.7.3.
+> Not always, but often.
+>
 
---=-/pliA9o90tucsz40NWGN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+There is one pending iwlwifi-fixes, dunno if it will fix your issue.
 
-John,
+- Sedat -
 
-For mac80211-next, I have a few more patches:
- * AKM definitions from Bing,
- * mesh fixes from Thomas,
- * channel check fix from Simon,
- * an old patch from Yoni Divinsky who doesn't even work for TI any
-   more, to configure the WEP TX key for ARP offload etc.
- * from myself, a fix for my previous aggregation changes, some cleanup
-   and some improvements and fixes for WoWLAN
+[1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-fixes.git;a=commitdiff;h=c3e5d7181afb66657393066bccce0956fab09ab3
 
-Please pull.
-
-Thanks,
-johannes
-
-The following changes since commit 5a32aff37a02ebc959837f08d09ac8ba65d4f1b0=
-:
-
-  mac80211: split out chandef tracing macros (2013-01-16 23:57:51 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to 782d2673655c05a1c0335fe0ee4cb62c23bcc231:
-
-  mac80211: remove redundant check (2013-01-24 16:07:58 +0100)
-
-----------------------------------------------------------------
-Bing Zhao (1):
-      ieee80211: define AKM suite selectors type 5, 6 and 7
-
-Emmanuel Grumbach (1):
-      mac80211: provide the vif in rssi_callback
-
-Johannes Berg (5):
-      mac80211: remove ARP filter enable/disable logic
-      mac80211: improve aggregation debug messages
-      mac80211: allow drivers to access IPv6 information
-      mac80211: fix aggregation state with current drivers
-      mac80211: remove redundant check
-
-Simon Wunderlich (1):
-      cfg80211: fix channel check in cfg80211_can_use_iftype_chan
-
-Thomas Pedersen (2):
-      mac80211: clean up mesh sta allocation warning
-      mac80211: support mesh rate updates
-
-Yoni Divinsky (1):
-      mac80211: add op to configure default key id
-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   5 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |   1 +
- drivers/net/wireless/ti/wlcore/main.c              |   3 +-
- include/linux/ieee80211.h                          |   5 +-
- include/net/mac80211.h                             |  31 +++-
- net/mac80211/agg-rx.c                              |  14 +-
- net/mac80211/agg-tx.c                              |  61 +++++---
- net/mac80211/driver-ops.h                          |  36 ++++-
- net/mac80211/ieee80211_i.h                         |   3 +-
- net/mac80211/iface.c                               |   3 -
- net/mac80211/key.c                                 |   5 +-
- net/mac80211/main.c                                |  64 ++++++--
- net/mac80211/mesh_plink.c                          | 166 +++++++++++++----=
-----
- net/mac80211/mlme.c                                |  42 ++----
- net/mac80211/sta_info.c                            |   5 -
- net/mac80211/trace.h                               |  53 ++++++-
- net/wireless/util.c                                |   3 +-
- 17 files changed, 332 insertions(+), 168 deletions(-)
-
-
---=-/pliA9o90tucsz40NWGN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRAWN4AAoJEDBSmw7B7bqrpnAP/1KTvG8JLAG0xPMchdFkndJi
-WESX1TLScybcAmll65D1HxP7cPtyGHmmNYpv7a7pHo4T05TH+ktlMURqXFg2T8I5
-CJp5B37LvDd4KesoD4LpiaZykQ3HcFZ9v100Kv4jS2qTV2jqlK6zjYYGO1AxmeK9
-v7+aIHQCLegHuHVBBr/rdWQeocBGJHpGEZq2nJQ7mvZHMu3mxKNWvThIpdXEzpUS
-McMuAlwMcOikEyRLI2pUJ6f43N7hf2ackxVZSqCkdG1trmhbKp3VifVVt2iXQ5qu
-0bXNmQQOftSq9GA32D8TryxFmKm+Vy6EE08HKAQIngYsSCZ+AwE1V7KyumHTYPzB
-SI1lMQDuIpZylcP63Ig4qvefQQB6riU4i6JOQ9fKnKssn33DChpcROXq/8TV47It
-FR7pIjv6aAV6aZSFQtXsV7GyyMq2+t2PVUDmyGdlOSyYTyRS7tfarxBBtCU4Rq2K
-5Kw/UepDBbZ0FK1i8uJA/ayEdJu/dRGUA7NshjpLeb0QMIe62L2EfVtWw+37bubb
-J89egyaFwqcEL+iFuHvnwFI+5Uw9mQRzuH7ABZbFhkzkqZi6ZnXm9/wCtp5Zz2eJ
-p1+BijYN+V8TkStjbFJ6vGx7y8NCtVeb964d70i97/Efu67Enu4ZayyFWAX2Ebvs
-vm3rYy42vafLe5Xvl8Xg
-=qTeh
------END PGP SIGNATURE-----
-
---=-/pliA9o90tucsz40NWGN--
-
+> Bisection led to commit f590dcec944552f9a4a61155810f3abd17d6465d
+> "iwlwifi: fix the reclaimed packet tracking upon flush queue"
+> (below); and indeed backing that out brings them back to speed.
+>
+> Here are the "iwlwifi" lines from my dmesg:
+> [    1.936640] iwlwifi 0000:03:00.0: irq 44 for MSI/MSI-X
+> [    8.384905] iwlwifi 0000:03:00.0: loaded firmware version 9.221.4.1 build 25532
+> [    8.406425] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
+> [    8.427099] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
+> [    8.447888] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+> [    8.468369] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
+> [    8.489008] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
+> [    8.509588] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Ultimate-N 6300 AGN, REV=0x74
+> [    8.531309] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> [    9.891162] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> [    9.891399] iwlwifi 0000:03:00.0: Radio type=0x0-0x3-0x1
+> [   10.260205] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> [   10.260405] iwlwifi 0000:03:00.0: Radio type=0x0-0x3-0x1
+>
+> Thanks,
+> Hugh
+>
+> commit f590dcec944552f9a4a61155810f3abd17d6465d
+> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Date:   Mon Dec 31 09:26:10 2012 +0200
+>
+>     iwlwifi: fix the reclaimed packet tracking upon flush queue
+>
+>     There's a bug in the currently released firmware version,
+>     the sequence control in the Tx response isn't updated in
+>     all cases. Take it from the packet as a workaround.
+>
+>     Cc: stable@vger.kernel.org
+>     Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>
+> diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+> index da21328..a790599 100644
+> --- a/drivers/net/wireless/iwlwifi/dvm/tx.c
+> +++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+> @@ -1151,13 +1151,6 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+>                         next_reclaimed = ssn;
+>                 }
+>
+> -               if (tid != IWL_TID_NON_QOS) {
+> -                       priv->tid_data[sta_id][tid].next_reclaimed =
+> -                               next_reclaimed;
+> -                       IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
+> -                                                 next_reclaimed);
+> -               }
+> -
+>                 iwl_trans_reclaim(priv->trans, txq_id, ssn, &skbs);
+>
+>                 iwlagn_check_ratid_empty(priv, sta_id, tid);
+> @@ -1208,11 +1201,28 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+>                         if (!is_agg)
+>                                 iwlagn_non_agg_tx_status(priv, ctx, hdr->addr1);
+>
+> +                       /*
+> +                        * W/A for FW bug - the seq_ctl isn't updated when the
+> +                        * queues are flushed. Fetch it from the packet itself
+> +                        */
+> +                       if (!is_agg && status == TX_STATUS_FAIL_FIFO_FLUSHED) {
+> +                               next_reclaimed = le16_to_cpu(hdr->seq_ctrl);
+> +                               next_reclaimed =
+> +                                       SEQ_TO_SN(next_reclaimed + 0x10);
+> +                       }
+> +
+>                         is_offchannel_skb =
+>                                 (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN);
+>                         freed++;
+>                 }
+>
+> +               if (tid != IWL_TID_NON_QOS) {
+> +                       priv->tid_data[sta_id][tid].next_reclaimed =
+> +                               next_reclaimed;
+> +                       IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
+> +                                          next_reclaimed);
+> +               }
+> +
+>                 WARN_ON(!is_agg && freed != 1);
+>
+>                 /*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
