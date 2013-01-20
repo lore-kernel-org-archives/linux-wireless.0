@@ -1,29 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:49084 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753261Ab3A1Es2 (ORCPT
+Received: from intranet.asianux.com ([58.214.24.6]:15722 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140Ab3ATKFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2013 23:48:28 -0500
-Message-ID: <51060302.9060309@qca.qualcomm.com> (sfid-20130128_054831_931748_26347546)
-Date: Mon, 28 Jan 2013 10:18:02 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Sun, 20 Jan 2013 05:05:05 -0500
+Message-ID: <50FBC180.2090003@asianux.com> (sfid-20130120_110525_369650_96D8BC75)
+Date: Sun, 20 Jan 2013 18:05:52 +0800
+From: Chen Gang <gang.chen@asianux.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V9 2/2] cfg80211/nl80211: Enable drivers to implement
- MAC address based ACL
-References: <1358488125-6154-1-git-send-email-vthiagar@qca.qualcomm.com>  <1358488125-6154-2-git-send-email-vthiagar@qca.qualcomm.com> <1359135561.4655.18.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359135561.4655.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: [suggestion]  drivers/net/wireless/iwlegacy: the parameter 'const
+ char *buf' may be not '\0' base string for DINFO
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Stanislaw, John
+
+  we can not assume that the parameter 'const char *buf' is '\0' base string.
+  and DINOF uses '%s' for buf (in line 3288..3289)
+  so it will cause issue.
+
+  I am not quite familiar with the detail features.
+  so I send mail as a suggestion.
+  please help checking, if this suggestion is valid, please help fixing, thanks.
+
+  Regards
+
+gchen.
+
+3260 static ssize_t
+3261 il3945_store_measurement(struct device *d, struct device_attribute *attr,
+3262                          const char *buf, size_t count)
+3263 {
+3264         struct il_priv *il = dev_get_drvdata(d);
+3265         struct ieee80211_measurement_params params = {
+3266                 .channel = le16_to_cpu(il->active.channel),
+3267                 .start_time = cpu_to_le64(il->_3945.last_tsf),
+3268                 .duration = cpu_to_le16(1),
+3269         };
+3270         u8 type = IL_MEASURE_BASIC;
+3271         u8 buffer[32];
+3272         u8 channel;
+3273 
+3274         if (count) {
+3275                 char *p = buffer;
+3276                 strlcpy(buffer, buf, min(sizeof(buffer), count));
+3277                 channel = simple_strtoul(p, NULL, 0);
+3278                 if (channel)
+3279                         params.channel = channel;
+3280 
+3281                 p = buffer;
+3282                 while (*p && *p != ' ')
+3283                         p++;
+3284                 if (*p)
+3285                         type = simple_strtoul(p + 1, NULL, 0);
+3286         }
+3287 
+3288         D_INFO("Invoking measurement of type %d on " "channel %d (for '%s')\n",
+3289                type, params.channel, buf);
+3290         il3945_get_measurement(il, &params, type);
+3291 
+3292         return count;
+3293 }
+3294 
 
 
-On Friday 25 January 2013 11:09 PM, Johannes Berg wrote:
-> I'm applying this because I've sat on it for such a long time, but I
-> think you can do better. I've fixed these issues with your patch:
 
-Thanks for fixing it, sorry for those mistakes.
 
-Vasanth
+-- 
+Chen Gang
+
+Asianux Corporation
