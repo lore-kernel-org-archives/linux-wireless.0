@@ -1,44 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:62816 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752650Ab3ADHns convert rfc822-to-8bit (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:45837 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752290Ab3ATQcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 02:43:48 -0500
-Received: by mail-we0-f175.google.com with SMTP id z53so7786149wey.34
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jan 2013 23:43:47 -0800 (PST)
+	Sun, 20 Jan 2013 11:32:08 -0500
+Date: Sun, 20 Jan 2013 19:31:30 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	David Laight <David.Laight@ACULAB.COM>,
+	kernel-janitors@vger.kernel.org
+Subject: [patch v3] b43: N-PHY: fix gain in
+ b43_nphy_get_gain_ctl_workaround_ent()
+Message-ID: <20130120163130.GA7730@elgon.mountain> (sfid-20130120_173249_689783_F88F0198)
 MIME-Version: 1.0
-In-Reply-To: <1357257085-11822-3-git-send-email-hauke@hauke-m.de>
-References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
-	<1357257085-11822-3-git-send-email-hauke@hauke-m.de>
-Date: Fri, 4 Jan 2013 08:43:46 +0100
-Message-ID: <CACna6rwincxUDM9ev9_CwH-MByS_5tGyd7hpR+wgR6D-rNzgww@mail.gmail.com> (sfid-20130104_084352_816815_12F4B593)
-Subject: Re: [PATCH 2/6] bcma: mips: explicit assign IRQ numbers
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nlhintz@hotmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7118@saturn3.aculab.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/1/4 Hauke Mehrtens <hauke@hauke-m.de>:
-> The assignment of the IRQs to the cores of the chips by iterating over
-> the cores is complicated and causes problems with SoC like the BCM4706
-> with two GMAC core where just one should get a dedicated IRQ number.
+There were no break statements in this switch statement so everything
+used the default settings.  Per Walter Harms's suggestion, I've replaced
+the switch statement and done a little cleanup.
 
-Well, the only problem on BCM4706 is that second (broken/dangling)
-GMAC core gets it's own IRQ. With such a "waste" of one IRQ line we
-may end up using shared IRQ for some other core like PCIE/USB.
-This issue can be simply workarounded (with 2 LOC) and sounds sane:
-bug in HW, specific workaround in a driver. We already have similar
-workarounds for other "dangling" cores.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2: Make additional style fixes as well while we're messing with the
+    function.
+v3: Make the array static const int.
 
-I don't know about any other issues with BCM4706 IRQs.
-
-Are there any other (more serious?) issues on different SoCs? Any
-advantages of hardcoding IRQs (per chipset) rather than keeping this
-simple algorithm? Do the IRQ lines differ? Is this somehow better to
-use (just an example) IRQ 3 instead of IRQ 4 for GMAC core?
-
--- 
-Rafał
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 97d4e27..aaca60c 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -3226,8 +3226,6 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+ {
+ 	struct nphy_gain_ctl_workaround_entry *e;
+ 	u8 phy_idx;
+-	u8 tr_iso = ghz5 ? dev->dev->bus_sprom->fem.ghz5.tr_iso :
+-			   dev->dev->bus_sprom->fem.ghz2.tr_iso;
+ 
+ 	if (!ghz5 && dev->phy.rev >= 6 && dev->phy.radio_rev == 11)
+ 		return &nphy_gain_ctl_wa_phy6_radio11_ghz2;
+@@ -3249,6 +3247,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+ 		    !b43_channel_type_is_40mhz(dev->phy.channel_type))
+ 			e->cliplo_gain = 0x2d;
+ 	} else if (!ghz5 && dev->phy.rev >= 5) {
++		static const int gain_data[] = {0x0062, 0x0064, 0x006a, 0x106a,
++						0x106c, 0x1074, 0x107c, 0x207c};
++		u8 tr_iso = dev->dev->bus_sprom->fem.ghz2.tr_iso;
++
+ 		if (ext_lna) {
+ 			e->rfseq_init[0] &= ~0x4000;
+ 			e->rfseq_init[1] &= ~0x4000;
+@@ -3256,26 +3258,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
+ 			e->rfseq_init[3] &= ~0x4000;
+ 			e->init_gain &= ~0x4000;
+ 		}
+-		switch (tr_iso) {
+-		case 0:
+-			e->cliplo_gain = 0x0062;
+-		case 1:
+-			e->cliplo_gain = 0x0064;
+-		case 2:
+-			e->cliplo_gain = 0x006a;
+-		case 3:
+-			e->cliplo_gain = 0x106a;
+-		case 4:
+-			e->cliplo_gain = 0x106c;
+-		case 5:
+-			e->cliplo_gain = 0x1074;
+-		case 6:
+-			e->cliplo_gain = 0x107c;
+-		case 7:
+-			e->cliplo_gain = 0x207c;
+-		default:
+-			e->cliplo_gain = 0x106a;
+-		}
++		if (tr_iso > 7)
++			tr_iso = 3;
++		e->cliplo_gain = gain_data[tr_iso];
++
+ 	} else if (ghz5 && dev->phy.rev == 4 && ext_lna) {
+ 		e->rfseq_init[0] &= ~0x4000;
+ 		e->rfseq_init[1] &= ~0x4000;
