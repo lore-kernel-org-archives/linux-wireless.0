@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32774 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092Ab3ARVyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 16:54:25 -0500
-Message-ID: <1358546080.7922.36.camel@jlt4.sipsolutions.net> (sfid-20130118_225429_846877_EC8618BB)
-Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
- command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 18 Jan 2013 22:54:40 +0100
-In-Reply-To: <20130117134034.GC19552@pandem0nium>
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1358376672.15012.37.camel@jlt4.sipsolutions.net>
-	 <20130117134034.GC19552@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:56448 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751061Ab3ATIyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2013 03:54:50 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1TwqgC-0007Lm-F5
+	for linux-wireless@vger.kernel.org; Sun, 20 Jan 2013 09:55:04 +0100
+Received: from 117.207.246.22 ([117.207.246.22])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2013 09:55:04 +0100
+Received: from ketan_kamat by 117.207.246.22 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jan 2013 09:55:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Ketan Kamat <ketan_kamat@persistent.co.in>
+Subject: wl12xx: does not connect to WPA2-personal
+Date: Sun, 20 Jan 2013 08:47:39 +0000 (UTC)
+Message-ID: <loom.20130120T094649-416@post.gmane.org> (sfid-20130120_095500_506521_E560651E)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-17 at 14:40 +0100, Simon Wunderlich wrote:
+Hello Luciano,
 
-> Actually there is no limit how long a channel is considered "available", at
-> least in ETSI. ETSI EN 301-893 v1.4.1 had a limit of 24 hours for that,
-> but that was removed in v1.5.1 and didn't re-appear since then (current is
-> v1.7.1).
+we are facing a problem with wl1271 module when connecting to WPA2-personal
+network with ciper AES.It connects after successful authentication (without
+getting IP address) and keeps retrying for IP address after connecting (and
+suddenly disconnects as well).
+We are using ubuntu 12.04 with linux kernel 3.4.7 built using stable-kernel
+tree. wl12xx firmware loaded for wl12xx is 6.3.5.0.98. Hardware setup consists
+of beagle board connected to the chipsee module that has touchscreen and the
+wl1271 module.
 
-Huh indeed, I would have expected that to be there. It does have a
-non-occupancy time though (30 minutes), maybe we should implement that?
+I am mentioning two scenarios here:
+1. Here we use a router that we can configure to different wifi security. If we
+set the wifi network to open i.e security=None, wl1271 module gets connected.
+Hence does not seem to be problem related to antenna or range.
+2. If i remove driver for wl12xx and connect a USB dongle (r8712u), and try to
+connect to the same WPA2-personal network.It works and gets the IP
+address.However we want to use on board wl12xx module.
 
-I'm also thinking with the next regdb format update we should allow
-specifying these timeouts etc. there.
+Is it the problem with the wl12xx driver? Any fix for this?
 
-Does anyone have the relevant FCC rules? I can't find anything with
-google ...
+Does wpa2-personal work with wl12xx with latest Linux kernel (3.7.2)?
 
-> But we can move the CAC/timeout in the wdev and have keep a flag field in
-> the channel struct instead, marking the channel as available, unavailable, etc.
-> 
-> What do you think?
+Any pointers towards this would be of great help.
 
-I think that would make sense. Probably available/unavailable and
-"non-occupancy until"?
+Regards,
+Ketan
 
-> > I have a feeling this change should take into account the channel width,
-> > and whether CAC completed successfully?
-> > 
-> 
-> All channels used for operation are checked already in cfg80211_chandef_usable()
-> for the flags.
-> 
-> If the channel width is supported at all is checked with cfg80211_can_use_iftype_chan()
-> before/after.
-> 
-> So I don't see the neccesity for further checking width, or am I missing something?
-
-Hmm, cfg80211_reg_can_beacon() is exported and usable by other modules,
-so it should probably do more checking?
-
-> > > +	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
-> > > +	if (!err) {
-> > > +		wdev->preset_chandef = chandef;
-> > > +		chandef.chan->cac_started = true;
-> > > +		chandef.chan->radar_detect_timeout = jiffies +
-> > > +			msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
-> > > +	}
-> > > +
-> > > +	return err;
-> > > +}
-> > 
-> > This still seems somewhat wrong. For the duration of the CAC, the
-> > channel should be "locked" in some way, no? As it stands now, nothing
-> > prevents userspace from adding another vif and using it for something
-> > entirely different, while cfg80211 thinks the CAC is actually running.
-> > 
-> 
-> Hmm, we can put the "CAC state" in the wdev then, and use it for locking?
-
-I think it may need to be the CAC chandef? Not sure, but we definitely
-need something to use in cfg80211_get_chan_state().
-
-johannes
 
