@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677Ab3ABNxd (ORCPT
+Received: from mail-da0-f45.google.com ([209.85.210.45]:34849 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab3ATHkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 08:53:33 -0500
-Message-ID: <1357134823.9839.41.camel@jlt4.sipsolutions.net> (sfid-20130102_145335_540837_95A8D1FF)
-Subject: Re: [PATCHv5 0/8] Add DFS master ability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 02 Jan 2013 14:53:43 +0100
-In-Reply-To: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 20 Jan 2013 02:40:39 -0500
+Received: by mail-da0-f45.google.com with SMTP id w4so2230166dam.4
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jan 2013 23:40:39 -0800 (PST)
+Date: Sat, 19 Jan 2013 23:40:24 -0800 (PST)
+From: Hugh Dickins <hughd@google.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: iwlwifi: regression in 3.8-rc4 and 3.7.3
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com>
+Message-ID: <alpine.LNX.2.00.1301192331140.3905@eggly.anvils> (sfid-20130120_084059_475108_52A1CBA6)
+References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils> <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 20 Jan 2013, Grumbach, Emmanuel wrote:
+> > 
+> > On Sun, Jan 20, 2013 at 6:56 AM, Hugh Dickins <hughd@google.com> wrote:
+> > > After sending the first 2MB, scp over wireless becomes unbearably
+> > > slow, with frequent stalls: on this ThinkPad T420s running 3.8-rc4 or 3.7.3.
+> > > Not always, but often.
+> > >
+> > 
+> > There is one pending iwlwifi-fixes, dunno if it will fix your issue.
+> > [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-
+> > fixes.git;a=commitdiff;h=c3e5d7181afb66657393066bccce0956fab09ab3
+> 
+> Right - so the 2 patches are unrelated, and the one Sedat is pointing at is relevant for 3.8 only. It fixes a bug that has been introduced in 3.8.
 
-> I'm sending this as patch to keep the versioning, although it can be
-> considered as RFC, I would be suprised if all single channel/single
-> interface aspects were considered correctly. :)
+Yes, I have now given that one a try, but it does not affect my issue.
 
-:)
+> Regarding the issue Hugh is suffering from, I have to say that I am a little confused since I am pretty sure the patch is right. Now, it might uncover other pre-existing bugs. All I can say is that I don't think that reverting the patch is *so* problematic since the patch really wants to solve a rare case. If it causes issues, we can simply revert it. It only means that when I will get a little bit of time, I might need to ask you a few logs. Thanks for the report (and the bisection).
 
-I think we need a bit more "design review" first.
+Sure, let me know what to do, once you have time to investigate.
 
-To me, the open questions are:
- * Should switching to a DFS channel be allowed at all? How so, if radar
-   can't be tested before? You just stop the AP instead but userspace
-   can do that just as well.
- * What happens with multiple virtual interfaces? You allow a single
-   channel context only which makes sense, but that doesn't disallow
-   things like having a client + AP, and then the client switching away
-   because the P2P GO it was connected to randomly decided to switch.
-   This would break radar detection. (1) What should happen in this
-   case?
- * To avoid that problem, could restrict to a single virtual interface.
-   However, that's unlikely to be sufficient -- you'd want to still be
-   able to implement multi-BSSID APs which then switch together etc.
- * That raises another interesting question -- should multiple BSSIDs on
-   the same channel really *all* call the driver's ap_channel_switch()
-   callback? That seems ... strange!
- * Do we need any software channel switch handling?
+So far as I know, I'm the first to notice: so we can probably
+leave it in 3.8-rc for now, until/unless it gives wider trouble.
 
-Generally the biggest issue is around multi-channel channel switch
-behaviour I think. Any good ideas?
+But reverting from 3.7-stable soon would be a good idea,
+regressions there being more tiresome.
 
-johannes
-
-(1) Actually today it would either break the AP (channel contexts NOT
-supported by the driver) or disconnect the client (otherwise)
-
+Hugh
