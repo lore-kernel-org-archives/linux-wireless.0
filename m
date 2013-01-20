@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.43]:36184 "EHLO mail.ispras.ru"
+Received: from nbd.name ([46.4.11.11]:39939 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751319Ab3ASM45 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jan 2013 07:56:57 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ilw@linux.intel.com,
-	ldv-project@linuxtesting.org
-Subject: [PATCH] iwlegacy: don't return zero on failure paths in il4965_pci_probe()
-Date: Sat, 19 Jan 2013 16:56:34 +0400
-Message-Id: <1358600194-20371-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130119_135705_842752_8329F574)
+	id S1752412Ab3ATRwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2013 12:52:10 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 8/8] ath9k_hw: remove a useless WARN_ON
+Date: Sun, 20 Jan 2013 18:51:59 +0100
+Message-Id: <1358704319-81749-8-git-send-email-nbd@openwrt.org> (sfid-20130120_185216_571085_314AF073)
+In-Reply-To: <1358704319-81749-7-git-send-email-nbd@openwrt.org>
+References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-2-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-3-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-4-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-5-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-6-git-send-email-nbd@openwrt.org>
+ <1358704319-81749-7-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If hardware is not ready, il4965_pci_probe() breaks off initialization,
-deallocates all resources, but returns zero.
-The patch adds -EIO as return value in this case.
+&ah->curchan->ani can never be NULL
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlegacy/4965-mac.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath9k/ani.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index c3fbf67..c805108 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6553,6 +6553,7 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il4965_prepare_card_hw(il);
- 	if (!il->hw_ready) {
- 		IL_WARN("Failed, HW not ready\n");
-+		err = -EIO;
- 		goto out_iounmap;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index a9218a1..7ecd40f 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -419,9 +419,6 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		return;
+ 
+ 	aniState = &ah->curchan->ani;
+-	if (WARN_ON(!aniState))
+-		return;
+-
+ 	if (!ath9k_hw_ani_read_counters(ah))
+ 		return;
  
 -- 
-1.7.9.5
+1.8.0.2
 
