@@ -1,39 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35534 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092Ab3AZUTh (ORCPT
+Received: from intranet.asianux.com ([58.214.24.6]:55781 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793Ab3ATHUd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 15:19:37 -0500
-Message-ID: <1359231601.8699.2.camel@jlt4.sipsolutions.net> (sfid-20130126_211941_601642_1CA5D551)
-Subject: Re: [PATCH v2] compat: backport nla_put_be{16,32,64}()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
-Date: Sat, 26 Jan 2013 21:20:01 +0100
-In-Reply-To: <510320C8.6010407@hauke-m.de>
-References: <1359024296-17724-1-git-send-email-johannes@sipsolutions.net>
-	 <510320C8.6010407@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 20 Jan 2013 02:20:33 -0500
+Message-ID: <50FB9AF0.2090200@asianux.com> (sfid-20130120_082100_552161_1591993F)
+Date: Sun, 20 Jan 2013 15:21:20 +0800
+From: Chen Gang <gang.chen@asianux.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] drivers/net/wireless: need consider the not '\0' terminated
+ string.
+References: <50EBAF8F.7030704@asianux.com>
+In-Reply-To: <50EBAF8F.7030704@asianux.com>
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-01-26 at 01:18 +0100, Hauke Mehrtens wrote:
-> On 01/24/2013 11:44 AM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > I intend to use these in nl80211.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >  include/linux/compat-3.5.h | 24 ++++++++++++++++++++++++
-> >  1 file changed, 24 insertions(+)
-> > 
+Hello John W. Linville:
+
+  when you have free time, could you give a glance for this patch ?
+
+  thanks.
+
+gchen.
+
+
+于 2013年01月08日 13:33, Chen Gang 写道:
 > 
-> Thank you for your patch.
-> I added a missing #include <net/netlink.h> to it.
+>   in ray_cs.c:
+>     the a_current_ess_id is "Null terminated unless ESSID_SIZE long"
+>     so we need buffer it with '\0' firstly, before using strlen or %s.
+> 
+>   additional information:
+>     in drivers/net/wireless/rayctl.h:
+>       "NULL terminated unless 32 long" is a comment at line 616, 664
+>       ESSID_SIZE is 32, at line 190
+>     in include/uapi/linux/wireless.h:
+>       IW_ESSID_MAX_SIZE is also 32
+>     in drivers/net/wireless/ray_cs.c:
+>       use strncpy for it, without '\0' terminated, at line 639
+>       use memcpy for it, assume not '\0' terminated in line 1092..1097
+>       buffer it with '\0' firstly, before using %s, in line 2576, 2598..2600
+> 
+> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+> ---
+>  drivers/net/wireless/ray_cs.c |   19 ++++++++++++++-----
+>  1 file changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+> index 598ca1c..e7cf37f 100644
+> --- a/drivers/net/wireless/ray_cs.c
+> +++ b/drivers/net/wireless/ray_cs.c
+> @@ -1107,12 +1107,15 @@ static int ray_get_essid(struct net_device *dev, struct iw_request_info *info,
+>  			 union iwreq_data *wrqu, char *extra)
+>  {
+>  	ray_dev_t *local = netdev_priv(dev);
+> +	UCHAR tmp[IW_ESSID_MAX_SIZE + 1];
+>  
+>  	/* Get the essid that was set */
+>  	memcpy(extra, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
+> +	memcpy(tmp, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
+> +	tmp[IW_ESSID_MAX_SIZE] = '\0';
+>  
+>  	/* Push it out ! */
+> -	wrqu->essid.length = strlen(extra);
+> +	wrqu->essid.length = strlen(tmp);
+>  	wrqu->essid.flags = 1;	/* active */
+>  
+>  	return 0;
+> @@ -1842,6 +1845,8 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
+>  	UCHAR tmp;
+>  	UCHAR cmd;
+>  	UCHAR status;
+> +	UCHAR memtmp[ESSID_SIZE + 1];
+> +
+>  
+>  	if (dev == NULL)	/* Note that we want interrupts with dev->start == 0 */
+>  		return IRQ_NONE;
+> @@ -1901,17 +1906,21 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
+>  			break;
+>  		case CCS_START_NETWORK:
+>  		case CCS_JOIN_NETWORK:
+> +			memcpy(memtmp, local->sparm.b4.a_current_ess_id,
+> +								ESSID_SIZE);
+> +			memtmp[ESSID_SIZE] = '\0';
+> +
+>  			if (status == CCS_COMMAND_COMPLETE) {
+>  				if (readb
+>  				    (&pccs->var.start_network.net_initiated) ==
+>  				    1) {
+>  					dev_dbg(&link->dev,
+>  					      "ray_cs interrupt network \"%s\" started\n",
+> -					      local->sparm.b4.a_current_ess_id);
+> +					      memtmp);
+>  				} else {
+>  					dev_dbg(&link->dev,
+>  					      "ray_cs interrupt network \"%s\" joined\n",
+> -					      local->sparm.b4.a_current_ess_id);
+> +					      memtmp);
+>  				}
+>  				memcpy_fromio(&local->bss_id,
+>  					      pccs->var.start_network.bssid,
+> @@ -1939,12 +1948,12 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
+>  				if (status == CCS_START_NETWORK) {
+>  					dev_dbg(&link->dev,
+>  					      "ray_cs interrupt network \"%s\" start failed\n",
+> -					      local->sparm.b4.a_current_ess_id);
+> +					      memtmp);
+>  					local->timer.function = start_net;
+>  				} else {
+>  					dev_dbg(&link->dev,
+>  					      "ray_cs interrupt network \"%s\" join failed\n",
+> -					      local->sparm.b4.a_current_ess_id);
+> +					      memtmp);
+>  					local->timer.function = join_net;
+>  				}
+>  				add_timer(&local->timer);
+> 
 
-Oops, thanks :)
 
-johannes
+-- 
+Chen Gang
 
+Asianux Corporation
