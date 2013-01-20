@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818Ab3AaPNs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:13:48 -0500
-Message-ID: <1359645245.8415.72.camel@jlt4.sipsolutions.net> (sfid-20130131_161351_675591_C4C8CA53)
-Subject: Re: [PATCH 2/7] mac80211: Fix tx queue handling during scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Thu, 31 Jan 2013 16:14:05 +0100
-In-Reply-To: <1359503255-18270-3-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-	 <1359503255-18270-3-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:43082 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752480Ab3ATUzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jan 2013 15:55:32 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	stable@vger.kernel.org
+Subject: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask that don't include chain 0
+Date: Sun, 20 Jan 2013 21:55:20 +0100
+Message-Id: <1358715322-46447-1-git-send-email-nbd@openwrt.org> (sfid-20130120_215540_743019_B9C023F5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 ++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c   | 2 +-
+ drivers/net/wireless/ath/ath9k/hw.h           | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
-> +		if (offchan_tx_ok) {
-
-unlikely(), this is one of the hottest code paths in mac80211 after
-all :-)
-
-> +			/*
-> +			 * Always directly transmit off-channel frames
-> +			 * unless the driver has stopped the queues.
-> +			 */
-> +			if (test_bit(IEEE80211_QUEUE_STOP_REASON_DRIVER,
-> +				     &local->queue_stop_reasons[q])) {
-
-might there be other reasons to TX, i.e. ignore only
-STOP_REASON_OFFCHANNEL?
-
-That might be more efficient too:
-
-offchflag = offchan_tx_ok << log2(STOP_REASON_OFFCHANNEL);
-
-> +		} else if (local->queue_stop_reasons[q] ||
-
-if (local->queue_stop_reasons[q] & ~offchflag || ...
-
-OTOH, I guess you want a different return value too. But that's in a
-relatively unlikely code path again, so might still be better to then
-again differentiate within that if.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 8b0d8dc..56317b0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -976,6 +976,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 					  AR_PHY_CL_TAB_1,
+ 					  AR_PHY_CL_TAB_2 };
+ 
++	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
++
+ 	if (rtt) {
+ 		if (!ar9003_hw_rtt_restore(ah, chan))
+ 			run_rtt_cal = true;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index ce19c09..8290edd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -586,7 +586,7 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
+ 	ath9k_hw_synth_delay(ah, chan, synthDelay);
+ }
+ 
+-static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
++void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
+ {
+ 	switch (rx) {
+ 	case 0x5:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 7f1a8e9..9d26fc5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1066,6 +1066,7 @@ void ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
+ int ar9003_paprd_init_table(struct ath_hw *ah);
+ bool ar9003_paprd_is_done(struct ath_hw *ah);
+ bool ar9003_is_paprd_enabled(struct ath_hw *ah);
++void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
+ 
+ /* Hardware family op attach helpers */
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
+-- 
+1.8.0.2
 
