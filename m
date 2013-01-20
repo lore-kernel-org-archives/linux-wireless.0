@@ -1,85 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:32872 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805Ab3AVLfz convert rfc822-to-8bit (ORCPT
+Received: from mail-da0-f41.google.com ([209.85.210.41]:45033 "EHLO
+	mail-da0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509Ab3ATKnw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 06:35:55 -0500
-Received: by mail-wi0-f182.google.com with SMTP id hn14so5803509wib.15
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 03:35:54 -0800 (PST)
+	Sun, 20 Jan 2013 05:43:52 -0500
+Message-ID: <50FBCA92.7000207@gmail.com> (sfid-20130120_114356_591954_528E88CC)
+Date: Sun, 20 Jan 2013 18:44:34 +0800
+From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <000301cdf87b$0ef2a020$2cd7e060$@co.kr>
-References: <000301cdf87b$0ef2a020$2cd7e060$@co.kr>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 22 Jan 2013 22:35:31 +1100
-Message-ID: <CAGRGNgU8qDPZCWR0KryJ7_P0En-01AccBAH+qzyCExv9TFRSsQ@mail.gmail.com> (sfid-20130122_123559_411677_536AD1DE)
-Subject: Re: AR6003 :: IP packet is not received.
-To: =?EUC-KR?B?sce/68H4?= <gyj@x-node.co.kr>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Content-Type: text/plain; charset=EUC-KR
+To: Chen Gang <gang.chen@asianux.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [suggestion]  drivers/net/wireless/iwlegacy: the parameter 'const
+ char *buf' may be not '\0' base string for DINFO
+References: <50FBC180.2090003@asianux.com>
+In-Reply-To: <50FBC180.2090003@asianux.com>
+Content-Type: multipart/mixed;
+ boundary="------------060306020409070507080108"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gueon,
+This is a multi-part message in MIME format.
+--------------060306020409070507080108
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: 8bit
 
-I wish I spoke Korean so we could talk easier.
+  oh, sorry, it is my fault.
 
-On Tue, Jan 22, 2013 at 7:32 PM, 鼻侩柳 <gyj@x-node.co.kr> wrote:
-> Dear ath6kl-devel,
->
-> I Korea's human-intech Work in a company that is Gueon.
-> I am porting and embeded-board wlan AR6003 chipset features.
-> embeded-board CPU samsung S5PV210, linux kenel-2.6.32 is used.
+  according to fill_write_buffer in fs/sysfs/file.c,
+    we can assume that 'const char *buf' must be '\0' based string.
 
-So you're porting Linux to an embedded board with a Samsung S5PV210
-CPU and a AR6003 wireless chipset.
+  please skip this suggestion.
 
-I assume that you have to use kernel version 2.6.32. I must point out
-that version is rather old and a lot of changes have been made to the
-drivers since then. That said, if needed, you may be able to use
-compat-wireless to get the latest version of the driver running on
-that particular kernel version.
 
-> wpa_supplicant using softAP mode, powered by letting success to other client devices (ex: Desktop PC) AP Access.
->         [wpa_supplicant -i wlan0 -c /home/ath6k/SoftAP/softap.conf -Dnl80211 -B]
->         [version : wpa_supplicant v2.0-devel Copyright (c) 2003-2012]
->
-> Does not accept the IP address from the DHCP client device(PC), the problem occurs.
+gchen.
 
-So exactly what are you trying to do here?
+于 2013年01月20日 18:05, Chen Gang 写道:
+> Hello Stanislaw, John
+> 
+>   we can not assume that the parameter 'const char *buf' is '\0' base string.
+>   and DINOF uses '%s' for buf (in line 3288..3289)
+>   so it will cause issue.
+> 
+>   I am not quite familiar with the detail features.
+>   so I send mail as a suggestion.
+>   please help checking, if this suggestion is valid, please help fixing, thanks.
+> 
+>   Regards
+> 
+> gchen.
+> 
+> 3260 static ssize_t
+> 3261 il3945_store_measurement(struct device *d, struct device_attribute *attr,
+> 3262                          const char *buf, size_t count)
+> 3263 {
+> 3264         struct il_priv *il = dev_get_drvdata(d);
+> 3265         struct ieee80211_measurement_params params = {
+> 3266                 .channel = le16_to_cpu(il->active.channel),
+> 3267                 .start_time = cpu_to_le64(il->_3945.last_tsf),
+> 3268                 .duration = cpu_to_le16(1),
+> 3269         };
+> 3270         u8 type = IL_MEASURE_BASIC;
+> 3271         u8 buffer[32];
+> 3272         u8 channel;
+> 3273 
+> 3274         if (count) {
+> 3275                 char *p = buffer;
+> 3276                 strlcpy(buffer, buf, min(sizeof(buffer), count));
+> 3277                 channel = simple_strtoul(p, NULL, 0);
+> 3278                 if (channel)
+> 3279                         params.channel = channel;
+> 3280 
+> 3281                 p = buffer;
+> 3282                 while (*p && *p != ' ')
+> 3283                         p++;
+> 3284                 if (*p)
+> 3285                         type = simple_strtoul(p + 1, NULL, 0);
+> 3286         }
+> 3287 
+> 3288         D_INFO("Invoking measurement of type %d on " "channel %d (for '%s')\n",
+> 3289                type, params.channel, buf);
+> 3290         il3945_get_measurement(il, &params, type);
+> 3291 
+> 3292         return count;
+> 3293 }
+> 3294 
+> 
+> 
+> 
+> 
 
-Are you:
-
-1. Trying to use the embedded board as an access point and connecting
-the PC to it?
-
-2. Trying to use the PC as an access point and connecting the embedded
-board to it?
-
-wpa_supplicant cannot run an access point. You need to use the hostapd
-program to run an access point.
-
-> I have a problem during the analysis.
-> I spoke to experiment by setting a fixed IP without using a DHCP
-> When embeded-Board from the PC to ping-test responses.
-> However, PC from the embedded-Board to ping-test does not responses.
->
-> Whether the idea of something I could try?
-
->From what you've described, it sounds like the wireless cards are not
-connecting.
-
-What messages are you getting in the kernel log (dmesg)?
-
-If you run the "ifconfig -a" command, is your wireless card's network
-interface UP and RUNNING?
-
-Can you connect to an access point using this embedded board?
-
-Thanks,
 
 -- 
-Julian Calaby
+Chen Gang
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Flying Transformer
+
+--------------060306020409070507080108
+Content-Type: text/x-vcard; charset=utf-8;
+ name="chen_gang_flying_transformer.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="chen_gang_flying_transformer.vcf"
+
+YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
+ZW5kOnZjYXJkDQoNCg==
+--------------060306020409070507080108--
