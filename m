@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48391 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281Ab3ACOpz (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:62645 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755388Ab3AUUF1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 09:45:55 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/12] iwlwifi: move some PCIe calls to better places
-Date: Thu,  3 Jan 2013 15:46:14 +0100
-Message-Id: <1357224376-27803-10-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154604_559447_C5F043C5)
-In-Reply-To: <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
-References: <1357224324.9741.20.camel@jlt4.sipsolutions.net>
- <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 21 Jan 2013 15:05:27 -0500
+Received: by mail-la0-f43.google.com with SMTP id ed20so2117641lab.16
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2013 12:05:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <50FA04B6.8080703@gmail.com>
+References: <E1TwInB-0003VY-Jh@sipsolutions.net> <50FA04B6.8080703@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 21 Jan 2013 12:05:05 -0800
+Message-ID: <CAB=NE6UHBZhg7L_Oh5EayLBQyY=fceqUBtfz=kEFXG_u2Ko9TQ@mail.gmail.com> (sfid-20130121_210531_348240_81D50681)
+Subject: Re: [ANN] crda: v1.1.3
+To: Richard Farina <sidhayn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jan 18, 2013 at 6:28 PM, Richard Farina <sidhayn@gmail.com> wrote:
+> On 01/18/2013 03:44 PM, wireless@sipsolutions.net wrote:
+>> A new release of crda (v1.1.3) is available at:
+>>
+>> http://wireless.kernel.org/download/crda/crda-1.1.3.tar.bz2
+>>
+>> SHA1 sum: 6e0adbfc0f5418a03d7d708bd39d52cd1325b511
+>>
+>> Here is the short log of the changes (since v1.1.2)
+>> included in this release:
+>>
+>> Luis R. Rodriguez (15):
+>>       crda: synch up nl80211.h
+>>       crda: fix null string assumption for alpha2
+>>       crda: add support to send DFS master region
+>>       crda: use stdint.h instead of linux/types.h
+>>       crda: move country2rd() and its helper to reglib.c
+>>       crda: add a reglib iterator reglib_for_each_country()
+>>       crda: make intersect.c use reglib_for_each_country()
+>>       crda: close fd upon leaving
+>>       crda: add new reglib_get_country_alpha2()
+>>       crda: add dfs_region to the ieee80211_regdomain data structure
+>>       crda: make crda use reglib_get_country_alpha2()
+>>       crda: clean header files
+>>       crda: make country2rd() static
+>>       crda: make usage of regdb.h exclusive to reglib.c
+>>       crda: rename reglib_get_*() routines
+>>
+>> Stefan Lippers-Hollmann (1):
+>>       crda: add nested support for libnl-3.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> I get three warnings when building that look like that may matter:
 
-Synchronizing the IRQ is pointless when we will
-then enable the RF-Kill interrupt again, but is
-needed before we free it and the data needed to
-handle IRQs; move it to the free function.
+Its just a warning but can you try adding the following path (in another e-mail)
 
-Simiarly, cancelling the replenish work struct
-can move to the function that frees the RX data
-structures.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c    | 2 ++
- drivers/net/wireless/iwlwifi/pcie/trans.c | 9 +++------
- 2 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index dad4c4a..02c9016 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -545,6 +545,8 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 		return;
- 	}
- 
-+	cancel_work_sync(&trans_pcie->rx_replenish);
-+
- 	spin_lock_irqsave(&rxq->lock, flags);
- 	iwl_pcie_rxq_free_rbs(trans);
- 	spin_unlock_irqrestore(&rxq->lock, flags);
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 48cd65e..bca6203 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -534,12 +534,6 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 
- 	iwl_enable_rfkill_int(trans);
- 
--	/* wait to make sure we flush pending tasklet*/
--	synchronize_irq(trans_pcie->pci_dev->irq);
--	tasklet_kill(&trans_pcie->irq_tasklet);
--
--	cancel_work_sync(&trans_pcie->rx_replenish);
--
- 	/* stop and reset the on-board processor */
- 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
- 
-@@ -682,6 +676,9 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-+	synchronize_irq(trans_pcie->pci_dev->irq);
-+	tasklet_kill(&trans_pcie->irq_tasklet);
-+
- 	iwl_pcie_tx_free(trans);
- 	iwl_pcie_rx_free(trans);
- 
--- 
-1.8.0
-
+  Luis
