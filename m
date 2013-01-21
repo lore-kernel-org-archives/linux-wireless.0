@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:43340 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776Ab3AYTs5 (ORCPT
+Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:55528 "EHLO
+	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752621Ab3AUJKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 14:48:57 -0500
-Received: by mail-pb0-f42.google.com with SMTP id rp2so400434pbb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 11:48:56 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	simon.wunderlich@s2003.tu-chemnitz.de,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH] cfg80211: don't dereference NULL chan
-Date: Fri, 25 Jan 2013 11:47:55 -0800
-Message-Id: <1359143275-28359-1-git-send-email-thomas@cozybit.com> (sfid-20130125_204900_652355_81D744E6)
+	Mon, 21 Jan 2013 04:10:03 -0500
+From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx: does not connect to WPA2-personal
+Date: Mon, 21 Jan 2013 09:09:58 +0000
+Message-ID: <125C46FB9265D3469829069CDC69BF445278B3C1@HJ-MBX2.persistent.co.in> (sfid-20130121_101009_600883_1BEC9384)
+References: <loom.20130120T094649-416@post.gmane.org>
+	 <1358754973.6252.131.camel@cumari.coelho.fi>
+	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
+ <1358758714.6252.135.camel@cumari.coelho.fi>
+In-Reply-To: <1358758714.6252.135.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "cfg80211: check radar interface combinations"
-would dereference chan even though this may be NULL. Fix a
-page fault when adding a new interface by adding a
-short-circuit check for NULL.
-
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
-
-No action required for this to make it into 3.8, right?
-
- net/wireless/util.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 1c2795d..d1decbc 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1212,7 +1212,8 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_WDS:
--		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
-+		radar_required = !!(chan &&
-+				    chan->flags & IEEE80211_CHAN_RADAR);
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
--- 
-1.7.10.4
-
+SGkgTHVjaWFubywNCg0KTm8gb3RoZXIgY2hhbmdlcy4NCldlIGFyZSB1c2luZyBELWxpbmsg
+cm91dGVyIERpci02MTUuIE9uIGJvYXJkIHdlIHVzZSB3bDEyNzEuDQpXZSBoYWQgdHJpZWQg
+VEtJUCBhcyB3ZWxsIGFuZCBoYWQgZmFjZWQgdGhlIHNhbWUgcHJvYmxlbSBiZWZvcmUgZml4
+aW5nIHRoaXMuDQoNClJlZ2FyZHMsDQpLZXRhbg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KRnJvbTogTHVjaWFubyBDb2VsaG8gW21haWx0bzpjb2VsaG9AdGkuY29tXSANClNl
+bnQ6IE1vbmRheSwgSmFudWFyeSAyMSwgMjAxMyAyOjI5IFBNDQpUbzogS2V0YW4gS2FtYXQN
+CkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiB3bDEy
+eHg6IGRvZXMgbm90IGNvbm5lY3QgdG8gV1BBMi1wZXJzb25hbA0KDQpPbiBNb24sIDIwMTMt
+MDEtMjEgYXQgMDg6NDIgKzAwMDAsIEtldGFuIEthbWF0IHdyb3RlOg0KPiBIaSBMdWNpYW5v
+LA0KPiANCj4gSSBhcHBsaWVkIHNvbWUgb2YgdGhlIGNvZGUgY29tbWl0cyB0aGF0IHdlcmUg
+ZG9uZSB0byB3bDEyeHggZHJpdmVyIChodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgv
+a2VybmVsL2dpdC9zdGFibGUvbGludXgtc3RhYmxlLmdpdDthPWhpc3Rvcnk7Zj1kcml2ZXJz
+L25ldC93aXJlbGVzcztoYj1IRUFEO3BnPTIwICk6DQo+IA0KPiAyMDEyLTA0LTEwICAJRXlh
+bCBTaGFwaXJhIAkJd2wxMnh4OiBpbmNyZWFzZSBzY2FuIHRpbWVvdXQgdG8gMzBzDQo+IDIw
+MTItMDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGFkYXB0aXZlIHNjaGVkIHNjYW4gZHdl
+bGwgdGltZXMNCj4gMjAxMi0wNC0xMAlFeWFsIFNoYXBpcmEJCXdsMTJ4eDogZml4IGEgbWVt
+b3J5IGxlYWsgb2YgcHJvYmVyZXEgdGVtcGxhdGUgdXBvbg0KPiAyMDEyLTA0LTEwCUVsaWFk
+IFBlbGxlcgkJd2wxMnh4OiBmcmVlIGFwIGtleXMgb25seSBpbiBhcCBtb2RlDQo+IDIwMTIt
+MDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGZpeCByYWNlIGJldHdlZW4gc3VzcGVuZC9y
+ZXN1bWUgYW5kIHJlY292ZXJ5DQo+IDIwMTItMDQtMTAJVmljdG9yIEdvbGRlbnNodGVpbgl3
+bDEyeHg6IGZpeCBzdGF0aW9uIGNoYW5uZWwgc3dpdGNoDQo+IDIwMTItMDQtMTAJRWxpYWQg
+UGVsbGVyCQl3bDEyeHg6IHNldCBkb19qb2luIG9uIEJTU19DSEFOR0VEX0FTU09DDQo+IA0K
+PiBBZnRlciBhcHBseWluZyB0aGVzZSBjaGFuZ2VzLCBpdCBnb3QgY29ubmVjdGVkIHRvIFdQ
+QTItcGVyc29uYWwuIA0KPiBDdXJyZW50bHkgZG9pbmcgc29tZSBtb3JlIHRlc3RpbmcNCg0K
+VGhpcyBzb3VuZHMgcXVpZXQgd2VpcmQuICBJIGRvbid0IHRoaW5rIGFueSBvZiB0aGUgcGF0
+Y2hlcyB5b3UgYXBwbGllZCBoYXZlIGFueSBpbmZsdWVuY2UgaW4gQUVTIGNvbm5lY3Rpb25z
+LiAgQXJlIHlvdSBzdXJlIHlvdSBkaWRuJ3QgY2hhbmdlIGFueXRoaW5nIGVsc2U/DQoNCkkg
+anVzdCB0cmllZCB2YW5pbGxhIDMuNCBhbmQgSSBkaWRuJ3QgaGF2ZSBwcm9ibGVtcyBjb25u
+ZWN0aW5nIGZyb20gbXkgd2wxMjd4IGNoaXAgdG8gYSB3bDE4eHggcnVubmluZyBob3N0YXBk
+IHdpdGggV1BBMi9BRVMuDQoNCi0tDQpDaGVlcnMsDQpMdWNhLiANCg0KDQpESVNDTEFJTUVS
+Cj09PT09PT09PT0KVGhpcyBlLW1haWwgbWF5IGNvbnRhaW4gcHJpdmlsZWdlZCBhbmQgY29u
+ZmlkZW50aWFsIGluZm9ybWF0aW9uIHdoaWNoIGlzIHRoZSBwcm9wZXJ0eSBvZiBQZXJzaXN0
+ZW50IFN5c3RlbXMgTHRkLiBJdCBpcyBpbnRlbmRlZCBvbmx5IGZvciB0aGUgdXNlIG9mIHRo
+ZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCBpdCBpcyBhZGRyZXNzZWQuIElmIHlv
+dSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBhcmUgbm90IGF1dGhvcml6
+ZWQgdG8gcmVhZCwgcmV0YWluLCBjb3B5LCBwcmludCwgZGlzdHJpYnV0ZSBvciB1c2UgdGhp
+cyBtZXNzYWdlLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGNvbW11bmljYXRpb24gaW4g
+ZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMg
+b2YgdGhpcyBtZXNzYWdlLiBQZXJzaXN0ZW50IFN5c3RlbXMgTHRkLiBkb2VzIG5vdCBhY2Nl
+cHQgYW55IGxpYWJpbGl0eSBmb3IgdmlydXMgaW5mZWN0ZWQgbWFpbHMuDQo=
