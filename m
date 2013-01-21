@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53970 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757847Ab3AIMjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 07:39:39 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:54082 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015Ab3AUOfK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2013 09:35:10 -0500
+Received: by mail-qc0-f182.google.com with SMTP id k19so3843663qcs.27
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jan 2013 06:35:10 -0800 (PST)
+MIME-Version: 1.0
+From: George Athanasiou <geo.athanasiou@gmail.com>
+Date: Mon, 21 Jan 2013 15:34:49 +0100
+Message-ID: <CAPtYMd3CvqVOovJiJ3Lbr8fd9oSoWYh7oOnf8UL-m5EodZr7SA@mail.gmail.com> (sfid-20130121_153516_180517_9C18AC2A)
+Subject: Wireless devices/cards for wil6210
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.8 1/5] ath9k: do not link receive buffers during flush
-Date: Wed,  9 Jan 2013 13:39:25 +0100
-Message-Id: <1357735169-91597-1-git-send-email-nbd@openwrt.org> (sfid-20130109_133945_573064_FEA33E0E)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR9300 the rx FIFO needs to be empty during reset to ensure that no
-further DMA activity is generated, otherwise it might lead to memory
-corruption issues.
+Hello,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/recv.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3d236ae..db4562d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -735,6 +735,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
- 			return NULL;
- 	}
- 
-+	list_del(&bf->list);
- 	if (!bf->bf_mpdu)
- 		return bf;
- 
-@@ -1245,14 +1246,15 @@ requeue_drop_frag:
- 			sc->rx.frag = NULL;
- 		}
- requeue:
-+		list_add_tail(&bf->list, &sc->rx.rxbuf);
-+		if (!flush)
-+			continue;
-+
- 		if (edma) {
--			list_add_tail(&bf->list, &sc->rx.rxbuf);
- 			ath_rx_edma_buf_link(sc, qtype);
- 		} else {
--			list_move_tail(&bf->list, &sc->rx.rxbuf);
- 			ath_rx_buf_link(sc, bf);
--			if (!flush)
--				ath9k_hw_rxena(ah);
-+			ath9k_hw_rxena(ah);
- 		}
- 	} while (1);
- 
--- 
-1.8.0.2
 
+I would like to ask if there are available devices that support
+wil6210 60 GHz wireless driver. Are there available in the market?
+
+
+
+Thank you,
+
+George
+
+
+
+--
+
+Dr. George Athanasiou
+
+Research Scientist
+
+Automatic Control Lab
+
+Electrical Engineering Department and ACCESS Linnaeus Center
+
+KTH Royal Institute of Technology
+
+Osquldas väg 10, 100-44 Stockholm, Sweden
