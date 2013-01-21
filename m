@@ -1,95 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40081 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714Ab3AQFc0 (ORCPT
+Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:47590 "EHLO
+	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750757Ab3AUInA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 00:32:26 -0500
-Date: Wed, 16 Jan 2013 23:32:21 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Fixes for problems with off-channel powersave
-Message-ID: <20130117053221.GA31449@thinkpad-t410> (sfid-20130117_063230_492028_F4B6C844)
-References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
- <1358379078.15012.68.camel@jlt4.sipsolutions.net>
+	Mon, 21 Jan 2013 03:43:00 -0500
+From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx: does not connect to WPA2-personal
+Date: Mon, 21 Jan 2013 08:42:52 +0000
+Message-ID: <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in> (sfid-20130121_094306_155555_021F8876)
+References: <loom.20130120T094649-416@post.gmane.org>
+ <1358754973.6252.131.camel@cumari.coelho.fi>
+In-Reply-To: <1358754973.6252.131.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1358379078.15012.68.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 12:31:18AM +0100, Johannes Berg wrote:
-> Hi Seth,
-> 
-> > When testing with iperf I've been observing very significant problems
-> > with throughput and packet loss during software scans. Throughput often
-> > drops to the point where iperf is reporting 0 bits/sec for several
-> > seconds, and packet loss commonly gets over 20%. 
-> 
-> Ouch.
-> 
-> One caveat up front: While I'm somewhat familiar with the SW scan code,
-> we have "HW" scan, so I'm not really completely into the details.
-
-Actually most of my machines have Intel wireless so I don't have all
-that many test cases :-(
-
-> > I started investigating
-> > and discovered the following problems:
-> > 
-> >  1. It seems that drivers are responsible for ensuring that PM is set in
-> >     frame control when powersave is enabled. However drivers are unaware
-> >     of off-channel powersave, so when the scan is suspended frames may
-> >     be transmitted that cause the AP to think we've exited powersave. As
-> >     a result the AP may attempt to deliver frames while we are
-> >     off-channel.
-> 
-> Hm, yeah, this is a problem. I've kinda always known this... 802.11mb
-> (or -2012) clarified that in (most?) management frames at least it
-> doesn't matter.
-> 
-> >  2. There's no flushing of the hardware queues after queueing the
-> >     nullfunc frame to enable off-channel powersave before going
-> >     off-channel, so it's possible to go off-channel before the frame is
-> >     transmitted.
-> 
-> Yep. And to make matters worse, flush() is broken. If the driver has
-> queues stopped while being asked to flush, it will probably enable
-> queues and I'm pretty sure we'll give it more frames while it's
-> flushing.
-
-I've seen this. Although as long as PM is getting set correctly it
-doesn't cause problems with getting the AP to buffer frames.
-
-> >  3. There's no flush of pending frames prior to queueing the nullfunc
-> >     frame to enable powersave. That frame is sent at a high priority,
-> >     and drivers supporting QoS may have lower-priority frames queued
-> >     with PM cleared. Those frames will be sent after the nullfunc, and
-> >     the AP may try to deliver frames while we are off-channel.
-> 
-> Yeah...
-> 
-> >  4. During a scan we won't process beacon frames from our associated AP,
-> >     which prevents PS-Poll from starting when the scan is suspended.
-> >     Even if we process the beacons we won't start PS-Poll unless
-> >     powersave is actually enabled, which isn't the case during a scan.
-> 
-> Uh oh.. yeah, ok, but this gets really really complicated. I truly hate
-> the powersave code. One of these days I'm just going to rip it out ;-)
-
-Yeah. I had it working, but as I indicated it's better to disable PS
-when the scan is suspended anyway. You just merged Stanislaw's patch
-which does that, so from my perspective there's no pressing need to fix
-this.
-
-> > It turns out that fixing problem #1 (i.e. patch 2) probably isn't
-> > necessary with the other changes, as no frames should be sent while
-> > off-channel PS is enabled. Does this still seem like a problem worth
-> > fixing?
-> 
-> Hmm. Probably not then. It just makes the API and driver implementation
-> more complex, no?
-
-I'll address this in response to one of your other emails.
-
-Seth
+SGkgTHVjaWFubywNCg0KSSBhcHBsaWVkIHNvbWUgb2YgdGhlIGNvZGUgY29tbWl0cyB0aGF0
+IHdlcmUgZG9uZSB0byB3bDEyeHggZHJpdmVyIChodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9
+bGludXgva2VybmVsL2dpdC9zdGFibGUvbGludXgtc3RhYmxlLmdpdDthPWhpc3Rvcnk7Zj1k
+cml2ZXJzL25ldC93aXJlbGVzcztoYj1IRUFEO3BnPTIwICk6DQoNCjIwMTItMDQtMTAgIAlF
+eWFsIFNoYXBpcmEgCQl3bDEyeHg6IGluY3JlYXNlIHNjYW4gdGltZW91dCB0byAzMHMNCjIw
+MTItMDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGFkYXB0aXZlIHNjaGVkIHNjYW4gZHdl
+bGwgdGltZXMNCjIwMTItMDQtMTAJRXlhbCBTaGFwaXJhCQl3bDEyeHg6IGZpeCBhIG1lbW9y
+eSBsZWFrIG9mIHByb2JlcmVxIHRlbXBsYXRlIHVwb24NCjIwMTItMDQtMTAJRWxpYWQgUGVs
+bGVyCQl3bDEyeHg6IGZyZWUgYXAga2V5cyBvbmx5IGluIGFwIG1vZGUNCjIwMTItMDQtMTAJ
+RXlhbCBTaGFwaXJhCQl3bDEyeHg6IGZpeCByYWNlIGJldHdlZW4gc3VzcGVuZC9yZXN1bWUg
+YW5kIHJlY292ZXJ5DQoyMDEyLTA0LTEwCVZpY3RvciBHb2xkZW5zaHRlaW4Jd2wxMnh4OiBm
+aXggc3RhdGlvbiBjaGFubmVsIHN3aXRjaA0KMjAxMi0wNC0xMAlFbGlhZCBQZWxsZXIJCXds
+MTJ4eDogc2V0IGRvX2pvaW4gb24gQlNTX0NIQU5HRURfQVNTT0MNCg0KQWZ0ZXIgYXBwbHlp
+bmcgdGhlc2UgY2hhbmdlcywgaXQgZ290IGNvbm5lY3RlZCB0byBXUEEyLXBlcnNvbmFsLiBD
+dXJyZW50bHkgZG9pbmcgc29tZSBtb3JlIHRlc3RpbmcNCg0KVGhhbmtzLA0KS2V0YW4NCg0K
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEx1Y2lhbm8gQ29lbGhvIFttYWls
+dG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBNb25kYXksIEphbnVhcnkgMjEsIDIwMTMgMToy
+NiBQTQ0KVG86IEtldGFuIEthbWF0DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4OiBkb2VzIG5vdCBjb25uZWN0IHRvIFdQQTItcGVy
+c29uYWwNCg0KSGkgS2V0YW4sDQoNCk9uIFN1biwgMjAxMy0wMS0yMCBhdCAwODo0NyArMDAw
+MCwgS2V0YW4gS2FtYXQgd3JvdGU6DQo+IEhlbGxvIEx1Y2lhbm8sDQo+IA0KPiB3ZSBhcmUg
+ZmFjaW5nIGEgcHJvYmxlbSB3aXRoIHdsMTI3MSBtb2R1bGUgd2hlbiBjb25uZWN0aW5nIHRv
+IA0KPiBXUEEyLXBlcnNvbmFsIG5ldHdvcmsgd2l0aCBjaXBlciBBRVMuSXQgY29ubmVjdHMg
+YWZ0ZXIgc3VjY2Vzc2Z1bCANCj4gYXV0aGVudGljYXRpb24gKHdpdGhvdXQgZ2V0dGluZyBJ
+UCBhZGRyZXNzKSBhbmQga2VlcHMgcmV0cnlpbmcgZm9yIElQIA0KPiBhZGRyZXNzIGFmdGVy
+IGNvbm5lY3RpbmcgKGFuZCBzdWRkZW5seSBkaXNjb25uZWN0cyBhcyB3ZWxsKS4NCg0KVGhp
+cyBzb3VuZHMgbGlrZSBhbiBlbmNyeXB0aW9uIHByb2JsZW0uDQoNCg0KPiBXZSBhcmUgdXNp
+bmcgdWJ1bnR1IDEyLjA0IHdpdGggbGludXgga2VybmVsIDMuNC43IGJ1aWx0IHVzaW5nIA0K
+PiBzdGFibGUta2VybmVsIHRyZWUuIHdsMTJ4eCBmaXJtd2FyZSBsb2FkZWQgZm9yIHdsMTJ4
+eCBpcyA2LjMuNS4wLjk4LiANCj4gSGFyZHdhcmUgc2V0dXAgY29uc2lzdHMgb2YgYmVhZ2xl
+IGJvYXJkIGNvbm5lY3RlZCB0byB0aGUgY2hpcHNlZSANCj4gbW9kdWxlIHRoYXQgaGFzIHRv
+dWNoc2NyZWVuIGFuZCB0aGUNCj4gd2wxMjcxIG1vZHVsZS4NCj4gDQo+IEkgYW0gbWVudGlv
+bmluZyB0d28gc2NlbmFyaW9zIGhlcmU6DQo+IDEuIEhlcmUgd2UgdXNlIGEgcm91dGVyIHRo
+YXQgd2UgY2FuIGNvbmZpZ3VyZSB0byBkaWZmZXJlbnQgd2lmaSANCj4gc2VjdXJpdHkuIElm
+IHdlIHNldCB0aGUgd2lmaSBuZXR3b3JrIHRvIG9wZW4gaS5lIHNlY3VyaXR5PU5vbmUsIHds
+MTI3MSBtb2R1bGUgZ2V0cyBjb25uZWN0ZWQuDQo+IEhlbmNlIGRvZXMgbm90IHNlZW0gdG8g
+YmUgcHJvYmxlbSByZWxhdGVkIHRvIGFudGVubmEgb3IgcmFuZ2UuDQoNCldoYXQgaXMgdGhl
+IG1vZGVsIG9mIHRoZSBBUCB5b3UncmUgdXNpbmc/DQoNCg0KPiAyLiBJZiBpIHJlbW92ZSBk
+cml2ZXIgZm9yIHdsMTJ4eCBhbmQgY29ubmVjdCBhIFVTQiBkb25nbGUgKHI4NzEydSksIA0K
+PiBhbmQgdHJ5IHRvIGNvbm5lY3QgdG8gdGhlIHNhbWUgV1BBMi1wZXJzb25hbCBuZXR3b3Jr
+Lkl0IHdvcmtzIGFuZCBnZXRzIA0KPiB0aGUgSVAgYWRkcmVzcy5Ib3dldmVyIHdlIHdhbnQg
+dG8gdXNlIG9uIGJvYXJkIHdsMTJ4eCBtb2R1bGUuDQo+IA0KPiBJcyBpdCB0aGUgcHJvYmxl
+bSB3aXRoIHRoZSB3bDEyeHggZHJpdmVyPyBBbnkgZml4IGZvciB0aGlzPw0KDQpJdCBjb3Vs
+ZCBiZSBhIHByb2JsZW0gd2l0aCB0aGUgZmlybXdhcmUuIA0KDQoNCj4gRG9lcyB3cGEyLXBl
+cnNvbmFsIHdvcmsgd2l0aCB3bDEyeHggd2l0aCBsYXRlc3QgTGludXgga2VybmVsICgzLjcu
+Mik/DQoNClllcywgQUVTIHdvcmtzIHdpdGggMy43Lg0KDQoNCj4gQW55IHBvaW50ZXJzIHRv
+d2FyZHMgdGhpcyB3b3VsZCBiZSBvZiBncmVhdCBoZWxwLg0KDQpEaWQgeW91IHRyeSBUS0lQ
+IGluc3RlYWQgb2YgQUVTPyBKdXN0IHRvIGZpbmQgb3V0IGlmIHRoZSBwcm9ibGVtIG9ubHkg
+aGFwcGVucyB3aXRoIEFFUy4NCg0KWW91IGNvdWxkIGFsc28gdHJ5IGNvbXBhdC4gIFRoZXJl
+IGFyZSBsb3RzIG9mIGZpeGVzIGFuZCBpbXByb3ZlbWVudHMgaW4gbmV3ZXIgdmVyc2lvbnMg
+b2YgdGhlIGRyaXZlciBhbmQgZmlybXdhcmUgaXQgdXNlcy4NCg0KSSdsbCB0cnkgYSBuZXdl
+ciBmaXJtd2FyZSBmb3IgMy40IHRoYXQgSSBmb3VuZCBoZXJlIGFuZCBsZXQgeW91IGtub3cg
+aG93IGl0IGdvZXMuDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0KDQoNCkRJU0NMQUlNRVIKPT09
+PT09PT09PQpUaGlzIGUtbWFpbCBtYXkgY29udGFpbiBwcml2aWxlZ2VkIGFuZCBjb25maWRl
+bnRpYWwgaW5mb3JtYXRpb24gd2hpY2ggaXMgdGhlIHByb3BlcnR5IG9mIFBlcnNpc3RlbnQg
+U3lzdGVtcyBMdGQuIEl0IGlzIGludGVuZGVkIG9ubHkgZm9yIHRoZSB1c2Ugb2YgdGhlIGlu
+ZGl2aWR1YWwgb3IgZW50aXR5IHRvIHdoaWNoIGl0IGlzIGFkZHJlc3NlZC4gSWYgeW91IGFy
+ZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgeW91IGFyZSBub3QgYXV0aG9yaXplZCB0
+byByZWFkLCByZXRhaW4sIGNvcHksIHByaW50LCBkaXN0cmlidXRlIG9yIHVzZSB0aGlzIG1l
+c3NhZ2UuIElmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgY29tbXVuaWNhdGlvbiBpbiBlcnJv
+ciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcyBvZiB0
+aGlzIG1lc3NhZ2UuIFBlcnNpc3RlbnQgU3lzdGVtcyBMdGQuIGRvZXMgbm90IGFjY2VwdCBh
+bnkgbGlhYmlsaXR5IGZvciB2aXJ1cyBpbmZlY3RlZCBtYWlscy4NCg==
