@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:41242
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932236Ab3AIQyh (ORCPT
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:56523
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753348Ab3AUMDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 11:54:37 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20717.41108.36571.933800@gargle.gargle.HOWL> (sfid-20130109_175444_380530_4168D00F)
-Date: Wed, 9 Jan 2013 22:23:40 +0530
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: Fix memory leak
-In-Reply-To: <50ED9E7B.8050702@lwfinger.net>
-References: <1357727868-3892-1-git-send-email-sujith@msujith.org>
-	<50ED9E7B.8050702@lwfinger.net>
+	Mon, 21 Jan 2013 07:03:15 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 6/15] drivers/net/wireless/iwlegacy/4965-mac.c: adjust duplicate test
+Date: Mon, 21 Jan 2013 14:02:50 +0100
+Message-Id: <1358773378-4700-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20130121_131533_563355_B0B06FB6)
+In-Reply-To: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1358773378-4700-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Yes, your fix handles the normal case, and you can add a
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Thanks.
+Delete successive tests to the same location.  This looks like simple code
+duplication.
 
-> I still have one remaining question. It is possible for the timeout code in 
-> htc_config_pipe_credits() to be executed, as shown below:
-> 
->          time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->          if (!time_left) {
->                  dev_err(target->dev, "HTC credit config timeout\n");
->                  return -ETIMEDOUT;
->          }
-> 
-> When this timeout happens, is the skb leaked?
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-No, the submitted SKB (via htc_issue_send()) will always have a TX completion
-invocation. The actual completion of target->cmd_wait happens via a different
-code-path, htc_process_conn_rsp() in ath9k_htc_rx_msg().
+// <smpl>
+@s exists@
+local idexpression y;
+expression x,e;
+@@
 
-Sujith
+*if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
+ { ... when forall
+   return ...; }
+... when != \(y = e\|y += e\|y -= e\|y |= e\|y &= e\|y++\|y--\|&y\)
+    when != \(XT_GETPAGE(...,y)\|WMI_CMD_BUF(...)\)
+*if ( \(x == NULL\|IS_ERR(x)\|y != 0\) )
+ { ... when forall
+   return ...; }
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 10fc249..0195190 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6572,9 +6572,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (err)
+ 		goto out_free_eeprom;
+ 
+-	if (err)
+-		goto out_free_eeprom;
+-
+ 	/* extract MAC Address */
+ 	il4965_eeprom_get_mac(il, il->addresses[0].addr);
+ 	D_INFO("MAC address: %pM\n", il->addresses[0].addr);
+
