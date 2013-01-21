@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:52267 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635Ab3ABWzv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43543 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759Ab3AUPs0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 17:55:51 -0500
-Received: by mail-pa0-f47.google.com with SMTP id fa10so8239253pad.34
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 14:55:51 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linville@tuxdriver.org
-Cc: j@w1.fi, linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 1/4] mac80211_hwsim: fix tsf adjustment
-Date: Wed,  2 Jan 2013 14:55:16 -0800
-Message-Id: <1357167319-13338-1-git-send-email-thomas@cozybit.com> (sfid-20130102_235558_975337_498EDF6E)
+	Mon, 21 Jan 2013 10:48:26 -0500
+Message-ID: <1358783326.5190.5.camel@jlt4.sipsolutions.net> (sfid-20130121_164829_870572_783031E8)
+Subject: Re: Intel Wifi 6200 N  iwlwifi (Unsupported (too old) EEPROM
+ VER=0x416 < 0x423 CALIB=0x5 < 0x4)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Freeman <linux-net@lists-in.noc4.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 21 Jan 2013 16:48:46 +0100
+In-Reply-To: <8785d94b44b4a14f3a24a78eb9c53507@noc4.net> (sfid-20130121_154221_263182_CDB4D94B)
+References: <10f63cd798eeb6fa6168f6342af3c373@noc4.net>
+	 <20130121142750.GA2212@tuxdriver.com>
+	 <8785d94b44b4a14f3a24a78eb9c53507@noc4.net>
+	 (sfid-20130121_154221_263182_CDB4D94B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make hwsim TSF offset adjustments cumulative and relative
-to the fake PHY TSF. Now adding 1000us, then adding -1000us
-doesn't result in a tsf_offset of -1000. Also the beacon
-timestamp can now correctly be expressed as (tsf +
-data->tsf_offset), which will be done in a later patch.
+On Mon, 2013-01-21 at 14:43 +0000, Paul Freeman wrote:
+> On 2013-01-21 14:27, John W. Linville wrote:
+> > The last time we saw something like that, the Intel folks said it was
+> > a device that was not supposed to have been released to the wild...?
+> >
+> 
+> Hmm, as in Engineering Sample/Pre-Release? ... if anyone has any 
+> confirmation on that it would be handy - then I can return the card from 
+> whence it came!
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Typically that's exactly the case.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ff90855..59761fb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -357,7 +357,7 @@ struct mac80211_hwsim_data {
- 	int power_level;
- 
- 	/* difference between this hw's clock and the real clock, in usecs */
--	u64 tsf_offset;
-+	s64 tsf_offset;
- };
- 
- 
-@@ -423,9 +423,10 @@ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
- 		struct ieee80211_vif *vif, u64 tsf)
- {
- 	struct mac80211_hwsim_data *data = hw->priv;
--	struct timeval tv = ktime_to_timeval(ktime_get_real());
--	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
--	data->tsf_offset = tsf - now;
-+	u64 now = mac80211_hwsim_get_tsf(hw, vif);
-+	s64 delta = tsf - now;
-+
-+	data->tsf_offset += delta;
- }
- 
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
--- 
-1.7.10.4
+Can you send me (privately if you wish) pictures of both sides of the
+card?
+
+johannes
 
