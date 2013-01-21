@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39936 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752440Ab3ATRwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 12:52:09 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 4/8] ath9k_hw: make the initval parameter to ath9k_hw_write_array const
-Date: Sun, 20 Jan 2013 18:51:55 +0100
-Message-Id: <1358704319-81749-4-git-send-email-nbd@openwrt.org> (sfid-20130120_185215_707453_4E870F62)
-In-Reply-To: <1358704319-81749-3-git-send-email-nbd@openwrt.org>
-References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
- <1358704319-81749-2-git-send-email-nbd@openwrt.org>
- <1358704319-81749-3-git-send-email-nbd@openwrt.org>
+Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:55376 "EHLO
+	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752558Ab3AUJSa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jan 2013 04:18:30 -0500
+From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx: does not connect to WPA2-personal
+Date: Mon, 21 Jan 2013 09:18:27 +0000
+Message-ID: <125C46FB9265D3469829069CDC69BF445278B3DC@HJ-MBX2.persistent.co.in> (sfid-20130121_101839_128061_1D441161)
+References: <loom.20130120T094649-416@post.gmane.org>
+	 <1358754973.6252.131.camel@cumari.coelho.fi>
+	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
+	 <1358758714.6252.135.camel@cumari.coelho.fi>
+	 <125C46FB9265D3469829069CDC69BF445278B3C1@HJ-MBX2.persistent.co.in>
+ <1358759519.6252.139.camel@cumari.coelho.fi>
+In-Reply-To: <1358759519.6252.139.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c | 2 +-
- drivers/net/wireless/ath/ath9k/hw.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a7448d1..0d84c1c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -203,7 +203,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
- 	udelay(hw_delay + BASE_ACTIVATE_DELAY);
- }
- 
--void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
-+void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt)
- {
- 	int r;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 04a3f3a..5c89aed 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1010,7 +1010,7 @@ void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
- void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
- 			  int hw_delay);
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
--void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
-+void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt);
- u32 ath9k_hw_reverse_bits(u32 val, u32 n);
- u16 ath9k_hw_computetxtime(struct ath_hw *ah,
--- 
-1.8.0.2
-
+Tm8uIEFwcGxpZWQgYWxsIHRob3NlIHBhdGNoZXMgZnJvbSBiZWxvdyBhdCBvbmNlLiBIYXZl
+IG5vdCB0cmllZCB0aGVtIG9uZSBieSBvbmUuIA0KDQoyMDEyLTA0LTEwICAJRXlhbCBTaGFw
+aXJhIAkJd2wxMnh4OiBpbmNyZWFzZSBzY2FuIHRpbWVvdXQgdG8gMzBzDQoyMDEyLTA0LTEw
+CUV5YWwgU2hhcGlyYQkJd2wxMnh4OiBhZGFwdGl2ZSBzY2hlZCBzY2FuIGR3ZWxsIHRpbWVz
+DQoyMDEyLTA0LTEwCUV5YWwgU2hhcGlyYQkJd2wxMnh4OiBmaXggYSBtZW1vcnkgbGVhayBv
+ZiBwcm9iZXJlcSB0ZW1wbGF0ZSB1cG9uDQoyMDEyLTA0LTEwCUVsaWFkIFBlbGxlcgkJd2wx
+Mnh4OiBmcmVlIGFwIGtleXMgb25seSBpbiBhcCBtb2RlDQoyMDEyLTA0LTEwCUV5YWwgU2hh
+cGlyYQkJd2wxMnh4OiBmaXggcmFjZSBiZXR3ZWVuIHN1c3BlbmQvcmVzdW1lIGFuZCByZWNv
+dmVyeQ0KMjAxMi0wNC0xMAlWaWN0b3IgR29sZGVuc2h0ZWluCXdsMTJ4eDogZml4IHN0YXRp
+b24gY2hhbm5lbCBzd2l0Y2gNCjIwMTItMDQtMTAJRWxpYWQgUGVsbGVyCQl3bDEyeHg6IHNl
+dCBkb19qb2luIG9uIEJTU19DSEFOR0VEX0FTU09DDQoNClJlZ2FyZHMsDQpLZXRhbg0KDQoN
+Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMdWNpYW5vIENvZWxobyBbbWFp
+bHRvOmNvZWxob0B0aS5jb21dIA0KU2VudDogTW9uZGF5LCBKYW51YXJ5IDIxLCAyMDEzIDI6
+NDIgUE0NClRvOiBLZXRhbiBLYW1hdA0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUmU6IHdsMTJ4eDogZG9lcyBub3QgY29ubmVjdCB0byBXUEEyLXBl
+cnNvbmFsDQoNCk9uIE1vbiwgMjAxMy0wMS0yMSBhdCAwOTowOSArMDAwMCwgS2V0YW4gS2Ft
+YXQgd3JvdGU6DQo+IEhpIEx1Y2lhbm8sDQo+IA0KPiBObyBvdGhlciBjaGFuZ2VzLg0KPiBX
+ZSBhcmUgdXNpbmcgRC1saW5rIHJvdXRlciBEaXItNjE1LiBPbiBib2FyZCB3ZSB1c2Ugd2wx
+MjcxLg0KPiBXZSBoYWQgdHJpZWQgVEtJUCBhcyB3ZWxsIGFuZCBoYWQgZmFjZWQgdGhlIHNh
+bWUgcHJvYmxlbSBiZWZvcmUgZml4aW5nIHRoaXMuDQoNCkRpZCB5b3UganVzdCByYW5kb21s
+eSBwaWNrZWQgdXAgdGhvc2UgcGF0Y2hlcz8gSSB0aGluaywgaWYgYW55LCB0aGUgb25seSBw
+YXRjaCB0aGF0IG1heSBoYXZlIHNvbWUgZWZmZWN0IGhlcmUgaXMgIndsMTJ4eDogc2V0IGRv
+X2pvaW4gb24gQlNTX0NIQU5HRURfQVNTT0MiLg0KDQotLQ0KTHVjYS4NCg0KDQpESVNDTEFJ
+TUVSCj09PT09PT09PT0KVGhpcyBlLW1haWwgbWF5IGNvbnRhaW4gcHJpdmlsZWdlZCBhbmQg
+Y29uZmlkZW50aWFsIGluZm9ybWF0aW9uIHdoaWNoIGlzIHRoZSBwcm9wZXJ0eSBvZiBQZXJz
+aXN0ZW50IFN5c3RlbXMgTHRkLiBJdCBpcyBpbnRlbmRlZCBvbmx5IGZvciB0aGUgdXNlIG9m
+IHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCBpdCBpcyBhZGRyZXNzZWQuIElm
+IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBhcmUgbm90IGF1dGhv
+cml6ZWQgdG8gcmVhZCwgcmV0YWluLCBjb3B5LCBwcmludCwgZGlzdHJpYnV0ZSBvciB1c2Ug
+dGhpcyBtZXNzYWdlLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGNvbW11bmljYXRpb24g
+aW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
+ZXMgb2YgdGhpcyBtZXNzYWdlLiBQZXJzaXN0ZW50IFN5c3RlbXMgTHRkLiBkb2VzIG5vdCBh
+Y2NlcHQgYW55IGxpYWJpbGl0eSBmb3IgdmlydXMgaW5mZWN0ZWQgbWFpbHMuDQo=
