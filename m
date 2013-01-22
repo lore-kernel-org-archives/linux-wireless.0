@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54624 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386Ab3AJKME (ORCPT
+Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:57878 "EHLO
+	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753288Ab3AVIaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 05:12:04 -0500
-Date: Thu, 10 Jan 2013 02:12:02 -0800 (PST)
-Message-Id: <20130110.021202.232771737304117743.davem@davemloft.net> (sfid-20130110_111209_245287_89F0DC06)
-To: sgruszka@redhat.com
-Cc: netdev@vger.kernel.org, edumazet@google.com,
-	greearb@candelatech.com, bjorn@mork.no,
-	linux-wireless@vger.kernel.org, bhutchings@solarflare.com,
-	mirqus@gmail.com
-Subject: Re: [PATCH v2] net: set default_ethtool_ops in register_netdevice
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130110.020729.1358020934840866117.davem@davemloft.net>
-References: <20130109.235738.467651533138068641.davem@davemloft.net>
-	<20130110083641.GA5637@redhat.com>
-	<20130110.020729.1358020934840866117.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+	Tue, 22 Jan 2013 03:30:10 -0500
+From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
+To: Luciano Coelho <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: wl12xx: does not connect to WPA2-personal
+Date: Tue, 22 Jan 2013 08:30:03 +0000
+Message-ID: <125C46FB9265D3469829069CDC69BF445278B805@HJ-MBX2.persistent.co.in> (sfid-20130122_093016_516338_2E0657E3)
+References: <loom.20130120T094649-416@post.gmane.org>
+	 <1358754973.6252.131.camel@cumari.coelho.fi>
+	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
+	 <1358758714.6252.135.camel@cumari.coelho.fi>
+	 <125C46FB9265D3469829069CDC69BF445278B3C1@HJ-MBX2.persistent.co.in>
+ <1358759519.6252.139.camel@cumari.coelho.fi>
+In-Reply-To: <1358759519.6252.139.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Thu, 10 Jan 2013 02:07:29 -0800 (PST)
-
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date: Thu, 10 Jan 2013 09:36:42 +0100
-> 
->> On Wed, Jan 09, 2013 at 11:57:38PM -0800, David Miller wrote:
->>> From: Stanislaw Gruszka <sgruszka@redhat.com>
->>> Date: Tue, 8 Jan 2013 16:38:51 +0100
->>> 
->>> > Since:
->>> > 
->>> > commit 2c60db037034d27f8c636403355d52872da92f81
->>> > Author: Eric Dumazet <edumazet@google.com>
->>> > Date:   Sun Sep 16 09:17:26 2012 +0000
->>> > 
->>> >     net: provide a default dev->ethtool_ops
->>> > 
->>> > wireless core does not correctly assign ethtool_ops. In order to fix
->>> > the problem, move assignement of default_ethtool_ops to
->>> > register_netdevice(). This is safe because both register_netdevice()
->>> > and dev_ethtool() are protected by RTNL lock.
->>> > 
->>> > Patch is besed on hint of Micha©© Miros©©aw.
->>> > 
->>> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->>> > Cc: stable@vger.kernel.org # 3.7+
->>> > ---
->>> > v1 -> v2: change order of default_ethtool_ops initialization to avoid
->>> > the problem. Change the subject accordingly.
->>> 
->>> I don't understand this.  Why is the assignment of default_ethtool_ops
->>> at netdev allocation time not working?  Is wireless really not using
->>> alloc_netdev*()?
->> 
->> It does. This is done on individual cfg80211 drivers , i.e. on mac80211
->> or full mac drivers. After alloc_netdev*() call, some cfg80211 drivers
->> provide they own ethtool_ops, but some do not. For them, wireless core
->> provide generic cfg80211_ethtool_ops, which is assigned in
->> NETDEV_REGISTER notify call: 
->> 
->> 	if (!dev->ethtool_ops)
->> 		dev->ethtool_ops = &cfg80211_ethtool_ops;
->> 
->> But after Eric's commit, dev->ethtool_ops is no longer NULL (on cfg80211
->> drivers without custom ethtool_ops), but points to &default_ethtool_ops.
-> 
-> The whole idea is to remove these kinds of NULL tests against
-> dev->ethtool_ops, thus creating the invariant that given any netdev
-> one must never be able to see a non-NULL value there.
-
-Of course I meant that we should never see a NULL value in
-dev->ethtool_ops.
-
-I would suggest fixing this by making the wireless core express it's
-intentions, that it wants to use a different default ethtool ops, to
-the netdev allocation layer.
-
-You have two way to do this:
-
-1) Add default_ethtool_ops argument to alloc_netdev*().
-
-2) Add a "netdev_set_default_ethtool_ops(netdev, ops)"
-
+SGkgTHVjaWFubywNCg0KRG9lcyB3bDEyeHggb24gTGludXggMy40Ljcgb3IgMy43LjIgd29y
+ayB3aXRoIFdQQS1lbnRlcnByaXNlIG9yIFdQQTItZW50ZXJwcmlzZSBXaS1GaSBuZXR3b3Jr
+Pw0KDQpSZWdhcmRzLA0KS2V0YW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IEx1Y2lhbm8gQ29lbGhvIFttYWlsdG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBNb25k
+YXksIEphbnVhcnkgMjEsIDIwMTMgMjo0MiBQTQ0KVG86IEtldGFuIEthbWF0DQpDYzogbGlu
+dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4OiBkb2Vz
+IG5vdCBjb25uZWN0IHRvIFdQQTItcGVyc29uYWwNCg0KT24gTW9uLCAyMDEzLTAxLTIxIGF0
+IDA5OjA5ICswMDAwLCBLZXRhbiBLYW1hdCB3cm90ZToNCj4gSGkgTHVjaWFubywNCj4gDQo+
+IE5vIG90aGVyIGNoYW5nZXMuDQo+IFdlIGFyZSB1c2luZyBELWxpbmsgcm91dGVyIERpci02
+MTUuIE9uIGJvYXJkIHdlIHVzZSB3bDEyNzEuDQo+IFdlIGhhZCB0cmllZCBUS0lQIGFzIHdl
+bGwgYW5kIGhhZCBmYWNlZCB0aGUgc2FtZSBwcm9ibGVtIGJlZm9yZSBmaXhpbmcgdGhpcy4N
+Cg0KRGlkIHlvdSBqdXN0IHJhbmRvbWx5IHBpY2tlZCB1cCB0aG9zZSBwYXRjaGVzPyBJIHRo
+aW5rLCBpZiBhbnksIHRoZSBvbmx5IHBhdGNoIHRoYXQgbWF5IGhhdmUgc29tZSBlZmZlY3Qg
+aGVyZSBpcyAid2wxMnh4OiBzZXQgZG9fam9pbiBvbiBCU1NfQ0hBTkdFRF9BU1NPQyIuDQoN
+Ci0tDQpMdWNhLg0KDQoNCkRJU0NMQUlNRVIKPT09PT09PT09PQpUaGlzIGUtbWFpbCBtYXkg
+Y29udGFpbiBwcml2aWxlZ2VkIGFuZCBjb25maWRlbnRpYWwgaW5mb3JtYXRpb24gd2hpY2gg
+aXMgdGhlIHByb3BlcnR5IG9mIFBlcnNpc3RlbnQgU3lzdGVtcyBMdGQuIEl0IGlzIGludGVu
+ZGVkIG9ubHkgZm9yIHRoZSB1c2Ugb2YgdGhlIGluZGl2aWR1YWwgb3IgZW50aXR5IHRvIHdo
+aWNoIGl0IGlzIGFkZHJlc3NlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lw
+aWVudCwgeW91IGFyZSBub3QgYXV0aG9yaXplZCB0byByZWFkLCByZXRhaW4sIGNvcHksIHBy
+aW50LCBkaXN0cmlidXRlIG9yIHVzZSB0aGlzIG1lc3NhZ2UuIElmIHlvdSBoYXZlIHJlY2Vp
+dmVkIHRoaXMgY29tbXVuaWNhdGlvbiBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2Vu
+ZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcyBvZiB0aGlzIG1lc3NhZ2UuIFBlcnNpc3RlbnQg
+U3lzdGVtcyBMdGQuIGRvZXMgbm90IGFjY2VwdCBhbnkgbGlhYmlsaXR5IGZvciB2aXJ1cyBp
+bmZlY3RlZCBtYWlscy4NCg==
