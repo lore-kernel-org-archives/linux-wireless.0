@@ -1,128 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab3A3Hyp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 02:54:45 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: remove unused cfg80211_get_mesh
-Date: Wed, 30 Jan 2013 08:55:05 +0100
-Message-Id: <1359532505-25658-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_085448_265760_6247680B)
+Received: from mx3.wp.pl ([212.77.101.7]:33049 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752273Ab3AVWTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 17:19:35 -0500
+Date: Tue, 22 Jan 2013 23:19:35 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
+Message-ID: <20130122221935.GA2193@localhost.localdomain> (sfid-20130122_231938_902922_303F2040)
+References: <20130122164914.GB25134@localhost.localdomain>
+ <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
+ <50FF00C0.1010402@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50FF00C0.1010402@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Jan 22, 2013 at 10:12:32PM +0100, Xose Vazquez Perez wrote:
+> On 01/22/2013 07:58 PM, Gertjan van Wingerde wrote:
+> 
+> > On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> > 
+> >> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> >> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> >> ---
+> >> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
+> >> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
+> >> 2 files changed, 4 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> >> index 3e37c19..bef449c 100644
+> >> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> >> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> >> @@ -92,7 +92,7 @@
+> >> #define NOTICE(__dev, __msg, __args...) \
+> >>    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+> >> #define INFO(__dev, __msg, __args...) \
+> >> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
+> >> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
+> >> #define DEBUG(__dev, __msg, __args...) \
+> >>    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
+> >> #define EEPROM(__dev, __msg, __args...) \
+> > 
+> 
+> > I think this change is good, but we should also change WARNING and
+> > NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is
+> > disabled, but INFO will, which would be strange.
 
-As Thomas pointed out, cfg80211_get_mesh() is
-unused and can be removed.
+We have those "TX status report missed" messages which spam logs,
+I think we should move them to DEBUG level then.
 
-Cc: Thomas Pedersen <thomas@cozybit.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |  4 ----
- net/wireless/scan.c    | 65 --------------------------------------------------
- 2 files changed, 69 deletions(-)
+NOTICE is only used in suspend/resume, it should be DEBUG too and NOTICE
+macro could be removed.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5eb20bc..7533f0d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3172,10 +3172,6 @@ cfg80211_get_ibss(struct wiphy *wiphy,
- 				WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
- }
- 
--struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
--				       struct ieee80211_channel *channel,
--				       const u8 *meshid, size_t meshidlen,
--				       const u8 *meshcfg);
- /**
-  * cfg80211_ref_bss - reference BSS struct
-  * @bss: the BSS struct to reference
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 46351ba..d220313 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -311,43 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
- 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
- }
- 
--static bool is_mesh(struct cfg80211_bss *a,
--		    const u8 *meshid, size_t meshidlen,
--		    const u8 *meshcfg)
--{
--	const struct cfg80211_bss_ies *ies;
--	const u8 *ie;
--
--	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
--		return false;
--
--	ies = rcu_access_pointer(a->ies);
--	if (!ies)
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
--	if (!ie)
--		return false;
--	if (ie[1] != meshidlen)
--		return false;
--	if (memcmp(ie + 2, meshid, meshidlen))
--		return false;
--
--	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
--	if (!ie)
--		return false;
--	if (ie[1] != sizeof(struct ieee80211_meshconf_ie))
--		return false;
--
--	/*
--	 * Ignore mesh capability (last two bytes of the IE) when
--	 * comparing since that may differ between stations taking
--	 * part in the same mesh.
--	 */
--	return memcmp(ie + 2, meshcfg,
--		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
--}
--
- static int cmp_bss(struct cfg80211_bss *a,
- 		   struct cfg80211_bss *b,
- 		   bool hide_ssid)
-@@ -482,34 +445,6 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(cfg80211_get_bss);
- 
--struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
--				       struct ieee80211_channel *channel,
--				       const u8 *meshid, size_t meshidlen,
--				       const u8 *meshcfg)
--{
--	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
--	struct cfg80211_internal_bss *bss, *res = NULL;
--
--	spin_lock_bh(&dev->bss_lock);
--
--	list_for_each_entry(bss, &dev->bss_list, list) {
--		if (channel && bss->pub.channel != channel)
--			continue;
--		if (is_mesh(&bss->pub, meshid, meshidlen, meshcfg)) {
--			res = bss;
--			kref_get(&res->ref);
--			break;
--		}
--	}
--
--	spin_unlock_bh(&dev->bss_lock);
--	if (!res)
--		return NULL;
--	return &res->pub;
--}
--EXPORT_SYMBOL(cfg80211_get_mesh);
--
--
- static void rb_insert_bss(struct cfg80211_registered_device *dev,
- 			  struct cfg80211_internal_bss *bss)
- {
--- 
-1.8.0
+> I believe this patch is so useful and trivial enough to be included,
+> as is, in the next 3.8-rc .
+> 
+> The next steps can be done for 3.9
 
+If Gertjan will be so kind and ACK this patch, I'll post further
+changes as incremental patch :-)
+
+Stanislaw
