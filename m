@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.43]:58471 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056Ab3AYU4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 15:56:15 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] mwifiex: don't return zero on failure paths in mwifiex_pcie_init()
-Date: Sat, 26 Jan 2013 00:56:03 +0400
-Message-Id: <1359147363-9587-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130125_215636_170339_2DEC0EE1)
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:44284 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755579Ab3AVUNm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 15:13:42 -0500
+Received: by mail-bk0-f41.google.com with SMTP id jg9so3994999bkc.14
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 12:13:40 -0800 (PST)
+Message-ID: <1358885614.5062.22.camel@canaries64> (sfid-20130122_211344_703546_6E991635)
+Subject: [PATCH] staging: vt6656: Revert: 64bit fixes: dpc.c incorrect
+ addressing of void structure.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>
+Date: Tue, 22 Jan 2013 20:13:34 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If pci_iomap() fails in mwifiex_pcie_init(), it breaks off initialization,
-deallocates all resources, but returns zero.
-The patch adds -EIO as return value in this case.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+The patch was totally wrong and is reverted.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+The problem was ultimately fixed by upstream commit.
+1ee4c55fc9620451b2a825d793042a7e0775391b
+staging: vt6656: Fix inconsistent structure packing
+
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: stable@vger.kernel.org # 3.8
+
 ---
- drivers/net/wireless/mwifiex/pcie.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/vt6656/dpc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 13fbc4e..9d9349c 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -1739,6 +1739,7 @@ static int mwifiex_pcie_init(struct mwifiex_adapter *adapter)
- 	card->pci_mmap = pci_iomap(pdev, 0, 0);
- 	if (!card->pci_mmap) {
- 		dev_err(adapter->dev, "iomap(0) error\n");
-+		ret = -EIO;
- 		goto err_iomap0;
- 	}
- 	ret = pci_request_region(pdev, 2, DRV_NAME);
-@@ -1749,6 +1750,7 @@ static int mwifiex_pcie_init(struct mwifiex_adapter *adapter)
- 	card->pci_mmap1 = pci_iomap(pdev, 2, 0);
- 	if (!card->pci_mmap1) {
- 		dev_err(adapter->dev, "iomap(2) error\n");
-+		ret = -EIO;
- 		goto err_iomap2;
- 	}
- 
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index 6c98172..208be2c 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -1116,7 +1116,7 @@ static int s_bHandleRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
+     if (byDecMode == KEY_CTL_WEP) {
+         // handle WEP
+         if ((pDevice->byLocalID <= REV_ID_VT3253_A1) ||
+-		(((PSKeyTable)(&pKey->pvKeyTable))->bSoftWEP == TRUE)) {
++		(((PSKeyTable)(pKey->pvKeyTable))->bSoftWEP == TRUE)) {
+             // Software WEP
+             // 1. 3253A
+             // 2. WEP 256
+@@ -1213,7 +1213,7 @@ static int s_bHostWepRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
+         // handle WEP
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"byDecMode == KEY_CTL_WEP\n");
+         if ((pDevice->byLocalID <= REV_ID_VT3253_A1) ||
+-		(((PSKeyTable)(&pKey->pvKeyTable))->bSoftWEP == TRUE) ||
++		(((PSKeyTable)(pKey->pvKeyTable))->bSoftWEP == TRUE) ||
+             (bOnFly == FALSE)) {
+             // Software WEP
+             // 1. 3253A
 -- 
-1.7.9.5
+1.8.0
+
+
 
