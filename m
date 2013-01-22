@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1532 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756756Ab3A1OTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 09:19:16 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [RFC/RFT] mac80211: use macaddr vif parameter for P2P_DEVICE
- creation
-Date: Mon, 28 Jan 2013 15:19:06 +0100
-Message-ID: <1359382746-26322-1-git-send-email-arend@broadcom.com> (sfid-20130128_151919_850592_1A788D5C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:56632 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750749Ab3AVFES (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 00:04:18 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.8] mwifiex: fix typo in PCIe adapter NULL check
+Date: Mon, 21 Jan 2013 21:04:10 -0800
+Message-Id: <1358831050-3486-1-git-send-email-bzhao@marvell.com> (sfid-20130122_060423_018651_B58F114A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is a follow-up of:
+From: Avinash Patil <patila@marvell.com>
 
-commit 1c18f1452a772dfe884ed25677bddb3ecaf9c43a
-Author: Arend van Spriel <arend@broadcom.com>
-Date:   Tue Jan 8 10:17:27 2013 +0100
+Add missing "!" as we are supposed to check "!card->adapter"
+in PCIe suspend handler.
 
-    nl80211: allow user-space to set address for P2P_DEVICE
-
-The address of the wdev is determined by the macaddr parameter
-when it is not a zero ethernet address. Otherwise, the permanent
-address as determined by ieee80211_assign_perm_addr() is used.
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Cc: "3.2+" <stable@vger.kernel.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-Hi Johannes,
+ drivers/net/wireless/mwifiex/pcie.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Here a mac80211 change to take the user-space provided mac address into
-account. Not sure if that is sufficient. Tested P2P device vif creation using
-iw with mac80211_hwsim:
-
-phy#0
-        Unnamed/non-netdev interface
-                wdev 0x2
-                addr 00:01:02:03:04:05
-                type P2P-device
-        Interface wlan0
-                ifindex 9
-                wdev 0x1
-                addr 02:00:00:00:00:00
-                type managed
-
-Gr. AvS
----
- net/mac80211/iface.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0a36dc6..b9ec91f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1530,7 +1530,12 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 3da89b4..237949c 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -164,7 +164,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
  
- 		sdata->dev = NULL;
- 		strlcpy(sdata->name, name, IFNAMSIZ);
--		ieee80211_assign_perm_addr(local, wdev->address, type);
-+		/* only use perm address if not provided in params */
-+		if (is_zero_ether_addr(params->macaddr))
-+			ieee80211_assign_perm_addr(local, wdev->address, type);
-+		else
-+			memcpy(wdev->address, params->macaddr, ETH_ALEN);
-+
- 		memcpy(sdata->vif.addr, wdev->address, ETH_ALEN);
- 	} else {
- 		if (local->hw.queues >= IEEE80211_NUM_ACS)
+ 	if (pdev) {
+ 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+-		if (!card || card->adapter) {
++		if (!card || !card->adapter) {
+ 			pr_err("Card or adapter structure is not valid\n");
+ 			return 0;
+ 		}
 -- 
-1.7.10.4
-
+1.7.0.2
 
