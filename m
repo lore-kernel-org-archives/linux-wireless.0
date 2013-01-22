@@ -1,59 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756210Ab3AIKUM (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:32872 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab3AVLfz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 05:20:12 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] regulatory: fix uevent
-Date: Wed,  9 Jan 2013 11:20:34 +0100
-Message-Id: <1357726834-14725-1-git-send-email-johannes@sipsolutions.net> (sfid-20130109_112016_564740_C683877F)
+	Tue, 22 Jan 2013 06:35:55 -0500
+Received: by mail-wi0-f182.google.com with SMTP id hn14so5803509wib.15
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 03:35:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <000301cdf87b$0ef2a020$2cd7e060$@co.kr>
+References: <000301cdf87b$0ef2a020$2cd7e060$@co.kr>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 22 Jan 2013 22:35:31 +1100
+Message-ID: <CAGRGNgU8qDPZCWR0KryJ7_P0En-01AccBAH+qzyCExv9TFRSsQ@mail.gmail.com> (sfid-20130122_123559_411677_536AD1DE)
+Subject: Re: AR6003 :: IP packet is not received.
+To: =?EUC-KR?B?sce/68H4?= <gyj@x-node.co.kr>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Content-Type: text/plain; charset=EUC-KR
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Gueon,
 
-The uevent callback doesn't protect its access to
-last_request, which now causes a warning since
-the conversion to get_last_request(). Fix this.
+I wish I spoke Korean so we could talk easier.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+On Tue, Jan 22, 2013 at 7:32 PM, ±Ç¿ëÁø <gyj@x-node.co.kr> wrote:
+> Dear ath6kl-devel,
+>
+> I Korea's human-intech Work in a company that is Gueon.
+> I am porting and embeded-board wlan AR6003 chipset features.
+> embeded-board CPU samsung S5PV210, linux kenel-2.6.32 is used.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0b35de0..c647869 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2250,14 +2250,21 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- #ifdef CONFIG_HOTPLUG
- int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
--	struct regulatory_request *lr = get_last_request();
-+	struct regulatory_request *lr;
-+	u8 alpha2[2];
-+	bool add = false;
- 
-+	rcu_read_lock();
-+	lr = get_last_request();
- 	if (lr && !lr->processed) {
--		if (add_uevent_var(env, "COUNTRY=%c%c",
--				   lr->alpha2[0], lr->alpha2[1]))
--			return -ENOMEM;
-+		memcpy(alpha2, lr->alpha2, 2);
-+		add = true;
- 	}
-+	rcu_read_unlock();
- 
-+	if (add)
-+		return add_uevent_var(env, "COUNTRY=%c%c",
-+				      alpha2[0], alpha2[1]);
- 	return 0;
- }
- #else
+So you're porting Linux to an embedded board with a Samsung S5PV210
+CPU and a AR6003 wireless chipset.
+
+I assume that you have to use kernel version 2.6.32. I must point out
+that version is rather old and a lot of changes have been made to the
+drivers since then. That said, if needed, you may be able to use
+compat-wireless to get the latest version of the driver running on
+that particular kernel version.
+
+> wpa_supplicant using softAP mode, powered by letting success to other client devices (ex: Desktop PC) AP Access.
+>         [wpa_supplicant -i wlan0 -c /home/ath6k/SoftAP/softap.conf -Dnl80211 -B]
+>         [version : wpa_supplicant v2.0-devel Copyright (c) 2003-2012]
+>
+> Does not accept the IP address from the DHCP client device(PC), the problem occurs.
+
+So exactly what are you trying to do here?
+
+Are you:
+
+1. Trying to use the embedded board as an access point and connecting
+the PC to it?
+
+2. Trying to use the PC as an access point and connecting the embedded
+board to it?
+
+wpa_supplicant cannot run an access point. You need to use the hostapd
+program to run an access point.
+
+> I have a problem during the analysis.
+> I spoke to experiment by setting a fixed IP without using a DHCP
+> When embeded-Board from the PC to ping-test responses.
+> However, PC from the embedded-Board to ping-test does not responses.
+>
+> Whether the idea of something I could try?
+
+>From what you've described, it sounds like the wireless cards are not
+connecting.
+
+What messages are you getting in the kernel log (dmesg)?
+
+If you run the "ifconfig -a" command, is your wireless card's network
+interface UP and RUNNING?
+
+Can you connect to an access point using this embedded board?
+
+Thanks,
+
 -- 
-1.8.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
