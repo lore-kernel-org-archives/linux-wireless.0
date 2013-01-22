@@ -1,69 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3914 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752788Ab3ABOX1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:23:27 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/18] brcm80211: cleanup work
-Date: Wed, 2 Jan 2013 15:22:33 +0100
-Message-ID: <1357136572-18273-1-git-send-email-arend@broadcom.com> (sfid-20130102_155321_272539_3E0C7B87)
+Received: from mail-la0-f46.google.com ([209.85.215.46]:35763 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855Ab3AVKGt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 05:06:49 -0500
+Received: by mail-la0-f46.google.com with SMTP id fq12so4636248lab.5
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 02:06:47 -0800 (PST)
+From: "Sergey V." <sftp.mtuci@gmail.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH 3.8] mwifiex: fix typo in PCIe adapter NULL check
+Date: Tue, 22 Jan 2013 14:06:40 +0400
+Message-ID: <2880891.ILv0eXOzR2@darkstar> (sfid-20130122_110654_611158_16423E16)
+In-Reply-To: <1358831050-3486-1-git-send-email-bzhao@marvell.com>
+References: <1358831050-3486-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="nextPart2102204.D5GtOyUzjE"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cleanup and rework on both drivers although mostly on
-brcmfmac.
 
-This series is intended for v3.9 and applies to the master
-branch of wireless-next.
+--nextPart2102204.D5GtOyUzjE
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-Arend van Spriel (9):
-  brcmsmac: use perimeter lock in add_interface() callback
-  brcmsmac: allow user-space setting of interface address
-  brcmfmac: assure USB dongle firmware is reset upon module unload
-  brcmfmac: define pr_fmt in one place
-  brcmfmac: remove rx helper function from bus interface
-  brcmfmac: remove brcmf_proto_hdrpull() from bus interface
-  brcmfmac: remove unused event related definitions
-  brcmfmac: cleanup netdev transmit callback
-  brcmfmac: remove unnecessary curly braces in dhd_attach()
+On 2013-01-21 at 21:04:10, Bing Zhao <bzhao@marvell.com> wrote:
+> From: Avinash Patil <patila@marvell.com>
+> 
+> Add missing "!" as we are supposed to check "!card->adapter"
+> in PCIe suspend handler.
+> 
+> Cc: "3.2+" <stable@vger.kernel.org>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/pcie.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c
+> b/drivers/net/wireless/mwifiex/pcie.c index 3da89b4..237949c 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -164,7 +164,7 @@ static int mwifiex_pcie_suspend(struct pci_dev
+> *pdev, pm_message_t state)
+> 
+>  	if (pdev) {
+>  		card = (struct pcie_service_card *) 
+pci_get_drvdata(pdev);
+> -		if (!card || card->adapter) {
+> +		if (!card || !card->adapter) {
+>  			pr_err("Card or adapter structure is not 
+valid\n");
+>  			return 0;
+>  		}
 
-Hante Meuleman (7):
-  brcmfmac: do not reconfigure refill rx on 0-length packet.
-  brcmfmac: removed deprecated set_bitrate_mask support
-  brcmfmac: Use dedicated trace level for CDC.
-  brcmfmac: Remove unused caching dongle error.
-  brcmfmac: Return correct error on netdev xmit.
-  brcmfmac: Removing obsolete variables and inline functions.
-  brcmfmac: Update init code routines from interface up.
+Looks correct for me.
 
-Piotr Haber (2):
-  brcmsmac: increase timer reference count for new timers only
-  brcmsmac: remove dead code
+Reviewed-by: Sergey V. <sftp.mtuci@gmail.com>
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 -
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   39 ++------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   19 +---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   48 +++-------
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   50 +++++------
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   90 +++++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   24 ++---
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    2 -
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   27 ++++--
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   94 +++-----------------
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |    7 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   10 ++-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    7 +-
- drivers/net/wireless/brcm80211/brcmsmac/scb.h      |    1 -
- 16 files changed, 146 insertions(+), 278 deletions(-)
+Thanks.
 
--- 
-1.7.10.4
+--nextPart2102204.D5GtOyUzjE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAABAgAGBQJQ/mSwAAoJEOX1jbAg+8MEOWoP/2gYfl2U7X6mcajY2Dgv603+
+wouClE+4z86OOD7pJDgE7OFtV5BvSwV7rg/CxJ55z17oM6zyrllTFiwt5dOFDQcj
+aNaZLa6nkSaKEmxZGlt6GiO2rhFFJ6u7+FrKNpW4d0hKhNtep+vOUj+74BU+Wha4
+hJT+RdtYhnZdytutNpWOCAulSRzB8k13UXRBF6bCRwMtt/J3lWIoq91Qr+YQBM34
+pyMnHXqF8kAP9WGVHviFyO36ZeDQHKWXEYEEsrY9w3UXInrVxnKdywXojilLp0Bp
+J7sRHNxJn9pKTN1Oc2LbdI0vVItgpyMnRVWBCtTa275HrRTCSV5u6E22PKfOryLj
+Nmd6iOXV+M/+Ps34CPqX28Wm0BQtGigar7XQECy8av+93Ub9scQ7pDs9VcLo5viC
+ZDnitvDv1LosloMx0T19AS8WE4oqI49Wrn+11sZR9l4XhbPhtY34r5nKVJBlO0xP
+08qbFOWtY15AsCJZo6NslsgfxntvqoVfcKNy33Gw/ZQB+/Cew3dZc1gbYMZxA7LG
+inGQydbt2stqpM+djMhdREeUXGPcbilEK0VMktZtCHOI2fifa6sUVlREIjjKyrS5
+nFrlZN/PdppX5TT1wBtK0q7nuWssxMF2zZrhMzpi6sP7mxR/S3ww9yJF3NEtCJji
+0jGqK6Uxp90D1orZ/dbt
+=h21/
+-----END PGP SIGNATURE-----
+
+--nextPart2102204.D5GtOyUzjE--
 
