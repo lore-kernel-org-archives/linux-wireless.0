@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:54071 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755199Ab3A0Wkt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2013 17:40:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH NEXT] rtlwifi: Eliminate two empty routines
-Date: Sun, 27 Jan 2013 16:40:34 -0600
-Message-Id: <1359326434-16093-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130127_234058_189540_A9521813)
+Received: from mx1.redhat.com ([209.132.183.28]:12938 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752579Ab3AVK4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 05:56:39 -0500
+Date: Tue, 22 Jan 2013 11:56:19 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: mcgrof@do-not-panic.com, bhutchings@solarflare.com,
+	netdev@vger.kernel.org, edumazet@google.com,
+	greearb@candelatech.com, bjorn@mork.no,
+	linux-wireless@vger.kernel.org, mirqus@gmail.com,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH v3] net, wireless: overwrite default_ethtool_ops
+Message-ID: <20130122105618.GB2328@redhat.com> (sfid-20130122_115645_001737_A51954CB)
+References: <1357934432.2643.4.camel@bwh-desktop.uk.solarflarecom.com>
+ <20130111.155936.1799008114956712424.davem@davemloft.net>
+ <CAB=NE6XjvupJ5XO0EN0HVwdy61ECWL=Ey0g1gsNm+v8Sen=nsQ@mail.gmail.com>
+ <20130121.160404.1007504714461228602.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130121.160404.1007504714461228602.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rc.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+On Mon, Jan 21, 2013 at 04:04:04PM -0500, David Miller wrote:
+> 
+> It's queued up for -stable already as is clearly seen at:
+> 
+> http://patchwork.ozlabs.org/user/bundle/2566/?state=*
 
-diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
-index c1e065f..204f46c 100644
---- a/drivers/net/wireless/rtlwifi/rc.c
-+++ b/drivers/net/wireless/rtlwifi/rc.c
-@@ -217,19 +217,6 @@ static void rtl_tx_status(void *ppriv,
- 	}
- }
- 
--static void rtl_rate_init(void *ppriv,
--			  struct ieee80211_supported_band *sband,
--			  struct ieee80211_sta *sta, void *priv_sta)
--{
--}
--
--static void rtl_rate_update(void *ppriv,
--			    struct ieee80211_supported_band *sband,
--			    struct ieee80211_sta *sta, void *priv_sta,
--			    u32 changed)
--{
--}
--
- static void *rtl_rate_alloc(struct ieee80211_hw *hw,
- 		struct dentry *debugfsdir)
- {
-@@ -274,8 +261,6 @@ static struct rate_control_ops rtl_rate_ops = {
- 	.free = rtl_rate_free,
- 	.alloc_sta = rtl_rate_alloc_sta,
- 	.free_sta = rtl_rate_free_sta,
--	.rate_init = rtl_rate_init,
--	.rate_update = rtl_rate_update,
- 	.tx_status = rtl_tx_status,
- 	.get_rate = rtl_get_rate,
- };
--- 
-1.8.1
+Hmm, this link does not work for me (need user/password).
 
+Anyway, I marked cc -stable in v2 patch, but forgot that in v3.
+Committed patch does not include the mark, so I'll post patch
+to stable just in case.
+
+Thanks
+Stanislaw 
