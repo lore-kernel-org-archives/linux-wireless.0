@@ -1,155 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24726 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755159Ab3AWLcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 06:32:52 -0500
-Date: Wed, 23 Jan 2013 12:32:45 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47062 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab3AVM5w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 07:57:52 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TxdQF-0006Q2-5l
+	for linux-wireless@vger.kernel.org; Tue, 22 Jan 2013 13:57:51 +0100
+Message-ID: <1358859496.4807.16.camel@jlt4.sipsolutions.net> (sfid-20130122_135800_388459_6FCC7181)
+Subject: Re: [RFC] cfg80211/mac80211: support reporting wakeup reason
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Sam Leffler <sleffler@chromium.org>,
-	Paul Stewart <pstew@chromium.org>
-Subject: [PATCH] mac80211: improve latency and throughput while software
- scanning
-Message-ID: <20130123113244.GA2941@redhat.com> (sfid-20130123_123259_415260_578716DF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Tue, 22 Jan 2013 13:58:16 +0100
+In-Reply-To: <1358859390-22617-1-git-send-email-johannes@sipsolutions.net> (sfid-20130122_135614_662448_AAD00569)
+References: <1358859390-22617-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130122_135614_662448_AAD00569)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch vastly improve latency while scanning. Slight throughput
-improvements were observed as well. Is intended for improve performance
-of voice and video applications, when scan is periodically requested by
-user space (i.e. default NetworkManager behaviour).
+On Tue, 2013-01-22 at 13:56 +0100, Johannes Berg wrote:
 
-Patch remove latency requirement based on PM_QOS_NETWORK_LATENCY,
-this value is 2000 seconds by default (i.e. approximately 0.5 hour !?!).
+> + * @NL80211_WOWLAN_TRIG_WAKEUP_PACKET: For wakeup reporting only, contains the
+> + *	packet, if any, that caused the wakeup. This is an 802.3 packet for
+> + *	the data matching wakeup reasons (magic packet, pattern match) or an
+> + *	802.11 packet (e.g. deauth). The packet may be truncated, the attribute
+> + *	@NL80211_WOWLAN_TRIG_WAKEUP_PACKET_LEN contains the original length.
+> + * @NL80211_WOWLAN_TRIG_WAKEUP_PACKET_LEN: Original length of the packet, might
+> + *	be longer than the length of the @NL80211_WOWLAN_TRIG_WAKEUP_PACKET
+> + *	attribute if the packet was truncated.
 
-Also remove listen interval requirement, which based on beaconing and
-depending on BSS parameters. It can make we stay off-channel for a
-second or more.
+I have a feeling I should split this into separate attributes for an
+802.3 and 802.11 packet to make it easier for userspace, thoughts?
 
-Instead try to offer the best latency that we could, i.e. be off-channel
-no longer than PASSIVE channel scan time: 125 ms. That mean we will
-scan two ACTIVE channels and go back to on-channel, and one PASSIVE
-channel, and go back to on-channel.
+johannes
 
-Patch also decrease PASSIVE channel scan time to about 110 ms.
-
-As drawback patch increase overall scan time. On my tests, when scanning
-both 2GHz and 5GHz bands, scanning time increase from 5 seconds up to 10
-seconds. Since that increase happen only when we are associated, I think
-it can be acceptable. If eventually better scan time is needed for
-situations when we lose signal and quickly need to decide to which AP
-roam, additional scan flag or parameter can be introduced.
-
-I tested patch by doing:
-
-while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
-
-and
-
-ping -i0.2 -c 1000 HOST
-
-on remote and local machine, results are as below:
-
-* Ping from local periodically scanning machine to AP:
-Unpatched: rtt min/avg/max/mdev = 0.928/24.946/182.135/36.873 ms
-Patched:   rtt min/avg/max/mdev = 0.928/19.678/150.845/33.130 ms
-
-* Ping from remote machine to periodically scanning machine:
-Unpatched: rtt min/avg/max/mdev = 1.637/120.683/709.139/164.337 ms
-Patched:   rtt min/avg/max/mdev = 1.807/26.893/201.435/40.284 ms
-
-Throughput measured by scp show following results.
-
-* Upload to periodically scanning machine:
-Unpatched: 3.9MB/s   03:15    
-Patched:   4.3MB/s   02:58
-
-* Download from periodically scanning machine:
-Unpatched: 5.5MB/s   02:17
-Patched:   6.2MB/s   02:02
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/scan.c |   32 +++++---------------------------
- 1 files changed, 5 insertions(+), 27 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 06cbe26..505699b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -27,7 +27,7 @@
- 
- #define IEEE80211_PROBE_DELAY (HZ / 33)
- #define IEEE80211_CHANNEL_TIME (HZ / 33)
--#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
-+#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
- 
- static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
- {
-@@ -546,8 +546,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	bool associated = false;
- 	bool tx_empty = true;
- 	bool bad_latency;
--	bool listen_int_exceeded;
--	unsigned long min_beacon_int = 0;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_channel *next_chan;
- 	enum mac80211_scan_state next_scan_state;
-@@ -566,11 +564,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 			if (sdata->u.mgd.associated) {
- 				associated = true;
- 
--				if (sdata->vif.bss_conf.beacon_int <
--				    min_beacon_int || min_beacon_int == 0)
--					min_beacon_int =
--						sdata->vif.bss_conf.beacon_int;
--
- 				if (!qdisc_all_tx_empty(sdata->dev)) {
- 					tx_empty = false;
- 					break;
-@@ -587,34 +580,19 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	 * see if we can scan another channel without interfering
- 	 * with the current traffic situation.
- 	 *
--	 * Since we don't know if the AP has pending frames for us
--	 * we can only check for our tx queues and use the current
--	 * pm_qos requirements for rx. Hence, if no tx traffic occurs
--	 * at all we will scan as many channels in a row as the pm_qos
--	 * latency allows us to. Additionally we also check for the
--	 * currently negotiated listen interval to prevent losing
--	 * frames unnecessarily.
--	 *
--	 * Otherwise switch back to the operating channel.
-+	 * Keep good latency, do not stay off-channel more than 125 ms.
- 	 */
- 
- 	bad_latency = time_after(jiffies +
--			ieee80211_scan_get_channel_time(next_chan),
--			local->leave_oper_channel_time +
--			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
--
--	listen_int_exceeded = time_after(jiffies +
--			ieee80211_scan_get_channel_time(next_chan),
--			local->leave_oper_channel_time +
--			usecs_to_jiffies(min_beacon_int * 1024) *
--			local->hw.conf.listen_interval);
-+				 ieee80211_scan_get_channel_time(next_chan),
-+				 local->leave_oper_channel_time + HZ / 8);
- 
- 	if (associated && !tx_empty) {
- 		if (local->scan_req->flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
- 			next_scan_state = SCAN_ABORT;
- 		else
- 			next_scan_state = SCAN_SUSPEND;
--	} else if (associated && (bad_latency || listen_int_exceeded)) {
-+	} else if (associated && bad_latency) {
- 		next_scan_state = SCAN_SUSPEND;
- 	} else {
- 		next_scan_state = SCAN_SET_CHANNEL;
--- 
-1.7.1
