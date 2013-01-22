@@ -1,99 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:44664 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754573Ab3AZCZi (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:42442 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625Ab3AVTsJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 21:25:38 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tim Shepard <shep@laptop.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: do not overwrite error code from lower layer driver
-Date: Fri, 25 Jan 2013 18:23:00 -0800
-Message-Id: <1359166980-13161-1-git-send-email-bzhao@marvell.com> (sfid-20130126_032542_059625_FFC14B67)
+	Tue, 22 Jan 2013 14:48:09 -0500
+Received: by mail-bk0-f54.google.com with SMTP id w5so717071bku.27
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 11:48:08 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: register platform device for parallel flash
+Date: Tue, 22 Jan 2013 20:48:03 +0100
+Message-Id: <1358884083-29607-1-git-send-email-zajec5@gmail.com> (sfid-20130122_204814_341821_C81701F7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of converting it to a bogus error code -1, we should
-return the original error code from lower layer driver. This
-error code will be printed so it may give user some clues on
-what has happened.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/mwifiex/sdio.c |   10 ++++------
- drivers/net/wireless/mwifiex/usb.c  |    4 ++--
- 2 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/bcma/bcma_private.h |    1 +
+ drivers/bcma/driver_mips.c  |   28 +++++++++++++++++++++++-----
+ drivers/bcma/main.c         |    8 ++++++++
+ 3 files changed, 32 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 5a1c1d0..e35b67a 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -332,7 +332,7 @@ mwifiex_write_data_sync(struct mwifiex_adapter *adapter,
- 			u8 *buffer, u32 pkt_len, u32 port)
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 04f7c86..6f377bd 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -47,6 +47,7 @@ int bcma_sprom_get(struct bcma_bus *bus);
+ /* driver_chipcommon.c */
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
++extern struct platform_device bcma_pflash_dev;
+ #endif /* CONFIG_BCMA_DRIVER_MIPS */
+ 
+ /* driver_chipcommon_pmu.c */
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 9fe86ee..cf8b6b7 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -14,11 +14,23 @@
+ 
+ #include <linux/bcma/bcma.h>
+ 
++#include <linux/platform_device.h>
+ #include <linux/serial.h>
+ #include <linux/serial_core.h>
+ #include <linux/serial_reg.h>
+ #include <linux/time.h>
+ 
++static struct resource bcma_pflash_resource = {
++	.name	= "bcma_pflash",
++	.flags  = IORESOURCE_MEM,
++};
++
++struct platform_device bcma_pflash_dev = {
++	.name		= "bcma_pflash",
++	.resource	= &bcma_pflash_resource,
++	.num_resources	= 1,
++};
++
+ /* The 47162a0 hangs when reading MIPS DMP registers registers */
+ static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
  {
- 	struct sdio_mmc_card *card = adapter->card;
--	int ret = -1;
-+	int ret;
- 	u8 blk_mode =
- 		(port & MWIFIEX_SDIO_BYTE_MODE_MASK) ? BYTE_MODE : BLOCK_MODE;
- 	u32 blk_size = (blk_mode == BLOCK_MODE) ? MWIFIEX_SDIO_BLOCK_SIZE : 1;
-@@ -350,8 +350,7 @@ mwifiex_write_data_sync(struct mwifiex_adapter *adapter,
- 
- 	sdio_claim_host(card->func);
- 
--	if (!sdio_writesb(card->func, ioport, buffer, blk_cnt * blk_size))
--		ret = 0;
-+	ret = sdio_writesb(card->func, ioport, buffer, blk_cnt * blk_size);
- 
- 	sdio_release_host(card->func);
- 
-@@ -365,7 +364,7 @@ static int mwifiex_read_data_sync(struct mwifiex_adapter *adapter, u8 *buffer,
- 				  u32 len, u32 port, u8 claim)
+@@ -211,6 +223,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
  {
- 	struct sdio_mmc_card *card = adapter->card;
--	int ret = -1;
-+	int ret;
- 	u8 blk_mode = (port & MWIFIEX_SDIO_BYTE_MODE_MASK) ? BYTE_MODE
- 		       : BLOCK_MODE;
- 	u32 blk_size = (blk_mode == BLOCK_MODE) ? MWIFIEX_SDIO_BLOCK_SIZE : 1;
-@@ -376,8 +375,7 @@ static int mwifiex_read_data_sync(struct mwifiex_adapter *adapter, u8 *buffer,
- 	if (claim)
- 		sdio_claim_host(card->func);
+ 	struct bcma_bus *bus = mcore->core->bus;
+ 	struct bcma_drv_cc *cc = &bus->drv_cc;
++	struct bcma_pflash *pflash = &cc->pflash;
  
--	if (!sdio_readsb(card->func, buffer, ioport, blk_cnt * blk_size))
--		ret = 0;
-+	ret = sdio_readsb(card->func, buffer, ioport, blk_cnt * blk_size);
+ 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
+ 	case BCMA_CC_FLASHT_STSER:
+@@ -220,15 +233,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 		break;
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
+-		cc->pflash.present = true;
+-		cc->pflash.window = BCMA_SOC_FLASH2;
+-		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
++		pflash->present = true;
++		pflash->window = BCMA_SOC_FLASH2;
++		pflash->window_size = BCMA_SOC_FLASH2_SZ;
  
- 	if (claim)
- 		sdio_release_host(card->func);
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 5d4a10a..f90fe21 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -672,7 +672,7 @@ static int mwifiex_write_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
- 			   *len, &actual_length, timeout);
- 	if (ret) {
- 		dev_err(adapter->dev, "usb_bulk_msg for tx failed: %d\n", ret);
--		ret = -1;
-+		return ret;
+ 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
+ 		     BCMA_CC_FLASH_CFG_DS) == 0)
+-			cc->pflash.buswidth = 1;
++			pflash->buswidth = 1;
+ 		else
+-			cc->pflash.buswidth = 2;
++			pflash->buswidth = 2;
++
++		bcma_pflash_resource.start = pflash->window;
++		bcma_pflash_resource.end = pflash->window + pflash->window_size;
++		bcma_pflash_dev.dev.platform_data = pflash;
++
+ 		break;
+ 	default:
+ 		bcma_err(bus, "Flash type not supported\n");
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index ff85289..ed172ac 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -149,6 +149,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 		dev_id++;
  	}
  
- 	*len = actual_length;
-@@ -691,7 +691,7 @@ static int mwifiex_read_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
- 			   *len, &actual_length, timeout);
- 	if (ret) {
- 		dev_err(adapter->dev, "usb_bulk_msg for rx failed: %d\n", ret);
--		ret = -1;
-+		return ret;
- 	}
- 
- 	*len = actual_length;
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++	if (bus->drv_cc.pflash.present) {
++		err = platform_device_register(&bcma_pflash_dev);
++		if (err)
++			bcma_err(bus, "Error registering serial flash\n");
++	}
++#endif
++
+ #ifdef CONFIG_BCMA_SFLASH
+ 	if (bus->drv_cc.sflash.present) {
+ 		err = platform_device_register(&bcma_sflash_dev);
 -- 
-1.7.0.2
+1.7.7
 
