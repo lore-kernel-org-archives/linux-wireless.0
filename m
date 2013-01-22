@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38723 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754009Ab3ACXv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 18:51:57 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/6] bcma: mips: rename oldirqflag to irqinitmask
-Date: Fri,  4 Jan 2013 00:51:25 +0100
-Message-Id: <1357257085-11822-7-git-send-email-hauke@hauke-m.de> (sfid-20130104_005200_247207_DF5C8827)
-In-Reply-To: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
-References: <1357257085-11822-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:48895 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395Ab3AVVMi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 16:12:38 -0500
+Received: by mail-bk0-f42.google.com with SMTP id ji2so4034772bkc.29
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 13:12:37 -0800 (PST)
+Message-ID: <50FF00C0.1010402@gmail.com> (sfid-20130122_221242_706524_A513D374)
+Date: Tue, 22 Jan 2013 22:12:32 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Stanislaw Gruszka <stf_xl@wp.pl>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
+References: <20130122164914.GB25134@localhost.localdomain> <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
+In-Reply-To: <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new name better matches the use of this variable.
+On 01/22/2013 07:58 PM, Gertjan van Wingerde wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_mips.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> 
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
+>> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
+>> 2 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+>> index 3e37c19..bef449c 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+>> @@ -92,7 +92,7 @@
+>> #define NOTICE(__dev, __msg, __args...) \
+>>    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+>> #define INFO(__dev, __msg, __args...) \
+>> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
+>> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
+>> #define DEBUG(__dev, __msg, __args...) \
+>>    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
+>> #define EEPROM(__dev, __msg, __args...) \
+> 
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index c6d7be3..8a51c79 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -130,9 +130,9 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
- 			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) |
- 			    (1 << irqflag));
- 	} else {
--		u32 oldirqflag = bcma_read32(mdev,
--					     BCMA_MIPS_MIPS74K_INTMASK(irq));
--		if (oldirqflag) {
-+		u32 irqinitmask = bcma_read32(mdev,
-+					      BCMA_MIPS_MIPS74K_INTMASK(irq));
-+		if (irqinitmask) {
- 			struct bcma_device *core;
- 
- 			/* backplane irq line is in use, find out who uses
-@@ -140,7 +140,7 @@ static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
- 			 */
- 			list_for_each_entry(core, &bus->cores, list) {
- 				if ((1 << bcma_core_mips_irqflag(core)) ==
--				    oldirqflag) {
-+				    irqinitmask) {
- 					bcma_core_mips_set_irq(core, 0);
- 					break;
- 				}
--- 
-1.7.10.4
+> I think this change is good, but we should also change WARNING and
+> NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is
+> disabled, but INFO will, which would be strange.
 
+I believe this patch is so useful and trivial enough to be included,
+as is, in the next 3.8-rc .
+
+The next steps can be done for 3.9
