@@ -1,34 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38674 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753745Ab3ACXvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 18:51:42 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	nlhintz@hotmail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/6] bcma: some fixes for mips IRQ assignment
-Date: Fri,  4 Jan 2013 00:51:19 +0100
-Message-Id: <1357257085-11822-1-git-send-email-hauke@hauke-m.de> (sfid-20130104_005148_663592_09E2D6B1)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:53291 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754703Ab3AVTv1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jan 2013 14:51:27 -0500
+Received: by mail-bk0-f46.google.com with SMTP id q16so4048655bkw.33
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 11:51:26 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: register platform device for parallel flash
+Date: Tue, 22 Jan 2013 20:50:43 +0100
+Message-Id: <1358884243-29668-1-git-send-email-zajec5@gmail.com> (sfid-20130122_205132_185758_58D34AAD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves IRQ assignment to cores on a mips SoC.
 
-Hauke Mehrtens (6):
-  bcma: make bcma_find_core_unit() accessible
-  bcma: mips: explicit assign IRQ numbers
-  bcma: mips: make some info messages debug messages
-  bcma: mips: show also disabled IRQs
-  bcma: mips: remove assigned_irqs from structure
-  bcma: mips: rename oldirqflag to irqinitmask
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: fix error message (s/serial/parallel/)
+---
+ drivers/bcma/bcma_private.h |    1 +
+ drivers/bcma/driver_mips.c  |   28 +++++++++++++++++++++++-----
+ drivers/bcma/main.c         |    8 ++++++++
+ 3 files changed, 32 insertions(+), 5 deletions(-)
 
- drivers/bcma/bcma_private.h           |    2 +
- drivers/bcma/driver_mips.c            |  119 +++++++++++++++++++++------------
- drivers/bcma/main.c                   |    4 +-
- include/linux/bcma/bcma_driver_mips.h |    1 -
- 4 files changed, 80 insertions(+), 46 deletions(-)
-
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 04f7c86..6f377bd 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -47,6 +47,7 @@ int bcma_sprom_get(struct bcma_bus *bus);
+ /* driver_chipcommon.c */
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
++extern struct platform_device bcma_pflash_dev;
+ #endif /* CONFIG_BCMA_DRIVER_MIPS */
+ 
+ /* driver_chipcommon_pmu.c */
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 9fe86ee..cf8b6b7 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -14,11 +14,23 @@
+ 
+ #include <linux/bcma/bcma.h>
+ 
++#include <linux/platform_device.h>
+ #include <linux/serial.h>
+ #include <linux/serial_core.h>
+ #include <linux/serial_reg.h>
+ #include <linux/time.h>
+ 
++static struct resource bcma_pflash_resource = {
++	.name	= "bcma_pflash",
++	.flags  = IORESOURCE_MEM,
++};
++
++struct platform_device bcma_pflash_dev = {
++	.name		= "bcma_pflash",
++	.resource	= &bcma_pflash_resource,
++	.num_resources	= 1,
++};
++
+ /* The 47162a0 hangs when reading MIPS DMP registers registers */
+ static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
+ {
+@@ -211,6 +223,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
+ 	struct bcma_drv_cc *cc = &bus->drv_cc;
++	struct bcma_pflash *pflash = &cc->pflash;
+ 
+ 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
+ 	case BCMA_CC_FLASHT_STSER:
+@@ -220,15 +233,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 		break;
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
+-		cc->pflash.present = true;
+-		cc->pflash.window = BCMA_SOC_FLASH2;
+-		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
++		pflash->present = true;
++		pflash->window = BCMA_SOC_FLASH2;
++		pflash->window_size = BCMA_SOC_FLASH2_SZ;
+ 
+ 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
+ 		     BCMA_CC_FLASH_CFG_DS) == 0)
+-			cc->pflash.buswidth = 1;
++			pflash->buswidth = 1;
+ 		else
+-			cc->pflash.buswidth = 2;
++			pflash->buswidth = 2;
++
++		bcma_pflash_resource.start = pflash->window;
++		bcma_pflash_resource.end = pflash->window + pflash->window_size;
++		bcma_pflash_dev.dev.platform_data = pflash;
++
+ 		break;
+ 	default:
+ 		bcma_err(bus, "Flash type not supported\n");
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index ff85289..6eda7ef 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -149,6 +149,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 		dev_id++;
+ 	}
+ 
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++	if (bus->drv_cc.pflash.present) {
++		err = platform_device_register(&bcma_pflash_dev);
++		if (err)
++			bcma_err(bus, "Error registering parallel flash\n");
++	}
++#endif
++
+ #ifdef CONFIG_BCMA_SFLASH
+ 	if (bus->drv_cc.sflash.present) {
+ 		err = platform_device_register(&bcma_sflash_dev);
 -- 
-1.7.10.4
+1.7.7
 
