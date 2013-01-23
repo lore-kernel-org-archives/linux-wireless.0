@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33856 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab3A3GQQ (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:43589 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab3AWKTa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 01:16:16 -0500
-Message-ID: <5108BAAD.7070306@candelatech.com> (sfid-20130130_071624_995584_C63CC18E)
-Date: Tue, 29 Jan 2013 22:16:13 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/beacon.c:362 ath9k_beacon_tasklet+0xcc/0x5f0)
-References: <5108AD09.9020308@candelatech.com> <20744.44999.48237.463434@gargle.gargle.HOWL> <5108B569.9090005@candelatech.com> <20744.47404.184099.495423@gargle.gargle.HOWL>
-In-Reply-To: <20744.47404.184099.495423@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 23 Jan 2013 05:19:30 -0500
+Received: by mail-bk0-f51.google.com with SMTP id y8so1860929bkt.24
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 02:19:29 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
+Subject: [RFC 0/3] mesh power save - hardware doze
+Date: Wed, 23 Jan 2013 11:19:17 +0100
+Message-Id: <1358936360-7795-1-git-send-email-marco@cozybit.com> (sfid-20130123_111935_418333_885E9C37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2013 10:09 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> They were not.  I see the second was queued to stable, should the first one
->> be a stable candidate as well?
->
-> Sorry, I meant this one:
->
-> commit 1adb2e2b5f85023d17eb4f95386a57029df27c88
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Wed Jan 9 16:16:53 2013 +0100
->
->      ath9k: fix double-free bug on beacon generate failure
->
->      When the next beacon is sent, the ath_buf from the previous run is reused.
->      If getting a new beacon from mac80211 fails, bf->bf_mpdu is not reset, yet
->      the skb is freed, leading to a double-free on the next beacon tx attempt,
->      resulting in a system crash.
->
->      Cc: stable@vger.kernel.org
->      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->      Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Commits #2 and #3 implement the actual power saving mechanism
+for mesh.
 
-I did not have this one applied, and it would explain at least one
-crash that I've seen.
+When the current peer link states allow doze state, the HW is
+configured accordingly.
+STA wake up from doze state for
+1) sending their own beacon and tailing awake window
+2) receiving beacons of peers they are in light sleep towards
+In these two situations a Mesh Peer Service Period may be
+initiated to extend the awake phase to transmit/receive
+frames.
 
-I'll apply it (and the other you mentioned) now.
+Design goal was to implement all PS routines in mac80211 to
+keep maintainability high and allow simple driver adaption.
+Since mesh PS requires waiting for beacon/multicasts (CAB) per
+STA, these routines are re-implemented in mac80211.
 
-Thanks!
-Ben
+The implementation should be capable of managing multiple
+concurrent mesh vif, although this has rarely been tested, yet.
 
+(For more info see https://github.com/cozybit/open80211s/wiki
+/Mesh-Powersave-Implementation-Notes.)
+
+On some test devices (WNDR3700/3800 with openwrt r35284) I
+experience frequent crashes ("Data bus error"). Adding udelay
+to ath9k_hw_set_power_awake and ath9k_set_power_network_sleep as
+described in https://dev.openwrt.org/ticket/9107 seems to help.
+I am unsure if I just stumble over a bug or cause it myself
+here.
+
+Marco Porsch (3):
+  mac80211: move mesh sync beacon handler into neighbour_update
+  mac80211: mesh power save doze scheduling
+  ath9k: mesh powersave support
+
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |   46 +++-
+ include/net/mac80211.h                 |   34 +++
+ net/mac80211/ieee80211_i.h             |   19 +-
+ net/mac80211/mesh.c                    |   25 ++-
+ net/mac80211/mesh.h                    |   22 +-
+ net/mac80211/mesh_plink.c              |   17 +-
+ net/mac80211/mesh_ps.c                 |  357 ++++++++++++++++++++++++++++++++
+ net/mac80211/mesh_sync.c               |   47 ++---
+ net/mac80211/sta_info.c                |    4 +
+ net/mac80211/sta_info.h                |   13 ++
+ net/mac80211/tx.c                      |    2 +
+ 12 files changed, 536 insertions(+), 51 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
