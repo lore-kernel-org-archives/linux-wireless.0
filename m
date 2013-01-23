@@ -1,61 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f173.google.com ([209.85.210.173]:44455 "EHLO
-	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745Ab3ACFLa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 00:11:30 -0500
-Received: by mail-ia0-f173.google.com with SMTP id w21so12528002iac.18
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 21:11:30 -0800 (PST)
-Date: Thu, 3 Jan 2013 00:09:46 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: fix mesh_hwmp kerneldoc
-Message-ID: <20130103050945.GE13185@localhost> (sfid-20130103_061135_213095_26262EF6)
+Received: from mx1.redhat.com ([209.132.183.28]:24726 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755159Ab3AWLcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 06:32:52 -0500
+Date: Wed, 23 Jan 2013 12:32:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Paul Stewart <pstew@chromium.org>
+Subject: [PATCH] mac80211: improve latency and throughput while software
+ scanning
+Message-ID: <20130123113244.GA2941@redhat.com> (sfid-20130123_123259_415260_578716DF)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patch vastly improve latency while scanning. Slight throughput
+improvements were observed as well. Is intended for improve performance
+of voice and video applications, when scan is periodically requested by
+user space (i.e. default NetworkManager behaviour).
 
-One of the function names was wrong and some parameters were
-missing.
+Patch remove latency requirement based on PM_QOS_NETWORK_LATENCY,
+this value is 2000 seconds by default (i.e. approximately 0.5 hour !?!).
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Also remove listen interval requirement, which based on beaconing and
+depending on BSS parameters. It can make we stay off-channel for a
+second or more.
+
+Instead try to offer the best latency that we could, i.e. be off-channel
+no longer than PASSIVE channel scan time: 125 ms. That mean we will
+scan two ACTIVE channels and go back to on-channel, and one PASSIVE
+channel, and go back to on-channel.
+
+Patch also decrease PASSIVE channel scan time to about 110 ms.
+
+As drawback patch increase overall scan time. On my tests, when scanning
+both 2GHz and 5GHz bands, scanning time increase from 5 seconds up to 10
+seconds. Since that increase happen only when we are associated, I think
+it can be acceptable. If eventually better scan time is needed for
+situations when we lose signal and quickly need to decide to which AP
+roam, additional scan flag or parameter can be introduced.
+
+I tested patch by doing:
+
+while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
+
+and
+
+ping -i0.2 -c 1000 HOST
+
+on remote and local machine, results are as below:
+
+* Ping from local periodically scanning machine to AP:
+Unpatched: rtt min/avg/max/mdev = 0.928/24.946/182.135/36.873 ms
+Patched:   rtt min/avg/max/mdev = 0.928/19.678/150.845/33.130 ms
+
+* Ping from remote machine to periodically scanning machine:
+Unpatched: rtt min/avg/max/mdev = 1.637/120.683/709.139/164.337 ms
+Patched:   rtt min/avg/max/mdev = 1.807/26.893/201.435/40.284 ms
+
+Throughput measured by scp show following results.
+
+* Upload to periodically scanning machine:
+Unpatched: 3.9MB/s   03:15    
+Patched:   4.3MB/s   02:58
+
+* Download from periodically scanning machine:
+Unpatched: 5.5MB/s   02:17
+Patched:   6.2MB/s   02:02
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/mesh_hwmp.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/scan.c |   32 +++++---------------------------
+ 1 files changed, 5 insertions(+), 27 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 47aeee2..f0b384e 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -219,12 +219,14 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
- }
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 06cbe26..505699b 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -27,7 +27,7 @@
  
- /**
-- * mesh_send_path error - Sends a PERR mesh management frame
-+ * mesh_path_error_tx - Sends a PERR mesh management frame
-  *
-+ * @ttl: allowed remaining hops
-  * @target: broken destination
-  * @target_sn: SN of the broken destination
-  * @target_rcode: reason code for this PERR
-  * @ra: node this frame is addressed to
-+ * @sdata: local mesh subif
-  *
-  * Note: This function may be called with driver locks taken that the driver
-  * also acquires in the TX path.  To avoid a deadlock we don't transmit the
-@@ -350,6 +352,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
-  * @sdata: local mesh subif
-  * @mgmt: mesh management frame
-  * @hwmp_ie: hwmp information element (PREP or PREQ)
-+ * @action: type of hwmp ie
-  *
-  * This function updates the path routing information to the originator and the
-  * transmitter of a HWMP PREQ or PREP frame.
+ #define IEEE80211_PROBE_DELAY (HZ / 33)
+ #define IEEE80211_CHANNEL_TIME (HZ / 33)
+-#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
++#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
+ 
+ static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
+ {
+@@ -546,8 +546,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	bool associated = false;
+ 	bool tx_empty = true;
+ 	bool bad_latency;
+-	bool listen_int_exceeded;
+-	unsigned long min_beacon_int = 0;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
+ 	enum mac80211_scan_state next_scan_state;
+@@ -566,11 +564,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 			if (sdata->u.mgd.associated) {
+ 				associated = true;
+ 
+-				if (sdata->vif.bss_conf.beacon_int <
+-				    min_beacon_int || min_beacon_int == 0)
+-					min_beacon_int =
+-						sdata->vif.bss_conf.beacon_int;
+-
+ 				if (!qdisc_all_tx_empty(sdata->dev)) {
+ 					tx_empty = false;
+ 					break;
+@@ -587,34 +580,19 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	 * see if we can scan another channel without interfering
+ 	 * with the current traffic situation.
+ 	 *
+-	 * Since we don't know if the AP has pending frames for us
+-	 * we can only check for our tx queues and use the current
+-	 * pm_qos requirements for rx. Hence, if no tx traffic occurs
+-	 * at all we will scan as many channels in a row as the pm_qos
+-	 * latency allows us to. Additionally we also check for the
+-	 * currently negotiated listen interval to prevent losing
+-	 * frames unnecessarily.
+-	 *
+-	 * Otherwise switch back to the operating channel.
++	 * Keep good latency, do not stay off-channel more than 125 ms.
+ 	 */
+ 
+ 	bad_latency = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
+-			local->leave_oper_channel_time +
+-			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+-
+-	listen_int_exceeded = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
+-			local->leave_oper_channel_time +
+-			usecs_to_jiffies(min_beacon_int * 1024) *
+-			local->hw.conf.listen_interval);
++				 ieee80211_scan_get_channel_time(next_chan),
++				 local->leave_oper_channel_time + HZ / 8);
+ 
+ 	if (associated && !tx_empty) {
+ 		if (local->scan_req->flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
+ 			next_scan_state = SCAN_ABORT;
+ 		else
+ 			next_scan_state = SCAN_SUSPEND;
+-	} else if (associated && (bad_latency || listen_int_exceeded)) {
++	} else if (associated && bad_latency) {
+ 		next_scan_state = SCAN_SUSPEND;
+ 	} else {
+ 		next_scan_state = SCAN_SET_CHANNEL;
 -- 
-1.7.10.4
-
--- 
-Bob Copeland %% www.bobcopeland.com
+1.7.1
