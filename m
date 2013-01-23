@@ -1,85 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40033 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab3ARNhs (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45250 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755179Ab3AWMwh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 08:37:48 -0500
-Date: Fri, 18 Jan 2013 16:36:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch v2] b43: N-PHY: fix gain in
- b43_nphy_get_gain_ctl_workaround_ent()
-Message-ID: <20130118133658.GA31186@elgon.mountain> (sfid-20130118_143812_086589_475B209A)
+	Wed, 23 Jan 2013 07:52:37 -0500
+Date: Wed, 23 Jan 2013 13:52:28 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv6 0/6] Add DFS master ability
+Message-ID: <20130123125228.GC23989@pandem0nium> (sfid-20130123_135240_817466_05CE82CB)
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1358378574.15012.62.camel@jlt4.sipsolutions.net>
+ <20130117142125.GF19552@pandem0nium>
+ <1358546933.7922.49.camel@jlt4.sipsolutions.net>
+ <50FD1C7C.5050606@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50F84AF3.5070901@bfs.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="adJ1OR3c6QgCpb/j"
+In-Reply-To: <50FD1C7C.5050606@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were no break statements in this switch statement so everything
-used the default settings.  Per Walter Harms's suggestion, I've replaced
-the switch statement and done a little cleanup.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2: Additional cleanups.
+--adJ1OR3c6QgCpb/j
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 97d4e27..99567db 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -3226,8 +3226,6 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- {
- 	struct nphy_gain_ctl_workaround_entry *e;
- 	u8 phy_idx;
--	u8 tr_iso = ghz5 ? dev->dev->bus_sprom->fem.ghz5.tr_iso :
--			   dev->dev->bus_sprom->fem.ghz2.tr_iso;
- 
- 	if (!ghz5 && dev->phy.rev >= 6 && dev->phy.radio_rev == 11)
- 		return &nphy_gain_ctl_wa_phy6_radio11_ghz2;
-@@ -3249,6 +3247,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 		    !b43_channel_type_is_40mhz(dev->phy.channel_type))
- 			e->cliplo_gain = 0x2d;
- 	} else if (!ghz5 && dev->phy.rev >= 5) {
-+		int gain_data[] = {0x0062, 0x0064, 0x006a, 0x106a, 0x106c,
-+				   0x1074, 0x107c, 0x207c};
-+		u8 tr_iso = dev->dev->bus_sprom->fem.ghz2.tr_iso;
-+
- 		if (ext_lna) {
- 			e->rfseq_init[0] &= ~0x4000;
- 			e->rfseq_init[1] &= ~0x4000;
-@@ -3256,26 +3258,10 @@ struct nphy_gain_ctl_workaround_entry *b43_nphy_get_gain_ctl_workaround_ent(
- 			e->rfseq_init[3] &= ~0x4000;
- 			e->init_gain &= ~0x4000;
- 		}
--		switch (tr_iso) {
--		case 0:
--			e->cliplo_gain = 0x0062;
--		case 1:
--			e->cliplo_gain = 0x0064;
--		case 2:
--			e->cliplo_gain = 0x006a;
--		case 3:
--			e->cliplo_gain = 0x106a;
--		case 4:
--			e->cliplo_gain = 0x106c;
--		case 5:
--			e->cliplo_gain = 0x1074;
--		case 6:
--			e->cliplo_gain = 0x107c;
--		case 7:
--			e->cliplo_gain = 0x207c;
--		default:
--			e->cliplo_gain = 0x106a;
--		}
-+		if (tr_iso > 7)
-+			tr_iso = 3;
-+		e->cliplo_gain = gain_data[tr_iso];
-+
- 	} else if (ghz5 && dev->phy.rev == 4 && ext_lna) {
- 		e->rfseq_init[0] &= ~0x4000;
- 		e->rfseq_init[1] &= ~0x4000;
+On Mon, Jan 21, 2013 at 11:46:20AM +0100, Zefir Kurtisi wrote:
+> On 01/18/2013 11:08 PM, Johannes Berg wrote:
+> > Hi,
+> >=20
+> >> As stated before: "available until ..." time is not neccessary as far
+> >> as I know. Also the channel must stay available when AP stops operatio=
+n,
+> >> I'll change that.
+> >=20
+> > Yeah, I checked the documents myself now ... strange, but hey. Radars
+> > are fixed installations and mostly active continually, so I guess they
+> > figured it was no big deal.
+> >=20
+> We were also unsure if this makes sense and contacted regulatory for
+> clarification. Indeed, with the current document a scenario where "I swit=
+ched to a
+> DFS channel and skipped CAC because I passed one half a year ago" is fully
+> compliant. Practically, when you set up a new AP and do once a CAC for ea=
+ch DFS
+> channel during installation time, you don't need to do a CAC ever again (=
+as long
+> as you do not see radars).
+>=20
+Thanks for clarification. :)
+
+
+> Why then bother with CAC at all, one might think. In fact, exploiting giv=
+en
+> requirements to such extent is mandatory to make operation on DFS channel=
+s usable
+> (which btw. is not the scope of the patches discussed here).
+>=20
+
+I would actually like to make operation on DFS channels usable by using the=
+ implementation
+=66rom these patches. :) Do you imply that we couldn't practically use it? =
+Any suggestions
+what can be improved?
+
+Cheers,
+	Simon
+
+--adJ1OR3c6QgCpb/j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlD/3QwACgkQrzg/fFk7axZ7MgCgqDy1WSFBZB/Tf19rVQ6YTvUW
+FswAnjj7oaosbJpRw7Px+x/oLv/8RQtC
+=U2Us
+-----END PGP SIGNATURE-----
+
+--adJ1OR3c6QgCpb/j--
