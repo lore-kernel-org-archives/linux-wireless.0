@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13983 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:51997 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195Ab3AGLIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 06:08:09 -0500
-Date: Mon, 7 Jan 2013 12:08:00 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Tino Keitel <tino.keitel@tikei.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Power saving features for iwl4965
-Message-ID: <20130107110759.GC6931@redhat.com> (sfid-20130107_120815_075244_EA3662A1)
-References: <20120418203543.GA16000@x61.home>
- <20120425122554.GD2466@redhat.com>
- <20120503182853.GA12461@mac.home>
- <20121226185425.GA12627@x61.home>
+	id S1755248Ab3AWOli (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 09:41:38 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0NEfbOB018117
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:37 -0600
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0NEfbZt025993
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:37 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH 4/5] wlcore: use PLATFORM_DEVID_AUTO for plat dev creation to avoid conflicts
+Date: Wed, 23 Jan 2013 16:40:37 +0200
+Message-ID: <1358952038-5982-5-git-send-email-coelho@ti.com> (sfid-20130123_154144_508611_D12E5E69)
+In-Reply-To: <1358952038-5982-1-git-send-email-coelho@ti.com>
+References: <1358952038-5982-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121226185425.GA12627@x61.home>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+The platform devices can be created by both wlcore_sdio and
+wlcore_spi.  Theoretically, if both are connected to the same board,
+there will be a conflict.
 
-On Wed, Dec 26, 2012 at 07:54:25PM +0100, Tino Keitel wrote:
-> On Thu, May 03, 2012 at 20:28:53 +0200, Tino Keitel wrote:
-> > On Wed, Apr 25, 2012 at 14:25:55 +0200, Stanislaw Gruszka wrote:
-> > > On Wed, Apr 18, 2012 at 10:35:43PM +0200, Tino Keitel wrote:
-> > > > up to 2.6.38, the iwl4965 driver was able to use power saving features
-> > > > by invoking "iwconfig <interface> power on", at least when unsetting
-> > > > the broken_powersave variable.
-> > > > 
-> > > > 2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
-> > > > missing power saving.  I was able to port the 2.6.38 driver up to
-> > > > kernel 3.1, but it got too complicated for me with 3.2. 
-> > > > 
-> > > > Are there any plans to fix this power usage regression at some point in
-> > > > the iwlegacy driver? I think there are still a lot of iwl4965 users out
-> > > > there.
-> > > Yes, adding PS support is on my iwlegacy TODO list.
-> > 
-> > Thanks, I'd be glad if I could help, testing etc.
-> 
-> Hi Stanislaw,
-> 
-> is there any progress regarding this? If not, I could try to implement
-> it in the current kernel.  However, I don't have any knowlegde about
-> hardware related features.  If you have, maybe I could use your
-> knowledge to do it myself.
+Reported-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c |    2 +-
+ drivers/net/wireless/ti/wlcore/spi.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I posted patch here
-http://marc.info/?l=linux-wireless&m=135601033021616&w=2
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 6d2884f..198028d 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -280,7 +280,7 @@ static int wl1271_probe(struct sdio_func *func,
+ 	else
+ 		chip_family = "wl12xx";
+ 
+-	glue->core = platform_device_alloc(chip_family, -1);
++	glue->core = platform_device_alloc(chip_family, PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device");
+ 		ret = -ENOMEM;
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index d62a20b..5ad2e10 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -366,7 +366,7 @@ static int wl1271_probe(struct spi_device *spi)
+ 		goto out_free_glue;
+ 	}
+ 
+-	glue->core = platform_device_alloc("wl12xx", -1);
++	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
+ 		ret = -ENOMEM;
+-- 
+1.7.10.4
 
-But I did not review code regarding power save to catch possible
-problems. Testing are bug reporting are welcome ...
-
-Thanks
-Stanislaw
