@@ -1,69 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:48324 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664Ab3AGBfv (ORCPT
+Received: from mail-da0-f48.google.com ([209.85.210.48]:46851 "EHLO
+	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400Ab3AWUTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2013 20:35:51 -0500
-Received: by mail-we0-f177.google.com with SMTP id x48so9407867wey.22
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jan 2013 17:35:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1357304757.11302.4.camel@jlt4.sipsolutions.net>
-References: <1357167319-13338-1-git-send-email-thomas@cozybit.com>
- <1357167319-13338-4-git-send-email-thomas@cozybit.com> <1357304757.11302.4.camel@jlt4.sipsolutions.net>
+	Wed, 23 Jan 2013 15:19:01 -0500
+Received: by mail-da0-f48.google.com with SMTP id k18so3971109dae.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 12:19:00 -0800 (PST)
 From: Thomas Pedersen <thomas@cozybit.com>
-Date: Sun, 6 Jan 2013 17:35:28 -0800
-Message-ID: <CAG6hwVMdivdiJZE9qqtm2UXhZLFZ=tHeTyOuU_FGJR_rqr20sQ@mail.gmail.com> (sfid-20130107_023554_669372_A3744FA8)
-Subject: Re: [PATCH v2 4/4] mac80211_hwsim: streamline beacon timestamp
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.org, j@w1.fi, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: johannes@sipsolutions.net
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/2] mac80211: support mesh rate updates
+Date: Wed, 23 Jan 2013 12:18:13 -0800
+Message-Id: <1358972293-2884-2-git-send-email-thomas@cozybit.com> (sfid-20130123_211910_598374_21E445A7)
+In-Reply-To: <1358972293-2884-1-git-send-email-thomas@cozybit.com>
+References: <1358972293-2884-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+An existing mesh station entry may change its rate
+capabilities, so call rate_control_rate_update() to notify
+the rate control.
 
-On Fri, Jan 4, 2013 at 5:05 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2013-01-02 at 14:55 -0800, Thomas Pedersen wrote:
->
->> @@ -359,6 +359,8 @@ struct mac80211_hwsim_data {
->>       /* difference between this hw's clock and the real clock, in usecs */
->>       s64 tsf_offset;
->>       s64 bcn_delta;
->> +     /* absolute beacon transmission time. Used to cover up "tx" delay. */
->> +     u64 abs_bcn_tstamp;
->
-> This can't work if you have multiple interfaces, as far as I can tell.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/driver-ops.h |    3 ++-
+ net/mac80211/mesh_plink.c |    8 +++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-In practice, I think it'll be fine. abs_bcn_tstamp is only relevant
-from the beacon timestamp to the rx mactime code, of which you have a
-single (non-preemptible) path per hwsim hw. Per-vif beaconing (was) is
-already not supported.
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 0c07f94..b80d7a3 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -569,7 +569,8 @@ static inline void drv_sta_rc_update(struct ieee80211_local *local,
+ 	check_sdata_in_driver(sdata);
+ 
+ 	WARN_ON(changed & IEEE80211_RC_SUPP_RATES_CHANGED &&
+-		sdata->vif.type != NL80211_IFTYPE_ADHOC);
++		(sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		 sdata->vif.type != NL80211_IFTYPE_MESH_POINT);
+ 
+ 	trace_drv_sta_rc_update(local, sdata, sta, changed);
+ 	if (local->ops->sta_rc_update)
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index fd280a6..1500a44 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -292,7 +292,7 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+ 	struct ieee80211_supported_band *sband;
+-	u32 rates, basic_rates = 0;
++	u32 rates, basic_rates = 0, changed = 0;
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 	rates = ieee80211_sta_get_rates(local, elems, band, &basic_rates);
+@@ -304,6 +304,8 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	if (sta->plink_state == NL80211_PLINK_ESTAB)
+ 		goto out;
+ 
++	if (sta->sta.supp_rates[band] != rates)
++		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
+ 	sta->sta.supp_rates[band] = rates;
+ 	if (elems->ht_cap_elem &&
+ 	    sdata->vif.bss_conf.chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
+@@ -322,11 +324,15 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 					    ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 		ieee80211_ht_oper_to_chandef(sdata->vif.bss_conf.chandef.chan,
+ 					     elems->ht_operation, &chandef);
++		if (sta->ch_width != chandef.width)
++			changed |= IEEE80211_RC_BW_CHANGED;
+ 		sta->ch_width = chandef.width;
+ 	}
+ 
+ 	if (insert)
+ 		rate_control_rate_init(sta);
++	else
++		rate_control_rate_update(local, sband, sta, changed);
+ out:
+ 	spin_unlock_bh(&sta->lock);
+ }
+-- 
+1.7.10.4
 
->> +             /*
->> +              * Account for delay from filling in the timestamp to mactime.
->> +              */
->> +             now = mac80211_hwsim_get_tsf_raw();
->> +             if (ieee80211_is_beacon(hdr->frame_control) ||
->> +                 ieee80211_is_probe_resp(hdr->frame_control))
->> +                     now -= now - data->abs_bcn_tstamp;
->
-> Uhh.
->         now -= now - data->abs_bcn_tstamp;
-> <=>     now = now - now + data->abs_bcn_tstamp;
-> <=>     now = dat->abs_bcn_tstamp;
-
-Oops. I guess that factors down to what I was really trying to do. No
-wonder the test passed :P
-
-> No? But it seems to me that you're trying to timestamp based on theT
-> transmitter? This is weird anyway?
-
-The global hwsim tsf is just ktime, so all interfaces have the same
-reference. This might cause the beacon mactime to show as earlier than
-just-received non-beacons, but it's only on the order of ~10 us, and
-I'd rather have that uncertainty there than Toffset.
-
-Will you take this patch after a little refactoring?
-
-Thomas
