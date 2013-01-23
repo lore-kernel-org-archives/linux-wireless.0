@@ -1,92 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54805 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753290Ab3ALOw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 09:52:26 -0500
-Message-ID: <50F178A1.7090205@hauke-m.de> (sfid-20130112_155229_837745_DD7D31CB)
-Date: Sat, 12 Jan 2013 15:52:17 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Nathan Hintz <nlhintz@hotmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] bcma: fix bcm4716/bcm4748 i2s irqflag
-References: <BLU0-SMTP2344277AA51EC3C2665B8DCAC280@phx.gbl>
-In-Reply-To: <BLU0-SMTP2344277AA51EC3C2665B8DCAC280@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:46992 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028Ab3AWTM6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 14:12:58 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, sven@open-mesh.com,
+	rodrigue@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2 4/4] ath9k: Update spectral scan output data
+Date: Wed, 23 Jan 2013 20:12:39 +0100
+Message-Id: <1358968359-25490-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130123_201304_303621_8861B1B6)
+In-Reply-To: <1358959087-24897-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1358959087-24897-4-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2013 07:07 AM, Nathan Hintz wrote:
-> The default irqflag assignment for the I2S core on some Broadcom
-> 4716/4748 devices is invalid and needs to be corrected (from the
-> Broadcom SDK).
-> 
-> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+From: Sven Eckelmann <sven@open-mesh.com>
 
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+The sample data received through the spectral scan can be either in big or
+little endian byteorder. This information isn't stored in the output file.
+Therefore it is not possible for the analyzer software to find the correct byte
+order.
 
-> ---
->  drivers/bcma/driver_mips.c            |   28 ++++++++++++++++++++++++++++
->  include/linux/bcma/bcma_driver_mips.h |    1 +
->  2 files changed, 29 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-> index a808404..9fe86ee 100644
-> --- a/drivers/bcma/driver_mips.c
-> +++ b/drivers/bcma/driver_mips.c
-> @@ -256,6 +256,32 @@ void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
->  	mcore->early_setup_done = true;
->  }
->  
-> +static void bcma_fix_i2s_irqflag(struct bcma_bus *bus)
-> +{
-> +	struct bcma_device *cpu, *pcie, *i2s;
-> +
-> +	/* Fixup the interrupts in 4716/4748 for i2s core (2010 Broadcom SDK)
-> +	 * (IRQ flags > 7 are ignored when setting the interrupt masks)
-> +	 */
-> +	if (bus->chipinfo.id != BCMA_CHIP_ID_BCM4716 &&
-> +	    bus->chipinfo.id != BCMA_CHIP_ID_BCM4748)
-> +		return;
-> +
-> +	cpu = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
-> +	pcie = bcma_find_core(bus, BCMA_CORE_PCIE);
-> +	i2s = bcma_find_core(bus, BCMA_CORE_I2S);
-> +	if (cpu && pcie && i2s &&
-> +	    bcma_aread32(cpu, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
-> +	    bcma_aread32(pcie, BCMA_MIPS_OOBSELINA74) == 0x08060504 &&
-> +	    bcma_aread32(i2s, BCMA_MIPS_OOBSELOUTA30) == 0x88) {
-> +		bcma_awrite32(cpu, BCMA_MIPS_OOBSELINA74, 0x07060504);
-> +		bcma_awrite32(pcie, BCMA_MIPS_OOBSELINA74, 0x07060504);
-> +		bcma_awrite32(i2s, BCMA_MIPS_OOBSELOUTA30, 0x87);
-> +		bcma_debug(bus,
-> +			   "Moved i2s interrupt to oob line 7 instead of 8\n");
-> +	}
-> +}
-> +
->  void bcma_core_mips_init(struct bcma_drv_mips *mcore)
->  {
->  	struct bcma_bus *bus;
-> @@ -269,6 +295,8 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
->  
->  	bcma_core_mips_early_init(mcore);
->  
-> +	bcma_fix_i2s_irqflag(bus);
-> +
->  	switch (bus->chipinfo.id) {
->  	case BCMA_CHIP_ID_BCM4716:
->  	case BCMA_CHIP_ID_BCM4748:
-> diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-> index 73c7f4b..0d1ea29 100644
-> --- a/include/linux/bcma/bcma_driver_mips.h
-> +++ b/include/linux/bcma/bcma_driver_mips.h
-> @@ -28,6 +28,7 @@
->  #define BCMA_MIPS_MIPS74K_GPIOEN	0x0048
->  #define BCMA_MIPS_MIPS74K_CLKCTLST	0x01E0
->  
-> +#define BCMA_MIPS_OOBSELINA74		0x004
->  #define BCMA_MIPS_OOBSELOUTA30		0x100
->  
->  struct bcma_device;
-> 
+It is relative common to get the data from a low end AP in big endian mode and
+transfer it to another computer in little endian mode to analyze it. Therefore,
+it would be better to store it in network (big endian) byte order.
+
+The extension of the 8 bit bins for each bin to 16 bit is not necessary. This
+operation can be done in userspace or on a different machine. Instead the
+max_exp defining the amount of shifting required for each bin is exported to
+userspace.
+
+The change of the output format requires a change of the type in the sample
+tlv to allow the userspace program to correctly detect the bin format.
+
+Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+[siwu@hrz.tu-chemnitz.de: squashed patches, update commit message, rebase, fix endianess bug]
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+Changes to PATCH:
+ * fixed endianess bug when sending the sample (Thanks Mathias)
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++---
+ drivers/net/wireless/ath/ath9k/debug.c |    6 ++++--
+ drivers/net/wireless/ath/ath9k/recv.c  |   14 ++++++++------
+ 3 files changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 342edc5..67df864 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -864,7 +864,7 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
+  * interface.
+  */
+ enum ath_fft_sample_type {
+-	ATH_FFT_SAMPLE_HT20 = 0,
++	ATH_FFT_SAMPLE_HT20 = 1,
+ };
+ 
+ struct fft_sample_tlv {
+@@ -876,7 +876,7 @@ struct fft_sample_tlv {
+ struct fft_sample_ht20 {
+ 	struct fft_sample_tlv tlv;
+ 
+-	u8 __alignment;
++	u8 max_exp;
+ 
+ 	u16 freq;
+ 	s8 rssi;
+@@ -888,7 +888,7 @@ struct fft_sample_ht20 {
+ 
+ 	u64 tsf;
+ 
+-	u16 data[SPECTRAL_HT20_NUM_BINS];
++	u8 data[SPECTRAL_HT20_NUM_BINS];
+ } __packed;
+ 
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 2bbdcf8..3714b97 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1236,11 +1236,13 @@ static int remove_buf_file_handler(struct dentry *dentry)
+ void ath_debug_send_fft_sample(struct ath_softc *sc,
+ 			       struct fft_sample_tlv *fft_sample_tlv)
+ {
++	int length;
+ 	if (!sc->rfs_chan_spec_scan)
+ 		return;
+ 
+-	relay_write(sc->rfs_chan_spec_scan, fft_sample_tlv,
+-		    fft_sample_tlv->length + sizeof(*fft_sample_tlv));
++	length = __be16_to_cpu(fft_sample_tlv->length) +
++		 sizeof(*fft_sample_tlv);
++	relay_write(sc->rfs_chan_spec_scan, fft_sample_tlv, length);
+ }
+ 
+ static struct rchan_callbacks rfs_spec_scan_cb = {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 13ee37b..2af6f19 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1035,7 +1035,7 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	struct ath_radar_info *radar_info;
+ 	struct ath_ht20_mag_info *mag_info;
+ 	int len = rs->rs_datalen;
+-	int i, dc_pos;
++	int dc_pos;
+ 
+ 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
+ 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
+@@ -1064,8 +1064,9 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 
+ 	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
+ 	fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
++	fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
+ 
+-	fft_sample.freq = ah->curchan->chan->center_freq;
++	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
+ 	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
+ 	fft_sample.noise = ah->noise;
+ 
+@@ -1105,14 +1106,15 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	/* mag data is at the end of the frame, in front of radar_info */
+ 	mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
+ 
+-	/* Apply exponent and grab further auxiliary information. */
+-	for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++)
+-		fft_sample.data[i] = bins[i] << mag_info->max_exp;
++	/* copy raw bins without scaling them */
++	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
++	fft_sample.max_exp = mag_info->max_exp & 0xf;
+ 
+ 	fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
++	fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
+ 	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
+ 	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
+-	fft_sample.tsf = tsf;
++	fft_sample.tsf = __cpu_to_be64(tsf);
+ 
+ 	ath_debug_send_fft_sample(sc, &fft_sample.tlv);
+ 	return 1;
+-- 
+1.7.10.4
 
