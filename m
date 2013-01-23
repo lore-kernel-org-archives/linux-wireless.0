@@ -1,108 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:45507 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab3AaRyh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 12:54:37 -0500
-Date: Thu, 31 Jan 2013 18:54:29 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection
- command/event
-Message-ID: <20130131175429.GD2018@pandem0nium> (sfid-20130131_185441_271088_B498993D)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
- <5107D345.7010101@neratec.com>
- <20130129143652.GA23425@pandem0nium>
- <5109094C.8050703@neratec.com>
- <20130130162531.GA27532@pandem0nium>
- <510A30D1.2080604@neratec.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LTeJQqWS0MN7I/qa"
-In-Reply-To: <510A30D1.2080604@neratec.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42694 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750813Ab3AWSst (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 13:48:49 -0500
+Message-ID: <1358967107.18201.23.camel@dcbw.foobar.com> (sfid-20130123_194853_511884_BE584920)
+Subject: Re: [PATCH] mac80211: improve latency and throughput while software
+ scanning
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Sam Leffler <sleffler@chromium.org>,
+	Paul Stewart <pstew@chromium.org>
+Date: Wed, 23 Jan 2013 12:51:47 -0600
+In-Reply-To: <20130123113244.GA2941@redhat.com>
+References: <20130123113244.GA2941@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2013-01-23 at 12:32 +0100, Stanislaw Gruszka wrote:
+> Patch vastly improve latency while scanning. Slight throughput
+> improvements were observed as well. Is intended for improve performance
+> of voice and video applications, when scan is periodically requested by
+> user space (i.e. default NetworkManager behaviour).
+> 
+> Patch remove latency requirement based on PM_QOS_NETWORK_LATENCY,
+> this value is 2000 seconds by default (i.e. approximately 0.5 hour !?!).
+> 
+> Also remove listen interval requirement, which based on beaconing and
+> depending on BSS parameters. It can make we stay off-channel for a
+> second or more.
+> 
+> Instead try to offer the best latency that we could, i.e. be off-channel
+> no longer than PASSIVE channel scan time: 125 ms. That mean we will
+> scan two ACTIVE channels and go back to on-channel, and one PASSIVE
+> channel, and go back to on-channel.
+> 
+> Patch also decrease PASSIVE channel scan time to about 110 ms.
+> 
+> As drawback patch increase overall scan time. On my tests, when scanning
+> both 2GHz and 5GHz bands, scanning time increase from 5 seconds up to 10
+> seconds. Since that increase happen only when we are associated, I think
+> it can be acceptable. If eventually better scan time is needed for
+> situations when we lose signal and quickly need to decide to which AP
+> roam, additional scan flag or parameter can be introduced.
 
---LTeJQqWS0MN7I/qa
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Total scan time isn't a problem as long as the latency of streaming
+applications is improved, since that was the original problem anyway.
+So I don't think it's a drawback.
 
-Hey Zefir,
+Dan
 
-On Thu, Jan 31, 2013 at 09:52:33AM +0100, Zefir Kurtisi wrote:
-> On 01/30/2013 05:25 PM, Simon Wunderlich wrote:
-> Hey Simon,
->=20
-> all my comments were based on a centralized frequency manager I implement=
-ed for
-> our system (in user-space) and my assumption that its functionality shoul=
-d be
-> portable to mac80211, i.e. channel states being managed by reg.c and wdev=
-s being
-> continuously notified on state changes.
->=20
-> Take a setup where you have two cards running, one as master and the othe=
-r as
-> monitor doing off-channel-CAC. If the monitor detects radar on the master=
-'s
-> operating channel (and the master doesn't), with the current implementati=
-on the
-> master can't be notified to switch. I understand that supporting this very
-> specific use-case would add unjustifiable complexity, while at the same t=
-ime, with
-> the updates you made this can be achieved at higher layers - so it is goo=
-d enough
-> as it is.
+> I tested patch by doing:
+> 
+> while true; do iw dev wlan0 scan; sleep 3; done > /dev/null
+> 
+> and
+> 
+> ping -i0.2 -c 1000 HOST
+> 
+> on remote and local machine, results are as below:
+> 
+> * Ping from local periodically scanning machine to AP:
+> Unpatched: rtt min/avg/max/mdev = 0.928/24.946/182.135/36.873 ms
+> Patched:   rtt min/avg/max/mdev = 0.928/19.678/150.845/33.130 ms
+> 
+> * Ping from remote machine to periodically scanning machine:
+> Unpatched: rtt min/avg/max/mdev = 1.637/120.683/709.139/164.337 ms
+> Patched:   rtt min/avg/max/mdev = 1.807/26.893/201.435/40.284 ms
+> 
+> Throughput measured by scp show following results.
+> 
+> * Upload to periodically scanning machine:
+> Unpatched: 3.9MB/s   03:15    
+> Patched:   4.3MB/s   02:58
+> 
+> * Download from periodically scanning machine:
+> Unpatched: 5.5MB/s   02:17
+> Patched:   6.2MB/s   02:02
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  net/mac80211/scan.c |   32 +++++---------------------------
+>  1 files changed, 5 insertions(+), 27 deletions(-)
+> 
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 06cbe26..505699b 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -27,7 +27,7 @@
+>  
+>  #define IEEE80211_PROBE_DELAY (HZ / 33)
+>  #define IEEE80211_CHANNEL_TIME (HZ / 33)
+> -#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
+> +#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
+>  
+>  static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
+>  {
+> @@ -546,8 +546,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+>  	bool associated = false;
+>  	bool tx_empty = true;
+>  	bool bad_latency;
+> -	bool listen_int_exceeded;
+> -	unsigned long min_beacon_int = 0;
+>  	struct ieee80211_sub_if_data *sdata;
+>  	struct ieee80211_channel *next_chan;
+>  	enum mac80211_scan_state next_scan_state;
+> @@ -566,11 +564,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+>  			if (sdata->u.mgd.associated) {
+>  				associated = true;
+>  
+> -				if (sdata->vif.bss_conf.beacon_int <
+> -				    min_beacon_int || min_beacon_int == 0)
+> -					min_beacon_int =
+> -						sdata->vif.bss_conf.beacon_int;
+> -
+>  				if (!qdisc_all_tx_empty(sdata->dev)) {
+>  					tx_empty = false;
+>  					break;
+> @@ -587,34 +580,19 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+>  	 * see if we can scan another channel without interfering
+>  	 * with the current traffic situation.
+>  	 *
+> -	 * Since we don't know if the AP has pending frames for us
+> -	 * we can only check for our tx queues and use the current
+> -	 * pm_qos requirements for rx. Hence, if no tx traffic occurs
+> -	 * at all we will scan as many channels in a row as the pm_qos
+> -	 * latency allows us to. Additionally we also check for the
+> -	 * currently negotiated listen interval to prevent losing
+> -	 * frames unnecessarily.
+> -	 *
+> -	 * Otherwise switch back to the operating channel.
+> +	 * Keep good latency, do not stay off-channel more than 125 ms.
+>  	 */
+>  
+>  	bad_latency = time_after(jiffies +
+> -			ieee80211_scan_get_channel_time(next_chan),
+> -			local->leave_oper_channel_time +
+> -			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+> -
+> -	listen_int_exceeded = time_after(jiffies +
+> -			ieee80211_scan_get_channel_time(next_chan),
+> -			local->leave_oper_channel_time +
+> -			usecs_to_jiffies(min_beacon_int * 1024) *
+> -			local->hw.conf.listen_interval);
+> +				 ieee80211_scan_get_channel_time(next_chan),
+> +				 local->leave_oper_channel_time + HZ / 8);
+>  
+>  	if (associated && !tx_empty) {
+>  		if (local->scan_req->flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
+>  			next_scan_state = SCAN_ABORT;
+>  		else
+>  			next_scan_state = SCAN_SUSPEND;
+> -	} else if (associated && (bad_latency || listen_int_exceeded)) {
+> +	} else if (associated && bad_latency) {
+>  		next_scan_state = SCAN_SUSPEND;
+>  	} else {
+>  		next_scan_state = SCAN_SET_CHANNEL;
 
-OK ... yeah I guess there are some things which can be handled in userspace=
-=2E Interaction
-between userspace programs will be a topic later anyways, think of say wpa_=
-supplicant and
-hostapd to handle IBSS and AP interface, one of them (or both?) receive a r=
-adar event and
-now have to negotiate the next channel ... :)
 
->=20
->=20
-> Looking forward your patches to get integrated soon, to allow people actu=
-ally
-> testing DFS. I'm eagerly waiting for more active testers to share some ug=
-ly
-> problems I am observing with ath9k's pulse detector. Therefore: full ACK.
-
-Thanks a lot! I've got quite a few mails of people offering their help to c=
-heck
-and verify this implementation or test it in their country. :) If you want =
-to
-help in the integration for ath9k, I'd be glad ... the interface should be
-rather simple so maybe we don't have too much hassle? I have a little patch=
- for
-ath9k to add dummy radar support and simulate events etc as baseline, if you
-(or anyone else) is interested ...
-
-Cheers,
-	Simon
-
---LTeJQqWS0MN7I/qa
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlEKr9UACgkQrzg/fFk7axaaSQCeM4q4FebI0Rjpb4H8SHfsLryz
-cWUAoIjH8fVykn8zVq+QOcK6Gmyz4xlJ
-=tyaF
------END PGP SIGNATURE-----
-
---LTeJQqWS0MN7I/qa--
