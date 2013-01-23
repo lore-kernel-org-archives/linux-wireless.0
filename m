@@ -1,59 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:42802 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753481Ab3A3Uay (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40763 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823Ab3AWMts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 15:30:54 -0500
-Received: by mail-oa0-f47.google.com with SMTP id o17so579788oag.34
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 12:30:54 -0800 (PST)
-Message-ID: <510982FA.3010401@lwfinger.net> (sfid-20130130_213100_786482_4934022A)
-Date: Wed, 30 Jan 2013 14:30:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 23 Jan 2013 07:49:48 -0500
+Date: Wed, 23 Jan 2013 13:49:42 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv6 3/6] nl80211/cfg80211: add radar detection
+ command/event
+Message-ID: <20130123124942.GB23989@pandem0nium> (sfid-20130123_135002_817949_D07834AB)
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1357650251-17425-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1358376672.15012.37.camel@jlt4.sipsolutions.net>
+ <20130117134034.GC19552@pandem0nium>
+ <1358546080.7922.36.camel@jlt4.sipsolutions.net>
+ <50FD1C06.1050300@neratec.com>
 MIME-Version: 1.0
-To: Dylan <dylandonkersgoed@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8723ae Weak Signal Problems
-References: <51072B15.2030805@gmail.com> <51072B95.10101@gmail.com> <51080904.5000103@lwfinger.net> <51095E55.3020106@gmail.com>
-In-Reply-To: <51095E55.3020106@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CdrF4e02JqNVZeln"
+In-Reply-To: <50FD1C06.1050300@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2013 11:54 AM, Dylan wrote:
 
-Please do not drop the Cc to wireless.
+--CdrF4e02JqNVZeln
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I apologize for the late response and limited information.
->
-> The patch doesn't work for me - same problems as before, i.e. the patch doesn't
-> seem to have changed anything. I attached a log. I expect you can make more
-> sense of it than I.
->
-> I can give you the model number of only one of the router/access points - the
-> Cisco DPC3825 which I have. Unfortunately I can't offer much analysis of it as
-> it's in modem only mode now and it's not very practical to reactivate it as an
-> access point at this time. I could try to find out what my school is using as well.
->
-> I've noticed that with the compat wireless drivers I'm ALSO experiencing similar
-> problems with an RTL8188CU card. I expect that's relevant. Funnily enough I have
-> three wireless cards on hand and all of them are some form of Realtek card.
+Hey Zefir,
 
-The vendor driver you are using, 
-/rtl_92ce_92se_92de_8723ae_linux_mac80211_0006.0514.2012/, is relatively old. My 
-patches were for rtl_92ce_92se_92de_8723ae_88ee_linux_mac80211_0010.0109.2013, 
-however, since I wrote earlier, I found 
-rtl_92ce_92se_92de_8723ae_88ee_linux_mac80211_0011.0128.2013, which you will 
-find on the Realtek web site under the RTL8188CE listing for Linux. That one 
-includes my feedback to Realtek about the 01092013 version, and it should build 
-on mainline kernels through 3.8, but not the current wireless-testing, but I 
-doubt that you are using that tree. With that driver, my RTL8723AE got 
-throughput of 60-70 Mbps for both RX and TX. I did have an unexplained kernel 
-panic while running that driver, thus there might be a severe bug in it. I don't 
-know if it is rtl8723e, but that is the only panic that I have had with 3.8-rc4.
+On Mon, Jan 21, 2013 at 11:44:22AM +0100, Zefir Kurtisi wrote:
+> On 01/18/2013 10:54 PM, Johannes Berg wrote:
+> > On Thu, 2013-01-17 at 14:40 +0100, Simon Wunderlich wrote:
+> >=20
+> >> Actually there is no limit how long a channel is considered "available=
+", at
+> >> least in ETSI. ETSI EN 301-893 v1.4.1 had a limit of 24 hours for that,
+> >> but that was removed in v1.5.1 and didn't re-appear since then (curren=
+t is
+> >> v1.7.1).
+> >=20
+> > Huh indeed, I would have expected that to be there. It does have a
+> > non-occupancy time though (30 minutes), maybe we should implement that?
+> >=20
+> No, why be more restrictive than regulatory demands?
+>=20
+> With the recent incremental updates, a general note: Victor's initial app=
+roach was
+> to keep all logic in hostapd and minimize the modifications in mac by only
+> ensuring CAC times there. If NOP handling is also added to mac, we'd have
+> everything needed to handle DFS channel states available. With hostapd on=
+ly left
+> to do the selection of the channel to switch to after a radar detection, =
+it might
+> make sense to move everything down to mac. I understand that questioning =
+the
+> design that late is not helpful, at the same time and since the initial p=
+ath was
+> left, it might be worth considering.
 
-The driver for the RTL8188CU/RTL8192CU is a mess. Unfortunately, I am not 
-getting musch help from Realtek. For that reason, I am concentrating on the CE 
-models. Their PCIe group is more responsive.
+Actually questioning the design NOW is a good idea, we are already question=
+ing it
+through the last patches and better bring up the issues now than later. We =
+have started from the
+simple hostap-handles-everything approach and have seen some points are mis=
+sing when
+we think about multi interfaces etc for the future (and implementation issu=
+es of course).
 
-Larry
+If we move channel states (available/unavailable) already into the kernel s=
+pace, we might
+as well check for other states (already doing CAC, not valid until). Maybe =
+it's better like
+this than splitting the management over hostapd and cfg/mac80211?
 
+> > I'm also thinking with the next regdb format update we should allow
+> > specifying these timeouts etc. there.
+> >=20
+> > Does anyone have the relevant FCC rules? I can't find anything with
+> > google ...
+> >=20
+> The FCC 06-96 document (freely available, e.g.
+> http://hraunfoss.fcc.gov/edocs_public/attachmatch/FCC-06-96A1.pdf) seems =
+to be the
+> most recent one. Skimming over I did not find a requirement for the valid=
+ity
+> period after CAC.
+>=20
+
+Thanks for pointing us to that doc. Couldn't find anything either, so I'd j=
+ust
+skip any "validity" for now.
+
+> >> But we can move the CAC/timeout in the wdev and have keep a flag field=
+ in
+> >> the channel struct instead, marking the channel as available, unavaila=
+ble, etc.
+> >>
+> >> What do you think?
+> >=20
+> > I think that would make sense. Probably available/unavailable and
+> > "non-occupancy until"?
+> >=20
+> At that stage, we would have half of all potential states (UNKNOWN, AVAIL=
+ABLE,
+> OPERATING, UNAVAILABLE, USABLE, SCANNING) covered, so a current state per=
+ channel
+> and the time it was entered would give everything required for the comple=
+te state
+> machine in mac.
+
+Sounds good! Will look into this ...
+
+Thanks,
+	Simon
+
+--CdrF4e02JqNVZeln
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlD/3GUACgkQrzg/fFk7axZH3gCgipBMAWROM3ksgx2eMXcxRFAA
+Qe0AoL46+T3mLpGMg9K48qPLWO5AhBfT
+=s2iO
+-----END PGP SIGNATURE-----
+
+--CdrF4e02JqNVZeln--
