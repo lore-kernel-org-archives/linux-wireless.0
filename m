@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:60387 "EHLO
-	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756802Ab3AYK4p (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:50961 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754737Ab3AWSDf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:56:45 -0500
-Date: Fri, 25 Jan 2013 16:20:03 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/7] mwl8k: Allow adding station interface on AP firmware
-Message-ID: <20130125105002.GA9404@markyou.marvell.com> (sfid-20130125_115712_987210_CBF524DF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 23 Jan 2013 13:03:35 -0500
+Received: by mail-bk0-f44.google.com with SMTP id j4so956722bkw.31
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 10:03:33 -0800 (PST)
+References: <20130122164914.GB25134@localhost.localdomain> <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com> <50FF00C0.1010402@gmail.com> <20130122221935.GA2193@localhost.localdomain>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <20130122221935.GA2193@localhost.localdomain>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <B39E4F0F-E03F-4230-83BE-7C379A0BA90D@gmail.com> (sfid-20130123_190339_058186_4CC23777)
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
+Date: Wed, 23 Jan 2013 19:03:30 +0100
+To: Stanislaw Gruszka <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When user wants to add a station interface when
-AP firmware is loaded & in-use, allow creating
-it and also notify user about the same.
+Hi Stanislaw,
 
-Allow adding max one STA interface for AP fw.
+Sent from my iPad
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+On 22 jan. 2013, at 23:19, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+
+> On Tue, Jan 22, 2013 at 10:12:32PM +0100, Xose Vazquez Perez wrote:
+>> On 01/22/2013 07:58 PM, Gertjan van Wingerde wrote:
+>> 
+>>> On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+>>> 
+>>>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>>>> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>>>> ---
+>>>> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
+>>>> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
+>>>> 2 files changed, 4 insertions(+), 4 deletions(-)
+>>>> 
+>>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+>>>> index 3e37c19..bef449c 100644
+>>>> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+>>>> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+>>>> @@ -92,7 +92,7 @@
+>>>> #define NOTICE(__dev, __msg, __args...) \
+>>>>   DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+>>>> #define INFO(__dev, __msg, __args...) \
+>>>> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
+>>>> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
+>>>> #define DEBUG(__dev, __msg, __args...) \
+>>>>   DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
+>>>> #define EEPROM(__dev, __msg, __args...) \
+>> 
+>>> I think this change is good, but we should also change WARNING and
+>>> NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is
+>>> disabled, but INFO will, which would be strange.
+> 
+> We have those "TX status report missed" messages which spam logs,
+> I think we should move them to DEBUG level then.
+> 
+> NOTICE is only used in suspend/resume, it should be DEBUG too and NOTICE
+> macro could be removed.
+> 
+>> I believe this patch is so useful and trivial enough to be included,
+>> as is, in the next 3.8-rc .
+>> 
+>> The next steps can be done for 3.9
+> 
+> If Gertjan will be so kind and ACK this patch, I'll post further
+> changes as incremental patch :-)
+
+As I mentioned to Xose already yesterday, I think this is only appropriate for -next, so we can do this properly. I can see this being handled as a series of patches, which first change the loglevels of the existing log lines, then remove NOTICE, and them change the macro of WARNING to not be covered by CONFIG_RT2X00_DEBUG.
+
 ---
- drivers/net/wireless/mwl8k.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 6c727be..59df345 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2519,7 +2519,7 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- 		priv->hw_rev = cmd->hw_rev;
- 		mwl8k_set_caps(hw, le32_to_cpu(cmd->caps));
- 		priv->ap_macids_supported = 0x000000ff;
--		priv->sta_macids_supported = 0x00000000;
-+		priv->sta_macids_supported = 0x00000100;
- 		priv->num_ampdu_queues = le32_to_cpu(cmd->num_of_ampdu_queues);
- 		if (priv->num_ampdu_queues > MWL8K_MAX_AMPDU_QUEUES) {
- 			wiphy_warn(hw->wiphy, "fw reported %d ampdu queues"
-@@ -4669,12 +4669,18 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		if (priv->ap_fw && di->fw_image_sta) {
--			/* we must load the sta fw to meet this request */
--			if (!list_empty(&priv->vif_list))
--				return -EBUSY;
--			rc = mwl8k_reload_firmware(hw, di->fw_image_sta);
--			if (rc)
--				return rc;
-+			if (!list_empty(&priv->vif_list)) {
-+				wiphy_warn(hw->wiphy, "AP interface is running.\n"
-+					   "Adding STA interface for WDS");
-+			} else {
-+				/* we must load the sta fw to
-+				 * meet this request.
-+				 */
-+				rc = mwl8k_reload_firmware(hw,
-+							   di->fw_image_sta);
-+				if (rc)
-+					return rc;
-+			}
- 		}
- 		macids_supported = priv->sta_macids_supported;
- 		break;
--- 
-1.8.0.3
-
+Gertjan
