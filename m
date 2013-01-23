@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44225 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655Ab3ABM44 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 07:56:56 -0500
-Message-ID: <1357131438.9839.18.camel@jlt4.sipsolutions.net> (sfid-20130102_135659_274677_5BD48CC1)
-Subject: Re: [PATCH V4 2/2] cfg80211/nl80211: Enable drivers to implement
- mac address based ACL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Wed, 02 Jan 2013 13:57:18 +0100
-In-Reply-To: <50E12058.8070106@qca.qualcomm.com>
-References: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com>
-	  <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>
-	 <1356700150.9922.7.camel@jlt4.sipsolutions.net>
-	 <50E12058.8070106@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bear.ext.ti.com ([192.94.94.41]:56426 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754737Ab3AWOld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 09:41:33 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0NEfWTL004219
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:32 -0600
+Received: from DLEE74.ent.ti.com (dlee74.ent.ti.com [157.170.170.8])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0NEfWKL025733
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:32 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH 0/5] ti wlan drivers: clean-up platform_data stuff (part 1)
+Date: Wed, 23 Jan 2013 16:40:33 +0200
+Message-ID: <1358952038-5982-1-git-send-email-coelho@ti.com> (sfid-20130123_154136_278638_B19CB7CB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-12-31 at 10:49 +0530, Vasanthakumar Thiagarajan wrote:
+Hi,
 
-> > I think maybe if you want to continue supporting the white-&  blacklist
-> > you should change it back to nested attributes, but treat the blacklist
-> > there as an optimisation and ignore it for feature advertising.
-> 
-> Ok, so we dont need any mechanism to advertise supporting acl types at 
-> all because any ACL supporting driver is supposed to support white
-> list?.
+These are my initial patches where I started cleaning up the platform
+data stuff so we can start moving to using DT more easily later.
 
-I don't think that's guaranteed.
+There is still a lot more to clean up before making all this DT
+friendly, so I'll send a few more patchsets soon.  I'm sending this
+already because I don't want to pile up too many patches.  Maybe in
+small batches I have a chance of getting some review. :P
 
-johannes
+--
+Cheers,
+Luca.
+
+Luciano Coelho (5):
+  wlcore: remove unused set_power method
+  wlcore: remove if_ops from platform_data
+  wlcore: use wl12xx_platform_data pointer from wlcore_pdev_data
+  wlcore: use PLATFORM_DEVID_AUTO for plat dev creation to avoid
+    conflicts
+  wlcore: move wl12xx_platform_data up and make it truly optional
+
+ drivers/net/wireless/ti/Kconfig                    |    9 ++++++
+ drivers/net/wireless/ti/Makefile                   |    3 ++
+ ...12xx_platform_data.c => wilink_platform_data.c} |    0
+ drivers/net/wireless/ti/wlcore/Kconfig             |    5 ---
+ drivers/net/wireless/ti/wlcore/Makefile            |    3 --
+ drivers/net/wireless/ti/wlcore/main.c              |    6 ++--
+ drivers/net/wireless/ti/wlcore/sdio.c              |   33 +++++++++++++-------
+ drivers/net/wireless/ti/wlcore/spi.c               |   28 ++++++++++++-----
+ drivers/net/wireless/ti/wlcore/wlcore.h            |    1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h          |    5 +++
+ include/linux/wl12xx.h                             |   16 +++++++---
+ 11 files changed, 72 insertions(+), 37 deletions(-)
+ rename drivers/net/wireless/ti/{wlcore/wl12xx_platform_data.c => wilink_platform_data.c} (100%)
+
+-- 
+1.7.10.4
 
