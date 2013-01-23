@@ -1,46 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34264 "EHLO mga02.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:50988 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750788Ab3A2HQk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 02:16:40 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Mathieu Chouquet-Stringer <mathieu@csetco.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: [Ilw] iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost
- unusable on 3.8.0-rc5)
-Date: Tue, 29 Jan 2013 07:16:34 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301925D7A@HASMSX103.ger.corp.intel.com> (sfid-20130129_081655_835188_F6FF924D)
-References: <20130128225657.GA17533@kashmir>
-In-Reply-To: <20130128225657.GA17533@kashmir>
-Content-Type: text/plain; charset="us-ascii"
+	id S1754737Ab3AWOlj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jan 2013 09:41:39 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0NEfdA0019110
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:39 -0600
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0NEfd7d026066
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jan 2013 08:41:39 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH 5/5] wlcore: move wl12xx_platform_data up and make it truly optional
+Date: Wed, 23 Jan 2013 16:40:38 +0200
+Message-ID: <1358952038-5982-6-git-send-email-coelho@ti.com> (sfid-20130123_154145_518396_FD5D7186)
+In-Reply-To: <1358952038-5982-1-git-send-email-coelho@ti.com>
+References: <1358952038-5982-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> 	Hello all,
-> 
-> Oh the irony, I was just starting an email saying wifi is almost unusable for me
-> with 3.8 and my machine (a thinkpad t530) completely froze while typing it...
-> 
-> I was going to say I'm getting a lot of:
-> iwlwifi 0000:03:00.0: fail to flush all tx fifo queues
-> 
+The platform data is used not only by wlcore-based drivers, but also
+by wl1251.  Move it up in the directory hierarchy to reflect this.
 
-Please try this one:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=c3e5d7181afb66657393066bccce0956fab09ab3
+Additionally, make it truly optional.  At the moment, disabling
+platform data while wl1251_sdio or wlcore_sdio are enabled doesn't
+work, but it will be necessary when device tree support is
+implemented.
 
-as you can see, it is in mainline already.
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
+Reviewed-by: Felipe Balbi <balbi@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/Kconfig                          |    9 +++++++++
+ drivers/net/wireless/ti/Makefile                         |    3 +++
+ .../wl12xx_platform_data.c => wilink_platform_data.c}    |    0
+ drivers/net/wireless/ti/wlcore/Kconfig                   |    5 -----
+ drivers/net/wireless/ti/wlcore/Makefile                  |    3 ---
+ include/linux/wl12xx.h                                   |   14 +++++++++++---
+ 6 files changed, 23 insertions(+), 11 deletions(-)
+ rename drivers/net/wireless/ti/{wlcore/wl12xx_platform_data.c => wilink_platform_data.c} (100%)
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
+index be80011..cbe1e7f 100644
+--- a/drivers/net/wireless/ti/Kconfig
++++ b/drivers/net/wireless/ti/Kconfig
+@@ -12,4 +12,13 @@ source "drivers/net/wireless/ti/wl18xx/Kconfig"
+ 
+ # keep last for automatic dependencies
+ source "drivers/net/wireless/ti/wlcore/Kconfig"
++
++config WILINK_PLATFORM_DATA
++	bool "TI WiLink platform data"
++	depends on WLCORE_SDIO || WL1251_SDIO
++	default y
++	---help---
++	Small platform data bit needed to pass data to the sdio modules.
++
++
+ endif # WL_TI
+diff --git a/drivers/net/wireless/ti/Makefile b/drivers/net/wireless/ti/Makefile
+index 4d68239..62cd419 100644
+--- a/drivers/net/wireless/ti/Makefile
++++ b/drivers/net/wireless/ti/Makefile
+@@ -3,3 +3,6 @@ obj-$(CONFIG_WL12XX)			+= wl12xx/
+ obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wlcore/
+ obj-$(CONFIG_WL1251)			+= wl1251/
+ obj-$(CONFIG_WL18XX)			+= wl18xx/
++
++# small builtin driver bit
++obj-$(CONFIG_WILINK_PLATFORM_DATA)	+= wilink_platform_data.o
+diff --git a/drivers/net/wireless/ti/wlcore/wl12xx_platform_data.c b/drivers/net/wireless/ti/wilink_platform_data.c
+similarity index 100%
+rename from drivers/net/wireless/ti/wlcore/wl12xx_platform_data.c
+rename to drivers/net/wireless/ti/wilink_platform_data.c
+diff --git a/drivers/net/wireless/ti/wlcore/Kconfig b/drivers/net/wireless/ti/wlcore/Kconfig
+index d7b907e..2b83282 100644
+--- a/drivers/net/wireless/ti/wlcore/Kconfig
++++ b/drivers/net/wireless/ti/wlcore/Kconfig
+@@ -33,8 +33,3 @@ config WLCORE_SDIO
+ 
+ 	  If you choose to build a module, it'll be called wlcore_sdio.
+ 	  Say N if unsure.
+-
+-config WL12XX_PLATFORM_DATA
+-	bool
+-	depends on WLCORE_SDIO != n || WL1251_SDIO != n
+-	default y
+diff --git a/drivers/net/wireless/ti/wlcore/Makefile b/drivers/net/wireless/ti/wlcore/Makefile
+index d9fba9e..b21398f 100644
+--- a/drivers/net/wireless/ti/wlcore/Makefile
++++ b/drivers/net/wireless/ti/wlcore/Makefile
+@@ -9,7 +9,4 @@ obj-$(CONFIG_WLCORE)			+= wlcore.o
+ obj-$(CONFIG_WLCORE_SPI)		+= wlcore_spi.o
+ obj-$(CONFIG_WLCORE_SDIO)		+= wlcore_sdio.o
+ 
+-# small builtin driver bit
+-obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
+-
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index 360c9bc..a54fe82 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -24,6 +24,8 @@
+ #ifndef _LINUX_WL12XX_H
+ #define _LINUX_WL12XX_H
+ 
++#include <linux/err.h>
++
+ /* Reference clock values */
+ enum {
+ 	WL12XX_REFCLOCK_19	= 0, /* 19.2 MHz */
+@@ -60,10 +62,12 @@ struct wl12xx_platform_data {
+ /* Platform does not support level trigger interrupts */
+ #define WL12XX_PLATFORM_QUIRK_EDGE_IRQ	BIT(0)
+ 
+-#ifdef CONFIG_WL12XX_PLATFORM_DATA
++#ifdef CONFIG_WILINK_PLATFORM_DATA
+ 
+ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
+ 
++struct wl12xx_platform_data *wl12xx_get_platform_data(void);
++
+ #else
+ 
+ static inline
+@@ -72,8 +76,12 @@ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
+ 	return -ENOSYS;
+ }
+ 
+-#endif
++static inline
++struct wl12xx_platform_data *wl12xx_get_platform_data(void)
++{
++	return ERR_PTR(-ENODATA);
++}
+ 
+-struct wl12xx_platform_data *wl12xx_get_platform_data(void);
++#endif
+ 
+ #endif
+-- 
+1.7.10.4
 
