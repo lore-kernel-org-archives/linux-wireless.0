@@ -1,30 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37243 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55080 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754976Ab3APLbw (ORCPT
+	with ESMTP id S1751658Ab3AXOns (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 06:31:52 -0500
-Message-ID: <1358335933.12297.0.camel@jlt4.sipsolutions.net> (sfid-20130116_123156_474184_46CF6914)
-Subject: Re: [PATCHv2 0/6] mesh power save - basics
+	Thu, 24 Jan 2013 09:43:48 -0500
+Message-ID: <1359038650.4639.7.camel@jlt4.sipsolutions.net> (sfid-20130124_154355_943240_F8EA82A0)
+Subject: Re: [PATCH] mac80211: provide the vif in rssi_callback
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Wed, 16 Jan 2013 12:32:13 +0100
-In-Reply-To: <50F677B4.7040609@cozybit.com> (sfid-20130116_115641_363108_7D18C6FC)
-References: <1357571093-12868-1-git-send-email-marco@cozybit.com>
-	 <50F677B4.7040609@cozybit.com> (sfid-20130116_115641_363108_7D18C6FC)
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 24 Jan 2013 15:44:10 +0100
+In-Reply-To: <1359028932-14244-1-git-send-email-johannes@sipsolutions.net> (sfid-20130124_130152_059598_45E65AE2)
+References: <1359028932-14244-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130124_130152_059598_45E65AE2)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-16 at 10:49 +0100, Marco Porsch wrote:
-> Hi Johannes,
+On Thu, 2013-01-24 at 13:02 +0100, Johannes Berg wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 > 
-> I just checked back on the status of my patches and see no further 
-> comments while they are not applied yet. Is there anything odd about them?
+> Since drivers can support several BSS / P2P Client
+> interfaces, the rssi callback needs to inform the driver
+> about the interface teh rssi event relates to.
+> 
 
-No, I've just been very backlogged for a while ...
+Applied.
 
 johannes
 
