@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:49361 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756368Ab3A1OfZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 09:35:25 -0500
-Received: by mail-lb0-f174.google.com with SMTP id l12so4001813lbo.33
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 06:35:24 -0800 (PST)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath9k has buggy promiscuous mode
-Date: Mon, 28 Jan 2013 15:35:20 +0100
-Message-ID: <1628374.rykW5SrKvm@sylvesterjr.pats.ua.ac.be> (sfid-20130128_153529_528882_E7B68D5A)
-In-Reply-To: <87txq1crst.fsf@purkki.adurom.net>
-References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be> <87txq1crst.fsf@purkki.adurom.net>
+Received: from mx4.wp.pl ([212.77.101.8]:19887 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755905Ab3AXVBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2013 16:01:35 -0500
+Date: Thu, 24 Jan 2013 22:01:55 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH 4/4] rt2x00: print queue parameters at debug level
+Message-ID: <20130124210155.GC22800@localhost.localdomain> (sfid-20130124_220138_516763_794ABECA)
+References: <20130124205931.GB16252@localhost.localdomain>
+ <20130124210028.GA22800@localhost.localdomain>
+ <20130124210110.GB22800@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130124210110.GB22800@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 January 2013 16:20:50 Kalle Valo wrote:
-> How did you test this exactly? If you just do 'tcpdump -i wlan0' in
-> managed mode which is expected. If you use monitor mode (iw wlan0 
-set
-> type monitor) when you would see all frames in the air.
+Those messages do not provide interesting information for average user,
+print them at debug level.
 
-I am using tcpdump with the interface in promiscuous mode (not monitor). 
-Tested with another driver, data frames from the access point to another 
-station are captured as is expected in promiscuous mode. Only ath9k fails 
-to do this (other drivers: ralink2800 and iwlwifi).
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Best regards,
-Erwin
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index ed7a1bb..20c6ecc 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -731,9 +731,9 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw,
+ 	queue->aifs = params->aifs;
+ 	queue->txop = params->txop;
+ 
+-	INFO(rt2x00dev,
+-	     "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d, TXop: %d.\n",
+-	     queue_idx, queue->cw_min, queue->cw_max, queue->aifs, queue->txop);
++	DEBUG(rt2x00dev,
++	      "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d, TXop: %d.\n",
++	      queue_idx, queue->cw_min, queue->cw_max, queue->aifs, queue->txop);
+ 
+ 	return 0;
+ }
+-- 
+1.7.4.4
 
