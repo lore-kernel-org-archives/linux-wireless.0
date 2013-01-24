@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:61293 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799Ab3AJIrR (ORCPT
+Received: from telegweb.telechips.com ([219.240.43.111]:58267 "EHLO
+	sfilter.telechips.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab3AXMCW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 03:47:17 -0500
-Message-ID: <50EE8042.1030108@gmail.com> (sfid-20130110_094726_979571_8464C043)
-Date: Thu, 10 Jan 2013 16:48:02 +0800
-From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
+	Thu, 24 Jan 2013 07:02:22 -0500
+Received: from [219.240.43.118] ([219.240.43.118])
+          by sfilter.telechips.com ([219.240.43.111])
+          with ESMTP id 1359027279.885808.3001945008.sfilter
+          for <linux-wireless@vger.kernel.org>;
+          Thu, 24 Jan 2013 20:34:39 +0900 (KST)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Chen Gang <gang.chen@asianux.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/iwlegacy: use strlcpy instead of
- strncpy
-References: <50EA5246.8060206@asianux.com> <20130107111752.GD6931@redhat.com>
-In-Reply-To: <20130107111752.GD6931@redhat.com>
-Content-Type: multipart/mixed;
- boundary="------------070109040906070903080607"
+Content-Type: text/plain;
+	charset="ks_c_5601-1987"
+Subject: [question] how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
+Date: Thu, 24 Jan 2013 20:58:25 +0900
+Message-ID: <F4F751F96C54D346898D4C77E196E3DB0A3F6C6D@telegweb.telechips.com> (sfid-20130124_130225_739320_7392B263)
+From: =?ks_c_5601-1987?B?seK787/4IChTVyBLaSk=?= <oprsystem@telechips.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070109040906070903080607
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+hello everyone.
 
-于 2013年01月07日 19:17, Stanislaw Gruszka 写道:
->> > Signed-off-by: Chen Gang <gang.chen@asianux.com>
-> ACK
+i have question. i want to use DMA for the 'data' field of sk_buff structure.
+but sometimes, the 'data' field of sk_buff structure is not 32bit aligned.
+so, how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
 
-  thank you very much.
+best regards.
+sangwon,ki
 
-  :-)
 
--- 
-Chen Gang
-
-Flying Transformer
-
---------------070109040906070903080607
-Content-Type: text/x-vcard; charset=utf-8;
- name="chen_gang_flying_transformer.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="chen_gang_flying_transformer.vcf"
-
-YmVnaW46dmNhcmQNCmZuOkNoZW4gR2FuZw0Kbjo7Q2hlbiBHYW5nDQp2ZXJzaW9uOjIuMQ0K
-ZW5kOnZjYXJkDQoNCg==
---------------070109040906070903080607--
