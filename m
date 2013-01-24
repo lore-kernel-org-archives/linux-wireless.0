@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53418 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab3AJH5j (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54159 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653Ab3AXJKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 02:57:39 -0500
-Date: Wed, 09 Jan 2013 23:57:38 -0800 (PST)
-Message-Id: <20130109.235738.467651533138068641.davem@davemloft.net> (sfid-20130110_085748_042466_4D66D1E1)
-To: sgruszka@redhat.com
-Cc: netdev@vger.kernel.org, edumazet@google.com,
-	greearb@candelatech.com, bjorn@mork.no,
-	linux-wireless@vger.kernel.org, bhutchings@solarflare.com,
-	mirqus@gmail.com
-Subject: Re: [PATCH v2] net: set default_ethtool_ops in register_netdevice
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130108153850.GA10464@redhat.com>
-References: <20130108153850.GA10464@redhat.com>
+	Thu, 24 Jan 2013 04:10:09 -0500
+Message-ID: <1359018633.4639.2.camel@jlt4.sipsolutions.net> (sfid-20130124_101023_339387_BEC0F2A2)
+Subject: Re: [RFC v2] cfg80211/mac80211: support reporting wakeup reason
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 24 Jan 2013 10:10:33 +0100
+In-Reply-To: <1359010005.6252.185.camel@cumari.coelho.fi>
+References: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
+	 <1359010005.6252.185.camel@cumari.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Tue, 8 Jan 2013 16:38:51 +0100
+On Thu, 2013-01-24 at 08:46 +0200, Luciano Coelho wrote:
 
-> Since:
-> 
-> commit 2c60db037034d27f8c636403355d52872da92f81
-> Author: Eric Dumazet <edumazet@google.com>
-> Date:   Sun Sep 16 09:17:26 2012 +0000
-> 
->     net: provide a default dev->ethtool_ops
-> 
-> wireless core does not correctly assign ethtool_ops. In order to fix
-> the problem, move assignement of default_ethtool_ops to
-> register_netdevice(). This is safe because both register_netdevice()
-> and dev_ethtool() are protected by RTNL lock.
-> 
-> Patch is besed on hint of Micha©© Miros©©aw.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: stable@vger.kernel.org # 3.7+
-> ---
-> v1 -> v2: change order of default_ethtool_ops initialization to avoid
-> the problem. Change the subject accordingly.
+> > Change-Id: I7766f071273f3e31020395cc74eabcc6d165fa3a
 
-I don't understand this.  Why is the assignment of default_ethtool_ops
-at netdev allocation time not working?  Is wireless really not using
-alloc_netdev*()?
+> As I asked on IRC, what are these Change-Id tags you've been using
+> recently? Just curious.
+
+For gerrit. We use it internally, and I was sending the review patches
+from my internal review tree. Usually I strip them when applying to my
+kernel tree(s), but sometimes I forget.
+
+> > + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8022_LEN: Original length of the 802.3
+> > + *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023
+> > + *	attribute if the packet was truncated somewhere.
+> 
+> This seems wrong.  Why PKT_8023 and PKT_8022_LEN?
+
+Yeah, typo.
+
+> Also, is there any specific reason you want to know the original length?
+> Just to check whether the packet was truncated or not?
+
+Yeah our device has a certain buffer size only (it's pretty large) but
+the packet could be truncated due to that, so I added that to be able to
+see that truncation.
+
+johannes
+
