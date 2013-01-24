@@ -1,45 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164Ab3AYXPu (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:40214 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831Ab3AXPve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 18:15:50 -0500
-Message-ID: <1359155773.4655.54.camel@jlt4.sipsolutions.net> (sfid-20130126_001553_942817_44B8EF23)
-Subject: Re: Q: offchannel operations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 26 Jan 2013 00:16:13 +0100
-In-Reply-To: <1690590.qQcKllxmg2@lx-vladimir> (sfid-20130110_094313_310385_C41C27AB)
-References: <1690590.qQcKllxmg2@lx-vladimir>
-	 (sfid-20130110_094313_310385_C41C27AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 Jan 2013 10:51:34 -0500
+Received: by mail-lb0-f176.google.com with SMTP id s4so4175066lbc.7
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2013 07:51:32 -0800 (PST)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Bypass EEPROM restrictions of Intel cards
+Date: Thu, 24 Jan 2013 16:51:29 +0100
+Message-ID: <2073047.fimZam72NC@sylvesterjr.pats.ua.ac.be> (sfid-20130124_165137_491476_B4EF5378)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-10 at 10:43 +0200, Vladimir Kondratiev wrote:
-> Hi,
-> 
-> There are 2 similar operations in the struct cfg80211_ops:
-> remain_on_channel() and mgmt_tx(). Actually, mgmt_tx() when called for
-> off-channel operation, is the same as remain_on_channel() except it
-> transmits frame at the beginning.
-> 
-> What I am interesting about, is notifications to cfg80211. For
-> remain_on_channel(), there are 2: cfg80211_ready_on_channel() when
-> channel tuned, and cfg80211_remain_on_channel_expired() when tuned off
-> requested channel. In contrast, if mgmt_tx() called for off-channel
-> with duration, 2 above notifications are not used. Instead, only
-> cfg80211_mgmt_tx_status() called after tx.
-> 
-> My question is why don't mgmt_tx() call cfg80211_ready_on_channel() and
-> cfg80211_remain_on_channel_expired() ? It seems logical to notify about
-> off-channel status. Otherwise, how can upper layers know when off-channel
-> started/finished in context of mgmt_tx()?
+Dear all,
 
-If all they care about is transmitting a frame, why would they want to
-know?
+I have an Intel Ultimate 6300 Ultimate-N wifi card and I was trying to do 
+some wireless tests in the 5GHz band (2.4GHz is too polluted). However, the 
+EEPROM does not allow ad-hoc mode in the 5GHz band, even though it is 
+allowed here (Belgium). Is there anyway to circumvent this issue? 'iw reg set 
+BE' does not help.
 
-johannes
+Best regards,
+Erwin
 
