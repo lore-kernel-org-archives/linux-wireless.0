@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52335 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754917Ab3AHIrx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 03:47:53 -0500
-Date: Tue, 8 Jan 2013 09:47:44 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: Tino Keitel <tino.keitel@tikei.de>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Power saving features for iwl4965
-Message-ID: <20130108084744.GA17899@redhat.com> (sfid-20130108_094756_427997_0EF2BCB0)
-References: <20120418203543.GA16000@x61.home>
- <20120425122554.GD2466@redhat.com>
- <20120503182853.GA12461@mac.home>
- <20121226185425.GA12627@x61.home>
- <20130107110759.GC6931@redhat.com>
- <CAJZjf_z71tqE5pdiJtUXpuPj1eCRRF+EdygZb_zQLnem5izxwA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZjf_z71tqE5pdiJtUXpuPj1eCRRF+EdygZb_zQLnem5izxwA@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:55159 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753008Ab3AXPHX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2013 10:07:23 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1TyOOf-0008Vz-V3
+	for linux-wireless@vger.kernel.org; Thu, 24 Jan 2013 16:07:22 +0100
+Message-ID: <1359040067.21908.5.camel@jlt4.sipsolutions.net> (sfid-20130124_160726_839793_31F3B92A)
+Subject: Re: [PATCH] mac80211: remove redundant check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 24 Jan 2013 16:07:47 +0100
+In-Reply-To: <1358541563-14448-1-git-send-email-johannes@sipsolutions.net> (sfid-20130118_213906_219300_3BEE8B84)
+References: <1358541563-14448-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130118_213906_219300_3BEE8B84)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 08, 2013 at 01:48:01AM +0000, Pedro Francisco wrote:
-> On Mon, Jan 7, 2013 at 11:08 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > Hi
-> >
-> > On Wed, Dec 26, 2012 at 07:54:25PM +0100, Tino Keitel wrote:
-> >>
-> >> Hi Stanislaw,
-> >>
-> >> is there any progress regarding this? If not, I could try to implement
-> >> it in the current kernel.  However, I don't have any knowlegde about
-> >> hardware related features.  If you have, maybe I could use your
-> >> knowledge to do it myself.
-> >
-> > I posted patch here
-> > http://marc.info/?l=linux-wireless&m=135601033021616&w=2
-> >
-> > But I did not review code regarding power save to catch possible
-> > problems. Testing are bug reporting are welcome ...
+On Fri, 2013-01-18 at 21:39 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Is the firmware crashing only after suspend? Or 'always'? (iwl3945)
+> There's no need to have two checks for "associated"
+> in ieee80211_sta_restart(), make the first one locked
+> to not race (unlikely at this point during resume)
+> and remove the second check.
 
-I don't have 3945 crashes on my local machine when I enable PS. The only
-documented issue on 3945 I found is this bug:
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2125
-It stands that problem happen just after associate.
+Applied.
 
-BTW: PS is still disabled by default, to test it need to be enabled by
-iw or iwconfig tool.
+johannes
 
-Stanislaw
