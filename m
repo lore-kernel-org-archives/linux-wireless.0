@@ -1,86 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42583 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874Ab3AUKVc (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39215 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755769Ab3AXVGM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 05:21:32 -0500
-Message-ID: <1358763714.5190.4.camel@jlt4.sipsolutions.net> (sfid-20130121_112135_796065_6368A301)
-Subject: Re: [PATCHv3] mac80211: mesh power save basics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
-	Mike Krinkin <krinkin.m.u@gmail.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Date: Mon, 21 Jan 2013 11:21:54 +0100
-In-Reply-To: <50FD1395.1020106@cozybit.com> (sfid-20130121_110825_942769_F64A6C63)
-References: <1358509570-31602-1-git-send-email-marco@cozybit.com>
-	  (sfid-20130118_124620_310760_705AD973) <1358543924.7922.22.camel@jlt4.sipsolutions.net>
-	 <50FD1395.1020106@cozybit.com> (sfid-20130121_110825_942769_F64A6C63)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 Jan 2013 16:06:12 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e49so4777317eek.5
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2013 13:06:11 -0800 (PST)
+References: <20130124205931.GB16252@localhost.localdomain>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <20130124205931.GB16252@localhost.localdomain>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <EDAA1034-ABF9-4CC2-9055-2340462443AE@gmail.com> (sfid-20130124_220616_595840_C50F5664)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/4] rt2x00: print warning, notice and info as default
+Date: Thu, 24 Jan 2013 22:06:07 +0100
+To: Stanislaw Gruszka <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-21 at 11:08 +0100, Marco Porsch wrote:
 
-> > That comment might do with exanding a bit? Without more explanation,
-> > transmission order doesn't really require BK -- except that this is done
-> > after potentially releasing multiple frames on different ACs, so it has
-> > to be BK to not pass any released BK frames. It's reasonable if you look
-> > at the (only) caller though, so I'm not worried about it.
+
+Sent from my iPad
+
+On 24 jan. 2013, at 21:59, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+
+> Some messages provide useful information, but are disabled without
+> CONFIG_RT2X00_DEBUG=y, so enable them by default
 > 
-> /*
->   * This frame has to be transmitted last. Assign lowest priority to
->   * make sure it cannot pass other frames when releasing multiple ACs.
->   */
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+Thanks for respinning.
+
+> ---
+> drivers/net/wireless/rt2x00/rt2x00.h |    6 +++---
+> 1 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> I am not sure if this really correct. Isn't it that all ACs are served 
-> in parallel and thus, a BK frame could be transmitted earlier than the 
-> last of multiple BE/VI/VO frames? On the other hand, this code has 
-> worked pretty reliably so far...
-
-No, they are priority queues, not round robin, so (locally) BK should
-always be last.
-
-> > Ultimately, this is where you should also call
-> > drv_allow_buffered_frames() and/or driver_release_buffered_frames(). In
-> > fact, the *driver* might be buffering frames, so that would be necessary
-> > for proper A-MPDU operation etc. I can merge it anyway, but be aware
-> > that it is not implementing the full API correctly, so once more drivers
-> > get fixed to rely on that API (really is a fix, especially with A-MPDU)
-> > you won't have much fun. But you said it doesn't really work with 11n
-> > anyway, so ... :)
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 3e37c19..8ef11b6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -88,11 +88,11 @@
+> #define ERROR_PROBE(__msg, __args...) \
+>    DEBUG_PRINTK_PROBE(KERN_ERR, "Error", __msg, ##__args)
+> #define WARNING(__dev, __msg, __args...) \
+> -    DEBUG_PRINTK(__dev, KERN_WARNING, "Warning", __msg, ##__args)
+> +    DEBUG_PRINTK_MSG(__dev, KERN_WARNING, "Warning", __msg, ##__args)
+> #define NOTICE(__dev, __msg, __args...) \
+> -    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+> +    DEBUG_PRINTK_MSG(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+> #define INFO(__dev, __msg, __args...) \
+> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
+> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
+> #define DEBUG(__dev, __msg, __args...) \
+>    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
+> #define EEPROM(__dev, __msg, __args...) \
+> -- 
+> 1.7.4.4
 > 
-> Adding driver_allow_buffered_frames and a frame release reason for MPSPs 
-> may be pretty straightforward. But I cannot foresee how it is going to 
-> work for driver_release_buffered_frames on the driver side.
-> 
-> I guess eventually this whole MPSP frame release should be merged into 
-> (and bloat) ieee80211_sta_ps_deliver_response. I would really like to 
-> postpone that hoping that others may pick it up once mesh PS is upstream 
-> in a proof of concept fashion.
-
-Sure.
-
-> >> +		ps = &sdata->u.mesh.ps;
-
-> Isn't that what ieee80211_vif_is_mesh is for? Everything compiled fine 
-> with CONFIG_MAC80211_MESH turned off.
-
-Never mind, you're right. I thought "u.mesh" was (still) under ifdef.
-
-
-> >> +				    256 + /* TIM IE */
-> >
-> > If wonder if that should be 2 + 255? But I haven't looked up the TIM IE
-> > format again now ...
-> 
-> I did:
-> IEEE802.11-2012 8.4.2.7 says the size is 5 + [1...251]. 
-> ieee80211_beacon_get_tim also uses 256 for AP mode correctly.
-
-Ok, thanks :-)
-
-johannes
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
