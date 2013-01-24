@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:54923 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756156Ab3AYKhA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995Ab3AXKpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:37:00 -0500
-Received: by mail-lb0-f176.google.com with SMTP id s4so441019lbc.7
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:36:59 -0800 (PST)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+	Thu, 24 Jan 2013 05:45:50 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: rt2800 does not support HT40 in managed mode
-Date: Fri, 25 Jan 2013 11:36:55 +0100
-Message-ID: <2074978.Uifvhs4VDD@sylvesterjr.pats.ua.ac.be> (sfid-20130125_113709_404458_A9B6F8AE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: backports@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] compat: make hid_match_id static
+Date: Thu, 24 Jan 2013 11:46:13 +0100
+Message-Id: <1359024373-21365-1-git-send-email-johannes@sipsolutions.net> (sfid-20130124_114553_865444_8E08B51E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+From: Johannes Berg <johannes.berg@intel.com>
 
-In a lab setup, we configured rt2800 + hostapd to setup an access point 
-in 802.11n 5GHz with HT40. Even though there was no interference, we 
-could verify with a Wi-Spy that the network used in fact only a 20MHz wide 
-band and iperf showed very low throughput (approx. 10Mbps for a 10m 
-line-of-sight connection).
+Otherwise sparse complains.
 
-A similar setup in ad-hoc mode resulted in a 40MHz wide band used by the 
-network as is to be expected. Any ideas? Is this a (known) bug?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ compat/compat-3.8.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-System:
-Linux OpenWrt 3.3.8
-driver: rt2800pci
-
-Best regards,
-Erwin
+diff --git a/compat/compat-3.8.c b/compat/compat-3.8.c
+index 36f3c50..70b004c 100644
+--- a/compat/compat-3.8.c
++++ b/compat/compat-3.8.c
+@@ -289,8 +289,8 @@ static bool hid_match_one_id(struct hid_device *hdev,
+ 		(id->product == HID_ANY_ID || id->product == hdev->product);
+ }
+ 
+-const struct hid_device_id *hid_match_id(struct hid_device *hdev,
+-		const struct hid_device_id *id)
++static const struct hid_device_id *hid_match_id(struct hid_device *hdev,
++						const struct hid_device_id *id)
+ {
+ 	for (; id->bus; id++)
+ 		if (hid_match_one_id(hdev, id))
+-- 
+1.8.0
 
