@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:15911 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab3ATJat (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:39713 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab3AXH3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 04:30:49 -0500
-Message-ID: <50FBB977.7080805@asianux.com> (sfid-20130120_103100_902994_9C461EC9)
-Date: Sun, 20 Jan 2013 17:31:35 +0800
-From: Chen Gang <gang.chen@asianux.com>
+	Thu, 24 Jan 2013 02:29:34 -0500
+Message-ID: <1359012504.6252.187.camel@cumari.coelho.fi> (sfid-20130124_082939_777869_5990599C)
+Subject: Re: [patch] cfg80211: off by one in ieee80211_bss()
+From: Luciano Coelho <coelho@ti.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Date: Thu, 24 Jan 2013 09:28:24 +0200
+In-Reply-To: <20130124064000.GB5611@elgon.mountain>
+References: <20130124064000.GB5611@elgon.mountain>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: sgruszka@redhat.com, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/iwlegacy: use strlcpy instead of
- strncpy
-References: <50EA5246.8060206@asianux.com>
-In-Reply-To: <50EA5246.8060206@asianux.com>
-Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all:
-
-  sorry, after checking the details:
-    I think this patch is incorrect.
-      we can not assume that the parameter "char *buf" is terminated by '\0'
-      so we should only use strlcpy instead of strncpy, without touching 'min(...'
-
-  since it is already integrated into main branch (at least, in next-20130118).
-    I should send additional patch to fix it.
-
-  please help to check, thanks.
-
-
-gchen.
-
-
-于 2013年01月07日 12:42, Chen Gang 写道:
+On Thu, 2013-01-24 at 09:40 +0300, Dan Carpenter wrote:
+> We do a:
 > 
->   The fields must be null-terminated, or simple_strtoul will cause issue.
+> 	sprintf(buf, " Last beacon: %ums ago",
+> 		elapsed_jiffies_msecs(bss->ts));
 > 
-> Signed-off-by: Chen Gang <gang.chen@asianux.com>
-> ---
->  drivers/net/wireless/iwlegacy/3945-mac.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> elapsed_jiffies_msecs() can return a 10 digit number so "buf" needs to
+> be 31 characters long.
 > 
-> diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-> index d604b40..3726cd6 100644
-> --- a/drivers/net/wireless/iwlegacy/3945-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-> @@ -3273,7 +3273,7 @@ il3945_store_measurement(struct device *d, struct device_attribute *attr,
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 01592d7..45f1618 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -1358,7 +1358,7 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+>  						  &iwe, IW_EV_UINT_LEN);
+>  	}
 >  
->  	if (count) {
->  		char *p = buffer;
-> -		strncpy(buffer, buf, min(sizeof(buffer), count));
-> +		strlcpy(buffer, buf, sizeof(buffer));
->  		channel = simple_strtoul(p, NULL, 0);
->  		if (channel)
->  			params.channel = channel;
-> 
+> -	buf = kmalloc(30, GFP_ATOMIC);
+> +	buf = kmalloc(31, GFP_ATOMIC);
+>  	if (buf) {
+>  		memset(&iwe, 0, sizeof(iwe));
+>  		iwe.cmd = IWEVCUSTOM;
 
+Looks good.  Also, to be on the safe side, shouldn't snprintf be used
+when writing to buf as well? Same thing higher up where the same buf is
+used and alloc'ed 50 bytes...
 
--- 
-Chen Gang
+--
+Luca.
 
-Asianux Corporation
