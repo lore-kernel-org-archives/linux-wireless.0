@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3939 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752782Ab3ABOXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:23:08 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 13/18] brcmfmac: cleanup netdev transmit callback
-Date: Wed, 2 Jan 2013 15:22:46 +0100
-Message-ID: <1357136572-18273-14-git-send-email-arend@broadcom.com> (sfid-20130102_155321_858915_FE4E3697)
-In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:54410 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887Ab3AXKod (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jan 2013 05:44:33 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: backports@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] compat: backport nla_put_be{16,32,64}()
+Date: Thu, 24 Jan 2013 11:44:56 +0100
+Message-Id: <1359024296-17724-1-git-send-email-johannes@sipsolutions.net> (sfid-20130124_114436_656941_4B13767D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The header of the ethernet packet is processed conditionally, but
-the check is wrong as it checks skb length is at least ETH_ALEN. It
-should check it is at least sizeof struct ethhdr instead.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+I intend to use these in nl80211.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   22 ++++++++++++--------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+ include/linux/compat-3.5.h | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index a1ca691..9ca7411 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -165,6 +165,7 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	int ret;
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_pub *drvr = ifp->drvr;
-+	struct ethhdr *eh;
+diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
+index 9cffead..1242720 100644
+--- a/include/linux/compat-3.5.h
++++ b/include/linux/compat-3.5.h
+@@ -10,6 +10,30 @@
  
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -202,17 +203,20 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 		}
- 	}
- 
--	/* Update multicast statistic */
--	if (skb->len >= ETH_ALEN) {
--		u8 *pktdata = (u8 *)(skb->data);
--		struct ethhdr *eh = (struct ethhdr *)pktdata;
--
--		if (is_multicast_ether_addr(eh->h_dest))
--			drvr->tx_multicast++;
--		if (ntohs(eh->h_proto) == ETH_P_PAE)
--			atomic_inc(&drvr->pend_8021x_cnt);
-+	/* validate length for ether packet */
-+	if (skb->len < sizeof(*eh)) {
-+		ret = -EINVAL;
-+		dev_kfree_skb(skb);
-+		goto done;
- 	}
- 
-+	/* handle ethernet header */
-+	eh = (struct ethhdr *)(skb->data);
-+	if (is_multicast_ether_addr(eh->h_dest))
-+		drvr->tx_multicast++;
-+	if (ntohs(eh->h_proto) == ETH_P_PAE)
-+		atomic_inc(&drvr->pend_8021x_cnt);
+ /*
+  * This backports:
++ * commit 569a8fc38367dfafd87454f27ac646c8e6b54bca
++ * Author: David S. Miller <davem@davemloft.net>
++ * Date:   Thu Mar 29 23:18:53 2012 -0400
++ *
++ *     netlink: Add nla_put_be{16,32,64}() helpers.
++ */
 +
- 	/* If the protocol uses a data header, apply it */
- 	brcmf_proto_hdrpush(drvr, ifp->idx, skb);
- 
++static inline int nla_put_be16(struct sk_buff *skb, int attrtype, __be16 value)
++{
++	return nla_put(skb, attrtype, sizeof(__be16), &value);
++}
++
++static inline int nla_put_be32(struct sk_buff *skb, int attrtype, __be32 value)
++{
++	return nla_put(skb, attrtype, sizeof(__be32), &value);
++}
++
++static inline int nla_put_be64(struct sk_buff *skb, int attrtype, __be64 value)
++{
++	return nla_put(skb, attrtype, sizeof(__be64), &value);
++}
++
++/*
++ * This backports:
+  *
+  * commit f56f821feb7b36223f309e0ec05986bb137ce418
+  * Author: Daniel Vetter <daniel.vetter@ffwll.ch>
 -- 
-1.7.10.4
-
+1.8.0
 
