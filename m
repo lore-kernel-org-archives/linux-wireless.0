@@ -1,58 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:48715 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755664Ab3AENkZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751658Ab3AXPFS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jan 2013 08:40:25 -0500
-Message-ID: <50E82D7D.4090107@asianux.com> (sfid-20130105_144034_530888_59773E25)
-Date: Sat, 05 Jan 2013 21:41:17 +0800
-From: Chen Gang <gang.chen@asianux.com>
-MIME-Version: 1.0
-To: stas.yakovlev@gmail.com, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless/ipw2x00: use strlcpy instead of strncpy
-Content-Type: text/plain; charset=GB2312
+	Thu, 24 Jan 2013 10:05:18 -0500
+Message-ID: <1359039941.21908.4.camel@jlt4.sipsolutions.net> (sfid-20130124_160521_098887_3E7AF8D5)
+Subject: Re: [PATCH] cfg80211: fix channel check in
+ cfg80211_can_use_iftype_chan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Thu, 24 Jan 2013 16:05:41 +0100
+In-Reply-To: <1358950557-24405-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1358950557-24405-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2013-01-23 at 15:15 +0100, Simon Wunderlich wrote:
+> In commit "cfg80211: check radar interface combinations" a regression
+> was introduced which might lead to NULL dereference if the argument
+> chan = NULL, which might happen in IBSS/wext case (and probably
+> others).
 
-  The fields must be null-terminated, or IPW_DEBUG_ASSOC will cause issue.
+Applied.
 
-Signed-off-by: Chen Gang <gang.chen@asianux.com>
----
- drivers/net/wireless/ipw2x00/ipw2200.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 844f201..c85261b 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -5558,7 +5558,7 @@ static int ipw_find_adhoc_network(struct ipw_priv *priv,
- 			    min(network->ssid_len, priv->essid_len)))) {
- 			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
- 
--			strncpy(escaped,
-+			strlcpy(escaped,
- 				print_ssid(ssid, network->ssid,
- 					   network->ssid_len),
- 				sizeof(escaped));
-@@ -5771,7 +5771,7 @@ static int ipw_best_network(struct ipw_priv *priv,
- 		     memcmp(network->ssid, priv->essid,
- 			    min(network->ssid_len, priv->essid_len)))) {
- 			char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
--			strncpy(escaped,
-+			strlcpy(escaped,
- 				print_ssid(ssid, network->ssid,
- 					   network->ssid_len),
- 				sizeof(escaped));
-@@ -5788,7 +5788,7 @@ static int ipw_best_network(struct ipw_priv *priv,
- 	 * testing everything else. */
- 	if (match->network && match->network->stats.rssi > network->stats.rssi) {
- 		char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
--		strncpy(escaped,
-+		strlcpy(escaped,
- 			print_ssid(ssid, network->ssid, network->ssid_len),
- 			sizeof(escaped));
- 		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded because "
--- 
-1.7.10.4
