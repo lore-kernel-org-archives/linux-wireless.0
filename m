@@ -1,75 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:61791 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448Ab3AAVpt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751859Ab3AXOuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jan 2013 16:45:49 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: Re: [PATCH] p54pci: don't return zero on failure path in p54p_probe()
-Date: Tue, 1 Jan 2013 22:45:42 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-References: <1357074661-15784-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1357074661-15784-1-git-send-email-khoroshilov@ispras.ru>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301012245.43064.chunkeey@googlemail.com> (sfid-20130101_224552_985733_DAB44FC9)
+	Thu, 24 Jan 2013 09:50:05 -0500
+Message-ID: <1359039028.21908.1.camel@jlt4.sipsolutions.net> (sfid-20130124_155009_088912_0DD4D38C)
+Subject: Re: [PATCH] ieee80211: define AKM suite selectors type 5 and 6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 24 Jan 2013 15:50:28 +0100
+In-Reply-To: <1359002038-8308-1-git-send-email-bzhao@marvell.com>
+References: <1359002038-8308-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 January 2013 22:11:01 Alexey Khoroshilov wrote:
-> If pci_set_dma_mask() or pci_set_consistent_dma_mask() fails in p54p_probe(),
-> it breaks off initialization, deallocates all resources, but returns zero.
-> 
-> The patch implements proper error code propagation.
+On Wed, 2013-01-23 at 20:33 -0800, Bing Zhao wrote:
+> Reference: IEEE P802.11w(TM)/D7.0, December 2008: 7.3.2.25.2
 
-Uh, Thanks!
+Applied, I also added 7 and fixed the reference to be against the
+802.11-2012 spec.
 
-But wait, I think there's another return 0 in the error
-path. See p54pci.c @ line 558:
-
-mem_len = pci_resource_len(pdev, 0);
-if (mem_len < sizeof(...)) {
-	dev_err(...)
-	goto err_disabled_dev;
-}
-
-Do you think you can add a err = -EINVAL; before the goto too?
-[I wonder why this wasn't found by the verification project as
-well? Could it be that pci_resource_len(...) < sizeof(...) is 
-somehow always true and this is a dead branch?]
-
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-
-Regards,
-	Christian
-> ---
->  drivers/net/wireless/p54/p54pci.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-> index 933e5d9..fef69ea 100644
-> --- a/drivers/net/wireless/p54/p54pci.c
-> +++ b/drivers/net/wireless/p54/p54pci.c
-> @@ -568,8 +568,10 @@ static int p54p_probe(struct pci_dev *pdev,
->  		goto err_disable_dev;
->  	}
->  
-> -	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
-> -	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
-> +	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-> +	if (!err)
-> +		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-> +	if (err) {
->  		dev_err(&pdev->dev, "No suitable DMA available\n");
->  		goto err_free_reg;
->  	}
-> 
-
+johannes
 
