@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44772 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757557Ab3ANUAU (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:44514 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004Ab3AXJNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 15:00:20 -0500
-Date: Mon, 14 Jan 2013 14:58:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 2/2] ath9k_hw: fix RF bank initialization
-Message-ID: <20130114195851.GB12018@tuxdriver.com> (sfid-20130114_210029_512380_5F1EE0CC)
-References: <1358103298-4017-1-git-send-email-nbd@openwrt.org>
- <1358103298-4017-2-git-send-email-nbd@openwrt.org>
+	Thu, 24 Jan 2013 04:13:24 -0500
+Message-ID: <1359018746.6252.189.camel@cumari.coelho.fi> (sfid-20130124_101329_398507_EEB4F384)
+Subject: Re: [RFC v2] cfg80211/mac80211: support reporting wakeup reason
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Date: Thu, 24 Jan 2013 11:12:26 +0200
+In-Reply-To: <1359018633.4639.2.camel@jlt4.sipsolutions.net>
+References: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
+	 <1359010005.6252.185.camel@cumari.coelho.fi>
+	 <1359018633.4639.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1358103298-4017-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 13, 2013 at 07:54:58PM +0100, Felix Fietkau wrote:
-> ar900*_init_mode_regs needs to be called before RF banks are allocated,
-> otherwise the storage size of RF banks isn't known. This patch fixes
-> a memory overrun that can show up as a crash on unloading the module.
+On Thu, 2013-01-24 at 10:10 +0100, Johannes Berg wrote:
+> On Thu, 2013-01-24 at 08:46 +0200, Luciano Coelho wrote:
 > 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> > > Change-Id: I7766f071273f3e31020395cc74eabcc6d165fa3a
+> 
+> > As I asked on IRC, what are these Change-Id tags you've been using
+> > recently? Just curious.
+> 
+> For gerrit. We use it internally, and I was sending the review patches
+> from my internal review tree. Usually I strip them when applying to my
+> kernel tree(s), but sometimes I forget.
 
-<snip>
+Okay, fair enough. ;)
 
-> @@ -410,7 +411,10 @@ int ar9002_hw_attach_ops(struct ath_hw *ah)
->  	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
->  	int ret;
->  
-> -	priv_ops->init_mode_regs = ar9002_hw_init_mode_regs;
-> +	ret = ar9002_hw_init_mode_regs(ah);
-> +	if (ret)
-> +		return ret;
-> +
->  	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
->  
->  	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
+> > > + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8022_LEN: Original length of the 802.3
+> > > + *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023
+> > > + *	attribute if the packet was truncated somewhere.
+> > 
+> > This seems wrong.  Why PKT_8023 and PKT_8022_LEN?
+> 
+> Yeah, typo.
+> 
+> > Also, is there any specific reason you want to know the original length?
+> > Just to check whether the packet was truncated or not?
+> 
+> Yeah our device has a certain buffer size only (it's pretty large) but
+> the packet could be truncated due to that, so I added that to be able to
+> see that truncation.
 
-This hunk depends on "ath9k_hw: use the devres API for allocations",
-which is queue for 3.9.  Can you revise this for 3.8?  If not, should
-I hold just this one for 3.9?  Or the earlier patch in the series
-as well?
+The actual length of the packet is irrelevant isn't it? Maybe a boolean
+just indicating it's truncated? Not really that important though, just
+for a bit more clarity.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--
+Luca.
+
