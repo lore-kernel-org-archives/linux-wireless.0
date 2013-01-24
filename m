@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.medihelpline.net ([211.55.81.226]:54703 "EHLO
-	mail.ebizcenter.co.kr" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263Ab3AVIjk convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:39966 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754890Ab3AXQ1l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 03:39:40 -0500
-Received: from GYJ ([39.115.113.222]:3749)
-	by ktpbx.com with [XMail 1.22 PassKorea080324 ESMTP Server]
-	id <S614C02> for <linux-wireless@vger.kernel.org> from <gyj@x-node.co.kr>;
-	Tue, 22 Jan 2013 17:07:28 +0900
-From: =?utf-8?B?6raM7Jqp7KeE?= <gyj@x-node.co.kr>
-To: <linux-wireless@vger.kernel.org>
-Cc: <ath6kl-devel@qualcomm.com>
-Subject: AR6003 :: IP packet is not received.
-Date: Tue, 22 Jan 2013 17:32:47 +0900
-Message-ID: <000301cdf87b$0ef2a020$2cd7e060$@co.kr> (sfid-20130122_093943_138783_B4A78D6F)
+	Thu, 24 Jan 2013 11:27:41 -0500
+Received: by mail-ob0-f171.google.com with SMTP id lz20so4320895obb.30
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2013 08:27:41 -0800 (PST)
+Message-ID: <510160FA.2020002@lwfinger.net> (sfid-20130124_172759_762449_18DCD562)
+Date: Thu, 24 Jan 2013 10:27:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
+To: =?EUC-KR?B?IrHiu/O/+CAoU1cgS2kpIg==?= <oprsystem@telechips.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [question] how can i make to 32bit aligned address for the 'data'
+ field of sk_buff structure ?
+References: <F4F751F96C54D346898D4C77E196E3DB0A3F6C6D@telegweb.telechips.com>
+In-Reply-To: <F4F751F96C54D346898D4C77E196E3DB0A3F6C6D@telegweb.telechips.com>
+Content-Type: text/plain; charset=EUC-KR
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear ath6kl-devel,
+On 01/24/2013 05:58 AM, ±â»ó¿ø (SW Ki) wrote:
+> hello everyone.
+> 
+> i have question. i want to use DMA for the 'data' field of sk_buff structure.
+> but sometimes, the 'data' field of sk_buff structure is not 32bit aligned.
+> so, how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
 
-I Korea's human-intech Work in a company that is Gueon.
-I am porting and embeded-board wlan AR6003 chipset features.
-embeded-board CPU samsung S5PV210, linux kenel-2.6.32 is used.
+A standard sk_buff should meet all the alignment requirements for your
+architecture. Could you provide more details about your architecture and an
+example where the sk_buff does not have the correct alignment?
 
-wpa_supplicant using softAP mode, powered by letting success to other client devices (ex: Desktop PC) AP Access.
-	[wpa_supplicant -i wlan0 -c /home/ath6k/SoftAP/softap.conf -Dnl80211 -B]
-	[version : wpa_supplicant v2.0-devel Copyright (c) 2003-2012]
-
-Does not accept the IP address from the DHCP client device(PC), the problem occurs.
-
-I have a problem during the analysis.
-I spoke to experiment by setting a fixed IP without using a DHCP
-When embeded-Board from the PC to ping-test responses.
-However, PC from the embedded-Board to ping-test does not responses.
-
-Whether the idea of â€‹â€‹something I could try?
-
-Thanks and Best Regards,
-Gueon.
-
+Larry
 
 
