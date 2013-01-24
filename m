@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:64889 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286Ab3AGC5o (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55118 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753838Ab3AXOrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jan 2013 21:57:44 -0500
-Date: Mon, 7 Jan 2013 03:48:27 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Nickolai Zeldovich <nickolai@csail.mit.edu>
+	Thu, 24 Jan 2013 09:47:24 -0500
+Message-ID: <1359038863.21908.0.camel@jlt4.sipsolutions.net> (sfid-20130124_154729_845796_BEAB11EA)
+Subject: Re: [patch] cfg80211: off by one in ieee80211_bss()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers/net/wireless/mwl8k.c: avoid use-after-free
-Message-ID: <20130107024827.GZ27530@wantstofly.org> (sfid-20130107_035751_511835_6BECDDEE)
-References: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357522042-39255-1-git-send-email-nickolai@csail.mit.edu>
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Thu, 24 Jan 2013 15:47:43 +0100
+In-Reply-To: <20130124064000.GB5611@elgon.mountain>
+References: <20130124064000.GB5611@elgon.mountain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 06, 2013 at 08:27:22PM -0500, Nickolai Zeldovich wrote:
-
-> Do not dereference p->station_id after kfree(cmd) because p
-> points into the cmd data structure.
-
-Good catch, but the patch would be better titled "mwl8k.c: avoid
-having a working driver", as the station_id return code _is_ needed
-by the caller in case of success.
-
-
-> Signed-off-by: Nickolai Zeldovich <nickolai@csail.mit.edu>
-> ---
->  drivers/net/wireless/mwl8k.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+On Thu, 2013-01-24 at 09:40 +0300, Dan Carpenter wrote:
+> We do a:
 > 
-> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> index f221b95..83564d3 100644
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -4250,9 +4250,11 @@ static int mwl8k_cmd_update_stadb_add(struct ieee80211_hw *hw,
->  	p->amsdu_enabled = 0;
->  
->  	rc = mwl8k_post_cmd(hw, &cmd->header);
-> +	if (!rc)
-> +		rc = p->station_id;
->  	kfree(cmd);
->  
-> -	return rc ? rc : p->station_id;
-> +	return rc;
->  }
->  
->  static int mwl8k_cmd_update_stadb_del(struct ieee80211_hw *hw,
-> -- 
-> 1.7.10.4
+> 	sprintf(buf, " Last beacon: %ums ago",
+> 		elapsed_jiffies_msecs(bss->ts));
+> 
+> elapsed_jiffies_msecs() can return a 10 digit number so "buf" needs to
+> be 31 characters long.
+
+Applied, thanks.
+
+johannes
+
