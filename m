@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:51710 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab3A3ALM (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:43839 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752733Ab3AYInZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 19:11:12 -0500
-From: Stephen Warren <swarren@wwwdotorg.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
-Subject: [PATCH] nl80211: avoid "wdev_id may be used uninitialized"
-Date: Tue, 29 Jan 2013 17:11:02 -0700
-Message-Id: <1359504662-23561-1-git-send-email-swarren@wwwdotorg.org> (sfid-20130130_011118_335925_03B80596)
+	Fri, 25 Jan 2013 03:43:25 -0500
+Received: by mail-bk0-f47.google.com with SMTP id jc3so63237bkc.20
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 00:43:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d8M6Gsv5-4j2H68+tr=cSVrz2A7Ow5xCmHuF_mEy-pb7w@mail.gmail.com>
+References: <1359089270-29702-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAGXE3d8M6Gsv5-4j2H68+tr=cSVrz2A7Ow5xCmHuF_mEy-pb7w@mail.gmail.com>
+Date: Fri, 25 Jan 2013 16:43:23 +0800
+Message-ID: <CAEFj985hQGr2WhDXW9fS6_RDkOk1P4rF6TvtkcGvCiRds8nxpw@mail.gmail.com> (sfid-20130125_094335_038778_AF4D8B2D)
+Subject: Re: [PATCH] rt2x00: allow AP and mesh mode to operate simultaneously
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Warren <swarren@nvidia.com>
+> Just curios: Are you actually running mesh + ap mode on a rt2x00 device?
 
-Silence the following:
-net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs.clone.119':
-net/wireless/nl80211.c:57:6: warning: 'wdev_id' may be used uninitialized in this function
+Yes. AP and Mesh created from the same radio are bridged together in
+Fonera 2.0n. I have also tried this using the TP-Link USB adapter in a
+PC. STA can associate with the AP and has its traffic forwarding via
+mesh.
 
-... by always initializing wdev_id to zero. I assume that wiphy_idx and
-ifidx are set to -1 for similar reasons, so this change simply propagates
-the same workaround.
-
-In practice, this warning is false, since wdev_id is both set and used
-under the condition if (have_wdev_id). However, at least my compiler
-can't be coerced into realizing this; almost any code between the if
-blocks that set and use the variable causes this warning.
-
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
 ---
- net/wireless/nl80211.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 33de803..389e62a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -54,7 +54,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
- 	struct wireless_dev *result = NULL;
- 	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
- 	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
--	u64 wdev_id;
-+	u64 wdev_id = 0;
- 	int wiphy_idx = -1;
- 	int ifidx = -1;
- 
--- 
-1.7.10.4
-
+Chun-Yeow
