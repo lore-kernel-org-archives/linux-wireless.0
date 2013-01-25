@@ -1,91 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42205 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750780Ab3AXGrp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 01:47:45 -0500
-Message-ID: <1359010005.6252.185.camel@cumari.coelho.fi> (sfid-20130124_074748_898490_4683A2B1)
-Subject: Re: [RFC v2] cfg80211/mac80211: support reporting wakeup reason
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Thu, 24 Jan 2013 08:46:45 +0200
-In-Reply-To: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
-References: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:38384 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751605Ab3AYKyT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 05:54:19 -0500
+Date: Fri, 25 Jan 2013 16:17:45 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Do not call mwl8k_cmd_set_rf_channel unconditionally
+Message-ID: <20130125104745.GA9165@markyou.marvell.com> (sfid-20130125_115422_164171_F57703B5)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-23 at 17:34 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When waking up from WoWLAN, it is useful to know
-> what triggered the wakeup. Support reporting the
-> wakeup reason(s) in cfg80211 (and a pass-through
-> in mac80211) to allow userspace to know.
-> 
-> Change-Id: I7766f071273f3e31020395cc74eabcc6d165fa3a
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+Avoid calling mwl8k_cmd_set_rf_channel unconditionally
+by checking IEEE80211_CONF_CHANGE_CHANNEL.
 
-As I asked on IRC, what are these Change-Id tags you've been using
-recently? Just curious.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 5470171..d0752c5 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-
-[...]
-
-> @@ -2881,8 +2891,25 @@ struct nl80211_wowlan_pattern_support {
->   * @NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE: wake up on 4-way handshake (flag)
->   * @NL80211_WOWLAN_TRIG_RFKILL_RELEASE: wake up when rfkill is released
->   *	(on devices that have rfkill in the device) (flag)
-> + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211: For wakeup reporting only, contains
-> + *	the 802.11 packet that caused the wakeup, e.g. a deauth frame. The frame
-> + *	may be truncated, the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211_LEN
-> + *	attribute contains the original length.
-> + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211_LEN: Original length of the 802.11
-> + *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211
-> + *	attribute if the packet was truncated somewhere.
-> + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023: For wakeup reporting only, contains the
-> + *	802.11 packet that caused the wakeup, e.g. a magic packet. The frame may
-> + *	be truncated, the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8022_LEN attribute
-> + *	contains the original length.
-> + * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8022_LEN: Original length of the 802.3
-> + *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023
-> + *	attribute if the packet was truncated somewhere.
-
-This seems wrong.  Why PKT_8023 and PKT_8022_LEN?
-
-Also, is there any specific reason you want to know the original length?
-Just to check whether the packet was truncated or not?
-
-
-
->   * @NUM_NL80211_WOWLAN_TRIG: number of wake on wireless triggers
->   * @MAX_NL80211_WOWLAN_TRIG: highest wowlan trigger attribute number
-> + *
-> + * These nested attributes are used to configure the wakeup triggers and
-> + * to report the wakeup reason(s).
->   */
->  enum nl80211_wowlan_triggers {
->  	__NL80211_WOWLAN_TRIG_INVALID,
-> @@ -2895,6 +2922,10 @@ enum nl80211_wowlan_triggers {
->  	NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST,
->  	NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE,
->  	NL80211_WOWLAN_TRIG_RFKILL_RELEASE,
-> +	NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211,
-> +	NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211_LEN,
-> +	NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023,
-> +	NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023_LEN,
-
-This confirms my suspicion that the doc was wrong. ;)
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 0b2428d..a48b137 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -4797,9 +4797,11 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (rc)
+ 		goto out;
+ 
+-	rc = mwl8k_cmd_set_rf_channel(hw, conf);
+-	if (rc)
+-		goto out;
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		rc = mwl8k_cmd_set_rf_channel(hw, conf);
++		if (rc)
++			goto out;
++	}
+ 
+ 	if (conf->power_level > 18)
+ 		conf->power_level = 18;
+-- 
+1.8.0.3
 
