@@ -1,66 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:38901 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755769Ab3AXVHR convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:64435 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894Ab3AYKhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 16:07:17 -0500
-Received: by mail-ea0-f175.google.com with SMTP id d1so4065910eab.20
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2013 13:07:16 -0800 (PST)
-References: <20130124205931.GB16252@localhost.localdomain> <20130124210028.GA22800@localhost.localdomain> <20130124210110.GB22800@localhost.localdomain>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20130124210110.GB22800@localhost.localdomain>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <5DAD0E2C-8F78-41C9-B6AB-8B75A4165A54@gmail.com> (sfid-20130124_220722_191721_CDF9208A)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 3/4] rt2800usb: move "TX status missed" messages to debug level
-Date: Thu, 24 Jan 2013 22:07:06 +0100
-To: Stanislaw Gruszka <stf_xl@wp.pl>
+	Fri, 25 Jan 2013 05:37:31 -0500
+Received: by mail-wi0-f169.google.com with SMTP id hq12so1320446wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:37:30 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: register platform device for parallel flash
+Date: Fri, 25 Jan 2013 11:37:26 +0100
+Message-Id: <1359110246-30610-1-git-send-email-zajec5@gmail.com> (sfid-20130125_113735_818101_3203F157)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+---
+Resend without RFC
+---
+ drivers/bcma/bcma_private.h |    1 +
+ drivers/bcma/driver_mips.c  |   38 +++++++++++++++++++++++++++++++++-----
+ drivers/bcma/main.c         |    8 ++++++++
+ 3 files changed, 42 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 04f7c86..6f377bd 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -47,6 +47,7 @@ int bcma_sprom_get(struct bcma_bus *bus);
+ /* driver_chipcommon.c */
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
++extern struct platform_device bcma_pflash_dev;
+ #endif /* CONFIG_BCMA_DRIVER_MIPS */
+ 
+ /* driver_chipcommon_pmu.c */
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 9fe86ee..9a7f0e3 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -14,11 +14,33 @@
+ 
+ #include <linux/bcma/bcma.h>
+ 
++#include <linux/mtd/physmap.h>
++#include <linux/platform_device.h>
+ #include <linux/serial.h>
+ #include <linux/serial_core.h>
+ #include <linux/serial_reg.h>
+ #include <linux/time.h>
+ 
++static const char *part_probes[] = { "bcm47xxpart", NULL };
++
++static struct physmap_flash_data bcma_pflash_data = {
++	.part_probe_types	= part_probes,
++};
++
++static struct resource bcma_pflash_resource = {
++	.name	= "bcma_pflash",
++	.flags  = IORESOURCE_MEM,
++};
++
++struct platform_device bcma_pflash_dev = {
++	.name		= "physmap-flash",
++	.dev		= {
++		.platform_data  = &bcma_pflash_data,
++	},
++	.resource	= &bcma_pflash_resource,
++	.num_resources	= 1,
++};
++
+ /* The 47162a0 hangs when reading MIPS DMP registers registers */
+ static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
+ {
+@@ -211,6 +233,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
+ 	struct bcma_drv_cc *cc = &bus->drv_cc;
++	struct bcma_pflash *pflash = &cc->pflash;
+ 
+ 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
+ 	case BCMA_CC_FLASHT_STSER:
+@@ -220,15 +243,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 		break;
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
+-		cc->pflash.present = true;
+-		cc->pflash.window = BCMA_SOC_FLASH2;
+-		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
++		pflash->present = true;
++		pflash->window = BCMA_SOC_FLASH2;
++		pflash->window_size = BCMA_SOC_FLASH2_SZ;
+ 
+ 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
+ 		     BCMA_CC_FLASH_CFG_DS) == 0)
+-			cc->pflash.buswidth = 1;
++			pflash->buswidth = 1;
+ 		else
+-			cc->pflash.buswidth = 2;
++			pflash->buswidth = 2;
++
++		bcma_pflash_data.width = pflash->buswidth;
++		bcma_pflash_resource.start = pflash->window;
++		bcma_pflash_resource.end = pflash->window + pflash->window_size;
++
+ 		break;
+ 	default:
+ 		bcma_err(bus, "Flash type not supported\n");
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index ff85289..6eda7ef 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -149,6 +149,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 		dev_id++;
+ 	}
+ 
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++	if (bus->drv_cc.pflash.present) {
++		err = platform_device_register(&bcma_pflash_dev);
++		if (err)
++			bcma_err(bus, "Error registering parallel flash\n");
++	}
++#endif
++
+ #ifdef CONFIG_BCMA_SFLASH
+ 	if (bus->drv_cc.sflash.present) {
+ 		err = platform_device_register(&bcma_sflash_dev);
+-- 
+1.7.7
 
-Sent from my iPad
-
-On 24 jan. 2013, at 22:01, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-
-> Those messages can flood in dmesg, so do not print them by default.
-> 
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-
-> ---
-> drivers/net/wireless/rt2x00/rt2800usb.c |    6 +++---
-> 1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 011410f..047ead5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -540,9 +540,9 @@ rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
->    tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
-> 
->    if (wcid != tx_wcid || ack != tx_ack || (!is_agg && pid != tx_pid)) {
-> -        WARNING(entry->queue->rt2x00dev,
-> -            "TX status report missed for queue %d entry %d\n",
-> -            entry->queue->qid, entry->entry_idx);
-> +        DEBUG(entry->queue->rt2x00dev,
-> +              "TX status report missed for queue %d entry %d\n",
-> +              entry->queue->qid, entry->entry_idx);
->        return TXDONE_UNKNOWN;
->    }
-> 
-> -- 
-> 1.7.4.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
