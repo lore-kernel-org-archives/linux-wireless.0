@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43893 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327Ab3ABKwi (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:43340 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab3AYTs5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 05:52:38 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TqLw5-0004GJ-0F
-	for linux-wireless@vger.kernel.org; Wed, 02 Jan 2013 11:52:37 +0100
-Message-ID: <1357123983.9839.5.camel@jlt4.sipsolutions.net> (sfid-20130102_115240_360731_5614DE3D)
-Subject: Re: [PATCH] mac80211: unset peer's HT 40 MHz support if not usable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 02 Jan 2013 11:53:03 +0100
-In-Reply-To: <1356703440-29267-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_150406_525116_53685D17)
-References: <1356703440-29267-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121228_150406_525116_53685D17)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 25 Jan 2013 14:48:57 -0500
+Received: by mail-pb0-f42.google.com with SMTP id rp2so400434pbb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 11:48:56 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	simon.wunderlich@s2003.tu-chemnitz.de,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] cfg80211: don't dereference NULL chan
+Date: Fri, 25 Jan 2013 11:47:55 -0800
+Message-Id: <1359143275-28359-1-git-send-email-thomas@cozybit.com> (sfid-20130125_204900_652355_81D744E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-28 at 15:04 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When an interface is configured to a 20 MHz channel
-> and the device as well as the peer are 40 MHz capable
-> the HT capabilities of the peer are not restricted to
-> 20 MHz, even though they're supposed to be restricted
-> to the currently possible capabilities.
-> 
-> Unset the 40 MHz HT capability bits in this case.
+The patch "cfg80211: check radar interface combinations"
+would dereference chan even though this may be NULL. Fix a
+page fault when adding a new interface by adding a
+short-circuit check for NULL.
 
-Applied.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-johannes
+No action required for this to make it into 3.8, right?
+
+ net/wireless/util.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 1c2795d..d1decbc 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1212,7 +1212,8 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_WDS:
+-		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
++		radar_required = !!(chan &&
++				    chan->flags & IEEE80211_CHAN_RADAR);
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-- 
+1.7.10.4
 
