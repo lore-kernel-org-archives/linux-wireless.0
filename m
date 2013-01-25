@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from norkia.v3.sk ([91.210.183.14]:59122 "EHLO norkia.v3.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750772Ab3ARHuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 02:50:35 -0500
-From: Lubomir Rintel <lkundrak@v3.sk>
-To: Harro Haan <hrhaan@gmail.com>, Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lubomir Rintel <lkundrak@v3.sk>
-Subject: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
-Date: Fri, 18 Jan 2013 08:24:43 +0100
-Message-Id: <1358493883-28433-1-git-send-email-lkundrak@v3.sk> (sfid-20130118_085039_431557_CAA6CF7D)
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:54923 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756156Ab3AYKhA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 05:37:00 -0500
+Received: by mail-lb0-f176.google.com with SMTP id s4so441019lbc.7
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:36:59 -0800 (PST)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: rt2800 does not support HT40 in managed mode
+Date: Fri, 25 Jan 2013 11:36:55 +0100
+Message-ID: <2074978.Uifvhs4VDD@sylvesterjr.pats.ua.ac.be> (sfid-20130125_113709_404458_A9B6F8AE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It actually times out on a 8688 present in GuruPlug with sd8688.bin
-(md5=7233401e9687f8c880da547beed4324e) firmware (that's present in
-linux-firmware tree), but the adapter works fine.
+Dear all,
 
-For that firmware times out with libertas_uap [1] as well, though it succeeds
-with sd8688_ap.bin (md5=52cd8f8296b9a7e1d3835d57416256b2) that was originally
-shipped with GuruPlug. That firmware is not in linux-firmware tree and btmrvl
-driver might win the race programming the 8688 with sd8688.bin anyway.
+In a lab setup, we configured rt2800 + hostapd to setup an access point 
+in 802.11n 5GHz with HT40. Even though there was no interference, we 
+could verify with a Wi-Spy that the network used in fact only a 20MHz wide 
+band and iperf showed very low throughput (approx. 10Mbps for a 10m 
+line-of-sight connection).
 
-[1] https://github.com/lkundrak/linux/tree/libertas_uap
----
- drivers/net/wireless/libertas/if_sdio.c |   14 --------------
- 1 files changed, 0 insertions(+), 14 deletions(-)
+A similar setup in ad-hoc mode resulted in a 40MHz wide band used by the 
+network as is to be expected. Any ideas? Is this a (known) bug?
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 2ecab49..3c4c555 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -825,20 +825,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
- 
- 	sdio_release_host(func);
- 
--	/*
--	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
--	 */
--	if (card->model == MODEL_8688) {
--		struct cmd_header cmd;
--
--		memset(&cmd, 0, sizeof(cmd));
--
--		lbs_deb_sdio("send function INIT command\n");
--		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
--				lbs_cmd_copyback, (unsigned long) &cmd))
--			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
--	}
--
- 	priv->fw_ready = 1;
- 	wake_up(&card->pwron_waitq);
- 
--- 
-1.7.1
+System:
+Linux OpenWrt 3.3.8
+driver: rt2800pci
+
+Best regards,
+Erwin
 
