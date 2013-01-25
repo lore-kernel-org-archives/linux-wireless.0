@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47613 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab3ACJyW (ORCPT
+Received: from telegweb.telechips.com ([219.240.43.111]:44712 "EHLO
+	sfilter.telechips.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754531Ab3AYBoK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 04:54:22 -0500
-Message-ID: <1357206883.9741.0.camel@jlt4.sipsolutions.net> (sfid-20130103_105429_342076_E16CF8B0)
-Subject: Re: [PATCH V4 2/2] cfg80211/nl80211: Enable drivers to implement
- mac address based ACL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Thu, 03 Jan 2013 10:54:43 +0100
-In-Reply-To: <50E51B7F.7000607@qca.qualcomm.com>
-References: <1356690070-26612-1-git-send-email-vthiagar@qca.qualcomm.com>
-	   <1356690070-26612-2-git-send-email-vthiagar@qca.qualcomm.com>
-	   <1356694308.9922.1.camel@jlt4.sipsolutions.net>
-	   (sfid-20121228_123135_896103_E2B28BED) <1356699373.9922.2.camel@jlt4.sipsolutions.net>
-	  <50E11F43.4010006@qca.qualcomm.com>
-	 <1357131412.9839.17.camel@jlt4.sipsolutions.net>
-	 <50E51B7F.7000607@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 Jan 2013 20:44:10 -0500
+Received: from [219.240.43.118] ([219.240.43.118])
+          by sfilter.telechips.com ([219.240.43.111])
+          with ESMTP id 1359077031.982571.3018754992.sfilter
+          for <linux-wireless@vger.kernel.org>;
+          Fri, 25 Jan 2013 10:23:51 +0900 (KST)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="ks_c_5601-1987"
+Subject: RE: [question] how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
+Date: Fri, 25 Jan 2013 10:47:39 +0900
+Message-ID: <F4F751F96C54D346898D4C77E196E3DB0A3F6CDE@telegweb.telechips.com> (sfid-20130125_024420_066351_1BB8AEB6)
+In-Reply-To: <510160FA.2020002@lwfinger.net>
+References: <F4F751F96C54D346898D4C77E196E3DB0A3F6C6D@telegweb.telechips.com> <510160FA.2020002@lwfinger.net>
+From: =?ks_c_5601-1987?B?seK787/4IChTVyBLaSk=?= <oprsystem@telechips.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-03 at 11:17 +0530, Vasanthakumar Thiagarajan wrote:
+hi Larry Finger.
 
-> > Basically we would have two modes:
-> >   * whitelist
-> >   * blacklist
-> >
-> > (each might or might not be supported by the driver)
-> >
-> > When a station is on the blacklist it's ignored. When it's on the
-> > whitelist it's allowed. When it's on neither, but a list is configured,
-> > an event might be sent. When there's a black-&  whitelist, the blacklist
-> > is this an optimisation to suppress the event, so we don't need a third
-> > mode "black- and whitelist supported".
+below log message show the our problem for detailed.
+you can find the our DMA address 32bit align problem in 2nd paragraph after association packet dump of 1st paragraph.
+in authentication packet dump log message, skb->data address is 0xC0A5E580 that is aligned of 32bit.
+but, in association packet dump log message, skb->data address is 0xC098800E that is not aligned of 32bit. 
+just aligned of 16bit.
+
+our dma controller can accept the only 32bit aligned address for transferring.
+I'd like to know a good way to solve my problem.
+
+wlan0: SME: Trying to authenticate with 00:50:43:21:22:2b (SSID='MarvellAP' freq=2442 MHz)
+0xC0A5E580: B0 00 00 00 00 50 43 21 22 2B 00 01 02 03 04 05  .....PC!"+......
+0xC0A5E680: 00 50 43 21 22 2B 00 00 00 00 01 00 00 00 01 00  .PC!"+..........
+0xC0A5E780: 00 00
+
+
+wlan0: Trying to associate with 00:50:43:21:22:2b (SSID='MarvellAP' freq=2442 MHz)
+0xC098800E: 00 00 00 00 00 50 43 21 22 2B 00 01 02 03 04 05  .....PC!"+......
+0xC098810E: 00 50 43 21 22 2B F0 02 21 04 05 00 00 09 4D 61  .PC!"+..!.....Ma
+0xC098820E: 72 76 65 6C 6C 41 50 01 08 02 04 0B 16 0C 12 18  rvellAP.........
+0xC098830E: 24 32 04 30 48 60 6C 2D 1A 2C 00 1B FF 00 00 00  $2.0H`l-.,......
+0xC098840E: 00 00 00 00
+
+
+thanks, best regards,
+sangwon,ki
+
+-----Original Message-----
+From: Larry Finger [mailto:larry.finger@gmail.com] On Behalf Of Larry Finger
+Sent: Friday, January 25, 2013 1:28 AM
+To: 기상원 (SW Ki)
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [question] how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
+
+On 01/24/2013 05:58 AM, 기상원 (SW Ki) wrote:
+> hello everyone.
 > 
-> Thanks!, I was really confused with this optimization part.
-> If I get it correctly, there needs to be a mechanism for
-> driver to advertise its dual list capability to user space.
+> i have question. i want to use DMA for the 'data' field of sk_buff structure.
+> but sometimes, the 'data' field of sk_buff structure is not 32bit aligned.
+> so, how can i make to 32bit aligned address for the 'data' field of sk_buff structure ?
 
-No, because that's subsumed by just the whitelist -- the blacklist in
-addition to the whitelist is just an optimisation which we can always
-pass to the driver but it may ignore.
+A standard sk_buff should meet all the alignment requirements for your architecture. Could you provide more details about your architecture and an example where the sk_buff does not have the correct alignment?
 
-johannes
+Larry
+
+
+
+
+
 
