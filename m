@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50920 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756689Ab3A3TpY (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:38062 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751275Ab3AYKzt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 14:45:24 -0500
-Date: Wed, 30 Jan 2013 14:34:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 0/7] Improvements to software scanning
-Message-ID: <20130130193419.GG2167@tuxdriver.com> (sfid-20130130_204527_683854_CABCB670)
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+	Fri, 25 Jan 2013 05:55:49 -0500
+Date: Fri, 25 Jan 2013 16:19:00 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/7] mwl8k: Adding support for simultaneous AP-STA
+ functionality
+Message-ID: <20130125104900.GA9305@markyou.marvell.com> (sfid-20130125_115552_237907_E554D217)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 05:47:28PM -0600, Seth Forshee wrote:
-> This patch series fixes a number of problems observed during software
-> scanning, as described in [1].
-> 
-> The first four patches implement improved queue handling during
-> off-channel operation and add some needed flushing of the hardware
-> queues, as suggested by Johannes in [2]. This includes adding a new
-> queue stop reason of off-channel operation, a transmit path for frames
-> which do need to be transmitted when off-channel, and some improvements
-> in error handling.
-> 
-> The last three fix a problem specific to brcmsmac (and likely b43,
-> though I don't have hardware for testing b43). Broadcom hardware
-> actively clears the PM bit in frame control whenever the hardware is not
-> configured correctly, and since wireless drivers have no knowledge of
-> off-channel powersave such configuration cannot be done. The patches
-> expand the driver powersave configuration with an off-channel state and
-> update brcmsmac to make use of it.
-> 
-> Johannes: I have a couple of comments/questions for you related to these
-> patches.
-> 
-> First, in the patches I've added an offchan_tx_ok argument to the tx
-> operations, but this seems a little awkward to me since it has to be
-> propogated down through a fairly deep call stack. The alternative idea
-> that occurred to me is to use a tx control flag, but that seems to be
-> pretty crowded. Any thoughts?
-> 
-> Second, I attempted to test these patches with iwlwifi (Centrino
-> Advanced-N 6235) to verify that I didn't break anything for drivers with
-> hw scanning. My standard test for this involves running iperf while
-> triggering nearly continuous scans, but I'm seeing lots of problems
-> running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
-> does fine in either direction. I haven't had time to do any kind of
-> debugging yet, but I thought you'd want to know.
-> 
-> Thanks,
-> Seth
-> 
-> [1] http://marc.info/?l=linux-wireless&m=135766865110986&w=2
-> [2] http://marc.info/?l=linux-wireless&m=135838252227053&w=2
-> 
-> 
-> Seth Forshee (7):
->   mac80211: Return a status for tx operations
->   mac80211: Fix tx queue handling during scans
->   mac80211: Improve error handling for off-channel operation
->   mac80211: Add flushes before going off-channel
->   mac80211: Expand powersave configuration flag to be two bits
->   mac80211: Add off-channel powersave state
->   brcmsmac: Add support for off-channel powersave
+Adding support for simultaneous AP-STA functionality.
+This is preparation for enabling 4-address mode for AP
+and client mode. For details about 4-address mode
+please refer
+http://wireless.kernel.org/en/users/Documentation/iw?highlight=%28WDS%29#Using_4-address_for_AP_and_client_mode
 
-Johannes,
 
-Please take the brcsmac patch through your tree if/when you take
-the others.
+Yogesh Ashok Powar (7):
+  mwl8k: Announce simultaneous AP-STA support on AP fw
+  mwl8k: Allow adding station interface on AP firmware
+  mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
+  mwl8k: Enable hw encryption for STA mode on AP fw
+  mwl8k: Add/Del self entry for AP interface only
+  mwl8k: Choose interface specific calls on vif type
+  mwl8k: Do not call STA specific cmds not supported by the AP fw
 
-Thanks!
+ drivers/net/wireless/mwl8k.c | 66 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 48 insertions(+), 18 deletions(-)
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0.3
+
