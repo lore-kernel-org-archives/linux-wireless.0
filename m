@@ -1,176 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59473 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756512Ab3ARMdo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 07:33:44 -0500
-Message-ID: <1358512446.5035.2.camel@jlt4.sipsolutions.net> (sfid-20130118_133357_489152_614492B6)
-Subject: Re: [PATCH v3] mac80211: add op to configure default key id
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yoni Divinsky <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 18 Jan 2013 13:34:06 +0100
-In-Reply-To: <1338366999-5268-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120530_104118_257567_BDCC3548)
-References: <1338366999-5268-1-git-send-email-yoni.divinsky@ti.com>
-	 (sfid-20120530_104118_257567_BDCC3548)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4563 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755906Ab3AYPIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 10:08:31 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: stable@vger.kernel.org
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v3.6.y] brcmsmac: handle packet drop on enqueuing
+ correctly
+Date: Fri, 25 Jan 2013 16:08:13 +0100
+Message-ID: <1359126493-28270-1-git-send-email-arend@broadcom.com> (sfid-20130125_160835_100114_B53E0785)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-30 at 11:36 +0300, Yoni Divinsky wrote:
-> There are hardwares which support offload of data packets
-> for example when auto ARP is enabled the hw will send
-> the ARP response. In such cases if WEP encryption is
-> configured the hw must know the default WEP key in order
-> to encrypt the packets correctly.
-> 
-> When hw_accel is enabled and encryption type is set to WEP,
-> the driver should get the default key index from mac80211.
-> 
-> Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+From: Piotr Haber <phaber@broadcom.com>
 
-I applied the fixed up version below.
+In the event that tx packet can not be queued by the driver
+the packet is dropped. Propagate that information to the .tx()
+callback to make sure the freed packet is not accessed after
+that.
 
-johannes
+This has happened causing slab corruptions as reported by
+Stanislaw Gruszka.
 
->From de5fad815703b5b24bc4726cd71422929537d259 Mon Sep 17 00:00:00 2001
-From: Yoni Divinsky <yoni.divinsky@ti.com>
-Date: Wed, 30 May 2012 11:36:39 +0300
-Subject: [PATCH] mac80211: add op to configure default key id
+Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
 
-There are hardwares which support offload of data packets
-for example when auto ARP is enabled the hw will send
-the ARP response. In such cases if WEP encryption is
-configured the hw must know the default WEP key in order
-to encrypt the packets correctly.
+The patch is backported from:
 
-When hw_accel is enabled and encryption type is set to WEP,
-the driver should get the default key index from mac80211.
+commit c4dea35e34f5f46e1701156153a09cce429d1ea9 upstream.
 
-Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-[cleanups, fixes, documentation]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/net/mac80211.h    | 10 ++++++++++
- net/mac80211/driver-ops.h | 16 ++++++++++++++++
- net/mac80211/key.c        |  5 ++++-
- net/mac80211/trace.h      | 23 +++++++++++++++++++++++
- 4 files changed, 53 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 ++--
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |   14 +++++++++-----
+ drivers/net/wireless/brcm80211/brcmsmac/main.h        |    2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 +-
+ 4 files changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3037f49..e0825a9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1630,6 +1630,10 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
-  * rekeying), it will not include a valid phase 1 key. The valid phase 1 key is
-  * provided by update_tkip_key only. The trigger that makes mac80211 call this
-  * handler is software decryption with wrap around of iv16.
-+ *
-+ * The set_default_unicast_key() call updates the default WEP key index
-+ * configured to the hardware for WEP encryption type. This is required
-+ * for devices that support offload of data packets (e.g. ARP responses).
-  */
- 
- /**
-@@ -2208,6 +2212,10 @@ enum ieee80211_rate_control_changed {
-  *	After rekeying was done it should (for example during resume) notify
-  *	userspace of the new replay counter using ieee80211_gtk_rekey_notify().
-  *
-+ * @set_default_unicast_key: Set the default (unicast) key index, useful for
-+ *	WEP when the device sends data packets autonomously, e.g. for ARP
-+ *	offloading. The index can be 0-3, or -1 for unsetting it.
-+ *
-  * @hw_scan: Ask the hardware to service the scan request, no need to start
-  *	the scan state machine in stack. The scan must honour the channel
-  *	configuration done by the regulatory agent in the wiphy's
-@@ -2539,6 +2547,8 @@ struct ieee80211_ops {
- 	void (*set_rekey_data)(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       struct cfg80211_gtk_rekey_data *data);
-+	void (*set_default_unicast_key)(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif, int idx);
- 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct cfg80211_scan_request *req);
- 	void (*cancel_hw_scan)(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 0c07f94..e6033b0 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1020,4 +1020,20 @@ static inline void drv_restart_complete(struct ieee80211_local *local)
- 	trace_drv_return_void(local);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 7ef964c..a9625b8 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -276,8 +276,8 @@ static void brcms_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		kfree_skb(skb);
+ 		goto done;
+ 	}
+-	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
+-	tx_info->rate_driver_data[0] = tx_info->control.sta;
++	if (brcms_c_sendpkt_mac80211(wl->wlc, skb, hw))
++		tx_info->rate_driver_data[0] = tx_info->control.sta;
+  done:
+ 	spin_unlock_bh(&wl->lock);
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 03ca653..5a604da 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -6095,7 +6095,7 @@ static bool brcms_c_prec_enq(struct brcms_c_info *wlc, struct pktq *q,
+ 	return brcms_c_prec_enq_head(wlc, q, pkt, prec, false);
  }
  
-+static inline void
-+drv_set_default_unicast_key(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata,
-+			    int key_idx)
-+{
-+	check_sdata_in_driver(sdata);
-+
-+	WARN_ON_ONCE(key_idx < -1 || key_idx > 3);
-+
-+	trace_drv_set_default_unicast_key(local, sdata, key_idx);
-+	if (local->ops->set_default_unicast_key)
-+		local->ops->set_default_unicast_key(&local->hw, &sdata->vif,
-+						    key_idx);
-+	trace_drv_return_void(local);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 619c5d6..ef252eb 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -204,8 +204,11 @@ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
- 	if (idx >= 0 && idx < NUM_DEFAULT_KEYS)
- 		key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
+-void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
++bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+ 		     struct sk_buff *sdu, uint prec)
+ {
+ 	struct brcms_txq_info *qi = wlc->pkt_queue;	/* Check me */
+@@ -6110,7 +6110,9 @@ void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+ 		 * packet flooding from mac80211 stack
+ 		 */
+ 		brcmu_pkt_buf_free_skb(sdu);
++		return false;
+ 	}
++	return true;
+ }
  
--	if (uni)
-+	if (uni) {
- 		rcu_assign_pointer(sdata->default_unicast_key, key);
-+		drv_set_default_unicast_key(sdata->local, sdata, idx);
-+	}
-+
- 	if (multi)
- 		rcu_assign_pointer(sdata->default_multicast_key, key);
+ /*
+@@ -7273,7 +7275,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 41861b9..9341b93 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1821,6 +1821,29 @@ TRACE_EVENT(stop_queue,
- 	)
- );
+-void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
++bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+ 			      struct ieee80211_hw *hw)
+ {
+ 	u8 prio;
+@@ -7288,10 +7290,12 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+ 	prio = ieee80211_is_data(d11_header->frame_control) ? sdu->priority :
+ 		MAXPRIO;
+ 	fifo = prio2fifo[prio];
+-	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
+-		return;
+-	brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio));
++	brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0);
++	if (!brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio)))
++		return false;
+ 	brcms_c_send_q(wlc);
++
++	return true;
+ }
  
-+TRACE_EVENT(drv_set_default_unicast_key,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 int key_idx),
-+
-+	TP_ARGS(local, sdata, key_idx),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(int, key_idx)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->key_idx = key_idx;
-+	),
-+
-+	TP_printk(LOCAL_PR_FMT VIF_PR_FMT " key_idx:%d",
-+		  LOCAL_PR_ARG, VIF_PR_ARG, __entry->key_idx)
-+);
-+
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM mac80211_msg
+ void brcms_c_send_q(struct brcms_c_info *wlc)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index 8debc74..b44725c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -642,7 +642,7 @@ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
+ 			   bool commit, s8 txpktpend);
+ extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo,
+ 				    s8 txpktpend);
+-extern void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
++extern bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+ 			    struct sk_buff *sdu, uint prec);
+ extern void brcms_c_print_txstatus(struct tx_status *txs);
+ extern int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 5855f4f..bfa2630 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -321,7 +321,7 @@ extern void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask);
+ extern bool brcms_c_intrsupd(struct brcms_c_info *wlc);
+ extern bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc);
+ extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
+-extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
++extern bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
+ 				     struct sk_buff *sdu,
+ 				     struct ieee80211_hw *hw);
+ extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
 -- 
-1.8.0
-
+1.7.10.4
 
 
