@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:44420 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626Ab3AGLRO (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:61080 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753518Ab3AYImc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 06:17:14 -0500
-Received: by mail-wg0-f52.google.com with SMTP id 12so9724187wgh.7
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 03:17:13 -0800 (PST)
-Date: Mon, 7 Jan 2013 12:11:08 +0100
-From: Jiri Pirko <jiri@resnulli.us>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Ben Greear <greearb@candelatech.com>,
-	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org,
-	Ben Hutchings <bhutchings@solarflare.com>
-Subject: Re: [PATCH repost] net,wireless: check against default_ethtool_ops
-Message-ID: <20130107111108.GB1587@minipsycho.orion> (sfid-20130107_121718_137652_57550FF0)
-References: <20130107095548.GA6931@redhat.com>
- <20130107102307.GA1587@minipsycho.orion>
- <20130107104413.GB6931@redhat.com>
+	Fri, 25 Jan 2013 03:42:32 -0500
+Received: by mail-wi0-f182.google.com with SMTP id hn14so100121wib.3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 00:42:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130107104413.GB6931@redhat.com>
+In-Reply-To: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be>
+References: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be>
+Date: Fri, 25 Jan 2013 09:42:31 +0100
+Message-ID: <CAGXE3d_fD9etSnMKFUb6YGz=4g85ACkvdgyPjusMJXus-nvFYg@mail.gmail.com> (sfid-20130125_094235_747379_59BFB652)
+Subject: Re: Unable to get RTS/CTS working in rt2800
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mon, Jan 07, 2013 at 11:44:14AM CET, sgruszka@redhat.com wrote:
->On Mon, Jan 07, 2013 at 11:23:07AM +0100, Jiri Pirko wrote:
->> >-static const struct ethtool_ops default_ethtool_ops;
->> >+const struct ethtool_ops default_ethtool_ops;
->> >+EXPORT_SYMBOL_GPL(default_ethtool_ops);
->> 
->> I think that default_ethtool_ops should stay static. Wouldn't it be
->> nicer to introduce a helper like:
->> 
->> bool dev_has_default_ethtool_ops(struct net_device *dev)
->> {
->> 	return dev->ethtool_ops == &default_ethtool_ops;
->> }
->
->Then I still have to export this function. So with your approch, number
->of exported symbols will be the same, but there will be few more lines
->of code.
+On Thu, Jan 24, 2013 at 4:58 PM, Erwin Van de Velde
+<erwin.vandevelde@gmail.com> wrote:
+> In a test setup with 802.11a/n a colleague and I tried enabling RTS/CTS. The
+> only thing we got however was a CTS to self. RTS threshold was 1000B,
+> packet size 1400B.
 
-I think it's always better to add few more lines in order to prevent possible
-confusion which exporting default_ethtool_ops might introduce...
+Did you use 11n aggregation?
 
->
->Stanislaw
+> We looked for other options but did not find anything
+> helpful, what else can we try to enable RTS/CTS?
+
+Yup, there are several issues there:
+- The hw ignores RTS thresholds for AMPDUs AFAIK
+- HT protection always uses CTS-to-self (hardcoded in driver in
+rt2800_config_ht_opmode)
+
+I don't think any other driver allows to configure if RTS-CTS or
+CTS-to-self should be used?
+You can easily enforce RTS-CTS for 11n transmissions by changing
+rt2800_config_ht_opmode.
+
+HTH,
+Helmut
