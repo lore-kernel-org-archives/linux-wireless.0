@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:51449 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757985Ab3AIRhA (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:47028 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751605Ab3AYKzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 12:37:00 -0500
-Received: by mail-ie0-f173.google.com with SMTP id e13so2431929iej.32
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jan 2013 09:37:00 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: johannes@sipsolutions.net, thomas@cozybit.com
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] mac80211: set NEED_TXPROCESSING for PERR frames
-Date: Wed,  9 Jan 2013 12:34:55 -0500
-Message-Id: <1357752896-17497-1-git-send-email-me@bobcopeland.com> (sfid-20130109_183706_323729_79D5D5E3)
+	Fri, 25 Jan 2013 05:55:05 -0500
+Date: Fri, 25 Jan 2013 16:18:33 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/7] mwl8k: Adding support for simultaneous AP-STA
+ functionality
+Message-ID: <20130125104833.GA9222@markyou.marvell.com> (sfid-20130125_115510_701455_17B72464)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A user reported warnings in ath5k due to transmitting frames with no
-rates set up.  The frames were Mesh PERR frames, and some debugging
-showed an empty control block with just the vif pointer:
+Adding support for simultaneous AP-STA functionality.
+This is preparation for enabling 4-address mode for AP
+and client mode. For details about 4-address mode
+please refer
+http://wireless.kernel.org/en/users/Documentation/iw?highlight=%28WDS%29#Using_4-address_for_AP_and_client_mode
 
->  [  562.522682] XXX txinfo: 00000000: 00 00 00 00 00 00 00 00 00 00 00
->  00 00 00 00 00  ................
->  [  562.522688] XXX txinfo: 00000010: 00 00 00 00 00 00 00 00 54 b8 f2
->  db 00 00 00 00  ........T.......
->  [  562.522693] XXX txinfo: 00000020: 00 00 00 00 00 00 00 00 00 00 00
->  00 00 00 00 00  ................
 
-Set the IEEE80211_TX_INTFL_NEED_TXPROCESSING flag to ensure that
-rate control gets run before the frame is sent.
+Yogesh Ashok Powar (7):
+  mwl8k: Announce simultaneous AP-STA support on AP fw
+  mwl8k: Allow adding station interface on AP firmware
+  mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
+  mwl8k: Enable hw encryption for STA mode on AP fw
+  mwl8k: Add/Del self entry for AP interface only
+  mwl8k: Choose interface specific calls on vif type
+  mwl8k: Do not call STA specific cmds not supported by the AP fw
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- net/mac80211/mesh_hwmp.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mwl8k.c | 66 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 48 insertions(+), 18 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f0b384e..e3b3959 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -215,6 +215,7 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
- 	skb->priority = 7;
- 
- 	info->control.vif = &sdata->vif;
-+	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 	ieee80211_set_qos_hdr(sdata, skb);
- }
- 
 -- 
-1.7.10.4
+1.8.0.3
 
