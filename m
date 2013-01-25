@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56046 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760Ab3AaAdT (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:48700 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755540Ab3AYK4x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 19:33:19 -0500
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0V0XIbN027684
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 16:33:18 -0800
-Message-ID: <5109BBCE.4090605@candelatech.com> (sfid-20130131_013327_719098_EEE7630A)
-Date: Wed, 30 Jan 2013 16:33:18 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 25 Jan 2013 05:56:53 -0500
+Date: Fri, 25 Jan 2013 16:20:12 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 3/7] mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
+Message-ID: <20130125105012.GA9432@markyou.marvell.com> (sfid-20130125_115713_693734_2C061247)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Any way to see current CQM RSSI value?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm seeing lots of these types of wireless events:
+Set mac type for station interface on AP firmware
+as secondary. This allows the firmware to set specific
+characteristics for the STA interface.
 
-2013-01-30 16:30:59.330  1.1:  sta2 (phy #0): connection quality monitor event: RSSI went below threshold
-2013-01-30 16:30:59.330  1.1:  sta4 (phy #0): connection quality monitor event: RSSI went below threshold
-2013-01-30 16:30:59.330  1.1:  sta6 (phy #0): connection quality monitor event: RSSI went below threshold
-2013-01-30 16:31:03.380  1.1:  sta3 (phy #0): connection quality monitor event: RSSI went below threshold
-2013-01-30 16:31:06.342  1.1:  sta5 (phy #0): connection quality monitor event: RSSI went below threshold
-2013-01-30 16:31:06.360  1.1:  sta7 (phy #0): connection quality monitor event: RSSI went below threshold
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-As far as I can tell, nothing on my system is setting the cqm (at least, it's not
-using 'iw' to do it).
-
-Is there any way to dump out the current cqm RSSI value?  If not, maybe it's
-worth adding?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 59df345..3515337 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3538,7 +3538,10 @@ static int mwl8k_cmd_update_mac_addr(struct ieee80211_hw *hw,
+ 	mac_type = MWL8K_MAC_TYPE_PRIMARY_AP;
+ 	if (vif != NULL && vif->type == NL80211_IFTYPE_STATION) {
+ 		if (mwl8k_vif->macid + 1 == ffs(priv->sta_macids_supported))
+-			mac_type = MWL8K_MAC_TYPE_PRIMARY_CLIENT;
++			if (priv->ap_fw)
++				mac_type = MWL8K_MAC_TYPE_SECONDARY_CLIENT;
++			else
++				mac_type = MWL8K_MAC_TYPE_PRIMARY_CLIENT;
+ 		else
+ 			mac_type = MWL8K_MAC_TYPE_SECONDARY_CLIENT;
+ 	} else if (vif != NULL && vif->type == NL80211_IFTYPE_AP) {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0.3
 
