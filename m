@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35944 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754663Ab3AZXFD (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:59601 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755220Ab3AYKze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 18:05:03 -0500
-Message-ID: <1359241527.9086.5.camel@jlt4.sipsolutions.net> (sfid-20130127_000513_684797_DD38069F)
-Subject: Re: [PATCH v2] mac80211: dynamic short slot time for MBSSs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Sun, 27 Jan 2013 00:05:27 +0100
-In-Reply-To: <1359241136.9086.0.camel@jlt4.sipsolutions.net> (sfid-20130126_235844_032457_426457DC)
-References: <1359232645-10563-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130126_213837_005675_90531EEB) <1359241136.9086.0.camel@jlt4.sipsolutions.net>
-	 (sfid-20130126_235844_032457_426457DC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 25 Jan 2013 05:55:34 -0500
+Date: Fri, 25 Jan 2013 16:18:53 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/7] mwl8k: Adding support for simultaneous AP-STA
+ functionality
+Message-ID: <20130125104853.GA9284@markyou.marvell.com> (sfid-20130125_115537_465571_67B83396)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-01-26 at 23:58 +0100, Johannes Berg wrote:
-> On Sat, 2013-01-26 at 12:37 -0800, Thomas Pedersen wrote:
-> 
-> > +	u32 rates, changed = 0;
-> 
-> > +		for_each_set_bit(i, (unsigned long *)&rates,
-> > +				 sizeof(rates) * BITS_PER_BYTE) {
-> 
-> this is broken on 64-bit architectures.
+Adding support for simultaneous AP-STA functionality.
+This is preparation for enabling 4-address mode for AP
+and client mode. For details about 4-address mode
+please refer
+http://wireless.kernel.org/en/users/Documentation/iw?highlight=%28WDS%29#Using_4-address_for_AP_and_client_mode
 
-Actually, probably only on big endian 64-bit architectures.
 
-johannes
+Yogesh Ashok Powar (7):
+  mwl8k: Announce simultaneous AP-STA support on AP fw
+  mwl8k: Allow adding station interface on AP firmware
+  mwl8k: set mac type to MWL8K_MAC_TYPE_SECONDARY_CLIENT
+  mwl8k: Enable hw encryption for STA mode on AP fw
+  mwl8k: Add/Del self entry for AP interface only
+  mwl8k: Choose interface specific calls on vif type
+  mwl8k: Do not call STA specific cmds not supported by the AP fw
+
+ drivers/net/wireless/mwl8k.c | 66 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 48 insertions(+), 18 deletions(-)
+
+-- 
+1.8.0.3
 
