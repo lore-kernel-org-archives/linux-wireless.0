@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45826 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab3A2Jzh (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46416 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab3AYWIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jan 2013 04:55:37 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] mac80211: remove assoc data "sent_assoc"
-Date: Tue, 29 Jan 2013 10:55:58 +0100
-Message-Id: <1359453359-20767-1-git-send-email-johannes@sipsolutions.net> (sfid-20130129_105542_708903_6DD77997)
+	Fri, 25 Jan 2013 17:08:41 -0500
+Message-ID: <51030260.2040004@candelatech.com> (sfid-20130125_230844_939216_8893C8DD)
+Date: Fri, 25 Jan 2013 14:08:32 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Sam Leffler <sleffler@google.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Increasing throughput on 3-radio system?
+References: <5102CADE.2010900@candelatech.com> <CA+yqC4b2_q5Nn2t7C-5JdAfxR-QA8KtBgqE_sw91ZfNwt-k+LQ@mail.gmail.com> <5102D0C7.50907@candelatech.com> <CAJ-VmonmYNGK42DuCLStjvSswdvkzeHUAwH+fsZQL5BdxwGgjA@mail.gmail.com>
+In-Reply-To: <CAJ-VmonmYNGK42DuCLStjvSswdvkzeHUAwH+fsZQL5BdxwGgjA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 01/25/2013 01:55 PM, Adrian Chadd wrote:
+> Hi,
+>
+> Strong enough out of band RF is still going to bleed over and it may
+> saturate the receive amplifiers before it hits the chip and the
+> configurable analog band-pass filter.
+>
+> Hence the suggestion to always TX at the same time. That way you don't
+> have the problem of TX from one radio being strong enough to
+> saturation. You can tune the PHY (via magic handwavy parameters that
+> strangely enough are partially described in the ANI code :-) to reduce
+> its sensitivity to blocker signals, but it doesn't help you if the
+> signal is close enough by to trigger the wideband / out of band
+> interference check. If you try and receive during that you're going to
+> have very poor behaviour.
 
-The field is never used, so remove it.
+Could you point me to which registers/vars/keywords in (ath9k) ani
+do this?  I'd like to play around with them a bit.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h | 1 -
- net/mac80211/mlme.c        | 3 ---
- 2 files changed, 4 deletions(-)
+As for transmitting at the same time, is that even possible
+using multiple ath9k NICs in a PC?  It would seem to me that you'd
+need some kind of low-level communication between the hardware/firmware
+on the NICs themselves to accomplish that?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index fdb0d3c..0f3e4b1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -400,7 +400,6 @@ struct ieee80211_mgd_assoc_data {
- 	u8 supp_rates_len;
- 	bool wmm, uapsd;
- 	bool have_beacon;
--	bool sent_assoc;
- 	bool synced;
- 
- 	u8 ap_ht_param;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5f7fd43..eda80b1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2578,7 +2578,6 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 		ifmgd->assoc_data->have_beacon = true;
--		ifmgd->assoc_data->sent_assoc = false;
- 		/* continue assoc process */
- 		ifmgd->assoc_data->timeout = jiffies;
- 		run_again(ifmgd, ifmgd->assoc_data->timeout);
-@@ -3993,13 +3992,11 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 				ifmgd->dtim_period = tim->dtim_period;
- 			}
- 			assoc_data->have_beacon = true;
--			assoc_data->sent_assoc = false;
- 			assoc_data->timeout = jiffies;
- 		}
- 		rcu_read_unlock();
- 	} else {
- 		assoc_data->have_beacon = true;
--		assoc_data->sent_assoc = false;
- 		assoc_data->timeout = jiffies;
- 	}
- 	run_again(ifmgd, assoc_data->timeout);
+Thanks,
+Ben
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
