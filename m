@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50724 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755586Ab3A3TaW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60174 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753007Ab3AYVgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 14:30:22 -0500
-Date: Wed, 30 Jan 2013 14:22:42 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 25 Jan 2013 16:36:17 -0500
+Message-ID: <1359149801.4655.24.camel@jlt4.sipsolutions.net> (sfid-20130125_223620_649803_CC21D1ED)
+Subject: Re: [RFC] Fixes for problems with off-channel powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-01-28 (was: pull-request:
- mac80211-next 2013-01-24)
-Message-ID: <20130130192242.GD2167@tuxdriver.com> (sfid-20130130_203048_620542_11CF3268)
-References: <1359045496.21908.11.camel@jlt4.sipsolutions.net>
- <1359375945.8120.13.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359375945.8120.13.camel@jlt4.sipsolutions.net>
+Date: Fri, 25 Jan 2013 22:36:41 +0100
+In-Reply-To: <20130117053413.GB31449@thinkpad-t410>
+References: <1357668645-5101-1-git-send-email-seth.forshee@canonical.com>
+	 <20130109134059.GC18778@thinkpad-t410>
+	 <1358379163.15012.69.camel@jlt4.sipsolutions.net>
+	 <20130117053413.GB31449@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 01:25:45PM +0100, Johannes Berg wrote:
-> John,
+On Wed, 2013-01-16 at 23:34 -0600, Seth Forshee wrote:
+> On Thu, Jan 17, 2013 at 12:32:43AM +0100, Johannes Berg wrote:
+> > On Wed, 2013-01-09 at 07:40 -0600, Seth Forshee wrote:
+> > 
+> > > > It turns out that fixing problem #1 (i.e. patch 2) probably isn't
+> > > > necessary with the other changes, as no frames should be sent while
+> > > > off-channel PS is enabled. Does this still seem like a problem worth
+> > > > fixing?
+> > > 
+> > > This is incorrect. We actually do need patch 2 for some hardware. I
+> > > forgot that when I was testing with BCM43224 I found that PM gets
+> > > actively set or cleared based on the device configuration. It's
+> > > impossible to enable PS at the AP without informing the driver.
+> > 
+> > Hm, don't understand. If we're not sending any packets to the AP, why
+> > does this matter?
+> > 
+> > Or are you saying it wants nullfunc frames generated in software, but
+> > then changes the PM bit in them?
 > 
-> Please ignore the previous pull request. I've updated my branch with a
-> few more commits, this is the combined pull request.
-> 
-> I've included
->  * AKM definitions from Bing,
->  * mesh fixes from Thomas, including a fix from him for me breaking his
->    patch while applying,
->  * channel check fix from Simon,
->  * an old patch from Yoni Divinsky who doesn't even work for TI any
->    more, to configure the WEP TX key for ARP offload etc.
->  * MAC ACL API from Vasanth
->  * a fix for the infamous chanctx_conf warning from Arnd
->  * from myself, a fix for my previous aggregation changes, some cleanup
->    and some improvements and fixes for WoWLAN
-> 
-> Let me know if there are any problems.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit 5a32aff37a02ebc959837f08d09ac8ba65d4f1b0:
-> 
->   mac80211: split out chandef tracing macros (2013-01-16 23:57:51 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 3b4797bce0050570e84bedd10e1b14e9320a3551:
-> 
->   mac80211: fix mesh_sta_info_get() reshuffle damage (2013-01-28 13:15:34 +0100)
+> Exactly. At least that's what it looks like to me. I lack detailed
+> knowledge of how to handle powersave on Broadcom, but I do know that the
+> PM bit is under the control of the MCTL_HPS field.  Experimentally it
+> appears that the hardware actively clears PM when this field is 0 and
+> actively sets it when this field is 1, for all frames including
+> nullfuncs.
 
-Pulling now...
+Hm maybe that also answers my other question :-)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Maybe for the benefit of such drivers instead of splitting the powersave
+state it would be easier to introduce a "PM bit state"? I don't know ...
+
+johannes
+
