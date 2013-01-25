@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54693 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753310Ab3AaCBs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60230 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878Ab3AYVpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 21:01:48 -0500
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0V21lFZ001644
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 18:01:48 -0800
-Message-ID: <5109D08B.1030707@candelatech.com> (sfid-20130131_030152_305192_AC354DAC)
-Date: Wed, 30 Jan 2013 18:01:47 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Any way to see current CQM RSSI value?
-References: <5109BBCE.4090605@candelatech.com>
-In-Reply-To: <5109BBCE.4090605@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 25 Jan 2013 16:45:34 -0500
+Message-ID: <1359150352.4655.29.camel@jlt4.sipsolutions.net> (sfid-20130125_224538_197606_B3BB4B80)
+Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH
+ response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Will Hawkins <hawkinsw@opentechinstitute.org>
+Cc: Antonio Quartulli <antonio@open-mesh.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 25 Jan 2013 22:45:52 +0100
+In-Reply-To: <50E5F2A4.9080108@opentechinstitute.org>
+References: <1355146824-25012-1-git-send-email-antonio@open-mesh.com>
+	 <1355146824-25012-2-git-send-email-antonio@open-mesh.com>
+	 <1356706268.9922.23.camel@jlt4.sipsolutions.net>
+	 <20130102063255.GA27676@open-mesh.com>
+	 <50E5F2A4.9080108@opentechinstitute.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2013 04:33 PM, Ben Greear wrote:
-> I'm seeing lots of these types of wireless events:
->
-> 2013-01-30 16:30:59.330  1.1:  sta2 (phy #0): connection quality monitor event: RSSI went below threshold
-> 2013-01-30 16:30:59.330  1.1:  sta4 (phy #0): connection quality monitor event: RSSI went below threshold
-> 2013-01-30 16:30:59.330  1.1:  sta6 (phy #0): connection quality monitor event: RSSI went below threshold
-> 2013-01-30 16:31:03.380  1.1:  sta3 (phy #0): connection quality monitor event: RSSI went below threshold
-> 2013-01-30 16:31:06.342  1.1:  sta5 (phy #0): connection quality monitor event: RSSI went below threshold
-> 2013-01-30 16:31:06.360  1.1:  sta7 (phy #0): connection quality monitor event: RSSI went below threshold
+On Thu, 2013-01-03 at 16:05 -0500, Will Hawkins wrote:
+> Sorry for the delay responding!
 
-I think now this is just a printout issue in iw, it seems the real problem is NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
-not RSSI issue.
+Haha, 1.5 days. I win at delaying ;-(
 
-I'll work up a patch for iw tomorrow if upstream hasn't fixed it yet.
+> >> Anyway this part is really confusing. If userspace is handling
+> >> auth frames, should the kernel really mark the station as
+> >> authenticated? What then is the point in handling auth frames in
+> >> userspace??
+> >> 
+> >> Will?
+> > 
+> > Actually I don't know. Maybe Will can help us in understanding how
+> > to handle this point. I simply kept the same behaviour: before this
+> > (my) patch a station was marked as AUTHenticated in by the kernel,
+> > even if userspace registered for AUTH frames, and the same I'm
+> > doing here.
+> 
+> It does *not* appear that Antonio's patch changes the logic that I put
+> in place with my earlier patch. For me, the userspace application
+> *authorizes* the station rather than *authenticates*. In other words,
+> no matter whether or not the userspace application is registered for
+> AUTH frames, the new station is assumed to be authenticated. Once the
+> two stations are authenticated the key exchange begins (over AUTH
+> frames) to determine if the stations are authorized.
+> 
+> Johannes, what are your thoughts on the differences between the
+> semantics of authenticated and authorized. I am definitely in over my
+> head so please correct me where I've gone wrong. :-)
 
-Would still be nice to display the current CQM settings of course...
+That makes sense, you handle the SAE authentication and then mark the
+station as authorized, which is perfectly fine. But that really mostly
+means you don't care about the authenticated state at all, and there's
+no real associated state anyway ...
 
-Thanks,
-Ben
+> I would be okay with this approach. I think that it would be fairly
+> easy to essentially move the logic up a level and protect the
+> transition to AUTH rather than AUTHORIZED.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Well, you'd have to do both, and we also can't break the userspace API
+now.
+
+> > This is a behaviour I introduced some time ago:
+> > 
+> > 1153         sdata->u.ibss.control_port = params->control_port;
+> > 
+> > which is set based on NL80211_ATTR_CONTROL_PORT and at the moment,
+> > in IBSS, I think it is only set by wpa_supplicant when using
+> > IBSS/RSN..you told me to use control_port instead of creating
+> > another member..but maybe it is general and could be used for
+> > something else?
+
+It could be used for something else.
+
+> The userspace application that I am writing does use the control port
+> in IBSS. My goal is to integrate my userspace application with
+> wpa_supplicant so eventually there will be convergence. In fact,
+> Antonio's new message is critical to this integration. :-)
+
+That I don't understand? Why does it need the new event? Wouldn't
+completing the SAE handshake be sufficient information?
+
+johannes
 
