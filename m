@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25302 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793Ab3ATGkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 01:40:51 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	Hugh Dickins <hughd@google.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: iwlwifi: regression in 3.8-rc4 and 3.7.3
-Date: Sun, 20 Jan 2013 06:39:30 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com> (sfid-20130120_074124_939055_601EF501)
-References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
- <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
-In-Reply-To: <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:60082 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751275Ab3AYK7E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 05:59:04 -0500
+Date: Fri, 25 Jan 2013 16:20:42 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 6/7] mwl8k: Choose interface specific calls on vif type
+Message-ID: <20130125105042.GA9494@markyou.marvell.com> (sfid-20130125_115911_836952_518E21F3)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gU3VuLCBKYW4gMjAsIDIwMTMgYXQgNjo1NiBBTSwgSHVnaCBEaWNraW5zIDxodWdo
-ZEBnb29nbGUuY29tPiB3cm90ZToNCj4gPiBBZnRlciBzZW5kaW5nIHRoZSBmaXJzdCAyTUIsIHNj
-cCBvdmVyIHdpcmVsZXNzIGJlY29tZXMgdW5iZWFyYWJseQ0KPiA+IHNsb3csIHdpdGggZnJlcXVl
-bnQgc3RhbGxzOiBvbiB0aGlzIFRoaW5rUGFkIFQ0MjBzIHJ1bm5pbmcgMy44LXJjNCBvciAzLjcu
-My4NCj4gPiBOb3QgYWx3YXlzLCBidXQgb2Z0ZW4uDQo+ID4NCj4gDQo+IFRoZXJlIGlzIG9uZSBw
-ZW5kaW5nIGl3bHdpZmktZml4ZXMsIGR1bm5vIGlmIGl0IHdpbGwgZml4IHlvdXIgaXNzdWUuDQo+
-IFsxXSBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3
-bHdpZmktDQo+IGZpeGVzLmdpdDthPWNvbW1pdGRpZmY7aD1jM2U1ZDcxODFhZmI2NjY1NzM5MzA2
-NmJjY2NlMDk1NmZhYjA5YWIzDQoNClJpZ2h0IC0gc28gdGhlIDIgcGF0Y2hlcyBhcmUgdW5yZWxh
-dGVkLCBhbmQgdGhlIG9uZSBTZWRhdCBpcyBwb2ludGluZyBhdCBpcyByZWxldmFudCBmb3IgMy44
-IG9ubHkuIEl0IGZpeGVzIGEgYnVnIHRoYXQgaGFzIGJlZW4gaW50cm9kdWNlZCBpbiAzLjguDQpS
-ZWdhcmRpbmcgdGhlIGlzc3VlIEh1Z2ggaXMgc3VmZmVyaW5nIGZyb20sIEkgaGF2ZSB0byBzYXkg
-dGhhdCBJIGFtIGEgbGl0dGxlIGNvbmZ1c2VkIHNpbmNlIEkgYW0gcHJldHR5IHN1cmUgdGhlIHBh
-dGNoIGlzIHJpZ2h0LiBOb3csIGl0IG1pZ2h0IHVuY292ZXIgb3RoZXIgcHJlLWV4aXN0aW5nIGJ1
-Z3MuIEFsbCBJIGNhbiBzYXkgaXMgdGhhdCBJIGRvbid0IHRoaW5rIHRoYXQgcmV2ZXJ0aW5nIHRo
-ZSBwYXRjaCBpcyAqc28qIHByb2JsZW1hdGljIHNpbmNlIHRoZSBwYXRjaCByZWFsbHkgd2FudHMg
-dG8gc29sdmUgYSByYXJlIGNhc2UuIElmIGl0IGNhdXNlcyBpc3N1ZXMsIHdlIGNhbiBzaW1wbHkg
-cmV2ZXJ0IGl0LiBJdCBvbmx5IG1lYW5zIHRoYXQgd2hlbiBJIHdpbGwgZ2V0IGEgbGl0dGxlIGJp
-dCBvZiB0aW1lLCBJIG1pZ2h0IG5lZWQgdG8gYXNrIHlvdSBhIGZldyBsb2dzLiBUaGFua3MgZm9y
-IHRoZSByZXBvcnQgKGFuZCB0aGUgYmlzZWN0aW9uKS4NCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpBIG1lbWJlciBv
-ZiB0aGUgSW50ZWwgQ29ycG9yYXRpb24gZ3JvdXAgb2YgY29tcGFuaWVzCgpUaGlzIGUtbWFpbCBh
-bmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IK
-dGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3Ig
-ZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJl
-IG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFu
-ZCBkZWxldGUgYWxsIGNvcGllcy4K
+Choose interface specific function calls
+based on interface type instead of
+firmware types.
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 7002fc8..5ca76c8 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -4984,11 +4984,9 @@ static void
+ mwl8k_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       struct ieee80211_bss_conf *info, u32 changed)
+ {
+-	struct mwl8k_priv *priv = hw->priv;
+-
+-	if (!priv->ap_fw)
++	if (vif->type == NL80211_IFTYPE_STATION)
+ 		mwl8k_bss_info_changed_sta(hw, vif, info, changed);
+-	else
++	if (vif->type == NL80211_IFTYPE_AP)
+ 		mwl8k_bss_info_changed_ap(hw, vif, info, changed);
+ }
+ 
+-- 
+1.8.0.3
 
