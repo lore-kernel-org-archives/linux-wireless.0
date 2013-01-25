@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:48895 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395Ab3AVVMi (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:57019 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756156Ab3AYKgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 16:12:38 -0500
-Received: by mail-bk0-f42.google.com with SMTP id ji2so4034772bkc.29
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 13:12:37 -0800 (PST)
-Message-ID: <50FF00C0.1010402@gmail.com> (sfid-20130122_221242_706524_A513D374)
-Date: Tue, 22 Jan 2013 22:12:32 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Fri, 25 Jan 2013 05:36:38 -0500
+Received: by mail-we0-f173.google.com with SMTP id r5so103580wey.18
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:36:36 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH RESEND 1/2] ssb: trivial: use pflash helper variable
+Date: Fri, 25 Jan 2013 11:36:25 +0100
+Message-Id: <1359110186-30526-1-git-send-email-zajec5@gmail.com> (sfid-20130125_113701_712951_1B8491C8)
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Stanislaw Gruszka <stf_xl@wp.pl>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: print chip and firmware version by default
-References: <20130122164914.GB25134@localhost.localdomain> <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
-In-Reply-To: <2BB3EFC8-0B36-47DA-9FE2-13159E367F85@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2013 07:58 PM, Gertjan van Wingerde wrote:
 
-> On 22 jan. 2013, at 17:49, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> 
->> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->> Tested-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->> ---
->> drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
->> drivers/net/wireless/rt2x00/rt2x00mac.c |    6 +++---
->> 2 files changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
->> index 3e37c19..bef449c 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00.h
->> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
->> @@ -92,7 +92,7 @@
->> #define NOTICE(__dev, __msg, __args...) \
->>    DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
->> #define INFO(__dev, __msg, __args...) \
->> -    DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
->> +    DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
->> #define DEBUG(__dev, __msg, __args...) \
->>    DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
->> #define EEPROM(__dev, __msg, __args...) \
-> 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+RESEND just for sure, as earlier I asked to drop patch 0002
+---
+ drivers/ssb/driver_mipscore.c |   19 ++++++++++---------
+ 1 files changed, 10 insertions(+), 9 deletions(-)
 
-> I think this change is good, but we should also change WARNING and
-> NOTICE. Otherwise they won't be displayed if CONFIG_RT2X00_DEBUG is
-> disabled, but INFO will, which would be strange.
+diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
+index 2a7684c..77bc8d4 100644
+--- a/drivers/ssb/driver_mipscore.c
++++ b/drivers/ssb/driver_mipscore.c
+@@ -189,13 +189,14 @@ static void ssb_mips_serial_init(struct ssb_mipscore *mcore)
+ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
+ {
+ 	struct ssb_bus *bus = mcore->dev->bus;
++	struct ssb_pflash *pflash = &mcore->pflash;
+ 
+ 	/* When there is no chipcommon on the bus there is 4MB flash */
+ 	if (!ssb_chipco_available(&bus->chipco)) {
+-		mcore->pflash.present = true;
+-		mcore->pflash.buswidth = 2;
+-		mcore->pflash.window = SSB_FLASH1;
+-		mcore->pflash.window_size = SSB_FLASH1_SZ;
++		pflash->present = true;
++		pflash->buswidth = 2;
++		pflash->window = SSB_FLASH1;
++		pflash->window_size = SSB_FLASH1_SZ;
+ 		return;
+ 	}
+ 
+@@ -208,14 +209,14 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
+ 		break;
+ 	case SSB_CHIPCO_FLASHT_PARA:
+ 		pr_debug("Found parallel flash\n");
+-		mcore->pflash.present = true;
+-		mcore->pflash.window = SSB_FLASH2;
+-		mcore->pflash.window_size = SSB_FLASH2_SZ;
++		pflash->present = true;
++		pflash->window = SSB_FLASH2;
++		pflash->window_size = SSB_FLASH2_SZ;
+ 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
+ 		               & SSB_CHIPCO_CFG_DS16) == 0)
+-			mcore->pflash.buswidth = 1;
++			pflash->buswidth = 1;
+ 		else
+-			mcore->pflash.buswidth = 2;
++			pflash->buswidth = 2;
+ 		break;
+ 	}
+ }
+-- 
+1.7.7
 
-I believe this patch is so useful and trivial enough to be included,
-as is, in the next 3.8-rc .
-
-The next steps can be done for 3.9
