@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:42993 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753168Ab3AaO5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 09:57:07 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, kvalo@adurom.com,
-	Sven Eckelmann <sven@narfation.org>
-Subject: [PATCHv2 4/6] ath9k: Only remove spectral scan relay file when it was created
-Date: Thu, 31 Jan 2013 15:56:56 +0100
-Message-Id: <1359644216-24439-1-git-send-email-sven@narfation.org> (sfid-20130131_155711_410329_699C731D)
-In-Reply-To: <1359624409-14815-4-git-send-email-sven@narfation.org>
-References: <1359624409-14815-4-git-send-email-sven@narfation.org>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:50246 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756955Ab3AYMIs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 07:08:48 -0500
+Received: by mail-wg0-f45.google.com with SMTP id dq12so190710wgb.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:08:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <A06A1995-B025-4841-BCD9-9A940DA58620@gmail.com>
+References: <20121211100419.GA7822@earthship.arig>
+	<A06A1995-B025-4841-BCD9-9A940DA58620@gmail.com>
+Date: Fri, 25 Jan 2013 13:08:46 +0100
+Message-ID: <CAGXE3d_6zsWDAQ6r9UR5jPa+a0iqWOqLEY1w6AoLBfszhqi1UQ@mail.gmail.com> (sfid-20130125_130851_753333_AF51F1C5)
+Subject: Re: [PATCH 3/3] rt2x00: add platform_data mac address
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Daniel Golle <dgolle@allnet.de>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<users@rt2x00.serialmonkey.com>" <users@rt2x00.serialmonkey.com>,
+	"<juhosg@openwrt.org>" <juhosg@openwrt.org>,
+	"<sgruszka@redhat.com>" <sgruszka@redhat.com>,
+	"<john@phrozen.org>" <john@phrozen.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The relay file depends on relayfs. Trying to close this file without having
-ATH9K_DEBUGFS (and therefore RELAY) activated causes build failures.
+Hi,
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
----
- drivers/net/wireless/ath/ath9k/init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, Dec 11, 2012 at 10:51 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> And for this patch I have the same question as for the previous patch: why do we need to arrange this via platform data,
+> as opposed to using the standard user space ifconfig facility to set a mac address?
 
-v2:
-* Use config_enabled instead of #ifdef as requested by
-  Kalle Valo <kvalo@adurom.com>
+This looks fine to me. I'd also prefer to pass in a MAC address from
+the platform data on SoC devices
+instead of having to write some user space code. And this is how it is
+done by other drivers as well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c7d116c..af932c9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -922,7 +922,7 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- 
- 	ath9k_eeprom_release(sc);
- 
--	if (sc->rfs_chan_spec_scan) {
-+	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && sc->rfs_chan_spec_scan) {
- 		relay_close(sc->rfs_chan_spec_scan);
- 		sc->rfs_chan_spec_scan = NULL;
- 	}
--- 
-1.7.10.4
+> As a second question: why is this only implemented for rt61pci, and not the other PCI / SOC drivers?
 
+Good point.
+
+Helmut
