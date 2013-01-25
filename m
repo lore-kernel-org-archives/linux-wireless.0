@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:43976 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755811Ab3ANXuc (ORCPT
+Received: from mail-gh0-f170.google.com ([209.85.160.170]:36057 "EHLO
+	mail-gh0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754841Ab3AYMf1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 18:50:32 -0500
-Received: by mail-lb0-f178.google.com with SMTP id l5so3384519lbo.9
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jan 2013 15:50:31 -0800 (PST)
+	Fri, 25 Jan 2013 07:35:27 -0500
+Received: by mail-gh0-f170.google.com with SMTP id g14so28707ghb.15
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:35:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87hamjzxyf.fsf@purkki.adurom.net>
-References: <CAMvjH0A69ZBCZc5qjm_cUYj3bDzSmneaz1u9CsPcJEm2T0Q1iw@mail.gmail.com>
- <87txqkz0yk.fsf@purkki.adurom.net> <CAMvjH0BkRS0HpjqHQyFOmnqmQs4AR9HGWh07FSz2yh3TiTBy6w@mail.gmail.com>
- <CAGRGNgXBNSRTK+zjaxg5eD-zDv6OE_S_iU7Gb3v5W=M_92qdrg@mail.gmail.com> <87hamjzxyf.fsf@purkki.adurom.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 15 Jan 2013 10:50:10 +1100
-Message-ID: <CAGRGNgXmVOtKLvzinuS=EAwVJCxDvwWY2s-Jsiv8wstha+mxbA@mail.gmail.com> (sfid-20130115_005036_407171_147D7D89)
-Subject: Re: Custom commands for cfg80211 based driver (like iwpriv)
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eugene <wifi.mailing.list@gmail.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <20130124210028.GA22800@localhost.localdomain>
+References: <20130124205931.GB16252@localhost.localdomain>
+	<20130124210028.GA22800@localhost.localdomain>
+Date: Fri, 25 Jan 2013 13:28:44 +0100
+Message-ID: <CAOZOX0Vj-T1WPHR692LwpSdHontVq5PJG4UJAzg7O=nYLodXOA@mail.gmail.com> (sfid-20130125_133532_708646_3F3D71A9)
+Subject: Re: [PATCH 2/4] rt2x00: remove NOTICE
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-On Tue, Jan 15, 2013 at 12:38 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Julian Calaby <julian.calaby@gmail.com> writes:
+On Thu, Jan 24, 2013 at 10:00 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
+> We use this macro only on 3 places - remove it and replace by other
+> appropriate macros for printing messages.
 >
->>> Why kernel do not support custom commands, like TESTMODE?
->>
->> The goal, as I understand it, is to work out a framework for how
->> TESTMODE could be implemented in a unified manner across all the
->> drivers for all hardware which supports it. I'm not sure that any real
->> progress has been made.
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+>  drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 ++--
+>  3 files changed, 3 insertions(+), 5 deletions(-)
 >
-> I personally think that will never work out. With testmode we are
-> talking about very low level features like RF registers, calibration, HW
-> testing etc. Stuff which is only run in a factory or by an RF engineer.
-> Finding a common interface for all HW designs is hard as they are so
-> different.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index a1de95e..1791260 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -80,7 +80,7 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
+>             rt2x00_rf(rt2x00dev, RF3022))
+>                 return true;
+>
+> -       NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
+> +       INFO(rt2x00dev, "Unknown RF chipset on rt305x\n");
+>         return false;
+>  }
 
-You're a lot closer to actual hardware than I am so you've probably
-got a better idea of what can and can't be done. I was just parroting
-what I heard about it last time it was mentioned.
+Isn't this more a warning?
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Ivo
