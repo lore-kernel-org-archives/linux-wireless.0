@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:38156 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756840Ab3A0Wxn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753164Ab3AYXRX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jan 2013 17:53:43 -0500
-From: Cyril Roelandt <tipecaml@gmail.com>
-To: bzhao@marvell.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Cyril Roelandt <tipecaml@gmail.com>
-Subject: [PATCH] mwifiex: avoid out of bounds access in mwifiex_get_common_rates.
-Date: Sun, 27 Jan 2013 23:42:48 +0100
-Message-Id: <1359326568-17022-1-git-send-email-tipecaml@gmail.com> (sfid-20130127_235416_646040_79DE3857)
+	Fri, 25 Jan 2013 18:17:23 -0500
+Message-ID: <1359155867.4655.55.camel@jlt4.sipsolutions.net> (sfid-20130126_001726_220336_BB9D2B2E)
+Subject: Re: Warning with trace while trying to connect to an AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Wollrath <jwollrath@web.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 26 Jan 2013 00:17:47 +0100
+In-Reply-To: <20121223143452.1d029621@ilfaris> (sfid-20121223_143502_563235_989FE958)
+References: <20121223143452.1d029621@ilfaris>
+	 (sfid-20121223_143502_563235_989FE958)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check that the array indexes are in-bounds before accessing the rate2 and tmp
-arrays.
+On Sun, 2012-12-23 at 14:34 +0100, Julian Wollrath wrote:
+> Hello,
+> 
+> while trying to connect to an AP I got the following trace:
+> [13677.506164] ------------[ cut here ]------------
+> [13677.506196] WARNING: at net/wireless/mlme.c:517 cfg80211_mlme_disassoc+0x17d/0x190 [cfg80211]()
 
-Found with the following semantic patch:
+Are you able to reproduce this by any chance? It's been happening for a
+while, but I've so far been unable to figure out what causes
+"wdev->sme_state" and "wdev->current_bss" to get out of sync ...
 
-<smpl>
-@@
-identifier t;
-identifier idx;
-expression E;
-statement S;
-@@
-* for (... ; <+... t[idx] ...+> && idx < E ; ...)
-S
-</smpl>
+If you could reproduce, a trace would help.
 
-Signed-off-by: Cyril Roelandt <tipecaml@gmail.com>
----
- drivers/net/wireless/mwifiex/join.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 893d809..f0a634d 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -157,8 +157,8 @@ static int mwifiex_get_common_rates(struct mwifiex_private *priv, u8 *rate1,
- 
- 	memset(rate1, 0, rate1_size);
- 
--	for (i = 0; rate2[i] && i < rate2_size; i++) {
--		for (j = 0; tmp[j] && j < rate1_size; j++) {
-+	for (i = 0; i < rate2_size && rate2[i]; i++) {
-+		for (j = 0; j < rate1_size && tmp[j]; j++) {
- 			/* Check common rate, excluding the bit for
- 			   basic rate */
- 			if ((rate2[i] & 0x7F) == (tmp[j] & 0x7F)) {
--- 
-1.7.10.4
+johannes
 
