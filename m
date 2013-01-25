@@ -1,78 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55404 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab3AXQeR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 11:34:17 -0500
-Message-ID: <1359045275.21908.7.camel@jlt4.sipsolutions.net> (sfid-20130124_173421_531453_723C11B9)
-Subject: pull-request: mac80211 2013-01-24
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 24 Jan 2013 17:34:35 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-F/Gmt58c/kxZJsDKHAxM"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4975 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932264Ab3AYPHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 10:07:30 -0500
+Message-ID: <51029FA6.40209@broadcom.com> (sfid-20130125_160747_533286_540BA037)
+Date: Fri, 25 Jan 2013 16:07:18 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Arend van Spriel" <arend@broadcom.com>
+cc: stable@vger.kernel.org,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>
+Subject: Re: [PATCH] brcmsmac: handle packet drop on enqueuing correctly
+References: <1359125868-27890-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1359125868-27890-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/25/2013 03:57 PM, Arend van Spriel wrote:
+> From: Piotr Haber <phaber@broadcom.com>
+> 
+> In the event that tx packet can not be queued by the driver
+> the packet is dropped. Propagate that information to the .tx()
+> callback to make sure the freed packet is not accessed after
+> that.
+> 
+> This has happened causing slab corruptions as reported by
+> Stanislaw Gruszka.
+> 
+> Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
+> 
+> That patch is backported from:
+> 
+> commit c4dea35e34f5f46e1701156153a09cce429d1ea9 upstream.
 
---=-F/Gmt58c/kxZJsDKHAxM
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+It applies to stable/linux-3.7.y only.
 
-John,
+> Reported-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Piotr Haber <phaber@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    4 ++--
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c        |   14 +++++++++-----
+>  drivers/net/wireless/brcm80211/brcmsmac/main.h        |    2 +-
+>  drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 +-
+>  4 files changed, 13 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index a744ea5..5590499 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -280,8 +280,8 @@ static void brcms_ops_tx(struct ieee80211_hw *hw,
+>  		kfree_skb(skb);
+>  		goto done;
+>  	}
+> -	brcms_c_sendpkt_mac80211(wl->wlc, skb, hw);
+> -	tx_info->rate_driver_data[0] = control->sta;
+> +	if (brcms_c_sendpkt_mac80211(wl->wlc, skb, hw))
+> +		tx_info->rate_driver_data[0] = control->sta;
+>   done:
+>  	spin_unlock_bh(&wl->lock);
+>  }
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 75086b3..9fb0a4c9 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -6095,7 +6095,7 @@ static bool brcms_c_prec_enq(struct brcms_c_info *wlc, struct pktq *q,
+>  	return brcms_c_prec_enq_head(wlc, q, pkt, prec, false);
+>  }
+>  
+> -void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+> +bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+>  		     struct sk_buff *sdu, uint prec)
+>  {
+>  	struct brcms_txq_info *qi = wlc->pkt_queue;	/* Check me */
+> @@ -6110,7 +6110,9 @@ void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+>  		 * packet flooding from mac80211 stack
+>  		 */
+>  		brcmu_pkt_buf_free_skb(sdu);
+> +		return false;
+>  	}
+> +	return true;
+>  }
+>  
+>  /*
+> @@ -7273,7 +7275,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+>  	return 0;
+>  }
+>  
+> -void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+> +bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+>  			      struct ieee80211_hw *hw)
+>  {
+>  	u8 prio;
+> @@ -7288,10 +7290,12 @@ void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc, struct sk_buff *sdu,
+>  	prio = ieee80211_is_data(d11_header->frame_control) ? sdu->priority :
+>  		MAXPRIO;
+>  	fifo = prio2fifo[prio];
+> -	if (brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0))
+> -		return;
+> -	brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio));
+> +	brcms_c_d11hdrs_mac80211(wlc, hw, sdu, scb, 0, 1, fifo, 0);
+> +	if (!brcms_c_txq_enq(wlc, scb, sdu, BRCMS_PRIO_TO_PREC(prio)))
+> +		return false;
+>  	brcms_c_send_q(wlc);
+> +
+> +	return true;
+>  }
+>  
+>  void brcms_c_send_q(struct brcms_c_info *wlc)
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+> index 8debc74..b44725c 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+> @@ -642,7 +642,7 @@ extern void brcms_c_txfifo(struct brcms_c_info *wlc, uint fifo,
+>  			   bool commit, s8 txpktpend);
+>  extern void brcms_c_txfifo_complete(struct brcms_c_info *wlc, uint fifo,
+>  				    s8 txpktpend);
+> -extern void brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+> +extern bool brcms_c_txq_enq(struct brcms_c_info *wlc, struct scb *scb,
+>  			    struct sk_buff *sdu, uint prec);
+>  extern void brcms_c_print_txstatus(struct tx_status *txs);
+>  extern int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+> index 5855f4f..bfa2630 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+> @@ -321,7 +321,7 @@ extern void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask);
+>  extern bool brcms_c_intrsupd(struct brcms_c_info *wlc);
+>  extern bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc);
+>  extern bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded);
+> -extern void brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
+> +extern bool brcms_c_sendpkt_mac80211(struct brcms_c_info *wlc,
+>  				     struct sk_buff *sdu,
+>  				     struct ieee80211_hw *hw);
+>  extern bool brcms_c_aggregatable(struct brcms_c_info *wlc, u8 tid);
+> 
 
-One fix from Dan for a possible memory overrun.
-
-Please pull.
-
-Thanks,
-johannes
-
-
-The following changes since commit 8680451f38a64bd270233b3c0eeb7c45f2b5efe3=
-:
-
-  mac80211: add encrypt headroom to PERR frames (2013-01-16 23:24:51 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to c49dc9008b1c641a86837297df7c90cef070571b:
-
-  cfg80211: off by one in ieee80211_bss() (2013-01-24 15:47:22 +0100)
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      cfg80211: off by one in ieee80211_bss()
-
- net/wireless/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
---=-F/Gmt58c/kxZJsDKHAxM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRAWKbAAoJEDBSmw7B7bqrYH0P/jlTnhax98x/kTk+Nh1Q7vWt
-Ba4mAvLL4iGvoraonTAworXlGutQND43ojlI0ceFCtnB33ucZlqE2gaYxAQ9zm9m
-6+xEsZ2ACTX+HaWR7ysStp3u4ZiV6m/M/vzyTykCZ8eNeylT05vPdVcoKVpnG2nk
-qflsr5B1x49+r4V2XicD70JTyo+9IRb4NZazEmudBgneT1aQZgQeZPFwZA0El7JY
-j8jtL7+KJio9K4u4A6flDKkpjNd0o6BkixKi1UisIoXrga2FhlwQLmtU2atl5TiT
-0Rzro3i2x4vuxBcqP+HIJnGMXeaMTV/JC9w8PX6xAMFIrMPUwFE2tjCHt27RoDVo
-RN1cJNgsQOWgJQw4EBzEMSkLEjEEFlVb7qUqVOgLiQERHiIBoFNuoarEyfO1n89A
-pxRXEotTI2qGDgTD3v9ENnE6WFMECxNncMVp1hJt+gKVaPN/HVnEXrtX8Grg4dTP
-OzET7kdMx8GMcGR2MkG8508sh/opJaLVUqTVMbdREW0fLgChTRUSndCCsxlUfEnN
-S4nvYFaVTMCLozQwbFT48fUTAwWaTR3Falw0CbrQegHvn9aeOF1nBfhiQWKoAzcZ
-RyJzWscXQ4x5qeNGnh41Bv0Dec+eUPL+UDfiJC1+aCAf4YAv9ZE36OM5A4RkcMkO
-TRdF9NCT0cYAn9/qZdOe
-=pd0N
------END PGP SIGNATURE-----
-
---=-F/Gmt58c/kxZJsDKHAxM--
 
