@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55240 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721Ab3AXPb4 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58374 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806Ab3AYSg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jan 2013 10:31:56 -0500
-Message-ID: <1359041539.21908.6.camel@jlt4.sipsolutions.net> (sfid-20130124_163159_641980_47B2C65C)
-Subject: Re: [RFC v2] cfg80211/mac80211: support reporting wakeup reason
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 24 Jan 2013 16:32:19 +0100
-In-Reply-To: <1359018746.6252.189.camel@cumari.coelho.fi>
-References: <1358958882-14246-1-git-send-email-johannes@sipsolutions.net>
-	 <1359010005.6252.185.camel@cumari.coelho.fi>
-	 <1359018633.4639.2.camel@jlt4.sipsolutions.net>
-	 <1359018746.6252.189.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 25 Jan 2013 13:36:59 -0500
+Message-ID: <5102D0C7.50907@candelatech.com> (sfid-20130125_193703_779760_52DD97B3)
+Date: Fri, 25 Jan 2013 10:36:55 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sam Leffler <sleffler@google.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Increasing throughput on 3-radio system?
+References: <5102CADE.2010900@candelatech.com> <CA+yqC4b2_q5Nn2t7C-5JdAfxR-QA8KtBgqE_sw91ZfNwt-k+LQ@mail.gmail.com>
+In-Reply-To: <CA+yqC4b2_q5Nn2t7C-5JdAfxR-QA8KtBgqE_sw91ZfNwt-k+LQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-24 at 11:12 +0200, Luciano Coelho wrote:
+On 01/25/2013 10:23 AM, Sam Leffler wrote:
+> On Fri, Jan 25, 2013 at 10:11 AM, Ben Greear <greearb@candelatech.com <mailto:greearb@candelatech.com>> wrote:
+>
+>     I've put 3 ath9k AR9380 NICs into a single system (core-i7).  Each is
+>     configured for an AP on a separate 5Ghz channel (40Mhz wide).
+>
+>     Individually, I can get about 300Mbps transmit towards the AP on any
+>     particular radio, but when running all together, total throughput is
+>     only about 475Mbps.
+>
+>     I assume there is some cross-channel bleeding or similar.
+>
+>
+> Yes.
+>
+>
+>     The APs are close by, so I was wondering if perhaps there was a way
+>     to configure the radios to be less sensitive and thus pay less
+>     attention to channel cross-talk?
+>
+>     Any suggestions for things to try are appreciated!
+>
+>
+> If you cannot fully isolate the antenna the usual approach is to schedule radio usage so tx/rx is done on all radios at the same time. Ubiquity and Mikrotik do
+> this and there have been many research papers that discuss this.
 
-> > > Also, is there any specific reason you want to know the original length?
-> > > Just to check whether the packet was truncated or not?
-> > 
-> > Yeah our device has a certain buffer size only (it's pretty large) but
-> > the packet could be truncated due to that, so I added that to be able to
-> > see that truncation.
-> 
-> The actual length of the packet is irrelevant isn't it? Maybe a boolean
-> just indicating it's truncated? Not really that important though, just
-> for a bit more clarity.
+It seems basically impossible to fully isolate the NICs in a normal
+system.  The u.fl/IPEX pigtails bleed for sure.  The NICs probably bleed
+just as bad or worse, and I can't think of a good way to increase isolation
+without somehow encasing each NIC in a small RF-proof box (and somehow keeping the
+RF from running down the pci-e ribon cables, etc).
 
-I have no idea if the actual length is irrelevant ;-)
+Playing tricks with scheduling seems pretty nifty, but probably not realistic
+for my particular use case (emulating lots and lots of stations that should run
+against whatever AP(s) the customers may be using).
 
-Most likely it is, but maybe somebody wants to know how much data was
-missing? I have the information, so I didn't want to hide it...
+If there were a way to decrease rx-sensitivity, wouldn't that be pretty
+similar to having all NICs transmit at once (in other words, the NICs
+could better ignore the fainter cross-talk signals and focus on the
+high-powered signals on their particular channel)?
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
