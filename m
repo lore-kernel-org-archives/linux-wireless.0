@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:48374
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756647Ab3AHP2w (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:40375 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756672Ab3AYKpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 10:28:52 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] ath9k_hw: Fix radio programming for AR9550
-Date: Tue,  8 Jan 2013 20:57:53 +0530
-Message-Id: <1357658873-14896-3-git-send-email-sujith@msujith.org> (sfid-20130108_162856_648846_B63FF6E1)
-In-Reply-To: <1357658873-14896-1-git-send-email-sujith@msujith.org>
-References: <1357658873-14896-1-git-send-email-sujith@msujith.org>
+	Fri, 25 Jan 2013 05:45:50 -0500
+Received: by mail-lb0-f181.google.com with SMTP id gm6so464730lbb.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:45:48 -0800 (PST)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: Unable to get RTS/CTS working in rt2800
+Date: Fri, 25 Jan 2013 11:45:45 +0100
+Message-ID: <1537149.hyND0EvR7A@sylvesterjr.pats.ua.ac.be> (sfid-20130125_114555_193735_F6E8CCCC)
+In-Reply-To: <CAGXE3d_fD9etSnMKFUb6YGz=4g85ACkvdgyPjusMJXus-nvFYg@mail.gmail.com>
+References: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be> <CAGXE3d_fD9etSnMKFUb6YGz=4g85ACkvdgyPjusMJXus-nvFYg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Friday 25 January 2013 09:42:31 Helmut Schaa wrote:
+> On Thu, Jan 24, 2013 at 4:58 PM, Erwin Van de Velde
+> 
+> <erwin.vandevelde@gmail.com> wrote:
+> > In a test setup with 802.11a/n a colleague and I tried enabling 
+RTS/CTS.
+> > The only thing we got however was a CTS to self. RTS threshold was 
+1000B,
+> > packet size 1400B.
+> 
+> Did you use 11n aggregation?
 
-For AR9550, program the synth value based on the ref. clock.
-The logic for AR9550 is similar to AR9330, but keep the code
-separate since changes for AR9330 are required - which would be
-done later.
+Yes, but afterwards we also tried it with 802.11a, same result.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 31 ++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+> > We looked for other options but did not find anything
+> > helpful, what else can we try to enable RTS/CTS?
+> 
+> Yup, there are several issues there:
+> - The hw ignores RTS thresholds for AMPDUs AFAIK
+> - HT protection always uses CTS-to-self (hardcoded in driver in
+> rt2800_config_ht_opmode)
+> 
+> I don't think any other driver allows to configure if RTS-CTS or
+> CTS-to-self should be used?
+> You can easily enforce RTS-CTS for 11n transmissions by changing
+> rt2800_config_ht_opmode.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index ce19c09..0c4c5a6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -68,7 +68,7 @@ static const int m2ThreshExt_off = 127;
- static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	u16 bMode, fracMode = 0, aModeRefSel = 0;
--	u32 freq, channelSel = 0, reg32 = 0;
-+	u32 freq, chan_frac, div, channelSel = 0, reg32 = 0;
- 	struct chan_centers centers;
- 	int loadSynthChannel;
- 
-@@ -77,9 +77,6 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 	if (freq < 4800) {     /* 2 GHz, fractional mode */
- 		if (AR_SREV_9330(ah)) {
--			u32 chan_frac;
--			u32 div;
--
- 			if (ah->is_clk_25mhz)
- 				div = 75;
- 			else
-@@ -89,34 +86,40 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			chan_frac = (((freq * 4) % div) * 0x20000) / div;
- 			channelSel = (channelSel << 17) | chan_frac;
- 		} else if (AR_SREV_9485(ah) || AR_SREV_9565(ah)) {
--			u32 chan_frac;
--
- 			/*
--			 * freq_ref = 40 / (refdiva >> amoderefsel); where refdiva=1 and amoderefsel=0
-+			 * freq_ref = 40 / (refdiva >> amoderefsel);
-+			 * where refdiva=1 and amoderefsel=0
- 			 * ndiv = ((chan_mhz * 4) / 3) / freq_ref;
- 			 * chansel = int(ndiv), chanfrac = (ndiv - chansel) * 0x20000
- 			 */
- 			channelSel = (freq * 4) / 120;
- 			chan_frac = (((freq * 4) % 120) * 0x20000) / 120;
- 			channelSel = (channelSel << 17) | chan_frac;
--		} else if (AR_SREV_9340(ah) || AR_SREV_9550(ah)) {
-+		} else if (AR_SREV_9340(ah)) {
- 			if (ah->is_clk_25mhz) {
--				u32 chan_frac;
--
- 				channelSel = (freq * 2) / 75;
- 				chan_frac = (((freq * 2) % 75) * 0x20000) / 75;
- 				channelSel = (channelSel << 17) | chan_frac;
--			} else
-+			} else {
- 				channelSel = CHANSEL_2G(freq) >> 1;
--		} else
-+			}
-+		} else if (AR_SREV_9550(ah)) {
-+			if (ah->is_clk_25mhz)
-+				div = 75;
-+			else
-+				div = 120;
-+
-+			channelSel = (freq * 4) / div;
-+			chan_frac = (((freq * 4) % div) * 0x20000) / div;
-+			channelSel = (channelSel << 17) | chan_frac;
-+		} else {
- 			channelSel = CHANSEL_2G(freq);
-+		}
- 		/* Set to 2G mode */
- 		bMode = 1;
- 	} else {
- 		if ((AR_SREV_9340(ah) || AR_SREV_9550(ah)) &&
- 		    ah->is_clk_25mhz) {
--			u32 chan_frac;
--
- 			channelSel = freq / 75;
- 			chan_frac = ((freq % 75) * 0x20000) / 75;
- 			channelSel = (channelSel << 17) | chan_frac;
--- 
-1.8.1
+Where do I configure that? Is it in the source code or is it a kernel 
+module parameter?
+
+Best regards,
+Erwin
 
