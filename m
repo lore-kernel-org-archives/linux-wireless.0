@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43132 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:58511 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756123Ab3AILUX (ORCPT
+	with ESMTP id S1753657Ab3AYLpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 06:20:23 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Tsthl-0007hG-Ux
-	for linux-wireless@vger.kernel.org; Wed, 09 Jan 2013 12:20:22 +0100
-Message-ID: <1357730448.9757.1.camel@jlt4.sipsolutions.net> (sfid-20130109_122026_441512_AB55BEF3)
-Subject: Re: [PATCH] regulatory: fix restore_regulatory_settings
+	Fri, 25 Jan 2013 06:45:16 -0500
+Message-ID: <1359114330.4655.0.camel@jlt4.sipsolutions.net> (sfid-20130125_124523_938702_1C43C3F8)
+Subject: Re: [PATCH] mwl8k: Announcing AP_VLAN suport
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 09 Jan 2013 12:20:48 +0100
-In-Reply-To: <1357730405-31853-1-git-send-email-johannes@sipsolutions.net> (sfid-20130109_121943_526291_1A8E091B)
-References: <1357730405-31853-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130109_121943_526291_1A8E091B)
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Date: Fri, 25 Jan 2013 12:45:30 +0100
+In-Reply-To: <20130125105121.GA9541@markyou.marvell.com> (sfid-20130125_115935_719740_CF04E836)
+References: <20130125105121.GA9541@markyou.marvell.com>
+	 (sfid-20130125_115935_719740_CF04E836)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-09 at 12:20 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2013-01-25 at 16:21 +0530, Yogesh Ashok Powar wrote:
+> AP_VLAN support is needed in order to support
+> wds_sta in the hostapd. This will allow us
+> adding support for 4-address for AP and client
+> mode
 > 
-> My commit 379b82f4c9dc6e67bf61aa61b096c06a2f320f60
-> ("regulatory: pass new regdomain to reset function")
-> broke the restore_regulatory_settings() function due
-> to a logic change. Consider this change:
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> ---
+>  drivers/net/wireless/mwl8k.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> -	reset_regdomains(true);
-> -	cfg80211_regdomain = cfg80211_world_regdom;
-> +	reset_regdomains(true, cfg80211_world_regdom);
-> 
-> This looks innocent enough, until you realise that the
-> called function (reset_regdomains) also resets the
-> cfg80211_world_regdom pointer, so that the old version
-> of the code would use the new object it pointed to and
-> the new version of the code uses the old object. This
-> lead to a double-free of this object.
-> 
-> Since reset_regdomains() sets it to &world_regdom, use
-> that directly.
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index ee5c7ea..8788157 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -5920,6 +5920,7 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+>  
+>  	if (priv->ap_macids_supported || priv->device_info->fw_image_ap) {
+>  		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
+> +		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+>  		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
 
-Applied.
+Hmm, why is this needed? mac80211 should add it:
+
+        /* if low-level driver supports AP, we also support VLAN */
+        if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+                hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+                hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
+        }
+
+Is this run too late, i.e. after registering hw? If so, that's a bug.
 
 johannes
 
