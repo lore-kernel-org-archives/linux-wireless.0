@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:46830 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753003Ab3ACAXF (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:53747 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757281Ab3AYRxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 19:23:05 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sasha Levin <sasha.levin@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2] wireless: mwifiex: remove unreachable paths
-Date: Wed,  2 Jan 2013 16:23:01 -0800
-Message-Id: <1357172581-27760-1-git-send-email-bzhao@marvell.com> (sfid-20130103_012309_740178_CD352886)
+	Fri, 25 Jan 2013 12:53:35 -0500
+Received: by mail-wi0-f179.google.com with SMTP id o1so534368wic.12
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 09:53:34 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
+Date: Fri, 25 Jan 2013 18:53:23 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
+	"stf_xl@wp.pl" <stf_xl@wp.pl>,
+	"andihartmann@01019freenet.de" <andihartmann@01019freenet.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+References: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com> <201301171816.15309.chunkeey@googlemail.com> <13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com>
+In-Reply-To: <13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301251853.24699.chunkeey@googlemail.com> (sfid-20130125_185339_623854_6358484E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sasha Levin <sasha.levin@oracle.com>
+On Thursday 17 January 2013 19:42:52 Gertjan van Wingerde wrote:
+> On 17 jan. 2013, at 18:16, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > On Thursday, January 17, 2013 05:34:32 PM Helmut Schaa wrote:
+> >> Since rt2800 hardware isn't capable of reporting the TX status of
+> >> BlockAckReq frames implement the TX status handling of BARs in
+> >> rt2x00lib. We keep track of all BARs that are send out and try to
+> >> match incoming BAs to the appropriate BARs. This allows us to report a
+> >> more or less accurate TX status for BAR frames which in turn improves
+> >> BA session stability.
+> > ---
+> > What about:
+> >> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
+> >> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> >> Date:   Mon Dec 3 12:56:33 2012 +0100
+> >> mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+> > 
+> > Should it be kept or dropped (as no driver uses it anymore?)
+> 
+> I guess it should be dropped. I guess we could create a revert patch for that once
+> this patch has been merged.
+Looks like the rt2x00 patch has been accepted :)
+John, do you still want to remove the workaround, or
+can we keep it?
 
-We know 'firmware' is non-NULL from the beginning of mwifiex_prog_fw_w_helper,
-remove all !firmware paths from the rest of the function.
-
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/usb.c |   30 +++---------------------------
- 1 files changed, 3 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 63ac9f2..5d4a10a 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -786,21 +786,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
--/* This function reads one block of firmware data. */
--static int mwifiex_get_fw_data(struct mwifiex_adapter *adapter,
--			       u32 offset, u32 len, u8 *buf)
--{
--	if (!buf || !len)
--		return -1;
--
--	if (offset + len > adapter->firmware->size)
--		return -1;
--
--	memcpy(buf, adapter->firmware->data + offset, len);
--
--	return 0;
--}
--
- static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 				    struct mwifiex_fw_image *fw)
- {
-@@ -836,23 +821,14 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 			dlen = 0;
- 		} else {
- 			/* copy the header of the fw_data to get the length */
--			if (firmware)
--				memcpy(&fwdata->fw_hdr, &firmware[tlen],
--				       sizeof(struct fw_header));
--			else
--				mwifiex_get_fw_data(adapter, tlen,
--						    sizeof(struct fw_header),
--						    (u8 *)&fwdata->fw_hdr);
-+			memcpy(&fwdata->fw_hdr, &firmware[tlen],
-+			       sizeof(struct fw_header));
- 
- 			dlen = le32_to_cpu(fwdata->fw_hdr.data_len);
- 			dnld_cmd = le32_to_cpu(fwdata->fw_hdr.dnld_cmd);
- 			tlen += sizeof(struct fw_header);
- 
--			if (firmware)
--				memcpy(fwdata->data, &firmware[tlen], dlen);
--			else
--				mwifiex_get_fw_data(adapter, tlen, dlen,
--						    (u8 *)fwdata->data);
-+			memcpy(fwdata->data, &firmware[tlen], dlen);
- 
- 			fwdata->seq_num = cpu_to_le32(fw_seqnum);
- 			tlen += dlen;
--- 
-1.7.0.2
-
+Regards,
+	Chr
