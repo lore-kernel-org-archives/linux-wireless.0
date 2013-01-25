@@ -1,205 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53013 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754947Ab3AYKGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:06:37 -0500
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <balbi@ti.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-omap@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<tony@atomide.com>
-Subject: [PATCH v2 5/5] wlcore: move wl12xx_platform_data up and make it truly optional
-Date: Fri, 25 Jan 2013 12:05:34 +0200
-Message-ID: <1359108334-18459-1-git-send-email-coelho@ti.com> (sfid-20130125_110657_540446_A717FE4C)
-In-Reply-To: <1358952038-5982-6-git-send-email-coelho@ti.com>
-References: <1358952038-5982-6-git-send-email-coelho@ti.com>
+Received: from mail.candelatech.com ([208.74.158.172]:40803 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab3AYSLt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jan 2013 13:11:49 -0500
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0PIBiEu030028
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 10:11:48 -0800
+Message-ID: <5102CADE.2010900@candelatech.com> (sfid-20130125_191153_365070_17ACB728)
+Date: Fri, 25 Jan 2013 10:11:42 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Increasing throughput on 3-radio system?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The platform data is used not only by wlcore-based drivers, but also
-by wl1251.  Move it up in the directory hierarchy to reflect this.
+I've put 3 ath9k AR9380 NICs into a single system (core-i7).  Each is
+configured for an AP on a separate 5Ghz channel (40Mhz wide).
 
-Additionally, make it truly optional.  At the moment, disabling
-platform data while wl1251_sdio or wlcore_sdio are enabled doesn't
-work, but it will be necessary when device tree support is
-implemented.
+Individually, I can get about 300Mbps transmit towards the AP on any
+particular radio, but when running all together, total throughput is
+only about 475Mbps.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Reviewed-by: Felipe Balbi <balbi@ti.com>
----
+I assume there is some cross-channel bleeding or similar.
 
-In v2:
-   * Fix ti/Makefile
-   * Modify board_omap3evm.c which was still using the old Kconfig define
+The APs are close by, so I was wondering if perhaps there was a way
+to configure the radios to be less sensitive and thus pay less
+attention to channel cross-talk?
 
-Tony, is it okay if I add this change in the omap3evm board in this
-patch and queue it via wireless so that the whole thing is in sync?
+Any suggestions for things to try are appreciated!
 
+Thanks,
+Ben
 
- arch/arm/mach-omap2/board-omap3evm.c                     |   10 +++++-----
- drivers/net/wireless/ti/Kconfig                          |    9 +++++++++
- drivers/net/wireless/ti/Makefile                         |    4 +++-
- .../wl12xx_platform_data.c => wilink_platform_data.c}    |    0
- drivers/net/wireless/ti/wlcore/Kconfig                   |    5 -----
- drivers/net/wireless/ti/wlcore/Makefile                  |    3 ---
- include/linux/wl12xx.h                                   |   14 +++++++++++---
- 7 files changed, 28 insertions(+), 17 deletions(-)
- rename drivers/net/wireless/ti/{wlcore/wl12xx_platform_data.c => wilink_platform_data.c} (100%)
-
-diff --git a/arch/arm/mach-omap2/board-omap3evm.c b/arch/arm/mach-omap2/board-omap3evm.c
-index 3985f35..a4ca63b 100644
---- a/arch/arm/mach-omap2/board-omap3evm.c
-+++ b/arch/arm/mach-omap2/board-omap3evm.c
-@@ -309,7 +309,7 @@ static struct omap2_hsmmc_info mmc[] = {
- 		.gpio_wp	= 63,
- 		.deferred	= true,
- 	},
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 	{
- 		.name		= "wl1271",
- 		.mmc		= 2,
-@@ -450,7 +450,7 @@ static struct regulator_init_data omap3evm_vio = {
- 	.consumer_supplies	= omap3evm_vio_supply,
- };
- 
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 
- #define OMAP3EVM_WLAN_PMENA_GPIO	(150)
- #define OMAP3EVM_WLAN_IRQ_GPIO		(149)
-@@ -563,7 +563,7 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
- 				OMAP_PIN_OFF_NONE),
- 	OMAP3_MUX(GPMC_WAIT2, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP |
- 				OMAP_PIN_OFF_NONE),
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 	/* WLAN IRQ - GPIO 149 */
- 	OMAP3_MUX(UART1_RTS, OMAP_MUX_MODE4 | OMAP_PIN_INPUT),
- 
-@@ -601,7 +601,7 @@ static struct omap_board_mux omap36x_board_mux[] __initdata = {
- 	OMAP3_MUX(SYS_BOOT4, OMAP_MUX_MODE3 | OMAP_PIN_OFF_NONE),
- 	OMAP3_MUX(SYS_BOOT5, OMAP_MUX_MODE3 | OMAP_PIN_OFF_NONE),
- 	OMAP3_MUX(SYS_BOOT6, OMAP_MUX_MODE3 | OMAP_PIN_OFF_NONE),
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 	/* WLAN IRQ - GPIO 149 */
- 	OMAP3_MUX(UART1_RTS, OMAP_MUX_MODE4 | OMAP_PIN_INPUT),
- 
-@@ -637,7 +637,7 @@ static struct gpio omap3_evm_ehci_gpios[] __initdata = {
- 
- static void __init omap3_evm_wl12xx_init(void)
- {
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 	int ret;
- 
- 	/* WL12xx WLAN Init */
-diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
-index be80011..cbe1e7f 100644
---- a/drivers/net/wireless/ti/Kconfig
-+++ b/drivers/net/wireless/ti/Kconfig
-@@ -12,4 +12,13 @@ source "drivers/net/wireless/ti/wl18xx/Kconfig"
- 
- # keep last for automatic dependencies
- source "drivers/net/wireless/ti/wlcore/Kconfig"
-+
-+config WILINK_PLATFORM_DATA
-+	bool "TI WiLink platform data"
-+	depends on WLCORE_SDIO || WL1251_SDIO
-+	default y
-+	---help---
-+	Small platform data bit needed to pass data to the sdio modules.
-+
-+
- endif # WL_TI
-diff --git a/drivers/net/wireless/ti/Makefile b/drivers/net/wireless/ti/Makefile
-index 4d68239..af14231 100644
---- a/drivers/net/wireless/ti/Makefile
-+++ b/drivers/net/wireless/ti/Makefile
-@@ -1,5 +1,7 @@
- obj-$(CONFIG_WLCORE)			+= wlcore/
- obj-$(CONFIG_WL12XX)			+= wl12xx/
--obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wlcore/
- obj-$(CONFIG_WL1251)			+= wl1251/
- obj-$(CONFIG_WL18XX)			+= wl18xx/
-+
-+# small builtin driver bit
-+obj-$(CONFIG_WILINK_PLATFORM_DATA)	+= wilink_platform_data.o
-diff --git a/drivers/net/wireless/ti/wlcore/wl12xx_platform_data.c b/drivers/net/wireless/ti/wilink_platform_data.c
-similarity index 100%
-rename from drivers/net/wireless/ti/wlcore/wl12xx_platform_data.c
-rename to drivers/net/wireless/ti/wilink_platform_data.c
-diff --git a/drivers/net/wireless/ti/wlcore/Kconfig b/drivers/net/wireless/ti/wlcore/Kconfig
-index d7b907e..2b83282 100644
---- a/drivers/net/wireless/ti/wlcore/Kconfig
-+++ b/drivers/net/wireless/ti/wlcore/Kconfig
-@@ -33,8 +33,3 @@ config WLCORE_SDIO
- 
- 	  If you choose to build a module, it'll be called wlcore_sdio.
- 	  Say N if unsure.
--
--config WL12XX_PLATFORM_DATA
--	bool
--	depends on WLCORE_SDIO != n || WL1251_SDIO != n
--	default y
-diff --git a/drivers/net/wireless/ti/wlcore/Makefile b/drivers/net/wireless/ti/wlcore/Makefile
-index d9fba9e..b21398f 100644
---- a/drivers/net/wireless/ti/wlcore/Makefile
-+++ b/drivers/net/wireless/ti/wlcore/Makefile
-@@ -9,7 +9,4 @@ obj-$(CONFIG_WLCORE)			+= wlcore.o
- obj-$(CONFIG_WLCORE_SPI)		+= wlcore_spi.o
- obj-$(CONFIG_WLCORE_SDIO)		+= wlcore_sdio.o
- 
--# small builtin driver bit
--obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
--
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index 360c9bc..a54fe82 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -24,6 +24,8 @@
- #ifndef _LINUX_WL12XX_H
- #define _LINUX_WL12XX_H
- 
-+#include <linux/err.h>
-+
- /* Reference clock values */
- enum {
- 	WL12XX_REFCLOCK_19	= 0, /* 19.2 MHz */
-@@ -60,10 +62,12 @@ struct wl12xx_platform_data {
- /* Platform does not support level trigger interrupts */
- #define WL12XX_PLATFORM_QUIRK_EDGE_IRQ	BIT(0)
- 
--#ifdef CONFIG_WL12XX_PLATFORM_DATA
-+#ifdef CONFIG_WILINK_PLATFORM_DATA
- 
- int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
- 
-+struct wl12xx_platform_data *wl12xx_get_platform_data(void);
-+
- #else
- 
- static inline
-@@ -72,8 +76,12 @@ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
- 	return -ENOSYS;
- }
- 
--#endif
-+static inline
-+struct wl12xx_platform_data *wl12xx_get_platform_data(void)
-+{
-+	return ERR_PTR(-ENODATA);
-+}
- 
--struct wl12xx_platform_data *wl12xx_get_platform_data(void);
-+#endif
- 
- #endif
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
