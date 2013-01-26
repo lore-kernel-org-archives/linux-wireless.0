@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:64181 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754290Ab3AHAAh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 19:00:37 -0500
-Received: by mail-wg0-f46.google.com with SMTP id dr13so10044182wgb.13
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 16:00:36 -0800 (PST)
-Message-ID: <1357602787.12182.14.camel@canaries64> (sfid-20130108_010043_397099_4FD8FCBE)
-Subject: Re: [PATCH 01/11] staging: vt6656: create new structure names to
- remove typedefs.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 07 Jan 2013 23:53:07 +0000
-In-Reply-To: <20130107191456.GA8395@kroah.com>
-References: <1355176559.4680.15.camel@canaries64>
-	 <20130107191456.GA8395@kroah.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:49795 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750990Ab3AZPPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jan 2013 10:15:34 -0500
+Message-ID: <1359213274.6252.257.camel@cumari.coelho.fi> (sfid-20130126_161546_299256_0F4095DD)
+Subject: Re: brcm WARN() on v3.7.2
+From: Luciano Coelho <coelho@ti.com>
+To: <balbi@ti.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Date: Sat, 26 Jan 2013 17:14:34 +0200
+In-Reply-To: <20130126125622.GA9542@arwen.pp.htv.fi>
+References: <20130125202355.GA4846@arwen.pp.htv.fi>
+	 <5103B595.8060805@broadcom.com> <20130126125622.GA9542@arwen.pp.htv.fi>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-07 at 11:14 -0800, Greg KH wrote:
-> On Mon, Dec 10, 2012 at 09:55:59PM +0000, Malcolm Priestley wrote:
-> > 
-> > This patch and the next 8 patches remove the old structure names and
-> > replace;
-> > 
-> > 
-> > struct vnt_private for DEVICE_INFO and PSDevice
-> > struct vnt_manager for SMgmtObject
-> > struct vnt_rx_mgmt for SRxMgmtPacket and PSRxMgmtPacket
-> > struct vnt_tx_mgmt for STxMgmtPacket and PSTxMgmtPacket
-> > 
-> > and
-> > 
-> > struct vnt_manager vnt_mgmt
-> > to replace
-> > SMgmtObject sMgmtObj;
-> > 
-> > Applied after patch staging: vt6656: dpc.c :RXbBulkInProcessData clean up RSC
+On Sat, 2013-01-26 at 14:56 +0200, Felipe Balbi wrote:
+> Hi,
 > 
-> Not all of these patches could be applied, can you please redo the ones
-> I didn't apply and resend them?
+> On Sat, Jan 26, 2013 at 11:53:09AM +0100, Arend van Spriel wrote:
+> > On 01/25/2013 09:23 PM, Felipe Balbi wrote:
+> > > Hi folks,
+> > > 
+> > > I'm running Fedora 18 with v3.7.2 on her MacBookAir 11" and it
+> > > turns out that brcm is acting out, see below full dmesg. Any tips ?
+> > > Is this fixed already ?
+> > 
+> > Thanks, Felipe
+> > 
+> > The warning itself means flush timed out, ie. not all outstanding
+> > packets could be transmitted. It does not necessarily mean the driver
+> > is failing. So do you have any connectivity issues after the warning
+> > has occurred?
 > 
-Yes, the missing rebased patches have been sent.
+> not really, just thought I'd mention it ;-)
 
-Regards
+If the warning is benign, maybe it shouldn't be a warning at all?
 
-
-Malcolm
+--
+Luca.
 
