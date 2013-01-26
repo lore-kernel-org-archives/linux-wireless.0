@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55278 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796Ab3AaPUa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:20:30 -0500
-Message-ID: <1359645648.8415.77.camel@jlt4.sipsolutions.net> (sfid-20130131_162033_622785_0548F676)
-Subject: Re: [PATCH 5/7] mac80211: Expand powersave configuration flag to be
- two bits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
+Received: from mx3.wp.pl ([212.77.101.7]:40277 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753214Ab3AZRPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jan 2013 12:15:21 -0500
+Date: Sat, 26 Jan 2013 18:15:40 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
 	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Arend van Spriel <arend@broadcom.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@lists.ath9k.org,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Date: Thu, 31 Jan 2013 16:20:48 +0100
-In-Reply-To: <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-	 <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
+	"andihartmann@01019freenet.de" <andihartmann@01019freenet.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH] rt2x00: Improve TX status handling for BlockAckReq frames
+Message-ID: <20130126171540.GC5834@localhost.localdomain> (sfid-20130126_181525_017942_F2A94BFB)
+References: <1358440472-26678-1-git-send-email-helmut.schaa@googlemail.com>
+ <201301171816.15309.chunkeey@googlemail.com>
+ <13A1CEB6-9E61-4F02-A273-5F45F40A5D2C@gmail.com>
+ <201301251853.24699.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201301251853.24699.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
+On Fri, Jan 25, 2013 at 06:53:23PM +0100, Christian Lamparter wrote:
+> On Thursday 17 January 2013 19:42:52 Gertjan van Wingerde wrote:
+> > On 17 jan. 2013, at 18:16, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > > On Thursday, January 17, 2013 05:34:32 PM Helmut Schaa wrote:
+> > >> Since rt2800 hardware isn't capable of reporting the TX status of
+> > >> BlockAckReq frames implement the TX status handling of BARs in
+> > >> rt2x00lib. We keep track of all BARs that are send out and try to
+> > >> match incoming BAs to the appropriate BARs. This allows us to report a
+> > >> more or less accurate TX status for BAR frames which in turn improves
+> > >> BA session stability.
+> > > ---
+> > > What about:
+> > >> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
+> > >> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> > >> Date:   Mon Dec 3 12:56:33 2012 +0100
+> > >> mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+> > > 
+> > > Should it be kept or dropped (as no driver uses it anymore?)
+> > 
+> > I guess it should be dropped. I guess we could create a revert patch for that once
+> > this patch has been merged.
+> Looks like the rt2x00 patch has been accepted :)
+> John, do you still want to remove the workaround, or
+> can we keep it?
+I'll post patch with revert.
 
-> +static inline bool ieee80211_is_ps_disabled(struct ieee80211_conf *conf)
-
-> +static inline bool ieee80211_is_ps_enabled(struct ieee80211_conf *conf)
-
-Huh, is that worth the confusion? It seems !enabled should be the same
-as disabled, but it's not quite the same, which might be confusing.
-
-> +/**
-> + * ieee80211_set_ps_state - set device powersave state
-> + *
-> + * Sets the powersave state in the supplied device configuration to the
-> + * specified state.
-> + *
-> + * @conf: device configuration
-> + * @state: new powersave state. Must be one of the IEEE80211_CONF_PS_*
-> + *	flags from enum ieee80211_conf_flags.
-> + */
-> +static inline void ieee80211_set_ps_state(struct ieee80211_conf *conf,
-> +					  u32 state)
-> +{
-> +	conf->flags = (conf->flags & ~IEEE80211_CONF_PS_MASK) |
-> +		      (state & IEEE80211_CONF_PS_MASK);
-> +}
-
-I don't think the driver should do this, so the inline shouldn't be
-here?
-
-johannes
-
+Stanislaw
