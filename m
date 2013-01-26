@@ -1,43 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:42958 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753532Ab3AaJ1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 04:27:05 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>
-Subject: [PATCH 2/6] ath9k: Only process fft samples when ATH9K_DEBUGFS is enabled
-Date: Thu, 31 Jan 2013 10:26:45 +0100
-Message-Id: <1359624409-14815-2-git-send-email-sven@narfation.org> (sfid-20130131_102713_979552_8F432F06)
-In-Reply-To: <1359624409-14815-1-git-send-email-sven@narfation.org>
-References: <1359624409-14815-1-git-send-email-sven@narfation.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34154 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754120Ab3AZUk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jan 2013 15:40:27 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2] ssb: add gpio_to_irq
+Date: Sat, 26 Jan 2013 21:38:35 +0100
+Message-Id: <1359232716-15774-1-git-send-email-hauke@hauke-m.de> (sfid-20130126_214032_892979_CA0A1C0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code can only be used when ATH9k_DEBUGFS is enabled an not when ATH_DEBUG
-is activated. Still enabling it would cause build failures.
+The old bcm47xx gpio code had support for gpio_to_irq, but the new
+code did not provide this function, but returned -ENXIO all the time.
+This patch adds the missing function.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
+arch/mips/bcm47xx/wgt634u.c calls gpio_to_irq() and got the correct irq
+number with the old gpio handling code. With this patch the code in
+wgt634u.c should work again. I do not have a wgt634u to test this.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ssb/driver_gpio.c           |   22 ++++++++++++++++++++++
+ include/linux/ssb/ssb_driver_mips.h |    5 +++++
+ 2 files changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 2af6f19..d372e4a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1027,7 +1027,7 @@ static s8 fix_rssi_inv_only(u8 rssi_val)
- static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 			   struct ath_rx_status *rs, u64 tsf)
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index 97ac0a3..accabe3 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -74,6 +74,16 @@ static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned gpio)
+ 	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 0);
+ }
+ 
++static int ssb_gpio_chipco_to_irq(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	if (bus->bustype == SSB_BUSTYPE_SSB)
++		return ssb_mips_irq(bus->chipco.dev) + 2;
++	else
++		return -EINVAL;
++}
++
+ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
  {
--#ifdef CONFIG_ATH_DEBUG
-+#ifdef CONFIG_ATH9K_DEBUGFS
- 	struct ath_hw *ah = sc->sc_ah;
- 	u8 bins[SPECTRAL_HT20_NUM_BINS];
- 	u8 *vdata = (u8 *)hdr;
+ 	struct gpio_chip *chip = &bus->gpio;
+@@ -86,6 +96,7 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+ 	chip->set		= ssb_gpio_chipco_set_value;
+ 	chip->direction_input	= ssb_gpio_chipco_direction_input;
+ 	chip->direction_output	= ssb_gpio_chipco_direction_output;
++	chip->to_irq		= ssb_gpio_chipco_to_irq;
+ 	chip->ngpio		= 16;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+@@ -134,6 +145,16 @@ static int ssb_gpio_extif_direction_output(struct gpio_chip *chip,
+ 	return 0;
+ }
+ 
++static int ssb_gpio_extif_to_irq(struct gpio_chip *chip, unsigned gpio)
++{
++	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
++
++	if (bus->bustype == SSB_BUSTYPE_SSB)
++		return ssb_mips_irq(bus->extif.dev) + 2;
++	else
++		return -EINVAL;
++}
++
+ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+ {
+ 	struct gpio_chip *chip = &bus->gpio;
+@@ -144,6 +165,7 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+ 	chip->set		= ssb_gpio_extif_set_value;
+ 	chip->direction_input	= ssb_gpio_extif_direction_input;
+ 	chip->direction_output	= ssb_gpio_extif_direction_output;
++	chip->to_irq		= ssb_gpio_extif_to_irq;
+ 	chip->ngpio		= 5;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+diff --git a/include/linux/ssb/ssb_driver_mips.h b/include/linux/ssb/ssb_driver_mips.h
+index 07a9c7a..afe79d4 100644
+--- a/include/linux/ssb/ssb_driver_mips.h
++++ b/include/linux/ssb/ssb_driver_mips.h
+@@ -45,6 +45,11 @@ void ssb_mipscore_init(struct ssb_mipscore *mcore)
+ {
+ }
+ 
++static inline unsigned int ssb_mips_irq(struct ssb_device *dev)
++{
++	return 0;
++}
++
+ #endif /* CONFIG_SSB_DRIVER_MIPS */
+ 
+ #endif /* LINUX_SSB_MIPSCORE_H_ */
 -- 
 1.7.10.4
 
