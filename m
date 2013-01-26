@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52443 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab3AaPse (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35944 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754663Ab3AZXFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:48:34 -0500
-Date: Thu, 31 Jan 2013 09:48:22 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 0/7] Improvements to software scanning
-Message-ID: <20130131154822.GA28799@thinkpad-t410> (sfid-20130131_164837_427311_8958CC80)
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
- <1359644664.8415.68.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359644664.8415.68.camel@jlt4.sipsolutions.net>
+	Sat, 26 Jan 2013 18:05:03 -0500
+Message-ID: <1359241527.9086.5.camel@jlt4.sipsolutions.net> (sfid-20130127_000513_684797_DD38069F)
+Subject: Re: [PATCH v2] mac80211: dynamic short slot time for MBSSs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Sun, 27 Jan 2013 00:05:27 +0100
+In-Reply-To: <1359241136.9086.0.camel@jlt4.sipsolutions.net> (sfid-20130126_235844_032457_426457DC)
+References: <1359232645-10563-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20130126_213837_005675_90531EEB) <1359241136.9086.0.camel@jlt4.sipsolutions.net>
+	 (sfid-20130126_235844_032457_426457DC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 04:04:24PM +0100, Johannes Berg wrote:
-> > Second, I attempted to test these patches with iwlwifi (Centrino
-> > Advanced-N 6235) to verify that I didn't break anything for drivers with
-> > hw scanning. My standard test for this involves running iperf while
-> > triggering nearly continuous scans, but I'm seeing lots of problems
-> > running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
-> > does fine in either direction. I haven't had time to do any kind of
-> > debugging yet, but I thought you'd want to know.
+On Sat, 2013-01-26 at 23:58 +0100, Johannes Berg wrote:
+> On Sat, 2013-01-26 at 12:37 -0800, Thomas Pedersen wrote:
 > 
-> Hm, ok, thanks.
+> > +	u32 rates, changed = 0;
+> 
+> > +		for_each_set_bit(i, (unsigned long *)&rates,
+> > +				 sizeof(rates) * BITS_PER_BYTE) {
+> 
+> this is broken on 64-bit architectures.
 
-I just tried moving this card to a different slot in the same machine,
-and it's working fine. Hardware problem I guess. Sorry for the false
-alarm.
+Actually, probably only on big endian 64-bit architectures.
 
-Seth
+johannes
+
