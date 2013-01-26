@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19665 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756059Ab3AIE4Y (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35534 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092Ab3AZUTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 23:56:24 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <djindal@qti.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH V8 1/2] cfg80211: Move the definition of struct mac_address up
-Date: Wed, 9 Jan 2013 10:26:11 +0530
-Message-ID: <1357707372-12273-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20130109_055632_793820_7AE2FC63)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 26 Jan 2013 15:19:37 -0500
+Message-ID: <1359231601.8699.2.camel@jlt4.sipsolutions.net> (sfid-20130126_211941_601642_1CA5D551)
+Subject: Re: [PATCH v2] compat: backport nla_put_be{16,32,64}()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, backports@vger.kernel.org
+Date: Sat, 26 Jan 2013 21:20:01 +0100
+In-Reply-To: <510320C8.6010407@hauke-m.de>
+References: <1359024296-17724-1-git-send-email-johannes@sipsolutions.net>
+	 <510320C8.6010407@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct mac_address will be used by ACL related configuration ops.
+On Sat, 2013-01-26 at 01:18 +0100, Hauke Mehrtens wrote:
+> On 01/24/2013 11:44 AM, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > I intend to use these in nl80211.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> >  include/linux/compat-3.5.h | 24 ++++++++++++++++++++++++
+> >  1 file changed, 24 insertions(+)
+> > 
+> 
+> Thank you for your patch.
+> I added a missing #include <net/netlink.h> to it.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Oops, thanks :)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e5f085c..9cd9248 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -521,6 +521,10 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- };
- 
-+struct mac_address {
-+	u8 addr[ETH_ALEN];
-+};
-+
- /**
-  * struct cfg80211_ap_settings - AP configuration
-  *
-@@ -2146,10 +2150,6 @@ struct ieee80211_iface_combination {
- 	bool beacon_int_infra_match;
- };
- 
--struct mac_address {
--	u8 addr[ETH_ALEN];
--};
--
- struct ieee80211_txrx_stypes {
- 	u16 tx, rx;
- };
--- 
-1.7.0.4
+johannes
 
