@@ -1,165 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55614 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688Ab3AaQpy (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51441 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755370Ab3A0Akz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 11:45:54 -0500
-Message-ID: <1359650760.8415.91.camel@jlt4.sipsolutions.net> (sfid-20130131_174558_299669_5884EDC6)
-Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection
- command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 31 Jan 2013 17:46:00 +0100
-In-Reply-To: <20130131161346.GA1387@pandem0nium>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359642321.8415.56.camel@jlt4.sipsolutions.net>
-	 <20130131161346.GA1387@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 26 Jan 2013 19:40:55 -0500
+Received: by mail-pb0-f46.google.com with SMTP id mc17so193274pbc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2013 16:40:54 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v3] mac80211: dynamic short slot time for MBSSs
+Date: Sat, 26 Jan 2013 16:39:55 -0800
+Message-Id: <1359247195-25818-1-git-send-email-thomas@cozybit.com> (sfid-20130127_014104_798750_CED97C72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-31 at 17:13 +0100, Simon Wunderlich wrote:
+The standard mandates mesh STAs to set the ERP Short Slot
+Time capability info bit in beacons to 0. Even though this
+is their way of disallowing short slot time for mesh STAs,
+there should be no harm in enabling it if we determine all
+STAs in the current MBSS support ERP rates.
 
-> > > +int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
-> > > +				  const struct cfg80211_chan_def *c);
-> > 
-> > Why does that need to be exported to mac80211/drivers? Shouldn't
-> > cfg80211 be able to check everything?
-> > 
-> I'm using it in mac80211/ieee80211_start_ap() to find out whether radar detection
-> is required. We could put into struct cfg80211_ap_settings *params if you prefer?
-> I guess similar params exist for IBSS.
+Increases throughput about 20% for legacy rates when
+enabled.
 
-I kinda think that would make more sense because then it's right there
-when you look at the parameters, rather than having to remember it.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-> > Don't you need a cac_chandef or something?
+Initializing short_slot = false saves 2 lines vs. the inverse.
 
-> The chandef is stored into wdev->preset_chandef anyway, so I didn't see any
-> need to save it twice?
+v2:
+	fix survey logic
 
-(I'm just worried about that changing, see below. We could use
-"wdev->channel" though, which I need to change to chandef anyway)
+v3:
+	tighten ERP rate check (Johannes)
 
-> Anyway, the idea was that a driver can report a radar only for a certain part of
-> the currently used spectrum - e.g. we sense a radar on the extension channel in HT40+,
-> we would need to move but could still use the primary channel.
-> 
-> I don't know if this is overkill since we don't support any more than HT20 yet, but
-> that would be kind of future proof.
+ net/mac80211/mesh.c       |    5 ----
+ net/mac80211/mesh_plink.c |   63 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 63 insertions(+), 5 deletions(-)
 
-I guess I'm not worried about internal APIs much. Does that even make
-sense? Can you detect radar on one 20 MHz subchannel and then still use
-the other subchannel?
-
-> IMHO the channels should be cleared on each regdom change. At least radar
-> patterns are different from FCC and ETSI (although I don't know if there is
-> a pattern in FCC which can be ignored in ETSI and vice versa). To be sure,
-> I would vote for complete reset.
-
-Your call.
-
-> > > @@ -344,7 +467,10 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
-> > >  		break;
-> > >  	case NL80211_IFTYPE_AP:
-> > >  	case NL80211_IFTYPE_P2P_GO:
-> > > -		if (wdev->beacon_interval) {
-> > > +		if (wdev->cac_started) {
-> > > +			*chan = wdev->preset_chandef.chan;
-> > > +			*chanmode = CHAN_MODE_SHARED;
-> > 
-> > Ah, ok, so you're using the preset_chandef for CAC as well. I'm not
-> > entirely sure that is correct though, since it could be changed by
-> > userspace without much effect, e.g. by setting the channel with iw or
-> > iwconfig? Unless you added "if (!cac_started)" there everywhere?
-> > 
-> 
-> Hmm, actually I've tried setting the frequency with iw and got a EINVAL back.
-> I'll look into it again if I missed something, but thought it would be good to
-> not have this stuff redundant.
-
-Ok. Hmm. EINVAL? Maybe you tried setting to a radar frequency or
-something? Can you try setting to say channel 1? I don't think you
-changed __nl80211_set_channel() to check cac_started, so ...
-
-> > > +	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
-> > > +	if (err < 1)
-> > > +		return err;
-> > 
-> > That doesn't make sense, if userspace starts CAC and that is successful
-> > it would expect to eventually receive an event that it completed? Thus
-> > if you return 0 here it would get confused, no?
-> > 
-> 
-> Ah yes, I should probably return EINVAL in this case, or the appropriate
-> error code otherwise ... 
-
-Maybe return some more useful error code? Can't really find any one that
-is appropriate though.
-
-Do we export the state yet when you do try to get the channel list? That
-would be helpful for userspace, particularly in this case, I think.
-
-> > > +	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
-> > > +	if (!err) {
-> > > +		wdev->preset_chandef = chandef;
-> > > +		wdev->cac_started = true;
-> > > +		chandef.chan->dfs_state_entered = jiffies;
-> > 
-> > No reason to assign dfs_state_entered since it won't be used in this
-> > state anyway, will it?
-> > 
-> 
-> Hmm ... yeah, that's stupid. I'll need to add wdev->cac_entered or something like
-> that to track CAC time. Using dfs_state_entered is just wrong.
-
-I didn't see you read that, or did I miss that?
-
-> > > +	if (cfg80211_chandef_usable(&rdev->wiphy, &ibss.chandef,
-> > > +				    IEEE80211_CHAN_NO_IBSS))
-> > > +		return -EINVAL;
-> > 
-> > That seems like an unrelated change/fix?
-> > 
-> 
-> Well, yeah, that is a survivor from some intermediate state that I forgot to remove.
-> I still have some confusion/questions regarding the other flags, there is a question
-> in the cover letter regarding this - we should discuss it there.
-
-Oh I missed that, let me see.
-
-> > > @@ -884,6 +884,9 @@ static void handle_channel(struct wiphy *wiphy,
-> > >  		return;
-> > >  	}
-> > >  
-> > > +	chan->dfs_state = IEEE80211_DFS_USABLE;
-> > > +	chan->dfs_state_entered = jiffies;
-> > 
-> > Here also you don't really need the time assignment.
-> > 
-> > (I skipped this before, so pasting here)
-> > 
-> 
-> Hm, aren't channels initialized in this function? I wanted to set some
-> sane values here - although time is not relevant for the USABLE state,
-> I thought it might be useful if this info is exported to userspace or
-> for debugging.
-
-Maybe so, I just don't think you need the time there since it won't be
-of relevance in the USABLE state. The "state entered" time is only used
-for UNAVAILABLE.
-
-Maybe therefore state_entered should be renamed to "unavailable_until"
-with the corresponding change in the logic of adding the time when it's
-set to that state?
-
-johannes
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 694e273..f920da1 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -629,11 +629,6 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.bss_conf.basic_rates =
+ 		ieee80211_mandatory_rates(local, band);
+ 
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		sdata->vif.bss_conf.use_short_slot = true;
+-		changed |= BSS_CHANGED_ERP_SLOT;
+-	}
+-
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(sdata->dev);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4e1d406..ca4f2d8 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -55,6 +55,66 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
+ 	sta->plink_retries = 0;
+ }
+ 
++/*
++ * mesh_set_short_slot_time - enable / disable ERP short slot time.
++ *
++ * The standard indirectly mandates mesh STAs to turn off short slot time by
++ * disallowing advertising this (802.11-2012 8.4.1.4), but that doesn't mean we
++ * can't be sneaky about it. Enable short slot time if all mesh STAs in the
++ * MBSS support ERP rates.
++ *
++ * Returns BSS_CHANGED_ERP_SLOT or 0 for no change.
++ */
++static u32 mesh_set_short_slot_time(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
++	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
++	struct sta_info *sta;
++	u32 erp_rates = 0, changed = 0;
++	int i;
++	bool short_slot = false;
++
++	if (band == IEEE80211_BAND_5GHZ) {
++		/* (IEEE 802.11-2012 19.4.5) */
++		short_slot = true;
++		goto out;
++	} else if (band != IEEE80211_BAND_2GHZ ||
++		   (band == IEEE80211_BAND_2GHZ &&
++		    local->hw.flags & IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE))
++		goto out;
++
++	for (i = 0; i < sband->n_bitrates; i++)
++		if (sband->bitrates[i].flags & IEEE80211_RATE_ERP_G)
++			erp_rates |= BIT(i);
++
++	if (!erp_rates)
++		goto out;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata ||
++		    sta->plink_state != NL80211_PLINK_ESTAB)
++			continue;
++
++		short_slot = false;
++		if (erp_rates & sta->sta.supp_rates[band])
++			short_slot = true;
++		 else
++			break;
++	}
++	rcu_read_unlock();
++
++out:
++	if (sdata->vif.bss_conf.use_short_slot != short_slot) {
++		sdata->vif.bss_conf.use_short_slot = short_slot;
++		changed = BSS_CHANGED_ERP_SLOT;
++		mpl_dbg(sdata, "mesh_plink %pM: ERP short slot time %d\n",
++			sdata->vif.addr, short_slot);
++	}
++	return changed;
++}
++
+ /**
+  * mesh_set_ht_prot_mode - set correct HT protection mode
+  *
+@@ -894,6 +954,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			spin_unlock_bh(&sta->lock);
+ 			changed |= mesh_plink_inc_estab_count(sdata);
+ 			changed |= mesh_set_ht_prot_mode(sdata);
++			changed |= mesh_set_short_slot_time(sdata);
+ 			mpl_dbg(sdata, "Mesh plink with %pM ESTABLISHED\n",
+ 				sta->sta.addr);
+ 			break;
+@@ -929,6 +990,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			spin_unlock_bh(&sta->lock);
+ 			changed |= mesh_plink_inc_estab_count(sdata);
+ 			changed |= mesh_set_ht_prot_mode(sdata);
++			changed |= mesh_set_short_slot_time(sdata);
+ 			mpl_dbg(sdata, "Mesh plink with %pM ESTABLISHED\n",
+ 				sta->sta.addr);
+ 			mesh_plink_frame_tx(sdata,
+@@ -952,6 +1014,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			mod_plink_timer(sta, mshcfg->dot11MeshHoldingTimeout);
+ 			spin_unlock_bh(&sta->lock);
+ 			changed |= mesh_set_ht_prot_mode(sdata);
++			changed |= mesh_set_short_slot_time(sdata);
+ 			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+ 					    sta->sta.addr, llid, plid, reason);
+ 			break;
+-- 
+1.7.10.4
 
