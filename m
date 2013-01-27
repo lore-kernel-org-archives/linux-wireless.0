@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44836 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab3AKTpM (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:55524 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755896Ab3A0Gj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 14:45:12 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1TtkXP-0000sd-Je
-	for linux-wireless@vger.kernel.org; Fri, 11 Jan 2013 14:45:11 -0500
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id r0BJdNQI026385
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 14:39:23 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.5/8.14.5/Submit) id r0BJdNqH026384
-	for linux-wireless@vger.kernel.org; Fri, 11 Jan 2013 14:39:23 -0500
-Date: Fri, 11 Jan 2013 14:39:23 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-regdb updated, please check!
-Message-ID: <20130111193922.GD2170@tuxdriver.com> (sfid-20130111_204517_481009_5182122F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 27 Jan 2013 01:39:29 -0500
+Date: Sun, 27 Jan 2013 01:39:28 -0500 (EST)
+Message-Id: <20130127.013928.1867901911175664439.davem@davemloft.net> (sfid-20130127_073944_711984_927802A7)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-01-23
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130123201605.GC5221@tuxdriver.com>
+References: <20130123201605.GC5221@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 23 Jan 2013 15:16:06 -0500
 
-I've been sitting on some wireless-regdb patches for some time.
-Mostly this is because I wasn't sure what to do with some/most of them.
-I even still have a few more like that...
+> This is a batch of fixes intende for the 3.8 stream.
+> 
+> Regarding the iwlwifi bits, Johannes says this:
+> 
+> "Please pull to get a single fix from Emmanuel for a bug I introduced due
+> to misunderstanding the code."
+> 
+> Regarding the mac80211 bits, Johannes says this:
+> 
+> "I have a few small fixes for you:
+>  * some mesh frames would cause encryption warnings -- fixes from Bob
+>  * scanning would pretty much break an association if we transmitted
+>    anything to the AP while scanning -- fix from Stanislaw
+>  * mode injection was broken by channel contexts -- fix from Felix
+>  * FT roaming was broken: hardware crypto would get disabled by it"
+> 
+> Along with that, a handful of other fixes confined to specific drivers.
+> 
+> Avinash Patil fixes a typo in a NULL check in mwifiex.
+> 
+> Larry Finger fixes a build warning in rtlwifi.  Seems safe...
+> 
+> Stanislaw Gruszka fixes iwlegacy to prevent microcode errors when
+> switching from IBSS mode to STA mode.
+> 
+> Felix Fietkau provides a trio of ath9k fixes related to proper tuning.
+> 
+> Please let me know if there are problems!
 
-Anyway, I wanted to at least get the 60GHz bits out, and I pushed a
-few other changes as well.  Please take a look, and let me know if
-I merged anything wrong or if there is still something missing.
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
-
-Thanks!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Pulled, thanks John.
