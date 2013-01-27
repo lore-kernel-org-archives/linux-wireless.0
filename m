@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:65397 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759193Ab3AQIpQ (ORCPT
+Received: from mail.active-venture.com ([67.228.131.205]:57363 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754634Ab3A0Sza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 03:45:16 -0500
-Received: by mail-wi0-f171.google.com with SMTP id hn14so4271229wib.4
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jan 2013 00:45:15 -0800 (PST)
+	Sun, 27 Jan 2013 13:55:30 -0500
+From: Guenter Roeck <linux@roeck-us.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH] net: iwlegacy: remove unused variable
+Date: Sun, 27 Jan 2013 10:55:41 -0800
+Message-Id: <1359312941-30661-1-git-send-email-linux@roeck-us.net> (sfid-20130127_195535_894267_8CEC20F3)
 MIME-Version: 1.0
-In-Reply-To: <1358378606.15012.63.camel@jlt4.sipsolutions.net>
-References: <CABPxzYL1LM-XAAb1RomgcM=O9Ma=KJZcbmEgTA678FSFuT8QMg@mail.gmail.com>
- <1358248982.4648.1.camel@jlt4.sipsolutions.net> <CABPxzYJciFXV=S7BGWT_V-M8U9ydpiBT8RSJJn35oHQy+zh3aQ@mail.gmail.com>
- <CAJ-Vmon_m1bH_OTL7XitXwRvqPK2+Q-V7E=rcBdGw7Gkj58LJQ@mail.gmail.com> <1358378606.15012.63.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 17 Jan 2013 14:14:53 +0530
-Message-ID: <CABPxzY+2qNLxoySMou+PzqzfhK4ZOVfcP08BwZGx0J2Bz3Sd1Q@mail.gmail.com> (sfid-20130117_094521_962238_3D9ABE73)
-Subject: Re: Tx AMSDU Support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok...will try with the below ones..Marvell definitely has support for AMSDU Tx.
+Fix:
 
-On Thu, Jan 17, 2013 at 4:53 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2013-01-16 at 15:05 -0800, Adrian Chadd wrote:
->> .. for testing that out, I ended up just using a NIC that implements
->> AMSDU in software.
->>
->> God knows what it was though (intel?)..
->
-> Probably Broadcom and/or Marvell.
->
-> johannes
->
+drivers/net/wireless/iwlegacy/4965.c: In function ‘il4965_post_associate’:
+drivers/net/wireless/iwlegacy/4965.c:1751:25: warning: variable ‘conf’ set but
+not used [-Wunused-but-set-variable]
+
+seen when building allmodconfig on x86_64 with W=1 by removing the unused
+variable.
+
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/net/wireless/iwlegacy/4965.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index 5db1171..91eb2d0 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -1748,7 +1748,6 @@ static void
+ il4965_post_associate(struct il_priv *il)
+ {
+ 	struct ieee80211_vif *vif = il->vif;
+-	struct ieee80211_conf *conf = NULL;
+ 	int ret = 0;
+ 
+ 	if (!vif || !il->is_open)
+@@ -1759,8 +1758,6 @@ il4965_post_associate(struct il_priv *il)
+ 
+ 	il_scan_cancel_timeout(il, 200);
+ 
+-	conf = &il->hw->conf;
+-
+ 	il->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	il_commit_rxon(il);
+ 
+-- 
+1.7.9.7
+
