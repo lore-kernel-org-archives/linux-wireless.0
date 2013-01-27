@@ -1,78 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40433 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756296Ab3AHNEw (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:62514 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756310Ab3A0WLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 08:04:52 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 0/6] Add DFS master ability
-Date: Tue,  8 Jan 2013 14:04:05 +0100
-Message-Id: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130108_140456_234943_569332EE)
+	Sun, 27 Jan 2013 17:11:54 -0500
+Message-ID: <5105A627.5000208@lwfinger.net> (sfid-20130127_231158_565706_E9AB8DA2)
+Date: Sun, 27 Jan 2013 16:11:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Guenter Roeck <linux@roeck-us.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Potential problem in drivers/net/wireless/rtlwifi/usb.c:_rtl_rx_pre_process()
+References: <20130127211811.GA6680@roeck-us.net>
+In-Reply-To: <20130127211811.GA6680@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is patchs series no 6 of the DFS master ability, based on Victor
-Goldenshteins original work. See changelog in the various patches for
-details. The main changes to v5 are:
+On 01/27/2013 03:18 PM, Guenter Roeck wrote:
+> Hi all,
+>
+> while browsing through 'warning: variable ‘...’ set but not used' warnings, I
+> found the following code in drivers/net/wireless/rtlwifi/usb.c:_rtl_rx_pre_process().
+>
+> 	while (!skb_queue_empty(&rx_queue)) {
+>          	_skb = skb_dequeue(&rx_queue);
+> 		_rtl_usb_rx_process_agg(hw, skb);
+> 		ieee80211_rx_irqsafe(hw, skb);
+> 	}
+>
+> Question: Should the parameter to _rtl_usb_rx_process_agg() and
+> ieee80211_rx_irqsafe() be '_skb' instead of 'skb' ?
 
- * channel switch announcement patch has been dropped from this patchset.
-   Although CSA is required for 802.11h, DFS can also be implemented
-   by just disassociating all stations and open up AP on another channel
-   later when a radar is detected (to meet ETSI/FCC requirements). 
-   I've choosen this approach to reduce the patchset size, CSA can (and should)
-   still be added later.
- * SINGLE_ONLY patch from last time was dropped as well
- * interface combination are now used to define and check DFS capabilities:
-   * one AP only/single channel is supported for now, more can be added later
-   * channel bandwidths are checked within a bitfield now
-   * Johannes Berg helped me a lot here, thanks! :)
- * some more obsolete things have been removed (dfs_nlportid, cac_chantype, etc)
- * rebased on latest master, of course
+I think you are right and I will submit a patch to fix this.
 
-Again, the implementation works for me[tm] with a dummy dfs-implementation
-in ath9k and a patched hostapd - I'll provide the hostapd patchset later
-after cleaning it up.
- 
-Any comment/review/etc are very much appreciated!
+What compiler version reported this? I use "gcc (SUSE Linux) 4.7.2 20130108 
+[gcc-4_7-branch revision 195012]" and I do not see this warning.
 
 Thanks,
-	Simon
 
-Simon Wunderlich (4):
-  nl80211: check if channel can be used in join_ibss
-  cfg80211: check radar interface combinations
-  mac80211: check radar interaction with scan and roc
-  nl80211: allow DFS in start_ap
+Larry
 
-Victor Goldenshtein (2):
-  nl80211/cfg80211: add radar detection command/event
-  mac80211: add radar detection command/event
-
- include/net/cfg80211.h       |   26 +++++++++
- include/net/mac80211.h       |   19 +++++++
- include/uapi/linux/nl80211.h |   12 ++++
- net/mac80211/cfg.c           |   37 ++++++++++++-
- net/mac80211/driver-ops.h    |   15 +++++
- net/mac80211/ieee80211_i.h   |    3 +
- net/mac80211/iface.c         |    4 ++
- net/mac80211/mlme.c          |   11 ++++
- net/mac80211/scan.c          |    3 +
- net/mac80211/trace.h         |   76 +++++++++++++++++++++++++
- net/wireless/chan.c          |   14 +++--
- net/wireless/core.c          |   11 +++-
- net/wireless/core.h          |    7 ++-
- net/wireless/mlme.c          |   14 +++++
- net/wireless/nl80211.c       |  126 +++++++++++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.h       |    6 ++
- net/wireless/util.c          |   32 ++++++++++-
- 17 files changed, 400 insertions(+), 16 deletions(-)
-
--- 
-1.7.10.4
 
