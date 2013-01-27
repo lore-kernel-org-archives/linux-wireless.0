@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:54420 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450Ab3AAEZm (ORCPT
+Received: from mail.active-venture.com ([67.228.131.205]:56359 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754308Ab3A0Xvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Dec 2012 23:25:42 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq7so6517532wib.5
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Dec 2012 20:25:40 -0800 (PST)
+	Sun, 27 Jan 2013 18:51:45 -0500
+Date: Sun, 27 Jan 2013 15:52:03 -0800
+From: Guenter Roeck <linux@roeck-us.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Potential problem in
+ drivers/net/wireless/rtlwifi/usb.c:_rtl_rx_pre_process()
+Message-ID: <20130127235203.GA24524@roeck-us.net> (sfid-20130128_005150_358392_7D15FA74)
+References: <20130127211811.GA6680@roeck-us.net>
+ <5105A627.5000208@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>
-References: <773DB8A82AB6A046AE0195C68612A31901412125@sbs2003.acksys.local>
-	<CAD2nsn1UyObSBrpAq+oJOm+Q1PuC=Y9J0cFH3aC3LkPei6QZYw@mail.gmail.com>
-Date: Mon, 31 Dec 2012 20:20:35 -0800
-Message-ID: <CAJ-VmomdWE2d3qUzgOR0=pnoKzeJpFG1rOT1XH3gTB-dtosuVg@mail.gmail.com> (sfid-20130101_052550_791121_57F2E566)
-Subject: Re: [RFC] ATH9K: infinite loop in Tasklet
-From: Adrian Chadd <adrian@freebsd.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Cedric VONCKEN <cedric.voncken@acksys.fr>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5105A627.5000208@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 December 2012 06:19, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> On Tue, Dec 11, 2012 at 3:31 PM, Cedric VONCKEN
-> <cedric.voncken@acksys.fr> wrote:
->>         Any suggestion to fix correctly this issue ?
->
-> having a count to break out from the loop is bit hacky. I would
-> suggest to enable as many prints and see
-> why the infinite loop counts(ofcourse you can have a loop count to
-> figure out and break the loop).
+On Sun, Jan 27, 2013 at 04:11:51PM -0600, Larry Finger wrote:
+> On 01/27/2013 03:18 PM, Guenter Roeck wrote:
+> >Hi all,
+> >
+> >while browsing through 'warning: variable ‘...’ set but not used' warnings, I
+> >found the following code in drivers/net/wireless/rtlwifi/usb.c:_rtl_rx_pre_process().
+> >
+> >	while (!skb_queue_empty(&rx_queue)) {
+> >         	_skb = skb_dequeue(&rx_queue);
+> >		_rtl_usb_rx_process_agg(hw, skb);
+> >		ieee80211_rx_irqsafe(hw, skb);
+> >	}
+> >
+> >Question: Should the parameter to _rtl_usb_rx_process_agg() and
+> >ieee80211_rx_irqsafe() be '_skb' instead of 'skb' ?
+> 
+> I think you are right and I will submit a patch to fix this.
+> 
+> What compiler version reported this? I use "gcc (SUSE Linux) 4.7.2
+> 20130108 [gcc-4_7-branch revision 195012]" and I do not see this
+> warning.
+> 
+Hi Larry,
 
-IMHO both need to be done. It's possible that it's taking way too long
-to handle frames in the driver layer. The ath/ath9k driver layer
-assumes that it can dequeue frames from the hardware FASTER than it
-can queue those frames to the network stack layer. If the latter falls
-behind (or both, really) then you can hit this condition.
+I use "gcc (Ubuntu/Linaro 4.7.2-2ubuntu1) 4.7.2".
 
-FWIW, I've done this in FreeBSD's ath(4) driver in both the TX and RX
-path, to ensure that I give the tasklets all a fair crack at being
-scheduled.
+You'll see the warning if you build the kernel with W=1.
 
-
-
-Adrian
+Guenter
