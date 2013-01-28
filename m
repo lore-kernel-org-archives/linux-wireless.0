@@ -1,49 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:57878 "EHLO
-	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753288Ab3AVIaK (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:49172 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763Ab3A1XWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 03:30:10 -0500
-From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl12xx: does not connect to WPA2-personal
-Date: Tue, 22 Jan 2013 08:30:03 +0000
-Message-ID: <125C46FB9265D3469829069CDC69BF445278B805@HJ-MBX2.persistent.co.in> (sfid-20130122_093016_516338_2E0657E3)
-References: <loom.20130120T094649-416@post.gmane.org>
-	 <1358754973.6252.131.camel@cumari.coelho.fi>
-	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
-	 <1358758714.6252.135.camel@cumari.coelho.fi>
-	 <125C46FB9265D3469829069CDC69BF445278B3C1@HJ-MBX2.persistent.co.in>
- <1358759519.6252.139.camel@cumari.coelho.fi>
-In-Reply-To: <1358759519.6252.139.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 28 Jan 2013 18:22:12 -0500
+Date: Mon, 28 Jan 2013 18:22:10 -0500 (EST)
+Message-Id: <20130128.182210.1868590791697794288.davem@davemloft.net> (sfid-20130129_002218_685700_DC138A7A)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2013-01-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130128202054.GD2107@tuxdriver.com>
+References: <20130128202054.GD2107@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVjaWFubywNCg0KRG9lcyB3bDEyeHggb24gTGludXggMy40Ljcgb3IgMy43LjIgd29y
-ayB3aXRoIFdQQS1lbnRlcnByaXNlIG9yIFdQQTItZW50ZXJwcmlzZSBXaS1GaSBuZXR3b3Jr
-Pw0KDQpSZWdhcmRzLA0KS2V0YW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IEx1Y2lhbm8gQ29lbGhvIFttYWlsdG86Y29lbGhvQHRpLmNvbV0gDQpTZW50OiBNb25k
-YXksIEphbnVhcnkgMjEsIDIwMTMgMjo0MiBQTQ0KVG86IEtldGFuIEthbWF0DQpDYzogbGlu
-dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogd2wxMnh4OiBkb2Vz
-IG5vdCBjb25uZWN0IHRvIFdQQTItcGVyc29uYWwNCg0KT24gTW9uLCAyMDEzLTAxLTIxIGF0
-IDA5OjA5ICswMDAwLCBLZXRhbiBLYW1hdCB3cm90ZToNCj4gSGkgTHVjaWFubywNCj4gDQo+
-IE5vIG90aGVyIGNoYW5nZXMuDQo+IFdlIGFyZSB1c2luZyBELWxpbmsgcm91dGVyIERpci02
-MTUuIE9uIGJvYXJkIHdlIHVzZSB3bDEyNzEuDQo+IFdlIGhhZCB0cmllZCBUS0lQIGFzIHdl
-bGwgYW5kIGhhZCBmYWNlZCB0aGUgc2FtZSBwcm9ibGVtIGJlZm9yZSBmaXhpbmcgdGhpcy4N
-Cg0KRGlkIHlvdSBqdXN0IHJhbmRvbWx5IHBpY2tlZCB1cCB0aG9zZSBwYXRjaGVzPyBJIHRo
-aW5rLCBpZiBhbnksIHRoZSBvbmx5IHBhdGNoIHRoYXQgbWF5IGhhdmUgc29tZSBlZmZlY3Qg
-aGVyZSBpcyAid2wxMnh4OiBzZXQgZG9fam9pbiBvbiBCU1NfQ0hBTkdFRF9BU1NPQyIuDQoN
-Ci0tDQpMdWNhLg0KDQoNCkRJU0NMQUlNRVIKPT09PT09PT09PQpUaGlzIGUtbWFpbCBtYXkg
-Y29udGFpbiBwcml2aWxlZ2VkIGFuZCBjb25maWRlbnRpYWwgaW5mb3JtYXRpb24gd2hpY2gg
-aXMgdGhlIHByb3BlcnR5IG9mIFBlcnNpc3RlbnQgU3lzdGVtcyBMdGQuIEl0IGlzIGludGVu
-ZGVkIG9ubHkgZm9yIHRoZSB1c2Ugb2YgdGhlIGluZGl2aWR1YWwgb3IgZW50aXR5IHRvIHdo
-aWNoIGl0IGlzIGFkZHJlc3NlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lw
-aWVudCwgeW91IGFyZSBub3QgYXV0aG9yaXplZCB0byByZWFkLCByZXRhaW4sIGNvcHksIHBy
-aW50LCBkaXN0cmlidXRlIG9yIHVzZSB0aGlzIG1lc3NhZ2UuIElmIHlvdSBoYXZlIHJlY2Vp
-dmVkIHRoaXMgY29tbXVuaWNhdGlvbiBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2Vu
-ZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcyBvZiB0aGlzIG1lc3NhZ2UuIFBlcnNpc3RlbnQg
-U3lzdGVtcyBMdGQuIGRvZXMgbm90IGFjY2VwdCBhbnkgbGlhYmlsaXR5IGZvciB2aXJ1cyBp
-bmZlY3RlZCBtYWlscy4NCg==
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 28 Jan 2013 15:20:55 -0500
+
+> Please accept this pull request intended for the 3.9 stream!
+
+Pulled, thanks Jeff.
