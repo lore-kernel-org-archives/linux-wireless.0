@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:38243 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677Ab3ABOwI (ORCPT
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:61360 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882Ab3A1PKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:52:08 -0500
-Received: by mail-pb0-f49.google.com with SMTP id un15so7871537pbc.22
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jan 2013 06:52:08 -0800 (PST)
-Message-ID: <50E447CC.8060509@lwfinger.net> (sfid-20130102_155213_834664_D4EA9464)
-Date: Wed, 02 Jan 2013 08:44:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 28 Jan 2013 10:10:43 -0500
+Received: by mail-qa0-f42.google.com with SMTP id cr7so569563qab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 07:10:42 -0800 (PST)
 MIME-Version: 1.0
-To: Julian Wollrath <jwollrath@web.de>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] Fix typo in debug output of rtl8192c and rtl8723ae
-References: <1357136516-8841-1-git-send-email-jwollrath@web.de>
-In-Reply-To: <1357136516-8841-1-git-send-email-jwollrath@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <87pq0pcrpy.fsf@purkki.adurom.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	<1359377405.8120.16.camel@jlt4.sipsolutions.net>
+	<87pq0pcrpy.fsf@purkki.adurom.net>
+Date: Mon, 28 Jan 2013 16:10:42 +0100
+Message-ID: <CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com> (sfid-20130128_161049_382879_8AC255D7)
+Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2013 08:21 AM, Julian Wollrath wrote:
-> Signed-off-by: Julian Wollrath <jwollrath@web.de>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
->   drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       |    2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
-
-Acked-by: Larry Finger <Larry.finger@lwfinger.net>
-
-Julian - Just a heads-up for future reference. All patches for drivers in the 
-drivers/net/wireless tree should be sent to John Linville (Cc'd here), with Cc 
-to the module maintainer, and the linux-wireless list. Obviously, I read 
-linux-wireless so that I saw this, but John might have a filter that only 
-extracts the stuff sent directly to him.
-
-Larry
-
+On Mon, Jan 28, 2013 at 3:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> index 1d5d360..246e535 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> @@ -692,7 +692,7 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
->   	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
->   		rtl92c_phy_sw_chnl_callback(hw);
->   		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-> -			 "sw_chnl_inprogress false schdule workitem\n");
-> +			 "sw_chnl_inprogress false schedule workitem\n");
->   		rtlphy->sw_chnl_inprogress = false;
->   	} else {
->   		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-> index 39cc793..3d8536b 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-> @@ -1106,7 +1106,7 @@ u8 rtl8723ae_phy_sw_chnl(struct ieee80211_hw *hw)
->   	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
->   		rtl8723ae_phy_sw_chnl_callback(hw);
->   		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-> -			 "sw_chnl_inprogress false schdule workitem\n");
-> +			 "sw_chnl_inprogress false schedule workitem\n");
->   		rtlphy->sw_chnl_inprogress = false;
->   	} else {
->   		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
+>> Question for the list ...
+>>
+>> Internally, we've identified patches to this new driver as
+>>
+>> "iwlwifi (MVM):"
+>>
+>> rather than just "iwlwifi:"
+>>
+>> We can continue doing so (and would probably also tag patches with
+>> "iwlwifi" for core and "iwlwifi (DVM)" for the DVM part.
+>>
+>> Would "iwlmvm"/"iwldvm"/"iwlwifi" make more sense as that's the module
+>> names? It's harder to filter though, I guess.
+>
+> I would use this:
+>
+> "iwlwifi: mvm: fix foo"
 >
 
+If two-items notation then "item1: item2: Subject" is better than the
+commata notation "iwlwifi, mwm: Fix foo" should simply die...
+
+More Like-it (mostly seen in media):
+
+[subtree|driver-family|etc.] special-driver|script|etc: Subject
+
+For example:
+
+"[kbuild] deb-pkg: Bump year in copyright
+
+(kbuild subtree and debbuild script (aka make deb-pkg).
+
+And yes, I like capital letter in the first word of subject (after ":").
+
+Two items is OK.
+But more items seen for rtlwifi sth. like "rtlwifi: rtlX: rtlY: rtlZ:
+Here now what I wanted to fix" is IMHO bad for extracting patches with
+git.
+
+BTW, why do you need two items?
+Is there somewhere a mvm driver in another subtree?
+Or new buzz-word: What about "iwlmvm"?
+iwlegacy - iwlwifi - iwlmvm...
+
+- Sedat -
+
+> I don't remember where I saw that style first but I liked it.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
