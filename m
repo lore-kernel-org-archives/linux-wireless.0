@@ -1,90 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:41219 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116Ab3ARMFm (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54326 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753444Ab3A1Qi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 07:05:42 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so1944178bkw.5
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 04:05:41 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH 1/3] iw: add beacon interval and DTIM period parameters to mesh join
-Date: Fri, 18 Jan 2013 13:05:30 +0100
-Message-Id: <1358510732-32767-2-git-send-email-marco@cozybit.com> (sfid-20130118_130545_249590_0DB3FA51)
-In-Reply-To: <1358510732-32767-1-git-send-email-marco@cozybit.com>
-References: <1358510732-32767-1-git-send-email-marco@cozybit.com>
+	Mon, 28 Jan 2013 11:38:29 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/14] wil6210: Fix: Tx stall
+Date: Mon, 28 Jan 2013 18:31:01 +0200
+Message-ID: <1359390669-9310-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173832_314301_051CF702)
+In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the beacon interval and DTIM period with the mesh join
-command:
-iw <dev> mesh join <meshid> beacon-interval <time in TUs>
-dtim-period <value>
+Due to multi-tx-queue design, wil_start_xmit() used to be executed
+concurrently for different queues. Then, these transmits delivered
+to the same queue, creating race.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
+As result, Tx descriptor may be skipped, causing stall in hardware.
+
+Convert to single Tx queue fixes it.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- mesh.c |   32 ++++++++++++++++++++++++++++++--
- 1 file changed, 30 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/netdev.c  |   27 +--------------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |    2 --
+ 2 files changed, 1 insertion(+), 28 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 4fdad6a..958c2c0 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -383,6 +383,7 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- {
- 	struct nlattr *container;
- 	float rate;
-+	int bintval, dtim_period;
- 	char *end;
- 
- 	if (argc < 1)
-@@ -405,6 +406,32 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
- 		argc--;
- 	}
- 
-+	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
-+		argc--;
-+		argv++;
-+
-+		bintval = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_BEACON_INTERVAL, bintval);
-+		argv++;
-+		argc--;
-+	}
-+
-+	if (argc > 1 && strcmp(argv[0], "dtim-period") == 0) {
-+		argc--;
-+		argv++;
-+
-+		dtim_period = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_DTIM_PERIOD, dtim_period);
-+		argv++;
-+		argc--;
-+	}
-+
- 	container = nla_nest_start(msg, NL80211_ATTR_MESH_SETUP);
- 	if (!container)
- 		return -ENOBUFS;
-@@ -431,8 +458,9 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
-  nla_put_failure:
- 	return -ENOBUFS;
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 3068b5c..073dc7d 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -35,35 +35,10 @@ static int wil_stop(struct net_device *ndev)
+ 	return wil_down(wil);
  }
--COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>] [vendor_sync on|off]"
--	" [<param>=<value>]*",
-+COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>]"
-+	" [beacon-interval <time in TUs>] [dtim-period <value>]"
-+	" [vendor_sync on|off] [<param>=<value>]*",
- 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
- 	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
  
+-/*
+- * AC to queue mapping
+- *
+- * AC_VO -> queue 3
+- * AC_VI -> queue 2
+- * AC_BE -> queue 1
+- * AC_BK -> queue 0
+- */
+-static u16 wil_select_queue(struct net_device *ndev, struct sk_buff *skb)
+-{
+-	static const u16 wil_1d_to_queue[8] = { 1, 0, 0, 1, 2, 2, 3, 3 };
+-	struct wil6210_priv *wil = ndev_to_wil(ndev);
+-	u16 rc;
+-
+-	skb->priority = cfg80211_classify8021d(skb);
+-
+-	rc = wil_1d_to_queue[skb->priority];
+-
+-	wil_dbg_TXRX(wil, "%s() %d -> %d\n", __func__, (int)skb->priority,
+-		     (int)rc);
+-
+-	return rc;
+-}
+-
+ static const struct net_device_ops wil_netdev_ops = {
+ 	.ndo_open		= wil_open,
+ 	.ndo_stop		= wil_stop,
+ 	.ndo_start_xmit		= wil_start_xmit,
+-	.ndo_select_queue	= wil_select_queue,
+ 	.ndo_set_mac_address    = eth_mac_addr,
+ 	.ndo_validate_addr      = eth_validate_addr,
+ };
+@@ -97,7 +72,7 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
+ 	ch = wdev->wiphy->bands[IEEE80211_BAND_60GHZ]->channels;
+ 	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
+ 
+-	ndev = alloc_netdev_mqs(0, "wlan%d", ether_setup, WIL6210_TX_QUEUES, 1);
++	ndev = alloc_netdev(0, "wlan%d", ether_setup);
+ 	if (!ndev) {
+ 		dev_err(dev, "alloc_netdev_mqs failed\n");
+ 		rc = -ENOMEM;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 9b2ebdd..d957286 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -36,8 +36,6 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ 
+ #define WIL6210_MEM_SIZE (2*1024*1024UL)
+ 
+-#define WIL6210_TX_QUEUES (4)
+-
+ #define WIL6210_RX_RING_SIZE (128)
+ #define WIL6210_TX_RING_SIZE (128)
+ #define WIL6210_MAX_TX_RINGS (24)
 -- 
-1.7.9.5
+1.7.10.4
 
