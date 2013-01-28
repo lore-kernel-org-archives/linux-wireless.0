@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:53568
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750955Ab3ACJ0W (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:58761 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab3A1Jdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 04:26:22 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 28 Jan 2013 04:33:53 -0500
+Received: by mail-lb0-f181.google.com with SMTP id gm6so3544810lbb.40
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 01:33:52 -0800 (PST)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k has buggy promiscuous mode
+Date: Mon, 28 Jan 2013 10:33:48 +0100
+Message-ID: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be> (sfid-20130128_103357_206380_7DC3BDE1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20709.20104.77507.315148@gargle.gargle.HOWL> (sfid-20130103_102627_063302_5C0D7EE6)
-Date: Thu, 3 Jan 2013 14:55:28 +0530
-To: Schrober <franzschrober@yahoo.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] ath9k_hw: Fix calibration for AR9340
-In-Reply-To: <1544381.2zNlvhsdEP@bentobox>
-References: <1357195883-8516-1-git-send-email-sujith@msujith.org>
-	<1357195883-8516-2-git-send-email-sujith@msujith.org>
-	<1544381.2zNlvhsdEP@bentobox>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Schrober wrote:
-> On Thursday 03 January 2013 12:21:22 Sujith Manoharan wrote:
-> > From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> > 
-> > TX_IQ_ON_AGC_CAL should not be enabled for AR9340.
-> 
-> Why?
+Dear all,
 
-Because the chip doesn't support it.
+When using promiscuous mode on a ath9k chipset, it does not capture 
+packets from the access point to other stations.
 
-Sujith
+e.g. a ping from S to T over AP results in:
+echo request S -> AP
+echo reply AP -> S
+
+Where echo request AP -> T is missing.
+
+System:
+Linux openWRT 3.3.8
+driver: ath9k
+
+Best regards,
+Erwin
+
