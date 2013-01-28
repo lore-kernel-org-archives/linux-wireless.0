@@ -1,51 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46416 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab3AYWIl (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:60643 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754708Ab3A1V4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 17:08:41 -0500
-Message-ID: <51030260.2040004@candelatech.com> (sfid-20130125_230844_939216_8893C8DD)
-Date: Fri, 25 Jan 2013 14:08:32 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 28 Jan 2013 16:56:45 -0500
+Received: by mail-qa0-f46.google.com with SMTP id o13so1041960qaj.12
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 13:56:45 -0800 (PST)
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Sam Leffler <sleffler@google.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Increasing throughput on 3-radio system?
-References: <5102CADE.2010900@candelatech.com> <CA+yqC4b2_q5Nn2t7C-5JdAfxR-QA8KtBgqE_sw91ZfNwt-k+LQ@mail.gmail.com> <5102D0C7.50907@candelatech.com> <CAJ-VmonmYNGK42DuCLStjvSswdvkzeHUAwH+fsZQL5BdxwGgjA@mail.gmail.com>
-In-Reply-To: <CAJ-VmonmYNGK42DuCLStjvSswdvkzeHUAwH+fsZQL5BdxwGgjA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1359387506.8120.20.camel@jlt4.sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	<1359377405.8120.16.camel@jlt4.sipsolutions.net>
+	<87pq0pcrpy.fsf@purkki.adurom.net>
+	<CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com>
+	<CA+icZUXx+Pt2vwMgvOCGdT5GiwASQ_mMfLBt_vxUJCPu4aXe9w@mail.gmail.com>
+	<1359387506.8120.20.camel@jlt4.sipsolutions.net>
+Date: Mon, 28 Jan 2013 22:56:44 +0100
+Message-ID: <CA+icZUUPU7QMdhDdZyw7BCPZ85bUj1ArKuJxTEjW+aWLd1BiyQ@mail.gmail.com> (sfid-20130128_225651_526776_89FA07D0)
+Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/25/2013 01:55 PM, Adrian Chadd wrote:
-> Hi,
+On Mon, Jan 28, 2013 at 4:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-01-28 at 16:17 +0100, Sedat Dilek wrote:
+>> On Mon, Jan 28, 2013 at 4:10 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>> > On Mon, Jan 28, 2013 at 3:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> >> Johannes Berg <johannes@sipsolutions.net> writes:
+>> >>
+>> >>> Question for the list ...
+>> >>>
+>> >>> Internally, we've identified patches to this new driver as
+>> >>>
+>> >>> "iwlwifi (MVM):"
+>> >>>
+>> >>> rather than just "iwlwifi:"
+>> >>>
+>> >>> We can continue doing so (and would probably also tag patches with
+>> >>> "iwlwifi" for core and "iwlwifi (DVM)" for the DVM part.
+>> >>>
+>> >>> Would "iwlmvm"/"iwldvm"/"iwlwifi" make more sense as that's the module
+>> >>> names? It's harder to filter though, I guess.
+>> >>
+>> >> I would use this:
+>> >>
+>> >> "iwlwifi: mvm: fix foo"
+>> >>
+>> >
+>> > If two-items notation then "item1: item2: Subject" is better than the
+>> > commata notation "iwlwifi, mwm: Fix foo" should simply die...
+>> >
+>> > More Like-it (mostly seen in media):
+>> >
+>> > [subtree|driver-family|etc.] special-driver|script|etc: Subject
+>> >
+>> > For example:
+>> >
+>> > "[kbuild] deb-pkg: Bump year in copyright
+>> >
+>> > (kbuild subtree and debbuild script (aka make deb-pkg).
+>> >
+>> > And yes, I like capital letter in the first word of subject (after ":").
+>> >
+>> > Two items is OK.
+>> > But more items seen for rtlwifi sth. like "rtlwifi: rtlX: rtlY: rtlZ:
+>> > Here now what I wanted to fix" is IMHO bad for extracting patches with
+>> > git.
+>> >
+>> > BTW, why do you need two items?
+>> > Is there somewhere a mvm driver in another subtree?
+>> > Or new buzz-word: What about "iwlmvm"?
+>> > iwlegacy - iwlwifi - iwlmvm...
+>> >
+>>
+>> Better than buzz-words and personal likes/dislikes is the quality of
+>> the patches, the embedded (descriptive) text in changelog and a well
+>> documented source-code.
 >
-> Strong enough out of band RF is still going to bleed over and it may
-> saturate the receive amplifiers before it hits the chip and the
-> configurable analog band-pass filter.
+> I'm sorry, did you read the patches?
 >
-> Hence the suggestion to always TX at the same time. That way you don't
-> have the problem of TX from one radio being strong enough to
-> saturation. You can tune the PHY (via magic handwavy parameters that
-> strangely enough are partially described in the ANI code :-) to reduce
-> its sensitivity to blocker signals, but it doesn't help you if the
-> signal is close enough by to trigger the wideband / out of band
-> interference check. If you try and receive during that you're going to
-> have very poor behaviour.
 
-Could you point me to which registers/vars/keywords in (ath9k) ani
-do this?  I'd like to play around with them a bit.
+NO, I gave my two cents only on general stuff about the label-name(s)
+you asked and the pointer to the fantastic blog-article of Peter.
+This was no blame to you as I always enjoy to read your changelogs -
+just a hint for all people reading here on the ML.
+If tons of patches would have followed Peter's article the
+Linux-kernel development would really improve!
 
-As for transmitting at the same time, is that even possible
-using multiple ath9k NICs in a PC?  It would seem to me that you'd
-need some kind of low-level communication between the hardware/firmware
-on the NICs themselves to accomplish that?
+- Sedat -
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> johannes
+>
