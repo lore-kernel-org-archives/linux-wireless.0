@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60255 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145Ab3AYWFE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 17:05:04 -0500
-Message-ID: <1359151524.4655.37.camel@jlt4.sipsolutions.net> (sfid-20130125_230507_957713_1C94E128)
-Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH
- response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: Antonio Quartulli <antonio@open-mesh.com>,
-	linux-wireless@vger.kernel.org,
-	Will Hawkins <hawkinsw@opentechinstitute.org>
-Date: Fri, 25 Jan 2013 23:05:24 +0100
-In-Reply-To: <50EACA95.8040004@lri.fr>
-References: <1355146824-25012-1-git-send-email-antonio@open-mesh.com>
-	 <1355146824-25012-2-git-send-email-antonio@open-mesh.com>
-	 <1356706268.9922.23.camel@jlt4.sipsolutions.net>
-	 <20130102063255.GA27676@open-mesh.com> <50E400A7.5060100@lri.fr>
-	 <20130107114048.GH27589@ritirata.org> <50EACA95.8040004@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from narfation.org ([79.140.41.39]:42838 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755561Ab3A1QMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 11:12:34 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	ordex@autistici.org, simon.wunderlich@s2003.tu-chemnitz.de,
+	rgibson@futurec.net, Sven Eckelmann <sven@narfation.org>
+Subject: [RFC 2/3] mac80211: Ignore CCMP replays for IBSS WPA_NONE
+Date: Mon, 28 Jan 2013 17:11:52 +0100
+Message-Id: <1359389513-1554-2-git-send-email-sven@narfation.org> (sfid-20130128_171236_615117_CDF88F32)
+In-Reply-To: <1359389513-1554-1-git-send-email-sven@narfation.org>
+References: <30210911.93HAZKKtRJ@bentobox>
+ <1359389513-1554-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-07 at 14:16 +0100, Nicolas Cavallari wrote:
+WPA_NONE has no support to avoid CCMP replays and therefore we have to disable
+it in this situation to allow rejoining stations.
 
-> > if the userspace did not register for auth frames, then authentication will be
-> > handled in the kernel (as I'm doing/changing now), while if the userspace
-> > registered for such frames, then the kernel will assume that the authentication
-> > will be handled by the userspace somehow and will not deal with it (but again,
-> > in this way we need a command to let userspace set the AUTHenticated flag on a
-> > station).
-> 
-> That means two implementations, not one.
-> 
-> And even with this current patch, old wpasupplicant starts 4 way handshake as soon as the
-> NEW_STA event is received, even if the station is not authenticated by the kernel. I
-> expect that some EAPOL frames will be dropped as a result.
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ net/mac80211/wpa.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-That's all very confusing to me.
-
-Today, we have basically two ways of operating, userspace-authorization
-or open network. Neither of them requires AUTH frames, except SAE which
-uses them in userspace.
-
-In either case, there are a few ways a station can be added:
-1) when mac80211 receives a data frame from a station matching the BSSID
-2) when mac80211 receives a proper open network authentication frame
-   from the station (except this is bypassed in SAE, since then
-   userspace gets all authentication frames instead of mac80211)
-3) when mac80211 receives a beacon or probe response from a station
-
-In all of these cases, the station is marked as authenticated (and
-associated for internal purposes, as this doesn't really exist in IBSS.)
-Authorization can be deferred to userspace, or done inline, depending on
-the "control port" setting.
-
-
-I think part of the reason this particular patch is so confusing is that
-it changes the semantics of when we add another station, based on our
-own authenticating with it? That's pretty confusing.
-
-The point, I thought, was to detect when a peer "silently rebooted" and
-thus lost all state. But in that case wouldn't we receive an unencrypted
-RSN handshake frame from the station, and be able to recover based on
-that?
-
-johannes
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index c175ee8..f961d9a 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -517,7 +517,9 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 
+ 	queue = rx->security_idx;
+ 
+-	if (memcmp(pn, key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) <= 0) {
++	if (memcmp(pn, key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) <= 0 &&
++	    (rx->sdata->vif.type != NL80211_IFTYPE_ADHOC ||
++	     rx->sdata->u.ibss.control_port)) {
+ 		key->u.ccmp.replays++;
+ 		return RX_DROP_UNUSABLE;
+ 	}
+-- 
+1.7.10.4
 
