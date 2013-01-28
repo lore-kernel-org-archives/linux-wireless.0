@@ -1,532 +1,432 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:17555 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220Ab3ACNOe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41735 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab3A1Ji7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 08:14:34 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V7 2/2] cfg80211/nl80211: Enable drivers to implement mac address based ACL
-Date: Thu, 3 Jan 2013 18:44:07 +0530
-Message-ID: <1357218847-16415-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20130103_141437_527013_4E8C66C6)
-In-Reply-To: <1357218847-16415-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1357218847-16415-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Jan 2013 04:38:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/37] iwlwifi: add the MVM driver (fw-api-sta)
+Date: Mon, 28 Jan 2013 10:37:17 +0100
+Message-Id: <1359365864-4259-11-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103909_840860_0F021EF9)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables drivers to implement mac address based
-access control in AP/P2P GO mode. Capable driver advertises
-this capability by setting wiphy max_acl_mac_addrs.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Driver can enable its ACL either with the initial list passed
-through NL80211_CMD_START_AP or a list passed through
-NL80211_CMD_SET_MAC_ACL. ACL information passed in these
-commands is an array of acl configuration each containing acl
-policy and list of mac address. With the acl policy as
-NL80211_ACL_POLICY_ACCEPT, driver will accept Auth requesti from any
-client matching any one of the mac addresses in the acl list. When
-acl policy is NL80211_ACL_POLICY_DENY, driver will ignore the connection
-request from the client. When a client is not part of either of the lists
-when both (black & white) are configured there will be a notification
-through NL80211_CMD_CONN_FAILED with failed reason as
-NL80211_CONN_FAIL_NEITHER_BLACK_WHITE_CLIENT. Driver must make sure to
-clear it's acl list when doing stop ap.
+Newer firmware revisions have a completely new
+firmware API. This is the new driver for this
+new API.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+I've listed the people who directly contributed
+code, but many others from various teams have
+contributed in other ways.
+
+Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Amit Beka <amit.beka@intel.com>
+Cc: Amnon Paz <amnonx.paz@intel.com>
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Dor Shaish <dor.shaish@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       |   48 +++++++++++
- include/uapi/linux/nl80211.h |   68 ++++++++++++++-
- net/wireless/core.c          |    5 +
- net/wireless/nl80211.c       |  192 +++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 309 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h | 380 ++++++++++++++++++++++++++
+ 1 file changed, 380 insertions(+)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9273d05..f5a37c7 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -526,6 +526,31 @@ struct mac_address {
- };
- 
- /**
-+ * struct cfg80211_acl_data - Access control data
-+ * @acl_policy: Access control policy to be applied on the station's
-+	entry specified by mac_addr
-+ * @n_acl_entries: Number of mac address entries passed
-+ * @mac_addrs: List of mac addresses of stations to be used for acl
-+ */
-+struct cfg80211_acl_data {
-+	enum nl80211_acl_policy_attr acl_policy;
-+	int n_acl_entries;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
+new file mode 100644
+index 0000000..0acb53d
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
+@@ -0,0 +1,380 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *****************************************************************************/
 +
-+	/* Keep it last */
-+	struct mac_address mac_addrs[];
++#ifndef __fw_api_sta_h__
++#define __fw_api_sta_h__
++
++/**
++ * enum iwl_sta_flags - flags for the ADD_STA host command
++ * @STA_FLG_REDUCED_TX_PWR_CTRL:
++ * @STA_FLG_REDUCED_TX_PWR_DATA:
++ * @STA_FLG_FLG_ANT_MSK: Antenna selection
++ * @STA_FLG_PS: set if STA is in Power Save
++ * @STA_FLG_INVALID: set if STA is invalid
++ * @STA_FLG_DLP_EN: Direct Link Protocol is enabled
++ * @STA_FLG_SET_ALL_KEYS: the current key applies to all key IDs
++ * @STA_FLG_DRAIN_FLOW: drain flow
++ * @STA_FLG_PAN: STA is for PAN interface
++ * @STA_FLG_CLASS_AUTH:
++ * @STA_FLG_CLASS_ASSOC:
++ * @STA_FLG_CLASS_MIMO_PROT:
++ * @STA_FLG_MAX_AGG_SIZE_MSK: maximal size for A-MPDU
++ * @STA_FLG_AGG_MPDU_DENS_MSK: maximal MPDU density for Tx aggregation
++ * @STA_FLG_FAT_EN_MSK: support for channel width (for Tx). This flag is
++ *	initialised by driver and can be updated by fw upon reception of
++ *	action frames that can change the channel width. When cleared the fw
++ *	will send all the frames in 20MHz even when FAT channel is requested.
++ * @STA_FLG_MIMO_EN_MSK: support for MIMO. This flag is initialised by the
++ *	driver and can be updated by fw upon reception of action frames.
++ * @STA_FLG_MFP_EN: Management Frame Protection
++ */
++enum iwl_sta_flags {
++	STA_FLG_REDUCED_TX_PWR_CTRL	= BIT(3),
++	STA_FLG_REDUCED_TX_PWR_DATA	= BIT(6),
++
++	STA_FLG_FLG_ANT_A		= (1 << 4),
++	STA_FLG_FLG_ANT_B		= (2 << 4),
++	STA_FLG_FLG_ANT_MSK		= (STA_FLG_FLG_ANT_A |
++					   STA_FLG_FLG_ANT_B),
++
++	STA_FLG_PS			= BIT(8),
++	STA_FLG_INVALID			= BIT(9),
++	STA_FLG_DLP_EN			= BIT(10),
++	STA_FLG_SET_ALL_KEYS		= BIT(11),
++	STA_FLG_DRAIN_FLOW		= BIT(12),
++	STA_FLG_PAN			= BIT(13),
++	STA_FLG_CLASS_AUTH		= BIT(14),
++	STA_FLG_CLASS_ASSOC		= BIT(15),
++	STA_FLG_RTS_MIMO_PROT		= BIT(17),
++
++	STA_FLG_MAX_AGG_SIZE_SHIFT	= 19,
++	STA_FLG_MAX_AGG_SIZE_8K		= (0 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_16K	= (1 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_32K	= (2 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_64K	= (3 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_128K	= (4 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_256K	= (5 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_512K	= (6 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_1024K	= (7 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++	STA_FLG_MAX_AGG_SIZE_MSK	= (7 << STA_FLG_MAX_AGG_SIZE_SHIFT),
++
++	STA_FLG_AGG_MPDU_DENS_SHIFT	= 23,
++	STA_FLG_AGG_MPDU_DENS_2US	= (4 << STA_FLG_AGG_MPDU_DENS_SHIFT),
++	STA_FLG_AGG_MPDU_DENS_4US	= (5 << STA_FLG_AGG_MPDU_DENS_SHIFT),
++	STA_FLG_AGG_MPDU_DENS_8US	= (6 << STA_FLG_AGG_MPDU_DENS_SHIFT),
++	STA_FLG_AGG_MPDU_DENS_16US	= (7 << STA_FLG_AGG_MPDU_DENS_SHIFT),
++	STA_FLG_AGG_MPDU_DENS_MSK	= (7 << STA_FLG_AGG_MPDU_DENS_SHIFT),
++
++	STA_FLG_FAT_EN_20MHZ		= (0 << 26),
++	STA_FLG_FAT_EN_40MHZ		= (1 << 26),
++	STA_FLG_FAT_EN_80MHZ		= (2 << 26),
++	STA_FLG_FAT_EN_160MHZ		= (3 << 26),
++	STA_FLG_FAT_EN_MSK		= (3 << 26),
++
++	STA_FLG_MIMO_EN_SISO		= (0 << 28),
++	STA_FLG_MIMO_EN_MIMO2		= (1 << 28),
++	STA_FLG_MIMO_EN_MIMO3		= (2 << 28),
++	STA_FLG_MIMO_EN_MSK		= (3 << 28),
 +};
 +
 +/**
-+ * struct cfg80211_acl_settings - Access control configuration
-+ * @acl_data: Acl data for various acl policies
-+ * @mac_acl_list: Number of acl configurations
++ * enum iwl_sta_key_flag - key flags for the ADD_STA host command
++ * @STA_KEY_FLG_EN_MSK: mask for encryption algorithm
++ * @STA_KEY_FLG_WEP_KEY_MAP: wep is either a group key (0 - legacy WEP) or from
++ *	station info array (1 - n 1X mode)
++ * @STA_KEY_FLG_KEYID_MSK: the index of the key
++ * @STA_KEY_NOT_VALID: key is invalid
++ * @STA_KEY_FLG_WEP_13BYTES: set for 13 bytes WEP key
++ * @STA_KEY_MULTICAST: set for multical key
++ * @STA_KEY_MFP: key is used for Management Frame Protection
 + */
-+struct cfg80211_acl_settings {
-+	struct cfg80211_acl_data *acl_data[NL80211_ACL_POLICY_MAX + 1];
-+	int num_acl_list;
++enum iwl_sta_key_flag {
++	STA_KEY_FLG_NO_ENC		= (0 << 0),
++	STA_KEY_FLG_WEP			= (1 << 0),
++	STA_KEY_FLG_CCM			= (2 << 0),
++	STA_KEY_FLG_TKIP		= (3 << 0),
++	STA_KEY_FLG_CMAC		= (6 << 0),
++	STA_KEY_FLG_ENC_UNKNOWN		= (7 << 0),
++	STA_KEY_FLG_EN_MSK		= (7 << 0),
++
++	STA_KEY_FLG_WEP_KEY_MAP		= BIT(3),
++	STA_KEY_FLG_KEYID_POS		 = 8,
++	STA_KEY_FLG_KEYID_MSK		= (3 << STA_KEY_FLG_KEYID_POS),
++	STA_KEY_NOT_VALID		= BIT(11),
++	STA_KEY_FLG_WEP_13BYTES		= BIT(12),
++	STA_KEY_MULTICAST		= BIT(14),
++	STA_KEY_MFP			= BIT(15),
 +};
 +
 +/**
-  * struct cfg80211_ap_settings - AP configuration
-  *
-  * Used to configure an AP interface.
-@@ -544,6 +569,8 @@ struct mac_address {
-  * @inactivity_timeout: time in seconds to determine station's inactivity.
-  * @p2p_ctwindow: P2P CT Window
-  * @p2p_opp_ps: P2P opportunistic PS
-+ * @acl: acl configuration used by the drivers which has support for
-+ *	mac address based access control
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -560,6 +587,7 @@ struct cfg80211_ap_settings {
- 	int inactivity_timeout;
- 	u8 p2p_ctwindow;
- 	bool p2p_opp_ps;
-+	struct cfg80211_acl_settings acl;
- };
- 
- /**
-@@ -1767,6 +1795,16 @@ struct cfg80211_gtk_rekey_data {
-  *
-  * @start_p2p_device: Start the given P2P device.
-  * @stop_p2p_device: Stop the given P2P device.
-+ *
-+ * @set_mac_acl: Set stations' mac address to driver's access control list in
-+ *	AP and P2P GO mode. Parameters contains an array of acl configuration
-+ *	each containing the acl policy, list of mac addresses and the number
-+ *	of mac address entries, and number of array entries. If there is already
-+ *	a list in driver for one of the acl policies, this new list replaces the
-+ *	existing one for that corresponding acl	policy. Driver has to clear a
-+ *	particular acl list when number of mac address entries is passed as 0
-+ *	for that acl policy. Drivers which advertise the support for mac address
-+ *	based access control have to implement this callback.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1987,6 +2025,9 @@ struct cfg80211_ops {
- 				    struct wireless_dev *wdev);
- 	void	(*stop_p2p_device)(struct wiphy *wiphy,
- 				   struct wireless_dev *wdev);
-+
-+	int	(*set_mac_acl)(struct wiphy *wiphy, struct net_device *dev,
-+			       struct cfg80211_acl_settings *params);
- };
- 
- /*
-@@ -2290,6 +2331,11 @@ struct wiphy_wowlan_support {
-  * @ap_sme_capa: AP SME capabilities, flags from &enum nl80211_ap_sme_features.
-  * @ht_capa_mod_mask:  Specify what ht_cap values can be over-ridden.
-  *	If null, then none can be over-ridden.
-+ *
-+ * @max_acl_mac_addrs: Maximum number of mac addresses that the device
-+ *	supports for ACL. Driver having ACL based on MAC address support
-+ *	has to fill this. This limit is common for both (white & black)
-+ *	the lists.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -2392,6 +2438,8 @@ struct wiphy {
- 	const struct iw_handler_def *wext;
- #endif
- 
-+	u16 max_acl_mac_addrs;
-+
- 	char priv[0] __attribute__((__aligned__(NETDEV_ALIGN)));
- };
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e3e19f8..d6f5e55 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -170,7 +170,8 @@
-  *	%NL80211_ATTR_HIDDEN_SSID, %NL80211_ATTR_CIPHERS_PAIRWISE,
-  *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
-  *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
-- *	%NL80211_ATTR_AUTH_TYPE and %NL80211_ATTR_INACTIVITY_TIMEOUT.
-+ *	%NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_INACTIVITY_TIMEOUT and
-+ *	%NL80211_ATTR_MAC_ACL_LISTS.
-  *	The channel to use can be set on the interface or be given using the
-  *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel width.
-  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
-@@ -586,6 +587,16 @@
-  * @NL80211_CMD_SET_MCAST_RATE: Change the rate used to send multicast frames
-  *	for IBSS or MESH vif.
-  *
-+ * @NL80211_CMD_SET_MAC_ACL: sets acl list for mac address based access control.
-+ *	This is to be used with the drivers advertising the support of mac
-+ *	address based access control. ACL information is passed in
-+ *	%NL80211_ATTR_MAC_ACL_LISTS. Driver will enable it's ACL with this
-+ *	list, if it is not done already. New acl list for an acl policy
-+ *	will replace the eixsting one. When a passed list of mac address
-+ *	is empty for a particular acl policy, driver has to clear corresponding
-+ *	acl list. This command is used in AP/P2P GO mode. Driver has to make
-+ *	sure to clear it's acl list during %NL80211_CMD_STOP_AP.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -736,6 +747,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_MCAST_RATE,
- 
-+	NL80211_CMD_SET_MAC_ACL,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1310,6 +1323,12 @@ enum nl80211_commands {
-  *	if not given in START_AP 0 is assumed, if not given in SET_BSS
-  *	no change is made.
-  *
-+ * @NL80211_ATTR_MAC_ACL_LISTS: Nested attribute containing acl configuration,
-+ *	see enum nl80211_acl_info_attr.
-+ * @NL80211_ATTR_MAC_ACL_MAX: u32 attribute to advertise the maximum
-+ *	number of mac addresses that a device can support for MAC
-+ *	access control.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1580,6 +1599,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_P2P_CTWINDOW,
- 	NL80211_ATTR_P2P_OPPPS,
- 
-+	NL80211_ATTR_MAC_ACL_LISTS,
-+	NL80211_ATTR_MAC_ACL_MAX,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3182,11 +3204,13 @@ enum nl80211_probe_resp_offload_support_attr {
-  * enum nl80211_connect_failed_reason - connection request failed reasons
-  * @NL80211_CONN_FAIL_MAX_CLIENTS: Maximum number of clients that can be
-  *	handled by the AP is reached.
-- * @NL80211_CONN_FAIL_BLOCKED_CLIENT: Client's MAC is in the AP's blocklist.
-+ * @NL80211_CONN_FAIL_NEITHER_BLACK_WHITE_CLIENT: Client's mac address is part
-+ *	of neither of the lists. This should be notified only when both the
-+ *	lists (black & white) are configured in the driver.
-  */
- enum nl80211_connect_failed_reason {
- 	NL80211_CONN_FAIL_MAX_CLIENTS,
--	NL80211_CONN_FAIL_BLOCKED_CLIENT,
-+	NL80211_CONN_FAIL_NEITHER_BLACK_WHITE_CLIENT,
- };
- 
- /**
-@@ -3210,4 +3234,42 @@ enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_AP				= 1<<2,
- };
- 
-+/**
-+ * enum nl80211_acl_info_attr - Access control information attributes
-+ *
-+ * @__NL80211_ACL_ATTR_INVALID: Invalid number for nested attributes
-+ * @NL80211_ACL_ATTR_POLICY: Access control policy to be applied on the
-+	mac address list, see enum nl80211_acl_policy_attr.
-+ * @NL80211_ACL_ATTR_MAC_ADDRS: List of stations' mac addresses for ACL
-+ * @__NL80211_ACL_ATTR_AFTER_LAST: Internal
-+ * @NL80211_ACL_ATTR_MAX: Highest number of acl attributes
++ * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
++ * @STA_MODIFY_KEY: this command modifies %key
++ * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
++ * @STA_MODIFY_TX_RATE: unused
++ * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
++ * @STA_MODIFY_REMOVE_BA_TID: this command modifies %remove_immediate_ba_tid
++ * @STA_MODIFY_SLEEPING_STA_TX_COUNT: this command modifies %sleep_tx_count
++ * @STA_MODIFY_PROT_TH:
++ * @STA_MODIFY_QUEUES: modify the queues used by this station
 + */
-+enum nl80211_acl_info_attr {
-+	__NL80211_ACL_ATTR_INVALID,
-+	NL80211_ACL_ATTR_POLICY,
-+	NL80211_ACL_ATTR_MAC_ADDRS,
++enum iwl_sta_modify_flag {
++	STA_MODIFY_KEY				= BIT(0),
++	STA_MODIFY_TID_DISABLE_TX		= BIT(1),
++	STA_MODIFY_TX_RATE			= BIT(2),
++	STA_MODIFY_ADD_BA_TID			= BIT(3),
++	STA_MODIFY_REMOVE_BA_TID		= BIT(4),
++	STA_MODIFY_SLEEPING_STA_TX_COUNT	= BIT(5),
++	STA_MODIFY_PROT_TH			= BIT(6),
++	STA_MODIFY_QUEUES			= BIT(7),
++};
 +
-+	__NL80211_ACL_ATTR_AFTER_LAST,
-+	NL80211_ACL_ATTR_MAX = __NL80211_ACL_ATTR_AFTER_LAST - 1
++#define STA_MODE_MODIFY	1
++
++/**
++ * enum iwl_sta_sleep_flag - type of sleep of the station
++ * @STA_SLEEP_STATE_AWAKE:
++ * @STA_SLEEP_STATE_PS_POLL:
++ * @STA_SLEEP_STATE_UAPSD:
++ */
++enum iwl_sta_sleep_flag {
++	STA_SLEEP_STATE_AWAKE	= 0,
++	STA_SLEEP_STATE_PS_POLL	= BIT(0),
++	STA_SLEEP_STATE_UAPSD	= BIT(1),
++};
++
++/* STA ID and color bits definitions */
++#define STA_ID_SEED		(0x0f)
++#define STA_ID_POS		(0)
++#define STA_ID_MSK		(STA_ID_SEED << STA_ID_POS)
++
++#define STA_COLOR_SEED		(0x7)
++#define STA_COLOR_POS		(4)
++#define STA_COLOR_MSK		(STA_COLOR_SEED << STA_COLOR_POS)
++
++#define STA_ID_N_COLOR_GET_COLOR(id_n_color) \
++	(((id_n_color) & STA_COLOR_MSK) >> STA_COLOR_POS)
++#define STA_ID_N_COLOR_GET_ID(id_n_color)    \
++	(((id_n_color) & STA_ID_MSK) >> STA_ID_POS)
++
++#define STA_KEY_MAX_NUM (16)
++#define STA_KEY_IDX_INVALID (0xff)
++#define STA_KEY_MAX_DATA_KEY_NUM (4)
++#define IWL_MAX_GLOBAL_KEYS (4)
++#define STA_KEY_LEN_WEP40 (5)
++#define STA_KEY_LEN_WEP104 (13)
++
++/**
++ * struct iwl_mvm_keyinfo - key information
++ * @key_flags: type %iwl_sta_key_flag
++ * @tkip_rx_tsc_byte2: TSC[2] for key mix ph1 detection
++ * @tkip_rx_ttak: 10-byte unicast TKIP TTAK for Rx
++ * @key_offset: key offset in the fw's key table
++ * @key: 16-byte unicast decryption key
++ * @tx_secur_seq_cnt: initial RSC / PN needed for replay check
++ * @hw_tkip_mic_rx_key: byte: MIC Rx Key - used for TKIP only
++ * @hw_tkip_mic_tx_key: byte: MIC Tx Key - used for TKIP only
++ */
++struct iwl_mvm_keyinfo {
++	__le16 key_flags;
++	u8 tkip_rx_tsc_byte2;
++	u8 reserved1;
++	__le16 tkip_rx_ttak[5];
++	u8 key_offset;
++	u8 reserved2;
++	u8 key[16];
++	__le64 tx_secur_seq_cnt;
++	__le64 hw_tkip_mic_rx_key;
++	__le64 hw_tkip_mic_tx_key;
++} __packed;
++
++/**
++ * struct iwl_mvm_add_sta_cmd - Add / modify a station in the fw's station table
++ * ( REPLY_ADD_STA = 0x18 )
++ * @add_modify: 1: modify existing, 0: add new station
++ * @unicast_tx_key_id: unicast tx key id. Relevant only when unicast key sent
++ * @multicast_tx_key_id: multicast tx key id. Relevant only when multicast key
++ *	sent
++ * @mac_id_n_color: the Mac context this station belongs to
++ * @addr[ETH_ALEN]: station's MAC address
++ * @sta_id: index of station in uCode's station table
++ * @modify_mask: STA_MODIFY_*, selects which parameters to modify vs. leave
++ *	alone. 1 - modify, 0 - don't change.
++ * @key: look at %iwl_mvm_keyinfo
++ * @station_flags: look at %iwl_sta_flags
++ * @station_flags_msk: what of %station_flags have changed
++ * @tid_disable_tx: is tid BIT(tid) enabled for Tx. Clear BIT(x) to enable
++ *	AMPDU for tid x. Set %STA_MODIFY_TID_DISABLE_TX to change this field.
++ * @add_immediate_ba_tid: tid for which to add block-ack support (Rx)
++ *	Set %STA_MODIFY_ADD_BA_TID to use this field, and also set
++ *	add_immediate_ba_ssn.
++ * @remove_immediate_ba_tid: tid for which to remove block-ack support (Rx)
++ *	Set %STA_MODIFY_REMOVE_BA_TID to use this field
++ * @add_immediate_ba_ssn: ssn for the Rx block-ack session. Used together with
++ *	add_immediate_ba_tid.
++ * @sleep_tx_count: number of packets to transmit to station even though it is
++ *	asleep. Used to synchronise PS-poll and u-APSD responses while ucode
++ *	keeps track of STA sleep state.
++ * @sleep_state_flags: Look at %iwl_sta_sleep_flag.
++ * @assoc_id: assoc_id to be sent in VHT PLCP (9-bit), for grp use 0, for AP
++ *	mac-addr.
++ * @beamform_flags: beam forming controls
++ * @tfd_queue_msk: tfd queues used by this station
++ *
++ * The device contains an internal table of per-station information, with info
++ * on security keys, aggregation parameters, and Tx rates for initial Tx
++ * attempt and any retries (set by REPLY_TX_LINK_QUALITY_CMD).
++ *
++ * ADD_STA sets up the table entry for one station, either creating a new
++ * entry, or modifying a pre-existing one.
++ */
++struct iwl_mvm_add_sta_cmd {
++	u8 add_modify;
++	u8 unicast_tx_key_id;
++	u8 multicast_tx_key_id;
++	u8 reserved1;
++	__le32 mac_id_n_color;
++	u8 addr[ETH_ALEN];
++	__le16 reserved2;
++	u8 sta_id;
++	u8 modify_mask;
++	__le16 reserved3;
++	struct iwl_mvm_keyinfo key;
++	__le32 station_flags;
++	__le32 station_flags_msk;
++	__le16 tid_disable_tx;
++	__le16 reserved4;
++	u8 add_immediate_ba_tid;
++	u8 remove_immediate_ba_tid;
++	__le16 add_immediate_ba_ssn;
++	__le16 sleep_tx_count;
++	__le16 sleep_state_flags;
++	__le16 assoc_id;
++	__le16 beamform_flags;
++	__le32 tfd_queue_msk;
++} __packed; /* ADD_STA_CMD_API_S_VER_5 */
++
++/**
++ * enum iwl_mvm_add_sta_rsp_status - status in the response to ADD_STA command
++ * @ADD_STA_SUCCESS: operation was executed successfully
++ * @ADD_STA_STATIONS_OVERLOAD: no room left in the fw's station table
++ * @ADD_STA_IMMEDIATE_BA_FAILURE: can't add Rx block ack session
++ * @ADD_STA_MODIFY_NON_EXISTING_STA: driver requested to modify a station that
++ *	doesn't exist.
++ */
++enum iwl_mvm_add_sta_rsp_status {
++	ADD_STA_SUCCESS			= 0x1,
++	ADD_STA_STATIONS_OVERLOAD	= 0x2,
++	ADD_STA_IMMEDIATE_BA_FAILURE	= 0x4,
++	ADD_STA_MODIFY_NON_EXISTING_STA	= 0x8,
 +};
 +
 +/**
-+ * enum nl80211_acl_policy_attr - The access control policy which needs to be
-+ *	applied on a mac list set by %NL80211_CMD_START_AP and
-+ *	%NL80211_CMD_SET_MAC_ACL. To be used with %NL80211_ACL_ATTR_POLICY.
-+ *
-+ * @NL80211_ACL_POLICY_ACCEPT: Allow the station to authenticate
-+ * @NL80211_ACL_POLICY_DENY: Block the station from authentication
-+ * @__NL80211_ACL_POLICY_AFTER_LAST: Internal use
-+ * @NL80211_ACL_POLICY_MAX: Highest acl policy attribute
++ * struct iwl_mvm_rm_sta_cmd - Add / modify a station in the fw's station table
++ * ( REMOVE_STA = 0x19 )
++ * @sta_id: the station id of the station to be removed
 + */
-+enum nl80211_acl_policy_attr {
-+	NL80211_ACL_POLICY_ACCEPT,
-+	NL80211_ACL_POLICY_DENY,
++struct iwl_mvm_rm_sta_cmd {
++	u8 sta_id;
++	u8 reserved[3];
++} __packed; /* REMOVE_STA_CMD_API_S_VER_2 */
 +
-+	/* Keep last */
-+	__NL80211_ACL_POLICY_AFTER_LAST,
-+	NL80211_ACL_POLICY_MAX = __NL80211_ACL_POLICY_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 14d9904..e5b37eb 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -478,6 +478,11 @@ int wiphy_register(struct wiphy *wiphy)
- 			   ETH_ALEN)))
- 		return -EINVAL;
- 
-+	if (WARN_ON(wiphy->max_acl_mac_addrs &&
-+		    (!(wiphy->flags & WIPHY_FLAG_HAVE_AP_SME) ||
-+		     !rdev->ops->set_mac_acl)))
-+		return -EINVAL;
-+
- 	if (wiphy->addresses)
- 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f45706a..fcaa5d4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -365,6 +365,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
- 	[NL80211_ATTR_P2P_CTWINDOW] = { .type = NLA_U8 },
- 	[NL80211_ATTR_P2P_OPPPS] = { .type = NLA_U8 },
-+	[NL80211_ATTR_MAC_ACL_LISTS] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -1265,6 +1266,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 		    dev->wiphy.ht_capa_mod_mask))
- 		goto nla_put_failure;
- 
-+	if ((dev->wiphy.flags & WIPHY_FLAG_HAVE_AP_SME) &&
-+	    nla_put_u32(msg, NL80211_ATTR_MAC_ACL_MAX,
-+			dev->wiphy.max_acl_mac_addrs))
-+		goto nla_put_failure;
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
-@@ -2481,6 +2487,167 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+/*
-+ * This function must either return an error or the number
-+ * of nested attributes.
++/**
++ * struct iwl_mvm_mgmt_mcast_key_cmd
++ * ( MGMT_MCAST_KEY = 0x1f )
++ * @ctrl_flags: %iwl_sta_key_flag
++ * @IGTK:
++ * @K1: IGTK master key
++ * @K2: IGTK sub key
++ * @sta_id: station ID that support IGTK
++ * @key_id:
++ * @receive_seq_cnt: initial RSC/PN needed for replay check
 + */
-+static int validate_acl_mac_addrs(struct nlattr *nl_attr)
-+{
-+	struct nlattr *attr;
-+	int n_entries = 0, tmp;
++struct iwl_mvm_mgmt_mcast_key_cmd {
++	__le32 ctrl_flags;
++	u8 IGTK[16];
++	u8 K1[16];
++	u8 K2[16];
++	__le32 key_id;
++	__le32 sta_id;
++	__le64 receive_seq_cnt;
++} __packed; /* SEC_MGMT_MULTICAST_KEY_CMD_API_S_VER_1 */
 +
-+	nla_for_each_nested(attr, nl_attr, tmp) {
-+		if (nla_len(attr) != ETH_ALEN)
-+			return -EINVAL;
++struct iwl_mvm_wep_key {
++	u8 key_index;
++	u8 key_offset;
++	__le16 reserved1;
++	u8 key_size;
++	u8 reserved2[3];
++	u8 key[16];
++} __packed;
 +
-+		if (!is_valid_ether_addr(nla_data(attr)))
-+			return -EINVAL;
++struct iwl_mvm_wep_key_cmd {
++	__le32 mac_id_n_color;
++	u8 num_keys;
++	u8 decryption_type;
++	u8 flags;
++	u8 reserved;
++	struct iwl_mvm_wep_key wep_key[0];
++} __packed; /* SEC_CURR_WEP_KEY_CMD_API_S_VER_2 */
 +
-+		n_entries++;
-+	}
 +
-+	return n_entries;
-+}
-+
-+static const struct nla_policy mac_acl_policy[NL80211_ACL_ATTR_MAX + 1] = {
-+	[NL80211_ACL_ATTR_POLICY]	= { .type = NLA_U8 },
-+	[NL80211_ACL_ATTR_MAC_ADDRS]	= { .type = NLA_NESTED },
-+};
-+
-+/*
-+ * This function parses acl information and fills the configuration.
-+ * On a successful return, the caller function is responsible to
-+ * free up the memory allocated in this function for acl configuration.
-+ */
-+static int parse_acl_information(struct cfg80211_registered_device *rdev,
-+				 struct nlattr *acl_attr,
-+				 struct cfg80211_acl_settings *acl)
-+{
-+	struct nlattr *nla_acl, *attr, *tb[NL80211_ACL_ATTR_MAX + 1];
-+	u8 avail_acl[NL80211_ACL_POLICY_MAX + 1];
-+	int tmp_acl, tmp, i = 0, j, n_entries, n_acl = 0;
-+	int acl_policy, err;
-+
-+	memset(avail_acl, 0, sizeof(avail_acl));
-+	nla_for_each_nested(nla_acl, acl_attr, tmp_acl) {
-+		if (n_acl > NL80211_ACL_POLICY_MAX) {
-+			err = -EINVAL;
-+			goto free_acl;
-+		}
-+
-+		if (nla_parse_nested(tb, NL80211_ACL_ATTR_MAX, nla_acl,
-+				     mac_acl_policy)) {
-+			err = -EINVAL;
-+			goto free_acl;
-+		}
-+
-+		if (!tb[NL80211_ACL_ATTR_POLICY]) {
-+			err = -EINVAL;
-+			goto free_acl;
-+		}
-+
-+		acl_policy = nla_get_u8(tb[NL80211_ACL_ATTR_POLICY]);
-+		if (acl_policy > NL80211_ACL_POLICY_MAX ||
-+		    avail_acl[acl_policy]) {
-+			err = -EINVAL;
-+			goto free_acl;
-+		}
-+
-+		if (!tb[NL80211_ACL_ATTR_MAC_ADDRS]) {
-+			err = -EINVAL;
-+			goto free_acl;
-+		}
-+
-+		n_entries =
-+			validate_acl_mac_addrs(tb[NL80211_ACL_ATTR_MAC_ADDRS]);
-+		if (n_entries < 0) {
-+			err = n_entries;
-+			goto free_acl;
-+		}
-+
-+		if (n_entries > rdev->wiphy.max_acl_mac_addrs) {
-+			err = -EOPNOTSUPP;
-+			goto free_acl;
-+		}
-+
-+		acl->acl_data[n_acl] =
-+			kzalloc(sizeof(struct cfg80211_acl_data) +
-+				(n_entries * sizeof(struct mac_address)),
-+				GFP_KERNEL);
-+		if (!acl->acl_data[n_acl]) {
-+			err = -ENOMEM;
-+			goto free_acl;
-+		}
-+
-+		j = 0;
-+		nla_for_each_nested(attr, tb[NL80211_ACL_ATTR_MAC_ADDRS], tmp) {
-+			memcpy(acl->acl_data[n_acl]->mac_addrs[j].addr,
-+			       nla_data(attr), ETH_ALEN);
-+			j++;
-+		}
-+
-+		acl->acl_data[n_acl]->n_acl_entries = j;
-+		acl->acl_data[n_acl]->acl_policy = acl_policy;
-+		avail_acl[acl_policy] = 1;
-+		n_acl++;
-+	}
-+
-+	if (!n_acl)
-+		return -EINVAL;
-+
-+	acl->num_acl_list = n_acl;
-+
-+	return 0;
-+
-+free_acl:
-+	for (i = 0; i < n_acl; i++)
-+		kfree(acl->acl_data[i]);
-+
-+	return err;
-+}
-+
-+static int nl80211_set_mac_acl(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct cfg80211_acl_settings acl;
-+	int err, i;
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-+		return -EOPNOTSUPP;
-+
-+	if (!dev->ieee80211_ptr->beacon_interval)
-+		return -EINVAL;
-+
-+	if (!rdev->wiphy.max_acl_mac_addrs)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC_ACL_LISTS])
-+		return -EINVAL;
-+
-+	memset(&acl, 0, sizeof(acl));
-+
-+	err = parse_acl_information(rdev,
-+				    info->attrs[NL80211_ATTR_MAC_ACL_LISTS],
-+				    &acl);
-+	if (err)
-+		return err;
-+
-+	if (!rdev->ops->set_mac_acl) {
-+		err = -EOPNOTSUPP;
-+		goto out_free;
-+	}
-+
-+	err = rdev->ops->set_mac_acl(&rdev->wiphy, dev, &acl);
-+
-+out_free:
-+	for (i = 0; i < acl.num_acl_list; i++)
-+		kfree(acl.acl_data[i]);
-+
-+	return err;
-+}
-+
- static int nl80211_parse_beacon(struct genl_info *info,
- 				struct cfg80211_beacon_data *bcn)
- {
-@@ -2597,7 +2764,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ap_settings params;
--	int err;
-+	int err, i;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-@@ -2724,6 +2891,17 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
-+	if (info->attrs[NL80211_ATTR_MAC_ACL_LISTS]) {
-+		if (!rdev->wiphy.max_acl_mac_addrs)
-+			return -EOPNOTSUPP;
-+
-+		err = parse_acl_information(rdev,
-+				info->attrs[NL80211_ATTR_MAC_ACL_LISTS],
-+				&params.acl);
-+		if (err)
-+			return err;
-+	}
-+
- 	err = rdev_start_ap(rdev, dev, &params);
- 	if (!err) {
- 		wdev->preset_chandef = params.chandef;
-@@ -2732,6 +2910,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		wdev->ssid_len = params.ssid_len;
- 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
- 	}
-+
-+	for (i = 0; i < params.acl.num_acl_list; i++)
-+		kfree(params.acl.acl_data[i]);
-+
- 	return err;
- }
- 
-@@ -7784,6 +7966,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_MAC_ACL,
-+		.doit = nl80211_set_mac_acl,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
++#endif /* __fw_api_sta_h__ */
 -- 
-1.7.0.4
+1.8.0
 
