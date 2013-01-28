@@ -1,230 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:59462 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751102Ab3AKFAG (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:50665 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754748Ab3A1Vzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 00:00:06 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tim Shepard <shep@laptop.org>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: change is_suspended variable type to atomic_t
-Date: Thu, 10 Jan 2013 20:57:24 -0800
-Message-Id: <1357880244-14610-1-git-send-email-bzhao@marvell.com> (sfid-20130111_060013_448876_78450B81)
+	Mon, 28 Jan 2013 16:55:47 -0500
+MIME-Version: 1.0
+From: Richard Hartmann <richih.mailinglist@gmail.com>
+Date: Mon, 28 Jan 2013 22:55:25 +0100
+Message-ID: <CAD77+gT-sLRfVK2-WJxSXg-JveRGiRqkzs00Js2vH5w=gh92Ow@mail.gmail.com> (sfid-20130128_225558_162549_510E254E)
+Subject: drivers/net/wireless/iwlwifi/dvm/tx.c: Kernel trace when roaming
+ between different Access Points with the same ESSID
+To: Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Hi all,
 
-is_suspended flag can be accessed by multiple threads.
-Use atomic variable type for is_suspended to ensure that there
-are no undefined behaviours.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c |    2 +-
- drivers/net/wireless/mwifiex/main.c   |    2 +-
- drivers/net/wireless/mwifiex/main.h   |    2 +-
- drivers/net/wireless/mwifiex/pcie.c   |    8 ++++----
- drivers/net/wireless/mwifiex/sdio.c   |   10 +++++-----
- drivers/net/wireless/mwifiex/usb.c    |   14 +++++++-------
- 6 files changed, 19 insertions(+), 19 deletions(-)
+I can somewhat reproduce this trace. It will happen when roaming from
+one AP to another AP, both having the same ESSID.
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 5f438e6..34a1485 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -519,7 +519,7 @@ int mwifiex_send_cmd_async(struct mwifiex_private *priv, uint16_t cmd_no,
- 		return -1;
- 	}
- 
--	if (adapter->is_suspended) {
-+	if (atomic_read(&adapter->is_suspended)) {
- 		dev_err(adapter->dev, "PREP_CMD: device in suspended state\n");
- 		return -1;
- 	}
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 9c802ed..17c4c8c 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -735,7 +735,7 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
- 	adapter->surprise_removed = false;
- 	init_waitqueue_head(&adapter->init_wait_q);
--	adapter->is_suspended = false;
-+	atomic_set(&adapter->is_suspended, 0);
- 	adapter->hs_activated = false;
- 	init_waitqueue_head(&adapter->hs_activate_wait_q);
- 	adapter->cmd_wait_q_required = false;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 51044e3..5fb642b 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -704,7 +704,7 @@ struct mwifiex_adapter {
- 	u8 hs_activated;
- 	u16 hs_activate_wait_q_woken;
- 	wait_queue_head_t hs_activate_wait_q;
--	bool is_suspended;
-+	atomic_t is_suspended;
- 	u8 event_body[MAX_EVENT_SIZE];
- 	u32 hw_dot_11n_dev_cap;
- 	u8 hw_dev_mcs_support;
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 3da89b4..091188c 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -127,7 +127,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 
- 	if (user_rmmod) {
- #ifdef CONFIG_PM
--		if (adapter->is_suspended)
-+		if (atomic_read(&adapter->is_suspended))
- 			mwifiex_pcie_resume(pdev);
- #endif
- 
-@@ -178,7 +178,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
- 	hs_actived = mwifiex_enable_hs(adapter);
- 
- 	/* Indicate device suspended */
--	adapter->is_suspended = true;
-+	atomic_set(&adapter->is_suspended, 1);
- 
- 	for (i = 0; i < adapter->priv_num; i++)
- 		netif_carrier_off(adapter->priv[i]->netdev);
-@@ -213,12 +213,12 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
- 
- 	adapter = card->adapter;
- 
--	if (!adapter->is_suspended) {
-+	if (!atomic_read(&adapter->is_suspended)) {
- 		dev_warn(adapter->dev, "Device already resumed\n");
- 		return 0;
- 	}
- 
--	adapter->is_suspended = false;
-+	atomic_set(&adapter->is_suspended, 0);
- 
- 	for (i = 0; i < adapter->priv_num; i++)
- 		if (adapter->priv[i]->media_connected)
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index f2874c3..ad3ab91 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -127,7 +127,7 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 	wait_for_completion(&adapter->fw_load);
- 
- 	if (user_rmmod) {
--		if (adapter->is_suspended)
-+		if (atomic_read(&adapter->is_suspended))
- 			mwifiex_sdio_resume(adapter->dev);
- 
- 		for (i = 0; i < adapter->priv_num; i++)
-@@ -196,7 +196,7 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
- 
- 	/* Indicate device suspended */
--	adapter->is_suspended = true;
-+	atomic_set(&adapter->is_suspended, 1);
- 
- 	for (i = 0; i < adapter->priv_num; i++)
- 		netif_carrier_off(adapter->priv[i]->netdev);
-@@ -236,12 +236,12 @@ static int mwifiex_sdio_resume(struct device *dev)
- 
- 	adapter = card->adapter;
- 
--	if (!adapter->is_suspended) {
-+	if (!atomic_read(&adapter->is_suspended)) {
- 		dev_warn(adapter->dev, "device already resumed\n");
- 		return 0;
- 	}
- 
--	adapter->is_suspended = false;
-+	atomic_set(&adapter->is_suspended, 0);
- 
- 	for (i = 0; i < adapter->priv_num; i++)
- 		if (adapter->priv[i]->media_connected)
-@@ -342,7 +342,7 @@ mwifiex_write_data_sync(struct mwifiex_adapter *adapter,
- 				MWIFIEX_SDIO_BLOCK_SIZE) : pkt_len;
- 	u32 ioport = (port & MWIFIEX_SDIO_IO_PORT_MASK);
- 
--	if (adapter->is_suspended) {
-+	if (atomic_read(&adapter->is_suspended)) {
- 		dev_err(adapter->dev,
- 			"%s: not allowed while suspended\n", __func__);
- 		return -1;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 5d4a10a..79cde47 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -197,7 +197,7 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
- 				dev_kfree_skb_any(skb);
- 		}
- 	} else if (urb->status) {
--		if (!adapter->is_suspended) {
-+		if (!atomic_read(&adapter->is_suspended)) {
- 			dev_warn(adapter->dev,
- 				 "Card is removed: %d\n", urb->status);
- 			adapter->surprise_removed = true;
-@@ -433,7 +433,7 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	}
- 	adapter = card->adapter;
- 
--	if (unlikely(adapter->is_suspended))
-+	if (unlikely(atomic_read(&adapter->is_suspended)))
- 		dev_warn(adapter->dev, "Device already suspended\n");
- 
- 	mwifiex_enable_hs(adapter);
-@@ -444,7 +444,7 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	 * this flag is used in combination to distinguish between a
- 	 * 'suspended' state and a 'disconnect' one.
- 	 */
--	adapter->is_suspended = true;
-+	atomic_set(&adapter->is_suspended, 1);
- 
- 	for (i = 0; i < adapter->priv_num; i++)
- 		netif_carrier_off(adapter->priv[i]->netdev);
-@@ -486,7 +486,7 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- 	}
- 	adapter = card->adapter;
- 
--	if (unlikely(!adapter->is_suspended)) {
-+	if (unlikely(!atomic_read(&adapter->is_suspended))) {
- 		dev_warn(adapter->dev, "Device already resumed\n");
- 		return 0;
- 	}
-@@ -494,7 +494,7 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- 	/* Indicate device resumed. The netdev queue will be resumed only
- 	 * after the urbs have been re-submitted
- 	 */
--	adapter->is_suspended = false;
-+	atomic_set(&adapter->is_suspended, 0);
- 
- 	if (!atomic_read(&card->rx_data_urb_pending))
- 		for (i = 0; i < MWIFIEX_RX_DATA_URB; i++)
-@@ -550,7 +550,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 
- 	if (user_rmmod) {
- #ifdef CONFIG_PM
--		if (adapter->is_suspended)
-+		if (atomic_read(&adapter->is_suspended))
- 			mwifiex_usb_resume(intf);
- #endif
- 		for (i = 0; i < adapter->priv_num; i++)
-@@ -709,7 +709,7 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
- 	u8 *data = (u8 *)skb->data;
- 	struct urb *tx_urb;
- 
--	if (adapter->is_suspended) {
-+	if (atomic_read(&adapter->is_suspended)) {
- 		dev_err(adapter->dev,
- 			"%s: not allowed while suspended\n", __func__);
- 		return -1;
--- 
-1.7.0.2
+Once this happens, wireless stops working. This can be fixed by running
 
+  rmmod iwldvm iwlwifi mac80211 cfg80211; sleep 10; modprobe iwlwifi
+
+
+Trace:
+
+[ 8920.123776] ------------[ cut here ]------------
+[ 8920.123797] WARNING: at
+/build/buildd-linux_3.7.1-1~experimental.1-i386-Au6THQ/linux-3.7.1/drivers/net/wireless/iwlwifi/dvm/tx.c:1189
+iwlagn_rx_reply_tx+0x288/0x6e2 [iwldvm]()
+[ 8920.123800] Hardware name: 4286CTO
+[ 8920.123802] Modules linked in: parport_pc ppdev lp parport bnep
+rfcomm cpufreq_userspace cpufreq_stats cpufreq_powersave
+cpufreq_conservative uinput nfsd auth_rpcgss nfs_acl nfs lockd
+dns_resolver fscache sunrpc ext4 jbd2 mbcache loop fuse
+snd_hda_codec_hdmi snd_hda_codec_conexant arc4 coretemp i915
+snd_hda_intel iwldvm mac80211 joydev drm_kms_helper drm snd_hda_codec
+snd_hwdep snd_pcm i2c_algo_bit kvm_intel btusb kvm thinkpad_acpi
+snd_page_alloc nvram bluetooth i2c_i801 iwlwifi crc32c_intel crc16
+snd_seq snd_seq_device snd_timer iTCO_wdt acpi_cpufreq mperf
+aesni_intel iTCO_vendor_support i2c_core psmouse pcspkr snd aes_i586
+xts lrw ac soundcore battery lpc_ich evdev mei tpm_tis gf128mul
+ablk_helper video serio_raw mfd_core button cfg80211 rfkill tpm cryptd
+tpm_bios processor wmi xfs sg sd_mod crc_t10dif mmc_block microcode
+ahci libahci xhci_hcd libata sdhci_pci sdhci mmc_core scsi_mod
+ehci_hcd e1000e usbcore usb_common thermal thermal_sys
+[ 8920.123891] Pid: 0, comm: swapper/0 Not tainted 3.7-trunk-686-pae
+#1 Debian 3.7.1-1~experimental.1
+[ 8920.123893] Call Trace:
+[ 8920.123902]  [<c10310c5>] ? warn_slowpath_common+0x68/0x79
+[ 8920.123912]  [<f86961e2>] ? iwlagn_rx_reply_tx+0x288/0x6e2 [iwldvm]
+[ 8920.123916]  [<c10310e3>] ? warn_slowpath_null+0xd/0x10
+[ 8920.123924]  [<f86961e2>] ? iwlagn_rx_reply_tx+0x288/0x6e2 [iwldvm]
+[ 8920.123929]  [<c10574b0>] ? load_balance+0x33c/0x520
+[ 8920.123940]  [<f869b344>] ? iwl_rx_dispatch+0x57/0x63 [iwldvm]
+[ 8920.123948]  [<f85b0d14>] ? iwl_irq_tasklet+0x39c/0x698 [iwlwifi]
+[ 8920.123953]  [<c1037457>] ? tasklet_action+0x62/0xa5
+[ 8920.123957]  [<c103711b>] ? __do_softirq+0x90/0x192
+[ 8920.123961]  [<c103708b>] ? perf_trace_irq_handler_entry+0xd7/0xd7
+[ 8920.123962]  <IRQ>  [<c10372cb>] ? irq_exit+0x32/0x7d
+[ 8920.123971]  [<c100d070>] ? do_IRQ+0x65/0x76
+[ 8920.123976]  [<c12ed2f3>] ? common_interrupt+0x33/0x38
+[ 8920.123980]  [<c10300d8>] ? copy_process.part.33+0x8a8/0xf0c
+[ 8920.123985]  [<c11b1c03>] ? intel_idle+0xc4/0xec
+[ 8920.123990]  [<c122ea2e>] ? cpuidle_enter+0xb/0xe
+[ 8920.123994]  [<c122edb9>] ? cpuidle_enter_state+0x9/0x33
+[ 8920.123998]  [<c122ee8e>] ? cpuidle_idle_call+0xab/0x146
+[ 8920.124002]  [<c10114d7>] ? cpu_idle+0x88/0xac
+[ 8920.124006]  [<c1464966>] ? start_kernel+0x334/0x339
+[ 8920.124009] ---[ end trace fc6895e52f152baf ]---
+
+
+lspci:
+
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor
+Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation
+Core Processor Family Integrated Graphics Controller (rev 09)
+00:16.0 Communication controller: Intel Corporation 6 Series/C200
+Series Chipset Family MEI Controller #1 (rev 04)
+00:16.3 Serial controller: Intel Corporation 6 Series/C200 Series
+Chipset Family KT Controller (rev 04)
+00:19.0 Ethernet controller: Intel Corporation 82579LM Gigabit Network
+Connection (rev 04)
+00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset
+Family USB Enhanced Host Controller #2 (rev 04)
+00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset
+Family High Definition Audio Controller (rev 04)
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 1 (rev b4)
+00:1c.1 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 2 (rev b4)
+00:1c.3 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 4 (rev b4)
+00:1c.4 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 5 (rev b4)
+00:1c.6 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset
+Family PCI Express Root Port 7 (rev b4)
+00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset
+Family USB Enhanced Host Controller #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation QM67 Express Chipset Family LPC
+Controller (rev 04)
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series
+Chipset Family 6 port SATA AHCI Controller (rev 04)
+00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family
+SMBus Controller (rev 04)
+03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 35)
+0d:00.0 System peripheral: Ricoh Co Ltd PCIe SDXC/MMC Host Controller (rev 07)
+0e:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
+Controller (rev 04)
+
+
+If you need any more info, please let me know; I am not subscribed on
+all lists so please keep me CC'ed.
+
+
+
+Thanks,
+Richard
