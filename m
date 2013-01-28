@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:62034 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932086Ab3AYMN2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41663 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763Ab3A1JhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 07:13:28 -0500
-Received: by mail-wg0-f45.google.com with SMTP id dq12so193405wgb.12
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:13:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <2074978.Uifvhs4VDD@sylvesterjr.pats.ua.ac.be>
-References: <2074978.Uifvhs4VDD@sylvesterjr.pats.ua.ac.be>
-Date: Fri, 25 Jan 2013 13:13:27 +0100
-Message-ID: <CAGXE3d9+XjVA4GNc37mZyNjE59xom2FMDhNZx_DFyzax8eXfkQ@mail.gmail.com> (sfid-20130125_131333_641017_0818293F)
-Subject: Re: rt2800 does not support HT40 in managed mode
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Jan 2013 04:37:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/37] iwlwifi: clean up CMD_MODE enum
+Date: Mon, 28 Jan 2013 10:37:09 +0100
+Message-Id: <1359365864-4259-3-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103731_996703_4D110762)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 25, 2013 at 11:36 AM, Erwin Van de Velde
-<erwin.vandevelde@gmail.com> wrote:
-> In a lab setup, we configured rt2800 + hostapd to setup an access point
-> in 802.11n 5GHz with HT40. Even though there was no interference, we
-> could verify with a Wi-Spy that the network used in fact only a 20MHz wide
-> band and iperf showed very low throughput (approx. 10Mbps for a 10m
-> line-of-sight connection).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Maybe there were other APs around forcing hostapd to fall back to HT20 (see
-ieee80211n_allowed_ht40_channel_pair in hostapd source code)?
+Just format the enum better.
 
-Helmut
+Change-Id: I16cfc815676e12fadea1640f3496a91a6b804c0a
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index ce878b9..d4ab24b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -193,11 +193,11 @@ struct iwl_rx_packet {
+  * @CMD_ON_DEMAND: This command is sent by the test mode pipe.
+  */
+ enum CMD_MODE {
+-	CMD_SYNC = 0,
+-	CMD_ASYNC = BIT(0),
+-	CMD_WANT_SKB = BIT(1),
+-	CMD_WANT_HCMD = BIT(2),
+-	CMD_ON_DEMAND = BIT(3),
++	CMD_SYNC		= 0,
++	CMD_ASYNC		= BIT(0),
++	CMD_WANT_SKB		= BIT(1),
++	CMD_WANT_HCMD		= BIT(2),
++	CMD_ON_DEMAND		= BIT(3),
+ };
+ 
+ #define DEF_CMD_PAYLOAD_SIZE 320
+-- 
+1.8.0
+
