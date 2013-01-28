@@ -1,105 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht1.myhostedexchange.com ([69.50.2.37]:18568 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752613Ab3APTqy (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab3A1Jiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 14:46:54 -0500
-From: Sven Eckelmann <sven@open-mesh.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>, <zefir.kurtisi@neratec.com>,
-	<simon.wunderlich@s2003.tu-chemnitz.de>,
-	<tobias.steinicke@net.t-labs.tu-berlin.de>,
-	<mathias.kretschmer@fokus.fraunhofer.de>,
-	<achadd@qca.qualcomm.com>, Sven Eckelmann <sven@open-mesh.com>
-Subject: [RFC] ath9k: Don't preshift spectral scan bins
-Date: Wed, 16 Jan 2013 20:46:39 +0100
-Message-ID: <1358365599-16122-1-git-send-email-sven@open-mesh.com> (sfid-20130116_204658_025130_BE4CB52B)
-In-Reply-To: <50F6CE89.5060106@neratec.com>
-References: <50F6CE89.5060106@neratec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Jan 2013 04:38:52 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 37/37] iwlwifi: add the MVM driver (add to driver)
+Date: Mon, 28 Jan 2013 10:37:44 +0100
+Message-Id: <1359365864-4259-38-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103906_704245_A8362A90)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The extension of the 8 bit bins for each bin to 16 bit is not necessary. This
-operation can be done in userspace or on a different machine. Instead the
-max_exp defining the amount of shifting required for each bin is exported to
-userspace.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The change of the output format requires a change of the type in the sample
-tlv to allow the userspace program to correctly detect the bin format.
+Newer firmware revisions have a completely new
+firmware API. This is the new driver for this
+new API.
 
-Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+I've listed the people who directly contributed
+code, but many others from various teams have
+contributed in other ways.
+
+Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Amit Beka <amit.beka@intel.com>
+Cc: Amnon Paz <amnonx.paz@intel.com>
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Dor Shaish <dor.shaish@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++---
- drivers/net/wireless/ath/ath9k/recv.c  |   10 ++++------
- 2 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/Kconfig     | 14 +++++++++++++-
+ drivers/net/wireless/iwlwifi/Makefile    |  1 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h |  2 ++
+ drivers/net/wireless/iwlwifi/iwl-drv.c   | 15 ++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-fw.h    |  1 +
+ 5 files changed, 27 insertions(+), 6 deletions(-)
 
-This patch requires the previous patch
-"[PATCH] ath9k: Save spectral scan data in network byteorder"
-
-Please discuss the final format before this patch is applied.
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8250330..cc6b786 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -864,7 +864,7 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
-  * interface.
-  */
- enum ath_fft_sample_type {
--	ATH_FFT_SAMPLE_HT20 = 0,
-+	ATH_FFT_SAMPLE_HT20 = 1,
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 5cf4323..ba319cb 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -43,8 +43,20 @@ config IWLWIFI
+ 	  module will be called iwlwifi.
+ 
+ config IWLDVM
+-	tristate "Intel Wireless WiFi"
++	tristate "Intel Wireless WiFi DVM Firmware support"
+ 	depends on IWLWIFI
++	help
++	  This is the driver supporting the DVM firmware which is
++	  currently the only firmware available for existing devices.
++
++config IWLMVM
++	tristate "Intel Wireless WiFi MVM Firmware support"
++	depends on IWLWIFI
++	help
++	  This is the driver supporting the MVM firmware which is
++	  currently only available for 7000 series devices.
++
++	  Say yes if you have such a device.
+ 
+ menu "Debugging Options"
+ 	depends on IWLWIFI
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 2d4d47a..6c78000 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -17,5 +17,6 @@ ccflags-y += -D__CHECK_ENDIAN__ -I$(src)
+ 
+ 
+ obj-$(CONFIG_IWLDVM)	+= dvm/
++obj-$(CONFIG_IWLMVM)	+= mvm/
+ 
+ CFLAGS_iwl-devtrace.o := -I$(src)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index b59ec4c..8cf5db7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -116,6 +116,7 @@ do {                                            			\
+ #define IWL_DL_HCMD		0x00000004
+ #define IWL_DL_STATE		0x00000008
+ /* 0x000000F0 - 0x00000010 */
++#define IWL_DL_TE		0x00000020
+ #define IWL_DL_EEPROM		0x00000040
+ #define IWL_DL_RADIO		0x00000080
+ /* 0x00000F00 - 0x00000100 */
+@@ -156,6 +157,7 @@ do {                                            			\
+ #define IWL_DEBUG_LED(p, f, a...)	IWL_DEBUG(p, IWL_DL_LED, f, ## a)
+ #define IWL_DEBUG_WEP(p, f, a...)	IWL_DEBUG(p, IWL_DL_WEP, f, ## a)
+ #define IWL_DEBUG_HC(p, f, a...)	IWL_DEBUG(p, IWL_DL_HCMD, f, ## a)
++#define IWL_DEBUG_TE(p, f, a...)	IWL_DEBUG(p, IWL_DL_TE, f, ## a)
+ #define IWL_DEBUG_EEPROM(d, f, a...)	IWL_DEBUG_DEV(d, IWL_DL_EEPROM, f, ## a)
+ #define IWL_DEBUG_CALIB(p, f, a...)	IWL_DEBUG(p, IWL_DL_CALIB, f, ## a)
+ #define IWL_DEBUG_FW(p, f, a...)	IWL_DEBUG(p, IWL_DL_FW, f, ## a)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index c675196..6f228bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -139,8 +139,10 @@ struct iwl_drv {
+ #endif
  };
  
- struct fft_sample_tlv {
-@@ -876,7 +876,7 @@ struct fft_sample_tlv {
- struct fft_sample_ht20 {
- 	struct fft_sample_tlv tlv;
+-#define DVM_OP_MODE	0
+-#define MVM_OP_MODE	1
++enum {
++	DVM_OP_MODE =	0,
++	MVM_OP_MODE =	1,
++};
  
--	u8 __alignment;
-+	u8 max_exp;
+ /* Protects the table contents, i.e. the ops pointer & drv list */
+ static struct mutex iwlwifi_opmode_table_mtx;
+@@ -149,8 +151,8 @@ static struct iwlwifi_opmode_table {
+ 	const struct iwl_op_mode_ops *ops;	/* pointer to op_mode ops */
+ 	struct list_head drv;		/* list of devices using this op_mode */
+ } iwlwifi_opmode_table[] = {		/* ops set when driver is initialized */
+-	{ .name = "iwldvm", .ops = NULL },
+-	{ .name = "iwlmvm", .ops = NULL },
++	[DVM_OP_MODE] = { .name = "iwldvm", .ops = NULL },
++	[MVM_OP_MODE] = { .name = "iwlmvm", .ops = NULL },
+ };
  
- 	u16 freq;
- 	s8 rssi;
-@@ -888,7 +888,7 @@ struct fft_sample_ht20 {
+ /*
+@@ -963,7 +965,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	release_firmware(ucode_raw);
  
- 	u64 tsf;
+ 	mutex_lock(&iwlwifi_opmode_table_mtx);
+-	op = &iwlwifi_opmode_table[DVM_OP_MODE];
++	if (fw->mvm_fw)
++		op = &iwlwifi_opmode_table[MVM_OP_MODE];
++	else
++		op = &iwlwifi_opmode_table[DVM_OP_MODE];
  
--	u16 data[SPECTRAL_HT20_NUM_BINS];
-+	u8 data[SPECTRAL_HT20_NUM_BINS];
- } __packed;
- 
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 2fac787..717ca9d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1035,7 +1035,7 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	struct ath_radar_info *radar_info;
- 	struct ath_ht20_mag_info *mag_info;
- 	int len = rs->rs_datalen;
--	int i, dc_pos;
-+	int dc_pos;
- 
- 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
- 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
-@@ -1106,11 +1106,9 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	/* mag data is at the end of the frame, in front of radar_info */
- 	mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
- 
--	/* Apply exponent and grab further auxiliary information. */
--	for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++) {
--		fft_sample.data[i] = bins[i] << mag_info->max_exp;
--		fft_sample.data[i] = __cpu_to_be16(fft_sample.data[i]);
--	}
-+	/* copy raw bins without scaling them */
-+	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
-+	fft_sample.max_exp = mag_info->max_exp & 0xf;
- 
- 	fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
- 	fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
+ 	/* add this device to the list of devices using this op_mode */
+ 	list_add_tail(&drv->list, &op->drv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 1ad31a9..de3c24a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -166,6 +166,7 @@ struct iwl_tlv_calib_ctrl {
+  * @inst_evtlog_ptr: event log offset for runtime ucode.
+  * @inst_evtlog_size: event log size for runtime ucode.
+  * @inst_errlog_ptr: error log offfset for runtime ucode.
++ * @mvm_fw: indicates this is MVM firmware
+  */
+ struct iwl_fw {
+ 	u32 ucode_ver;
 -- 
-1.7.10.4
+1.8.0
 
