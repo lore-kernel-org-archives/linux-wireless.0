@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54166 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751607Ab3AGRWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 12:22:42 -0500
-Message-ID: <1357579362.21481.45.camel@joe-AO722> (sfid-20130107_182250_501118_1F3620EB)
-Subject: Re: [RFC PATCH] vsprintf: Add %p*D extension for 80211 SSIDs
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Chen Gang <gang.chen@asianux.com>, stas.yakovlev@gmail.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 07 Jan 2013 09:22:42 -0800
-In-Reply-To: <1357544828.9912.0.camel@jlt4.sipsolutions.net>
-References: <50E82D7D.4090107@asianux.com>
-	 <1357396966.21156.4.camel@joe-AO722> <50EA37CE.1090901@asianux.com>
-	 <1357528746.4940.31.camel@joe-AO722> <1357534195.21481.31.camel@joe-AO722>
-	 (sfid-20130107_055017_668200_9F1C3EAF) <1357544828.9912.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:63073 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753009Ab3A1KCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 05:02:40 -0500
+Date: Mon, 28 Jan 2013 11:02:30 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] iwlegacy: fix antenna bitmask
+Message-ID: <20130128100229.GB2316@redhat.com> (sfid-20130128_110244_037029_EC1E42A7)
+References: <E1TzDQW-0001Fa-7P@debian64.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1TzDQW-0001Fa-7P@debian64.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-01-07 at 08:47 +0100, Johannes Berg wrote:
-> On Sun, 2013-01-06 at 20:49 -0800, Joe Perches wrote:
-> > On Sun, 2013-01-06 at 19:19 -0800, Joe Perches wrote:
-> > > Maybe these days this should be another vsprintf %p extension
-> > > like %pM when the DECLARE_MAC_BUF/print_mac uses were converted.
-> > > 
-> > > (or maybe extend %ph for ssids with %*phs, length, array)
-> > 
-> > Maybe like this:
+On Sat, Jan 26, 2013 at 10:19:35PM +0100, Christian Lamparter wrote:
+> This patch is based on "iwlwifi: fix antenna bitmask".
+> (362b0563b28506d53)
 > 
-> > + * - 'D' For a 80211 SSID, it prints the SSID escaping any non-printable
-> > +         characters with a leading \ and octal or [0nrt\]
+> Like the new iwlagn devices, the old 4965N device only
+> supports a maximum of three antennas. Hence only three
+> bits are used, the fourth bit is likely the A-MPDU
+> indicator.
 > 
-> Honestly, I'm not sure it's worth it.
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 
-Neither am I really, the only value I see in it is the
-reduction in stack consumption by 100 bytes or so per use.
-
-> print_ssid() is used in two or
-> three legacy drivers only, not in any modern driver, and is unlikely to
-> be used in the more modern drivers due to tracing etc.
-
-Swell.  It was just another way to correct those overrun
-errors Chen Gang found.
+ACK
 
