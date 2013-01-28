@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54722 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753387Ab3ALOo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 09:44:29 -0500
-Message-ID: <50F176C3.2070200@hauke-m.de> (sfid-20130112_154432_550119_775D1558)
-Date: Sat, 12 Jan 2013 15:44:19 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:64443 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754545Ab3A1Qcm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 11:32:42 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/14] wil6210: Count Tx statistics on Tx completion
+Date: Mon, 28 Jan 2013 18:31:00 +0200
+Message-ID: <1359390669-9310-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173245_518776_2CA3D4E2)
+In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Nathan Hintz <nlhintz@hotmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/5] bcma: add support for 1 and 2 byte extended config
- space access
-References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com> <BLU0-SMTP989EDC8A841E1B9D693EC8AC280@phx.gbl>
-In-Reply-To: <BLU0-SMTP989EDC8A841E1B9D693EC8AC280@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2013 11:46 AM, Nathan Hintz wrote:
-> The sanity checks allow 1 and 2 byte reads/writes of the extended
-> PCI config space to proceed; however, the code only supports 4
-> byte reads/writes.  This patch adds support for 1 and 2 byte
-> reads/writes of the extended PCI config space.
-> 
-> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+This allows to account for Tx errors
 
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-> ---
->  drivers/bcma/driver_pci_host.c |   15 ++++++++-------
->  1 files changed, 8 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-> index e1381ba..92800b4 100644
-> --- a/drivers/bcma/driver_pci_host.c
-> +++ b/drivers/bcma/driver_pci_host.c
-> @@ -101,7 +101,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
->  		 */
->  		if (off >= PCI_CONFIG_SPACE_SIZE) {
->  			addr = (func << 12);
-> -			addr |= (off & 0x0FFF);
-> +			addr |= (off & 0x0FFC);
->  			val = bcma_pcie_read_config(pc, addr);
->  		} else {
->  			addr = BCMA_CORE_PCI_PCICFG0;
-> @@ -164,7 +164,11 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
->  		/* accesses to config registers with offsets >= 256
->  		 * requires indirect access.
->  		 */
-> -		if (off < PCI_CONFIG_SPACE_SIZE) {
-> +		if (off >= PCI_CONFIG_SPACE_SIZE) {
-> +			addr = (func << 12);
-> +			addr |= (off & 0x0FFC);
-> +			val = bcma_pcie_read_config(pc, addr);
-> +		} else {
->  			addr = BCMA_CORE_PCI_PCICFG0;
->  			addr |= (func << 8);
->  			addr |= (off & 0xfc);
-> @@ -202,13 +206,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
->  		/* accesses to config registers with offsets >= 256
->  		 * requires indirect access.
->  		 */
-> -		if (off >= PCI_CONFIG_SPACE_SIZE) {
-> -			addr = (func << 12);
-> -			addr |= (off & 0x0FFF);
-> +		if (off >= PCI_CONFIG_SPACE_SIZE)
->  			bcma_pcie_write_config(pc, addr, val);
-> -		} else {
-> +		else
->  			pcicore_write32(pc, addr, val);
-> -		}
->  	} else {
->  		writel(val, mmio);
->  
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index f3b523b..e7ea538 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -752,8 +752,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	}
+ 	switch (rc) {
+ 	case 0:
+-		ndev->stats.tx_packets++;
+-		ndev->stats.tx_bytes += skb->len;
++		/* statistics will be updated on the tx_complete */
+ 		dev_kfree_skb_any(skb);
+ 		return NETDEV_TX_OK;
+ 	case -ENOMEM:
+@@ -777,6 +776,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+  */
+ void wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ {
++	struct net_device *ndev = wil_to_ndev(wil);
+ 	struct device *dev = wil_to_dev(wil);
+ 	struct vring *vring = &wil->vring_tx[ringid];
+ 
+@@ -804,6 +804,13 @@ void wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 		pa = d->dma.addr_low | ((u64)d->dma.addr_high << 32);
+ 		skb = vring->ctx[vring->swtail];
+ 		if (skb) {
++			if (d->dma.error == 0) {
++				ndev->stats.tx_packets++;
++				ndev->stats.tx_bytes += skb->len;
++			} else {
++				ndev->stats.tx_errors++;
++			}
++
+ 			dma_unmap_single(dev, pa, d->dma.length, DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(skb);
+ 			vring->ctx[vring->swtail] = NULL;
+-- 
+1.7.10.4
 
