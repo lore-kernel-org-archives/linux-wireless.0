@@ -1,110 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:31315 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab3AHFcL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41723 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755519Ab3A1Jiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 00:32:11 -0500
-Message-ID: <50EBAF8F.7030704@asianux.com> (sfid-20130108_063308_456728_0BC6C300)
-Date: Tue, 08 Jan 2013 13:33:03 +0800
-From: Chen Gang <gang.chen@asianux.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: [PATCH] drivers/net/wireless: need consider the not '\0' terminated
- string.
-Content-Type: text/plain; charset=GB2312
+	Mon, 28 Jan 2013 04:38:46 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 34/37] iwlwifi: add the MVM driver (time-event.h)
+Date: Mon, 28 Jan 2013 10:37:41 +0100
+Message-Id: <1359365864-4259-35-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103855_448531_E813902B)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-  in ray_cs.c:
-    the a_current_ess_id is "Null terminated unless ESSID_SIZE long"
-    so we need buffer it with '\0' firstly, before using strlen or %s.
+Newer firmware revisions have a completely new
+firmware API. This is the new driver for this
+new API.
 
-  additional information:
-    in drivers/net/wireless/rayctl.h:
-      "NULL terminated unless 32 long" is a comment at line 616, 664
-      ESSID_SIZE is 32, at line 190
-    in include/uapi/linux/wireless.h:
-      IW_ESSID_MAX_SIZE is also 32
-    in drivers/net/wireless/ray_cs.c:
-      use strncpy for it, without '\0' terminated, at line 639
-      use memcpy for it, assume not '\0' terminated in line 1092..1097
-      buffer it with '\0' firstly, before using %s, in line 2576, 2598..2600
+I've listed the people who directly contributed
+code, but many others from various teams have
+contributed in other ways.
 
-Signed-off-by: Chen Gang <gang.chen@asianux.com>
+Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Amit Beka <amit.beka@intel.com>
+Cc: Amnon Paz <amnonx.paz@intel.com>
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Dor Shaish <dor.shaish@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ray_cs.c |   19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/time-event.h | 214 ++++++++++++++++++++++++++
+ 1 file changed, 214 insertions(+)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/time-event.h
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 598ca1c..e7cf37f 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -1107,12 +1107,15 @@ static int ray_get_essid(struct net_device *dev, struct iw_request_info *info,
- 			 union iwreq_data *wrqu, char *extra)
- {
- 	ray_dev_t *local = netdev_priv(dev);
-+	UCHAR tmp[IW_ESSID_MAX_SIZE + 1];
- 
- 	/* Get the essid that was set */
- 	memcpy(extra, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
-+	memcpy(tmp, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
-+	tmp[IW_ESSID_MAX_SIZE] = '\0';
- 
- 	/* Push it out ! */
--	wrqu->essid.length = strlen(extra);
-+	wrqu->essid.length = strlen(tmp);
- 	wrqu->essid.flags = 1;	/* active */
- 
- 	return 0;
-@@ -1842,6 +1845,8 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 	UCHAR tmp;
- 	UCHAR cmd;
- 	UCHAR status;
-+	UCHAR memtmp[ESSID_SIZE + 1];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.h b/drivers/net/wireless/iwlwifi/mvm/time-event.h
+new file mode 100644
+index 0000000..bf2f541
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.h
+@@ -0,0 +1,214 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
 +
- 
- 	if (dev == NULL)	/* Note that we want interrupts with dev->start == 0 */
- 		return IRQ_NONE;
-@@ -1901,17 +1906,21 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 			break;
- 		case CCS_START_NETWORK:
- 		case CCS_JOIN_NETWORK:
-+			memcpy(memtmp, local->sparm.b4.a_current_ess_id,
-+								ESSID_SIZE);
-+			memtmp[ESSID_SIZE] = '\0';
++#ifndef __time_event_h__
++#define __time_event_h__
 +
- 			if (status == CCS_COMMAND_COMPLETE) {
- 				if (readb
- 				    (&pccs->var.start_network.net_initiated) ==
- 				    1) {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" started\n",
--					      local->sparm.b4.a_current_ess_id);
-+					      memtmp);
- 				} else {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" joined\n",
--					      local->sparm.b4.a_current_ess_id);
-+					      memtmp);
- 				}
- 				memcpy_fromio(&local->bss_id,
- 					      pccs->var.start_network.bssid,
-@@ -1939,12 +1948,12 @@ static irqreturn_t ray_interrupt(int irq, void *dev_id)
- 				if (status == CCS_START_NETWORK) {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" start failed\n",
--					      local->sparm.b4.a_current_ess_id);
-+					      memtmp);
- 					local->timer.function = start_net;
- 				} else {
- 					dev_dbg(&link->dev,
- 					      "ray_cs interrupt network \"%s\" join failed\n",
--					      local->sparm.b4.a_current_ess_id);
-+					      memtmp);
- 					local->timer.function = join_net;
- 				}
- 				add_timer(&local->timer);
++#include "fw-api.h"
++
++#include "mvm.h"
++
++/**
++ * DOC: Time Events - what is it?
++ *
++ * Time Events are a fw feature that allows the driver to control the presence
++ * of the device on the channel. Since the fw supports multiple channels
++ * concurrently, the fw may choose to jump to another channel at any time.
++ * In order to make sure that the fw is on a specific channel at a certain time
++ * and for a certain duration, the driver needs to issue a time event.
++ *
++ * The simplest example is for BSS association. The driver issues a time event,
++ * waits for it to start, and only then tells mac80211 that we can start the
++ * association. This way, we make sure that the association will be done
++ * smoothly and won't be interrupted by channel switch decided within the fw.
++ */
++
++ /**
++ * DOC: The flow against the fw
++ *
++ * When the driver needs to make sure we are in a certain, at a certain time
++ * and for a certain duration, it sends a Time Event. The flow against the fw
++ * goes like this:
++ *	1) Driver sends a TIME_EVENT_CMD to the fw
++ *	2) Driver gets the response for that command. This response contains the
++ *	   Unique ID (UID) of the event.
++ *	3) The fw sends notification when the event start.
++ *
++ * Of course the API provides various options that allows to cover parameters
++ * of the flow.
++ *	What is the duration of the event?
++ *	What is the start time of the event?
++ *	Is there an end-time for the event?
++ *	How much can the event be delayed?
++ *	Can the event be split?
++ *	If yes what is the maximal number of chunks?
++ *	etc...
++ */
++
++/**
++ * DOC: Abstraction to the driver
++ *
++ * In order to simplify the use of time events to the rest of the driver,
++ * we abstract the use of time events. This component provides the functions
++ * needed by the driver.
++ */
++
++#define IWL_MVM_TE_SESSION_PROTECTION_MAX_TIME_MS 500
++#define IWL_MVM_TE_SESSION_PROTECTION_MIN_TIME_MS 400
++
++/**
++ * iwl_mvm_protect_session - start / extend the session protection.
++ * @mvm: the mvm component
++ * @vif: the virtual interface for which the session is issued
++ * @duration: the duration of the session in TU.
++ * @min_duration: will start a new session if the current session will end
++ *	in less than min_duration.
++ *
++ * This function can be used to start a session protection which means that the
++ * fw will stay on the channel for %duration_ms milliseconds. This function
++ * will block (sleep) until the session starts. This function can also be used
++ * to extend a currently running session.
++ * This function is meant to be used for BSS association for example, where we
++ * want to make sure that the fw stays on the channel during the association.
++ */
++void iwl_mvm_protect_session(struct iwl_mvm *mvm,
++			     struct ieee80211_vif *vif,
++			     u32 duration, u32 min_duration);
++
++/**
++ * iwl_mvm_stop_session_protection - cancel the session protection.
++ * @mvm: the mvm component
++ * @vif: the virtual interface for which the session is issued
++ *
++ * This functions cancels the session protection which is an act of good
++ * citizenship. If it is not needed any more it should be cancelled because
++ * the other bindings wait for the medium during that time.
++ * This funtions doesn't sleep.
++ */
++void iwl_mvm_stop_session_protection(struct iwl_mvm *mvm,
++				      struct ieee80211_vif *vif);
++
++/*
++ * iwl_mvm_rx_time_event_notif - handles %TIME_EVENT_NOTIFICATION.
++ */
++int iwl_mvm_rx_time_event_notif(struct iwl_mvm *mvm,
++				struct iwl_rx_cmd_buffer *rxb,
++				struct iwl_device_cmd *cmd);
++
++/**
++ * iwl_mvm_start_p2p_roc - start remain on channel for p2p device functionlity
++ * @mvm: the mvm component
++ * @vif: the virtual interface for which the roc is requested. It is assumed
++ * that the vif type is NL80211_IFTYPE_P2P_DEVICE
++ * @duration: the requested duration in millisecond for the fw to be on the
++ * channel that is bound to the vif.
++ *
++ * This function can be used to issue a remain on channel session,
++ * which means that the fw will stay in the channel for the request %duration
++ * milliseconds. The function is async, meaning that it only issues the ROC
++ * request but does not wait for it to start. Once the FW is ready to serve the
++ * ROC request, it will issue a notification to the driver that it is on the
++ * requested channel. Once the FW completes the ROC request it will issue
++ * another notification to the driver.
++ */
++int iwl_mvm_start_p2p_roc(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			  int duration);
++
++/**
++ * iwl_mvm_stop_p2p_roc - stop remain on channel for p2p device functionlity
++ * @mvm: the mvm component
++ *
++ * This function can be used to cancel an ongoing ROC session.
++ * The function is async, it will instruct the FW to stop serving the ROC
++ * session, but will not wait for the actual stopping of the session.
++ */
++void iwl_mvm_stop_p2p_roc(struct iwl_mvm *mvm);
++
++/**
++ * iwl_mvm_remove_time_event - general function to clean up of time event
++ * @mvm: the mvm component
++ * @vif: the vif to which the time event belongs
++ * @te_data: the time event data that corresponds to that time event
++ *
++ * This function can be used to cancel a time event regardless its type.
++ * It is useful for cleaning up time events running before removing an
++ * interface.
++ */
++void iwl_mvm_remove_time_event(struct iwl_mvm *mvm,
++			       struct iwl_mvm_vif *mvmvif,
++			       struct iwl_mvm_time_event_data *te_data);
++
++/**
++ * iwl_mvm_te_clear_data - remove time event from list
++ * @mvm: the mvm component
++ * @te_data: the time event data to remove
++ *
++ * This function is mostly internal, it is made available here only
++ * for firmware restart purposes.
++ */
++void iwl_mvm_te_clear_data(struct iwl_mvm *mvm,
++			   struct iwl_mvm_time_event_data *te_data);
++
++void iwl_mvm_roc_done_wk(struct work_struct *wk);
++
++#endif /* __time_event_h__ */
 -- 
-1.7.10.4
+1.8.0
+
