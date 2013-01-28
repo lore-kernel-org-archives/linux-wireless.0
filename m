@@ -1,742 +1,364 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38126 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753390Ab3AQReB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41675 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753029Ab3A1Jh3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jan 2013 12:34:01 -0500
-Date: Thu, 17 Jan 2013 12:32:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2013-01-17
-Message-ID: <20130117173239.GA2098@tuxdriver.com> (sfid-20130117_183510_743026_5B61F4F6)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
+	Mon, 28 Jan 2013 04:37:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 08/37] iwlwifi: add the MVM driver (fw-api-rs)
+Date: Mon, 28 Jan 2013 10:37:15 +0100
+Message-Id: <1359365864-4259-9-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103740_278366_CF0B0F49)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Newer firmware revisions have a completely new
+firmware API. This is the new driver for this
+new API.
 
-(This message comes to you from Santa Clara, CA -- where I found
-frost on the windshield this morning!)
+I've listed the people who directly contributed
+code, but many others from various teams have
+contributed in other ways.
 
-Dave,
-
-This batch of fixes is intended for 3.8...
-
-Included is a Bluetooth pull.  Gustavo says:
-
-"A few fixes for 3.8. Five of them are just new devices ids addition.
-Apart from the that there is fix to a kernel memory leak to userspace from
-Anderson Lizardo, two interoperability fixes from Jaganath Kanakkassery and
-Szymon Janc. And a crash fix by me."
-
-Along with that, Amitkumar Karwar brings a pair of mwifiex fixes for
-problems related to handling of band information within the driver.
-These problems can lead to association failures.
-
-Sujith Manoharan fixes a memory leak in the ath9k_htc code (originally
-reported by Larry Finger).
-
-The big hero this round is Felix Fietkau.  Felix gives us seven
-ath9k fixes, including a fix for a race condition, the removal of a
-double-free, and a fix for a deadlock, among others.
-
-These have all been in linux-next for at least a couple of days,
-with no complaints so far.  Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Amit Beka <amit.beka@intel.com>
+Cc: Amnon Paz <amnonx.paz@intel.com>
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Dor Shaish <dor.shaish@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h | 312 +++++++++++++++++++++++++++
+ 1 file changed, 312 insertions(+)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
 
-The following changes since commit fa1e492aa3cbafba9f8fc6d05e5b08a3091daf4a:
-
-  ipv4: Don't update the pmtu on mtu locked routes (2013-01-17 03:39:36 -05=
-00)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
-avem
-
-for you to fetch changes up to 811477de5f6d65baea69f25cb5528d428b82cc9c:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless into for-davem (2013-01-17 12:07:44 -0500)
-
-----------------------------------------------------------------
-
-AceLan Kao (3):
-      Bluetooth: Add support for IMC Networks [13d3:3393]
-      Bluetooth: Add support for Foxconn / Hon Hai [0489:e04e]
-      Bluetooth: Add support for Foxconn / Hon Hai [0489:e056]
-
-Amitkumar Karwar (2):
-      mwifiex: update config_bands during infra association
-      mwifiex: correct config_bands handling for ibss network
-
-Anderson Lizardo (1):
-      Bluetooth: Fix incorrect strncpy() in hidp_setup_hid()
-
-Daniel Schaal (1):
-      Bluetooth: Add support for GC-WB300D PCIe [04ca:3006] to ath3k.
-
-Felix Fietkau (7):
-      ath9k: do not link receive buffers during flush
-      ath9k: fix double-free bug on beacon generate failure
-      ath9k: remove the WARN_ON that triggers if generating a beacon fails
-      ath9k: add a better fix for the rx tasklet vs rx flush race
-      ath9k: fix rx flush handling
-      ath9k: remove sc->rx.rxbuflock to fix a deadlock
-      ath9k: disable the tasklet before taking the PCU lock
-
-Gustavo Padovan (1):
-      Bluetooth: Check if the hci connection exists in SCO shutdown
-
-Jaganath Kanakkassery (1):
-      Bluetooth: Fix authentication if acl data comes before remote feature=
- evt
-
-John W. Linville (1):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
-nto for-davem
-
-Piotr Haber (1):
-      brcmsmac: increase timer reference count for new timers only
-
-Sergio Cambra (1):
-      Bluetooth device 04ca:3008 should use ath3k
-
-Sujith Manoharan (1):
-      ath9k_htc: Fix memory leak
-
-Szymon Janc (1):
-      Bluetooth: Fix sending HCI commands after reset
-
- drivers/bluetooth/ath3k.c                          | 10 ++++
- drivers/bluetooth/btusb.c                          |  5 ++
- drivers/net/wireless/ath/ath9k/ath9k.h             |  3 --
- drivers/net/wireless/ath/ath9k/beacon.c            |  2 +-
- drivers/net/wireless/ath/ath9k/debug.c             |  1 -
- drivers/net/wireless/ath/ath9k/debug.h             |  2 -
- drivers/net/wireless/ath/ath9k/htc_hst.c           |  2 +
- drivers/net/wireless/ath/ath9k/main.c              | 19 +++-----
- drivers/net/wireless/ath/ath9k/recv.c              | 54 ++++++------------=
-----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  7 +--
- drivers/net/wireless/mwifiex/cfg80211.c            | 17 +------
- drivers/net/wireless/mwifiex/sta_ioctl.c           | 14 ++++++
- net/bluetooth/hci_core.c                           |  8 ----
- net/bluetooth/hci_event.c                          |  2 +-
- net/bluetooth/hidp/core.c                          |  2 +-
- net/bluetooth/l2cap_core.c                         | 11 +++++
- net/bluetooth/sco.c                                |  2 +-
- 17 files changed, 73 insertions(+), 88 deletions(-)
-
-diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
-index b00000e..33c9a44 100644
---- a/drivers/bluetooth/ath3k.c
-+++ b/drivers/bluetooth/ath3k.c
-@@ -77,10 +77,15 @@ static struct usb_device_id ath3k_table[] =3D {
- 	{ USB_DEVICE(0x0CF3, 0x311D) },
- 	{ USB_DEVICE(0x13d3, 0x3375) },
- 	{ USB_DEVICE(0x04CA, 0x3005) },
-+	{ USB_DEVICE(0x04CA, 0x3006) },
-+	{ USB_DEVICE(0x04CA, 0x3008) },
- 	{ USB_DEVICE(0x13d3, 0x3362) },
- 	{ USB_DEVICE(0x0CF3, 0xE004) },
- 	{ USB_DEVICE(0x0930, 0x0219) },
- 	{ USB_DEVICE(0x0489, 0xe057) },
-+	{ USB_DEVICE(0x13d3, 0x3393) },
-+	{ USB_DEVICE(0x0489, 0xe04e) },
-+	{ USB_DEVICE(0x0489, 0xe056) },
-=20
- 	/* Atheros AR5BBU12 with sflash firmware */
- 	{ USB_DEVICE(0x0489, 0xE02C) },
-@@ -104,10 +109,15 @@ static struct usb_device_id ath3k_blist_tbl[] =3D {
- 	{ USB_DEVICE(0x0cf3, 0x311D), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x13d3, 0x3375), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x04ca, 0x3005), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3006), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3008), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x13d3, 0x3362), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0cf3, 0xe004), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0930, 0x0219), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0489, 0xe057), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x13d3, 0x3393), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x0489, 0xe04e), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x0489, 0xe056), .driver_info =3D BTUSB_ATH3012 },
-=20
- 	/* Atheros AR5BBU22 with sflash firmware */
- 	{ USB_DEVICE(0x0489, 0xE03C), .driver_info =3D BTUSB_ATH3012 },
-diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index a1d4ede..7e351e3 100644
---- a/drivers/bluetooth/btusb.c
-+++ b/drivers/bluetooth/btusb.c
-@@ -135,10 +135,15 @@ static struct usb_device_id blacklist_table[] =3D {
- 	{ USB_DEVICE(0x0cf3, 0x311d), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x13d3, 0x3375), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x04ca, 0x3005), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3006), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x04ca, 0x3008), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x13d3, 0x3362), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0cf3, 0xe004), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0930, 0x0219), .driver_info =3D BTUSB_ATH3012 },
- 	{ USB_DEVICE(0x0489, 0xe057), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x13d3, 0x3393), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x0489, 0xe04e), .driver_info =3D BTUSB_ATH3012 },
-+	{ USB_DEVICE(0x0489, 0xe056), .driver_info =3D BTUSB_ATH3012 },
-=20
- 	/* Atheros AR5BBU12 with sflash firmware */
- 	{ USB_DEVICE(0x0489, 0xe02c), .driver_info =3D BTUSB_IGNORE },
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/=
-ath/ath9k/ath9k.h
-index 86e26a1..42794c5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -317,7 +317,6 @@ struct ath_rx {
- 	u32 *rxlink;
- 	u32 num_pkts;
- 	unsigned int rxfilter;
--	spinlock_t rxbuflock;
- 	struct list_head rxbuf;
- 	struct ath_descdma rxdma;
- 	struct ath_buf *rx_bufptr;
-@@ -328,7 +327,6 @@ struct ath_rx {
-=20
- int ath_startrecv(struct ath_softc *sc);
- bool ath_stoprecv(struct ath_softc *sc);
--void ath_flushrecv(struct ath_softc *sc);
- u32 ath_calcrxfilter(struct ath_softc *sc);
- int ath_rx_init(struct ath_softc *sc, int nbufs);
- void ath_rx_cleanup(struct ath_softc *sc);
-@@ -646,7 +644,6 @@ void ath_ant_comb_update(struct ath_softc *sc);
- enum sc_op_flags {
- 	SC_OP_INVALID,
- 	SC_OP_BEACONS,
--	SC_OP_RXFLUSH,
- 	SC_OP_ANI_RUN,
- 	SC_OP_PRIM_STA_VIF,
- 	SC_OP_HW_RESET,
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless=
-/ath/ath9k/beacon.c
-index 531fffd..2ca355e 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -147,6 +147,7 @@ static struct ath_buf *ath9k_beacon_generate(struct iee=
-e80211_hw *hw,
- 				 skb->len, DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 		bf->bf_buf_addr =3D 0;
-+		bf->bf_mpdu =3D NULL;
- 	}
-=20
- 	skb =3D ieee80211_beacon_get(hw, vif);
-@@ -359,7 +360,6 @@ void ath9k_beacon_tasklet(unsigned long data)
- 		return;
-=20
- 	bf =3D ath9k_beacon_generate(sc->hw, vif);
--	WARN_ON(!bf);
-=20
- 	if (sc->beacon.bmisscnt !=3D 0) {
- 		ath_dbg(common, BSTUCK, "resume beacon xmit after %u misses\n",
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/=
-ath/ath9k/debug.c
-index 13ff9ed..e585fc8 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -861,7 +861,6 @@ static ssize_t read_file_recv(struct file *file, char _=
-_user *user_buf,
- 	RXS_ERR("RX-LENGTH-ERR", rx_len_err);
- 	RXS_ERR("RX-OOM-ERR", rx_oom_err);
- 	RXS_ERR("RX-RATE-ERR", rx_rate_err);
--	RXS_ERR("RX-DROP-RXFLUSH", rx_drop_rxflush);
- 	RXS_ERR("RX-TOO-MANY-FRAGS", rx_too_many_frags_err);
-=20
- 	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/=
-ath/ath9k/debug.h
-index 375c3b4..6df2ab6 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -216,7 +216,6 @@ struct ath_tx_stats {
-  * @rx_oom_err:  No. of frames dropped due to OOM issues.
-  * @rx_rate_err:  No. of frames dropped due to rate errors.
-  * @rx_too_many_frags_err:  Frames dropped due to too-many-frags received.
-- * @rx_drop_rxflush: No. of frames dropped due to RX-FLUSH.
-  * @rx_beacons:  No. of beacons received.
-  * @rx_frags:  No. of rx-fragements received.
-  */
-@@ -235,7 +234,6 @@ struct ath_rx_stats {
- 	u32 rx_oom_err;
- 	u32 rx_rate_err;
- 	u32 rx_too_many_frags_err;
--	u32 rx_drop_rxflush;
- 	u32 rx_beacons;
- 	u32 rx_frags;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireles=
-s/ath/ath9k/htc_hst.c
-index 4a9570d..aac4a40 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -344,6 +344,8 @@ void ath9k_htc_txcompletion_cb(struct htc_target *htc_h=
-andle,
- 			endpoint->ep_callbacks.tx(endpoint->ep_callbacks.priv,
- 						  skb, htc_hdr->endpoint_id,
- 						  txok);
-+		} else {
-+			kfree_skb(skb);
- 		}
- 	}
-=20
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/a=
-th/ath9k/main.c
-index be30a9a..3796e65 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -182,7 +182,7 @@ static void ath_restart_work(struct ath_softc *sc)
- 	ath_start_ani(sc);
- }
-=20
--static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool fl=
-ush)
-+static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah =3D sc->sc_ah;
- 	bool ret =3D true;
-@@ -202,14 +202,6 @@ static bool ath_prepare_reset(struct ath_softc *sc, bo=
-ol retry_tx, bool flush)
- 	if (!ath_drain_all_txq(sc, retry_tx))
- 		ret =3D false;
-=20
--	if (!flush) {
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
--			ath_rx_tasklet(sc, 1, true);
--		ath_rx_tasklet(sc, 1, false);
--	} else {
--		ath_flushrecv(sc);
--	}
--
- 	return ret;
- }
-=20
-@@ -262,11 +254,11 @@ static int ath_reset_internal(struct ath_softc *sc, s=
-truct ath9k_channel *hchan,
- 	struct ath_common *common =3D ath9k_hw_common(ah);
- 	struct ath9k_hw_cal_data *caldata =3D NULL;
- 	bool fastcc =3D true;
--	bool flush =3D false;
- 	int r;
-=20
- 	__ath_cancel_work(sc);
-=20
-+	tasklet_disable(&sc->intr_tq);
- 	spin_lock_bh(&sc->sc_pcu_lock);
-=20
- 	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
-@@ -276,11 +268,10 @@ static int ath_reset_internal(struct ath_softc *sc, s=
-truct ath9k_channel *hchan,
-=20
- 	if (!hchan) {
- 		fastcc =3D false;
--		flush =3D true;
- 		hchan =3D ah->curchan;
- 	}
-=20
--	if (!ath_prepare_reset(sc, retry_tx, flush))
-+	if (!ath_prepare_reset(sc, retry_tx))
- 		fastcc =3D false;
-=20
- 	ath_dbg(common, CONFIG, "Reset to %u MHz, HT40: %d fastcc: %d\n",
-@@ -302,6 +293,8 @@ static int ath_reset_internal(struct ath_softc *sc, str=
-uct ath9k_channel *hchan,
-=20
- out:
- 	spin_unlock_bh(&sc->sc_pcu_lock);
-+	tasklet_enable(&sc->intr_tq);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
+new file mode 100644
+index 0000000..aa3474d
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
+@@ -0,0 +1,312 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *****************************************************************************/
 +
- 	return r;
- }
-=20
-@@ -804,7 +797,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
- 	}
-=20
--	ath_prepare_reset(sc, false, true);
-+	ath_prepare_reset(sc, false);
-=20
- 	if (sc->rx.frag) {
- 		dev_kfree_skb_any(sc->rx.frag);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/a=
-th/ath9k/recv.c
-index d4df98a..90752f2 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -254,8 +254,6 @@ rx_init_fail:
-=20
- static void ath_edma_start_recv(struct ath_softc *sc)
- {
--	spin_lock_bh(&sc->rx.rxbuflock);
--
- 	ath9k_hw_rxena(sc->sc_ah);
-=20
- 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_HP,
-@@ -267,8 +265,6 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 	ath_opmode_init(sc);
-=20
- 	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CON=
-F_OFFCHANNEL));
--
--	spin_unlock_bh(&sc->rx.rxbuflock);
- }
-=20
- static void ath_edma_stop_recv(struct ath_softc *sc)
-@@ -285,8 +281,6 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	int error =3D 0;
-=20
- 	spin_lock_init(&sc->sc_pcu_lock);
--	spin_lock_init(&sc->rx.rxbuflock);
--	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
-=20
- 	common->rx_bufsize =3D IEEE80211_MAX_MPDU_LEN / 2 +
- 			     sc->sc_ah->caps.rx_status_len;
-@@ -447,7 +441,6 @@ int ath_startrecv(struct ath_softc *sc)
- 		return 0;
- 	}
-=20
--	spin_lock_bh(&sc->rx.rxbuflock);
- 	if (list_empty(&sc->rx.rxbuf))
- 		goto start_recv;
-=20
-@@ -468,26 +461,31 @@ start_recv:
- 	ath_opmode_init(sc);
- 	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCH=
-ANNEL));
-=20
--	spin_unlock_bh(&sc->rx.rxbuflock);
--
- 	return 0;
- }
-=20
-+static void ath_flushrecv(struct ath_softc *sc)
-+{
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
-+		ath_rx_tasklet(sc, 1, true);
-+	ath_rx_tasklet(sc, 1, false);
-+}
++#ifndef __fw_api_rs_h__
++#define __fw_api_rs_h__
 +
- bool ath_stoprecv(struct ath_softc *sc)
- {
- 	struct ath_hw *ah =3D sc->sc_ah;
- 	bool stopped, reset =3D false;
-=20
--	spin_lock_bh(&sc->rx.rxbuflock);
- 	ath9k_hw_abortpcurecv(ah);
- 	ath9k_hw_setrxfilter(ah, 0);
- 	stopped =3D ath9k_hw_stopdmarecv(ah, &reset);
-=20
-+	ath_flushrecv(sc);
++#include "fw-api-mac.h"
 +
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ath_edma_stop_recv(sc);
- 	else
- 		sc->rx.rxlink =3D NULL;
--	spin_unlock_bh(&sc->rx.rxbuflock);
-=20
- 	if (!(ah->ah_flags & AH_UNPLUGGED) &&
- 	    unlikely(!stopped)) {
-@@ -499,15 +497,6 @@ bool ath_stoprecv(struct ath_softc *sc)
- 	return stopped && !reset;
- }
-=20
--void ath_flushrecv(struct ath_softc *sc)
--{
--	set_bit(SC_OP_RXFLUSH, &sc->sc_flags);
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
--		ath_rx_tasklet(sc, 1, true);
--	ath_rx_tasklet(sc, 1, false);
--	clear_bit(SC_OP_RXFLUSH, &sc->sc_flags);
--}
--
- static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
- {
- 	/* Check whether the Beacon frame has DTIM indicating buffered bc/mc */
-@@ -744,6 +733,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_s=
-oftc *sc,
- 			return NULL;
- 	}
-=20
-+	list_del(&bf->list);
- 	if (!bf->bf_mpdu)
- 		return bf;
-=20
-@@ -1059,16 +1049,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush,=
- bool hp)
- 		dma_type =3D DMA_FROM_DEVICE;
-=20
- 	qtype =3D hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
--	spin_lock_bh(&sc->rx.rxbuflock);
-=20
- 	tsf =3D ath9k_hw_gettsf64(ah);
- 	tsf_lower =3D tsf & 0xffffffff;
-=20
- 	do {
- 		bool decrypt_error =3D false;
--		/* If handling rx interrupt and flush is in progress =3D> exit */
--		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags) && (flush =3D=3D 0))
--			break;
-=20
- 		memset(&rs, 0, sizeof(rs));
- 		if (edma)
-@@ -1111,15 +1097,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, =
-bool hp)
-=20
- 		ath_debug_stat_rx(sc, &rs);
-=20
--		/*
--		 * If we're asked to flush receive queue, directly
--		 * chain it back at the queue without processing it.
--		 */
--		if (test_bit(SC_OP_RXFLUSH, &sc->sc_flags)) {
--			RX_STAT_INC(rx_drop_rxflush);
--			goto requeue_drop_frag;
--		}
--
- 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
-=20
- 		rxs->mactime =3D (tsf & ~0xffffffffULL) | rs.rs_tstamp;
-@@ -1254,19 +1231,18 @@ requeue_drop_frag:
- 			sc->rx.frag =3D NULL;
- 		}
- requeue:
-+		list_add_tail(&bf->list, &sc->rx.rxbuf);
-+		if (flush)
-+			continue;
++/*
++ * These serve as indexes into
++ * struct iwl_rate_info fw_rate_idx_to_plcp[IWL_RATE_COUNT];
++ */
++enum {
++	IWL_RATE_1M_INDEX = 0,
++	IWL_FIRST_CCK_RATE = IWL_RATE_1M_INDEX,
++	IWL_RATE_2M_INDEX,
++	IWL_RATE_5M_INDEX,
++	IWL_RATE_11M_INDEX,
++	IWL_LAST_CCK_RATE = IWL_RATE_11M_INDEX,
++	IWL_RATE_6M_INDEX,
++	IWL_FIRST_OFDM_RATE = IWL_RATE_6M_INDEX,
++	IWL_RATE_9M_INDEX,
++	IWL_RATE_12M_INDEX,
++	IWL_RATE_18M_INDEX,
++	IWL_RATE_24M_INDEX,
++	IWL_RATE_36M_INDEX,
++	IWL_RATE_48M_INDEX,
++	IWL_RATE_54M_INDEX,
++	IWL_LAST_NON_HT_RATE = IWL_RATE_54M_INDEX,
++	IWL_RATE_60M_INDEX,
++	IWL_LAST_OFDM_RATE = IWL_RATE_60M_INDEX,
++	IWL_RATE_COUNT_LEGACY = IWL_LAST_NON_HT_RATE + 1,
++	IWL_RATE_COUNT,
++};
 +
- 		if (edma) {
--			list_add_tail(&bf->list, &sc->rx.rxbuf);
- 			ath_rx_edma_buf_link(sc, qtype);
- 		} else {
--			list_move_tail(&bf->list, &sc->rx.rxbuf);
- 			ath_rx_buf_link(sc, bf);
--			if (!flush)
--				ath9k_hw_rxena(ah);
-+			ath9k_hw_rxena(ah);
- 		}
- 	} while (1);
-=20
--	spin_unlock_bh(&sc->rx.rxbuflock);
--
- 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
- 		ah->imask |=3D (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
- 		ath9k_hw_set_interrupts(ah);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/driver=
-s/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 1fbd8ec..0f71d1d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1407,9 +1407,10 @@ void brcms_add_timer(struct brcms_timer *t, uint ms,=
- int periodic)
- #endif
- 	t->ms =3D ms;
- 	t->periodic =3D (bool) periodic;
--	t->set =3D true;
--
--	atomic_inc(&t->wl->callbacks);
-+	if (!t->set) {
-+		t->set =3D true;
-+		atomic_inc(&t->wl->callbacks);
-+	}
-=20
- 	ieee80211_queue_delayed_work(hw, &t->dly_wrk, msecs_to_jiffies(ms));
- }
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless=
-/mwifiex/cfg80211.c
-index efe525b..cdb11b3 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1459,7 +1459,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, =
-size_t ssid_len, u8 *ssid,
- 	struct cfg80211_ssid req_ssid;
- 	int ret, auth_type =3D 0;
- 	struct cfg80211_bss *bss =3D NULL;
--	u8 is_scanning_required =3D 0, config_bands =3D 0;
-+	u8 is_scanning_required =3D 0;
-=20
- 	memset(&req_ssid, 0, sizeof(struct cfg80211_ssid));
-=20
-@@ -1478,19 +1478,6 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv,=
- size_t ssid_len, u8 *ssid,
- 	/* disconnect before try to associate */
- 	mwifiex_deauthenticate(priv, NULL);
-=20
--	if (channel) {
--		if (mode =3D=3D NL80211_IFTYPE_STATION) {
--			if (channel->band =3D=3D IEEE80211_BAND_2GHZ)
--				config_bands =3D BAND_B | BAND_G | BAND_GN;
--			else
--				config_bands =3D BAND_A | BAND_AN;
--
--			if (!((config_bands | priv->adapter->fw_bands) &
--			      ~priv->adapter->fw_bands))
--				priv->adapter->config_bands =3D config_bands;
--		}
--	}
--
- 	/* As this is new association, clear locally stored
- 	 * keys and security related flags */
- 	priv->sec_info.wpa_enabled =3D false;
-@@ -1707,7 +1694,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_pri=
-vate *priv,
-=20
- 		if (cfg80211_get_chandef_type(&params->chandef) !=3D
- 						NL80211_CHAN_NO_HT)
--			config_bands |=3D BAND_GN;
-+			config_bands |=3D BAND_G | BAND_GN;
- 	} else {
- 		if (cfg80211_get_chandef_type(&params->chandef) =3D=3D
- 						NL80211_CHAN_NO_HT)
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireles=
-s/mwifiex/sta_ioctl.c
-index 60e88b5..f542bb8 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -283,6 +283,20 @@ int mwifiex_bss_start(struct mwifiex_private *priv, st=
-ruct cfg80211_bss *bss,
- 		if (ret)
- 			goto done;
-=20
-+		if (bss_desc) {
-+			u8 config_bands =3D 0;
++#define IWL_RATE_BIT_MSK(r) BIT(IWL_RATE_##r##M_INDEX)
 +
-+			if (mwifiex_band_to_radio_type((u8) bss_desc->bss_band)
-+			    =3D=3D HostCmd_SCAN_RADIO_TYPE_BG)
-+				config_bands =3D BAND_B | BAND_G | BAND_GN;
-+			else
-+				config_bands =3D BAND_A | BAND_AN;
++/* fw API values for legacy bit rates, both OFDM and CCK */
++enum {
++	IWL_RATE_6M_PLCP  = 13,
++	IWL_RATE_9M_PLCP  = 15,
++	IWL_RATE_12M_PLCP = 5,
++	IWL_RATE_18M_PLCP = 7,
++	IWL_RATE_24M_PLCP = 9,
++	IWL_RATE_36M_PLCP = 11,
++	IWL_RATE_48M_PLCP = 1,
++	IWL_RATE_54M_PLCP = 3,
++	IWL_RATE_1M_PLCP  = 10,
++	IWL_RATE_2M_PLCP  = 20,
++	IWL_RATE_5M_PLCP  = 55,
++	IWL_RATE_11M_PLCP = 110,
++};
 +
-+			if (!((config_bands | adapter->fw_bands) &
-+			      ~adapter->fw_bands))
-+				adapter->config_bands =3D config_bands;
-+		}
++/*
++ * rate_n_flags bit fields
++ *
++ * The 32-bit value has different layouts in the low 8 bites depending on the
++ * format. There are three formats, HT, VHT and legacy (11abg, with subformats
++ * for CCK and OFDM).
++ *
++ * High-throughput (HT) rate format
++ *	bit 8 is 1, bit 26 is 0, bit 9 is 0 (OFDM)
++ * Very High-throughput (VHT) rate format
++ *	bit 8 is 0, bit 26 is 1, bit 9 is 0 (OFDM)
++ * Legacy OFDM rate format for bits 7:0
++ *	bit 8 is 0, bit 26 is 0, bit 9 is 0 (OFDM)
++ * Legacy CCK rate format for bits 7:0:
++ *	bit 8 is 0, bit 26 is 0, bit 9 is 1 (CCK)
++ */
 +
- 		ret =3D mwifiex_check_network_compatibility(priv, bss_desc);
- 		if (ret)
- 			goto done;
-diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
-index 596660d..0f78e34 100644
---- a/net/bluetooth/hci_core.c
-+++ b/net/bluetooth/hci_core.c
-@@ -2810,14 +2810,6 @@ static void hci_acldata_packet(struct hci_dev *hdev,=
- struct sk_buff *skb)
- 	if (conn) {
- 		hci_conn_enter_active_mode(conn, BT_POWER_FORCE_ACTIVE_OFF);
-=20
--		hci_dev_lock(hdev);
--		if (test_bit(HCI_MGMT, &hdev->dev_flags) &&
--		    !test_and_set_bit(HCI_CONN_MGMT_CONNECTED, &conn->flags))
--			mgmt_device_connected(hdev, &conn->dst, conn->type,
--					      conn->dst_type, 0, NULL, 0,
--					      conn->dev_class);
--		hci_dev_unlock(hdev);
--
- 		/* Send to upper protocol */
- 		l2cap_recv_acldata(conn, skb, flags);
- 		return;
-diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
-index 705078a..81b4448 100644
---- a/net/bluetooth/hci_event.c
-+++ b/net/bluetooth/hci_event.c
-@@ -2688,7 +2688,7 @@ static void hci_cmd_complete_evt(struct hci_dev *hdev=
-, struct sk_buff *skb)
- 	if (ev->opcode !=3D HCI_OP_NOP)
- 		del_timer(&hdev->cmd_timer);
-=20
--	if (ev->ncmd) {
-+	if (ev->ncmd && !test_bit(HCI_RESET, &hdev->flags)) {
- 		atomic_set(&hdev->cmd_cnt, 1);
- 		if (!skb_queue_empty(&hdev->cmd_q))
- 			queue_work(hdev->workqueue, &hdev->cmd_work);
-diff --git a/net/bluetooth/hidp/core.c b/net/bluetooth/hidp/core.c
-index b2bcbe2..a7352ff 100644
---- a/net/bluetooth/hidp/core.c
-+++ b/net/bluetooth/hidp/core.c
-@@ -931,7 +931,7 @@ static int hidp_setup_hid(struct hidp_session *session,
- 	hid->version =3D req->version;
- 	hid->country =3D req->country;
-=20
--	strncpy(hid->name, req->name, 128);
-+	strncpy(hid->name, req->name, sizeof(req->name) - 1);
-=20
- 	snprintf(hid->phys, sizeof(hid->phys), "%pMR",
- 		 &bt_sk(session->ctrl_sock->sk)->src);
-diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c
-index 2c78208..22e6583 100644
---- a/net/bluetooth/l2cap_core.c
-+++ b/net/bluetooth/l2cap_core.c
-@@ -3727,6 +3727,17 @@ sendresp:
- static int l2cap_connect_req(struct l2cap_conn *conn,
- 			     struct l2cap_cmd_hdr *cmd, u8 *data)
- {
-+	struct hci_dev *hdev =3D conn->hcon->hdev;
-+	struct hci_conn *hcon =3D conn->hcon;
++/* Bit 8: (1) HT format, (0) legacy or VHT format */
++#define RATE_MCS_HT_POS 8
++#define RATE_MCS_HT_MSK (1 << RATE_MCS_HT_POS)
 +
-+	hci_dev_lock(hdev);
-+	if (test_bit(HCI_MGMT, &hdev->dev_flags) &&
-+	    !test_and_set_bit(HCI_CONN_MGMT_CONNECTED, &hcon->flags))
-+		mgmt_device_connected(hdev, &hcon->dst, hcon->type,
-+				      hcon->dst_type, 0, NULL, 0,
-+				      hcon->dev_class);
-+	hci_dev_unlock(hdev);
++/* Bit 9: (1) CCK, (0) OFDM.  HT (bit 8) must be "0" for this bit to be valid */
++#define RATE_MCS_CCK_POS 9
++#define RATE_MCS_CCK_MSK (1 << RATE_MCS_CCK_POS)
 +
- 	l2cap_connect(conn, cmd, data, L2CAP_CONN_RSP, 0);
- 	return 0;
- }
-diff --git a/net/bluetooth/sco.c b/net/bluetooth/sco.c
-index 531a93d..57f250c 100644
---- a/net/bluetooth/sco.c
-+++ b/net/bluetooth/sco.c
-@@ -352,7 +352,7 @@ static void __sco_sock_close(struct sock *sk)
-=20
- 	case BT_CONNECTED:
- 	case BT_CONFIG:
--		if (sco_pi(sk)->conn) {
-+		if (sco_pi(sk)->conn->hcon) {
- 			sk->sk_state =3D BT_DISCONN;
- 			sco_sock_set_timer(sk, SCO_DISCONN_TIMEOUT);
- 			hci_conn_put(sco_pi(sk)->conn->hcon);
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
++/* Bit 26: (1) VHT format, (0) legacy format in bits 8:0 */
++#define RATE_MCS_VHT_POS 26
++#define RATE_MCS_VHT_MSK (1 << RATE_MCS_VHT_POS)
++
++
++/*
++ * High-throughput (HT) rate format for bits 7:0
++ *
++ *  2-0:  MCS rate base
++ *        0)   6 Mbps
++ *        1)  12 Mbps
++ *        2)  18 Mbps
++ *        3)  24 Mbps
++ *        4)  36 Mbps
++ *        5)  48 Mbps
++ *        6)  54 Mbps
++ *        7)  60 Mbps
++ *  4-3:  0)  Single stream (SISO)
++ *        1)  Dual stream (MIMO)
++ *        2)  Triple stream (MIMO)
++ *    5:  Value of 0x20 in bits 7:0 indicates 6 Mbps HT40 duplicate data
++ *  (bits 7-6 are zero)
++ *
++ * Together the low 5 bits work out to the MCS index because we don't
++ * support MCSes above 15/23, and 0-7 have one stream, 8-15 have two
++ * streams and 16-23 have three streams. We could also support MCS 32
++ * which is the duplicate 20 MHz MCS (bit 5 set, all others zero.)
++ */
++#define RATE_HT_MCS_RATE_CODE_MSK	0x7
++
++/* Bit 10: (1) Use Green Field preamble */
++#define RATE_HT_MCS_GF_POS		10
++#define RATE_HT_MCS_GF_MSK		(1 << RATE_HT_MCS_GF_POS)
++
++#define RATE_HT_MCS_INDEX_MSK		0x3f
++
++/*
++ * Very High-throughput (VHT) rate format for bits 7:0
++ *
++ *  3-0:  VHT MCS (0-9)
++ *  5-4:  number of streams - 1:
++ *        0)  Single stream (SISO)
++ *        1)  Dual stream (MIMO)
++ *        2)  Triple stream (MIMO)
++ */
++
++/* Bit 4-5: (0) SISO, (1) MIMO2 (2) MIMO3 */
++#define RATE_VHT_MCS_RATE_CODE_MSK	0xf
++#define RATE_VHT_MCS_NSS_POS		4
++#define RATE_VHT_MCS_NSS_MSK		(3 << RATE_VHT_MCS_NSS_POS)
++
++/*
++ * Legacy OFDM rate format for bits 7:0
++ *
++ *  3-0:  0xD)   6 Mbps
++ *        0xF)   9 Mbps
++ *        0x5)  12 Mbps
++ *        0x7)  18 Mbps
++ *        0x9)  24 Mbps
++ *        0xB)  36 Mbps
++ *        0x1)  48 Mbps
++ *        0x3)  54 Mbps
++ * (bits 7-4 are 0)
++ *
++ * Legacy CCK rate format for bits 7:0:
++ * bit 8 is 0, bit 26 is 0, bit 9 is 1 (CCK):
++ *
++ *  6-0:   10)  1 Mbps
++ *         20)  2 Mbps
++ *         55)  5.5 Mbps
++ *        110)  11 Mbps
++ * (bit 7 is 0)
++ */
++#define RATE_LEGACY_RATE_MSK 0xff
++
++
++/*
++ * Bit 11-12: (0) 20MHz, (1) 40MHz, (2) 80MHz, (3) 160MHz
++ * 0 and 1 are valid for HT and VHT, 2 and 3 only for VHT
++ */
++#define RATE_MCS_CHAN_WIDTH_POS		11
++#define RATE_MCS_CHAN_WIDTH_MSK		(3 << RATE_MCS_CHAN_WIDTH_POS)
++#define RATE_MCS_CHAN_WIDTH_20		(0 << RATE_MCS_CHAN_WIDTH_POS)
++#define RATE_MCS_CHAN_WIDTH_40		(1 << RATE_MCS_CHAN_WIDTH_POS)
++#define RATE_MCS_CHAN_WIDTH_80		(2 << RATE_MCS_CHAN_WIDTH_POS)
++#define RATE_MCS_CHAN_WIDTH_160		(3 << RATE_MCS_CHAN_WIDTH_POS)
++
++/* Bit 13: (1) Short guard interval (0.4 usec), (0) normal GI (0.8 usec) */
++#define RATE_MCS_SGI_POS		13
++#define RATE_MCS_SGI_MSK		(1 << RATE_MCS_SGI_POS)
++
++/* Bit 14-16: Antenna selection (1) Ant A, (2) Ant B, (4) Ant C */
++#define RATE_MCS_ANT_POS		14
++#define RATE_MCS_ANT_A_MSK		(1 << RATE_MCS_ANT_POS)
++#define RATE_MCS_ANT_B_MSK		(2 << RATE_MCS_ANT_POS)
++#define RATE_MCS_ANT_C_MSK		(4 << RATE_MCS_ANT_POS)
++#define RATE_MCS_ANT_AB_MSK		(RATE_MCS_ANT_A_MSK | \
++					 RATE_MCS_ANT_B_MSK)
++#define RATE_MCS_ANT_ABC_MSK		(RATE_MCS_ANT_AB_MSK | \
++					 RATE_MCS_ANT_C_MSK)
++#define RATE_MCS_ANT_MSK		RATE_MCS_ANT_ABC_MSK
++#define RATE_MCS_ANT_NUM 3
++
++/* Bit 17-18: (0) SS, (1) SS*2 */
++#define RATE_MCS_STBC_POS		17
++#define RATE_MCS_STBC_MSK		(1 << RATE_MCS_STBC_POS)
++
++/* Bit 19: (0) Beamforming is off, (1) Beamforming is on */
++#define RATE_MCS_BF_POS			19
++#define RATE_MCS_BF_MSK			(1 << RATE_MCS_BF_POS)
++
++/* Bit 20: (0) ZLF is off, (1) ZLF is on */
++#define RATE_MCS_ZLF_POS		20
++#define RATE_MCS_ZLF_MSK		(1 << RATE_MCS_ZLF_POS)
++
++/* Bit 24-25: (0) 20MHz (no dup), (1) 2x20MHz, (2) 4x20MHz, 3 8x20MHz */
++#define RATE_MCS_DUP_POS		24
++#define RATE_MCS_DUP_MSK		(3 << RATE_MCS_DUP_POS)
++
++/* Bit 27: (1) LDPC enabled, (0) LDPC disabled */
++#define RATE_MCS_LDPC_POS		27
++#define RATE_MCS_LDPC_MSK		(1 << RATE_MCS_LDPC_POS)
++
++
++/* Link Quality definitions */
++
++/* # entries in rate scale table to support Tx retries */
++#define  LQ_MAX_RETRY_NUM 16
++
++/* Link quality command flags, only this one is available */
++#define  LQ_FLAG_SET_STA_TLC_RTS_MSK	BIT(0)
++
++/**
++ * struct iwl_lq_cmd - link quality command
++ * @sta_id: station to update
++ * @control: not used
++ * @flags: combination of LQ_FLAG_*
++ * @mimo_delim: the first SISO index in rs_table, which separates MIMO
++ *	and SISO rates
++ * @single_stream_ant_msk: best antenna for SISO (can be dual in CDD).
++ *	Should be ANT_[ABC]
++ * @dual_stream_ant_msk: best antennas for MIMO, combination of ANT_[ABC]
++ * @initial_rate_index: first index from rs_table per AC category
++ * @agg_time_limit: aggregation max time threshold in usec/100, meaning
++ *	value of 100 is one usec. Range is 100 to 8000
++ * @agg_disable_start_th: try-count threshold for starting aggregation.
++ *	If a frame has higher try-count, it should not be selected for
++ *	starting an aggregation sequence.
++ * @agg_frame_cnt_limit: max frame count in an aggregation.
++ *	0: no limit
++ *	1: no aggregation (one frame per aggregation)
++ *	2 - 0x3f: maximal number of frames (up to 3f == 63)
++ * @rs_table: array of rates for each TX try, each is rate_n_flags,
++ *	meaning it is a combination of RATE_MCS_* and IWL_RATE_*_PLCP
++ * @bf_params: beam forming params, currently not used
++ */
++struct iwl_lq_cmd {
++	u8 sta_id;
++	u8 reserved1;
++	u16 control;
++	/* LINK_QUAL_GENERAL_PARAMS_API_S_VER_1 */
++	u8 flags;
++	u8 mimo_delim;
++	u8 single_stream_ant_msk;
++	u8 dual_stream_ant_msk;
++	u8 initial_rate_index[AC_NUM];
++	/* LINK_QUAL_AGG_PARAMS_API_S_VER_1 */
++	__le16 agg_time_limit;
++	u8 agg_disable_start_th;
++	u8 agg_frame_cnt_limit;
++	__le32 reserved2;
++	__le32 rs_table[LQ_MAX_RETRY_NUM];
++	__le32 bf_params;
++}; /* LINK_QUALITY_CMD_API_S_VER_1 */
++#endif /* __fw_api_rs_h__ */
+-- 
+1.8.0
 
---ReaqsoxgOBHFXBhH
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ+DW3AAoJEJctW/TcYTgGorYP/1tMiRIYQvJ8P8hVRC80zDAz
-b8uFB30DTo5YPFnggFFgxcRlR2g4PesyrreaHyIUD/mFczTwOAv/PEhcArCipaWs
-sVxKvmYdeqrSXDI+zrBg8HRFomj92h1TN7wtfKaMqxXG/2cG9cY0LQ5i6L8mCsVW
-ILvDpQ76c+ZWHiBlrJ7UF2hCopnQ6dKxd3uZom3w389dtRX2ix46klunpcAEZFTn
-R5KRdTccNSKcSgWh04rcVaTaZeVPC6DPbWiokV14su2wMM3KXFg+lCCMTfU3Auai
-N7JqDfdaKvy+LJrwMBoEGxta2Yabpn31374lnP7SFdOIn2SmSWf4k/FilB4ws7vp
-hsiWf2R4fxRuMqnzQPtW7Nx3N5Zo3YsaNYEv1lf3xZLd/PJYAqeSEs15L0WHEguq
-VXK58eb3m6yanMbs8446zJle7EFP1znI/ERa4ER3lIuydRjFFvNX/O3J2Qd3oMsB
-/Nj/gVTjdtWwH9V8KV0g4q2Ww7zyprsb4DftdamI6nLTwfCdtwPnKSbPAjL7sunJ
-1h/fJTFA7h8lM1fT69MvBuKAVmxwlzxSz3K4Ravx1EEYXx2CUAWlw/RkJNjFNaLT
-Pd208Nf2bnKEjoFj3C6iHCmDrnesMoWYMvQVHCGH7e9nM25orr7Jtygh+3O7yj5c
-T8v27OUfl8kNazogQD5s
-=jF6+
------END PGP SIGNATURE-----
-
---ReaqsoxgOBHFXBhH--
