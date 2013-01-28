@@ -1,95 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:42971 "EHLO v3-1039.vlinux.de"
+Received: from mms3.broadcom.com ([216.31.210.19]:1532 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753726Ab3AaJ1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 04:27:16 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>
-Subject: [PATCH 5/6] ath9k: Fix sparse __CHECK_ENDIAN__ for spectral code
-Date: Thu, 31 Jan 2013 10:26:48 +0100
-Message-Id: <1359624409-14815-5-git-send-email-sven@narfation.org> (sfid-20130131_102720_709917_A2B74B92)
-In-Reply-To: <1359624409-14815-1-git-send-email-sven@narfation.org>
-References: <1359624409-14815-1-git-send-email-sven@narfation.org>
+	id S1756756Ab3A1OTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 09:19:16 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [RFC/RFT] mac80211: use macaddr vif parameter for P2P_DEVICE
+ creation
+Date: Mon, 28 Jan 2013 15:19:06 +0100
+Message-ID: <1359382746-26322-1-git-send-email-arend@broadcom.com> (sfid-20130128_151919_850592_1A788D5C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch is a follow-up of:
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
+commit 1c18f1452a772dfe884ed25677bddb3ecaf9c43a
+Author: Arend van Spriel <arend@broadcom.com>
+Date:   Tue Jan 8 10:17:27 2013 +0100
+
+    nl80211: allow user-space to set address for P2P_DEVICE
+
+The address of the wdev is determined by the macaddr parameter
+when it is not a zero ethernet address. Otherwise, the permanent
+address as determined by ieee80211_assign_perm_addr() is used.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    8 ++++----
- drivers/net/wireless/ath/ath9k/recv.c  |    9 +++++----
- 2 files changed, 9 insertions(+), 8 deletions(-)
+Hi Johannes,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 67df864..5fb99d6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -869,7 +869,7 @@ enum ath_fft_sample_type {
+Here a mac80211 change to take the user-space provided mac address into
+account. Not sure if that is sufficient. Tested P2P device vif creation using
+iw with mac80211_hwsim:
+
+phy#0
+        Unnamed/non-netdev interface
+                wdev 0x2
+                addr 00:01:02:03:04:05
+                type P2P-device
+        Interface wlan0
+                ifindex 9
+                wdev 0x1
+                addr 02:00:00:00:00:00
+                type managed
+
+Gr. AvS
+---
+ net/mac80211/iface.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0a36dc6..b9ec91f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1530,7 +1530,12 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
  
- struct fft_sample_tlv {
- 	u8 type;	/* see ath_fft_sample */
--	u16 length;
-+	__be16 length;
- 	/* type dependent data follows */
- } __packed;
- 
-@@ -878,15 +878,15 @@ struct fft_sample_ht20 {
- 
- 	u8 max_exp;
- 
--	u16 freq;
-+	__be16 freq;
- 	s8 rssi;
- 	s8 noise;
- 
--	u16 max_magnitude;
-+	__be16 max_magnitude;
- 	u8 max_index;
- 	u8 bitmap_weight;
- 
--	u64 tsf;
-+	__be64 tsf;
- 
- 	u8 data[SPECTRAL_HT20_NUM_BINS];
- } __packed;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index e349bff..0910146 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1038,6 +1038,7 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	struct ath_ht20_mag_info *mag_info;
- 	int len = rs->rs_datalen;
- 	int dc_pos;
-+	u16 length, max_magnitude;
- 
- 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
- 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
-@@ -1065,8 +1066,8 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 		return 1;
- 
- 	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
--	fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
--	fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
-+	length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
-+	fft_sample.tlv.length = __cpu_to_be16(length);
- 
- 	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
- 	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
-@@ -1112,8 +1113,8 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
- 	fft_sample.max_exp = mag_info->max_exp & 0xf;
- 
--	fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
--	fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
-+	max_magnitude = spectral_max_magnitude(mag_info->all_bins);
-+	fft_sample.max_magnitude = __cpu_to_be16(max_magnitude);
- 	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
- 	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
- 	fft_sample.tsf = __cpu_to_be64(tsf);
+ 		sdata->dev = NULL;
+ 		strlcpy(sdata->name, name, IFNAMSIZ);
+-		ieee80211_assign_perm_addr(local, wdev->address, type);
++		/* only use perm address if not provided in params */
++		if (is_zero_ether_addr(params->macaddr))
++			ieee80211_assign_perm_addr(local, wdev->address, type);
++		else
++			memcpy(wdev->address, params->macaddr, ETH_ALEN);
++
+ 		memcpy(sdata->vif.addr, wdev->address, ETH_ALEN);
+ 	} else {
+ 		if (local->hw.queues >= IEEE80211_NUM_ACS)
 -- 
 1.7.10.4
+
 
