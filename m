@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:42960
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753378Ab3AGIYr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552Ab3A1Mtm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 03:24:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] ath9k_hw: Do not enable IQ-CAL for half/quarter rates
-Date: Mon,  7 Jan 2013 13:53:46 +0530
-Message-Id: <1357547028-22891-1-git-send-email-sujith@msujith.org> (sfid-20130107_092503_106048_903ABAA3)
+	Mon, 28 Jan 2013 07:49:42 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Tzo9c-0001vW-HQ
+	for linux-wireless@vger.kernel.org; Mon, 28 Jan 2013 13:49:40 +0100
+Message-ID: <1359377405.8120.16.camel@jlt4.sipsolutions.net> (sfid-20130128_134946_582951_56A31DED)
+Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 28 Jan 2013 13:50:05 +0100
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103728_069407_001EDD61)
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130128_103728_069407_001EDD61)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Question for the list ...
 
-IQ calibration doesn't complete and times out for half/quarter
-rates, so skip it correctly.
+Internally, we've identified patches to this new driver as
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+"iwlwifi (MVM):"
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index fa67e84..61caf1c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1013,7 +1013,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 		}
- 	}
- 
--	if (!(ah->enabled_cals & TX_IQ_CAL))
-+	if ((IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan)) ||
-+	    !(ah->enabled_cals & TX_IQ_CAL))
- 		goto skip_tx_iqcal;
- 
- 	/* Do Tx IQ Calibration */
-@@ -1040,12 +1041,10 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
- 		ar9003_mci_init_cal_req(ah, &is_reusable);
- 
--	if (!(IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))) {
--		txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
--		udelay(5);
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
--	}
-+	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
-+	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
-+	udelay(5);
-+	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
- skip_tx_iqcal:
- 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
--- 
-1.8.1
+rather than just "iwlwifi:"
+
+We can continue doing so (and would probably also tag patches with
+"iwlwifi" for core and "iwlwifi (DVM)" for the DVM part.
+
+Would "iwlmvm"/"iwldvm"/"iwlwifi" make more sense as that's the module
+names? It's harder to filter though, I guess.
+
+Thoughts?
+
+johannes
 
