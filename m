@@ -1,133 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:64435 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab3AYKhb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:37:31 -0500
-Received: by mail-wi0-f169.google.com with SMTP id hq12so1320446wib.0
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 02:37:30 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: register platform device for parallel flash
-Date: Fri, 25 Jan 2013 11:37:26 +0100
-Message-Id: <1359110246-30610-1-git-send-email-zajec5@gmail.com> (sfid-20130125_113735_818101_3203F157)
+Received: from mout.web.de ([212.227.17.11]:60045 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755325Ab3A1KeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 05:34:06 -0500
+Received: from ilfaris ([84.113.227.159]) by smtp.web.de (mrweb002) with
+ ESMTPSA (Nemesis) id 0LqlAw-1UcwbW3u3G-00dq41 for
+ <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 11:34:05 +0100
+Date: Mon, 28 Jan 2013 11:34:02 +0100
+From: Julian Wollrath <jwollrath@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Warning with trace while trying to connect to an AP
+Message-ID: <20130128113402.54809556@ilfaris> (sfid-20130128_113411_686326_3633F6A3)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-Resend without RFC
----
- drivers/bcma/bcma_private.h |    1 +
- drivers/bcma/driver_mips.c  |   38 +++++++++++++++++++++++++++++++++-----
- drivers/bcma/main.c         |    8 ++++++++
- 3 files changed, 42 insertions(+), 5 deletions(-)
+Hello,
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 04f7c86..6f377bd 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -47,6 +47,7 @@ int bcma_sprom_get(struct bcma_bus *bus);
- /* driver_chipcommon.c */
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
-+extern struct platform_device bcma_pflash_dev;
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
- /* driver_chipcommon_pmu.c */
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 9fe86ee..9a7f0e3 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -14,11 +14,33 @@
- 
- #include <linux/bcma/bcma.h>
- 
-+#include <linux/mtd/physmap.h>
-+#include <linux/platform_device.h>
- #include <linux/serial.h>
- #include <linux/serial_core.h>
- #include <linux/serial_reg.h>
- #include <linux/time.h>
- 
-+static const char *part_probes[] = { "bcm47xxpart", NULL };
-+
-+static struct physmap_flash_data bcma_pflash_data = {
-+	.part_probe_types	= part_probes,
-+};
-+
-+static struct resource bcma_pflash_resource = {
-+	.name	= "bcma_pflash",
-+	.flags  = IORESOURCE_MEM,
-+};
-+
-+struct platform_device bcma_pflash_dev = {
-+	.name		= "physmap-flash",
-+	.dev		= {
-+		.platform_data  = &bcma_pflash_data,
-+	},
-+	.resource	= &bcma_pflash_resource,
-+	.num_resources	= 1,
-+};
-+
- /* The 47162a0 hangs when reading MIPS DMP registers registers */
- static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
- {
-@@ -211,6 +233,7 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- {
- 	struct bcma_bus *bus = mcore->core->bus;
- 	struct bcma_drv_cc *cc = &bus->drv_cc;
-+	struct bcma_pflash *pflash = &cc->pflash;
- 
- 	switch (cc->capabilities & BCMA_CC_CAP_FLASHT) {
- 	case BCMA_CC_FLASHT_STSER:
-@@ -220,15 +243,20 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 		break;
- 	case BCMA_CC_FLASHT_PARA:
- 		bcma_debug(bus, "Found parallel flash\n");
--		cc->pflash.present = true;
--		cc->pflash.window = BCMA_SOC_FLASH2;
--		cc->pflash.window_size = BCMA_SOC_FLASH2_SZ;
-+		pflash->present = true;
-+		pflash->window = BCMA_SOC_FLASH2;
-+		pflash->window_size = BCMA_SOC_FLASH2_SZ;
- 
- 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
- 		     BCMA_CC_FLASH_CFG_DS) == 0)
--			cc->pflash.buswidth = 1;
-+			pflash->buswidth = 1;
- 		else
--			cc->pflash.buswidth = 2;
-+			pflash->buswidth = 2;
-+
-+		bcma_pflash_data.width = pflash->buswidth;
-+		bcma_pflash_resource.start = pflash->window;
-+		bcma_pflash_resource.end = pflash->window + pflash->window_size;
-+
- 		break;
- 	default:
- 		bcma_err(bus, "Flash type not supported\n");
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index ff85289..6eda7ef 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -149,6 +149,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 		dev_id++;
- 	}
- 
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+	if (bus->drv_cc.pflash.present) {
-+		err = platform_device_register(&bcma_pflash_dev);
-+		if (err)
-+			bcma_err(bus, "Error registering parallel flash\n");
-+	}
-+#endif
-+
- #ifdef CONFIG_BCMA_SFLASH
- 	if (bus->drv_cc.sflash.present) {
- 		err = platform_device_register(&bcma_sflash_dev);
--- 
-1.7.7
+> On Sun, 2012-12-23 at 14:34 +0100, Julian Wollrath wrote:
+> > Hello,
+> > 
+> > while trying to connect to an AP I got the following trace:
+> > [13677.506164] ------------[ cut here ]------------
+> > [13677.506196] WARNING: at net/wireless/mlme.c:517
+> > cfg80211_mlme_disassoc+0x17d/0x190 [cfg80211]()
+> 
+> Are you able to reproduce this by any chance? It's been happening for
+> a while, but I've so far been unable to figure out what causes
+> "wdev->sme_state" and "wdev->current_bss" to get out of sync ...
+Sorry, it only happend with the wireless network I tried to connect to
+while I was on vacation. I was not able to reproduce it since but as
+soon as I can reproduce it I while tell you.
 
+
+With best regards,
+Julian
