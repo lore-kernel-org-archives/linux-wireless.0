@@ -1,91 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:40503 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756326Ab3AHNEz (ORCPT
+Received: from relay4-d.mail.gandi.net ([217.70.183.196]:44986 "EHLO
+	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977Ab3A1W5U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 08:04:55 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv6 6/6] nl80211: allow DFS in start_ap
-Date: Tue,  8 Jan 2013 14:04:11 +0100
-Message-Id: <1357650251-17425-7-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130108_140500_758416_146D0D34)
-In-Reply-To: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 28 Jan 2013 17:57:20 -0500
+Date: Mon, 28 Jan 2013 23:56:57 +0100
+From: Mathieu Chouquet-Stringer <mathieu@csetco.com>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: ilw@linux.intel.com, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com
+Subject: iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost unusable on
+ 3.8.0-rc5)
+Message-ID: <20130128225657.GA17533@kashmir> (sfid-20130128_235725_067384_61215011)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables DFS within nl80211/cfg80211. start_ap now checks if
-DFS is allowed on the channel with the selected channel width.
+	Hello all,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
-Changes to PATCHv5:
- * check radar detection width
----
- net/wireless/mlme.c    |    1 +
- net/wireless/nl80211.c |   23 +++++++++++++++++++++--
- 2 files changed, 22 insertions(+), 2 deletions(-)
+Oh the irony, I was just starting an email saying wifi is almost
+unusable for me with 3.8 and my machine (a thinkpad t530) completely
+froze while typing it...
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 6b63ffb..153c4ed 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -709,6 +709,7 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
-+	struct net_device *dev = wdev->netdev;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	struct cfg80211_mgmt_registration *reg, *tmp;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d98c1d3..2bb9889 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2600,7 +2600,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ap_settings params;
-+	struct ieee80211_channel *chan;
- 	int err;
-+	u8 radar_detect_width = 0;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-@@ -2719,9 +2721,26 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
- 		return -EINVAL;
- 
-+	chan = params.chandef.chan;
-+
-+	if (chan->flags & IEEE80211_CHAN_RADAR) {
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_DFS))
-+			return -EINVAL;
-+
-+		if (!chan->cac_started)
-+			return -EPERM;
-+
-+		if (time_is_after_jiffies(chan->radar_detect_timeout))
-+			return -EPERM;
-+
-+		radar_detect_width = BIT(params.chandef.width);
-+	}
-+
- 	mutex_lock(&rdev->devlist_mtx);
--	err = cfg80211_can_use_chan(rdev, wdev, params.chandef.chan,
--				    CHAN_MODE_SHARED);
-+	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					   params.chandef.chan,
-+					   CHAN_MODE_SHARED,
-+					   radar_detect_width);
- 	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (err)
+I was going to say I'm getting a lot of:
+iwlwifi 0000:03:00.0: fail to flush all tx fifo queues
+
+with this device:
+03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 3e)
+        Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN
+        Kernel driver in use: iwlwifi
+
+But now I will be able to give you links to the actual soft lockup:
+http://mathieu.csetco.com/iwlwifi/iwlwifi-oops1.jpeg
+http://mathieu.csetco.com/iwlwifi/iwlwifi-oops2.jpeg
+http://mathieu.csetco.com/iwlwifi/iwlwifi-oops3.jpeg
+
+The same machine works perfectly fine with a vanilla 3.7.  On 3.8,
+before the machine froze I could see my download speed going up and down
+like crazy (that's what prompted the "almost unusable" comment, it's so
+painful loading a web page feels like being on dialup).
+
+A rough text version is a follow:
+BUG: soft lockup - CPU#1 stuck for 23s!
+[...]
+Call Trace:
+iwl_trans_pcie_stop_device+0x15c/0x1c0 [iwlwifi]
+iwl_down+0x1fd/0x300 [iwldvm]
+iwlagn_prepare_restart+0x4f/0xd0 [iwldvm]
+? idle_balance+0x110/0x2f0
+iwl_bg_restart+0x52/0xe0 [iwldvm]
+process_one_work+0x147/0x490
+? iwl_op_mode_dvm_start+0xa50/0xa50 [iwldvm]
+[...]
+
+After that I the whole thing was frozen: keyboard/mouse would still work
+but no IO would go whatsoever (even disk)...
+
+The "fail to flush all tx fifo queues" are easy to reproduce: I get that
+by copying file around / downloading and browsing the web.
+
+Let me know if I can help in any way (like decoding addresses).
+
+Cheers,
 -- 
-1.7.10.4
-
+Mathieu Chouquet-Stringer                         mathieu@csetco.com
+            The sun itself sees not till heaven clears.
+	             -- William Shakespeare --
