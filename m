@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f181.google.com ([209.85.210.181]:44123 "EHLO
-	mail-ia0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977Ab3A2C7E (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:44200 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751334Ab3A1HLp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 21:59:04 -0500
-Received: by mail-ia0-f181.google.com with SMTP id k25so5199797iah.40
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 18:59:03 -0800 (PST)
-Message-ID: <51073AE1.6000509@gmail.com> (sfid-20130129_035908_737095_3835B4AB)
-Date: Mon, 28 Jan 2013 21:58:41 -0500
-From: Dylan <dylandonkersgoed@gmail.com>
+	Mon, 28 Jan 2013 02:11:45 -0500
+Date: Mon, 28 Jan 2013 12:35:02 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH] mwl8k: Announcing AP_VLAN suport
+Message-ID: <20130128070502.GA442@markyou> (sfid-20130128_081149_113437_75032607)
+References: <20130125105121.GA9541@markyou.marvell.com>
+ <1359114330.4655.0.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: rtl8723ae Weak Signal Problems
-References: <51072B95.10101@gmail.com>
-In-Reply-To: <51072B95.10101@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359114330.4655.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apologies if I'm resending this - I think my mail client got 
-disconnected as I was trying to send this but I'm not 100% certain.
+> >  	if (priv->ap_macids_supported || priv->device_info->fw_image_ap) {
+> >  		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
+> > +		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+> >  		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
+> 
+> Hmm, why is this needed? mac80211 should add it:
+> 
+>         /* if low-level driver supports AP, we also support VLAN */
+>         if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+>                 hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+>                 hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
+>         }
+> 
+> Is this run too late, i.e. after registering hw? If so, that's a bug.
 
-Quick summary if you don't want to read my rambling:
+Hi Johannes,
 
-  * Using the compat-drivers-3.8-rc5-1-u package
-  * Using the rtl8723ae chipset and driver
-  * Experiencing extremely weak signal
-  * No clue what information I need to submit - I'm not having any clear
-    crashes or anything, just a way-weaker-than-appropriate signal with
-    a driver change being the only issue
-  * Seems to have problems with Cisco access points (can't connect at
-    all) but I'm not 100% certain
+   We agree with you. There is no need to explicitly set
+NL80211_IFTYPE_AP_VLAN support for AP driver. This patch
+is redundant.
 
------------------------------------------------------------------------------------------------------------------------------------------
+@John: Please ignore this patch.
 
-So, I have a very specific issue with rtl8723ae chipset. I'm not having
-huge expectations of success but figure I'll just send this out there in
-the hopes that someone can help me. I'm using the
-compat-drivers-3.8-rc5-1-u package (the latest stable as of the time of
-this writing) which I'm pleased to see now includes the rtl8723ae
-drivers. Not a moment too soon as the hard-found drivers from Realtek no
-longer seem to work with the new kernels. Unfortunately, I'm now
-experiencing severely reduced signal strength and I'm not sure why. This
-adapter didn't have the best signal strength to begin with but was
-useable (again after a lot of effort). Now...I had this very same
-problem before. Then it was a lot better for the past few months. I'm a
-little hazy about what happened in between. I guess I
-did...something?...to fix it. I wish I remembered what. At any rate I
-now have to move downstairs closer to my router to be able to connect,
-and I have a very poor connection from in my room (it disconnected
-frequently and while it can reconnect on it's own it's still pretty
-annoying and causes a lot of problems).
+Thanks
+Yogesh
 
-Small piece of extra information: I actually haven't tested this yet
-with the compat driver (I wouldn't expect a change from the Realtek one)
-since I just switched to it the other day, but the rtl8723ae Linux
-driver (at least the one I was using before from Realtek) seems to be
-unable to connect to my school's Cisco access points OR the old Cisco
-access point provided by my ISP - I believe it's a problem connecting to
-Cisco access points in general since one of the networking teachers at
-my school mentioned some newer Windows 8 drivers having similar problems
-
-
-
-
+> 
+> johannes
+> 
