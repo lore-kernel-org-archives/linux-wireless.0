@@ -1,52 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:44403 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501Ab3AaWVT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41725 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab3A1Jit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 17:21:19 -0500
-Message-ID: <510AEE5C.6030303@wwwdotorg.org> (sfid-20130131_232124_480318_38EDD7DE)
-Date: Thu, 31 Jan 2013 15:21:16 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
-Subject: Re: [PATCH] nl80211: avoid "wdev_id may be used uninitialized"
-References: <1359504662-23561-1-git-send-email-swarren@wwwdotorg.org>   (sfid-20130130_011118_335925_03B80596) <1359532679.8010.1.camel@jlt4.sipsolutions.net>  <51094F10.60605@wwwdotorg.org> <1359665497.8415.102.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359665497.8415.102.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 28 Jan 2013 04:38:49 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 26/37] iwlwifi: add the MVM driver (quota)
+Date: Mon, 28 Jan 2013 10:37:33 +0100
+Message-Id: <1359365864-4259-27-git-send-email-johannes@sipsolutions.net> (sfid-20130128_103858_500139_90250BD6)
+In-Reply-To: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2013 01:51 PM, Johannes Berg wrote:
-> On Wed, 2013-01-30 at 09:49 -0700, Stephen Warren wrote:
->> On 01/30/2013 12:57 AM, Johannes Berg wrote:
->>> On Tue, 2013-01-29 at 17:11 -0700, Stephen Warren wrote:
->>>> From: Stephen Warren <swarren@nvidia.com>
->>>>
->>>> Silence the following:
->>>> net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs.clone.119':
->>>> net/wireless/nl80211.c:57:6: warning: 'wdev_id' may be used uninitialized in this function
->>>>
->>>> ... by always initializing wdev_id to zero. I assume that wiphy_idx and
->>>> ifidx are set to -1 for similar reasons, so this change simply propagates
->>>> the same workaround.
->>>>
->>>> In practice, this warning is false, since wdev_id is both set and used
->>>> under the condition if (have_wdev_id). However, at least my compiler
->>>> can't be coerced into realizing this; almost any code between the if
->>>> blocks that set and use the variable causes this warning.
->>>
->>> I don't see this warning? What compiler are you using?
->>
->> I'm using gcc-4.5.3 for ARM. I checked with gcc-4.6.3 and gcc-4.7.2 and
->> indeed I don't see the warning there.
-> 
-> Interesting. So should I keep it or remove it? I guess in this
-> particular instance it doesn't matter all that much. In other cases I'd
-> be more against changing it I guess.
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's your call. I guess since it's fixed going forward in gcc, you may
-as well drop it though.
+Newer firmware revisions have a completely new
+firmware API. This is the new driver for this
+new API.
+
+I've listed the people who directly contributed
+code, but many others from various teams have
+contributed in other ways.
+
+Change-Id: Id62a7ce1b80ec762c9a902b93188d3502837b77b
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Amit Beka <amit.beka@intel.com>
+Cc: Amnon Paz <amnonx.paz@intel.com>
+Cc: Assaf Krauss <assaf.krauss@intel.com>
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Dor Shaish <dor.shaish@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/quota.c | 178 +++++++++++++++++++++++++++++++
+ 1 file changed, 178 insertions(+)
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/quota.c
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/quota.c b/drivers/net/wireless/iwlwifi/mvm/quota.c
+new file mode 100644
+index 0000000..2d4611a
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/mvm/quota.c
+@@ -0,0 +1,178 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2012 - 2013 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++
++#include <net/mac80211.h>
++#include "fw-api.h"
++#include "mvm.h"
++
++struct iwl_mvm_quota_iterator_data {
++	int n_interfaces[MAX_BINDINGS];
++	int colors[MAX_BINDINGS];
++	struct ieee80211_vif *new_vif;
++};
++
++static void iwl_mvm_quota_iterator(void *_data, u8 *mac,
++				   struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_quota_iterator_data *data = _data;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	u16 id;
++
++	/*
++	 * We'll account for the new interface (if any) below,
++	 * skip it here in case we're not called from within
++	 * the add_interface callback (otherwise it won't show
++	 * up in iteration)
++	 */
++	if (vif == data->new_vif)
++		return;
++
++	if (!mvmvif->phy_ctxt)
++		return;
++
++	/* currently, PHY ID == binding ID */
++	id = mvmvif->phy_ctxt->id;
++
++	/* need at least one binding per PHY */
++	BUILD_BUG_ON(NUM_PHY_CTX > MAX_BINDINGS);
++
++	if (WARN_ON_ONCE(id >= MAX_BINDINGS))
++		return;
++
++	if (data->colors[id] < 0)
++		data->colors[id] = mvmvif->phy_ctxt->color;
++	else
++		WARN_ON_ONCE(data->colors[id] != mvmvif->phy_ctxt->color);
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		if (vif->bss_conf.assoc)
++			data->n_interfaces[id]++;
++		break;
++	case NL80211_IFTYPE_AP:
++		if (mvmvif->ap_active)
++			data->n_interfaces[id]++;
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		data->n_interfaces[id]++;
++		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		if (vif->bss_conf.ibss_joined)
++			data->n_interfaces[id]++;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		break;
++	}
++}
++
++int iwl_mvm_update_quotas(struct iwl_mvm *mvm, struct ieee80211_vif *newvif)
++{
++	struct iwl_time_quota_cmd cmd;
++	int i, idx, ret;
++	struct iwl_mvm_quota_iterator_data data = {
++		.n_interfaces = {},
++		.colors = { -1, -1, -1, -1 },
++		.new_vif = newvif,
++	};
++
++	/* update all upon completion */
++	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
++		return 0;
++
++	BUILD_BUG_ON(data.colors[MAX_BINDINGS - 1] != -1);
++
++	lockdep_assert_held(&mvm->mutex);
++
++	memset(&cmd, 0, sizeof(cmd));
++
++	ieee80211_iterate_active_interfaces_atomic(
++		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
++		iwl_mvm_quota_iterator, &data);
++	if (newvif) {
++		data.new_vif = NULL;
++		iwl_mvm_quota_iterator(&data, newvif->addr, newvif);
++	}
++
++	for (idx = 0, i = 0; i < MAX_BINDINGS; i++) {
++		if (data.n_interfaces[i] <= 0)
++			continue;
++
++		cmd.quotas[idx].id_and_color =
++			cpu_to_le32(FW_CMD_ID_AND_COLOR(i, data.colors[i]));
++		cmd.quotas[idx].quota = cpu_to_le32(100);
++		cmd.quotas[idx].max_duration = cpu_to_le32(1000);
++		idx++;
++	}
++
++	for (i = idx; i < MAX_BINDINGS; i++)
++		cmd.quotas[i].id_and_color = cpu_to_le32(FW_CTXT_INVALID);
++
++	ret = iwl_mvm_send_cmd_pdu(mvm, TIME_QUOTA_CMD, CMD_SYNC,
++				   sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(mvm, "Failed to send quota: %d\n", ret);
++	return ret;
++}
+-- 
+1.8.0
+
