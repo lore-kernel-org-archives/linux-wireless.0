@@ -1,184 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:40473 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402Ab3ARMFp (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:64443 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754545Ab3A1Qck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 07:05:45 -0500
-Received: by mail-bk0-f49.google.com with SMTP id jm19so1947408bkc.22
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jan 2013 04:05:44 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>,
-	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-Subject: [PATCH 3/3] iw: add support for link-specific mesh power modes
-Date: Fri, 18 Jan 2013 13:05:32 +0100
-Message-Id: <1358510732-32767-4-git-send-email-marco@cozybit.com> (sfid-20130118_130548_922080_EC2DC952)
-In-Reply-To: <1358510732-32767-1-git-send-email-marco@cozybit.com>
-References: <1358510732-32767-1-git-send-email-marco@cozybit.com>
+	Mon, 28 Jan 2013 11:32:40 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/14] wil6210: Refactor rx init/fini
+Date: Mon, 28 Jan 2013 18:30:59 +0200
+Message-ID: <1359390669-9310-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130128_173244_089450_76CB7D07)
+In-Reply-To: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1359390669-9310-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The different power modes of links towards neighbor STA can be
-read using
-iw <dev> station get
--or-
-iw <dev> station dump
+Move WMI related operations to wmi.c as helper functions
 
-The different power modes shown are:
-- mesh local PS mode
-- mesh peer PS mode
-- mesh non-peer PS mode
-where the local PS mode is "our" mode towards the neighbor, the
-peer PS mode is the neighbor's mode towards us, and the non-peer
-PS mode is the neighbor's non-peer PS mode as indicated in
-beacons and management frames.
-
-The local PS mode can be modified for each neighbor using
-iw <dev> station set <mac-addr> mesh_power_mode
-<active|light|deep>
-
-Signed-off-by: Marco Porsch <marco@cozybit.com>
-Signed-off-by: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- station.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 89 insertions(+)
+ drivers/net/wireless/ath/wil6210/txrx.c    |   54 +-------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |    2 +
+ drivers/net/wireless/ath/wil6210/wmi.c     |   73 ++++++++++++++++++++++++++++
+ 3 files changed, 77 insertions(+), 52 deletions(-)
 
-diff --git a/station.c b/station.c
-index 247f445..eb02b0c 100644
---- a/station.c
-+++ b/station.c
-@@ -29,6 +29,25 @@ enum plink_actions {
- 	PLINK_ACTION_BLOCK,
- };
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 241dd0e..f3b523b 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -484,53 +484,18 @@ void wil_rx_handle(struct wil6210_priv *wil)
  
-+static void print_power_mode(struct nlattr *a)
-+{
-+	enum nl80211_mesh_power_mode pm = nla_get_u32(a);
-+
-+	switch (pm) {
-+	case NL80211_MESH_POWER_ACTIVE:
-+		printf("ACTIVE");
-+		break;
-+	case NL80211_MESH_POWER_LIGHT_SLEEP:
-+		printf("LIGHT SLEEP");
-+		break;
-+	case NL80211_MESH_POWER_DEEP_SLEEP:
-+		printf("DEEP SLEEP");
-+		break;
-+	default:
-+		printf("UNKNOWN");
-+		break;
-+	}
-+}
- 
- static int print_sta_handler(struct nl_msg *msg, void *arg)
+ int wil_rx_init(struct wil6210_priv *wil)
  {
-@@ -54,6 +73,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_STA_FLAGS] =
- 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
-+		[NL80211_STA_INFO_LOCAL_PM] = { .type = NLA_U32},
-+		[NL80211_STA_INFO_PEER_PM] = { .type = NLA_U32},
-+		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
- 	};
+-	struct net_device *ndev = wil_to_ndev(wil);
+-	struct wireless_dev *wdev = wil->wdev;
+ 	struct vring *vring = &wil->vring_rx;
+ 	int rc;
+-	struct wmi_cfg_rx_chain_cmd cmd = {
+-		.action = WMI_RX_CHAIN_ADD,
+-		.rx_sw_ring = {
+-			.max_mpdu_size = cpu_to_le16(RX_BUF_LEN),
+-		},
+-		.mid = 0, /* TODO - what is it? */
+-		.decap_trans_type = WMI_DECAP_TYPE_802_3,
+-	};
+-	struct {
+-		struct wil6210_mbox_hdr_wmi wmi;
+-		struct wmi_cfg_rx_chain_done_event evt;
+-	} __packed evt;
  
- 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
-@@ -177,6 +199,18 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		}
- 		printf("\n\tmesh plink:\t%s", state_name);
+ 	vring->size = WIL6210_RX_RING_SIZE;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+ 		return rc;
+ 
+-	cmd.rx_sw_ring.ring_mem_base = cpu_to_le64(vring->pa);
+-	cmd.rx_sw_ring.ring_size = cpu_to_le16(vring->size);
+-	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
+-		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
+-
+-		cmd.sniffer_cfg.mode = cpu_to_le32(WMI_SNIFFER_ON);
+-		if (ch)
+-			cmd.sniffer_cfg.channel = ch->hw_value - 1;
+-		cmd.sniffer_cfg.phy_info_mode =
+-			cpu_to_le32(ndev->type == ARPHRD_IEEE80211_RADIOTAP);
+-		cmd.sniffer_cfg.phy_support =
+-			cpu_to_le32((wil->monitor_flags & MONITOR_FLAG_CONTROL)
+-				    ? WMI_SNIFFER_CP : WMI_SNIFFER_DP);
+-	}
+-	/* typical time for secure PCP is 840ms */
+-	rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
+-		      WMI_CFG_RX_CHAIN_DONE_EVENTID, &evt, sizeof(evt), 2000);
++	rc = wmi_rx_chain_add(wil, vring);
+ 	if (rc)
+ 		goto err_free;
+ 
+-	vring->hwtail = le32_to_cpu(evt.evt.rx_ring_tail_ptr);
+-
+-	wil_dbg_MISC(wil, "Rx init: status %d tail 0x%08x\n",
+-		     le32_to_cpu(evt.evt.status), vring->hwtail);
+-
+ 	rc = wil_rx_refill(wil, vring->size);
+ 	if (rc)
+ 		goto err_free;
+@@ -547,22 +512,7 @@ void wil_rx_fini(struct wil6210_priv *wil)
+ 	struct vring *vring = &wil->vring_rx;
+ 
+ 	if (vring->va) {
+-		int rc;
+-		struct wmi_cfg_rx_chain_cmd cmd = {
+-			.action = cpu_to_le32(WMI_RX_CHAIN_DEL),
+-			.rx_sw_ring = {
+-				.max_mpdu_size = cpu_to_le16(RX_BUF_LEN),
+-			},
+-		};
+-		struct {
+-			struct wil6210_mbox_hdr_wmi wmi;
+-			struct wmi_cfg_rx_chain_done_event cfg;
+-		} __packed wmi_rx_cfg_reply;
+-
+-		rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
+-			      WMI_CFG_RX_CHAIN_DONE_EVENTID,
+-			      &wmi_rx_cfg_reply, sizeof(wmi_rx_cfg_reply),
+-			      100);
++		wmi_rx_chain_del(wil);
+ 		wil_vring_free(wil, vring, 0);
  	}
-+	if (sinfo[NL80211_STA_INFO_LOCAL_PM]) {
-+		printf("\n\tmesh local PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_LOCAL_PM]);
-+	}
-+	if (sinfo[NL80211_STA_INFO_PEER_PM]) {
-+		printf("\n\tmesh peer PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_PEER_PM]);
-+	}
-+	if (sinfo[NL80211_STA_INFO_NONPEER_PM]) {
-+		printf("\n\tmesh non-peer PS mode:\t");
-+		print_power_mode(sinfo[NL80211_STA_INFO_NONPEER_PM]);
-+	}
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index a9b6f70..9b2ebdd 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -329,6 +329,8 @@ int wmi_add_cipher_key(struct wil6210_priv *wil, u8 key_index,
+ 		       const void *mac_addr, int key_len, const void *key);
+ int wmi_echo(struct wil6210_priv *wil);
+ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie);
++int wmi_rx_chain_del(struct wil6210_priv *wil);
++int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring);
  
- 	if (sinfo[NL80211_STA_INFO_STA_FLAGS]) {
- 		sta_flags = (struct nl80211_sta_flag_update *)
-@@ -274,6 +308,7 @@ COMMAND(station, del, "<MAC address>",
+ int wil6210_init_irq(struct wil6210_priv *wil, int irq);
+ void wil6210_fini_irq(struct wil6210_priv *wil, int irq);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 12915f6..d109c3f 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -18,8 +18,10 @@
+ #include <linux/io.h>
+ #include <linux/list.h>
+ #include <linux/etherdevice.h>
++#include <linux/if_arp.h>
  
- static const struct cmd *station_set_plink;
- static const struct cmd *station_set_vlan;
-+static const struct cmd *station_set_mesh_power_mode;
+ #include "wil6210.h"
++#include "txrx.h"
+ #include "wmi.h"
  
- static const struct cmd *select_station_cmd(int argc, char **argv)
- {
-@@ -283,6 +318,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
- 		return station_set_plink;
- 	if (strcmp(argv[1], "vlan") == 0)
- 		return station_set_vlan;
-+	if (strcmp(argv[1], "mesh_power_mode") == 0)
-+		return station_set_mesh_power_mode;
- 	return NULL;
+ /**
+@@ -853,6 +855,77 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
+ 	return rc;
  }
  
-@@ -384,6 +421,58 @@ COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
- 	"Set an AP VLAN for this station.",
- 	select_station_cmd, station_set_vlan);
- 
-+static int handle_station_set_mesh_power_mode(struct nl80211_state *state,
-+					      struct nl_cb *cb,
-+					      struct nl_msg *msg,
-+					      int argc, char **argv,
-+					      enum id_input id)
++int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
 +{
-+	unsigned char mesh_power_mode;
-+	unsigned char mac_addr[ETH_ALEN];
++	struct wireless_dev *wdev = wil->wdev;
++	struct net_device *ndev = wil_to_ndev(wil);
++	struct wmi_cfg_rx_chain_cmd cmd = {
++		.action = WMI_RX_CHAIN_ADD,
++		.rx_sw_ring = {
++			.max_mpdu_size = cpu_to_le16(RX_BUF_LEN),
++			.ring_mem_base = cpu_to_le64(vring->pa),
++			.ring_size = cpu_to_le16(vring->size),
++		},
++		.mid = 0, /* TODO - what is it? */
++		.decap_trans_type = WMI_DECAP_TYPE_802_3,
++	};
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_cfg_rx_chain_done_event evt;
++	} __packed evt;
++	int rc;
 +
-+	if (argc < 3)
-+		return 1;
++	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
++		struct ieee80211_channel *ch = wdev->preset_chandef.chan;
 +
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
++		cmd.sniffer_cfg.mode = cpu_to_le32(WMI_SNIFFER_ON);
++		if (ch)
++			cmd.sniffer_cfg.channel = ch->hw_value - 1;
++		cmd.sniffer_cfg.phy_info_mode =
++			cpu_to_le32(ndev->type == ARPHRD_IEEE80211_RADIOTAP);
++		cmd.sniffer_cfg.phy_support =
++			cpu_to_le32((wil->monitor_flags & MONITOR_FLAG_CONTROL)
++				    ? WMI_SNIFFER_CP : WMI_SNIFFER_DP);
 +	}
-+	argc--;
-+	argv++;
++	/* typical time for secure PCP is 840ms */
++	rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
++		      WMI_CFG_RX_CHAIN_DONE_EVENTID, &evt, sizeof(evt), 2000);
++	if (rc)
++		return rc;
 +
-+	if (strcmp("mesh_power_mode", argv[0]) != 0)
-+		return 1;
-+	argc--;
-+	argv++;
++	vring->hwtail = le32_to_cpu(evt.evt.rx_ring_tail_ptr);
 +
-+	if (strcmp("active", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_ACTIVE;
-+	else if (strcmp("light", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_LIGHT_SLEEP;
-+	else if (strcmp("deep", argv[0]) == 0)
-+		mesh_power_mode = NL80211_MESH_POWER_DEEP_SLEEP;
-+	else {
-+		fprintf(stderr, "unknown mesh power mode\n");
-+		return 2;
-+	}
-+	argc--;
-+	argv++;
++	wil_dbg_MISC(wil, "Rx init: status %d tail 0x%08x\n",
++		     le32_to_cpu(evt.evt.status), vring->hwtail);
 +
-+	if (argc)
-+		return 1;
++	if (le32_to_cpu(evt.evt.status) != WMI_CFG_RX_CHAIN_SUCCESS)
++		rc = -EINVAL;
 +
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+	NLA_PUT_U32(msg, NL80211_ATTR_LOCAL_MESH_POWER_MODE, mesh_power_mode);
-+
-+	return 0;
-+nla_put_failure:
-+	return -ENOBUFS;
++	return rc;
 +}
-+COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
-+	"<active|light|deep>", NL80211_CMD_SET_STATION, 0, CIB_NETDEV,
-+	handle_station_set_mesh_power_mode,
-+	"Set link-specific mesh power mode for this station",
-+	select_station_cmd, station_set_mesh_power_mode);
- 
- static int handle_station_dump(struct nl80211_state *state,
- 			       struct nl_cb *cb,
++
++int wmi_rx_chain_del(struct wil6210_priv *wil)
++{
++	int rc;
++	struct wmi_cfg_rx_chain_cmd cmd = {
++		.action = cpu_to_le32(WMI_RX_CHAIN_DEL),
++		.rx_sw_ring = {
++			.max_mpdu_size = cpu_to_le16(RX_BUF_LEN),
++		},
++	};
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_cfg_rx_chain_done_event cfg;
++	} __packed wmi_rx_cfg_reply;
++
++	rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
++		      WMI_CFG_RX_CHAIN_DONE_EVENTID,
++		      &wmi_rx_cfg_reply, sizeof(wmi_rx_cfg_reply),
++		      100);
++
++	return rc;
++}
++
+ void wmi_event_flush(struct wil6210_priv *wil)
+ {
+ 	struct pending_wmi_event *evt, *t;
 -- 
-1.7.9.5
+1.7.10.4
 
