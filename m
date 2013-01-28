@@ -1,43 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:53568
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752715Ab3ACJ0j (ORCPT
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:61733 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755Ab3A1PYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 04:26:39 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath9k_hw: Fix calibration for AR9340
-Date: Thu,  3 Jan 2013 14:55:48 +0530
-Message-Id: <1357205148-11781-1-git-send-email-sujith@msujith.org> (sfid-20130103_102642_577007_3F4486C4)
+	Mon, 28 Jan 2013 10:24:15 -0500
+Received: by mail-qa0-f48.google.com with SMTP id j8so989630qah.7
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 07:24:14 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com>
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	<1359377405.8120.16.camel@jlt4.sipsolutions.net>
+	<87pq0pcrpy.fsf@purkki.adurom.net>
+	<CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com>
+Date: Mon, 28 Jan 2013 16:17:32 +0100
+Message-ID: <CA+icZUXx+Pt2vwMgvOCGdT5GiwASQ_mMfLBt_vxUJCPu4aXe9w@mail.gmail.com> (sfid-20130128_162418_557030_7338EC29)
+Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Jan 28, 2013 at 4:10 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Mon, Jan 28, 2013 at 3:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>
+>>> Question for the list ...
+>>>
+>>> Internally, we've identified patches to this new driver as
+>>>
+>>> "iwlwifi (MVM):"
+>>>
+>>> rather than just "iwlwifi:"
+>>>
+>>> We can continue doing so (and would probably also tag patches with
+>>> "iwlwifi" for core and "iwlwifi (DVM)" for the DVM part.
+>>>
+>>> Would "iwlmvm"/"iwldvm"/"iwlwifi" make more sense as that's the module
+>>> names? It's harder to filter though, I guess.
+>>
+>> I would use this:
+>>
+>> "iwlwifi: mvm: fix foo"
+>>
+>
+> If two-items notation then "item1: item2: Subject" is better than the
+> commata notation "iwlwifi, mwm: Fix foo" should simply die...
+>
+> More Like-it (mostly seen in media):
+>
+> [subtree|driver-family|etc.] special-driver|script|etc: Subject
+>
+> For example:
+>
+> "[kbuild] deb-pkg: Bump year in copyright
+>
+> (kbuild subtree and debbuild script (aka make deb-pkg).
+>
+> And yes, I like capital letter in the first word of subject (after ":").
+>
+> Two items is OK.
+> But more items seen for rtlwifi sth. like "rtlwifi: rtlX: rtlY: rtlZ:
+> Here now what I wanted to fix" is IMHO bad for extracting patches with
+> git.
+>
+> BTW, why do you need two items?
+> Is there somewhere a mvm driver in another subtree?
+> Or new buzz-word: What about "iwlmvm"?
+> iwlegacy - iwlwifi - iwlmvm...
+>
 
-TX_IQ_ON_AGC_CAL should not be enabled for AR9340. TX-IQ calibration
-is run as part of AGC calibration only for AR9485, AR9462 and AR9565.
-For the others (AR9300, AR9330, AR9340), TX-IQ cal is done independent
-of AGC-cal.
+Better than buzz-words and personal likes/dislikes is the quality of
+the patches, the embedded (descriptive) text in changelog and a well
+documented source-code.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Worth reading on this topic: "On commit messages" from Peter
+Hutterer's blog  (Linux Xorg hacker).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 598b847..303e40d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -326,7 +326,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ah->enabled_cals |= TX_IQ_CAL;
--		if (AR_SREV_9485_OR_LATER(ah))
-+		if (AR_SREV_9485_OR_LATER(ah) && !AR_SREV_9340(ah))
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
- 
--- 
-1.8.1
+- Sedat -
 
+[1] http://who-t.blogspot.de/2009/12/on-commit-messages.html
+
+> - Sedat -
+>
+>> I don't remember where I saw that style first but I liked it.
+>>
+>> --
+>> Kalle Valo
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
