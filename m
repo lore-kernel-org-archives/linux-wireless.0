@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62087 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab3ACNOV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 08:14:21 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V7 1/2] cfg80211: Move the definition of struct mac_address up
-Date: Thu, 3 Jan 2013 18:44:06 +0530
-Message-ID: <1357218847-16415-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20130103_141425_066122_9767F42F)
+Received: from purkki.adurom.net ([80.68.90.206]:54446 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756733Ab3A1OUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 09:20:52 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k has buggy promiscuous mode
+References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be>
+Date: Mon, 28 Jan 2013 16:20:50 +0200
+In-Reply-To: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be> (Erwin Van de
+	Velde's message of "Mon, 28 Jan 2013 10:33:48 +0100")
+Message-ID: <87txq1crst.fsf@purkki.adurom.net> (sfid-20130128_152056_301038_8AE9C852)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct mac_address will be used by ACL related configuration ops.
+Erwin Van de Velde <erwin.vandevelde@gmail.com> writes:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+> When using promiscuous mode on a ath9k chipset, it does not capture 
+> packets from the access point to other stations.
+>
+> e.g. a ping from S to T over AP results in:
+> echo request S -> AP
+> echo reply AP -> S
+>
+> Where echo request AP -> T is missing.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8e6a6b7..9273d05 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -521,6 +521,10 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- };
- 
-+struct mac_address {
-+	u8 addr[ETH_ALEN];
-+};
-+
- /**
-  * struct cfg80211_ap_settings - AP configuration
-  *
-@@ -2146,10 +2150,6 @@ struct ieee80211_iface_combination {
- 	bool beacon_int_infra_match;
- };
- 
--struct mac_address {
--	u8 addr[ETH_ALEN];
--};
--
- struct ieee80211_txrx_stypes {
- 	u16 tx, rx;
- };
+How did you test this exactly? If you just do 'tcpdump -i wlan0' in
+managed mode which is expected. If you use monitor mode (iw wlan0 set
+type monitor) when you would see all frames in the air.
+
 -- 
-1.7.0.4
-
+Kalle Valo
