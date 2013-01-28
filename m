@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:37612 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751684Ab3ARRJS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 12:09:18 -0500
-Message-ID: <1358528900.6252.113.camel@cumari.coelho.fi> (sfid-20130118_180923_208167_0E3DD7D4)
-Subject: Re: wl12xx : ping to wlan0(Station) doesn't work after creating
- wlan1 interface
-From: Luciano Coelho <coelho@ti.com>
-To: Girish Bn <Girish.BN@lnties.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 18 Jan 2013 19:08:20 +0200
-In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1EB092@POCITMSEXMB02.LntUniverse.com>
-References: <45566970CF58C74CB52107862E0541CD1D1EB092@POCITMSEXMB02.LntUniverse.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42553 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754469Ab3A1NrJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 08:47:09 -0500
+Message-ID: <1359380852.8120.19.camel@jlt4.sipsolutions.net> (sfid-20130128_144713_214316_14110652)
+Subject: Re: [PATCH] mac80211: remove IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 28 Jan 2013 14:47:32 +0100
+In-Reply-To: <1359380550-7798-1-git-send-email-sgruszka@redhat.com>
+References: <1359380550-7798-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Girish,
+On Mon, 2013-01-28 at 14:42 +0100, Stanislaw Gruszka wrote:
+> This is basically a revert of:
+> 
+> commit 5b632fe85ec82e5c43740b52e74c66df50a37db3
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Mon Dec 3 12:56:33 2012 +0100
+> 
+>     mac80211: introduce IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL
+> 
+> We do not need this flag any longer, rt2x00 BAR/BA problem was fixed
+> correctly by wireless-testing commit:
+> 
+> commit 84e9e8ebd369679a958200a8baca96aafb2393bb
+> Author: Helmut Schaa <helmut.schaa@googlemail.com>
+> Date:   Thu Jan 17 17:34:32 2013 +0100
+> 
+>     rt2x00: Improve TX status handling for BlockAckReq frames
 
-On Fri, 2013-01-18 at 15:17 +0000, Girish Bn wrote:
-> The issue is, after starting P2P GO, may be after 2 to 3mins, the ping
-> operation from any other PC/Laptop which is connected to the same AP
-> as Station(wlan0) fails.
+Applied, thanks.
 
-Do you mean that before 2 to 3 mins elapse the ping works fine and then
-stops working?
-
-> However, if I start the ping from my device to the PC/Laptop, ping
-> operation succeeds and also ping from other side works(which failed
-> before).
-
-Seems to be because the device is sleeping or failing to wake up from
-power saving.
-
-
-> We suspect some issue while creating the multi-role interface(wlan1
-> for P2P GO) is causing the problem.
-
-Can you send some wl12xx logs so we can see what is going on?
-
---
-Luca.
+johannes
 
