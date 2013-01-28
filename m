@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134Ab3ABKuO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 05:50:14 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TqLtl-0004Db-P9
-	for linux-wireless@vger.kernel.org; Wed, 02 Jan 2013 11:50:13 +0100
-Message-ID: <1357123839.9839.1.camel@jlt4.sipsolutions.net> (sfid-20130102_115018_051855_D64AC84F)
-Subject: Re: [PATCH 0/4] mac80211: refine TX aggregation session stop
- handling
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from narfation.org ([79.140.41.39]:42830 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753444Ab3A1QMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 11:12:30 -0500
+From: Sven Eckelmann <sven@narfation.org>
 To: linux-wireless@vger.kernel.org
-Date: Wed, 02 Jan 2013 11:50:39 +0100
-In-Reply-To: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_100936_158377_93399A38)
-References: <1356685781-6758-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121228_100936_158377_93399A38)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	ordex@autistici.org, simon.wunderlich@s2003.tu-chemnitz.de,
+	rgibson@futurec.net, Sven Eckelmann <sven@narfation.org>
+Subject: [RFC 1/3] mac80211: Allow group key for IBSS WPA_NONE
+Date: Mon, 28 Jan 2013 17:11:51 +0100
+Message-Id: <1359389513-1554-1-git-send-email-sven@narfation.org> (sfid-20130128_171234_341170_65C398EB)
+In-Reply-To: <30210911.93HAZKKtRJ@bentobox>
+References: <30210911.93HAZKKtRJ@bentobox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-28 at 10:09 +0100, Johannes Berg wrote:
-> We ran into problems when an aggregation session is stopped
-> when disconnecting, we can't clean it up completely and drop
-> all packets right away because we don't know this is valid
-> but when we don't doing it later when the station is removed
-> gets tricky.
-> 
-> To solve this, split out the STOP action into the different
-> kinds of stop: "stop and continue transmitting" (normal stop),
-> "stop and flush packets" (connection drop) and "stop and flush
-> a previously stopped session" (can happen when the connection
-> drops while a session is still stopping.)
+WPA_NONE uses the shared group key to encrypt the protected frames. Therefore,
+it must also be allowed for non-multicast frames to use the group key for
+decryption.
 
-Applied all.
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ net/mac80211/rx.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a190895..d412fd0 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1160,7 +1160,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 			if (rx->key &&
+ 			    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP40 &&
+ 			    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP104 &&
+-			    !is_multicast_ether_addr(hdr->addr1))
++			    !is_multicast_ether_addr(hdr->addr1) &&
++			    (rx->sdata->vif.type != NL80211_IFTYPE_ADHOC ||
++			     rx->sdata->u.ibss.control_port))
+ 				rx->key = NULL;
+ 		}
+ 	}
+-- 
+1.7.10.4
 
