@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54652 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752812Ab3ALOTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jan 2013 09:19:00 -0500
-Message-ID: <50F170C9.8000905@hauke-m.de> (sfid-20130112_151906_477954_6A3EFF30)
-Date: Sat, 12 Jan 2013 15:18:49 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Nathan Hintz <nlhintz@hotmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/5] bcma: jump to 'out' label for invalid 'func' value
-References: <1357987577-20661-1-git-send-email-nlhintz@hotmail.com> <BLU0-SMTP98AD32E757F0A7255A238DAC280@phx.gbl>
-In-Reply-To: <BLU0-SMTP98AD32E757F0A7255A238DAC280@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44025 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532Ab3A1W0f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jan 2013 17:26:35 -0500
+Message-ID: <1359412015.8543.1.camel@jlt4.sipsolutions.net> (sfid-20130128_232638_825892_DB19622C)
+Subject: Re: [PATCH 0/37] iwlwifi: add the MVM driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: sedat.dilek@gmail.com
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
+Date: Mon, 28 Jan 2013 23:26:55 +0100
+In-Reply-To: <CA+icZUUPU7QMdhDdZyw7BCPZ85bUj1ArKuJxTEjW+aWLd1BiyQ@mail.gmail.com> (sfid-20130128_225647_146481_BFE22C98)
+References: <1359365864-4259-1-git-send-email-johannes@sipsolutions.net>
+	 <1359377405.8120.16.camel@jlt4.sipsolutions.net>
+	 <87pq0pcrpy.fsf@purkki.adurom.net>
+	 <CA+icZUUhDgyez9vwrMLiLP1CERq12rYpbPpyB--9ECZ0dbuvwg@mail.gmail.com>
+	 <CA+icZUXx+Pt2vwMgvOCGdT5GiwASQ_mMfLBt_vxUJCPu4aXe9w@mail.gmail.com>
+	 <1359387506.8120.20.camel@jlt4.sipsolutions.net>
+	 <CA+icZUUPU7QMdhDdZyw7BCPZ85bUj1ArKuJxTEjW+aWLd1BiyQ@mail.gmail.com>
+	 (sfid-20130128_225647_146481_BFE22C98)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2013 11:46 AM, Nathan Hintz wrote:
-> Consistently jump to the 'out' label for error conditions (adds
-> missing check for 'func' validity in bcma_extpci_write_config).
-> 
-> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+On Mon, 2013-01-28 at 22:56 +0100, Sedat Dilek wrote:
 
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+> NO, I gave my two cents only on general stuff about the label-name(s)
+> you asked and the pointer to the fantastic blog-article of Peter.
 
-> ---
->  drivers/bcma/driver_pci_host.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-> index 56073a5..187cc9f 100644
-> --- a/drivers/bcma/driver_pci_host.c
-> +++ b/drivers/bcma/driver_pci_host.c
-> @@ -94,7 +94,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
->  	if (dev == 0) {
->  		/* we support only two functions on device 0 */
->  		if (func > 1)
-> -			return -EINVAL;
-> +			goto out;
->  
->  		/* accesses to config registers with offsets >= 256
->  		 * requires indirect access.
-> @@ -157,6 +157,10 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
->  	if (unlikely(len != 1 && len != 2 && len != 4))
->  		goto out;
->  	if (dev == 0) {
-> +		/* we support only two functions on device 0 */
-> +		if (func > 1)
-> +			goto out;
-> +
->  		/* accesses to config registers with offsets >= 256
->  		 * requires indirect access.
->  		 */
-> 
+Ok :)
+
+> This was no blame to you as I always enjoy to read your changelogs -
+> just a hint for all people reading here on the ML.
+> If tons of patches would have followed Peter's article the
+> Linux-kernel development would really improve!
+
+No worries, I was just wondering if your comments were directed at these
+patches or not :) FWIW, the changelog for this *is* a bit terse, I'm not
+really sure what to write about an almost completely new driver ... I
+guess I could say "look, *shiny*" ;-)
+
+johannes
 
