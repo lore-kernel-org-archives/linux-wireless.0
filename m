@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41336 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752788Ab3ABQAM (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:34264 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750788Ab3A2HQk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 11:00:12 -0500
-Date: Wed, 2 Jan 2013 10:47:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	linux-wireless@vger.kernel.org, kay@redhat.com
-Subject: Re: rtl8187 WARN slowpath on suspend with 3.6.11
-Message-ID: <20130102154724.GA2198@tuxdriver.com> (sfid-20130102_170018_434346_4B0A941B)
-References: <50E23C19.7050008@lwfinger.net>
- <1357138947.38782.YahooMailClassic@web172305.mail.ir2.yahoo.com>
+	Tue, 29 Jan 2013 02:16:40 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Mathieu Chouquet-Stringer <mathieu@csetco.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: RE: [Ilw] iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost
+ unusable on 3.8.0-rc5)
+Date: Tue, 29 Jan 2013 07:16:34 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301925D7A@HASMSX103.ger.corp.intel.com> (sfid-20130129_081655_835188_F6FF924D)
+References: <20130128225657.GA17533@kashmir>
+In-Reply-To: <20130128225657.GA17533@kashmir>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357138947.38782.YahooMailClassic@web172305.mail.ir2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 02, 2013 at 03:02:27PM +0000, Hin-Tak Leung wrote:
-> --- On Tue, 1/1/13, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 > 
-> > On 12/31/2012 06:16 PM, Hin-Tak Leung
-> > wrote:
-> > > Hi,
-> > >
-> > > Does either Larry or Herton see the sort of behavior
-> > (https://bugzilla.redhat.com/show_bug.cgi?id=891019) on
-> > suspend? John, is there anything changed between 3.6.9 and
-> > 3.6.11 which would cause this?
-> > >
-> > > Other than a genuine kernel regression, it is possible
-> > that it might be fedora specific - I just went from F17 to
-> > F18. F18 seems to have an systemd integrated udevd which
-> > might behaves differently from the older udevd's... or
-> > general funniness with F18 (I noticed another bug https://bugzilla.redhat.com/show_bug.cgi?id=891018 but
-> > that might be unrelated).
-> > >
-> > > Anyway, other than whole sale downgrade I think I can
-> > try booting 3.6.9 (which suspended cleanly under F17) and
-> > see whether it is a F18-specific problem.
-> > 
-> > Hin-Tak,
-> > 
-> > My system has never done a suspend/resume with any wireless
-> > card, thus I cannot 
-> > check your result. The test with 3.6.9 is a good idea.
-> > 
-> > Sorry,
-> > 
-> > Larry
+> 	Hello all,
 > 
-> Hi Larry,
+> Oh the irony, I was just starting an email saying wifi is almost unusable for me
+> with 3.8 and my machine (a thinkpad t530) completely froze while typing it...
 > 
-> Thanks for the reply. I have since rebooted to 3.6.9-2.fc17.x86_64, 3.6.10-2.fc17.x86_64 as well as 3.6.9-4.fc18.x86_64, 3.6.10-5.fc18.x86_64 and 3.6.11-3.fc18.x86_64; and all have the same problem. 3.6.9-2.fc17.x86_64 was the last kernel which I ran for over two weeks and had suspended a few times according to my /var/log/messages*. So this looks like a fedora-18 specific problems brought on by changes in userland
-> between F17 and F18. (possibly the systemd integrated udevd).
+> I was going to say I'm getting a lot of:
+> iwlwifi 0000:03:00.0: fail to flush all tx fifo queues
 > 
-> I'll add a comment to the bug report and let John reassign as appropriate.
 
-Thanks, Hin-Tak!  I'll ask Kay to investigate.
+Please try this one:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=c3e5d7181afb66657393066bccce0956fab09ab3
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+as you can see, it is in mainline already.
+---------------------------------------------------------------------
+A member of the Intel Corporation group of companies
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
