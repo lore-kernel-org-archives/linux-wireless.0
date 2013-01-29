@@ -1,152 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:48251 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757340Ab3APVjg convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180Ab3A2LxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jan 2013 16:39:36 -0500
-From: "Chadd, Adrian" <achadd@qca.qualcomm.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: Sven Eckelmann <sven@open-mesh.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	"tobias.steinicke@net.t-labs.tu-berlin.de"
-	<tobias.steinicke@net.t-labs.tu-berlin.de>,
-	"mathias.kretschmer@fokus.fraunhofer.de"
-	<mathias.kretschmer@fokus.fraunhofer.de>
-Subject: RE: [PATCH] ath9k: Save spectral scan data in network byteorder
-Date: Wed, 16 Jan 2013 21:39:35 +0000
-Message-ID: <48EC4E8D43A28947B1AB2639FA97CDB920AD4657@nasanexd02a.na.qualcomm.com> (sfid-20130116_223941_551593_E4681284)
-References: <1358251363-14385-1-git-send-email-sven@open-mesh.com>
- <20130116085931.GA13648@pandem0nium>,<50F6788B.9050409@neratec.com>
-In-Reply-To: <50F6788B.9050409@neratec.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 29 Jan 2013 06:53:02 -0500
+Message-ID: <1359460403.8108.17.camel@jlt4.sipsolutions.net> (sfid-20130129_125306_967380_81B0C468)
+Subject: Re: [PATCHv4] mac80211: mesh power save basics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>,
+	Mike Krinkin <krinkin.m.u@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
+Date: Tue, 29 Jan 2013 12:53:23 +0100
+In-Reply-To: <1358767080-21758-1-git-send-email-marco@cozybit.com> (sfid-20130121_121831_158137_E5D23643)
+References: <1358767080-21758-1-git-send-email-marco@cozybit.com>
+	 (sfid-20130121_121831_158137_E5D23643)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2013-01-21 at 12:18 +0100, Marco Porsch wrote:
+[long changelog]
 
-Yes, I advocate doing it all in userspace.
-
-I'm just exporting the raw PHY errors via bpf, so I can just expose all PHY errors this way and let the userland application do what it wants with this.
-
-I do the same with radar data too, fwiw.
-
+I think the changelog is pretty much unreadable. Can you boil it down,
+or maybe start with a "tl;dr" version? All the little technical details
+are also less important (like debugfs files, who cares).
 
 
-Adrian
+> @@ -656,6 +684,13 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+>  	sta_info_flush(sdata);
+>  	mesh_path_flush_by_iface(sdata);
+>  
+> +	atomic_set(&ifmsh->ps.num_sta_ps, 0); /* not reset by sta_info_flush */
+> +	atomic_set(&ifmsh->num_mpsp, 0);
 
-________________________________________
-From: Zefir Kurtisi [zefir.kurtisi@neratec.com]
-Sent: Wednesday, 16 January 2013 1:53 AM
-To: Simon Wunderlich
-Cc: Sven Eckelmann; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; Simon Wunderlich; tobias.steinicke@net.t-labs.tu-berlin.de; mathias.kretschmer@fokus.fraunhofer.de; Chadd, Adrian
-Subject: Re: [PATCH] ath9k: Save spectral scan data in network byteorder
-
-On 01/16/2013 09:59 AM, Simon Wunderlich wrote:
-> On Tue, Jan 15, 2013 at 01:02:43PM +0100, Sven Eckelmann wrote:
->> The sample data received through the spectral scan can be either in big or
->> little endian byteorder. This information isn't stored in the output file.
->> Therefore it is not possible for the analyzer software to find the correct byte
->> order.
->>
->> It is relative common to get the data from a low end AP in big endian mode and
->> transfer it to another computer in little endian mode to analyze it. Therefore,
->> it would be better to store it in network (big endian) byte order.
->
-> I'd agree that changing the byteorder to the "general" network order format is
-> a good idea, although we will break compatibility again - which should hopefully
-> be no problem as the original patch is pretty new anyway.
->
-> I was pondering about performance loss when we run spectral on the same machine
-> (i.e. maybe adding two useless byteswaps per value). OTOH the byteswaps are pretty
-> cheap and we do some computations anyway, so the performance difference should be quite
-> small.
->
-> Therefore,
->
-> Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
->
-> (I've CCd some more people in the reply so they can scream if they don't like it. ;])
->
-> Thanks,
->       Simon
->
-Hi Simon,
-
-at this point, I'd like to advocate the approach I am currently using that does
-the conversion fully in user space. There, each sample provided consists of the
-fft data as bytes plus the values required to scale the magnitude values back to
-absolute power numbers (i.e. the 'bug-fixed' raw data).
-
-Since for the scaling an user space component is mandatory (FP calculations), I
-miss to see the benefit of splitting post-processing in the kernel (shifting bins)
-and user space. This step doubles fft data size and introduces endianess issues
-for no (at least to me) evident reason.
-
-Maybe you have a host application in mind where it does not really matter where
-the processing is done. Whereas, if you operate an AP as continuous spectral
-scanner, shifting the post-processing to the point where it is evaluated /
-displayed (usually your fat PC) significantly impacts your AP's load and its
-capability to provide higher sampling rates.
-
-I'd assume Adrian's proposal to just push out the raw spectral data to user-space
-is also targeting at that, which I fully support. The only thing I would keep in
-the driver is fixing the fft data corruption caused by known chip bugs.
+This comment tells me that you have bugs elsewhere, in particular in
+mesh housekeeping. In fact, looking there, I see nothing that causes a
+sleeping station to be accounted for correctly when it expires.
 
 
-Cheers,
-Zefir
->>
->> Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
->> Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
->> ---
->> A patch for FFT_eval was also sent to the author.
->>
->>  drivers/net/wireless/ath/ath9k/recv.c |   10 +++++++---
->>  1 file changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index d7c129b..2fac787 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -1064,8 +1064,9 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
->>
->>      fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
->>      fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
->> +    fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
->>
->> -    fft_sample.freq = ah->curchan->chan->center_freq;
->> +    fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
->>      fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
->>      fft_sample.noise = ah->noise;
->>
->> @@ -1106,13 +1107,16 @@ static void ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
->>      mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
->>
->>      /* Apply exponent and grab further auxiliary information. */
->> -    for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++)
->> +    for (i = 0; i < SPECTRAL_HT20_NUM_BINS; i++) {
->>              fft_sample.data[i] = bins[i] << mag_info->max_exp;
->> +            fft_sample.data[i] = __cpu_to_be16(fft_sample.data[i]);
->> +    }
->>
->>      fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
->> +    fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
->>      fft_sample.max_index = spectral_max_index(mag_info->all_bins);
->>      fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
->> -    fft_sample.tsf = tsf;
->> +    fft_sample.tsf = __cpu_to_be64(tsf);
->>
->>      ath_debug_send_fft_sample(sc, &fft_sample.tlv);
->>  #endif
->> --
->> 1.7.10.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +static void mps_set_sta_peer_pm(struct sta_info *sta,
+> +				struct ieee80211_hdr *hdr)
+
+> +void ieee80211_mpsp_trigger_process(struct ieee80211_hdr *hdr,
+> +				    struct sta_info *sta, bool tx, bool acked)
+
+I wonder if these functions should get the QoS CTL field instead of the
+header, as otherwise nothing really verifies that they're passed QoS
+frames to start with. Yes, that's the case today, but it's not obvious
+that this is really a requirement.
+ 
+johannes
 
