@@ -1,72 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:60705 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab3ACHhB (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:43062 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab3A2Xrs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 02:37:01 -0500
-Date: Thu, 3 Jan 2013 08:36:54 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv5 4/8] mac80211: add radar detection command/event
-Message-ID: <20130103073654.GB20780@pandem0nium> (sfid-20130103_083704_545651_70050046)
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1355407113-27006-5-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357134029.9839.28.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GRPZ8SYKNexpdSJ7"
-In-Reply-To: <1357134029.9839.28.camel@jlt4.sipsolutions.net>
+	Tue, 29 Jan 2013 18:47:48 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 0/7] Improvements to software scanning
+Date: Tue, 29 Jan 2013 17:47:28 -0600
+Message-Id: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com> (sfid-20130130_004752_498998_37FF4DF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series fixes a number of problems observed during software
+scanning, as described in [1].
 
---GRPZ8SYKNexpdSJ7
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The first four patches implement improved queue handling during
+off-channel operation and add some needed flushing of the hardware
+queues, as suggested by Johannes in [2]. This includes adding a new
+queue stop reason of off-channel operation, a transmit path for frames
+which do need to be transmitted when off-channel, and some improvements
+in error handling.
 
-On Wed, Jan 02, 2013 at 02:40:29PM +0100, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
->=20
-> > +	int (*start_radar_detection)(struct ieee80211_hw *hw,
-> > +				     struct ieee80211_vif *vif,
-> > +				     struct ieee80211_channel *chan);
->=20
-> pass a chandef?
+The last three fix a problem specific to brcmsmac (and likely b43,
+though I don't have hardware for testing b43). Broadcom hardware
+actively clears the PM bit in frame control whenever the hardware is not
+configured correctly, and since wireless drivers have no knowledge of
+off-channel powersave such configuration cannot be done. The patches
+expand the driver powersave configuration with an off-channel state and
+update brcmsmac to make use of it.
 
-Good idea, will change that.
+Johannes: I have a couple of comments/questions for you related to these
+patches.
 
-> > +void ieee80211_radar_detected(struct ieee80211_vif *vif,
-> > +			      struct ieee80211_channel *chan, gfp_t gfp);
->=20
-> Here you probably don't need to pass the channel, once the tracking in
-> cfg80211 moves into the sdata (or even local) struct the same can happen
-> in mac80211.
+First, in the patches I've added an offchan_tx_ok argument to the tx
+operations, but this seems a little awkward to me since it has to be
+propogated down through a fairly deep call stack. The alternative idea
+that occurred to me is to use a tx control flag, but that seems to be
+pretty crowded. Any thoughts?
 
-Yep, we should change this depending on the result of the discussion whether
-we want to change the tracking.
+Second, I attempted to test these patches with iwlwifi (Centrino
+Advanced-N 6235) to verify that I didn't break anything for drivers with
+hw scanning. My standard test for this involves running iperf while
+triggering nearly continuous scans, but I'm seeing lots of problems
+running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
+does fine in either direction. I haven't had time to do any kind of
+debugging yet, but I thought you'd want to know.
 
-Cheers,
-	Simon
+Thanks,
+Seth
 
---GRPZ8SYKNexpdSJ7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+[1] http://marc.info/?l=linux-wireless&m=135766865110986&w=2
+[2] http://marc.info/?l=linux-wireless&m=135838252227053&w=2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAlDlNRYACgkQrzg/fFk7axYVogCgxryCbPWAyhCzJu3ZrRWsxsiL
-MpAAn1Xk7yB8PaZOVIMdN/UZ7y++9Kng
-=xqDZ
------END PGP SIGNATURE-----
+Seth Forshee (7):
+  mac80211: Return a status for tx operations
+  mac80211: Fix tx queue handling during scans
+  mac80211: Improve error handling for off-channel operation
+  mac80211: Add flushes before going off-channel
+  mac80211: Expand powersave configuration flag to be two bits
+  mac80211: Add off-channel powersave state
+  brcmsmac: Add support for off-channel powersave
 
---GRPZ8SYKNexpdSJ7--
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |    2 +-
+ drivers/net/wireless/ath/carl9170/main.c           |    2 +-
+ drivers/net/wireless/ath/carl9170/rx.c             |    2 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   15 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |    9 ++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    1 +
+ drivers/net/wireless/iwlwifi/dvm/power.c           |    2 +-
+ drivers/net/wireless/mac80211_hwsim.c              |    2 +-
+ drivers/net/wireless/p54/fwio.c                    |    2 +-
+ drivers/net/wireless/p54/txrx.c                    |    2 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c            |    3 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |    3 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c            |    3 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00config.c         |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |    3 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |    3 +-
+ drivers/net/wireless/rtlwifi/core.c                |    2 +-
+ drivers/net/wireless/rtlwifi/ps.c                  |    4 +-
+ drivers/net/wireless/ti/wl1251/main.c              |    7 +-
+ drivers/net/wireless/ti/wlcore/main.c              |    6 +-
+ include/net/mac80211.h                             |  125 +++++++++++++++----
+ net/mac80211/agg-tx.c                              |    4 +-
+ net/mac80211/cfg.c                                 |    2 +-
+ net/mac80211/ht.c                                  |    2 +-
+ net/mac80211/ieee80211_i.h                         |   72 ++++++++---
+ net/mac80211/mlme.c                                |   32 ++---
+ net/mac80211/offchannel.c                          |  114 +++++++++--------
+ net/mac80211/scan.c                                |   44 +++++--
+ net/mac80211/sta_info.c                            |    2 +-
+ net/mac80211/tx.c                                  |  131 +++++++++++---------
+ net/mac80211/util.c                                |   13 +-
+ 34 files changed, 400 insertions(+), 225 deletions(-)
+
