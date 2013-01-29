@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f170.google.com ([209.85.160.170]:36057 "EHLO
-	mail-gh0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754841Ab3AYMf1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210Ab3A2KxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 07:35:27 -0500
-Received: by mail-gh0-f170.google.com with SMTP id g14so28707ghb.15
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 04:35:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130124210028.GA22800@localhost.localdomain>
-References: <20130124205931.GB16252@localhost.localdomain>
-	<20130124210028.GA22800@localhost.localdomain>
-Date: Fri, 25 Jan 2013 13:28:44 +0100
-Message-ID: <CAOZOX0Vj-T1WPHR692LwpSdHontVq5PJG4UJAzg7O=nYLodXOA@mail.gmail.com> (sfid-20130125_133532_708646_3F3D71A9)
-Subject: Re: [PATCH 2/4] rt2x00: remove NOTICE
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 29 Jan 2013 05:53:08 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U08oM-00077M-Qv
+	for linux-wireless@vger.kernel.org; Tue, 29 Jan 2013 11:53:07 +0100
+Message-ID: <1359456812.8108.3.camel@jlt4.sipsolutions.net> (sfid-20130129_115311_893557_57BF8B50)
+Subject: Re: [PATCH] cfg80211: add SME state to warning in
+ __cfg80211_mlme_disassoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 29 Jan 2013 11:53:32 +0100
+In-Reply-To: <1359235036-13086-1-git-send-email-johannes@sipsolutions.net> (sfid-20130126_221701_968936_C1054DCD)
+References: <1359235036-13086-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130126_221701_968936_C1054DCD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 24, 2013 at 10:00 PM, Stanislaw Gruszka <stf_xl@wp.pl> wrote:
-> We use this macro only on 3 places - remove it and replace by other
-> appropriate macros for printing messages.
->
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->  drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    4 ++--
->  3 files changed, 3 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index a1de95e..1791260 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -80,7 +80,7 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
->             rt2x00_rf(rt2x00dev, RF3022))
->                 return true;
->
-> -       NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
-> +       INFO(rt2x00dev, "Unknown RF chipset on rt305x\n");
->         return false;
->  }
+On Sat, 2013-01-26 at 22:17 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The warning here occasionally triggers but we haven't
+> found the cause yet. It's a valid warning since if it
+> triggers the SME state got confused, so add the SME
+> state to it to help narrow it down in the future.
 
-Isn't this more a warning?
+Applied.
 
-Ivo
+johannes
+
