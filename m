@@ -1,29 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:61630 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755047Ab3AGSx4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45826 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab3A2Jzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jan 2013 13:53:56 -0500
-Received: by mail-wg0-f53.google.com with SMTP id fn15so2397819wgb.8
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jan 2013 10:53:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1357571093-12868-3-git-send-email-marco@cozybit.com>
-References: <1357571093-12868-1-git-send-email-marco@cozybit.com> <1357571093-12868-3-git-send-email-marco@cozybit.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 7 Jan 2013 10:47:34 -0800
-Message-ID: <CAG6hwVMSJaDu=agc+f3F5RtAjmVwBqCTuDgBOo0saZ7C4KtWHw@mail.gmail.com> (sfid-20130107_195400_182089_5FF4BE59)
-Subject: Re: [PATCHv2 2/6] mac80211: update mesh peer link counter during
- userspace peering
-To: devel@lists.open80211s.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 29 Jan 2013 04:55:37 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] mac80211: remove assoc data "sent_assoc"
+Date: Tue, 29 Jan 2013 10:55:58 +0100
+Message-Id: <1359453359-20767-1-git-send-email-johannes@sipsolutions.net> (sfid-20130129_105542_708903_6DD77997)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 7, 2013 at 7:04 AM, Marco Porsch <marco@cozybit.com> wrote:
-> The established peer link count is indicated in mesh beacons and used for
-> other internal tasks. Previously it was not updated when authenticated peering
-> is performed in userspace.
->
-> Signed-off-by: Marco Porsch <marco@cozybit.com>
-Acked-by: Thomas Pedersen <thomas@cozybit.com>
+From: Johannes Berg <johannes.berg@intel.com>
+
+The field is never used, so remove it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h | 1 -
+ net/mac80211/mlme.c        | 3 ---
+ 2 files changed, 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index fdb0d3c..0f3e4b1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -400,7 +400,6 @@ struct ieee80211_mgd_assoc_data {
+ 	u8 supp_rates_len;
+ 	bool wmm, uapsd;
+ 	bool have_beacon;
+-	bool sent_assoc;
+ 	bool synced;
+ 
+ 	u8 ap_ht_param;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5f7fd43..eda80b1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2578,7 +2578,6 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
+ 		ifmgd->assoc_data->have_beacon = true;
+-		ifmgd->assoc_data->sent_assoc = false;
+ 		/* continue assoc process */
+ 		ifmgd->assoc_data->timeout = jiffies;
+ 		run_again(ifmgd, ifmgd->assoc_data->timeout);
+@@ -3993,13 +3992,11 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 				ifmgd->dtim_period = tim->dtim_period;
+ 			}
+ 			assoc_data->have_beacon = true;
+-			assoc_data->sent_assoc = false;
+ 			assoc_data->timeout = jiffies;
+ 		}
+ 		rcu_read_unlock();
+ 	} else {
+ 		assoc_data->have_beacon = true;
+-		assoc_data->sent_assoc = false;
+ 		assoc_data->timeout = jiffies;
+ 	}
+ 	run_again(ifmgd, assoc_data->timeout);
+-- 
+1.8.0
+
