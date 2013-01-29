@@ -1,145 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227Ab3ACOpw (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:36586 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560Ab3A2X4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 09:45:52 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/12] iwlwifi: don't verify fw after download
-Date: Thu,  3 Jan 2013 15:46:07 +0100
-Message-Id: <1357224376-27803-3-git-send-email-johannes@sipsolutions.net> (sfid-20130103_154936_674147_61263252)
-In-Reply-To: <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
-References: <1357224324.9741.20.camel@jlt4.sipsolutions.net>
- <1357224376-27803-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 29 Jan 2013 18:56:25 -0500
+Received: by mail-wg0-f41.google.com with SMTP id ds1so2449273wgb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jan 2013 15:56:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1359503255-18270-8-git-send-email-seth.forshee@canonical.com>
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com> <1359503255-18270-8-git-send-email-seth.forshee@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 30 Jan 2013 10:56:03 +1100
+Message-ID: <CAGRGNgUTSL105OQvF7=W_2CZHWsS-NohJ-tKWfNwVZNuBEJP9A@mail.gmail.com> (sfid-20130130_005628_121567_FB8365B2)
+Subject: Re: [PATCH 7/7] brcmsmac: Add support for off-channel powersave
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Seth,
 
-No need to verify that the fw has been written correctly.
-In case it hasn't, we won't get ALIVE notification.
+On Wed, Jan 30, 2013 at 10:47 AM, Seth Forshee
+<seth.forshee@canonical.com> wrote:
+> Broadcom hardware sets the value of the PM flag in frame control based
+> on the value of MCTL_HPS, which seems to include actively clearing PM
+> if MCTL_HPS is not set. brcmsmac needs to suppor the off-channel
+> powersave state in order to enable powersave at the AP at all.
+>
+> Add limited support for powersave to brcmsmac to prevent frame loss
+> during background scans. Full powersave supoprt remains unimplemented,
+> but switching between the off-channel and disabled states is possible.
+>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   15 +++++++++++----
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c     |    9 +++++++++
+>  drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    1 +
+>  3 files changed, 21 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index c26992a..3fb71c9 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -7545,6 +7549,11 @@ void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 interval)
+>                 brcms_c_bcn_li_upd(wlc);
+>  }
+>
+> +void brcms_c_set_ps(struct brcms_c_info *wlc)
+> +{
+> +       brcms_c_set_ps_ctrl(wlc);
+> +}
+> +
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/ucode.c | 94 --------------------------------
- 1 file changed, 94 deletions(-)
+Why not just use brcms_c_set_ps_ctrl() directly?
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/ucode.c b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-index c6467e5..ecf700b 100644
---- a/drivers/net/wireless/iwlwifi/dvm/ucode.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-@@ -286,89 +286,6 @@ static int iwl_alive_notify(struct iwl_priv *priv)
- 	return iwl_send_calib_results(priv);
- }
- 
--
--/**
-- * iwl_verify_inst_sparse - verify runtime uCode image in card vs. host,
-- *   using sample data 100 bytes apart.  If these sample points are good,
-- *   it's a pretty good bet that everything between them is good, too.
-- */
--static int iwl_verify_sec_sparse(struct iwl_priv *priv,
--				  const struct fw_desc *fw_desc)
--{
--	__le32 *image = (__le32 *)fw_desc->data;
--	u32 len = fw_desc->len;
--	u32 val;
--	u32 i;
--
--	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
--
--	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
--		/* read data comes through single port, auto-incr addr */
--		/* NOTE: Use the debugless read so we don't flood kernel log
--		 * if IWL_DL_IO is set */
--		iwl_write_direct32(priv->trans, HBUS_TARG_MEM_RADDR,
--			i + fw_desc->offset);
--		val = iwl_read32(priv->trans, HBUS_TARG_MEM_RDAT);
--		if (val != le32_to_cpu(*image))
--			return -EIO;
--	}
--
--	return 0;
--}
--
--static void iwl_print_mismatch_sec(struct iwl_priv *priv,
--				    const struct fw_desc *fw_desc)
--{
--	__le32 *image = (__le32 *)fw_desc->data;
--	u32 len = fw_desc->len;
--	u32 val;
--	u32 offs;
--	int errors = 0;
--
--	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
--
--	iwl_write_direct32(priv->trans, HBUS_TARG_MEM_RADDR,
--				fw_desc->offset);
--
--	for (offs = 0;
--	     offs < len && errors < 20;
--	     offs += sizeof(u32), image++) {
--		/* read data comes through single port, auto-incr addr */
--		val = iwl_read32(priv->trans, HBUS_TARG_MEM_RDAT);
--		if (val != le32_to_cpu(*image)) {
--			IWL_ERR(priv, "uCode INST section at "
--				"offset 0x%x, is 0x%x, s/b 0x%x\n",
--				offs, val, le32_to_cpu(*image));
--			errors++;
--		}
--	}
--}
--
--/**
-- * iwl_verify_ucode - determine which instruction image is in SRAM,
-- *    and verify its contents
-- */
--static int iwl_verify_ucode(struct iwl_priv *priv,
--			    enum iwl_ucode_type ucode_type)
--{
--	const struct fw_img *img = iwl_get_ucode_image(priv, ucode_type);
--
--	if (!img) {
--		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
--		return -EINVAL;
--	}
--
--	if (!iwl_verify_sec_sparse(priv, &img->sec[IWL_UCODE_SECTION_INST])) {
--		IWL_DEBUG_FW(priv, "uCode is good in inst SRAM\n");
--		return 0;
--	}
--
--	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
--
--	iwl_print_mismatch_sec(priv, &img->sec[IWL_UCODE_SECTION_INST]);
--	return -EIO;
--}
--
- struct iwl_alive_data {
- 	bool valid;
- 	u8 subtype;
-@@ -450,18 +367,7 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
- 		return -EIO;
- 	}
- 
--	/*
--	 * This step takes a long time (60-80ms!!) and
--	 * WoWLAN image should be loaded quickly, so
--	 * skip it for WoWLAN.
--	 */
- 	if (ucode_type != IWL_UCODE_WOWLAN) {
--		ret = iwl_verify_ucode(priv, ucode_type);
--		if (ret) {
--			priv->cur_ucode = old_type;
--			return ret;
--		}
--
- 		/* delay a bit to give rfkill time to run */
- 		msleep(5);
- 	}
+Thanks,
+
 -- 
-1.8.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
