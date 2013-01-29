@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:44284 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755579Ab3AVUNm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45998 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884Ab3A2K5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 15:13:42 -0500
-Received: by mail-bk0-f41.google.com with SMTP id jg9so3994999bkc.14
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 12:13:40 -0800 (PST)
-Message-ID: <1358885614.5062.22.camel@canaries64> (sfid-20130122_211344_703546_6E991635)
-Subject: [PATCH] staging: vt6656: Revert: 64bit fixes: dpc.c incorrect
- addressing of void structure.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>
-Date: Tue, 22 Jan 2013 20:13:34 +0000
+	Tue, 29 Jan 2013 05:57:35 -0500
+Message-ID: <1359457078.8108.4.camel@jlt4.sipsolutions.net> (sfid-20130129_115740_522415_928D53BA)
+Subject: Re: [RFC/RFT] mac80211: use macaddr vif parameter for P2P_DEVICE
+ creation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Date: Tue, 29 Jan 2013 11:57:58 +0100
+In-Reply-To: <1359382746-26322-1-git-send-email-arend@broadcom.com>
+References: <1359382746-26322-1-git-send-email-arend@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2013-01-28 at 15:19 +0100, Arend van Spriel wrote:
+> This patch is a follow-up of:
+> 
+> commit 1c18f1452a772dfe884ed25677bddb3ecaf9c43a
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Tue Jan 8 10:17:27 2013 +0100
+> 
+>     nl80211: allow user-space to set address for P2P_DEVICE
+> 
+> The address of the wdev is determined by the macaddr parameter
+> when it is not a zero ethernet address. Otherwise, the permanent
+> address as determined by ieee80211_assign_perm_addr() is used.
+> 
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Johannes,
+> 
+> Here a mac80211 change to take the user-space provided mac address into
+> account. Not sure if that is sufficient. Tested P2P device vif creation using
+> iw with mac80211_hwsim:
 
-The patch was totally wrong and is reverted.
+Looks fine to me, yeah.
 
-The problem was ultimately fixed by upstream commit.
-1ee4c55fc9620451b2a825d793042a7e0775391b
-staging: vt6656: Fix inconsistent structure packing
-
-Reported-by: Ben Hutchings <ben@decadent.org.uk>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: stable@vger.kernel.org # 3.8
-
----
- drivers/staging/vt6656/dpc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
-index 6c98172..208be2c 100644
---- a/drivers/staging/vt6656/dpc.c
-+++ b/drivers/staging/vt6656/dpc.c
-@@ -1116,7 +1116,7 @@ static int s_bHandleRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
-     if (byDecMode == KEY_CTL_WEP) {
-         // handle WEP
-         if ((pDevice->byLocalID <= REV_ID_VT3253_A1) ||
--		(((PSKeyTable)(&pKey->pvKeyTable))->bSoftWEP == TRUE)) {
-+		(((PSKeyTable)(pKey->pvKeyTable))->bSoftWEP == TRUE)) {
-             // Software WEP
-             // 1. 3253A
-             // 2. WEP 256
-@@ -1213,7 +1213,7 @@ static int s_bHostWepRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
-         // handle WEP
- 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"byDecMode == KEY_CTL_WEP\n");
-         if ((pDevice->byLocalID <= REV_ID_VT3253_A1) ||
--		(((PSKeyTable)(&pKey->pvKeyTable))->bSoftWEP == TRUE) ||
-+		(((PSKeyTable)(pKey->pvKeyTable))->bSoftWEP == TRUE) ||
-             (bOnFly == FALSE)) {
-             // Software WEP
-             // 1. 3253A
--- 
-1.8.0
-
-
+johannes
 
