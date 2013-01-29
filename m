@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55190 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45662 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754215Ab3AaPEE (ORCPT
+	with ESMTP id S1754098Ab3A2JAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:04:04 -0500
-Message-ID: <1359644664.8415.68.camel@jlt4.sipsolutions.net> (sfid-20130131_160420_711577_28826127)
-Subject: Re: [PATCH 0/7] Improvements to software scanning
+	Tue, 29 Jan 2013 04:00:12 -0500
+Message-ID: <1359450035.8108.2.camel@jlt4.sipsolutions.net> (sfid-20130129_100016_095043_0995151D)
+Subject: Re: [PATCH] mac80211: Add vif debugfs driver callbacks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Thu, 31 Jan 2013 16:04:24 +0100
-In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Date: Tue, 29 Jan 2013 10:00:35 +0100
+In-Reply-To: <1359049916.21908.18.camel@jlt4.sipsolutions.net> (sfid-20130124_185137_827900_0C55F6A0)
+References: <1359028899-14202-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130124_130124_687174_8696D982) <1359032923.4639.5.camel@jlt4.sipsolutions.net>
+	 (sfid-20130124_140824_496008_4D8D8056) <1359049916.21908.18.camel@jlt4.sipsolutions.net>
+	 (sfid-20130124_185137_827900_0C55F6A0)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
+On Thu, 2013-01-24 at 18:51 +0100, Johannes Berg wrote:
 
-> Johannes: I have a couple of comments/questions for you related to these
-> patches.
+> > > Add debugfs driver callbacks to be called upon interface addition,
+> > > removal and type change.
+> > 
+> > Never mind, apparently this doesn't work. I haven't tried myself yet.
 > 
-> First, in the patches I've added an offchan_tx_ok argument to the tx
-> operations, but this seems a little awkward to me since it has to be
-> propogated down through a fairly deep call stack. The alternative idea
-> that occurred to me is to use a tx control flag, but that seems to be
-> pretty crowded. Any thoughts?
+> The issue is that the driver might rely on mac80211 removing the dir
+> (recursively), but that only happens when the interface is destroyed.
+> However, add/remove here happens when the interface is added to/removed
+> from the driver, which is up/down not create/destroy.
 
-Maybe you can bypass by using a flag in struct ieee80211_tx_data, so
-only the first few functions in the call chain need the argument?
-Otherwise, I guess adding a flag should be OK. I know it's crowded, but
-if we really run out I guess we could move all the internal flags etc.
-wholesale ...
+So the issue is that mac80211 cannot remove the debugfs entries the
+driver creates here, because it only removes the interface debugfs when
+the interface is destroyed, not when it is taken down.
 
-> Second, I attempted to test these patches with iwlwifi (Centrino
-> Advanced-N 6235) to verify that I didn't break anything for drivers with
-> hw scanning. My standard test for this involves running iperf while
-> triggering nearly continuous scans, but I'm seeing lots of problems
-> running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
-> does fine in either direction. I haven't had time to do any kind of
-> debugging yet, but I thought you'd want to know.
+The driver, OTOH, gets add/remove when the interface goes up/down.
 
-Hm, ok, thanks.
+Would anyone complain if we just document that and require that the
+driver actually remove its entries when the new remove_interface_debugfs
+callback is called? That'd be a bit unlike other debugfs dirs where
+everything just gets cleaned up in mac80211.
 
 johannes
 
