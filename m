@@ -1,86 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51462 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928Ab3AaRQS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46273 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756937Ab3A2MkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 12:16:18 -0500
-Message-ID: <510AA6D6.3000801@candelatech.com> (sfid-20130131_181622_176744_942DBC11)
-Date: Thu, 31 Jan 2013 09:16:06 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Expand byte counters in struct station_info
-References: <6017229.5ECEUbBVAL@lx-vladimir> <1359628924.8415.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359628924.8415.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 29 Jan 2013 07:40:16 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/2] mac80211: always allow calling ieee80211_connection_loss()
+Date: Tue, 29 Jan 2013 13:40:36 +0100
+Message-Id: <1359463236-14809-2-git-send-email-johannes@sipsolutions.net> (sfid-20130129_134023_241298_4079D95A)
+In-Reply-To: <1359463236-14809-1-git-send-email-johannes@sipsolutions.net>
+References: <1359463236-14809-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2013 02:42 AM, Johannes Berg wrote:
-> On Thu, 2013-01-31 at 11:46 +0200, Vladimir Kondratiev wrote:
->> Hi,
->>
->> Now wifi drivers reports per-station info using struct station_info;
->> and currently for the data counters it has:
->> 	u32 rx_bytes;
->> 	u32 tx_bytes;
->>
->> while for device-wide statistics one can use ndo_get_stats64() to fill
->> 64-bit counters in the struct rtnl_link_stats64, per-station statistics
->> are 32-bit.
->>
->> This becomes problematic with gigabit speeds now observed for .11ac and .11ad -
->> counters overflown every few seconds.
->>
->> I'd like to extend rx and tx byte counters to 64-bit.
->>
->> What is better - expand existing fields in struct station_info as:
->> 	u64 rx_bytes;
->> 	u64 tx_bytes;
->
-> This.
->
->> or add ne ones like:
->> 	u64 rx_bytes64;
->> 	u64 tx_bytes64;
->
-> I don't see a reason to do this.
->
->>
->> Then, I'll add
->> 	NL80211_STA_INFO_RX_BYTES64,
->> 	NL80211_STA_INFO_TX_BYTES64,
->> to the enum nl80211_sta_info
->>
->> Before doing patch, I'd like to hear comments.
->> Any consideration why is this not to be done or done differently?
->
-> Sounds good to me.
->
-> Two points:
->
-> 1) You should provide the RX_TX_BYTES attributes, but I think only if
-> the value fits into 32 bits. That way, we don't report invalid
-> information.
+From: Johannes Berg <johannes.berg@intel.com>
 
-There are already a large amounts of '64-bit' counters reported by
-netlink that really wrap at 32-bits, so any solid user-space
-code already has to deal with this by making assumptions (ie, if cur
-value is < last value, then it wrapped at 32-bits, because there is no way you
-actually missed polling a real 64-bit counter wrap).
+With multi-channel, there's a corner case where a driver
+doesn't receive a beacon soon enough to be able to sync
+its timers with the AP. In this case, the only recovery
+(after trying again) is to disconnect from the AP. Allow
+calling ieee80211_connection_loss() for such cases. To
+make that possible, modify the work function to not rely
+on the IEEE80211_HW_CONNECTION_MONITOR flag but use new
+state kept in the interface instead.
 
-So, you might not have to worry about this so much.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     | 2 ++
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/mlme.c        | 6 ++++--
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-In my own work, my biggest problem is that stations reset their
-counters when they got ifdown and then back to ifup.
-
-Thanks,
-Ben
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 21831ee..c4642b3 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3872,6 +3872,8 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+  * When beacon filtering is enabled with %IEEE80211_VIF_BEACON_FILTER, and
+  * %IEEE80211_CONF_PS and %IEEE80211_HW_CONNECTION_MONITOR are set, the driver
+  * needs to inform if the connection to the AP has been lost.
++ * The function may also be called if the connection needs to be terminated
++ * for some other reason, even if %IEEE80211_HW_CONNECTION_MONITOR isn't set.
+  *
+  * This function will cause immediate change to disassociated state,
+  * without connection recovery attempts.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cbb1b73..f409ce6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -425,6 +425,7 @@ struct ieee80211_if_managed {
+ 	unsigned long probe_timeout;
+ 	int probe_send_count;
+ 	bool nullfunc_failed;
++	bool connection_loss;
+ 
+ 	struct mutex mtx;
+ 	struct cfg80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e3f90af..90893bc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1866,7 +1866,7 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 		rcu_read_unlock();
+ 	}
+ 
+-	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR) {
++	if (ifmgd->connection_loss) {
+ 		sdata_info(sdata, "Connection to AP %pM lost\n",
+ 			   ifmgd->bssid);
+ 		__ieee80211_disconnect(sdata);
+@@ -1894,6 +1894,7 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+ 	trace_api_beacon_loss(sdata);
+ 
+ 	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
++	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_loss);
+@@ -1905,7 +1906,7 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif)
+ 
+ 	trace_api_connection_loss(sdata);
+ 
+-	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
++	sdata->u.mgd.connection_loss = true;
+ 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_connection_loss);
+@@ -3080,6 +3081,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
++	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->u.mgd.beacon_connection_loss_work);
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0
 
