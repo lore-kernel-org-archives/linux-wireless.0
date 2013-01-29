@@ -1,57 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60777 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:48137 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992Ab3ARUoD (ORCPT
+	with ESMTP id S1751326Ab3A2Xo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 15:44:03 -0500
-Received: from wireless by sipsolutions.net with local (Exim 4.80)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1TwInC-0003Ys-9v
-	for linux-wireless@vger.kernel.org; Fri, 18 Jan 2013 21:44:02 +0100
+	Tue, 29 Jan 2013 18:44:58 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [ANN] wireless-regdb: master-2013-01-11
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1TwInC-0003Ys-9v@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Fri, 18 Jan 2013 21:44:02 +0100
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: simplify mesh BSS comparison
+Date: Wed, 30 Jan 2013 00:45:20 +0100
+Message-Id: <1359503120-25685-2-git-send-email-johannes@sipsolutions.net> (sfid-20130130_004507_774030_B7AA3439)
+In-Reply-To: <1359503120-25685-1-git-send-email-johannes@sipsolutions.net>
+References: <1359503120-25685-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-A new release of wireless-regdb (master-2013-01-11) is available at:
+Instead of first checking if a BSS is an MBSS
+and then doing the comparisons, inline it all
+into the BSS comparison function. This avoids
+doing the IE searches twice and is also a lot
+less code.
 
-http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2013.01.11.tar.bz2
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/scan.c | 120 +++++++++++++++++-----------------------------------
+ 1 file changed, 39 insertions(+), 81 deletions(-)
 
-SHA1 sum: 38cd3098903b8b1aa991f893d8b1fb0e068173ba
-
-
-For your convenience the individual regulatory.bin file can be downloaded from:
-
-http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2013.01.11-regulatory.bin
-
-SHA1 sum a152577246d35299ff195dc650d1097935bda830
-
-Here is the short log of the changes included in this 
-release:
-
-Johannes Berg (4):
-      dbparse: remove usable bandwidth check
-      regdb: enable HT40 on channels 8-13 in Japan
-      regdb: remove unused 10 MHz wide rules for JP
-      regdb: remove wrong 10 MHz rule for JP
-
-John W. Linville (2):
-      wireless-regdb: update regulatory.bin based on preceding changes.
-      wireless-regdb: update regulatory.bin based on preceding changes.
-
-Mykyta Iziumtsev (1):
-      wireless-regdb: Update regulations for Ukraine
-
-Rajkumar Manoharan (1):
-      wireless-regdb: add Rwanda (RW)
-
-Vladimir Kondratiev (3):
-      wireless-regdb: add regulatory rule for US on 60gHz band
-      wireless-regdb: add regulatory rule for ETSI members on 60GHz band
-      wireless-regdb: add regulatory rule for China on 60GHz band
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 72ef3b2..5fd7c47 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -288,26 +288,6 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
+ }
+ EXPORT_SYMBOL(cfg80211_find_vendor_ie);
+ 
+-static int cmp_ies(u8 num, const u8 *ies1, int len1, const u8 *ies2, int len2)
+-{
+-	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
+-	const u8 *ie2 = cfg80211_find_ie(num, ies2, len2);
+-
+-	/* equal if both missing */
+-	if (!ie1 && !ie2)
+-		return 0;
+-	/* sort missing IE before (left of) present IE */
+-	if (!ie1)
+-		return -1;
+-	if (!ie2)
+-		return 1;
+-
+-	/* sort by length first, then by contents */
+-	if (ie1[1] != ie2[1])
+-		return ie2[1] - ie1[1];
+-	return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+-}
+-
+ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
+ 		   const u8 *ssid, size_t ssid_len)
+ {
+@@ -331,29 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
+ 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
+ }
+ 
+-static bool is_mesh_bss(struct cfg80211_bss *a)
+-{
+-	const struct cfg80211_bss_ies *ies;
+-	const u8 *ie;
+-
+-	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
+-		return false;
+-
+-	ies = rcu_access_pointer(a->ies);
+-	if (!ies)
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-
+-	return true;
+-}
+-
+ static bool is_mesh(struct cfg80211_bss *a,
+ 		    const u8 *meshid, size_t meshidlen,
+ 		    const u8 *meshcfg)
+@@ -391,51 +348,17 @@ static bool is_mesh(struct cfg80211_bss *a,
+ 		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
+ }
+ 
+-static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
+-{
+-	const struct cfg80211_bss_ies *a_ies, *b_ies;
+-	int r;
+-
+-	if (a->channel != b->channel)
+-		return b->channel->center_freq - a->channel->center_freq;
+-
+-	if (is_mesh_bss(a) && is_mesh_bss(b)) {
+-		a_ies = rcu_access_pointer(a->ies);
+-		if (!a_ies)
+-			return -1;
+-		b_ies = rcu_access_pointer(b->ies);
+-		if (!b_ies)
+-			return 1;
+-
+-		r = cmp_ies(WLAN_EID_MESH_ID,
+-			    a_ies->data, a_ies->len,
+-			    b_ies->data, b_ies->len);
+-		if (r)
+-			return r;
+-		return cmp_ies(WLAN_EID_MESH_CONFIG,
+-			       a_ies->data, a_ies->len,
+-			       b_ies->data, b_ies->len);
+-	}
+-
+-	/*
+-	 * we can't use compare_ether_addr here since we need a < > operator.
+-	 * The binary return value of compare_ether_addr isn't enough
+-	 */
+-	return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
+-}
+-
+ static int cmp_bss(struct cfg80211_bss *a,
+ 		   struct cfg80211_bss *b,
+ 		   bool hide_ssid)
+ {
+ 	const struct cfg80211_bss_ies *a_ies, *b_ies;
+-	const u8 *ie1;
+-	const u8 *ie2;
++	const u8 *ie1 = NULL;
++	const u8 *ie2 = NULL;
+ 	int i, r;
+ 
+-	r = cmp_bss_core(a, b);
+-	if (r)
+-		return r;
++	if (a->channel != b->channel)
++		return b->channel->center_freq - a->channel->center_freq;
+ 
+ 	a_ies = rcu_access_pointer(a->ies);
+ 	if (!a_ies)
+@@ -444,6 +367,41 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 	if (!b_ies)
+ 		return 1;
+ 
++	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
++		ie1 = cfg80211_find_ie(WLAN_EID_MESH_ID,
++				       a_ies->data, a_ies->len);
++	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
++		ie2 = cfg80211_find_ie(WLAN_EID_MESH_ID,
++				       b_ies->data, b_ies->len);
++	if (ie1 && ie2) {
++		int mesh_id_cmp;
++
++		if (ie1[1] == ie2[1])
++			mesh_id_cmp = memcmp(ie1 + 2, ie2 + 2, ie1[1]);
++		else
++			mesh_id_cmp = ie2[1] - ie1[1];
++
++		ie1 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
++				       a_ies->data, a_ies->len);
++		ie2 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
++				       b_ies->data, b_ies->len);
++		if (ie1 && ie2) {
++			if (mesh_id_cmp)
++				return mesh_id_cmp;
++			if (ie1[1] != ie2[1])
++				return ie2[1] - ie1[1];
++			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
++		}
++	}
++
++	/*
++	 * we can't use compare_ether_addr here since we need a < > operator.
++	 * The binary return value of compare_ether_addr isn't enough
++	 */
++	r = memcmp(a->bssid, b->bssid, sizeof(a->bssid));
++	if (r)
++		return r;
++
+ 	ie1 = cfg80211_find_ie(WLAN_EID_SSID, a_ies->data, a_ies->len);
+ 	ie2 = cfg80211_find_ie(WLAN_EID_SSID, b_ies->data, b_ies->len);
+ 
+-- 
+1.8.0
 
