@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:41874 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756862Ab3AYK6m (ORCPT
+Received: from mail-ia0-f171.google.com ([209.85.210.171]:43003 "EHLO
+	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab3A2Bxo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 05:58:42 -0500
-Date: Fri, 25 Jan 2013 16:20:28 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 4/7] mwl8k: Enable hw encryption for STA mode on AP fw
-Message-ID: <20130125105028.GA9451@markyou.marvell.com> (sfid-20130125_115857_643603_83EC6755)
+	Mon, 28 Jan 2013 20:53:44 -0500
+Received: by mail-ia0-f171.google.com with SMTP id z13so5276979iaz.30
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jan 2013 17:53:44 -0800 (PST)
+Message-ID: <51072B95.10101@gmail.com> (sfid-20130129_025347_751960_9A24ABBA)
+Date: Mon, 28 Jan 2013 20:53:25 -0500
+From: Dylan <dylandonkersgoed@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: rtl8723ae Weak Signal Problems
+References: <51072B15.2030805@gmail.com>
+In-Reply-To: <51072B15.2030805@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware supports hardware encryption feature
-for the station interface running on AP
-firmware.
+Quick summary if you don't want to read my rambling:
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+  * Using the compat-drivers-3.8-rc5-1-u package
+  * Using the rtl8723ae chipset and driver
+  * Experiencing extremely weak signal
+  * No clue what information I need to submit - I'm not having any clear
+    crashes or anything, just a way-weaker-than-appropriate signal with
+    a driver change being the only issue
+  * Seems to have problems with Cisco access points (can't connect at
+    all) but I'm not 100% certain
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 3515337..a83f3ca 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -4265,8 +4265,9 @@ static int mwl8k_set_key(struct ieee80211_hw *hw,
- 	u8 encr_type;
- 	u8 *addr;
- 	struct mwl8k_vif *mwl8k_vif = MWL8K_VIF(vif);
-+	struct mwl8k_priv *priv = hw->priv;
- 
--	if (vif->type == NL80211_IFTYPE_STATION)
-+	if (vif->type == NL80211_IFTYPE_STATION && !priv->ap_fw)
- 		return -EOPNOTSUPP;
- 
- 	if (sta == NULL)
--- 
-1.8.0.3
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+So, I have a very specific issue with rtl8723ae chipset. I'm not having 
+huge expectations of success but figure I'll just send this out there in 
+the hopes that someone can help me. I'm using the 
+compat-drivers-3.8-rc5-1-u package (the latest stable as of the time of 
+this writing) which I'm pleased to see now includes the rtl8723ae 
+drivers. Not a moment too soon as the hard-found drivers from Realtek no 
+longer seem to work with the new kernels. Unfortunately, I'm now 
+experiencing severely reduced signal strength and I'm not sure why. This 
+adapter didn't have the best signal strength to begin with but was 
+useable (again after a lot of effort). Now...I had this very same 
+problem before. Then it was a lot better for the past few months. I'm a 
+little hazy about what happened in between. I guess I 
+did...something?...to fix it. I wish I remembered what. At any rate I 
+now have to move downstairs closer to my router to be able to connect, 
+and I have a very poor connection from in my room (it disconnected 
+frequently and while it can reconnect on it's own it's still pretty 
+annoying and causes a lot of problems).
+
+Small piece of extra information: I actually haven't tested this yet 
+with the compat driver (I wouldn't expect a change from the Realtek one) 
+since I just switched to it the other day, but the rtl8723ae Linux 
+driver (at least the one I was using before from Realtek) seems to be 
+unable to connect to my school's Cisco access points OR the old Cisco 
+access point provided by my ISP - I believe it's a problem connecting to 
+Cisco access points in general since one of the networking teachers at 
+my school mentioned some newer Windows 8 drivers having similar problems
+
 
