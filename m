@@ -1,66 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:43973 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab3A3F2Q (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:41212 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754224Ab3A2Owg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jan 2013 00:28:16 -0500
-Date: Tue, 29 Jan 2013 23:28:08 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 7/7] brcmsmac: Add support for off-channel powersave
-Message-ID: <20130130052808.GA21051@thinkpad-t410> (sfid-20130130_062821_777517_E41FA2D0)
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
- <1359503255-18270-8-git-send-email-seth.forshee@canonical.com>
- <CAGRGNgUTSL105OQvF7=W_2CZHWsS-NohJ-tKWfNwVZNuBEJP9A@mail.gmail.com>
+	Tue, 29 Jan 2013 09:52:36 -0500
+Date: Tue, 29 Jan 2013 15:52:28 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv7 0/3] Add DFS master ability
+Message-ID: <20130129145228.GC23425@pandem0nium> (sfid-20130129_155240_598568_ADC4CED5)
+References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <5107CB32.2070908@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgUTSL105OQvF7=W_2CZHWsS-NohJ-tKWfNwVZNuBEJP9A@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OBd5C1Lgu00Gd/Tn"
+In-Reply-To: <5107CB32.2070908@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 30, 2013 at 10:56:03AM +1100, Julian Calaby wrote:
-> Hi Seth,
-> 
-> On Wed, Jan 30, 2013 at 10:47 AM, Seth Forshee
-> <seth.forshee@canonical.com> wrote:
-> > Broadcom hardware sets the value of the PM flag in frame control based
-> > on the value of MCTL_HPS, which seems to include actively clearing PM
-> > if MCTL_HPS is not set. brcmsmac needs to suppor the off-channel
-> > powersave state in order to enable powersave at the AP at all.
-> >
-> > Add limited support for powersave to brcmsmac to prevent frame loss
-> > during background scans. Full powersave supoprt remains unimplemented,
-> > but switching between the off-channel and disabled states is possible.
-> >
-> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> > ---
-> >  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   15 +++++++++++----
-> >  drivers/net/wireless/brcm80211/brcmsmac/main.c     |    9 +++++++++
-> >  drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    1 +
-> >  3 files changed, 21 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> > index c26992a..3fb71c9 100644
-> > --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> > +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> > @@ -7545,6 +7549,11 @@ void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 interval)
-> >                 brcms_c_bcn_li_upd(wlc);
-> >  }
-> >
-> > +void brcms_c_set_ps(struct brcms_c_info *wlc)
-> > +{
-> > +       brcms_c_set_ps_ctrl(wlc);
-> > +}
-> > +
-> 
-> Why not just use brcms_c_set_ps_ctrl() directly?
 
-It's a remnant from an earlier version of the patches. Looks like I just
-didn't take things to the logical conclusion when I refactored the code.
+--OBd5C1Lgu00Gd/Tn
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Seth
+Hey Zefir,
+
+On Tue, Jan 29, 2013 at 02:14:26PM +0100, Zefir Kurtisi wrote:
+> On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
+> > [...]
+> >=20
+> > The channel states are now implemented in cfg80211. Shall we inform use=
+rspace
+> > about channel changes? If yes, how should we do that? We could add chan=
+nel states
+> > to the channel list, and give "channel list changed" events to userspac=
+e as it
+> > happens now, or define a new kind of event ("channel-available-again-ev=
+ent").
+> > Suggestions welcome. :)
+> >=20
+> An event whenever a channel state changes is perfect, ideally provided wi=
+th the
+> time-stamp when this change happened.
+
+Yeah. "channel list changed" events are already available (at least I get t=
+hem in
+hostapd). If we put the current state + timestamp when entered into the cha=
+nnel list,
+we would have what you want, too.
+
+>=20
+> With the centralized channel state handling proposed here, the required
+> modification to allow managed DFS operation can be minimized to a proprie=
+tary (or
+> even upstreamed but CONFIG_CFG80211_CERTIFICATION_ONUS guarded) function =
+to modify
+> channel states.
+
+Yes, the idea is that one can have a small proprietary patch or default-off=
+ command
+(CONFIG_CFG80211_CERTIFICATION_ONUS sounds good) or something like that to =
+change a
+DFS state with the new cfg80211 function. I also thought about having a nl8=
+0211-command
+without implementing an iw counter part or keeping a special "state change"=
+ program
+somewhere with appropriate warnings. But this might still be too "liberal" =
+for the
+regulatory statement. :)
+>=20
+> Can't contribute much to code review, but full ACK for the updated concep=
+t.
+>=20
+
+Cool, also thanks for the code comments!
+
+Cheers,
+	Simon
+
+--OBd5C1Lgu00Gd/Tn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlEH4iwACgkQrzg/fFk7axbhqwCg8jyR2CzPBAZG6WUQRChMsGZI
+LS0An3elaD5pw39ZEH0u9AjXpWPbQTiS
+=bUFt
+-----END PGP SIGNATURE-----
+
+--OBd5C1Lgu00Gd/Tn--
