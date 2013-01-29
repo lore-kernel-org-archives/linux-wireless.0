@@ -1,96 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:50716 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501Ab3AaPXq (ORCPT
+Received: from www19.servergod.com ([64.89.16.20]:65275 "EHLO
+	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067Ab3A2VzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 10:23:46 -0500
-Received: by mail-bk0-f44.google.com with SMTP id j4so1392723bkw.3
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2013 07:23:44 -0800 (PST)
-Message-ID: <510A8C7E.9070602@cozybit.com> (sfid-20130131_162358_968515_EC3A54B4)
-Date: Thu, 31 Jan 2013 16:23:42 +0100
-From: Marco Porsch <marco@cozybit.com>
+	Tue, 29 Jan 2013 16:55:04 -0500
+Message-ID: <51084528.2060502@opentechinstitute.org> (sfid-20130129_225507_510076_E6A6BA62)
+Date: Tue, 29 Jan 2013 16:54:48 -0500
+From: Will Hawkins <hawkinsw@opentechinstitute.org>
 MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [RFC 2/3] mac80211: mesh power save doze scheduling
-References: <1358936360-7795-1-git-send-email-marco@cozybit.com>  <1358936360-7795-3-git-send-email-marco@cozybit.com>  (sfid-20130123_111932_695381_467B8C3D) <1359640314.8415.31.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359640314.8415.31.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+CC: Antonio Quartulli <antonio@open-mesh.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH response
+References: <1355146824-25012-1-git-send-email-antonio@open-mesh.com>  <1355146824-25012-2-git-send-email-antonio@open-mesh.com>  <1356706268.9922.23.camel@jlt4.sipsolutions.net>  <20130102063255.GA27676@open-mesh.com>  <50E5F2A4.9080108@opentechinstitute.org> <1359150352.4655.29.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359150352.4655.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2013 02:51 PM, Johannes Berg wrote:
-> On Wed, 2013-01-23 at 11:19 +0100, Marco Porsch wrote:
->
->> Expose a callback ieee80211_mps_init for drivers to register
->> mesh powersave ops:
->> - hw_doze - put the radio to sleep now
->> - hw_wakeup - wake the radio up for frame RX
->> These ops may be extended in the future to allow drivers/HW to
->> implement mesh PS themselves. (The current design goal was to
->> concentrate mesh PS routines in mac80211 to keep driver
->> modifications minimal.
+
+
+On 01/25/2013 04:45 PM, Johannes Berg wrote:
+> On Thu, 2013-01-03 at 16:05 -0500, Will Hawkins wrote:
+>> Sorry for the delay responding!
+> 
+> Haha, 1.5 days. I win at delaying ;-(
+> 
+>>>> Anyway this part is really confusing. If userspace is handling
+>>>> auth frames, should the kernel really mark the station as
+>>>> authenticated? What then is the point in handling auth frames in
+>>>> userspace??
+>>>>
+>>>> Will?
+>>>
+>>> Actually I don't know. Maybe Will can help us in understanding how
+>>> to handle this point. I simply kept the same behaviour: before this
+>>> (my) patch a station was marked as AUTHenticated in by the kernel,
+>>> even if userspace registered for AUTH frames, and the same I'm
+>>> doing here.
 >>
->> Track the beacon timing information of peers we are in PS mode
->> towards. Set a per-STA hrtimer which will trigger a wakeup right
->> before the peer's next TBTT.
->> Also use the same hrtimer to go to sleep mode after not
->> receiving a beacon in a defined time margin. In this case
->> calculate the next TBTT and increase the margin.
+>> It does *not* appear that Antonio's patch changes the logic that I put
+>> in place with my earlier patch. For me, the userspace application
+>> *authorizes* the station rather than *authenticates*. In other words,
+>> no matter whether or not the userspace application is registered for
+>> AUTH frames, the new station is assumed to be authenticated. Once the
+>> two stations are authenticated the key exchange begins (over AUTH
+>> frames) to determine if the stations are authorized.
 >>
->> For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
->> a timer which triggers a hw_doze call on expiry.
->
-> Hmm. I'm not completely happy with this hrtimer stuff in mac80211.
-> There's a lot of (USB) hardware that could never implement such a thing,
-> but could, conceivably, implement this differently?
+>> Johannes, what are your thoughts on the differences between the
+>> semantics of authenticated and authorized. I am definitely in over my
+>> head so please correct me where I've gone wrong. :-)
+> 
+> That makes sense, you handle the SAE authentication and then mark the
+> station as authorized, which is perfectly fine. But that really mostly
+> means you don't care about the authenticated state at all, and there's
+> no real associated state anyway ...
+> 
+>> I would be okay with this approach. I think that it would be fairly
+>> easy to essentially move the logic up a level and protect the
+>> transition to AUTH rather than AUTHORIZED.
+> 
+> Well, you'd have to do both, and we also can't break the userspace API
+> now.
+> 
+>>> This is a behaviour I introduced some time ago:
+>>>
+>>> 1153         sdata->u.ibss.control_port = params->control_port;
+>>>
+>>> which is set based on NL80211_ATTR_CONTROL_PORT and at the moment,
+>>> in IBSS, I think it is only set by wpa_supplicant when using
+>>> IBSS/RSN..you told me to use control_port instead of creating
+>>> another member..but maybe it is general and could be used for
+>>> something else?
+> 
+> It could be used for something else.
+> 
+>> The userspace application that I am writing does use the control port
+>> in IBSS. My goal is to integrate my userspace application with
+>> wpa_supplicant so eventually there will be convergence. In fact,
+>> Antonio's new message is critical to this integration. :-)
+> 
+> That I don't understand? Why does it need the new event? Wouldn't
+> completing the SAE handshake be sufficient information?
 
-The use of hrtimers for MPS is debatable currently. The approach of 
-calculating the peer's TSF should be accurate to the usec. Good timing 
-here directly affects the energy savings. On the other handside the 
-margin of 5ms used shows that something is not working as expected yet. 
-If this cannot be fixed, I may as well use regular timers here. How 
-strongly do you oppose hrtimers? :)
+It does not need the new event, necessarily. I was just hoping to use
+that event to know when to kick off the SAE handshake with a new node.
+Something along the lines of NL80211_CMD_NEW_PEER_CANDIDATE in the world
+of 802.11s.
 
->> @@ -1146,6 +1148,11 @@ struct ieee80211_local {
->>
->>   	int user_power_level; /* in dBm, for all interfaces */
->>
->> +	/* mesh power save */
->> +	bool mps_enabled;
->> +	bool mps_hw_doze;
->
-> Generally, this also seems wrong, you're making the assumption that mesh
-> will be the only interface. That might actually be true for many use
-> cases, but is it really an assumption we should still put into the stack
-> today, with multi-channel etc? I'm not convinced of that.
+With the code as it stands, I plan on using the NEW_STA event to start
+that process, but I was hoping for something that would indicate the
+station was authenticated (in case there was ever a time that we wanted
+to layer SAE on top of explicit authentication).
 
-When trying to enable MPS in mps_hw_conf_check, I check if there are any 
-non-mesh interfaces. If yes, it is not enabled.
-So these status variables are just used to sync multi-mesh-vif MPS on a 
-single device.
+Will
 
-Multiple mesh interfaces are ok. An AP vif is a no-go for any PS mode. 
-Mesh + client is theoretically fine, but handled completely differently 
-- also a no for now.
-
-> So I think you should (at least attempt to) make an implementation that
-> is less tied to the exact timing implementation. Maybe program the
-> wakeup TBTT in advance.  Maybe with a small library the driver can
-> connect to this that uses hrtimers to implement it? That could then also
-> assume that callbacks need not sleep, thus allowing to reduce
-> TBTT_MARGIN.
- >
-> In theory I think with ath9k you could even use hardware timers &
-> interrupts to wake the hardware, thus probably being able to reduce
-> TBTT_MARGIN significantly.
-
-Earlier, I had successfully implemented wakeups using ath9k HW before we 
-at cozybit decided to concentrate all code in mac80211. Concerning ath9k 
-it worked fine but required more callbacks to mac80211 and will 
-eventually add redundant code that has to be maintained to multiple drivers.
-
---Marco
+> 
+> johannes
+> 
+> 
