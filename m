@@ -1,101 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2552 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752795Ab3ABOXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:23:14 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 15/18] brcmfmac: Remove unused caching dongle error.
-Date: Wed, 2 Jan 2013 15:22:48 +0100
-Message-ID: <1357136572-18273-16-git-send-email-arend@broadcom.com> (sfid-20130102_152325_455097_AACF08F8)
-In-Reply-To: <1357136572-18273-1-git-send-email-arend@broadcom.com>
-References: <1357136572-18273-1-git-send-email-arend@broadcom.com>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55407 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757065Ab3A2On5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jan 2013 09:43:57 -0500
+Date: Tue, 29 Jan 2013 15:43:48 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	victorg@ti.com, linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
+Message-ID: <20130129144348.GB23425@pandem0nium> (sfid-20130129_154406_145910_EED39A75)
+References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <5107CE12.3090209@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2B/JsCI69OhZNC5r"
+In-Reply-To: <5107CE12.3090209@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-CDC errors are retained. However, it is never used so it can
-be removed.
+--2B/JsCI69OhZNC5r
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h     |    3 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |   22 ++-------------------
- 2 files changed, 2 insertions(+), 23 deletions(-)
+Hey,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 0388599..bbefaf3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -496,9 +496,6 @@ struct brcmf_pub {
- 	/* Last error return */
- 	int bcmerror;
- 
--	/* Last error from dongle */
--	int dongle_error;
--
- 	/* Suspend disable flag  flag */
- 	int suspend_disable_flag;	/* "1" to disable all extra powersaving
- 					 during suspend */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index db3bc2e..4557709 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -147,18 +147,6 @@ brcmf_proto_cdc_query_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 
- 	brcmf_dbg(CDC, "Enter, cmd %d len %d\n", cmd, len);
- 
--	/* Respond "bcmerror" and "bcmerrorstr" with local cache */
--	if (cmd == BRCMF_C_GET_VAR && buf) {
--		if (!strcmp((char *)buf, "bcmerrorstr")) {
--			strncpy((char *)buf, "bcm_error",
--				BCME_STRLEN);
--			goto done;
--		} else if (!strcmp((char *)buf, "bcmerror")) {
--			*(int *)buf = drvr->dongle_error;
--			goto done;
--		}
--	}
--
- 	memset(msg, 0, sizeof(struct brcmf_proto_cdc_dcmd));
- 
- 	msg->cmd = cpu_to_le32(cmd);
-@@ -207,11 +195,8 @@ retry:
- 	}
- 
- 	/* Check the ERROR flag */
--	if (flags & CDC_DCMD_ERROR) {
-+	if (flags & CDC_DCMD_ERROR)
- 		ret = le32_to_cpu(msg->status);
--		/* Cache error from dongle */
--		drvr->dongle_error = ret;
--	}
- 
- done:
- 	return ret;
-@@ -258,11 +243,8 @@ int brcmf_proto_cdc_set_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 	}
- 
- 	/* Check the ERROR flag */
--	if (flags & CDC_DCMD_ERROR) {
-+	if (flags & CDC_DCMD_ERROR)
- 		ret = le32_to_cpu(msg->status);
--		/* Cache error from dongle */
--		drvr->dongle_error = ret;
--	}
- 
- done:
- 	return ret;
--- 
-1.7.10.4
+On Tue, Jan 29, 2013 at 02:26:42PM +0100, Zefir Kurtisi wrote:
+> On 01/29/2013 01:21 PM, Simon Wunderlich wrote:
+> > From: Victor Goldenshtein <victorg@ti.com>
+> >=20
+> > [...]
+> > @@ -2080,7 +2087,7 @@ enum ieee80211_frame_release_type {
+> >   * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
+> >   * @IEEE80211_RC_SUPP_RATES_CHANGED: The supported rate set of this pe=
+er
+> >   *	changed (in IBSS mode) due to discovering more information about
+> > - *	the peer.
+> > + *	the peern.
+> >   */
+> typo?
 
+yup ... sorry about that.
 
+> > [...]
+> > +	/* TODO: some channels (e.g. ETSI weather channels between 5.600 and
+> > +	 * 5.6500 require longer waiting time, if we want to support them at
+> > +	 * all.
+> > +	 */
+> > +	timeout =3D msecs_to_jiffies(NL80211_DFS_MIN_CAC_TIME_MS);
+> > +	ieee80211_queue_delayed_work(&sdata->local->hw,
+> > +				     &sdata->dfs_cac_timer_work, timeout);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> The required minimum detection probability for weather channels is purpos=
+ely
+> defined such that it can't be reached, so it is safe to assume they will =
+never be
+> supported. As for CAC and NOP timings, they are luckily same for ETSI and=
+ FCC
+> right now, and if they differ in the future, we have the countrycode's DFS
+> regulatory domain available to differentiate.
+
+Ah ok, good that they are the same :)
+
+I agree about weather channels, 99.9% detection rate just appears not feasi=
+ble.
+Will remove the comment then.
+
+Cheers,
+	Simon
+
+--2B/JsCI69OhZNC5r
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlEH4CQACgkQrzg/fFk7axYGUwCgrmiHDJI9gASPrGtt/Xl2u/Bl
+318AnillUUtRQemL4jVvgvhoT4RO/1yE
+=KJBu
+-----END PGP SIGNATURE-----
+
+--2B/JsCI69OhZNC5r--
