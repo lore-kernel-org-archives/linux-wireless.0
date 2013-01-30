@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45748 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758085Ab3AIRbB (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:54493 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab3A3O4j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 12:31:01 -0500
-Message-ID: <1357752686.9757.18.camel@jlt4.sipsolutions.net> (sfid-20130109_183113_442290_F27C58B4)
-Subject: Re: Q: how to update platform power state for the network driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 09 Jan 2013 18:31:26 +0100
-In-Reply-To: <6929081.7c7blFVDp4@lx-vladimir> (sfid-20130109_182029_783210_FC7FE104)
-References: <6929081.7c7blFVDp4@lx-vladimir>
-	 (sfid-20130109_182029_783210_FC7FE104)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 30 Jan 2013 09:56:39 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c50so906008eek.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 06:56:38 -0800 (PST)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@adurom.com>
+Subject: Re: ath9k has buggy promiscuous mode
+Date: Wed, 30 Jan 2013 15:56:33 +0100
+Message-ID: <1606478.o2vcQdheiZ@sylvesterjr.pats.ua.ac.be> (sfid-20130130_155642_993554_35478F4C)
+In-Reply-To: <87622edabu.fsf@purkki.adurom.net>
+References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be> <15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be> <87622edabu.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-09 at 19:20 +0200, Vladimir Kondratiev wrote:
-> Hi,
+On Wednesday 30 January 2013 16:17:25 Kalle Valo wrote:
+> I don't understand, what do you mean software configuration?
 > 
-> in 60g spec (802.11ad, references to this doc.), station should set "power source" bit in the:
+> A quick grep show that at least ath9k checks for the promisc filter:
 > 
-> 8.4.2.130.3 DMG PCP/AP Capability Information field
-> 
-> This information used to construct "PCP factor" that used in:
-> 
-> 10.1.4.3.4 PCP selection in a PBSS
-> 
-> This procedure replaces GO negotiation in P2P. "power source" bit above specified as:
-> 
-> The Power Source field is set to 0 if the STA is battery powered, and is set to 1 otherwise.
-> 
-> What is the best way to obtain this info in the network driver?
+> ath9k/htc_drv_main.c:   (FIF_PROMISC_IN_BSS |                   \
+> ath9k/htc_drv_txrx.c:    * Set promiscuous mode when 
+FIF_PROMISC_IN_BSS
+> is enabled for station
+> ath9k/htc_drv_txrx.c:        (priv->rxfilter & FIF_PROMISC_IN_BSS)) ||
+> ath9k/main.c:   (FIF_PROMISC_IN_BSS |                   \
+> ath9k/recv.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS is
+> enabled for station
 
-You can't really do that very well. Set it in wpa_supplicant according
-to the configuration. It might even query the power source on a laptop,
-but I suspect this is a somewhat different use case anyway.
+I tried understanding the code, but it is hard without decent study of 
+course. FIF_PROMISC IN BSS I saw there in comment, but not in the code 
+:-) For monitor mode there is something like:
 
-johannes
+if (sc->sc_ah->is_monitoring)
+                rfilt |= ATH9K_RX_FILTER_PROM;
+
+Best regards,
+Erwin
+
 
