@@ -1,58 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3192 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595Ab3AROgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jan 2013 09:36:25 -0500
-Message-ID: <50F95D45.6060601@broadcom.com> (sfid-20130118_153628_711652_2F6686F1)
-Date: Fri, 18 Jan 2013 15:33:41 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:54898 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755457Ab3A3TNE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 14:13:04 -0500
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Rafal Milecki" <zajec5@gmail.com>
-cc: linux-wireless@vger.kernel.org
-Subject: bcma: trouble with gpio
-Content-Type: text/plain;
- charset=windows-1252
+In-Reply-To: <CALiWzOhawsfaW9TQgn-CZO5XQ_2=1R_91QB9q4yM1HDq_yQRFg@mail.gmail.com>
+References: <20130128225657.GA17533@kashmir> <0BA3FCBA62E2DC44AF3030971E174FB301925D7A@HASMSX103.ger.corp.intel.com>
+ <CALiWzOhawsfaW9TQgn-CZO5XQ_2=1R_91QB9q4yM1HDq_yQRFg@mail.gmail.com>
+From: Mathieu Chouquet-Stringer <mathieu@csetco.com>
+Date: Wed, 30 Jan 2013 20:12:22 +0100
+Message-ID: <CALiWzOiO9Bj=kJh8=Dzfph7mhu8bKowdmV-CeoaLMX8n--6pGw@mail.gmail.com> (sfid-20130130_201323_916612_AD27F3B9)
+Subject: Re: [Ilw] iwlwifi/iwldvm soft lockup with 3.8.0-rc5 (was: almost
+ unusable on 3.8.0-rc5)
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Jan 29, 2013 at 10:14 AM, Mathieu Chouquet-Stringer
+<mathieu@csetco.com> wrote:
+> On Tue, Jan 29, 2013 at 8:16 AM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+>> Please try this one:
+>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=c3e5d7181afb66657393066bccce0956fab09ab3
+>>
+>> as you can see, it is in mainline already.
+>
+> Ha, that was fast!  I'll check tonight, thanks for your quick turn around.
 
-I turned GPIO support in bcma (CONFIG_BCMA_DRIVER_GPIO)
-and get this in log:
-
-bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and package 0x0A
-bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
-bcma: bus0: Found rev 6 PMU (capabilities 0x108C2606)
-bcma: bus0: SPROM offset 0x830
-bcma: bus0: PMU resource config unknown or not needed for device 0xA8D8
-gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-bcma: bus0: Error registering GPIO driver: -28
-bcma: bus0: Bus registered
-bcma: bus1: Found chip with id 0x4313, rev 0x01 and package 0x08
-bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
-bcma: bus1: Found rev 8 PMU (capabilities 0x084C3008)
-bcma: bus1: SPROM offset 0x830
-gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-bcma: bus1: Error registering GPIO driver: -28
-bcma: bus1: Bus registered
-bcma: bus2: Found chip with id 0x4313, rev 0x01 and package 0x08
-bcma: bus2: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
-bcma: bus2: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
-bcma: bus2: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
-bcma: bus2: Found rev 8 PMU (capabilities 0x084C3008)
-bcma: bus2: SPROM offset 0x830
-gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
-bcma: bus2: Error registering GPIO driver: -28
-bcma: bus2: Bus registered
-
-does that mean that gpio is not usable?
-what might be the problem?
-
-Kind regards
-Piotr
-
+Issue is indeed fixed: thank you!
