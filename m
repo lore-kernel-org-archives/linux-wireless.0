@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:39479 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755655Ab3AVUQx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 15:16:53 -0500
-Received: by mail-bk0-f48.google.com with SMTP id jk14so1402911bkc.7
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 12:16:51 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: trivial: use pflash helper variable
-Date: Tue, 22 Jan 2013 21:16:44 +0100
-Message-Id: <1358885805-19662-1-git-send-email-zajec5@gmail.com> (sfid-20130122_211657_833123_67D664A2)
+Received: from mail.kernel.org ([198.145.19.201]:47481 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752552Ab3A3JcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 04:32:08 -0500
+Date: Wed, 30 Jan 2013 10:33:49 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: stable@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>
+Subject: Re: [PATCH] brcmsmac: handle packet drop on enqueuing correctly
+Message-ID: <20130130093349.GB17322@kroah.com> (sfid-20130130_103212_955612_43CD6201)
+References: <1359125868-27890-1-git-send-email-arend@broadcom.com>
+ <51029FA6.40209@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51029FA6.40209@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jan 25, 2013 at 04:07:18PM +0100, Arend van Spriel wrote:
+> On 01/25/2013 03:57 PM, Arend van Spriel wrote:
+> > From: Piotr Haber <phaber@broadcom.com>
+> > 
+> > In the event that tx packet can not be queued by the driver
+> > the packet is dropped. Propagate that information to the .tx()
+> > callback to make sure the freed packet is not accessed after
+> > that.
+> > 
+> > This has happened causing slab corruptions as reported by
+> > Stanislaw Gruszka.
+> > 
+> > Bug #47721: https://bugzilla.kernel.org/show_bug.cgi?id=47721
+> > 
+> > That patch is backported from:
+> > 
+> > commit c4dea35e34f5f46e1701156153a09cce429d1ea9 upstream.
+> 
+> It applies to stable/linux-3.7.y only.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/driver_mipscore.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
+Ah, here's the 3.7 patch, thanks.
 
-diff --git a/drivers/ssb/driver_mipscore.c b/drivers/ssb/driver_mipscore.c
-index 2a7684c..77bc8d4 100644
---- a/drivers/ssb/driver_mipscore.c
-+++ b/drivers/ssb/driver_mipscore.c
-@@ -189,13 +189,14 @@ static void ssb_mips_serial_init(struct ssb_mipscore *mcore)
- static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- {
- 	struct ssb_bus *bus = mcore->dev->bus;
-+	struct ssb_pflash *pflash = &mcore->pflash;
- 
- 	/* When there is no chipcommon on the bus there is 4MB flash */
- 	if (!ssb_chipco_available(&bus->chipco)) {
--		mcore->pflash.present = true;
--		mcore->pflash.buswidth = 2;
--		mcore->pflash.window = SSB_FLASH1;
--		mcore->pflash.window_size = SSB_FLASH1_SZ;
-+		pflash->present = true;
-+		pflash->buswidth = 2;
-+		pflash->window = SSB_FLASH1;
-+		pflash->window_size = SSB_FLASH1_SZ;
- 		return;
- 	}
- 
-@@ -208,14 +209,14 @@ static void ssb_mips_flash_detect(struct ssb_mipscore *mcore)
- 		break;
- 	case SSB_CHIPCO_FLASHT_PARA:
- 		pr_debug("Found parallel flash\n");
--		mcore->pflash.present = true;
--		mcore->pflash.window = SSB_FLASH2;
--		mcore->pflash.window_size = SSB_FLASH2_SZ;
-+		pflash->present = true;
-+		pflash->window = SSB_FLASH2;
-+		pflash->window_size = SSB_FLASH2_SZ;
- 		if ((ssb_read32(bus->chipco.dev, SSB_CHIPCO_FLASH_CFG)
- 		               & SSB_CHIPCO_CFG_DS16) == 0)
--			mcore->pflash.buswidth = 1;
-+			pflash->buswidth = 1;
- 		else
--			mcore->pflash.buswidth = 2;
-+			pflash->buswidth = 2;
- 		break;
- 	}
- }
--- 
-1.7.7
-
+greg k-h
