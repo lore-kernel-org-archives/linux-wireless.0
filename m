@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:49795 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990Ab3AZPPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 10:15:34 -0500
-Message-ID: <1359213274.6252.257.camel@cumari.coelho.fi> (sfid-20130126_161546_299256_0F4095DD)
-Subject: Re: brcm WARN() on v3.7.2
-From: Luciano Coelho <coelho@ti.com>
-To: <balbi@ti.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-Date: Sat, 26 Jan 2013 17:14:34 +0200
-In-Reply-To: <20130126125622.GA9542@arwen.pp.htv.fi>
-References: <20130125202355.GA4846@arwen.pp.htv.fi>
-	 <5103B595.8060805@broadcom.com> <20130126125622.GA9542@arwen.pp.htv.fi>
-Content-Type: text/plain; charset="UTF-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50538 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755457Ab3A3TPY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 14:15:24 -0500
+Date: Wed, 30 Jan 2013 14:07:04 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] iwl4965: report A-MPDU status
+Message-ID: <20130130190703.GB2167@tuxdriver.com> (sfid-20130130_201528_596568_169359E5)
+References: <E1TzDQV-0001Fa-Sp@debian64.localnet>
+ <20130128100857.GC2316@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130128100857.GC2316@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-01-26 at 14:56 +0200, Felipe Balbi wrote:
-> Hi,
-> 
-> On Sat, Jan 26, 2013 at 11:53:09AM +0100, Arend van Spriel wrote:
-> > On 01/25/2013 09:23 PM, Felipe Balbi wrote:
-> > > Hi folks,
-> > > 
-> > > I'm running Fedora 18 with v3.7.2 on her MacBookAir 11" and it
-> > > turns out that brcm is acting out, see below full dmesg. Any tips ?
-> > > Is this fixed already ?
+On Mon, Jan 28, 2013 at 11:08:58AM +0100, Stanislaw Gruszka wrote:
+> On Fri, Jan 18, 2013 at 11:47:19PM +0100, Christian Lamparter wrote:
+> > This patch is based on "iwlwifi: report A-MPDU status".
+> > (12bf6f45d1703858)
 > > 
-> > Thanks, Felipe
+> > Since the firmware will give us an A-MPDU bit and
+> > only a single PHY information packet for all the
+> > subframes in an A-MPDU, we can easily report the
+> > minimal A-MPDU information for radiotap.
 > > 
-> > The warning itself means flush timed out, ie. not all outstanding
-> > packets could be transmitted. It does not necessarily mean the driver
-> > is failing. So do you have any connectivity issues after the warning
-> > has occurred?
+> > Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 > 
-> not really, just thought I'd mention it ;-)
+> ACK
 
-If the warning is benign, maybe it shouldn't be a warning at all?
+OK, I'm confused...this ACK is for the patch posted on 18 Jan as
+"[PATCH 2/2] iwl4965: report A-MPDU status".  But on the next day
+(19 Jan) there was a patch posted as "[RFC ] iwl4965: report A-MPDU
+status" that seems to be different.  What a I missing?  Is this the
+right patch to merge?
 
---
-Luca.
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
