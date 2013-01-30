@@ -1,91 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:45694 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752036Ab3ACIAw (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:59753 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184Ab3A3IyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 03:00:52 -0500
-Date: Thu, 3 Jan 2013 13:23:33 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 2/5] mwl8k: changing mwl8k_destroy_ba prototype
-Message-ID: <20130103075328.GA20349@markyou.marvell.com> (sfid-20130103_090054_592016_E39E6A75)
+	Wed, 30 Jan 2013 03:54:11 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id r0U8sBoQ029967
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 02:54:11 -0600
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r0U8sBde006964
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 02:54:11 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>
+Subject: [PATCH] wlcore: don't hide real error code when booting fails
+Date: Wed, 30 Jan 2013 10:53:14 +0200
+Message-ID: <1359535995-18092-1-git-send-email-coelho@ti.com> (sfid-20130130_095414_897733_1C73D879)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, mwl8k_ampdu_stream is passed as one of the
-argument to the function mwl8k_destroy_ba. Instead of
-this pass only the stream index. This will be helpful
-during watchdog event handling when bitmap of stream
-indices are received.
+There's no need to hide the actual error that was reported when
+booting fails.  For instance, on I/O error, we were returing
+-EINVALID, which doesn't make sense at all.
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/mwl8k.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 704d7d3..a603e64 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3788,7 +3788,7 @@ mwl8k_create_ba(struct ieee80211_hw *hw, struct mwl8k_ampdu_stream *stream,
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 731dd26..6455e2d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2072,7 +2072,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 	return 0;
  }
  
- static void mwl8k_destroy_ba(struct ieee80211_hw *hw,
--			     struct mwl8k_ampdu_stream *stream)
-+			     u8 idx)
+-static bool wl12xx_init_fw(struct wl1271 *wl)
++static int wl12xx_init_fw(struct wl1271 *wl)
  {
- 	struct mwl8k_cmd_bastream *cmd;
+ 	int retries = WL1271_BOOT_RETRIES;
+ 	bool booted = false;
+@@ -2138,7 +2138,7 @@ power_off:
  
-@@ -3800,10 +3800,10 @@ static void mwl8k_destroy_ba(struct ieee80211_hw *hw,
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	cmd->action = cpu_to_le32(MWL8K_BA_DESTROY);
- 
--	cmd->destroy_params.ba_context = cpu_to_le32(stream->idx);
-+	cmd->destroy_params.ba_context = cpu_to_le32(idx);
- 	mwl8k_post_cmd(hw, &cmd->header);
- 
--	wiphy_debug(hw->wiphy, "Deleted BA stream index %d\n", stream->idx);
-+	wiphy_debug(hw->wiphy, "Deleted BA stream index %d\n", idx);
- 
- 	kfree(cmd);
+ 	wl->state = WLCORE_STATE_ON;
+ out:
+-	return booted;
++	return ret;
  }
-@@ -5117,7 +5117,7 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	int i, rc = 0;
- 	struct mwl8k_priv *priv = hw->priv;
- 	struct mwl8k_ampdu_stream *stream;
--	u8 *addr = sta->addr;
-+	u8 *addr = sta->addr, idx;
- 	struct mwl8k_sta *sta_info = MWL8K_STA(sta);
  
- 	if (!(hw->flags & IEEE80211_HW_AMPDU_AGGREGATION))
-@@ -5198,8 +5198,9 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	case IEEE80211_AMPDU_TX_STOP:
- 		if (stream) {
- 			if (stream->state == AMPDU_STREAM_ACTIVE) {
-+				idx = stream->idx;
- 				spin_unlock(&priv->stream_lock);
--				mwl8k_destroy_ba(hw, stream);
-+				mwl8k_destroy_ba(hw, idx);
- 				spin_lock(&priv->stream_lock);
- 			}
- 			mwl8k_remove_stream(hw, stream);
-@@ -5215,8 +5216,9 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		if (!rc)
- 			stream->state = AMPDU_STREAM_ACTIVE;
- 		else {
-+			idx = stream->idx;
- 			spin_unlock(&priv->stream_lock);
--			mwl8k_destroy_ba(hw, stream);
-+			mwl8k_destroy_ba(hw, idx);
- 			spin_lock(&priv->stream_lock);
- 			wiphy_debug(hw->wiphy,
- 				"Failed adding stream for sta %pM tid %d\n",
+ static bool wl12xx_dev_role_started(struct wl12xx_vif *wlvif)
+@@ -2206,7 +2206,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	struct vif_counter_data vif_count;
+ 	int ret = 0;
+ 	u8 role_type;
+-	bool booted = false;
+ 
+ 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
+ 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+@@ -2263,11 +2262,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		 */
+ 		memcpy(wl->addresses[0].addr, vif->addr, ETH_ALEN);
+ 
+-		booted = wl12xx_init_fw(wl);
+-		if (!booted) {
+-			ret = -EINVAL;
++		ret = wl12xx_init_fw(wl);
++		if (ret < 0)
+ 			goto out;
+-		}
+ 	}
+ 
+ 	ret = wl12xx_cmd_role_enable(wl, vif->addr,
 -- 
-1.8.0.3
+1.7.10.4
 
