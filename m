@@ -1,104 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39944 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752467Ab3ATRwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jan 2013 12:52:12 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 6/8] ath9k_hw: remove ath9k_hw_ani_setup and its variables
-Date: Sun, 20 Jan 2013 18:51:57 +0100
-Message-Id: <1358704319-81749-6-git-send-email-nbd@openwrt.org> (sfid-20130120_185217_792796_A7F8511F)
-In-Reply-To: <1358704319-81749-5-git-send-email-nbd@openwrt.org>
-References: <1358704319-81749-1-git-send-email-nbd@openwrt.org>
- <1358704319-81749-2-git-send-email-nbd@openwrt.org>
- <1358704319-81749-3-git-send-email-nbd@openwrt.org>
- <1358704319-81749-4-git-send-email-nbd@openwrt.org>
- <1358704319-81749-5-git-send-email-nbd@openwrt.org>
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:54748 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753845Ab3A3QOX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 11:14:23 -0500
+Received: by mail-wg0-f53.google.com with SMTP id fn15so1358755wgb.32
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 08:14:21 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-next] wireless: rt2x00: rt2800usb add/identify ids
+Date: Wed, 30 Jan 2013 17:14:13 +0100
+Message-Id: <1359562453-31781-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130130_171426_676768_6BC0BDF0)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are no longer needed for ANI functionality
+Devices were taken from Ralink Linux drivers:
+- RT5370
+0x043e, 0x7a32
+0x043e, 0x7a42
+0x0471, 0x2126
+0x0471, 0x2180
+0x0471, 0x2181
+0x0471, 0x2182
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Identify these ones:
+0x04da, 0x23f6 in CONFIG_RT2800USB_RT53XX is a Panasonic device
+0x07d1, 0x3c17 in RT2800USB_UNKNOWN is a RT3070
+0x0586, 0x341a in RT2800USB_UNKNOWN is a RT3070
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com> 
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 17 -----------------
- drivers/net/wireless/ath/ath9k/ani.h |  1 -
- drivers/net/wireless/ath/ath9k/hw.c  |  4 +---
- drivers/net/wireless/ath/ath9k/hw.h  |  4 ----
- 4 files changed, 1 insertion(+), 25 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index e09ec40..2978287 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -489,23 +489,6 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
- 
--void ath9k_hw_ani_setup(struct ath_hw *ah)
--{
--	int i;
--
--	static const int totalSizeDesired[] = { -55, -55, -55, -55, -62 };
--	static const int coarseHigh[] = { -14, -14, -14, -14, -12 };
--	static const int coarseLow[] = { -64, -64, -64, -64, -70 };
--	static const int firpwr[] = { -78, -78, -78, -78, -80 };
--
--	for (i = 0; i < 5; i++) {
--		ah->totalSizeDesired[i] = totalSizeDesired[i];
--		ah->coarse_high[i] = coarseHigh[i];
--		ah->coarse_low[i] = coarseLow[i];
--		ah->firpwr[i] = firpwr[i];
--	}
--}
--
- void ath9k_hw_ani_init(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 1485bf5..385bdba 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -147,7 +147,6 @@ struct ar5416Stats {
- 
- void ath9k_enable_mib_counters(struct ath_hw *ah);
- void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
--void ath9k_hw_ani_setup(struct ath_hw *ah);
- void ath9k_hw_ani_init(struct ath_hw *ah);
- 
- #endif /* ANI_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0d84c1c..42cf3c7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -549,10 +549,8 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
- 		ah->eep_ops->get_eeprom_ver(ah),
- 		ah->eep_ops->get_eeprom_rev(ah));
- 
--	if (ah->config.enable_ani) {
--		ath9k_hw_ani_setup(ah);
-+	if (ah->config.enable_ani)
- 		ath9k_hw_ani_init(ah);
--	}
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 639d60d..9b6e45d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -857,10 +857,6 @@ struct ath_hw {
- 	/* ANI */
- 	u32 proc_phyerr;
- 	u32 aniperiod;
--	int totalSizeDesired[5];
--	int coarse_high[5];
--	int coarse_low[5];
--	int firpwr[5];
- 	enum ath9k_ani_cmd ani_function;
- 	u32 ani_skip_count;
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 4721cad..1cbf20a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -968,6 +968,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c13) },
+ 	{ USB_DEVICE(0x07d1, 0x3c15) },
+ 	{ USB_DEVICE(0x07d1, 0x3c16) },
++	{ USB_DEVICE(0x07d1, 0x3c17) },
+ 	{ USB_DEVICE(0x2001, 0x3c1b) },
+ 	/* Draytek */
+ 	{ USB_DEVICE(0x07fa, 0x7712) },
+@@ -1115,6 +1116,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Zyxel */
+ 	{ USB_DEVICE(0x0586, 0x3416) },
+ 	{ USB_DEVICE(0x0586, 0x3418) },
++	{ USB_DEVICE(0x0586, 0x341a) },
+ 	{ USB_DEVICE(0x0586, 0x341e) },
+ 	{ USB_DEVICE(0x0586, 0x343e) },
+ #ifdef CONFIG_RT2800USB_RT33XX
+@@ -1166,6 +1168,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ #ifdef CONFIG_RT2800USB_RT53XX
+ 	/* Arcadyan */
+ 	{ USB_DEVICE(0x043e, 0x7a12) },
++	{ USB_DEVICE(0x043e, 0x7a32) },
+ 	/* Azurewave */
+ 	{ USB_DEVICE(0x13d3, 0x3329) },
+ 	{ USB_DEVICE(0x13d3, 0x3365) },
+@@ -1177,16 +1180,20 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x2001, 0x3c1e) },
+ 	/* LG innotek */
+ 	{ USB_DEVICE(0x043e, 0x7a22) },
++	{ USB_DEVICE(0x043e, 0x7a42) },
+ 	/* Panasonic */
+ 	{ USB_DEVICE(0x04da, 0x1801) },
+ 	{ USB_DEVICE(0x04da, 0x1800) },
++	{ USB_DEVICE(0x04da, 0x23f6) },
+ 	/* Philips */
+ 	{ USB_DEVICE(0x0471, 0x2104) },
++	{ USB_DEVICE(0x0471, 0x2126) },
++	{ USB_DEVICE(0x0471, 0x2180) },
++	{ USB_DEVICE(0x0471, 0x2181) },
++	{ USB_DEVICE(0x0471, 0x2182) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x5370) },
+ 	{ USB_DEVICE(0x148f, 0x5372) },
+-	/* Unknown */
+-	{ USB_DEVICE(0x04da, 0x23f6) },
+ #endif
+ #ifdef CONFIG_RT2800USB_UNKNOWN
+ 	/*
+@@ -1223,7 +1230,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x18c5, 0x0008) },
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x07d1, 0x3c0b) },
+-	{ USB_DEVICE(0x07d1, 0x3c17) },
+ 	/* Encore */
+ 	{ USB_DEVICE(0x203d, 0x14a1) },
+ 	/* Gemtek */
+@@ -1261,8 +1267,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x083a, 0xc522) },
+ 	{ USB_DEVICE(0x083a, 0xd522) },
+ 	{ USB_DEVICE(0x083a, 0xf511) },
+-	/* Zyxel */
+-	{ USB_DEVICE(0x0586, 0x341a) },
+ #endif
+ 	{ 0, }
+ };
 -- 
-1.8.0.2
-
+1.7.11.7
