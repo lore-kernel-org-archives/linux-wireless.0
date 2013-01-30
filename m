@@ -1,156 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51441 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755370Ab3A0Akz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753761Ab3A3VBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 19:40:55 -0500
-Received: by mail-pb0-f46.google.com with SMTP id mc17so193274pbc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jan 2013 16:40:54 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v3] mac80211: dynamic short slot time for MBSSs
-Date: Sat, 26 Jan 2013 16:39:55 -0800
-Message-Id: <1359247195-25818-1-git-send-email-thomas@cozybit.com> (sfid-20130127_014104_798750_CED97C72)
+	Wed, 30 Jan 2013 16:01:44 -0500
+Message-ID: <1359579712.8010.30.camel@jlt4.sipsolutions.net> (sfid-20130130_220148_052629_E172F315)
+Subject: pull-request: iwlwifi-next 2013-01-30
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 30 Jan 2013 22:01:52 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-U4sZTpM6q5/NP3/25YbD"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The standard mandates mesh STAs to set the ERP Short Slot
-Time capability info bit in beacons to 0. Even though this
-is their way of disallowing short slot time for mesh STAs,
-there should be no harm in enabling it if we determine all
-STAs in the current MBSS support ERP rates.
 
-Increases throughput about 20% for legacy rates when
-enabled.
+--=-U4sZTpM6q5/NP3/25YbD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
+John,
 
-Initializing short_slot = false saves 2 lines vs. the inverse.
+I was only waiting for you to merge mac80211-next, so I could merge
+wireless-next into iwlwifi-next and send you a new pull request :-)
 
-v2:
-	fix survey logic
+So here it is, just the patches with the new driver I posted earlier.
+This is the MVM driver for the new firmware API for 7000 series devices.
 
-v3:
-	tighten ERP rate check (Johannes)
+Please pull (or let me know if it's broken :) )
 
- net/mac80211/mesh.c       |    5 ----
- net/mac80211/mesh_plink.c |   63 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 63 insertions(+), 5 deletions(-)
+johannes
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 694e273..f920da1 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -629,11 +629,6 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.bss_conf.basic_rates =
- 		ieee80211_mandatory_rates(local, band);
- 
--	if (band == IEEE80211_BAND_5GHZ) {
--		sdata->vif.bss_conf.use_short_slot = true;
--		changed |= BSS_CHANGED_ERP_SLOT;
--	}
--
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	netif_carrier_on(sdata->dev);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4e1d406..ca4f2d8 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -55,6 +55,66 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
- 	sta->plink_retries = 0;
- }
- 
-+/*
-+ * mesh_set_short_slot_time - enable / disable ERP short slot time.
-+ *
-+ * The standard indirectly mandates mesh STAs to turn off short slot time by
-+ * disallowing advertising this (802.11-2012 8.4.1.4), but that doesn't mean we
-+ * can't be sneaky about it. Enable short slot time if all mesh STAs in the
-+ * MBSS support ERP rates.
-+ *
-+ * Returns BSS_CHANGED_ERP_SLOT or 0 for no change.
-+ */
-+static u32 mesh_set_short_slot_time(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
-+	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+	struct sta_info *sta;
-+	u32 erp_rates = 0, changed = 0;
-+	int i;
-+	bool short_slot = false;
-+
-+	if (band == IEEE80211_BAND_5GHZ) {
-+		/* (IEEE 802.11-2012 19.4.5) */
-+		short_slot = true;
-+		goto out;
-+	} else if (band != IEEE80211_BAND_2GHZ ||
-+		   (band == IEEE80211_BAND_2GHZ &&
-+		    local->hw.flags & IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE))
-+		goto out;
-+
-+	for (i = 0; i < sband->n_bitrates; i++)
-+		if (sband->bitrates[i].flags & IEEE80211_RATE_ERP_G)
-+			erp_rates |= BIT(i);
-+
-+	if (!erp_rates)
-+		goto out;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (sdata != sta->sdata ||
-+		    sta->plink_state != NL80211_PLINK_ESTAB)
-+			continue;
-+
-+		short_slot = false;
-+		if (erp_rates & sta->sta.supp_rates[band])
-+			short_slot = true;
-+		 else
-+			break;
-+	}
-+	rcu_read_unlock();
-+
-+out:
-+	if (sdata->vif.bss_conf.use_short_slot != short_slot) {
-+		sdata->vif.bss_conf.use_short_slot = short_slot;
-+		changed = BSS_CHANGED_ERP_SLOT;
-+		mpl_dbg(sdata, "mesh_plink %pM: ERP short slot time %d\n",
-+			sdata->vif.addr, short_slot);
-+	}
-+	return changed;
-+}
-+
- /**
-  * mesh_set_ht_prot_mode - set correct HT protection mode
-  *
-@@ -894,6 +954,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			spin_unlock_bh(&sta->lock);
- 			changed |= mesh_plink_inc_estab_count(sdata);
- 			changed |= mesh_set_ht_prot_mode(sdata);
-+			changed |= mesh_set_short_slot_time(sdata);
- 			mpl_dbg(sdata, "Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			break;
-@@ -929,6 +990,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			spin_unlock_bh(&sta->lock);
- 			changed |= mesh_plink_inc_estab_count(sdata);
- 			changed |= mesh_set_ht_prot_mode(sdata);
-+			changed |= mesh_set_short_slot_time(sdata);
- 			mpl_dbg(sdata, "Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			mesh_plink_frame_tx(sdata,
-@@ -952,6 +1014,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			mod_plink_timer(sta, mshcfg->dot11MeshHoldingTimeout);
- 			spin_unlock_bh(&sta->lock);
- 			changed |= mesh_set_ht_prot_mode(sdata);
-+			changed |= mesh_set_short_slot_time(sdata);
- 			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
- 					    sta->sta.addr, llid, plid, reason);
- 			break;
--- 
-1.7.10.4
+
+The following changes since commit c331997b6c9ad7f4b8075e6e60d3caa6e36f5938=
+:
+
+  wil6210: fix wil_vring_init_tx status (2013-01-30 15:07:19 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
+r-john
+
+for you to fetch changes up to 5f4c5fa8a6ab5f23bba87b159e80f1edf4885ba5:
+
+  iwlwifi: add the MVM driver (2013-01-30 21:46:23 +0100)
+
+----------------------------------------------------------------
+Johannes Berg (7):
+      iwlwifi: include debugfs.h
+      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
+      iwlwifi: add 7000 series device configuration
+      iwlwifi: clean up CMD_MODE enum
+      iwlwifi: fix calibration parser
+      iwlwifi: add NVM and PHY DB code for new MVM driver
+      iwlwifi: add the MVM driver
+
+ drivers/net/wireless/iwlwifi/Kconfig            |   14 +-
+ drivers/net/wireless/iwlwifi/Makefile           |    3 +
+ drivers/net/wireless/iwlwifi/iwl-config.h       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h        |    2 +
+ drivers/net/wireless/iwlwifi/iwl-drv.c          |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.h |    9 +
+ drivers/net/wireless/iwlwifi/iwl-fh.h           |    1 +
+ drivers/net/wireless/iwlwifi/iwl-fw.h           |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c    |  346 +++
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.h    |   80 +
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-phy-db.c       |  514 ++++
+ drivers/net/wireless/iwlwifi/iwl-phy-db.h       |   82 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h         |    3 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h        |   10 +-
+ drivers/net/wireless/iwlwifi/mvm/Makefile       |   10 +
+ drivers/net/wireless/iwlwifi/mvm/binding.c      |  197 ++
+ drivers/net/wireless/iwlwifi/mvm/d3.c           |  841 ++++++
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c      |  378 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h    |  282 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h   |  369 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  140 +
+ drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h    |  312 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h  |  561 ++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h   |  380 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h    |  580 +++++
+ drivers/net/wireless/iwlwifi/mvm/fw-api.h       |  949 +++++++
+ drivers/net/wireless/iwlwifi/mvm/fw.c           |  644 +++++
+ drivers/net/wireless/iwlwifi/mvm/led.c          |  134 +
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c     |  951 +++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c     | 1310 ++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h          |  500 ++++
+ drivers/net/wireless/iwlwifi/mvm/nvm.c          |  311 +++
+ drivers/net/wireless/iwlwifi/mvm/ops.c          |  679 +++++
+ drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c     |  292 +++
+ drivers/net/wireless/iwlwifi/mvm/power.c        |  207 ++
+ drivers/net/wireless/iwlwifi/mvm/quota.c        |  178 ++
+ drivers/net/wireless/iwlwifi/mvm/rs.c           | 3096 +++++++++++++++++++=
+++++
+ drivers/net/wireless/iwlwifi/mvm/rs.h           |  393 +++
+ drivers/net/wireless/iwlwifi/mvm/rx.c           |  355 +++
+ drivers/net/wireless/iwlwifi/mvm/scan.c         |  437 ++++
+ drivers/net/wireless/iwlwifi/mvm/sta.c          | 1211 +++++++++
+ drivers/net/wireless/iwlwifi/mvm/sta.h          |  368 +++
+ drivers/net/wireless/iwlwifi/mvm/time-event.c   |  569 +++++
+ drivers/net/wireless/iwlwifi/mvm/time-event.h   |  214 ++
+ drivers/net/wireless/iwlwifi/mvm/tx.c           |  916 +++++++
+ drivers/net/wireless/iwlwifi/mvm/utils.c        |  472 ++++
+ drivers/net/wireless/iwlwifi/pcie/7000.c        |  111 +
+ drivers/net/wireless/iwlwifi/pcie/cfg.h         |    2 +
+ drivers/net/wireless/iwlwifi/pcie/drv.c         |    6 +
+ 51 files changed, 19454 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-nvm-parse.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-phy-db.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-phy-db.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/Makefile
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/binding.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/d3.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/debugfs.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-d3.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-mac.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-rs.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-sta.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api-tx.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw-api.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/fw.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/led.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/mac80211.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/mvm.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/nvm.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/ops.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/power.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/quota.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/rs.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/rs.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/rx.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/scan.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/sta.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/sta.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/time-event.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/time-event.h
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/tx.c
+ create mode 100644 drivers/net/wireless/iwlwifi/mvm/utils.c
+ create mode 100644 drivers/net/wireless/iwlwifi/pcie/7000.c
+
+
+--=-U4sZTpM6q5/NP3/25YbD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRCYpAAAoJEDBSmw7B7bqrexgP/R1kIxvSc/tRZiOcA/FK/PQE
+CwmfHG6+L+ePswwXov5BTIeztJVUrkgPsxCGb891VKCq4mvjjHRSR6a0BS5fIgyc
+iTY8H3YkuU+r5cnaFVTMzD/X4hxiUNr8yhns81cX7VF4V90suf7+ldbwKgh3TDQT
+S2kwXF5dlkBHDm/m5bZvUWs1OWd+A9mGIdIhdWqoyVznMC/S+W+rPkq+iwQwKoH2
+Bi2wxKCoHqiTIYAAzK1nwq3tRc3hwftNllL+nEc4nFP96OOdR2PyIw6XM8gyle/H
+Amn+A9daNFwTyuHqbmE1R0yuCWn7IbdPoxwGVk72GfL8JkikKPgCFsIe4n662v0y
+RN7wrsD1wohu1taNpe5groQQV2ZE9kPwkWBvbAPKhFwSo/Y+Zq7gMjhZu2Iuuj4Z
+bsWpK5W2aRD7tjdADLfaEWlCz14lDRGOZJMoP7ZiDy5msAhzFHbrwP8NQtgcrml7
+bNRxvACKyyrlBY3yJo3h+2lrpwWwODGqnrnsSBMFwkuPxD84TEy1It+3LUtAs4Sf
+IQJkQYLQPB3G68P/IEHOCNyloHQtspBTeEfBKW688VbE+G3X8+9hvxuMShKLUzSd
+BCk3kycTBj4bvM4YaK/LhYi0SpBawWqUFowyApLl03uE4dMfvqDDOi/GlvvbrGrM
+ZDFMv1FhkpYwnqJbnJGw
+=3SnS
+-----END PGP SIGNATURE-----
+
+--=-U4sZTpM6q5/NP3/25YbD--
 
