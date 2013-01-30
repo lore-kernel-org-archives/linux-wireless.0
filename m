@@ -1,107 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:60601 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097Ab3ACHfv (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:42802 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481Ab3A3Uay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 02:35:51 -0500
-Date: Thu, 3 Jan 2013 08:35:39 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv5 3/8] nl80211/cfg80211: add radar detection
- command/event
-Message-ID: <20130103073539.GA20780@pandem0nium> (sfid-20130103_083600_507044_956E4285)
-References: <1355407113-27006-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1355407113-27006-4-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357133940.9839.26.camel@jlt4.sipsolutions.net>
+	Wed, 30 Jan 2013 15:30:54 -0500
+Received: by mail-oa0-f47.google.com with SMTP id o17so579788oag.34
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 12:30:54 -0800 (PST)
+Message-ID: <510982FA.3010401@lwfinger.net> (sfid-20130130_213100_786482_4934022A)
+Date: Wed, 30 Jan 2013 14:30:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Qxx1br4bt0+wmkIi"
-In-Reply-To: <1357133940.9839.26.camel@jlt4.sipsolutions.net>
+To: Dylan <dylandonkersgoed@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8723ae Weak Signal Problems
+References: <51072B15.2030805@gmail.com> <51072B95.10101@gmail.com> <51080904.5000103@lwfinger.net> <51095E55.3020106@gmail.com>
+In-Reply-To: <51095E55.3020106@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/30/2013 11:54 AM, Dylan wrote:
 
---Qxx1br4bt0+wmkIi
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Please do not drop the Cc to wireless.
 
-On Wed, Jan 02, 2013 at 02:39:00PM +0100, Johannes Berg wrote:
-> On Thu, 2012-12-13 at 14:58 +0100, Simon Wunderlich wrote:
->=20
-> > +++ b/include/net/cfg80211.h
-> > @@ -133,6 +133,11 @@ enum ieee80211_channel_flags {
-> >   *	to enable this, this is useful only on 5 GHz band.
-> >   * @orig_mag: internal use
-> >   * @orig_mpwr: internal use
-> > + * @radar_detect_timeout: this timeout indicates the end of the channel
-> > + *	availability check for radar channels (in jiffies), only after this
-> > + *	period the user may initiate the tx on the channel.
-> > + * @cac_type: indicates that channel availability check is started for=
- this
-> > + *	channel type.
-> >   */
-> >  struct ieee80211_channel {
-> >  	enum ieee80211_band band;
-> > @@ -145,6 +150,9 @@ struct ieee80211_channel {
-> >  	bool beacon_found;
-> >  	u32 orig_flags;
-> >  	int orig_mag, orig_mpwr;
-> > +	unsigned long radar_detect_timeout;
-> > +	enum nl80211_channel_type cac_type;
-> > +	bool cac_started;
->=20
-> Since we lock a channel, all of these should probably move to the
-> rdev/wiphy struct, I think.
+> I apologize for the late response and limited information.
+>
+> The patch doesn't work for me - same problems as before, i.e. the patch doesn't
+> seem to have changed anything. I attached a log. I expect you can make more
+> sense of it than I.
+>
+> I can give you the model number of only one of the router/access points - the
+> Cisco DPC3825 which I have. Unfortunately I can't offer much analysis of it as
+> it's in modem only mode now and it's not very practical to reactivate it as an
+> access point at this time. I could try to find out what my school is using as well.
+>
+> I've noticed that with the compat wireless drivers I'm ALSO experiencing similar
+> problems with an RTL8188CU card. I expect that's relevant. Funnily enough I have
+> three wireless cards on hand and all of them are some form of Realtek card.
 
-Hm, but when we have completed CAC on phy A, we could use the same
-channel on phy B too, right?=20
+The vendor driver you are using, 
+/rtl_92ce_92se_92de_8723ae_linux_mac80211_0006.0514.2012/, is relatively old. My 
+patches were for rtl_92ce_92se_92de_8723ae_88ee_linux_mac80211_0010.0109.2013, 
+however, since I wrote earlier, I found 
+rtl_92ce_92se_92de_8723ae_88ee_linux_mac80211_0011.0128.2013, which you will 
+find on the Realtek web site under the RTL8188CE listing for Linux. That one 
+includes my feedback to Realtek about the 01092013 version, and it should build 
+on mainline kernels through 3.8, but not the current wireless-testing, but I 
+doubt that you are using that tree. With that driver, my RTL8723AE got 
+throughput of 60-70 Mbps for both RX and TX. I did have an unexplained kernel 
+panic while running that driver, thus there might be a severe bug in it. I don't 
+know if it is rtl8723e, but that is the only panic that I have had with 3.8-rc4.
 
-That would be handy if one has two WiFi module and uses one only for
-CAC/radar detection (e.g. checking other channels), and another one
-doing the real AP service.
+The driver for the RTL8188CU/RTL8192CU is a mess. Unfortunately, I am not 
+getting musch help from Realtek. For that reason, I am concentrating on the CE 
+models. Their PCIe group is more responsive.
 
->=20
-> And then the code checking channel contexts needs to be extended to not
-> allow another while a channel context is in use:
->=20
-> > +	mutex_lock(&rdev->devlist_mtx);
-> > +	err =3D cfg80211_can_use_chan(rdev, wdev, chandef.chan,
-> > +				    CHAN_MODE_SINGLE_ONLY);
-> > +	mutex_unlock(&rdev->devlist_mtx);
->=20
-> This only does a spot check, keeping state needs to be handled
-> separately.
+Larry
 
-I've extended cfg80211_can_use_iftype_chan() to check for other contexts
-in the patch 1 of this series. This should make sure that only one single
-mode context can be added, and it can't be added if other contexts are alre=
-ady
-present. So you say that is not sufficient?
-
-I guess I'm still not fully understanding the channel context concept ...
-
-Cheers,
-	Simon
-
---Qxx1br4bt0+wmkIi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlDlNMoACgkQrzg/fFk7axYTAwCg76K6o66rY3vh3q82zwtWSgRU
-8U4AoM1neXP3BpafaL5C0AbLLjOz8Bpq
-=umKE
------END PGP SIGNATURE-----
-
---Qxx1br4bt0+wmkIi--
