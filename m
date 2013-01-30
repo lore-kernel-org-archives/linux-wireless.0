@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53133 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49410 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755202Ab3AKNnS (ORCPT
+	with ESMTP id S1751549Ab3A3IEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 08:43:18 -0500
+	Wed, 30 Jan 2013 03:04:49 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: cedric.debarge@acksys.fr, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix FT roaming
-Date: Fri, 11 Jan 2013 14:43:39 +0100
-Message-Id: <1357911819-9504-1-git-send-email-johannes@sipsolutions.net> (sfid-20130111_144321_886241_D82FE615)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove unused SSID from BSS
+Date: Wed, 30 Jan 2013 09:05:12 +0100
+Message-Id: <1359533112-13100-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_090452_657274_525C3C61)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-During FT roaming, wpa_supplicant attempts to set the
-key before association. This used to be rejected, but
-as a side effect of my commit 66e67e418908442389d3a9e
-("mac80211: redesign auth/assoc") the key was accepted
-causing hardware crypto to not be used for it as the
-station isn't added to the driver yet.
+The ssid/ssid_len fields in the private BSS
+struct are unused, contrary to the comment
+we do look up the SSID in the few cases we
+need it.
 
-It would be possible to accept the key and then add it
-to the driver when the station has been added. However,
-this may run into issues with drivers using the state-
-based station adding if they accept the key only after
-association like it used to be.
-
-For now, revert to the behaviour from before the auth
-and assoc change.
-
-Cc: stable@vger.kernel.org
-Reported-by: Cédric Debarge <cedric.debarge@acksys.fr>
-Tested-by: Cédric Debarge <cedric.debarge@acksys.fr>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7d290bc..f83e5b6 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -164,7 +164,17 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			sta = sta_info_get(sdata, mac_addr);
- 		else
- 			sta = sta_info_get_bss(sdata, mac_addr);
--		if (!sta) {
-+		/*
-+		 * The ASSOC test makes sure the driver is ready to
-+		 * receive the key. When wpa_supplicant has roamed
-+		 * using FT, it attempts to set the key before
-+		 * association has completed, this rejects that attempt
-+		 * so it will set the key again after assocation.
-+		 *
-+		 * TODO: accept the key if we have a station entry and
-+		 *       add it to the device after the station.
-+		 */
-+		if (!sta || !test_sta_flag(sta, WLAN_STA_ASSOC)) {
- 			ieee80211_key_free(sdata->local, key);
- 			err = -ENOENT;
- 			goto out_unlock;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ae92c47..69febb9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -86,10 +86,6 @@ struct ieee80211_fragment_entry {
+ 
+ 
+ struct ieee80211_bss {
+-	/* don't want to look up all the time */
+-	size_t ssid_len;
+-	u8 ssid[IEEE80211_MAX_SSID_LEN];
+-
+ 	u32 device_ts;
+ 
+ 	bool wmm_used;
 -- 
 1.8.0
 
