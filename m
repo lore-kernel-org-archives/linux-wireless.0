@@ -1,55 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:35481 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab3AVUMm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49386 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737Ab3A3HyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jan 2013 15:12:42 -0500
-Received: by mail-bk0-f53.google.com with SMTP id je9so1430663bkc.12
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jan 2013 12:12:41 -0800 (PST)
-Message-ID: <1358885554.5062.21.camel@canaries64> (sfid-20130122_211246_748012_61313746)
-Subject: [PATCH] staging: vt6656: revert : 64 bit- Correctly address void
- structure.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>
-Date: Tue, 22 Jan 2013 20:12:34 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 30 Jan 2013 02:54:22 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] cfg80211: simplify mesh BSS comparison
+Date: Wed, 30 Jan 2013 08:54:24 +0100
+Message-Id: <1359532464-25555-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_085427_341396_725C3C25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-The patch is wrong and is partially reverted.
+Instead of first checking if a BSS is an MBSS
+and then doing the comparisons, inline it all
+into the BSS comparison function. This avoids
+doing the IE searches twice and is also a lot
+less code.
 
-The NULL check of pTransmitKey->pvKeyTable is kept.
-
-The problem was ultimately fixed by upstream commit.
-1ee4c55fc9620451b2a825d793042a7e0775391b
-staging: vt6656: Fix inconsistent structure packing
-
-Reported-by: Ben Hutchings <ben@decadent.org.uk>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: stable@vger.kernel.org # 3.8
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/rxtx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/scan.c | 120 +++++++++++++++++-----------------------------------
+ 1 file changed, 39 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 536d314..92343f2 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1232,7 +1232,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 	pvRrvTime = pMICHDR = pvRTS = pvCTS = pvTxDataHd = NULL;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index cfc4e1a..46351ba 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -288,26 +288,6 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
+ }
+ EXPORT_SYMBOL(cfg80211_find_vendor_ie);
  
- 	if (bNeedEncryption && pTransmitKey->pvKeyTable) {
--		if (((PSKeyTable)&pTransmitKey->pvKeyTable)->bSoftWEP == TRUE)
-+		if (((PSKeyTable)pTransmitKey->pvKeyTable)->bSoftWEP == TRUE)
- 			bSoftWEP = TRUE; /* WEP 256 */
- 	}
+-static int cmp_ies(u8 num, const u8 *ies1, int len1, const u8 *ies2, int len2)
+-{
+-	const u8 *ie1 = cfg80211_find_ie(num, ies1, len1);
+-	const u8 *ie2 = cfg80211_find_ie(num, ies2, len2);
+-
+-	/* equal if both missing */
+-	if (!ie1 && !ie2)
+-		return 0;
+-	/* sort missing IE before (left of) present IE */
+-	if (!ie1)
+-		return -1;
+-	if (!ie2)
+-		return 1;
+-
+-	/* sort by length first, then by contents */
+-	if (ie1[1] != ie2[1])
+-		return ie2[1] - ie1[1];
+-	return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+-}
+-
+ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
+ 		   const u8 *ssid, size_t ssid_len)
+ {
+@@ -331,29 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
+ 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
+ }
+ 
+-static bool is_mesh_bss(struct cfg80211_bss *a)
+-{
+-	const struct cfg80211_bss_ies *ies;
+-	const u8 *ie;
+-
+-	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
+-		return false;
+-
+-	ies = rcu_access_pointer(a->ies);
+-	if (!ies)
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-
+-	return true;
+-}
+-
+ static bool is_mesh(struct cfg80211_bss *a,
+ 		    const u8 *meshid, size_t meshidlen,
+ 		    const u8 *meshcfg)
+@@ -391,51 +348,17 @@ static bool is_mesh(struct cfg80211_bss *a,
+ 		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
+ }
+ 
+-static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
+-{
+-	const struct cfg80211_bss_ies *a_ies, *b_ies;
+-	int r;
+-
+-	if (a->channel != b->channel)
+-		return b->channel->center_freq - a->channel->center_freq;
+-
+-	if (is_mesh_bss(a) && is_mesh_bss(b)) {
+-		a_ies = rcu_access_pointer(a->ies);
+-		if (!a_ies)
+-			return -1;
+-		b_ies = rcu_access_pointer(b->ies);
+-		if (!b_ies)
+-			return 1;
+-
+-		r = cmp_ies(WLAN_EID_MESH_ID,
+-			    a_ies->data, a_ies->len,
+-			    b_ies->data, b_ies->len);
+-		if (r)
+-			return r;
+-		return cmp_ies(WLAN_EID_MESH_CONFIG,
+-			       a_ies->data, a_ies->len,
+-			       b_ies->data, b_ies->len);
+-	}
+-
+-	/*
+-	 * we can't use compare_ether_addr here since we need a < > operator.
+-	 * The binary return value of compare_ether_addr isn't enough
+-	 */
+-	return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
+-}
+-
+ static int cmp_bss(struct cfg80211_bss *a,
+ 		   struct cfg80211_bss *b,
+ 		   bool hide_ssid)
+ {
+ 	const struct cfg80211_bss_ies *a_ies, *b_ies;
+-	const u8 *ie1;
+-	const u8 *ie2;
++	const u8 *ie1 = NULL;
++	const u8 *ie2 = NULL;
+ 	int i, r;
+ 
+-	r = cmp_bss_core(a, b);
+-	if (r)
+-		return r;
++	if (a->channel != b->channel)
++		return b->channel->center_freq - a->channel->center_freq;
+ 
+ 	a_ies = rcu_access_pointer(a->ies);
+ 	if (!a_ies)
+@@ -444,6 +367,41 @@ static int cmp_bss(struct cfg80211_bss *a,
+ 	if (!b_ies)
+ 		return 1;
+ 
++	if (WLAN_CAPABILITY_IS_STA_BSS(a->capability))
++		ie1 = cfg80211_find_ie(WLAN_EID_MESH_ID,
++				       a_ies->data, a_ies->len);
++	if (WLAN_CAPABILITY_IS_STA_BSS(b->capability))
++		ie2 = cfg80211_find_ie(WLAN_EID_MESH_ID,
++				       b_ies->data, b_ies->len);
++	if (ie1 && ie2) {
++		int mesh_id_cmp;
++
++		if (ie1[1] == ie2[1])
++			mesh_id_cmp = memcmp(ie1 + 2, ie2 + 2, ie1[1]);
++		else
++			mesh_id_cmp = ie2[1] - ie1[1];
++
++		ie1 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
++				       a_ies->data, a_ies->len);
++		ie2 = cfg80211_find_ie(WLAN_EID_MESH_CONFIG,
++				       b_ies->data, b_ies->len);
++		if (ie1 && ie2) {
++			if (mesh_id_cmp)
++				return mesh_id_cmp;
++			if (ie1[1] != ie2[1])
++				return ie2[1] - ie1[1];
++			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
++		}
++	}
++
++	/*
++	 * we can't use compare_ether_addr here since we need a < > operator.
++	 * The binary return value of compare_ether_addr isn't enough
++	 */
++	r = memcmp(a->bssid, b->bssid, sizeof(a->bssid));
++	if (r)
++		return r;
++
+ 	ie1 = cfg80211_find_ie(WLAN_EID_SSID, a_ies->data, a_ies->len);
+ 	ie2 = cfg80211_find_ie(WLAN_EID_SSID, b_ies->data, b_ies->len);
  
 -- 
 1.8.0
-
-
 
