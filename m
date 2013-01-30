@@ -1,102 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:50827 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756386Ab3AIB6R (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46924 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220Ab3A3Fxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 20:58:17 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.8] mwifiex: update config_bands during infra association
-Date: Tue,  8 Jan 2013 17:53:10 -0800
-Message-Id: <1357696391-9396-1-git-send-email-bzhao@marvell.com> (sfid-20130109_025820_908412_97D6849F)
+	Wed, 30 Jan 2013 00:53:49 -0500
+Message-ID: <5108B569.9090005@candelatech.com> (sfid-20130130_065353_500100_F95ED651)
+Date: Tue, 29 Jan 2013 21:53:45 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/beacon.c:362 ath9k_beacon_tasklet+0xcc/0x5f0)
+References: <5108AD09.9020308@candelatech.com> <20744.44999.48237.463434@gargle.gargle.HOWL>
+In-Reply-To: <20744.44999.48237.463434@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 01/29/2013 09:29 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> I hit this warning in ath9k.  Shortly after the machine blew up elsewhere,
+>> but not sure if this is to blame or not.
+>>
+>> Code is slightly modified 3.7.5 (just a few patches, not my normal mass of hackings!)
+>>
+>> The warning that hit is the one below:
+>>
+>> 	bf = ath9k_beacon_generate(sc->hw, vif);
+>> 	WARN_ON(!bf);
+>>
+>> Test case is dual-core Atom system with ath9k NIC, 10 or so virtual stations,
+>> two virtual APs.  Two stations send traffic to each other once everything associates, but
+>> not sure it got that far when this crash happened.
+>>
+>
+> Are these patches in your tree ?
 
-Currently "adapter->config_bands" is updated during infra
-association only if channel is provided by user in "iw connect"
-command. config_bands is used while preparing association
-request to calculate supported rates by intersecting our rates
-with the rates advertised by AP.
+They were not.  I see the second was queued to stable, should the first one
+be a stable candidate as well?
 
-There is corner case in which we include zero rates in
-supported rates TLV based on previous IBSS network history,
-which leads to association failure.
+Thanks,
+Ben
 
-This patch fixes the problem by correctly updating config_bands.
+>
+> commit 1381559ba48a04ca7c98f1b4c487bd44d0b75db5
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Sun Jan 20 18:51:53 2013 +0100
+>
+>      ath9k: clean up processing of pending tx frames on reset
+>
+>      Dropping packets from aggregation sessions is usually not a good idea, as
+>      it might upset the synchronization of the BlockAck receive window of the
+>      remote node. The use of the retry_tx parameter to reset/tx-drain functions
+>      also seemed a bit arbitrary.
+>      This patch removes this parameter altogether and ensures that pending tx
+>      frames are not dropped for no good reason.
+>
+>      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>      Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> commit 3adcf20afb585993ffee24de36d1975f6b26b120
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Wed Jan 9 16:16:54 2013 +0100
+>
+>      ath9k: remove the WARN_ON that triggers if generating a beacon fails
+>
+>      During teardown, mac80211 will not return a new beacon. This is normal and
+>      handled properly in the driver, so there's no need to spam the user with a kernel
+>      warning here.
+>
+>      Cc: stable@vger.kernel.org
+>      Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>      Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+>
+> Sujith
+>
 
-Cc: "3.7.y" <stable@vger.kernel.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c  |   15 +--------------
- drivers/net/wireless/mwifiex/sta_ioctl.c |   14 ++++++++++++++
- 2 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index a1f7fe0..b4dbe22 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1460,7 +1460,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
- 	struct cfg80211_ssid req_ssid;
- 	int ret, auth_type = 0;
- 	struct cfg80211_bss *bss = NULL;
--	u8 is_scanning_required = 0, config_bands = 0;
-+	u8 is_scanning_required = 0;
- 
- 	memset(&req_ssid, 0, sizeof(struct cfg80211_ssid));
- 
-@@ -1479,19 +1479,6 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
- 	/* disconnect before try to associate */
- 	mwifiex_deauthenticate(priv, NULL);
- 
--	if (channel) {
--		if (mode == NL80211_IFTYPE_STATION) {
--			if (channel->band == IEEE80211_BAND_2GHZ)
--				config_bands = BAND_B | BAND_G | BAND_GN;
--			else
--				config_bands = BAND_A | BAND_AN;
--
--			if (!((config_bands | priv->adapter->fw_bands) &
--			      ~priv->adapter->fw_bands))
--				priv->adapter->config_bands = config_bands;
--		}
--	}
--
- 	/* As this is new association, clear locally stored
- 	 * keys and security related flags */
- 	priv->sec_info.wpa_enabled = false;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 60e88b5..f542bb8 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -283,6 +283,20 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 		if (ret)
- 			goto done;
- 
-+		if (bss_desc) {
-+			u8 config_bands = 0;
-+
-+			if (mwifiex_band_to_radio_type((u8) bss_desc->bss_band)
-+			    == HostCmd_SCAN_RADIO_TYPE_BG)
-+				config_bands = BAND_B | BAND_G | BAND_GN;
-+			else
-+				config_bands = BAND_A | BAND_AN;
-+
-+			if (!((config_bands | adapter->fw_bands) &
-+			      ~adapter->fw_bands))
-+				adapter->config_bands = config_bands;
-+		}
-+
- 		ret = mwifiex_check_network_compatibility(priv, bss_desc);
- 		if (ret)
- 			goto done;
 -- 
-1.7.0.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
