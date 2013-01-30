@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53874 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503Ab3ABDt5 (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:51710 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331Ab3A3ALM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jan 2013 22:49:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath9k_htc: Fix skb leaks
-Date: Tue,  1 Jan 2013 21:49:27 -0600
-Message-Id: <1357098567-8558-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130102_045039_656585_8A16AB65)
+	Tue, 29 Jan 2013 19:11:12 -0500
+From: Stephen Warren <swarren@wwwdotorg.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
+Subject: [PATCH] nl80211: avoid "wdev_id may be used uninitialized"
+Date: Tue, 29 Jan 2013 17:11:02 -0700
+Message-Id: <1359504662-23561-1-git-send-email-swarren@wwwdotorg.org> (sfid-20130130_011118_335925_03B80596)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Running with kmemleak shows that this driver leaks every skb allocated in
-routine htc_connect_service() whether the service connection succeeds or
-fails.
+From: Stephen Warren <swarren@nvidia.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Silence the following:
+net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs.clone.119':
+net/wireless/nl80211.c:57:6: warning: 'wdev_id' may be used uninitialized in this function
+
+... by always initializing wdev_id to zero. I assume that wiphy_idx and
+ifidx are set to -1 for similar reasons, so this change simply propagates
+the same workaround.
+
+In practice, this warning is false, since wdev_id is both set and used
+under the condition if (have_wdev_id). However, at least my compiler
+can't be coerced into realizing this; almost any code between the if
+blocks that set and use the variable causes this warning.
+
+Signed-off-by: Stephen Warren <swarren@nvidia.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_hst.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 4a9570d..a304748 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -278,10 +278,12 @@ int htc_connect_service(struct htc_target *target,
- 	if (!time_left) {
- 		dev_err(target->dev, "Service connection timeout for: %d\n",
- 			service_connreq->service_id);
--		return -ETIMEDOUT;
-+		ret = -ETIMEDOUT;
-+		goto err;
- 	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 33de803..389e62a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -54,7 +54,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
+ 	struct wireless_dev *result = NULL;
+ 	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
+ 	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
+-	u64 wdev_id;
++	u64 wdev_id = 0;
+ 	int wiphy_idx = -1;
+ 	int ifidx = -1;
  
- 	*conn_rsp_epid = target->conn_rsp_epid;
-+	kfree_skb(skb);
- 	return 0;
- err:
- 	kfree_skb(skb);
 -- 
 1.7.10.4
 
