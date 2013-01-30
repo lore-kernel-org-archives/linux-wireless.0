@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.43]:58024 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab3ABUHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 15:07:20 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:63206 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756862Ab3A3T6T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 14:58:19 -0500
+Received: by mail-bk0-f43.google.com with SMTP id jm19so1020855bkc.30
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 11:58:17 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH v2] p54pci: don't return zero on failure paths in p54p_probe()
-Date: Thu,  3 Jan 2013 00:06:47 +0400
-Message-Id: <1357157207-20626-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130102_210743_360440_4D482B52)
+Subject: Re: [PATCH 2/2] iwl4965: report A-MPDU status
+Date: Wed, 30 Jan 2013 20:58:13 +0100
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+References: <E1TzDQV-0001Fa-Sp@debian64.localnet> <20130128100857.GC2316@redhat.com> <20130130190703.GB2167@tuxdriver.com>
+In-Reply-To: <20130130190703.GB2167@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301302058.13586.chunkeey@googlemail.com> (sfid-20130130_205823_528944_F005650E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If pci_set_dma_mask() or pci_set_consistent_dma_mask() fails in p54p_probe(),
-it breaks off initialization, deallocates all resources, but returns zero.
-Similar issue is if check for returned value of pci_resource_len() fails.
+On Wednesday, January 30, 2013 08:07:04 PM John W. Linville wrote:
+> On Mon, Jan 28, 2013 at 11:08:58AM +0100, Stanislaw Gruszka wrote:
+> > On Fri, Jan 18, 2013 at 11:47:19PM +0100, Christian Lamparter wrote:
+> > > This patch is based on "iwlwifi: report A-MPDU status".
+> > > (12bf6f45d1703858)
+> > > 
+> > > Since the firmware will give us an A-MPDU bit and
+> > > only a single PHY information packet for all the
+> > > subframes in an A-MPDU, we can easily report the
+> > > minimal A-MPDU information for radiotap.
+> > > 
+> > > Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> > > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> > 
+> > ACK
+> 
+> OK, I'm confused...
+Ah yes, maybe I can explain it.
 
-The patch implements proper error code propagation.
+> this ACK is for the patch posted on 18 Jan as
+> "[PATCH 2/2] iwl4965: report A-MPDU status". 
+> But on the next day (19 Jan) there was a patch
+> posted as "[RFC ] iwl4965: report A-MPDU
+> status" that seems to be different.  What a I
+> missing?
+Nothing I hope.
 
-Found by Linux Driver Verification project (linuxtesting.org).
+The patch "[PATCH 2/2] iwl4965: report A-MPDU status" might have
+the date 2013-01-18, but it was sent on the 26th... A week after
+the RFC. 
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/p54/p54pci.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Note: The RFC is just both patches ("report A-MPDU status" and
+"iwlegacy: fix antenna mask") merged into one. I did that because
+I wanted to point out the issue of the *shared* bit (antenna mask
+vs ampdu indicator). And thankfully, Johannes explained that... 
+"the definition in question has always been the same for all
+hardware. I just didn't fix it for 4965 since it was split off
+to iwlegacy already."
 
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index 933e5d9..57e3af8 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -559,6 +559,7 @@ static int p54p_probe(struct pci_dev *pdev,
- 	mem_len = pci_resource_len(pdev, 0);
- 	if (mem_len < sizeof(struct p54p_csr)) {
- 		dev_err(&pdev->dev, "Too short PCI resources\n");
-+		err = -ENODEV;
- 		goto err_disable_dev;
- 	}
- 
-@@ -568,8 +569,10 @@ static int p54p_probe(struct pci_dev *pdev,
- 		goto err_disable_dev;
- 	}
- 
--	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
--	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
-+	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (!err)
-+		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (err) {
- 		dev_err(&pdev->dev, "No suitable DMA available\n");
- 		goto err_free_reg;
- 	}
--- 
-1.7.9.5
+Note2: I had to edit the patch "fix antenna mask" a second time,
+that's why it has a newer date.
 
+> Is this the right patch to merge?
+Yes.
+
+Best Regards,
+	Christian
