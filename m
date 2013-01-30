@@ -1,98 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56532 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755725Ab3AIOdQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50920 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756689Ab3A3TpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 09:33:16 -0500
-Date: Wed, 9 Jan 2013 15:33:04 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] nl80211: allow ad-hoc to set WMM parameters from
- outside
-Message-ID: <20130109143304.GA23469@pandem0nium> (sfid-20130109_153319_972408_43D83857)
-References: <1354042232-32428-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <CAJ-Vmom91BS5fPas+FWsaqQwm-ZVcZckUXB2vQgoEXtKiOH6mA@mail.gmail.com>
- <20130109131540.GA22836@pandem0nium>
- <201301091510.49723.chunkeey@googlemail.com>
+	Wed, 30 Jan 2013 14:45:24 -0500
+Date: Wed, 30 Jan 2013 14:34:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH 0/7] Improvements to software scanning
+Message-ID: <20130130193419.GG2167@tuxdriver.com> (sfid-20130130_204527_683854_CABCB670)
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
-In-Reply-To: <201301091510.49723.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jan 29, 2013 at 05:47:28PM -0600, Seth Forshee wrote:
+> This patch series fixes a number of problems observed during software
+> scanning, as described in [1].
+> 
+> The first four patches implement improved queue handling during
+> off-channel operation and add some needed flushing of the hardware
+> queues, as suggested by Johannes in [2]. This includes adding a new
+> queue stop reason of off-channel operation, a transmit path for frames
+> which do need to be transmitted when off-channel, and some improvements
+> in error handling.
+> 
+> The last three fix a problem specific to brcmsmac (and likely b43,
+> though I don't have hardware for testing b43). Broadcom hardware
+> actively clears the PM bit in frame control whenever the hardware is not
+> configured correctly, and since wireless drivers have no knowledge of
+> off-channel powersave such configuration cannot be done. The patches
+> expand the driver powersave configuration with an off-channel state and
+> update brcmsmac to make use of it.
+> 
+> Johannes: I have a couple of comments/questions for you related to these
+> patches.
+> 
+> First, in the patches I've added an offchan_tx_ok argument to the tx
+> operations, but this seems a little awkward to me since it has to be
+> propogated down through a fairly deep call stack. The alternative idea
+> that occurred to me is to use a tx control flag, but that seems to be
+> pretty crowded. Any thoughts?
+> 
+> Second, I attempted to test these patches with iwlwifi (Centrino
+> Advanced-N 6235) to verify that I didn't break anything for drivers with
+> hw scanning. My standard test for this involves running iperf while
+> triggering nearly continuous scans, but I'm seeing lots of problems
+> running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
+> does fine in either direction. I haven't had time to do any kind of
+> debugging yet, but I thought you'd want to know.
+> 
+> Thanks,
+> Seth
+> 
+> [1] http://marc.info/?l=linux-wireless&m=135766865110986&w=2
+> [2] http://marc.info/?l=linux-wireless&m=135838252227053&w=2
+> 
+> 
+> Seth Forshee (7):
+>   mac80211: Return a status for tx operations
+>   mac80211: Fix tx queue handling during scans
+>   mac80211: Improve error handling for off-channel operation
+>   mac80211: Add flushes before going off-channel
+>   mac80211: Expand powersave configuration flag to be two bits
+>   mac80211: Add off-channel powersave state
+>   brcmsmac: Add support for off-channel powersave
 
---jI8keyz6grp/JLjh
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Johannes,
 
-Hello Christian,
+Please take the brcsmac patch through your tree if/when you take
+the others.
 
-On Wed, Jan 09, 2013 at 03:10:49PM +0100, Christian Lamparter wrote:
-> On Wednesday, January 09, 2013 02:15:40 PM Simon Wunderlich wrote:
-> > On Tue, Jan 08, 2013 at 09:28:44AM -0800, Adrian Chadd wrote:
-> > > I still populate the WME fields; I need to "fix" paying attention to
-> > > them in the adhoc case.
-> >=20
-> > Applying the EDCA parameters in the hardware and sending "standard" WME=
- IEs
-> > (without EDCA parameter sets) is understandable, Linux does that too.=
-=20
->=20
-> Well, the WFA WMM Specification v1.2 costs $99 (last time I checked, whic=
-h wasn't
-> too long ago). However Johannes told me that the WMM IE should not be add=
-ed
-> to IBSS beacons.
+Thanks!
 
-I don't have the spec, and I don't intend to buy it. :)
-
-But: We do have WMM IE sent by Linux IBSS STAs even today. The difference t=
-o the AP
-WMM IEs is that it doesn't include EDCA parameters (cwmin/max, aifs, ...). =
-But still,
-this is useful to detect that the other IBBS station is WMM-capable: we can=
- then
-use QOS_DATA frames, use noack, etc ...
->=20
-> However, we can still pack some EDCA parameters into beacons, probe/(re-)=
-assoc
-> resps because there's an alternative IE. The "EDCA Parameter Set IE" is p=
-art of
-> 802.11-2012 8.4.2.31 - The Element ID is 12 [Table 8-54].
-
-Ah didn't know that - thanks for pointing that out. Although I'm still in f=
-avor of
-not sending anything in IBSS and do local changes only. :)
->=20
-> [Note: It's worth mentioning that the WFA WMM spec was just a stop-gap me=
-asure
-> until 802.11e was ready. Here's an article which explains this weird bit =
-of
-> history, unfortunately it is in German
-> <http://www.heise.de/netze/artikel/Parallelnorm-WMM-223736.html>]
->=20
-> Regards,
-> 	Chr
-
---jI8keyz6grp/JLjh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlDtf6AACgkQrzg/fFk7axbEFQCgpThv1yKA5DPIT57EEmuNcWCq
-2PkAoIzve77LmHmcGRkKlgzQ6DQ4BseM
-=tXBG
------END PGP SIGNATURE-----
-
---jI8keyz6grp/JLjh--
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
