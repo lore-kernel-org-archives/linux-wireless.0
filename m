@@ -1,102 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:38629 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751422Ab3ACH7E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jan 2013 02:59:04 -0500
-Date: Thu, 3 Jan 2013 13:22:56 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 1/5] mwl8k: Enable support to support additional ampdu streams
-Message-ID: <20130103075252.GA20263@markyou.marvell.com> (sfid-20130103_085908_082020_CF88D649)
+Received: from purkki.adurom.net ([80.68.90.206]:54464 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752422Ab3A3Pnt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 10:43:49 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k has buggy promiscuous mode
+References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be>
+	<15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be>
+	<87622edabu.fsf@purkki.adurom.net>
+	<1606478.o2vcQdheiZ@sylvesterjr.pats.ua.ac.be>
+Date: Wed, 30 Jan 2013 17:43:47 +0200
+In-Reply-To: <1606478.o2vcQdheiZ@sylvesterjr.pats.ua.ac.be> (Erwin Van de
+	Velde's message of "Wed, 30 Jan 2013 15:56:33 +0100")
+Message-ID: <87zjzqbrrg.fsf@purkki.adurom.net> (sfid-20130130_164353_629590_F2982D1B)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, we have 2 ampdu streams that can be created
-simultaneously. Firmware is capable of supporting
-additional streams. Add support to use these streams.
+Erwin Van de Velde <erwin.vandevelde@gmail.com> writes:
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwl8k.c | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+> On Wednesday 30 January 2013 16:17:25 Kalle Valo wrote:
+>> I don't understand, what do you mean software configuration?
+>> 
+>> A quick grep show that at least ath9k checks for the promisc filter:
+>> 
+>> ath9k/htc_drv_main.c:   (FIF_PROMISC_IN_BSS |                   \
+>> ath9k/htc_drv_txrx.c:    * Set promiscuous mode when 
+> FIF_PROMISC_IN_BSS
+>> is enabled for station
+>> ath9k/htc_drv_txrx.c:        (priv->rxfilter & FIF_PROMISC_IN_BSS)) ||
+>> ath9k/main.c:   (FIF_PROMISC_IN_BSS |                   \
+>> ath9k/recv.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS is
+>> enabled for station
+>
+> I tried understanding the code, but it is hard without decent study of 
+> course. FIF_PROMISC IN BSS I saw there in comment, but not in the code 
+> :-) For monitor mode there is something like:
+>
+> if (sc->sc_ah->is_monitoring)
+>                 rfilt |= ATH9K_RX_FILTER_PROM;
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index c9c9c99..704d7d3 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -101,6 +101,18 @@ MODULE_PARM_DESC(ap_mode_default,
- #define MWL8K_MAX_TX_QUEUES	(MWL8K_TX_WMM_QUEUES + MWL8K_MAX_AMPDU_QUEUES)
- #define mwl8k_tx_queues(priv)	(MWL8K_TX_WMM_QUEUES + (priv)->num_ampdu_queues)
- 
-+/* txpriorities are mapped with hw queues.
-+ * Each hw queue has a txpriority.
-+ */
-+#define TOTAL_HW_TX_QUEUES	8
-+
-+/* Each HW queue can have one AMPDU stream.
-+ * But, because one of the hw queue is reserved,
-+ * maximum AMPDU queues that can be created are
-+ * one short of total tx queues.
-+ */
-+#define MWL8K_NUM_AMPDU_STREAMS	(TOTAL_HW_TX_QUEUES - 1)
-+
- struct rxd_ops {
- 	int rxd_size;
- 	void (*rxd_init)(void *rxd, dma_addr_t next_dma_addr);
-@@ -1733,7 +1745,7 @@ mwl8k_add_stream(struct ieee80211_hw *hw, struct ieee80211_sta *sta, u8 tid)
- 	struct mwl8k_priv *priv = hw->priv;
- 	int i;
- 
--	for (i = 0; i < priv->num_ampdu_queues; i++) {
-+	for (i = 0; i < MWL8K_NUM_AMPDU_STREAMS; i++) {
- 		stream = &priv->ampdu[i];
- 		if (stream->state == AMPDU_NO_STREAM) {
- 			stream->sta = sta;
-@@ -1780,7 +1792,7 @@ mwl8k_lookup_stream(struct ieee80211_hw *hw, u8 *addr, u8 tid)
- 	struct mwl8k_priv *priv = hw->priv;
- 	int i;
- 
--	for (i = 0 ; i < priv->num_ampdu_queues; i++) {
-+	for (i = 0; i < MWL8K_NUM_AMPDU_STREAMS; i++) {
- 		struct mwl8k_ampdu_stream *stream;
- 		stream = &priv->ampdu[i];
- 		if (stream->state == AMPDU_NO_STREAM)
-@@ -1827,6 +1839,13 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
- 		tx_stats->pkts++;
- }
- 
-+/* The hardware ampdu queues start from 5.
-+ * txpriorities for ampdu queues are
-+ * 5 6 7 0 1 2 3 4 ie., queue 5 is highest
-+ * and queue 3 is lowest (queue 4 is reserved)
-+ */
-+#define BA_QUEUE		5
-+
- static void
- mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 	       int index,
-@@ -1927,8 +1946,12 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw,
- 		if (stream != NULL) {
- 			if (stream->state == AMPDU_STREAM_ACTIVE) {
- 				WARN_ON(!(qos & MWL8K_QOS_ACK_POLICY_BLOCKACK));
--				txpriority = stream->idx + MWL8K_TX_WMM_QUEUES;
--				index = stream->idx + MWL8K_TX_WMM_QUEUES;
-+				txpriority = (BA_QUEUE + stream->idx) %
-+					     TOTAL_HW_TX_QUEUES;
-+				if (stream->idx <= 1)
-+					index = stream->idx +
-+						MWL8K_TX_WMM_QUEUES;
-+
- 			} else if (stream->state == AMPDU_STREAM_NEW) {
- 				/* We get here if the driver sends us packets
- 				 * after we've initiated a stream, but before
+To be honest I don't know ath9k at all and I don't have time to look at
+it either. I think we need to hope that either Shafi or Sujith notices
+this thread and jump in.
+
+Or you could try to debug it yourself. Sprinkle printks everywhere and
+see what's happening inside the driver :)
+
 -- 
-1.8.0.3
-
+Kalle Valo
