@@ -1,115 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39877 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755423Ab3AWMmu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40416 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467Ab3A3AzW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jan 2013 07:42:50 -0500
-Date: Wed, 23 Jan 2013 13:42:36 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv6 4/6] mac80211: add radar detection command/event
-Message-ID: <20130123124236.GA23989@pandem0nium> (sfid-20130123_134254_665457_3E45478A)
-References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1357650251-17425-5-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1358377171.15012.45.camel@jlt4.sipsolutions.net>
- <20130117135228.GD19552@pandem0nium>
- <1358546411.7922.41.camel@jlt4.sipsolutions.net>
+	Tue, 29 Jan 2013 19:55:22 -0500
+Message-ID: <51086F74.4060603@candelatech.com> (sfid-20130130_015527_084432_CD56D402)
+Date: Tue, 29 Jan 2013 16:55:16 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
-In-Reply-To: <1358546411.7922.41.camel@jlt4.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at net/mac80211/agg-tx.c:625  (3.7.5)
+References: <510842C4.3040608@candelatech.com>   (sfid-20130129_224440_836761_5DE244B3) <1359496013.8108.22.camel@jlt4.sipsolutions.net>  <51084415.9060409@candelatech.com> <1359496537.8108.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359496537.8108.23.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/29/2013 01:55 PM, Johannes Berg wrote:
+> On Tue, 2013-01-29 at 13:50 -0800, Ben Greear wrote:
+>> On 01/29/2013 01:46 PM, Johannes Berg wrote:
+>>> On Tue, 2013-01-29 at 13:44 -0800, Ben Greear wrote:
+>>>> This is in 3.7.5, plus one ath9k patch to over-ride eeprom regdomain.
+>>>>
+>>>> Code that causes this is here...I seem to have a good test case for
+>>>> this currently, so if there is any other debugging I could put here
+>>>> that would be useful, let me know.
+>>>>
+>>>> 	if (WARN_ON(!tid_tx)) {
+>>>> 		ht_dbg(sdata, "addBA was not requested!\n");
+>>>> 		goto unlock;
+>>>> 	}
+>>>
+>>> Heh, I think Kalle just had the same. Do you have the ht_dbg()
+>>> statements (i.e. HT debugging) enabled?
+>>
+>> No, it seems I do not.
+>>
+>> Want me to enable it?
+>
+> Please. Actually, if you can (and it applies) this patch would be
+> helpful too:
+> http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git;a=commit;h=0a214d3f7e5041685ebff054628a4354bedd78c3
 
---M9NhX3UHpAaciwkO
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I added that, and the patch that allows two VAPs to register for
+beacons so I can run both VAPs I have configured on this system...
 
-On Fri, Jan 18, 2013 at 11:00:11PM +0100, Johannes Berg wrote:
-> On Thu, 2013-01-17 at 14:52 +0100, Simon Wunderlich wrote:
->=20
-> > > > +	res =3D drv_start_radar_detection(local, sdata, chandef);
-> > >=20
-> > > If the vif is assigned the channel, why also pass it to the
-> > > start_radar_detection command? That seems pointless, they can't be
-> > > different?
-> > >=20
-> > In the initial phase, __nl80211_set_channel() should not be able to set
-> > the channel (no CAC yet), and will fail for IBSS (to be implemented lat=
-er)
-> > generally, at least as it's implemented now.
-> >=20
-> > But what we can do is set the channel from mac80211 and call the driver
-> > function without the channel argument, as it'll be pointless in this ca=
-se.
-> > Is this what you mean?
->=20
-> Hmm. Why are you talking about __nl80211_set_channel() now? We're now
-> talking about mac80211, which can and does set the channel (chanctx,
-> which may fall back to drv_config()) before calling
-> drv_start_radar_detection(), so I think the latter needs no chandef
-> argument?
->=20
+I can grab more history if it helps...
 
-Sorry, I was confused at the point, you are right nl80211_set_channel() has
-nothing to do with that. ieee80211_vif_use_channel() already sets the chann=
-el
-implicitly (e.g. through ieee80211_hw_config()).
 
-> > > Actually that raises another question: If we have "external" radar
-> > > detection, say by a different NIC, then shouldn't we still ask the
-> > > driver to start radar detection when using the channel? Or is that
-> > > implicit, does the driver have to check?
-> >=20
-> > That is a good question, I didn't consider that. In the "simple process"
-> > we first start radar detection and start the ap on the same channel.
-> > For external CAC that won't work, of course. What about mac80211 checki=
-ng
-> > the channel in start_ap(), and if the channel requires DFS, pass some f=
-lag
-> > to the driver that radar detection should be enabled?
->=20
-> Yes, that makes sense. But then it would also make sense to remove the
-> start_radar_detection() callback entirely, and encode all that
-> information in the channel context/drv_config call?
->=20
-> If mac80211 gets to be responsible for it, this should totally be
-> documented in the cfg80211 API though so if a full-mac driver wants to
-> implement it they know what to do. I do think this is the reasonable way
-> of doing it though.
->=20
-> Note that I'm not advocating removing the start_radar_detection() or its
-> chandef from the *cfg80211* API. That is clearly needed. But in mac80211
-> it seems "set this chandef with radar detection" is a better API?
->=20
+[  142.852997] vap0: delba from 00:0e:8e:32:12:cf (initiator) tid 0 reason code 37
+[  142.853110] vap0: switched off addBA timer for 00:0e:8e:32:12:cf tid 0
+[  142.853122] vap0: got addBA resp for 00:0e:8e:32:12:cf tid 0 but we already gave up
+[  142.853168] vap0: switched off addBA timer for 00:11:22:99:88:00 tid 0
+[  142.853192] vap0: got addBA resp for 00:11:22:99:88:00 tid 0 but we already gave up
+[  142.853219] vap0: Stopping Tx BA session for 00:0e:8e:32:12:cf tid 0
+[  142.853513] vap0: Stopping Tx BA session for 00:11:22:99:88:00 tid 0
+[  142.853769] vap0: Open BA session requested for 00:0e:8e:32:12:cf tid 0
+[  142.853961] vap0: Open BA session requested for 00:0e:8e:32:12:cf tid 0
+[  142.853976] vap0: BA request denied - session is not idle on 00:0e:8e:32:12:cf tid 0
+[  142.854166] vap0: Rx A-MPDU request on 00:0e:8e:32:12:cf tid 0 result 0
+[  142.854235] vap0: Open BA session requested for 00:0e:8e:32:12:cf tid 0
+[  142.854251] vap0: BA request denied - session is not idle on 00:0e:8e:32:12:cf tid 0
+[  142.854344] vap0: delba from 00:11:22:99:88:00 (initiator) tid 0 reason code 37
+[  142.854436] vap0: Rx A-MPDU request on 00:11:22:99:88:00 tid 0 result 0
+[  142.854556] ------------[ cut here ]------------
+[  142.863992] vap0: Open BA session requested for 00:11:22:99:88:00 tid 0
+[  142.864166] vap0: Open BA session requested for 00:11:22:99:88:00 tid 0
+[  142.864181] vap0: BA request denied - session is not idle on 00:11:22:99:88:00 tid 0
+[  142.864218] vap0: Open BA session requested for 00:11:22:99:88:00 tid 0
+[  142.864232] vap0: BA request denied - session is not idle on 00:11:22:99:88:00 tid 0
+[  142.864276] vap0: Open BA session requested for 00:11:22:99:88:00 tid 0
+[  142.864297] vap0: BA request denied - session is not idle on 00:11:22:99:88:00 tid 0
+[  142.864332] vap0: Open BA session requested for 00:11:22:99:88:00 tid 0
+[  142.864346] vap0: BA request denied - session is not idle on 00:11:22:99:88:00 tid 0
+[  142.866319] WARNING: at /home/greearb/git/linux-3.7.dev.y/net/mac80211/agg-tx.c:631 ieee80211_start_tx_ba_cb+0x1d2/0x220 [mac80211]()
+[  142.891075] Hardware name: To Be Filled By O.E.M.
+[  142.901277] Modules linked in: iptable_raw xt_CT nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack bridge veth ip_gre gre 8021q garp stp llc 
+macvlan pktgen fuse nfsv3 nfs_acl nfsv4 auth_rpcgss nfs fscache lockd sunrpc binfmt_misc uinput arc4 ath9k coretemp snd_hda_codec_realtek iTCO_wdt mac80211 
+iTCO_vendor_support gpio_ich snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath lpc_ich microcode pcspkr i2c_i801 
+serio_raw cfg80211 snd_timer snd r8169 soundcore snd_page_alloc mii rfkill i915 drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iptable_nat]
+[  142.938975] Pid: 6, comm: kworker/u:0 Tainted: G         C   3.7.5+ #36
+[  142.938980] Call Trace:
+[  142.939062]  [<c04451bd>] warn_slowpath_common+0x6d/0xa0
+[  142.939100]  [<f8e933b2>] ? ieee80211_start_tx_ba_cb+0x1d2/0x220 [mac80211]
+[  142.939160]  [<f8e933b2>] ? ieee80211_start_tx_ba_cb+0x1d2/0x220 [mac80211]
+[  142.939202]  [<c044520d>] warn_slowpath_null+0x1d/0x20
+[  142.939232]  [<f8e933b2>] ieee80211_start_tx_ba_cb+0x1d2/0x220 [mac80211]
+[  142.939273]  [<c049d64b>] ? trace_hardirqs_on+0xb/0x10
+[  142.939287]  [<c09746df>] ? _raw_spin_unlock_irqrestore+0x3f/0x80
+[  142.939321]  [<f8e977bf>] ieee80211_iface_work+0x20f/0x310 [mac80211]
+[  142.939364]  [<c045de76>] process_one_work+0x1a6/0x3d0
+[  142.939377]  [<c045de09>] ? process_one_work+0x139/0x3d0
+[  142.939389]  [<c0460e58>] ? worker_thread+0x198/0x380
+[  142.939417]  [<f8e975b0>] ? ieee80211_netdev_select_queue+0x10/0x10 [mac80211]
+[  142.939494]  [<c0460dc2>] worker_thread+0x102/0x380
+[  142.939506]  [<c0973362>] ? preempt_schedule+0x32/0x50
+[  142.939520]  [<c046596c>] kthread+0xac/0xb0
+[  142.939532]  [<c0460cc0>] ? manage_workers+0x2b0/0x2b0
+[  142.939543]  [<c0974742>] ? _raw_spin_unlock_irq+0x22/0x50
+[  142.939559]  [<c097a0b7>] ret_from_kernel_thread+0x1b/0x28
+[  142.939571]  [<c04658c0>] ? __init_kthread_worker+0x60/0x60
+[  142.939587] ---[ end trace 0f04f0a807663584 ]---
+[  142.939594] vap0: addBA was not requested!
+[  142.939634] vap0: Stopping Tx BA session for 00:11:22:99:88:00 tid 0
+[  142.939648] vap0: unexpected callback to A-MPDU stop for 00:11:22:99:88:00 tid 0
+[  142.939671] vap0: delba from 00:11:22:99:88:00 (initiator) tid 0 reason code 37
+[  142.939682] vap0: Rx BA session stop requested for 00:11:22:99:88:00 tid 0 inititator reason: 0
+[  142.939772] vap0: Rx A-MPDU request on 00:11:22:99:88:00 tid 0 result 0
+[  142.939850] vap0: delba from 00:11:22:99:88:00 (initiator) tid 0 reason code 37
+[  142.939860] vap0: Rx BA session stop requested for 00:11:22:99:88:00 tid 0 inititator reason: 0
+[  142.939895] vap0: unexpected AddBA Req from 00:0e:8e:32:12:cf on tid 0
+[  142.939903] vap0: Rx BA session stop requested for 00:0e:8e:32:12:cf tid 0 recipient reason: 32
+[  142.940130] vap0: Rx A-MPDU request on 00:0e:8e:32:12:cf tid 0 result 0
+[  142.940240] vap0: Rx A-MPDU request on 00:11:22:99:88:00 tid 0 result 0
+[  142.940290] vap0: delba from 00:0e:8e:32:12:cf (initiator) tid 0 reason code 37
+[  142.940300] vap0: Rx BA session stop requested for 00:0e:8e:32:12:cf tid 0 inititator reason: 0
+[  142.940444] vap0: Rx A-MPDU request on 00:0e:8e:32:12:cf tid 0 result 0
 
-OK, so we keep the cfg80211 start_radar_detection() and replace the mac80211
-part with respective information that radar is required. That could work,
-I'll look into this.
 
-Thanks,
-	Simon
+>
+> johannes
+>
 
---M9NhX3UHpAaciwkO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-iEYEARECAAYFAlD/2rwACgkQrzg/fFk7axavCgCguiuv2k0bKz9FfHSWFqMuPBrO
-QtUAoOVpsiGWVHPOadgA3ERK6oK++f+7
-=fJ1q
------END PGP SIGNATURE-----
-
---M9NhX3UHpAaciwkO--
