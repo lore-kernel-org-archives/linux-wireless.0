@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33849 "EHLO nbd.name"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:52063 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757605Ab3ANVPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 16:15:16 -0500
-Message-ID: <50F4755E.8010508@openwrt.org> (sfid-20130114_221521_697819_6D1D05D5)
-Date: Mon, 14 Jan 2013 22:15:10 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1756069Ab3A3RVs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 12:21:48 -0500
+Message-ID: <1359566410.14894.57.camel@cumari.coelho.fi> (sfid-20130130_182152_114440_F0BD66B8)
+Subject: Re: [PATCHv6 2/6] cfg80211: check radar interface combinations
+From: Luciano Coelho <coelho@ti.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<victorg@ti.com>, <linville@tuxdriver.com>,
+	<kgiori@qca.qualcomm.com>, <zefir.kurtisi@neratec.com>,
+	<adrian@freebsd.org>, <j@w1.fi>, <igalc@ti.com>, <nbd@nbd.name>,
+	<mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 30 Jan 2013 19:20:10 +0200
+In-Reply-To: <20130130165636.GA27636@pandem0nium>
+References: <1357650251-17425-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1357650251-17425-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1359563688.14894.54.camel@cumari.coelho.fi>
+	 <20130130165636.GA27636@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 2/2] ath9k_hw: fix RF bank initialization
-References: <1358103298-4017-1-git-send-email-nbd@openwrt.org> <1358103298-4017-2-git-send-email-nbd@openwrt.org> <20130114195851.GB12018@tuxdriver.com>
-In-Reply-To: <20130114195851.GB12018@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-01-14 8:58 PM, John W. Linville wrote:
-> On Sun, Jan 13, 2013 at 07:54:58PM +0100, Felix Fietkau wrote:
->> ar900*_init_mode_regs needs to be called before RF banks are allocated,
->> otherwise the storage size of RF banks isn't known. This patch fixes
->> a memory overrun that can show up as a crash on unloading the module.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On Wed, 2013-01-30 at 17:56 +0100, Simon Wunderlich wrote:
+> On Wed, Jan 30, 2013 at 06:34:48PM +0200, Luciano Coelho wrote:
+> > > +	switch (iftype) {
+> > > +	case NL80211_IFTYPE_ADHOC:
+> > > +	case NL80211_IFTYPE_AP:
+> > > +	case NL80211_IFTYPE_AP_VLAN:
+> > > +	case NL80211_IFTYPE_MESH_POINT:
+> > > +	case NL80211_IFTYPE_P2P_GO:
+> > > +		radar_required = !!(chan->flags & IEEE80211_CHAN_RADAR);
+> > > +		break;
+> > 
+> > This code is causing an oops with the wl18xx driver in AP mode.  The
+> > problem is that cfg80211_can_change_interface() calls
+> > cfg80211_can_use_iftype_chan() with chan == NULL.  This code doesn't
+> > check if chan is NULL, so this dereference causes the oops.
 > 
-> <snip>
+> Sorry about that - I believe you've found the same bug I've posted a patch
+> for a few days ago. Johannes already has this in mac80211-next, but it is
+> not yet in wireless-testing:
 > 
->> @@ -410,7 +411,10 @@ int ar9002_hw_attach_ops(struct ath_hw *ah)
->>  	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
->>  	int ret;
->>  
->> -	priv_ops->init_mode_regs = ar9002_hw_init_mode_regs;
->> +	ret = ar9002_hw_init_mode_regs(ah);
->> +	if (ret)
->> +		return ret;
->> +
->>  	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
->>  
->>  	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
-> 
-> This hunk depends on "ath9k_hw: use the devres API for allocations",
-> which is queue for 3.9.  Can you revise this for 3.8?  If not, should
-> I hold just this one for 3.9?  Or the earlier patch in the series
-> as well?
-Oh, I got the version mixed up, put this into 3.9 then, 3.8 doesn't need it.
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/102836/match=simon
+> http://git.kernel.org/?p=linux/kernel/git/jberg/mac80211-next.git;a=commit;h=683d41ae6755e6ae297ec09603c229795ab9566e
 
-- Felix
+Ah, thanks.  I should have read the list more carefully. :)
+
+
+> > I don't have the time right now to fix this, but I'll look into it
+> > tomorrow (unless someone comes with a fix before that :P).
+> 
+> Please have a look at the patch posted above (both links for the same patch).
+
+I'll apply that and try it out.  Thanks for pointing it out so promptly!
+
+--
+Cheers,
+Luca.
 
