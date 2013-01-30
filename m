@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:48865 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756812Ab3AHXiG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50724 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755586Ab3A3TaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jan 2013 18:38:06 -0500
-Received: by mail-bk0-f47.google.com with SMTP id j4so582016bkw.6
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jan 2013 15:38:05 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johan Danielsson <joda@kth.se>
-Subject: Re: mac80211 and RX of A-MPDU with missing back agreement
-Date: Wed, 9 Jan 2013 00:38:01 +0100
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <CAESKgcgVQYwT770OfOXZnB-06SnidfxV7DnUrAMquJZtLNsYHg@mail.gmail.com> <201301081715.49672.chunkeey@googlemail.com> <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
-In-Reply-To: <CAESKgcgN+ev0f-PewqP7k5E-Bq2uR2OPKDiYwrPot4B=CAiffA@mail.gmail.com>
+	Wed, 30 Jan 2013 14:30:22 -0500
+Date: Wed, 30 Jan 2013 14:22:42 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2013-01-28 (was: pull-request:
+ mac80211-next 2013-01-24)
+Message-ID: <20130130192242.GD2167@tuxdriver.com> (sfid-20130130_203048_620542_11CF3268)
+References: <1359045496.21908.11.camel@jlt4.sipsolutions.net>
+ <1359375945.8120.13.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201301090038.01984.chunkeey@googlemail.com> (sfid-20130109_003827_192837_F2D7BAE7)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359375945.8120.13.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johan,
-
-On Tuesday, January 08, 2013 10:47:22 PM Johan Danielsson wrote:
-> Maybe I'm incomprehensible, so let me try to clarify my question.
-Thanks! Hopefully we can clear up some confusion.
-
-> The normal sequence of events for HT A-MPDU BlockAck agreements are:
+On Mon, Jan 28, 2013 at 01:25:45PM +0100, Johannes Berg wrote:
+> John,
 > 
-> 1) we receive an ADDBA
-> 2) ampdu_action is called with RX_START
-> 3) we send an ADDBA response
-> 4) time passes with no activity
-> 5) ampdu_action is called with RX_STOP
-> 6) a DELBA is sent to the peer STA
-> 7) everything is cool and froody
+> Please ignore the previous pull request. I've updated my branch with a
+> few more commits, this is the combined pull request.
 > 
-> However if 6 results in a failed transmission, mac80211 doesn't care,
-> and we have a situation where the peer may continue to send A-MPDU:s,
-> but we don't have any agreement, so we can't properly ACK.
-
-Ah, I think I didn't get the "This may occur when an existing RX BACK
-agreement times out, and the peer STA fails to hear the DELBA frame."
-sentence in your original post.
-
-I thought that this was just an example. But a semi-rogue device can
-sent AMPDUs to anyone at anytime, so I argued that if we have no (or
-no longer) a BA agreement [even if the peer never got the DELBA] we can
-discard the AMPDU data and sent a DELBAs to the HT peer once it tries
-sent us an A-MPDU (again). This is actually what we should do according
-to 802.11-2012 10.5.4 - instead of calling dont_reorder. This would also
-cover your case where a HT peer suddenly reappears again. Because once
-the HT peer sends an AMPDU and the BA agreement has timed out on our side,
-it will get a DELBA back the stale BA agreement on the Phoenix HT peer
-will be torn down [but the peer can be established it again by sending
-out a new ADDBA].
-
-> My feeling is that nothing in 802.11-2012 covers this scenario. There
-> are some paragraphs that deal with similar situations when using the
-> other flavour of BlockAcks (originally defined in 802.11e I believe),
-> but in my experience, you can't assume much based in this.
+> I've included
+>  * AKM definitions from Bing,
+>  * mesh fixes from Thomas, including a fix from him for me breaking his
+>    patch while applying,
+>  * channel check fix from Simon,
+>  * an old patch from Yoni Divinsky who doesn't even work for TI any
+>    more, to configure the WEP TX key for ARP offload etc.
+>  * MAC ACL API from Vasanth
+>  * a fix for the infamous chanctx_conf warning from Arnd
+>  * from myself, a fix for my previous aggregation changes, some cleanup
+>    and some improvements and fixes for WoWLAN
 > 
-> And even if the DELBA in 6 is sent ok, there is a race between 5 and
-> 6, where the originator has block ack state, but the recipient does not.
+> Let me know if there are any problems.
+> 
+> Thanks,
+> johannes
+> 
+> The following changes since commit 5a32aff37a02ebc959837f08d09ac8ba65d4f1b0:
+> 
+>   mac80211: split out chandef tracing macros (2013-01-16 23:57:51 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 3b4797bce0050570e84bedd10e1b14e9320a3551:
+> 
+>   mac80211: fix mesh_sta_info_get() reshuffle damage (2013-01-28 13:15:34 +0100)
 
-Yes, this sounds wrong. Was there a historic reason why RX_STOP was put before
-DELBA? I've traced the code back to Intel's initial A-MPDU RX contribution:
+Pulling now...
 
-commit 07db218396650933abff3c5c1ad1e2a6e0cfedeb
-Author: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Date:   Tue Dec 25 17:00:33 2007 +0200
-
-    mac80211: A-MPDU Rx adding basic functionality
-
-
-Stanislaw, do you know if iwlegacy needs AGG_RX_STOP before it can sent out
-the DELBA [Maybe something about flushing an FW internal RX reorder buffer,
-or anything]?
-
-> So, my question now is: Does this reasoning make sense, or have I
-> missed anything?
- 
-I think reordering 5 and 6 won't stop the race entirely. ACKs are 
-usually generated by hardware (or firmware) right away when the received
-frame passed the CRC checks and found a place to stay in the HW's FIFOs.
-However by the time DELBA is processed by the peers' 802.11 stack, some
-frames on the tx-path might have left the DELBA in the dust [keep-alives
-and friends].
-
-[Note: Action frames like DELBA have to be encrypted/decrypted when 
-MFP/802.11w is enabled on the link and some HW/FW can't do that. So
-it takes even longer to react to those.]
-
-[Note2: Some hardware (rtlwifi) only have some sort of "fire and forget"
-TX. The we don't know when, or even if a frame (like a DELBA) was received...]
-
-[Note3: What will happen to DELBAs if they aren't acked? Is there a timeout
-or are they retried until the peer is dropped by other means?
-I'm asking this because with some hardware we have to be greedy with the
-number of open BA Agreements. For example ti's wl12xx can only support a
-limited number of open RX BA Agreements.]
-
-Regards,
-	Chr
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
