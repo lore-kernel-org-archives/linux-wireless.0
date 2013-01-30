@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sg2plout10-02.prod.sin2.secureserver.net ([182.50.145.5]:55601
-	"EHLO sg2plout10-02.prod.sin2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757020Ab3AIIUr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 03:20:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from purkki.adurom.net ([80.68.90.206]:48224 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752492Ab3A3OR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jan 2013 09:17:26 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k has buggy promiscuous mode
+References: <2045349.v6KXL7FGSP@sylvesterjr.pats.ua.ac.be>
+	<87txq1crst.fsf@purkki.adurom.net>
+	<1628374.rykW5SrKvm@sylvesterjr.pats.ua.ac.be>
+	<15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be>
+Date: Wed, 30 Jan 2013 16:17:25 +0200
+In-Reply-To: <15452550.1ttGSZchYI@sylvesterjr.pats.ua.ac.be> (Erwin Van de
+	Velde's message of "Wed, 30 Jan 2013 11:09:32 +0100")
+Message-ID: <87622edabu.fsf@purkki.adurom.net> (sfid-20130130_151729_860652_D844130A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <20717.10275.994429.552141@gargle.gargle.HOWL> (sfid-20130109_092110_987033_76F714E3)
-Date: Wed, 9 Jan 2013 13:49:47 +0530
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: Fix skb leaks
-In-Reply-To: <50EC44B5.6020605@lwfinger.net>
-References: <1357098567-8558-1-git-send-email-Larry.Finger@lwfinger.net>
-	<20707.47067.474241.813195@gargle.gargle.HOWL>
-	<50E3BE23.3010102@lwfinger.net>
-	<20707.50445.510814.481023@gargle.gargle.HOWL>
-	<50EC44B5.6020605@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> > I'll come up with a patch and see if kmemleak still complains.
-> 
-> Did I miss your posting on this issue?
+Erwin Van de Velde <erwin.vandevelde@gmail.com> writes:
 
-Nope, I haven't got to this yet, sorry. I'll try to send a patch by today.
+> I have had a look at the source code of the driver and as far as I can see, 
+> the driver just never looks at the software configuration when enabling 
+> promiscuous mode and thus does not pass this information to the 
+> system, which explains why packets are never captured in promiscuous 
+> mode, even when the user configures the interface that way.
 
-Sujith
+I don't understand, what do you mean software configuration?
+
+A quick grep show that at least ath9k checks for the promisc filter:
+
+ath9k/htc_drv_main.c:   (FIF_PROMISC_IN_BSS |                   \
+ath9k/htc_drv_txrx.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS
+is enabled for station
+ath9k/htc_drv_txrx.c:        (priv->rxfilter & FIF_PROMISC_IN_BSS)) ||
+ath9k/main.c:   (FIF_PROMISC_IN_BSS |                   \
+ath9k/recv.c:    * Set promiscuous mode when FIF_PROMISC_IN_BSS is
+enabled for station
+
+-- 
+Kalle Valo
