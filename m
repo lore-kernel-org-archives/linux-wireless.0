@@ -1,95 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:63084 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113Ab3AJNnN (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:65255 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131Ab3A3XCU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 08:43:13 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUV9+JgZcYKZ4DAoj69D89hF-1cqr_bTpJvfgzWZZJ41kQ@mail.gmail.com>
-References: <20130109191817.GA17321@tuxdriver.com>
-	<CA+icZUV9+JgZcYKZ4DAoj69D89hF-1cqr_bTpJvfgzWZZJ41kQ@mail.gmail.com>
-Date: Thu, 10 Jan 2013 14:43:12 +0100
-Message-ID: <CA+icZUXZYtdwBuY3WVM5ZNR-_7bOs4W2GYNtFQSRv_iqEpnS+Q@mail.gmail.com> (sfid-20130110_144317_777255_D4FB3822)
-Subject: Re: pull request: wireless 2013-01-09
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 30 Jan 2013 18:02:20 -0500
+Received: by mail-bk0-f49.google.com with SMTP id w11so1088285bku.36
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 15:02:19 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Wed, 30 Jan 2013 23:37:41 +0100
+Subject: [PATCH] ath9k: report A-MPDU status
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>, senthilb@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, Adrian Chadd <adrian@freebsd.org>,
+	John Linville <linville@tuxdriver.com>
+Message-Id: <20130130230216.42EA11001D6@blech.mobile> (sfid-20130131_000224_212349_FA3C3C82)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 10, 2013 at 11:14 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Wed, Jan 9, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
->> Dave,
->>
->> Please pull this batch of fixes (and a new driver) for the 3.8 stream...
->>
->> Included is a mac80211 pull, of which Johannes says the following:
->>
->> 'This includes a number of fixes for various pieces of mac80211. I've
->> also included Thomas's memory RMC hash table optimisation since it
->> saves so much memory.'
->>
->> Also from Johannes is an iwlwifi pull:
->>
->> 'I have two fixes for iwlwifi: one to fix a lost return value that was
->> dropped in a previous patch and could cause "nobody cared" IRQ messages,
->> and one to work around a firmware issue.'
->>
->> Amitkumar Karwar brings an mwifiex for a typo in an comparison.
->>
->> Bing Zhao gives us an mwifiex fix to properly check the return value
->> from wait_event_interruptible and handle it properly.
->>
->> Chen Gang provides a fix to make iwlegacy use strlcpy instead of
->> strncpy, avoiding a potential buffer underflow.
->>
->> Julian Wollrath fixes a typo in an error message in rtlwifi.
->>
->> Larry Finger brings a b43 fix for a firmware loading problem.
->>
->> Nickolai Zeldovich avoids a use-after-free in the mwl8k driver.
->>
->> Vladimir Kondratiev brings the last big piece, the new Qualcomm/Atheros
->> wil6210 802.11ad driver.  Since it is for new hardware, I hope that
->> taking it for 3.8 is not a problem.
->>
->> Please let me know if there are problems!
->>
->> Thanks,
->>
->> John
->>
->> ---
->>
->> The following changes since commit c9be4a5c49cf51cc70a993f004c5bb30067a65ce:
->>
->>   net: prevent setting ttl=0 via IP_TTL (2013-01-08 17:57:10 -0800)
->>
->> are available in the git repository at:
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
->>
->> for you to fetch changes up to a9b8a894ad7d0b90b0464c9ac7e8e5c1687edcae:
->>
->>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2013-01-09 11:01:37 -0500)
->>
->> ----------------------------------------------------------------
->
-> Hi John,
->
-> if I look at for-davem GIT branch (online GitWeb interface) [1], this
-> has no tag "master-2013-01-09" like in master branch.
-> Comments?
->
+The ath9k hardware reports whenever an frame was part
+of an A-MPDU. MAC80211 already provides the necessary
+API to pass this additional information along to
+whomever needs it.
 
-Sorry, forget this, I looked at wireless-next.git#for-davem.
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+No locking necessary. The ampdu_ref var is only
+read and updated within the rx tasklet. 
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath/ath9k/recv.c  |   20 ++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-- Sedat -
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 67df864..21e2e42 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -319,6 +319,8 @@ struct ath_rx {
+ 	struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
+ 
+ 	struct sk_buff *frag;
++
++	u32 ampdu_ref;
+ };
+ 
+ int ath_startrecv(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 2af6f19..87497f3 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1123,6 +1123,24 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ #endif
+ }
+ 
++static void ath9k_apply_ampdu_details(struct ath_softc *sc,
++	struct ath_rx_status *rs, struct ieee80211_rx_status *rxs)
++{
++	if (rs->rs_isaggr) {
++		rxs->flag |= RX_FLAG_AMPDU_DETAILS | RX_FLAG_AMPDU_LAST_KNOWN;
++
++		rxs->ampdu_reference = sc->rx.ampdu_ref;
++
++		if (!rs->rs_moreaggr) {
++			rxs->flag |= RX_FLAG_AMPDU_IS_LAST;
++			sc->rx.ampdu_ref++;
++		}
++
++		if (rs->rs_flags & ATH9K_RX_DELIM_CRC_PRE)
++			rxs->flag |= RX_FLAG_AMPDU_DELIM_CRC_ERROR;
++	}
++}
++
+ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ {
+ 	struct ath_buf *bf;
+@@ -1329,6 +1347,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
+ 			ath_ant_comb_scan(sc, &rs);
+ 
++		ath9k_apply_ampdu_details(sc, &rs, rxs);
++
+ 		ieee80211_rx(hw, skb);
+ 
+ requeue_drop_frag:
+-- 
+1.7.10.4
 
-> Regards,
-> - Sedat -
->
-> [1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=shortlog;h=refs/heads/for-davem
