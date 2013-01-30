@@ -1,106 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:45577 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750805Ab3ADFw3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49388 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737Ab3A3Hyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jan 2013 00:52:29 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 30 Jan 2013 02:54:45 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/5] mwifiex: add init_fw_port handler for PCIe interface
-Date: Thu,  3 Jan 2013 21:21:29 -0800
-Message-Id: <1357276892-32759-3-git-send-email-bzhao@marvell.com> (sfid-20130104_065241_777154_032F5C40)
-In-Reply-To: <1357276892-32759-1-git-send-email-bzhao@marvell.com>
-References: <1357276892-32759-1-git-send-email-bzhao@marvell.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: remove unused cfg80211_get_mesh
+Date: Wed, 30 Jan 2013 08:55:05 +0100
+Message-Id: <1359532505-25658-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_085448_265760_6247680B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch adds support for init_fw_port handler for PCIe
-interface, which resets RXBD read pointer for PCIe.
-This fixes issue where RX doesn't work until some TX from
-driver happens.
+As Thomas pointed out, cfg80211_get_mesh() is
+unused and can be removed.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/init.c |    6 ++++++
- drivers/net/wireless/mwifiex/main.h |    1 +
- drivers/net/wireless/mwifiex/pcie.c |   20 ++++++++++++++++++--
- 3 files changed, 25 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h |  4 ----
+ net/wireless/scan.c    | 65 --------------------------------------------------
+ 2 files changed, 69 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 39f03ce..e00b806 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -591,6 +591,12 @@ int mwifiex_init_fw(struct mwifiex_adapter *adapter)
- 				return -1;
- 		}
- 	}
-+
-+	if (adapter->if_ops.init_fw_port) {
-+		if (adapter->if_ops.init_fw_port(adapter))
-+			return -1;
-+	}
-+
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if (adapter->priv[i]) {
- 			ret = mwifiex_sta_init_cmd(adapter->priv[i], first_sta);
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d717c98..ef02a5b 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -599,6 +599,7 @@ struct mwifiex_if_ops {
- 	int (*cmdrsp_complete) (struct mwifiex_adapter *, struct sk_buff *);
- 	int (*event_complete) (struct mwifiex_adapter *, struct sk_buff *);
- 	int (*data_complete) (struct mwifiex_adapter *, struct sk_buff *);
-+	int (*init_fw_port) (struct mwifiex_adapter *);
- 	int (*dnld_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 	void (*card_reset) (struct mwifiex_adapter *);
- };
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index e4c2cfd..191c682 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -966,8 +966,23 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 	return 0;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5eb20bc..7533f0d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3172,10 +3172,6 @@ cfg80211_get_ibss(struct wiphy *wiphy,
+ 				WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
  }
  
--/*
-- * This function downloads commands to the device
-+/* This function init rx port in firmware which in turn enables to receive data
-+ * from device before transmitting any packet.
-+ */
-+static int mwifiex_pcie_init_fw_port(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	/* Write the RX ring read pointer in to REG_RXBD_RDPTR */
-+	if (mwifiex_write_reg(adapter, REG_RXBD_RDPTR, card->rxbd_rdptr | 0)) {
-+		dev_err(adapter->dev,
-+			"RECV DATA: failed to write REG_RXBD_RDPTR\n");
-+		return -1;
-+	}
-+	return 0;
-+}
-+
-+/* This function downloads commands to the device
-  */
- static int
- mwifiex_pcie_send_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
-@@ -1899,6 +1914,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.event_complete =		mwifiex_pcie_event_complete,
- 	.update_mp_end_port =		NULL,
- 	.cleanup_mpa_buf =		NULL,
-+	.init_fw_port =			mwifiex_pcie_init_fw_port,
- };
+-struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
+-				       struct ieee80211_channel *channel,
+-				       const u8 *meshid, size_t meshidlen,
+-				       const u8 *meshcfg);
+ /**
+  * cfg80211_ref_bss - reference BSS struct
+  * @bss: the BSS struct to reference
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 46351ba..d220313 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -311,43 +311,6 @@ static bool is_bss(struct cfg80211_bss *a, const u8 *bssid,
+ 	return memcmp(ssidie + 2, ssid, ssid_len) == 0;
+ }
  
- /*
+-static bool is_mesh(struct cfg80211_bss *a,
+-		    const u8 *meshid, size_t meshidlen,
+-		    const u8 *meshcfg)
+-{
+-	const struct cfg80211_bss_ies *ies;
+-	const u8 *ie;
+-
+-	if (!WLAN_CAPABILITY_IS_STA_BSS(a->capability))
+-		return false;
+-
+-	ies = rcu_access_pointer(a->ies);
+-	if (!ies)
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_ID, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-	if (ie[1] != meshidlen)
+-		return false;
+-	if (memcmp(ie + 2, meshid, meshidlen))
+-		return false;
+-
+-	ie = cfg80211_find_ie(WLAN_EID_MESH_CONFIG, ies->data, ies->len);
+-	if (!ie)
+-		return false;
+-	if (ie[1] != sizeof(struct ieee80211_meshconf_ie))
+-		return false;
+-
+-	/*
+-	 * Ignore mesh capability (last two bytes of the IE) when
+-	 * comparing since that may differ between stations taking
+-	 * part in the same mesh.
+-	 */
+-	return memcmp(ie + 2, meshcfg,
+-		      sizeof(struct ieee80211_meshconf_ie) - 2) == 0;
+-}
+-
+ static int cmp_bss(struct cfg80211_bss *a,
+ 		   struct cfg80211_bss *b,
+ 		   bool hide_ssid)
+@@ -482,34 +445,6 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ }
+ EXPORT_SYMBOL(cfg80211_get_bss);
+ 
+-struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
+-				       struct ieee80211_channel *channel,
+-				       const u8 *meshid, size_t meshidlen,
+-				       const u8 *meshcfg)
+-{
+-	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
+-	struct cfg80211_internal_bss *bss, *res = NULL;
+-
+-	spin_lock_bh(&dev->bss_lock);
+-
+-	list_for_each_entry(bss, &dev->bss_list, list) {
+-		if (channel && bss->pub.channel != channel)
+-			continue;
+-		if (is_mesh(&bss->pub, meshid, meshidlen, meshcfg)) {
+-			res = bss;
+-			kref_get(&res->ref);
+-			break;
+-		}
+-	}
+-
+-	spin_unlock_bh(&dev->bss_lock);
+-	if (!res)
+-		return NULL;
+-	return &res->pub;
+-}
+-EXPORT_SYMBOL(cfg80211_get_mesh);
+-
+-
+ static void rb_insert_bss(struct cfg80211_registered_device *dev,
+ 			  struct cfg80211_internal_bss *bss)
+ {
 -- 
-1.7.0.2
+1.8.0
 
