@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55644 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485Ab3AaQuc (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51462 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928Ab3AaRQS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 11:50:32 -0500
-Message-ID: <1359651044.8415.96.camel@jlt4.sipsolutions.net> (sfid-20130131_175047_367218_C87B1FBF)
-Subject: Re: [PATCHv7 0/3] Add DFS master ability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 31 Jan 2013 17:50:44 +0100
-In-Reply-To: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 31 Jan 2013 12:16:18 -0500
+Message-ID: <510AA6D6.3000801@candelatech.com> (sfid-20130131_181622_176744_942DBC11)
+Date: Thu, 31 Jan 2013 09:16:06 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] Expand byte counters in struct station_info
+References: <6017229.5ECEUbBVAL@lx-vladimir> <1359628924.8415.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359628924.8415.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-01-29 at 13:21 +0100, Simon Wunderlich wrote:
+On 01/31/2013 02:42 AM, Johannes Berg wrote:
+> On Thu, 2013-01-31 at 11:46 +0200, Vladimir Kondratiev wrote:
+>> Hi,
+>>
+>> Now wifi drivers reports per-station info using struct station_info;
+>> and currently for the data counters it has:
+>> 	u32 rx_bytes;
+>> 	u32 tx_bytes;
+>>
+>> while for device-wide statistics one can use ndo_get_stats64() to fill
+>> 64-bit counters in the struct rtnl_link_stats64, per-station statistics
+>> are 32-bit.
+>>
+>> This becomes problematic with gigabit speeds now observed for .11ac and .11ad -
+>> counters overflown every few seconds.
+>>
+>> I'd like to extend rx and tx byte counters to 64-bit.
+>>
+>> What is better - expand existing fields in struct station_info as:
+>> 	u64 rx_bytes;
+>> 	u64 tx_bytes;
+>
+> This.
+>
+>> or add ne ones like:
+>> 	u64 rx_bytes64;
+>> 	u64 tx_bytes64;
+>
+> I don't see a reason to do this.
+>
+>>
+>> Then, I'll add
+>> 	NL80211_STA_INFO_RX_BYTES64,
+>> 	NL80211_STA_INFO_TX_BYTES64,
+>> to the enum nl80211_sta_info
+>>
+>> Before doing patch, I'd like to hear comments.
+>> Any consideration why is this not to be done or done differently?
+>
+> Sounds good to me.
+>
+> Two points:
+>
+> 1) You should provide the RX_TX_BYTES attributes, but I think only if
+> the value fits into 32 bits. That way, we don't report invalid
+> information.
 
-> Right now, channels at least on my machine have the NO IBSS and PASSIVE SCAN
-> flags set, which prevents reg_can_beacon from returning true, even if we do
-> have radar support. This is due to my reg database setting these flags for
-> country code 00, and this is still kept when changing the country code to
-> something else (DE in my case). How should we proceed with this? Shouldn't
-> these flags be removed when selecting a country code?
+There are already a large amounts of '64-bit' counters reported by
+netlink that really wrap at 32-bits, so any solid user-space
+code already has to deal with this by making assumptions (ie, if cur
+value is < last value, then it wrapped at 32-bits, because there is no way you
+actually missed polling a real 64-bit counter wrap).
 
-I don't think any country sets that, you may be running into that whole
-"regdb intersect" thing ... FWIW the flags are set for 00 since for
-world roaming we don't know if we're in a country that even allows
-transmission on that AP.
+So, you might not have to worry about this so much.
 
-> The channel states are now implemented in cfg80211. Shall we inform userspace
-> about channel changes? If yes, how should we do that? We could add channel states
-> to the channel list, and give "channel list changed" events to userspace as it
-> happens now, or define a new kind of event ("channel-available-again-event").
-> Suggestions welcome. :)
+In my own work, my biggest problem is that stations reset their
+counters when they got ifdown and then back to ifup.
 
-You already inform it of the changes by the radar event, but it would
-probably also be good to export the state as part of the channel list
-that you get with things like "iw list".
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
