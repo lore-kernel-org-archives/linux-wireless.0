@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:47536 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab3AKP6K (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55190 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754215Ab3AaPEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jan 2013 10:58:10 -0500
-Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
-	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id r0BFw8CZ012937
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jan 2013 10:58:08 -0500
-Received: (from pizza@localhost)
-	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id r0BFw8LY012936
-	for linux-wireless@vger.kernel.org; Fri, 11 Jan 2013 10:58:08 -0500
-Date: Fri, 11 Jan 2013 10:58:08 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Subject: Re: RFCv2: ST-E cw1200 driver
-Message-ID: <20130111155807.GA5153@shaftnet.org> (sfid-20130111_165814_857210_A792E6CA)
-References: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qMm9M+Fa2AknHoGS"
-In-Reply-To: <1356218312-13616-1-git-send-email-pizza@shaftnet.org>
+	Thu, 31 Jan 2013 10:04:04 -0500
+Message-ID: <1359644664.8415.68.camel@jlt4.sipsolutions.net> (sfid-20130131_160420_711577_28826127)
+Subject: Re: [PATCH 0/7] Improvements to software scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Thu, 31 Jan 2013 16:04:24 +0100
+In-Reply-To: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
 
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Johannes: I have a couple of comments/questions for you related to these
+> patches.
+> 
+> First, in the patches I've added an offchan_tx_ok argument to the tx
+> operations, but this seems a little awkward to me since it has to be
+> propogated down through a fairly deep call stack. The alternative idea
+> that occurred to me is to use a tx control flag, but that seems to be
+> pretty crowded. Any thoughts?
 
-On Sat, Dec 22, 2012 at 06:18:15PM -0500, Solomon Peachy wrote:
-> Okay, here's the second pass.  Changes from v1:
+Maybe you can bypass by using a flag in struct ieee80211_tx_data, so
+only the first few functions in the call chain need the argument?
+Otherwise, I guess adding a flag should be OK. I know it's crowded, but
+if we really run out I guess we could move all the internal flags etc.
+wholesale ...
 
-Now that I've been getting some third-party test results, I'm planning=20
-on posting a v3 patch series this weekend.
+> Second, I attempted to test these patches with iwlwifi (Centrino
+> Advanced-N 6235) to verify that I didn't break anything for drivers with
+> hw scanning. My standard test for this involves running iperf while
+> triggering nearly continuous scans, but I'm seeing lots of problems
+> running a tcp iperf test even with unpatched 3.8-rc4. iperf with udp
+> does fine in either direction. I haven't had time to do any kind of
+> debugging yet, but I thought you'd want to know.
 
-Any further comments before I do so?  Should I stick to the staging=20
-area, or should I move it over to drivers/net/wireless?
+Hm, ok, thanks.
 
-(The only known problem is that IBSS is still broken, but now it merely=20
- doesn't work properly instead of triggering OOPSen -- still trying to=20
- track that down but I've been sidetracked by other OMGURGENT!!11 tasks)
+johannes
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---qMm9M+Fa2AknHoGS
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iD8DBQFQ8DaPPuLgii2759ARAggTAKCOOFbkcnG39SCUsQVimRlnlUvXagCeIDED
-8rL0WUm3HWJ2XpyuWFoTwNw=
-=5Ajy
------END PGP SIGNATURE-----
-
---qMm9M+Fa2AknHoGS--
