@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:40062 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab3AZRNb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 12:13:31 -0500
-Date: Sat, 26 Jan 2013 18:13:50 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	users@rt2x00.serialmonkey.com
-Subject: [PATCH 2/4 v2] rt2x00: remove NOTICE
-Message-ID: <20130126171350.GB5834@localhost.localdomain> (sfid-20130126_181336_393879_6B107274)
-References: <20130124205931.GB16252@localhost.localdomain>
- <20130124210028.GA22800@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130124210028.GA22800@localhost.localdomain>
+Received: from he.sipsolutions.net ([78.46.109.217]:54988 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591Ab3AaNvc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 08:51:32 -0500
+Message-ID: <1359640314.8415.31.camel@jlt4.sipsolutions.net> (sfid-20130131_145136_048488_7533A1BD)
+Subject: Re: [RFC 2/3] mac80211: mesh power save doze scheduling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Date: Thu, 31 Jan 2013 14:51:54 +0100
+In-Reply-To: <1358936360-7795-3-git-send-email-marco@cozybit.com> (sfid-20130123_111932_695381_467B8C3D)
+References: <1358936360-7795-1-git-send-email-marco@cozybit.com>
+	 <1358936360-7795-3-git-send-email-marco@cozybit.com>
+	 (sfid-20130123_111932_695381_467B8C3D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We use this macro only on 3 places - remove it and replace by other
-appropriate macros for printing messages.
+On Wed, 2013-01-23 at 11:19 +0100, Marco Porsch wrote:
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
-v1 -> v2 : replace NOTICE by WARNING for unknown RF chipset message.
+> Expose a callback ieee80211_mps_init for drivers to register
+> mesh powersave ops:
+> - hw_doze - put the radio to sleep now
+> - hw_wakeup - wake the radio up for frame RX
+> These ops may be extended in the future to allow drivers/HW to
+> implement mesh PS themselves. (The current design goal was to
+> concentrate mesh PS routines in mac80211 to keep driver
+> modifications minimal.
+> 
+> Track the beacon timing information of peers we are in PS mode
+> towards. Set a per-STA hrtimer which will trigger a wakeup right
+> before the peer's next TBTT.
+> Also use the same hrtimer to go to sleep mode after not
+> receiving a beacon in a defined time margin. In this case
+> calculate the next TBTT and increase the margin.
+> 
+> For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
+> a timer which triggers a hw_doze call on expiry.
 
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
- drivers/net/wireless/rt2x00/rt2x00dev.c |    4 ++--
- 3 files changed, 3 insertions(+), 5 deletions(-)
+Hmm. I'm not completely happy with this hrtimer stuff in mac80211.
+There's a lot of (USB) hardware that could never implement such a thing,
+but could, conceivably, implement this differently?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index a1de95e..1791260 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -80,7 +80,7 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	    rt2x00_rf(rt2x00dev, RF3022))
- 		return true;
- 
--	NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
-+	WARNING(rt2x00dev, "Unknown RF chipset on rt305x\n");
- 	return false;
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 8ef11b6..ad73942 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -89,8 +89,6 @@
- 	DEBUG_PRINTK_PROBE(KERN_ERR, "Error", __msg, ##__args)
- #define WARNING(__dev, __msg, __args...) \
- 	DEBUG_PRINTK_MSG(__dev, KERN_WARNING, "Warning", __msg, ##__args)
--#define NOTICE(__dev, __msg, __args...) \
--	DEBUG_PRINTK_MSG(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
- #define INFO(__dev, __msg, __args...) \
- 	DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
- #define DEBUG(__dev, __msg, __args...) \
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 96fffe8..07a9e10 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1440,7 +1440,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_remove_dev);
- #ifdef CONFIG_PM
- int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
- {
--	NOTICE(rt2x00dev, "Going to sleep.\n");
-+	DEBUG(rt2x00dev, "Going to sleep.\n");
- 
- 	/*
- 	 * Prevent mac80211 from accessing driver while suspended.
-@@ -1480,7 +1480,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_suspend);
- 
- int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
- {
--	NOTICE(rt2x00dev, "Waking up.\n");
-+	DEBUG(rt2x00dev, "Waking up.\n");
- 
- 	/*
- 	 * Restore/enable extra components.
--- 
-1.7.4.4
+> @@ -1146,6 +1148,11 @@ struct ieee80211_local {
+>  
+>  	int user_power_level; /* in dBm, for all interfaces */
+>  
+> +	/* mesh power save */
+> +	bool mps_enabled;
+> +	bool mps_hw_doze;
+
+Generally, this also seems wrong, you're making the assumption that mesh
+will be the only interface. That might actually be true for many use
+cases, but is it really an assumption we should still put into the stack
+today, with multi-channel etc? I'm not convinced of that.
+
+So I think you should (at least attempt to) make an implementation that
+is less tied to the exact timing implementation. Maybe program the
+wakeup TBTT in advance. Maybe with a small library the driver can
+connect to this that uses hrtimers to implement it? That could then also
+assume that callbacks need not sleep, thus allowing to reduce
+TBTT_MARGIN.
+
+In theory I think with ath9k you could even use hardware timers &
+interrupts to wake the hardware, thus probably being able to reduce
+TBTT_MARGIN significantly.
+
+
+[haven't really looked at the rest of the implementation]
+
+johannes
 
