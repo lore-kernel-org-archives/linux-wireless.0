@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:39635 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667Ab3AYFOS (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:30426 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148Ab3AaIRc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 00:14:18 -0500
-Received: by mail-pb0-f52.google.com with SMTP id uo5so968632pbc.39
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jan 2013 21:14:18 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, users@rt2x00.serialmonkey.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] rt2x00: allow AP and mesh mode to operate simultaneously
-Date: Fri, 25 Jan 2013 12:47:50 +0800
-Message-Id: <1359089270-29702-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130125_061423_130398_76C729B3)
+	Thu, 31 Jan 2013 03:17:32 -0500
+Date: Thu, 31 Jan 2013 11:16:46 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	Szymon Janc <szymon.janc@tieto.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
+	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] NFC: llcp: integer underflow in nfc_llcp_set_remote_gb()
+Message-ID: <20130131081645.GA14812@elgon.mountain> (sfid-20130131_091742_132765_D35AC34A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow AP and Mesh mode to operate concurrently using
-single radio. Verify this using fonera 2.0n featuring
-RT3052 chipset and also TP-LINK TL-WN727N featuring
-RT5370 chipset.
+If gb_len is less than 3 it would cause an integer underflow and
+possibly memory corruption in nfc_llcp_parse_gb_tlv().
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I removed the old test for gb_len == 0.  I also removed the test for
+->remote_gb == NULL.  It's not possible for ->remote_gb to be NULL and
+we have already dereferenced ->remote_gb_len so it's too late to test.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index b40a538..f3c83f4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1236,7 +1236,8 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	if_limit = &rt2x00dev->if_limits_ap;
- 	if_limit->max = rt2x00dev->ops->max_ap_intf;
--	if_limit->types = BIT(NL80211_IFTYPE_AP);
-+	if_limit->types = BIT(NL80211_IFTYPE_AP) |
-+			BIT(NL80211_IFTYPE_MESH_POINT);
+The old test return -ENODEV but my test returns -EINVAL.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 85bc75c..746f5a2 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -549,14 +549,13 @@ int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len)
+ 		pr_err("No LLCP device\n");
+ 		return -ENODEV;
+ 	}
++	if (gb_len < 3)
++		return -EINVAL;
  
- 	/*
- 	 * Build up AP interface combinations structure.
--- 
-1.7.0.4
-
+ 	memset(local->remote_gb, 0, NFC_MAX_GT_LEN);
+ 	memcpy(local->remote_gb, gb, gb_len);
+ 	local->remote_gb_len = gb_len;
+ 
+-	if (local->remote_gb == NULL || local->remote_gb_len == 0)
+-		return -ENODEV;
+-
+ 	if (memcmp(local->remote_gb, llcp_magic, 3)) {
+ 		pr_err("MAC does not support LLCP\n");
+ 		return -EINVAL;
