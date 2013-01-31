@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from HJOutgoing.persistent.co.in ([125.16.81.245]:55376 "EHLO
-	HJ-SMTP-OUT.persistent.co.in" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752558Ab3AUJSa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754686Ab3AaPIO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 04:18:30 -0500
-From: Ketan Kamat <Ketan_Kamat@persistent.co.in>
-To: Luciano Coelho <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl12xx: does not connect to WPA2-personal
-Date: Mon, 21 Jan 2013 09:18:27 +0000
-Message-ID: <125C46FB9265D3469829069CDC69BF445278B3DC@HJ-MBX2.persistent.co.in> (sfid-20130121_101839_128061_1D441161)
-References: <loom.20130120T094649-416@post.gmane.org>
-	 <1358754973.6252.131.camel@cumari.coelho.fi>
-	 <125C46FB9265D3469829069CDC69BF445278B39E@HJ-MBX2.persistent.co.in>
-	 <1358758714.6252.135.camel@cumari.coelho.fi>
-	 <125C46FB9265D3469829069CDC69BF445278B3C1@HJ-MBX2.persistent.co.in>
- <1358759519.6252.139.camel@cumari.coelho.fi>
-In-Reply-To: <1358759519.6252.139.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 31 Jan 2013 10:08:14 -0500
+Message-ID: <1359644916.8415.69.camel@jlt4.sipsolutions.net> (sfid-20130131_160817_601769_FA96BD6F)
+Subject: Re: [PATCH 0/7] Improvements to software scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Thu, 31 Jan 2013 16:08:36 +0100
+In-Reply-To: <1359644664.8415.68.camel@jlt4.sipsolutions.net> (sfid-20130131_160420_711577_28826127)
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+	 <1359644664.8415.68.camel@jlt4.sipsolutions.net>
+	 (sfid-20130131_160420_711577_28826127)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tm8uIEFwcGxpZWQgYWxsIHRob3NlIHBhdGNoZXMgZnJvbSBiZWxvdyBhdCBvbmNlLiBIYXZl
-IG5vdCB0cmllZCB0aGVtIG9uZSBieSBvbmUuIA0KDQoyMDEyLTA0LTEwICAJRXlhbCBTaGFw
-aXJhIAkJd2wxMnh4OiBpbmNyZWFzZSBzY2FuIHRpbWVvdXQgdG8gMzBzDQoyMDEyLTA0LTEw
-CUV5YWwgU2hhcGlyYQkJd2wxMnh4OiBhZGFwdGl2ZSBzY2hlZCBzY2FuIGR3ZWxsIHRpbWVz
-DQoyMDEyLTA0LTEwCUV5YWwgU2hhcGlyYQkJd2wxMnh4OiBmaXggYSBtZW1vcnkgbGVhayBv
-ZiBwcm9iZXJlcSB0ZW1wbGF0ZSB1cG9uDQoyMDEyLTA0LTEwCUVsaWFkIFBlbGxlcgkJd2wx
-Mnh4OiBmcmVlIGFwIGtleXMgb25seSBpbiBhcCBtb2RlDQoyMDEyLTA0LTEwCUV5YWwgU2hh
-cGlyYQkJd2wxMnh4OiBmaXggcmFjZSBiZXR3ZWVuIHN1c3BlbmQvcmVzdW1lIGFuZCByZWNv
-dmVyeQ0KMjAxMi0wNC0xMAlWaWN0b3IgR29sZGVuc2h0ZWluCXdsMTJ4eDogZml4IHN0YXRp
-b24gY2hhbm5lbCBzd2l0Y2gNCjIwMTItMDQtMTAJRWxpYWQgUGVsbGVyCQl3bDEyeHg6IHNl
-dCBkb19qb2luIG9uIEJTU19DSEFOR0VEX0FTU09DDQoNClJlZ2FyZHMsDQpLZXRhbg0KDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMdWNpYW5vIENvZWxobyBbbWFp
-bHRvOmNvZWxob0B0aS5jb21dIA0KU2VudDogTW9uZGF5LCBKYW51YXJ5IDIxLCAyMDEzIDI6
-NDIgUE0NClRvOiBLZXRhbiBLYW1hdA0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZw0KU3ViamVjdDogUmU6IHdsMTJ4eDogZG9lcyBub3QgY29ubmVjdCB0byBXUEEyLXBl
-cnNvbmFsDQoNCk9uIE1vbiwgMjAxMy0wMS0yMSBhdCAwOTowOSArMDAwMCwgS2V0YW4gS2Ft
-YXQgd3JvdGU6DQo+IEhpIEx1Y2lhbm8sDQo+IA0KPiBObyBvdGhlciBjaGFuZ2VzLg0KPiBX
-ZSBhcmUgdXNpbmcgRC1saW5rIHJvdXRlciBEaXItNjE1LiBPbiBib2FyZCB3ZSB1c2Ugd2wx
-MjcxLg0KPiBXZSBoYWQgdHJpZWQgVEtJUCBhcyB3ZWxsIGFuZCBoYWQgZmFjZWQgdGhlIHNh
-bWUgcHJvYmxlbSBiZWZvcmUgZml4aW5nIHRoaXMuDQoNCkRpZCB5b3UganVzdCByYW5kb21s
-eSBwaWNrZWQgdXAgdGhvc2UgcGF0Y2hlcz8gSSB0aGluaywgaWYgYW55LCB0aGUgb25seSBw
-YXRjaCB0aGF0IG1heSBoYXZlIHNvbWUgZWZmZWN0IGhlcmUgaXMgIndsMTJ4eDogc2V0IGRv
-X2pvaW4gb24gQlNTX0NIQU5HRURfQVNTT0MiLg0KDQotLQ0KTHVjYS4NCg0KDQpESVNDTEFJ
-TUVSCj09PT09PT09PT0KVGhpcyBlLW1haWwgbWF5IGNvbnRhaW4gcHJpdmlsZWdlZCBhbmQg
-Y29uZmlkZW50aWFsIGluZm9ybWF0aW9uIHdoaWNoIGlzIHRoZSBwcm9wZXJ0eSBvZiBQZXJz
-aXN0ZW50IFN5c3RlbXMgTHRkLiBJdCBpcyBpbnRlbmRlZCBvbmx5IGZvciB0aGUgdXNlIG9m
-IHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCBpdCBpcyBhZGRyZXNzZWQuIElm
-IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBhcmUgbm90IGF1dGhv
-cml6ZWQgdG8gcmVhZCwgcmV0YWluLCBjb3B5LCBwcmludCwgZGlzdHJpYnV0ZSBvciB1c2Ug
-dGhpcyBtZXNzYWdlLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGNvbW11bmljYXRpb24g
-aW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
-ZXMgb2YgdGhpcyBtZXNzYWdlLiBQZXJzaXN0ZW50IFN5c3RlbXMgTHRkLiBkb2VzIG5vdCBh
-Y2NlcHQgYW55IGxpYWJpbGl0eSBmb3IgdmlydXMgaW5mZWN0ZWQgbWFpbHMuDQo=
+On Thu, 2013-01-31 at 16:04 +0100, Johannes Berg wrote:
+> On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
+> 
+> > Johannes: I have a couple of comments/questions for you related to these
+> > patches.
+> > 
+> > First, in the patches I've added an offchan_tx_ok argument to the tx
+> > operations, but this seems a little awkward to me since it has to be
+> > propogated down through a fairly deep call stack. The alternative idea
+> > that occurred to me is to use a tx control flag, but that seems to be
+> > pretty crowded. Any thoughts?
+> 
+> Maybe you can bypass by using a flag in struct ieee80211_tx_data, so
+> only the first few functions in the call chain need the argument?
+> Otherwise, I guess adding a flag should be OK. I know it's crowded, but
+> if we really run out I guess we could move all the internal flags etc.
+> wholesale ...
+
+Ok no that was wrong ... we can't do that because many flags need to
+survive queueing.
+
+johannes
+
