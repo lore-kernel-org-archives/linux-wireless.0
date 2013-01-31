@@ -1,26 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:48808 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932147Ab3AIRkq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jan 2013 12:40:46 -0500
-Received: from localhost ([127.0.0.1] helo=www.infidigm.net)
-	by freiheit with esmtp (Exim 4.72)
-	(envelope-from <drwho@infidigm.net>)
-	id 1Tt0OD-000328-1U
-	for linux-wireless@vger.kernel.org; Wed, 09 Jan 2013 13:28:37 -0500
-Message-ID: <f69d7d2f065bed3ec8ab22eb452e7c30.squirrel@www.infidigm.net> (sfid-20130109_184048_917669_A6E8AF2E)
-Date: Wed, 9 Jan 2013 13:28:37 -0500
-Subject: Q: how to enable MIMO
-From: drwho@infidigm.net
+Received: from narfation.org ([79.140.41.39]:42975 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753726Ab3AaJ1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 04:27:20 -0500
+From: Sven Eckelmann <sven@narfation.org>
 To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH 6/6] ath9k: Remove unused variables in ath_mci_cleanup
+Date: Thu, 31 Jan 2013 10:26:49 +0100
+Message-Id: <1359624409-14815-6-git-send-email-sven@narfation.org> (sfid-20130131_102726_662543_6EFF967F)
+In-Reply-To: <1359624409-14815-1-git-send-email-sven@narfation.org>
+References: <1359624409-14815-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a 2x2 station and a 3x3 AP.  Does the station automatically work in
-2x3 mode or does it need to be enabled?  I'm only getting 1x1 speeds.
+Leaving the unused variables ath_mci_cleanup causes build warnings.
 
-Jon
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath9k/mci.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index d207433..815bee2 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -474,8 +474,6 @@ void ath_mci_cleanup(struct ath_softc *sc)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_mci_coex *mci = &sc->mci_coex;
+-	struct ath_mci_buf *buf = &mci->sched_buf;
+ 
+ 	ar9003_mci_cleanup(ah);
+ 
+-- 
+1.7.10.4
 
