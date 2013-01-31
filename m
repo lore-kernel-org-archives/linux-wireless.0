@@ -1,195 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36585 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999Ab3ANOQ1 (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:50716 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754501Ab3AaPXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jan 2013 09:16:27 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] mac80211: allow drivers to access IPv6 information
-Date: Mon, 14 Jan 2013 15:16:50 +0100
-Message-Id: <1358173010-16985-1-git-send-email-johannes@sipsolutions.net> (sfid-20130114_151631_494051_DB12C072)
+	Thu, 31 Jan 2013 10:23:46 -0500
+Received: by mail-bk0-f44.google.com with SMTP id j4so1392723bkw.3
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jan 2013 07:23:44 -0800 (PST)
+Message-ID: <510A8C7E.9070602@cozybit.com> (sfid-20130131_162358_968515_EC3A54B4)
+Date: Thu, 31 Jan 2013 16:23:42 +0100
+From: Marco Porsch <marco@cozybit.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC 2/3] mac80211: mesh power save doze scheduling
+References: <1358936360-7795-1-git-send-email-marco@cozybit.com>  <1358936360-7795-3-git-send-email-marco@cozybit.com>  (sfid-20130123_111932_695381_467B8C3D) <1359640314.8415.31.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359640314.8415.31.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 01/31/2013 02:51 PM, Johannes Berg wrote:
+> On Wed, 2013-01-23 at 11:19 +0100, Marco Porsch wrote:
+>
+>> Expose a callback ieee80211_mps_init for drivers to register
+>> mesh powersave ops:
+>> - hw_doze - put the radio to sleep now
+>> - hw_wakeup - wake the radio up for frame RX
+>> These ops may be extended in the future to allow drivers/HW to
+>> implement mesh PS themselves. (The current design goal was to
+>> concentrate mesh PS routines in mac80211 to keep driver
+>> modifications minimal.
+>>
+>> Track the beacon timing information of peers we are in PS mode
+>> towards. Set a per-STA hrtimer which will trigger a wakeup right
+>> before the peer's next TBTT.
+>> Also use the same hrtimer to go to sleep mode after not
+>> receiving a beacon in a defined time margin. In this case
+>> calculate the next TBTT and increase the margin.
+>>
+>> For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
+>> a timer which triggers a hw_doze call on expiry.
+>
+> Hmm. I'm not completely happy with this hrtimer stuff in mac80211.
+> There's a lot of (USB) hardware that could never implement such a thing,
+> but could, conceivably, implement this differently?
 
-To be able to implement NS response offloading (in
-regular operation or while in WoWLAN) drivers need
-to know the IPv6 addresses assigned to interfaces.
-Implement an IPv6 notifier in mac80211 to call the
-driver when addresses change.
+The use of hrtimers for MPS is debatable currently. The approach of 
+calculating the peer's TSF should be accurate to the usec. Good timing 
+here directly affects the energy savings. On the other handside the 
+margin of 5ms used shows that something is not working as expected yet. 
+If this cannot be fixed, I may as well use regular timers here. How 
+strongly do you oppose hrtimers? :)
 
-Unlike for IPv4, implement it as a callback rather
-than as a list in the BSS configuration, that is
-more flexible.
+>> @@ -1146,6 +1148,11 @@ struct ieee80211_local {
+>>
+>>   	int user_power_level; /* in dBm, for all interfaces */
+>>
+>> +	/* mesh power save */
+>> +	bool mps_enabled;
+>> +	bool mps_hw_doze;
+>
+> Generally, this also seems wrong, you're making the assumption that mesh
+> will be the only interface. That might actually be true for many use
+> cases, but is it really an assumption we should still put into the stack
+> today, with multi-channel etc? I'm not convinced of that.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     | 10 ++++++++++
- net/mac80211/driver-ops.h  | 12 ++++++++++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/main.c        | 45 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/trace.h       |  8 ++++++++
- 5 files changed, 76 insertions(+)
+When trying to enable MPS in mps_hw_conf_check, I check if there are any 
+non-mesh interfaces. If yes, it is not enabled.
+So these status variables are just used to sync multi-mesh-vif MPS on a 
+single device.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 23daed3..1921da3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2487,6 +2487,10 @@ enum ieee80211_rate_control_changed {
-  * @restart_complete: Called after a call to ieee80211_restart_hw(), when the
-  *	reconfiguration has completed. This can help the driver implement the
-  *	reconfiguration step. This callback may sleep.
-+ *
-+ * @ipv6_addr_change: IPv6 address assignment on the given interface changed.
-+ *	Currently, this is only called for managed or P2P client interfaces.
-+ *	This callback is optional; it must not sleep.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -2660,6 +2664,12 @@ struct ieee80211_ops {
- 				     struct ieee80211_chanctx_conf *ctx);
- 
- 	void (*restart_complete)(struct ieee80211_hw *hw);
-+
-+#ifdef CONFIG_IPV6
-+	void (*ipv6_addr_change)(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct inet6_dev *idev);
-+#endif
- };
- 
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 0c07f94..0b60392 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1020,4 +1020,16 @@ static inline void drv_restart_complete(struct ieee80211_local *local)
- 	trace_drv_return_void(local);
- }
- 
-+#ifdef CONFIG_IPV6
-+static inline void drv_ipv6_addr_change(struct ieee80211_local *local,
-+					struct ieee80211_sub_if_data *sdata,
-+					struct inet6_dev *idev)
-+{
-+	trace_drv_ipv6_addr_change(local, sdata);
-+	if (local->ops->ipv6_addr_change)
-+		local->ops->ipv6_addr_change(&local->hw, &sdata->vif, idev);
-+	trace_drv_return_void(local);
-+}
-+#endif
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0fa44a9..93cfa90 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1129,6 +1129,7 @@ struct ieee80211_local {
- 	struct timer_list dynamic_ps_timer;
- 	struct notifier_block network_latency_notifier;
- 	struct notifier_block ifa_notifier;
-+	struct notifier_block ifa6_notifier;
- 
- 	/*
- 	 * The dynamic ps timeout configured from user space via WEXT -
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 39cfe8f..08ac59d 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -23,6 +23,7 @@
- #include <linux/inetdevice.h>
- #include <net/net_namespace.h>
- #include <net/cfg80211.h>
-+#include <net/addrconf.h>
- 
- #include "ieee80211_i.h"
- #include "driver-ops.h"
-@@ -377,6 +378,37 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
- }
- #endif
- 
-+#ifdef CONFIG_IPV6
-+static int ieee80211_ifa6_changed(struct notifier_block *nb,
-+				  unsigned long data, void *arg)
-+{
-+	struct inet6_ifaddr *ifa = (struct inet6_ifaddr *)arg;
-+	struct inet6_dev *idev = ifa->idev;
-+	struct net_device *ndev = ifa->idev->dev;
-+	struct ieee80211_local *local =
-+		container_of(nb, struct ieee80211_local, ifa6_notifier);
-+	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	/* Make sure it's our interface that got changed */
-+	if (!wdev || wdev->wiphy != local->hw.wiphy)
-+		return NOTIFY_DONE;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-+
-+	/*
-+	 * For now only support station mode. This is mostly because
-+	 * doing AP would have to handle AP_VLAN in some way ...
-+	 */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return NOTIFY_DONE;
-+
-+	drv_ipv6_addr_change(local, sdata, idev);
-+
-+	return NOTIFY_DONE;
-+}
-+#endif
-+
- static int ieee80211_napi_poll(struct napi_struct *napi, int budget)
- {
- 	struct ieee80211_local *local =
-@@ -985,12 +1017,25 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_ifa;
- #endif
- 
-+#ifdef CONFIG_IPV6
-+	local->ifa6_notifier.notifier_call = ieee80211_ifa6_changed;
-+	result = register_inet6addr_notifier(&local->ifa6_notifier);
-+	if (result)
-+		goto fail_ifa6;
-+#endif
-+
- 	netif_napi_add(&local->napi_dev, &local->napi, ieee80211_napi_poll,
- 			local->hw.napi_weight);
- 
- 	return 0;
- 
-+#ifdef CONFIG_IPV6
-+ fail_ifa6:
- #ifdef CONFIG_INET
-+	unregister_inetaddr_notifier(&local->ifa_notifier);
-+#endif
-+#endif
-+#if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-  fail_ifa:
- 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
- 			       &local->network_latency_notifier);
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index a8270b4..cad8629 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1426,6 +1426,14 @@ DEFINE_EVENT(local_only_evt, drv_restart_complete,
- 	TP_ARGS(local)
- );
- 
-+#ifdef CONFIG_IPV6
-+DEFINE_EVENT(local_sdata_evt, drv_ipv6_addr_change,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+#endif
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
--- 
-1.8.0
+Multiple mesh interfaces are ok. An AP vif is a no-go for any PS mode. 
+Mesh + client is theoretically fine, but handled completely differently 
+- also a no for now.
 
+> So I think you should (at least attempt to) make an implementation that
+> is less tied to the exact timing implementation. Maybe program the
+> wakeup TBTT in advance.  Maybe with a small library the driver can
+> connect to this that uses hrtimers to implement it? That could then also
+> assume that callbacks need not sleep, thus allowing to reduce
+> TBTT_MARGIN.
+ >
+> In theory I think with ath9k you could even use hardware timers &
+> interrupts to wake the hardware, thus probably being able to reduce
+> TBTT_MARGIN significantly.
+
+Earlier, I had successfully implemented wakeups using ath9k HW before we 
+at cozybit decided to concentrate all code in mac80211. Concerning ath9k 
+it worked fine but required more callbacks to mac80211 and will 
+eventually add redundant code that has to be maintained to multiple drivers.
+
+--Marco
