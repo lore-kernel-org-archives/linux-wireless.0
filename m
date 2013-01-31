@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tirith.ics.muni.cz ([147.251.4.36]:42677 "EHLO
-	tirith.ics.muni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134Ab3ABMYM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 07:24:12 -0500
-From: Vojtech Havel <xhavel1@fi.muni.cz>
-To: Piotr Haber <phaber@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: bugreport brcmsmac weak signal
-Date: Wed, 02 Jan 2013 13:23:41 +0100
-Message-ID: <1404516.BpDVRpBgmS@ledge> (sfid-20130102_132427_792921_2A9D95FA)
-In-Reply-To: <50E416E4.5010407@broadcom.com>
-References: <1707792.Sg5XObDUQq@ledge> <1536004.hKi75cttfX@ledge> <50E416E4.5010407@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from narfation.org ([79.140.41.39]:42966 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753603Ab3AaJ1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 04:27:13 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH 4/6] ath9k: Only spectral scan relay file when it was created
+Date: Thu, 31 Jan 2013 10:26:47 +0100
+Message-Id: <1359624409-14815-4-git-send-email-sven@narfation.org> (sfid-20130131_102719_791281_B5CFD820)
+In-Reply-To: <1359624409-14815-1-git-send-email-sven@narfation.org>
+References: <1359624409-14815-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkbmVzZGF5IDAyIG9mIEphbnVhcnkgMjAxMyAxMjoxNTo0OCBQaW90ciBIYWJlciB3cm90
-ZToKPiBPbiAwMS8wMi8xMyAxMDowOSwgVm9qdGVjaCBIYXZlbCB3cm90ZToKPiA+IE9uIFdlZG5l
-c2RheSAwMiBvZiBKYW51YXJ5IDIwMTMgMDg6MjA6NTEgUGlvdHIgSGFiZXIgd3JvdGU6Cj4gPj4g
-T24gMDEvMDIvMTMgMDE6MDksIFZvanRlY2ggSGF2ZWwgd3JvdGU6Cj4gPj4+IEhpLAo+ID4+PiAK
-PiA+Pj4gSSBoYXZlIHByb2JsZW1zIHdpdGggbXkgQnJvYWRjb20gQkNNNDMxMyB3aWZpIGNhcmQg
-d2hpbGUgdXNpbmcgYnJjbXNtYWMKPiA+Pj4gbW9kdWxlLgo+ID4+PiAKPiA+Pj4gVGhlIHdpZmkg
-c2lnbmFsIGlzIHRlcnJpYmx5IHdlYWsuIFdoZW4gdGhlIGRpc3RhbmNlIGJldHdlZW4gbXkgbGFw
-dG9wCj4gPj4+IGFuZAo+ID4+PiBBUCBpcyBtb3JlIHRoYW4gfjUgbSB0aGUgbmV0d29yayBpcyBu
-b3QgdmlzaWJsZSBhdCBhbGwuIFdoZW4gdGhlIGxhcHRvcAo+ID4+PiBpcyBjbG9zZXIsIGl0IGNv
-bm5lY3RzLCBidXQgaXQgaXMgdmVyeSBzbG93IGR1ZSB0byB3ZWFrIHNpZ25hbC4gSSBoYXZlCj4g
-Pj4+IHRvCj4gPj4+IHNpdCBuZXh0IHRvIEFQIHdoZW4gSSB3YW50IGxpbmsgcXVhbGl0eSBtb3Jl
-IHRoYW4gNjAvNzAuCj4gPj4+IAo+ID4+PiBJZiBJIHVzZSBCcm9hZGNvbSBoeWJyaWQgZHJpdmVy
-IC0gd2wgLSBpdCB3b3JrcyBub3JtYWxseSAoYnV0IGhhcwo+ID4+PiBkaWZmZXJlbnQKPiA+Pj4g
-cHJvYmxlbXMuLi4pLgo+ID4+PiAKPiA+Pj4gSSB0cmllZCB0byB1c2UgdGhyZWUgZGlmZmVyZW50
-IHdpZmkgbmV0d29ya3Mgd2l0aCB0aGlzIGNvbWJpbmF0aW9uIGFuZAo+ID4+PiBhbGwKPiA+Pj4g
-b2YgdGhlbSBoYWQgdGhlIHNhbWUgcHJvYmxlbS4KPiA+Pj4gCj4gPj4+IC0tLS0tCj4gPj4+IE15
-IHNldHRpbmc6Cj4gPj4+ICQgdW5hbWUgLXIKPiA+Pj4gMy44LjAtcmMxCj4gPj4+IAo+ID4+PiBJ
-IGFwcGxpZWQgdGhlIHBhdGNoIGZyb206Cj4gPj4+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgt
-d2lyZWxlc3MmbT0xMzU2MzUwOTAxMjExNTQmdz0yCj4gPj4+IAo+ID4+PiBUaGUgc2FtZSB3aXRo
-IDMuNS43IGdlbnRvbyBrZXJuZWwuCj4gPj4+IC0tLS0tCj4gPj4+IHdhdmVtb24gaW5mbzogKHdp
-dGggYnJjbXNtYWMsIH41IG0gYmV0d2VlbiBteSBsYXB0b3AgYW5kIHRoZSBhcCkKPiA+Pj4gCj4g
-Pj4+IOKUjOKUgEludGVyZmFjZeKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAo+ID4+PiDi
-lIJ3bGFuMCAoSUVFRSA4MDIuMTFiZ24sIFdQQS9XUEEyKSwgIEVTU0lEOiAiaWhvbWUiCj4gPj4+
-IOKUnOKUgExldmVsc+KUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAo+ID4+
-PiDilIIKPiA+Pj4g4pSCbGluayBxdWFsaXR5OiAyMy83MAo+ID4+PiDilII9PT09PT09PT09PT09
-PT09PT09PT09Cj4gPj4+IOKUggo+ID4+PiDilIJzaWduYWwgbGV2ZWw6IC04NyBkQm0gKDIsMDAg
-cFcpCj4gPj4+IOKUgj09PT09PT09Cj4gPj4+IOKUggo+ID4+PiDilIIKPiA+Pj4g4pSc4pSAU3Rh
-dGlzdGljc+KUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAo+ID4+PiDilIJSWDogMyA4MTc4KDIs
-NDEgTWlCKSwgaW52YWxpZDogMCBud2lkLCAwIGNyeXB0LCAwIGZyYWcsIDMgbWlzYwo+ID4+PiDi
-lIJUWDogNCAxNzg5KDc3OSw2MTlLaUIpLCBtYWMgcmV0cmllczogMzEsIG1pc3NlZCBiZWFjb25z
-OiAwCj4gPj4+IOKUnOKUgEluZm/ilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIAKPiA+Pj4g4pSCbW9kZTogTWFuYWdlZCwgIGFjY2VzcyBwb2ludDogKG5vdCByZWxl
-dmFudCA6LSkpCj4gPj4+IOKUgmZyZXE6IDIsNDM3IEdIeiwgY2hhbm5lbDogNiwgIGJpdHJhdGU6
-IDUsNSBNYml0L3MKPiA+Pj4g4pSCcG93ZXIgbWd0OiBvZmYsICB0eC1wb3dlcjogMTkgZEJtICg3
-OSw0MyBtVykKPiA+Pj4g4pSCcmV0cnk6IGxvbmcgbGltaXQgNywgIHJ0cy9jdHM6IG9mZiwgIGZy
-YWc6IG9mZgo+ID4+PiDilIJlbmNyeXB0aW9uOiBuL2EgKHJlcXVpcmVzIENBUF9ORVRfQURNSU4g
-cGVybWlzc2lvbnMpCj4gPj4+IOKUnOKUgE5ldHdvcmvilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIAKPiA+Pj4g4pSCd2xhbjAgKFVQIFJVTk5JTkcgQlJPQURDQVNUIE1VTFRJQ0FT
-VCkKPiA+Pj4g4pSCbWFjOiAobm90IHJlbGV2YW50IDotKSksIHFsZW46IDEwMDAKPiA+Pj4g4pSC
-aXA6IDE5Mi4xNjguMS4xMDMvMjQsICBiY2FzdDogMjU1LjI1NS4yNTUuMjU1Cj4gPj4+IOKUlOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gAo+ID4+IAo+ID4+IEhpIFZvanRlY2gsCj4gPj4gSSBzZWUgeW91IGFyZSBydW5uaW5nIHYzLjgt
-cmMxLCB0aGF0J3MgZ3JlYXQgc2luY2UgeW91IGNhbiBwcm92aWRlIHVzCj4gPj4gd2l0aCB0aGUg
-Y29udGVudCBvZiAvc3lzL2tlcm5lbC9kZWJ1Zy9icmNtc21hYy9iY21hMDowL2hhcmR3YXJlIHNv
-IHdlCj4gPj4ga25vdyBleGFjdGx5IHdoaWNoIGhhcmR3YXJlIHlvdSBoYXZlLgo+ID4+IEFsc28g
-ZG1lc2cgY29udGVudHMgd291bGQgYmUgaGVscGZ1bCBpIHRoaW5rCj4gPj4gCj4gPj4gS2luZCBy
-ZWdhcmRzCj4gPj4gUGlvdHIKPiA+IAo+ID4gSGkgUGlvdHIsCj4gPiAKPiA+ICMgY2F0IC9zeXMv
-a2VybmVsL2RlYnVnL2JyY21zbWFjL2JjbWEwOjAvaGFyZHdhcmUKPiA+IGJvYXJkIHZlbmRvcjog
-MTRlNAo+ID4gYm9hcmQgdHlwZTogNjA4Cj4gPiBib2FyZCByZXZpc2lvbjogMTEwOQo+ID4gYm9h
-cmQgZmxhZ3M6IDQwMjIwMQo+ID4gYm9hcmQgZmxhZ3MyOiA4ODQKPiA+IGZpcm13YXJlIHJldmlz
-aW9uOiAyNjIwMzJiCj4gCj4gSGksCj4gCj4gd2hhdCB5b3UgaGF2ZSBoZXJlIGlzIGEgQmx1ZXRv
-b3RoIGNvbWJvIGJvYXJkLCB3aXRoIHNoYXJlZCBCVCAmIFdpRmkKPiBhbnRlbm5hLgo+IFRoZXJl
-IHdlcmUgcmVwb3J0cyBiZWZvcmUgb2YgcG9vciBwZXJmb3JtYW5jZSBvbiBzdWNoIGJvYXJkcy4K
-PiBDdXJyZW50bHkgYnJjbXNtYWMgZHJpdmVyIGRvZXMgbm90IHN1cHBvcnQgQlQgY29leGlzdGVu
-Y2UuCj4gWW91IG1pZ2h0IHRyeSBhbmQgZGlzYWJsZSBCVCBhbmQgc2VlIGlmIHRoaXMgaGVscHMu
-CgpJIHRyaWVkIHRvIGRpc2FibGUgQlQgaW4gQklPUyBhbmQgdGhlIHByb2JsZW0gcmVtYWlucy4K
-Cj4gCj4gU29ycnkgd2UgY2Fubm90IGRvIG1vcmUgZm9yIHlvdS4KPiAKCk9LLCBJIHdpbGwgY29u
-dGludWUgdXNpbmcgdGhlIHdsIG1vZHVsZSwgd2hpY2ggd29ya3Mgd2l0aCBtb3N0IG9mIHRoZSAK
-bmV0d29ya3MuCkFueXdheSwgdGhhbmtzIGZvciB5b3VyIHRpbWUsIFBpb3RyLgoKVm9qdGVjaAo=
+The relay file depends on relayfs. Trying to close this file without having
+ATH9K_DEBUGFS (and therefore RELAY) activated causes build failures.
+
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c7d116c..93a6dba 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -922,10 +922,12 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 
+ 	ath9k_eeprom_release(sc);
+ 
++#ifdef CONFIG_ATH9K_DEBUGFS
+ 	if (sc->rfs_chan_spec_scan) {
+ 		relay_close(sc->rfs_chan_spec_scan);
+ 		sc->rfs_chan_spec_scan = NULL;
+ 	}
++#endif
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+-- 
+1.7.10.4
 
