@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:61080 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518Ab3AYImc (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54693 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310Ab3AaCBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 03:42:32 -0500
-Received: by mail-wi0-f182.google.com with SMTP id hn14so100121wib.3
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jan 2013 00:42:31 -0800 (PST)
+	Wed, 30 Jan 2013 21:01:48 -0500
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r0V21lFZ001644
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jan 2013 18:01:48 -0800
+Message-ID: <5109D08B.1030707@candelatech.com> (sfid-20130131_030152_305192_AC354DAC)
+Date: Wed, 30 Jan 2013 18:01:47 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be>
-References: <1731354.xZITKB59tC@sylvesterjr.pats.ua.ac.be>
-Date: Fri, 25 Jan 2013 09:42:31 +0100
-Message-ID: <CAGXE3d_fD9etSnMKFUb6YGz=4g85ACkvdgyPjusMJXus-nvFYg@mail.gmail.com> (sfid-20130125_094235_747379_59BFB652)
-Subject: Re: Unable to get RTS/CTS working in rt2800
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Any way to see current CQM RSSI value?
+References: <5109BBCE.4090605@candelatech.com>
+In-Reply-To: <5109BBCE.4090605@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 24, 2013 at 4:58 PM, Erwin Van de Velde
-<erwin.vandevelde@gmail.com> wrote:
-> In a test setup with 802.11a/n a colleague and I tried enabling RTS/CTS. The
-> only thing we got however was a CTS to self. RTS threshold was 1000B,
-> packet size 1400B.
+On 01/30/2013 04:33 PM, Ben Greear wrote:
+> I'm seeing lots of these types of wireless events:
+>
+> 2013-01-30 16:30:59.330  1.1:  sta2 (phy #0): connection quality monitor event: RSSI went below threshold
+> 2013-01-30 16:30:59.330  1.1:  sta4 (phy #0): connection quality monitor event: RSSI went below threshold
+> 2013-01-30 16:30:59.330  1.1:  sta6 (phy #0): connection quality monitor event: RSSI went below threshold
+> 2013-01-30 16:31:03.380  1.1:  sta3 (phy #0): connection quality monitor event: RSSI went below threshold
+> 2013-01-30 16:31:06.342  1.1:  sta5 (phy #0): connection quality monitor event: RSSI went below threshold
+> 2013-01-30 16:31:06.360  1.1:  sta7 (phy #0): connection quality monitor event: RSSI went below threshold
 
-Did you use 11n aggregation?
+I think now this is just a printout issue in iw, it seems the real problem is NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
+not RSSI issue.
 
-> We looked for other options but did not find anything
-> helpful, what else can we try to enable RTS/CTS?
+I'll work up a patch for iw tomorrow if upstream hasn't fixed it yet.
 
-Yup, there are several issues there:
-- The hw ignores RTS thresholds for AMPDUs AFAIK
-- HT protection always uses CTS-to-self (hardcoded in driver in
-rt2800_config_ht_opmode)
+Would still be nice to display the current CQM settings of course...
 
-I don't think any other driver allows to configure if RTS-CTS or
-CTS-to-self should be used?
-You can easily enforce RTS-CTS for 11n transmissions by changing
-rt2800_config_ht_opmode.
+Thanks,
+Ben
 
-HTH,
-Helmut
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
