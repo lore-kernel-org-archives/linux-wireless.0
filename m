@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20460 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911Ab3A1Kzl convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55092 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753596Ab3AaOZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 05:55:41 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Guenter Roeck <linux@roeck-us.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	<netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless/ath: Fix compile error seen with W=1
-Date: Mon, 28 Jan 2013 12:55:37 +0200
-Message-ID: <1368762.AOqRHlT7Ra@lx-vladimir> (sfid-20130128_115546_978625_BBB4C882)
-In-Reply-To: <1359253568-15762-1-git-send-email-linux@roeck-us.net>
-References: <1359253568-15762-1-git-send-email-linux@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 31 Jan 2013 09:25:50 -0500
+Message-ID: <1359642373.8415.57.camel@jlt4.sipsolutions.net> (sfid-20130131_152552_851235_FF17DAC9)
+Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH
+ response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: Antonio Quartulli <antonio@open-mesh.com>,
+	linux-wireless@vger.kernel.org,
+	Will Hawkins <hawkinsw@opentechinstitute.org>
+Date: Thu, 31 Jan 2013 15:26:13 +0100
+In-Reply-To: <510A7D40.2030206@lri.fr>
+References: <1355146824-25012-1-git-send-email-antonio@open-mesh.com>
+	    <1355146824-25012-2-git-send-email-antonio@open-mesh.com>
+	    <1356706268.9922.23.camel@jlt4.sipsolutions.net>
+	    <20130102063255.GA27676@open-mesh.com> <50E400A7.5060100@lri.fr>
+	    <20130107114048.GH27589@ritirata.org> <50EACA95.8040004@lri.fr>
+	   <1359151524.4655.37.camel@jlt4.sipsolutions.net>
+	 <5103C774.4080403@lri.fr>  <1359459469.8108.11.camel@jlt4.sipsolutions.net>
+	 <5107D5D5.3070601@lri.fr> <1359639241.8415.17.camel@jlt4.sipsolutions.net>
+	 <510A7D40.2030206@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, January 26, 2013 06:26:08 PM Guenter Roeck wrote:
-> make W=1 for x86_64 fails with
-> 
-> drivers/net/wireless/ath/wil6210/txrx.c: In function ‘wil_rx_fini’:
-> drivers/net/wireless/ath/wil6210/txrx.c:550:7: error: variable ‘rc’ set but not
-> used [-Werror=unused-but-set-variable]
-> 
-> Fix by dropping the variable.
-> 
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> ---
->  drivers/net/wireless/ath/wil6210/txrx.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-> index f29c294..b6e8042 100644
-> --- a/drivers/net/wireless/ath/wil6210/txrx.c
-> +++ b/drivers/net/wireless/ath/wil6210/txrx.c
-> @@ -547,7 +547,6 @@ void wil_rx_fini(struct wil6210_priv *wil)
->  	struct vring *vring = &wil->vring_rx;
->  
->  	if (vring->va) {
-> -		int rc;
->  		struct wmi_cfg_rx_chain_cmd cmd = {
->  			.action = cpu_to_le32(WMI_RX_CHAIN_DEL),
->  			.rx_sw_ring = {
-> @@ -559,7 +558,7 @@ void wil_rx_fini(struct wil6210_priv *wil)
->  			struct wmi_cfg_rx_chain_done_event cfg;
->  		} __packed wmi_rx_cfg_reply;
->  
-> -		rc = wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
-> +		(void)wmi_call(wil, WMI_CFG_RX_CHAIN_CMDID, &cmd, sizeof(cmd),
->  			      WMI_CFG_RX_CHAIN_DONE_EVENTID,
->  			      &wmi_rx_cfg_reply, sizeof(wmi_rx_cfg_reply),
->  			      100);
-> 
+On Thu, 2013-01-31 at 15:18 +0100, Nicolas Cavallari wrote:
 
-Thanks for finding it.
+> > I think that's acceptable, but if it requires a wpa_s change anyway we
+> > could just implement reboot detection there instead of adding all these
+> > new events etc.? I.e. rather than having a new supplicant say "OK I will
+> > listen to the right event when handling reboot detection", it could just
+> > use the existing infrastructure and implement it itself?
+> 
+> Well i already have wpa_supplicant patches for that. Might just need to clean that up a
+> bit so it's at least configurable.
+> 
+> But now i'm reminded that transmitting management frames from userspace requires a
+> frequency. For wpasupp to be race-free during ibss merges, we should have a way to
+> transmit management frames to the current bss without specifying a frequency...
 
-I will send series of new patches shortly. This will include changes in
-rx chain initialization that, among other, remove fragment you fixed.
-Reason is firmware API changes.
+That seems reasonable.
 
-Thanks, Vladimir
+johannes
+
