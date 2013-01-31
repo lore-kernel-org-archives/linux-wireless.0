@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757181Ab3A1MPk (ORCPT
+Received: from avon.wwwdotorg.org ([70.85.31.133]:44403 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754501Ab3AaWVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jan 2013 07:15:40 -0500
-Message-ID: <1359375363.8120.9.camel@jlt4.sipsolutions.net> (sfid-20130128_131543_934538_7260CECA)
-Subject: Re: [PATCH] mac80211: fix mesh_sta_info_get() reshuffle damage
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 28 Jan 2013 13:16:03 +0100
-In-Reply-To: <1359248402-6595-1-git-send-email-thomas@cozybit.com> (sfid-20130127_020104_978679_4E88F644)
-References: <1359248402-6595-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130127_020104_978679_4E88F644)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 31 Jan 2013 17:21:19 -0500
+Message-ID: <510AEE5C.6030303@wwwdotorg.org> (sfid-20130131_232124_480318_38EDD7DE)
+Date: Thu, 31 Jan 2013 15:21:16 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
+Subject: Re: [PATCH] nl80211: avoid "wdev_id may be used uninitialized"
+References: <1359504662-23561-1-git-send-email-swarren@wwwdotorg.org>   (sfid-20130130_011118_335925_03B80596) <1359532679.8010.1.camel@jlt4.sipsolutions.net>  <51094F10.60605@wwwdotorg.org> <1359665497.8415.102.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359665497.8415.102.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-01-26 at 17:00 -0800, Thomas Pedersen wrote:
-> Before "mac80211: clean up mesh sta allocation warning"
-> was applied, mesh_sta_info_get() was reshuffled to please
-> sparse. As a result we neglect to initialize newly created
-> STAs. Fix this.
+On 01/31/2013 01:51 PM, Johannes Berg wrote:
+> On Wed, 2013-01-30 at 09:49 -0700, Stephen Warren wrote:
+>> On 01/30/2013 12:57 AM, Johannes Berg wrote:
+>>> On Tue, 2013-01-29 at 17:11 -0700, Stephen Warren wrote:
+>>>> From: Stephen Warren <swarren@nvidia.com>
+>>>>
+>>>> Silence the following:
+>>>> net/wireless/nl80211.c: In function '__cfg80211_wdev_from_attrs.clone.119':
+>>>> net/wireless/nl80211.c:57:6: warning: 'wdev_id' may be used uninitialized in this function
+>>>>
+>>>> ... by always initializing wdev_id to zero. I assume that wiphy_idx and
+>>>> ifidx are set to -1 for similar reasons, so this change simply propagates
+>>>> the same workaround.
+>>>>
+>>>> In practice, this warning is false, since wdev_id is both set and used
+>>>> under the condition if (have_wdev_id). However, at least my compiler
+>>>> can't be coerced into realizing this; almost any code between the if
+>>>> blocks that set and use the variable causes this warning.
+>>>
+>>> I don't see this warning? What compiler are you using?
+>>
+>> I'm using gcc-4.5.3 for ARM. I checked with gcc-4.6.3 and gcc-4.7.2 and
+>> indeed I don't see the warning there.
+> 
+> Interesting. So should I keep it or remove it? I guess in this
+> particular instance it doesn't matter all that much. In other cases I'd
+> be more against changing it I guess.
 
-Ouch, sorry. Applied.
-
-johannes
-
+It's your call. I guess since it's fixed going forward in gcc, you may
+as well drop it though.
