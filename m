@@ -1,66 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3544 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752298Ab3AJKVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jan 2013 05:21:01 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>, stable@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.8] brcmsmac: increase timer reference count for
- new timers only
-Date: Thu, 10 Jan 2013 11:20:48 +0100
-Message-ID: <1357813248-10630-1-git-send-email-arend@broadcom.com> (sfid-20130110_112109_014127_7F2E2F69)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:54814 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753950Ab3AaNFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 08:05:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: always allow calling ieee80211_connection_loss()
+Date: Thu, 31 Jan 2013 14:06:02 +0100
+Message-Id: <1359637562-22399-2-git-send-email-johannes@sipsolutions.net> (sfid-20130131_140548_036156_85A6E9E7)
+In-Reply-To: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net>
+References: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-On hardware reintialization reference count of
-already existing timers would be increased again.
-This leads to problems on module unloading.
+With multi-channel, there's a corner case where a driver
+doesn't receive a beacon soon enough to be able to sync
+its timers with the AP. In this case, the only recovery
+(after trying again) is to disconnect from the AP. Allow
+calling ieee80211_connection_loss() for such cases. To
+make that possible, modify the work function to not rely
+on the IEEE80211_HW_CONNECTION_MONITOR flag but use new
+state kept in the interface instead.
 
-Cc: stable@vger.kernel.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Hi John,
+ include/net/mac80211.h     | 2 ++
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/mlme.c        | 6 ++++--
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-This patch fixes driver unload issue after driver restart due
-to fatal hardware problem. Because for 3.8 brcmsmac has been
-reported to restart (looking into that) this fix may be helpful
-to at least get the driver removed.
-
-Gr. AvS
----
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 1fbd8ec..0f71d1d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1407,9 +1407,10 @@ void brcms_add_timer(struct brcms_timer *t, uint ms, int periodic)
- #endif
- 	t->ms = ms;
- 	t->periodic = (bool) periodic;
--	t->set = true;
--
--	atomic_inc(&t->wl->callbacks);
-+	if (!t->set) {
-+		t->set = true;
-+		atomic_inc(&t->wl->callbacks);
-+	}
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 434f26d..1d3cbdc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3882,6 +3882,8 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+  * When beacon filtering is enabled with %IEEE80211_VIF_BEACON_FILTER, and
+  * %IEEE80211_CONF_PS and %IEEE80211_HW_CONNECTION_MONITOR are set, the driver
+  * needs to inform if the connection to the AP has been lost.
++ * The function may also be called if the connection needs to be terminated
++ * for some other reason, even if %IEEE80211_HW_CONNECTION_MONITOR isn't set.
+  *
+  * This function will cause immediate change to disassociated state,
+  * without connection recovery attempts.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bb80190..4b71477 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -424,6 +424,7 @@ struct ieee80211_if_managed {
+ 	unsigned long probe_timeout;
+ 	int probe_send_count;
+ 	bool nullfunc_failed;
++	bool connection_loss;
  
- 	ieee80211_queue_delayed_work(hw, &t->dly_wrk, msecs_to_jiffies(ms));
+ 	struct mutex mtx;
+ 	struct cfg80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f93b98f..199969c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1866,7 +1866,7 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 		rcu_read_unlock();
+ 	}
+ 
+-	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR) {
++	if (ifmgd->connection_loss) {
+ 		sdata_info(sdata, "Connection to AP %pM lost\n",
+ 			   ifmgd->bssid);
+ 		__ieee80211_disconnect(sdata);
+@@ -1894,6 +1894,7 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+ 	trace_api_beacon_loss(sdata);
+ 
+ 	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
++	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_loss);
+@@ -1905,7 +1906,7 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif)
+ 
+ 	trace_api_connection_loss(sdata);
+ 
+-	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
++	sdata->u.mgd.connection_loss = true;
+ 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_connection_loss);
+@@ -3121,6 +3122,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+ 	if (local->quiescing)
+ 		return;
+ 
++	sdata->u.mgd.connection_loss = false;
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->u.mgd.beacon_connection_loss_work);
  }
 -- 
-1.7.10.4
-
+1.8.0
 
