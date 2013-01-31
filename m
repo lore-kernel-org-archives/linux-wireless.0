@@ -1,423 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:37114 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070Ab3BDRor (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 12:44:47 -0500
-Received: by mail-bk0-f52.google.com with SMTP id jk13so2880126bkc.11
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2013 09:44:46 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Fix PN corruption in case of multiple virtual interface
-Date: Mon, 4 Feb 2013 18:44:44 +0100
-Cc: Amit Shakya <amit.shakya@stericsson.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com> <201302041814.11894.chunkeey@googlemail.com> <1359999018.17993.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359999018.17993.13.camel@jlt4.sipsolutions.net>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:48793 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342Ab3AaXiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 18:38:02 -0500
+From: "Zigman, Eran" <eranz@ti.com>
+To: Girish Bn <Girish.BN@lnties.com>, "Coelho, Luciano" <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: WL12XX drivers and firmware for Wi-Fi Pre Certifications Tests
+Date: Thu, 31 Jan 2013 23:37:54 +0000
+Message-ID: <58098F92B10CE64E898E9D20B13AA4830B5D244E@DNCE05.ent.ti.com> (sfid-20130201_003807_028452_B979FEBB)
+References: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
+In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201302041844.44436.chunkeey@googlemail.com> (sfid-20130204_184451_157654_38F66EFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, February 04, 2013 06:30:18 PM Johannes Berg wrote:
-> On Mon, 2013-02-04 at 18:14 +0100, Christian Lamparter wrote:
-> > On Monday, February 04, 2013 04:28:28 PM Johannes Berg wrote:
-> > > On Mon, 2013-02-04 at 16:48 +0530, Amit Shakya wrote:
-> > > > @@ -2790,7 +2791,20 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
-> > > >  
-> > > >     rx->local->running_rx_handler = true;
-> > > >  
-> > > > -   while ((skb = __skb_dequeue(&rx->local->rx_skb_queue))) {
-> > > > +   skb_queue_walk_safe(&rx->local->rx_skb_queue, skb, tmp) {
-> > > > +           if (!skb)
-> > > > +                   break;
-> > > > +           hdr = (struct ieee80211_hdr *) skb->data;
-> > > > +           /*
-> > > > +           * Additional check to ensure that the packets corresponding
-> > > > +           * to same sta entry as in rx->sta are de-queued. The queue
-> > > > +           * can have different interface packets in case of multiple vifs
-> > > > +           */
-> > > > +           if ((rx->sta && hdr) && (ieee80211_is_data(hdr->frame_control))
-> > > > +                   && (memcmp(rx->sta->sta.addr, hdr->addr2, ETH_ALEN)))
-> > > > +                                   continue;
-> > > > +           __skb_unlink(skb, &rx->local->rx_skb_queue);
-> > > 
-> > > Christian, is there any reason to not just have the queue be on the
-> > > stack, and use a separate spinlock in the local struct to lock out the
-> > > unwanted concurrency?
-> 
-> > Let's see.
-> > 
-> > The original "AMPDU rx reorder timeout timer" had the rx_skb_queue (frames)
-> > on the stack. But that didn't work because the rx-path isn't thread-safe. This
-> > issue was addressed by "mac80211: serialize rx path workers" (24a8fda). 
-> 
-> It seems this actually caused the problem, because this part:
-> 
->     Only one active rx handler worker [ieee80211_rx_handlers]
->     is needed. All other threads which have lost the race of
->     "runnning_rx_handler" can now simply "return", knowing that
->     the thread who had the "edge" will also take care of their
->     workload.
-> 
-> forgot to account for the fact that the on-stack versions of "struct
-> ieee80211_rx_data" can be different. Right?
-Yes, sdata and sta can be different.
-
-> > Interestingly, the RFC [1] of this patch mentioned the reason why I/we didn't
-> > go for a rx-path lock:
-> > "       1. Locking is easy to implement but hard to maintain.
-> >            Furthermore, Johannes worked very hard to get rid
-> >            of as many as possible."
-> > 
-> > > It seems to me that should work just as well, since there are never frames
-> > > on the rx_skb_queue for very long, right?
-> > Yes it should. At least we didn't find anything wrong with it back then.
-> 
-> But ... that doesn't necessarily mean an RX path lock, does it? 
-> 
-> I mean, in order to fix the above, we *do* have to make the RX
-> tasklet/timer wait for each other. So it's not really a big difference
-> between what we do now and having one of them block, is it? I guess that
-> they can still do all the local work, and then call the RX handlers with
-> the lock held? Hmm. That does kinda mean an RX path lock :-)
-
-See the attached patch. It compiles, but I can't test it right now.
-
-Regards,
-	Christian
-
----
-mac80211: protect rx-path with spinlock
-
-(Text is from "Fix PN corruption in case of multiple virtual interface"
-with a little modification => "same sdata and sta")
-
-In case, ieee80211_rx_handlers processing is going on for skbs received on
-one vif and at the same time, rx aggregation reorder timer expires on
-another vif then sta_rx_agg_reorder_timer_expired is invoked and it will
-push skbs into the single queue (local->rx_skb_queue).
-ieee80211_rx_handlers in the while loop assumes that the skbs are for the
-same sdata and sta. This assumption doesn't hold good in this scenario
-and the PN gets corrupted by PN received in other vif's skb, causing
-traffic to stop due to PN mismatch.
-
----
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5fba867..11a520b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -986,14 +986,7 @@ struct ieee80211_local {
- 	struct sk_buff_head skb_queue;
- 	struct sk_buff_head skb_queue_unreliable;
- 
--	/*
--	 * Internal FIFO queue which is shared between multiple rx path
--	 * stages. Its main task is to provide a serialization mechanism,
--	 * so all rx handlers can enjoy having exclusive access to their
--	 * private data structures.
--	 */
--	struct sk_buff_head rx_skb_queue;
--	bool running_rx_handler;	/* protected by rx_skb_queue.lock */
-+	spinlock_t rx_handler;
- 
- 	/* Station data */
- 	/*
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2bdd454..6517dd5 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -34,8 +34,6 @@
- #include "cfg.h"
- #include "debugfs.h"
- 
--static struct lock_class_key ieee80211_rx_skb_queue_class;
--
- void ieee80211_configure_filter(struct ieee80211_local *local)
- {
- 	u64 mc;
-@@ -613,21 +611,12 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 
- 	mutex_init(&local->key_mtx);
- 	spin_lock_init(&local->filter_lock);
-+	spin_lock_init(&local->rx_handler);
- 	spin_lock_init(&local->queue_stop_reason_lock);
- 
- 	INIT_LIST_HEAD(&local->chanctx_list);
- 	mutex_init(&local->chanctx_mtx);
- 
--	/*
--	 * The rx_skb_queue is only accessed from tasklets,
--	 * but other SKB queues are used from within IRQ
--	 * context. Therefore, this one needs a different
--	 * locking class so our direct, non-irq-safe use of
--	 * the queue's lock doesn't throw lockdep warnings.
--	 */
--	skb_queue_head_init_class(&local->rx_skb_queue,
--				  &ieee80211_rx_skb_queue_class);
--
- 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_scan_work);
- 
- 	INIT_WORK(&local->restart_work, ieee80211_restart_work);
-@@ -1089,7 +1078,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 		wiphy_warn(local->hw.wiphy, "skb_queue not empty\n");
- 	skb_queue_purge(&local->skb_queue);
- 	skb_queue_purge(&local->skb_queue_unreliable);
--	skb_queue_purge(&local->rx_skb_queue);
- 
- 	destroy_workqueue(local->workqueue);
- 	wiphy_unregister(local->hw.wiphy);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a190895..c52b15d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -668,9 +668,9 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
- 
- static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
- 					    struct tid_ampdu_rx *tid_agg_rx,
--					    int index)
-+					    int index,
-+					    struct sk_buff_head *frames)
- {
--	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
- 	struct ieee80211_rx_status *status;
- 
-@@ -684,7 +684,7 @@ static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
- 	tid_agg_rx->reorder_buf[index] = NULL;
- 	status = IEEE80211_SKB_RXCB(skb);
- 	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
--	skb_queue_tail(&local->rx_skb_queue, skb);
-+	__skb_queue_tail(frames, skb);
- 
- no_frame:
- 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-@@ -692,7 +692,8 @@ no_frame:
- 
- static void ieee80211_release_reorder_frames(struct ieee80211_sub_if_data *sdata,
- 					     struct tid_ampdu_rx *tid_agg_rx,
--					     u16 head_seq_num)
-+					     u16 head_seq_num,
-+					     struct sk_buff_head *frames)
- {
- 	int index;
- 
-@@ -701,7 +702,8 @@ static void ieee80211_release_reorder_frames(struct ieee80211_sub_if_data *sdata
- 	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
- 		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
--		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index);
-+		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index,
-+						frames);
- 	}
- }
- 
-@@ -717,7 +719,8 @@ static void ieee80211_release_reorder_frames(struct ieee80211_sub_if_data *sdata
- #define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
- 
- static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
--					  struct tid_ampdu_rx *tid_agg_rx)
-+					  struct tid_ampdu_rx *tid_agg_rx,
-+					  struct sk_buff_head *frames)
- {
- 	int index, j;
- 
-@@ -746,7 +749,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 
- 			ht_dbg_ratelimited(sdata,
- 					   "release an RX reorder frame due to timeout on earlier frames\n");
--			ieee80211_release_reorder_frame(sdata, tid_agg_rx, j);
-+			ieee80211_release_reorder_frame(sdata, tid_agg_rx, j,
-+							frames);
- 
- 			/*
- 			 * Increment the head seq# also for the skipped slots.
-@@ -756,7 +760,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
- 			skipped = 0;
- 		}
- 	} else while (tid_agg_rx->reorder_buf[index]) {
--		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index);
-+		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index,
-+						frames);
- 		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
- 	}
-@@ -788,7 +793,8 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
-  */
- static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata,
- 					     struct tid_ampdu_rx *tid_agg_rx,
--					     struct sk_buff *skb)
-+					     struct sk_buff *skb,
-+					     struct sk_buff_head *frames)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u16 sc = le16_to_cpu(hdr->seq_ctrl);
-@@ -816,7 +822,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
- 		head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
- 		/* release stored frames up to new head to stack */
- 		ieee80211_release_reorder_frames(sdata, tid_agg_rx,
--						 head_seq_num);
-+						 head_seq_num, frames);
- 	}
- 
- 	/* Now the new frame is always in the range of the reordering buffer */
-@@ -846,7 +852,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
- 	tid_agg_rx->reorder_buf[index] = skb;
- 	tid_agg_rx->reorder_time[index] = jiffies;
- 	tid_agg_rx->stored_mpdu_num++;
--	ieee80211_sta_reorder_release(sdata, tid_agg_rx);
-+	ieee80211_sta_reorder_release(sdata, tid_agg_rx, frames);
- 
-  out:
- 	spin_unlock(&tid_agg_rx->reorder_lock);
-@@ -857,7 +863,8 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
-  * Reorder MPDUs from A-MPDUs, keeping them on a buffer. Returns
-  * true if the MPDU was buffered, false if it should be processed.
-  */
--static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
-+static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
-+				       struct sk_buff_head *frames)
- {
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_local *local = rx->local;
-@@ -922,11 +929,12 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 	 * sure that we cannot get to it any more before doing
- 	 * anything with it.
- 	 */
--	if (ieee80211_sta_manage_reorder_buf(rx->sdata, tid_agg_rx, skb))
-+	if (ieee80211_sta_manage_reorder_buf(rx->sdata, tid_agg_rx, skb,
-+					     frames))
- 		return;
- 
-  dont_reorder:
--	skb_queue_tail(&local->rx_skb_queue, skb);
-+	__skb_queue_tail(frames, skb);
- }
- 
- static ieee80211_rx_result debug_noinline
-@@ -2177,7 +2185,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- }
- 
- static ieee80211_rx_result debug_noinline
--ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
-+ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
- {
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_bar *bar = (struct ieee80211_bar *)skb->data;
-@@ -2216,7 +2224,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
- 		spin_lock(&tid_agg_rx->reorder_lock);
- 		/* release stored frames up to start of BAR */
- 		ieee80211_release_reorder_frames(rx->sdata, tid_agg_rx,
--						 start_seq_num);
-+						 start_seq_num, frames);
- 		spin_unlock(&tid_agg_rx->reorder_lock);
- 
- 		kfree_skb(skb);
-@@ -2801,7 +2809,8 @@ static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
- 	}
- }
- 
--static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
-+static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
-+				  struct sk_buff_head *frames)
- {
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 	struct sk_buff *skb;
-@@ -2813,15 +2822,9 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
- 			goto rxh_next;  \
- 	} while (0);
- 
--	spin_lock(&rx->local->rx_skb_queue.lock);
--	if (rx->local->running_rx_handler)
--		goto unlock;
--
--	rx->local->running_rx_handler = true;
--
--	while ((skb = __skb_dequeue(&rx->local->rx_skb_queue))) {
--		spin_unlock(&rx->local->rx_skb_queue.lock);
-+	spin_lock_bh(&rx->local->rx_handler);
- 
-+	while ((skb = __skb_dequeue(frames))) {
- 		/*
- 		 * all the other fields are valid across frames
- 		 * that belong to an aMPDU since they are on the
-@@ -2842,7 +2845,12 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
- #endif
- 		CALL_RXH(ieee80211_rx_h_amsdu)
- 		CALL_RXH(ieee80211_rx_h_data)
--		CALL_RXH(ieee80211_rx_h_ctrl);
-+
-+		/* special treatment -- needs the queue */
-+		res = ieee80211_rx_h_ctrl(rx, frames);
-+		if (res != RX_CONTINUE)
-+			goto rxh_next;
-+
- 		CALL_RXH(ieee80211_rx_h_mgmt_check)
- 		CALL_RXH(ieee80211_rx_h_action)
- 		CALL_RXH(ieee80211_rx_h_userspace_mgmt)
-@@ -2851,20 +2859,20 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
- 
-  rxh_next:
- 		ieee80211_rx_handlers_result(rx, res);
--		spin_lock(&rx->local->rx_skb_queue.lock);
-+
- #undef CALL_RXH
- 	}
- 
--	rx->local->running_rx_handler = false;
--
-- unlock:
--	spin_unlock(&rx->local->rx_skb_queue.lock);
-+	spin_unlock_bh(&rx->local->rx_handler);
- }
- 
- static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
- {
-+	struct sk_buff_head reorder_release;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 
-+	__skb_queue_head_init(&reorder_release);
-+
- #define CALL_RXH(rxh)			\
- 	do {				\
- 		res = rxh(rx);		\
-@@ -2874,9 +2882,9 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
- 
- 	CALL_RXH(ieee80211_rx_h_check)
- 
--	ieee80211_rx_reorder_ampdu(rx);
-+	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
- 
--	ieee80211_rx_handlers(rx);
-+	ieee80211_rx_handlers(rx, &reorder_release);
- 	return;
- 
-  rxh_next:
-@@ -2891,6 +2899,7 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
-  */
- void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- {
-+	struct sk_buff_head frames;
- 	struct ieee80211_rx_data rx = {
- 		.sta = sta,
- 		.sdata = sta->sdata,
-@@ -2906,11 +2915,13 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 	if (!tid_agg_rx)
- 		return;
- 
-+	__skb_queue_head_init(&frames);
-+
- 	spin_lock(&tid_agg_rx->reorder_lock);
--	ieee80211_sta_reorder_release(sta->sdata, tid_agg_rx);
-+	ieee80211_sta_reorder_release(sta->sdata, tid_agg_rx, &frames);
- 	spin_unlock(&tid_agg_rx->reorder_lock);
- 
--	ieee80211_rx_handlers(&rx);
-+	ieee80211_rx_handlers(&rx, &frames);
- }
- 
- /* main receive path */
-
+SGkgR2lyaXNoLA0KTGV0IG1lIHRha2UgaXQgd2l0aCBvdXIgUiZELg0KDQpUaGFua3MgYW5kIFJl
+Z2FyZHMsDQoNCkVyYW4gWmlnbWFuDQpUZXhhcyBJbnN0cnVtZW50cyBJbmMNCkVDUyBBcHBsaWNh
+dGlvbiANCkNlbGw6IDQwOC02ODA5NzM0LCBPZmZpY2U6IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lyaXNoIEJuIFttYWlsdG86R2lyaXNoLkJOQGxudGll
+cy5jb21dIA0KU2VudDogV2VkbmVzZGF5LCBKYW51YXJ5IDMwLCAyMDEzIDk6MDcgUE0NClRvOiBa
+aWdtYW4sIEVyYW47IENvZWxobywgTHVjaWFubw0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZw0KU3ViamVjdDogV0wxMlhYIGRyaXZlcnMgYW5kIGZpcm13YXJlIGZvciBXaS1GaSBQ
+cmUgQ2VydGlmaWNhdGlvbnMgVGVzdHMNCg0KSGkgRXJhbiwNCg0KT3VyIFBsYXRmb3JtICBpcyBi
+YXNlZCBvbiBMUEMzMTN4IGFuZCBMaW51eCBrZXJuZWwgMi42LjI4LjIuIFRoZSB3aXJlbGVzcyBt
+b2R1bGUgaXMgSm9yamluIGJhc2VkIFdMMTI3MSBQRyAyLjAgV2UgYXJlIHVzaW5nIHRoZSBmb2xs
+b3dpbmcgY29tcGF0IHdpcmVsZXNzIHBhY2thZ2UgYW5kIGZpcm13YXJlIHZlcnNpb24gVGhlIENv
+bXBhdCBXaXJlbGVzcyAzLjUgcGFja2FnZSBmcm9tIFVSTCBodHRwOi8vbGludXh3aXJlbGVzcy5v
+cmcvZW4vdXNlcnMvRG93bmxvYWQvc3RhYmxlLyNjb21wYXQtd2lyZWxlc3NfMy41X3N0YWJsZV9y
+ZWxlYXNlcy4NClRoZSBTUiBmaXJtd2FyZSBiaW5hcnkgaXMgdGFrZW4gZnJvbSBVUkwgaHR0cHM6
+Ly9naXRodWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFuY2ggcjVfamIgYW5kIHRh
+ZyBbb2xfUjUuMDAuMTRdICBhbmQgdGhlIFJldmlzaW9uIGlzIFNpbmdsZSBSb2xlIChTUik6ICAp
+OiAgUmV2IDYuMy43LjAuMTA1IFBsZWFzZSBub3RlIHRoYXQgbXVsdGktcm9sZSB3aWxsIG5vdCBi
+ZSBlbmFibGVkIENhbiB5b3UgY29uZmlybSB1cyB3aGV0aGVyIHRoZSBhYm92ZSBjb21iaW5hdGlv
+biBoYXMgcGFzc2VkIG5lY2Vzc2FyeSBQcmUtcXVhbGlmaWNhdGlvbiB0ZXN0cyBmb3IgV2ktRmkg
+YW5kIFdpLUZpIERpcmVjdD8NCklmIG5vdCBhYm92ZSBjb21iaW5hdGlvbiwgcGxlYXNlIHN1Z2dl
+c3QgdXMgdGhlIHJpZ2h0IGNvbWJpbmF0aW9uIHdoaWNoIGhhcyBwYXNzZWQgdGVzdHMgYW5kIGl0
+IGNhbiB3b3JrIG9uIFdMMTI3MSBQRyAyLjANCg0KDQpUaGFua3MgJiBSZWdhcmRzLA0KR2lyaXNo
+DQpMJlQgSUVTLA0KS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0KSGViYmFsLUhvb3RhZ2FsbGksIE15
+c29yZSAtIDU3MCAwMTgNClRlbGVwaG9uZSA6ICBESUQrOTEtODIxLTI0MDU1NTINCk1vYmlsZTog
+KzkxLTk3NDEyMDY0MDINCkUtbWFpbCBJRCA6R2lyaXNoLkJOQGxudGllcy5jb20NCnd3dy5sbnRp
+ZXMuY29tDQoNClRoaXMgbWFpbCBpcyBjbGFzc2lmaWVkIGFzIDoNCiggICkgTCZUIElFUyBQcm9w
+cmlldGFyeQ0KKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KKFgpIEwmVCBJRVMgSW50ZXJuYWwg
+VXNlDQooICkgTCZUIElFUyBHZW5lcmFsIEJ1c2luZXNzDQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpH
+aXJpc2gNCkwmVCBJRVMsDQpLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQpIZWJiYWwtSG9vdGFnYWxs
+aSwgTXlzb3JlIC0gNTcwIDAxOA0KVGVsZXBob25lIDogIERJRCs5MS04MjEtMjQwNTU1Mg0KTW9i
+aWxlOiArOTEtOTc0MTIwNjQwMg0KRS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVzLmNvbQ0Kd3d3
+LmxudGllcy5jb20NCg0KVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KKCAgKSBMJlQgSUVT
+IFByb3ByaWV0YXJ5DQooICApIEwmVCBJRVMgQ29uZmlkZW50aWFsDQooWCkgTCZUIElFUyBJbnRl
+cm5hbCBVc2UNCiggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCg0KLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCkZyb206IFppZ21hbiwgRXJhbiBbbWFpbHRvOmVyYW56QHRpLmNvbV0NClNl
+bnQ6IFR1ZXNkYXksIEphbnVhcnkgMjksIDIwMTMgMTE6NTkgUE0NClRvOiBHaXJpc2ggQm47IENv
+ZWxobywgTHVjaWFubw0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVj
+dDogUkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBkcml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQ
+My4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAoSFcgUEcgMi4wKQ0KDQpIaSBHaXJpc2gsDQoN
+ClBHMi4wIHdhcyBzdG9wcGVkIGJlZW4gc3VwcG9ydGVkIGR1ZSB0byBSWCBNaXNtYXRjaCBwcm9i
+bGVtIHRoYXQgY2FtZSBkdWUgdG8gIndyb25nL3Byb2JsZW1hdGljIiBQUERVIGNvbXBsZXRlIGlu
+dGVycnVwdC4gSW4gUEczLjAgd2UgbW92ZWQgaW4gMTI3eCB0byB3b3JrIGFzIDEyOHggZGV2aWNl
+cywgYW5kIHNvbHZlZCB0aGF0IGlzc3VlLg0KDQpUaGFua3MgYW5kIFJlZ2FyZHMsDQoNCkVyYW4g
+WmlnbWFuDQpUZXhhcyBJbnN0cnVtZW50cyBJbmMNCkVDUyBBcHBsaWNhdGlvbg0KQ2VsbDogNDA4
+LTY4MDk3MzQsIE9mZmljZTogNzIxMzcyNg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBHaXJpc2ggQm4gW21haWx0bzpHaXJpc2guQk5AbG50aWVzLmNvbV0NClNlbnQ6IFRo
+dXJzZGF5LCBKYW51YXJ5IDI0LCAyMDEzIDEwOjQ4IFBNDQpUbzogWmlnbWFuLCBFcmFuOyBDb2Vs
+aG8sIEx1Y2lhbm8NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6
+IFJFOiB3bDEyeHggKG9sX1I1LlNQMy4wNSkgZHJpdmVycyArIGZpcm13YXJlIChvbF9SNS5TUDMu
+MDUpIGRvZXNuJ3Qgd29yayBvbiBXTDEyNzEgKEhXIFBHIDIuMCkNCg0KSGkgVEkgRGV2ZWxvcGVy
+cywNCg0KSSBhbSBzdGlsbCB3YWl0aW5nIGZvciByZXBseSBmcm9tIFRJIG9uIHdoZXRoZXIgb3Vy
+IGhhcmR3YXJlIGNhbiBydW4gc3VjY2Vzc2Z1bGx5IHJ1biB0aGUgb2xfUjUuU1AzLjA1IHBhY2th
+Z2Ugb3Igbm90Lg0KV2Ugc3BlbmQgaHVnZSBhbW91bnQgb2YgdGltZSBpbiB0ZXN0aW5nIHRoZSBw
+YWNrYWdlLiBXZSBhcmUgc2VlaW5nIHRoZSBpc3N1ZSB3aXRoIHRoZSBmaXJtd2FyZSBiaW5hcmll
+cyBvbmx5LiBXZSBkb24ndCBoYXZlIGFuIGFueSBjb250cm9sIG9uIHRoZSBmaXJtd2FyZSBiaW5h
+cmllcyBhbmQgaXQgYSBibGFjayBib3ggdG8gdXMuDQpJZiB0aGUgZmlybXdhcmUgaXMgbm90IHN1
+cHBvcnRlZCBvbiB0aGUgb2xkZXIgaGFyZHdhcmUsIHBsZWFzZSBhcHBseSBhIHBhdGNoIHRvIHRo
+ZSBkcml2ZXIgd2hpY2ggd2lsbCByZXN0cmljdCBydW5uaW5nIHRoZSBuZXcgZHJpdmVycyBvbiB0
+aGUgb2xkZXIgaGFyZHdhcmUuDQpJdCB3aWxsIGFsc28gaGVscCB0byBhdm9pZCBwZW9wbGUgc3Bl
+bmRpbmcgdGltZSBvbiB0aGUgbmV3IGRyaXZlcnMgd2l0aCBvbGQgaGFyZHdhcmUuDQpXZSB3YW50
+ZWQgdG8gbWFrZSBjcnVjaWFsIGRlY2lzaW9uIGZvciBvdXIgTmV0d29yayBTZXJ2ZXIgcHJvZHVj
+dCBmZWF0dXJlcyBiYXNlZCBvbiB0aGUgb3V0Y29tZSBvZiB0ZXN0aW5nIG9sX1I1LlNQMy4wNSBw
+YWNrYWdlIHdoaWNoIHdlIGNvdWxkbid0IGFjaGlldmUuDQpUaGlzIGhhcyBkaXNhcHBvaW50ZWQg
+dXMgYSBsb3QNCg0KVGhhbmtzICYgUmVnYXJkcywNCkdpcmlzaA0KDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogR2lyaXNoIEJuDQpTZW50OiBGcmlkYXksIEphbnVhcnkgMDQsIDIw
+MTMgOToxMSBBTQ0KVG86ICdaaWdtYW4sIEVyYW4nOyAnQ29lbGhvLCBMdWNpYW5vJw0KQ2M6ICds
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9S
+NS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2FyZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsg
+b24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkhpLA0KDQpEbyB5b3UgaGF2ZSBhbnkgdXBkYXRlcyBv
+biB0aGUgdGVzdGluZyBhdCB5b3VyIHNpZGU/IExldCB1cyBrbm93IGFueSBwYXRoIGZvcndhcmQg
+b24gdGhpcz8NCg0KVGhhbmtzICYgUmVnYXJkcywNCkdpcmlzaA0KTCZUIElFUywNCktJQURCIElu
+ZHVzdHJpYWwgQXJlYSwNCkhlYmJhbC1Ib290YWdhbGxpLCBNeXNvcmUgLSA1NzAgMDE4DQpUZWxl
+cGhvbmUgOiAgRElEKzkxLTgyMS0yNDA1NTUyDQpNb2JpbGU6ICs5MS05NzQxMjA2NDAyDQpFLW1h
+aWwgSUQgOkdpcmlzaC5CTkBsbnRpZXMuY29tDQp3d3cubG50aWVzLmNvbQ0KDQpUaGlzIG1haWwg
+aXMgY2xhc3NpZmllZCBhcyA6DQooICApIEwmVCBJRVMgUHJvcHJpZXRhcnkNCiggICkgTCZUIElF
+UyBDb25maWRlbnRpYWwNCihYKSBMJlQgSUVTIEludGVybmFsIFVzZQ0KKCApIEwmVCBJRVMgR2Vu
+ZXJhbCBCdXNpbmVzcw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lyaXNo
+IEJuDQpTZW50OiBGcmlkYXksIERlY2VtYmVyIDI4LCAyMDEyIDY6MTcgUE0NClRvOiAnWmlnbWFu
+LCBFcmFuJzsgQ29lbGhvLCBMdWNpYW5vDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2Fy
+ZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkhp
+LA0KDQpUaGFua3MgZm9yIHRoZSBzdXBwb3J0DQpDYW4geW91IGxldCB1cyBrbm93IHdoZXRoZXIg
+eW91IHdlcmUgYWJsZSB0byByZXByb2R1Y2UgdGhlIGlzc3VlIHVzaW5nIFI1LlNQMyBvbiBXTDEy
+NzFMIChIVyBQRyAyLjApIG9uIExpbnV4Pw0KDQogVGhhbmtzICYgUmVnYXJkcywNCkdpcmlzaA0K
+TCZUIElFUywNCktJQURCIEluZHVzdHJpYWwgQXJlYSwNCkhlYmJhbC1Ib290YWdhbGxpLCBNeXNv
+cmUgLSA1NzAgMDE4DQpUZWxlcGhvbmUgOiAgRElEKzkxLTgyMS0yNDA1NTUyDQpNb2JpbGU6ICs5
+MS05NzQxMjA2NDAyDQpFLW1haWwgSUQgOkdpcmlzaC5CTkBsbnRpZXMuY29tDQp3d3cubG50aWVz
+LmNvbQ0KDQpUaGlzIG1haWwgaXMgY2xhc3NpZmllZCBhcyA6DQooICApIEwmVCBJRVMgUHJvcHJp
+ZXRhcnkNCiggICkgTCZUIElFUyBDb25maWRlbnRpYWwNCihYKSBMJlQgSUVTIEludGVybmFsIFVz
+ZQ0KKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KRnJvbTogWmlnbWFuLCBFcmFuIFttYWlsdG86ZXJhbnpAdGkuY29tXQ0KU2VudDogU2F0
+dXJkYXksIERlY2VtYmVyIDIyLCAyMDEyIDEyOjM2IEFNDQpUbzogQ29lbGhvLCBMdWNpYW5vOyBH
+aXJpc2ggQm4NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJF
+OiB3bDEyeHggKG9sX1I1LlNQMy4wNSkgZHJpdmVycyArIGZpcm13YXJlIChvbF9SNS5TUDMuMDUp
+IGRvZXNuJ3Qgd29yayBvbiBXTDEyNzEgKEhXIFBHIDIuMCkNCg0KTHVjYSwNCldlIGhhdmUgdGVz
+dGVkIHRoZSBiZWxvdyByZWxlYXNlIFI1LlNQMyBvbiBBTTMzNXggYW5kIFdMMTI3MUwgKEhXIFBH
+IDMueCkgb24gTGludXggYnV0IG5vdCBvbiBQRyAyLjAuDQpJIGFtIG5vdCBzdXJlIGlmIHRoZSBS
+NS5TUDMgZHJpdmVyL2Zpcm13YXJlIHdvdWxkIGhhdmUgYW55IGxpbWl0YXRpb25zIG9mIG9sZCB2
+ZXJzaW9uIFBHMi4wLg0KV2Ugd2lsbCBydW4gdGhlIGV4YWN0IHNjZW5hcmlvcyB0aGF0IHlvdSBt
+ZW50aW9uZWQgZm9yIFdMNiAoUEczLngpIGFuZCB1cGRhdGUuDQoNCg0KQ2FuIHlvdSBwbGVhc2Ug
+c2hlZCBzb21lIGxpZ2h0IG9uIHRoaXMgYWN0aXZpdHksIGN1c3RvbWVyLi4uDQoNClRoYW5rcyBh
+bmQgUmVnYXJkcywNCg0KRXJhbiBaaWdtYW4NClRleGFzIEluc3RydW1lbnRzIEluYw0KRUNTIEFw
+cGxpY2F0aW9uDQpDZWxsOiA0MDgtNjgwOTczNCwgT2ZmaWNlOiA3MjEzNzI2DQoNCg0KLS0tLS1P
+cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IENvZWxobywgTHVjaWFubw0KU2VudDogV2VkbmVz
+ZGF5LCBEZWNlbWJlciAxOSwgMjAxMiAxMTozMiBBTQ0KVG86IFppZ21hbiwgRXJhbjsgR2lyaXNo
+IEJuDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogd2wx
+Mnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2FyZSAob2xfUjUuU1AzLjA1KSBkb2Vz
+bid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkhpIEVyYW4sDQoNCkNhbiB5b3UgcGxl
+YXNlIGNoZWNrIEdpcmlzaCdzIGVtYWlsIGJlbG93IGFuZCBoZWxwIGhpbSB3aXRoIHRoaXM/DQoN
+ClRoYW5rcyENCg0KLS0NCkx1Y2EuDQoNCk9uIFdlZCwgMjAxMi0xMi0xOSBhdCAxNDo0MSArMDAw
+MCwgR2lyaXNoIEJuIHdyb3RlOg0KPiBIaSwNCj4NCj4gV2UgYXJlIGNsaWVudCBpcyB1c2luZyB0
+aGUgSm9yamluIFdHNzMxMC0wMCBXTEFOL0JUL0ZNIE1vZHVsZSBmb3Igb25lIG9mIHRoZSBXTEFO
+IHNlcnZlciBtb2R1bGUuDQo+IFdlIGFyZSBwb3J0aW5nIHRoZSBMaW51eCBvcGVuIHNvdXJjZSBk
+cml2ZXJzIHRvIFdMMTI3MSBiYXNlZCBKb3JqaW4gbW9kdWxlLiBPdXIga2VybmVsIHZlcnNpb24g
+aXMgMi42LjI4LjIgYW5kIHByb2Nlc3NvciBpcyBMUEMzMTMwLiBUaGUgUEcgdmVyIG9mIFdsMTI3
+MSBpcyAyLg0KPiBSZWNlbnRseSB3ZSBoYXZlIGJhY2sgcG9ydGVkIHRoZSB3bDEyeHggZHJpdmVy
+cyBmcm9tIHRoZSBUSS1PcGVuTGluayANCj4gc2l0ZSBXZSBoYXZlIHRha2VuIHRoZSB3bDEyeHgg
+ZHJpdmVycyBmcm9tIA0KPiBodHRwczovL2dpdGh1Yi5jb20vVEktT3Blbkxpbmsvd2wxMnh4IGFu
+ZCBicmFuY2ggcjVfamIgYW5kIHRhZw0KPiBvbF9SNS5TUDMuMDUgQWxzbyB3ZSBoYWQgdGFrZW4g
+dGhlIGZpcm13YXJlIGZyb20gDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay90aS11
+dGlscyBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcNCj4gb2xfUjUuU1AzLjA1IFRoZSBzdXBwbGlj
+YW50IGFsc28gd2FzIHRha2VuIGZyb20gDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGlu
+ay9ob3N0YXAgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFnDQo+IG9sX1I1LlNQMy4wNQ0KPg0KPiBX
+ZSB1c2luZyB0aGUgbXVsdGktcm9sZSBmZWF0dXJlIG9mIHRoZSBkcml2ZXIuDQo+IFdlIGhhZCBz
+cGVjaWZpY2FsbHkgdGFrZW4gYWJvdmUgcGFja2FnZSBhcyB3ZSB3YW50ZWQgdGhlIEFQIGNoYW5u
+ZWwgc3dpdGNoIGZ1bmN0aW9uYWxpdHkuIFRoaXMgZmVhdHVyZSBoYW5kbGVzIGEgcGFydGljdWxh
+ciBjYXNlIGxpa2UgaWYgeW91IHN0YXJ0ZWQgdGhlIFNUQSBvbiBDaGFubmVsIFggYW5kIGFsc28g
+eW91IHdpbGwgc3RhcnQgQVAgKFAyUCBHcm91cCBPd25lcikgb24gdGhlIHNhbWUgY2hhbm5lbCAo
+Q2hhbm5lbCBYKS4gTm93IGlmIHlvdSBjaGFuZ2UgdGhlIGNoYW5uZWwgb2YgU3RhdGlvbiB0byBD
+aGFubmVsKFkpLCB0aGUgZHJpdmVyIGF1dG9tYXRpY2FsbHkgd2lsbCB0YWtlIGNhcmUgb2YgcmVz
+dGFydGluZyB0aGUgQVAoUDJQIEdPKSBvbiB0aGUgc2FtZSBjaGFubmVsKENoYW5uZWwgWSkuDQo+
+DQo+IFdlIGFyZSBmYWNpbmcgaXNzdWUgd2l0aCB0aGlzIHBhY2thZ2UgYW5kIHRoZSBkcml2ZXJz
+IHdvbid0IHdvcmsgcHJvcGVybHkgZm9yIHVzLg0KPiBUaGUgbWFqb3IgaXNzdWVzIHNlZW4gd2l0
+aCB0aGlzIHBhY2thZ2UgYXJlIDEuIFdlIGFibGUgdG8gZG8gdGhlIHNjYW4gDQo+IGFuZCBjb25u
+ZWN0IHRvIGFuIGVuY3J5cHRlZCBuZXR3b3JrLiAgQnV0IHdoZW4gd2UgcnVuIERIQ1AgY2xpZW50
+IG9uIHdsYW4wIHRvIGdldCB0aGUgSVAgYWRkcmVzcyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQsIHRo
+ZSBkcml2ZXIgdGhyb3dzICJ3bDEyeHg6IEJlYWNvbiBsb3NzIGRldGVjdGVkIiBtZXNzYWdlIGFu
+ZCB0aGUgY29ubmVjdGlvbiBicmVha3MgYW5kIHRoZSBkcml2ZXIgZ2V0cyBpbnRvIFNDQU4gbW9k
+ZSBhbmQgd2lsbCB0cnkgdG8gcmVjb25uZWN0IHRvIHRoZSBBY2Nlc3MgUG9pbnQuIEV2ZW50dWFs
+bHkgd2UgZG9uJ3QgcmVjZWl2ZSB0aGUgSVAgYWRkcmVzcyBmcm9tIHRoZSBBY2Nlc3MgUG9pbnQu
+DQo+IDIuIEkgd2FzIGFibGUgdG8gc3RhcnQgdGhlIFN0YXRpb24gYW5kIEFQIHJvbGUgb24gdGhl
+IHNhbWUgY2hhbm5lbC4gQnV0IHRoZSBhZnRlciBzdGF0aW5nIHRoZSBBUCByb2xlLCBzdGF0aW9u
+IHJvbGUgd2lsbCBiZSBkaXNjb25uZWN0ZWQgYXV0b21hdGljYWxseSBhbmQgSSB3b24ndCBiZSBh
+YmxlIHRvIGRvIHNjYW4gYW5kIGNvbm5lY3Rpb24gb24gU1RBLg0KPiAzLiBBbHNvIGNhbm5vdCBj
+b25uZWN0IHRvIG15IFN5c3RlbSB3aGljaCBpcyBhY3RpbmcgYXMgUDJQIEdyb3VwIE93bmVyKEFQ
+KSBmcm9tIGFueSBvdGhlciBXaS1GaSBkZXZpY2UgbGlrZSBpUGhvbmUvTGFwdG9wIG9yIGFueSBv
+dGhlci4gVGhlIGlzc3VlIGlzIHNlZW4gd2hlbiBTeXN0ZW0gaXMgc2V0IHRvIFAyUCBHTyBlaXRo
+ZXIgdXNpbmcgU2luZ2xlIFJvbGUgZmlybXdhcmUgb25seSBvciB1c2luZyBNdWx0aS1yb2xlIGZp
+cm13YXJlLg0KPg0KPiBXZSBzdXNwZWN0IHRoZSBpc3N1ZSB3aXRoIHRoZSBhYm92ZSB2ZXJzaW9u
+cyBvZiAob2xfUjUuU1AzLjA1KSB3bDEyN3ggDQo+IGZpcm13YXJlIGFuZCBzdXJwcmlzaW5nbHkg
+YWxsIHRoZSBhYm92ZSB0aHJlZSBpc3N1ZXMgYXJlIE5PVCBzZWVuIHdoZW4gDQo+IEkgdXNlIHRo
+ZSBiZWxvdyBmaXJtd2FyZSB2ZXJzaW9ucyAod2hpY2ggaXMgcXVpdGUgb2xkKSBTaW5nbGUgUm9s
+ZQ0KPiAoU1IpOiAgUmV2IDYuMy43LjAuMTA1DQo+IE11bHRpLVJvbGUoTVIpOiBSZXYgNi41LjUu
+MC4yMQ0KPg0KPg0KPiBUaGUgZmlybXdhcmUgdmVyc2lvbnMgdGFrZW4gZnJvbQ0KPiBodHRwczov
+L2dpdGh1Yi5jb20vVEktT3BlbkxpbmsvdGktdXRpbHMgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFn
+DQo+IG9sX1I1LlNQMy4wNSBhcmUgU2luZ2xlIFJvbGUgKFNSKTogIFJldiA2LjMuMTAuMC4xMzIg
+TXVsdGktUm9sZSAoTVIpOg0KPiBSZXYgNi41LjcuMC40Mg0KPg0KPiBDYW4geW91IGxldCB1cyBr
+bm93IHdoZXRoZXIgV2wxMjcxIGh3IFBHIFZlciAyLjAgY2FuIHJ1biB0aGUgb2xfUjUuU1AzLjA1
+IGZpcm13YXJlIHN1Y2Nlc3NmdWxseSBvciBhbnkgaGFyZHdhcmUgbGltaXRhdGlvbnMgd2l0aCBX
+bDEyNzE/DQo+IEFueSBzdWdnZXN0aW9ucyBvbiB0aGUgYWJvdmUgaXNzdWVzIHdpbGwgYmUgZ3Jl
+YXRseSBoZWxwZnVsDQo+DQo+DQo+IFRoYW5rcyAmIFJlZ2FyZHMsDQo+IEdpcmlzaA0KPiBMJlQg
+SUVTLA0KPiBLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQo+IEhlYmJhbC1Ib290YWdhbGxpLCBNeXNv
+cmUgLSA1NzAgMDE4DQo+IFRlbGVwaG9uZSA6ICBESUQrOTEtODIxLTI0MDU1NTINCj4gTW9iaWxl
+OiArOTEtOTc0MTIwNjQwMg0KPiBFLW1haWwgSUQgOkdpcmlzaC5CTkBsbnRpZXMuY29tDQo+IHd3
+dy5sbnRpZXMuY29tDQo+DQo+IFRoaXMgbWFpbCBpcyBjbGFzc2lmaWVkIGFzIDoNCj4gKCAgKSBM
+JlQgSUVTIFByb3ByaWV0YXJ5DQo+ICggICkgTCZUIElFUyBDb25maWRlbnRpYWwNCj4gKFgpIEwm
+VCBJRVMgSW50ZXJuYWwgVXNlDQo+ICggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCj4NCj4g
+TGFyc2VuICYgVG91YnJvIExpbWl0ZWQNCj4NCj4gd3d3LmxhcnNlbnRvdWJyby5jb20NCj4NCj4g
+VGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3IgcHJpdmlsZWdlZCBpbmZvcm1h
+dGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVudCAocykuIElmIHlvdSBhcmUgbm90IHRoZSBp
+bnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBub3QgdXNlIG9yIGRpc3NlbWluYXRlIHRoZSBp
+bmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBpdCBmcm9tIHlvdXIgc3lz
+dGVtLg0KDQpMYXJzZW4gJiBUb3Vicm8gTGltaXRlZA0KDQp3d3cubGFyc2VudG91YnJvLmNvbQ0K
+DQpUaGlzIEVtYWlsIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2VkIGluZm9y
+bWF0aW9uIGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBub3QgdGhl
+IGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5hdGUgdGhl
+IGluZm9ybWF0aW9uLCBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20geW91ciBz
+eXN0ZW0uDQpMYXJzZW4gJiBUb3Vicm8gTGltaXRlZA0KDQp3d3cubGFyc2VudG91YnJvLmNvbQ0K
+DQpUaGlzIEVtYWlsIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2VkIGluZm9y
+bWF0aW9uIGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBub3QgdGhl
+IGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5hdGUgdGhl
+IGluZm9ybWF0aW9uLCBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20geW91ciBz
+eXN0ZW0uDQo=
