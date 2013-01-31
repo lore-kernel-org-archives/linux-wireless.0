@@ -1,89 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60230 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751878Ab3AYVpe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jan 2013 16:45:34 -0500
-Message-ID: <1359150352.4655.29.camel@jlt4.sipsolutions.net> (sfid-20130125_224538_197606_B3BB4B80)
-Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH
- response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Will Hawkins <hawkinsw@opentechinstitute.org>
-Cc: Antonio Quartulli <antonio@open-mesh.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 25 Jan 2013 22:45:52 +0100
-In-Reply-To: <50E5F2A4.9080108@opentechinstitute.org>
-References: <1355146824-25012-1-git-send-email-antonio@open-mesh.com>
-	 <1355146824-25012-2-git-send-email-antonio@open-mesh.com>
-	 <1356706268.9922.23.camel@jlt4.sipsolutions.net>
-	 <20130102063255.GA27676@open-mesh.com>
-	 <50E5F2A4.9080108@opentechinstitute.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from narfation.org ([79.140.41.39]:42971 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753726Ab3AaJ1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 04:27:16 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	rodrigue@qca.qualcomm.com, Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH 5/6] ath9k: Fix sparse __CHECK_ENDIAN__ for spectral code
+Date: Thu, 31 Jan 2013 10:26:48 +0100
+Message-Id: <1359624409-14815-5-git-send-email-sven@narfation.org> (sfid-20130131_102720_709917_A2B74B92)
+In-Reply-To: <1359624409-14815-1-git-send-email-sven@narfation.org>
+References: <1359624409-14815-1-git-send-email-sven@narfation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-03 at 16:05 -0500, Will Hawkins wrote:
-> Sorry for the delay responding!
 
-Haha, 1.5 days. I win at delaying ;-(
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    8 ++++----
+ drivers/net/wireless/ath/ath9k/recv.c  |    9 +++++----
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-> >> Anyway this part is really confusing. If userspace is handling
-> >> auth frames, should the kernel really mark the station as
-> >> authenticated? What then is the point in handling auth frames in
-> >> userspace??
-> >> 
-> >> Will?
-> > 
-> > Actually I don't know. Maybe Will can help us in understanding how
-> > to handle this point. I simply kept the same behaviour: before this
-> > (my) patch a station was marked as AUTHenticated in by the kernel,
-> > even if userspace registered for AUTH frames, and the same I'm
-> > doing here.
-> 
-> It does *not* appear that Antonio's patch changes the logic that I put
-> in place with my earlier patch. For me, the userspace application
-> *authorizes* the station rather than *authenticates*. In other words,
-> no matter whether or not the userspace application is registered for
-> AUTH frames, the new station is assumed to be authenticated. Once the
-> two stations are authenticated the key exchange begins (over AUTH
-> frames) to determine if the stations are authorized.
-> 
-> Johannes, what are your thoughts on the differences between the
-> semantics of authenticated and authorized. I am definitely in over my
-> head so please correct me where I've gone wrong. :-)
-
-That makes sense, you handle the SAE authentication and then mark the
-station as authorized, which is perfectly fine. But that really mostly
-means you don't care about the authenticated state at all, and there's
-no real associated state anyway ...
-
-> I would be okay with this approach. I think that it would be fairly
-> easy to essentially move the logic up a level and protect the
-> transition to AUTH rather than AUTHORIZED.
-
-Well, you'd have to do both, and we also can't break the userspace API
-now.
-
-> > This is a behaviour I introduced some time ago:
-> > 
-> > 1153         sdata->u.ibss.control_port = params->control_port;
-> > 
-> > which is set based on NL80211_ATTR_CONTROL_PORT and at the moment,
-> > in IBSS, I think it is only set by wpa_supplicant when using
-> > IBSS/RSN..you told me to use control_port instead of creating
-> > another member..but maybe it is general and could be used for
-> > something else?
-
-It could be used for something else.
-
-> The userspace application that I am writing does use the control port
-> in IBSS. My goal is to integrate my userspace application with
-> wpa_supplicant so eventually there will be convergence. In fact,
-> Antonio's new message is critical to this integration. :-)
-
-That I don't understand? Why does it need the new event? Wouldn't
-completing the SAE handshake be sufficient information?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 67df864..5fb99d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -869,7 +869,7 @@ enum ath_fft_sample_type {
+ 
+ struct fft_sample_tlv {
+ 	u8 type;	/* see ath_fft_sample */
+-	u16 length;
++	__be16 length;
+ 	/* type dependent data follows */
+ } __packed;
+ 
+@@ -878,15 +878,15 @@ struct fft_sample_ht20 {
+ 
+ 	u8 max_exp;
+ 
+-	u16 freq;
++	__be16 freq;
+ 	s8 rssi;
+ 	s8 noise;
+ 
+-	u16 max_magnitude;
++	__be16 max_magnitude;
+ 	u8 max_index;
+ 	u8 bitmap_weight;
+ 
+-	u64 tsf;
++	__be64 tsf;
+ 
+ 	u8 data[SPECTRAL_HT20_NUM_BINS];
+ } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index e349bff..0910146 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1038,6 +1038,7 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	struct ath_ht20_mag_info *mag_info;
+ 	int len = rs->rs_datalen;
+ 	int dc_pos;
++	u16 length, max_magnitude;
+ 
+ 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
+ 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
+@@ -1065,8 +1066,8 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 		return 1;
+ 
+ 	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
+-	fft_sample.tlv.length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
+-	fft_sample.tlv.length = __cpu_to_be16(fft_sample.tlv.length);
++	length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
++	fft_sample.tlv.length = __cpu_to_be16(length);
+ 
+ 	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
+ 	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
+@@ -1112,8 +1113,8 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
+ 	fft_sample.max_exp = mag_info->max_exp & 0xf;
+ 
+-	fft_sample.max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+-	fft_sample.max_magnitude = __cpu_to_be16(fft_sample.max_magnitude);
++	max_magnitude = spectral_max_magnitude(mag_info->all_bins);
++	fft_sample.max_magnitude = __cpu_to_be16(max_magnitude);
+ 	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
+ 	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
+ 	fft_sample.tsf = __cpu_to_be64(tsf);
+-- 
+1.7.10.4
 
