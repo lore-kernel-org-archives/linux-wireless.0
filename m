@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41338 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835Ab3ABQAM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54816 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752345Ab3AaNGD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 11:00:12 -0500
-Date: Wed, 2 Jan 2013 10:54:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v12] wireless: add new wil6210 802.11ad 60GHz driver
-Message-ID: <20130102155435.GB2198@tuxdriver.com> (sfid-20130102_170016_804539_11DCE620)
-References: <1356037999-26092-1-git-send-email-mcgrof@do-not-panic.com>
- <1356037999-26092-2-git-send-email-mcgrof@do-not-panic.com>
- <2337605.TgA1UMa4Oj@lx-vladimir>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2337605.TgA1UMa4Oj@lx-vladimir>
+	Thu, 31 Jan 2013 08:06:03 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U0tq6-0000Jh-9G
+	for linux-wireless@vger.kernel.org; Thu, 31 Jan 2013 14:06:02 +0100
+Message-ID: <1359637586.8415.9.camel@jlt4.sipsolutions.net> (sfid-20130131_140624_055905_6A6D1D69)
+Subject: Re: [PATCH] mac80211: remove last_probe_resp from bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 31 Jan 2013 14:06:26 +0100
+In-Reply-To: <1359495232-32092-1-git-send-email-johannes@sipsolutions.net> (sfid-20130129_223340_996761_8B99FD0B)
+References: <1359495232-32092-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130129_223340_996761_8B99FD0B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 02, 2013 at 11:08:55AM +0200, Vladimir Kondratiev wrote:
-> On Thursday, December 20, 2012 01:13:19 PM Luis R. Rodriguez wrote:
-> > From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> > 
-> > This adds support for the 60 GHz 802.11ad Wilocity card
-> > through a new driver, wil6210. Wilocity implemented the
-> > firmware, QCA maintains the device driver.
-> > 
+On Tue, 2013-01-29 at 22:33 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Hi John,
-> 
-> What is status of this patch?
-> 
-> Thanks, Vladimir
+> We track this, but never use it, so we can
+> just remove it.
 
-I've been on vacation since before Christmas.  I'll try to get to
-this soon.
+Applied.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
