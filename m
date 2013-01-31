@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629Ab3ABKv0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jan 2013 05:51:26 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1TqLuv-0004Ek-KE
-	for linux-wireless@vger.kernel.org; Wed, 02 Jan 2013 11:51:25 +0100
-Message-ID: <1357123911.9839.3.camel@jlt4.sipsolutions.net> (sfid-20130102_115129_608528_78380BB3)
-Subject: Re: [PATCH] mac80211: support HT notify channel width action
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 02 Jan 2013 11:51:51 +0100
-In-Reply-To: <1356693299-12143-1-git-send-email-johannes@sipsolutions.net> (sfid-20121228_121444_315212_961A27CC)
-References: <1356693299-12143-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20121228_121444_315212_961A27CC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:47744 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751763Ab3AaN5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 08:57:43 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Sven Eckelmann <sven@narfation.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH 4/6] ath9k: Only spectral scan relay file when it was created
+References: <1359624409-14815-1-git-send-email-sven@narfation.org>
+	<1359624409-14815-4-git-send-email-sven@narfation.org>
+Date: Thu, 31 Jan 2013 15:57:35 +0200
+In-Reply-To: <1359624409-14815-4-git-send-email-sven@narfation.org> (Sven
+	Eckelmann's message of "Thu, 31 Jan 2013 10:26:47 +0100")
+Message-ID: <87vcadbgkw.fsf@purkki.adurom.net> (sfid-20130131_145747_200287_465AA0CB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-12-28 at 12:14 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Support the HT notify channel width action frame
-> to update the rate scaling about the bandwidth
-> the peer can receive in.
+Sven Eckelmann <sven@narfation.org> writes:
 
-Applied.
+> The relay file depends on relayfs. Trying to close this file without having
+> ATH9K_DEBUGFS (and therefore RELAY) activated causes build failures.
+>
+> Signed-off-by: Sven Eckelmann <sven@narfation.org>
 
-johannes
+[...]
 
+> +#ifdef CONFIG_ATH9K_DEBUGFS
+>  	if (sc->rfs_chan_spec_scan) {
+>  		relay_close(sc->rfs_chan_spec_scan);
+>  		sc->rfs_chan_spec_scan = NULL;
+>  	}
+> +#endif
+
+Instead of ugly #ifdef you could do something like this:
+
+        if (config_enabled(CONFIG_ATH6KL_REGDOMAIN) &&
+
+I think you could use that elsehwere in your patchset as well, but I
+didn't check that carefully.
+
+-- 
+Kalle Valo
