@@ -1,32 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta2.mx.noc4.net ([176.67.161.177]:60907 "EHLO mta2.mx.noc4.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752134Ab3AUOmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jan 2013 09:42:18 -0500
-Received: from unknown (HELO www.noc4.net) (176.67.161.175)
-  by mta2.mx.noc4.net with SMTP for <linux-wireless@vger.kernel.org>; 21 Jan 2013 14:42:16 -0000
+Received: from youngberry.canonical.com ([91.189.89.112]:52638 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666Ab3AaQOJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 11:14:09 -0500
+Date: Thu, 31 Jan 2013 10:14:04 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH 2/7] mac80211: Fix tx queue handling during scans
+Message-ID: <20130131161404.GC28799@thinkpad-t410> (sfid-20130131_171413_372016_81866123)
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+ <1359503255-18270-3-git-send-email-seth.forshee@canonical.com>
+ <1359645245.8415.72.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 21 Jan 2013 14:43:36 +0000
-From: Paul Freeman <linux-net@lists-in.noc4.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Intel Wifi 6200 N  iwlwifi (Unsupported (too old) EEPROM
- =?UTF-8?Q?VER=3D=30x=34=31=36=20=3C=20=30x=34=32=33=20CALIB=3D=30x=35=20?=
- =?UTF-8?Q?=3C=20=30x=34=29?=
-In-Reply-To: <20130121142750.GA2212@tuxdriver.com>
-References: <10f63cd798eeb6fa6168f6342af3c373@noc4.net>
- <20130121142750.GA2212@tuxdriver.com>
-Message-ID: <8785d94b44b4a14f3a24a78eb9c53507@noc4.net> (sfid-20130121_154221_263182_CDB4D94B)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359645245.8415.72.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-01-21 14:27, John W. Linville wrote:
-> The last time we saw something like that, the Intel folks said it was
-> a device that was not supposed to have been released to the wild...?
->
+On Thu, Jan 31, 2013 at 04:14:05PM +0100, Johannes Berg wrote:
+> On Tue, 2013-01-29 at 17:47 -0600, Seth Forshee wrote:
+> 
+> > +		if (offchan_tx_ok) {
+> 
+> unlikely(), this is one of the hottest code paths in mac80211 after
+> all :-)
 
-Hmm, as in Engineering Sample/Pre-Release? ... if anyone has any 
-confirmation on that it would be handy - then I can return the card from 
-whence it came!
+Ack, I'll change this for v2.
+
+> > +			/*
+> > +			 * Always directly transmit off-channel frames
+> > +			 * unless the driver has stopped the queues.
+> > +			 */
+> > +			if (test_bit(IEEE80211_QUEUE_STOP_REASON_DRIVER,
+> > +				     &local->queue_stop_reasons[q])) {
+> 
+> might there be other reasons to TX, i.e. ignore only
+> STOP_REASON_OFFCHANNEL?
+
+I originally wrote it that way, but I'm not sure that all of the stop
+reasons need to block tx here. I'll take another look.
+
+> That might be more efficient too:
+> 
+> offchflag = offchan_tx_ok << log2(STOP_REASON_OFFCHANNEL);
+> 
+> > +		} else if (local->queue_stop_reasons[q] ||
+> 
+> if (local->queue_stop_reasons[q] & ~offchflag || ...
+> 
+> OTOH, I guess you want a different return value too. But that's in a
+> relatively unlikely code path again, so might still be better to then
+> again differentiate within that if.
+
+Good suggestions, I'll take a look at applying them in some form.
+
+Seth
