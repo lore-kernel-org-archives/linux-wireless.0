@@ -1,102 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34154 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754120Ab3AZUk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jan 2013 15:40:27 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] ssb: add gpio_to_irq
-Date: Sat, 26 Jan 2013 21:38:35 +0100
-Message-Id: <1359232716-15774-1-git-send-email-hauke@hauke-m.de> (sfid-20130126_214032_892979_CA0A1C0A)
+Received: from he.sipsolutions.net ([78.46.109.217]:54876 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499Ab3AaNOo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jan 2013 08:14:44 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: send deauth if connection was lost during suspend
+Date: Thu, 31 Jan 2013 14:15:07 +0100
+Message-Id: <1359638107-15306-2-git-send-email-johannes@sipsolutions.net> (sfid-20130131_141449_707736_79A42411)
+In-Reply-To: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net>
+References: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old bcm47xx gpio code had support for gpio_to_irq, but the new
-code did not provide this function, but returned -ENXIO all the time.
-This patch adds the missing function.
+From: Johannes Berg <johannes.berg@intel.com>
 
-arch/mips/bcm47xx/wgt634u.c calls gpio_to_irq() and got the correct irq
-number with the old gpio handling code. With this patch the code in
-wgt634u.c should work again. I do not have a wgt634u to test this.
+If the driver determined the connection was lost or that
+it couldn't securely maintain the connection when coming
+out of WoWLAN, send a deauth frame to the AP to also let
+it know.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/ssb/driver_gpio.c           |   22 ++++++++++++++++++++++
- include/linux/ssb/ssb_driver_mips.h |    5 +++++
- 2 files changed, 27 insertions(+)
+ net/mac80211/mlme.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
-index 97ac0a3..accabe3 100644
---- a/drivers/ssb/driver_gpio.c
-+++ b/drivers/ssb/driver_gpio.c
-@@ -74,6 +74,16 @@ static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned gpio)
- 	ssb_chipco_gpio_pullup(&bus->chipco, 1 << gpio, 0);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 199969c..946cb67 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2867,14 +2867,14 @@ static void ieee80211_sta_timer(unsigned long data)
  }
  
-+static int ssb_gpio_chipco_to_irq(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	if (bus->bustype == SSB_BUSTYPE_SSB)
-+		return ssb_mips_irq(bus->chipco.dev) + 2;
-+	else
-+		return -EINVAL;
-+}
-+
- static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+-					  u8 *bssid, u8 reason)
++					  u8 *bssid, u8 reason, bool tx)
  {
- 	struct gpio_chip *chip = &bus->gpio;
-@@ -86,6 +96,7 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
- 	chip->set		= ssb_gpio_chipco_set_value;
- 	chip->direction_input	= ssb_gpio_chipco_direction_input;
- 	chip->direction_output	= ssb_gpio_chipco_direction_output;
-+	chip->to_irq		= ssb_gpio_chipco_to_irq;
- 	chip->ngpio		= 16;
- 	/* There is just one SoC in one device and its GPIO addresses should be
- 	 * deterministic to address them more easily. The other buses could get
-@@ -134,6 +145,16 @@ static int ssb_gpio_extif_direction_output(struct gpio_chip *chip,
- 	return 0;
- }
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
  
-+static int ssb_gpio_extif_to_irq(struct gpio_chip *chip, unsigned gpio)
-+{
-+	struct ssb_bus *bus = ssb_gpio_get_bus(chip);
-+
-+	if (bus->bustype == SSB_BUSTYPE_SSB)
-+		return ssb_mips_irq(bus->extif.dev) + 2;
-+	else
-+		return -EINVAL;
-+}
-+
- static int ssb_gpio_extif_init(struct ssb_bus *bus)
- {
- 	struct gpio_chip *chip = &bus->gpio;
-@@ -144,6 +165,7 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
- 	chip->set		= ssb_gpio_extif_set_value;
- 	chip->direction_input	= ssb_gpio_extif_direction_input;
- 	chip->direction_output	= ssb_gpio_extif_direction_output;
-+	chip->to_irq		= ssb_gpio_extif_to_irq;
- 	chip->ngpio		= 5;
- 	/* There is just one SoC in one device and its GPIO addresses should be
- 	 * deterministic to address them more easily. The other buses could get
-diff --git a/include/linux/ssb/ssb_driver_mips.h b/include/linux/ssb/ssb_driver_mips.h
-index 07a9c7a..afe79d4 100644
---- a/include/linux/ssb/ssb_driver_mips.h
-+++ b/include/linux/ssb/ssb_driver_mips.h
-@@ -45,6 +45,11 @@ void ssb_mipscore_init(struct ssb_mipscore *mcore)
- {
- }
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+-			       false, frame_buf);
++			       tx, frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
  
-+static inline unsigned int ssb_mips_irq(struct ssb_device *dev)
-+{
-+	return 0;
-+}
-+
- #endif /* CONFIG_SSB_DRIVER_MIPS */
+ 	/*
+@@ -3074,7 +3074,8 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 					 "No ack for nullfunc frame to AP %pM, disconnecting.\n",
+ 					 bssid);
+ 				ieee80211_sta_connection_lost(sdata, bssid,
+-					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++					false);
+ 			}
+ 		} else if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+@@ -3083,7 +3084,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 				 "Failed to send nullfunc to AP %pM after %dms, disconnecting\n",
+ 				 bssid, probe_wait_ms);
+ 			ieee80211_sta_connection_lost(sdata, bssid,
+-				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY, false);
+ 		} else if (ifmgd->probe_send_count < max_tries) {
+ 			mlme_dbg(sdata,
+ 				 "No probe response from AP %pM after %dms, try %d/%i\n",
+@@ -3102,7 +3103,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 				    bssid, probe_wait_ms);
  
- #endif /* LINUX_SSB_MIPSCORE_H_ */
+ 			ieee80211_sta_connection_lost(sdata, bssid,
+-				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY, false);
+ 		}
+ 	}
+ 
+@@ -3209,7 +3210,8 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+ 		mlme_dbg(sdata, "driver requested disconnect after resume\n");
+ 		ieee80211_sta_connection_lost(sdata,
+ 					      ifmgd->associated->bssid,
+-					      WLAN_REASON_UNSPECIFIED);
++					      WLAN_REASON_UNSPECIFIED,
++					      true);
+ 		mutex_unlock(&ifmgd->mtx);
+ 		return;
+ 	}
 -- 
-1.7.10.4
+1.8.0
 
