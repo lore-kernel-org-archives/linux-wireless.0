@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:42157 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765Ab3BFSdJ (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:50823 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756115Ab3BAQkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 13:33:09 -0500
-Date: Wed, 06 Feb 2013 13:33:04 -0500 (EST)
-Message-Id: <20130206.133304.809962323533002767.davem@davemloft.net> (sfid-20130206_193347_986835_93E4FA99)
-To: dinggnu@gmail.com
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: mac80211/cfg.c: fix error using of sizeof()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1360167826-29265-1-git-send-email-dinggnu@gmail.com>
-References: <1360167826-29265-1-git-send-email-dinggnu@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 1 Feb 2013 11:40:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/6] Fix a number of warnings that show up when using "make W=1"
+Date: Fri,  1 Feb 2013 10:40:21 -0600
+Message-Id: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130201_174051_194292_E94481D7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Cong Ding <dinggnu@gmail.com>
-Date: Wed,  6 Feb 2013 17:23:45 +0100
+Several of the rtlwifi family of drivers show warnings when W=1 is added to
+the make command. This set of patches fixes all ot them. None of them are
+serious and they may be applied to some future kernel.
 
-> Using 'sizeof' on array given as function argument returns size of a pointer
-> rather than the size of array.
-> 
-> Signed-off-by: Cong Ding <dinggnu@gmail.com>
-> ---
->  net/mac80211/cfg.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 661b878..af561d5 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2058,7 +2058,8 @@ static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
->  {
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  
-> -	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
-> +	memcpy(sdata->vif.bss_conf.mcast_rate, rate,
-> +			sizeof(int) * IEEE80211_NUM_BANDS);
->  
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-This is not indented properly.  The "sizeof(int..." should start at the
-first column after the openning parenthesis of the memcpy() call.
+Larry Finger (6):
+  rtlwifi: Fix many compile warnings when using W=1
+  rtlwifi: Fix warnings in usb.c
+  rtlwifi: rtl8192c: Fix W=1 warning
+  rtlwifi: rtl8192cu: Fix W=1 build warning
+  rtlwifi: rtl8192de: Fix W=1 build warnings
+  rtlwifi: rtl8723ae: Fix W=1 compile warnings
+
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c       |  2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |  4 ++--
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c       |  2 --
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c  |  2 --
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c       |  8 ++------
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c      | 20 ++------------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      |  2 --
+ drivers/net/wireless/rtlwifi/usb.c                |  4 ----
+ drivers/net/wireless/rtlwifi/wifi.h               |  2 +-
+ 10 files changed, 10 insertions(+), 39 deletions(-)
+
+-- 
+1.8.1
+
