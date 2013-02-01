@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503Ab3BFPoI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 10:44:08 -0500
-Message-ID: <1360165468.7910.18.camel@jlt4.sipsolutions.net> (sfid-20130206_164413_282299_4055BEDC)
-Subject: Re: [PATCH 5/5] mwl8k: bump firmware API to 3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: Jonas Gorski <jogo@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Date: Wed, 06 Feb 2013 16:44:28 +0100
-In-Reply-To: <20130206151313.GB373@markyou.marvell.com> (sfid-20130206_162253_315994_D6B8E6C2)
-References: <20130103075440.GA20523@markyou.marvell.com>
-	 <CAOiHx=kpV8TScc4gQRZUBwUDAEL-j+uoNg3eodKi8WwmAHYg=w@mail.gmail.com>
-	 <20130206151313.GB373@markyou.marvell.com>
-	 (sfid-20130206_162253_315994_D6B8E6C2)
-Content-Type: text/plain; charset="UTF-8"
+Received: from perches-mx.perches.com ([206.117.179.246]:49051 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757795Ab3BAV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 16:58:10 -0500
+Message-ID: <1359755886.17807.12.camel@joe-AO722> (sfid-20130201_225828_001427_8F17CA9B)
+Subject: Re: [PATCH 0/6] Fix a number of warnings that show up when using
+ "make W=1"
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Fri, 01 Feb 2013 13:58:06 -0800
+In-Reply-To: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-06 at 20:43 +0530, Yogesh Ashok Powar wrote:
-> On Wed, Feb 06, 2013 at 06:31:12AM -0800, Jonas Gorski wrote:
-> > On 3 January 2013 08:54, Yogesh Ashok Powar <yogeshp@marvell.com> wrote:
-> > > New firmware is required to support
-> > > a) Add support for additional ampdu streams
-> > > b) Handle corresponding watchdog events to destroy ampdu streams
-> > >
-> > > Bumping firmware API version by one.
-> > 
-> > Soo ... where does one get this new firmware version? I don't see it
-> > anywhere (especially not in linux-firmware.git). AFAICT mwl8k in
-> > ap-mode is currently broken since this patch got in.
-> 
-> Hi Jonas,
-> 
-> We have already mailed the API-3 firmware to Ben Hutching for adding
-> it to linux-firmware.git.
-> 
-> Meanwhile please get the new AP firmware from
-> https://github.com/yogeshpowar/mwl8k_ap_firmware
+On Fri, 2013-02-01 at 10:40 -0600, Larry Finger wrote:
+> Several of the rtlwifi family of drivers show warnings when W=1 is added to
+> the make command. This set of patches fixes all ot them. None of them are
+> serious and they may be applied to some future kernel.
 
-I think you really ought to support previous firmware and next firmware
-for a while at least so not everybody is forced to upgrade
-immediately...
+Do these really need fixing?
+I think Linus' email from awhile back is still reasonable.
 
-johannes
+https://lkml.org/lkml/2007/2/9/183
+
 
