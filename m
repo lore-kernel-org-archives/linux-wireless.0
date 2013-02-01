@@ -1,51 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40142 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751714Ab3BYFyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 00:54:12 -0500
-Message-ID: <512AFC80.9030808@openwrt.org> (sfid-20130225_065415_873821_6D9EFFF2)
-Date: Mon, 25 Feb 2013 06:54:08 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gh0-f179.google.com ([209.85.160.179]:34248 "EHLO
+	mail-gh0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757098Ab3BARyw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 12:54:52 -0500
+Date: Fri, 1 Feb 2013 15:54:45 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-02-01
+Message-ID: <20130201175445.GE4733@joana> (sfid-20130201_185511_101602_11A2837E)
+References: <20130201174019.GD4733@joana>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>
-Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth coexistence
- mode
-References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com> <1361564916.3420.11.camel@jlt4.sipsolutions.net> <CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com> <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com> <1361726886.8129.9.camel@jlt4.sipsolutions.net> <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
-In-Reply-To: <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uh9ZiVrAOUUm9fzH"
+In-Reply-To: <20130201174019.GD4733@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-02-25 6:08 AM, Adrian Chadd wrote:
-> On 24 February 2013 09:28, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
->>> In the driver we could inspect each sk_buff and boost priority of any
->>> BOOTP packets so that it will end up in the AC_VO fifo and have
->>> hardware coexistence handle it further. I consider that more a
->>> pragmatic fix, which is not always the worst thing to go for.
->>
->> Well, I don't really think that's the best idea. Sniffing the protocol
->> is clumsy at best.
-> 
-> Sure, but it's the kind of thing that commercial devices do in order
-> to work around real world issues.
-Just because commercial devices do this crap to weasel out of fixing
-things properly doesn't mean we have to do the same.
 
-> So it'd be nice to have a programmatic way to detect things (eg bootp
-> packets going out) and signal the driver via some side channel to do
-> things like btcoex weight changing.
-I disagree, that approach clumsy and fragile and it's trying to address
-the issue in the wrong place.
+--uh9ZiVrAOUUm9fzH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Most devices have some kind of connection manager that has a high-level
-perspective of when it's fully connected (which includes DHCP/bootp).
-Why not just let that connection manager set a sane maximum network
-latency value via pm_qos network_latency and derive btcoex weight
-changing and multi-channel settings from that?
+Hi John,
 
-- Felix
+* Gustavo Padovan <gustavo@padovan.org> [2013-02-01 15:40:19 -0200]:
+
+> Hi John,
+>=20
+> Here goes another batch intended for 3.9, the majority of the patch here =
+are
+> from Johan who is fixing many issues in the management interface that have
+> appeared lately. The rest of the patches are just small improvements, fix=
+es
+> and clean ups.
+
+I had a brain shutdown moment and forgot to rebase against wireless-next.
+SO the pull request is actually much smaller.
+
+Please pull!
+
+	Gustavo
+
+---
+The following changes since commit c331997b6c9ad7f4b8075e6e60d3caa6e36f5938:
+
+  wil6210: fix wil_vring_init_tx status (2013-01-30 15:07:19 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next fo=
+r-upstream
+
+for you to fetch changes up to a3d09356491d637548dbe815ddb966f52ec9e53a:
+
+  Bluetooth: Refactor mgmt_pending_foreach (2013-02-01 15:50:18 -0200)
+
+----------------------------------------------------------------
+Andre Guedes (3):
+      Bluetooth: Reduce critical section in sco_conn_ready
+      Bluetooth: Remove unneeded locking
+      Bluetooth: Refactor mgmt_pending_foreach
+
+Johan Hedberg (11):
+      Bluetooth: Store UUIDs in the same order that they were added
+      Bluetooth: Simplify UUIDs clearing code
+      Bluetooth: Keep track of UUID type upon addition
+      Bluetooth: Simplify UUID removal code
+      Bluetooth: Simplify UUID16 list generation for EIR
+      Bluetooth: Remove useless eir_len variable from EIR creation
+      Bluetooth: Refactor UUID-16 list generation into its own function
+      Bluetooth: Add support for 32-bit UUIDs in EIR data
+      Bluetooth: Add support for 128-bit UUIDs in EIR data
+      Bluetooth: Fix link security setting when powering on
+      Bluetooth: Increment Management interface revision
+
+ include/net/bluetooth/hci_core.h |   1 +
+ net/bluetooth/hci_core.c         |  10 +-
+ net/bluetooth/hci_event.c        |   4 -
+ net/bluetooth/mgmt.c             | 219 +++++++++++++++++++++++++----------=
+------
+ net/bluetooth/sco.c              |  18 ++--
+ 5 files changed, 150 insertions(+), 102 deletions(-)
+
+--uh9ZiVrAOUUm9fzH
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRDAFlAAoJEPs3PUX4s20oOrwQAK5PnopbfD6PgTAewSGXmr1I
+3gkO2h4uu38e8qw53NaOspLSdy+DnfRjVuWcaEncniotPYeXuBnrUQ6jizyx6CpT
+4P1zlAFkS3nzMd5sSbIfgSHhYssVgG9bFP5Pll3+tOFHntIfyTqJE1pBSjOdMUCp
+ZnoqbuKIq8zY337JyMStNNskI+6XLHKvJ0R7BAbZmEIXgBXuDyn1MuR8OX0jIJ8J
+id19iFWDaOHBoxNIClScjUpiiSVTLqqnC5CYDdY1pDrQSvV45opTVj8fvwcE967W
+fmB8hz7Us2qEDJdJOvuN8Tjy5h0NOeVf/AN/sNWHfT5Td5UWn2L8S3o3Vyt/+9Gv
+YuUPLMyb5P6Pf6PLBCT+N7KULzrW8gGVf3vmgnntJcsTw/AwsoOSf7i2JHgwoeu1
+yRo4lva090RB5kOPCwwMYW8oxgWJKT0YeFIOTACHvu0dxfQpcvbGfI2KSg19fgsV
+1ld3E0sY8IrL//RUIjibHe9Dv60uyXbmc0RGH2YyjCO+QAl79ASune91OQ39jy+5
+5zdSVgrvQNZiNLUTDl7lAXs65cdCkr98llvzHcqTqBra5eOKHk8SxSiDeLbHj7UX
+otTvqtVkkKnyraj09H7w+MU/7Qnh9Qgqw0nG5KCIiaciBtz2kK3uLvAHOeiNx1be
+oebkm/WksHblOd5NobFv
+=pfe3
+-----END PGP SIGNATURE-----
+
+--uh9ZiVrAOUUm9fzH--
