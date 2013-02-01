@@ -1,89 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1359 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754119Ab3BFRmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:42:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/12] brcmfmac: Cleanup function
- brcmf_notifiy_connect_status_ap.
-Date: Wed, 6 Feb 2013 18:40:43 +0100
-Message-ID: <1360172447-2424-9-git-send-email-arend@broadcom.com> (sfid-20130206_184245_459659_7EFDE045)
-In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50970 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755768Ab3BATaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 14:30:25 -0500
+Date: Fri, 1 Feb 2013 14:20:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-02-01 (was: pull-request:
+ iwlwifi-next 2013-01-30)
+Message-ID: <20130201192030.GB29418@tuxdriver.com> (sfid-20130201_203101_495552_FBC081C5)
+References: <1359579712.8010.30.camel@jlt4.sipsolutions.net>
+ <1359715120.8528.11.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359715120.8528.11.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Fri, Feb 01, 2013 at 11:38:40AM +0100, Johannes Berg wrote:
+> John,
+> 
+> Please excuse my overriding an earlier pull request again. Fengguang
+> Wu's build testing found that we had a few symbol conflicts between the
+> two subdrivers (iwldvm and the new iwlmvm) so I fixed those. I also
+> included a few more patches that we'd worked on and I put in for
+> publishing since then.
+> 
+> So what I have here is some cleanups, preparations and the new MVM
+> (multi-virtual MAC) driver itself and (this is new) some work on the
+> transport API as well as a message flooding fix.
+> 
+> Let me know if there are any problems.
+> 
+> johannes
+> 
+> The following changes since commit c331997b6c9ad7f4b8075e6e60d3caa6e36f5938:
+> 
+>   wil6210: fix wil_vring_init_tx status (2013-01-30 15:07:19 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to e56b04efc1f795da42cf1d9651b52a4a5bebd730:
+> 
+>   iwlwifi: move register access lock into transport (2013-02-01 11:27:22 +0100)
 
-Clean up function, removing some unnecessary code and
-initialisation.
+Pulling now...
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   20 +++++++-------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 0f170cb..544257a5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3994,38 +3994,32 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 			       struct net_device *ndev,
- 			       const struct brcmf_event_msg *e, void *data)
- {
--	s32 err = 0;
-+	static int generation;
- 	u32 event = e->event_code;
- 	u32 reason = e->reason;
--	u32 len = e->datalen;
--	static int generation;
--
- 	struct station_info sinfo;
- 
- 	brcmf_dbg(CONN, "event %d, reason %d\n", event, reason);
--	memset(&sinfo, 0, sizeof(sinfo));
- 
--	sinfo.filled = 0;
- 	if (((event == BRCMF_E_ASSOC_IND) || (event == BRCMF_E_REASSOC_IND)) &&
--	    reason == BRCMF_E_STATUS_SUCCESS) {
-+	    (reason == BRCMF_E_STATUS_SUCCESS)) {
-+		memset(&sinfo, 0, sizeof(sinfo));
- 		sinfo.filled = STATION_INFO_ASSOC_REQ_IES;
- 		if (!data) {
- 			brcmf_err("No IEs present in ASSOC/REASSOC_IND");
- 			return -EINVAL;
- 		}
- 		sinfo.assoc_req_ies = data;
--		sinfo.assoc_req_ies_len = len;
-+		sinfo.assoc_req_ies_len = e->datalen;
- 		generation++;
- 		sinfo.generation = generation;
--		cfg80211_new_sta(ndev, e->addr, &sinfo, GFP_ATOMIC);
-+		cfg80211_new_sta(ndev, e->addr, &sinfo, GFP_KERNEL);
- 	} else if ((event == BRCMF_E_DISASSOC_IND) ||
- 		   (event == BRCMF_E_DEAUTH_IND) ||
- 		   (event == BRCMF_E_DEAUTH)) {
--		generation++;
--		sinfo.generation = generation;
--		cfg80211_del_sta(ndev, e->addr, GFP_ATOMIC);
-+		cfg80211_del_sta(ndev, e->addr, GFP_KERNEL);
- 	}
--	return err;
-+	return 0;
- }
- 
- static s32
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
