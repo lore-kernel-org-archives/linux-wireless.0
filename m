@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:58393 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753371Ab3BHSu3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50973 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892Ab3BATaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 13:50:29 -0500
-Message-ID: <511548F2.5090602@lwfinger.net> (sfid-20130208_195218_946170_9FC4C43D)
-Date: Fri, 08 Feb 2013 12:50:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 1 Feb 2013 14:30:25 -0500
+Date: Fri, 1 Feb 2013 14:22:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-02-01
+Message-ID: <20130201192225.GC29418@tuxdriver.com> (sfid-20130201_203100_708290_91F224FC)
+References: <20130201174019.GD4733@joana>
+ <20130201175445.GE4733@joana>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
-References: <1360348098-8687-1-git-send-email-Larry.Finger@lwfinger.net> <1360348677.2268.7.camel@joe-AO722>
-In-Reply-To: <1360348677.2268.7.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130201175445.GE4733@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2013 12:37 PM, Joe Perches wrote:
-> On Fri, 2013-02-08 at 12:28 -0600, Larry Finger wrote:
->> A new model of the RTL8188CUS has appeared.
-> []
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> index 577c0dc..a73a17b 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> @@ -285,6 +285,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
->>   	/* RTL8188CUS-VL */
->>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x818a, rtl92cu_hal_cfg)},
->> +	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x819a, rtl92cu_hal_cfg)},
->>   	/* 8188 Combo for BC4 */
->>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
->
-> One day would you please do a s/_VENDOR_/_VENDOR_/g
+On Fri, Feb 01, 2013 at 03:54:45PM -0200, Gustavo Padovan wrote:
+> Hi John,
+> 
+> * Gustavo Padovan <gustavo@padovan.org> [2013-02-01 15:40:19 -0200]:
+> 
+> > Hi John,
+> > 
+> > Here goes another batch intended for 3.9, the majority of the patch here are
+> > from Johan who is fixing many issues in the management interface that have
+> > appeared lately. The rest of the patches are just small improvements, fixes
+> > and clean ups.
+> 
+> I had a brain shutdown moment and forgot to rebase against wireless-next.
+> SO the pull request is actually much smaller.
+> 
+> Please pull!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit c331997b6c9ad7f4b8075e6e60d3caa6e36f5938:
+> 
+>   wil6210: fix wil_vring_init_tx status (2013-01-30 15:07:19 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
+> 
+> for you to fetch changes up to a3d09356491d637548dbe815ddb966f52ec9e53a:
+> 
+>   Bluetooth: Refactor mgmt_pending_foreach (2013-02-01 15:50:18 -0200)
 
-Sure, even though that particular command would not accomplish what you want. I 
-know what you meant. :)
+Pulling now...
 
-Larry
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
