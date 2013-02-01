@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54879 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932709Ab3BKV4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:56:44 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v3 2/3] mac80211/minstrel_ht: remove the sampling bypass check for the lowest rate
-Date: Mon, 11 Feb 2013 22:56:39 +0100
-Message-Id: <1360619800-80582-2-git-send-email-nbd@openwrt.org> (sfid-20130211_225650_349409_9FBC3F8D)
-In-Reply-To: <1360619800-80582-1-git-send-email-nbd@openwrt.org>
-References: <1360619800-80582-1-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51917 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756967Ab3BAUpZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 15:45:25 -0500
+Date: Fri, 1 Feb 2013 15:38:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rfkill/iw tarballs moved
+Message-ID: <20130201203802.GD29418@tuxdriver.com> (sfid-20130201_214528_740249_2388B8C3)
+References: <1359735250.8528.25.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359735250.8528.25.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's more of an unnecessary micro-optimization and it prevents switching
-from long-GI to short-GI in HT20/single-stream for the lowest rate
+On Fri, Feb 01, 2013 at 05:14:10PM +0100, Johannes Berg wrote:
+> I've moved the rfkill and iw tarballs onto the proper kernel.org
+> storage, they're now available at
+> 
+> http://kernel.org/pub/software/network/rfkill/
+> and
+> http://kernel.org/pub/software/network/iw/
+> 
+> respectively. Properly signed (by me) with sha256sums provided by the
+> kernel.org robot.
+> 
+> I'm also asking John and Luis to move crda and wireless-regdb downloads,
+> they will be at
+> 
+> http://kernel.org/pub/software/network/crda/
+> and
+> http://kernel.org/pub/software/network/wireless-regdb/
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 4 ----
- 1 file changed, 4 deletions(-)
+I've copied the tarballs out there.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 9f9c453..5bb316a 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -231,10 +231,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 			if (!mr->cur_tp)
- 				continue;
- 
--			/* ignore the lowest rate of each single-stream group */
--			if (!i && minstrel_mcs_groups[group].streams == 1)
--				continue;
--
- 			if ((mr->cur_tp > cur_prob_tp && mr->probability >
- 			     MINSTREL_FRAC(3, 4)) || mr->probability > cur_prob) {
- 				mg->max_prob_rate = index;
+The old site has the bare regulatory.bin files published as well.
+Do we need those?
+
+John
 -- 
-1.8.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
