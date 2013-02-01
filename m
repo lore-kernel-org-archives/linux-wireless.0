@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:53604 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759020Ab3BKSx0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59643 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab3BAQNt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 13:53:26 -0500
-Date: Mon, 11 Feb 2013 13:53:22 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
-Message-ID: <20130211185322.GB3123@shaftnet.org> (sfid-20130211_195341_799993_EDB4AC51)
-References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
- <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
- <1360372559.13487.14.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cvVnyQ+4j833TQvp"
-In-Reply-To: <1360372559.13487.14.camel@joe-AO722>
+	Fri, 1 Feb 2013 11:13:49 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U1JFK-0000LI-Kp
+	for linux-wireless@vger.kernel.org; Fri, 01 Feb 2013 17:13:47 +0100
+Message-ID: <1359735250.8528.25.camel@jlt4.sipsolutions.net> (sfid-20130201_171352_678337_FCC35327)
+Subject: rfkill/iw tarballs moved
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 01 Feb 2013 17:14:10 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I've moved the rfkill and iw tarballs onto the proper kernel.org
+storage, they're now available at
 
---cvVnyQ+4j833TQvp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+http://kernel.org/pub/software/network/rfkill/
+and
+http://kernel.org/pub/software/network/iw/
 
-On Fri, Feb 08, 2013 at 05:15:59PM -0800, Joe Perches wrote:
-> Could you please run your patches through
-> scripts/checkpatch.pl --strict
+respectively. Properly signed (by me) with sha256sums provided by the
+kernel.org robot.
 
-If you think it's bad now, you should have seen the state of the code=20
-when I first "inherited" it.  :)
+I'm also asking John and Luis to move crda and wireless-regdb downloads,
+they will be at
 
-Question -- as a matter of policy, is the goal to have a completely=20
-clean checkpatch run?  I get that there should be no ERRORs, but=20
-WARNINGs/CHECKs are not considered fatal for a reason, right?
+http://kernel.org/pub/software/network/crda/
+and
+http://kernel.org/pub/software/network/wireless-regdb/
 
-As I write this, there are 550 WARNINGs and 243 CHECKs in the patch set.
+johannes
 
-There are three general classes of WARNINGs in the code --=20
-alignment/indentation issues (mostly caused by the conversion to=20
-pr_XXX() calls versus printk()), >80char lines (unfortunately resolving=20
-these tends to make the code less readable), and a boatload of CamelCase=20
-variable names (which this codebase inherited from vendor header files)
-
-I consider the >80 line stuff to be generally noise, but I'll revisit it=20
-once everything else is handled.
-
-As for your other suggestions, I'll add them to the to-do list and knock=20
-them out as time permits.  Now that the major problems are solved, I=20
-guess it's time for the tedious patch iteration until it's acceptible=20
-for wireless-next.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---cvVnyQ+4j833TQvp
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRGT4iPuLgii2759ARAvhpAKCWNqKob8roqH3sG0uzAzc3k8GIsgCeLq5p
-TkrONONK3F/B7QB5GYn8418=
-=p7uV
------END PGP SIGNATURE-----
-
---cvVnyQ+4j833TQvp--
