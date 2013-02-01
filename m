@@ -1,152 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58731 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759552Ab3BZQu1 (ORCPT
+Received: from mail-ye0-f175.google.com ([209.85.213.175]:51358 "EHLO
+	mail-ye0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756890Ab3BARdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 11:50:27 -0500
-Date: Tue, 26 Feb 2013 10:50:21 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: carl9170 A-MPDU transmit problem
-Message-ID: <20130226165021.GA19077@thinkpad-t410> (sfid-20130226_175040_856247_50CFFE86)
-References: <Pine.LNX.4.44L0.1302251516240.1184-100000@iolanthe.rowland.org>
- <201302260030.58332.chunkeey@googlemail.com>
+	Fri, 1 Feb 2013 12:33:09 -0500
+Date: Fri, 1 Feb 2013 15:33:02 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-02-01
+Message-ID: <20130201173302.GC4733@joana> (sfid-20130201_183319_342218_629DE2BC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302260030.58332.chunkeey@googlemail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2013 at 12:30:58AM +0100, Christian Lamparter wrote:
-> On Monday, February 25, 2013 09:19:03 PM Alan Stern wrote:
-> > On Mon, 25 Feb 2013, Seth Forshee wrote:
-> > > > > >ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 ... <-- DATA
-> > > > > >
-> > > > > > [... long period where the device receives commands on EP4 and sends
-> > > > > > wifi data to the host via EP2 - so it is working!]
-> > > > > >
-> > > > > >ffff880146c8af00 1522200650 S Bo:3:003:1 -115 62 = 3e000000 ... <-- DELBA
-> > > > > >ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 > <-- DATA urb completion
-> > > > > >ffff880146c8af00 1522200756 C Bo:3:003:1 0 62 > <-- DELBA urb completion
-> > 
-> > > > Which kernel version are you testing under?  Can you please recompile
-> > > > with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on, and
-> > > > send me dmesg?  I should be able to see if there's an unhandled pending
-> > > > event on the xHCI rings if the data URB stalls for longer than say, a
-> > > > minute.
-> > > 
-> > > I'll do this.
-> > 
-> > Bear in mind that the usbmon trace shows the URB stalling for 2 - 3
-> > seconds.  There may have been other examples that went on for longer,
-> > but probably nothing anywhere near as long as a minute.
-> > 
-> ---
-> This should open up the window for as long as we want it. 
-> The driver will now queue, but not deliver any frames to
-> the device when there are unfinished urbs.
 
-Here's dmesg with USB debug with the patch. I let it run for at least 5
-minutes after the connection stalled.
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-http://people.canonical.com/~sforshee/dmesg-carl9170-usb-debug2.txt
+Hi John,
 
-I pasted lsusb for the device below as well.
+Two simple fixes for 3.8. One of the patches fixes a situation where the
+connection wasn't terminated if a timeout ocurrs for LE an SCO connections.
+The other fixes prevent NULL dereference in the SMP code, it is a security fix
+as well.
 
-Thanks,
-Seth
+Please pull, or let me know of any problems!
 
+        Gustavo
 
-Bus 003 Device 004: ID 07d1:3a09 D-Link System DWA-160 802.11abgn Xtreme 
-N Dual Band Adapter(rev.A2) [Atheros AR9170+AR9104]
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass          255 Vendor Specific Class
-  bDeviceSubClass       255 Vendor Specific Subclass
-  bDeviceProtocol       255 Vendor Specific Protocol
-  bMaxPacketSize0        64
-  idVendor           0x07d1 D-Link System
-  idProduct          0x3a09 DWA-160 802.11abgn Xtreme N Dual Band Adapter(rev.A2) [Atheros AR9170+AR9104]
-  bcdDevice            1.07
-  iManufacturer          16 ATHER
-  iProduct               32 11n adapter
-  iSerial                48 12345
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           46
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          0 
-    bmAttributes         0x80
-      (Bus Powered)
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           4
-      bInterfaceClass       255 Vendor Specific Class
-      bInterfaceSubClass      0 
-      bInterfaceProtocol      0 
-      iInterface              0 
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x01  EP 1 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x82  EP 2 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x83  EP 3 IN
-        bmAttributes            3
-          Transfer Type            Interrupt
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0040  1x 64 bytes
-        bInterval               1
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x04  EP 4 OUT
-        bmAttributes            3
-          Transfer Type            Interrupt
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0040  1x 64 bytes
-        bInterval               1
-Device Qualifier (for other device speed):
-  bLength                10
-  bDescriptorType         6
-  bcdUSB               2.00
-  bDeviceClass          255 Vendor Specific Class
-  bDeviceSubClass       255 Vendor Specific Subclass
-  bDeviceProtocol       255 Vendor Specific Protocol
-  bMaxPacketSize0        64
-  bNumConfigurations      0
-Device Status:     0x0000
-  (Bus Powered)
+---
+The following changes since commit b7e98b5100aad9290d7f06fcb9d1e80f7f62f05f:
 
+  Bluetooth: Check if the hci connection exists in SCO shutdown (2013-01-10 03:53:32 -0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
+
+for you to fetch changes up to 4c02e2d444595200d0b18b889994aac3611cd288:
+
+  Bluetooth: Fix hci_conn timeout routine (2013-01-31 15:38:02 -0200)
+
+----------------------------------------------------------------
+Andre Guedes (1):
+      Bluetooth: Fix hci_conn timeout routine
+
+Johan Hedberg (1):
+      Bluetooth: Fix handling of unexpected SMP PDUs
+
+ net/bluetooth/hci_conn.c |  6 +++---
+ net/bluetooth/smp.c      | 13 +++++++++++++
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+--gBBFr7Ir9EOA20Yy
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRC/xOAAoJEPs3PUX4s20oCc4QAKY9IS8/VoAdwYvBLtxqMH5I
+o29e2M1ELWDauTU88dG7IgRFrNpe+STnlJM57u4sfqo9fhasSFMTvA1AtvlkYTtP
+k4j9AGGVhkTL8JcYT1Gz5dIVxSuExv20lsXK/uHEJYtiO7krs1TYwh9paGbjMwFK
+ff13uKEuIyNxJ28JisyDrN2TbSr/AuVNUraAfuXLSjWU0qWt30ec9+cUKGUrhmS/
++hHKQfLJZiVPISoE0g9lirRljEKG2virLC9/kXCzyJqdiufJ1QFTUJPtZ1y4S9N+
+U7R+2pbc4gF8E/WXqerMyciQrwKP3LZVNdUfU9IIHN5TbN5LHFh9Z0egv9/Id2MV
+JJeh0Ygf5r6gyNvDvyxA6nNXfNlPPqEcGlyVSUtPcnuuXR7dwKgBIEKnWL+9/leT
+JUO4/e/deKaSoB7IKIgZaYH3U2bjAS9M35SejDtc1uLnfemEJ5HKZqNzML7RdFjN
+C+TvKjAgA2O2PMMGlOgg8w0kE95IDRvSXTnLX8QHP8poeVPOKyR4KKIi0hl0csR2
+NK57y8cmsKSLUiyoUkIiRypk7aGAaRFhASn+8Oocbj6u2xKsDnpvA5oAkBz0uo/p
+qz3naWoplG1n39NxtJ4btGcLGcF2nisQ7IHMaF5I2v0cgtqpagf07FvaDrRea792
+lgySATt0MNaVfMWcdFNQ
+=2CcP
+-----END PGP SIGNATURE-----
+
+--gBBFr7Ir9EOA20Yy--
