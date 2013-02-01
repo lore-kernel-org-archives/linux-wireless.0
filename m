@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60039 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759535Ab3BZPKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 10:10:11 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com
-Subject: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
-Date: Tue, 26 Feb 2013 16:09:55 +0100
-Message-Id: <1361891395-59990-1-git-send-email-nbd@openwrt.org> (sfid-20130226_161020_675589_76D956B0)
+Received: from shards.monkeyblade.net ([149.20.54.216]:38613 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754717Ab3BATuz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 14:50:55 -0500
+Date: Fri, 01 Feb 2013 14:50:52 -0500 (EST)
+Message-Id: <20130201.145052.1736779736271048954.davem@davemloft.net> (sfid-20130201_205102_375780_7A109723)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-02-01
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130201191745.GA29418@tuxdriver.com>
+References: <20130201191745.GA29418@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
-interface combinations with NL80211_IFTYPE_MESH_POINT present.
-Add appropriate ifdefs to avoid running into errors.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 1 Feb 2013 14:17:45 -0500
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+> I'm sorry you got hit by the flu!  Hopefully you are fully recovered
+> by now? :-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 1031db6..189744d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1236,8 +1236,10 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	if_limit = &rt2x00dev->if_limits_ap;
- 	if_limit->max = rt2x00dev->ops->max_ap_intf;
--	if_limit->types = BIT(NL80211_IFTYPE_AP) |
--			BIT(NL80211_IFTYPE_MESH_POINT);
-+	if_limit->types = BIT(NL80211_IFTYPE_AP);
-+#ifdef CONFIG_MAC80211_MESH
-+	if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
-+#endif
- 
- 	/*
- 	 * Build up AP interface combinations structure.
-@@ -1309,7 +1311,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 		rt2x00dev->hw->wiphy->interface_modes |=
- 		    BIT(NL80211_IFTYPE_ADHOC) |
- 		    BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
- 		    BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
- 		    BIT(NL80211_IFTYPE_WDS);
- 
- 	rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
--- 
-1.8.0.2
+I'm recovered enough to review everyone's buggy patches :-)
 
+> This is a small batch of fixes intended for the 3.8 stream...
+> 
+> There are two pulls from Johannes.  Regarding mac80211, Johannes says:
+> 
+> "One fix from Dan for a possible memory overrun."
+> 
+> Regarding iwlwifi,  Johannes says:
+> 
+> "I have one fix from Emmanuel reverting a previous fix that caused
+> more trouble than it's worth."
+> 
+> Along with those:
+> 
+> Arend van Spriel fixes a fatal error in brcsmac related to tx status processing.
+> 
+> Bing Zhao corrects a problem where mwifiex would fail to complete a scan
+> in the event of an IE processing error.
+> 
+> Larry Finger fixes a thinko in rtlwifi in which the wrong skb variable
+> was being used in some cases.
+> 
+> Rafa©© Mi©©ecki fixes a thinko in an ID check in the bcma flash code.
+
+Pulled, thanks John.
