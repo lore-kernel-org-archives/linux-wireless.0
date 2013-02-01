@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from leit.jelmoni.net ([78.46.129.73]:37494 "EHLO leit.jelmoni.net"
+Received: from mail.neratec.com ([80.75.119.105]:43648 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870Ab3BRNRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 08:17:49 -0500
-Received: from localhost (localhost.jelmoni.net [127.0.0.1])
-	by leit.jelmoni.net (Postfix) with ESMTP id 3E9CA80D2
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 14:17:48 +0100 (CET)
-Received: from leit.jelmoni.net ([127.0.0.1])
-	by localhost (leit.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id CpfR9zYtf1VP for <linux-wireless@vger.kernel.org>;
-	Mon, 18 Feb 2013 14:17:48 +0100 (CET)
-Received: from laptop-beat.swiss-wireless.com.ar (host126.190-224-81.telecom.net.ar [190.224.81.126])
-	(Authenticated sender: genauth@swiss-wireless.com.ar)
-	by leit.jelmoni.net (Postfix) with ESMTPSA id 6101480D1
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 14:17:47 +0100 (CET)
-Message-ID: <512229DD.80901@swiss-wireless.com.ar> (sfid-20130218_141753_646520_3D9B381F)
-Date: Mon, 18 Feb 2013 10:17:17 -0300
-From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+	id S1755721Ab3BAJkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Feb 2013 04:40:33 -0500
+Message-ID: <510B8D87.8050604@neratec.com> (sfid-20130201_104037_960370_A8B21C2E)
+Date: Fri, 01 Feb 2013 10:40:23 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: How can I find out the ssid of an inteface in AP mode?
-References: <511D3AA4.7000209@swiss-wireless.com.ar> <201302142053.57519.chunkeey@googlemail.com>
-In-Reply-To: <201302142053.57519.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection command/event
+References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de> <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de> <1359642321.8415.56.camel@jlt4.sipsolutions.net> <20130131161346.GA1387@pandem0nium> <1359650760.8415.91.camel@jlt4.sipsolutions.net> <20130131174443.GB2018@pandem0nium>
+In-Reply-To: <20130131174443.GB2018@pandem0nium>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2013 04:53 PM, Christian Lamparter wrote:
-> On Thursday, February 14, 2013 08:27:32 PM Beat Meier wrote:
->> Hello
+On 01/31/2013 06:44 PM, Simon Wunderlich wrote:
+> On Thu, Jan 31, 2013 at 05:46:00PM +0100, Johannes Berg wrote:
+>> On Thu, 2013-01-31 at 17:13 +0100, Simon Wunderlich wrote:
+>> [...]
 >>
->> How can I find out the ssid of an inteface in AP mode (using hostapd)?
-> start up hostapd_cli
->
-> (usually it connects to the right wlanX interface, otherwise
-> execute interface wlanX)
->
-> get_config
->
-> (And then look for ssid=xyz)
-Ah ok, thanks a lot Christian! This points me to te right way. My 
-hostapd on voyage is outdated...
-In version 0.7.3 this is not implemented... So I will updated as soon as 
-possible.
-Thanks again!
+>> Maybe so, I just don't think you need the time there since it won't be
+>> of relevance in the USABLE state. The "state entered" time is only used
+>> for UNAVAILABLE.
+>>
+>> Maybe therefore state_entered should be renamed to "unavailable_until"
+>> with the corresponding change in the logic of adding the time when it's
+>> set to that state?
+> 
+> Can do that, if no one is interested in when we, say, change from unavailable
+> to usable (after NOP). This is what Zefir asked for. 
+> 
+My assumption was that the user (or the certification lab engineer) might want to
+know how long the device is going to remain in CAC. And since a time-stamp must be
+kept anyhow for NOP, with the (channel_state / ts) tuple everything needed to
+track the state transition is already there. Otherwise, it is not needed.
 
-Beat
+> Personally I don't care at all, and we discuss that in the cover letter thread
+> anyway. Let's see what Zefir says or if anyone else objects, I put that onto
+> the "TODO if nobody objects list". :)
+> 
+No objections here. The updated concept makes my work already way easier to
+handle, and since I need to implement a frequency manager / planner anyhow on
+higher layers, there's no need to consider my comments unless they are relevant
+for stand-alone operation.
+
+> Thanks!
+> 	Simon
+> 
+
