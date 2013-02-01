@@ -1,117 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:25532 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751652Ab3BRQIF (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:54054 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753072Ab3BAN3S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 11:08:05 -0500
-Date: Mon, 18 Feb 2013 17:07:05 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Marek Lindner <marek@open-mesh.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-Message-ID: <20130218160705.GD4162@open-mesh.com> (sfid-20130218_170809_945880_6075D3A2)
-References: <20130215171938.GA4140@pandem0nium>
- <1361197831.8555.23.camel@jlt4.sipsolutions.net>
- <1361197982.8555.24.camel@jlt4.sipsolutions.net>
- <20130218144622.GA4162@open-mesh.com>
- <1361201387.8555.32.camel@jlt4.sipsolutions.net>
- <20130218153833.GB4162@open-mesh.com>
- <1361202206.8555.34.camel@jlt4.sipsolutions.net>
- <20130218154906.GC4162@open-mesh.com>
- <1361203098.8555.35.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="OROCMA9jn6tkzFBc"
-In-Reply-To: <1361203098.8555.35.camel@jlt4.sipsolutions.net>
+	Fri, 1 Feb 2013 08:29:18 -0500
+Received: by mail-wg0-f41.google.com with SMTP id ds1so1274105wgb.4
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2013 05:29:16 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-next] wireless: rt2x00: rt2800pci add id
+Date: Fri,  1 Feb 2013 14:28:49 +0100
+Message-Id: <1359725329-8027-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130201_142921_837468_071BD517)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---OROCMA9jn6tkzFBc
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+0x1814,0x359f is a RT3592 802.11a/b/g/n 2x2 WiFi Adapter
+support added by 872834dfb38edc6f72cfc783a5ce78f2a9f36ec5
 
-On Mon, Feb 18, 2013 at 07:58:18 -0800, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 16:49 +0100, Antonio Quartulli wrote:
-> > On Mon, Feb 18, 2013 at 07:43:26 -0800, Johannes Berg wrote:
-> > > > I did not like this approach because the sta_info struct is so big =
-that
-> > > > when we want to fill the stats substruct only we will waste a lot o=
-f bytes.
-> > >=20
-> > > I don't understand your point.
-> > >=20
-> > > struct sta_info {
-> > >    ...
-> > >    struct stats stats;
-> > > };
-> >=20
-> > My concern is about those "..." that we are allocating within the sta_i=
-nfo struct
-> > that we will never use for every non-peer station.
-> >=20
-> > While if we used the struct below (with its own hash table), we would a=
-llocate
-> > only the space needed for the stats.
-> >=20
-> > >=20
-> > > struct stats_entry {
-> > >    struct hash/list/whatever;
-> > >    struct stats stats;
-> > > };
-> > >=20
-> >=20
-> >=20
-> > no?
-> > Maybe I misunderstood your idea?
->=20
-> But I'm not saying that these are mutually exclusive, I'm saying both
-> should exist.
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Ah ok..Sorry, but I did not take this as an option :)
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 0e8d170..48a01aa 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1152,6 +1152,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ 	{ PCI_DEVICE(0x1814, 0x3562) },
+ 	{ PCI_DEVICE(0x1814, 0x3592) },
+ 	{ PCI_DEVICE(0x1814, 0x3593) },
++	{ PCI_DEVICE(0x1814, 0x359f) },
+ #endif
+ #ifdef CONFIG_RT2800PCI_RT53XX
+ 	{ PCI_DEVICE(0x1814, 0x5360) },
+-- 
+1.7.11.7
 
-So, if I understood correctly, this means one table lookup for peer station=
-s,
-while two table lookups for non peers (first in sta_hash, which will fail).=
- Right?
-
-This would save one look up for each peer, since we have to do perform one =
-of
-them anyway (now I fully understood your previous statement!).
-
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---OROCMA9jn6tkzFBc
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRIlGpAAoJEADl0hg6qKeOd9oP/2NTQpCupELt/WsuNP0h+V+v
-rgi8ayjr1LLkIGBgFrT3P9LWPCCk4/SrEHm0J0knd0W/95WyLJXn9HY9EdbKZb/y
-GDG+5w1fUjAuoZbOKjoZ2321J86hpYcuFBRl2JO9EEyilMwFqUYMc8CRiU33meke
-Lw0tAEekF5PvlVT6qpajEiH7O6soCQwFaJeHjsl7SkxkYF0UkwZOtF1RF8b6BFEd
-YFiuKCBQ5OesTefmEidjWk3l9tAvU4rOJtPrGkWfYC31xc4pmgVlKhm/ZzUQLE6V
-aRxAjSSTvkYv7Qa0N8kejD6t8n2TMFb6Km9jiHBpw3QjV+qToQhfL0yfnucs8xwv
-iuRciwiojSMWUgS37+kVOtR5FkcwgsaNwlX7tqkhJLAuSTQoglwSa1qFlZXT54s8
-443vHdIfN5xfMlT1ciL8f4ReT4fB4MBa68NBdZzXbK59rk22SA7k2mPjs02zyRSv
-ay6fT/ZMEWakWtfmik/qfwcKkyUykzS31a9f+MhXVqrUB3OkDsaP3JuO/MGQYG/T
-GUch3h19KpVVtGZ8fckZLr3+Px3qmL3GtzrMrh3aBekd6F39zolsM5tRG6rIuUIt
-O5By9wzksbVBZIsSWycQw6ALGo/bzgvock5atYzvjZJAVdj7N9foc7Fei6pEVwOU
-VQ9UnISIdnD4N2on9WwD
-=Lyow
------END PGP SIGNATURE-----
-
---OROCMA9jn6tkzFBc--
