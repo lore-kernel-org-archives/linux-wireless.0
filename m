@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:46436 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161179Ab3BONbd (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:41576 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757078Ab3BAQkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 08:31:33 -0500
-Received: by mail-bk0-f41.google.com with SMTP id q16so1535365bkw.14
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 05:31:32 -0800 (PST)
-Message-ID: <511E38B2.40900@cozybit.com> (sfid-20130215_143140_187393_83B74545)
-Date: Fri, 15 Feb 2013 14:31:30 +0100
-From: Marco Porsch <marco@cozybit.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into neighbour_update
-References: <1360928446-543-1-git-send-email-marco@cozybit.com> 	 (sfid-20130215_124056_325990_55BC105E) <1360930499.15040.7.camel@jlt4.sipsolutions.net>  <3fance.mi9hwg.2rw1te-qmf@mx.google.com>  (sfid-20130215_134116_713607_1FD8E99F) <1360932381.15040.11.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360932381.15040.11.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 1 Feb 2013 11:40:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3/6] rtlwifi: rtl8192c: Fix W=1 warning
+Date: Fri,  1 Feb 2013 10:40:24 -0600
+Message-Id: <1359736827-30977-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130201_174114_558184_92F88F80)
+In-Reply-To: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When this driver is built with "make W=1", the following warning occurs:
 
-On 02/15/2013 01:46 PM, Johannes Berg wrote:
-> On Fri, 2013-02-15 at 12:40 +0000, marco@cozybit.com wrote:
->> Please check again. The comment is split in two and placed on the respective new positions.
->
-> Yeah, I see, the API is just total shit. First passing the TSF and then
-> calculating it to override? Why not do the calculation outside the API
-> always?
+drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:907:4: warning: comparison is always false due to limited range of data type [-Wtype-limits]
 
-The TBTT calculation does intentionally not use the mactime value.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Synchronization uses the time in local TSF units and the exact same time 
-point in peers TSF units at the time of sending/receiving (mactime field).
-The TBTT calculation uses the time of NOW, i.e. the current TSF after 
-possible delays in firmware/driver/rx-handler which may have outdated 
-the mactime field.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index 1cdf5a2..b793a65 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -669,7 +669,8 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+ 	u8 thermalvalue, delta, delta_lck, delta_iqk;
+ 	long ele_a, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c = 0;
+-	u8 ofdm_index[2], cck_index = 0, ofdm_index_old[2], cck_index_old = 0;
++	u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
++	s8 cck_index = 0;
+ 	int i;
+ 	bool is2t = IS_92C_SERIAL(rtlhal->version);
+ 	s8 txpwr_level[2] = {0, 0};
+-- 
+1.8.1
 
---Marco
