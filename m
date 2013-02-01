@@ -1,403 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:45999 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759701Ab3BNL5t (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:52330 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374Ab3BAHc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 06:57:49 -0500
-Received: by mail-bk0-f43.google.com with SMTP id jm19so1039762bkc.30
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 03:57:47 -0800 (PST)
-Message-ID: <511CD138.70200@cozybit.com> (sfid-20130214_125811_487900_7F3892CD)
-Date: Thu, 14 Feb 2013 12:57:44 +0100
-From: Marco Porsch <marco@cozybit.com>
+	Fri, 1 Feb 2013 02:32:29 -0500
+From: "Zigman, Eran" <eranz@ti.com>
+To: Girish Bn <Girish.BN@lnties.com>, "Coelho, Luciano" <coelho@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: WL12XX drivers and firmware for Wi-Fi Pre Certifications Tests
+Date: Fri, 1 Feb 2013 07:32:23 +0000
+Message-ID: <58098F92B10CE64E898E9D20B13AA4830B5D30E8@DNCE05.ent.ti.com> (sfid-20130201_083248_991729_879FBDAC)
+References: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
+In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: devel@lists.open80211s.org
-CC: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] mac80211: cache mesh beacon
-References: <1360786461-30107-1-git-send-email-thomas@cozybit.com> <1360786461-30107-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1360786461-30107-2-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When re-submitting, could you please check if you unintentionally 
-removed the call to ieee80211_mps_set_frame_flags when building the beacon?
-
---Marco
-
-
-On 02/13/2013 09:14 PM, Thomas Pedersen wrote:
-> Previously, the entire mesh beacon would be generated each
-> time the beacon timer fired. Instead generate a beacon
-> head and tail (so the TIM can easily be inserted when mesh
-> power save is on) when starting a mesh or the MBSS
-> parameters change.
->
-> Also add a mutex for protecting beacon updates and
-> preventing leaks.
->
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->
-> v2:
-> 	less verbose, fix RCU usage (Johannes)
-> 	protect beacon updates (Johannes)
->
->   net/mac80211/cfg.c         |    5 +-
->   net/mac80211/ieee80211_i.h |    3 +
->   net/mac80211/mesh.c        |  146 +++++++++++++++++++++++++++++++++++++++++++-
->   net/mac80211/mesh.h        |    3 +
->   net/mac80211/mesh_plink.c  |    4 +-
->   net/mac80211/tx.c          |   61 +++---------------
->   6 files changed, 162 insertions(+), 60 deletions(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 6a39d38..5388054e 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1803,11 +1803,10 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
->   		conf->power_mode = nconf->power_mode;
->   		ieee80211_mps_local_status_update(sdata);
->   	}
-> -	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask)) {
-> +	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask))
->   		conf->dot11MeshAwakeWindowDuration =
->   			nconf->dot11MeshAwakeWindowDuration;
-> -		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-> -	}
-> +	ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
->   	return 0;
->   }
->
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 0e0a977..959888c 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -578,6 +578,9 @@ struct ieee80211_if_mesh {
->   	u32 mesh_seqnum;
->   	bool accepting_plinks;
->   	int num_gates;
-> +	struct beacon_data __rcu *beacon;
-> +	/* just protects beacon updates for now */
-> +	struct mutex mtx;
->   	const u8 *ie;
->   	u8 ie_len;
->   	enum {
-> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-> index 0adec3d..d9426e0 100644
-> --- a/net/mac80211/mesh.c
-> +++ b/net/mac80211/mesh.c
-> @@ -171,7 +171,7 @@ void mesh_sta_cleanup(struct sta_info *sta)
->   	}
->
->   	if (changed)
-> -		ieee80211_bss_info_change_notify(sdata, changed);
-> +		ieee80211_mbss_info_change_notify(sdata, changed);
->   }
->
->   int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
-> @@ -593,7 +593,7 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
->   	mesh_path_expire(sdata);
->
->   	changed = mesh_accept_plinks_update(sdata);
-> -	ieee80211_bss_info_change_notify(sdata, changed);
-> +	ieee80211_mbss_info_change_notify(sdata, changed);
->
->   	mod_timer(&ifmsh->housekeeping_timer,
->   		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
-> @@ -644,6 +644,139 @@ void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
->   }
->   #endif
->
-> +static int
-> +ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
-> +{
-> +	struct beacon_data *bcn;
-> +	int head_len, tail_len;
-> +	struct sk_buff *skb;
-> +	struct ieee80211_mgmt *mgmt;
-> +	struct ieee80211_chanctx_conf *chanctx_conf;
-> +	enum ieee80211_band band;
-> +	u8 *pos;
-> +	struct ieee80211_sub_if_data *sdata;
-> +	int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
-> +		      sizeof(mgmt->u.beacon);
-> +
-> +	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
-> +	rcu_read_lock();
-> +	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> +	band = chanctx_conf->def.chan->band;
-> +	rcu_read_unlock();
-> +
-> +	head_len = hdr_len +
-> +		   2 + /* NULL SSID */
-> +		   2 + 8 + /* supported rates */
-> +		   2 + 3; /* DS params */
-> +	tail_len = 2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-> +		   2 + sizeof(struct ieee80211_ht_cap) +
-> +		   2 + sizeof(struct ieee80211_ht_operation) +
-> +		   2 + ifmsh->mesh_id_len +
-> +		   2 + sizeof(struct ieee80211_meshconf_ie) +
-> +		   2 + sizeof(__le16) + /* awake window */
-> +		   ifmsh->ie_len;
-> +
-> +	bcn = kzalloc(sizeof(*bcn) + head_len + tail_len, GFP_KERNEL);
-> +	/* need an skb for IE builders to operate on */
-> +	skb = dev_alloc_skb(max(head_len, tail_len));
-> +
-> +	if (!bcn || !skb)
-> +		goto out_free;
-> +
-> +	/*
-> +	 * pointers go into the block we allocated,
-> +	 * memory is | beacon_data | head | tail |
-> +	 */
-> +	bcn->head = ((u8 *) bcn) + sizeof(*bcn);
-> +
-> +	/* fill in the head */
-> +	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-> +	memset(mgmt, 0, hdr_len);
-> +	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-> +					  IEEE80211_STYPE_BEACON);
-> +	eth_broadcast_addr(mgmt->da);
-> +	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
-> +	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
-
-e.g. here
-
-> +	mgmt->u.beacon.beacon_int =
-> +		cpu_to_le16(sdata->vif.bss_conf.beacon_int);
-> +	mgmt->u.beacon.capab_info |= cpu_to_le16(
-> +		sdata->u.mesh.security ? WLAN_CAPABILITY_PRIVACY : 0);
-> +
-> +	pos = skb_put(skb, 2);
-> +	*pos++ = WLAN_EID_SSID;
-> +	*pos++ = 0x0;
-> +
-> +	if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
-> +	    mesh_add_ds_params_ie(skb, sdata))
-> +		goto out_free;
-> +
-> +	bcn->head_len = skb->len;
-> +	memcpy(bcn->head, skb->data, bcn->head_len);
-> +
-> +	/* now the tail */
-> +	skb_trim(skb, 0);
-> +	bcn->tail = bcn->head + bcn->head_len;
-> +
-> +	if (ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
-> +	    mesh_add_rsn_ie(skb, sdata) ||
-> +	    mesh_add_ht_cap_ie(skb, sdata) ||
-> +	    mesh_add_ht_oper_ie(skb, sdata) ||
-> +	    mesh_add_meshid_ie(skb, sdata) ||
-> +	    mesh_add_meshconf_ie(skb, sdata) ||
-> +	    mesh_add_awake_window_ie(skb, sdata) ||
-> +	    mesh_add_vendor_ies(skb, sdata))
-> +		goto out_free;
-> +
-> +	bcn->tail_len = skb->len;
-> +	memcpy(bcn->tail, skb->data, bcn->tail_len);
-> +
-> +	dev_kfree_skb(skb);
-> +	rcu_assign_pointer(ifmsh->beacon, bcn);
-> +	return 0;
-> +out_free:
-> +	kfree(bcn);
-> +	dev_kfree_skb(skb);
-> +	return -ENOMEM;
-> +}
-> +
-> +static int
-> +ieee80211_mesh_rebuild_beacon(struct ieee80211_if_mesh *ifmsh)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct beacon_data *old_bcn;
-> +	int ret;
-> +	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
-> +
-> +	mutex_lock(&ifmsh->mtx);
-> +
-> +	old_bcn = rcu_dereference_protected(ifmsh->beacon,
-> +					    lockdep_is_held(&ifmsh->mtx));
-> +	ret = ieee80211_mesh_build_beacon(ifmsh);
-> +	if (ret)
-> +		/* just reuse old beacon */
-> +		goto out;
-> +
-> +	if (old_bcn)
-> +		kfree_rcu(old_bcn, rcu_head);
-> +out:
-> +	mutex_unlock(&ifmsh->mtx);
-> +	return ret;
-> +}
-> +
-> +void ieee80211_mbss_info_change_notify(struct ieee80211_sub_if_data *sdata,
-> +				       u32 changed)
-> +{
-> +	if (sdata->vif.bss_conf.enable_beacon &&
-> +	    (changed & (BSS_CHANGED_BEACON |
-> +			BSS_CHANGED_HT |
-> +			BSS_CHANGED_BASIC_RATES |
-> +			BSS_CHANGED_BEACON_INT)))
-> +		if (ieee80211_mesh_rebuild_beacon(&sdata->u.mesh))
-> +			return;
-> +	ieee80211_bss_info_change_notify(sdata, changed);
-> +	return;
-> +}
-> +
->   void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
->   {
->   	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> @@ -677,6 +810,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
->
->   	changed |= ieee80211_mps_local_status_update(sdata);
->
-> +	if (ieee80211_mesh_build_beacon(ifmsh)) {
-> +		ieee80211_stop_mesh(sdata);
-> +		return;
-> +	}
-> +
->   	ieee80211_bss_info_change_notify(sdata, changed);
->
->   	netif_carrier_on(sdata->dev);
-> @@ -694,6 +832,8 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
->   	sdata->vif.bss_conf.enable_beacon = false;
->   	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
->   	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-> +	kfree_rcu(ifmsh->beacon, rcu_head);
-> +	rcu_assign_pointer(ifmsh->beacon, NULL);
->
->   	/* flush STAs and mpaths on this iface */
->   	sta_info_flush(sdata);
-> @@ -883,6 +1023,8 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
->   	skb_queue_head_init(&ifmsh->ps.bc_buf);
->   	spin_lock_init(&ifmsh->mesh_preq_queue_lock);
->   	spin_lock_init(&ifmsh->sync_offset_lock);
-> +	RCU_INIT_POINTER(ifmsh->beacon, NULL);
-> +	mutex_init(&ifmsh->mtx);
->
->   	sdata->vif.bss_conf.bssid = zero_addr;
->   }
-> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-> index 7ad035f..3ce00ba 100644
-> --- a/net/mac80211/mesh.h
-> +++ b/net/mac80211/mesh.h
-> @@ -243,6 +243,9 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
->   void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
->   void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
->   const struct ieee80211_mesh_sync_ops *ieee80211_mesh_sync_ops_get(u8 method);
-> +/* wrapper for ieee80211_bss_info_change_notify() */
-> +void ieee80211_mbss_info_change_notify(struct ieee80211_sub_if_data *sdata,
-> +				       u32 changed);
->
->   /* mesh power save */
->   u32 ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata);
-> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-> index a4c7a7e..13983b6 100644
-> --- a/net/mac80211/mesh_plink.c
-> +++ b/net/mac80211/mesh_plink.c
-> @@ -510,7 +510,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
->   	ieee80211_mps_frame_release(sta, elems);
->   out:
->   	rcu_read_unlock();
-> -	ieee80211_bss_info_change_notify(sdata, changed);
-> +	ieee80211_mbss_info_change_notify(sdata, changed);
->   }
->
->   static void mesh_plink_timer(unsigned long data)
-> @@ -1092,5 +1092,5 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
->   	rcu_read_unlock();
->
->   	if (changed)
-> -		ieee80211_bss_info_change_notify(sdata, changed);
-> +		ieee80211_mbss_info_change_notify(sdata, changed);
->   }
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index f476aa6..0dabc8a 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -2446,71 +2446,26 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
->   		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
->   						 IEEE80211_STYPE_BEACON);
->   	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> -		struct ieee80211_mgmt *mgmt;
->   		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> -		u8 *pos;
-> -		int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
-> -			      sizeof(mgmt->u.beacon);
-> +		struct beacon_data *bcn = rcu_dereference(ifmsh->beacon);
->
-> -#ifdef CONFIG_MAC80211_MESH
-> -		if (!sdata->u.mesh.mesh_id_len)
-> +		if (!bcn)
->   			goto out;
-> -#endif
->
->   		if (ifmsh->sync_ops)
->   			ifmsh->sync_ops->adjust_tbtt(
->   						sdata);
->
->   		skb = dev_alloc_skb(local->tx_headroom +
-> -				    hdr_len +
-> -				    2 + /* NULL SSID */
-> -				    2 + 8 + /* supported rates */
-> -				    2 + 3 + /* DS params */
-> +				    bcn->head_len +
->   				    256 + /* TIM IE */
-> -				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-> -				    2 + sizeof(struct ieee80211_ht_cap) +
-> -				    2 + sizeof(struct ieee80211_ht_operation) +
-> -				    2 + sdata->u.mesh.mesh_id_len +
-> -				    2 + sizeof(struct ieee80211_meshconf_ie) +
-> -				    sdata->u.mesh.ie_len +
-> -				    2 + sizeof(__le16)); /* awake window */
-> +				    bcn->tail_len);
->   		if (!skb)
->   			goto out;
-> -
-> -		skb_reserve(skb, local->hw.extra_tx_headroom);
-> -		mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
-> -		memset(mgmt, 0, hdr_len);
-> -		mgmt->frame_control =
-> -		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
-> -		eth_broadcast_addr(mgmt->da);
-> -		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
-> -		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
-> -		ieee80211_mps_set_frame_flags(sdata, NULL, (void *) mgmt);
-
-as previously here
-
-> -		mgmt->u.beacon.beacon_int =
-> -			cpu_to_le16(sdata->vif.bss_conf.beacon_int);
-> -		mgmt->u.beacon.capab_info |= cpu_to_le16(
-> -			sdata->u.mesh.security ? WLAN_CAPABILITY_PRIVACY : 0);
-> -
-> -		pos = skb_put(skb, 2);
-> -		*pos++ = WLAN_EID_SSID;
-> -		*pos++ = 0x0;
-> -
-> -		band = chanctx_conf->def.chan->band;
-> -
-> -		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
-> -		    mesh_add_ds_params_ie(skb, sdata) ||
-> -		    ieee80211_beacon_add_tim(sdata, &ifmsh->ps, skb) ||
-> -		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
-> -		    mesh_add_rsn_ie(skb, sdata) ||
-> -		    mesh_add_ht_cap_ie(skb, sdata) ||
-> -		    mesh_add_ht_oper_ie(skb, sdata) ||
-> -		    mesh_add_meshid_ie(skb, sdata) ||
-> -		    mesh_add_meshconf_ie(skb, sdata) ||
-> -		    mesh_add_awake_window_ie(skb, sdata) ||
-> -		    mesh_add_vendor_ies(skb, sdata)) {
-> -			pr_err("o11s: couldn't add ies!\n");
-> -			goto out;
-> -		}
-> +		skb_reserve(skb, local->tx_headroom);
-> +		memcpy(skb_put(skb, bcn->head_len), bcn->head, bcn->head_len);
-> +		ieee80211_beacon_add_tim(sdata, &ifmsh->ps, skb);
-> +		memcpy(skb_put(skb, bcn->tail_len), bcn->tail, bcn->tail_len);
->   	} else {
->   		WARN_ON(1);
->   		goto out;
->
-
+SGkgR2lyaXNoLA0KW29sX1I1LjAwLjE0XSBpcyBub3QgZm9yIEpCLiBJdCdzIHRoZSBmaXJzdCBS
+NSBOTENQIHJlbGVhc2UsIGFuZCBpdCdzIG9uIEdCLg0KV2UgaGF2ZSAiSG93IFRvIiBvbiBvdXIg
+d2VicGFnZSB0byBidWlsZCBKQiByZWxlYXNlLiBZb3UgY2FuIGZpbmQgaXQgaW4gb21hcGVkaWEu
+Y29tDQpUaGUgcG9pbnQgaXMgV0w2IHdpdGggUEcyLjAgaXNuJ3Qgc3VwcG9ydGVkIHdpdGggb3Vy
+IGxhdGVzdCByZWxlYXNlIGFzIGZhciBhcyBJIHVuZGVyc3RhbmQsIHdoeSBjYW4ndCB5b3UgbW92
+ZSB0byB0aGUgbGF0ZXN0IFBHIHZlcnNpb24/IEl0IHNob3VsZCBiZSBwaW4gY29tcGF0aWJsZS4N
+Cg0KVGhhbmtzIGFuZCBSZWdhcmRzLA0KDQpFcmFuIFppZ21hbg0KVGV4YXMgSW5zdHJ1bWVudHMg
+SW5jDQpFQ1MgQXBwbGljYXRpb24gDQpDZWxsOiA0MDgtNjgwOTczNCwgT2ZmaWNlOiA3MjEzNzI2
+DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEdpcmlzaCBCbiBbbWFpbHRv
+OkdpcmlzaC5CTkBsbnRpZXMuY29tXSANClNlbnQ6IFdlZG5lc2RheSwgSmFudWFyeSAzMCwgMjAx
+MyA5OjA3IFBNDQpUbzogWmlnbWFuLCBFcmFuOyBDb2VsaG8sIEx1Y2lhbm8NCkNjOiBsaW51eC13
+aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFdMMTJYWCBkcml2ZXJzIGFuZCBmaXJt
+d2FyZSBmb3IgV2ktRmkgUHJlIENlcnRpZmljYXRpb25zIFRlc3RzDQoNCkhpIEVyYW4sDQoNCk91
+ciBQbGF0Zm9ybSAgaXMgYmFzZWQgb24gTFBDMzEzeCBhbmQgTGludXgga2VybmVsIDIuNi4yOC4y
+LiBUaGUgd2lyZWxlc3MgbW9kdWxlIGlzIEpvcmppbiBiYXNlZCBXTDEyNzEgUEcgMi4wIFdlIGFy
+ZSB1c2luZyB0aGUgZm9sbG93aW5nIGNvbXBhdCB3aXJlbGVzcyBwYWNrYWdlIGFuZCBmaXJtd2Fy
+ZSB2ZXJzaW9uIFRoZSBDb21wYXQgV2lyZWxlc3MgMy41IHBhY2thZ2UgZnJvbSBVUkwgaHR0cDov
+L2xpbnV4d2lyZWxlc3Mub3JnL2VuL3VzZXJzL0Rvd25sb2FkL3N0YWJsZS8jY29tcGF0LXdpcmVs
+ZXNzXzMuNV9zdGFibGVfcmVsZWFzZXMuDQpUaGUgU1IgZmlybXdhcmUgYmluYXJ5IGlzIHRha2Vu
+IGZyb20gVVJMIGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay90aS11dGlscyBhbmQgYnJh
+bmNoIHI1X2piIGFuZCB0YWcgW29sX1I1LjAwLjE0XSAgYW5kIHRoZSBSZXZpc2lvbiBpcyBTaW5n
+bGUgUm9sZSAoU1IpOiAgKTogIFJldiA2LjMuNy4wLjEwNSBQbGVhc2Ugbm90ZSB0aGF0IG11bHRp
+LXJvbGUgd2lsbCBub3QgYmUgZW5hYmxlZCBDYW4geW91IGNvbmZpcm0gdXMgd2hldGhlciB0aGUg
+YWJvdmUgY29tYmluYXRpb24gaGFzIHBhc3NlZCBuZWNlc3NhcnkgUHJlLXF1YWxpZmljYXRpb24g
+dGVzdHMgZm9yIFdpLUZpIGFuZCBXaS1GaSBEaXJlY3Q/DQpJZiBub3QgYWJvdmUgY29tYmluYXRp
+b24sIHBsZWFzZSBzdWdnZXN0IHVzIHRoZSByaWdodCBjb21iaW5hdGlvbiB3aGljaCBoYXMgcGFz
+c2VkIHRlc3RzIGFuZCBpdCBjYW4gd29yayBvbiBXTDEyNzEgUEcgMi4wDQoNCg0KVGhhbmtzICYg
+UmVnYXJkcywNCkdpcmlzaA0KTCZUIElFUywNCktJQURCIEluZHVzdHJpYWwgQXJlYSwNCkhlYmJh
+bC1Ib290YWdhbGxpLCBNeXNvcmUgLSA1NzAgMDE4DQpUZWxlcGhvbmUgOiAgRElEKzkxLTgyMS0y
+NDA1NTUyDQpNb2JpbGU6ICs5MS05NzQxMjA2NDAyDQpFLW1haWwgSUQgOkdpcmlzaC5CTkBsbnRp
+ZXMuY29tDQp3d3cubG50aWVzLmNvbQ0KDQpUaGlzIG1haWwgaXMgY2xhc3NpZmllZCBhcyA6DQoo
+ICApIEwmVCBJRVMgUHJvcHJpZXRhcnkNCiggICkgTCZUIElFUyBDb25maWRlbnRpYWwNCihYKSBM
+JlQgSUVTIEludGVybmFsIFVzZQ0KKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KDQpUaGFu
+a3MgJiBSZWdhcmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0K
+SGViYmFsLUhvb3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRlbGVwaG9uZSA6ICBESUQrOTEt
+ODIxLTI0MDU1NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUtbWFpbCBJRCA6R2lyaXNoLkJO
+QGxudGllcy5jb20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFpbCBpcyBjbGFzc2lmaWVkIGFz
+IDoNCiggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0K
+KFgpIEwmVCBJRVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBHZW5lcmFsIEJ1c2luZXNzDQoN
+Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBaaWdtYW4sIEVyYW4gW21haWx0bzpl
+cmFuekB0aS5jb21dDQpTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDI5LCAyMDEzIDExOjU5IFBNDQpU
+bzogR2lyaXNoIEJuOyBDb2VsaG8sIEx1Y2lhbm8NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmcNClN1YmplY3Q6IFJFOiB3bDEyeHggKG9sX1I1LlNQMy4wNSkgZHJpdmVycyArIGZp
+cm13YXJlIChvbF9SNS5TUDMuMDUpIGRvZXNuJ3Qgd29yayBvbiBXTDEyNzEgKEhXIFBHIDIuMCkN
+Cg0KSGkgR2lyaXNoLA0KDQpQRzIuMCB3YXMgc3RvcHBlZCBiZWVuIHN1cHBvcnRlZCBkdWUgdG8g
+UlggTWlzbWF0Y2ggcHJvYmxlbSB0aGF0IGNhbWUgZHVlIHRvICJ3cm9uZy9wcm9ibGVtYXRpYyIg
+UFBEVSBjb21wbGV0ZSBpbnRlcnJ1cHQuIEluIFBHMy4wIHdlIG1vdmVkIGluIDEyN3ggdG8gd29y
+ayBhcyAxMjh4IGRldmljZXMsIGFuZCBzb2x2ZWQgdGhhdCBpc3N1ZS4NCg0KVGhhbmtzIGFuZCBS
+ZWdhcmRzLA0KDQpFcmFuIFppZ21hbg0KVGV4YXMgSW5zdHJ1bWVudHMgSW5jDQpFQ1MgQXBwbGlj
+YXRpb24NCkNlbGw6IDQwOC02ODA5NzM0LCBPZmZpY2U6IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lyaXNoIEJuIFttYWlsdG86R2lyaXNoLkJOQGxudGll
+cy5jb21dDQpTZW50OiBUaHVyc2RheSwgSmFudWFyeSAyNCwgMjAxMyAxMDo0OCBQTQ0KVG86IFpp
+Z21hbiwgRXJhbjsgQ29lbGhvLCBMdWNpYW5vDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJt
+d2FyZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoN
+CkhpIFRJIERldmVsb3BlcnMsDQoNCkkgYW0gc3RpbGwgd2FpdGluZyBmb3IgcmVwbHkgZnJvbSBU
+SSBvbiB3aGV0aGVyIG91ciBoYXJkd2FyZSBjYW4gcnVuIHN1Y2Nlc3NmdWxseSBydW4gdGhlIG9s
+X1I1LlNQMy4wNSBwYWNrYWdlIG9yIG5vdC4NCldlIHNwZW5kIGh1Z2UgYW1vdW50IG9mIHRpbWUg
+aW4gdGVzdGluZyB0aGUgcGFja2FnZS4gV2UgYXJlIHNlZWluZyB0aGUgaXNzdWUgd2l0aCB0aGUg
+ZmlybXdhcmUgYmluYXJpZXMgb25seS4gV2UgZG9uJ3QgaGF2ZSBhbiBhbnkgY29udHJvbCBvbiB0
+aGUgZmlybXdhcmUgYmluYXJpZXMgYW5kIGl0IGEgYmxhY2sgYm94IHRvIHVzLg0KSWYgdGhlIGZp
+cm13YXJlIGlzIG5vdCBzdXBwb3J0ZWQgb24gdGhlIG9sZGVyIGhhcmR3YXJlLCBwbGVhc2UgYXBw
+bHkgYSBwYXRjaCB0byB0aGUgZHJpdmVyIHdoaWNoIHdpbGwgcmVzdHJpY3QgcnVubmluZyB0aGUg
+bmV3IGRyaXZlcnMgb24gdGhlIG9sZGVyIGhhcmR3YXJlLg0KSXQgd2lsbCBhbHNvIGhlbHAgdG8g
+YXZvaWQgcGVvcGxlIHNwZW5kaW5nIHRpbWUgb24gdGhlIG5ldyBkcml2ZXJzIHdpdGggb2xkIGhh
+cmR3YXJlLg0KV2Ugd2FudGVkIHRvIG1ha2UgY3J1Y2lhbCBkZWNpc2lvbiBmb3Igb3VyIE5ldHdv
+cmsgU2VydmVyIHByb2R1Y3QgZmVhdHVyZXMgYmFzZWQgb24gdGhlIG91dGNvbWUgb2YgdGVzdGlu
+ZyBvbF9SNS5TUDMuMDUgcGFja2FnZSB3aGljaCB3ZSBjb3VsZG4ndCBhY2hpZXZlLg0KVGhpcyBo
+YXMgZGlzYXBwb2ludGVkIHVzIGEgbG90DQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpHaXJpc2gNCg0K
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEdpcmlzaCBCbg0KU2VudDogRnJpZGF5
+LCBKYW51YXJ5IDA0LCAyMDEzIDk6MTEgQU0NClRvOiAnWmlnbWFuLCBFcmFuJzsgJ0NvZWxobywg
+THVjaWFubycNCkNjOiAnbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnJw0KU3ViamVjdDog
+UkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBkcml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQMy4w
+NSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAoSFcgUEcgMi4wKQ0KDQpIaSwNCg0KRG8geW91IGhh
+dmUgYW55IHVwZGF0ZXMgb24gdGhlIHRlc3RpbmcgYXQgeW91ciBzaWRlPyBMZXQgdXMga25vdyBh
+bnkgcGF0aCBmb3J3YXJkIG9uIHRoaXM/DQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpHaXJpc2gNCkwm
+VCBJRVMsDQpLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQpIZWJiYWwtSG9vdGFnYWxsaSwgTXlzb3Jl
+IC0gNTcwIDAxOA0KVGVsZXBob25lIDogIERJRCs5MS04MjEtMjQwNTU1Mg0KTW9iaWxlOiArOTEt
+OTc0MTIwNjQwMg0KRS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVzLmNvbQ0Kd3d3LmxudGllcy5j
+b20NCg0KVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KKCAgKSBMJlQgSUVTIFByb3ByaWV0
+YXJ5DQooICApIEwmVCBJRVMgQ29uZmlkZW50aWFsDQooWCkgTCZUIElFUyBJbnRlcm5hbCBVc2UN
+CiggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCkZyb206IEdpcmlzaCBCbg0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAyOCwgMjAxMiA2OjE3
+IFBNDQpUbzogJ1ppZ21hbiwgRXJhbic7IENvZWxobywgTHVjaWFubw0KQ2M6IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBk
+cml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQMy4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAo
+SFcgUEcgMi4wKQ0KDQpIaSwNCg0KVGhhbmtzIGZvciB0aGUgc3VwcG9ydA0KQ2FuIHlvdSBsZXQg
+dXMga25vdyB3aGV0aGVyIHlvdSB3ZXJlIGFibGUgdG8gcmVwcm9kdWNlIHRoZSBpc3N1ZSB1c2lu
+ZyBSNS5TUDMgb24gV0wxMjcxTCAoSFcgUEcgMi4wKSBvbiBMaW51eD8NCg0KIFRoYW5rcyAmIFJl
+Z2FyZHMsDQpHaXJpc2gNCkwmVCBJRVMsDQpLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQpIZWJiYWwt
+SG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KVGVsZXBob25lIDogIERJRCs5MS04MjEtMjQw
+NTU1Mg0KTW9iaWxlOiArOTEtOTc0MTIwNjQwMg0KRS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVz
+LmNvbQ0Kd3d3LmxudGllcy5jb20NCg0KVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KKCAg
+KSBMJlQgSUVTIFByb3ByaWV0YXJ5DQooICApIEwmVCBJRVMgQ29uZmlkZW50aWFsDQooWCkgTCZU
+IElFUyBJbnRlcm5hbCBVc2UNCiggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCg0KLS0tLS1P
+cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFppZ21hbiwgRXJhbiBbbWFpbHRvOmVyYW56QHRp
+LmNvbV0NClNlbnQ6IFNhdHVyZGF5LCBEZWNlbWJlciAyMiwgMjAxMiAxMjozNiBBTQ0KVG86IENv
+ZWxobywgTHVjaWFubzsgR2lyaXNoIEJuDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2Fy
+ZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkx1
+Y2EsDQpXZSBoYXZlIHRlc3RlZCB0aGUgYmVsb3cgcmVsZWFzZSBSNS5TUDMgb24gQU0zMzV4IGFu
+ZCBXTDEyNzFMIChIVyBQRyAzLngpIG9uIExpbnV4IGJ1dCBub3Qgb24gUEcgMi4wLg0KSSBhbSBu
+b3Qgc3VyZSBpZiB0aGUgUjUuU1AzIGRyaXZlci9maXJtd2FyZSB3b3VsZCBoYXZlIGFueSBsaW1p
+dGF0aW9ucyBvZiBvbGQgdmVyc2lvbiBQRzIuMC4NCldlIHdpbGwgcnVuIHRoZSBleGFjdCBzY2Vu
+YXJpb3MgdGhhdCB5b3UgbWVudGlvbmVkIGZvciBXTDYgKFBHMy54KSBhbmQgdXBkYXRlLg0KDQoN
+CkNhbiB5b3UgcGxlYXNlIHNoZWQgc29tZSBsaWdodCBvbiB0aGlzIGFjdGl2aXR5LCBjdXN0b21l
+ci4uLg0KDQpUaGFua3MgYW5kIFJlZ2FyZHMsDQoNCkVyYW4gWmlnbWFuDQpUZXhhcyBJbnN0cnVt
+ZW50cyBJbmMNCkVDUyBBcHBsaWNhdGlvbg0KQ2VsbDogNDA4LTY4MDk3MzQsIE9mZmljZTogNzIx
+MzcyNg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDb2VsaG8sIEx1Y2lh
+bm8NClNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMTksIDIwMTIgMTE6MzIgQU0NClRvOiBaaWdt
+YW4sIEVyYW47IEdpcmlzaCBCbg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0K
+U3ViamVjdDogUmU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBkcml2ZXJzICsgZmlybXdhcmUgKG9s
+X1I1LlNQMy4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAoSFcgUEcgMi4wKQ0KDQpIaSBFcmFu
+LA0KDQpDYW4geW91IHBsZWFzZSBjaGVjayBHaXJpc2gncyBlbWFpbCBiZWxvdyBhbmQgaGVscCBo
+aW0gd2l0aCB0aGlzPw0KDQpUaGFua3MhDQoNCi0tDQpMdWNhLg0KDQpPbiBXZWQsIDIwMTItMTIt
+MTkgYXQgMTQ6NDEgKzAwMDAsIEdpcmlzaCBCbiB3cm90ZToNCj4gSGksDQo+DQo+IFdlIGFyZSBj
+bGllbnQgaXMgdXNpbmcgdGhlIEpvcmppbiBXRzczMTAtMDAgV0xBTi9CVC9GTSBNb2R1bGUgZm9y
+IG9uZSBvZiB0aGUgV0xBTiBzZXJ2ZXIgbW9kdWxlLg0KPiBXZSBhcmUgcG9ydGluZyB0aGUgTGlu
+dXggb3BlbiBzb3VyY2UgZHJpdmVycyB0byBXTDEyNzEgYmFzZWQgSm9yamluIG1vZHVsZS4gT3Vy
+IGtlcm5lbCB2ZXJzaW9uIGlzIDIuNi4yOC4yIGFuZCBwcm9jZXNzb3IgaXMgTFBDMzEzMC4gVGhl
+IFBHIHZlciBvZiBXbDEyNzEgaXMgMi4NCj4gUmVjZW50bHkgd2UgaGF2ZSBiYWNrIHBvcnRlZCB0
+aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSB0aGUgVEktT3BlbkxpbmsgDQo+IHNpdGUgV2UgaGF2ZSB0
+YWtlbiB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSANCj4gaHR0cHM6Ly9naXRodWIuY29tL1RJLU9w
+ZW5MaW5rL3dsMTJ4eCBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcNCj4gb2xfUjUuU1AzLjA1IEFs
+c28gd2UgaGFkIHRha2VuIHRoZSBmaXJtd2FyZSBmcm9tIA0KPiBodHRwczovL2dpdGh1Yi5jb20v
+VEktT3BlbkxpbmsvdGktdXRpbHMgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFnDQo+IG9sX1I1LlNQ
+My4wNSBUaGUgc3VwcGxpY2FudCBhbHNvIHdhcyB0YWtlbiBmcm9tIA0KPiBodHRwczovL2dpdGh1
+Yi5jb20vVEktT3BlbkxpbmsvaG9zdGFwIGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZw0KPiBvbF9S
+NS5TUDMuMDUNCj4NCj4gV2UgdXNpbmcgdGhlIG11bHRpLXJvbGUgZmVhdHVyZSBvZiB0aGUgZHJp
+dmVyLg0KPiBXZSBoYWQgc3BlY2lmaWNhbGx5IHRha2VuIGFib3ZlIHBhY2thZ2UgYXMgd2Ugd2Fu
+dGVkIHRoZSBBUCBjaGFubmVsIHN3aXRjaCBmdW5jdGlvbmFsaXR5LiBUaGlzIGZlYXR1cmUgaGFu
+ZGxlcyBhIHBhcnRpY3VsYXIgY2FzZSBsaWtlIGlmIHlvdSBzdGFydGVkIHRoZSBTVEEgb24gQ2hh
+bm5lbCBYIGFuZCBhbHNvIHlvdSB3aWxsIHN0YXJ0IEFQIChQMlAgR3JvdXAgT3duZXIpIG9uIHRo
+ZSBzYW1lIGNoYW5uZWwgKENoYW5uZWwgWCkuIE5vdyBpZiB5b3UgY2hhbmdlIHRoZSBjaGFubmVs
+IG9mIFN0YXRpb24gdG8gQ2hhbm5lbChZKSwgdGhlIGRyaXZlciBhdXRvbWF0aWNhbGx5IHdpbGwg
+dGFrZSBjYXJlIG9mIHJlc3RhcnRpbmcgdGhlIEFQKFAyUCBHTykgb24gdGhlIHNhbWUgY2hhbm5l
+bChDaGFubmVsIFkpLg0KPg0KPiBXZSBhcmUgZmFjaW5nIGlzc3VlIHdpdGggdGhpcyBwYWNrYWdl
+IGFuZCB0aGUgZHJpdmVycyB3b24ndCB3b3JrIHByb3Blcmx5IGZvciB1cy4NCj4gVGhlIG1ham9y
+IGlzc3VlcyBzZWVuIHdpdGggdGhpcyBwYWNrYWdlIGFyZSAxLiBXZSBhYmxlIHRvIGRvIHRoZSBz
+Y2FuIA0KPiBhbmQgY29ubmVjdCB0byBhbiBlbmNyeXB0ZWQgbmV0d29yay4gIEJ1dCB3aGVuIHdl
+IHJ1biBESENQIGNsaWVudCBvbiB3bGFuMCB0byBnZXQgdGhlIElQIGFkZHJlc3MgZnJvbSB0aGUg
+QWNjZXNzIFBvaW50LCB0aGUgZHJpdmVyIHRocm93cyAid2wxMnh4OiBCZWFjb24gbG9zcyBkZXRl
+Y3RlZCIgbWVzc2FnZSBhbmQgdGhlIGNvbm5lY3Rpb24gYnJlYWtzIGFuZCB0aGUgZHJpdmVyIGdl
+dHMgaW50byBTQ0FOIG1vZGUgYW5kIHdpbGwgdHJ5IHRvIHJlY29ubmVjdCB0byB0aGUgQWNjZXNz
+IFBvaW50LiBFdmVudHVhbGx5IHdlIGRvbid0IHJlY2VpdmUgdGhlIElQIGFkZHJlc3MgZnJvbSB0
+aGUgQWNjZXNzIFBvaW50Lg0KPiAyLiBJIHdhcyBhYmxlIHRvIHN0YXJ0IHRoZSBTdGF0aW9uIGFu
+ZCBBUCByb2xlIG9uIHRoZSBzYW1lIGNoYW5uZWwuIEJ1dCB0aGUgYWZ0ZXIgc3RhdGluZyB0aGUg
+QVAgcm9sZSwgc3RhdGlvbiByb2xlIHdpbGwgYmUgZGlzY29ubmVjdGVkIGF1dG9tYXRpY2FsbHkg
+YW5kIEkgd29uJ3QgYmUgYWJsZSB0byBkbyBzY2FuIGFuZCBjb25uZWN0aW9uIG9uIFNUQS4NCj4g
+My4gQWxzbyBjYW5ub3QgY29ubmVjdCB0byBteSBTeXN0ZW0gd2hpY2ggaXMgYWN0aW5nIGFzIFAy
+UCBHcm91cCBPd25lcihBUCkgZnJvbSBhbnkgb3RoZXIgV2ktRmkgZGV2aWNlIGxpa2UgaVBob25l
+L0xhcHRvcCBvciBhbnkgb3RoZXIuIFRoZSBpc3N1ZSBpcyBzZWVuIHdoZW4gU3lzdGVtIGlzIHNl
+dCB0byBQMlAgR08gZWl0aGVyIHVzaW5nIFNpbmdsZSBSb2xlIGZpcm13YXJlIG9ubHkgb3IgdXNp
+bmcgTXVsdGktcm9sZSBmaXJtd2FyZS4NCj4NCj4gV2Ugc3VzcGVjdCB0aGUgaXNzdWUgd2l0aCB0
+aGUgYWJvdmUgdmVyc2lvbnMgb2YgKG9sX1I1LlNQMy4wNSkgd2wxMjd4IA0KPiBmaXJtd2FyZSBh
+bmQgc3VycHJpc2luZ2x5IGFsbCB0aGUgYWJvdmUgdGhyZWUgaXNzdWVzIGFyZSBOT1Qgc2VlbiB3
+aGVuIA0KPiBJIHVzZSB0aGUgYmVsb3cgZmlybXdhcmUgdmVyc2lvbnMgKHdoaWNoIGlzIHF1aXRl
+IG9sZCkgU2luZ2xlIFJvbGUNCj4gKFNSKTogIFJldiA2LjMuNy4wLjEwNQ0KPiBNdWx0aS1Sb2xl
+KE1SKTogUmV2IDYuNS41LjAuMjENCj4NCj4NCj4gVGhlIGZpcm13YXJlIHZlcnNpb25zIHRha2Vu
+IGZyb20NCj4gaHR0cHM6Ly9naXRodWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFu
+Y2ggcjVfamIgYW5kIHRhZw0KPiBvbF9SNS5TUDMuMDUgYXJlIFNpbmdsZSBSb2xlIChTUik6ICBS
+ZXYgNi4zLjEwLjAuMTMyIE11bHRpLVJvbGUgKE1SKToNCj4gUmV2IDYuNS43LjAuNDINCj4NCj4g
+Q2FuIHlvdSBsZXQgdXMga25vdyB3aGV0aGVyIFdsMTI3MSBodyBQRyBWZXIgMi4wIGNhbiBydW4g
+dGhlIG9sX1I1LlNQMy4wNSBmaXJtd2FyZSBzdWNjZXNzZnVsbHkgb3IgYW55IGhhcmR3YXJlIGxp
+bWl0YXRpb25zIHdpdGggV2wxMjcxPw0KPiBBbnkgc3VnZ2VzdGlvbnMgb24gdGhlIGFib3ZlIGlz
+c3VlcyB3aWxsIGJlIGdyZWF0bHkgaGVscGZ1bA0KPg0KPg0KPiBUaGFua3MgJiBSZWdhcmRzLA0K
+PiBHaXJpc2gNCj4gTCZUIElFUywNCj4gS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0KPiBIZWJiYWwt
+SG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KPiBUZWxlcGhvbmUgOiAgRElEKzkxLTgyMS0y
+NDA1NTUyDQo+IE1vYmlsZTogKzkxLTk3NDEyMDY0MDINCj4gRS1tYWlsIElEIDpHaXJpc2guQk5A
+bG50aWVzLmNvbQ0KPiB3d3cubG50aWVzLmNvbQ0KPg0KPiBUaGlzIG1haWwgaXMgY2xhc3NpZmll
+ZCBhcyA6DQo+ICggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KPiAoICApIEwmVCBJRVMgQ29uZmlk
+ZW50aWFsDQo+IChYKSBMJlQgSUVTIEludGVybmFsIFVzZQ0KPiAoICkgTCZUIElFUyBHZW5lcmFs
+IEJ1c2luZXNzDQo+DQo+IExhcnNlbiAmIFRvdWJybyBMaW1pdGVkDQo+DQo+IHd3dy5sYXJzZW50
+b3Vicm8uY29tDQo+DQo+IFRoaXMgRW1haWwgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG9yIHBy
+aXZpbGVnZWQgaW5mb3JtYXRpb24gZm9yIHRoZSBpbnRlbmRlZCByZWNpcGllbnQgKHMpLiBJZiB5
+b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgZG8gbm90IHVzZSBvciBk
+aXNzZW1pbmF0ZSB0aGUgaW5mb3JtYXRpb24sIG5vdGlmeSB0aGUgc2VuZGVyIGFuZCBkZWxldGUg
+aXQgZnJvbSB5b3VyIHN5c3RlbS4NCg0KTGFyc2VuICYgVG91YnJvIExpbWl0ZWQNCg0Kd3d3Lmxh
+cnNlbnRvdWJyby5jb20NCg0KVGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3Ig
+cHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVudCAocykuIElm
+IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBub3QgdXNlIG9y
+IGRpc3NlbWluYXRlIHRoZSBpbmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIgYW5kIGRlbGV0
+ZSBpdCBmcm9tIHlvdXIgc3lzdGVtLg0KTGFyc2VuICYgVG91YnJvIExpbWl0ZWQNCg0Kd3d3Lmxh
+cnNlbnRvdWJyby5jb20NCg0KVGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3Ig
+cHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVudCAocykuIElm
+IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBub3QgdXNlIG9y
+IGRpc3NlbWluYXRlIHRoZSBpbmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIgYW5kIGRlbGV0
+ZSBpdCBmcm9tIHlvdXIgc3lzdGVtLg0K
