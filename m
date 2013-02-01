@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56683 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:58545 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758688Ab3BNTyY (ORCPT
+	with ESMTP id S1755700Ab3BAK1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 14:54:24 -0500
-Message-ID: <1360871657.8210.14.camel@jlt4.sipsolutions.net> (sfid-20130214_205426_729027_EEB562AA)
-Subject: Re: [PATCH v3 1/2] mac80211: cache mesh beacon
+	Fri, 1 Feb 2013 05:27:18 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Thu, 14 Feb 2013 20:54:17 +0100
-In-Reply-To: <1360869614-29297-1-git-send-email-thomas@cozybit.com> (sfid-20130214_202134_927337_D6A0746D)
-References: <1360869614-29297-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130214_202134_927337_D6A0746D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] iwlwifi: lower BT coex aggregation message severity
+Date: Fri,  1 Feb 2013 11:27:34 +0100
+Message-Id: <1359714456-15427-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_112725_389379_AA0EA423)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-14 at 11:20 -0800, Thomas Pedersen wrote:
-> Previously, the entire mesh beacon would be generated each
-> time the beacon timer fired. Instead generate a beacon
-> head and tail (so the TIM can easily be inserted when mesh
-> power save is on) when starting a mesh or the MBSS
-> parameters change.
-> 
-> Also add a mutex for protecting beacon updates and
-> preventing leaks.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied both, hopefully for good this time ;-)
+As the rate scaling algorithm will attempt to enable
+aggregation over and over again, the message will
+flood the log if there is, for example, Bluetooth
+streaming music. Make it a debug messages instead of
+printing it all the time.
 
-johannes
+Reported-by: Jan-Michael Brummer <jan.brummer@tabos.org>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/rs.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
+index 2eb4277..a131227 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
+@@ -411,8 +411,9 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 	 * BT traffic, as they would just be disrupted by BT.
+ 	 */
+ 	if (priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH) {
+-		IWL_ERR(priv, "BT traffic (%d), no aggregation allowed\n",
+-			priv->bt_traffic_load);
++		IWL_DEBUG_COEX(priv,
++			       "BT traffic (%d), no aggregation allowed\n",
++			       priv->bt_traffic_load);
+ 		return ret;
+ 	}
+ 
+-- 
+1.8.0
 
