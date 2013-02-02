@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60389 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756329Ab3BVUgj (ORCPT
+Received: from mail-gg0-f173.google.com ([209.85.161.173]:62744 "EHLO
+	mail-gg0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664Ab3BBX41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 15:36:39 -0500
-Message-ID: <1361565394.3420.17.camel@jlt4.sipsolutions.net> (sfid-20130222_213643_023037_9CD1475B)
-Subject: Re: [PATCH] cfg80211: Extend support for IEEE 802.11r Fast BSS
- Transition
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 22 Feb 2013 21:36:34 +0100
-In-Reply-To: <20130221060843.GA24491@w1.fi>
-References: <20130221060843.GA24491@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Feb 2013 18:56:27 -0500
+Received: by mail-gg0-f173.google.com with SMTP id b6so115911ggm.32
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2013 15:56:26 -0800 (PST)
+Message-ID: <510DA640.6000405@gmail.com> (sfid-20130203_005629_903527_1EA318D5)
+Date: Sun, 03 Feb 2013 00:50:24 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/4] rt2x00: print warning, notice and info as default
+References: <20130124205931.GB16252@localhost.localdomain>
+In-Reply-To: <20130124205931.GB16252@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 22:08 -0800, Jouni Malinen wrote:
+On 01/24/2013 09:59 PM, Stanislaw Gruszka wrote:
 
+> Some messages provide useful information, but are disabled without
+> CONFIG_RT2X00_DEBUG=y, so enable them by default
+> 
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 3e37c19..8ef11b6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -88,11 +88,11 @@
+>  #define ERROR_PROBE(__msg, __args...) \
+>  	DEBUG_PRINTK_PROBE(KERN_ERR, "Error", __msg, ##__args)
+>  #define WARNING(__dev, __msg, __args...) \
+> -	DEBUG_PRINTK(__dev, KERN_WARNING, "Warning", __msg, ##__args)
+> +	DEBUG_PRINTK_MSG(__dev, KERN_WARNING, "Warning", __msg, ##__args)
+>  #define NOTICE(__dev, __msg, __args...) \
+> -	DEBUG_PRINTK(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+> +	DEBUG_PRINTK_MSG(__dev, KERN_NOTICE, "Notice", __msg, ##__args)
+>  #define INFO(__dev, __msg, __args...) \
+> -	DEBUG_PRINTK(__dev, KERN_INFO, "Info", __msg, ##__args)
+> +	DEBUG_PRINTK_MSG(__dev, KERN_INFO, "Info", __msg, ##__args)
+>  #define DEBUG(__dev, __msg, __args...) \
+>  	DEBUG_PRINTK(__dev, KERN_DEBUG, "Debug", __msg, ##__args)
+>  #define EEPROM(__dev, __msg, __args...) \
 
-> +int cfg80211_ft_event(struct net_device *dev,
-> +                     struct cfg80211_ft_event_params *ft_event);
-
-Is the return value really very useful?
-
-
-> +static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
-> +{
-> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> +	struct cfg80211_update_ft_ies_params ft_params;
-> +	struct net_device *dev = info->user_ptr[1];
-> +
-> +	if (!rdev->ops->update_ft_ies)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (!info->attrs[NL80211_ATTR_MDID] || !info->attrs[NL80211_ATTR_IE])
-> +		return -EINVAL;
-> +
-> +	memset(&ft_params, 0, sizeof(ft_params));
-> +	ft_params.md = nla_get_u16(info->attrs[NL80211_ATTR_MDID]);
-> +	ft_params.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
-> +	ft_params.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
-
-Should this use is_valid_ie_attr()?
-
-> +int cfg80211_ft_event(struct net_device *dev,
-> +                     struct cfg80211_ft_event_params *ft_event)
-> +{
-> +       struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-> +
-> +       return nl80211_ft_event(rdev, dev, ft_event);
-> +}
-> +EXPORT_SYMBOL(cfg80211_ft_event);
-
-FWIW, I don't really see the need to have separate functions. I know we
-have a whole bunch like that, but I think I'm just going to remove them
-now. There's really no point, nl80211 and cfg80211 are two sides of the
-same thing, I'd just put the cfg80211_ function into nl80211.c
-
-
-> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_FT_EVENT);
-> +	if (!hdr) {
-> +		nlmsg_free(msg);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-> +	nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-> +	if (ft_event->target_ap)
-> +		nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, ft_event->target_ap);
-
-Would that really be valid without a new BSSID? That seems a bit odd.
-
-johannes
-
+This patch was applied twice. The old one and this version.
+See:
+28f2bce9f8bbf704c86f8c684337f82c51592c81
+def64521572d8330bfa6d855e278507100fdf180
