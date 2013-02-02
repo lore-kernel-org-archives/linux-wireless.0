@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:60273 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755708Ab3BWOHP (ORCPT
+Received: from mail-ye0-f170.google.com ([209.85.213.170]:41336 "EHLO
+	mail-ye0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757391Ab3BBC6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 09:07:15 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Seth Forshee <seth.forshee@canonical.com>,
-	linux-usb@vger.kernel.org,
-	"Chen, Stephen" <scchen@qca.qualcomm.com>
-Subject: Re: carl9170 A-MPDU transmit problem
-Date: Sat, 23 Feb 2013 15:07:08 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20130222205044.GD1418@thinkpad-t410> <201302230048.52018.chunkeey@googlemail.com> <20130223064600.GA27187@thinkpad-t410>
-In-Reply-To: <20130223064600.GA27187@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302231507.09051.chunkeey@googlemail.com> (sfid-20130223_150726_120754_9259291E)
+	Fri, 1 Feb 2013 21:58:36 -0500
+Received: by mail-ye0-f170.google.com with SMTP id m12so1167116yen.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2013 18:58:35 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless: rt2x00: rt2800usb add Sweex ids
+Date: Sat,  2 Feb 2013 03:33:44 +0100
+Message-Id: <1359772424-17250-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130202_035846_478924_93872C1E)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CC'd linux-usb and Stephen.
+Info coming from Sweex Windows driver and wikidevi.com
+0x177f,0x0163 Sweex LW163 RT3370 1x1, int. antenna
+0x177f,0x0164 Sweex LW164 RT8070 1x1, Nano dongle
+0x177f,0x0165 Sweex LW165 RT3370 1x1, ext. antenna
+0x177f,0x0324 Sweex LW324 RT3072 2x2  with 32Mb NOR flash, autoinstall
 
-If some folks there know how to debug these pesky usb transport
-stalls/errors?... then please join!
-(Start of the discussion was this mail:
-<http://www.spinics.net/lists/linux-wireless/msg103880.html>)
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Stephen, I'm sorry to bother you again ;). But can you
-tell me how the download DMA engine and FUSB200 handle
-and react to usb transfer errors? Is the error detection
-and recovery done by the hardware or is there something
-the driver/firmware should be aware of?
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 42b5b65..8a57646 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1099,9 +1099,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x15a9, 0x0006) },
+ 	/* Sweex */
+ 	{ USB_DEVICE(0x177f, 0x0153) },
++	{ USB_DEVICE(0x177f, 0x0164) },
+ 	{ USB_DEVICE(0x177f, 0x0302) },
+ 	{ USB_DEVICE(0x177f, 0x0313) },
+ 	{ USB_DEVICE(0x177f, 0x0323) },
++	{ USB_DEVICE(0x177f, 0x0324) },
+ 	/* U-Media */
+ 	{ USB_DEVICE(0x157e, 0x300e) },
+ 	{ USB_DEVICE(0x157e, 0x3013) },
+@@ -1133,6 +1135,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x148f, 0x8070) },
+ 	/* Sitecom */
+ 	{ USB_DEVICE(0x0df6, 0x0050) },
++	/* Sweex */
++	{ USB_DEVICE(0x177f, 0x0163) },
++	{ USB_DEVICE(0x177f, 0x0165) },
+ #endif
+ #ifdef CONFIG_RT2800USB_RT35XX
+ 	/* Allwin */
+-- 
+1.7.11.7
 
-On Saturday 23 February 2013 07:46:00 Seth Forshee wrote:
-> On Sat, Feb 23, 2013 at 12:48:51AM +0100, Christian Lamparter wrote:
-> > So it looks like we need to ask whenever the USB transport
-> > is reliable or not. Did you (by any change) also monitor
-> > "usb_tx_anch_urbs" [And does it get stuck at some > 1 value
-> > as well?]. I'm asking this because if the driver has more than
-> > 8 (=AR9170_NUM_TX_URBS) concurrently outgoing URBs, the 
-> > overflow is queued in tx_wait. Of course, the urb completion
-> > handler (carl9170_usb_tx_data_complete) takes care of
-> > delivering the next frame in the tx_wait line and so on...
-> > But according to your report, this doesn't seem to work!
-> > What's a bit odd is that the device is able to recover. Because 
-> > normally if there is an USB error, the endpoint will halt and
-> > no traffic will get through it anymore [So the DELBA should be
-> > stuck as well!].
-> 
-> The carl9170 usb code seems to be working properly. If tx_anch_urbs
-> reaches 8 the overflow is queued in tx_wait as you said, and the next
-> queued frame gets delivered from carl9170_usb_tx_data_complete(). The
-> stuck frame does get passed to a successful usb_submit_urb() call before
-> tx stops, but it still isn't transmitted until the DELBA comes along
-> (and tx_anch_urbs decrements to 1 and then gets stuck there while tx is
-> stalled, as would be expected).
-usb_submit_urb() is async, so unless the URB data structure is
-bogus, the device is in the middle of a reset/is removed or OOM
-it won't return with an -ENUMBER.
-
-Since neither of us has probably access to an USB analyzer, the
-next best thing would be to enable ehci_hcd's debug facilities
-and check if the stuck frame produced any DataBufferErr, XactErr
-or something else.
-
-Also, we should check what the device is doing. The hardware has
-an (Faraday Tech) FUSB200 PHY. It's initialized and partially 
-controlled by the carl9170 firmware.
-(fw source is available at <https://github.com/chunkeey/carl9170fw>).
-
-The standard usb code (ep0 control, get/set_configuration/
-interface, get_status, ...) is under carlfw/usb/usb.c and
-carlfw/usb/main.c.
-
-The code which deals with the I/O of WiFi-frames is located in
-carlfw/src/hostif.c (TX is handled by handle_download and
-handle_download_exception).
-
-Note: If you want to add printf in the firmware:
-INFO("Text %d %x %p", int, hex, pointer);
-(And then watch dmesg)
-
-You can also use debugfs's hw_ioread32 and hw_iowrite32 to
-monitor and manipulate hardware registers (0x1c0000-0x1e2000)
-and the firmware memory space (0x20000-0x203ffc). 
-[addresses have to be aligned on a 4-byte boundary]
-
-For example:
-
-To read the FUSB200 register base from 0x1e1000 - 0x1e1034:
-# echo "0x1e1000 14" > /sys/kernel/debug/.../carl9170/hw_ioread32
-# cat /sys/.../hw_ioread32
-001e1000 = 00008464
-001e1004 = 044c097b
-...
-001e1034 = 00000000
-
-To write some 0xdeadbeef into 0x1e1000:
-# echo "0x1e1000 0xdeadbeef" > /sys/kernel/debug/.../carl9170/hw_iowrite32
-
-Regards,
-	Christian
