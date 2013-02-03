@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab3BDQDx (ORCPT
+Received: from mail-da0-f46.google.com ([209.85.210.46]:43400 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492Ab3BCBDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 11:03:53 -0500
-Message-ID: <1359993855.17993.5.camel@jlt4.sipsolutions.net> (sfid-20130204_170357_023971_04956D3D)
-Subject: Re: [PATCH] {cfg,nl}80211: tx_mgmt: use current bss channel if
- omitted.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Feb 2013 17:04:15 +0100
-In-Reply-To: <1359738683-13499-1-git-send-email-cavallar@lri.fr>
-References: <510A7D40.2030206@lri.fr>
-	 <1359738683-13499-1-git-send-email-cavallar@lri.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Feb 2013 20:03:30 -0500
+Received: by mail-da0-f46.google.com with SMTP id p5so2187966dak.33
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2013 17:03:30 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/3] mac80211: generate mesh probe requests
+Date: Sat,  2 Feb 2013 17:02:20 -0800
+Message-Id: <1359853341-29237-3-git-send-email-thomas@cozybit.com> (sfid-20130203_020338_435702_B0005E3D)
+In-Reply-To: <1359853341-29237-1-git-send-email-thomas@cozybit.com>
+References: <1359853341-29237-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-01 at 18:11 +0100, Nicolas Cavallari wrote:
-> Allow not specifying the channel when transmitting a management frame.
-> This allows user space code to not track the current channel.  This is
-> especially useful in IBSS mode, because userspace is not informed when
-> the channel changes because of a merge and requesting the current
-> channel before using it can introduce races.
+A mesh probe request must include the mesh ID IE and a
+wildcard SSID IE. Add this and transpose the SSID scan
+list into mesh IDs for mesh interfaces.
 
+Also allow the user to specify a mesh ID IE in the user
+scan IEs, since additional SSID IEs seem to be allowed.
 
-> @@ -836,10 +837,23 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
->  			err = -EOPNOTSUPP;
->  			break;
->  		}
-> +		if (!err && chan == NULL) {
-> +			cfg80211_get_chan_state(wdev, &chan, &chan_mode);
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/tx.c   |   15 +++++++++++----
+ net/mac80211/util.c |    1 +
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-I'm not sure this is the best way of handling it. Is there a reason to
-not pass NULL through to the driver(s) (and audit them) instead? This
-channel access could be racy for channel changes still, etc.
-
-johannes
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 01dc001..9f3e9ba 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2622,11 +2622,18 @@ struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
+ 	memcpy(hdr->addr2, vif->addr, ETH_ALEN);
+ 	eth_broadcast_addr(hdr->addr3);
+ 
+-	pos = skb_put(skb, ie_ssid_len);
+-	*pos++ = WLAN_EID_SSID;
++	if (ieee80211_vif_is_mesh(vif)) {
++		pos = skb_put(skb, 2 + 2 + ssid_len);
++		*pos++ = WLAN_EID_SSID;
++		*pos++ = 0;
++		/* NOTE: mesh ID will be out of order */
++		*pos++ = WLAN_EID_MESH_ID;
++	} else {
++		pos = skb_put(skb, 2 + ssid_len);
++		*pos++ = WLAN_EID_SSID;
++	}
+ 	*pos++ = ssid_len;
+-	if (ssid_len)
+-		memcpy(pos, ssid, ssid_len);
++	memcpy(pos, ssid, ssid_len);
+ 	pos += ssid_len;
+ 
+ 	return skb;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 139ad9b..aeb0f88 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1181,6 +1181,7 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	if (ie && ie_len) {
+ 		static const u8 before_ht[] = {
+ 			WLAN_EID_SSID,
++			WLAN_EID_MESH_ID,
+ 			WLAN_EID_SUPP_RATES,
+ 			WLAN_EID_REQUEST,
+ 			WLAN_EID_EXT_SUPP_RATES,
+-- 
+1.7.10.4
 
