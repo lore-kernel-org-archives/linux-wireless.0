@@ -1,55 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22053 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932372Ab3BNJiC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 04:38:02 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 4/6] ath6kl: Remove NETDEV_REGISTERED flag
-Date: Thu, 14 Feb 2013 15:07:55 +0530
-Message-ID: <1360834675-11106-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130214_103807_655533_222EBB10)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55698 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753380Ab3BCWZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Feb 2013 17:25:55 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] ssb: unregister gpios before unloading ssb
+Date: Sun,  3 Feb 2013 23:25:34 +0100
+Message-Id: <1359930334-25472-2-git-send-email-hauke@hauke-m.de> (sfid-20130203_232604_767715_6087E347)
+In-Reply-To: <1359930334-25472-1-git-send-email-hauke@hauke-m.de>
+References: <1359930334-25472-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+This patch unregisters the gpio chip before ssb gets unloaded.
 
-Currently its no where used.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 -
- drivers/net/wireless/ath/ath6kl/core.h     |    1 -
- 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 227fc43..e065c24 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3667,7 +3667,6 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
- 	vif->sme_state = SME_DISCONNECTED;
- 	set_bit(WLAN_ENABLED, &vif->flags);
- 	ar->wlan_pwr_state = WLAN_POWER_STATE_ON;
--	set_bit(NETDEV_REGISTERED, &vif->flags);
+This should also go into 3.8.
+
+ drivers/ssb/driver_gpio.c |   12 ++++++++++++
+ drivers/ssb/main.c        |    9 +++++++++
+ drivers/ssb/ssb_private.h |    5 +++++
+ 3 files changed, 26 insertions(+)
+
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index accabe3..dc109de 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -196,3 +196,15 @@ int ssb_gpio_init(struct ssb_bus *bus)
  
- 	if (type == NL80211_IFTYPE_ADHOC)
- 		ar->ibss_if_active = true;
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 61b2f98..1c9ed40 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -560,7 +560,6 @@ enum ath6kl_vif_state {
- 	WMM_ENABLED,
- 	NETQ_STOPPED,
- 	DTIM_EXPIRED,
--	NETDEV_REGISTERED,
- 	CLEAR_BSSFILTER_ON_BEACON,
- 	DTIM_PERIOD_AVAIL,
- 	WLAN_ENABLED,
+ 	return -1;
+ }
++
++int ssb_gpio_unregister(struct ssb_bus *bus)
++{
++	if (ssb_chipco_available(&bus->chipco) ||
++	    ssb_extif_available(&bus->extif)) {
++		return gpiochip_remove(&bus->gpio);
++	} else {
++		SSB_WARN_ON(1);
++	}
++
++	return -1;
++}
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 9987d9f..3b645b8 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -443,6 +443,15 @@ static void ssb_devices_unregister(struct ssb_bus *bus)
+ 
+ void ssb_bus_unregister(struct ssb_bus *bus)
+ {
++	int err;
++
++	err = ssb_gpio_unregister(bus);
++	if (err == -EBUSY)
++		ssb_dprintk(KERN_ERR PFX "Some GPIOs are still in use.\n");
++	else if (err)
++		ssb_dprintk(KERN_ERR PFX
++			    "Can not unregister GPIO driver: %i\n", err);
++
+ 	ssb_buses_lock();
+ 	ssb_devices_unregister(bus);
+ 	list_del(&bus->list);
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 53198dc..466171b 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -267,11 +267,16 @@ static inline void ssb_extif_init(struct ssb_extif *extif)
+ 
+ #ifdef CONFIG_SSB_DRIVER_GPIO
+ extern int ssb_gpio_init(struct ssb_bus *bus);
++extern int ssb_gpio_unregister(struct ssb_bus *bus);
+ #else /* CONFIG_SSB_DRIVER_GPIO */
+ static inline int ssb_gpio_init(struct ssb_bus *bus)
+ {
+ 	return -ENOTSUPP;
+ }
++static inline int ssb_gpio_unregister(struct ssb_bus *bus)
++{
++	return 0;
++}
+ #endif /* CONFIG_SSB_DRIVER_GPIO */
+ 
+ #endif /* LINUX_SSB_PRIVATE_H_ */
 -- 
-1.7.9.5
+1.7.10.4
 
