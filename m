@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36324 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758208Ab3BGPTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 10:19:00 -0500
-Message-ID: <5113C5E0.5050509@openwrt.org> (sfid-20130207_161905_412808_021A3539)
-Date: Thu, 07 Feb 2013 16:18:56 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, chaitanyatk@posedge.com,
-	linux-wireless@vger.kernel.org, maheshp@posedge.com
-Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
-References: <7384f4ddc838247a0f467708d66baa8c@posedge.com> <1360225230.8038.1.camel@jlt4.sipsolutions.net> <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com> <1360228991.8038.3.camel@jlt4.sipsolutions.net> <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com> <5113B42A.4020708@openwrt.org> <1360246653.8038.9.camel@jlt4.sipsolutions.net> <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com>
-In-Reply-To: <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:57094 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758Ab3BCBD0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Feb 2013 20:03:26 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rp8so2652254pbb.20
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2013 17:03:26 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 0/3] implement active mesh scanning
+Date: Sat,  2 Feb 2013 17:02:18 -0800
+Message-Id: <1359853341-29237-1-git-send-email-thomas@cozybit.com> (sfid-20130203_020333_794624_39F746E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-02-07 3:57 PM, Krishna Chaitanya wrote:
-> On Thu, Feb 7, 2013 at 6:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Thu, 2013-02-07 at 15:03 +0100, Felix Fietkau wrote:
->>
->>> > But the problem is every time we have to test the Rx-AMSDU
->>> > which is mandatory for WFA 802.11n cert, we need to procure a adapter
->>> > which supports it, which is difficult. Thats the scenario we have faced
->>> > which lead us to work on this.With this feature in place we can use
->>> > any opensource adapter and driver for that purpose.
->>> >
->>> > Again, Its a trade off between stability and usability :-)
->>> How about injecting A-MSDU packets via cooked monitor mode or nl80211
->>> frame tx and thus shifting the debug-only code into userspace?
->>
->> nl80211 won't work -- no support for data frames (and I'd rather not add
->> it), but monitor mode (why cooked?) seems fine.
-> 
-> But whats the use of sending an AMSDU if we are not connected?
-> First check in the code is to check for a connection.
-I mentioned cooked monitor because putting the hw in monitor mode may
-not always be desirable, and cooked monitor bypasses that.
+This set improves the mesh scanning functionality by:
 
-You can send the AMSDU while you're connected. mac80211 treats injected
-frames that match the address of a local interface similar to regular tx
-on that interface, except for bypassing the normal 802.11 header
-encapsulation, so it should work for your tests.
+	- responding to broadcast or directed probe requests
+	- allowing the user to generate a directed mesh probe request, ie:
+		iw mesh0 scan ssid foo
+	  on a mesh interface will send probe requests where the ssid "foo" has
+	  been filled into the mesh ID IE.
 
-- Felix
+Also patch 1 caches the mesh beacon in a struct beacon_data each time it
+changes so probe responses can be quickly built. This is also convenient when
+the TIM IE becomes needed for PS.
+
+Applies on mac80211-next/master
+
+Thomas Pedersen (3):
+  mac80211: cache mesh beacon
+  mac80211: generate mesh probe requests
+  mac80211: generate mesh probe responses
+
+ net/mac80211/cfg.c         |    2 +
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mesh.c        |  199 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mesh.h        |    3 +
+ net/mac80211/mesh_plink.c  |    6 +-
+ net/mac80211/rx.c          |    5 +-
+ net/mac80211/tx.c          |   72 +++++-----------
+ net/mac80211/util.c        |    1 +
+ 8 files changed, 229 insertions(+), 60 deletions(-)
+
+-- 
+1.7.10.4
+
