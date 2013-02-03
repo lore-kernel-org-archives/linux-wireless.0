@@ -1,138 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60067 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935884Ab3BOPql (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 10:46:41 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] cfg80211: clean up station WME attribute parsing
-Date: Fri, 15 Feb 2013 16:46:32 +0100
-Message-Id: <1360943194-14810-4-git-send-email-johannes@sipsolutions.net> (sfid-20130215_164645_587475_2CC5707C)
-In-Reply-To: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
-References: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55699 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753489Ab3BCWZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Feb 2013 17:25:55 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] bcma: unregister gpios before unloading bcma
+Date: Sun,  3 Feb 2013 23:25:33 +0100
+Message-Id: <1359930334-25472-1-git-send-email-hauke@hauke-m.de> (sfid-20130203_232605_486509_4A208C49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch unregisters the gpio chip before bcma gets unloaded.
 
-Parse the attributes first, and then disable the apply
-flag if needed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reported-by: Piotr Haber <phaber@broadcom.com>
 ---
- net/wireless/nl80211.c | 68 +++++++++++++++++++++++++++-----------------------
- 1 file changed, 37 insertions(+), 31 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5523150..a8ae6419 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3839,6 +3839,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+This should also go into 3.8.
+
+ drivers/bcma/bcma_private.h |    5 +++++
+ drivers/bcma/driver_gpio.c  |    5 +++++
+ drivers/bcma/main.c         |    7 +++++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 6f377bd..79595a0 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -97,11 +97,16 @@ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
+ #ifdef CONFIG_BCMA_DRIVER_GPIO
+ /* driver_gpio.c */
+ int bcma_gpio_init(struct bcma_drv_cc *cc);
++int bcma_gpio_unregister(struct bcma_drv_cc *cc);
+ #else
+ static inline int bcma_gpio_init(struct bcma_drv_cc *cc)
+ {
+ 	return -ENOTSUPP;
+ }
++static inline int bcma_gpio_unregister(struct bcma_drv_cc *cc)
++{
++	return 0;
++}
+ #endif /* CONFIG_BCMA_DRIVER_GPIO */
  
- 	memset(&params, 0, sizeof(params));
+ #endif
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 0b5df53..45f0996 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -107,3 +107,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
  
-+	if (!rdev->ops->add_station)
-+		return -EOPNOTSUPP;
+ 	return gpiochip_add(chip);
+ }
 +
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
++int bcma_gpio_unregister(struct bcma_drv_cc *cc)
++{
++	return gpiochip_remove(&cc->gpio);
++}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 6eda7ef..9a6188a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -276,6 +276,13 @@ int bcma_bus_register(struct bcma_bus *bus)
+ void bcma_bus_unregister(struct bcma_bus *bus)
+ {
+ 	struct bcma_device *cores[3];
++	int err;
++
++	err = bcma_gpio_unregister(&bus->drv_cc);
++	if (err == -EBUSY)
++		bcma_err(bus, "Some GPIOs are still in use.\n");
++	else if (err)
++		bcma_err(bus, "Can not unregister GPIO driver: %i\n", err);
  
-@@ -3891,8 +3894,30 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
--	if (!rdev->ops->add_station)
--		return -EOPNOTSUPP;
-+	if (info->attrs[NL80211_ATTR_STA_WME]) {
-+		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
-+		struct nlattr *nla;
-+
-+		nla = info->attrs[NL80211_ATTR_STA_WME];
-+		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
-+				       nl80211_sta_wme_policy);
-+		if (err)
-+			return err;
-+
-+		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
-+			params.uapsd_queues =
-+			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
-+		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
-+			return -EINVAL;
-+
-+		if (tb[NL80211_STA_WME_MAX_SP])
-+			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
-+
-+		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
-+			return -EINVAL;
-+
-+		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
-+	}
- 
- 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
- 		return -EINVAL;
-@@ -3901,36 +3926,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_P2P_GO:
--		/* parse WME attributes if sta is WME capable */
--		if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
--		    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
--		    info->attrs[NL80211_ATTR_STA_WME]) {
--			struct nlattr *tb[NL80211_STA_WME_MAX + 1];
--			struct nlattr *nla;
--
--			nla = info->attrs[NL80211_ATTR_STA_WME];
--			err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
--					       nl80211_sta_wme_policy);
--			if (err)
--				return err;
--
--			if (tb[NL80211_STA_WME_UAPSD_QUEUES])
--				params.uapsd_queues =
--				     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
--			if (params.uapsd_queues &
--					~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
--				return -EINVAL;
-+		/* ignore WME attributes if iface/sta is not capable */
-+		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
-+		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
-+			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
- 
--			if (tb[NL80211_STA_WME_MAX_SP])
--				params.max_sp =
--				     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
--
--			if (params.max_sp &
--					~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
--				return -EINVAL;
--
--			params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
--		}
- 		/* TDLS peers cannot be added */
- 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
- 			return -EINVAL;
-@@ -3951,6 +3951,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(params.vlan);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
-+		/* ignore uAPSD data */
-+		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
-+
- 		/* associated is disallowed */
- 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
- 			return -EINVAL;
-@@ -3959,6 +3962,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+		/* ignore uAPSD data */
-+		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
-+
- 		/* associated is disallowed */
- 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
- 			return -EINVAL;
+ 	cores[0] = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
+ 	cores[1] = bcma_find_core(bus, BCMA_CORE_PCIE);
 -- 
-1.8.0
+1.7.10.4
 
