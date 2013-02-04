@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50365 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43384 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756494Ab3BTKE0 (ORCPT
+	with ESMTP id S1753506Ab3BDPkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 05:04:26 -0500
-Message-ID: <1361354662.8629.12.camel@jlt4.sipsolutions.net> (sfid-20130220_110436_443828_C725A954)
-Subject: Re: [PATCH v3] iw: add packet offset information for wowlan pattern
+	Mon, 4 Feb 2013 10:40:11 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U2O9S-00032G-3w
+	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:40:10 +0100
+Message-ID: <1359992435.10311.19.camel@jlt4.sipsolutions.net> (sfid-20130204_164015_603432_7D6A9A79)
+Subject: Re: [PATCH] cfg80211: fix BSS list hidden SSID lookup
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 20 Feb 2013 11:04:22 +0100
-In-Reply-To: <1361321084-11325-1-git-send-email-bzhao@marvell.com>
-References: <1361321084-11325-1-git-send-email-bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 16:40:35 +0100
+In-Reply-To: <1359742986-12932-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_192315_970791_397EE812)
+References: <1359742986-12932-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130201_192315_970791_397EE812)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-19 at 16:44 -0800, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
+On Fri, 2013-02-01 at 19:23 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Now user can provide packet offset along with the pattern in
-> "iw wowlan" command. Default offset will be 0 when it is not
-> provided.
+> When trying to find a hidden SSID, the lookup function
+> is done wrong; the code is trying to combine the two
+> lookups into one, and as a consequence doesn't always
+> find the entry at all. To understand this, consider a
+> case where multiple BSS entries with the same channel
+> and BSSID exist but have different SSID length. Then
+> comparing against the probe response SSID length is
+> bound to cause problems since the hidden one might be
+> either zeroed out or zero-length.
 > 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
-> v3: check struct size to avoid crash on old kernels; and use
->     '+' delimiter between offset and pattern. (Johannes Berg)
-> v2: display maximum permissible packet offset as well for
->     WOWLAN patterns
+> To fix this we need to do two lookups for the two ways
+> to hide SSIDs.
 
-Applied, thanks!
+Applied.
 
 johannes
 
