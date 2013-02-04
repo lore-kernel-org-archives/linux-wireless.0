@@ -1,225 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60062 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43476 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935883Ab3BOPqk (ORCPT
+	with ESMTP id S1754220Ab3BDQDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 10:46:40 -0500
+	Mon, 4 Feb 2013 11:03:53 -0500
+Message-ID: <1359993855.17993.5.camel@jlt4.sipsolutions.net> (sfid-20130204_170357_023971_04956D3D)
+Subject: Re: [PATCH] {cfg,nl}80211: tx_mgmt: use current bss channel if
+ omitted.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] cfg80211: clean up mesh plink station change API
-Date: Fri, 15 Feb 2013 16:46:30 +0100
-Message-Id: <1360943194-14810-2-git-send-email-johannes@sipsolutions.net> (sfid-20130215_164646_334985_F0E198E7)
-In-Reply-To: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
-References: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 17:04:15 +0100
+In-Reply-To: <1359738683-13499-1-git-send-email-cavallar@lri.fr>
+References: <510A7D40.2030206@lri.fr>
+	 <1359738683-13499-1-git-send-email-cavallar@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2013-02-01 at 18:11 +0100, Nicolas Cavallari wrote:
+> Allow not specifying the channel when transmitting a management frame.
+> This allows user space code to not track the current channel.  This is
+> especially useful in IBSS mode, because userspace is not informed when
+> the channel changes because of a merge and requesting the current
+> channel before using it can introduce races.
 
-Make the ability to leave the plink_state unchanged not use a
-magic -1 variable that isn't in the enum, but an explicit change
-flag; reject invalid plink states or actions and move the needed
-constants for plink actions to the right header file. Also
-reject plink_state changes for non-mesh interfaces.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h       | 15 ++-------------
- include/uapi/linux/nl80211.h | 20 +++++++++++++++++++-
- net/mac80211/cfg.c           | 14 +++++++++++---
- net/wireless/nl80211.c       | 29 ++++++++++++++++++++++-------
- 4 files changed, 54 insertions(+), 24 deletions(-)
+> @@ -836,10 +837,23 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+>  			err = -EOPNOTSUPP;
+>  			break;
+>  		}
+> +		if (!err && chan == NULL) {
+> +			cfg80211_get_chan_state(wdev, &chan, &chan_mode);
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2aae134..2d60db9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -611,22 +611,10 @@ struct cfg80211_ap_settings {
- };
- 
- /**
-- * enum plink_action - actions to perform in mesh peers
-- *
-- * @PLINK_ACTION_INVALID: action 0 is reserved
-- * @PLINK_ACTION_OPEN: start mesh peer link establishment
-- * @PLINK_ACTION_BLOCK: block traffic from this mesh peer
-- */
--enum plink_actions {
--	PLINK_ACTION_INVALID,
--	PLINK_ACTION_OPEN,
--	PLINK_ACTION_BLOCK,
--};
--
--/**
-  * enum station_parameters_apply_mask - station parameter values to apply
-  * @STATION_PARAM_APPLY_UAPSD: apply new uAPSD parameters (uapsd_queues, max_sp)
-  * @STATION_PARAM_APPLY_CAPABILITY: apply new capability
-+ * @STATION_PARAM_APPLY_PLINK_STATE: apply new plink state
-  *
-  * Not all station parameters have in-band "no change" signalling,
-  * for those that don't these flags will are used.
-@@ -634,6 +622,7 @@ enum plink_actions {
- enum station_parameters_apply_mask {
- 	STATION_PARAM_APPLY_UAPSD = BIT(0),
- 	STATION_PARAM_APPLY_CAPABILITY = BIT(1),
-+	STATION_PARAM_APPLY_PLINK_STATE = BIT(2),
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5354cc6..5b7601f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -890,7 +890,8 @@ enum nl80211_commands {
-  *	consisting of a nested array.
-  *
-  * @NL80211_ATTR_MESH_ID: mesh id (1-32 bytes).
-- * @NL80211_ATTR_STA_PLINK_ACTION: action to perform on the mesh peer link.
-+ * @NL80211_ATTR_STA_PLINK_ACTION: action to perform on the mesh peer link
-+ *	(see &enum nl80211_plink_action).
-  * @NL80211_ATTR_MPATH_NEXT_HOP: MAC address of the next hop for a mesh path.
-  * @NL80211_ATTR_MPATH_INFO: information about a mesh_path, part of mesh path
-  * 	info given for %NL80211_CMD_GET_MPATH, nested attribute described at
-@@ -3323,6 +3324,23 @@ enum nl80211_plink_state {
- 	MAX_NL80211_PLINK_STATES = NUM_NL80211_PLINK_STATES - 1
- };
- 
-+/**
-+ * enum nl80211_plink_action - actions to perform in mesh peers
-+ *
-+ * @NL80211_PLINK_ACTION_NO_ACTION: perform no action
-+ * @NL80211_PLINK_ACTION_OPEN: start mesh peer link establishment
-+ * @NL80211_PLINK_ACTION_BLOCK: block traffic from this mesh peer
-+ * @NUM_NL80211_PLINK_ACTIONS: number of possible actions
-+ */
-+enum plink_actions {
-+	NL80211_PLINK_ACTION_NO_ACTION,
-+	NL80211_PLINK_ACTION_OPEN,
-+	NL80211_PLINK_ACTION_BLOCK,
-+
-+	NUM_NL80211_PLINK_ACTIONS,
-+};
-+
-+
- #define NL80211_KCK_LEN			16
- #define NL80211_KEK_LEN			16
- #define NL80211_REPLAY_CTR_LEN		8
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2b94563..b13dcb3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1261,7 +1261,9 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
- 		u32 changed = 0;
--		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED) {
-+		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED &&
-+		    (params->sta_modify_mask &
-+					STATION_PARAM_APPLY_PLINK_STATE)) {
- 			switch (params->plink_state) {
- 			case NL80211_PLINK_ESTAB:
- 				if (sta->plink_state != NL80211_PLINK_ESTAB)
-@@ -1292,12 +1294,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 				/*  nothing  */
- 				break;
- 			}
-+		} else if (params->sta_modify_mask &
-+					STATION_PARAM_APPLY_PLINK_STATE) {
-+			return -EINVAL;
- 		} else {
- 			switch (params->plink_action) {
--			case PLINK_ACTION_OPEN:
-+			case NL80211_PLINK_ACTION_NO_ACTION:
-+				/* nothing */
-+				break;
-+			case NL80211_PLINK_ACTION_OPEN:
- 				changed |= mesh_plink_open(sta);
- 				break;
--			case PLINK_ACTION_BLOCK:
-+			case NL80211_PLINK_ACTION_BLOCK:
- 				changed |= mesh_plink_block(sta);
- 				break;
- 			}
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f3a07d0..5523150 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3632,7 +3632,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	memset(&params, 0, sizeof(params));
- 
- 	params.listen_interval = -1;
--	params.plink_state = -1;
- 
- 	if (info->attrs[NL80211_ATTR_STA_AID])
- 		return -EINVAL;
-@@ -3671,13 +3670,20 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
- 		return -EINVAL;
- 
--	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
-+	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
- 		params.plink_action =
--		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+		if (params.plink_action >= NUM_NL80211_PLINK_ACTIONS)
-+			return -EINVAL;
-+	}
- 
--	if (info->attrs[NL80211_ATTR_STA_PLINK_STATE])
-+	if (info->attrs[NL80211_ATTR_STA_PLINK_STATE]) {
- 		params.plink_state =
--		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_STATE]);
-+			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_STATE]);
-+		if (params.plink_state >= NUM_NL80211_PLINK_STATES)
-+			return -EINVAL;
-+		params.sta_modify_mask |= STATION_PARAM_APPLY_PLINK_STATE;
-+	}
- 
- 	if (info->attrs[NL80211_ATTR_LOCAL_MESH_POWER_MODE]) {
- 		enum nl80211_mesh_power_mode pm = nla_get_u32(
-@@ -3699,6 +3705,8 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		if (params.local_pm)
- 			return -EINVAL;
-+		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
-+			return -EINVAL;
- 
- 		/* TDLS can't be set, ... */
- 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
-@@ -3762,6 +3770,8 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		if (params.local_pm)
- 			return -EINVAL;
-+		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
-+			return -EINVAL;
- 		/* reject any changes other than AUTHORIZED or WME (for TDLS) */
- 		if (params.sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
- 					      BIT(NL80211_STA_FLAG_WME)))
-@@ -3773,6 +3783,8 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		if (params.local_pm)
- 			return -EINVAL;
-+		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
-+			return -EINVAL;
- 		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
- 		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
- 			return -EINVAL;
-@@ -3872,9 +3884,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.vht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
- 
--	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
-+	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
- 		params.plink_action =
--		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
-+		if (params.plink_action >= NUM_NL80211_PLINK_ACTIONS)
-+			return -EINVAL;
-+	}
- 
- 	if (!rdev->ops->add_station)
- 		return -EOPNOTSUPP;
--- 
-1.8.0
+I'm not sure this is the best way of handling it. Is there a reason to
+not pass NULL through to the driver(s) (and audit them) instead? This
+channel access could be racy for channel changes still, etc.
+
+johannes
 
