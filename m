@@ -1,227 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47710 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44420 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933199Ab3BLQCU (ORCPT
+	with ESMTP id S1753983Ab3BDU4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:20 -0500
+	Mon, 4 Feb 2013 15:56:17 -0500
+Message-ID: <1360011393.17993.37.camel@jlt4.sipsolutions.net> (sfid-20130204_215621_559274_2140A3BE)
+Subject: Re: Memory leak in cfg80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 10/15] iwlwifi: mvm: report wakeup reasons
-Date: Tue, 12 Feb 2013 17:02:02 +0100
-Message-Id: <1360684927-1367-10-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170226_935715_F0E67B72)
-In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: mcgrof@do-not-panic.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 04 Feb 2013 21:56:33 +0100
+In-Reply-To: <51100C8E.6040502@lwfinger.net> (sfid-20130204_203132_375841_8B344B1E)
+References: <510D9E71.2080300@lwfinger.net>
+	  (sfid-20130203_001709_849515_E1CDB041) <1359998652.17993.9.camel@jlt4.sipsolutions.net>
+	 <51100C8E.6040502@lwfinger.net> (sfid-20130204_203132_375841_8B344B1E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Larry,
 
-Query the wakeup reasons properly and then
-report them to mac80211.
+> You got it right. I got two tracebacks as follows:
+> 
+> [   22.147978] cfg80211: wiphy->regd changed at line 1459: old           (null), new: ffff8800b1e25a80
+> [   22.147982] Pid: 292, comm: kworker/1:1 Not tainted 3.8.0-rc6-wl+ #96
+> [   22.147985] Call Trace:
+> [   22.148032]  [<ffffffffa03c6623>] reg_todo+0x403/0x5e0 [cfg80211]
+> [   22.148088]  [<ffffffff81063cdd>] process_one_work+0x19d/0x6f0
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c | 168 ++++++++++++++++++++++++++++------
- 1 file changed, 141 insertions(+), 27 deletions(-)
+> [   22.161223] cfg80211: request_wiphy->regd changed at line 2199: old ffff8800b1e25a80, new: ffff8800b61c66c0
+> [   22.161230] Pid: 2377, comm: crda Not tainted 3.8.0-rc6-wl+ #96
+> [   22.161233] Call Trace:
+> [   22.161275]  [<ffffffffa03c76fc>] set_regdom+0x6dc/0x750 [cfg80211]
+> [   22.161293]  [<ffffffffa03d1f56>] nl80211_set_reg+0x236/0x2a0 [cfg80211]
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 5b2c675..a00267f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -763,6 +763,146 @@ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	return ret;
- }
- 
-+static void iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
-+					 struct ieee80211_vif *vif)
-+{
-+	u32 base = mvm->error_event_table;
-+	struct error_table_start {
-+		/* cf. struct iwl_error_event_table */
-+		u32 valid;
-+		u32 error_id;
-+	} err_info;
-+	struct cfg80211_wowlan_wakeup wakeup = {
-+		.pattern_idx = -1,
-+	};
-+	struct cfg80211_wowlan_wakeup *wakeup_report = &wakeup;
-+	struct iwl_host_cmd cmd = {
-+		.id = WOWLAN_GET_STATUSES,
-+		.flags = CMD_SYNC | CMD_WANT_SKB,
-+	};
-+	struct iwl_wowlan_status *status;
-+	u32 reasons;
-+	int ret, len;
-+	bool pkt8023 = false;
-+	struct sk_buff *pkt = NULL;
-+
-+	iwl_trans_read_mem_bytes(mvm->trans, base,
-+				 &err_info, sizeof(err_info));
-+
-+	if (err_info.valid) {
-+		IWL_INFO(mvm, "error table is valid (%d)\n",
-+			 err_info.valid);
-+		if (err_info.error_id == RF_KILL_INDICATOR_FOR_WOWLAN) {
-+			wakeup.rfkill_release = true;
-+			ieee80211_report_wowlan_wakeup(vif, &wakeup,
-+						       GFP_KERNEL);
-+		}
-+		return;
-+	}
-+
-+	/* only for tracing for now */
-+	ret = iwl_mvm_send_cmd_pdu(mvm, OFFLOADS_QUERY_CMD, CMD_SYNC, 0, NULL);
-+	if (ret)
-+		IWL_ERR(mvm, "failed to query offload statistics (%d)\n", ret);
-+
-+	ret = iwl_mvm_send_cmd(mvm, &cmd);
-+	if (ret) {
-+		IWL_ERR(mvm, "failed to query status (%d)\n", ret);
-+		return;
-+	}
-+
-+	/* RF-kill already asserted again... */
-+	if (!cmd.resp_pkt)
-+		return;
-+
-+	len = le32_to_cpu(cmd.resp_pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
-+	if (len - sizeof(struct iwl_cmd_header) < sizeof(*status)) {
-+		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
-+		goto out;
-+	}
-+
-+	status = (void *)cmd.resp_pkt->data;
-+
-+	if (len - sizeof(struct iwl_cmd_header) !=
-+	    sizeof(*status) + le32_to_cpu(status->wake_packet_bufsize)) {
-+		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
-+		goto out;
-+	}
-+
-+	reasons = le32_to_cpu(status->wakeup_reasons);
-+
-+	if (reasons == IWL_WOWLAN_WAKEUP_BY_NON_WIRELESS) {
-+		wakeup_report = NULL;
-+		goto report;
-+	}
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_MAGIC_PACKET) {
-+		wakeup.magic_pkt = true;
-+		pkt8023 = true;
-+	}
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_PATTERN) {
-+		wakeup.pattern_idx =
-+			le16_to_cpu(status->pattern_number);
-+		pkt8023 = true;
-+	}
-+
-+	if (reasons & (IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_MISSED_BEACON |
-+		       IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_DEAUTH))
-+		wakeup.disconnect = true;
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_GTK_REKEY_FAILURE) {
-+		wakeup.gtk_rekey_failure = true;
-+		pkt8023 = true;
-+	}
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_RFKILL_DEASSERTED) {
-+		wakeup.rfkill_release = true;
-+		pkt8023 = true;
-+	}
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_EAPOL_REQUEST) {
-+		wakeup.eap_identity_req = true;
-+		pkt8023 = true;
-+	}
-+
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_FOUR_WAY_HANDSHAKE) {
-+		wakeup.four_way_handshake = true;
-+		pkt8023 = true;
-+	}
-+
-+	if (status->wake_packet_bufsize) {
-+		u32 pktsize = le32_to_cpu(status->wake_packet_bufsize);
-+		u32 pktlen = le32_to_cpu(status->wake_packet_length);
-+
-+		if (pkt8023) {
-+			pkt = alloc_skb(pktsize, GFP_KERNEL);
-+			if (!pkt)
-+				goto report;
-+			memcpy(skb_put(pkt, pktsize), status->wake_packet,
-+			       pktsize);
-+			if (ieee80211_data_to_8023(pkt, vif->addr, vif->type))
-+				goto report;
-+			wakeup.packet = pkt->data;
-+			wakeup.packet_present_len = pkt->len;
-+			wakeup.packet_len = pkt->len - (pktlen - pktsize);
-+			wakeup.packet_80211 = false;
-+		} else {
-+			wakeup.packet = status->wake_packet;
-+			wakeup.packet_present_len = pktsize;
-+			wakeup.packet_len = pktlen;
-+			wakeup.packet_80211 = true;
-+		}
-+	}
-+
-+ report:
-+	ieee80211_report_wowlan_wakeup(vif, wakeup_report, GFP_KERNEL);
-+	kfree_skb(pkt);
-+
-+ out:
-+	iwl_free_resp(&cmd);
-+}
-+
- int iwl_mvm_resume(struct ieee80211_hw *hw)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-@@ -770,14 +910,8 @@ int iwl_mvm_resume(struct ieee80211_hw *hw)
- 		.mvm = mvm,
- 	};
- 	struct ieee80211_vif *vif = NULL;
--	u32 base;
- 	int ret;
- 	enum iwl_d3_status d3_status;
--	struct error_table_start {
--		/* cf. struct iwl_error_event_table */
--		u32 valid;
--		u32 error_id;
--	} err_info;
- 
- 	mutex_lock(&mvm->mutex);
- 
-@@ -800,27 +934,7 @@ int iwl_mvm_resume(struct ieee80211_hw *hw)
- 		goto out_unlock;
- 	}
- 
--	base = mvm->error_event_table;
--
--	iwl_trans_read_mem_bytes(mvm->trans, base,
--				 &err_info, sizeof(err_info));
--
--	if (err_info.valid) {
--		IWL_INFO(mvm, "error table is valid (%d)\n",
--			 err_info.valid);
--		if (err_info.error_id == RF_KILL_INDICATOR_FOR_WOWLAN)
--			IWL_ERR(mvm, "this was due to RF-kill\n");
--		goto out_unlock;
--	}
--
--	/* TODO: get status and whatever else ... */
--	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_GET_STATUSES, CMD_SYNC, 0, NULL);
--	if (ret)
--		IWL_ERR(mvm, "failed to query status (%d)\n", ret);
--
--	ret = iwl_mvm_send_cmd_pdu(mvm, OFFLOADS_QUERY_CMD, CMD_SYNC, 0, NULL);
--	if (ret)
--		IWL_ERR(mvm, "failed to query offloads (%d)\n", ret);
-+	iwl_mvm_query_wakeup_reasons(mvm, vif);
- 
-  out_unlock:
- 	mutex_unlock(&mvm->mutex);
--- 
-1.8.0
+> The second one replaced a non-NULL pointer, and kmemleak confirms that it is the 
+> leaked block.
+
+Ok, good. I'm not sure how a recent change would have caused this
+though, but I'm sure we can fix it :)
+
+> This leak seems to occur because I am loading cfg80211 with the regdom set to 
+> "US"; however, the driver is forcing "CN". That is my penalty for buying the 
+> adapter on Ebay; however, I think my setting should override that of the driver, 
+> which might be a separate bug. I'm OK as long as there are no FCC inspectors in 
+> my neighborhood to see that I am sending out probes on channels 12 and 13.
+
+:)
+That might indeed be a different bug.
+
+> I am only vaguely familiar with the rcu routines. Is it sufficient to do the 
+> simple kfree() before the rcu_assign_pointer() call, or is it necessary to make 
+> an rcu_lock() call as well? If a simple kfree() is all that is needed, then the 
+> following patch should be OK. If is is, I'll do some testing and do a proper 
+> submission later:
+
+No, neither is quite right, another thread might be accessing it at the
+same time.
+
+> Index: wireless-testing-new/net/wireless/reg.c
+> ===================================================================
+> --- wireless-testing-new.orig/net/wireless/reg.c
+> +++ wireless-testing-new/net/wireless/reg.c
+> @@ -2189,10 +2189,12 @@ static int __set_regdom(const struct iee
+>                   * However if a driver requested this specific regulatory
+>                   * domain we keep it for its private use
+>                   */
+> -               if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER)
+> +               if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER) {
+> +                       kfree(request_wiphy->regd);
+
+This one should be rcu_free_regdom(), except you also need a temporary
+variable:
+
+	tmp = get_wiphy_regdom(request_wiphy);
+	rcu_assign_pointer(request_wiphy->regd, rd);
+	rcu_free_regdom(tmp);
+
+Note this also works if "tmp" ends up NULL.
+
+johannes
 
