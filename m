@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50357 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754881Ab3BLKE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 05:04:57 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [BUG] Beacon loss event every second
-References: <5118F682.8000502@neratec.com>
-	<1360592857.8738.30.camel@jlt4.sipsolutions.net>
-	<51190341.40806@neratec.com>
-Date: Tue, 12 Feb 2013 12:04:54 +0200
-In-Reply-To: <51190341.40806@neratec.com> (Wojciech Dubowik's message of "Mon,
-	11 Feb 2013 15:42:09 +0100")
-Message-ID: <87bobpc0ft.fsf@purkki.adurom.net> (sfid-20130212_110500_764218_308CB431)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:43437 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754435Ab3BDPpP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2013 10:45:15 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U2OEM-00039c-5a
+	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:45:14 +0100
+Message-ID: <1359992738.10311.27.camel@jlt4.sipsolutions.net> (sfid-20130204_164520_386967_1CB9E8BF)
+Subject: Re: [PATCH] cfg80211: wrap BSS kref
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 16:45:38 +0100
+In-Reply-To: <1359679143-4810-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_013845_786545_97B08B0C)
+References: <1359679143-4810-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130201_013845_786545_97B08B0C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+On Fri, 2013-02-01 at 01:39 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Add inline wrappers for the BSS struct krefs
+> to be able to extend them easily later.
 
-> I have connection without sending any data.
->
-> I have seen that  ieee80211_sta_rx_notify doesn't count beacons
-> so the time is not resetted. What was the reason not to count them
-> for beacon loss work? Something connected with PS?
->
-> Anyway I should get the event every
->
-> IEEE80211_BEACON_LOSS_COUNT * bcn period
->
-> which in my case should be 7 * 30 ms = 210 ms and not 1 second.
->
-> I will keep on digging.
+Applied.
 
-What driver are you using?
+johannes
 
--- 
-Kalle Valo
