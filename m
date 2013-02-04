@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758283Ab3BNRwq (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:36267 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab3BDVnh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 12:52:46 -0500
-Message-ID: <1360864361.8210.13.camel@jlt4.sipsolutions.net> (sfid-20130214_185249_272185_98C70CEE)
-Subject: Re: [PATCH v2 1/3] regulatory: allow VHT channels in world roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, green@qca.qualcomm.com
-Date: Thu, 14 Feb 2013 18:52:41 +0100
-In-Reply-To: <1360799274-16088-2-git-send-email-johannes@sipsolutions.net> (sfid-20130214_004810_651220_97A30DEF)
-References: <1360799274-16088-1-git-send-email-johannes@sipsolutions.net>
-	 <1360799274-16088-2-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130214_004810_651220_97A30DEF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Feb 2013 16:43:37 -0500
+From: Cong Ding <dinggnu@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Cong Ding <dinggnu@gmail.com>
+Subject: [PATCH] net: wireless/rtlwifi: fix uninitialized variable issue
+Date: Mon,  4 Feb 2013 22:43:22 +0100
+Message-Id: <1360014206-6138-1-git-send-email-dinggnu@gmail.com> (sfid-20130204_224410_186666_8E27696F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-14 at 00:47 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> For VHT, the wider bandwidths (up to 160 MHz) need
-> to be allowed. Since world roaming only covers the
-> case of connecting to an AP, it can be opened up
-> there, we will rely on the AP to know the local
-> regulations.
+The use of variable packet_beacon might be uninitialized in the two files,
+which is same as this patch:
+https://patchwork.kernel.org/patch/2006711/
 
-Since I don't particularly care about the regulatory stuff right now (we
-have custom world roaming) I'm just going to drop this until somebody
-else figures out VHT ...
+Signed-off-by: Cong Ding <dinggnu@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index c31795e..da0e902 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -488,7 +488,7 @@ static void _rtl92ce_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 	u8 *praddr;
+ 	__le16 fc;
+ 	u16 type, c_fc;
+-	bool packet_matchbssid, packet_toself, packet_beacon;
++	bool packet_matchbssid, packet_toself, packet_beacon = false;
+ 
+ 	tmp_buf = skb->data + pstats->rx_drvinfo_size + pstats->rx_bufshift;
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index 32ff959..85b6bdb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -1084,7 +1084,7 @@ void rtl92c_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 	u8 *praddr;
+ 	__le16 fc;
+ 	u16 type, cpu_fc;
+-	bool packet_matchbssid, packet_toself, packet_beacon;
++	bool packet_matchbssid, packet_toself, packet_beacon = false;
+ 
+ 	tmp_buf = skb->data + pstats->rx_drvinfo_size + pstats->rx_bufshift;
+ 	hdr = (struct ieee80211_hdr *)tmp_buf;
+-- 
+1.7.9.5
 
