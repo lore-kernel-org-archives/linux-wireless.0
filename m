@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:57941 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933153Ab3BLTxE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43838 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754899Ab3BDRzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 14:53:04 -0500
-Received: by mail-ob0-f169.google.com with SMTP id ta14so479312obb.28
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 11:53:01 -0800 (PST)
-Message-ID: <511A9D9B.7070804@lwfinger.net> (sfid-20130212_205309_853535_2335DF79)
-Date: Tue, 12 Feb 2013 13:52:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John W Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Rework Kconfig
-References: <511a9bbf.62vWRaboLfIa29ND%Larry.Finger@lwfinger.net>
-In-Reply-To: <511a9bbf.62vWRaboLfIa29ND%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 4 Feb 2013 12:55:17 -0500
+Message-ID: <1360000536.17993.24.camel@jlt4.sipsolutions.net> (sfid-20130204_185523_904489_EE5C6F90)
+Subject: Re: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
+ interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Amit Shakya <amit.shakya@stericsson.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 04 Feb 2013 18:55:36 +0100
+In-Reply-To: <201302041844.44436.chunkeey@googlemail.com> (sfid-20130204_184447_354638_056330FF)
+References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
+	 <201302041814.11894.chunkeey@googlemail.com>
+	 <1359999018.17993.13.camel@jlt4.sipsolutions.net>
+	 <201302041844.44436.chunkeey@googlemail.com>
+	 (sfid-20130204_184447_354638_056330FF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2013 01:45 PM, Larry Finger wrote:
-> #
-> # For a description of the syntax of this configuration file,
-> # see Documentation/kbuild/kconfig-language.txt.
-> #
-> mainmenu "Linux/$ARCH $KERNELVERSION Kernel Configuration"
->
-> config SRCARCH
-> 	string
-> 	option env="SRCARCH"
->
-> source "arch/$SRCARCH/Kconfig"
+On Mon, 2013-02-04 at 18:44 +0100, Christian Lamparter wrote:
 
-In case there is any confusion, this is garbage and resulted from an operator 
-problem. The other E-mail with the same subject is correct.
+> See the attached patch. It compiles, but I can't test it right now.
 
-Larry
+> mac80211: protect rx-path with spinlock
+> 
+[...]
+
+Looks good to me. Amit, can you test it please?
+
+johannes
 
 
