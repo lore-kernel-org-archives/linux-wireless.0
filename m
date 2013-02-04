@@ -1,38 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:56729 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818Ab3BRQSh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 11:18:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Mon, 18 Feb 2013 17:18:34 +0100
-Message-ID: <CACna6rwLgE+o2mcRTemLFAqzdsEoA9Xyx8GyEQTh5qbv1iZ04A@mail.gmail.com> (sfid-20130218_171841_471506_67D3228A)
-Subject: Re: [PATCH] b43: Increase number of RX DMA slots
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Bastian Bittorf <bittorf@bluebottle.com>,
-	Stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from perches-mx.perches.com ([206.117.179.246]:49354 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752258Ab3BDD2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Feb 2013 22:28:42 -0500
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-can@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-hams@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	virtualization@lists.linux-foundation.org, wimax@linuxwimax.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH 0/8] drivers/net: Remove unnecessary alloc/OOM messages
+Date: Sun,  3 Feb 2013 19:28:07 -0800
+Message-Id: <cover.1359939012.git.joe@perches.com> (sfid-20130204_042930_370480_BEE8C38D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/2/18 Larry Finger <Larry.Finger@lwfinger.net>:
-> Bastian Bittorf reported that some of the silent freezes on a Linksys WRT54G
-> were due to overflow of the RX DMA ring buffer, which was created with 64
-> slots. That finding reminded me that I was seeing similar crashed on a netbook,
-> which also has a relatively slow processor. After increasing the number of
-> slots to 128, runs on the netbook that previously failed now worked; however,
-> I found that 109 slots had been used in one test. For that reason, the number
-> of slots is being increased to 256.
+Remove all the OOM messages that follow kernel alloc
+failures as there is already a generic equivalent to
+these messages in the mm subsystem.
 
-So probably ideal solution is to use 128 *and* fix the driver's
-failing on overflow ;)
+Joe Perches (8):
+  caif: Remove unnecessary alloc/OOM messages
+  can: Remove unnecessary alloc/OOM messages
+  ethernet: Remove unnecessary alloc/OOM messages, alloc cleanups
+  drivers: net: usb: Remove unnecessary alloc/OOM messages
+  wan: Remove unnecessary alloc/OOM messages
+  wimax: Remove unnecessary alloc/OOM messages, alloc cleanups
+  wireless: Remove unnecessary alloc/OOM messages, alloc cleanups
+  drivers:net:misc: Remove unnecessary alloc/OOM messages
 
-Did you try it on some old device? Just for sure firmware&DMA will
-handle it correctly.
+ drivers/net/caif/caif_shmcore.c                    |  6 -----
+ drivers/net/can/sja1000/ems_pci.c                  |  1 -
+ drivers/net/can/sja1000/peak_pci.c                 |  5 +---
+ drivers/net/can/sja1000/peak_pcmcia.c              |  1 -
+ drivers/net/can/sja1000/plx_pci.c                  |  1 -
+ drivers/net/can/usb/ems_usb.c                      |  4 +---
+ drivers/net/can/usb/kvaser_usb.c                   |  2 --
+ drivers/net/can/usb/peak_usb/pcan_usb_core.c       |  5 ----
+ drivers/net/can/usb/usb_8dev.c                     |  4 +---
+ drivers/net/ethernet/atheros/atl1c/atl1c_main.c    |  6 ++---
+ drivers/net/ethernet/atheros/atl1e/atl1e_main.c    |  2 --
+ drivers/net/ethernet/broadcom/b44.c                |  4 +---
+ drivers/net/ethernet/broadcom/bcm63xx_enet.c       |  6 ++---
+ drivers/net/ethernet/broadcom/cnic.c               |  6 ++---
+ drivers/net/ethernet/broadcom/tg3.c                |  4 +---
+ drivers/net/ethernet/freescale/gianfar_ethtool.c   |  9 ++++----
+ drivers/net/ethernet/ibm/ehea/ehea_main.c          |  4 +---
+ drivers/net/ethernet/ibm/ehea/ehea_qmr.c           | 19 +++++----------
+ drivers/net/ethernet/ibm/emac/mal.c                |  7 ++----
+ drivers/net/ethernet/ibm/ibmveth.c                 |  1 -
+ drivers/net/ethernet/intel/igb/igb_main.c          |  5 ++--
+ drivers/net/ethernet/intel/igbvf/netdev.c          |  8 +++----
+ drivers/net/ethernet/marvell/mv643xx_eth.c         |  8 +++----
+ drivers/net/ethernet/marvell/mvmdio.c              |  1 -
+ drivers/net/ethernet/marvell/skge.c                |  5 ++--
+ drivers/net/ethernet/marvell/sky2.c                |  4 +---
+ drivers/net/ethernet/mellanox/mlx4/en_main.c       |  4 +---
+ drivers/net/ethernet/mellanox/mlx4/main.c          |  4 +---
+ drivers/net/ethernet/myricom/myri10ge/myri10ge.c   |  5 ++--
+ .../net/ethernet/qlogic/netxen/netxen_nic_ctx.c    |  5 +---
+ drivers/net/ethernet/qlogic/netxen/netxen_nic_hw.c | 18 ++++-----------
+ .../net/ethernet/qlogic/netxen/netxen_nic_init.c   | 27 ++++++++--------------
+ .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |  5 +---
+ drivers/net/ethernet/qlogic/qla3xxx.c              | 10 ++++----
+ .../net/ethernet/qlogic/qlcnic/qlcnic_83xx_init.c  | 14 ++++-------
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_hw.c     |  6 ++---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_init.c   | 26 +++++++--------------
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c   | 19 +++++----------
+ .../net/ethernet/qlogic/qlcnic/qlcnic_minidump.c   |  7 ++----
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c       |  1 -
+ drivers/net/ethernet/rdc/r6040.c                   |  3 +--
+ drivers/net/ethernet/renesas/sh_eth.c              | 10 ++++----
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c  | 11 +++++----
+ drivers/net/ethernet/sun/niu.c                     |  2 +-
+ drivers/net/ethernet/ti/cpsw.c                     |  8 +++----
+ drivers/net/ethernet/ti/davinci_mdio.c             |  4 +---
+ drivers/net/ethernet/xilinx/ll_temac_main.c        |  6 ++---
+ drivers/net/hamradio/dmascc.c                      |  7 +-----
+ drivers/net/phy/spi_ks8995.c                       |  4 +---
+ drivers/net/usb/ax88172a.c                         |  6 ++---
+ drivers/net/usb/hso.c                              | 25 ++++++--------------
+ drivers/net/usb/sierra_net.c                       | 10 +++-----
+ drivers/net/usb/smsc75xx.c                         |  6 ++---
+ drivers/net/usb/smsc95xx.c                         |  6 ++---
+ drivers/net/usb/usbnet.c                           |  5 +---
+ drivers/net/virtio_net.c                           |  4 +---
+ drivers/net/wan/cosa.c                             |  9 ++++----
+ drivers/net/wan/farsync.c                          |  6 ++---
+ drivers/net/wan/hdlc.c                             |  9 ++++----
+ drivers/net/wan/x25_asy.c                          |  1 -
+ drivers/net/wimax/i2400m/rx.c                      | 16 ++++---------
+ drivers/net/wimax/i2400m/usb-notif.c               |  1 -
+ drivers/net/wireless/airo_cs.c                     |  5 ++--
+ drivers/net/wireless/at76c50x-usb.c                |  4 +---
+ .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |  6 ++---
+ drivers/net/wireless/atmel_cs.c                    |  5 ++--
+ drivers/net/wireless/ipw2x00/ipw2100.c             |  9 +++-----
+ drivers/net/wireless/libertas/cfg.c                |  4 +---
+ drivers/net/wireless/mwifiex/11n.c                 |  5 +---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c       |  5 +---
+ drivers/net/wireless/mwifiex/cfg80211.c            |  4 +---
+ drivers/net/wireless/mwifiex/cmdevt.c              | 11 +++------
+ drivers/net/wireless/mwifiex/init.c                |  5 +---
+ drivers/net/wireless/mwifiex/scan.c                | 27 +++++++---------------
+ drivers/net/wireless/mwifiex/sdio.c                | 11 ++-------
+ drivers/net/wireless/mwifiex/sta_ioctl.c           | 11 +++------
+ drivers/net/wireless/mwifiex/wmm.c                 |  7 ++----
+ drivers/net/wireless/orinoco/main.c                | 16 ++++---------
+ drivers/net/wireless/p54/p54usb.c                  | 10 ++------
+ drivers/net/wireless/prism54/islpci_mgt.c          | 14 ++++-------
+ drivers/net/wireless/rndis_wlan.c                  |  5 +---
+ drivers/net/wireless/ti/wlcore/sdio.c              |  4 +---
+ drivers/net/wireless/ti/wlcore/spi.c               | 14 +++--------
+ drivers/net/wireless/zd1211rw/zd_usb.c             |  1 -
+ 84 files changed, 185 insertions(+), 436 deletions(-)
 
 -- 
-Rafał
+1.8.0.dirty
+
