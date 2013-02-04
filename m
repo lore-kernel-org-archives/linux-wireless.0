@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33391 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752027Ab3BPI2i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Feb 2013 03:28:38 -0500
-Message-ID: <1361003317.3444.4.camel@joe-AO722> (sfid-20130216_092844_356468_08673947)
-Subject: Re: [PATCH 1/2] mwifiex: coding style cleanup in bss parameter
- update
-From: Joe Perches <joe@perches.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Sat, 16 Feb 2013 00:28:37 -0800
-In-Reply-To: <1360993470-4828-2-git-send-email-bzhao@marvell.com>
-References: <1360993470-4828-1-git-send-email-bzhao@marvell.com>
-	 <1360993470-4828-2-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56614 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754548Ab3BDMuL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2013 07:50:11 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH 2/2] iw: print DFS states for channels if available
+Date: Mon,  4 Feb 2013 13:50:00 +0100
+Message-Id: <1359982200-2321-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130204_135020_400466_948DF7F8)
+In-Reply-To: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 21:44 -0800, Bing Zhao wrote:
-> From: Yogesh Ashok Powar <yogeshp@marvell.com>
-> They all can make one line.
-[]
-> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-[]
-> @@ -1485,20 +1485,15 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
->  	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
->  	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
->  	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
-> -	priv->curr_bss_params.bss_descriptor.ht_cap_offset =
-> -		0;
-> +	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ info.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-Another way to do this to reduce the visual noise it to
-create a temporary
-	struct mwifiex_bssdescriptor *t = &priv->curr_bss_params.bss_descriptor;
-and use
-	s/priv->curr_bss_params.bss_descriptor./t->/
-
+diff --git a/info.c b/info.c
+index 14db37f..bcf36d7 100644
+--- a/info.c
++++ b/info.c
+@@ -49,6 +49,20 @@ static char *cipher_name(__u32 c)
+ 	}
+ }
+ 
++static char *dfs_state_name(enum nl80211_dfs_state state)
++{
++	switch (state) {
++	case NL80211_DFS_USABLE:
++		return "usable";
++	case NL80211_DFS_AVAILABLE:
++		return "available";
++	case NL80211_DFS_UNAVAILABLE:
++		return "unavailable";
++	default:
++		return "unknown";
++	}
++}
++
+ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ {
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+@@ -147,6 +161,17 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+  next:
+ 			if (open)
+ 				printf(")");
++			if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
++				enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
++				unsigned long time;
++
++				printf(" DFS state: %s", dfs_state_name(state));
++				if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
++					time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
++					printf(" (for %lu sec)", time/1000);
++				}
++			}
++
+ 			printf("\n");
+ 		}
+ 
+-- 
+1.7.10.4
 
