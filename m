@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:52336 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818Ab3BRQlI (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52700 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193Ab3BDLyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 11:41:08 -0500
-Received: by mail-bk0-f42.google.com with SMTP id jk7so2671291bkc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 08:41:06 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Marco Porsch <marco@cozybit.com>
-Subject: Re: [PATCHv2 2/3] mac80211: mesh power save doze scheduling
-Date: Mon, 18 Feb 2013 17:41:03 +0100
-Cc: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, sleffler@google.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-References: <1361203709-16669-1-git-send-email-marco@cozybit.com> <1361203709-16669-2-git-send-email-marco@cozybit.com>
-In-Reply-To: <1361203709-16669-2-git-send-email-marco@cozybit.com>
+	Mon, 4 Feb 2013 06:54:07 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 0/2] wireless: expand per-station byte counters to 64bit
+Date: Mon, 4 Feb 2013 13:54:03 +0200
+Message-ID: <1470511.o8Pg9NRrJx@lx-vladimir> (sfid-20130204_125411_079227_AADA88CA)
+In-Reply-To: <1359976732.10311.3.camel@jlt4.sipsolutions.net>
+References: <6017229.5ECEUbBVAL@lx-vladimir> <1545359.lClxPtAl2j@lx-vladimir> <1359976732.10311.3.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201302181741.03279.chunkeey@googlemail.com> (sfid-20130218_174115_043089_D2834D98)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, February 18, 2013 05:08:28 PM Marco Porsch wrote:
-> ---
-> +/**
-> + * ieee80211_mps_sta_tbtt_update - update peer beacon wakeup schedule
-> + *
-> + * @sta: mesh STA
-> + * @mgmt: beacon frame
-> + * @tim: TIM IE of beacon frame
-> + * @tsf_local: current HW TSF
-> + */
-> +void ieee80211_mps_sta_tbtt_update(struct sta_info *sta,
-> +				   struct ieee80211_mgmt *mgmt,
-> +				   const struct ieee80211_tim_ie *tim,
-> +				   u64 tsf_local)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = sta->sdata;
-> +
-> +	if (!sdata->local->mps_enabled ||
-> +	    sta->plink_state != NL80211_PLINK_ESTAB)
-> +		return;
-> +
-> +	sta->beacon_interval = le16_to_cpu(mgmt->u.beacon.beacon_int) * 1024;
-If you want, you could use ieee80211_tu_to_usec instead of "* 1024":
-sta->beacon_interval = ieee80211_tu_to_usec(le16_to_cpu(mgmt->u.beacon.beacon_int));
+On Monday, February 04, 2013 12:18:52 PM Johannes Berg wrote:
+> On Mon, 2013-02-04 at 13:13 +0200, Vladimir Kondratiev wrote:
+> 
+> > Patches follows.
+> 
+> Can you send them as proper separate emails, I'm not going to pick up
+> ath6kl one :)
+> 
+> johannes
 
-Regards,
-	Chr
+Sure, sent.
