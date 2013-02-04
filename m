@@ -1,33 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2399 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755538Ab3BWRsT convert rfc822-to-8bit (ORCPT
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:36737 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab3BDRmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 12:48:19 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Adrian Chadd" <adrian@freebsd.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>
-Subject: RE: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
- coexistence mode
-Date: Sat, 23 Feb 2013 17:47:48 +0000
-Message-ID: <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com> (sfid-20130223_184825_581362_59F667DE)
-References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com>
- <1361564916.3420.11.camel@jlt4.sipsolutions.net>,<CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
-In-Reply-To: <CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
+	Mon, 4 Feb 2013 12:42:38 -0500
+Date: Mon, 4 Feb 2013 09:42:32 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	rusty@rustcorp.com.au, bfields@fieldses.org,
+	skinsbursky@parallels.com, ebiederm@xmission.com,
+	jmorris@namei.org, axboe@kernel.dk, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 59/62] mac80211: convert to idr_alloc()
+Message-ID: <20130204174232.GO27963@mtj.dyndns.org> (sfid-20130204_184310_681596_B7FEB7A4)
+References: <1359854463-2538-1-git-send-email-tj@kernel.org>
+ <1359854463-2538-60-git-send-email-tj@kernel.org>
+ <1359999624.17993.21.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359999624.17993.21.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, February 23, 2013 1:30 AM Adrian Chadd wrote:
->
-> ... why not tag such traffic with a higher QOS priority and then have
-> the BT coex module snoop thaT?
->
+On Mon, Feb 04, 2013 at 06:40:24PM +0100, Johannes Berg wrote:
+> On Sat, 2013-02-02 at 17:21 -0800, Tejun Heo wrote:
+> > Convert to the much saner new idr interface.
+> > 
+> > Only compile tested.
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: linux-wireless@vger.kernel.org
+> > ---
+> > This patch depends on an earlier idr changes and I think it would be
+> > best to route these together through -mm.  Please holler if there's
+> > any objection.  Thanks.
+> 
+> Looks fine to me, thanks.
 
-In the driver we could inspect each sk_buff and boost priority of any BOOTP packets so that it will end up in the AC_VO fifo and have hardware coexistence handle it further. I consider that more a pragmatic fix, which is not always the worst thing to go for. However, I would prefer a solution is which user-space, ie. dhcp client can control the priority and/or BT coexistence.
+Will add Acked-by.  Thanks a lot!
 
-Gr. AvS
+-- 
+tejun
