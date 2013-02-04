@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57430 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935113Ab3BNXz3 (ORCPT
+Received: from mail-ye0-f179.google.com ([209.85.213.179]:45757 "EHLO
+	mail-ye0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755555Ab3BDX1C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 18:55:29 -0500
-Message-ID: <1360886123.9475.1.camel@jlt4.sipsolutions.net> (sfid-20130215_005547_546265_54A926F2)
-Subject: Re: [PATCH] mac80211_hwsim: ask mac80211 to reserve space for
- chanctx.drv_priv
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Fri, 15 Feb 2013 00:55:23 +0100
-In-Reply-To: <1360882994-13250-1-git-send-email-karl@eleaks.org> (sfid-20130215_000755_381127_1DBABC17)
-References: <1360882994-13250-1-git-send-email-karl@eleaks.org>
-	 (sfid-20130215_000755_381127_1DBABC17)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Feb 2013 18:27:02 -0500
+Received: by mail-ye0-f179.google.com with SMTP id m4so1694406yen.24
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2013 15:27:01 -0800 (PST)
+Message-ID: <511043C0.2020405@gmail.com> (sfid-20130205_002709_697124_79CB15AA)
+Date: Tue, 05 Feb 2013 00:26:56 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Thomas Rosenkranz <tom.rosary@googlemail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
+ downstream and upstreamkernel
+References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com>
+In-Reply-To: <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 00:03 +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> Otherwise memory corruption occurs when using channel contexts (ATM when
-> param 'channel' > 1).
+On 02/05/2013 12:00 AM, Thomas Rosenkranz wrote:
 
-Heh, and I've been using it forever with that in kvm, I guess it depends
-on the allocator (and the resulting ksize() of the object).
+> btw. if I do:
+> $ sudo modprobe -r 8192cu
+> the system crashes
 
-Applied, thanks!
+> [  183.369324] rtw driver version=v3.4.4_xxxx.20120730
 
-johannes
-
+That release is a bit old. Try:
+ftp://WebUser:wK9xBuD5@208.70.202.220/cn/wlan/RTL8192xC_USB_linux_v3.4.4_4749.20121105.zip
