@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173015pub.verizon.net ([206.46.173.15]:55364 "EHLO
-	vms173015pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602Ab3BUNfG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755920Ab3BDPIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 08:35:06 -0500
-Received: from odin.tremily.us ([unknown] [72.68.84.219])
- by vms173015.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0MIK00B20LM5R880@vms173015.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Thu, 21 Feb 2013 06:34:54 -0600 (CST)
-From: "W. Trevor King" <wking@tremily.us>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Michael Buesch <m@bues.ch>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	b43-dev@lists.infradead.org, "W. Trevor King" <wking@tremily.us>
-Subject: [PATCH] b43: Fix 'me' -> 'be' typo in Kconfig
-Date: Thu, 21 Feb 2013 07:34:42 -0500
-Message-id: <81849f3444af632521ee18dfa3009b6f60efca86.1361449471.git.wking@tremily.us> (sfid-20130221_143512_030323_0FECF1E6)
+	Mon, 4 Feb 2013 10:08:54 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U2NfB-0002Yi-6q
+	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:08:53 +0100
+Message-ID: <1359990557.10311.6.camel@jlt4.sipsolutions.net> (sfid-20130204_160857_686362_4AAD5A4D)
+Subject: Re: [PATCH 1/2] mac80211: send deauth when connection is lost
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 16:09:17 +0100
+In-Reply-To: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net> (sfid-20130131_140546_138447_A35D7420)
+References: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130131_140546_138447_A35D7420)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "W. Trevor King" <wking@tremily.us>
+On Thu, 2013-01-31 at 14:06 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> If the driver determines the connection is lost,
+> send a deauth frame to the AP anyway just in case
+> it still considers the connection alive. The frame
+> might not go through, but at least we've tried.
 
-Also add a missing 'the' before 'runtime performance'.
+Applied.
 
-Signed-off-by: W. Trevor King <wking@tremily.us>
----
-Based on wireless-testing's master-2013-02-19.
-
- drivers/net/wireless/b43/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 7a28d21..f259c49 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -166,8 +166,8 @@ config B43_DEBUG
- 	  Broadcom 43xx debugging.
- 
- 	  This adds additional runtime sanity checks and statistics to the driver.
--	  These checks and statistics might me expensive and hurt runtime performance
--	  of your system.
-+	  These checks and statistics might be expensive and hurt the runtime
-+	  performance of your system.
- 	  This also adds the b43 debugfs interface.
- 
- 	  Do not enable this, unless you are debugging the driver.
--- 
-1.8.2.rc0.16.g20a599e
+johannes
 
