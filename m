@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946187Ab3BHJIe (ORCPT
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:40554 "EHLO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752962Ab3BDLTX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 04:08:34 -0500
-Message-ID: <1360314503.29851.6.camel@jlt4.sipsolutions.net> (sfid-20130208_100844_659564_70F5684E)
-Subject: Re: [PATCHv9 1/3] mac80211: lock AP_VLAN list with iflist_mtx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 08 Feb 2013 10:08:23 +0100
-In-Reply-To: <1360262304-28362-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1360262304-28362-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Feb 2013 06:19:23 -0500
+From: Amit Shakya <amit.shakya@stericsson.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amit Shakya <amit.shakya@stericsson.com>
+Subject: [PATCH] mac80211: Fix PN corruption in case of multiple virtual interface
+Date: Mon, 4 Feb 2013 16:48:57 +0530
+Message-ID: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com> (sfid-20130204_121932_077461_638586DB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 19:38 +0100, Simon Wunderlich wrote:
-> To remove the dependency to rtnl_lock() for
-> ieee80211_vif_use/release_channel in AP mode, protect the AP_VLAN
-> list with local->iflist_mtx instead.
-> 
-> RTNL can not be used from within mac80211 workers, but the
-> DFS AP interface requires to release channels (after DFS channel
-> availability checks).
+In case of multiple virtual interface, if AES is configured on multiple
+interface then there are chances of stored PN corruption, causing traffic
+to stop.
+In case, ieee80211_rx_handlers processing is going on for skbs received on
+one vif and at the same time, rx aggregation reorder timer expires on
+another vif then sta_rx_agg_reorder_timer_expired is invoked and it will
+push skbs into the single queue (local->rx_skb_queue).
+ieee80211_rx_handlers in the while loop assumes that the skbs are for the
+same TID and same sta. This assumption doesn't hold good in this scenario
+and the PN gets corrupted by PN received in other vif's skb, causing
+traffic to stop due to PN mismatch.
+This can be avoided by comparing source mac addres in received skb's with
+the sta's mac address for which processing is going on, when de-queueing.
 
-I have to say ... I don't like this churn.
+Signed-off-by: Amit Shakya <amit.shakya@stericsson.com>
+---
+ net/mac80211/rx.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
-> @@ -934,12 +936,14 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
->  	 */
->  	sdata->control_port_protocol = params->crypto.control_port_ethertype;
->  	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-> +	mutex_lock(&sdata->local->iflist_mtx);
->  	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
->  		vlan->control_port_protocol =
->  			params->crypto.control_port_ethertype;
->  		vlan->control_port_no_encrypt =
->  			params->crypto.control_port_no_encrypt;
->  	}
-> +	mutex_unlock(&sdata->local->iflist_mtx);
->  
->  	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
->  	sdata->vif.bss_conf.dtim_period = params->dtim_period;
-> @@ -972,8 +976,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
->  	ieee80211_bss_info_change_notify(sdata, changed);
->  
->  	netif_carrier_on(dev);
-> +	mutex_lock(&sdata->local->iflist_mtx);
->  	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
->  		netif_carrier_on(vlan->dev);
-> +	mutex_unlock(&sdata->local->iflist_mtx);
-
-Things like this are also questionable -- it still only works because
-the RTNL is there.
-
-I'm not sure what the solution would be though -- maybe allowing/using
-both locks.
-
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 580704e..e6f1799 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2775,7 +2775,8 @@ static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
+ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
+ {
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+-	struct sk_buff *skb;
++	struct sk_buff *skb, *tmp;
++	struct ieee80211_hdr *hdr;
+ 
+ #define CALL_RXH(rxh)			\
+ 	do {				\
+@@ -2790,7 +2791,20 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
+ 
+ 	rx->local->running_rx_handler = true;
+ 
+-	while ((skb = __skb_dequeue(&rx->local->rx_skb_queue))) {
++	skb_queue_walk_safe(&rx->local->rx_skb_queue, skb, tmp) {
++		if (!skb)
++			break;
++		hdr = (struct ieee80211_hdr *) skb->data;
++		/*
++		* Additional check to ensure that the packets corresponding
++		* to same sta entry as in rx->sta are de-queued. The queue
++		* can have different interface packets in case of multiple vifs
++		*/
++		if ((rx->sta && hdr) && (ieee80211_is_data(hdr->frame_control))
++			&& (memcmp(rx->sta->sta.addr, hdr->addr2, ETH_ALEN)))
++					continue;
++		__skb_unlink(skb, &rx->local->rx_skb_queue);
++
+ 		spin_unlock(&rx->local->rx_skb_queue.lock);
+ 
+ 		/*
+-- 
+1.7.4.1
 
