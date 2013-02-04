@@ -1,69 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1134 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946262Ab3BHLGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 06:06:51 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 5/5] brcmfmac: remove unnecessary locking in trap info
- processing
-Date: Fri, 8 Feb 2013 12:06:35 +0100
-Message-ID: <1360321595-31722-6-git-send-email-arend@broadcom.com> (sfid-20130208_120655_860074_EAD44B11)
-In-Reply-To: <1360321595-31722-1-git-send-email-arend@broadcom.com>
-References: <1360321595-31722-1-git-send-email-arend@broadcom.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:39807 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754962Ab3BDPhU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2013 10:37:20 -0500
+Date: Mon, 4 Feb 2013 09:37:12 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH for 3.8] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20130204153712.GB12491@thinkpad-t410> (sfid-20130204_163741_304228_9200F9E4)
+References: <1359812210-31658-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1359812210-31658-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
+On Sat, Feb 02, 2013 at 02:36:50PM +0100, Arend van Spriel wrote:
+> This patch addresses a long standing issue of the driver with the
+> mac80211 .flush() callback. Since implementing the .flush() callback
+> a number of issues have been fixed, but a WARN_ON_ONCE() was still
+> triggered because the timeout on the flush could still occur.
+> 
+> This patch changes the awkward design using msleep() into one using
+> a waitqueue. The waiting flush() context will kick the transmit dma
+> when it is idle and the timeout used waiting for the event is set
+> to 500 ms. Worst case there can be 64 frames outstanding for transmit
+> in the driver. At a rate of 1Mbps that would take 1.5 seconds assuming
+> MTU is 1500 bytes and ignoring retries. The WARN_ON_ONCE() is also
+> removed as this was put in to indicate the flush timeout as a reason
+> for the driver to stall. That was not happening since fixing endless
+> AMPDU retries with following upstream commit:
+> 
+> commit 85091fc0a75653e239dc8379658515e577544927
+> Author: Arend van Spriel <arend@broadcom.com>
+> Date:   Thu Feb 23 18:38:22 2012 +0100
+> 
+>     brcm80211: smac: fix endless retry of A-MPDU transmissions
+> 
+> bugzilla: 42840 <https://bugzilla.kernel.org/show_bug.cgi?id=42840>
+> bugzilla@redhat: <https://bugzilla.redhat.com/show_bug.cgi?id=799168>
+> bugzilla@redhat: <https://bugzilla.redhat.com/show_bug.cgi?id=787649>
+> 
+> Cc: Jonathan Nieder <jrnieder@gmail.com>
+> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> Cc: Camaleón <noelamac@gmail.com>
+> Cc: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Piotr Haber <phaber@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-Locking host access in trap info processing
-is not needed as bus access functions do it on
-their own.
+I think this makes sense and is an improvement to how the flush works
+now. In the past week I've become pretty well convinced that all
+instances of the flush timeout warning that I've been seeing are
+actually due to brcmsmac continuing to get frames for tx rather than any
+kind of problem with actually transmitting the frames, so demoting this
+from a WARN_ON to a debug statement makes sense.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    4 ----
- 1 file changed, 4 deletions(-)
+Acked-by: Seth Forshee <seth.forshee@canonical.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 97764b4..3581763 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2721,10 +2721,8 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 	}
- 
- 	/* Read hndrte_shared structure */
--	sdio_claim_host(bus->sdiodev->func[1]);
- 	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *)&sh_le,
- 				   sizeof(struct sdpcm_shared_le));
--	sdio_release_host(bus->sdiodev->func[1]);
- 	if (rv < 0)
- 		return rv;
- 
-@@ -2826,14 +2824,12 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
- 	if ((sh->flags & SDPCM_SHARED_TRAP) == 0)
- 		return 0;
- 
--	sdio_claim_host(bus->sdiodev->func[1]);
- 	error = brcmf_sdbrcm_membytes(bus, false, sh->trap_addr, (u8 *)&tr,
- 				      sizeof(struct brcmf_trap_info));
- 	if (error < 0)
- 		return error;
- 
- 	nbytes = brcmf_sdio_dump_console(bus, sh, data, count);
--	sdio_release_host(bus->sdiodev->func[1]);
- 	if (nbytes < 0)
- 		return nbytes;
- 
--- 
-1.7.10.4
+I do have one minor comment below.
 
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> index 9f3d7e9..8b58390 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> @@ -7511,25 +7511,16 @@ int brcms_c_get_curband(struct brcms_c_info *wlc)
+>  	return wlc->band->bandunit;
+>  }
+>  
+> -void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc, bool drop)
+> +bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc)
+>  {
+> -	int timeout = 20;
+>  	int i;
+>  
+>  	/* Kick DMA to send any pending AMPDU */
+>  	for (i = 0; i < ARRAY_SIZE(wlc->hw->di); i++)
+>  		if (wlc->hw->di[i])
+> -			dma_txflush(wlc->hw->di[i]);
+> +			dma_kick_tx(wlc->hw->di[i]);
+
+While it won't hurt to call dma_kick_tx() here, it really shouldn't be
+necessary. It already gets called anytime brcmsmac handles a legit
+txstatus interrupt, so I suspect calling it here will has effect.
+
+The call to dma_txflush() was intended to move queued A-MPDU frames into
+the DMA fifos at the start of the flush. This is no longer happening,
+but if the driver continues getting frames for tx while the flush is in
+progress then the flush doesn't really help. Removing the call renders
+dma_txflush() unused though, so it could be removed entirely.
+
+Cheers,
+Seth
 
