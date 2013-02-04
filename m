@@ -1,105 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50475 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42662 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758617Ab3BTKgc (ORCPT
+	with ESMTP id S1753271Ab3BDLSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 05:36:32 -0500
+	Mon, 4 Feb 2013 06:18:31 -0500
+Message-ID: <1359976732.10311.3.camel@jlt4.sipsolutions.net> (sfid-20130204_121838_641672_5BBDC109)
+Subject: Re: [PATCH 0/2] wireless: expand per-station byte counters to 64bit
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] nl80211: conditionally add back TCP WoWLAN information
-Date: Wed, 20 Feb 2013 11:36:26 +0100
-Message-Id: <1361356586-11496-4-git-send-email-johannes@sipsolutions.net> (sfid-20130220_113639_709963_BEB82C25)
-In-Reply-To: <1361356586-11496-1-git-send-email-johannes@sipsolutions.net>
-References: <1361356586-11496-1-git-send-email-johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Mon, 04 Feb 2013 12:18:52 +0100
+In-Reply-To: <1545359.lClxPtAl2j@lx-vladimir>
+References: <6017229.5ECEUbBVAL@lx-vladimir>
+	 <1359628924.8415.5.camel@jlt4.sipsolutions.net>
+	 <1545359.lClxPtAl2j@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-02-04 at 13:13 +0200, Vladimir Kondratiev wrote:
 
-Add back the previously removed TCP WoWLAN information,
-but only if userspace is prepared to deal with large
-wiphy capability data dumps.
+> Patches follows.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 46 insertions(+), 2 deletions(-)
+Can you send them as proper separate emails, I'm not going to pick up
+ath6kl one :)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fa35b07..4701893a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -925,8 +925,49 @@ nla_put_failure:
- }
- 
- #ifdef CONFIG_PM
-+static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
-+					struct sk_buff *msg)
-+{
-+	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
-+	struct nlattr *nl_tcp;
-+
-+	if (!tcp)
-+		return 0;
-+
-+	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
-+	if (!nl_tcp)
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+			tcp->data_payload_max))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+			tcp->data_payload_max))
-+		return -ENOBUFS;
-+
-+	if (tcp->seq && nla_put_flag(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ))
-+		return -ENOBUFS;
-+
-+	if (tcp->tok && nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
-+				sizeof(*tcp->tok), tcp->tok))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
-+			tcp->data_interval_max))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
-+			tcp->wake_payload_max))
-+		return -ENOBUFS;
-+
-+	nla_nest_end(msg, nl_tcp);
-+	return 0;
-+}
-+
- static int nl80211_send_wowlan(struct sk_buff *msg,
--			       struct cfg80211_registered_device *dev)
-+			       struct cfg80211_registered_device *dev,
-+			       bool large)
- {
- 	struct nlattr *nl_wowlan;
- 
-@@ -968,6 +1009,9 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
- 			return -ENOBUFS;
- 	}
- 
-+	if (large && nl80211_send_wowlan_tcp_caps(dev, msg))
-+		return -ENOBUFS;
-+
- 	nla_nest_end(msg, nl_wowlan);
- 
- 	return 0;
-@@ -1404,7 +1448,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
- 			break;
- 	case 6:
- #ifdef CONFIG_PM
--		if (nl80211_send_wowlan(msg, dev))
-+		if (nl80211_send_wowlan(msg, dev, split))
- 			goto nla_put_failure;
- 		(*split_start)++;
- 		if (split)
--- 
-1.8.0
+johannes
 
