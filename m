@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34768 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922Ab3BUCGT (ORCPT
+Received: from mail-ye0-f173.google.com ([209.85.213.173]:35846 "EHLO
+	mail-ye0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab3BDVl7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 21:06:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 4 Feb 2013 16:41:59 -0500
+Received: by mail-ye0-f173.google.com with SMTP id l5so1696622yen.4
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Feb 2013 13:41:58 -0800 (PST)
+Message-ID: <51102B22.20702@gmail.com> (sfid-20130204_224203_236755_19964731)
+Date: Mon, 04 Feb 2013 22:41:54 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20773.32951.976684.849906@gargle.gargle.HOWL> (sfid-20130221_030622_947568_6D6CDD4C)
-Date: Thu, 21 Feb 2013 07:34:39 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
- high.
-In-Reply-To: <51258020.1060906@candelatech.com>
-References: <511935F2.8080103@candelatech.com>
-	<20761.34987.125000.908722@gargle.gargle.HOWL>
-	<511BC243.8010409@candelatech.com>
-	<20770.57339.20017.225929@gargle.gargle.HOWL>
-	<51255360.6060603@candelatech.com>
-	<20773.31273.604966.176099@gargle.gargle.HOWL>
-	<51258020.1060906@candelatech.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Thomas Rosenkranz <tom.rosary@googlemail.com>
+Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
+ downstream and upstreamkernel
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> Powersave is always disabled in our tests...can't use it with multiple VIFS
-> as far as I know...
+Larry Finger wrote:
 
-Ah, yes.
+> You are likely crashing more than X.
+> 
+> That is very good evidence that rtl8192cu is *NOT* the correct driver for that 
+> device. As I recall Xose found that USB ID in a Windows driver, but who knows 
+> what changes are inside that driver?
+> 
+> I have what I think is a complete collection of Realtek drivers for Linux, and 
+> none of them have 0bda:819a as a USB ID.
 
-> System doesn't recover if we drop the attenuation back to optimal levels, btw.
+He's using the RTL8188C_8192C_USB_linux driver.
+Therefore, there are only two possibilities:
 
-Ok.
+- it's a 8192_du device, or
+- it's a 8192_cu device, and there is a bug in rtlwifi.
 
-Sujith
+
+Thomas, could you put "dmesg" output after loading 8192cu.ko (realtek driver) ?
+and "lsusb -v -d 0bda:819a" output.
