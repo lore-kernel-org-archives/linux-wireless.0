@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-008.fem.tu-ilmenau.de ([141.24.44.8]:49541 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758470Ab3BLPwn (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56617 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754556Ab3BDMuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 10:52:43 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [konusllaptop] [PATCH 0/1] Fix VLAN support on AP with ps-sta
-Date: Tue, 12 Feb 2013 16:43:25 +0100
-Message-Id: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_165247_699771_96E5E796)
+	Mon, 4 Feb 2013 07:50:11 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv8 0/3] Add DFS master ability
+Date: Mon,  4 Feb 2013 13:49:55 +0100
+Message-Id: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130204_135025_557972_123F232D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+This is patch series version 8 of the DFS master ability, based on Victor
+Goldenshteins original work. See changelog in the various patches for
+details. The main changes to v7 are:
 
-Users are affected by not receiving the broadcasts indended for them, which for
-example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
-might be affected as packets might be disclosed to non-intended stas, though
-mixing vlan and non-vlan stas might be rare.
-This problem is triggered more often by smartphones (which enabled me to track
-it down) as they power sleep more often (I guess), but a single sleeping sta on
-the ap stops the packet for all connected stas of the ap.
-The problem exists in older kernels (at least 3.3.7) as well.
+ * export channel state to userspace
+ * add event when NOP is over
+ * use wdev->channel instead of wdev->preset_chandef.chan for CAC
+ * remove NL80211_FEATURE_DFS
+ * many small fixes
+ * claim authorship for patches (but leave note for victors original patches
+   - please mail me if you find this inappropriate)
+ * rebased on latest master, of course
 
-The following patch fixes this by restoring the per-vlan sdata using the
-skb->dev entry.
+As always, thanks a lot to Johannes and Zefir for review and support. 
+I've verified the implementation (again) with ath9k a patched hostapd (patches
+to be released later). This patchset is more an RFC with a few open questions,
+any comment/review/etc are very much appreciated. 
 
-Is it safe to assume that skb->dev is always set correctly there?
-This patch works for me with the vlan-interface within a bridge.
+iw patches for interface combinations and DFS state handling are attached as well.
 
-Would it be better to maintain the power sleeping state of the stas on a
-per-interface basis, as this would permit one group of non-sleeping stas to
-receive while another group has sleeping stas? Of course this would not
-prevent non-targetted groups of stas to be waked up, but implementing the
-latter sounds difficult to me.
+One open issue remains: On my system, DFS channels are flagged with NO_IBSS and
+DISABLED, this is due to my country code setting to 00. I can manually circumvent
+that, but should we find a proper solution for this? This regularity intersection
+gives me quite a bit of a headache ...
 
-Example old backtrace:
+Simon Wunderlich (3):
+  nl80211/cfg80211: add radar detection command/event
+  mac80211: add radar detection command/event
+  nl80211: allow DFS in start_ap
 
-Using good key:
-[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
-
-Using wrong key:
-[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
-
-Example new backtrace:
-[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
-
-
-Michael Braun (1):
-  Fix WPA with VLAN on AP side with ps client
-
- net/mac80211/tx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h       |   46 +++++++++++++++
+ include/net/mac80211.h       |   16 ++++++
+ include/uapi/linux/nl80211.h |   58 +++++++++++++++++++
+ net/mac80211/cfg.c           |   36 +++++++++++-
+ net/mac80211/chan.c          |   33 +++++++++++
+ net/mac80211/ieee80211_i.h   |   11 ++++
+ net/mac80211/iface.c         |   12 ++++
+ net/mac80211/mlme.c          |   32 +++++++++++
+ net/mac80211/scan.c          |    3 +
+ net/mac80211/trace.h         |   19 ++++++
+ net/wireless/chan.c          |  129 ++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/core.c          |    3 +
+ net/wireless/core.h          |   18 ++++++
+ net/wireless/mlme.c          |  127 +++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       |  130 ++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/nl80211.h       |    7 +++
+ net/wireless/reg.c           |    3 +
+ net/wireless/scan.c          |   10 ----
+ net/wireless/trace.h         |   33 +++++++++++
+ 19 files changed, 708 insertions(+), 18 deletions(-)
 
 -- 
 1.7.10.4
