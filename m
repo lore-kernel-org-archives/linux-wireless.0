@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758385Ab3BNRgO (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25944 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754001Ab3BDLxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 12:36:14 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U62jF-0001Rn-9x
-	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2013 18:36:13 +0100
-Message-ID: <1360863370.8210.9.camel@jlt4.sipsolutions.net> (sfid-20130214_183617_686194_A55C95B9)
-Subject: Re: [PATCH] mac80211: use spin_lock_bh() for tim_lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 14 Feb 2013 18:36:10 +0100
-In-Reply-To: <1360774542-15342-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_175550_826130_2593D4AD)
-References: <1360774542-15342-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130213_175550_826130_2593D4AD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Feb 2013 06:53:24 -0500
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 0/2] 64-bit counters in the struct station_info
+Date: Mon, 4 Feb 2013 13:53:10 +0200
+Message-ID: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130204_125328_262559_46D53650)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-13 at 17:55 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There's no need to use _irqsave() as the lock
-> is never used in interrupt context.
-> 
-> This also fixes a problem in the iwlwifi MVM
-> driver that calls spin_unlock_bh() within its
-> set_tim() callback.
+patch 1 expands counters and patch 2 uses this 64-bit counters for
+the ath6kl - only easy to find driver with 64-bit counters.
 
-Applied.
+Vladimir Kondratiev (2):
+  wireless: expand per-station byte counters to 64bit
+  ath6kl: provide 64-bit per-station byte counters
 
-johannes
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
+ include/net/cfg80211.h                     |   12 ++++++++----
+ include/uapi/linux/nl80211.h               |    4 ++++
+ net/wireless/nl80211.c                     |   10 +++++++++-
+ 4 files changed, 25 insertions(+), 7 deletions(-)
+
+-- 
+1.7.10.4
 
