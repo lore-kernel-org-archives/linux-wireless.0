@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59056 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760074Ab3BHMiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 07:38:07 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:43394 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863Ab3BDPm2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2013 10:42:28 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U2OBf-000357-Rn
+	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:42:28 +0100
+Message-ID: <1359992573.10311.24.camel@jlt4.sipsolutions.net> (sfid-20130204_164304_849321_CB4513AC)
+Subject: Re: [PATCH 1/2] mac80211: allow transmitting deauth with tainted key
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/3] mac80211/minstrel_ht: show the number of retries for each rate in debugfs
-Date: Fri,  8 Feb 2013 13:38:01 +0100
-Message-Id: <1360327083-57298-1-git-send-email-nbd@openwrt.org> (sfid-20130208_133819_223545_8E7B75C6)
+Date: Mon, 04 Feb 2013 16:42:53 +0100
+In-Reply-To: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net> (sfid-20130131_141448_355132_8437FAF0)
+References: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130131_141448_355132_8437FAF0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+On Thu, 2013-01-31 at 14:15 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> When we had a connection for WoWLAN and after resume it
+> needed to be disconnected, the previous commit enabled
+> sending a deauth frame to the AP. This frame would not
+> go through on MFP-enabled networks as the key for it is
+> marked tainted before the frame is transmitted.
+> 
+> Allow a tainted key to be used for deauth frames. Worst
+> case, we'll use a wrong key because the PTK was rekeyed
+> while suspended, but more likely the PTK is still fine
+> and the taint flag really only applies to the GTK(s).
 
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index e788f76..f2b7d26 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -38,8 +38,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, "type      rate     throughput  ewma prob   this prob  "
--			"this succ/attempt   success    attempts\n");
-+	p += sprintf(p, "type         rate     throughput  ewma prob   this prob  "
-+			"retry   this succ/attempt   success    attempts\n");
- 	for (i = 0; i < MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS; i++) {
- 		char htmode = '2';
- 		char gimode = 'L';
-@@ -64,18 +64,19 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 			*(p++) = (idx == mi->max_tp_rate) ? 'T' : ' ';
- 			*(p++) = (idx == mi->max_tp_rate2) ? 't' : ' ';
- 			*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
--			p += sprintf(p, "MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
-+			p += sprintf(p, " MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
- 					MCS_GROUP_RATES + j);
- 
- 			tp = mr->cur_tp / 10;
- 			prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
- 			eprob = MINSTREL_TRUNC(mr->probability * 1000);
- 
--			p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
--					"%3u(%3u)   %8llu    %8llu\n",
-+			p += sprintf(p, "      %6u.%1u   %6u.%1u    %6u.%1u    "
-+					"%3u            %3u(%3u)  %8llu    %8llu\n",
- 					tp / 10, tp % 10,
- 					eprob / 10, eprob % 10,
- 					prob / 10, prob % 10,
-+					mr->retry_count,
- 					mr->last_success,
- 					mr->last_attempts,
- 					(unsigned long long)mr->succ_hist,
--- 
-1.8.0.2
+Applied both.
+
+johannes
 
