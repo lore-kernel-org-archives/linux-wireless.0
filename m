@@ -1,90 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:48829 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932347Ab3BIBQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 20:16:00 -0500
-Message-ID: <1360372559.13487.14.camel@joe-AO722> (sfid-20130209_021606_157221_9EB1D50F)
-Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
-From: Joe Perches <joe@perches.com>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 08 Feb 2013 17:15:59 -0800
-In-Reply-To: <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
-References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
-	 <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56607 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753758Ab3BDMuL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Feb 2013 07:50:11 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv8 3/3] nl80211: allow DFS in start_ap
+Date: Mon,  4 Feb 2013 13:49:58 +0100
+Message-Id: <1359982200-2321-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130204_135024_868845_0F8335B1)
+In-Reply-To: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-08 at 15:31 -0500, Solomon Peachy wrote:
-> Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+This patch enables DFS within nl80211/cfg80211. start_ap now checks if
+DFS is allowed on the channel with the selected channel width.
 
-Could you please run your patches through
-scripts/checkpatch.pl --strict
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+Changes to PATCHv7:
+ * set radar required in AP params
 
-> diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw1200/hwio.c
+Changes to PATCHv6:
+ * let reg_can_beacon() and others check for channel states, simplify
+   start_ap
+ * check using cfg80211_chandef_dfs_required
 
-> +static int __cw1200_reg_write(struct cw1200_common *priv, u16 addr,
-> +				const void *buf, size_t buf_len, int buf_id)
-> +{
-> +	u16 addr_sdio;
-> +	u32 sdio_reg_addr_17bit ;
+Changes to PATCHv5:
+ * check radar detection width
+---
+ net/wireless/nl80211.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Odd layout with space before semi
-
-[]
-
-> +int cw1200_data_read(struct cw1200_common *priv, void *buf, size_t buf_len)
-> +{
-> +	int ret, retry = 1;
-> +	priv->sbus_ops->lock(priv->sbus_priv);
-> +	{
-
-> +		int buf_id_rx = priv->buf_id_rx;
-
-declare buf_id_rx at the top of the function please
-and avoid the extra indentation level.
-
-> +		while (retry <= MAX_RETRY) {
-> +			ret = __cw1200_reg_read(priv,
-> +					ST90TDS_IN_OUT_QUEUE_REG_ID, buf,
-> +					buf_len, buf_id_rx + 1);
-> +			if (!ret) {
-> +				buf_id_rx = (buf_id_rx + 1) & 3;
-> +				priv->buf_id_rx = buf_id_rx;
-> +				break;
-> +			} else {
-> +				retry++;
-> +				mdelay(1);
-> +				pr_err("%s,error :[%d]\n",
-> +						__func__, ret);
-
-This would fit on a single line if indented correctly.
-
-If you are always going to use "%s", __func__
-you should probably instead add
-
-#define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
-
-before any include and remove all the "%s"/__func__
-uses from the logging messages.
-
-[]
-
-> +int cw1200_apb_write(struct cw1200_common *priv, u32 addr, const void *buf,
-> +			size_t buf_len)
-> +{
-> +	int ret;
-> +
-> +	if ((buf_len / 2) >= 0x1000) {
-> +		pr_err("%s: Can't wrire more than 0xfff words.\n",
-> +		       __func__);
-
-write
-
-Consider using netdev_err instead of pr_err
-
-etc.
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 00e6599..2a71935 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2714,6 +2714,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_ap_settings params;
+ 	int err;
++	u8 radar_detect_width = 0;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+@@ -2832,9 +2833,19 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
+ 		return -EINVAL;
+ 
++	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
++	if (err < 0)
++		return -EINVAL;
++	if (err) {
++		radar_detect_width = BIT(params.chandef.width);
++		params.radar_required = true;
++	}
++
+ 	mutex_lock(&rdev->devlist_mtx);
+-	err = cfg80211_can_use_chan(rdev, wdev, params.chandef.chan,
+-				    CHAN_MODE_SHARED);
++	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
++					   params.chandef.chan,
++					   CHAN_MODE_SHARED,
++					   radar_detect_width);
+ 	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	if (err)
+-- 
+1.7.10.4
 
