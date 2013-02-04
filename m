@@ -1,83 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:42533 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751719Ab3BFG46 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:39922 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432Ab3BDPs1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 01:56:58 -0500
-From: Amit SHAKYA <amit.shakya@stericsson.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>
+	Mon, 4 Feb 2013 10:48:27 -0500
+Date: Mon, 4 Feb 2013 09:48:22 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Feb 2013 07:56:46 +0100
-Subject: RE: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
- interface
-Message-ID: <ECD438FDEF6BD742895E554C24725A40236E82519C@EXDCVYMBSTM005.EQ1STM.local> (sfid-20130206_075702_895172_06C02864)
-References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
- <1359991708.10311.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Subject: Re: [PATCH for 3.8] brcmsmac: rework of mac80211 .flush() callback
+ operation
+Message-ID: <20130204154822.GC12491@thinkpad-t410> (sfid-20130204_164830_955119_41D4A83C)
+References: <1359812210-31658-1-git-send-email-arend@broadcom.com>
+ <20130204153712.GB12491@thinkpad-t410>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130204153712.GB12491@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TXkgY29tbWVudHMgaW5saW5lW0FTXToNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KU2Vu
-dDogTW9uZGF5LCBGZWJydWFyeSAwNCwgMjAxMyA4OjU4IFBNDQpUbzogQW1pdCBTSEFLWUE7IENo
-cmlzdGlhbiBMYW1wYXJ0ZXINCkNjOiBKb2huIFcuIExpbnZpbGxlOyBsaW51eC13aXJlbGVzcw0K
-U3ViamVjdDogUmU6IFtQQVRDSF0gbWFjODAyMTE6IEZpeCBQTiBjb3JydXB0aW9uIGluIGNhc2Ug
-b2YgbXVsdGlwbGUgdmlydHVhbCBpbnRlcmZhY2UNCg0KT24gTW9uLCAyMDEzLTAyLTA0IGF0IDE2
-OjQ4ICswNTMwLCBBbWl0IFNoYWt5YSB3cm90ZToNCj4gSW4gY2FzZSBvZiBtdWx0aXBsZSB2aXJ0
-dWFsIGludGVyZmFjZSwgaWYgQUVTIGlzIGNvbmZpZ3VyZWQgb24gDQo+IG11bHRpcGxlIGludGVy
-ZmFjZSB0aGVuIHRoZXJlIGFyZSBjaGFuY2VzIG9mIHN0b3JlZCBQTiBjb3JydXB0aW9uLCANCj4g
-Y2F1c2luZyB0cmFmZmljIHRvIHN0b3AuDQoNCkludGVyZXN0aW5nLCBuaWNlIGZpbmQuDQoNCj4g
-SW4gY2FzZSwgaWVlZTgwMjExX3J4X2hhbmRsZXJzIHByb2Nlc3NpbmcgaXMgZ29pbmcgb24gZm9y
-IHNrYnMgDQo+IHJlY2VpdmVkIG9uIG9uZSB2aWYgYW5kIGF0IHRoZSBzYW1lIHRpbWUsIHJ4IGFn
-Z3JlZ2F0aW9uIHJlb3JkZXIgdGltZXIgDQo+IGV4cGlyZXMgb24gYW5vdGhlciB2aWYgdGhlbiBz
-dGFfcnhfYWdnX3Jlb3JkZXJfdGltZXJfZXhwaXJlZCBpcyANCj4gaW52b2tlZCBhbmQgaXQgd2ls
-bCBwdXNoIHNrYnMgaW50byB0aGUgc2luZ2xlIHF1ZXVlIChsb2NhbC0+cnhfc2tiX3F1ZXVlKS4N
-Cj4gaWVlZTgwMjExX3J4X2hhbmRsZXJzIGluIHRoZSB3aGlsZSBsb29wIGFzc3VtZXMgdGhhdCB0
-aGUgc2ticyBhcmUgZm9yIA0KPiB0aGUgc2FtZSBUSUQgYW5kIHNhbWUgc3RhLg0KDQpUaGlzIGlz
-IGJlY2F1c2Ugb2Ygc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhLCBwcmVzdW1hYmx5PyBJT1csIHRo
-ZSBsb29wIGRvZXNuJ3QgcmVhbGx5IGFzc3VtZSBpdCwgaXQncyB0aGUgZmFjdCB0aGF0IHRoZSBs
-b29wIGlzIGNhbGxlZCB3aXRoIGEgZ2l2ZW4gc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhLCByaWdo
-dD8NCltBU10gWWVzDQoNCj4gVGhpcyBhc3N1bXB0aW9uIGRvZXNuJ3QgaG9sZCBnb29kIGluIHRo
-aXMgc2NlbmFyaW8gYW5kIHRoZSBQTiBnZXRzIA0KPiBjb3JydXB0ZWQgYnkgUE4gcmVjZWl2ZWQg
-aW4gb3RoZXIgdmlmJ3Mgc2tiLCBjYXVzaW5nIHRyYWZmaWMgdG8gc3RvcCANCj4gZHVlIHRvIFBO
-IG1pc21hdGNoLg0KPiBUaGlzIGNhbiBiZSBhdm9pZGVkIGJ5IGNvbXBhcmluZyBzb3VyY2UgbWFj
-IGFkZHJlcyBpbiByZWNlaXZlZCBza2IncyANCj4gd2l0aCB0aGUgc3RhJ3MgbWFjIGFkZHJlc3Mg
-Zm9yIHdoaWNoIHByb2Nlc3NpbmcgaXMgZ29pbmcgb24sIHdoZW4gZGUtcXVldWVpbmcuDQoNCg0K
-DQo+IEBAIC0yNzkwLDcgKzI3OTEsMjAgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3J4X2hhbmRs
-ZXJzKHN0cnVjdCANCj4gaWVlZTgwMjExX3J4X2RhdGEgKnJ4KQ0KPiAgDQo+ICAJcngtPmxvY2Fs
-LT5ydW5uaW5nX3J4X2hhbmRsZXIgPSB0cnVlOw0KPiAgDQo+IC0Jd2hpbGUgKChza2IgPSBfX3Nr
-Yl9kZXF1ZXVlKCZyeC0+bG9jYWwtPnJ4X3NrYl9xdWV1ZSkpKSB7DQo+ICsJc2tiX3F1ZXVlX3dh
-bGtfc2FmZSgmcngtPmxvY2FsLT5yeF9za2JfcXVldWUsIHNrYiwgdG1wKSB7DQo+ICsJCWlmICgh
-c2tiKQ0KPiArCQkJYnJlYWs7DQo+ICsJCWhkciA9IChzdHJ1Y3QgaWVlZTgwMjExX2hkciAqKSBz
-a2ItPmRhdGE7DQo+ICsJCS8qDQo+ICsJCSogQWRkaXRpb25hbCBjaGVjayB0byBlbnN1cmUgdGhh
-dCB0aGUgcGFja2V0cyBjb3JyZXNwb25kaW5nDQo+ICsJCSogdG8gc2FtZSBzdGEgZW50cnkgYXMg
-aW4gcngtPnN0YSBhcmUgZGUtcXVldWVkLiBUaGUgcXVldWUNCj4gKwkJKiBjYW4gaGF2ZSBkaWZm
-ZXJlbnQgaW50ZXJmYWNlIHBhY2tldHMgaW4gY2FzZSBvZiBtdWx0aXBsZSB2aWZzDQo+ICsJCSov
-DQo+ICsJCWlmICgocngtPnN0YSAmJiBoZHIpICYmIChpZWVlODAyMTFfaXNfZGF0YShoZHItPmZy
-YW1lX2NvbnRyb2wpKQ0KPiArCQkJJiYgKG1lbWNtcChyeC0+c3RhLT5zdGEuYWRkciwgaGRyLT5h
-ZGRyMiwgRVRIX0FMRU4pKSkNCj4gKwkJCQkJY29udGludWU7DQo+ICsJCV9fc2tiX3VubGluayhz
-a2IsICZyeC0+bG9jYWwtPnJ4X3NrYl9xdWV1ZSk7DQoNCkFwYXJ0IGZyb20gdGhlIGN1cmlvdXMg
-Y29kaW5nIHN0eWxlICh5b3UgZG9uJ3QgbmVlZCBhbnkgb2YgdGhvc2UgZXh0cmEgcGFyZW50aGVz
-ZXMsICYmIHNob3VsZCBiZSBvbiB0aGUgcHJldmlvdXMgbGluZSwgdGhlIGlmIGNvbnRpbnVhdGlv
-biBpbmRlbnRlZCB0byB0aGUgb3BlbmluZyBwYXJlbnRoZXNpcywgY29udGludWUgb25seSBpbmRl
-bnRlZCBvbmUgdGFiKSwgSSB3b25kZXIgaWYgdGhpcyBjb3VsZCBsZWFkIHRvIGxlYWtpbmcgZnJh
-bWVzIGhlcmUsIGlmIHRoZSBzdGF0aW9uIGRpc2Nvbm5lY3RzIG9yIHNvbWV0aGluZyB3aGlsZSB0
-aGVyZSBhcmUgZnJhbWVzIGZvciBpdCBvbiB0aGUgcXVldWU/DQpJT1csIHRoZSAianVzdCBza2lw
-IHRoYXQgZnJhbWUiIHBpZWNlIHNlZW1zIGEgYml0IHF1ZXN0aW9uYWJsZS4NCg0KW0FTXSBZZWFo
-LCBJIHJlYWxpemVkIHRoaXMgcGFyZW50aGVzaXMvaW5kZW50YXRpb24gaXNzdWUgKHdvdWxkIGZp
-eCBpdCkuQlRXIHdlIGRpZCB0ZXN0IHRoaXMgb3V0IGFuZCBkaWRu4oCZdCBvYnNlcnZlIGFueSBz
-dWNoIGlzc3VlLiBDYW4geW91IHBsZWFzZSBoZWxwIG1lIHVuZGVyc3RhbmQgdGhlIGZsb3cgd2hp
-Y2ggY291bGQgbGVhZCB0byB0aGUgc2FtZT8gQWxzbyBpbiBjYXNlIHRoaXMgaXMgYW4gaXNzdWUs
-IGNhbiB3ZSB0YWtlIGNhcmUgb2YgdGhpcyBpbiB0aGUgY2xlYW51cCByZWxhdGVkIHRvIGRpc2Nv
-bm5lY3Q/IEhlcmUgaXQgc2VlbXMgYSBjb25zY2lvdXMgZWZmb3J0IGhhcyBiZWVuIG1hZGUgdG8g
-YXZvaWQgc3BpbmxvY2sgKHJ4LT5sb2NhbC0+cnhfc2tiX3F1ZXVlLmxvY2spLCBhcyB0aGlzIGxv
-Y2sgaXMgdGFrZW4gb25seSBmb3IgdGhlIGR1cmF0aW9uIG9mIGRlcXVldWUuIFRoZSBzdWdnZXN0
-ZWQgc29sdXRpb24gYXZvaWRzIHVzaW5nIHNwaW5sb2NrLg0KDQpDaHJpc3RpYW4sIGlzIHRoZXJl
-IGFueSByZWFzb24gdG8gbm90IGp1c3QgaGF2ZSB0aGUgcXVldWUgYmUgb24gdGhlIHN0YWNrLCBh
-bmQgdXNlIGEgc2VwYXJhdGUgc3BpbmxvY2sgaW4gdGhlIGxvY2FsIHN0cnVjdCB0byBsb2NrIG91
-dCB0aGUgdW53YW50ZWQgY29uY3VycmVuY3k/IEl0IHNlZW1zIHRvIG1lIHRoYXQgc2hvdWxkIHdv
-cmsganVzdCBhcyB3ZWxsLCBzaW5jZSB0aGVyZSBhcmUgbmV2ZXIgZnJhbWVzIG9uIHRoZSByeF9z
-a2JfcXVldWUgZm9yIHZlcnkgbG9uZywgcmlnaHQ/DQoNCmpvaGFubmVzDQoNCg==
+On Mon, Feb 04, 2013 at 09:37:12AM -0600, Seth Forshee wrote:
+> On Sat, Feb 02, 2013 at 02:36:50PM +0100, Arend van Spriel wrote:
+> > This patch addresses a long standing issue of the driver with the
+> > mac80211 .flush() callback. Since implementing the .flush() callback
+> > a number of issues have been fixed, but a WARN_ON_ONCE() was still
+> > triggered because the timeout on the flush could still occur.
+> > 
+> > This patch changes the awkward design using msleep() into one using
+> > a waitqueue. The waiting flush() context will kick the transmit dma
+> > when it is idle and the timeout used waiting for the event is set
+> > to 500 ms. Worst case there can be 64 frames outstanding for transmit
+> > in the driver. At a rate of 1Mbps that would take 1.5 seconds assuming
+> > MTU is 1500 bytes and ignoring retries. The WARN_ON_ONCE() is also
+> > removed as this was put in to indicate the flush timeout as a reason
+> > for the driver to stall. That was not happening since fixing endless
+> > AMPDU retries with following upstream commit:
+> > 
+> > commit 85091fc0a75653e239dc8379658515e577544927
+> > Author: Arend van Spriel <arend@broadcom.com>
+> > Date:   Thu Feb 23 18:38:22 2012 +0100
+> > 
+> >     brcm80211: smac: fix endless retry of A-MPDU transmissions
+> > 
+> > bugzilla: 42840 <https://bugzilla.kernel.org/show_bug.cgi?id=42840>
+> > bugzilla@redhat: <https://bugzilla.redhat.com/show_bug.cgi?id=799168>
+> > bugzilla@redhat: <https://bugzilla.redhat.com/show_bug.cgi?id=787649>
+> > 
+> > Cc: Jonathan Nieder <jrnieder@gmail.com>
+> > Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+> > Cc: Camaleón <noelamac@gmail.com>
+> > Cc: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+> > Cc: Seth Forshee <seth.forshee@canonical.com>
+> > Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> > Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> > Reviewed-by: Piotr Haber <phaber@broadcom.com>
+> > Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> 
+> I think this makes sense and is an improvement to how the flush works
+> now. In the past week I've become pretty well convinced that all
+> instances of the flush timeout warning that I've been seeing are
+> actually due to brcmsmac continuing to get frames for tx rather than any
+> kind of problem with actually transmitting the frames, so demoting this
+> from a WARN_ON to a debug statement makes sense.
+> 
+> Acked-by: Seth Forshee <seth.forshee@canonical.com>
+> 
+> I do have one minor comment below.
+> 
+> > diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > index 9f3d7e9..8b58390 100644
+> > --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> > @@ -7511,25 +7511,16 @@ int brcms_c_get_curband(struct brcms_c_info *wlc)
+> >  	return wlc->band->bandunit;
+> >  }
+> >  
+> > -void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc, bool drop)
+> > +bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc)
+> >  {
+> > -	int timeout = 20;
+> >  	int i;
+> >  
+> >  	/* Kick DMA to send any pending AMPDU */
+> >  	for (i = 0; i < ARRAY_SIZE(wlc->hw->di); i++)
+> >  		if (wlc->hw->di[i])
+> > -			dma_txflush(wlc->hw->di[i]);
+> > +			dma_kick_tx(wlc->hw->di[i]);
+> 
+> While it won't hurt to call dma_kick_tx() here, it really shouldn't be
+> necessary. It already gets called anytime brcmsmac handles a legit
+> txstatus interrupt, so I suspect calling it here will has effect.
+> 
+> The call to dma_txflush() was intended to move queued A-MPDU frames into
+> the DMA fifos at the start of the flush. This is no longer happening,
+> but if the driver continues getting frames for tx while the flush is in
+> progress then the flush doesn't really help. Removing the call renders
+
+Sorry, confusing wording here. I mean that calling dma_txflush() doesn't
+help if the driver continues receiving frames during a flush.
+
+> dma_txflush() unused though, so it could be removed entirely.
+> 
+> Cheers,
+> Seth
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
