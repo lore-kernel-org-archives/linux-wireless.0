@@ -1,36 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43022 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43822 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755883Ab3BKLvw (ORCPT
+	with ESMTP id S1754278Ab3BDRsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 06:51:52 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U4rvL-0000ly-30
-	for linux-wireless@vger.kernel.org; Mon, 11 Feb 2013 12:51:51 +0100
-Message-ID: <1360583508.8738.26.camel@jlt4.sipsolutions.net> (sfid-20130211_125453_025053_F81B0953)
-Subject: Re: [PATCH] mac80211: remove unused code to mark AP station
- authenticated
+	Mon, 4 Feb 2013 12:48:12 -0500
+Message-ID: <1360000114.17993.23.camel@jlt4.sipsolutions.net> (sfid-20130204_184815_646358_43C7CB43)
+Subject: Re: [PATCH 1/2] wireless: expand per-station byte counters to 64bit
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 11 Feb 2013 12:51:48 +0100
-In-Reply-To: <1360254021-23864-1-git-send-email-johannes@sipsolutions.net> (sfid-20130207_172008_833059_4995DCD4)
-References: <1360254021-23864-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130207_172008_833059_4995DCD4)
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Mon, 04 Feb 2013 18:48:34 +0100
+In-Reply-To: <1359992219.10311.16.camel@jlt4.sipsolutions.net> (sfid-20130204_163641_118159_6D181F12)
+References: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1359978792-7121-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1359992219.10311.16.camel@jlt4.sipsolutions.net>
+	 (sfid-20130204_163641_118159_6D181F12)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 17:20 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When we get to association, the AP station already exists and
-> is marked authenticated, so moving it into IEEE80211_STA_AUTH
-> again is a NOP, remove it.
+On Mon, 2013-02-04 at 16:36 +0100, Johannes Berg wrote:
 
-Applied.
+> > +	if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
+> > +	    nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
+> > +			sinfo->rx_bytes))
+> > +		goto nla_put_failure;
+> >[...]
+> 
+> +       if (sinfo->filled & STATION_INFO_RX_BYTES64) {
+> +               if (nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
+> +                               sinfo->rx_bytes))
+> +                       goto nla_put_failure;
+> +               if (sinfo->rx_bytes <= UINT_MAX &&
+> +                   nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
+> +                               (u32)sinfo->rx_bytes))
+> +                       goto nla_put_failure;
+> +       }
+> +       if (sinfo->filled & STATION_INFO_TX_BYTES64) {
+> +               if (nla_put_u64(msg, NL80211_STA_INFO_TX_BYTES64,
+> +                               sinfo->tx_bytes))
+> +                       goto nla_put_failure;
+> +               if (sinfo->tx_bytes <= UINT_MAX &&
+> +                   nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
+> +                               (u32)sinfo->tx_bytes))
+> +                       goto nla_put_failure;
+> +       }
+
+Ok Vladimir convinced me this was stupid because it breaks the current
+userspace API in a subtle way: right now, if it rolls over, we will get
+wrapped values in userspace, afterwards with a 64-bit compatible driver
+we won't get any 32-bit value ...
+
+I'll change it to this though, so drivers don't get this choice:
+
+
+-       if ((sinfo->filled & STATION_INFO_RX_BYTES) &&
++       if ((sinfo->filled & (STATION_INFO_RX_BYTES |
++                             STATION_INFO_RX_BYTES64)) &&
+            nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
+-                       sinfo->rx_bytes))
++                       (u32)sinfo->rx_bytes))
+                goto nla_put_failure;
+-       if ((sinfo->filled & STATION_INFO_TX_BYTES) &&
++       if ((sinfo->filled & (STATION_INFO_TX_BYTES |
++                             NL80211_STA_INFO_TX_BYTES64)) &&
+            nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
++                       (u32)sinfo->tx_bytes))
++               goto nla_put_failure;
++       if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
++           nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
++                       sinfo->rx_bytes))
++               goto nla_put_failure;
++       if ((sinfo->filled & STATION_INFO_TX_BYTES64) &&
++           nla_put_u64(msg, NL80211_STA_INFO_TX_BYTES64,
+                        sinfo->tx_bytes))
+                goto nla_put_failure;
+
+
+IOW, always put the 32-bit value even if the driver said it had 64-bit,
+but then also give the 64-bit value to userspace.
 
 johannes
 
