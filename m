@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:37889 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216Ab3BFNRw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43387 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754900Ab3BDPkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 08:17:52 -0500
-Received: by mail-ea0-f169.google.com with SMTP id d13so606889eaa.14
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 05:17:51 -0800 (PST)
-From: Emanuel Taube <emanuel.taube@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	Emanuel Taube <emanuel.taube@gmail.com>
-Subject: [PATCH] mac80211: Add the DS Params for mesh to every band
-Date: Wed,  6 Feb 2013 14:17:17 +0100
-Message-Id: <1360156637-30926-1-git-send-email-emanuel.taube@gmail.com> (sfid-20130206_141756_426211_F24E642C)
+	Mon, 4 Feb 2013 10:40:40 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U2O9v-000337-IE
+	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:40:39 +0100
+Message-ID: <1359992464.10311.20.camel@jlt4.sipsolutions.net> (sfid-20130204_164043_439631_C34033CC)
+Subject: Re: [PATCH] cfg80211: remove unused cfg80211_get_mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 16:41:04 +0100
+In-Reply-To: <1359532505-25658-1-git-send-email-johannes@sipsolutions.net> (sfid-20130130_085448_265760_6247680B)
+References: <1359532505-25658-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130130_085448_265760_6247680B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There seems to be no reason, why it has to be limited to 2.4 GHz.
+On Wed, 2013-01-30 at 08:55 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> As Thomas pointed out, cfg80211_get_mesh() is
+> unused and can be removed.
 
-Signed-off-by: Emanuel Taube <emanuel.taube@gmail.com>
----
- net/mac80211/mesh.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+Applied.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 694e273..cedb6e3 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -343,7 +343,6 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *chan;
- 	u8 *pos;
-@@ -360,13 +359,10 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- 	chan = chanctx_conf->def.chan;
- 	rcu_read_unlock();
- 
--	sband = local->hw.wiphy->bands[chan->band];
--	if (sband->band == IEEE80211_BAND_2GHZ) {
--		pos = skb_put(skb, 2 + 1);
--		*pos++ = WLAN_EID_DS_PARAMS;
--		*pos++ = 1;
--		*pos++ = ieee80211_frequency_to_channel(chan->center_freq);
--	}
-+	pos = skb_put(skb, 2 + 1);
-+	*pos++ = WLAN_EID_DS_PARAMS;
-+	*pos++ = 1;
-+	*pos++ = ieee80211_frequency_to_channel(chan->center_freq);
- 
- 	return 0;
- }
--- 
-1.7.10.4
+johannes
 
