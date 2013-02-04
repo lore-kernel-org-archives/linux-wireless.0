@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:45256 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757838Ab3BKRVS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42608 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753267Ab3BDLJY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 12:21:18 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v4 2/2] mac80211: Add flushes before going off-channel
-Date: Mon, 11 Feb 2013 11:21:08 -0600
-Message-Id: <1360603268-28594-2-git-send-email-seth.forshee@canonical.com> (sfid-20130211_182302_667414_8377C071)
-In-Reply-To: <1360603268-28594-1-git-send-email-seth.forshee@canonical.com>
-References: <20130211171829.GD13768@thinkpad-t410>
- <1360603268-28594-1-git-send-email-seth.forshee@canonical.com>
+	Mon, 4 Feb 2013 06:09:24 -0500
+Message-ID: <1359976186.10311.2.camel@jlt4.sipsolutions.net> (sfid-20130204_120929_407460_B3977ADB)
+Subject: Re: rfkill/iw tarballs moved
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Feb 2013 12:09:46 +0100
+In-Reply-To: <1359907847.6873.3.camel@aeonflux>
+References: <1359735250.8528.25.camel@jlt4.sipsolutions.net>
+	 <1359907847.6873.3.camel@aeonflux>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've got a couple of races when enabling powersave with an AP for
-off-channel operation. The first is fairly simple. If we go off-channel
-before the nullfunc frame to enable PS is transmitted then it may not be
-received by the AP. Add a flush after enabling off-channel PS to prevent
-this from happening.
+On Sun, 2013-02-03 at 18:10 +0200, Marcel Holtmann wrote:
+> Hi Johannes,
+> 
+> > I've moved the rfkill and iw tarballs onto the proper kernel.org
+> > storage, they're now available at
+> > 
+> > http://kernel.org/pub/software/network/rfkill/
+> > and
+> > http://kernel.org/pub/software/network/iw/
+> > 
+> > respectively. Properly signed (by me) with sha256sums provided by the
+> > kernel.org robot.
+> 
+> any reason you guys did not pick pub/linux/network/ for these? Since
+> both tools are pretty much Linux only.
 
-The second race is a bit more subtle. If the driver supports QoS and has
-frames queued when the nullfunc frame is queued, those frames may get
-transmitted after the nullfunc frame. If PM is not set then the AP is
-being told that we've exited PS before we go off-channel and may try to
-deliver frames. To prevent this, add a flush after stopping the queues
-but before passing the nullfunc frame to the driver.
+It was just the first thing that came to mind, and Konstantin just put
+it there. I don't really _care_ much, except that now I don't really
+want to put it somewhere else again .... So I think it's just going to
+stay there now :)
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- net/mac80211/offchannel.c |    5 +++++
- net/mac80211/scan.c       |    3 +++
- 2 files changed, 8 insertions(+)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 4c3ee3e..cc79b4a 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -114,8 +114,13 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
- 	 * STA interfaces.
- 	 */
- 
-+	/*
-+	 * Stop queues and transmit all frames queued by the driver
-+	 * before sending nullfunc to enable powersave at the AP.
-+	 */
- 	ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
-+	drv_flush(local, false);
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 29e7d6e..ae422fa 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -330,6 +330,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 
- 	ieee80211_offchannel_stop_vifs(local);
- 
-+	/* ensure nullfunc is transmitted before leaving operating channel */
-+	drv_flush(local, false);
-+
- 	ieee80211_configure_filter(local);
- 
- 	/* We need to set power level at maximum rate for scanning. */
--- 
-1.7.9.5
+johannes
 
