@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45090 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754747Ab3BUXLV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47293 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754018Ab3BENtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 18:11:21 -0500
-Message-ID: <5126A993.8060408@candelatech.com> (sfid-20130222_001129_698725_F5ABB2D5)
-Date: Thu, 21 Feb 2013 15:11:15 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
- high.
-References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL> <511BC243.8010409@candelatech.com> <20770.57339.20017.225929@gargle.gargle.HOWL> <51255360.6060603@candelatech.com> <51257304.10109@candelatech.com> <20773.31380.740958.31338@gargle.gargle.HOWL> <5125B39F.3010200@candelatech.com> <51265AC3.5030304@candelatech.com>
-In-Reply-To: <51265AC3.5030304@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 5 Feb 2013 08:49:46 -0500
+Message-ID: <1360072210.8376.9.camel@jlt4.sipsolutions.net> (sfid-20130205_144950_996774_14518D3F)
+Subject: Re: [RFC] cfg80211: configuration for WoWLAN over TCP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 05 Feb 2013 14:50:10 +0100
+In-Reply-To: <51110D86.8030500@gmail.com> (sfid-20130205_144759_494055_8E3FC786)
+References: <1360062367-15970-1-git-send-email-johannes@sipsolutions.net>
+	 <51110D86.8030500@gmail.com> (sfid-20130205_144759_494055_8E3FC786)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2013 09:34 AM, Ben Greear wrote:
-> On 02/20/2013 09:41 PM, Ben Greear wrote:
->> On 02/20/2013 05:38 PM, Sujith Manoharan wrote:
->>> Ben Greear wrote:
->>>> For instance, in this case, why do we have pending frames, the axq-stopped,
->>>> and no axq depth?  Is that an invalid state to begin with?  Once
->>>> it gets in the hung state, those numbers never change.  I'd assume
->>>> something should be poking more packets out of the pending frames
->>>> down into the axq logic?
->>>
->>> Something is broken in the xmit path, definitely.
->>
->> Ok, so here's a question:  In the ath_tx_complete method,
->> the pending_frames counter is only decremented if txq == c->tx.txq_map[q].
->>
->> Maybe it should always be decremented?
->>
->> What kinds of things could cause txq to not equal the txq-map[q]?
->
-> I put in debugging code to check for that...and I can still reproduce
-> the hang without ever failing the txq == ct->tx.txq_map[q]
-> test..so problem is elsewhere it seems...
+On Tue, 2013-02-05 at 14:47 +0100, Pontus Fuchs wrote:
+> On 2013-02-05 12:06, Johannes Berg wrote:
+> >
+> > Intel Wireless devices are able to make a TCP connection
+> > after suspending, sending some data and waking up when
+> > the connection receives wakeup data (or breaks). Add the
+> > WoWLAN configuration and feature advertising API for it.
+> >
+> 
+> What's protecting this feature from stomping on an existing connection 
+> when specifying the source port?
 
-Ok, I think I see the problem, or at least some of it.
+Nothing. Presumably if you specify it you know what you're doing, and
+don't also create a connection to the same IP from the same port?
 
-When the attenuation goes very high (signal of -80 or lower),
-all transmit basically stops, at least for a bit (possibly while
-rate-control algorithms adjust).
+Hmm. Maybe we could allocate the socket anyway and make it allocate the
+chosen port, failing if it isn't available? I guess I need to check the
+APIs.
 
-During this time, the ath_tx_complete_poll_work logic can hit,
-causing a reset of the NIC.
-
-I am seeing at the end of ath_draintxq that axq->pending_frames
-reports 53 (in one example).
-
-Shouldn't pending_frames be zero after finishing the ath_draintxq?
-
-
-I added some logic to force pending_frames to be zero at the end
-of that method (and also added some extra logic to reset when I
-detect pending_frames type hang, and now my system appears to
-recover when attenuation goes back to normal levels....
-
-I'll post my hackings as RFC shortly.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
