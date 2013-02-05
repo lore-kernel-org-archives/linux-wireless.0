@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55163 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab3BNLNI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 06:13:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: remove and renumber NL80211_FEATURE_FULL_AP_CLIENT_STATE
-Date: Thu, 14 Feb 2013 12:13:04 +0100
-Message-Id: <1360840384-13986-1-git-send-email-johannes@sipsolutions.net> (sfid-20130214_121311_772413_A31329D9)
+Received: from nbd.name ([46.4.11.11]:58667 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755746Ab3BEWFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2013 17:05:39 -0500
+Message-ID: <5111822B.9050309@openwrt.org> (sfid-20130205_230542_629834_997B0B09)
+Date: Tue, 05 Feb 2013 23:05:31 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Bernhard Urban <lewurm@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	c_manoha@qca.qualcomm.com, Sujith.Manoharan@atheros.com,
+	linville@tuxdriver.com, m.sujith@gmail.com,
+	shafi.wireless@gmail.com, markus@indoo.rs
+Subject: Re: [PATCH] ath9k_htc: update RSSI values only when the device is
+ associated
+References: <1359723012-9488-1-git-send-email-lewurm@gmail.com>
+In-Reply-To: <1359723012-9488-1-git-send-email-lewurm@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2013-02-01 1:50 PM, Bernhard Urban wrote:
+> add an if-guard, otherwise iw(8) reports weird signal strengths.
+> 
+> The behaviour was fine before this commit:
+> 	7c277349ecbd66e19fad3d949fa6ef6c131a3b62
+> Therefore, this patch is a partially revert of it.
+I think your commit message is a bit misleading. The main problem with
+signal strength reporting is not that it's missing some checks for if
+the device is associated, or if the received frame is a local beacon.
 
-Adding the flag to mac80211 already without testing was
-clearly a mistake, one that we now pay for by having to
-reserve bit 13 forever. The problem is cfg80211 doesn't
-allow capability/rate changes for station entries that
-were added unassociated, so the station entries cannot
-be set up properly when marked associated.
+The main problem is in these lines below:
+> +		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER)) {
+> +			s8 rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+> +			rxbuf->rxstatus.rs_rssi = rssi;
+> +		}
+It does not make any sense to update the per-frame RSSI value with any
+sort of average. ath9k filters out invalid RSSI values by ignoring rssi
+for ANI when rx_stats->rs_moreaggr is set. In that case it also sets the
+RX_FLAG_NO_SIGNAL_VAL flag to tell mac80211 to ignore the value for its
+own signal strength averages.
 
-Change the NL80211_FEATURE_FULL_AP_CLIENT_STATE number
-to make it clear to userspace implementations that all
-current kernels don't actually support it, even though
-the previous bit is set, and of course also remove the
-flag from mac80211 until we test and fix the issues.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h | 3 ++-
- net/mac80211/main.c          | 3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1fd6e561..db6ef0b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3461,8 +3461,9 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_NEED_OBSS_SCAN			= 1 << 10,
- 	NL80211_FEATURE_P2P_GO_CTWIN			= 1 << 11,
- 	NL80211_FEATURE_P2P_GO_OPPPS			= 1 << 12,
--	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 13,
-+	/* bit 13 is reserved */
- 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
-+	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
- };
- 
- /**
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 75a78c6..4c894da 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -572,8 +572,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	wiphy->features |= NL80211_FEATURE_SK_TX_STATUS |
- 			   NL80211_FEATURE_SAE |
- 			   NL80211_FEATURE_HT_IBSS |
--			   NL80211_FEATURE_VIF_TXPOWER |
--			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
-+			   NL80211_FEATURE_VIF_TXPOWER;
- 
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
--- 
-1.8.0
+- Felix
 
