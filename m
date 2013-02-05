@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47712 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933241Ab3BLQCi (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:59797 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755915Ab3BEBBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:38 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/15] iwlwifi: mvm: beautify code in rx_handlers
-Date: Tue, 12 Feb 2013 17:02:07 +0100
-Message-Id: <1360684927-1367-15-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170255_945797_FEC95CC3)
-In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 4 Feb 2013 20:01:19 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Mon, 4 Feb 2013 16:58:49 -0800
+Subject: RE: [PATCH] cfg80211: pass wiphy to cfg80211_ref_bss/put_bss
+Message-ID: <477F20668A386D41ADCC57781B1F70430D1432F706@SC-VEXCH1.marvell.com> (sfid-20130205_020124_976259_378D8053)
+References: <1359992842-14660-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130204_164706_960708_BA11AF9A)
+ <1359993002.10311.29.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1359993002.10311.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Make the code more readable, and while at it also
-add a missing "break" to avoid checking handlers
-that cannot be used.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 41 ++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 983dca3..aa59adf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -536,25 +536,28 @@ static int iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
- 
- 	for (i = 0; i < ARRAY_SIZE(iwl_mvm_rx_handlers); i++) {
- 		const struct iwl_rx_handlers *rx_h = &iwl_mvm_rx_handlers[i];
--		if (rx_h->cmd_id == pkt->hdr.cmd) {
--			struct iwl_async_handler_entry *entry;
--			if (!rx_h->async)
--				return rx_h->fn(mvm, rxb, cmd);
--
--			entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
--			/* we can't do much... */
--			if (!entry)
--				return 0;
--
--			entry->rxb._page = rxb_steal_page(rxb);
--			entry->rxb._offset = rxb->_offset;
--			entry->rxb._rx_page_order = rxb->_rx_page_order;
--			entry->fn = rx_h->fn;
--			spin_lock(&mvm->async_handlers_lock);
--			list_add_tail(&entry->list, &mvm->async_handlers_list);
--			spin_unlock(&mvm->async_handlers_lock);
--			schedule_work(&mvm->async_handlers_wk);
--		}
-+		struct iwl_async_handler_entry *entry;
-+
-+		if (rx_h->cmd_id != pkt->hdr.cmd)
-+			continue;
-+
-+		if (!rx_h->async)
-+			return rx_h->fn(mvm, rxb, cmd);
-+
-+		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-+		/* we can't do much... */
-+		if (!entry)
-+			return 0;
-+
-+		entry->rxb._page = rxb_steal_page(rxb);
-+		entry->rxb._offset = rxb->_offset;
-+		entry->rxb._rx_page_order = rxb->_rx_page_order;
-+		entry->fn = rx_h->fn;
-+		spin_lock(&mvm->async_handlers_lock);
-+		list_add_tail(&entry->list, &mvm->async_handlers_list);
-+		spin_unlock(&mvm->async_handlers_lock);
-+		schedule_work(&mvm->async_handlers_wk);
-+		break;
- 	}
- 
- 	return 0;
--- 
-1.8.0
-
+SGkgSm9oYW5uZXMsDQoNCj4gT24gTW9uLCAyMDEzLTAyLTA0IGF0IDE2OjQ3ICswMTAwLCBKb2hh
+bm5lcyBCZXJnIHdyb3RlOg0KPiA+IEZyb206IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdA
+aW50ZWwuY29tPg0KPiA+DQo+ID4gVGhpcyBwcmVwYXJlcyBmb3IgdXNpbmcgdGhlIHNwaW5sb2Nr
+IGluc3RlYWQgb2Yga3JlZnMNCj4gPiB3aGljaCBpcyBuZWVkZWQgaW4gdGhlIG5leHQgcGF0Y2gg
+dG8gdHJhY2sgdGhlIHJlZnMNCj4gPiBvZiBjb21iaW5lZCBCU1NlcyBjb3JyZWN0bHkuDQo+IA0K
+PiBUaGUgIm5leHQgcGF0Y2giIHdhcyAiY2ZnODAyMTE6IHRyYWNrIGhpZGRlbiBTU0lEIG5ldHdv
+cmtzIHByb3Blcmx5IiwgSQ0KPiBqdXN0IGZvcmdvdCB0byBzZW5kIG91dCB0aGlzIHBhdGNoLiBB
+bHNvIGNsZWFybHkgZm9yZ290IHRvIENjIGFsbCB0aGUNCj4gbWFpbnRhaW5lcnMsIGZpeGluZyAo
+YW5kIGtlZXBpbmcgdGhlIHBhdGNoIGJlbG93IGZvciB0aGVtKQ0KPiANCj4gam9oYW5uZXMNCj4g
+DQo+ID4gU2lnbmVkLW9mZi1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5j
+b20+DQoNCkFja2VkLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPiBbbXdpZmlleF0N
+Cg0KVGhhbmtzLA0KQmluZw0KDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
+aC9hdGg2a2wvY2ZnODAyMTEuYyAgICAgICAgICAgIHwgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25l
+dC93aXJlbGVzcy9hdGgvYXRoNmtsL3dtaS5jICAgICAgICAgICAgICAgICB8ICAyICstDQo+ID4g
+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2NmZzgwMjExLmMgICAgICAgICAgIHwg
+IDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL3dpbDYyMTAvd21pLmMgICAgICAg
+ICAgICAgICAgfCAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJj
+bWZtYWMvd2xfY2ZnODAyMTEuYyB8ICA0ICsrLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bGliZXJ0YXMvY2ZnLmMgICAgICAgICAgICAgICAgICAgfCAgOCArKysrLS0tLQ0KPiA+ICBkcml2
+ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgICAgICAgICAgICAgICB8ICAyICst
+DQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jICAgICAgICAgICAgICAg
+ICAgIHwgIDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwu
+YyAgICAgICAgICAgICAgfCAgNCArKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL29yaW5v
+Y28vc2Nhbi5jICAgICAgICAgICAgICAgICAgIHwgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC93
+aXJlbGVzcy9ybmRpc193bGFuLmMgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAg
+ZHJpdmVycy9zdGFnaW5nL3dsYW4tbmcvY2ZnODAyMTEuYyAgICAgICAgICAgICAgICAgICAgfCAg
+MiArLQ0KPiA+ICBpbmNsdWRlL25ldC9jZmc4MDIxMS5oICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICB8ICA2ICsrKystLQ0KPiA+ICBuZXQvbWFjODAyMTEvaWJzcy5jICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAgbmV0L21hYzgwMjExL21sbWUu
+YyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNiArKystLS0NCj4gPiAgbmV0
+L21hYzgwMjExL3NjYW4uYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMyAr
+Ky0NCj4gPiAgbmV0L3dpcmVsZXNzL2NvcmUuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfCAgMiArLQ0KPiA+ICBuZXQvd2lyZWxlc3MvaWJzcy5jICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAgbmV0L3dpcmVsZXNzL21sbWUuYyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCArKysrKysrLS0tLS0tLQ0KPiA+ICBu
+ZXQvd2lyZWxlc3Mvc2Nhbi5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0
+ICsrLS0NCj4gPiAgbmV0L3dpcmVsZXNzL3NtZS5jICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgfCAxNiArKysrKysrKy0tLS0tLS0tDQo+ID4gIDIxIGZpbGVzIGNoYW5nZWQsIDUx
+IGluc2VydGlvbnMoKyksIDQ4IGRlbGV0aW9ucygtKQ0KDQo=
