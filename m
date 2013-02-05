@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:33718 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752734Ab3B1ITk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 03:19:40 -0500
-Message-ID: <1362039502.23194.81.camel@cumari.coelho.fi> (sfid-20130228_091958_355859_AAEA7DDA)
-Subject: Re: [PATCH 3/5] wl1251: call pm_runtime_put_sync in
- pm_runtime_get_sync failed case
-From: Luciano Coelho <coelho@ti.com>
-To: Li Fei <fei.li@intel.com>
-CC: <linville@tuxdriver.com>, <wfp5p@virginia.edu>,
-	<gregkh@linuxfoundation.org>, <notasas@gmail.com>, <rjw@sisk.pl>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <chuansheng.liu@intel.com>
-Date: Thu, 28 Feb 2013 10:18:22 +0200
-In-Reply-To: <1362037892.6212.13.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
-References: <1362037031.6212.3.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
-	 <1362037455.6212.8.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
-	 <1362037892.6212.13.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:46573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab3BEJ4Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2013 04:56:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: qca_vkondrat@qca.qualcomm.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: provide 64-bit traffic counters
+Date: Tue,  5 Feb 2013 10:56:44 +0100
+Message-Id: <1360058204-12208-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_105632_028597_BD46E2C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-28 at 15:51 +0800, Li Fei wrote:
-> Even in failed case of pm_runtime_get_sync, the usage_count
-> is incremented. In order to keep the usage_count with correct
-> value and runtime power management to behave correctly, call
-> pm_runtime_put(_sync) in such case.
-> 
-> Signed-off-by Liu Chuansheng <chuansheng.liu@intel.com>
-> Signed-off-by: Li Fei <fei.li@intel.com>
-> ---
+From: Johannes Berg <johannes.berg@intel.com>
 
-Looks good.  I'll apply this via my tree.
+"unsigned long" is already 64-bit on (most?) 64-bit
+machines, use u64 and tell cfg80211 that we provide
+64-bit counters now.
 
-Thanks!
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c         | 4 ++--
+ net/mac80211/ieee80211_i.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
---
-Luca.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f4f7e76..fb06d13 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -449,8 +449,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	sinfo->generation = sdata->local->sta_generation;
+ 
+ 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
+-			STATION_INFO_RX_BYTES |
+-			STATION_INFO_TX_BYTES |
++			STATION_INFO_RX_BYTES64 |
++			STATION_INFO_TX_BYTES64 |
+ 			STATION_INFO_RX_PACKETS |
+ 			STATION_INFO_TX_PACKETS |
+ 			STATION_INFO_TX_RETRIES |
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2b06ff1..4631de0 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -822,7 +822,7 @@ struct tpt_led_trigger {
+ 	unsigned int blink_table_len;
+ 	struct timer_list timer;
+ 	unsigned long prev_traffic;
+-	unsigned long tx_bytes, rx_bytes;
++	u64 tx_bytes, rx_bytes;
+ 	unsigned int active, want;
+ 	bool running;
+ };
+-- 
+1.8.0
 
