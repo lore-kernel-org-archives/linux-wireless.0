@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ye0-f170.google.com ([209.85.213.170]:41336 "EHLO
-	mail-ye0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757391Ab3BBC6g (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:63995 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756730Ab3BEV25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 21:58:36 -0500
-Received: by mail-ye0-f170.google.com with SMTP id m12so1167116yen.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2013 18:58:35 -0800 (PST)
+	Tue, 5 Feb 2013 16:28:57 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hi8so844858wib.7
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2013 13:28:55 -0800 (PST)
+Message-ID: <51117994.1060506@gmail.com> (sfid-20130205_222910_312588_298DB769)
+Date: Tue, 05 Feb 2013 22:28:52 +0100
 From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless: rt2x00: rt2800usb add Sweex ids
-Date: Sat,  2 Feb 2013 03:33:44 +0100
-Message-Id: <1359772424-17250-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130202_035846_478924_93872C1E)
-To: unlisted-recipients:; (no To-header on input)
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Thomas Rosenkranz <tom.rosary@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
+ downstream and upstreamkernel
+References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com> <511163BA.7060902@gmail.com> <51116A33.9070207@lwfinger.net>
+In-Reply-To: <51116A33.9070207@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Info coming from Sweex Windows driver and wikidevi.com
-0x177f,0x0163 Sweex LW163 RT3370 1x1, int. antenna
-0x177f,0x0164 Sweex LW164 RT8070 1x1, Nano dongle
-0x177f,0x0165 Sweex LW165 RT3370 1x1, ext. antenna
-0x177f,0x0324 Sweex LW324 RT3072 2x2  with 32Mb NOR flash, autoinstall
+On 02/05/2013 09:23 PM, Larry Finger wrote:
 
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> What difference does it make what chip it has? It is obviously some flavor of RTL8188CU/RTL8192CU that is different enough that it does not work with the kernel version of rtl8192cu. A few months ago,
+> I ran across a new B-CUT RTL8188CE that took new programming for rtl8192ce, and I suspect this device also has the B-CUT chip.
+> 
+> The crash on unloading is a known fault of the vendor driver. It happens with devices that work OK with the standard rtl8192cu. I have no desire to find out what causes the crash.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 42b5b65..8a57646 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1099,9 +1099,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x15a9, 0x0006) },
- 	/* Sweex */
- 	{ USB_DEVICE(0x177f, 0x0153) },
-+	{ USB_DEVICE(0x177f, 0x0164) },
- 	{ USB_DEVICE(0x177f, 0x0302) },
- 	{ USB_DEVICE(0x177f, 0x0313) },
- 	{ USB_DEVICE(0x177f, 0x0323) },
-+	{ USB_DEVICE(0x177f, 0x0324) },
- 	/* U-Media */
- 	{ USB_DEVICE(0x157e, 0x300e) },
- 	{ USB_DEVICE(0x157e, 0x3013) },
-@@ -1133,6 +1135,9 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x148f, 0x8070) },
- 	/* Sitecom */
- 	{ USB_DEVICE(0x0df6, 0x0050) },
-+	/* Sweex */
-+	{ USB_DEVICE(0x177f, 0x0163) },
-+	{ USB_DEVICE(0x177f, 0x0165) },
- #endif
- #ifdef CONFIG_RT2800USB_RT35XX
- 	/* Allwin */
--- 
-1.7.11.7
+We were trying to know, loading the
+_realtek_ driver, the chip of the device.
 
+*Because*, as Thomas said before, doing:
+# echo "0bda 819a" > /sys/bus/usb/drivers/rtl8192cu/new_id
+with the rtl8192cu _kernel driver_
+He got a _panic of the system_ .
+
+This is a severe bug in rtlwifi.
+
+
+BTW, the device is RTL8188C/RF6052
+
+>>     [  183.370905] Chip Version ID: VERSION_NORMAL_TSMC_CHIP_88C.
+
+VERSION_NORMAL_TSMC_CHIP_88C = 0x0008
+
+>>     [  183.608631] Set RF Chip ID to RF_6052 and RF type to 1T1R.
+
+RF_6052 = 4
+
+
+
+B-cut are these ones:
+VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT =       0x1089
+VERSION_NORMAL_UMC_CHIP_88C_B_CUT =             0x1088
+VERSION_NORMAL_UMC_CHIP_92C_B_CUT =             0x10a8
+VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT =        0x1090
+
+
+thank you.
