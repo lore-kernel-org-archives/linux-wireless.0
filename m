@@ -1,154 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60260 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946785Ab3BHRZ5 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52331 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064Ab3BEIoP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 12:25:57 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 09/14] mac80211: handle operating mode notification in beacons
-Date: Fri,  8 Feb 2013 18:25:39 +0100
-Message-Id: <1360344344-15742-10-git-send-email-johannes@sipsolutions.net> (sfid-20130208_182938_961640_DFFBDB6D)
-In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
-References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 5 Feb 2013 03:44:15 -0500
+Date: Tue, 5 Feb 2013 09:44:05 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
+Message-ID: <20130205084405.GA7865@pandem0nium> (sfid-20130205_094422_768774_A696E845)
+References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359643448.8415.62.camel@jlt4.sipsolutions.net>
+ <20130131163126.GB1387@pandem0nium>
+ <1359650902.8415.93.camel@jlt4.sipsolutions.net>
+ <20130131174758.GC2018@pandem0nium>
+ <1359712620.8528.5.camel@jlt4.sipsolutions.net>
+ <20130202221544.GA22363@pandem0nium>
+ <1359999125.17993.15.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
+In-Reply-To: <1359999125.17993.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-In beacons, an AP may include an operating mode notification
-element to advertise changes in the number of spatial streams
-it can receive. Handle this using the existing function that
-handles the action frame, but only handle NSS changes, not
-bandwidth changes which aren't allowed here.
+--/9DWx/yDrRhgMJTb
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  3 ++-
- net/mac80211/mlme.c        | 11 ++++++++---
- net/mac80211/rx.c          |  3 ++-
- net/mac80211/util.c        |  6 ++++++
- net/mac80211/vht.c         |  6 +++++-
- 5 files changed, 23 insertions(+), 6 deletions(-)
+On Mon, Feb 04, 2013 at 06:32:05PM +0100, Johannes Berg wrote:
+> On Sat, 2013-02-02 at 23:15 +0100, Simon Wunderlich wrote:
+> > On Fri, Feb 01, 2013 at 10:57:00AM +0100, Johannes Berg wrote:
+> > > On Thu, 2013-01-31 at 18:47 +0100, Simon Wunderlich wrote:
+> > >=20
+>=20
+> That sounds strange -- how does ath9k even know about an interface
+> that's not UP? Maybe you mean it didn't start an AP?
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 78b27e0..9ee9e63 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1196,6 +1196,7 @@ struct ieee802_11_elems {
- 	u8 *pwr_constr_elem;
- 	u8 *quiet_elem;	/* first quite element */
- 	u8 *timeout_int;
-+	u8 *vht_opmode;
- 
- 	/* length of them, respectively */
- 	u8 ssid_len;
-@@ -1431,7 +1432,7 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band);
-+				 enum ieee80211_band band, bool nss_only);
- 
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 23c3604..1ef3efe 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2494,6 +2494,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *chan;
-+	struct sta_info *sta;
- 	u32 changed = 0;
- 	bool erp_valid;
- 	u8 erp_value = 0;
-@@ -2732,14 +2733,18 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			le16_to_cpu(mgmt->u.beacon.capab_info),
- 			erp_valid, erp_value);
- 
--
- 	mutex_lock(&local->sta_mtx);
-+	sta = sta_info_get(sdata, bssid);
-+
- 	if (elems.ht_cap_elem && elems.ht_operation && elems.wmm_param &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
--		changed |= ieee80211_config_ht_tx(sdata,
--						  sta_info_get(sdata, bssid),
-+		changed |= ieee80211_config_ht_tx(sdata, sta,
- 						  elems.ht_operation,
- 						  bssid, true);
-+
-+	if (sta && elems.vht_opmode)
-+		ieee80211_vht_handle_opmode(sdata, sta, *elems.vht_opmode,
-+					    rx_status->band, true);
- 	mutex_unlock(&local->sta_mtx);
- 
- 	if (elems.country_elem && elems.pwr_constr_elem &&
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index bef2a58..12a968b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2451,7 +2451,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
- 
- 			ieee80211_vht_handle_opmode(rx->sdata, rx->sta,
--						    opmode, status->band);
-+						    opmode, status->band,
-+						    false);
- 			goto handled;
- 		}
- 		default:
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index b177b5a..c151ba2 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -791,6 +791,12 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			else
- 				elem_parse_failed = true;
- 			break;
-+		case WLAN_EID_VHT_OPMODE_NOTIF:
-+			if (elen > 0)
-+				elems->vht_opmode = pos;
-+			else
-+				elem_parse_failed = true;
-+			break;
- 		case WLAN_EID_MESH_ID:
- 			elems->mesh_id = pos;
- 			elems->mesh_id_len = elen;
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index a7d0d6d..3bb0eae 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -131,7 +131,7 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band)
-+				 enum ieee80211_band band, bool nss_only)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -153,6 +153,9 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_NSS_CHANGED;
- 	}
- 
-+	if (nss_only)
-+		goto change;
-+
- 	switch (opmode & IEEE80211_VHT_OPMODE_CHANWIDTH_MASK) {
- 	case IEEE80211_VHT_OPMODE_CHANWIDTH_20MHZ:
- 		sta->vht_opmode_bandwidth = IEEE80211_STA_RX_BW_20;
-@@ -174,6 +177,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_NSS_CHANGED;
- 	}
- 
-+ change:
- 	if (changed)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
--- 
-1.8.0
+Yeah, that is what I meant - the AP wasn't started on this on that interfac=
+e.
+>=20
+> Why does the driver even report it by interface? It seems it should do
+> it on a channel context, or even on the hw since it can only be a single
+> channel in that case anyway?
 
+Well, yeah the reporting is currently done per interface. Reporting radars
+for the hw is certainly possible as well - channel contexts are currently
+not implemented in ath9k (where I test). The latest patchset works the same
+way, although we can change that if you prefer. For the current implementat=
+ion
+(single channel, single vif) it makes no difference, maybe for future imple=
+mentations.
+I don't know if there are any weird corner cases though, and we probably ne=
+ed to
+adjust the mac80211 interface too when to report radars on certain channels=
+ only
+(e.g. extension channel radar).
+
+Cheers,
+	Simon
+
+--/9DWx/yDrRhgMJTb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlEQxlUACgkQrzg/fFk7axZFHACg0oCFnQvRnVivqAXR0e/Lvvcj
+MqsAnR94fxybzDt8ftRQclQdOHo/JVwn
+=uABd
+-----END PGP SIGNATURE-----
+
+--/9DWx/yDrRhgMJTb--
