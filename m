@@ -1,143 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933241Ab3BLQCn (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:37913 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756737Ab3BEVye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:43 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 14/15] iwlwifi: mvm: update station when marked associated
-Date: Tue, 12 Feb 2013 17:02:06 +0100
-Message-Id: <1360684927-1367-14-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170255_320660_A3027A23)
-In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 5 Feb 2013 16:54:34 -0500
+Received: by mail-oa0-f50.google.com with SMTP id l20so770306oag.23
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2013 13:54:33 -0800 (PST)
+Message-ID: <51117F98.3040900@lwfinger.net> (sfid-20130205_225444_855481_9910617E)
+Date: Tue, 05 Feb 2013 15:54:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: Thomas Rosenkranz <tom.rosary@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
+ downstream and upstreamkernel
+References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com> <511163BA.7060902@gmail.com> <51116A33.9070207@lwfinger.net> <51117994.1060506@gmail.com>
+In-Reply-To: <51117994.1060506@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/05/2013 03:28 PM, Xose Vazquez Perez wrote:
+> On 02/05/2013 09:23 PM, Larry Finger wrote:
+>
+>> What difference does it make what chip it has? It is obviously some flavor of RTL8188CU/RTL8192CU that is different enough that it does not work with the kernel version of rtl8192cu. A few months ago,
+>> I ran across a new B-CUT RTL8188CE that took new programming for rtl8192ce, and I suspect this device also has the B-CUT chip.
+>>
+>> The crash on unloading is a known fault of the vendor driver. It happens with devices that work OK with the standard rtl8192cu. I have no desire to find out what causes the crash.
+>
+> We were trying to know, loading the
+> _realtek_ driver, the chip of the device.
+>
+> *Because*, as Thomas said before, doing:
+> # echo "0bda 819a" > /sys/bus/usb/drivers/rtl8192cu/new_id
+> with the rtl8192cu _kernel driver_
+> He got a _panic of the system_ .
+>
+> This is a severe bug in rtlwifi.
 
-In managed mode, the HT/VHT capabilities aren't set when
-the station is initially added, so update the station
-when it is marked associated. In AP/GO mode, the station
-will typically be added with full capabilities today,
-but an upcoming change in hostapd may mean a similar
-scenario as for managed mode, therefore do the update
-unconditionally.
+Yes, but not a bug for the devices that it is supposed to support! No one ever 
+says that their driver will support *future* devices! As I said earlier, there 
+are newer versions of the RTL8188C chip that requires different programming, 
+which may be the cause of the problem. On the other hand, the chip change did 
+not cause a crash in rtl8192ce. I just didn't work very well. As I have no such 
+device, I cannot test any changes; therefore, I will not make them. If you want 
+to write patches that let that device work with the kernel driver, I will be 
+happy to review them.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c       |  2 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  6 ++++--
- drivers/net/wireless/iwlwifi/mvm/sta.c      | 21 ++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/sta.h      |  6 +++++-
- 4 files changed, 26 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index a00267f..c64d864 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -490,7 +490,7 @@ static int iwl_mvm_d3_reprogram(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		return -EIO;
- 	}
- 
--	ret = iwl_mvm_sta_add_to_fw(mvm, ap_sta);
-+	ret = iwl_mvm_sta_send_to_fw(mvm, ap_sta, false);
- 	if (ret)
- 		return ret;
- 	rcu_assign_pointer(mvm->fw_id_to_mac_id[mvmvif->ap_sta_id], ap_sta);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 6bfcb3b..5bdcbcf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -926,8 +926,10 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 		ret = 0;
- 	} else if (old_state == IEEE80211_STA_AUTH &&
- 		   new_state == IEEE80211_STA_ASSOC) {
--		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
--		ret = 0;
-+		ret = iwl_mvm_update_sta(mvm, vif, sta);
-+		if (ret == 0)
-+			iwl_mvm_rs_rate_init(mvm, sta,
-+					     mvmvif->phy_ctxt->channel->band);
- 	} else if (old_state == IEEE80211_STA_ASSOC &&
- 		   new_state == IEEE80211_STA_AUTHORIZED) {
- 		ret = 0;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 6b22bac..a1eb692 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -81,8 +81,9 @@ static int iwl_mvm_find_free_sta_id(struct iwl_mvm *mvm)
- 	return IWL_MVM_STATION_COUNT;
- }
- 
--/* add a NEW station to fw */
--int iwl_mvm_sta_add_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta)
-+/* send station add/update command to firmware */
-+int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			   bool update)
- {
- 	struct iwl_mvm_sta *mvm_sta = (void *)sta->drv_priv;
- 	struct iwl_mvm_add_sta_cmd add_sta_cmd;
-@@ -94,8 +95,11 @@ int iwl_mvm_sta_add_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta)
- 
- 	add_sta_cmd.sta_id = mvm_sta->sta_id;
- 	add_sta_cmd.mac_id_n_color = cpu_to_le32(mvm_sta->mac_id_n_color);
--	add_sta_cmd.tfd_queue_msk = cpu_to_le32(mvm_sta->tfd_queue_msk);
--	memcpy(&add_sta_cmd.addr, sta->addr, ETH_ALEN);
-+	if (!update) {
-+		add_sta_cmd.tfd_queue_msk = cpu_to_le32(mvm_sta->tfd_queue_msk);
-+		memcpy(&add_sta_cmd.addr, sta->addr, ETH_ALEN);
-+	}
-+	add_sta_cmd.add_modify = update ? 1 : 0;
- 
- 	/* STA_FLG_FAT_EN_MSK ? */
- 	/* STA_FLG_MIMO_EN_MSK ? */
-@@ -181,7 +185,7 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 	/* for HW restart - need to reset the seq_number etc... */
- 	memset(mvm_sta->tid_data, 0, sizeof(mvm_sta->tid_data));
- 
--	ret = iwl_mvm_sta_add_to_fw(mvm, sta);
-+	ret = iwl_mvm_sta_send_to_fw(mvm, sta, false);
- 	if (ret)
- 		return ret;
- 
-@@ -195,6 +199,13 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
-+int iwl_mvm_update_sta(struct iwl_mvm *mvm,
-+		       struct ieee80211_vif *vif,
-+		       struct ieee80211_sta *sta)
-+{
-+	return iwl_mvm_sta_send_to_fw(mvm, sta, true);
-+}
-+
- int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 		      bool drain)
- {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.h b/drivers/net/wireless/iwlwifi/mvm/sta.h
-index 1bf3010..bdd7c5e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.h
-@@ -309,10 +309,14 @@ struct iwl_mvm_int_sta {
- 	u32 tfd_queue_msk;
- };
- 
--int iwl_mvm_sta_add_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta);
-+int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			   bool update);
- int iwl_mvm_add_sta(struct iwl_mvm *mvm,
- 		    struct ieee80211_vif *vif,
- 		    struct ieee80211_sta *sta);
-+int iwl_mvm_update_sta(struct iwl_mvm *mvm,
-+		       struct ieee80211_vif *vif,
-+		       struct ieee80211_sta *sta);
- int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
- 		   struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta);
--- 
-1.8.0
+Larry
 
