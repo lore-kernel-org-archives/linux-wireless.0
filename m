@@ -1,73 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:56636 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759938Ab3BKVht (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46961 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476Ab3BELs7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:37:49 -0500
-Received: by mail-ob0-f180.google.com with SMTP id ef5so6636116obb.11
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:37:49 -0800 (PST)
-Message-ID: <511964AB.6080701@lwfinger.net> (sfid-20130211_223753_754924_7AF585FE)
-Date: Mon, 11 Feb 2013 15:37:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Catalin Iacob <iacobcatalin@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] rtlwifi: Initialize rate_init member of struct rate_control_ops
-References: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
-In-Reply-To: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 5 Feb 2013 06:48:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH] mac80211: add vif debugfs driver callbacks
+Date: Tue,  5 Feb 2013 12:49:22 +0100
+Message-Id: <1360064962-19946-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_124902_865037_2359A3C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2013 03:18 PM, Catalin Iacob wrote:
-> This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
->
-> rate_control_rate_init assumes the rate_init member of
-> struct rate_control_ops is not NULL therefore not initializing it leads to
-> an oops as soon the driver succesfully associates to an AP.
->
-> The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
-> is ok because rate_update is checked for NULL before being
-> called.
->
-> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rc.c | 7 +++++++
->   1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
-> index 204f46c..6ad8bb7 100644
-> --- a/drivers/net/wireless/rtlwifi/rc.c
-> +++ b/drivers/net/wireless/rtlwifi/rc.c
-> @@ -217,6 +217,12 @@ static void rtl_tx_status(void *ppriv,
->   	}
->   }
->
-> +static void rtl_rate_init(void *ppriv,
-> +			  struct ieee80211_supported_band *sband,
-> +			  struct ieee80211_sta *sta, void *priv_sta)
-> +{
-> +}
-> +
->   static void *rtl_rate_alloc(struct ieee80211_hw *hw,
->   		struct dentry *debugfsdir)
->   {
-> @@ -261,6 +267,7 @@ static struct rate_control_ops rtl_rate_ops = {
->   	.free = rtl_rate_free,
->   	.alloc_sta = rtl_rate_alloc_sta,
->   	.free_sta = rtl_rate_free_sta,
-> +	.rate_init = rtl_rate_init,
->   	.tx_status = rtl_tx_status,
->   	.get_rate = rtl_get_rate,
->   };
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-Shouldn't rate_control_rate_init() in net/mac80211/rate.h be changed to protect 
-against the oops? I don't see any value in the client driver having to provide a 
-dummy routine. The rtlwifi family of drivers use their own rate-control 
-mechanism, and get no rate-control info from mac80211.
+Add debugfs driver callbacks so drivers can add
+debugfs entries for interfaces. Note that they
+_must_ remove the entries again as add/remove in
+the driver doesn't correspond to add/remove in
+debugfs; the former is up/down while the latter
+is netdev create/destroy.
 
-Larry
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h    | 18 ++++++++++++++++++
+ net/mac80211/driver-ops.h | 37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/iface.c      |  4 ++++
+ 3 files changed, 59 insertions(+)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7da1121..46e08ba 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2167,6 +2167,18 @@ enum ieee80211_rate_control_changed {
+  *	MAC address of the device going away.
+  *	Hence, this callback must be implemented. It can sleep.
+  *
++ * @add_interface_debugfs: Drivers can use this callback to add debugfs files
++ *	when a vif is added to mac80211. This callback and
++ *	@remove_interface_debugfs should be within a CONFIG_MAC80211_DEBUGFS
++ *	conditional. @remove_interface_debugfs must be provided for cleanup.
++ *	This callback can sleep.
++ *
++ * @remove_interface_debugfs: Remove the debugfs files which were added using
++ *	@add_interface_debugfs. This callback must remove all debugfs entries
++ *	that were added because mac80211 only removes interface debugfs when the
++ *	interface is destroyed, not when it is removed from the driver.
++ *	This callback can sleep.
++ *
+  * @config: Handler for configuration requests. IEEE 802.11 code calls this
+  *	function to change hardware configuration, e.g., channel.
+  *	This function should never fail but returns a negative error code
+@@ -2580,6 +2592,12 @@ struct ieee80211_ops {
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_sta *sta,
+ 				   struct dentry *dir);
++	void (*add_interface_debugfs)(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct dentry *dir);
++	void (*remove_interface_debugfs)(struct ieee80211_hw *hw,
++					 struct ieee80211_vif *vif,
++					 struct dentry *dir);
+ #endif
+ 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			enum sta_notify_cmd, struct ieee80211_sta *sta);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 434b3c4..2b08b99 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -528,6 +528,43 @@ static inline void drv_sta_remove_debugfs(struct ieee80211_local *local,
+ 		local->ops->sta_remove_debugfs(&local->hw, &sdata->vif,
+ 					       sta, dir);
+ }
++
++static inline
++void drv_add_interface_debugfs(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++
++	check_sdata_in_driver(sdata);
++
++	if (!local->ops->add_interface_debugfs)
++		return;
++
++	local->ops->add_interface_debugfs(&local->hw, &sdata->vif,
++					  sdata->debugfs.dir);
++}
++
++static inline
++void drv_remove_interface_debugfs(struct ieee80211_local *local,
++				  struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++
++	check_sdata_in_driver(sdata);
++
++	if (!local->ops->remove_interface_debugfs)
++		return;
++
++	local->ops->remove_interface_debugfs(&local->hw, &sdata->vif,
++					     sdata->debugfs.dir);
++}
++#else
++static inline
++void drv_add_interface_debugfs(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata) {}
++static inline
++void drv_remove_interface_debugfs(struct ieee80211_local *local,
++				  struct ieee80211_sub_if_data *sdata) {}
+ #endif
+ 
+ static inline __must_check
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0a36dc6..deb78e8 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -621,6 +621,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 				goto err_del_interface;
+ 		}
+ 
++		drv_add_interface_debugfs(local, sdata);
++
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 			local->fif_pspoll++;
+ 			local->fif_probe_req++;
+@@ -882,6 +884,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		 */
+ 		ieee80211_free_keys(sdata);
+ 
++		drv_remove_interface_debugfs(local, sdata);
++
+ 		if (going_down)
+ 			drv_remove_interface(local, sdata);
+ 	}
+-- 
+1.8.0
 
