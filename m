@@ -1,77 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:52571 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756980Ab3BWTqC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 14:46:02 -0500
-Date: Sat, 23 Feb 2013 23:45:54 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Michal Kazior <kazikcz@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
-In-Reply-To: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
-Message-ID: <alpine.DEB.2.02.1302232342380.15538@icf.org.ru> (sfid-20130223_204608_628837_E859A73C)
-References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47874 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab3BEKDi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2013 05:03:38 -0500
+Date: Tue, 5 Feb 2013 11:03:29 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
+Message-ID: <20130205100329.GC7865@pandem0nium> (sfid-20130205_110348_718786_45029696)
+References: <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359643448.8415.62.camel@jlt4.sipsolutions.net>
+ <20130131163126.GB1387@pandem0nium>
+ <1359650902.8415.93.camel@jlt4.sipsolutions.net>
+ <20130131174758.GC2018@pandem0nium>
+ <1359712620.8528.5.camel@jlt4.sipsolutions.net>
+ <20130202221544.GA22363@pandem0nium>
+ <1359999125.17993.15.camel@jlt4.sipsolutions.net>
+ <20130205084405.GA7865@pandem0nium>
+ <1360056900.8376.0.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-1860876174-1361648754=:15538"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Md/poaVZ8hnGTzuv"
+In-Reply-To: <1360056900.8376.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
----1050998036-1860876174-1361648754=:15538
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+--Md/poaVZ8hnGTzuv
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 2013-02-23 20:34 +0100, Michal Kazior wrote linux-wireless@vger.kernel.o...:
+On Tue, Feb 05, 2013 at 10:35:00AM +0100, Johannes Berg wrote:
+> >=20
+> > Well, yeah the reporting is currently done per interface. Reporting rad=
+ars
+> > for the hw is certainly possible as well - channel contexts are current=
+ly
+> > not implemented in ath9k (where I test). The latest patchset works the =
+same
+> > way, although we can change that if you prefer. For the current impleme=
+ntation
+> > (single channel, single vif) it makes no difference, maybe for future i=
+mplementations.
+> > I don't know if there are any weird corner cases though, and we probabl=
+y need to
+> > adjust the mac80211 interface too when to report radars on certain chan=
+nels only
+> > (e.g. extension channel radar).
+>=20
+> It really just seems strange to me to report radar on all/any other
+> interfaces to userspace. If we leave it up to the drivers, we'll get all
+> kinds of strange behaviour ;-)
+>=20
+> So it seems better to let mac80211 manage that?
 
-hm, strange, i have this cards, and it's works fine, exactly not fine, but works, 
-and as i known it's EOS since 2012.
+I was afraid you'd say that ... :)
 
-MK>Dbii F52N-PRO mini pci device reports an invalid
-MK>regdomain. This card has been reported to work on
-MK>MikroTik's RouterOS but failed on Linux:
-MK>
-MK>[   14.320000] ath: EEPROM regdomain: 0xffff
-MK>[   14.320000] ath: EEPROM indicates we should expect a country code
-MK>[   14.320000] ath: invalid regulatory domain/country code 0xbfff
-MK>[   14.320000] ath: Invalid EEPROM contents
-MK>[   14.320000] ath9k 0000:00:12.0: Failed to initialize device
-MK>[   14.330000] ath9k: probe of 0000:00:12.0 failed with error -22
-MK>
-MK>With the patch the device works fine.
-MK>
-MK>Signed-off-by: Michal Kazior <kazikcz@gmail.com>
-MK>---
-MK> drivers/net/wireless/ath/regd.c | 3 ++-
-MK> 1 file changed, 2 insertions(+), 1 deletion(-)
-MK>
-MK>diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-MK>index ccc4c71..48fb1b9 100644
-MK>--- a/drivers/net/wireless/ath/regd.c
-MK>+++ b/drivers/net/wireless/ath/regd.c
-MK>@@ -533,10 +533,11 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
-MK>  * but since we have more than one user with it we need
-MK>  * a solution for them. We default to 0x64, which is the
-MK>  * default Atheros world regulatory domain.
-MK>+ * There is also at least one report of 0xFFFF being set.
-MK>  */
-MK> static void ath_regd_sanitize(struct ath_regulatory *reg)
-MK> {
-MK>-	if (reg->current_rd != COUNTRY_ERD_FLAG)
-MK>+	if (reg->current_rd != COUNTRY_ERD_FLAG && reg->current_rd != 0xFFFF)
-MK> 		return;
-MK> 	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
-MK> 	reg->current_rd = 0x64;
-MK>
+I'll include that change in the next iteration (it is a rather small fix). =
+If you
+find anything else in the v8 patchset, please let me know so I can include =
+that.
 
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-1860876174-1361648754=:15538--
+Cheers,
+	Simon
+
+--Md/poaVZ8hnGTzuv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlEQ2PEACgkQrzg/fFk7axbhCgCg63gKkwLbU3xy8V5szFJsv88s
+zCMAoKsWyvdz726C2WGabViZKuHGFQRK
+=LjQm
+-----END PGP SIGNATURE-----
+
+--Md/poaVZ8hnGTzuv--
