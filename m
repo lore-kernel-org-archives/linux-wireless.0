@@ -1,121 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53283 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761190Ab3BMXsC (ORCPT
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:55728 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756778Ab3BEUXS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 18:48:02 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, green@qca.qualcomm.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 3/3] nl80211: advertise HT/VHT channel limitations
-Date: Thu, 14 Feb 2013 00:47:54 +0100
-Message-Id: <1360799274-16088-4-git-send-email-johannes@sipsolutions.net> (sfid-20130214_004808_511448_9EA4FD50)
-In-Reply-To: <1360799274-16088-1-git-send-email-johannes@sipsolutions.net>
-References: <1360799274-16088-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 5 Feb 2013 15:23:18 -0500
+Received: by mail-oa0-f48.google.com with SMTP id j1so683087oag.21
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2013 12:23:17 -0800 (PST)
+Message-ID: <51116A33.9070207@lwfinger.net> (sfid-20130205_212330_871160_7C2D8597)
+Date: Tue, 05 Feb 2013 14:23:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: Thomas Rosenkranz <tom.rosary@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
+ downstream and upstreamkernel
+References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com> <511163BA.7060902@gmail.com>
+In-Reply-To: <511163BA.7060902@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/05/2013 01:55 PM, Xose Vazquez Perez wrote:
+> On 02/05/2013 12:00 AM, Thomas Rosenkranz wrote:
+>
+> Larry, are you able to identify the chip of that device
+> with the 8192cu output ?
+>
+> what should he do ? open the device to see the chip ??
 
-When drivers or regulatory have limitations on
-40, 80 or 160 MHz channels, advertise these to
-userspace via nl80211. Also add a new feature
-flag to let userspace know this is supported.
+What difference does it make what chip it has? It is obviously some flavor of 
+RTL8188CU/RTL8192CU that is different enough that it does not work with the 
+kernel version of rtl8192cu. A few months ago, I ran across a new B-CUT 
+RTL8188CE that took new programming for rtl8192ce, and I suspect this device 
+also has the B-CUT chip.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h | 17 +++++++++++++++++
- net/wireless/core.c          |  3 ++-
- net/wireless/nl80211.c       | 12 ++++++++++++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+The crash on unloading is a known fault of the vendor driver. It happens with 
+devices that work OK with the standard rtl8192cu. I have no desire to find out 
+what causes the crash.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 90b7af8..3880f6a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2041,6 +2041,16 @@ enum nl80211_band_attr {
-  *	(enum nl80211_dfs_state)
-  * @NL80211_FREQUENCY_ATTR_DFS_TIME: time in miliseconds for how long
-  *	this channel is in this DFS state.
-+ * @NL80211_FREQUENCY_ATTR_NO_HT40_MINUS: HT40- isn't possible with this
-+ *	channel as the control channel
-+ * @NL80211_FREQUENCY_ATTR_NO_HT40_PLUS: HT40+ isn't possible with this
-+ *	channel as the control channel
-+ * @NL80211_FREQUENCY_ATTR_NO_80MHZ: any 80 MHz channel using this channel
-+ *	as the primary or any of the secondary channels isn't possible,
-+ *	this includes 80+80 channels
-+ * @NL80211_FREQUENCY_ATTR_NO_160MHZ: any 160 MHz (but not 80+80) channel
-+ *	using this channel as the primary or any of the secondary channels
-+ *	isn't possible
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -2055,6 +2065,10 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 	NL80211_FREQUENCY_ATTR_DFS_STATE,
- 	NL80211_FREQUENCY_ATTR_DFS_TIME,
-+	NL80211_FREQUENCY_ATTR_NO_HT40_MINUS,
-+	NL80211_FREQUENCY_ATTR_NO_HT40_PLUS,
-+	NL80211_FREQUENCY_ATTR_NO_80MHZ,
-+	NL80211_FREQUENCY_ATTR_NO_160MHZ,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -3421,6 +3435,8 @@ enum nl80211_ap_sme_features {
-  *	Note that even for drivers that support this, the default is to add
-  *	stations in authenticated/associated state, so to add unauthenticated
-  *	stations the authenticated/associated bits have to be set in the mask.
-+ * @NL80211_FEATURE_ADVERTISE_CHAN_LIMITS: cfg80211 advertises channel limits
-+ *	(HT40, VHT 80/160 MHz) if this flag is set
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3437,6 +3453,7 @@ enum nl80211_feature_flags {
- 	NL80211_FEATURE_P2P_GO_CTWIN			= 1 << 11,
- 	NL80211_FEATURE_P2P_GO_OPPPS			= 1 << 12,
- 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 13,
-+	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
- };
- 
- /**
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9220021..33b75b9 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -367,7 +367,8 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 	rdev->wiphy.rts_threshold = (u32) -1;
- 	rdev->wiphy.coverage_class = 0;
- 
--	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH;
-+	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH |
-+			       NL80211_FEATURE_ADVERTISE_CHAN_LIMITS;
- 
- 	return &rdev->wiphy;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c1e18cc..7e40b9e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -562,6 +562,18 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_TIME, time))
- 			goto nla_put_failure;
- 	}
-+	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
-+	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
-+		goto nla_put_failure;
-+	if ((chan->flags & IEEE80211_CHAN_NO_HT40PLUS) &&
-+	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_PLUS))
-+		goto nla_put_failure;
-+	if ((chan->flags & IEEE80211_CHAN_NO_80MHZ) &&
-+	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_80MHZ))
-+		goto nla_put_failure;
-+	if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
-+	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
-+		goto nla_put_failure;
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 			DBM_TO_MBM(chan->max_power)))
--- 
-1.8.0
+If someone wants to supply me with a sample of this 0bda:819a device, I'll make 
+it work in the kernel. I have no desire to try to purchase one on my own.
+
+Larry
+
+
 
