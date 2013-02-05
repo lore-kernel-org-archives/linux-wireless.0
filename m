@@ -1,93 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49011 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751265Ab3B1JzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 04:55:24 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 4/6] mac80211: cleanup suspend/resume on ibss mode
-Date: Thu, 28 Feb 2013 10:55:28 +0100
-Message-Id: <1362045330-2018-4-git-send-email-sgruszka@redhat.com> (sfid-20130228_105532_889356_17102BE4)
-In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
-References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:46705 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643Ab3BEKoH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2013 05:44:07 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH] mac80211: fix radar check for P2P_DEVICE
+Date: Tue,  5 Feb 2013 11:44:30 +0100
+Message-Id: <1360061070-15314-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_114412_543740_77C7C673)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove not used any longer suspend/resume code.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Radar is not required for P2P_DEVICE interfaces.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ibss.c        | 29 +----------------------------
- net/mac80211/ieee80211_i.h |  4 ----
- 2 files changed, 1 insertion(+), 32 deletions(-)
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 40b71df..539d4a1 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -985,36 +985,9 @@ static void ieee80211_ibss_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct ieee80211_local *local = sdata->local;
--
--	if (local->quiescing) {
--		ifibss->timer_running = true;
--		return;
--	}
--
--	ieee80211_queue_work(&local->hw, &sdata->work);
--}
--
--#ifdef CONFIG_PM
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	if (del_timer_sync(&ifibss->timer))
--		ifibss->timer_running = true;
--}
--
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	if (ifibss->timer_running) {
--		add_timer(&ifibss->timer);
--		ifibss->timer_running = false;
--	}
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- }
--#endif
- 
- void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 42ddf0a..e73f7b8 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -489,8 +489,6 @@ struct ieee80211_if_ibss {
- 
- 	u32 basic_rates;
- 
--	bool timer_running;
--
- 	bool fixed_bssid;
- 	bool fixed_channel;
- 	bool privacy;
-@@ -1290,8 +1288,6 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_ibss_params *params);
- int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index d7873c7..37a56ee 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1217,10 +1217,10 @@ int cfg80211_can_use_iftype_chan(struct cfg80211_registered_device *rdev,
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NL80211_IFTYPE_MONITOR:
+ 		radar_required = false;
+ 		break;
+-	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NUM_NL80211_IFTYPES:
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	default:
 -- 
-1.7.11.7
+1.8.0
 
