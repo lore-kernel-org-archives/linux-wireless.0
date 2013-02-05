@@ -1,119 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58407 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382Ab3BAJxz (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:48437 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755710Ab3BEWvL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 04:53:55 -0500
-Message-ID: <1359712448.8528.2.camel@jlt4.sipsolutions.net> (sfid-20130201_105400_972116_71810A1F)
-Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection
- command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Fri, 01 Feb 2013 10:54:08 +0100
-In-Reply-To: <20130131174443.GB2018@pandem0nium>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359642321.8415.56.camel@jlt4.sipsolutions.net>
-	 <20130131161346.GA1387@pandem0nium>
-	 <1359650760.8415.91.camel@jlt4.sipsolutions.net>
-	 <20130131174443.GB2018@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Feb 2013 17:51:11 -0500
+Date: Tue, 5 Feb 2013 16:51:01 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Arend van Spriel <arend@broadcom.com>,
+	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 5/7] mac80211: Expand powersave configuration flag to be
+ two bits
+Message-ID: <20130205225101.GB29557@thinkpad-t410> (sfid-20130205_235115_434151_91299710)
+References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
+ <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
+ <1359645648.8415.77.camel@jlt4.sipsolutions.net>
+ <20130131163355.GE28799@thinkpad-t410>
+ <1359651229.8415.99.camel@jlt4.sipsolutions.net>
+ <20130131171826.GG28799@thinkpad-t410>
+ <1359654634.8415.101.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359654634.8415.101.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-31 at 18:44 +0100, Simon Wunderlich wrote:
-
-> "If the master device has detected a radar signal on an Operating Channel during In-Service Monitoring, the
-> master device shall instruct all its associated slave devices to stop transmitting on this channel which becomes
-> an Unavailable Channel. For devices operating on multiple (adjacent or non-adjacent) Operating Channels
-> simultaneously, only the Operating Channel containing the frequency on which radar was detected shall
-> become an Unavailable Channel."
+On Thu, Jan 31, 2013 at 06:50:34PM +0100, Johannes Berg wrote:
+> On Thu, 2013-01-31 at 11:18 -0600, Seth Forshee wrote:
 > 
-> At least in ath9k it appears that the radar header contains some information whether
-> the radar was received on the primary or extension channel.
-> 
-> I don't know how upcoming 80 MHz devices handle that though.
-> 
-> We can remove it now and re-add it later if you prefer?
-
-No no, it's fine, I was just wondering.
-
-> > > Hmm, actually I've tried setting the frequency with iw and got a EINVAL back.
-> > > I'll look into it again if I missed something, but thought it would be good to
-> > > not have this stuff redundant.
-> > 
-> > Ok. Hmm. EINVAL? Maybe you tried setting to a radar frequency or
-> > something? Can you try setting to say channel 1? I don't think you
-> > changed __nl80211_set_channel() to check cac_started, so ...
-> > 
-> 
-> I can try again ... but maybe this is obsolete when using wdev->channel.
-
-Yes, then you'd not have the problem.
-
-> > > > > +	err = cfg80211_chandef_dfs_required(wdev->wiphy, &chandef);
-> > > > > +	if (err < 1)
-> > > > > +		return err;
+> > > > Actually one of the last bugs I fixed before sending these was a place
+> > > > where I had used disabled instead of !enabled, and the frames ended up
+> > > > with PM set when it shouldn't have been.
 > > > > 
-> > > > That doesn't make sense, if userspace starts CAC and that is successful
-> > > > it would expect to eventually receive an event that it completed? Thus
-> > > > if you return 0 here it would get confused, no?
-> > > > 
+> > > > I agree though that the distinction is confusing. Maybe some better
+> > > > state names are needed. Perhaps awake, offchannel, and doze?
 > > > 
-> > > Ah yes, I should probably return EINVAL in this case, or the appropriate
-> > > error code otherwise ... 
+> > > I think what you really want is to distinguish between "HW can go to
+> > > powersave" and "PM bit should be set"? That's pretty much what your
+> > > CONF_PS_ENABLED and CONF_PS_OFFCHANNEL means, respectively, but maybe
 > > 
-> > Maybe return some more useful error code? Can't really find any one that
-> > is appropriate though.
-> 
-> We should add EUSELESS. :D
-> Can't think of anything better, so will keep it at EINVAL until someone has
-> a better idea.
-
-:)
-
-> > [...]
-> > > > > @@ -884,6 +884,9 @@ static void handle_channel(struct wiphy *wiphy,
-> > > > >  		return;
-> > > > >  	}
-> > > > >  
-> > > > > +	chan->dfs_state = IEEE80211_DFS_USABLE;
-> > > > > +	chan->dfs_state_entered = jiffies;
-> > > > 
-> > > > Here also you don't really need the time assignment.
-> > > > 
-> > > > (I skipped this before, so pasting here)
-> > > > 
-> > > 
-> > > Hm, aren't channels initialized in this function? I wanted to set some
-> > > sane values here - although time is not relevant for the USABLE state,
-> > > I thought it might be useful if this info is exported to userspace or
-> > > for debugging.
+> > Correct, with the understanding that "HW can go to powersave" also
+> > implies "PM bit should be set."
 > > 
-> > Maybe so, I just don't think you need the time there since it won't be
-> > of relevance in the USABLE state. The "state entered" time is only used
-> > for UNAVAILABLE.
-> > 
-> > Maybe therefore state_entered should be renamed to "unavailable_until"
-> > with the corresponding change in the logic of adding the time when it's
-> > set to that state?
+> > Another approach would be to keep the CONF_PS flag the same and add a
+> > CONF_PM flag or similar. I didn't go with this approach because CONF_PS
+> > && !CONF_PM really doesn't make any sense, which really doesn't help
+> > with reducing confusion. The advantage is that it separates setting PM
+> > from PS for those driver that don't support PS but need to configure the
+> > hardware to set PM for off-channel.
 > 
-> Can do that, if no one is interested in when we, say, change from unavailable
-> to usable (after NOP). This is what Zefir asked for. 
+> Good point, that'd work too. PS && !PM would never be used, I guess?
+> It'd also have the advantage of not having to touch all the drivers?
 > 
-> Personally I don't care at all, and we discuss that in the cover letter thread
-> anyway. Let's see what Zefir says or if anyone else objects, I put that onto
-> the "TODO if nobody objects list". :)
+> It doesn't really matter all that much to me though, I just think what
+> you have right now is (too) confusing.
 
-Heh. Ok I see Zefir's argument, so I guess that's reasonable. I just
-didn't see a use for it in the kernel so was wondering.
+Hi Johannes,
 
-johannes
+I've been thinking about and playing around with these ideas. I've
+implemented the CONF_PM idea, and it does end up with fewer changes, but
+I just don't think separating powersave from setting PM makes much
+sense. In the end it just seems like a kludge to fix a problem with
+Broadcom chips, and if I want a kludge I can do it entirely within the
+driver.
+
+So what I'm planning to do know is implement the awake/doze/offchannel
+powersave modes like I had mentioned, but taking things a bit further.
+I'd change IEEE80211_HW_SUPPORTS_PS to SUPPORTS_PS_DOZE, indicating
+support for a low-power powersave state rather than support for
+powersave in general. All hardware will be reconfigured for
+awake<->offchannel transitions (though most drivers can simply ignore
+these transitions), but hardware will only be put in the doze state if
+it indicates PS_DOZE support.
+
+This will make it compulsory for all drivers to indicate whether or not
+they require IEEE802111_HW_PS_NULLFUNC_STACK. I'll simply set this flag
+for any drivers not currently supporting powersave.
+
+In practice the changes shouldn't end up much different than what I have
+in these patches, but I think it's conceptually cleaner (and less
+confusing!). Does this sound reasonable to you?
+
+Thanks,
+Seth
 
