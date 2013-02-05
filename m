@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:62380 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757195Ab3BVQhr (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:6795 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754575Ab3BEStw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 11:37:47 -0500
-Date: Fri, 22 Feb 2013 17:36:44 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Tue, 5 Feb 2013 13:49:52 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Hugh Dickins <hughd@google.com>,
+	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Marek Lindner <marek@open-mesh.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-Message-ID: <20130222163643.GB3757@open-mesh.com> (sfid-20130222_173750_344579_0C6D0BC3)
-References: <20130215171938.GA4140@pandem0nium>
- <51279AFA.3000608@openwrt.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: iwlwifi: regression in 3.8-rc4 and 3.7.3
+Date: Tue, 5 Feb 2013 18:49:47 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301929C9D@HASMSX103.ger.corp.intel.com> (sfid-20130205_195010_779012_FEA922DF)
+References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
+ <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com>
+ <alpine.LNX.2.00.1301192331140.3905@eggly.anvils>
+ <20130205180831.GA29557@thinkpad-t410>
+In-Reply-To: <20130205180831.GA29557@thinkpad-t410>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="xHFwDpU9dbj6ez1V"
-In-Reply-To: <51279AFA.3000608@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---xHFwDpU9dbj6ez1V
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > > > On Sun, Jan 20, 2013 at 6:56 AM, Hugh Dickins <hughd@google.com>
+> wrote:
+> > > > > After sending the first 2MB, scp over wireless becomes
+> > > > > unbearably slow, with frequent stalls: on this ThinkPad T420s running
+> 3.8-rc4 or 3.7.3.
+> > > > > Not always, but often.
+> > > > >
+> > > >
+> > > > There is one pending iwlwifi-fixes, dunno if it will fix your issue.
+> > > > [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-
+> > > > fixes.git;a=commitdiff;h=c3e5d7181afb66657393066bccce0956fab09ab3
+> > >
+> > > Right - so the 2 patches are unrelated, and the one Sedat is pointing at is
+> relevant for 3.8 only. It fixes a bug that has been introduced in 3.8.
+> >
+> > Yes, I have now given that one a try, but it does not affect my issue.
+> >
+> > > Regarding the issue Hugh is suffering from, I have to say that I am a little
+> confused since I am pretty sure the patch is right. Now, it might uncover other
+> pre-existing bugs. All I can say is that I don't think that reverting the patch is
+> *so* problematic since the patch really wants to solve a rare case. If it causes
+> issues, we can simply revert it. It only means that when I will get a little bit of
+> time, I might need to ask you a few logs. Thanks for the report (and the
+> bisection).
+> >
+> > Sure, let me know what to do, once you have time to investigate.
+> >
+> > So far as I know, I'm the first to notice: so we can probably leave it
+> > in 3.8-rc for now, until/unless it gives wider trouble.
+> >
+> > But reverting from 3.7-stable soon would be a good idea, regressions
+> > there being more tiresome.
+> 
+> I'm seeing iwlwifi performance problems in 3.8 as well, and have heard from
+> several other saying the same thing. Testing with iperf shows very little data
+> getting through most of the time.
+> 
+> Reverting f590dcec944552f9a4a61155810f3abd17d6465d on top of 3.8-rc6
+> seems to have eliminated the problems for me, so far at least. I'll request some
+> testing from others as well.
+> 
+> Seth
 
-On Fri, Feb 22, 2013 at 08:21:14AM -0800, Felix Fietkau wrote:
-> Hi,
->=20
-> Since this is a rare special case, I think it really does not belong
-> into the mac80211 data path. How about creating a monitor mode device
-> and claiming it from within the kernel in your own module via rx_handler
-> (the same mechanism that the bridge code uses to hook into the data path
-> of a normal net_device). You can extract relevant information from the
-> radiotap headers.
+So the revert patch is on its way: http://git.kernel.org/?p=linux/kernel/git/davem/net.git;a=commit;h=ae023b2795d36f0f077e157428eb7eafa29ee412
 
-I think this would increase the complexity given the fact that each and eve=
-ry
-packet needs to be encapsulated into the radiotap header..
-Then, most of the information that people wants to grab does not appear in
-such header.
+---------------------------------------------------------------------
+A member of the Intel Corporation group of companies
 
-Other than that, by hooking into the mac80211 rx_path, in an early point, p=
-ackets can
-then be dropped as usual (all those packets not going to this device), while
-with this monitor-like solution all of them have to be carried up to the vi=
-rtual
-interface.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-Imho this introduces a not negligible complexity that it is better to avoid.
-
-And what about 802.11s? I don't think this is a good solution for them..
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---xHFwDpU9dbj6ez1V
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRJ56bAAoJEADl0hg6qKeOGAwP/2/Kv0YU6GrfjSymvQUE5STt
-6NUs80lYuDKFCLndZTZZVoX8shb/11FQM88+DIFOS/1w3vbegz9jXmfUtXN5oNlO
-RNogoK22ohWCdPsrJy6Fpn4VP8rsp0ocGu5mMhUjaxYc25vkuEP36bHv3lrm2mLj
-UJgXbVE+j3wCaeBwPXwjQWMZIynvvXTIE8qajAczuZhcUUVLBoR0BJe2d9+oALmW
-cOfVg70mvV/8W1TdmUQNxLQrVAmyHKdhMWp4SYUexRB06Sz71XmHmkSLwg/lPBpw
-qK0G3St1IjcpISM3wpvotfK3dRYDHkRyTJrlLzE4dbDeQEwoZyy6oydI5Fr42Kbd
-UFYwC3ol+KSg+Rq3c90cIP4SjTt4CAWAepg6NanYNrfpIF8bN1fW410JwXn6cE+k
-rojakWQsnUWdtwSbG9xzm+6oBUrpGnW/48Fvs4opy30MKsduNrBSEiesekRNmHv+
-dYsTMjiy9povnFnn/TzZ5M4PuwA1CFRiFQejMHxmMFpVZMrAjufCMCNS0PY9za6C
-53PNvJreQbeJl/pGQOyUx4RdfEI4mF1x/klC4yCD94Op1STLUe5toFFch0Iqp1eX
-9C0Z+8i/pmemM2BAqVlmXBLtCpEUIHikuyNLQ8cvKMfKa/kEDRgRUO7CNVASdR3O
-LmBlZYlz2/yxSwVac82n
-=PQMA
------END PGP SIGNATURE-----
-
---xHFwDpU9dbj6ez1V--
