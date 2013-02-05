@@ -1,54 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55987 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759486Ab3BXWb0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 17:31:26 -0500
-Message-ID: <512A94B3.4020205@hauke-m.de> (sfid-20130224_233128_775393_099621A3)
-Date: Sun, 24 Feb 2013 23:31:15 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42178 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755045Ab3BEPmI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Feb 2013 10:42:08 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: Re: [RFC 00/13] brcmsmac: add AP mode
-References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>  <A47087626F2942499CF47E79803E771E0431BF4D@SJEXCHMB13.corp.ad.broadcom.com>  <5129FBB8.1080505@hauke-m.de> (sfid-20130224_123852_665943_7C5D7E9A) <1361726563.8129.6.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361726563.8129.6.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] iw: prefer 64-bit byte counters for sta_info
+Date: Tue, 5 Feb 2013 17:41:44 +0200
+Message-ID: <1360078904-13056-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130205_164224_446271_86AFEA6E)
+In-Reply-To: <1360078904-13056-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1360078904-13056-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2013 06:22 PM, Johannes Berg wrote:
-> On Sun, 2013-02-24 at 12:38 +0100, Hauke Mehrtens wrote:
-> 
->> Yes this needs some review and more testing, I hope this also works with
->> power saving stations and so on.
-> 
-> I doubt it will. I know it's not really a major thing, but due to the
-> way aggregation is handled you definitely need to implement
-> "release_buffered_frames". "allow_buffered_frames" might not be
-> necessary if the device doesn't track station's powersave mode by
-> itself? Not sure how that's supposed to work, too long since I worked on
-> Broadcom stuff.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ link.c    |   14 ++++++++++++--
+ station.c |   12 ++++++++++--
+ 2 files changed, 22 insertions(+), 4 deletions(-)
 
-Ok, I have to read how power saving exactly works and look how brcmsmac
-currently does aggregation and so on.
+diff --git a/link.c b/link.c
+index 3470c4d..3a6b15a 100644
+--- a/link.c
++++ b/link.c
+@@ -121,6 +121,8 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_RX_BYTES] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_BYTES] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_RX_BYTES64] = { .type = NLA_U64 },
++		[NL80211_STA_INFO_TX_BYTES64] = { .type = NLA_U64 },
+ 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
+@@ -159,11 +161,19 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
+ 		return NL_SKIP;
+ 	}
+ 
+-	if (sinfo[NL80211_STA_INFO_RX_BYTES] && sinfo[NL80211_STA_INFO_RX_PACKETS])
++	if (sinfo[NL80211_STA_INFO_RX_BYTES64] && sinfo[NL80211_STA_INFO_RX_PACKETS])
++		printf("\tRX: %llu bytes (%u packets)\n",
++			(unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_BYTES64]),
++			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
++	else if (sinfo[NL80211_STA_INFO_RX_BYTES] && sinfo[NL80211_STA_INFO_RX_PACKETS])
+ 		printf("\tRX: %u bytes (%u packets)\n",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]),
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
+-	if (sinfo[NL80211_STA_INFO_TX_BYTES] && sinfo[NL80211_STA_INFO_TX_PACKETS])
++	if (sinfo[NL80211_STA_INFO_TX_BYTES64] && sinfo[NL80211_STA_INFO_TX_PACKETS])
++		printf("\tTX: %llu bytes (%u packets)\n",
++			(unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_TX_BYTES64]),
++			nla_get_u32(sinfo[NL80211_STA_INFO_TX_PACKETS]));
++	else if (sinfo[NL80211_STA_INFO_TX_BYTES] && sinfo[NL80211_STA_INFO_TX_PACKETS])
+ 		printf("\tTX: %u bytes (%u packets)\n",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]),
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_PACKETS]));
+diff --git a/station.c b/station.c
+index 247f445..5b132d9 100644
+--- a/station.c
++++ b/station.c
+@@ -42,6 +42,8 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_RX_BYTES] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_BYTES] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_RX_BYTES64] = { .type = NLA_U64 },
++		[NL80211_STA_INFO_TX_BYTES64] = { .type = NLA_U64 },
+ 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
+@@ -91,13 +93,19 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_STA_INFO_INACTIVE_TIME])
+ 		printf("\n\tinactive time:\t%u ms",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_INACTIVE_TIME]));
+-	if (sinfo[NL80211_STA_INFO_RX_BYTES])
++	if (sinfo[NL80211_STA_INFO_RX_BYTES64])
++		printf("\n\trx bytes:\t%llu", (unsigned long long)
++			nla_get_u64(sinfo[NL80211_STA_INFO_RX_BYTES64]));
++	else if (sinfo[NL80211_STA_INFO_RX_BYTES])
+ 		printf("\n\trx bytes:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]));
+ 	if (sinfo[NL80211_STA_INFO_RX_PACKETS])
+ 		printf("\n\trx packets:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
+-	if (sinfo[NL80211_STA_INFO_TX_BYTES])
++	if (sinfo[NL80211_STA_INFO_TX_BYTES64])
++		printf("\n\ttx bytes:\t%llu", (unsigned long long)
++			nla_get_u64(sinfo[NL80211_STA_INFO_TX_BYTES64]));
++	else if (sinfo[NL80211_STA_INFO_TX_BYTES])
+ 		printf("\n\ttx bytes:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]));
+ 	if (sinfo[NL80211_STA_INFO_TX_PACKETS])
+-- 
+1.7.10.4
 
->> probe response offload
-> 
-> See also enum nl80211_probe_resp_offload_support_attr; probe response
-> offload is a bit tricky because e.g. for WPS you absolutely need
-> userspace, not the firmware, to respond. So if the firmware can't tell
-> the difference between regular and WPS probe requests, you can't support
-> WPS.
-> 
-> If you can, I'd probably just turn off the response offload. It's likely
-> not worth the effort. If you wanted to make that turning off conditional
-> we'd have to come up with a bunch of new API to let the driver know what
-> kind of AP it's running.
-
-Ok, I will turn it off, this driver is mostly used on devices without a
-battery, or a big one, so the energy saving by offloading is not needed
-and the performance improvement is probably not that big.
-
-Hauke
