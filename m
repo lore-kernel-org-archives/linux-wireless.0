@@ -1,91 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:54358 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759874Ab3BZAOy (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47636 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742Ab3BEPxm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 19:14:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz
-Subject: [RFC/RFT 27/27] rtlwifi: rtl8188ee: Enable build of new driver
-Date: Mon, 25 Feb 2013 18:13:39 -0600
-Message-Id: <1361837619-2985-28-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011507_820784_146C5EB6)
-In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 5 Feb 2013 10:53:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: remove scan ies NULL check
+Date: Tue,  5 Feb 2013 16:54:01 +0100
+Message-Id: <1360079641-14357-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_165345_419164_1209E500)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes enable building the new driver.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
+There's no way scan BSS IEs can be NULL as even
+if the allocation fails the frame is discarded.
+Remove some code checking for this and document
+that it is always non-NULL.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/Kconfig            | 11 +++++++++++
- drivers/net/wireless/rtlwifi/Makefile           |  1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/Makefile | 16 ++++++++++++++++
- 3 files changed, 28 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  5 -----
+ include/net/cfg80211.h                   |  8 ++++----
+ net/wireless/scan.c                      | 11 +++--------
+ 3 files changed, 7 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-index b6aa0c4..e42b3a8 100644
---- a/drivers/net/wireless/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -55,6 +55,17 @@ config RTL8723AE
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index ee85b41..8866a2b 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -162,11 +162,6 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
  
- 	If you choose to build it as a module, it will be called rtl8723ae
+ 	rcu_read_lock();
+ 	ies = rcu_dereference(bss->ies);
+-	if (WARN_ON(!ies)) {
+-		/* should never happen */
+-		rcu_read_unlock();
+-		return -EINVAL;
+-	}
+ 	beacon_ie = kmemdup(ies->data, ies->len, GFP_ATOMIC);
+ 	beacon_ie_len = ies->len;
+ 	rcu_read_unlock();
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2907cec..7b73267 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1299,10 +1299,10 @@ struct cfg80211_bss_ies {
+  * @tsf: timestamp of last received update
+  * @beacon_interval: the beacon interval as from the frame
+  * @capability: the capability field in host byte order
+- * @ies: the information elements (Note that there
+- *	is no guarantee that these are well-formed!); this is a pointer to
+- *	either the beacon_ies or proberesp_ies depending on whether Probe
+- *	Response frame has been received
++ * @ies: the information elements (Note that there is no guarantee that these
++ *	are well-formed!); this is a pointer to either the beacon_ies or
++ *	proberesp_ies depending on whether Probe Response frame has been
++ *	received. It is always non-%NULL.
+  * @beacon_ies: the information elements from the last Beacon frame
+  *	(implementation note: if @hidden_beacon_bss is set this struct doesn't
+  *	own the beacon_ies, but they're just pointers to the ones from the
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 5e0983d..02a2383 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1293,15 +1293,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
  
-+config RTL8188EE
-+	tristate "Realtek RTL8188EE Wireless Network Adapter"
-+	depends on MAC80211 && PCI
-+	select FW_LOADER
-+	select RTLWIFI
-+	---help---
-+	This is the driver for Realtek RTL8188EE 802.11n PCIe
-+	wireless network adapters.
-+
-+	If you choose to build it as a module, it will be called rtl8188ee
-+
- config RTL8192CU
- 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
- 	depends on RTLWIFI && USB
-diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
-index 3b1cbac..ff02b87 100644
---- a/drivers/net/wireless/rtlwifi/Makefile
-+++ b/drivers/net/wireless/rtlwifi/Makefile
-@@ -26,5 +26,6 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
- obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
- obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
- obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
-+obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ 	rcu_read_lock();
+ 	ies = rcu_dereference(bss->pub.ies);
+-	if (ies) {
+-		rem = ies->len;
+-		ie = ies->data;
+-	} else {
+-		rem = 0;
+-		ie = NULL;
+-	}
++	rem = ies->len;
++	ie = ies->data;
  
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
-new file mode 100644
-index 0000000..f3772c9
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
-@@ -0,0 +1,16 @@
-+rtl8188ee-objs :=		\
-+		dm.o		\
-+		fw.o		\
-+		hw.o		\
-+		led.o		\
-+		phy.o		\
-+		pwrseq.o	\
-+		pwrseqcmd.o	\
-+		rf.o		\
-+		sw.o		\
-+		table.o		\
-+		trx.o
-+
-+obj-$(CONFIG_RTL8188EE) += rtl8188ee.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
+-	while (ies && rem >= 2) {
++	while (rem >= 2) {
+ 		/* invalid data */
+ 		if (ie[1] > rem - 2)
+ 			break;
 -- 
-1.8.1.4
+1.8.0
 
