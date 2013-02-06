@@ -1,84 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:63339 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759355Ab3BNVFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 16:05:05 -0500
-Date: Thu, 14 Feb 2013 16:05:03 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Solomon Peachy <speachy@sagrad.com>
-Subject: Re: [PATCH] rt2800usb: Add support for eeprom writes.
-Message-ID: <20130214210502.GA24641@shaftnet.org> (sfid-20130214_220511_455754_F4C2E8AB)
-References: <1360872580-24334-1-git-send-email-pizza@shaftnet.org>
- <1360872580-24334-2-git-send-email-pizza@shaftnet.org>
- <CAOZOX0Vva3ObJp6hW85i6m33zYxieTsbER78UVrp23uo=t4B9A@mail.gmail.com>
+Received: from mail.nanl.de ([217.115.11.12]:56765 "EHLO mail.nanl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751294Ab3BFObj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 09:31:39 -0500
+Received: from mail-ia0-f172.google.com (mail-ia0-f172.google.com [209.85.210.172])
+	by mail.nanl.de (Postfix) with ESMTPSA id 2CFBB45EC3
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Feb 2013 14:30:18 +0000 (UTC)
+Received: by mail-ia0-f172.google.com with SMTP id u8so1621011iag.31
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 06:31:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
-In-Reply-To: <CAOZOX0Vva3ObJp6hW85i6m33zYxieTsbER78UVrp23uo=t4B9A@mail.gmail.com>
+In-Reply-To: <20130103075440.GA20523@markyou.marvell.com>
+References: <20130103075440.GA20523@markyou.marvell.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Wed, 6 Feb 2013 15:31:12 +0100
+Message-ID: <CAOiHx=kpV8TScc4gQRZUBwUDAEL-j+uoNg3eodKi8WwmAHYg=w@mail.gmail.com> (sfid-20130206_153142_189102_9408A768)
+Subject: Re: [PATCH 5/5] mwl8k: bump firmware API to 3
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 3 January 2013 08:54, Yogesh Ashok Powar <yogeshp@marvell.com> wrote:
+> New firmware is required to support
+> a) Add support for additional ampdu streams
+> b) Handle corresponding watchdog events to destroy ampdu streams
+>
+> Bumping firmware API version by one.
 
---M9NhX3UHpAaciwkO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Soo ... where does one get this new firmware version? I don't see it
+anywhere (especially not in linux-firmware.git). AFAICT mwl8k in
+ap-mode is currently broken since this patch got in.
 
-On Thu, Feb 14, 2013 at 09:25:56PM +0100, Ivo Van Doorn wrote:
-> This is incorrect, all other debugfs files are read/write, so there is
-> no point in a extra commit file.
-
-The other eeprom debugfs files only modify the in-memory copy of the=20
-eeprom data; they do not actually write it back out to the eeprom.
-
-Furthermore, the rt2800usb driver often "validates" (ie modifies) the=20
-in-memory copy of the eeprom data, so I needed to have a way to re-read=20
-the raw data so I would only modify what was absolutely necessary.
-
-(IIRC the PCI-based modules expose a standard I2C eeprom which can be=20
- accessed/updated independently)
-
-> rt2800 specific code doesn't belong in the generic code. You should=20
-> make your solution completely driver independent.
-
-I see your point.
-
-This should come via bolting on generic eeprom read/write functions to=20
-rt2x00lib_ops, and calling those from the debugfs hooks, correct?
-
-Alternatively this could be bolted up to ethtool's eeprom manipulation=20
-hooks instead of the debugfs hook I hacked in there.
-
-Let me know what you'd prefer.
-
-> Have you checked if this is specific to rt2800 or would other Ralink=20
-> USB devices be able to work with this as well?
-
-I only have access to RT2870 modules at the moment, so I don't have any=20
-way of verifying this applies to non-RT2800 modules.  I suppose I could=20
-wade through ralink's posted source code, but the comments in=20
-rt2x00usb.h seem to indicate eeprom write support is generic.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---M9NhX3UHpAaciwkO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRHVF+PuLgii2759ARAjeYAJ46lwzIu8R3GbxK/E1nj1uYcyQmHACdGQZl
-F4MEB8txtKtCf2uxyHY6k+Y=
-=r1LW
------END PGP SIGNATURE-----
-
---M9NhX3UHpAaciwkO--
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> ---
+>  drivers/net/wireless/mwl8k.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index 51ae9e9..5717e15 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -5319,7 +5319,7 @@ enum {
+>         MWL8366,
+>  };
+>
+> -#define MWL8K_8366_AP_FW_API 2
+> +#define MWL8K_8366_AP_FW_API 3
+>  #define _MWL8K_8366_AP_FW(api) "mwl8k/fmimage_8366_ap-" #api ".fw"
+>  #define MWL8K_8366_AP_FW(api) _MWL8K_8366_AP_FW(api)
+>
+> --
+> 1.8.0.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
