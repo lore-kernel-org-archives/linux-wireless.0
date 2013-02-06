@@ -1,88 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43822 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754278Ab3BDRsM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 12:48:12 -0500
-Message-ID: <1360000114.17993.23.camel@jlt4.sipsolutions.net> (sfid-20130204_184815_646358_43C7CB43)
-Subject: Re: [PATCH 1/2] wireless: expand per-station byte counters to 64bit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Mon, 04 Feb 2013 18:48:34 +0100
-In-Reply-To: <1359992219.10311.16.camel@jlt4.sipsolutions.net> (sfid-20130204_163641_118159_6D181F12)
-References: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1359978792-7121-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1359992219.10311.16.camel@jlt4.sipsolutions.net>
-	 (sfid-20130204_163641_118159_6D181F12)
-Content-Type: text/plain; charset="UTF-8"
+Received: from moh2-ve2.go2.pl ([193.17.41.200]:53038 "EHLO moh2-ve2.go2.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757559Ab3BFWkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 17:40:00 -0500
+Received: from moh2-ve2.go2.pl (unknown [10.0.0.200])
+	by moh2-ve2.go2.pl (Postfix) with ESMTP id 98803DA4093
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Feb 2013 23:39:55 +0100 (CET)
+Received: from unknown (unknown [10.0.0.142])
+	by moh2-ve2.go2.pl (Postfix) with SMTP
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Feb 2013 23:39:55 +0100 (CET)
+Date: Wed, 6 Feb 2013 23:39:51 +0100
+From: Tomasz Guszkowski <tsg@o2.pl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54usb: corrected USB ID for T-Com Sinus 154 data II
+Message-Id: <20130206233951.0cf8e25b7963bbd170b37899@o2.pl> (sfid-20130206_234005_834130_F085E29A)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-04 at 16:36 +0100, Johannes Berg wrote:
 
-> > +	if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
-> > +	    nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
-> > +			sinfo->rx_bytes))
-> > +		goto nla_put_failure;
-> >[...]
-> 
-> +       if (sinfo->filled & STATION_INFO_RX_BYTES64) {
-> +               if (nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
-> +                               sinfo->rx_bytes))
-> +                       goto nla_put_failure;
-> +               if (sinfo->rx_bytes <= UINT_MAX &&
-> +                   nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
-> +                               (u32)sinfo->rx_bytes))
-> +                       goto nla_put_failure;
-> +       }
-> +       if (sinfo->filled & STATION_INFO_TX_BYTES64) {
-> +               if (nla_put_u64(msg, NL80211_STA_INFO_TX_BYTES64,
-> +                               sinfo->tx_bytes))
-> +                       goto nla_put_failure;
-> +               if (sinfo->tx_bytes <= UINT_MAX &&
-> +                   nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
-> +                               (u32)sinfo->tx_bytes))
-> +                       goto nla_put_failure;
-> +       }
+On Tue, 5 Feb 2013, Christian Lamparter wrote:
 
-Ok Vladimir convinced me this was stupid because it breaks the current
-userspace API in a subtle way: right now, if it rolls over, we will get
-wrapped values in userspace, afterwards with a 64-bit compatible driver
-we won't get any 32-bit value ...
+> OT: The latest supported firmware for LM87 is: 2.13.25.0.lm87.arm
+> Did you experience issues with the new version, or do you simply
+> stick with the old 2.13.1.0 because it does work just as well?
 
-I'll change it to this though, so drivers don't get this choice:
+Hello again,
 
+I have just tested behavior of T-Com with 2.13.25.0.lm87.arm 
+(md5sum 39be687c87544b892e7a8ffe7ffd9371) in managed mode.
+Ewerything what was tested worked perfectly:
+1. iwlist wlan0 scan
+2. connecting to open network
+3. connecting to WEP 128-bit
+4. connecting to WPA-PSK (TKIP)
+5. connecting to WPA2-PSK (AES)
 
--       if ((sinfo->filled & STATION_INFO_RX_BYTES) &&
-+       if ((sinfo->filled & (STATION_INFO_RX_BYTES |
-+                             STATION_INFO_RX_BYTES64)) &&
-            nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
--                       sinfo->rx_bytes))
-+                       (u32)sinfo->rx_bytes))
-                goto nla_put_failure;
--       if ((sinfo->filled & STATION_INFO_TX_BYTES) &&
-+       if ((sinfo->filled & (STATION_INFO_TX_BYTES |
-+                             NL80211_STA_INFO_TX_BYTES64)) &&
-            nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
-+                       (u32)sinfo->tx_bytes))
-+               goto nla_put_failure;
-+       if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
-+           nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
-+                       sinfo->rx_bytes))
-+               goto nla_put_failure;
-+       if ((sinfo->filled & STATION_INFO_TX_BYTES64) &&
-+           nla_put_u64(msg, NL80211_STA_INFO_TX_BYTES64,
-                        sinfo->tx_bytes))
-                goto nla_put_failure;
+I am particularly impressed by working WPA2, with 2.13.1.0
+it didn't work.
 
+Thanks for pointing newer firmware, with WPA2 support it's
+an excellent, sensitive card despite its age.
 
-IOW, always put the 32-bit value even if the driver said it had 64-bit,
-but then also give the 64-bit value to userspace.
-
-johannes
-
+Regards,
+Tomek
