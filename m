@@ -1,109 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54150 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758190Ab3BYU6K (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:36344 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab3BFLtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 15:58:10 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Fabio Rossi <rossi.f@inwind.it>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Ensure off-channel frames don't get queued
-Date: Mon, 25 Feb 2013 14:58:05 -0600
-Message-Id: <1361825885-13520-1-git-send-email-seth.forshee@canonical.com> (sfid-20130225_215815_269165_8291A5F8)
-In-Reply-To: <20130225192629.GH13296@thinkpad-t410>
-References: <20130225192629.GH13296@thinkpad-t410>
+	Wed, 6 Feb 2013 06:49:13 -0500
+Received: by mail-bk0-f54.google.com with SMTP id w5so594465bku.27
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 03:49:11 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
+Subject: [RFCv2 0/3] mesh power save - hardware doze
+Date: Wed,  6 Feb 2013 12:48:42 +0100
+Message-Id: <1360151325-6368-1-git-send-email-marco@cozybit.com> (sfid-20130206_124916_881824_23D02F08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 6c17b77b67587b9f9e3070fb89fe98cef3187131 (mac80211: Fix tx queue
-handling during scans) contains a bug that causes off-channel frames to
-get queued when they should be handed down to the driver for transmit.
-Prevent this from happening.
+Commits #2 and #3 implement the actual power saving mechanism
+for mesh.
 
-Reported-by: Fabio Rossi <rossi.f@inwind.it>
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
+When the current peer link states allow doze state, the HW is
+configured accordingly.
+STA wake up from doze state for
+1) sending their own beacon and tailing awake window
+2) receiving beacons of peers they are in light sleep towards
+In these two situations a Mesh Peer Service Period may be
+initiated to extend the awake phase to transmit/receive
+frames.
 
-Fabio, this patch should fix the problem. Can you verify?
+Design goal was to implement most PS routines in mac80211 to
+keep maintainability high and allow simple driver adaption.
+Since mesh PS requires waiting for beacon/multicasts (CAB) per
+STA, these routines are re-implemented in mac80211.
 
-Johannes, this prevents the off-channel frames from getting queued
-without affecting the fast path. It does however make the indentation
-awfully deep ...
+The implementation should be capable of managing multiple
+concurrent mesh vif, although this has rarely been tested, yet.
 
- net/mac80211/tx.c |   56 +++++++++++++++++++++++++++++------------------------
- 1 file changed, 31 insertions(+), 25 deletions(-)
+(For more info see https://github.com/cozybit/open80211s/wiki
+/Mesh-Powersave-Implementation-Notes.)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b9602b..b1296e7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1231,34 +1231,40 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 		if (local->queue_stop_reasons[q] ||
- 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
- 			if (unlikely(info->flags &
--					IEEE80211_TX_INTFL_OFFCHAN_TX_OK &&
--				     local->queue_stop_reasons[q] &
--					~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL))) {
-+				     IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
-+				if (local->queue_stop_reasons[q] &
-+				    ~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL)) {
-+					/*
-+					 * Drop off-channel frames if queues
-+					 * are stopped for any reason other
-+					 * than off-channel operation. Never
-+					 * queue them.
-+					 */
-+					spin_unlock_irqrestore(
-+						&local->queue_stop_reason_lock,
-+						flags);
-+					ieee80211_purge_tx_queue(&local->hw,
-+								 skbs);
-+					return true;
-+				}
-+			} else {
-+
- 				/*
--				 * Drop off-channel frames if queues are stopped
--				 * for any reason other than off-channel
--				 * operation. Never queue them.
-+				 * Since queue is stopped, queue up frames for
-+				 * later transmission from the tx-pending
-+				 * tasklet when the queue is woken again.
- 				 */
--				spin_unlock_irqrestore(
--					&local->queue_stop_reason_lock, flags);
--				ieee80211_purge_tx_queue(&local->hw, skbs);
--				return true;
-+				if (txpending)
-+					skb_queue_splice_init(skbs,
-+							      &local->pending[q]);
-+				else
-+					skb_queue_splice_tail_init(skbs,
-+								   &local->pending[q]);
-+
-+				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
-+						       flags);
-+				return false;
- 			}
--
--			/*
--			 * Since queue is stopped, queue up frames for later
--			 * transmission from the tx-pending tasklet when the
--			 * queue is woken again.
--			 */
--			if (txpending)
--				skb_queue_splice_init(skbs, &local->pending[q]);
--			else
--				skb_queue_splice_tail_init(skbs,
--							   &local->pending[q]);
--
--			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
--					       flags);
--			return false;
- 		}
- 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
+On some test devices (WNDR3700/3800 with openwrt r35284) I
+experience frequent crashes ("Data bus error"). Adding udelay
+to ath9k_hw_set_power_awake and ath9k_set_power_network_sleep as
+described in https://dev.openwrt.org/ticket/9107 seems to help.
+I am unsure if I just stumble over a bug or cause it myself
+here.
+
+v2:
+mac80211:
+- trigger wakeups in HW (Johannes)
+- got rid of hrtimer usage (Johannes)
+- got rid of pre-TBTT wakeup margin
+- got rid of HW sleep/awake status variable in local
+- fix deep sleep wakeup schedule
+ath9k:
+- program HW's TIM timer registers to perform wakeups
+
+Marco Porsch (3):
+  mac80211: move mesh sync beacon handler into neighbour_update
+  mac80211: mesh power save doze scheduling
+  ath9k: mesh powersave support
+
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
+ drivers/net/wireless/ath/ath9k/beacon.c |   21 +-
+ drivers/net/wireless/ath/ath9k/hw.c     |   20 +-
+ drivers/net/wireless/ath/ath9k/main.c   |   67 ++++++-
+ include/net/mac80211.h                  |   29 +++
+ net/mac80211/ieee80211_i.h              |   17 +-
+ net/mac80211/mesh.c                     |   25 ++-
+ net/mac80211/mesh.h                     |   22 ++-
+ net/mac80211/mesh_plink.c               |   17 +-
+ net/mac80211/mesh_ps.c                  |  316 +++++++++++++++++++++++++++++++
+ net/mac80211/mesh_sync.c                |   47 ++---
+ net/mac80211/sta_info.c                 |    3 +
+ net/mac80211/sta_info.h                 |   10 +
+ net/mac80211/tx.c                       |    2 +
+ 14 files changed, 541 insertions(+), 56 deletions(-)
+
 -- 
 1.7.9.5
 
