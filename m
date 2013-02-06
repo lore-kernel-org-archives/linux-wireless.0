@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:63560 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab3BBXRI (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:40989 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757294Ab3BFPhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2013 18:17:08 -0500
-Received: by mail-ob0-f182.google.com with SMTP id va7so5281502obc.13
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2013 15:17:07 -0800 (PST)
-Message-ID: <510D9E71.2080300@lwfinger.net> (sfid-20130203_001718_948823_7307AD73)
-Date: Sat, 02 Feb 2013 17:17:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 6 Feb 2013 10:37:37 -0500
+Received: by mail-we0-f181.google.com with SMTP id t44so1214472wey.12
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 07:37:35 -0800 (PST)
+Message-ID: <511278B7.8000600@gmail.com> (sfid-20130206_163740_342632_C4B6C1BC)
+Date: Wed, 06 Feb 2013 16:37:27 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Memory leak in cfg80211
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: stable compat-drivers-3.8-rc5-1 is broken
+References: <510FAB9B.1040102@gmail.com>
+In-Reply-To: <510FAB9B.1040102@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+hi,
 
-A recent change to cfg80211 has resulted in kmemleak reporting a new leak:
+with compat-drivers-3.8-rc5-1 I get:
 
-unreferenced object 0xffff8800b24cba80 (size 192):
-   comm "kworker/1:0", pid 13, jiffies 4294899104 (age 5432.336s)
-   hex dump (first 32 bytes):
-     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-     06 00 00 00 55 53 00 00 d0 a6 24 00 40 b8 25 00  ....US....$.@.%.
-   backtrace:
-     [<ffffffff81444cf1>] kmemleak_alloc+0x21/0x50
-     [<ffffffff81147770>] __kmalloc+0x130/0x2c0
-     [<ffffffffa02b93e3>] reg_copy_regd+0x23/0xa0 [cfg80211]
-     [<ffffffffa02ba5e2>] reg_todo+0x3d2/0x5a0 [cfg80211]
-     [<ffffffff81063cdd>] process_one_work+0x19d/0x6f0
-     [<ffffffff81064605>] worker_thread+0x155/0x400
-     [<ffffffff81069b56>] kthread+0xd6/0xe0
-     [<ffffffff8145ba7c>] ret_from_fork+0x7c/0xb0
-     [<ffffffffffffffff>] 0xffffffffffffffff
-
-The traceback points back to the call at line 353 of net/wireless/reg.c where 
-the regd space is allocated.
-
-I verified that the memory is still allocated after unloading cfg80211. This is 
-not a false report from kmemleak.
-
-Thanks,
-
-Larry
-
-
-
+make -C /lib/modules/3.7.5-101.fc17.x86_64/build M=/home/xose/tmp/compat-drivers-3.8-rc5-1 modules
+make[1]: Entering directory `/usr/src/kernels/3.7.5-101.fc17.x86_64'
+  CC [M]  /home/xose/tmp/compat-drivers-3.8-rc5-1/net/wireless/core.o
+/home/xose/tmp/compat-drivers-3.8-rc5-1/net/wireless/core.c: In function ‘cfg80211_netdev_notifier_call’:
+/home/xose/tmp/compat-drivers-3.8-rc5-1/net/wireless/core.c:895:3: error: implicit declaration of function ‘netdev_set_default_ethtool_ops’ [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
