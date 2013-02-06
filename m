@@ -1,111 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1618 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760201Ab3BHO4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 09:56:41 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 26/27] brcmfmac: Create netdev before returning from
- add_virtual_intf.
-Date: Fri, 8 Feb 2013 15:54:01 +0100
-Message-ID: <1360335242-12608-27-git-send-email-arend@broadcom.com> (sfid-20130208_163814_197843_8B82110A)
-In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
-References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57046 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756774Ab3BFTa1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 14:30:27 -0500
+Date: Wed, 6 Feb 2013 14:25:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ognjen Ikovic <ognjen.ikovic@lacitadelleing.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	robertbasic.com@gmail.com
+Subject: Re: wireless-regdb: Update regulatory rules for Serbia (RS) on 2.4
+ and 5GHz
+Message-ID: <20130206192544.GH2148@tuxdriver.com> (sfid-20130206_203031_347537_45E08F9E)
+References: <CAL1G+-HfPJnwvisiE5Vr0ihenwKzL3_QL40DLPP_PsPyv+nveQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL1G+-HfPJnwvisiE5Vr0ihenwKzL3_QL40DLPP_PsPyv+nveQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Ognjen,
 
-Currently netdev gets created possibly after returning from
-add_virtual_intf. This is because add_if is handled asynch. This
-is wrong and netdev should be up before returning.
+Thank you so much for this timely message!  I apologize for having
+overlooked it so far.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c         |    6 +++++-
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |   10 +---------
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h |    2 --
- 3 files changed, 6 insertions(+), 12 deletions(-)
+I don't suppose that you could translate the information you have
+provided into the format used within the regulatory database file?
+Also, could you provide a link to the original regulatory document
+(even if it is in Serbian)?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index fd09074..84d6acd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1591,7 +1591,11 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- 	}
- 
- 	strncpy(ifp->ndev->name, name, sizeof(ifp->ndev->name) - 1);
--	brcmf_cfg80211_vif_complete(cfg);
-+	err = brcmf_net_attach(ifp, true);
-+	if (err) {
-+		brcmf_err("Registering netdevice failed\n");
-+		goto fail;
-+	}
- 	cfg->p2p.bss_idx[P2PAPI_BSSCFG_CONNECTION].vif = vif;
- 	/* Disable firmware roaming for P2P interface  */
- 	brcmf_fil_iovar_int_set(ifp, "roam_off", 1);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 6cdb578..b5cc154 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -4665,10 +4665,7 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
- 		SET_NETDEV_DEV(ifp->ndev, wiphy_dev(cfg->wiphy));
- 		mutex_unlock(&event->vif_event_lock);
- 		wake_up(&event->vif_wq);
--
--		/* waiting process need to set the netdev name */
--		wait_for_completion(&event->vif_complete);
--		return brcmf_net_attach(ifp, true);
-+		return 0;
- 
- 	case BRCMF_E_IF_DEL:
- 		ifp->vif = NULL;
-@@ -4800,7 +4797,6 @@ static void wl_deinit_priv(struct brcmf_cfg80211_info *cfg)
- static void init_vif_event(struct brcmf_cfg80211_vif_event *event)
- {
- 	init_waitqueue_head(&event->vif_wq);
--	init_completion(&event->vif_complete);
- 	mutex_init(&event->vif_event_lock);
- }
- 
-@@ -5154,7 +5150,3 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
- 				  vif_event_equals(event, action), timeout);
- }
- 
--void brcmf_cfg80211_vif_complete(struct brcmf_cfg80211_info *cfg)
--{
--	complete(&cfg->vif_event.vif_complete);
--}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index b886f22..8b5d498 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -337,7 +337,6 @@ struct brcmf_pno_scanresults_le {
- struct brcmf_cfg80211_vif_event {
- 	wait_queue_head_t vif_wq;
- 	struct mutex vif_event_lock;
--	struct completion vif_complete;
- 	u8 action;
- 	struct brcmf_cfg80211_vif *vif;
- };
-@@ -493,7 +492,6 @@ void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
- bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg);
- int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
- 					  u8 action, ulong timeout);
--void brcmf_cfg80211_vif_complete(struct brcmf_cfg80211_info *info);
- s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 				struct net_device *ndev,
- 				bool aborted, bool fw_abort);
+Ideally you could post a patch for the db.txt file.  If that is a
+problem, simply posting the information should be sufficient.
+
+Thanks!
+
+John
+
+On Thu, Jan 31, 2013 at 03:18:56PM +0100, Ognjen Ikovic wrote:
+> Dear Mr. John,
+> 
+> my name is Ognjen Ikovic and I am R&D engineer from Novi Sad, Serbia. I
+> have noticed that You are listed as maintainer for the wireless-regdb
+> database, congratulations on a fine work You are doing.
+> 
+> I have noticed the following inputs in the regulatory database for Serbia
+> which are not in line with regulatory documents for Serbia:
+> 
+> country RS:
+>         # 60 gHz band channels 1-4, ref: Etsi En 302 567
+>         (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+> 
+> I was wondering if You could, please, update the regulatory database with
+> new information:
+> 
+> *WAS/RLANs for indoor usage:*
+> 1. Frequency Band 2400-2483.5 MHz;  Power 100mW e.i.r.p.; Channel spacing:
+> None;
+> CEPT document:  ERC/DEC/(01)07, ERC/DEC/(04)07, ERC/REC/70-03; ETSI
+> standard EN 300 328
+> 
+> 2. Frequency Band 5150-5350 MHz;  Power 200mW e.i.r.p.;
+> CEPT document:  ERC/DEC/(99)24, ECC/DEC/(04)08, ERC/REC/70-03; ETSI
+> standard: EN 300 836, EN 301 893
+> 
+> *WAS/RLANs for outdoor usage:*
+> 1. Frequency Band 2400-2483.5 MHz;  Power 100mW e.i.r.p.; Channel spacing:
+> None;
+> CEPT document:  ERC/DEC/(01)07, ERC/REC/70-03; ETSI standard EN 300 328
+> 
+> 2. Frequency Band 5470-5725 MHz;  Power 1W e.i.r.p; Channel spacing: 20
+> MHz; TCP required 3dB;  DFS required;
+> CEPT document: ECC/DEC/(04)08; ETSI standard: EN 301 893
+> 
+> I have regulatory document with these information, but it is on Serbian
+> language. If You need more information regarding this subject do not
+> hesitate to contact me.
+> 
+> Best regards,
+> 
+> Ognjen Ikovic
+> 
+> -- 
+> Ognjen Ikovic
+> Staff engineer
+> ognjen.ikovic@lacitadelleing.com
+> +381640272551
+> LaCitadelle Inzenjering
+> www.lacitadelleing.com
+
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
