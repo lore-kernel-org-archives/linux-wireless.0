@@ -1,259 +1,652 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759947Ab3BZV2C (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:53038 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab3BFLtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:28:02 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] iwlwifi: always copy first 16 bytes of commands
-Date: Tue, 26 Feb 2013 22:27:54 +0100
-Message-Id: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222807_868739_222A7527)
-In-Reply-To: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
-References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
+	Wed, 6 Feb 2013 06:49:15 -0500
+Received: by mail-bk0-f43.google.com with SMTP id jm19so594020bkc.30
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 03:49:13 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
+Subject: [RFCv2 2/3] mac80211: mesh power save doze scheduling
+Date: Wed,  6 Feb 2013 12:48:44 +0100
+Message-Id: <1360151325-6368-3-git-send-email-marco@cozybit.com> (sfid-20130206_124921_590334_3C1E845B)
+In-Reply-To: <1360151325-6368-1-git-send-email-marco@cozybit.com>
+References: <1360151325-6368-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Configure the HW for PS mode if the local mesh PS parameters
+allow so.
 
-The FH hardware will always write back to the scratch field
-in commands, even host commands not just TX commands, which
-can overwrite parts of the command. This is problematic if
-the command is re-used (with IWL_HCMD_DFL_NOCOPY) and can
-cause calibration issues.
+Expose a callback ieee80211_mps_init for drivers to register
+mesh powersave ops:
+- hw_doze - put the radio to sleep now, wake up at given TBTT
+- hw_wakeup - wake the radio up for frame RX
+These ops may be extended in the future to allow drivers/HW to
+implement mesh PS themselves. (The current design goal was to
+concentrate most mesh PS routines in mac80211 to keep driver
+modifications minimal.
 
-Address this problem by always putting at least the first
-16 bytes into the buffer we also use for the command header
-and therefore make the DMA engine write back into this.
+Track the beacon timing information of peers we are in PS mode
+towards. Calculate the next TBTT per-STA.
 
-For commands that are smaller than 16 bytes also always map
-enough memory for the DMA engine to write back to.
+When going to doze state, get the most imminent STA TBTT and
+configure the driver to trigger a wakeup on time to catch that
+beacon. After successful receipt put the HW to doze again.
+Set a timeout for the case that the beacon is not received on
+time. In this case calculate the following TBTT and go to doze
+again.
 
-Cc: stable@vger.kernel.org
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
+a timer which triggers a doze call on expiry.
+
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-devtrace.h  | 10 ++--
- drivers/net/wireless/iwlwifi/pcie/internal.h |  9 ++++
- drivers/net/wireless/iwlwifi/pcie/tx.c       | 75 +++++++++++++++++++++-------
- 3 files changed, 71 insertions(+), 23 deletions(-)
+ include/net/mac80211.h     |   29 ++++
+ net/mac80211/ieee80211_i.h |    7 +-
+ net/mac80211/mesh.c        |   17 +++
+ net/mac80211/mesh.h        |   17 +++
+ net/mac80211/mesh_plink.c  |    1 +
+ net/mac80211/mesh_ps.c     |  316 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.c    |    3 +
+ net/mac80211/sta_info.h    |   10 ++
+ net/mac80211/tx.c          |    2 +
+ 9 files changed, 401 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-index 9a0f45e..10f0179 100644
---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
-@@ -349,25 +349,23 @@ TRACE_EVENT(iwlwifi_dev_rx_data,
- TRACE_EVENT(iwlwifi_dev_hcmd,
- 	TP_PROTO(const struct device *dev,
- 		 struct iwl_host_cmd *cmd, u16 total_size,
--		 const void *hdr, size_t hdr_len),
--	TP_ARGS(dev, cmd, total_size, hdr, hdr_len),
-+		 struct iwl_cmd_header *hdr),
-+	TP_ARGS(dev, cmd, total_size, hdr),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
- 		__dynamic_array(u8, hcmd, total_size)
- 		__field(u32, flags)
- 	),
- 	TP_fast_assign(
--		int i, offset = hdr_len;
-+		int i, offset = sizeof(*hdr);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3037f49..e393a49 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3999,6 +3999,35 @@ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
+  */
+ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
  
- 		DEV_ASSIGN;
- 		__entry->flags = cmd->flags;
--		memcpy(__get_dynamic_array(hcmd), hdr, hdr_len);
-+		memcpy(__get_dynamic_array(hcmd), hdr, sizeof(*hdr));
- 
- 		for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
- 			if (!cmd->len[i])
- 				continue;
--			if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
--				continue;
- 			memcpy((u8 *)__get_dynamic_array(hcmd) + offset,
- 			       cmd->data[i], cmd->len[i]);
- 			offset += cmd->len[i];
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index aa2a39a..3d62e80 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -182,6 +182,15 @@ struct iwl_queue {
- #define TFD_TX_CMD_SLOTS 256
- #define TFD_CMD_SLOTS 32
- 
-+/*
-+ * The FH will write back to the first TB only, so we need
-+ * to copy some data into the buffer regardless of whether
-+ * it should be mapped or not. This indicates how much to
-+ * copy, even for HCMDs it must be big enough to fit the
-+ * DRAM scratch from the TX cmd, at least 16 bytes.
++/**
++ * struct ieee80211_mps_ops - callbacks from mac80211 to the driver for mesh PS
++ *
++ * @hw_doze: put the radio to doze state to conserve power, schedule wakeup
++ *	at given TSF value to receive peer beacon
++ * @hw_wakeup: wake up the radio to receive frames again
 + */
-+#define IWL_HCMD_MIN_COPY_SIZE	16
++struct ieee80211_mps_ops {
++	void (*hw_doze)(struct ieee80211_hw *hw, u64 nexttbtt);
++	void (*hw_wakeup)(struct ieee80211_hw *hw);
++};
 +
- struct iwl_pcie_txq_entry {
- 	struct iwl_device_cmd *cmd;
- 	struct iwl_device_cmd *copy_cmd;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 8e9e321..8b625a7 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1152,10 +1152,12 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 	void *dup_buf = NULL;
- 	dma_addr_t phys_addr;
- 	int idx;
--	u16 copy_size, cmd_size;
-+	u16 copy_size, cmd_size, dma_size;
- 	bool had_nocopy = false;
- 	int i;
- 	u32 cmd_pos;
-+	const u8 *cmddata[IWL_MAX_CMD_TFDS];
-+	u16 cmdlen[IWL_MAX_CMD_TFDS];
++#ifdef CONFIG_MAC80211_MESH
++/**
++ * ieee80211_mps_init - register callbacks for mesh PS
++ *
++ * @hw: the hardware
++ * @ops: callbacks for this device
++ *
++ * called by driver on mesh interface add/remove
++ */
++int ieee80211_mps_init(struct ieee80211_hw *hw,
++		       const struct ieee80211_mps_ops *ops);
++#else
++static inline int ieee80211_mps_init(struct ieee80211_hw *hw,
++				     const struct ieee80211_mps_ops *ops)
++{ return 0; }
++#endif
++
+ /* Rate control API */
  
- 	copy_size = sizeof(out_cmd->hdr);
- 	cmd_size = sizeof(out_cmd->hdr);
-@@ -1164,8 +1166,23 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 	BUILD_BUG_ON(IWL_MAX_CMD_TFDS > IWL_NUM_OF_TBS - 1);
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bba2b10..cb54bae 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -628,6 +628,7 @@ struct ieee80211_if_mesh {
+ 	int ps_peers_light_sleep;
+ 	int ps_peers_deep_sleep;
+ 	struct ps_data ps;
++	struct timer_list awake_window_end_timer;
+ };
  
- 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
-+		cmddata[i] = cmd->data[i];
-+		cmdlen[i] = cmd->len[i];
-+
- 		if (!cmd->len[i])
- 			continue;
-+
-+		/* need at least IWL_HCMD_MIN_COPY_SIZE copied */
-+		if (copy_size < IWL_HCMD_MIN_COPY_SIZE) {
-+			int copy = IWL_HCMD_MIN_COPY_SIZE - copy_size;
-+
-+			if (copy > cmdlen[i])
-+				copy = cmdlen[i];
-+			cmdlen[i] -= copy;
-+			cmddata[i] += copy;
-+			copy_size += copy;
-+		}
-+
- 		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
- 			had_nocopy = true;
- 			if (WARN_ON(cmd->dataflags[i] & IWL_HCMD_DFL_DUP)) {
-@@ -1185,7 +1202,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 				goto free_dup_buf;
- 			}
+ #ifdef CONFIG_MAC80211_MESH
+@@ -1125,7 +1126,7 @@ struct ieee80211_local {
+ 	bool pspolling;
+ 	bool offchannel_ps_enabled;
+ 	/*
+-	 * PS can only be enabled when we have exactly one managed
++	 * managed mode PS can only be enabled when we have exactly one managed
+ 	 * interface (and monitors) in PS, this then points there.
+ 	 */
+ 	struct ieee80211_sub_if_data *ps_sdata;
+@@ -1145,6 +1146,10 @@ struct ieee80211_local {
  
--			dup_buf = kmemdup(cmd->data[i], cmd->len[i],
-+			dup_buf = kmemdup(cmddata[i], cmdlen[i],
- 					  GFP_ATOMIC);
- 			if (!dup_buf)
- 				return -ENOMEM;
-@@ -1195,7 +1212,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 				idx = -EINVAL;
- 				goto free_dup_buf;
- 			}
--			copy_size += cmd->len[i];
-+			copy_size += cmdlen[i];
- 		}
- 		cmd_size += cmd->len[i];
+ 	int user_power_level; /* in dBm, for all interfaces */
+ 
++	/* mesh power save */
++	bool mps_enabled;
++	const struct ieee80211_mps_ops *mps_ops;
++
+ 	enum ieee80211_smps_mode smps_mode;
+ 
+ 	struct work_struct restart_work;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 643262b..b0deb14 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -800,6 +800,7 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+ 	if (ifmsh->preq_queue_len &&
+@@ -821,6 +822,19 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (test_and_clear_bit(MESH_WORK_DRIFT_ADJUST, &ifmsh->wrkq_flags))
+ 		mesh_sync_adjust_tbtt(sdata);
++
++	if (test_and_clear_bit(MESH_WORK_PS_HW_CONF, &ifmsh->wrkq_flags))
++		ieee80211_mps_hw_conf(sdata);
++
++	/* in case both fired simultaneously, wakeup overrides doze */
++	if (test_bit(MESH_WORK_PS_DOZE, &ifmsh->wrkq_flags) &&
++	    test_bit(MESH_WORK_PS_WAKEUP, &ifmsh->wrkq_flags))
++		clear_bit(MESH_WORK_PS_DOZE, &ifmsh->wrkq_flags);
++
++	if (test_and_clear_bit(MESH_WORK_PS_WAKEUP, &ifmsh->wrkq_flags))
++		ieee80211_mps_wakeup(local);
++	else if (test_and_clear_bit(MESH_WORK_PS_DOZE, &ifmsh->wrkq_flags))
++		ieee80211_mps_doze(local);
+ }
+ 
+ void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local)
+@@ -860,6 +874,9 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	setup_timer(&ifmsh->mesh_path_root_timer,
+ 		    ieee80211_mesh_path_root_timer,
+ 		    (unsigned long) sdata);
++	setup_timer(&ifmsh->awake_window_end_timer,
++		    ieee80211_mps_awake_window_end,
++		    (unsigned long) sdata);
+ 	INIT_LIST_HEAD(&ifmsh->preq_queue.list);
+ 	skb_queue_head_init(&ifmsh->ps.bc_buf);
+ 	spin_lock_init(&ifmsh->mesh_preq_queue_lock);
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index d6d9933..686f991 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -58,6 +58,10 @@ enum mesh_path_flags {
+  * @MESH_WORK_ROOT: the mesh root station needs to send a frame
+  * @MESH_WORK_DRIFT_ADJUST: time to compensate for clock drift relative to other
+  * mesh nodes
++ * @MESH_WORK_PS_HW_CONF: configure hardware according to the link-specific
++ * mesh power modes
++ * @MESH_WORK_PS_DOZE: put the hardware to sleep after checking all conditions
++ * @MESH_WORK_PS_WAKEUP: wakeup the hardware immediately
+  */
+ enum mesh_deferred_task_flags {
+ 	MESH_WORK_HOUSEKEEPING,
+@@ -65,6 +69,9 @@ enum mesh_deferred_task_flags {
+ 	MESH_WORK_GROW_MPP_TABLE,
+ 	MESH_WORK_ROOT,
+ 	MESH_WORK_DRIFT_ADJUST,
++	MESH_WORK_PS_HW_CONF,
++	MESH_WORK_PS_DOZE,
++	MESH_WORK_PS_WAKEUP,
+ };
+ 
+ /**
+@@ -258,6 +265,16 @@ void ieee80211_mpsp_trigger_process(u8 *qc, struct sta_info *sta,
+ 				    bool tx, bool acked);
+ void ieee80211_mps_frame_release(struct sta_info *sta,
+ 				 struct ieee802_11_elems *elems);
++void ieee80211_mps_hw_conf(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mps_sta_tbtt_update(struct sta_info *sta,
++				   struct ieee80211_mgmt *mgmt,
++				   struct ieee80211_tim_ie *tim,
++				   u64 tsf);
++void ieee80211_mps_sta_tbtt_timeout(unsigned long data);
++void ieee80211_mps_awake_window_start(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mps_awake_window_end(unsigned long data);
++void ieee80211_mps_doze(struct ieee80211_local *local);
++void ieee80211_mps_wakeup(struct ieee80211_local *local);
+ 
+ /* Mesh paths */
+ int mesh_nexthop_lookup(struct sk_buff *skb,
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index af6fbfd..f41b4bb 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -419,6 +419,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 		ifmsh->sync_ops->rx_bcn(sta, mgmt, elems, rx_status, tsf);
+ 
+ 	ieee80211_mps_frame_release(sta, elems);
++	ieee80211_mps_sta_tbtt_update(sta, mgmt, elems->tim, tsf);
+ out:
+ 	rcu_read_unlock();
+ }
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index b677962..08de056 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -9,6 +9,18 @@
+ 
+ #include "mesh.h"
+ #include "wme.h"
++#include <linux/export.h>
++
++
++#define BEACON_TIMEOUT	20000	/* in us units */
++
++
++static inline void mps_queue_work(struct ieee80211_sub_if_data *sdata,
++				  enum mesh_deferred_task_flags flag)
++{
++	set_bit(flag, &sdata->u.mesh.wrkq_flags);
++	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++}
+ 
+ 
+ /* mesh PS management */
+@@ -126,6 +138,8 @@ void ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifmsh->ps_peers_light_sleep = light_sleep_cnt;
+ 	ifmsh->ps_peers_deep_sleep = deep_sleep_cnt;
++
++	mps_queue_work(sdata, MESH_WORK_PS_HW_CONF);
+ }
+ 
+ /**
+@@ -538,6 +552,12 @@ void ieee80211_mpsp_trigger_process(u8 *qc, struct sta_info *sta,
+ 		if (rspi && !test_and_set_sta_flag(sta, WLAN_STA_MPSP_OWNER))
+ 			mps_frame_deliver(sta, -1);
  	}
-@@ -1242,14 +1259,31 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
++
++	if (test_sta_flag(sta, WLAN_STA_MPSP_OWNER) ||
++	    test_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT))
++		mps_queue_work(sta->sdata, MESH_WORK_PS_WAKEUP);
++	else
++		mps_queue_work(sta->sdata, MESH_WORK_PS_DOZE);
+ }
  
- 	/* and copy the data that needs to be copied */
- 	cmd_pos = offsetof(struct iwl_device_cmd, payload);
-+	copy_size = sizeof(out_cmd->hdr);
- 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
--		if (!cmd->len[i])
-+		int copy = 0;
+ /**
+@@ -583,3 +603,299 @@ void ieee80211_mps_frame_release(struct sta_info *sta,
+ 	else
+ 		mps_frame_deliver(sta, 1);
+ }
 +
-+		if (!cmd->len)
- 			continue;
--		if (cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
--					 IWL_HCMD_DFL_DUP))
--			break;
--		memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], cmd->len[i]);
--		cmd_pos += cmd->len[i];
 +
-+		/* need at least IWL_HCMD_MIN_COPY_SIZE copied */
-+		if (copy_size < IWL_HCMD_MIN_COPY_SIZE) {
-+			copy = IWL_HCMD_MIN_COPY_SIZE - copy_size;
++/* mesh PS driver configuration and doze scheduling */
 +
-+			if (copy > cmd->len[i])
-+				copy = cmd->len[i];
++static bool mps_hw_conf_check(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_mesh *ifmsh;
++	bool enable = true;
++
++	if (!local->mps_ops)
++		return false;
++
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++
++		/* If an AP or any other non-mesh vif is found, disable PS */
++		if (ieee80211_sdata_running(sdata) &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT) {
++			enable = false;
++			break;
 +		}
 +
-+		/* copy everything if not nocopy/dup */
-+		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
-+					   IWL_HCMD_DFL_DUP)))
-+			copy = cmd->len[i];
++		ifmsh = &sdata->u.mesh;
 +
-+		if (copy) {
-+			memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], copy);
-+			cmd_pos += copy;
-+			copy_size += copy;
++		/*
++		 * check for non-peer power mode, check for links in active
++		 * mode. Assume a valid power mode is set for each established
++		 * peer link
++		 */
++		if (ifmsh->nonpeer_pm == NL80211_MESH_POWER_ACTIVE ||
++		    ifmsh->ps_peers_light_sleep + ifmsh->ps_peers_deep_sleep
++				< atomic_read(&ifmsh->estab_plinks)) {
++			enable = false;
++			break;
 +		}
- 	}
- 
- 	WARN_ON_ONCE(txq->entries[idx].copy_cmd);
-@@ -1275,7 +1309,14 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 		     out_cmd->hdr.cmd, le16_to_cpu(out_cmd->hdr.sequence),
- 		     cmd_size, q->write_ptr, idx, trans_pcie->cmd_queue);
- 
--	phys_addr = dma_map_single(trans->dev, &out_cmd->hdr, copy_size,
++	}
++	mutex_unlock(&local->iflist_mtx);
++
++	return enable;
++}
++
++/**
++ * mps_hw_conf_sta_prepare - mark peers to catch beacon once before first doze
++ */
++static void mps_hw_conf_sta_prepare(struct ieee80211_local *local)
++{
++	struct sta_info *sta;
++
++	mutex_lock(&local->sta_mtx);
++	list_for_each_entry(sta, &local->sta_list, list) {
++		if (!ieee80211_vif_is_mesh(&sta->sdata->vif) ||
++		    !ieee80211_sdata_running(sta->sdata) ||
++		    sta->plink_state != NL80211_PLINK_ESTAB)
++			continue;
++		else
++			set_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB);
++	}
++	mutex_unlock(&local->sta_mtx);
++}
++
++/**
++ * ieee80211_mps_hw_conf - check conditions for mesh PS and configure driver
++ *
++ * @sdata: local mesh subif
++ */
++void ieee80211_mps_hw_conf(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	bool enable;
++
++	enable = mps_hw_conf_check(local);
++
++	if (local->mps_enabled == enable)
++		return;
++
++	if (enable) {
++		mps_hw_conf_sta_prepare(local);
++		local->hw.conf.flags |= IEEE80211_CONF_PS;
++	} else {
++		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++	}
++
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	local->mps_enabled = enable;
++	mps_queue_work(sdata, MESH_WORK_PS_WAKEUP);
++}
++
++static void mps_sta_nexttbtt_calc(struct sta_info *sta,
++				  struct ieee80211_tim_ie *tim,
++				  u64 tsf_local)
++{
++	u64 tsf_peer;
++	int skip = 1;
++	u32 nexttbtt_interval;
++
++	/* simple Deep Sleep implementation: only wake up for DTIM beacons */
++	if (sta->local_pm == NL80211_MESH_POWER_DEEP_SLEEP)
++		skip = tim->dtim_count ? tim->dtim_count : tim->dtim_period;
 +	/*
-+	 * If the entire command is smaller than IWL_HCMD_MIN_COPY_SIZE, we must
-+	 * still map at least that many bytes for the hardware to write back to.
-+	 * We have enough space, so that's not a problem.
++	 * determine time to peer TBTT (TSF % beacon_interval = 0).
++	 * This approach is robust to delayed beacons.
 +	 */
-+	dma_size = max_t(u16, copy_size, IWL_HCMD_MIN_COPY_SIZE);
++	tsf_peer = tsf_local + sta->t_offset;
++	nexttbtt_interval = sta->beacon_interval * skip -
++			do_div(tsf_peer, sta->beacon_interval * skip);
 +
-+	phys_addr = dma_map_single(trans->dev, &out_cmd->hdr, dma_size,
- 				   DMA_BIDIRECTIONAL);
- 	if (unlikely(dma_mapping_error(trans->dev, phys_addr))) {
- 		idx = -ENOMEM;
-@@ -1283,14 +1324,15 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
++	mps_dbg(sta->sdata, "updating %pM next TBTT in %dus (%lldus awake)\n",
++		sta->sta.addr, nexttbtt_interval,
++		(long long) tsf_local - sta->nexttbtt_tsf);
++
++	sta->nexttbtt_tsf = tsf_local + nexttbtt_interval;
++	sta->nexttbtt_jiffies = jiffies + usecs_to_jiffies(nexttbtt_interval);
++
++	mod_timer(&sta->nexttbtt_timer, sta->nexttbtt_jiffies +
++			usecs_to_jiffies(BEACON_TIMEOUT));
++}
++
++/**
++ * ieee80211_mps_sta_tbtt_update - update peer beacon wakeup schedule
++ *
++ * @sta: mesh STA
++ * @mgmt: beacon frame
++ * @tim: TIM IE of beacon frame
++ * @tsf_local: current HW TSF
++ */
++void ieee80211_mps_sta_tbtt_update(struct sta_info *sta,
++				   struct ieee80211_mgmt *mgmt,
++				   struct ieee80211_tim_ie *tim,
++				   u64 tsf_local)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++
++	if (!sdata->local->mps_enabled ||
++	    sta->plink_state != NL80211_PLINK_ESTAB)
++		return;
++
++	sta->beacon_interval = le16_to_cpu(mgmt->u.beacon.beacon_int) * 1024;
++	/* pending multicasts after DTIM beacon? TODO reset after RX */
++	if (tim->bitmap_ctrl & 0x01)
++		set_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB);
++	else
++		clear_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB);
++
++	mps_sta_nexttbtt_calc(sta, tim, tsf_local);
++
++	mps_queue_work(sdata, MESH_WORK_PS_DOZE);
++}
++
++/**
++ * ieee80211_mps_sta_tbtt_timeout - timer callback for missed peer beacons
++ */
++void ieee80211_mps_sta_tbtt_timeout(unsigned long data)
++{
++	struct sta_info *sta = (void *)data;
++
++	rcu_read_lock();
++	sta->nexttbtt_tsf += sta->beacon_interval;
++	sta->nexttbtt_jiffies += usecs_to_jiffies(sta->beacon_interval);
++
++	mps_dbg(sta->sdata, "beacon miss %pM\n", sta->sta.addr);
++	mps_queue_work(sta->sdata, MESH_WORK_PS_DOZE);
++	rcu_read_unlock();
++}
++
++/**
++ * ieee80211_mps_awake_window_start - start Awake Window on SWBA
++ *
++ * @sdata: local mesh subif
++ */
++void ieee80211_mps_awake_window_start(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++
++	if (!sdata->local->mps_enabled)
++		return;
++
++	mod_timer(&ifmsh->awake_window_end_timer, jiffies + usecs_to_jiffies(
++			ifmsh->mshcfg.dot11MeshAwakeWindowDuration * 1024));
++
++	mps_dbg(sdata, "awake window start (%dTU)\n",
++		ifmsh->mshcfg.dot11MeshAwakeWindowDuration);
++	mps_queue_work(sdata, MESH_WORK_PS_WAKEUP);
++}
++
++/**
++ * ieee80211_mps_awake_window_end - timer callback for end of Awake Window
++ */
++void ieee80211_mps_awake_window_end(unsigned long data)
++{
++	struct ieee80211_sub_if_data *sdata = (void *) data;
++
++	if (!sdata->local->mps_enabled)
++		return;
++
++	mps_dbg(sdata, "awake window end\n");
++	mps_queue_work(sdata, MESH_WORK_PS_DOZE);
++}
++
++static bool mps_doze_check_vif(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	bool allow = true;
++
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++
++		if (!ieee80211_vif_is_mesh(&sdata->vif) ||
++		    timer_pending(&sdata->u.mesh.awake_window_end_timer)) {
++			allow = false;
++			break;
++		}
++	}
++	mutex_unlock(&local->iflist_mtx);
++
++	return allow;
++}
++
++static bool mps_doze_check_sta(struct ieee80211_local *local, u64 *nexttbtt)
++{
++	struct sta_info *sta;
++	bool allow = true;
++	u64 nexttbtt_min = ULLONG_MAX;
++
++	mutex_lock(&local->sta_mtx);
++	list_for_each_entry(sta, &local->sta_list, list) {
++		if (!ieee80211_vif_is_mesh(&sta->sdata->vif) ||
++		    !ieee80211_sdata_running(sta->sdata) ||
++		    sta->plink_state != NL80211_PLINK_ESTAB) {
++			continue;
++		} else if (test_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB) ||
++			   test_sta_flag(sta, WLAN_STA_MPSP_OWNER) ||
++			   test_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT) ||
++			   time_in_range(jiffies, sta->nexttbtt_jiffies,
++					 sta->nexttbtt_jiffies +
++					 usecs_to_jiffies(BEACON_TIMEOUT))) {
++			allow = false;
++			break;
++		} else if (sta->nexttbtt_tsf < nexttbtt_min) {
++			nexttbtt_min = sta->nexttbtt_tsf;
++		}
++	}
++	mutex_unlock(&local->sta_mtx);
++
++	if (nexttbtt_min != ULLONG_MAX)
++		*nexttbtt = nexttbtt_min;
++
++	return allow;
++}
++
++/**
++ * ieee80211_mps_doze - check conditions and trigger radio doze state
++ *
++ * @local: local interface data
++ */
++void ieee80211_mps_doze(struct ieee80211_local *local)
++{
++	u64 nexttbtt = 0;
++	struct sta_info *sta;
++
++	if (!local->mps_enabled ||
++	    !mps_doze_check_vif(local) ||
++	    !mps_doze_check_sta(local, &nexttbtt))
++		return;
++
++	if (local->mps_ops)
++		local->mps_ops->hw_doze(&local->hw, nexttbtt);
++}
++
++/**
++ * ieee80211_mps_wakeup - trigger radio wakeup immediately
++ *
++ * @local: local interface data
++ */
++void ieee80211_mps_wakeup(struct ieee80211_local *local)
++{
++	if (local->mps_ops)
++		local->mps_ops->hw_wakeup(&local->hw);
++}
++
++int ieee80211_mps_init(struct ieee80211_hw *hw,
++		       const struct ieee80211_mps_ops *ops)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	local->mps_ops = ops;
++	if (!ops)
++		local->mps_enabled = false;
++
++	return 0;
++}
++EXPORT_SYMBOL(ieee80211_mps_init);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f920154..2905f2a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -142,6 +142,7 @@ static void cleanup_single_sta(struct sta_info *sta)
+ 		mesh_accept_plinks_update(sdata);
+ 		mesh_plink_deactivate(sta);
+ 		del_timer_sync(&sta->plink_timer);
++		del_timer_sync(&sta->nexttbtt_timer);
  	}
+ #endif
  
- 	dma_unmap_addr_set(out_meta, mapping, phys_addr);
--	dma_unmap_len_set(out_meta, len, copy_size);
-+	dma_unmap_len_set(out_meta, len, dma_size);
+@@ -385,6 +386,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ #ifdef CONFIG_MAC80211_MESH
+ 	sta->plink_state = NL80211_PLINK_LISTEN;
+ 	init_timer(&sta->plink_timer);
++	setup_timer(&sta->nexttbtt_timer, ieee80211_mps_sta_tbtt_timeout,
++		    (unsigned long) sta);
+ #endif
  
- 	iwl_pcie_txq_build_tfd(trans, txq, phys_addr, copy_size, 1);
+ 	return sta;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 5a1deba..624d32a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -58,6 +58,7 @@
+  * @WLAN_STA_TOFFSET_KNOWN: toffset calculated for this station is valid.
+  * @WLAN_STA_MPSP_OWNER: local STA is owner of a mesh Peer Service Period.
+  * @WLAN_STA_MPSP_RECIPIENT: local STA is recipient of a MPSP.
++ * @WLAN_STA_MPS_WAIT_FOR_CAB: multicast frames from this STA are imminent.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH,
+@@ -82,6 +83,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_TOFFSET_KNOWN,
+ 	WLAN_STA_MPSP_OWNER,
+ 	WLAN_STA_MPSP_RECIPIENT,
++	WLAN_STA_MPS_WAIT_FOR_CAB,
+ };
  
-+	/* map the remaining (adjusted) nocopy/dup fragments */
- 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
--		const void *data = cmd->data[i];
-+		const void *data = cmddata[i];
+ #define ADDBA_RESP_INTERVAL HZ
+@@ -289,6 +291,10 @@ struct sta_ampdu_mlme {
+  * @local_pm: local link-specific power save mode
+  * @peer_pm: peer-specific power save mode towards local STA
+  * @nonpeer_pm: STA power save mode towards non-peer neighbors
++ * @beacon_interval: beacon interval of neighbor STA (in us)
++ * @nexttbtt_tsf: next TBTT in local TSF units
++ * @nexttbtt_jiffies: next TBTT in jiffies units
++ * @nexttbtt_timer: timeout for missed beacons
+  * @debugfs: debug filesystem info
+  * @dead: set to true when sta is unlinked
+  * @uploaded: set to true when sta is uploaded to the driver
+@@ -390,6 +396,10 @@ struct sta_info {
+ 	enum nl80211_mesh_power_mode local_pm;
+ 	enum nl80211_mesh_power_mode peer_pm;
+ 	enum nl80211_mesh_power_mode nonpeer_pm;
++	u32 beacon_interval;
++	u64 nexttbtt_tsf;
++	unsigned long nexttbtt_jiffies;
++	struct timer_list nexttbtt_timer;
+ #endif
  
--		if (!cmd->len[i])
-+		if (!cmdlen[i])
- 			continue;
- 		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
- 					   IWL_HCMD_DFL_DUP)))
-@@ -1298,7 +1340,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 		if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP)
- 			data = dup_buf;
- 		phys_addr = dma_map_single(trans->dev, (void *)data,
--					   cmd->len[i], DMA_BIDIRECTIONAL);
-+					   cmdlen[i], DMA_BIDIRECTIONAL);
- 		if (dma_mapping_error(trans->dev, phys_addr)) {
- 			iwl_pcie_tfd_unmap(trans, out_meta,
- 					   &txq->tfds[q->write_ptr],
-@@ -1307,7 +1349,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ #ifdef CONFIG_MAC80211_DEBUGFS
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 75ae941..4ad45f0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2495,6 +2495,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 			pr_err("o11s: couldn't add ies!\n");
  			goto out;
  		}
- 
--		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmd->len[i], 0);
-+		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], 0);
- 	}
- 
- 	out_meta->flags = cmd->flags;
-@@ -1317,8 +1359,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
- 
- 	txq->need_update = 1;
- 
--	trace_iwlwifi_dev_hcmd(trans->dev, cmd, cmd_size,
--			       &out_cmd->hdr, copy_size);
-+	trace_iwlwifi_dev_hcmd(trans->dev, cmd, cmd_size, &out_cmd->hdr);
- 
- 	/* start timer if queue currently empty */
- 	if (q->read_ptr == q->write_ptr && trans_pcie->wd_timeout)
++
++		ieee80211_mps_awake_window_start(sdata);
+ 	} else {
+ 		WARN_ON(1);
+ 		goto out;
 -- 
-1.8.0
+1.7.9.5
 
