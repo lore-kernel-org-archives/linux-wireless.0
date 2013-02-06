@@ -1,94 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56903 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753922Ab3BAAim (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53942 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758465Ab3BFVBd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 19:38:42 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: wrap BSS kref
-Date: Fri,  1 Feb 2013 01:39:03 +0100
-Message-Id: <1359679143-4810-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_013845_786545_97B08B0C)
+	Wed, 6 Feb 2013 16:01:33 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: [PATCH 4/4] brcmsmac: Add support for off-channel powersave
+Date: Wed,  6 Feb 2013 15:01:18 -0600
+Message-Id: <1360184478-31481-5-git-send-email-seth.forshee@canonical.com> (sfid-20130206_220138_694401_0361C5F8)
+In-Reply-To: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Broadcom hardware sets the value of the PM flag in frame control based
+on the value of MCTL_HPS, which seems to include actively clearing PM
+if MCTL_HPS is not set. brcmsmac needs to suppor the off-channel
+powersave state in order to enable powersave at the AP at all.
 
-Add inline wrappers for the BSS struct krefs
-to be able to extend them easily later.
+Add limited support for powersave to brcmsmac to prevent frame loss
+during background scans. Full powersave supoprt remains unimplemented,
+but switching between the off-channel and disabled states is possible.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- net/wireless/scan.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   16 +++++++++++-----
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |    7 ++++++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |    1 +
+ 3 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 1ed160d..c962737 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -41,6 +41,16 @@ static void bss_release(struct kref *ref)
- 	kfree(bss);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index e36df33..4fff8fc 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -394,11 +394,17 @@ static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
+ 		brcms_dbg_info(core, "%s: change monitor mode: %s\n",
+ 			       __func__, conf->flags & IEEE80211_CONF_MONITOR ?
+ 			       "true" : "false");
+-	if (changed & IEEE80211_CONF_CHANGE_PS)
+-		brcms_err(core, "%s: change power-save mode: %s (implement)\n",
+-			  __func__,
+-			  ieee80211_conf_ps_mode(conf) == IEEE80211_PS_DOZE ?
+-			  "true" : "false");
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		/*
++		 * brcmsmac doesn't support powersave, but it does support
++		 * setting the PM bit in frame control for off-channel PS
++		 */
++		if (ieee80211_conf_ps_mode(conf) == IEEE80211_PS_DOZE)
++			brcms_err(core, "%s: cannot enable power-save mode (implement)\n",
++				  __func__);
++		else
++			brcms_c_set_ps_ctrl(wl->wlc);
++	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		err = brcms_c_set_tx_power(wl->wlc, conf->power_level);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 62be550..8b259ca 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3051,6 +3051,11 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (!wlc->pub->associated)
+ 		return false;
+ 
++	/* allow PS when off-channel PS is enabled */
++	if (ieee80211_conf_ps_mode(&wlc->pub->ieee_hw->conf) ==
++	    IEEE80211_PS_OFFCHANNEL)
++		return true;
++
+ 	/* disallow PS when one of these meets when not scanning */
+ 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
+ 		return false;
+@@ -3740,7 +3745,7 @@ brcms_c_duty_cycle_set(struct brcms_c_info *wlc, int duty_cycle, bool isOFDM,
  }
  
-+static inline void bss_ref_get(struct cfg80211_internal_bss *bss)
-+{
-+	kref_get(&bss->ref);
-+}
-+
-+static inline void bss_ref_put(struct cfg80211_internal_bss *bss)
-+{
-+	kref_put(&bss->ref, bss_release);
-+}
-+
- static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
- 				  struct cfg80211_internal_bss *bss)
+ /* push sw hps and wake state through hardware */
+-static void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc)
++void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc)
  {
-@@ -48,7 +58,7 @@ static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
- 
- 	list_del_init(&bss->list);
- 	rb_erase(&bss->rbn, &dev->bss_tree);
--	kref_put(&bss->ref, bss_release);
-+	bss_ref_put(bss);
- }
- 
- static void __cfg80211_bss_expire(struct cfg80211_registered_device *dev,
-@@ -435,7 +445,7 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 			continue;
- 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
- 			res = bss;
--			kref_get(&res->ref);
-+			bss_ref_get(res);
- 			break;
- 		}
- 	}
-@@ -623,7 +633,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 	dev->bss_generation++;
- 	spin_unlock_bh(&dev->bss_lock);
- 
--	kref_get(&found->ref);
-+	bss_ref_get(found);
- 	return found;
- }
- 
-@@ -790,7 +800,7 @@ void cfg80211_ref_bss(struct cfg80211_bss *pub)
- 		return;
- 
- 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
--	kref_get(&bss->ref);
-+	bss_ref_get(bss);
- }
- EXPORT_SYMBOL(cfg80211_ref_bss);
- 
-@@ -802,7 +812,7 @@ void cfg80211_put_bss(struct cfg80211_bss *pub)
- 		return;
- 
- 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
--	kref_put(&bss->ref, bss_release);
-+	bss_ref_put(bss);
- }
- EXPORT_SYMBOL(cfg80211_put_bss);
- 
+ 	u32 v1, v2;
+ 	bool hps;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index fb44774..35a93ef 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -638,6 +638,7 @@ extern void brcms_c_beacon_phytxctl_txant_upd(struct brcms_c_info *wlc,
+ 					  u32 bcn_rate);
+ extern void brcms_b_antsel_type_set(struct brcms_hardware *wlc_hw,
+ 				     u8 antsel_type);
++extern void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc);
+ extern void brcms_b_set_chanspec(struct brcms_hardware *wlc_hw,
+ 				  u16 chanspec,
+ 				  bool mute, struct txpwr_limits *txpwr);
 -- 
-1.8.0
+1.7.9.5
 
