@@ -1,81 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43363 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753996Ab3BDP2I (ORCPT
+Received: from mail-da0-f48.google.com ([209.85.210.48]:57649 "EHLO
+	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab3BFIGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 10:28:08 -0500
-Message-ID: <1359991708.10311.15.camel@jlt4.sipsolutions.net> (sfid-20130204_162812_484067_B12F0F09)
-Subject: Re: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
- interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amit Shakya <amit.shakya@stericsson.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 04 Feb 2013 16:28:28 +0100
-In-Reply-To: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
-References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Feb 2013 03:06:38 -0500
+Received: by mail-da0-f48.google.com with SMTP id v40so526281dad.7
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 00:06:37 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] mac80211: fix mesh sta teardown
+Date: Wed,  6 Feb 2013 00:05:25 -0800
+Message-Id: <1360137925-14264-1-git-send-email-thomas@cozybit.com> (sfid-20130206_090641_804562_9AD4ED7F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-04 at 16:48 +0530, Amit Shakya wrote:
-> In case of multiple virtual interface, if AES is configured on multiple
-> interface then there are chances of stored PN corruption, causing traffic
-> to stop.
+The patch "mac80211: clean up mesh sta allocation warning"
+moved some mesh initialization into a path which is only
+called when the kernel handles peering. This causes a hang
+when mac80211 tries to clean up a userspace-allocated
+station entry and delete a timer which has never been
+initialized.
 
-Interesting, nice find.
+To avoid this, only do any mesh sta peering teardown if
+the kernel is actually handling it.
 
-> In case, ieee80211_rx_handlers processing is going on for skbs received on
-> one vif and at the same time, rx aggregation reorder timer expires on
-> another vif then sta_rx_agg_reorder_timer_expired is invoked and it will
-> push skbs into the single queue (local->rx_skb_queue).
-> ieee80211_rx_handlers in the while loop assumes that the skbs are for the
-> same TID and same sta. 
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c       |   25 +++++++++++++++++++++++++
+ net/mac80211/mesh.h       |    4 +++-
+ net/mac80211/mesh_plink.c |    4 ++--
+ net/mac80211/sta_info.c   |    9 ++-------
+ 4 files changed, 32 insertions(+), 10 deletions(-)
 
-This is because of struct ieee80211_rx_data, presumably? IOW, the loop
-doesn't really assume it, it's the fact that the loop is called with a
-given struct ieee80211_rx_data, right?
-
-> This assumption doesn't hold good in this scenario
-> and the PN gets corrupted by PN received in other vif's skb, causing
-> traffic to stop due to PN mismatch.
-> This can be avoided by comparing source mac addres in received skb's with
-> the sta's mac address for which processing is going on, when de-queueing.
-
-
-
-> @@ -2790,7 +2791,20 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
->  
->  	rx->local->running_rx_handler = true;
->  
-> -	while ((skb = __skb_dequeue(&rx->local->rx_skb_queue))) {
-> +	skb_queue_walk_safe(&rx->local->rx_skb_queue, skb, tmp) {
-> +		if (!skb)
-> +			break;
-> +		hdr = (struct ieee80211_hdr *) skb->data;
-> +		/*
-> +		* Additional check to ensure that the packets corresponding
-> +		* to same sta entry as in rx->sta are de-queued. The queue
-> +		* can have different interface packets in case of multiple vifs
-> +		*/
-> +		if ((rx->sta && hdr) && (ieee80211_is_data(hdr->frame_control))
-> +			&& (memcmp(rx->sta->sta.addr, hdr->addr2, ETH_ALEN)))
-> +					continue;
-> +		__skb_unlink(skb, &rx->local->rx_skb_queue);
-
-Apart from the curious coding style (you don't need any of those extra
-parentheses, && should be on the previous line, the if continuation
-indented to the opening parenthesis, continue only indented one tab), I
-wonder if this could lead to leaking frames here, if the station
-disconnects or something while there are frames for it on the queue?
-IOW, the "just skip that frame" piece seems a bit questionable.
-
-Christian, is there any reason to not just have the queue be on the
-stack, and use a separate spinlock in the local struct to lock out the
-unwanted concurrency? It seems to me that should work just as well,
-since there are never frames on the rx_skb_queue for very long, right?
-
-johannes
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 35ac388..0c51b78 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -149,6 +149,31 @@ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ 	return changed;
+ }
+ 
++/*
++ * mesh_sta_cleanup - clean up any mesh sta state
++ *
++ * @sta: mesh sta to clean up.
++ */
++void mesh_sta_cleanup(struct sta_info *sta)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u32 changed;
++
++	/*
++	 * maybe userspace handles peer allocation and peering, but in either
++	 * case the beacon is still generated by the kernel and we might need
++	 * an update.
++	 */
++	changed = mesh_accept_plinks_update(sdata);
++	if (sdata->u.mesh.security == IEEE80211_MESH_SEC_NONE) {
++		changed |= mesh_plink_deactivate(sta);
++		del_timer_sync(&sta->plink_timer);
++	}
++
++	if (changed)
++		ieee80211_bss_info_change_notify(sdata, changed);
++}
++
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+ {
+ 	int i;
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index eb33625..e5f6095 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -288,12 +288,13 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+-void mesh_plink_deactivate(struct sta_info *sta);
++u32 mesh_plink_deactivate(struct sta_info *sta);
+ int mesh_plink_open(struct sta_info *sta);
+ void mesh_plink_block(struct sta_info *sta);
+ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len,
+ 			 struct ieee80211_rx_status *rx_status);
++void mesh_sta_cleanup(struct sta_info *sta);
+ 
+ /* Private interfaces */
+ /* Mesh tables */
+@@ -380,6 +381,7 @@ static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
+ { return false; }
+ static inline void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
+ {}
++static inline void mesh_sta_cleanup(struct sta_info *sta) {}
+ #endif
+ 
+ #endif /* IEEE80211S_H */
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 67524e7..cdf66fb 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -214,7 +214,7 @@ static u32 __mesh_plink_deactivate(struct sta_info *sta)
+  *
+  * All mesh paths with this peer as next hop will be flushed
+  */
+-void mesh_plink_deactivate(struct sta_info *sta)
++u32 mesh_plink_deactivate(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	u32 changed;
+@@ -227,7 +227,7 @@ void mesh_plink_deactivate(struct sta_info *sta)
+ 			    sta->reason);
+ 	spin_unlock_bh(&sta->lock);
+ 
+-	ieee80211_bss_info_change_notify(sdata, changed);
++	return changed;
+ }
+ 
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 47a0f06..19db20a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -137,13 +137,8 @@ static void cleanup_single_sta(struct sta_info *sta)
+ 		ieee80211_purge_tx_queue(&local->hw, &sta->tx_filtered[ac]);
+ 	}
+ 
+-#ifdef CONFIG_MAC80211_MESH
+-	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+-		mesh_accept_plinks_update(sdata);
+-		mesh_plink_deactivate(sta);
+-		del_timer_sync(&sta->plink_timer);
+-	}
+-#endif
++	if (ieee80211_vif_is_mesh(&sdata->vif))
++		mesh_sta_cleanup(sta);
+ 
+ 	cancel_work_sync(&sta->drv_unblock_wk);
+ 
+-- 
+1.7.10.4
 
