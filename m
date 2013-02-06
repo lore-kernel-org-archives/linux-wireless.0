@@ -1,618 +1,496 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3754 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760196Ab3BHO4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 09:56:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/27] brcmfmac: add support for P2P listen mode.
-Date: Fri, 8 Feb 2013 15:53:38 +0100
-Message-ID: <1360335242-12608-4-git-send-email-arend@broadcom.com> (sfid-20130208_163814_476016_B6AB9BA3)
-In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
-References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57203 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932087Ab3BFTp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 14:45:27 -0500
+Date: Wed, 6 Feb 2013 14:34:23 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2013-02-06
+Message-ID: <20130206193423.GI2148@tuxdriver.com> (sfid-20130206_204555_158124_EAAA4803)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-With this patch a device can be put in p2p listen mode and becomes
-visible for other p2p devices (via p2p_find).
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Dave,
+
+Please consider this pull request for the 3.8 stream...
+
+Included is a bluetooth pull.  Gustavo says:
+
+"Two simple fixes for 3.8. One of the patches fixes a situation
+where the connection wasn't terminated if a timeout ocurrs for LE
+an SCO connections.  The other fixes prevent NULL dereference in the
+SMP code, it is a security fix as well."
+
+Along with those...
+
+Hauke Mehrtens provides a couple of ssb and bcma bus fixes that
+prevent oopses when unloading those modules.
+
+Larry Finger provides and rtlwifi fix to avoid a "scheduling while
+atomic" bug.
+
+Last but certainly not least, Arend van Spriel bring a brcmsmac fix that
+reworks the mac80211 .flush() callback in order to avoid the dreaded
+brcms_c_wait_for_tx_completion warnings.  This one looks a little
+large, but I think it is safe and isolated to brcmsmac in any case.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   13 ++
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    6 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  150 +++++++++++++---
- drivers/net/wireless/brcm80211/brcmfmac/p2p.h      |   15 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  189 +++++++++++++++++++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 +
- 6 files changed, 341 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index b61254d..82724d3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -452,6 +452,19 @@ struct brcmf_sta_info_le {
- 	__le32	rx_decrypt_failures;	/* # of packet decrypted failed */
- };
- 
-+/*
-+ * WLC_E_PROBRESP_MSG
-+ * WLC_E_P2P_PROBREQ_MSG
-+ * WLC_E_ACTION_FRAME_RX
-+ */
-+struct brcmf_rx_mgmt_data {
-+	__be16	version;
-+	__be16	chanspec;
-+	__be32	rssi;
-+	__be32	mactime;
-+	__be32	rate;
-+};
-+
- /* Bus independent dongle command */
- struct brcmf_dcmd {
- 	uint cmd;		/* common dongle cmd definition */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index 36901f7..8c39b51 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -83,6 +83,7 @@ struct brcmf_event;
- 	BRCMF_ENUM_DEF(MULTICAST_DECODE_ERROR, 51) \
- 	BRCMF_ENUM_DEF(TRACE, 52) \
- 	BRCMF_ENUM_DEF(IF, 54) \
-+	BRCMF_ENUM_DEF(P2P_DISC_LISTEN_COMPLETE, 55) \
- 	BRCMF_ENUM_DEF(RSSI, 56) \
- 	BRCMF_ENUM_DEF(PFN_SCAN_COMPLETE, 57) \
- 	BRCMF_ENUM_DEF(EXTLOG_MSG, 58) \
-@@ -96,8 +97,11 @@ struct brcmf_event;
- 	BRCMF_ENUM_DEF(DFS_AP_RESUME, 66) \
- 	BRCMF_ENUM_DEF(ESCAN_RESULT, 69) \
- 	BRCMF_ENUM_DEF(ACTION_FRAME_OFF_CHAN_COMPLETE, 70) \
-+	BRCMF_ENUM_DEF(PROBERESP_MSG, 71) \
-+	BRCMF_ENUM_DEF(P2P_PROBEREQ_MSG, 72) \
- 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
--	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74)
-+	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
-+	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75)
- 
- #define BRCMF_ENUM_DEF(id, val) \
- 	BRCMF_E_##id = (val),
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 25c6b7d..ecc96f3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -318,11 +318,6 @@ static s32 brcmf_p2p_deinit_discovery(struct brcmf_p2p_info *p2p)
- 	brcmf_dbg(TRACE, "enter\n");
- 
- 	bss_dev = &p2p->bss_idx[P2PAPI_BSSCFG_DEVICE];
--	if (bss_dev->vif == NULL) {
--		brcmf_err("do nothing, not initialized\n");
--		return -EINVAL;
--	}
--
- 	ifp = bss_dev->vif->ifp;
- 
- 	/* Set the discovery state to SCAN */
-@@ -348,8 +343,7 @@ static s32 brcmf_p2p_deinit_discovery(struct brcmf_p2p_info *p2p)
-  *
-  * Initializes the discovery device and configure the virtual interface.
-  */
--static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
--				      const u8 *ie, u32 ie_len)
-+static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p)
+The following changes since commit bf414b369f158bb527f9f29174ada815f961b44c:
+
+  net: usbnet: fix tx_dropped statistics (2013-02-04 13:07:31 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
+avem
+
+for you to fetch changes up to b3b66ae4c8aff0636521034d824b8953dc617335:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
+nville/wireless into for-davem (2013-02-06 13:55:44 -0500)
+
+----------------------------------------------------------------
+
+Andre Guedes (1):
+      Bluetooth: Fix hci_conn timeout routine
+
+Arend van Spriel (1):
+      brcmsmac: rework of mac80211 .flush() callback operation
+
+Hauke Mehrtens (2):
+      bcma: unregister gpios before unloading bcma
+      ssb: unregister gpios before unloading ssb
+
+Johan Hedberg (1):
+      Bluetooth: Fix handling of unexpected SMP PDUs
+
+John W. Linville (2):
+      Merge branch 'for-upstream' of git://git.kernel.org/.../bluetooth/blu=
+etooth
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+Larry Finger (1):
+      rtlwifi: Fix scheduling while atomic bug
+
+ drivers/bcma/bcma_private.h                        |  5 ++++
+ drivers/bcma/driver_gpio.c                         |  5 ++++
+ drivers/bcma/main.c                                |  7 +++++
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  | 35 +++++++++++++-----=
+----
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |  3 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     | 15 ++--------
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |  3 +-
+ drivers/net/wireless/rtlwifi/base.c                |  7 +++--
+ drivers/ssb/driver_gpio.c                          | 12 ++++++++
+ drivers/ssb/main.c                                 |  9 ++++++
+ drivers/ssb/ssb_private.h                          |  5 ++++
+ net/bluetooth/hci_conn.c                           |  6 ++--
+ net/bluetooth/smp.c                                | 13 ++++++++
+ 13 files changed, 90 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 19e3fbf..cb0c454 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -94,11 +94,16 @@ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *p=
+c);
+ #ifdef CONFIG_BCMA_DRIVER_GPIO
+ /* driver_gpio.c */
+ int bcma_gpio_init(struct bcma_drv_cc *cc);
++int bcma_gpio_unregister(struct bcma_drv_cc *cc);
+ #else
+ static inline int bcma_gpio_init(struct bcma_drv_cc *cc)
  {
- 	struct brcmf_cfg80211_vif *vif;
- 	s32 ret = 0;
-@@ -357,9 +351,8 @@ static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
- 	brcmf_dbg(TRACE, "enter\n");
- 	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
- 	if (vif) {
--		brcmf_dbg(INFO,
--			  "DISCOVERY init already done, just process IE\n");
--		goto set_ie;
-+		brcmf_dbg(INFO, "DISCOVERY init already done\n");
-+		goto exit;
- 	}
- 
- 	ret = brcmf_p2p_init_discovery(p2p);
-@@ -380,20 +373,36 @@ static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
- 	if (ret < 0)
- 		brcmf_err("wsec error %d\n", ret);
- 
--set_ie:
--	if (ie_len) {
--		ret = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
--					    ie, ie_len);
--
--		if (ret < 0) {
--			brcmf_err("set probreq ie occurs error %d\n", ret);
--			goto exit;
--		}
--	}
- exit:
- 	return ret;
+ 	return -ENOTSUPP;
  }
- 
-+/**
-+ * brcmf_p2p_configure_probereq() - Configure probe request data.
-+ *
-+ * @p2p: P2P specific data.
-+ * @ie: buffer containing information elements.
-+ * @ie_len: length of @ie buffer.
-+ *
-+ */
-+static int brcmf_p2p_configure_probereq(struct brcmf_p2p_info *p2p,
-+					const u8 *ie, u32 ie_len)
++static inline int bcma_gpio_unregister(struct bcma_drv_cc *cc)
 +{
-+	struct brcmf_cfg80211_vif *vif;
-+	s32 err = 0;
-+
-+	brcmf_dbg(TRACE, "enter\n");
-+	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+
-+	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
-+				    ie, ie_len);
-+
-+	if (err < 0)
-+		brcmf_err("set probreq ie occurs error %d\n", err);
-+
-+	return err;
-+}
-+
- /*
-  * brcmf_p2p_escan() - initiate a P2P scan.
-  *
-@@ -420,9 +429,6 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
- 	struct brcmf_scan_params_le *sparams;
- 	struct brcmf_ssid ssid;
- 
--	/* add padding if uneven */
--	if (num_chans % 2)
--		memsize += sizeof(__le16);
- 	memsize += num_chans * sizeof(__le16);
- 	memblk = kzalloc(memsize, GFP_KERNEL);
- 	if (!memblk)
-@@ -639,8 +645,10 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
- 		clear_bit(BRCMF_P2P_STATUS_GO_NEG_PHASE, &p2p->status);
- 		brcmf_dbg(INFO, "P2P: GO_NEG_PHASE status cleared\n");
- 
--		err = brcmf_p2p_enable_discovery(p2p, request->ie,
--						 request->ie_len);
-+		err = brcmf_p2p_enable_discovery(p2p);
-+		if (err == 0)
-+			err = brcmf_p2p_configure_probereq(p2p, request->ie,
-+							   request->ie_len);
- 
- 		/*
- 		 * override .run_escan() callback.
-@@ -666,6 +674,92 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
- 	return err;
- }
- 
-+
-+/**
-+ * brcmf_p2p_remain_on_channel() - put device on channel and stay there.
-+ *
-+ * @wiphy: wiphy device.
-+ * @channel: channel to stay on.
-+ * @duration: time in ms to remain on channel.
-+ *
-+ */
-+int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
-+				struct ieee80211_channel *channel,
-+				unsigned int duration, u64 *cookie)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_p2p_info *p2p = &cfg->p2p;
-+	struct brcmf_cfg80211_vif *vif;
-+	s32 err;
-+	u16 chanspec;
-+
-+	brcmf_dbg(TRACE, "Enter, channel: %d, duration ms (%d)\n",
-+		  ieee80211_frequency_to_channel(channel->center_freq),
-+		  duration);
-+
-+	*cookie = 0;
-+	err = brcmf_p2p_enable_discovery(p2p);
-+	if (err)
-+		goto exit;
-+
-+	chanspec = channel_to_chanspec(channel);
-+	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+	err = brcmf_p2p_set_discover_state(vif->ifp, WL_P2P_DISC_ST_LISTEN,
-+					   chanspec, (u16)duration);
-+	if (err)
-+		goto exit;
-+
-+	memcpy(&p2p->remain_on_channel, channel,
-+	       sizeof(p2p->remain_on_channel));
-+
-+	set_bit(BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL, &p2p->status);
-+
-+exit:
-+	cfg80211_ready_on_channel(wdev, *cookie, channel, duration, GFP_KERNEL);
-+	return err;
-+}
-+
-+
-+/**
-+ * brcmf_p2p_notify_listen_complete() - p2p listen has completed.
-+ *
-+ * @ifp: interfac control.
-+ * @e: event message. Not used, to make it usable for fweh event dispatcher.
-+ * @data: payload of message. Not used.
-+ *
-+ */
-+int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
-+				     const struct brcmf_event_msg *e,
-+				     void *data)
-+{
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
-+	struct brcmf_p2p_info *p2p = &cfg->p2p;
-+
-+	brcmf_dbg(TRACE, "Enter\n");
-+	if (test_and_clear_bit(BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL,
-+			       &p2p->status))
-+		cfg80211_remain_on_channel_expired(&ifp->vif->wdev, 0,
-+						   &p2p->remain_on_channel,
-+						   GFP_KERNEL);
 +	return 0;
 +}
-+
-+
-+/**
-+ * brcmf_p2p_cancel_remain_on_channel() - cancel p2p listen state.
-+ *
-+ * @ifp: interfac control.
-+ *
-+ */
-+void brcmf_p2p_cancel_remain_on_channel(struct brcmf_if *ifp)
-+{
-+	if (!ifp)
-+		return;
-+	brcmf_p2p_set_discover_state(ifp, WL_P2P_DISC_ST_SCAN, 0, 0);
-+	brcmf_p2p_notify_listen_complete(ifp, NULL, NULL);
-+}
-+
-+
- /**
-  * brcmf_p2p_attach() - attach for P2P.
-  *
-@@ -689,7 +783,11 @@ void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg)
-  */
- void brcmf_p2p_detach(struct brcmf_p2p_info *p2p)
- {
--	brcmf_p2p_deinit_discovery(p2p);
-+	if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif != NULL) {
-+		brcmf_p2p_cancel_remain_on_channel(
-+			p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->ifp);
-+		brcmf_p2p_deinit_discovery(p2p);
-+	}
- 	/* just set it all to zero */
- 	memset(p2p, 0, sizeof(*p2p));
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-index f304adf..df93272 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-@@ -60,10 +60,10 @@ struct p2p_bss {
-  * @BRCMF_P2P_STATUS_IF_DELETING: peer-to-peer vif delete sent to dongle.
-  * @BRCMF_P2P_STATUS_IF_CHANGING: peer-to-peer vif change sent to dongle.
-  * @BRCMF_P2P_STATUS_IF_CHANGED: peer-to-peer vif change completed on dongle.
-- * @BRCMF_P2P_STATUS_LISTEN_EXPIRED: listen duration expired.
-  * @BRCMF_P2P_STATUS_ACTION_TX_COMPLETED: action frame tx completed.
-  * @BRCMF_P2P_STATUS_ACTION_TX_NOACK: action frame tx not acked.
-  * @BRCMF_P2P_STATUS_GO_NEG_PHASE: P2P GO negotiation ongoing.
-+ * @BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL: P2P listen, remaining on channel.
-  */
- enum brcmf_p2p_status {
- 	BRCMF_P2P_STATUS_IF_ADD = 0,
-@@ -71,10 +71,10 @@ enum brcmf_p2p_status {
- 	BRCMF_P2P_STATUS_IF_DELETING,
- 	BRCMF_P2P_STATUS_IF_CHANGING,
- 	BRCMF_P2P_STATUS_IF_CHANGED,
--	BRCMF_P2P_STATUS_LISTEN_EXPIRED,
- 	BRCMF_P2P_STATUS_ACTION_TX_COMPLETED,
- 	BRCMF_P2P_STATUS_ACTION_TX_NOACK,
--	BRCMF_P2P_STATUS_GO_NEG_PHASE
-+	BRCMF_P2P_STATUS_GO_NEG_PHASE,
-+	BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL
- };
- 
- /**
-@@ -88,6 +88,7 @@ enum brcmf_p2p_status {
-  * @listen_timer: timer for @WL_P2P_DISC_ST_LISTEN discover state.
-  * @ssid: ssid for P2P GO.
-  * @listen_channel: channel for @WL_P2P_DISC_ST_LISTEN discover state.
-+ * @remain_on_channel: contains copy of struct used by cfg80211.
-  */
- struct brcmf_p2p_info {
- 	struct brcmf_cfg80211_info *cfg;
-@@ -98,6 +99,7 @@ struct brcmf_p2p_info {
- 	struct timer_list listen_timer;
- 	struct brcmf_ssid ssid;
- 	u8 listen_channel;
-+	struct ieee80211_channel remain_on_channel;
- };
- 
- void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg);
-@@ -110,5 +112,12 @@ int brcmf_p2p_start_device(struct wiphy *wiphy, struct wireless_dev *wdev);
- void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev);
- int brcmf_p2p_scan_prep(struct wiphy *wiphy,
- 			struct cfg80211_scan_request *request);
-+int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
-+				struct ieee80211_channel *channel,
-+				unsigned int duration, u64 *cookie);
-+int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
-+				     const struct brcmf_event_msg *e,
-+				     void *data);
-+void brcmf_p2p_cancel_remain_on_channel(struct brcmf_if *ifp);
- 
- #endif /* WL_CFGP2P_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 6b4e877..6ab6397 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3359,6 +3359,11 @@ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
- 			mgmt_ie_len = &saved_ie->probe_req_ie_len;
- 			mgmt_ie_buf_len = sizeof(saved_ie->probe_req_ie);
- 			break;
-+		case BRCMF_VNDR_IE_PRBRSP_FLAG:
-+			mgmt_ie_buf = saved_ie->probe_res_ie;
-+			mgmt_ie_len = &saved_ie->probe_res_ie_len;
-+			mgmt_ie_buf_len = sizeof(saved_ie->probe_res_ie);
-+			break;
- 		default:
- 			err = -EPERM;
- 			brcmf_err("not suitable type\n");
-@@ -3674,6 +3679,150 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
- 	return err;
- }
- 
-+
-+static void
-+brcmf_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev,
-+				   u16 frame_type, bool reg)
-+{
-+	struct brcmf_if *ifp = netdev_priv(wdev->netdev);
-+	struct brcmf_cfg80211_vif *vif = ifp->vif;
-+	u16 mgmt_type;
-+
-+	brcmf_dbg(TRACE, "Enter, frame_type %04x, reg=%d\n", frame_type, reg);
-+
-+	mgmt_type = (frame_type & IEEE80211_FCTL_STYPE) >> 4;
-+	if (reg)
-+		vif->mgmt_rx_reg |= BIT(mgmt_type);
-+	else
-+		vif->mgmt_rx_reg |= ~BIT(mgmt_type);
-+}
-+
-+
-+static int
-+brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
-+		       struct ieee80211_channel *chan, bool offchan,
-+		       unsigned int wait, const u8 *buf, size_t len,
-+		       bool no_cck, bool dont_wait_for_ack, u64 *cookie)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	const struct ieee80211_mgmt *mgmt;
-+	struct brcmf_cfg80211_vif *vif;
-+	s32 err = 0;
-+	s32 ie_offset;
-+	s32 ie_len;
-+
-+	brcmf_dbg(TRACE, "Enter\n");
-+
-+	*cookie = 0;
-+
-+	mgmt = (const struct ieee80211_mgmt *)buf;
-+
-+	if (ieee80211_is_mgmt(mgmt->frame_control)) {
-+		if (ieee80211_is_probe_resp(mgmt->frame_control)) {
-+			/* Right now the only reason to get a probe response */
-+			/* is for p2p listen response from wpa_supplicant.   */
-+			/* Unfortunately the wpa_supplicant sends it on the  */
-+			/* primary ndev, while dongle wants it on the p2p    */
-+			/* vif. Since this is only reason for a probe        */
-+			/* response to be sent, the vif is taken from cfg.   */
-+			/* If ever desired to send proberesp for non p2p     */
-+			/* response then data should be checked for          */
-+			/* "DIRECT-". Note in future supplicant will take    */
-+			/* dedicated p2p wdev to do this and then this 'hack'*/
-+			/* is not needed anymore.                            */
-+			ie_offset =  DOT11_MGMT_HDR_LEN +
-+				     DOT11_BCN_PRB_FIXED_LEN;
-+			ie_len = len - ie_offset;
-+
-+			vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+			if (vif == NULL) {
-+				brcmf_err("No p2p device available for probe response\n");
-+				err = -ENODEV;
-+				goto exit;
-+			}
-+			err = brcmf_vif_set_mgmt_ie(vif,
-+						    BRCMF_VNDR_IE_PRBRSP_FLAG,
-+						    &buf[ie_offset],
-+						    ie_len);
-+			cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
-+						GFP_KERNEL);
-+			goto exit;
-+		}
-+	}
-+	brcmf_dbg(TRACE, "Unhandled, is_mgmt %d, fc=%04x!!!!!\n",
-+		  ieee80211_is_mgmt(mgmt->frame_control), mgmt->frame_control);
-+exit:
-+	return err;
-+}
-+
-+
-+static int
-+brcmf_cfg80211_cancel_remain_on_channel(struct wiphy *wiphy,
-+					struct wireless_dev *wdev,
-+					u64 cookie)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_cfg80211_vif *vif;
-+	int err = 0;
-+
-+	brcmf_dbg(TRACE, "Enter p2p listen cancel\n");
-+
-+	vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+	if (vif == NULL) {
-+		brcmf_err("No p2p device available for probe response\n");
-+		err = -ENODEV;
-+		goto exit;
-+	}
-+	brcmf_p2p_cancel_remain_on_channel(vif->ifp);
-+exit:
-+	return err;
-+}
-+
-+static s32 brcmf_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
-+					     const struct brcmf_event_msg *e,
-+					     void *data)
-+{
-+	struct wireless_dev *wdev;
-+	struct brcmf_cfg80211_vif *vif = ifp->vif;
-+	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
-+	u16 chanspec = be16_to_cpu(rxframe->chanspec);
-+	u8 *mgmt_frame;
-+	u32 mgmt_frame_len;
-+	s32 freq;
-+	u16 mgmt_type;
-+
-+	brcmf_dbg(INFO,
-+		  "Enter: event %d reason %d\n", e->event_code, e->reason);
-+
-+	/* Firmware sends us two proberesponses for each idx one. At the */
-+	/* moment only bsscfgidx 0 is passed up to supplicant            */
-+	if (e->bsscfgidx)
-+		return 0;
-+
-+	/* Check if wpa_supplicant has registered for this frame */
-+	brcmf_dbg(INFO, "vif->mgmt_rx_reg %04x\n", vif->mgmt_rx_reg);
-+	mgmt_type = (IEEE80211_STYPE_PROBE_REQ & IEEE80211_FCTL_STYPE) >> 4;
-+	if ((vif->mgmt_rx_reg & BIT(mgmt_type)) == 0)
-+		return 0;
-+
-+	mgmt_frame = (u8 *)(rxframe + 1);
-+	mgmt_frame_len = e->datalen - sizeof(*rxframe);
-+	freq = ieee80211_channel_to_frequency(CHSPEC_CHANNEL(chanspec),
-+					      CHSPEC_IS2G(chanspec) ?
-+					      IEEE80211_BAND_2GHZ :
-+					      IEEE80211_BAND_5GHZ);
-+	wdev = ifp->ndev->ieee80211_ptr;
-+	cfg80211_rx_mgmt(wdev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
-+
-+	brcmf_dbg(INFO,
-+		  "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
-+		  mgmt_frame_len, e->datalen, chanspec, freq);
-+
-+	return 0;
-+}
-+
-+
- static struct cfg80211_ops wl_cfg80211_ops = {
- 	.add_virtual_intf = brcmf_cfg80211_add_iface,
- 	.del_virtual_intf = brcmf_cfg80211_del_iface,
-@@ -3703,6 +3852,10 @@ static struct cfg80211_ops wl_cfg80211_ops = {
- 	.del_station = brcmf_cfg80211_del_station,
- 	.sched_scan_start = brcmf_cfg80211_sched_scan_start,
- 	.sched_scan_stop = brcmf_cfg80211_sched_scan_stop,
-+	.mgmt_frame_register = brcmf_cfg80211_mgmt_frame_register,
-+	.mgmt_tx = brcmf_cfg80211_mgmt_tx,
-+	.remain_on_channel = brcmf_p2p_remain_on_channel,
-+	.cancel_remain_on_channel = brcmf_cfg80211_cancel_remain_on_channel,
- #ifdef CONFIG_NL80211_TESTMODE
- 	.testmode_cmd = brcmf_cfg80211_testmode
+ #endif /* CONFIG_BCMA_DRIVER_GPIO */
+=20
  #endif
-@@ -3765,6 +3918,30 @@ static const struct ieee80211_iface_combination brcmf_iface_combos[] = {
- 	}
- };
- 
-+static const struct ieee80211_txrx_stypes
-+brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
-+	[NL80211_IFTYPE_STATION] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
-+	},
-+	[NL80211_IFTYPE_P2P_CLIENT] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
-+	},
-+	[NL80211_IFTYPE_P2P_GO] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
-+		      BIT(IEEE80211_STYPE_AUTH >> 4) |
-+		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-+		      BIT(IEEE80211_STYPE_ACTION >> 4)
-+	}
-+};
-+
- static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
- {
- 	struct wiphy *wiphy;
-@@ -3797,10 +3974,10 @@ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->cipher_suites = __wl_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
--	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;	/* enable power
--								 * save mode
--								 * by default
--								 */
-+	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
-+			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+	wiphy->mgmt_stypes = brcmf_txrx_stypes;
-+	wiphy->max_remain_on_channel_duration = 5000;
- 	brcmf_wiphy_pno_params(wiphy);
- 	err = wiphy_register(wiphy);
- 	if (err < 0) {
-@@ -4271,6 +4448,10 @@ static void brcmf_register_event_handlers(struct brcmf_cfg80211_info *cfg)
- 			    brcmf_notify_sched_scan_results);
- 	brcmf_fweh_register(cfg->pub, BRCMF_E_IF,
- 			    brcmf_notify_vif_event);
-+	brcmf_fweh_register(cfg->pub, BRCMF_E_P2P_PROBEREQ_MSG,
-+			    brcmf_notify_rx_mgmt_p2p_probereq);
-+	brcmf_fweh_register(cfg->pub, BRCMF_E_P2P_DISC_LISTEN_COMPLETE,
-+			    brcmf_p2p_notify_listen_complete);
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index 9a6f585..71f755c 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -96,3 +96,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+=20
+ 	return gpiochip_add(chip);
  }
- 
- static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_info *cfg)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 691f613..a996afa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -189,6 +189,7 @@ struct vif_saved_ie {
-  * @sme_state: SME state using enum brcmf_vif_status bits.
-  * @pm_block: power-management blocked.
-  * @list: linked list.
-+ * @mgmt_rx_reg: registered rx mgmt frame types.
-  */
- struct brcmf_cfg80211_vif {
- 	struct brcmf_if *ifp;
-@@ -200,6 +201,7 @@ struct brcmf_cfg80211_vif {
- 	bool pm_block;
- 	struct vif_saved_ie saved_ie;
- 	struct list_head list;
-+	u16 mgmt_rx_reg;
- };
- 
- /* association inform */
--- 
-1.7.10.4
++
++int bcma_gpio_unregister(struct bcma_drv_cc *cc)
++{
++	return gpiochip_remove(&cc->gpio);
++}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 4a92f64..324f9de 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -268,6 +268,13 @@ int bcma_bus_register(struct bcma_bus *bus)
+ void bcma_bus_unregister(struct bcma_bus *bus)
+ {
+ 	struct bcma_device *cores[3];
++	int err;
++
++	err =3D bcma_gpio_unregister(&bus->drv_cc);
++	if (err =3D=3D -EBUSY)
++		bcma_err(bus, "Some GPIOs are still in use.\n");
++	else if (err)
++		bcma_err(bus, "Can not unregister GPIO driver: %i\n", err);
+=20
+ 	cores[0] =3D bcma_find_core(bus, BCMA_CORE_MIPS_74K);
+ 	cores[1] =3D bcma_find_core(bus, BCMA_CORE_PCIE);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/driver=
+s/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 0f71d1d..e5fd209 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -36,6 +36,7 @@
+ #include "debug.h"
+=20
+ #define N_TX_QUEUES	4 /* #tx queues on mac80211<->driver interface */
++#define BRCMS_FLUSH_TIMEOUT	500 /* msec */
+=20
+ /* Flags we support */
+ #define MAC_FILTERS (FIF_PROMISC_IN_BSS | \
+@@ -708,16 +709,29 @@ static void brcms_ops_rfkill_poll(struct ieee80211_hw=
+ *hw)
+ 	wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, blocked);
+ }
+=20
++static bool brcms_tx_flush_completed(struct brcms_info *wl)
++{
++	bool result;
++
++	spin_lock_bh(&wl->lock);
++	result =3D brcms_c_tx_flush_completed(wl->wlc);
++	spin_unlock_bh(&wl->lock);
++	return result;
++}
++
+ static void brcms_ops_flush(struct ieee80211_hw *hw, bool drop)
+ {
+ 	struct brcms_info *wl =3D hw->priv;
++	int ret;
+=20
+ 	no_printk("%s: drop =3D %s\n", __func__, drop ? "true" : "false");
+=20
+-	/* wait for packet queue and dma fifos to run empty */
+-	spin_lock_bh(&wl->lock);
+-	brcms_c_wait_for_tx_completion(wl->wlc, drop);
+-	spin_unlock_bh(&wl->lock);
++	ret =3D wait_event_timeout(wl->tx_flush_wq,
++				 brcms_tx_flush_completed(wl),
++				 msecs_to_jiffies(BRCMS_FLUSH_TIMEOUT));
++
++	brcms_dbg_mac80211(wl->wlc->hw->d11core,
++			   "ret=3D%d\n", jiffies_to_msecs(ret));
+ }
+=20
+ static const struct ieee80211_ops brcms_ops =3D {
+@@ -772,6 +786,7 @@ void brcms_dpc(unsigned long data)
+=20
+  done:
+ 	spin_unlock_bh(&wl->lock);
++	wake_up(&wl->tx_flush_wq);
+ }
+=20
+ /*
+@@ -1020,6 +1035,8 @@ static struct brcms_info *brcms_attach(struct bcma_de=
+vice *pdev)
+=20
+ 	atomic_set(&wl->callbacks, 0);
+=20
++	init_waitqueue_head(&wl->tx_flush_wq);
++
+ 	/* setup the bottom half handler */
+ 	tasklet_init(&wl->tasklet, brcms_dpc, (unsigned long) wl);
+=20
+@@ -1609,13 +1626,3 @@ bool brcms_rfkill_set_hw_state(struct brcms_info *wl)
+ 	spin_lock_bh(&wl->lock);
+ 	return blocked;
+ }
+-
+-/*
+- * precondition: perimeter lock has been acquired
+- */
+-void brcms_msleep(struct brcms_info *wl, uint ms)
+-{
+-	spin_unlock_bh(&wl->lock);
+-	msleep(ms);
+-	spin_lock_bh(&wl->lock);
+-}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h b/driver=
+s/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+index 9358bd5..947ccac 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.h
+@@ -68,6 +68,8 @@ struct brcms_info {
+ 	spinlock_t lock;	/* per-device perimeter lock */
+ 	spinlock_t isr_lock;	/* per-device ISR synchronization lock */
+=20
++	/* tx flush */
++	wait_queue_head_t tx_flush_wq;
+=20
+ 	/* timer related fields */
+ 	atomic_t callbacks;	/* # outstanding callback functions */
+@@ -100,7 +102,6 @@ extern struct brcms_timer *brcms_init_timer(struct brcm=
+s_info *wl,
+ extern void brcms_free_timer(struct brcms_timer *timer);
+ extern void brcms_add_timer(struct brcms_timer *timer, uint ms, int period=
+ic);
+ extern bool brcms_del_timer(struct brcms_timer *timer);
+-extern void brcms_msleep(struct brcms_info *wl, uint ms);
+ extern void brcms_dpc(unsigned long data);
+ extern void brcms_timer(struct brcms_timer *t);
+ extern void brcms_fatal_error(struct brcms_info *wl);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/w=
+ireless/brcm80211/brcmsmac/main.c
+index 9f3d7e9..8b58390 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7511,25 +7511,16 @@ int brcms_c_get_curband(struct brcms_c_info *wlc)
+ 	return wlc->band->bandunit;
+ }
+=20
+-void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc, bool drop)
++bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc)
+ {
+-	int timeout =3D 20;
+ 	int i;
+=20
+ 	/* Kick DMA to send any pending AMPDU */
+ 	for (i =3D 0; i < ARRAY_SIZE(wlc->hw->di); i++)
+ 		if (wlc->hw->di[i])
+-			dma_txflush(wlc->hw->di[i]);
++			dma_kick_tx(wlc->hw->di[i]);
+=20
+-	/* wait for queue and DMA fifos to run dry */
+-	while (brcms_txpktpendtot(wlc) > 0) {
+-		brcms_msleep(wlc->wl, 1);
+-
+-		if (--timeout =3D=3D 0)
+-			break;
+-	}
+-
+-	WARN_ON_ONCE(timeout =3D=3D 0);
++	return !brcms_txpktpendtot(wlc);
+ }
+=20
+ void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 inter=
+val)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wi=
+reless/brcm80211/brcmsmac/pub.h
+index 4fb2834..b0f14b7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -314,8 +314,6 @@ extern void brcms_c_associate_upd(struct brcms_c_info *=
+wlc, bool state);
+ extern void brcms_c_scan_start(struct brcms_c_info *wlc);
+ extern void brcms_c_scan_stop(struct brcms_c_info *wlc);
+ extern int brcms_c_get_curband(struct brcms_c_info *wlc);
+-extern void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc,
+-					   bool drop);
+ extern int brcms_c_set_channel(struct brcms_c_info *wlc, u16 channel);
+ extern int brcms_c_set_rate_limit(struct brcms_c_info *wlc, u16 srl, u16 l=
+rl);
+ extern void brcms_c_get_current_rateset(struct brcms_c_info *wlc,
+@@ -332,5 +330,6 @@ extern int brcms_c_set_tx_power(struct brcms_c_info *wl=
+c, int txpwr);
+ extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
+ extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
+ extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
++extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
+=20
+ #endif				/* _BRCM_PUB_H_ */
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtl=
+wifi/base.c
+index 4494d13..0f8b051 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -1004,7 +1004,8 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struc=
+t sk_buff *skb, u8 is_tx)
+ 					 is_tx ? "Tx" : "Rx");
+=20
+ 				if (is_tx) {
+-					rtl_lps_leave(hw);
++					schedule_work(&rtlpriv->
++						      works.lps_leave_work);
+ 					ppsc->last_delaylps_stamp_jiffies =3D
+ 					    jiffies;
+ 				}
+@@ -1014,7 +1015,7 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struc=
+t sk_buff *skb, u8 is_tx)
+ 		}
+ 	} else if (ETH_P_ARP =3D=3D ether_type) {
+ 		if (is_tx) {
+-			rtl_lps_leave(hw);
++			schedule_work(&rtlpriv->works.lps_leave_work);
+ 			ppsc->last_delaylps_stamp_jiffies =3D jiffies;
+ 		}
+=20
+@@ -1024,7 +1025,7 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struc=
+t sk_buff *skb, u8 is_tx)
+ 			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
+=20
+ 		if (is_tx) {
+-			rtl_lps_leave(hw);
++			schedule_work(&rtlpriv->works.lps_leave_work);
+ 			ppsc->last_delaylps_stamp_jiffies =3D jiffies;
+ 		}
+=20
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index 97ac0a3..eb27530 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -174,3 +174,15 @@ int ssb_gpio_init(struct ssb_bus *bus)
+=20
+ 	return -1;
+ }
++
++int ssb_gpio_unregister(struct ssb_bus *bus)
++{
++	if (ssb_chipco_available(&bus->chipco) ||
++	    ssb_extif_available(&bus->extif)) {
++		return gpiochip_remove(&bus->gpio);
++	} else {
++		SSB_WARN_ON(1);
++	}
++
++	return -1;
++}
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 772ad9b..24dc331 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -443,6 +443,15 @@ static void ssb_devices_unregister(struct ssb_bus *bus)
+=20
+ void ssb_bus_unregister(struct ssb_bus *bus)
+ {
++	int err;
++
++	err =3D ssb_gpio_unregister(bus);
++	if (err =3D=3D -EBUSY)
++		ssb_dprintk(KERN_ERR PFX "Some GPIOs are still in use.\n");
++	else if (err)
++		ssb_dprintk(KERN_ERR PFX
++			    "Can not unregister GPIO driver: %i\n", err);
++
+ 	ssb_buses_lock();
+ 	ssb_devices_unregister(bus);
+ 	list_del(&bus->list);
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 6c10b66..da38305 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -252,11 +252,16 @@ static inline void ssb_extif_init(struct ssb_extif *e=
+xtif)
+=20
+ #ifdef CONFIG_SSB_DRIVER_GPIO
+ extern int ssb_gpio_init(struct ssb_bus *bus);
++extern int ssb_gpio_unregister(struct ssb_bus *bus);
+ #else /* CONFIG_SSB_DRIVER_GPIO */
+ static inline int ssb_gpio_init(struct ssb_bus *bus)
+ {
+ 	return -ENOTSUPP;
+ }
++static inline int ssb_gpio_unregister(struct ssb_bus *bus)
++{
++	return 0;
++}
+ #endif /* CONFIG_SSB_DRIVER_GPIO */
+=20
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+diff --git a/net/bluetooth/hci_conn.c b/net/bluetooth/hci_conn.c
+index 25bfce0..4925a02 100644
+--- a/net/bluetooth/hci_conn.c
++++ b/net/bluetooth/hci_conn.c
+@@ -249,12 +249,12 @@ static void hci_conn_disconnect(struct hci_conn *conn)
+ 	__u8 reason =3D hci_proto_disconn_ind(conn);
+=20
+ 	switch (conn->type) {
+-	case ACL_LINK:
+-		hci_acl_disconn(conn, reason);
+-		break;
+ 	case AMP_LINK:
+ 		hci_amp_disconn(conn, reason);
+ 		break;
++	default:
++		hci_acl_disconn(conn, reason);
++		break;
+ 	}
+ }
+=20
+diff --git a/net/bluetooth/smp.c b/net/bluetooth/smp.c
+index 68a9587..5abefb1 100644
+--- a/net/bluetooth/smp.c
++++ b/net/bluetooth/smp.c
+@@ -859,6 +859,19 @@ int smp_sig_channel(struct l2cap_conn *conn, struct sk=
+_buff *skb)
+=20
+ 	skb_pull(skb, sizeof(code));
+=20
++	/*
++	 * The SMP context must be initialized for all other PDUs except
++	 * pairing and security requests. If we get any other PDU when
++	 * not initialized simply disconnect (done if this function
++	 * returns an error).
++	 */
++	if (code !=3D SMP_CMD_PAIRING_REQ && code !=3D SMP_CMD_SECURITY_REQ &&
++	    !conn->smp_chan) {
++		BT_ERR("Unexpected SMP command 0x%02x. Disconnecting.", code);
++		kfree_skb(skb);
++		return -ENOTSUPP;
++	}
++
+ 	switch (code) {
+ 	case SMP_CMD_PAIRING_REQ:
+ 		reason =3D smp_cmd_pairing_req(conn, skb);
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRErA/AAoJEJctW/TcYTgGcrsP/11W/ntiBjWdrsB1NcOv9xjR
+EkShzsJKclRIJcpqhZZL0Y9NS7fwECfp+qydgCu9+lXJcms2KkpB74ynIuFUANUy
+bDcW+bWZ1oq+jUV6o3lldGFViT3AuDZu6YGgSRieangJE4CrmDo1Xg2eLg3QYu3O
+0B+3KU+MsGHvSsb49HkmdmmAqPgIn7skG+Ah8nTXAUg9QT+Fxq0jaBBKO6GdYC31
+ji2W5k0B0WprI4OoZI5xP4QUloyI3e3Tjj7g9cXxSiPyBupRvawcj7TKJVK0VlX3
+orjhyl4dXJMG5YbYuMBTSAjl1RLhnT+Nu/kMDh+OphJeXq+QLrhy3ojQe7Rl7qtd
+KXDmcd5+h03I2zRMDyqGkDm+xzVTr/PRNbM9z0giQRBXM1GN1Rc6DdPtSAyhlEAt
+LQDaaQwzkiPF1fDpU6xsT/680dgUfcLN8J258jM+gC9zR+yVbfuhMsq3mNJvrIcu
+ye2nAk45ERJ4jinJHE0l8XINzOpsW54N7YvCCFlSPfTVZcJYdnwXE0/TPfQOzf1Z
+V/DiW99/S8ZK5vlSH57jPHaBvGZnroVyUEvhVUaQDSmbn/jsOgfR5RcdnPG2rF/v
+z+sGQy4OeISDWrs+RS58IPUBd3wpnRSVH8ghExWF0Aaz+pD4VAr3GzSby2KmZV+M
+jDX7iPY079YpMB9lip/7
+=FdSR
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
