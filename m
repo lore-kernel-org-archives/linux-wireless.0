@@ -1,38 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50625 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438Ab3BMJaV (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:62613 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094Ab3BFSyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 04:30:21 -0500
-Message-ID: <1360747816.8868.7.camel@jlt4.sipsolutions.net> (sfid-20130213_103030_852044_FF95066B)
-Subject: Re: [RFCv4 2/2] mac80211: free ps->bc_buf skbs on vlan device stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	projekt-wlan@fem.tu-ilmenau.de
-Date: Wed, 13 Feb 2013 10:30:16 +0100
-In-Reply-To: <1360695107-5721-3-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_200235_648904_98A270D2)
-References: <1360695107-5721-1-git-send-email-michael-dev@fami-braun.de>
-	 <1360695107-5721-3-git-send-email-michael-dev@fami-braun.de>
-	 (sfid-20130212_200235_648904_98A270D2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Feb 2013 13:54:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH V2] rtlwifi: rtl8192cu: Fix NULL dereference BUG when using new_id
+Date: Wed,  6 Feb 2013 12:54:17 -0600
+Message-Id: <1360176857-852-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130206_195440_696878_0B3EC78B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-12 at 19:51 +0100, Michael Braun wrote:
-> When the vlan device is removed, ps->bc_buf processing can no longer
-> send its frames.
-> 
-> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
-> ---
-> V4: Add this patch. Does it need locks? Which?
+When the new_id entry in /sysfs is used for a foreign USB device, rtlwifi
+BUGS with a NULL pointer dereference because the per-driver configuration
+data is not available. The probe function has been restructured as
+suggested by Ben Hutchings <bhutchings@solarflare.com>.
 
-Yes, the bc_buf has a spinlock itself, which we never use because we
-never walk the queue (we use skb_dequeue() which has locking built-in)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 8 +++++++-
+ drivers/net/wireless/rtlwifi/usb.c          | 5 +++--
+ drivers/net/wireless/rtlwifi/usb.h          | 3 ++-
+ 3 files changed, 12 insertions(+), 4 deletions(-)
 
-Also this patch needs to be the first, otherwise during bisect the
-problem might show up.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index d9e659f..577c0dc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -363,9 +363,15 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+ 
+ MODULE_DEVICE_TABLE(usb, rtl8192c_usb_ids);
+ 
++static int rtl8192cu_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtl_usb_probe(intf, id, &rtl92cu_hal_cfg);
++}
++
+ static struct usb_driver rtl8192cu_driver = {
+ 	.name = "rtl8192cu",
+-	.probe = rtl_usb_probe,
++	.probe = rtl8192cu_probe,
+ 	.disconnect = rtl_usb_disconnect,
+ 	.id_table = rtl8192c_usb_ids,
+ 
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index d42bbe2..476eaef 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -937,7 +937,8 @@ static struct rtl_intf_ops rtl_usb_ops = {
+ };
+ 
+ int rtl_usb_probe(struct usb_interface *intf,
+-			const struct usb_device_id *id)
++		  const struct usb_device_id *id,
++		  struct rtl_hal_cfg *rtl_hal_cfg)
+ {
+ 	int err;
+ 	struct ieee80211_hw *hw = NULL;
+@@ -972,7 +973,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	usb_set_intfdata(intf, hw);
+ 	/* init cfg & intf_ops */
+ 	rtlpriv->rtlhal.interface = INTF_USB;
+-	rtlpriv->cfg = (struct rtl_hal_cfg *)(id->driver_info);
++	rtlpriv->cfg = rtl_hal_cfg;
+ 	rtlpriv->intf_ops = &rtl_usb_ops;
+ 	rtl_dbgp_flag_init(hw);
+ 	/* Init IO handler */
+diff --git a/drivers/net/wireless/rtlwifi/usb.h b/drivers/net/wireless/rtlwifi/usb.h
+index 5235136..fb986f9 100644
+--- a/drivers/net/wireless/rtlwifi/usb.h
++++ b/drivers/net/wireless/rtlwifi/usb.h
+@@ -157,7 +157,8 @@ struct rtl_usb_priv {
+ 
+ 
+ int rtl_usb_probe(struct usb_interface *intf,
+-			    const struct usb_device_id *id);
++		  const struct usb_device_id *id,
++		  struct rtl_hal_cfg *rtl92cu_hal_cfg);
+ void rtl_usb_disconnect(struct usb_interface *intf);
+ int rtl_usb_suspend(struct usb_interface *pusb_intf, pm_message_t message);
+ int rtl_usb_resume(struct usb_interface *pusb_intf);
+-- 
+1.8.1
 
