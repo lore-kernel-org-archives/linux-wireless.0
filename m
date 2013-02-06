@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1534 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4281 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759386Ab3BGUYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:24:08 -0500
-Message-ID: <51140CFB.1060100@broadcom.com> (sfid-20130207_212628_150504_AC351A4C)
-Date: Thu, 7 Feb 2013 21:22:19 +0100
+	id S1756378Ab3BFRlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 12:41:09 -0500
 From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Tim Gardner" <tim.gardner@canonical.com>
-cc: linux-kernel@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
 	"Hante Meuleman" <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, "Joe Perches" <joe@perches.com>
-Subject: Re: [PATCH wireless-next] brcmsmac: avoid 512 byte stack
- variable
-References: <1360268032-52414-1-git-send-email-tim.gardner@canonical.com>
-In-Reply-To: <1360268032-52414-1-git-send-email-tim.gardner@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/12] brcmfmac: Use struct brcmf_if in
+ brcmf_configure_opensecurity.
+Date: Wed, 6 Feb 2013 18:40:38 +0100
+Message-ID: <1360172447-2424-4-git-send-email-arend@broadcom.com> (sfid-20130206_184125_043970_9DF5FE05)
+In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2013 09:13 PM, Tim Gardner wrote:
-> Dynamically allocate the probe response template which
-> avoids potential stack corruption. Observed with smatch:
-> 
-> drivers/net/wireless/brcm80211/brcmsmac/main.c:7412 brcms_c_bss_update_probe_resp()
->  warn: 'prb_resp' puts 512 bytes on stack
-> 
-> Cc: Brett Rudley <brudley@broadcom.com>
-> Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-> Cc: Hante Meuleman <meuleman@broadcom.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Cc: Hauke Mehrtens <hauke@hauke-m.de>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: brcm80211-dev-list@broadcom.com
-> Cc: netdev@vger.kernel.org
+From: Hante Meuleman <meuleman@broadcom.com>
 
-One comment below. When taken care of feel free to add:
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index c26992a..e392e76 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -7408,9 +7408,16 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
->  			      struct brcms_bss_cfg *cfg,
->  			      bool suspend)
->  {
-> -	u16 prb_resp[BCN_TMPL_LEN / 2];
-> +	u16 *prb_resp;
->  	int len = BCN_TMPL_LEN;
->  
-> +	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
-> +	if (!prb_resp) {
-> +		wiphy_err(wlc->wiphy, "wl: %s: failed to alloc %u bytes\n",
-> +			__func__, BCN_TMPL_LEN);
-
-I believe the kmalloc() call spews enough info upon allocation failure
-so please remove the error message here.
-
-> +		return;
-> +	}
-> +
->  	/*
->  	 * write the probe response to hardware, or save in
->  	 * the config structure
-> @@ -7444,6 +7451,8 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
->  
->  	if (suspend)
->  		brcms_c_enable_mac(wlc);
-> +
-> +	kfree(prb_resp);
->  }
->  
->  void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
-> 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 62a528e..0f170cb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -2968,9 +2968,8 @@ static int brcmf_cfg80211_testmode(struct wiphy *wiphy, void *data, int len)
+ }
+ #endif
+ 
+-static s32 brcmf_configure_opensecurity(struct net_device *ndev, s32 bssidx)
++static s32 brcmf_configure_opensecurity(struct brcmf_if *ifp)
+ {
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	s32 err;
+ 
+ 	/* set auth */
+@@ -3433,7 +3432,6 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_tlv *rsn_ie;
+ 	struct brcmf_vs_tlv *wpa_ie;
+ 	struct brcmf_join_params join_params;
+-	s32 bssidx = 0;
+ 
+ 	brcmf_dbg(TRACE, "channel_type=%d, beacon_interval=%d, dtim_period=%d,\n",
+ 		  cfg80211_get_chandef_type(&settings->chandef),
+@@ -3507,7 +3505,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		}
+ 	} else {
+ 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
+-		brcmf_configure_opensecurity(ndev, bssidx);
++		brcmf_configure_opensecurity(ifp);
+ 	}
+ 	/* Set Beacon IEs to FW */
+ 	err = brcmf_vif_set_mgmt_ie(ndev_to_vif(ndev),
+-- 
+1.7.10.4
 
 
