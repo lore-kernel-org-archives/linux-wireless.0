@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:63549 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754Ab3BFI0i (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52015 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884Ab3BFRfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 03:26:38 -0500
-Received: by mail-wg0-f51.google.com with SMTP id 8so888964wgl.30
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 00:26:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1360137925-14264-1-git-send-email-thomas@cozybit.com>
-References: <1360137925-14264-1-git-send-email-thomas@cozybit.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 6 Feb 2013 00:26:17 -0800
-Message-ID: <CAG6hwVMTsgr7KBNadQ1dewaQTn5cDKiaLNsGF9ZP2S+xAMOfqQ@mail.gmail.com> (sfid-20130206_092641_887458_CE67F0E7)
-Subject: Re: [PATCH] mac80211: fix mesh sta teardown
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 6 Feb 2013 12:35:52 -0500
+Message-ID: <1360172173.7910.54.camel@jlt4.sipsolutions.net> (sfid-20130206_183555_599537_5B8CB494)
+Subject: Re: [PATCHv8 2/3] mac80211: add radar detection command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 06 Feb 2013 18:36:13 +0100
+In-Reply-To: <1359982200-2321-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1359982200-2321-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 12:05 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> The patch "mac80211: clean up mesh sta allocation warning"
-> moved some mesh initialization into a path which is only
-> called when the kernel handles peering. This causes a hang
-> when mac80211 tries to clean up a userspace-allocated
-> station entry and delete a timer which has never been
-> initialized.
->
-> To avoid this, only do any mesh sta peering teardown if
-> the kernel is actually handling it.
+On Mon, 2013-02-04 at 13:49 +0100, Simon Wunderlich wrote:
 
-Wait, this would also apply to the del_timer_sync() in
-mesh_plink_quiesce() then. v2 will add this check to that function.
+> +++ b/net/mac80211/cfg.c
 
--- 
-Thomas
+> @@ -1796,6 +1797,7 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+>  	/* can mesh use other SMPS modes? */
+>  	sdata->smps_mode = IEEE80211_SMPS_OFF;
+>  	sdata->needed_rx_chains = sdata->local->rx_chains;
+> +	sdata->radar_required = true;
+
+err?
+
+johannes
+
