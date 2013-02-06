@@ -1,262 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55776 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039Ab3B1WTQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 17:19:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: yogeshp@marvell.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: defer tailroom counter manipulation when roaming
-Date: Thu, 28 Feb 2013 23:19:10 +0100
-Message-Id: <1362089950-12142-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_231919_069651_BE886B2B)
+Received: from mms2.broadcom.com ([216.31.210.18]:2448 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757275Ab3BFRlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 12:41:12 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/12] brcmfmac: Use single function for channel to
+ chanspec.
+Date: Wed, 6 Feb 2013 18:40:44 +0100
+Message-ID: <1360172447-2424-10-git-send-email-arend@broadcom.com> (sfid-20130206_184122_485683_E6E88693)
+In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-During roaming, the crypto_tx_tailroom_needed_cnt counter
-will often take values 2,1,0,1,2 because first keys are
-removed and then new keys are added. This is inefficient
-because during the 0->1 transition, synchronize_net must
-be called to avoid packet races, although typically no
-packets would be flowing during that time.
+Simplify code by using single function for converting channel to
+chanspec. No need to set 40MHz flags, as they are not needed for
+correct working in FW.
 
-To avoid that, defer the decrement (2->1, 1->0) when keys
-are removed (by half a second). This means the counter
-will really have the values 2,2,2,3,4 ... 2, thus never
-reaching 0 and having to do the 0->1 transition.
-
-Note that this patch entirely disregards the drivers for
-which this optimisation was done to start with, for them
-the key removal itself will be expensive because it has
-to synchronize_net() after the counter is incremented to
-remove the key from HW crypto. For them the sequence will
-look like this: 0,1,0,1,0,1,0,1,0 (*) which is clearly a
-lot more inefficient. This could be addressed separately,
-during key removal the 0->1->0 sequence isn't necessary.
-
-(*) it starts at 0 because HW crypto is on, then goes to
-    1 when HW crypto is disabled for a key, then back to
-    0 because the key is deleted; this happens for both
-    keys in the example. When new keys are added, it goes
-    to 1 first because they're added in software; when a
-    key is moved to hardware it goes back to 0
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/cfg.c         |  2 +-
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/iface.c       |  2 ++
- net/mac80211/key.c         | 63 ++++++++++++++++++++++++++++++++++++++++------
- net/mac80211/key.h         |  4 ++-
- net/mac80211/sta_info.c    |  6 +++--
- 6 files changed, 68 insertions(+), 11 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   63 +++++++-------------
+ 1 file changed, 21 insertions(+), 42 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a003f72..64da5a4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -254,7 +254,7 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
- 		goto out_unlock;
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 544257a5..153924e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -393,16 +393,9 @@ static u16 channel_to_chanspec(struct ieee80211_channel *ch)
+ 	else
+ 		chanspec |= WL_CHANSPEC_BAND_5G;
  
--	__ieee80211_key_free(key);
-+	__ieee80211_key_free(key, true);
- 
- 	ret = 0;
-  out_unlock:
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1281389..ea5ac15 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -685,6 +685,8 @@ struct ieee80211_sub_if_data {
- 
- 	/* count for keys needing tailroom space allocation */
- 	int crypto_tx_tailroom_needed_cnt;
-+	int crypto_tx_tailroom_pending_dec;
-+	struct delayed_work dec_tailroom_needed_wk;
- 
- 	struct net_device *dev;
- 	struct ieee80211_local *local;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2f2cbb7..feda9fb 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1541,6 +1541,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	INIT_WORK(&sdata->cleanup_stations_wk, ieee80211_cleanup_sdata_stas_wk);
- 	INIT_DELAYED_WORK(&sdata->dfs_cac_timer_work,
- 			  ieee80211_dfs_cac_timer_work);
-+	INIT_DELAYED_WORK(&sdata->dec_tailroom_needed_wk,
-+			  ieee80211_delayed_tailroom_dec);
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
- 		struct ieee80211_supported_band *sband;
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index c4bc3bd..3f98acf 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -397,7 +397,8 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 	return key;
+-	if (ch->flags & IEEE80211_CHAN_NO_HT40) {
+-		chanspec |= WL_CHANSPEC_BW_20;
+-		chanspec |= WL_CHANSPEC_CTL_SB_NONE;
+-	} else {
+-		chanspec |= WL_CHANSPEC_BW_40;
+-		if (ch->flags & IEEE80211_CHAN_NO_HT40PLUS)
+-			chanspec |= WL_CHANSPEC_CTL_SB_LOWER;
+-		else
+-			chanspec |= WL_CHANSPEC_CTL_SB_UPPER;
+-	}
++	chanspec |= WL_CHANSPEC_BW_20;
++	chanspec |= WL_CHANSPEC_CTL_SB_NONE;
++
+ 	return chanspec;
  }
  
--static void __ieee80211_key_destroy(struct ieee80211_key *key)
-+static void __ieee80211_key_destroy(struct ieee80211_key *key,
-+				    bool delay_tailroom)
+@@ -933,31 +926,6 @@ static void brcmf_init_prof(struct brcmf_cfg80211_profile *prof)
+ 	memset(prof, 0, sizeof(*prof));
+ }
+ 
+-static void brcmf_ch_to_chanspec(int ch, struct brcmf_join_params *join_params,
+-	size_t *join_params_size)
+-{
+-	u16 chanspec = 0;
+-
+-	if (ch != 0) {
+-		if (ch <= CH_MAX_2G_CHANNEL)
+-			chanspec |= WL_CHANSPEC_BAND_2G;
+-		else
+-			chanspec |= WL_CHANSPEC_BAND_5G;
+-
+-		chanspec |= WL_CHANSPEC_BW_20;
+-		chanspec |= WL_CHANSPEC_CTL_SB_NONE;
+-
+-		*join_params_size += BRCMF_ASSOC_PARAMS_FIXED_SIZE +
+-				     sizeof(u16);
+-
+-		chanspec |= (ch & WL_CHANSPEC_CHAN_MASK);
+-		join_params->params_le.chanspec_list[0] = cpu_to_le16(chanspec);
+-		join_params->params_le.chanspec_num = cpu_to_le32(1);
+-
+-		brcmf_dbg(CONN, "channel %d, chanspec %#X\n", ch, chanspec);
+-	}
+-}
+-
+ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
  {
- 	if (!key)
- 		return;
-@@ -416,8 +417,18 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
- 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
- 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
- 	if (key->local) {
-+		struct ieee80211_sub_if_data *sdata = key->sdata;
-+
- 		ieee80211_debugfs_key_remove(key);
--		key->sdata->crypto_tx_tailroom_needed_cnt--;
-+
-+		if (delay_tailroom) {
-+			/* see ieee80211_delayed_tailroom_dec */
-+			sdata->crypto_tx_tailroom_pending_dec++;
-+			schedule_delayed_work(&sdata->dec_tailroom_needed_wk,
-+					      HZ/2);
-+		} else {
-+			sdata->crypto_tx_tailroom_needed_cnt--;
-+		}
- 	}
+ 	s32 err = 0;
+@@ -988,6 +956,7 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 	s32 err = 0;
+ 	s32 wsec = 0;
+ 	s32 bcnprd;
++	u16 chanspec;
  
- 	kfree(key);
-@@ -452,7 +463,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	increment_tailroom_need_count(sdata);
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (!check_vif_up(ifp->vif))
+@@ -1091,8 +1060,11 @@ brcmf_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *ndev,
+ 				params->chandef.chan->center_freq);
+ 		if (params->channel_fixed) {
+ 			/* adding chanspec */
+-			brcmf_ch_to_chanspec(cfg->channel,
+-				&join_params, &join_params_size);
++			chanspec = channel_to_chanspec(params->chandef.chan);
++			join_params.params_le.chanspec_list[0] =
++				cpu_to_le16(chanspec);
++			join_params.params_le.chanspec_num = cpu_to_le32(1);
++			join_params_size += sizeof(join_params.params_le);
+ 		}
  
- 	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
--	__ieee80211_key_destroy(old_key);
-+	__ieee80211_key_destroy(old_key, true);
+ 		/* set channel for starter */
+@@ -1404,6 +1376,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_join_params join_params;
+ 	size_t join_params_size;
+ 	struct brcmf_ssid ssid;
++	u16 chanspec;
  
- 	ieee80211_debugfs_key_add(key);
+ 	s32 err = 0;
  
-@@ -463,7 +474,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	return ret;
- }
+@@ -1421,10 +1394,13 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (chan) {
+ 		cfg->channel =
+ 			ieee80211_frequency_to_channel(chan->center_freq);
+-		brcmf_dbg(CONN, "channel (%d), center_req (%d)\n",
+-			  cfg->channel, chan->center_freq);
+-	} else
++		chanspec = channel_to_chanspec(chan);
++		brcmf_dbg(CONN, "channel=%d, center_req=%d, chanspec=0x%04x\n",
++			  cfg->channel, chan->center_freq, chanspec);
++	} else {
+ 		cfg->channel = 0;
++		chanspec = 0;
++	}
  
--void __ieee80211_key_free(struct ieee80211_key *key)
-+void __ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom)
- {
- 	if (!key)
- 		return;
-@@ -475,14 +486,14 @@ void __ieee80211_key_free(struct ieee80211_key *key)
- 		__ieee80211_key_replace(key->sdata, key->sta,
- 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				key, NULL);
--	__ieee80211_key_destroy(key);
-+	__ieee80211_key_destroy(key, delay_tailroom);
- }
+ 	brcmf_dbg(INFO, "ie (%p), ie_len (%zd)\n", sme->ie, sme->ie_len);
  
- void ieee80211_key_free(struct ieee80211_local *local,
- 			struct ieee80211_key *key)
- {
- 	mutex_lock(&local->key_mtx);
--	__ieee80211_key_free(key);
-+	__ieee80211_key_free(key, true);
- 	mutex_unlock(&local->key_mtx);
- }
+@@ -1473,8 +1449,11 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_dbg(CONN, "ssid \"%s\", len (%d)\n",
+ 			  ssid.SSID, ssid.SSID_len);
  
-@@ -558,18 +569,56 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_key *key, *tmp;
- 
-+	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
-+
- 	mutex_lock(&sdata->local->key_mtx);
- 
-+	sdata->crypto_tx_tailroom_needed_cnt -=
-+		sdata->crypto_tx_tailroom_pending_dec;
-+	sdata->crypto_tx_tailroom_pending_dec = 0;
-+
- 	ieee80211_debugfs_key_remove_mgmt_default(sdata);
- 
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
--		__ieee80211_key_free(key);
-+		__ieee80211_key_free(key, false);
- 
- 	ieee80211_debugfs_key_update_default(sdata);
- 
-+	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
-+		     sdata->crypto_tx_tailroom_pending_dec);
-+
- 	mutex_unlock(&sdata->local->key_mtx);
- }
- 
-+void ieee80211_delayed_tailroom_dec(struct work_struct *wk)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	sdata = container_of(wk, struct ieee80211_sub_if_data,
-+			     dec_tailroom_needed_wk.work);
-+
-+	/*
-+	 * The reason for the delayed tailroom needed decrementing is to
-+	 * make roaming faster: during roaming, all keys are first deleted
-+	 * and then new keys are installed. The first new key causes the
-+	 * crypto_tx_tailroom_needed_cnt to go from 0 to 1, which invokes
-+	 * the cost of synchronize_net() (which can be slow). Avoid this
-+	 * by deferring the crypto_tx_tailroom_needed_cnt decrementing on
-+	 * key removal for a while, so if we roam the value is larger than
-+	 * zero and no 0->1 transition happens.
-+	 *
-+	 * The cost is that if the AP switching was from an AP with keys
-+	 * to one without, we still allocate tailroom while it would no
-+	 * longer be needed. However, in the typical (fast) roaming case
-+	 * within an ESS this usually won't happen.
-+	 */
-+
-+	mutex_lock(&sdata->local->key_mtx);
-+	sdata->crypto_tx_tailroom_needed_cnt -=
-+		sdata->crypto_tx_tailroom_pending_dec;
-+	sdata->crypto_tx_tailroom_pending_dec = 0;
-+	mutex_unlock(&sdata->local->key_mtx);
-+}
- 
- void ieee80211_gtk_rekey_notify(struct ieee80211_vif *vif, const u8 *bssid,
- 				const u8 *replay_ctr, gfp_t gfp)
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 382dc44..d04f9e9 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -134,7 +134,7 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- int __must_check ieee80211_key_link(struct ieee80211_key *key,
- 				    struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
--void __ieee80211_key_free(struct ieee80211_key *key);
-+void __ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom);
- void ieee80211_key_free(struct ieee80211_local *local,
- 			struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
-@@ -148,4 +148,6 @@ void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata);
- #define key_mtx_dereference(local, ref) \
- 	rcu_dereference_protected(ref, lockdep_is_held(&((local)->key_mtx)))
- 
-+void ieee80211_delayed_tailroom_dec(struct work_struct *wk);
-+
- #endif /* IEEE80211_KEY_H */
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index a79ce82..0141e49 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -794,9 +794,11 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 
- 	mutex_lock(&local->key_mtx);
- 	for (i = 0; i < NUM_DEFAULT_KEYS; i++)
--		__ieee80211_key_free(key_mtx_dereference(local, sta->gtk[i]));
-+		__ieee80211_key_free(key_mtx_dereference(local, sta->gtk[i]),
-+				     true);
- 	if (sta->ptk)
--		__ieee80211_key_free(key_mtx_dereference(local, sta->ptk));
-+		__ieee80211_key_free(key_mtx_dereference(local, sta->ptk),
-+				     true);
- 	mutex_unlock(&local->key_mtx);
- 
- 	sta->dead = true;
+-	brcmf_ch_to_chanspec(cfg->channel,
+-			     &join_params, &join_params_size);
++	if (cfg->channel) {
++		join_params.params_le.chanspec_list[0] = cpu_to_le16(chanspec);
++		join_params.params_le.chanspec_num = cpu_to_le32(1);
++		join_params_size += sizeof(join_params.params_le);
++	}
+ 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
+ 				     &join_params, join_params_size);
+ 	if (err)
 -- 
-1.8.0
+1.7.10.4
+
 
