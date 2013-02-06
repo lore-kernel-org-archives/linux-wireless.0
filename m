@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:57827 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761310Ab3BMXxd (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:35892 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757858Ab3BFX42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 18:53:33 -0500
-Received: by mail-wg0-f48.google.com with SMTP id 16so1447843wgi.27
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 15:53:32 -0800 (PST)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless-regdb: change Max_EIRP in 5150-5250 for ES (Spain)
-Date: Thu, 14 Feb 2013 00:52:53 +0100
-Message-Id: <1360799573-4665-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130214_005341_862499_43C7EBD0)
+	Wed, 6 Feb 2013 18:56:28 -0500
+Message-ID: <5112EDAA.9050002@lwfinger.net> (sfid-20130207_005636_018450_D2651CC8)
+Date: Wed, 06 Feb 2013 17:56:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+To: Thomas Rosenkranz <tom.rosary@googlemail.com>
+CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-usb@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bugreport upstream: 0bda:819a RTL8188CUS WLAN doesn't work out
+ of the box
+References: <51045387.2040607@gmail.com> <5112A972.3060109@lwfinger.net> <CAOAX8-np_cY85=qL4TQCS9_d3tvggZTww7Maq1RWcasJsQxngw@mail.gmail.com>
+In-Reply-To: <CAOAX8-np_cY85=qL4TQCS9_d3tvggZTww7Maq1RWcasJsQxngw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did cut&paste from DE rules, but DE lowers the limit
-in 5150-5250 to 100mW for "neighborhood reasons" [1].
-Even when 200mW is completely legal in DE.
+On 02/06/2013 02:03 PM, Thomas Rosenkranz wrote:
+> Sorry for aksing back.
+> 1. You mean I should get the kernel clean of the realtek driver first
+> to prevent a crash during patching? Cause unplugging is no option for
+> a onboard device.
+> 2. I have no idea what to do with the patching file and couldn't find
+> any good instructions with google. "man patch" doesn't make me smarter
+> at all
 
-put 200mW, as Spanish law says:
+Put the patch in the directory where the arch, block, crypto, drivers, and so 
+forth directories are located. Then run the command
 
-Banda 5150 – 5350 MHz: En esta banda el uso por el servicio móvil en sistemas de
-acceso inalámbrico incluyendo comunicaciones electrónicas y redes de área local, se
-restringe para su utilización únicamente en el interior de recintos. La potencia isotrópica
-radiada equivalente máxima será de 200 mW (p.i.r.e.), siendo la densidad máxima de
-p.i.r.e. media de 10 mW/MHz en cualquier banda de 1 MHz. Este valor se refiere a la
-potencia promediada sobre una ráfaga de transmisión ajustada a la máxima potencia
+patch -p1 < 0001-......patch
 
-Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
-nacional de atribución de frecuencias (CNAF):
-https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
-https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+After that, run "make" followed by "sudo make modules_install install". If your 
+distro is reasonable, that will give you a new entry in your boot menu.
 
-search for:
- UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
- UN - 128 RLANs en 5 GHz (pag. 232)
+Larry
 
-more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
-http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
-
-[1] http://marc.info/?l=linux-wireless&m=127429049514439
-
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Luis R. Rodriguez <mcgrof@frijolero.org>
-Cc: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index c5861b8..6f618c0 100644
---- a/db.txt
-+++ b/db.txt
-@@ -269,7 +269,7 @@ country EG:
- 
- country ES: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
--	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
-+	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
--- 
-1.7.11.7
 
