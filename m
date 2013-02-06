@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52967 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51814 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048Ab3BFW0U (ORCPT
+	with ESMTP id S1754767Ab3BFQfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 17:26:20 -0500
-Message-ID: <1360189602.7910.81.camel@jlt4.sipsolutions.net> (sfid-20130206_232625_612621_A4E2339D)
-Subject: Re: [PATCH 3/4] mac80211: Improve error handling for off-channel
- operation
+	Wed, 6 Feb 2013 11:35:42 -0500
+Message-ID: <1360168561.7910.24.camel@jlt4.sipsolutions.net> (sfid-20130206_173555_899354_0EC3DE1D)
+Subject: pull-request: mac80211 2013-02-06
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Wed, 06 Feb 2013 23:26:42 +0100
-In-Reply-To: <20130206222051.GD6280@thinkpad-t410>
-References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
-	 <1360162873-17240-4-git-send-email-seth.forshee@canonical.com>
-	 <1360187077.7910.78.camel@jlt4.sipsolutions.net>
-	 <20130206220517.GC6280@thinkpad-t410>
-	 <1360188651.7910.80.camel@jlt4.sipsolutions.net>
-	 <20130206222051.GD6280@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Feb 2013 17:36:01 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-XoGbMmweb+pOTBmE0yid"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-06 at 16:20 -0600, Seth Forshee wrote:
 
-> > > I'd considered trying to expand this to check whether or not the frame
-> > > was acked -- in fact just today I captured a trace where the AP didn't
-> > > ack the frame but the STA went off-channel anyway. I'm not sure how to
-> > > implement that yet, and haven't found time to look into it.
-> > 
-> > It means waiting for the TX status from the driver, which might not
-> > really come with all drivers at all, making it somewhat tricky in
-> > general.
-> > 
-> > Anyway my point is that this doesn't really help all that much, and
-> > patch 1 and 3 together is a lot of churn ...
-> 
-> Fair enough. If you want I can drop those and resend 2 and 4, because
-> they do fix real problems.
+--=-XoGbMmweb+pOTBmE0yid
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Please. I'll quickly go over them for comments first. I was going to say
-I can apply them but I don't think they'll compile :)
+John,
 
+Just the fix from Cong Ding for the bad sizeof() -- Stephen Hemminger
+had pointed it out at the end of December but I promptly forgot about
+it.
+
+Please pull.
+
+Thanks,
 johannes
+
+
+The following changes since commit c49dc9008b1c641a86837297df7c90cef070571b=
+:
+
+  cfg80211: off by one in ieee80211_bss() (2013-01-24 15:47:22 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 9887dbf5b2163bcf69cd4456c21352e9a81c6003:
+
+  mac80211: fix error in sizeof() usage (2013-02-06 17:31:55 +0100)
+
+----------------------------------------------------------------
+Cong Ding (1):
+      mac80211: fix error in sizeof() usage
+
+ net/mac80211/cfg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+
+--=-XoGbMmweb+pOTBmE0yid
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJREoZxAAoJEDBSmw7B7bqr43gP/3oNQFBLwA72tbX8S0DMP7QS
+23QE6X9piHnS9lsaQp3FG84iie7vPusBQlgiGiLxVE+tos4yRLUXof3FMaVPFVr0
+h9nMlGj07nqWfraGP4/j9YKSEW125FdE6UnCh/ea/OaTaIpz3BWyN85FTZ7oHg04
+G3sPqQqkCXSgyElYcFpS9CQE1WuGcN5Xt/y7paikRPsuXVPvWRxHk08c46/f/tFL
+DDxCCmdaHnOFZW5sJD6IbbuJPM9U6z2UuV0o6tsUpzMjWwdSpkWOGYnAS1myexMr
+xCRTTAE4RflcgaI66i47HHVY4BNvwD/OXcpzKgEatFguqKLySGQ40uj54y3rgpEt
+gjY9SaPt51AVS5BbkDqXz5VbqDlkLbVnIKnvJckqdn/QBYIiEzOADtSl+vFp3m0c
+uqmGEVJcXZozf6u10MfuTy5gvx8vgSqdanAbUWQ/E7qgk/BYd6ojmIT1ThvRZsnf
+P1uXKfxbEiMjVAdKp/4wGNx/gH8l8C+IjOnQz/yJ7Ccmz+pPzP+M1gDsX840qy4b
+HdXzg5ZDFV00TPtLO85OzU2WzF6V1szMrqG2hjNDOcZbFkSNSzewGwvKMbFq3sw/
+XiGog0nOAdLf2UVZPLiNte1t9aF7wAFJDVdDv4em0Lhb53LsVNzxVg50BkFthRg+
+4XRNxyE+dwG5hDpxePoa
+=8VsI
+-----END PGP SIGNATURE-----
+
+--=-XoGbMmweb+pOTBmE0yid--
 
