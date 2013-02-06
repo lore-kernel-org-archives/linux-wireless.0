@@ -1,25 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51724 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934025Ab3BMPG6 (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:44625 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758309Ab3BFTv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 10:06:58 -0500
-Message-ID: <1360768014.8868.25.camel@jlt4.sipsolutions.net> (sfid-20130213_160701_095059_029EE3F1)
-Subject: Re: [RFCv5 0/2] mac80211: fix VLAN support on AP with ps-sta
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	projekt-wlan@fem.tu-ilmenau.de
-Date: Wed, 13 Feb 2013 16:06:54 +0100
-In-Reply-To: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130213_155052_997212_34CA7C36)
-References: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
-	 (sfid-20130213_155052_997212_34CA7C36)
-Content-Type: text/plain
-Mime-Version: 1.0
+	Wed, 6 Feb 2013 14:51:26 -0500
+From: Tejun Heo <tj@kernel.org>
+To: akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 75/77] mac80211: convert to idr_alloc()
+Date: Wed,  6 Feb 2013 11:40:47 -0800
+Message-Id: <1360179649-22465-76-git-send-email-tj@kernel.org> (sfid-20130206_205141_724097_0E34A277)
+In-Reply-To: <1360179649-22465-1-git-send-email-tj@kernel.org>
+References: <1360179649-22465-1-git-send-email-tj@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks good, can you send them as [PATCH]? :)
+Convert to the much saner new idr interface.
 
-johannes
+Only compile tested.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+---
+ net/mac80211/main.c |  2 --
+ net/mac80211/tx.c   | 18 ++++--------------
+ 2 files changed, 4 insertions(+), 16 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 2bdd454..632f2a7 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -647,8 +647,6 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 
+ 	spin_lock_init(&local->ack_status_lock);
+ 	idr_init(&local->ack_status_frames);
+-	/* preallocate at least one entry */
+-	idr_pre_get(&local->ack_status_frames, GFP_KERNEL);
+ 
+ 	sta_info_init(local);
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a2cb6a3..5a62468 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1999,24 +1999,14 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		skb = skb_clone(skb, GFP_ATOMIC);
+ 		if (skb) {
+ 			unsigned long flags;
+-			int id, r;
++			int id;
+ 
+ 			spin_lock_irqsave(&local->ack_status_lock, flags);
+-			r = idr_get_new_above(&local->ack_status_frames,
+-					      orig_skb, 1, &id);
+-			if (r == -EAGAIN) {
+-				idr_pre_get(&local->ack_status_frames,
+-					    GFP_ATOMIC);
+-				r = idr_get_new_above(&local->ack_status_frames,
+-						      orig_skb, 1, &id);
+-			}
+-			if (WARN_ON(!id) || id > 0xffff) {
+-				idr_remove(&local->ack_status_frames, id);
+-				r = -ERANGE;
+-			}
++			id = idr_alloc(&local->ack_status_frames, orig_skb,
++				       1, 0x10000, GFP_ATOMIC);
+ 			spin_unlock_irqrestore(&local->ack_status_lock, flags);
+ 
+-			if (!r) {
++			if (id >= 0) {
+ 				info_id = id;
+ 				info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 			} else if (skb_shared(skb)) {
+-- 
+1.8.1
 
