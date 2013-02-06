@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:42005 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758052Ab3BSCfb (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:47183 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755163Ab3BFXuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 21:35:31 -0500
-Received: by mail-pa0-f45.google.com with SMTP id kl14so3144702pab.32
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 18:35:31 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	cedric.voncken@acksys.fr, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: fix the problem of forwarding from DS to DS in Mesh
-Date: Tue, 19 Feb 2013 10:04:50 +0800
-Message-Id: <1361239490-4630-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130219_033538_451686_E4C83E84)
+	Wed, 6 Feb 2013 18:50:13 -0500
+Received: by mail-oa0-f44.google.com with SMTP id h1so2201912oag.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 15:50:12 -0800 (PST)
+Message-ID: <5112EC32.6020808@lwfinger.net> (sfid-20130207_005018_636579_265F71E7)
+Date: Wed, 06 Feb 2013 17:50:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bugreport upstream: 0bda:819a RTL8188CUS WLAN doesn't work out
+ of the box
+References: <51045387.2040607@gmail.com> <5112A972.3060109@lwfinger.net> <5112E139.6090701@gmail.com>
+In-Reply-To: <5112E139.6090701@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unicast frame with unknown forwarding information always trigger
-the path discovery assuming destination is always located inside the
-MBSS. This patch allows the forwarding to look for mesh gate if path
-discovery inside the MBSS has failed.
+On 02/06/2013 05:03 PM, Xose Vazquez Perez wrote:
+> On 02/06/2013 08:05 PM, Larry Finger wrote:
+>
+>> Please install the attached patch, and retry the above method. I fixed the probe function to get rid of the oops. If the device is really foreign, the process that writes new_id will not finish until
+>> the device is unplugged; however, the rest of the system is chugging along.
+>
+> I tried the patch. And now, rtl8192cu doesn't break the kernel.
+>
+> But it should go out when an unknown chip/rf is detected,
+> instead of trying to configure the unknown_device.
 
-Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: rebase on mac80211-next and redefine the logic clearer (Johannes & Thomas)
+No fooling; however, the only way it can tell if the device is known is by 
+seeing those USB timeouts. It took a very long time before the probe routine 
+gets control again. I don't know any way to fix that.
 
- net/mac80211/tx.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+Larry
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5b9602b..c79860f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1844,9 +1844,24 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		}
- 
- 		if (!is_multicast_ether_addr(skb->data)) {
-+			struct sta_info *next_hop;
-+			bool mpp_lookup = true;
-+
- 			mpath = mesh_path_lookup(sdata, skb->data);
--			if (!mpath)
-+			if (mpath) {
-+				mpp_lookup = false;
-+				next_hop = rcu_dereference(mpath->next_hop);
-+				if (!next_hop ||
-+				    !(mpath->flags & (MESH_PATH_ACTIVE |
-+						      MESH_PATH_RESOLVING)))
-+					mpp_lookup = true;
-+			}
-+
-+			if (mpp_lookup)
- 				mppath = mpp_path_lookup(sdata, skb->data);
-+
-+			if (mppath && mpath)
-+				mesh_path_del(mpath->sdata, mpath->dst);
- 		}
- 
- 		/*
--- 
-1.7.0.4
 
