@@ -1,85 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:63491 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759095Ab3BGUC2 (ORCPT
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:42533 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751719Ab3BFG46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:02:28 -0500
-Received: by mail-wg0-f54.google.com with SMTP id fm10so2414459wgb.9
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 12:02:27 -0800 (PST)
+	Wed, 6 Feb 2013 01:56:58 -0500
+From: Amit SHAKYA <amit.shakya@stericsson.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 6 Feb 2013 07:56:46 +0100
+Subject: RE: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
+ interface
+Message-ID: <ECD438FDEF6BD742895E554C24725A40236E82519C@EXDCVYMBSTM005.EQ1STM.local> (sfid-20130206_075702_895172_06C02864)
+References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
+ <1359991708.10311.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A319014B7731@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A319014B7731@sbs2003.acksys.local>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 7 Feb 2013 12:02:06 -0800
-Message-ID: <CAG6hwVOEdFoac=TO8AcZVSB4Y15usHRwNkrK3cVWerHTvArO9g@mail.gmail.com> (sfid-20130207_210230_960692_026BC177)
-Subject: Re: Mesh regression
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless@vger.kernel.org,
-	open11s <devel@lists.open80211s.org>,
-	Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ o11s-devel, Chun-Yeow
-
-For once I don't think this regression is my fault :)
-
-$ git log master-2012-06-08...master-2012-09-07  --oneline
-net/mac80211/mesh_hwmp.c
-4bd4c2d mac80211: clean up mpath_move_to_queue()
-2c53040 net: Fix (nearly-)kernel-doc comments for various functions
-bdcbd8e mac80211: clean up debugging
-7ebfa46 mac80211: fix and improve mesh RANN processing
-728b19e {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
-3fbf4b7 mac80211: implement the proactive PREP generation
-a69cc44 mac80211: implement the proactive PREQ generation
-35b3fe1 mac80211: Rename stainfo variable for the more common sta
-e3f5d16 mac80211: Remove unused variable
-
-Chun-Yeow, can you please take a look at the PREQ forwarding logic in
-the context of Cedric's problem?
-
-On Thu, Feb 7, 2013 at 8:29 AM, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
-> My test Platform is:
->
-> LAPTOP_A ---------------- MeshGate 1 ---------------- MeshGate2
-> 192.168.3.1                  192.168.3.252               192.168.3.253
-> 08:00:27:c1:bf:06     Wistron_aa:41:ed              Wistron_aa:40:a8
->                                                 Acksysco_00:2d:ef
->
-> The meshgate2 have a mesh interface and a lan interface bridged
-> together, and IP address is set on the bridge.
->
-> If I run a ping from LAPTOP_A to MeshGate2 and on the same time, I
-> launch the following mesh initialization script
->         iw phy phy0 interface add wlan0 type mp
->         iw wlan0 set channel 36
->         ifconfig wlan0 up
->         iw wlan0 mesh join cvtest
->         brctl addif br-lan wlan0
->
-> In this case, I get no response from the ping.
-> I spied the wireless with airpcap and wireshark:
->         A PREQ frame is sent from the mesh gate but the "sta target"
-> field is not set with the other mesh gate. In this frame, the "sta
-> target" field is set to the destination mac address (Acksysco_00:2d:ef).
->
-> I don't have this default with compat-2012-06-14.
-> I have this default with compat-2013-01-07 and compat-2012-09-07
->
-> I attach a wireshark capture with the default. The frame #49 is PREQ
-> with field target sta address set to MAC address of LAPTOPB.
->
-> Do not hesitate to request more information or new test, if necessary to
-> understand the default.
->
-> Any help will appreciate.
-> Best regards.
->
-> Voncken cedric
-
-
-
--- 
-Thomas
+TXkgY29tbWVudHMgaW5saW5lW0FTXToNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KU2Vu
+dDogTW9uZGF5LCBGZWJydWFyeSAwNCwgMjAxMyA4OjU4IFBNDQpUbzogQW1pdCBTSEFLWUE7IENo
+cmlzdGlhbiBMYW1wYXJ0ZXINCkNjOiBKb2huIFcuIExpbnZpbGxlOyBsaW51eC13aXJlbGVzcw0K
+U3ViamVjdDogUmU6IFtQQVRDSF0gbWFjODAyMTE6IEZpeCBQTiBjb3JydXB0aW9uIGluIGNhc2Ug
+b2YgbXVsdGlwbGUgdmlydHVhbCBpbnRlcmZhY2UNCg0KT24gTW9uLCAyMDEzLTAyLTA0IGF0IDE2
+OjQ4ICswNTMwLCBBbWl0IFNoYWt5YSB3cm90ZToNCj4gSW4gY2FzZSBvZiBtdWx0aXBsZSB2aXJ0
+dWFsIGludGVyZmFjZSwgaWYgQUVTIGlzIGNvbmZpZ3VyZWQgb24gDQo+IG11bHRpcGxlIGludGVy
+ZmFjZSB0aGVuIHRoZXJlIGFyZSBjaGFuY2VzIG9mIHN0b3JlZCBQTiBjb3JydXB0aW9uLCANCj4g
+Y2F1c2luZyB0cmFmZmljIHRvIHN0b3AuDQoNCkludGVyZXN0aW5nLCBuaWNlIGZpbmQuDQoNCj4g
+SW4gY2FzZSwgaWVlZTgwMjExX3J4X2hhbmRsZXJzIHByb2Nlc3NpbmcgaXMgZ29pbmcgb24gZm9y
+IHNrYnMgDQo+IHJlY2VpdmVkIG9uIG9uZSB2aWYgYW5kIGF0IHRoZSBzYW1lIHRpbWUsIHJ4IGFn
+Z3JlZ2F0aW9uIHJlb3JkZXIgdGltZXIgDQo+IGV4cGlyZXMgb24gYW5vdGhlciB2aWYgdGhlbiBz
+dGFfcnhfYWdnX3Jlb3JkZXJfdGltZXJfZXhwaXJlZCBpcyANCj4gaW52b2tlZCBhbmQgaXQgd2ls
+bCBwdXNoIHNrYnMgaW50byB0aGUgc2luZ2xlIHF1ZXVlIChsb2NhbC0+cnhfc2tiX3F1ZXVlKS4N
+Cj4gaWVlZTgwMjExX3J4X2hhbmRsZXJzIGluIHRoZSB3aGlsZSBsb29wIGFzc3VtZXMgdGhhdCB0
+aGUgc2ticyBhcmUgZm9yIA0KPiB0aGUgc2FtZSBUSUQgYW5kIHNhbWUgc3RhLg0KDQpUaGlzIGlz
+IGJlY2F1c2Ugb2Ygc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhLCBwcmVzdW1hYmx5PyBJT1csIHRo
+ZSBsb29wIGRvZXNuJ3QgcmVhbGx5IGFzc3VtZSBpdCwgaXQncyB0aGUgZmFjdCB0aGF0IHRoZSBs
+b29wIGlzIGNhbGxlZCB3aXRoIGEgZ2l2ZW4gc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhLCByaWdo
+dD8NCltBU10gWWVzDQoNCj4gVGhpcyBhc3N1bXB0aW9uIGRvZXNuJ3QgaG9sZCBnb29kIGluIHRo
+aXMgc2NlbmFyaW8gYW5kIHRoZSBQTiBnZXRzIA0KPiBjb3JydXB0ZWQgYnkgUE4gcmVjZWl2ZWQg
+aW4gb3RoZXIgdmlmJ3Mgc2tiLCBjYXVzaW5nIHRyYWZmaWMgdG8gc3RvcCANCj4gZHVlIHRvIFBO
+IG1pc21hdGNoLg0KPiBUaGlzIGNhbiBiZSBhdm9pZGVkIGJ5IGNvbXBhcmluZyBzb3VyY2UgbWFj
+IGFkZHJlcyBpbiByZWNlaXZlZCBza2IncyANCj4gd2l0aCB0aGUgc3RhJ3MgbWFjIGFkZHJlc3Mg
+Zm9yIHdoaWNoIHByb2Nlc3NpbmcgaXMgZ29pbmcgb24sIHdoZW4gZGUtcXVldWVpbmcuDQoNCg0K
+DQo+IEBAIC0yNzkwLDcgKzI3OTEsMjAgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3J4X2hhbmRs
+ZXJzKHN0cnVjdCANCj4gaWVlZTgwMjExX3J4X2RhdGEgKnJ4KQ0KPiAgDQo+ICAJcngtPmxvY2Fs
+LT5ydW5uaW5nX3J4X2hhbmRsZXIgPSB0cnVlOw0KPiAgDQo+IC0Jd2hpbGUgKChza2IgPSBfX3Nr
+Yl9kZXF1ZXVlKCZyeC0+bG9jYWwtPnJ4X3NrYl9xdWV1ZSkpKSB7DQo+ICsJc2tiX3F1ZXVlX3dh
+bGtfc2FmZSgmcngtPmxvY2FsLT5yeF9za2JfcXVldWUsIHNrYiwgdG1wKSB7DQo+ICsJCWlmICgh
+c2tiKQ0KPiArCQkJYnJlYWs7DQo+ICsJCWhkciA9IChzdHJ1Y3QgaWVlZTgwMjExX2hkciAqKSBz
+a2ItPmRhdGE7DQo+ICsJCS8qDQo+ICsJCSogQWRkaXRpb25hbCBjaGVjayB0byBlbnN1cmUgdGhh
+dCB0aGUgcGFja2V0cyBjb3JyZXNwb25kaW5nDQo+ICsJCSogdG8gc2FtZSBzdGEgZW50cnkgYXMg
+aW4gcngtPnN0YSBhcmUgZGUtcXVldWVkLiBUaGUgcXVldWUNCj4gKwkJKiBjYW4gaGF2ZSBkaWZm
+ZXJlbnQgaW50ZXJmYWNlIHBhY2tldHMgaW4gY2FzZSBvZiBtdWx0aXBsZSB2aWZzDQo+ICsJCSov
+DQo+ICsJCWlmICgocngtPnN0YSAmJiBoZHIpICYmIChpZWVlODAyMTFfaXNfZGF0YShoZHItPmZy
+YW1lX2NvbnRyb2wpKQ0KPiArCQkJJiYgKG1lbWNtcChyeC0+c3RhLT5zdGEuYWRkciwgaGRyLT5h
+ZGRyMiwgRVRIX0FMRU4pKSkNCj4gKwkJCQkJY29udGludWU7DQo+ICsJCV9fc2tiX3VubGluayhz
+a2IsICZyeC0+bG9jYWwtPnJ4X3NrYl9xdWV1ZSk7DQoNCkFwYXJ0IGZyb20gdGhlIGN1cmlvdXMg
+Y29kaW5nIHN0eWxlICh5b3UgZG9uJ3QgbmVlZCBhbnkgb2YgdGhvc2UgZXh0cmEgcGFyZW50aGVz
+ZXMsICYmIHNob3VsZCBiZSBvbiB0aGUgcHJldmlvdXMgbGluZSwgdGhlIGlmIGNvbnRpbnVhdGlv
+biBpbmRlbnRlZCB0byB0aGUgb3BlbmluZyBwYXJlbnRoZXNpcywgY29udGludWUgb25seSBpbmRl
+bnRlZCBvbmUgdGFiKSwgSSB3b25kZXIgaWYgdGhpcyBjb3VsZCBsZWFkIHRvIGxlYWtpbmcgZnJh
+bWVzIGhlcmUsIGlmIHRoZSBzdGF0aW9uIGRpc2Nvbm5lY3RzIG9yIHNvbWV0aGluZyB3aGlsZSB0
+aGVyZSBhcmUgZnJhbWVzIGZvciBpdCBvbiB0aGUgcXVldWU/DQpJT1csIHRoZSAianVzdCBza2lw
+IHRoYXQgZnJhbWUiIHBpZWNlIHNlZW1zIGEgYml0IHF1ZXN0aW9uYWJsZS4NCg0KW0FTXSBZZWFo
+LCBJIHJlYWxpemVkIHRoaXMgcGFyZW50aGVzaXMvaW5kZW50YXRpb24gaXNzdWUgKHdvdWxkIGZp
+eCBpdCkuQlRXIHdlIGRpZCB0ZXN0IHRoaXMgb3V0IGFuZCBkaWRu4oCZdCBvYnNlcnZlIGFueSBz
+dWNoIGlzc3VlLiBDYW4geW91IHBsZWFzZSBoZWxwIG1lIHVuZGVyc3RhbmQgdGhlIGZsb3cgd2hp
+Y2ggY291bGQgbGVhZCB0byB0aGUgc2FtZT8gQWxzbyBpbiBjYXNlIHRoaXMgaXMgYW4gaXNzdWUs
+IGNhbiB3ZSB0YWtlIGNhcmUgb2YgdGhpcyBpbiB0aGUgY2xlYW51cCByZWxhdGVkIHRvIGRpc2Nv
+bm5lY3Q/IEhlcmUgaXQgc2VlbXMgYSBjb25zY2lvdXMgZWZmb3J0IGhhcyBiZWVuIG1hZGUgdG8g
+YXZvaWQgc3BpbmxvY2sgKHJ4LT5sb2NhbC0+cnhfc2tiX3F1ZXVlLmxvY2spLCBhcyB0aGlzIGxv
+Y2sgaXMgdGFrZW4gb25seSBmb3IgdGhlIGR1cmF0aW9uIG9mIGRlcXVldWUuIFRoZSBzdWdnZXN0
+ZWQgc29sdXRpb24gYXZvaWRzIHVzaW5nIHNwaW5sb2NrLg0KDQpDaHJpc3RpYW4sIGlzIHRoZXJl
+IGFueSByZWFzb24gdG8gbm90IGp1c3QgaGF2ZSB0aGUgcXVldWUgYmUgb24gdGhlIHN0YWNrLCBh
+bmQgdXNlIGEgc2VwYXJhdGUgc3BpbmxvY2sgaW4gdGhlIGxvY2FsIHN0cnVjdCB0byBsb2NrIG91
+dCB0aGUgdW53YW50ZWQgY29uY3VycmVuY3k/IEl0IHNlZW1zIHRvIG1lIHRoYXQgc2hvdWxkIHdv
+cmsganVzdCBhcyB3ZWxsLCBzaW5jZSB0aGVyZSBhcmUgbmV2ZXIgZnJhbWVzIG9uIHRoZSByeF9z
+a2JfcXVldWUgZm9yIHZlcnkgbG9uZywgcmlnaHQ/DQoNCmpvaGFubmVzDQoNCg==
