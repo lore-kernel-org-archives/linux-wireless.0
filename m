@@ -1,130 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f42.google.com ([209.85.210.42]:45712 "EHLO
-	mail-da0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078Ab3BKVIs (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52021 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754169Ab3BFPB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:08:48 -0500
-Received: by mail-da0-f42.google.com with SMTP id z17so2906796dal.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:08:47 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 3/3] mac80211: generate mesh probe responses
-Date: Mon, 11 Feb 2013 13:07:23 -0800
-Message-Id: <1360616843-24618-3-git-send-email-thomas@cozybit.com> (sfid-20130211_221237_065184_05798D19)
-In-Reply-To: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
-References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+	Wed, 6 Feb 2013 10:01:29 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 4/4] mac80211: Add flushes before going off-channel
+Date: Wed,  6 Feb 2013 09:01:13 -0600
+Message-Id: <1360162873-17240-5-git-send-email-seth.forshee@canonical.com> (sfid-20130206_160133_333988_096CB44E)
+In-Reply-To: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
+References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh interfaces will now respond to any broadcast (or
-matching directed mesh) probe requests with a probe
-response.
+We've got a couple of races when enabling powersave with an AP for
+off-channel operation. The first is fairly simple. If we go off-channel
+before the nullfunc frame to enable PS is transmitted then it may not be
+received by the AP. Add a flush after enabling off-channel PS to prevent
+this from happening.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+The second race is a bit more subtle. If the driver supports QoS and has
+frames queued when the nullfunc frame is queued, those frames may get
+transmitted after the nullfunc frame. If PM is not set then the AP is
+being told that we've exited PS before we go off-channel and may try to
+deliver frames. To prevent this, add a flush after stopping the queues
+but before passing the nullfunc frame to the driver.
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- net/mac80211/mesh.c |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c   |    5 ++--
- 2 files changed, 66 insertions(+), 2 deletions(-)
+ net/mac80211/offchannel.c |    5 +++++
+ net/mac80211/scan.c       |    3 +++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index ffbe1d5..0bb7754 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -862,6 +862,66 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	sdata->u.mesh.timers_running = 0;
- }
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 650af94..28274f9 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -118,8 +118,13 @@ bool ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 	 * STA interfaces.
+ 	 */
  
-+static void
-+ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
-+			    struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct sk_buff *presp;
-+	struct beacon_data *bcn;
-+	struct ieee80211_mgmt *hdr;
-+	struct ieee802_11_elems elems;
-+	size_t baselen;
-+	u8 *pos, *end;
++	/*
++	 * Stop queues and transmit all frames queued by the driver
++	 * before sending nullfunc to enable powersave at the AP.
++	 */
+ 	ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
++	drv_flush(local, false);
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index beca4db..9ecd1660 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -343,6 +343,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	if (!ieee80211_offchannel_stop_vifs(local))
+ 		goto error;
+ 
++	/* ensure nullfunc is transmitted before leaving operating channel */
++	drv_flush(local, false);
 +
-+	end = ((u8 *) mgmt) + len;
-+	pos = mgmt->u.probe_req.variable;
-+	baselen = (u8 *) pos - (u8 *) mgmt;
-+	if (baselen > len)
-+		return;
-+
-+	ieee802_11_parse_elems(pos, len - baselen, &elems);
-+
-+	/* 802.11-2012 10.1.4.3.2 */
-+	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
-+	     !is_broadcast_ether_addr(mgmt->da)) ||
-+	    elems.ssid_len != 0)
-+		return;
-+
-+	if (elems.mesh_id_len != 0 &&
-+	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
-+	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len))) {
-+		mpl_dbg(sdata, "ignoring probe request for different MBSS\n");
-+		return;
-+	}
-+
-+	rcu_read_lock();
-+	bcn = rcu_dereference(ifmsh->beacon);
-+
-+	if (!bcn)
-+		goto out;
-+
-+	presp = dev_alloc_skb(local->tx_headroom +
-+			      bcn->head_len + bcn->tail_len);
-+	if (WARN_ON(!presp))
-+		goto out;
-+
-+	skb_reserve(presp, local->tx_headroom);
-+	memcpy(skb_put(presp, bcn->head_len), bcn->head, bcn->head_len);
-+	memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
-+	hdr = (struct ieee80211_mgmt *) presp->data;
-+	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					 IEEE80211_STYPE_PROBE_RESP);
-+	memcpy(hdr->da, mgmt->sa, ETH_ALEN);
-+	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
-+	IEEE80211_SKB_CB(presp)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	ieee80211_tx_skb(sdata, presp);
-+out:
-+	rcu_read_unlock();
-+	return;
-+}
-+
- static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 					u16 stype,
- 					struct ieee80211_mgmt *mgmt,
-@@ -951,6 +1011,9 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_mesh_rx_bcn_presp(sdata, stype, mgmt, skb->len,
- 					    rx_status);
- 		break;
-+	case IEEE80211_STYPE_PROBE_REQ:
-+		ieee80211_mesh_rx_probe_req(sdata, mgmt, skb->len);
-+		break;
- 	case IEEE80211_STYPE_ACTION:
- 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
- 		break;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b5f1bba..34aa975 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2692,8 +2692,9 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- 			return RX_DROP_MONITOR;
- 		break;
- 	case cpu_to_le16(IEEE80211_STYPE_PROBE_REQ):
--		/* process only for ibss */
--		if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
-+		/* process only for ibss and mesh */
-+		if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
- 			return RX_DROP_MONITOR;
- 		break;
- 	default:
+ 	ieee80211_configure_filter(local);
+ 
+ 	/* We need to set power level at maximum rate for scanning. */
 -- 
-1.7.10.4
+1.7.9.5
 
