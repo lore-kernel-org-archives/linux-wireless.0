@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:53560 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751224Ab3BUAA5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 19:00:57 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Feb 2013 16:00:15 -0800
-Subject: RE: mwifiex crash when removing interface while scanning
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com> (sfid-20130221_010103_504431_99B0464D)
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
- <CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
-In-Reply-To: <CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:52977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754839Ab3BFWaH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Feb 2013 17:30:07 -0500
+Message-ID: <1360189829.7910.84.camel@jlt4.sipsolutions.net> (sfid-20130206_233012_099949_B3AFA079)
+Subject: Re: [PATCH 3/4] mac80211: Improve error handling for off-channel
+ operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Wed, 06 Feb 2013 23:30:29 +0100
+In-Reply-To: <1360189602.7910.81.camel@jlt4.sipsolutions.net> (sfid-20130206_232625_612621_A4E2339D)
+References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
+	 <1360162873-17240-4-git-send-email-seth.forshee@canonical.com>
+	 <1360187077.7910.78.camel@jlt4.sipsolutions.net>
+	 <20130206220517.GC6280@thinkpad-t410>
+	 <1360188651.7910.80.camel@jlt4.sipsolutions.net>
+	 <20130206222051.GD6280@thinkpad-t410>
+	 <1360189602.7910.81.camel@jlt4.sipsolutions.net>
+	 (sfid-20130206_232625_612621_A4E2339D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
-
-> >> >     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
-> >> >     eth0      Failed to read scan data : No such device
-> >
-> > After this error message, do you see the sd8787 card is removed from the bus?
-> >
-> > "mmc0: card 0001 removed"
+On Wed, 2013-02-06 at 23:26 +0100, Johannes Berg wrote:
+> On Wed, 2013-02-06 at 16:20 -0600, Seth Forshee wrote:
 > 
-> No.
-
-That's strange.
-"mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1" is from 
-mwifiex_remove_card().
-
+> > > > I'd considered trying to expand this to check whether or not the frame
+> > > > was acked -- in fact just today I captured a trace where the AP didn't
+> > > > ack the frame but the STA went off-channel anyway. I'm not sure how to
+> > > > implement that yet, and haven't found time to look into it.
+> > > 
+> > > It means waiting for the TX status from the driver, which might not
+> > > really come with all drivers at all, making it somewhat tricky in
+> > > general.
+> > > 
+> > > Anyway my point is that this doesn't really help all that much, and
+> > > patch 1 and 3 together is a lot of churn ...
+> > 
+> > Fair enough. If you want I can drop those and resend 2 and 4, because
+> > they do fix real problems.
 > 
-> > My card works fine with a Ricoh controller on x86_64 machine. Of course the power is not cut when I
-> remove the mwifiex_sdio module.
-> 
-> Under this kernel, I'm not sure if the power is or isn't being cut at
-> this point. I don't think this is relevant though; regular
+> Please. I'll quickly go over them for comments first. I was going to say
+> I can apply them but I don't think they'll compile :)
 
-"we quite regularly will power down the wireless card when it is not
-being actively used..."
+Actually they look fine. I thought the purge queue thing was weird but
+it's necessary, just wasn't obvious to me right now.
 
-I interpreted this statement as "the power to the card is being cut while inactive".
-mwifiex_remove_card() is called seems agrees with it. Perhaps I'm missing something here.
+johannes
 
-> insmod/rmmod cycles work fine, the problem only appears when tearing
-> down the interface while a scan is in progress.
-
-Could you add some debug logs in the tear-down path to show where exactly it gets stuck?
-
-> 
-> > I can upgrade my XO-4 to kernel 3.8 if feasible. Please let me know if a HOW-TO doc is available.
-> 
-> You will need a serial console connected, as there is no output on the
-> LCD at this time when running the upstream kernel.
-> 
-> http://wiki.laptop.org/go/User:DanielDrake/Run_upstream_kernel_on_XO-4
-
-Will do.
-
-Thanks,
-Bing
-
-> 
-> Daniel
