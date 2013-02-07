@@ -1,221 +1,499 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.clear.net.nz ([203.97.37.64]:44391 "EHLO
-	smtp4.clear.net.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab3BOWTJ (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:57401 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751535Ab3BGIBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 17:19:09 -0500
-Received: from mxin2-orange.clear.net.nz
- (lb2-srcnat.clear.net.nz [203.97.32.237])
- by smtp4.clear.net.nz (CLEAR Net Mail)
- with ESMTP id <0MIA006O87YR2Y10@smtp4.clear.net.nz> for
- linux-wireless@vger.kernel.org; Sat, 16 Feb 2013 11:04:05 +1300 (NZDT)
-Date: Sat, 16 Feb 2013 11:03:26 +1300
-From: Kevin & Pauline Gordon <kgordon@paradise.net.nz>
-Subject: RE: Writing application code using sd8686
-In-reply-to: <CAGRGNgUnSuALDpZME=YrSDwTJQew+kdUHRrZskJBob8HHGcqVQ@mail.gmail.com>
-To: 'Julian Calaby' <julian.calaby@gmail.com>
-Cc: 'linux-wireless' <linux-wireless@vger.kernel.org>
-Message-id: <E09AA5D37894474C897FDF8284D04380@KGDOMAIN.local> (sfid-20130215_231931_014864_54228384)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-References: <loom.20130214T000819-590@post.gmane.org>
- <CAGRGNgU4akuP=iKqUqpNbztB7P6DECm=-ug6QKxtsJdvMd9iCg@mail.gmail.com>
- <4A04400646FF41AE84629E8D1443AA89@KGDOMAIN.local>
- <CAGRGNgWBYOJeLnA64yT4Pp0JOd50UqnndA98Jmq1kRd25Fn-ZA@mail.gmail.com>
- <A91BB000EAB44D40A1C1EF25B3CD8761@KGDOMAIN.local>
- <CAGRGNgUnSuALDpZME=YrSDwTJQew+kdUHRrZskJBob8HHGcqVQ@mail.gmail.com>
+	Thu, 7 Feb 2013 03:01:44 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 07 Feb 2013 00:01:44 -0800
+From: chaitanyatk@posedge.com
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>, <maheshp@posedge.com>
+Subject: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+Message-ID: <7384f4ddc838247a0f467708d66baa8c@posedge.com> (sfid-20130207_090148_148406_E88982BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many thanks for your comments Julian. Configuring files is fine if one is
-not out and about. Today with free Wifi or for demo purposes gaining access
-as a guest to local systems one needs an api (library) to:
-Configure,
-Open,
-Enable Dhcp,
-Scan,
-Join
-to automatically join local wifi access point on the fly.
-If anyone has some thoughts on this, I am keen to hear (especially re
-Libertas).
-Regards,
-Kevin Gordon.
+Add support for sending AMSDU packet with the
+user defined config through debugfs. This helps in
+testing the Rx-AMSDU path without needing a special
+driver/stack.
 
+Note: Its purely for debug purposes.
 
------Original Message-----
-From: Julian Calaby [mailto:julian.calaby@gmail.com] 
-Sent: Friday, 15 February 2013 10:27 p.m.
-To: Kevin & Pauline Gordon
-Cc: linux-wireless
-Subject: Re: Writing application code using sd8686
+Signed-off-by: T Krushna Chaitanya <chaitanyatk@posedge.com>
+---
+Tests and Observations
+==============
+1)  Verified the Rx-AMSDU logic with mac80211 based chip
+it works fine all msdu's are delivered.
 
-Hi Kevin,
+2) Wireshark parses this frame fine.
 
-On Fri, Feb 15, 2013 at 5:26 PM, Kevin & Pauline Gordon
-<kgordon@paradise.net.nz> wrote:
-> Hi Julian,
-> Thank you for your reply. Please refer to my answers below.
->
-> -----Original Message-----
-> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> Sent: Friday, 15 February 2013 6:00 p.m.
-> To: Kevin & Pauline Gordon
-> Cc: linux-wireless
-> Subject: Re: Writing application code using sd8686
->
-> Hi Kevin,
->
-> Firstly, please CC linux-wireless or reply to all. I don't support or
-> assist people off-list. Also, don't top post. Quote the relevant parts
-> of the email you're replying to, then respond to them underneath. This
-> helps people to quickly read the entire discussion.
->
-> On Fri, Feb 15, 2013 at 2:55 PM, Kevin & Pauline Gordon
-> <kgordon@paradise.net.nz> wrote:
->> Hi Julian,
->>
->> My main interest is wireless control of a robot
->> (http://www.rescuerobot.org). I have been writing code in C# for a System
-> on
->> Module board using http://www.ghielectronics.com/catalog/product/128 and
->> http://www.ghielectronics.com/catalog/product/379 . The supplier has been
->> struggling with software problems
->> http://www.tinyclr.com/forum/topic?id=10844&page=3#msg108916 so I thought
-> I
->> would experiment with Linux hence purchased an excellent board at
->> http://www.isee.biz/products/processor-boards/igepv2-board . After
-writing
-> a
->> mass of C# code in NETMF (tinyclr) and regretting it, I am now enjoying
->> configuring wifi on the IGEPV2 (poky to ubuntu) using the libertas module
-> in
->> Poky.
->
-> "Sounds interesting.
->
-> The advice I'm going to give you assumes that the board on the robot
-> is running Linux. If it isn't then this is not really the right place
-> to be asking this question."
->
-> I am using Poky and Ubuntu which are both Linux.
+3)sample cmd: echo "0,7,5,100,00:10:18:a9:50:6c"
+> /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/send_amsdu
 
-Good.
+Issues: Comments are welcome
+===
+1) Netgear/Broadcom AP's are dropping some AMSDU's in
+the AMSDU deaggregation when seen on wired side.
 
-> " If you're after .NET code to operate the
-> wireless module directly without the help of Linux or the standard
-> Linux wireless tools, you'll need to contact Marvell, the manufacturer
-> of the board, or write it yourself."
->
-> I have setup eclipse for C/C++ on Linux (Poky and Ubuntu):
+2) with 8K seeing a DMA timeout and warning in ath9k driver.
+(will send a separate mail)
 
-Sorry, I misunderstood, I assumed you were writing your application in C#.
+3) dev_alloc_skb allocates as below(local PAGE_SIZE=4096)
 
->> I have setup eclipse on ubuntu and wish to start writing c/c++ code to
->> experiment with linux wireless. The IGEPV2 contains a Marvell 88w8686B1.
->>
->> Is there a SDK or example code available on the net for the Marvell
->> 88w8686B1. I have downloaded the driver package from Marvell which
-> contains
->> the source code for SD8686 (Marvell88w8686_d0acbab79fde.rar). I have no
->> experience of programming in the Linux environment but have plenty of
-> books
->> to help.
->
-> "I assume that you want to transmit data using TCP or UDP sockets over
-> a wireless link between the robot and some other device. I'm also
-> going to assume that some third device will be an access point and
-> both the robot and the other device will connect to it."
->
-> I will use TCP sockets over a wireless link. The third device will be an
-> access point.
+AMSDU Size:    SKB tailroom
 
-Good.
+2304+26            2368
+3839+26            7936
+7935+26            16128
 
-> "You need to do three things:
-> 1. Ensure that the driver is installed and working
-> 2. Establish a wireless link.
-> 3. Obtain or set an IP address.
-> 4. Determine the remote IP address.
-> 5. Establish a socket connection between the two computers."
->
-> "For 1, from what you've said above, it seems that this is already done."
->
-> Done.
->
-> "For 2 and 3, the simplest way would be to install the network-manager
-> daemon and talk to it over d-bus, and there are modules for Mono /
-> .NET to communicate over d-bus. There may even be modules for Mono /
-> .NET to interface directly with network manager. Note that there are
-> other tools that perform the same functions, e.g. wicd or Connman and
-> you should be able to interface with them in a similar manner."
->
-> I will not be using Mono.
->
-> "If that's not an option, you'll have to do it more manually. There may
-> be tools installed on the board to help you, or you could install
-> wpa_supplicant and configure it to maintain the wireless connection
-> for you. Note that wpa_supplicant can be controlled and configured
-> over d-bus. wpa_supplicant only manages the connection, and setting or
-> obtaining an IP address must be done separately. If you're using a
-> static IP address, you could use ifconfig, which should already be
-> installed, to set it. If you want a dynamic IP address and use DHCP,
-> you'll need to ensure that a DHCP client is installed and determine
-> how to operate it. You'll then have to figure out some way to run
-> these tools after wpa_supplicant connects to the wireless network."
->
-> Today in Poky (embedded Linux) I have configured wpa_supplicant.conf and
-> interfaces files. I am able to use ssh in Ubuntu to command Poky (via
-wired)
-> and use Tera Term in Windows (via wifi) to command Poky. The IGEPV2 board
-> (6.5cm x 9cm) has Poky installed with the libertas module. It also can
-have
-> a DVI screen, usb mouse and usb keyboard plugged in.
+---
 
-Ok, that sounds good, you should be ready to go.
+  include/linux/ieee80211.h     |   22 ++++
+  include/net/mac80211.h        |    8 +-
+  net/mac80211/debugfs_netdev.c |  257 
++++++++++++++++++++++++++++++++++++++++++
+  net/mac80211/ieee80211_i.h    |    1 -
+  net/mac80211/mlme.c           |    2 +-
+  net/mac80211/tx.c             |    4 +-
+  net/mac80211/wme.c            |    5 +
+  7 files changed, 293 insertions(+), 6 deletions(-)
 
-> "4 and 5 are beyond the scope of the advice I can give you as I have no
-> experience with .NET, but once the wireless link is connected and IP
-> address set, everything works exactly the same as communicating over
-> any other IP network."
->
-> I will not be using .NET. I need help with getting started with Linux
-C/C++.
->
-> "Oh, one last thing: this advice applies to practically any wireless
-> device on any system running Linux."
->
-> I do wish to write C/C++ code for TCP sockets. There will be much data
-> feeding back from the robot which the user of the PC will consider before
-> using the graphical interface to send command data back to the robot.
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index ccf9ee1..b91902b 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -172,6 +172,28 @@
 
-You should be just using the socket library to do this. I understand
-it's rather simple.
+  #define IEEE80211_HT_CTL_LEN		4
 
-> Also I wish to use the libertas "library" to initiate a connection and IP
-> address. Is this possible?
++/*AMSDU Params*/
++#define LLC_SNAP_LEN			8
++#define AMSDU_SIZE_2K			2304
++#define AMSDU_SIZE_4K			3839
++#define AMSDU_SIZE_8K			7935
++#define AMSDU_SHDR_LEN			14
++#define AMSDU_RESERVE			0
++
++struct ieee80211_amsdu_sub_header {
++	u8 daddr[6];
++	u8 saddr[6];
++	__le16 len;
++} __packed;
++
++struct ieee80211_amsdu_llc_hdr {
++	u8 llc_dsap;
++	u8 llc_ssap;
++	u8 llc_ctrl;
++	u8 snap_oui[3];
++	u16 snap_type;
++} __packed;
++
+  struct ieee80211_hdr {
+  	__le16 frame_control;
+  	__le16 duration_id;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 23daed3..3bf5aef 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -470,6 +470,7 @@ enum mac80211_tx_control_flags {
+  	IEEE80211_TX_STATUS_EOSP		= BIT(28),
+  	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
+  	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
++	IEEE80211_TX_CTL_AMSDU			= BIT(31),
+  };
 
-"libertas" is not a library, it's the driver for the wireless card.
+  #define IEEE80211_TX_CTL_STBC_SHIFT		23
+@@ -485,7 +486,8 @@ enum mac80211_tx_control_flags {
+  	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+  	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_NO_PS_BUFFER |    
+\
+  	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
+-	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP)
++	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP|		      \
++	IEEE80211_TX_CTL_AMSDU)
 
-If you want to communicate between two computers, the wireless link
-is, from an application's perspective, exactly like any other network
-connection, so you use the socket library.
+  /**
+   * enum mac80211_rate_control_flags - per-rate flags set by the
+@@ -1402,6 +1404,10 @@ enum ieee80211_hw_flags {
+  	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
+  	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
+  	IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL		= 1<<26,
++	/* Some Drivers may not support 4K frame transmission
++	 * in that case we need 2 bits, else 1 bit is enough*/
++	IEEE80211_HW_TX_4K_AMSDU			= 1<<27,
++	IEEE80211_HW_TX_8K_AMSDU			= 1<<28
+  };
 
-If you want to control the _wireless_ connection, i.e. tell the sd8686
-card to connect to a different access point, you'll need to do
-something different. You will need to, at the very least, use
-wpa_supplicant or network manager or something else you can interface
-with to manage the actual wireless connection, then, depending on what
-you use, you may need to do something else to configure the network
-interface with an IP address.
+  /**
+diff --git a/net/mac80211/debugfs_netdev.c 
+b/net/mac80211/debugfs_netdev.c
+index cbde5cc..3041717 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -11,6 +11,7 @@
+  #include <linux/device.h>
+  #include <linux/if.h>
+  #include <linux/if_ether.h>
++#include <linux/string.h>
+  #include <linux/interrupt.h>
+  #include <linux/netdevice.h>
+  #include <linux/rtnetlink.h>
+@@ -336,6 +337,261 @@ static ssize_t ieee80211_if_parse_tkip_mic_test(
 
-Hope that helps.
+  __IEEE80211_IF_FILE_W(tkip_mic_test);
 
-Thanks,
++static ssize_t ieee80211_if_fmt_send_amsdu(
++		const struct ieee80211_sub_if_data *sdata,
++		char *buf,
++		int buflen)
++{
++	return -EOPNOTSUPP;
++}
++static ssize_t ieee80211_if_parse_send_amsdu(
++		struct ieee80211_sub_if_data *sdata,
++		const char *buf,
++		int buflen)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta = NULL;
++	struct sk_buff *skb = NULL;
++	struct sk_buff *skb_amsdu = NULL;
++	struct ieee80211_hdr *hdr = NULL;
++	struct ieee80211_amsdu_sub_header *amsdu_shdr = NULL;
++	struct ieee80211_amsdu_llc_hdr amsdu_llc = { /* From mwifiex*/
++		0xaa,           /* LLC DSAP */
++		0xaa,           /* LLC SSAP */
++		0x03,           /* LLC CTRL */
++		{0x00, 0x00, 0x00},     /* SNAP OUI */
++		0x9999          /* SNAP type */
++	};
++	__le16 fc, pad;
++
++	/*==== User Inputs===*/
++	u8 addr[ETH_ALEN] = {0x0};
++	u8 daddr[ETH_ALEN], saddr[ETH_ALEN], bssid[ETH_ALEN];
++	u32 tid;
++	u32 total_msdu, num_msdu;
++	u32 msdu_size, payload_size;
++	u32 amsdu_size = 0;
++
++	char *buffer;
++	/* Defaults: amsdu_size,tid,no of msdu's, size of msdu, DAddr*/
++	char *buffer_array[5] = {"0", "0", "3", "300", "ff:ff:ff:ff:ff:ff"};
++	int j = 0;
++
++	/* Sanity checks for the buffer Rx*/
++	if (buflen == 0 || !buf)
++		return -EINVAL;
++
++	/*We have already copied data from user space*/
++	buffer = kstrdup(buf, GFP_KERNEL);
++	/* Its reentrant safe.*/
++	while ((buffer_array[j] = strsep(&buffer, ",")) != NULL) {
++		/*Skip the MAC address part, we will handle it below*/
++		j++;
++	}
++	/* Conver to respective data types*/
++	kstrtouint(buffer_array[0], 10, &amsdu_size);
++	kstrtouint(buffer_array[1], 10, &tid);
++	kstrtouint(buffer_array[2], 10, &total_msdu);
++	kstrtouint(buffer_array[3], 10, &msdu_size);
++
++	if (buffer_array[4])
++		sscanf(buffer_array[4], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
++		&addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
++
++	/* Validate all input params*/
++
++	/* Check for AMSDU_size*/
++
++	/* User Inputs*/
++	if (amsdu_size == 0)
++		amsdu_size = AMSDU_SIZE_2K;
++	else if (amsdu_size == 1)
++		amsdu_size = AMSDU_SIZE_4K;
++	else if (amsdu_size == 2)
++		amsdu_size = AMSDU_SIZE_8K;
++	else if (amsdu_size != 0 || amsdu_size != 1 || amsdu_size != 2)
++		amsdu_size = AMSDU_SIZE_2K;
++
++	/* MSDU Size Checks: Min-100, Max: 2304*/
++	if (msdu_size < 0)
++		msdu_size = 100;
++	if (msdu_size > 2304)
++		msdu_size = 2304;
++
++	/* TID CHecks: Default is 0-BE*/
++	if (tid < 0 || tid > 7)
++		tid = 0;/* Default is BE*/
++
++	/* Total MSDU's Checks: Default 3*/
++	if (total_msdu < 0 || total_msdu > 10)
++		total_msdu = 3;
++	/* Driver Inputs: Tx Side*/
++	if ((local->hw.flags & IEEE80211_HW_TX_4K_AMSDU) &&
++		!(local->hw.flags & IEEE80211_HW_TX_8K_AMSDU)) {
++		if (amsdu_size == AMSDU_SIZE_8K)
++			amsdu_size = AMSDU_SIZE_4K;
++	} else if ((local->hw.flags & IEEE80211_HW_TX_8K_AMSDU) &&
++		!(local->hw.flags & IEEE80211_HW_TX_4K_AMSDU)) {
++		/* Take the User Input*/
++	} else if (!(local->hw.flags & IEEE80211_HW_TX_4K_AMSDU) &&
++		    !(local->hw.flags & IEEE80211_HW_TX_8K_AMSDU))  {
++		/* Most drivrs are suporting only 2k buffer allocation*/
++		amsdu_size = AMSDU_SIZE_2K;
++	} else if ((local->hw.flags & IEEE80211_HW_TX_4K_AMSDU) &&
++		(local->hw.flags & IEEE80211_HW_TX_8K_AMSDU)) {
++		/* Invalid Case, but just handle it.
++		 * Take the User Input
++		 */
++	}
++
++	if (!ieee80211_sdata_running(sdata))
++		return -ENOTCONN;
++
++	/* Reciver Inputs: Rx Side
++	 * Check the HT Capabilities: Depending on Mode: AP/STA
++	 * If user configured 8K but RX doesn't support: Use 4K
++	 */
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		rcu_read_lock();
++		sta = sta_info_get(sdata, addr);
++		if (!sta) {
++			/* Passed Address is not one of the STAs': Reject*/
++			rcu_read_unlock();
++			return -ENOENT;
++		}
++		if (!(sta->sta.ht_cap.cap & IEEE80211_HT_CAP_MAX_AMSDU) &&
++				amsdu_size == AMSDU_SIZE_8K)
++			amsdu_size = AMSDU_SIZE_4K;
++		rcu_read_unlock();
++		break;
++	case NL80211_IFTYPE_STATION:
++		rcu_read_lock();
++		mutex_lock(&sdata->u.mgd.mtx);
++		if (!sdata->u.mgd.associated) {
++			mutex_unlock(&sdata->u.mgd.mtx);
++			return -ENOTCONN;
++		}
++		sta = sta_info_get(sdata, sdata->u.mgd.associated->bssid);
++		/*Used later while filling the header*/
++		memcpy(bssid, sdata->u.mgd.associated->bssid, ETH_ALEN);
++		mutex_unlock(&sdata->u.mgd.mtx);
++		if (!sta) {
++			/* Unable to retrive ht.cap info, so fall back to 4K*/
++			amsdu_size = AMSDU_SIZE_4K;
++		} else if (!(sta->sta.ht_cap.cap & IEEE80211_HT_CAP_MAX_AMSDU)
++				&& amsdu_size == AMSDU_SIZE_8K) {
++			amsdu_size = AMSDU_SIZE_4K;
++		}
++		rcu_read_unlock();
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + amsdu_size + 26);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	/* Reserve Room for Qos Hdr now, it will be filled later*/
++	hdr = (struct ieee80211_hdr *) skb_put(skb, 26);
++	memset(hdr, 0, 26);
++
++	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA);
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP:
++		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
++		/* DA BSSID SA */
++		memcpy(hdr->addr1, addr, ETH_ALEN);
++		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
++		memcpy(hdr->addr3, sdata->vif.addr, ETH_ALEN);/*A-MSDU Case*/
++
++		/* Store the Addresses for Subframe AMSDU*/
++		memcpy(daddr, addr, ETH_ALEN);
++		memcpy(saddr, sdata->vif.addr, ETH_ALEN);
++		break;
++	case NL80211_IFTYPE_STATION:
++		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
++		/* BSSID SA DA */
++		memcpy(hdr->addr1, bssid, ETH_ALEN);
++		memcpy(hdr->addr2, sdata->vif.addr, ETH_ALEN);
++		memcpy(hdr->addr3, bssid, ETH_ALEN); /* A-MSDU Case*/
++
++		/* Store the Addresses for Subframe AMSDU*/
++		memcpy(daddr, addr, ETH_ALEN);
++		memcpy(saddr, sdata->vif.addr, ETH_ALEN);
++		break;
++	default:
++		dev_kfree_skb(skb);
++		return -EOPNOTSUPP;
++	}
++	hdr->frame_control = fc;
++
++	/* Read from the debugfs file and form the AMSDU
++	 * Reference: mwifiex driver
++	 */
++	payload_size = msdu_size;
++	/*subheader+Reserve+LLC*/
++	msdu_size += AMSDU_SHDR_LEN + AMSDU_RESERVE + LLC_SNAP_LEN;
++	for (num_msdu = 0; num_msdu < total_msdu; num_msdu++) {
++
++		/* Check if there is enough room for
++		 * new MSDU
++		 */
++		if (skb_tailroom(skb) < (msdu_size))
++			break;
++
++		/* Loop thru and create a AMSDU*/
++		skb_amsdu = dev_alloc_skb(msdu_size);
++		if (!skb_amsdu) {
++			dev_kfree_skb(skb);
++			return -ENOMEM;
++		}
++		/* 4 Byte Alignment..Not required..hence 0*/
++		skb_reserve(skb_amsdu, AMSDU_RESERVE);
++		amsdu_shdr = (struct ieee80211_amsdu_sub_header *)
++			skb_put(skb_amsdu, AMSDU_SHDR_LEN);
++
++		memcpy(amsdu_shdr->daddr, daddr, ETH_ALEN);
++		memcpy(amsdu_shdr->saddr, saddr, ETH_ALEN);
++		/* Doesn't include Subheaders, only MSDU Length*/
++		amsdu_shdr->len = htons(msdu_size-AMSDU_RESERVE-AMSDU_SHDR_LEN);
++
++		/* Add some LLC Header*/
++		memcpy((struct ieee80211_amsdu_llc_hdr *)skb_put(skb_amsdu,
++			 LLC_SNAP_LEN) , &amsdu_llc, LLC_SNAP_LEN);
++
++		/* Add Some Payload, as Requested
++		 * Add different payload to identify each MSDU in an AMSDU OTA
++		 */
++		memset(skb_put(skb_amsdu, payload_size), num_msdu+1,
++			payload_size);
++		if (num_msdu != total_msdu-1)  { /* Excpet for the last*/
++			/* pad new MSDU to start at 4 byte boundary*/
++			pad = (4 - ((unsigned long)skb_amsdu->tail & 0x3)) % 4;
++			if (skb_tailroom(skb_amsdu) < pad) {
++				pad = 0;
++				break;
++			}
++			memset(skb_put(skb_amsdu, pad), 0, pad);
++		}
++
++		/* Append to the Main SKB*/
++		memcpy(skb_put(skb, skb_amsdu->len), skb_amsdu->data,
++				skb_amsdu->len);
++		if (!skb_amsdu)
++			dev_kfree_skb(skb_amsdu);
++	}
++	/* The Qos Header changes based on this CTL FLAG*/
++	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_AMSDU;
++	ieee80211_tx_skb_tid(sdata, skb, tid);
++
++	return buflen;
++}
++__IEEE80211_IF_FILE_W(send_amsdu);
++
+  static ssize_t ieee80211_if_fmt_uapsd_queues(
+  	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+  {
+@@ -541,6 +797,7 @@ static void add_sta_files(struct 
+ieee80211_sub_if_data *sdata)
+  	DEBUGFS_ADD(ave_beacon);
+  	DEBUGFS_ADD_MODE(smps, 0600);
+  	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
++	DEBUGFS_ADD_MODE(send_amsdu, 0200);
+  	DEBUGFS_ADD_MODE(uapsd_queues, 0600);
+  	DEBUGFS_ADD_MODE(uapsd_max_sp_len, 0600);
+  }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0fa44a9..be07b6a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -402,7 +402,6 @@ struct ieee80211_mgd_assoc_data {
+  	bool have_beacon;
+  	bool sent_assoc;
+  	bool synced;
+-
+  	u8 ap_ht_param;
 
--- 
-Julian Calaby
+  	struct ieee80211_vht_cap ap_vht_cap;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e930175..9540215 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2183,7 +2183,6 @@ static void ieee80211_destroy_assoc_data(struct 
+ieee80211_sub_if_data *sdata,
+  		sdata->u.mgd.flags = 0;
+  		ieee80211_vif_release_channel(sdata);
+  	}
+-
+  	kfree(assoc_data);
+  	sdata->u.mgd.assoc_data = NULL;
+  }
+@@ -3905,6 +3904,7 @@ int ieee80211_mgd_assoc(struct 
+ieee80211_sub_if_data *sdata,
+  	assoc_data->supp_rates_len = bss->supp_rates_len;
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+  	rcu_read_lock();
++
+  	ht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
+  	if (ht_ie && ht_ie[1] >= sizeof(struct ieee80211_ht_operation))
+  		assoc_data->ap_ht_param =
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e9eadc4..0c42835 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1144,7 +1144,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data 
+*sdata,
+  	info->flags &= ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
 
+  	hdr = (struct ieee80211_hdr *) skb->data;
+-
+  	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+  		tx->sta = rcu_dereference(sdata->u.vlan.sta);
+  		if (!tx->sta && sdata->dev->ieee80211_ptr->use_4addr)
+@@ -1327,7 +1326,7 @@ static int invoke_tx_handlers(struct 
+ieee80211_tx_data *tx)
+  #define CALL_TXH(txh) \
+  	do {				\
+  		res = txh(tx);		\
+-		if (res != TX_CONTINUE)	\
++		if (res != TX_CONTINUE) \
+  			goto txh_done;	\
+  	} while (0)
+
+@@ -1367,7 +1366,6 @@ static int invoke_tx_handlers(struct 
+ieee80211_tx_data *tx)
+  		I802_DEBUG_INC(tx->local->tx_handlers_queued);
+  		return -1;
+  	}
+-
+  	return 0;
+  }
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 906f00c..f444b5d 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -188,6 +188,11 @@ void ieee80211_set_qos_hdr(struct 
+ieee80211_sub_if_data *sdata,
+  		ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+  		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+  	}
++	/* Check for AMSDU Injection Tx*/
++	if (info->flags & IEEE80211_TX_CTL_AMSDU) {
++		ack_policy |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++		info->flags |= IEEE80211_TX_CTL_DONTFRAG;
++	}
+
+  	/* qos header is 2 bytes */
+  	*p++ = ack_policy | tid;
