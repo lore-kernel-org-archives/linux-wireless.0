@@ -1,138 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:53414 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756137Ab3BVLnr (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41986 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759250Ab3BGSik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 06:43:47 -0500
-Date: Fri, 22 Feb 2013 12:43:40 +0100
+	Thu, 7 Feb 2013 13:38:40 -0500
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-Message-ID: <20130222114340.GA11803@pandem0nium> (sfid-20130222_124352_093335_8CD3D109)
-References: <20130215171938.GA4140@pandem0nium>
- <51274372.9030600@neratec.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wac7ysb48OaltWcw"
-In-Reply-To: <51274372.9030600@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv9 1/3] mac80211: lock AP_VLAN list with iflist_mtx
+Date: Thu,  7 Feb 2013 19:38:20 +0100
+Message-Id: <1360262304-28362-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130207_193853_213351_2CB8362C)
+In-Reply-To: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+To remove the dependency to rtnl_lock() for
+ieee80211_vif_use/release_channel in AP mode, protect the AP_VLAN
+list with local->iflist_mtx instead.
 
---wac7ysb48OaltWcw
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+RTNL can not be used from within mac80211 workers, but the
+DFS AP interface requires to release channels (after DFS channel
+availability checks).
 
-Hello Zefir,
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/cfg.c         |   14 ++++++++++++++
+ net/mac80211/chan.c        |    4 ++--
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |   11 ++++++++++-
+ 4 files changed, 28 insertions(+), 3 deletions(-)
 
-On Fri, Feb 22, 2013 at 11:07:46AM +0100, Zefir Kurtisi wrote:
-> On 02/15/2013 06:19 PM, Simon Wunderlich wrote:
-> > Hello wireless folks,
-> >=20
-> > Mathias Kretschmer and me would like to bring another new feature to th=
-e kernel:
-> > Collecting information for (non-peer) stations. [...]
-> >=20
-> > Cheers,
-> >         Simon
-> >=20
-> Hi Simon,
->=20
-> our areas of operations obviously highly overlap, since I did the same
-> consideration path only recently ;)
->=20
-> For the frequency planning feature we are currently working on, I need th=
-ose
-> extended statistics you are proposing with additional filtering rules (OU=
-I or mask
-> based) to classify peers.
->=20
-> My initial idea was to do a sliding time window aggregation of those stat=
-istics in
-> the kernel with almost the same interface to the userspace you are propos=
-ing.
->=20
-> But with your integration of the spectral feature I realized how efficien=
-t relay
-> based continuous data transfer is (as compared to sending samples over ne=
-tlink).
-> Consequently I revised the initial plan and consider realizing the extend=
-ed
-> statistics collection in userspace.
->=20
-> The modifications required in the kernel are minimal:
-> * create relay file in debugfs
-> * provide enable flag in debugfs
-> * based on this flag, extract relevant information from frames and write =
-to relay
->=20
-> This way, you move complexity out of the kernel and maximize flexibility =
-for
-> statistical evaluation in userspace. Also, the overhead for moving data b=
-etween
-> kernel and userspace is minimized, since you do them in bulk.
->=20
-> This is all in the planning phase, so I have no proof-of-concept patches =
-yet.
-> Would just like to hear what your thoughts are and whether this could be =
-the way
-> to go.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 661b878..4a99a8f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -923,8 +923,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+ 
++	mutex_lock(&sdata->local->iflist_mtx);
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
++	mutex_unlock(&sdata->local->iflist_mtx);
+ 	if (err)
+ 		return err;
+ 
+@@ -934,12 +936,14 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
+ 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
++	mutex_lock(&sdata->local->iflist_mtx);
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+ 		vlan->control_port_protocol =
+ 			params->crypto.control_port_ethertype;
+ 		vlan->control_port_no_encrypt =
+ 			params->crypto.control_port_no_encrypt;
+ 	}
++	mutex_unlock(&sdata->local->iflist_mtx);
+ 
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 	sdata->vif.bss_conf.dtim_period = params->dtim_period;
+@@ -972,8 +976,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(dev);
++	mutex_lock(&sdata->local->iflist_mtx);
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 		netif_carrier_on(vlan->dev);
++	mutex_unlock(&sdata->local->iflist_mtx);
+ 
+ 	return 0;
+ }
+@@ -1012,8 +1018,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	old_probe_resp = rtnl_dereference(sdata->u.ap.probe_resp);
+ 
+ 	/* turn off carrier for this interface and dependent VLANs */
++	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 		netif_carrier_off(vlan->dev);
++	mutex_unlock(&local->iflist_mtx);
+ 	netif_carrier_off(dev);
+ 
+ 	/* remove beacon and probe response */
+@@ -1023,12 +1031,16 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	if (old_probe_resp)
+ 		kfree_rcu(old_probe_resp, rcu_head);
+ 
++	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 		sta_info_flush_defer(vlan);
++	mutex_unlock(&local->iflist_mtx);
+ 	sta_info_flush_defer(sdata);
+ 	rcu_barrier();
++	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 		sta_info_flush_cleanup(vlan);
++	mutex_unlock(&local->iflist_mtx);
+ 	sta_info_flush_cleanup(sdata);
+ 
+ 	sdata->vif.bss_conf.enable_beacon = false;
+@@ -1041,7 +1053,9 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
+ 	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+ 
++	mutex_lock(&local->iflist_mtx);
+ 	ieee80211_vif_release_channel(sdata);
++	mutex_unlock(&local->iflist_mtx);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 1bfe0a8..cbdc999 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -202,7 +202,7 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 		struct ieee80211_sub_if_data *vlan;
+ 
+ 		/* for the VLAN list */
+-		ASSERT_RTNL();
++		lockdep_assert_held(&local->iflist_mtx);
+ 		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 			rcu_assign_pointer(vlan->vif.chanctx_conf, NULL);
+ 	}
+@@ -330,7 +330,7 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 		struct ieee80211_sub_if_data *vlan;
+ 
+ 		/* for the VLAN list */
+-		ASSERT_RTNL();
++		lockdep_assert_held(&local->iflist_mtx);
+ 		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+ 			rcu_assign_pointer(vlan->vif.chanctx_conf, &ctx->conf);
+ 	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5fba867..b619cf7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -294,6 +294,7 @@ struct ieee80211_if_ap {
+ 	struct beacon_data __rcu *beacon;
+ 	struct probe_resp __rcu *probe_resp;
+ 
++	/* protected with local->iflist_mtx */
+ 	struct list_head vlans;
+ 
+ 	struct ps_data ps;
+@@ -306,6 +307,7 @@ struct ieee80211_if_wds {
+ };
+ 
+ struct ieee80211_if_vlan {
++	/* protected with local->iflist_mtx */
+ 	struct list_head list;
+ 
+ 	/* used for all tx if the VLAN is configured to 4-addr mode */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0a36dc6..dbb7fed 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -517,7 +517,9 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		if (!sdata->bss)
+ 			return -ENOLINK;
+ 
++		mutex_lock(&local->iflist_mtx);
+ 		list_add(&sdata->u.vlan.list, &sdata->bss->vlans);
++		mutex_unlock(&local->iflist_mtx);
+ 
+ 		master = container_of(sdata->bss,
+ 				      struct ieee80211_sub_if_data, u.ap);
+@@ -717,8 +719,11 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		drv_stop(local);
+  err_del_bss:
+ 	sdata->bss = NULL;
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		mutex_lock(&sdata->local->iflist_mtx);
+ 		list_del(&sdata->u.vlan.list);
++		mutex_unlock(&sdata->local->iflist_mtx);
++	}
+ 	/* might already be clear but that doesn't matter */
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 	return res;
+@@ -821,10 +826,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
+ 
++		mutex_lock(&local->iflist_mtx);
+ 		/* down all dependent devices, that is VLANs */
+ 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
+ 					 u.vlan.list)
+ 			dev_close(vlan->dev);
++		mutex_unlock(&local->iflist_mtx);
+ 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
+ 	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		ieee80211_mgd_stop(sdata);
+@@ -835,7 +842,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
++		mutex_lock(&sdata->local->iflist_mtx);
+ 		list_del(&sdata->u.vlan.list);
++		mutex_unlock(&sdata->local->iflist_mtx);
+ 		rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
+ 		/* no need to tell driver */
+ 		break;
+-- 
+1.7.10.4
 
-it is nice to hear that the relayfs approach works well. :)
-
-Our biggest performance issue is probably the syscall for every packet, so =
-minimizing
-data to be sent to userspace and aggregate it to would benefit to our perfo=
-rmance
-problem.
-
-I would also agree that this approach is simpler as we don't have to manage=
- lists
-of clients and purge them. And we can evaluation in userspace, just as ever=
-yone
-needs for its application (maybe some of these statistics are not of genera=
-l interest).
-
-Issues I see are:
- * the relayfs has to be regularly polled for new data (maybe multiple time=
-s a second),
-   so it can't overflow. I'm just looking at a dump from a running iperf te=
-st, it shows
-   ~12000 packets per second (at 70Mbit/s). Assuming we are sending 64 byte=
- of metainfo
-   per packet, this would sum up to 768k every second. Doing the statistics=
- computation
-   in userspace makes no difference to doing it in kernelspace, imho.
- * in-kernel drivers can't use the gathered statistics (that would affect 8=
-02.11s)
- * I wonder how debugfs use in mac80211 for this kind of feature is accepta=
-ble. This
-   would be a question for Johannes. :)
-
-Thanks for sharing your thoughts!
-
-Cheers,
-	Simon
-
---wac7ysb48OaltWcw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlEnWewACgkQrzg/fFk7axYJaQCcC7V+DsFgRzhi65iM0if1DPkV
-WPYAn3noBzyKZgHWFXlxNtJYslz8ihSB
-=SOzp
------END PGP SIGNATURE-----
-
---wac7ysb48OaltWcw--
