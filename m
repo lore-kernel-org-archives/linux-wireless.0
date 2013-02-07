@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27838 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750925Ab3BEGlP convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55759 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497Ab3BGP0r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 01:41:15 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Thomas Pedersen <thomas@cozybit.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mac80211: stop plink timer only on mesh interfaces
-Date: Tue, 5 Feb 2013 06:41:10 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301929663@HASMSX103.ger.corp.intel.com> (sfid-20130205_074119_285216_9B940FFF)
-References: <1360015961-5922-1-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1360015961-5922-1-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 7 Feb 2013 10:26:47 -0500
+Message-ID: <1360250827.8038.10.camel@jlt4.sipsolutions.net> (sfid-20130207_162652_208598_C23FF57A)
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
+	maheshp@posedge.com
+Date: Thu, 07 Feb 2013 16:27:07 +0100
+In-Reply-To: <5113C5E0.5050509@openwrt.org>
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com>
+	 <1360225230.8038.1.camel@jlt4.sipsolutions.net>
+	 <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
+	 <1360228991.8038.3.camel@jlt4.sipsolutions.net>
+	 <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
+	 <5113B42A.4020708@openwrt.org>
+	 <1360246653.8038.9.camel@jlt4.sipsolutions.net>
+	 <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com>
+	 <5113C5E0.5050509@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Since mesh_plink_quiesce() would unconditionally delete
-> the plink timer, and the timer initialization was recently
-> moved into the mesh code path, suspending with a non-mesh
-> interface now causes a crash. Fix this by only deleting
-> the plink timer for mesh interfaces.
-> 
-> Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
-> 
-> Hi Emmanuel,
-> 
-> Will you please test this patch?
-> 
->  net/mac80211/mesh_plink.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-> index 81e6126..1f40c4a 100644
-> --- a/net/mac80211/mesh_plink.c
-> +++ b/net/mac80211/mesh_plink.c
-> @@ -528,6 +528,9 @@ static void mesh_plink_timer(unsigned long data)
->  #ifdef CONFIG_PM
->  void mesh_plink_quiesce(struct sta_info *sta)
->  {
-> +	if (!ieee80211_vif_is_mesh(&sta->sdata->vif))
-> +		return;
-> +
->  	if (del_timer_sync(&sta->plink_timer))
->  		sta->plink_timer_was_running = true;
->  }
-> --
-> 1.7.10.4
+On Thu, 2013-02-07 at 16:18 +0100, Felix Fietkau wrote:
 
-Tested-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
+> > But whats the use of sending an AMSDU if we are not connected?
+> > First check in the code is to check for a connection.
+> I mentioned cooked monitor because putting the hw in monitor mode may
+> not always be desirable, and cooked monitor bypasses that.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+You can pass "flags none" on the iw command line and it shouldn't change
+much then, but yeah, still might do a few other things. Anyway cooked
+should work fine.
+
+johannes
 
