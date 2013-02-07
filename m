@@ -1,41 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33416 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437Ab3BERVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 12:21:43 -0500
-Message-ID: <51113F98.8040209@candelatech.com> (sfid-20130205_182146_691609_222350FD)
-Date: Tue, 05 Feb 2013 09:21:28 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, qca_vkondrat@qca.qualcomm.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: provide 64-bit traffic counters
-References: <1360058204-12208-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1360058204-12208-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.tpi.com ([70.99.223.143]:2906 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755116Ab3BGU22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 15:28:28 -0500
+From: Tim Gardner <tim.gardner@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH wireless-next V2] brcmsmac: avoid 512 byte stack variable
+Date: Thu,  7 Feb 2013 13:28:09 -0700
+Message-Id: <1360268889-52985-1-git-send-email-tim.gardner@canonical.com> (sfid-20130207_212847_313038_47769057)
+In-Reply-To: <51140CFB.1060100@broadcom.com>
+References: <51140CFB.1060100@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2013 01:56 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> "unsigned long" is already 64-bit on (most?) 64-bit
-> machines, use u64 and tell cfg80211 that we provide
-> 64-bit counters now.
+Dynamically allocate the probe response template which
+avoids potential stack corruption. Observed with smatch:
 
- From what I can tell, these counters are modified using
-+= operators.  From what I recall, this is non-atomic on
-32-bit systems when the variable is u64.
+drivers/net/wireless/brcm80211/brcmsmac/main.c:7412 brcms_c_bss_update_probe_resp()
+ warn: 'prb_resp' puts 512 bytes on stack
 
-Is there any other locking that keeps this from blowing up?
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index c26992a..ea88abe 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7408,9 +7408,13 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+ 			      struct brcms_bss_cfg *cfg,
+ 			      bool suspend)
+ {
+-	u16 prb_resp[BCN_TMPL_LEN / 2];
++	u16 *prb_resp;
+ 	int len = BCN_TMPL_LEN;
+ 
++	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
++	if (!prb_resp)
++		return;
++
+ 	/*
+ 	 * write the probe response to hardware, or save in
+ 	 * the config structure
+@@ -7444,6 +7448,8 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+ 
+ 	if (suspend)
+ 		brcms_c_enable_mac(wlc);
++
++	kfree(prb_resp);
+ }
+ 
+ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
