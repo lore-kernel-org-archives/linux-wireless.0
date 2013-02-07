@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:52010 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934876Ab3BSXcC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 18:32:02 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 19 Feb 2013 15:31:40 -0800
-Subject: RE: mwifiex crash when removing interface while scanning
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com> (sfid-20130220_003206_853386_C8A65B79)
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-In-Reply-To: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mms1.broadcom.com ([216.31.210.17]:1551 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759387Ab3BGUYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 15:24:08 -0500
+Message-ID: <51140D3D.9020100@broadcom.com> (sfid-20130207_212433_896563_C6843F3B)
+Date: Thu, 7 Feb 2013 21:23:25 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Joe Perches" <joe@perches.com>
+cc: "Tim Gardner" <tim.gardner@canonical.com>,
+	linux-kernel@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH wireless-next] brcmsmac: avoid 512 byte stack
+ variable
+References: <1360268032-52414-1-git-send-email-tim.gardner@canonical.com>
+ <1360268386.27863.2.camel@joe-AO722>
+In-Reply-To: <1360268386.27863.2.camel@joe-AO722>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On 02/07/2013 09:19 PM, Joe Perches wrote:
+> On Thu, 2013-02-07 at 13:13 -0700, Tim Gardner wrote:
+>> Dynamically allocate the probe response template which
+>> avoids potential stack corruption. Observed with smatch:
+> 
+> trivial:
+> 
+>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+> []
+>> @@ -7408,9 +7408,16 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+> []
+>> +	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
+>> +	if (!prb_resp) {
+>> +		wiphy_err(wlc->wiphy, "wl: %s: failed to alloc %u bytes\n",
+>> +			__func__, BCN_TMPL_LEN);
+> 
+> Please remove the error message.
+> alloc's don't need specific OOM messages.
+> 
+> The mm subsystem already provides a standardized
+> message with a dump_stack().
 
-> Hi,
-> 
-> Testing mwifiex_sdio on XO-4 (8787) on Linux 3.8. In OLPC's use case
-> we quite regularly will power down the wireless card when it is not
-> being actively used. This is currently proving problematic.
+You beat me to the finish line :-)
 
-I have an XO-4. Perhaps I can update to kernel 3.8?
+Gr. AvS
 
-> 
-> Here is a test case reproducing one of the failures we are seeing:
-> 
-> First, run this script:
-> 
-> insmod mwifiex_sdio.ko
-> sleep 1
-> ifconfig eth0 up
-> iwlist eth0 scan &
-> sleep 0.5
-> rmmod mwifiex_sdio
-> 
-> It normally runs fine the first time, no errors, but run it again and
-> it terminates with these errors:
-> 
->     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
->     eth0      Failed to read scan data : No such device
-> 
-> From this point, things are pretty screwed up. Try to load the driver again...
-> 
-> insmod mwifiex_sdio.ko
-> mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
-> mwifiex_sdio mmc0:0001:1: WLAN FW is active
-> mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
-> (331.391420) = 0xa9, act = 0x0
-> mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-> mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-> mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-> mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-> mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
-> mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
-> mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
-> mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
-> mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
-> mwifiex_sdio mmc0:0001:1: last_event_index = 0
-> mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
-> mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
-> mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
-> mwifiex_sdio mmc0:0001:1: cmd timeout
-> mwifiex_sdio: Resetting card...
-> WARNING: driver mwifiex_sdio did not remove its interrupt handler!
-> mmc0: card 0001 removed
-> 
-> and it doesn't come back.
-> 
-> Let me know how we can help further debugging.
 
-I will try this test with my SD8787 card and get back to you later.
-
-Thanks,
-Bing
-
-> 
-> Thanks
-> Daniel
