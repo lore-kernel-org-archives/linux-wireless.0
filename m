@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:56120 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932958Ab3BSOy5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 09:54:57 -0500
-Message-ID: <51239234.8080702@gmail.com> (sfid-20130219_155523_667268_2D06E0FA)
-Date: Tue, 19 Feb 2013 16:54:44 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-MIME-Version: 1.0
-To: Jiri Slaby <jslaby@suse.cz>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH] NET: ath5k, check ath5k_eeprom_mode_from_channel retval
-References: <1360244680-10370-1-git-send-email-jslaby@suse.cz> <CAFtRNNwUaGFejpGHydDKD1Sn4zLYbmAeyO5zkS7wsHFZ_2yRfA@mail.gmail.com> <51237FC7.3070509@suse.cz>
-In-Reply-To: <51237FC7.3070509@suse.cz>
-Content-Type: text/plain; charset=UTF-8
+Received: from perches-mx.perches.com ([206.117.179.246]:46321 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757486Ab3BGUht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 15:37:49 -0500
+Message-ID: <1360269467.27863.9.camel@joe-AO722> (sfid-20130207_213815_538913_1349F29F)
+Subject: [PATCH] mwl8k: Remove unnecessary alloc/OOM messages
+From: Joe Perches <joe@perches.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Thu, 07 Feb 2013 12:37:47 -0800
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue Feb 19 15:36:07 2013, Jiri Slaby wrote:
-> On 02/18/2013 01:47 AM, Nick Kossifidis wrote:
->> int
->> ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
->> {
->>         switch (channel->hw_value) {
->>         case AR5K_MODE_11A:
->>                 return AR5K_EEPROM_MODE_11A;
->>         case AR5K_MODE_11G:
->>                 return AR5K_EEPROM_MODE_11G;
->>         case AR5K_MODE_11B:
->>                 return AR5K_EEPROM_MODE_11B;
->>         default:
->>                 return -1;
->>         }
->> }
->>
->> I think we should just change that default to return 0 instead and add
->> an ATH5K_WARN there.
->
-> Something like the attached patch? It needs ah to be propagated to
-> eeprom. If you are fine with that, I'll send it as patch...
->
-> thanks,
+alloc failures already get standardized OOM
+messages and a dump_stack.
 
-Just move the prototype on ath5k.h with the rest of them...
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/mwl8k.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-1523 /* EEPROM access functions */
-1524 int ath5k_eeprom_init(struct ath5k_hw *ah);
-1525 void ath5k_eeprom_detach(struct ath5k_hw *ah);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 224cf91..e31f779 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1146,7 +1146,6 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw, int index)
+ 
+ 	rxq->buf = kcalloc(MWL8K_RX_DESCS, sizeof(*rxq->buf), GFP_KERNEL);
+ 	if (rxq->buf == NULL) {
+-		wiphy_err(hw->wiphy, "failed to alloc RX skbuff list\n");
+ 		pci_free_consistent(priv->pdev, size, rxq->rxd, rxq->rxd_dma);
+ 		return -ENOMEM;
+ 	}
+@@ -1439,7 +1438,6 @@ static int mwl8k_txq_init(struct ieee80211_hw *hw, int index)
+ 
+ 	txq->skb = kcalloc(MWL8K_TX_DESCS, sizeof(*txq->skb), GFP_KERNEL);
+ 	if (txq->skb == NULL) {
+-		wiphy_err(hw->wiphy, "failed to alloc TX skbuff list\n");
+ 		pci_free_consistent(priv->pdev, size, txq->txd, txq->txd_dma);
+ 		return -ENOMEM;
+ 	}
+
+
