@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20188 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758627Ab3BYQS5 (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:40071 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755765Ab3BGJae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 11:18:57 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Trevor Cullen <tcc@innovelec.co.uk>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: AR9374 Rev 1.3/RevB USB Linux drivers?
-References: <00d301ce1369$d9ec9f20$8dc5dd60$@innovelec.co.uk>
-Date: Mon, 25 Feb 2013 18:18:50 +0200
-In-Reply-To: <00d301ce1369$d9ec9f20$8dc5dd60$@innovelec.co.uk> (Trevor
-	Cullen's message of "Mon, 25 Feb 2013 15:07:36 +0000")
-Message-ID: <871uc4l639.fsf@kamboji.qca.qualcomm.com> (sfid-20130225_171901_845075_B8CAE6CF)
+	Thu, 7 Feb 2013 04:30:34 -0500
+Received: by mail-wi0-f177.google.com with SMTP id hm14so2601412wib.4
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 01:30:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1360228991.8038.3.camel@jlt4.sipsolutions.net>
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com> <1360225230.8038.1.camel@jlt4.sipsolutions.net>
+ <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com> <1360228991.8038.3.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 7 Feb 2013 15:00:11 +0530
+Message-ID: <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com> (sfid-20130207_103040_764952_0CCB868E)
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
+	maheshp@posedge.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trevor Cullen <tcc@innovelec.co.uk> writes:
-
-> We got the open source driver from QCA via their support portal -
-> ath6kl_usb_3.2.1_RC
-
-This is an internal (forked) version of the driver. For getting help on
-that one you need to use official QCA support channels.
-
-> Rev B is the correct chip designation for the AR9374 silicon (that is the
-> same as hw1.3) - so AR9374-BL3D is the full chip number
+On Thu, Feb 7, 2013 at 2:53 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2013-02-07 at 14:49 +0530, Krishna Chaitanya wrote:
+>> On Thu, Feb 7, 2013 at 1:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Thu, 2013-02-07 at 00:01 -0800, chaitanyatk@posedge.com wrote:
+>> >
+>>
+>> > Hmm. I'm not exactly happy with using (one of) the last control flag for
+>> > a pure debug facility.
+>> >
+>> Hmm...initially i tried to add qos header in the debugfs itself but to avoid
+>> code redundancy went with the TX_CTL. But in either case we need some kind
+>> of flag to skip adding the qos header by mac80211 (or) to set the AMSDU
+>> bit in the qos control header.
 >
-> We're getting mixed messages about support for this version in the open
-> community.
+> I guess the question is whether we really need this code in the tree at
+> all? It seems like a (relatively) obscure debug feature for which I'm
+> not sure we should touch the TX fastpath?
 
-That's because the internal driver is different from what's in upstream
-Linux kernel or compat-wireless.
+AMSDU in itself is rarely used feature in 802.11. So your concern i s
+understandable.
 
--- 
-Kalle Valo
+But the problem is every time we have to test the Rx-AMSDU
+which is mandatory for WFA 802.11n cert, we need to procure a adapter
+which supports it, which is difficult. Thats the scenario we have faced
+which lead us to work on this.With this feature in place we can use
+any opensource adapter and driver for that purpose.
+
+Again, Its a trade off between stability and usability :-)
