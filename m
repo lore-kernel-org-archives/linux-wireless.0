@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53774 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757539Ab3BWWag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 17:30:36 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: init spin lock
-Date: Sat, 23 Feb 2013 23:30:22 +0100
-Message-Id: <1361658622-29719-1-git-send-email-hauke@hauke-m.de> (sfid-20130223_233040_187437_AD75DBB5)
+Received: from perches-mx.perches.com ([206.117.179.246]:58953 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932155Ab3BGUTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 15:19:47 -0500
+Message-ID: <1360268386.27863.2.camel@joe-AO722> (sfid-20130207_212149_848362_23C66690)
+Subject: Re: [PATCH wireless-next] brcmsmac: avoid 512 byte stack variable
+From: Joe Perches <joe@perches.com>
+To: Tim Gardner <tim.gardner@canonical.com>
+Cc: linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Date: Thu, 07 Feb 2013 12:19:46 -0800
+In-Reply-To: <1360268032-52414-1-git-send-email-tim.gardner@canonical.com>
+References: <1360268032-52414-1-git-send-email-tim.gardner@canonical.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This spin lock was not initialized.
+On Thu, 2013-02-07 at 13:13 -0700, Tim Gardner wrote:
+> Dynamically allocate the probe response template which
+> avoids potential stack corruption. Observed with smatch:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_pci_host.c |    2 ++
- 1 file changed, 2 insertions(+)
+trivial:
 
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index d3bde6c..30629a3 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -404,6 +404,8 @@ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
- 		return;
- 	}
- 
-+	spin_lock_init(&pc_host->cfgspace_lock);
-+
- 	pc->host_controller = pc_host;
- 	pc_host->pci_controller.io_resource = &pc_host->io_resource;
- 	pc_host->pci_controller.mem_resource = &pc_host->mem_resource;
--- 
-1.7.10.4
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+[]
+> @@ -7408,9 +7408,16 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
+[]
+> +	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
+> +	if (!prb_resp) {
+> +		wiphy_err(wlc->wiphy, "wl: %s: failed to alloc %u bytes\n",
+> +			__func__, BCN_TMPL_LEN);
+
+Please remove the error message.
+alloc's don't need specific OOM messages.
+
+The mm subsystem already provides a standardized
+message with a dump_stack().
+
 
