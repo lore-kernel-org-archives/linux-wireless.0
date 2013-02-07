@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:37684 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758274Ab3BGPUV (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59068 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758733Ab3BGSPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 10:20:21 -0500
-Received: by mail-bk0-f53.google.com with SMTP id j10so1238084bkw.12
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 07:20:19 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Tomasz Guszkowski <tsg@o2.pl>
-Subject: Re: [PATCH] p54usb: corrected USB ID for T-Com Sinus 154 data II
-Date: Thu, 7 Feb 2013 16:20:15 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20130206233951.0cf8e25b7963bbd170b37899@o2.pl>
-In-Reply-To: <20130206233951.0cf8e25b7963bbd170b37899@o2.pl>
+	Thu, 7 Feb 2013 13:15:49 -0500
+Date: Thu, 7 Feb 2013 12:15:43 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 0/4] Add support for off-channel powersave state in
+ mac80211
+Message-ID: <20130207181543.GA4378@thinkpad-t410> (sfid-20130207_191555_669085_E72202F3)
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+ <1360186322.7910.76.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302071620.16014.chunkeey@googlemail.com> (sfid-20130207_162024_813521_CE788F40)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360186322.7910.76.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, February 06, 2013 11:39:51 PM Tomasz Guszkowski wrote:
-> On Tue, 5 Feb 2013, Christian Lamparter wrote:
-> > OT: The latest supported firmware for LM87 is: 2.13.25.0.lm87.arm
-> > Did you experience issues with the new version, or do you simply
-> > stick with the old 2.13.1.0 because it does work just as well?
->
-> I have just tested behavior of T-Com with 2.13.25.0.lm87.arm 
-> (md5sum 39be687c87544b892e7a8ffe7ffd9371) in managed mode.
-> Ewerything what was tested worked perfectly:
-> 1. iwlist wlan0 scan
-> 2. connecting to open network
-> 3. connecting to WEP 128-bit
-> 4. connecting to WPA-PSK (TKIP)
-> 5. connecting to WPA2-PSK (AES)
+On Wed, Feb 06, 2013 at 10:32:02PM +0100, Johannes Berg wrote:
+> On Wed, 2013-02-06 at 15:01 -0600, Seth Forshee wrote:
+> > Hi Johannes,
+> > 
+> > As promised, here are the patches which add the off-channel powesave
+> > state. At a high level, the changes are:
+> > 
+> >  * Expand the PS configuration flag to be 2 bits and add helper
+> >    functions for reading and setting the modes
+> >  * Change the terminology around PS states, i.e. disabled -> awake and
+> >    enabled -> doze
+> >  * Add the off-channel PS state and put it to use
+> >  * Minor driver updates based on these changes
+> >  * Update brcmsmac to utilize the off-channel PS state
+
+Hmm, I guess I should have mentioned that these patches were written on
+top of the version 2 patches I sent for adding the off-channel queue
+stop reason, etc. I'll need to resend them before they're likely to
+apply cleanly anywhere.
+
+> That's a lot of driver changes ... :)
+
+A large number of those changes were made by sed ;-)
+
+> I've been trying to disentangle the mess a bit. It looks like I was
+> completely wrong about wl1251, it has HW scan so we don't care about its
+> weird PS behaviour (1).
 > 
-> I am particularly impressed by working WPA2, with 2.13.1.0
-> it didn't work.
-Ok, that is actually important. I didn't know that 2.13.1.0 
-had problems with AES, I'll check that again. Thanks for 
-letting me know about this.
- 
-> Thanks for pointing newer firmware, with WPA2 support it's
-> an excellent, sensitive card despite its age.
-:-) [But of course: the driver is not done yet, I hope I'll get
-around and add the automatic-reset-when-firmware-crashes feature
-in the near future.]  
+> That leaves us with a few different drivers:
+>  * iwlegacy -- has PS support but not NULLFUNC_STACK, so generates a
+>    wakeup to the AP when we want to go scan ...
+>  * drivers like iwlwifi/wl12xx have HW scan and don't set NULLFUNC_STACK
+>  * drivers like ath5k/9k/... have all SW but set NULLFUNC_STACK
+>  * drivers that just don't have powersave
 
-Regards
+I tried to ensure that the patches would result in equivalent behavior
+for all drivers except brcmsmac (which will behave better). But I
+obviously wan't able to test every driver to verify this.
 
-Christian
+I suspect b43 should also be updated similarly to brcmsmac. The only
+hardware I have that uses b43 is a macbook whose wireless functions too
+poorly to be a good test case.
+
+Seth
+
