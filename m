@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60379 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756301Ab3BVUbF (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:41933 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759549Ab3BGX36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 15:31:05 -0500
-Message-ID: <1361565061.3420.13.camel@jlt4.sipsolutions.net> (sfid-20130222_213109_828933_8EA6495D)
-Subject: Re: [RFC 1/2] mac80211: disconnect on suspend in managed mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 22 Feb 2013 21:31:01 +0100
-In-Reply-To: <20130221102939.GA19443@redhat.com>
-References: <20130219164714.GA27140@redhat.com>
-	 <1361354804.8629.15.camel@jlt4.sipsolutions.net>
-	 <20130221102939.GA19443@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 7 Feb 2013 18:29:58 -0500
+Message-ID: <511438CA.8060003@pengutronix.de> (sfid-20130208_003039_799337_C5BFD8BD)
+Date: Fri, 08 Feb 2013 00:29:14 +0100
+From: Marc Kleine-Budde <mkl@pengutronix.de>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: netdev <netdev@vger.kernel.org>, linux-can@vger.kernel.org,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, wil6210@qca.qualcomm.com,
+	brcm80211-dev-list@broadcom.com,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>
+Subject: Re: [PATCH] drivers: net: Remove remaining alloc/OOM messages
+References: <1360273587.27863.15.camel@joe-AO722>
+In-Reply-To: <1360273587.27863.15.camel@joe-AO722>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="----enig2UHVEOGTHORNDWVVOWLUJ"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-21 at 11:29 +0100, Stanislaw Gruszka wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+------enig2UHVEOGTHORNDWVVOWLUJ
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> --- a/net/wireless/sysfs.c
-> +++ b/net/wireless/sysfs.c
-> @@ -86,16 +86,21 @@ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
->  static int wiphy_suspend(struct device *dev, pm_message_t state)
->  {
->  	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
-> +	struct wireless_dev *wdev;
->  	int ret = 0;
->  
->  	rdev->suspend_at = get_seconds();
->  
-> -	if (rdev->ops->suspend) {
-> -		rtnl_lock();
-> -		if (rdev->wiphy.registered)
-> +	rtnl_lock();
-> +	if (rdev->wiphy.registered) {
-> +		list_for_each_entry_rcu(wdev, &rdev->wdev_list, list)
-> +			cfg80211_leave(rdev, wdev);
-> +
-> +		if (rdev->ops->suspend)
->  			ret = rdev_suspend(rdev);
+On 02/07/2013 10:46 PM, Joe Perches wrote:
+> alloc failures already get standardized OOM
+> messages and a dump_stack.
+>=20
+> For the affected mallocs around these OOM messages:
+>=20
+> Converted kmallocs with multiplies to kmalloc_array.
+> Converted a kmalloc/memcpy to kmemdup.
+> Removed now unused stack variables.
+> Removed unnecessary parentheses.
+> Neatened alignment.
+>=20
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+> Let me know if you want multiple small patches instead.
+>=20
+>  drivers/net/can/usb/ems_usb.c                      |  4 +-
 
-I think this would break WoWLAN?
+For ems_usb.c
 
-johannes
+Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
 
+regards,
+Marc
+--=20
+Pengutronix e.K.                  | Marc Kleine-Budde           |
+Industrial Linux Solutions        | Phone: +49-231-2826-924     |
+Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+
+
+------enig2UHVEOGTHORNDWVVOWLUJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlEUON8ACgkQjTAFq1RaXHNawgCghkTouziZz1s9EyqAQmRtnyTg
+t5QAoIsLAx7+P28BtRi4ralrnaIxHHZm
+=jak+
+-----END PGP SIGNATURE-----
+
+------enig2UHVEOGTHORNDWVVOWLUJ--
