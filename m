@@ -1,73 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43512 "EHLO
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:52257 "EHLO
 	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab3BGLLU (ORCPT
+	with ESMTP id S1758817Ab3BGSik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 06:11:20 -0500
-Date: Thu, 7 Feb 2013 12:11:11 +0100
+	Thu, 7 Feb 2013 13:38:40 -0500
 From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
+	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
 	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv8 3/3] nl80211: allow DFS in start_ap
-Message-ID: <20130207111111.GD26957@pandem0nium> (sfid-20130207_121123_844402_F0E79CA5)
-References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359982200-2321-4-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1360172180.7910.55.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cQXOx3fnlpmgJsTP"
-In-Reply-To: <1360172180.7910.55.camel@jlt4.sipsolutions.net>
+Subject: [PATCHv9 0/3] Add DFS master ability
+Date: Thu,  7 Feb 2013 19:38:19 +0100
+Message-Id: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130207_193845_404770_69218A48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is patch series version 9 of the DFS master ability, based on Victor
+Goldenshteins original work. See changelog in the various patches for
+details. The main changes to v8 are:
 
---cQXOx3fnlpmgJsTP
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ * checked and fixed locking - note the new patch 1 changing the locking
+   for use/release_channel to remove rtnl dependency
+ * report radar detected and NOP only once
+ * fix gfp usage
+ * merge "nl80211: allow DFS in start_ap" in the main nl80211 patch
+ * various style changes
+ * rebased on latest master, of course
 
-On Wed, Feb 06, 2013 at 06:36:20PM +0100, Johannes Berg wrote:
-> On Mon, 2013-02-04 at 13:49 +0100, Simon Wunderlich wrote:
->=20
-> > +	err =3D cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
-> > +	if (err < 0)
-> > +		return -EINVAL;
->=20
-> return err; ?
->=20
-OK
-> > +	if (err) {
-> > +		radar_detect_width =3D BIT(params.chandef.width);
-> > +		params.radar_required =3D true;
->=20
-> It seems you should probably just squash this into patch 1 since you
-> already use it in mac80211 in patch 2 but only patch 3 makes it valid?
-> seems a bit odd
+As always, thanks a lot to Johannes for review and support. 
+I've verified the implementation (again) with ath9k a patched hostapd (patches
+to be released later). This time also lock verified (I used a tainted kernel
+before, so locking was disabled ...).
 
-Yeah, patch 1 was becoming bigger and patch 3 smaller ... will just
-squash it.
+iw patches for interface combinations and DFS state handling are attached as well.
 
-Thanks,
-	Simon
+One open issue (still) remains: On my system, DFS channels are flagged with NO_IBSS and
+DISABLED, this is due to my country code setting to 00. I can manually circumvent
+that, but should we find a proper solution for this? This regularity intersection
+gives me quite a bit of a headache ...
 
+Simon Wunderlich (3):
+  mac80211: lock AP_VLAN list with iflist_mtx
+  nl80211/cfg80211: add radar detection command/event
+  mac80211: add radar detection command/event
 
---cQXOx3fnlpmgJsTP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+ include/net/cfg80211.h       |   46 ++++++++++++++
+ include/net/mac80211.h       |   14 +++++
+ include/uapi/linux/nl80211.h |   61 +++++++++++++++++++
+ net/mac80211/cfg.c           |   51 +++++++++++++++-
+ net/mac80211/chan.c          |   37 +++++++++++-
+ net/mac80211/ieee80211_i.h   |   15 +++++
+ net/mac80211/iface.c         |   23 ++++++-
+ net/mac80211/main.c          |    3 +
+ net/mac80211/mlme.c          |   56 ++++++++++++++++++
+ net/mac80211/scan.c          |    3 +
+ net/mac80211/trace.h         |   19 ++++++
+ net/wireless/chan.c          |  129 +++++++++++++++++++++++++++++++++++++++-
+ net/wireless/core.c          |    3 +
+ net/wireless/core.h          |   28 +++++++++
+ net/wireless/mlme.c          |  121 +++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       |  135 ++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/nl80211.h       |    7 +++
+ net/wireless/reg.c           |    3 +
+ net/wireless/scan.c          |   10 ----
+ net/wireless/trace.h         |   47 +++++++++++++++
+ 20 files changed, 790 insertions(+), 21 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+-- 
+1.7.10.4
 
-iEYEARECAAYFAlETi88ACgkQrzg/fFk7axYhYACaArwJu42eK/khrp9wX9arwPE0
-MW8AnjFg0lb1vJrO3nTgCNq4bGJ/37wr
-=3YpS
------END PGP SIGNATURE-----
-
---cQXOx3fnlpmgJsTP--
