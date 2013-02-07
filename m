@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36582 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932542Ab3BIVKo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Feb 2013 16:10:44 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U4Hh4-0004NH-5h
-	for linux-wireless@vger.kernel.org; Sat, 09 Feb 2013 22:10:42 +0100
-Message-ID: <1360444240.8394.2.camel@jlt4.sipsolutions.net> (sfid-20130209_221051_215866_8C1BEBBF)
-Subject: Re: [RFC 14/14] mac80211: properly track HT/VHT operation changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Sat, 09 Feb 2013 22:10:40 +0100
-In-Reply-To: <1360344344-15742-15-git-send-email-johannes@sipsolutions.net> (sfid-20130208_183812_452599_890EF4AF)
-References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
-	 <1360344344-15742-15-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130208_183812_452599_890EF4AF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:37249 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758137Ab3BGOD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 09:03:26 -0500
+Message-ID: <5113B42A.4020708@openwrt.org> (sfid-20130207_150329_604633_029233B3)
+Date: Thu, 07 Feb 2013 15:03:22 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, chaitanyatk@posedge.com,
+	linux-wireless@vger.kernel.org, maheshp@posedge.com
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com> <1360225230.8038.1.camel@jlt4.sipsolutions.net> <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com> <1360228991.8038.3.camel@jlt4.sipsolutions.net> <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
+In-Reply-To: <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-08 at 18:25 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 2013-02-07 10:30 AM, Krishna Chaitanya wrote:
+> On Thu, Feb 7, 2013 at 2:53 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Thu, 2013-02-07 at 14:49 +0530, Krishna Chaitanya wrote:
+>>> On Thu, Feb 7, 2013 at 1:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> > On Thu, 2013-02-07 at 00:01 -0800, chaitanyatk@posedge.com wrote:
+>>> >
+>>>
+>>> > Hmm. I'm not exactly happy with using (one of) the last control flag for
+>>> > a pure debug facility.
+>>> >
+>>> Hmm...initially i tried to add qos header in the debugfs itself but to avoid
+>>> code redundancy went with the TX_CTL. But in either case we need some kind
+>>> of flag to skip adding the qos header by mac80211 (or) to set the AMSDU
+>>> bit in the qos control header.
+>>
+>> I guess the question is whether we really need this code in the tree at
+>> all? It seems like a (relatively) obscure debug feature for which I'm
+>> not sure we should touch the TX fastpath?
 > 
-> A while ago, I made the mac80211 station code never change
-> the channel type after association. This solved a number of
-> issues but is ultimately wrong,
+> AMSDU in itself is rarely used feature in 802.11. So your concern i s
+> understandable.
+> 
+> But the problem is every time we have to test the Rx-AMSDU
+> which is mandatory for WFA 802.11n cert, we need to procure a adapter
+> which supports it, which is difficult. Thats the scenario we have faced
+> which lead us to work on this.With this feature in place we can use
+> any opensource adapter and driver for that purpose.
+> 
+> Again, Its a trade off between stability and usability :-)
+How about injecting A-MSDU packets via cooked monitor mode or nl80211
+frame tx and thus shifting the debug-only code into userspace?
 
-I should say that the reason for that originally was that we would
-change from non-HT to HT during association, and generally switch
-channels far too much (auth/assoc was kinda off-channel then). Changing
-just the bandwidth while already doing HT (or VHT!) shouldn't be an
-issue.
-
-johannes
+- Felix
 
