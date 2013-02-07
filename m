@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f173.google.com ([209.85.220.173]:36737 "EHLO
-	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab3BDRmi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 12:42:38 -0500
-Date: Mon, 4 Feb 2013 09:42:32 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	rusty@rustcorp.com.au, bfields@fieldses.org,
-	skinsbursky@parallels.com, ebiederm@xmission.com,
-	jmorris@namei.org, axboe@kernel.dk, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 59/62] mac80211: convert to idr_alloc()
-Message-ID: <20130204174232.GO27963@mtj.dyndns.org> (sfid-20130204_184310_681596_B7FEB7A4)
-References: <1359854463-2538-1-git-send-email-tj@kernel.org>
- <1359854463-2538-60-git-send-email-tj@kernel.org>
- <1359999624.17993.21.camel@jlt4.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3605 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759095Ab3BGUDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 15:03:16 -0500
+Message-ID: <51140811.3000108@broadcom.com> (sfid-20130207_210319_574465_F2AA44FE)
+Date: Thu, 7 Feb 2013 21:01:21 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359999624.17993.21.camel@jlt4.sipsolutions.net>
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 0/4] Add support for off-channel powersave state in
+ mac80211
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+ <1360186322.7910.76.camel@jlt4.sipsolutions.net>
+ <20130207181543.GA4378@thinkpad-t410>
+In-Reply-To: <20130207181543.GA4378@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 04, 2013 at 06:40:24PM +0100, Johannes Berg wrote:
-> On Sat, 2013-02-02 at 17:21 -0800, Tejun Heo wrote:
-> > Convert to the much saner new idr interface.
-> > 
-> > Only compile tested.
-> > 
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Cc: linux-wireless@vger.kernel.org
-> > ---
-> > This patch depends on an earlier idr changes and I think it would be
-> > best to route these together through -mm.  Please holler if there's
-> > any objection.  Thanks.
+On 02/07/2013 07:15 PM, Seth Forshee wrote:
+> On Wed, Feb 06, 2013 at 10:32:02PM +0100, Johannes Berg wrote:
+>> On Wed, 2013-02-06 at 15:01 -0600, Seth Forshee wrote:
+>>> Hi Johannes,
+>>>
+>>> As promised, here are the patches which add the off-channel powesave
+>>> state. At a high level, the changes are:
+>>>
+>>>  * Expand the PS configuration flag to be 2 bits and add helper
+>>>    functions for reading and setting the modes
+>>>  * Change the terminology around PS states, i.e. disabled -> awake and
+>>>    enabled -> doze
+>>>  * Add the off-channel PS state and put it to use
+>>>  * Minor driver updates based on these changes
+>>>  * Update brcmsmac to utilize the off-channel PS state
 > 
-> Looks fine to me, thanks.
+> Hmm, I guess I should have mentioned that these patches were written on
+> top of the version 2 patches I sent for adding the off-channel queue
+> stop reason, etc. I'll need to resend them before they're likely to
+> apply cleanly anywhere.
+> 
+>> That's a lot of driver changes ... :)
+> 
+> A large number of those changes were made by sed ;-)
+> 
+>> I've been trying to disentangle the mess a bit. It looks like I was
+>> completely wrong about wl1251, it has HW scan so we don't care about its
+>> weird PS behaviour (1).
+>>
+>> That leaves us with a few different drivers:
+>>  * iwlegacy -- has PS support but not NULLFUNC_STACK, so generates a
+>>    wakeup to the AP when we want to go scan ...
+>>  * drivers like iwlwifi/wl12xx have HW scan and don't set NULLFUNC_STACK
+>>  * drivers like ath5k/9k/... have all SW but set NULLFUNC_STACK
+>>  * drivers that just don't have powersave
+> 
+> I tried to ensure that the patches would result in equivalent behavior
+> for all drivers except brcmsmac (which will behave better). But I
+> obviously wan't able to test every driver to verify this.
+> 
+> I suspect b43 should also be updated similarly to brcmsmac. The only
+> hardware I have that uses b43 is a macbook whose wireless functions too
+> poorly to be a good test case.
 
-Will add Acked-by.  Thanks a lot!
+If I recall correctly b43 has a Kconfig option to allow it to support
+the same devices brcmsmac supports.
 
--- 
-tejun
+Gr. AvS
+
