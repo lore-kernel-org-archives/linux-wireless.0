@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56607 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753758Ab3BDMuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 07:50:11 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv8 3/3] nl80211: allow DFS in start_ap
-Date: Mon,  4 Feb 2013 13:49:58 +0100
-Message-Id: <1359982200-2321-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130204_135024_868845_0F8335B1)
-In-Reply-To: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from ebb05.tieto.com ([131.207.168.36]:61036 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab3BGKQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 05:16:04 -0500
+From: Szymon Janc <szymon.janc@tieto.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-nfc@ml01.01.org" <linux-nfc@ml01.01.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [patch] NFC: llcp: integer underflow in nfc_llcp_set_remote_gb()
+Date: Thu, 7 Feb 2013 11:16:01 +0100
+Message-ID: <2148581.S8tzak9aE2@uw000953> (sfid-20130207_111610_550255_93DFD712)
+In-Reply-To: <20130131081645.GA14812@elgon.mountain>
+References: <20130131081645.GA14812@elgon.mountain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables DFS within nl80211/cfg80211. start_ap now checks if
-DFS is allowed on the channel with the selected channel width.
+Hi Dan,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
-Changes to PATCHv7:
- * set radar required in AP params
+On Thursday 31 of January 2013 10:16:46 Dan Carpenter wrote:
+> If gb_len is less than 3 it would cause an integer underflow and
+> possibly memory corruption in nfc_llcp_parse_gb_tlv().
+> 
+> I removed the old test for gb_len == 0.  I also removed the test for
+> ->remote_gb == NULL.  It's not possible for ->remote_gb to be NULL and
+> we have already dereferenced ->remote_gb_len so it's too late to test.
+> 
+> The old test return -ENODEV but my test returns -EINVAL.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+> index 85bc75c..746f5a2 100644
+> --- a/net/nfc/llcp/llcp.c
+> +++ b/net/nfc/llcp/llcp.c
+> @@ -549,14 +549,13 @@ int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len)
+>  		pr_err("No LLCP device\n");
+>  		return -ENODEV;
+>  	}
+> +	if (gb_len < 3)
+> +		return -EINVAL;
 
-Changes to PATCHv6:
- * let reg_can_beacon() and others check for channel states, simplify
-   start_ap
- * check using cfg80211_chandef_dfs_required
+Maybe define NFC_MIN_GT_LEN and test it together with NFC_MAX_GT_LEN in
+nfc_set_remote_general_bytes() ?
 
-Changes to PATCHv5:
- * check radar detection width
----
- net/wireless/nl80211.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+>  
+>  	memset(local->remote_gb, 0, NFC_MAX_GT_LEN);
+>  	memcpy(local->remote_gb, gb, gb_len);
+>  	local->remote_gb_len = gb_len;
+>  
+> -	if (local->remote_gb == NULL || local->remote_gb_len == 0)
+> -		return -ENODEV;
+> -
+>  	if (memcmp(local->remote_gb, llcp_magic, 3)) {
+>  		pr_err("MAC does not support LLCP\n");
+>  		return -EINVAL;
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 00e6599..2a71935 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2714,6 +2714,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_ap_settings params;
- 	int err;
-+	u8 radar_detect_width = 0;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
-@@ -2832,9 +2833,19 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &params.chandef))
- 		return -EINVAL;
- 
-+	err = cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
-+	if (err < 0)
-+		return -EINVAL;
-+	if (err) {
-+		radar_detect_width = BIT(params.chandef.width);
-+		params.radar_required = true;
-+	}
-+
- 	mutex_lock(&rdev->devlist_mtx);
--	err = cfg80211_can_use_chan(rdev, wdev, params.chandef.chan,
--				    CHAN_MODE_SHARED);
-+	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
-+					   params.chandef.chan,
-+					   CHAN_MODE_SHARED,
-+					   radar_detect_width);
- 	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (err)
 -- 
-1.7.10.4
-
+BR
+Szymon Janc
