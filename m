@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43474 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757095Ab3BKObe (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43322 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab3BGLKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 09:31:34 -0500
-Message-ID: <1360593088.8738.31.camel@jlt4.sipsolutions.net> (sfid-20130211_153137_874325_E0E4C347)
-Subject: Re: [PATCH v2 3/3] mac80211/minstrel_ht: add support for using CCK
- rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 11 Feb 2013 15:31:28 +0100
-In-Reply-To: <5118FBC9.7000801@openwrt.org>
-References: <1360589765-58642-1-git-send-email-nbd@openwrt.org>
-	 <1360589765-58642-2-git-send-email-nbd@openwrt.org>
-	 <1360589765-58642-3-git-send-email-nbd@openwrt.org>
-	 <201302111457.28452.chunkeey@googlemail.com> <5118FBC9.7000801@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 7 Feb 2013 06:10:17 -0500
+Date: Thu, 7 Feb 2013 12:10:09 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv8 2/3] mac80211: add radar detection command/event
+Message-ID: <20130207111009.GC26957@pandem0nium> (sfid-20130207_121022_117134_FA33380C)
+References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359982200-2321-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1360172173.7910.54.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8NvZYKFJsRX2Djef"
+In-Reply-To: <1360172173.7910.54.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-11 at 15:10 +0100, Felix Fietkau wrote:
-> On 2013-02-11 2:57 PM, Christian Lamparter wrote:
-> > On Monday, February 11, 2013 02:36:05 PM Felix Fietkau wrote:
-> >> When MCS rates start to get bad in 2.4 GHz because of long range or
-> >> strong interference, CCK rates can be a lot more robust.
-> >> 
-> >> This patch adds a pseudo MCS group containing CCK rates (long preamble
-> >> in the lower 4 slots, short preamble in the upper slots).
-> >> 
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> ---
-> >>  static void
-> >> +minstrel_ht_update_cck(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
-> >> +		       struct ieee80211_supported_band *sband,
-> >> +		       struct ieee80211_sta *sta)
-> >> +{
-> >> +	int i;
-> >> +
-> >> +	if (sband->band != IEEE80211_BAND_2GHZ)
-> >> +		return;
-> >> +
-> >> +	mi->cck_supported = 0;
-> >> +	mi->cck_supported_short = 0;
-> >> +	for (i = 0; i < 4; i++) {
-> >> +		if (!rate_supported(sta, sband->band, mp->cck_rates[i]))
-> >> +			continue;
-> > 
-> > Don't we need to check if the receiver (and the minstrel_ht sender)
-> > supports IEEE80211_HT_CAP_DSSSCCK40 when the phy is in HT40+/- mode?
-> I don't think this should be handled in the rate control modules, when
-> mac80211 can easily handle that through the supported rates set (which
-> seems to be the intention behind this flag in the standard as well).
 
-Patches welcome.  This corner of the spec doesn't seem to be implemented
-at all :)
+--8NvZYKFJsRX2Djef
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-johannes
+On Wed, Feb 06, 2013 at 06:36:13PM +0100, Johannes Berg wrote:
+> On Mon, 2013-02-04 at 13:49 +0100, Simon Wunderlich wrote:
+>=20
+> > +++ b/net/mac80211/cfg.c
+>=20
+> > @@ -1796,6 +1797,7 @@ static int ieee80211_join_mesh(struct wiphy *wiph=
+y, struct net_device *dev,
+> >  	/* can mesh use other SMPS modes? */
+> >  	sdata->smps_mode =3D IEEE80211_SMPS_OFF;
+> >  	sdata->needed_rx_chains =3D sdata->local->rx_chains;
+> > +	sdata->radar_required =3D true;
+>=20
+> err?
 
+Oops ... will remove that. Sorry!
+	Simon
+
+--8NvZYKFJsRX2Djef
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlETi5EACgkQrzg/fFk7axZwJQCeIdaJDBkQ0FtHtPoofqjrXl/j
+QzkAoIhjEpyIDQl0dHoDN1dxJW+2MzHG
+=CApJ
+-----END PGP SIGNATURE-----
+
+--8NvZYKFJsRX2Djef--
