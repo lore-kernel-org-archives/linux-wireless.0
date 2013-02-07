@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:55728 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778Ab3BEUXS (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:43512 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab3BGLLU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 15:23:18 -0500
-Received: by mail-oa0-f48.google.com with SMTP id j1so683087oag.21
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2013 12:23:17 -0800 (PST)
-Message-ID: <51116A33.9070207@lwfinger.net> (sfid-20130205_212330_871160_7C2D8597)
-Date: Tue, 05 Feb 2013 14:23:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 7 Feb 2013 06:11:20 -0500
+Date: Thu, 7 Feb 2013 12:11:11 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv8 3/3] nl80211: allow DFS in start_ap
+Message-ID: <20130207111111.GD26957@pandem0nium> (sfid-20130207_121123_844402_F0E79CA5)
+References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1359982200-2321-4-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1360172180.7910.55.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: Thomas Rosenkranz <tom.rosary@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
- downstream and upstreamkernel
-References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com> <511163BA.7060902@gmail.com>
-In-Reply-To: <511163BA.7060902@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cQXOx3fnlpmgJsTP"
+In-Reply-To: <1360172180.7910.55.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2013 01:55 PM, Xose Vazquez Perez wrote:
-> On 02/05/2013 12:00 AM, Thomas Rosenkranz wrote:
->
-> Larry, are you able to identify the chip of that device
-> with the 8192cu output ?
->
-> what should he do ? open the device to see the chip ??
 
-What difference does it make what chip it has? It is obviously some flavor of 
-RTL8188CU/RTL8192CU that is different enough that it does not work with the 
-kernel version of rtl8192cu. A few months ago, I ran across a new B-CUT 
-RTL8188CE that took new programming for rtl8192ce, and I suspect this device 
-also has the B-CUT chip.
+--cQXOx3fnlpmgJsTP
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The crash on unloading is a known fault of the vendor driver. It happens with 
-devices that work OK with the standard rtl8192cu. I have no desire to find out 
-what causes the crash.
+On Wed, Feb 06, 2013 at 06:36:20PM +0100, Johannes Berg wrote:
+> On Mon, 2013-02-04 at 13:49 +0100, Simon Wunderlich wrote:
+>=20
+> > +	err =3D cfg80211_chandef_dfs_required(wdev->wiphy, &params.chandef);
+> > +	if (err < 0)
+> > +		return -EINVAL;
+>=20
+> return err; ?
+>=20
+OK
+> > +	if (err) {
+> > +		radar_detect_width =3D BIT(params.chandef.width);
+> > +		params.radar_required =3D true;
+>=20
+> It seems you should probably just squash this into patch 1 since you
+> already use it in mac80211 in patch 2 but only patch 3 makes it valid?
+> seems a bit odd
 
-If someone wants to supply me with a sample of this 0bda:819a device, I'll make 
-it work in the kernel. I have no desire to try to purchase one on my own.
+Yeah, patch 1 was becoming bigger and patch 3 smaller ... will just
+squash it.
 
-Larry
+Thanks,
+	Simon
 
 
+--cQXOx3fnlpmgJsTP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlETi88ACgkQrzg/fFk7axYhYACaArwJu42eK/khrp9wX9arwPE0
+MW8AnjFg0lb1vJrO3nTgCNq4bGJ/37wr
+=3YpS
+-----END PGP SIGNATURE-----
+
+--cQXOx3fnlpmgJsTP--
