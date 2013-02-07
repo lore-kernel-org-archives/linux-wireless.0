@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:61660 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759361Ab3BYNYN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 08:24:13 -0500
-Received: by mail-bk0-f52.google.com with SMTP id jk13so1265264bkc.39
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 05:24:11 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 25 Feb 2013 21:24:11 +0800
-Message-ID: <CAPgLHd9VC5b+AVHcVEPMayewirKzPmmrNczS7y6OL59N2uCj8Q@mail.gmail.com> (sfid-20130225_142418_429739_A39EEC8D)
-Subject: [PATCH -next] iwlwifi: convert to use simple_open()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.tpi.com ([70.99.223.143]:2477 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759236Ab3BGTfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 14:35:50 -0500
+From: Tim Gardner <tim.gardner@canonical.com>
+To: linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH wireless-next] brcmsmac: fix u16 overflow warning
+Date: Thu,  7 Feb 2013 12:35:35 -0700
+Message-Id: <1360265735-42450-1-git-send-email-tim.gardner@canonical.com> (sfid-20130207_203610_563459_6E716B3C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+DOT11_MIN_BEACON_PERIOD and DOT11_MAX_BEACON_PERIOD are
+superfluous. The only invalid beacon period is 0. Comparing
+a 16 bit quantity to 0xffff also causes a compile warning:
 
-This removes an open coded simple_open() function and
-replaces file operations references to the function
-with simple_open() instead.
+drivers/net/wireless/brcm80211/brcmsmac/main.c:5560 brcms_c_set_beacon_period()
+ warn: impossible condition '(period > 65535) => (0-65535 > 65535)'
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Observed from smatch analysis.
+
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index c1bdb55..c9d5ea1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -69,12 +69,6 @@ struct iwl_dbgfs_mvm_ctx {
- 	struct ieee80211_vif *vif;
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index c26992a..080b54d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -101,8 +101,6 @@
+ #define DOT11_RTS_LEN			16
+ #define DOT11_CTS_LEN			10
+ #define DOT11_BA_BITMAP_LEN		128
+-#define DOT11_MIN_BEACON_PERIOD		1
+-#define DOT11_MAX_BEACON_PERIOD		0xFFFF
+ #define DOT11_MAXNUMFRAGS		16
+ #define DOT11_MAX_FRAG_LEN		2346
  
--static int iwl_dbgfs_open_file_generic(struct inode *inode, struct file *file)
--{
--	file->private_data = inode->i_private;
--	return 0;
--}
--
- static ssize_t iwl_dbgfs_tx_flush_write(struct file *file,
- 					const char __user *user_buf,
- 					size_t count, loff_t *ppos)
-@@ -309,7 +303,7 @@ static ssize_t iwl_dbgfs_power_down_d3_allow_write(struct file *file,
- #define MVM_DEBUGFS_READ_FILE_OPS(name)					\
- static const struct file_operations iwl_dbgfs_##name##_ops = {	\
- 	.read = iwl_dbgfs_##name##_read,				\
--	.open = iwl_dbgfs_open_file_generic,				\
-+	.open = simple_open,						\
- 	.llseek = generic_file_llseek,					\
- }
+@@ -5555,8 +5553,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
  
-@@ -317,14 +311,14 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {	\
- static const struct file_operations iwl_dbgfs_##name##_ops = {	\
- 	.write = iwl_dbgfs_##name##_write,				\
- 	.read = iwl_dbgfs_##name##_read,				\
--	.open = iwl_dbgfs_open_file_generic,				\
-+	.open = simple_open,						\
- 	.llseek = generic_file_llseek,					\
- };
+ int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
+ {
+-	if (period < DOT11_MIN_BEACON_PERIOD ||
+-	    period > DOT11_MAX_BEACON_PERIOD)
++	if (period == 0)
+ 		return -EINVAL;
  
- #define MVM_DEBUGFS_WRITE_FILE_OPS(name)				\
- static const struct file_operations iwl_dbgfs_##name##_ops = {	\
- 	.write = iwl_dbgfs_##name##_write,				\
--	.open = iwl_dbgfs_open_file_generic,				\
-+	.open = simple_open,						\
- 	.llseek = generic_file_llseek,					\
- };
- 
-
+ 	wlc->default_bss->beacon_period = period;
+-- 
+1.7.9.5
 
