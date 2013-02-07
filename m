@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44257 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982Ab3BLU0l (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:37684 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758274Ab3BGPUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 15:26:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 12 Feb 2013 12:19:11 -0800
-Subject: RE: [PATCH] nl80211: add packet offset information for wowlan
- pattern
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D2EABEA@SC-VEXCH1.marvell.com> (sfid-20130212_212645_821578_12644463)
-References: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
-	 <1360655802-21515-2-git-send-email-bzhao@marvell.com>
- <1360660163.8178.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360660163.8178.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 7 Feb 2013 10:20:21 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j10so1238084bkw.12
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 07:20:19 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Tomasz Guszkowski <tsg@o2.pl>
+Subject: Re: [PATCH] p54usb: corrected USB ID for T-Com Sinus 154 data II
+Date: Thu, 7 Feb 2013 16:20:15 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20130206233951.0cf8e25b7963bbd170b37899@o2.pl>
+In-Reply-To: <20130206233951.0cf8e25b7963bbd170b37899@o2.pl>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302071620.16014.chunkeey@googlemail.com> (sfid-20130207_162024_813521_CE788F40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gT24gTW9uLCAyMDEzLTAyLTExIGF0IDIzOjU2IC0wODAwLCBCaW5n
-IFpoYW8gd3JvdGU6DQo+ID4gRnJvbTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxs
-LmNvbT4NCj4gPg0KPiA+IElmIHVzZXIga25vd3MgdGhlIGxvY2F0aW9uIG9mIGEgd293bGFuIHBh
-dHRlcm4gdG8gYmUgbWF0Y2hlZCBpbg0KPiA+IFJ4IHBhY2tldCwgaGUgY2FuIHByb3ZpZGUgYW4g
-b2Zmc2V0IHdpdGggdGhlIHBhdHRlcm4uIFRoaXMgd2lsbA0KPiA+IGhlbHAgZHJpdmVycyB0byBp
-Z25vcmUgaW5pdGlhbCBieXRlcyBhbmQgbWF0Y2ggdGhlIHBhdHRlcm4NCj4gPiBlZmZpY2llbnRs
-eS4NCj4gDQo+IFRoaXMgaXMgYSBiaXQgdHJpY2t5LiBSaWdodCBub3csIHRoZSBkb2N1bWVudGF0
-aW9uIHNheXM6DQo+IA0KPiAgKiBATkw4MDIxMV9XT1dMQU5fVFJJR19QS1RfUEFUVEVSTjogd2Fr
-ZSB1cCBvbiB0aGUgc3BlY2lmaWVkIHBhY2tldCBwYXR0ZXJucw0KPiAgKiAgICAgIHdoaWNoIGFy
-ZSBwYXNzZWQgaW4gYW4gYXJyYXkgb2YgbmVzdGVkIGF0dHJpYnV0ZXMsIGVhY2ggbmVzdGVkIGF0
-dHJpYnV0ZQ0KPiAgKiAgICAgIGRlZmluaW5nIGEgd2l0aCBhdHRyaWJ1dGVzIGZyb20gJnN0cnVj
-dCBubDgwMjExX3dvd2xhbl90cmlnX3BrdF9wYXR0ZXJuLg0KPiAgKiAgICAgIEVhY2ggcGF0dGVy
-biBkZWZpbmVzIGEgd2FrZXVwIHBhY2tldC4gVGhlIG1hdGNoaW5nIGlzIGRvbmUgb24gdGhlIE1T
-RFUsDQo+ICAqICAgICAgaS5lLiBhcyB0aG91Z2ggdGhlIHBhY2tldCB3YXMgYW4gODAyLjMgcGFj
-a2V0LCBzbyB0aGUgcGF0dGVybiBtYXRjaGluZw0KPiAgKiAgICAgIGlzIGRvbmUgYWZ0ZXIgdGhl
-IHBhY2tldCBpcyBjb252ZXJ0ZWQgdG8gdGhlIE1TRFUuDQo+IA0KPiBJIGRvbid0IG1pbmQgYWRk
-aW5nIHRoZSBvZmZzZXQsIGJ1dCBub3QgYWxsIGRldmljZXMgd2lsbCBzdXBwb3J0IHRoYXQNCj4g
-KG91cnMgZG9lc24ndCkgc28gd2hlbiBhZHZlcnRpc2luZyB0aGUgZmVhdHVyZSBpdCBuZWVkcyB0
-byBiZSBkb2N1bWVudGVkDQo+IHRvIGJlIHNvbWV0aGluZyBsaWtlIHRoZSBtYXhpbXVtIHBvc3Np
-YmxlIG9mZnNldD8gU28geW91IGFsc28gbmVlZCB0bw0KPiBtb2RpZnkgdGhlIGRvY3VtZW50YXRp
-b24gZm9yIHRoYXQgYW5kIHRoZSBjb2RlIGluIG5sODAyMTFfc2VuZF93aXBoeSgpLg0KPiANCj4g
-PiBAQCAtNzA3MCw3ICs3MDczLDggQEAgc3RhdGljIGludCBubDgwMjExX3NldF93b3dsYW4oc3Ry
-dWN0IHNrX2J1ZmYgKnNrYiwgc3RydWN0IGdlbmxfaW5mbyAqaW5mbykNCj4gPiAgCQkJCSAgbmxh
-X2RhdGEocGF0KSwgbmxhX2xlbihwYXQpLCBOVUxMKTsNCj4gPiAgCQkJZXJyID0gLUVJTlZBTDsN
-Cj4gPiAgCQkJaWYgKCFwYXRfdGJbTkw4MDIxMV9XT1dMQU5fUEtUUEFUX01BU0tdIHx8DQo+ID4g
-LQkJCSAgICAhcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9QQVRURVJOXSkNCj4gPiArCQkJ
-ICAgICFwYXRfdGJbTkw4MDIxMV9XT1dMQU5fUEtUUEFUX1BBVFRFUk5dIHx8DQo+ID4gKwkJCSAg
-ICAhcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9PRkZTRVRdKQ0KPiA+ICAJCQkJZ290byBl
-cnJvcjsNCj4gDQo+IFlvdSBjYW4ndCBqdXN0IGJyZWFrIGJhY2t3YXJkIGNvbXBhdGliaWxpdHkg
-bGlrZSB0aGF0LCB0aGUgbmV3IGF0dHJpYnV0ZQ0KPiBtdXN0IGJlIG9wdGlvbmFsIGFuZCBhc3N1
-bWVkIDAgaWYgaXQncyBub3QgcHJlc2VudC4NCj4gDQo+ID4gQEAgLTcwOTYsNiArNzEwMCw4IEBA
-IHN0YXRpYyBpbnQgbmw4MDIxMV9zZXRfd293bGFuKHN0cnVjdCBza19idWZmICpza2IsIHN0cnVj
-dCBnZW5sX2luZm8gKmluZm8pDQo+ID4gIAkJCW1lbWNweShuZXdfdHJpZ2dlcnMucGF0dGVybnNb
-aV0ucGF0dGVybiwNCj4gPiAgCQkJICAgICAgIG5sYV9kYXRhKHBhdF90YltOTDgwMjExX1dPV0xB
-Tl9QS1RQQVRfUEFUVEVSTl0pLA0KPiA+ICAJCQkgICAgICAgcGF0X2xlbik7DQo+ID4gKwkJCW5l
-d190cmlnZ2Vycy5wYXR0ZXJuc1tpXS5wa3Rfb2Zmc2V0ID0gbmxhX2dldF91MzIoDQo+ID4gKwkJ
-CQkJcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9PRkZTRVRdKTsNCj4gDQo+IFNpbmNlIGFs
-bCBleGlzdGluZyB1c2VycyBvZiB0aGUgQVBJIHdvdWxkIGlnbm9yZSB0aGUgcGt0X29mZnNldCwg
-eW91DQo+IG11c3QgcmVqZWN0IHRoZSBjb25maWd1cmF0aW9uIGlmIHRoZSBvZmZzZXQgZXhjZWVk
-cyB0aGUgbWF4aW11bQ0KPiBwZXJtaXNzaWJsZSBvZmZzZXQgdGhlIGRldmljZSBhZHZlcnRpc2Vz
-IChleGlzdGluZyBvbmVzIHdvdWxkIGFkdmVydGlzZQ0KPiAwKQ0KDQpUaGFua3MgZm9yIHlvdXIg
-Y29tbWVudHMuDQoNClRoZSByZXZpc2VkIHYyIHBhdGNoIGhhcyBiZWVuIHN1Ym1pdHRlZC4gUGxl
-YXNlIHJldmlldy4NCg0KUmVnYXJkcywNCkJpbmcNCg==
+On Wednesday, February 06, 2013 11:39:51 PM Tomasz Guszkowski wrote:
+> On Tue, 5 Feb 2013, Christian Lamparter wrote:
+> > OT: The latest supported firmware for LM87 is: 2.13.25.0.lm87.arm
+> > Did you experience issues with the new version, or do you simply
+> > stick with the old 2.13.1.0 because it does work just as well?
+>
+> I have just tested behavior of T-Com with 2.13.25.0.lm87.arm 
+> (md5sum 39be687c87544b892e7a8ffe7ffd9371) in managed mode.
+> Ewerything what was tested worked perfectly:
+> 1. iwlist wlan0 scan
+> 2. connecting to open network
+> 3. connecting to WEP 128-bit
+> 4. connecting to WPA-PSK (TKIP)
+> 5. connecting to WPA2-PSK (AES)
+> 
+> I am particularly impressed by working WPA2, with 2.13.1.0
+> it didn't work.
+Ok, that is actually important. I didn't know that 2.13.1.0 
+had problems with AES, I'll check that again. Thanks for 
+letting me know about this.
+ 
+> Thanks for pointing newer firmware, with WPA2 support it's
+> an excellent, sensitive card despite its age.
+:-) [But of course: the driver is not done yet, I hope I'll get
+around and add the automatic-reset-when-firmware-crashes feature
+in the near future.]  
+
+Regards
+
+Christian
