@@ -1,132 +1,466 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37278 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752247Ab3BGAoL (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:50541 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750763Ab3BGFGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 19:44:11 -0500
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r170iAwL011637
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 6 Feb 2013 16:44:10 -0800
-Message-ID: <5112F8D9.5060206@candelatech.com> (sfid-20130207_014415_868355_33170FE8)
-Date: Wed, 06 Feb 2013 16:44:09 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 7 Feb 2013 00:06:25 -0500
+Received: by mail-wg0-f54.google.com with SMTP id fm10so1735070wgb.9
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 21:06:24 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: 3.7.6+:  WARNING: at net/mac80211/iface.c:705 ieee80211_do_stop
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
+	<CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
+	<CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
+	<CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
+	<CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
+	<CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
+	<CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
+	<CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
+Date: Wed, 6 Feb 2013 21:06:23 -0800
+Message-ID: <CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com> (sfid-20130207_060635_847401_AF1D4CAB)
+Subject: Re: Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Robert Shade <robert.shade@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This came from my patched 3.7.6+ kernel...it has some additional printout for the
-WDS/flush states, in case that helps any...
+Okay. Then the radio is truely confused. :-(
 
-Doesn't seem to have caused any lasting harm.
+Which chipset is this again?
 
-.....
-[13040.210852] sta6: switched off addBA timer for 00:ab:87:60:10:10 tid 0
-[13040.210872] sta6: Aggregation is on for 00:ab:87:60:10:10 tid 0
-[13041.234814] sta7: delba from 00:ab:87:60:10:10 (recipient) tid 0 reason code 39
-[13041.234814] sta7: Tx BA session stop requested for 00:ab:87:60:10:10 tid 0
-[13041.243131] sta7: Stopping Tx BA session for 00:ab:87:60:10:10 tid 0
-[13044.467824] sta5: Open BA session requested for 00:ab:87:60:10:10 tid 0
-[13044.490181] sta5: activated addBA response timer on 00:ab:87:60:10:10 tid 0
-[13044.493147] sta5: switched off addBA timer for 00:ab:87:60:10:10 tid 0
-[13044.493149] sta5: Aggregation is on for 00:ab:87:60:10:10 tid 0
-[13045.346104] sta6: tx session timer expired on 00:ab:87:60:10:10 tid 0
-[13045.346199] sta6: Tx BA session stop requested for 00:ab:87:60:10:10 tid 0
-[13045.357154] sta6: Stopping Tx BA session for 00:ab:87:60:10:10 tid 0
-[13048.647010] sta8: Open BA session requested for 00:ab:87:60:10:10 tid 0
-[13048.647384] sta8: activated addBA response timer on 00:ab:87:60:10:10 tid 0
-[13048.649710] sta8: switched off addBA timer for 00:ab:87:60:10:10 tid 0
-[13048.649738] sta8: Aggregation is on for 00:ab:87:60:10:10 tid 0
-[13049.620723] sta5: delba from 00:ab:87:60:10:10 (recipient) tid 0 reason code 39
-[13049.621007] sta5: Tx BA session stop requested for 00:ab:87:60:10:10 tid 0
-[13049.630255] sta5: Stopping Tx BA session for 00:ab:87:60:10:10 tid 0
-[13050.095003] sta7: Open BA session requested for 00:ab:87:60:10:10 tid 0
-[13050.113141] sta7: activated addBA response timer on 00:ab:87:60:10:10 tid 0
-[13050.114845] sta7: switched off addBA timer for 00:ab:87:60:10:10 tid 0
-[13050.114869] sta7: Aggregation is on for 00:ab:87:60:10:10 tid 0
-[13050.739696] sta6: deauthenticating from 00:ab:87:60:10:10 by local choice (reason=3)
-[13051.891626] IPv6: ADDRCONF(NETDEV_UP): sta6: link is not ready
-[13051.909152] wiphy0: start_sw_scan: running-other-vifs: 2  running-station-vifs: 8, associated-stations: 7 scanning current channel: 5180 MHz
-[13051.973344] sta6: authenticate with 00:ab:87:60:10:10
-[13052.099487] sta6: send auth to 00:ab:87:60:10:10 (try 1/3)
-[13052.139177] sta6: authenticated
-[13052.176209] sta6: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
-[13052.193241] ------------[ cut here ]------------
-[13052.206642] WARNING: at /home/greearb/git/linux-3.7.dev.y/net/mac80211/iface.c:705 ieee80211_do_stop+0x647/0x6a0 [mac80211]()
-[13052.227200] Hardware name: To Be Filled By O.E.M.
-[13052.238787] Modules linked in: iptable_raw xt_CT bridge nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack veth ip_gre gre 8021q garp stp llc 
-fuse macvlan wanlink(O) pktgen nfsv3 nfs_acl nfsv4 auth_rpcgss nfs fscache lockd sunrpc binfmt_misc uinput arc4 snd_hda_codec_realtek ath9k snd_hda_intel 
-mac80211 snd_hda_codec snd_hwdep coretemp snd_seq iTCO_wdt snd_seq_device ath9k_common snd_pcm gpio_ich iTCO_vendor_support ath9k_hw snd_timer microcode snd 
-i2c_i801 ath lpc_ich serio_raw pcspkr soundcore cfg80211 snd_page_alloc r8169 mii rfkill i915 drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: 
-iptable_nat]
-[13052.337183] Pid: 26365, comm: ip Tainted: G         C O 3.7.6+ #47
-[13052.350669] Call Trace:
-[13052.359551]  [<c044417d>] warn_slowpath_common+0x6d/0xa0
-[13052.372070]  [<f8b4c1b7>] ? ieee80211_do_stop+0x647/0x6a0 [mac80211]
-[13052.385106]  [<f8b4c1b7>] ? ieee80211_do_stop+0x647/0x6a0 [mac80211]
-[13052.399193]  [<c04441cd>] warn_slowpath_null+0x1d/0x20
-[13052.416803]  [<f8b4c1b7>] ieee80211_do_stop+0x647/0x6a0 [mac80211]
-[13052.431507]  [<c093372f>] ? _raw_spin_unlock_bh+0x2f/0x40
-[13052.453520]  [<c08557b1>] ? dev_deactivate_many+0x1e1/0x210
-[13052.471179]  [<f8b4c222>] ieee80211_stop+0x12/0x20 [mac80211]
-[13052.486507]  [<c083b1c1>] __dev_close_many+0x61/0xb0
-[13052.500384]  [<c044bc62>] ? local_bh_enable_ip+0x42/0xa0
-[13052.515556]  [<c083b22f>] __dev_close+0x1f/0x30
-[13052.529078]  [<c083a56d>] __dev_change_flags+0x7d/0x150
-[13052.543250]  [<c083bb2e>] dev_change_flags+0x1e/0x60
-[13052.556564]  [<c084ab10>] do_setlink+0x190/0x8f0
-[13052.568896]  [<c064c852>] ? nla_parse+0x22/0xd0
-[13052.580306]  [<c084ceee>] rtnl_newlink+0x52e/0x5b0
-[13052.592733]  [<c05dbf57>] ? security_capable+0x17/0x20
-[13052.603526]  [<c044eef5>] ? ns_capable+0x25/0x60
-[13052.614057]  [<c09312c1>] ? __mutex_lock_common+0x301/0x3e0
-[13052.625775]  [<c084c9c0>] ? rtnl_configure_link+0xa0/0xa0
-[13052.641185]  [<c084a467>] rtnetlink_rcv_msg+0x267/0x2c0
-[13052.652616]  [<c084a200>] ? rtnetlink_rcv+0x20/0x20
-[13052.663600]  [<c085ea06>] netlink_rcv_skb+0x86/0xb0
-[13052.674764]  [<c084a1f7>] rtnetlink_rcv+0x17/0x20
-[13052.685221]  [<c085e755>] netlink_unicast+0x175/0x1f0
-[13052.695549]  [<c085f3bc>] netlink_sendmsg+0x1fc/0x300
-[13052.706297]  [<c0829f5d>] sock_sendmsg+0xbd/0xf0
-[13052.717299]  [<c0828578>] ? copy_from_user+0x8/0x10
-[13052.741002]  [<c0834483>] ? verify_iovec+0x53/0xb0
-[13052.751249]  [<c082b0a5>] __sys_sendmsg+0x2c5/0x2e0
-[13052.764696]  [<c082a550>] ? sock_aio_write+0x170/0x170
-[13052.775097]  [<c0435dae>] ? arch_flush_lazy_mmu_mode+0x3e/0x60
-[13052.787582]  [<c043da2c>] ? kmap_atomic_prot+0x10c/0x130
-[13052.798127]  [<c04f3c99>] ? handle_mm_fault+0x1c9/0x250
-[13052.808407]  [<c082b226>] sys_sendmsg+0x36/0x60
-[13052.818396]  [<c082b537>] sys_socketcall+0x107/0x2d0
-[13052.828792]  [<c04f7d15>] ? sys_brk+0xd5/0x110
-[13052.838278]  [<c0938b0d>] sysenter_do_call+0x12/0x33
-[13052.848390] ---[ end trace 38ad468e97568339 ]---
-[13052.862855] sta7: deauthenticating from 00:ab:87:60:10:10 by local choice (reason=3)
-[13052.876642] sta7: Tx BA session stop requested for 00:ab:87:60:10:10 tid 0
-[13052.876926] sta7: Stopping Tx BA session for 00:ab:87:60:10:10 tid 0
-[13052.938262] IPv6: ADDRCONF(NETDEV_UP): sta6: link is not ready
-[13053.776084] sta8: tx session timer expired on 00:ab:87:60:10:10 tid 0
-[13053.776180] sta8: Tx BA session stop requested for 00:ab:87:60:10:10 tid 0
-[13053.787178] sta8: Stopping Tx BA session for 00:ab:87:60:10:10 tid 0
-[13054.368624] sta5: deauthenticating from 00:ab:87:60:10:10 by local choice (reason=3)
-[13057.133369] wiphy0: start_sw_scan: running-other-vifs: 2  running-station-vifs: 6, associated-stations: 5 scanning current channel: 5180 MHz
-[13057.207416] sta6: authenticate with 00:ab:87:60:10:10
-[13057.337127] sta6: send auth to 00:ab:87:60:10:10 (try 1/3)
-[13057.362168] sta6: authenticated
-[13057.410809] sta6: associate with 00:ab:87:60:10:10 (try 1/3)
-[13057.430801] sta6: RX AssocResp from 00:ab:87:60:10:10 (capab=0x1 status=0 aid=1)
-[13057.447890] IPv6: ADDRCONF(NETDEV_CHANGE): sta6: link becomes ready
-[13057.461071] sta6: associated
-[13057.569209] sta6: Open BA session requested for 00:ab:87:60:10:10 tid 0
-[13057.588103] sta6: activated addBA response timer on 00:ab:87:60:10:10 tid 0
-[13057.597554] sta6: switched off addBA timer for 00:ab:87:60:10:10 tid 0
-[13057.597566] sta6: Aggregation is on for 00:ab:87:60:10:10 tid 0
-[13058.045908] IPv6: ADDRCONF(NETDEV_UP): sta5: link is not ready
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
+Adrian
+
+
+On 6 February 2013 14:58, Robert Shade <robert.shade@gmail.com> wrote:
+> I tested this all the way up to 1s and am still able to replicate the timeout.
+>
+> Out of curiosity I collected how long the calibration usually takes:
+> avg 825.829us, min 620us, max 830us (16k+ samples)
+>
+> On Wed, Feb 6, 2013 at 7:53 AM, Robert Shade <robert.shade@gmail.com> wrote:
+>> The "1ms" in the message is hard coded.  The actual timeout on the
+>> register poll is 100ms.
+>>
+>> On Tue, Feb 5, 2013 at 10:08 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>> Try bumping that up to 10ms.
+>>>
+>>>
+>>>
+>>> adrian
+>>>
+>>> On 5 February 2013 18:51, Robert Shade <robert.shade@gmail.com> wrote:
+>>>> I was finally able to do some additional testing on this.  I disabled
+>>>> the one and only block that calls ath9k_hw_do_fastcc.  The issue is
+>>>> still reproducible[1], starting with a timeout on AR_PHY_AGC_CONTROL
+>>>>
+>>>> kernel: ath: phy1: timeout (100000 us) on reg 0x9860: 0x00048d21 &
+>>>> 0x00000001 != 0x00000000
+>>>> kernel: ath: phy1: offset calibration failed to complete in 1ms; noisy
+>>>> environment?
+>>>> kernel: ath: phy1: Unable to reset channel, reset status -5
+>>>> kernel: ath: phy1: Unable to set channel
+>>>>
+>>>> It fails to change channel a number of times as it tries to scan, then
+>>>> auth.  After it gives up on the auth it goes through a AWAKE ->
+>>>> FULL-SLEEP, FULL-SLEEP -> AWAKE, AWAKE -> FULL-SLEEP, FULL-SLEEP ->
+>>>> AWAKE cycle.  Afterward, it's able to change channel to the channel
+>>>> the SSID is on and xmit the auth requests, however by that time it's
+>>>> too late.
+>>>>
+>>>> It continues to scan and re-auth, however the auth packets are not
+>>>> sent until it gives up and goes through another AWAKE/FULL-SLEEP cycle
+>>>> after the auth times out.
+>>>>
+>>>> The radio seems to actually be transmitting because I see the SSID
+>>>> probe requests going out and I see my non-broadcasted SSID in the scan
+>>>> logs.
+>>>>
+>>>> [1] It happens randomly on my devices in the field, but I'm able to
+>>>> make it happen pretty quickly if I start a flood ping to my wireless
+>>>> gw and do continuous scans with iw.
+>>>>
+>>>> On Wed, Jan 16, 2013 at 10:12 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>>>> Find where the fast channel change code is (maybe) called, and just
+>>>>> disable it so it always calls the full channel change?
+>>>>>
+>>>>>
+>>>>>
+>>>>> Adrian
+>>>>>
+>>>>>
+>>>>> On 16 January 2013 17:00, Robert Shade <robert.shade@gmail.com> wrote:
+>>>>>> I was able to grab a log with debugging on when the issue started all
+>>>>>> the way to when it started timing out association due to TX delay:
+>>>>>> https://dl.dropbox.com/u/12121487/delay-messages.gz
+>>>>>>
+>>>>>> On Wed, Jan 16, 2013 at 6:09 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>>>>>> Hm, that register is AR_PHY_RFBUS_GNT, which iirc is only involved in
+>>>>>>> fast channel change.
+>>>>>>>
+>>>>>>> Maybe ath9k's fast channel change code isn't working right, and it's
+>>>>>>> not trying a full channel change afterwards?
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Adrian
+>>>>>>>
+>>>>>>>
+>>>>>>> On 15 January 2013 14:06, Robert Shade <robert.shade@gmail.com> wrote:
+>>>>>>>> I'm seeing a periodic issue where the device seems to get stuck in a
+>>>>>>>> state where the TX of authentication packets is delayed so that
+>>>>>>>> authentication fails.  The log snippet below shows the auth packets
+>>>>>>>> getting queued after each "wlan0: send auth to XX", but they're not
+>>>>>>>> actually sent until after it gives up and restarts scanning.  Once the
+>>>>>>>> device gets into this state, it stays in a SCAN->AUTH->AUTH
+>>>>>>>> FAILED->SCAN cycle indefinitely.  However, if I do a ifconfig wlan0
+>>>>>>>> down, the device usually recovers and works correctly for a few minutes to
+>>>>>>>> hours.
+>>>>>>>>
+>>>>>>>> This is with the latest compat-drivers.  The authentication is EAP-TLS
+>>>>>>>> and it's in an environment where it periodically roams using
+>>>>>>>> wpa_supplicant's bgscan.
+>>>>>>>>
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 1
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 2
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 3
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TXQ, inactive queue: 4
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TXQ, inactive queue: 5
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TXQ, inactive queue: 6
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TXQ, inactive queue: 7
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 8
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Reset TX queue: 9
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: tx ok 0x0 err 0x0 desc
+>>>>>>>> 0x10f eol 0x10f urn 0x0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ver 64.1 opmode 2 chan 2437 Mhz/0xc0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ah->misc_mode 0x4
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: enabling ADC Gain Calibration
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: enabling ADC DC Calibration
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: enabling IQ Calibration
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: starting ADC Gain Calibration
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Enable MIB counters
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Restore history: opmode 2
+>>>>>>>> chan 2437 Mhz/0xc0 is_scanning=0 ofdm:8 cck:6
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: **** ofdmlevel 8=>8,
+>>>>>>>> rssi=67[lo=7 hi=40]
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ** ch 2437: level
+>>>>>>>> 3=>7[def:3] cycpwrThr1[level]=14 ini=6
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ** ch 2437: level
+>>>>>>>> 3=>7[def:3] cycpwrThr1Ext[level]=14 ini=6
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ANI parameters: SI=7,
+>>>>>>>> ofdmWS=on FS=2 MRCcck=off listenTime=0 ofdmErrs=0 cckErrs=0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ** ch 2437: level
+>>>>>>>> 2=>6[def:2] firstep[level]=10 ini=2
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ** ch 2437: level
+>>>>>>>> 2=>6[def:2] firstep_low[level]=14 ini=6
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ANI parameters: SI=7,
+>>>>>>>> ofdmWS=on FS=6 MRCcck=off listenTime=0 ofdmErrs=0 cckErrs=0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ** ch 2437: ofdm weak signal: on=>off
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: ANI parameters: SI=7,
+>>>>>>>> ofdmWS=off FS=6 MRCcck=off listenTime=0 ofdmErrs=0 cckErrs=0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: **** ccklevel 6=>6,
+>>>>>>>> rssi=67[lo=7 hi=40]
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: New interrupt mask 0xf4040071
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: new IMR 0x918404b0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Do not enable IER ref count -1
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: STA is not yet
+>>>>>>>> associated..skipping beacon config
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Beacon already configured
+>>>>>>>> for a station interface
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: Inserted STA 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: send auth to 00:24:6c:74:0a:40 (try 1/3)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: transmitting packet, skb:
+>>>>>>>> ffff880137846a80
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: qnum: 0, txq depth: 0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: TXDP[0] = 378480c8 (ffff8800378480c8)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Enable TXE on queue: 0
+>>>>>>>> Nov 20 11:24:33 MR89253 NetworkManager[1821]: <info> (wlan0):
+>>>>>>>> supplicant interface state: scanning -> authenticating
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: RTM_NEWLINK: operstate=0
+>>>>>>>> ifi_flags=0x1003 ([UP])
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: RTM_NEWLINK,
+>>>>>>>> IFLA_IFNAME: Interface 'wlan0' added
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: if_removed
+>>>>>>>> already cleared - ignore event
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Event message available
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: New station
+>>>>>>>> 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: send auth to 00:24:6c:74:0a:40 (try 2/3)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: transmitting packet, skb:
+>>>>>>>> ffff8801265cc2c0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: qnum: 0, txq depth: 1
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: link[0]
+>>>>>>>> (ffff8800378480c8)=37847568 (ffff880037847568)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Enable TXE on queue: 0
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: send auth to 00:24:6c:74:0a:40 (try 3/3)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: transmitting packet, skb:
+>>>>>>>> ffff8801261aac80
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: qnum: 0, txq depth: 2
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: link[0]
+>>>>>>>> (ffff880037847568)=378465f8 (ffff8800378465f8)
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: ath: phy0: Enable TXE on queue: 0
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Event message available
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Delete station
+>>>>>>>> 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Event message available
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: MLME event 37;
+>>>>>>>> timeout with 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: Event
+>>>>>>>> AUTH_TIMED_OUT (14) received
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: SME:
+>>>>>>>> Authentication timed out
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: Added BSSID
+>>>>>>>> 00:24:6c:74:0a:40 into blacklist
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: Another BSS in
+>>>>>>>> this ESS has been seen; try it next
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: BSSID 00:24:6c:74:0a:40
+>>>>>>>> blacklist count incremented to 2
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: Setting scan
+>>>>>>>> request: 0 sec 100000 usec
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: State:
+>>>>>>>> AUTHENTICATING -> DISCONNECTED
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]:
+>>>>>>>> wpa_driver_nl80211_set_operstate: operstate 0->0 (DORMANT)
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: netlink: Operstate:
+>>>>>>>> linkmode=-1, operstate=5
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: EAPOL: External
+>>>>>>>> notification - portEnabled=0
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: EAPOL: Supplicant port
+>>>>>>>> status: Unauthorized
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: EAPOL: External
+>>>>>>>> notification - portValid=0
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: EAPOL: Supplicant port
+>>>>>>>> status: Unauthorized
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: authentication with
+>>>>>>>> 00:24:6c:74:0a:40 timed out
+>>>>>>>> Nov 20 11:24:33 MR89253 kernel: wlan0: Removed STA 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: dbus:
+>>>>>>>> flush_object_timeout_handler: Timeout - sending changed properties of
+>>>>>>>> object /fi/w1/wpa_supplicant1/Interfaces/1
+>>>>>>>> Nov 20 11:24:33 MR89253 NetworkManager[1821]: <info> (wlan0):
+>>>>>>>> supplicant interface state: authenticating -> disconnected
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: State:
+>>>>>>>> DISCONNECTED -> SCANNING
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: wlan0: Starting AP scan
+>>>>>>>> for wildcard SSID
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2412 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2417 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2422 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2427 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2432 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2437 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2442 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2447 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2452 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2457 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2462 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2467 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2472 MHz
+>>>>>>>> Nov 20 11:24:33 MR89253 wpa_supplicant[1841]: nl80211: Scan frequency 2484 MHz
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: AWAKE -> FULL-SLEEP
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: wlan0: Destroyed STA 00:24:6c:74:0a:40
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: FULL-SLEEP -> AWAKE
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: AWAKE -> FULL-SLEEP
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: FULL-SLEEP -> AWAKE
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: Set channel: 2437 MHz type: 0
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF calibrated [ctl] [chain 0] is -50
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF[0] (-50) > MAX (-80),
+>>>>>>>> correcting to MAX
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF calibrated [ctl] [chain 1] is -50
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF[1] (-50) > MAX (-80),
+>>>>>>>> correcting to MAX
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF calibrated [ctl] [chain 2] is -50
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: NF[2] (-50) > MAX (-80),
+>>>>>>>> correcting to MAX
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: Stopping ANI
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: disable IER
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: Disable MIB counters
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: TX complete: skb: ffff880137846a80
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: TX complete: skb: ffff8801265cc2c0
+>>>>>>>> Nov 20 11:24:34 MR89253 kernel: ath: phy0: TX complete: skb: ffff8801261aac80
+>>>>>>>>
+>>>>>>>> 17:00.0 Network controller: Atheros Communications Inc. AR9160
+>>>>>>>> Wireless Network Adapter [AR9001 802.11(a)bgn] (rev 01)
+>>>>>>>>         Subsystem: Ubiquiti Networks, Inc. SR71-A 802.11abgn Wireless
+>>>>>>>> Mini PCI Adapter
+>>>>>>>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+>>>>>>>> Stepping- SERR- FastB2B- DisINTx-
+>>>>>>>>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+>>>>>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>>>>>         Latency: 168, Cache Line Size: 32 bytes
+>>>>>>>>         Interrupt: pin A routed to IRQ 18
+>>>>>>>>         Region 0: Memory at fd5f0000 (32-bit, non-prefetchable) [size=64K]
+>>>>>>>>         Capabilities: [44] Power Management version 2
+>>>>>>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=100mA
+>>>>>>>> PME(D0+,D1-,D2-,D3hot+,D3cold-)
+>>>>>>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>>>>>>>>         Kernel driver in use: ath9k
+>>>>>>>>         Kernel modules: ath9k
+>>>>>>>>
+>>>>>>>> The last time I saw this on a device that I could debug with, I saw
+>>>>>>>> the following in the log just before it entered this state:
+>>>>>>>>
+>>>>>>>> Jan 15 16:36:53 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:53 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:53 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9c20: 0x00000000 & 0x00000001 != 0x00000001
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Could not kill baseband RX
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9c20: 0x00000000 & 0x00000001 != 0x00000001
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Could not kill baseband RX
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:54 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9c20: 0x00000000 & 0x00000001 != 0x00000001
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Could not kill baseband RX
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:55 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9c20: 0x00000000 & 0x00000001 != 0x00000001
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: Could not kill baseband RX
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Event message available
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: New scan
+>>>>>>>> results available
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Event
+>>>>>>>> SCAN_RESULTS (3) received
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Associated on 2412 MHz
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Associated with
+>>>>>>>> 00:17:59:2c:c3:20
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Received scan
+>>>>>>>> results (45 BSSes)
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Scan results
+>>>>>>>> indicate BSS status with 00:17:59:2c:c3:20 as associated
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: New scan results available
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: bgscan simple: scan
+>>>>>>>> result notification
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Selecting BSS
+>>>>>>>> from priority group 0
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: 0:
+>>>>>>>> 00:17:59:2c:c3:20 ssid='l0c0m0t1v3' wpa_ie_len=24 rsn_ie_len=0
+>>>>>>>> caps=0xc31 level=-56
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0:    selected based on WPA IE
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0:    selected BSS
+>>>>>>>> 00:17:59:2c:c3:20 ssid='l0c0m0t1v3'
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Checking for
+>>>>>>>> other virtual interfaces sharing same radio (phy1) in
+>>>>>>>> event_scan_results
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: dbus:
+>>>>>>>> flush_object_timeout_handler: Timeout - sending changed properties of
+>>>>>>>> object /fi/w1/wpa_supplicant1/Interfaces/1
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: RTM_NEWLINK: operstate=1
+>>>>>>>> ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: RTM_NEWLINK,
+>>>>>>>> IFLA_IFNAME: Interface 'wlan0' added
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: if_removed
+>>>>>>>> already cleared - ignore event
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: timeout (100000 us) on reg
+>>>>>>>> 0x9860: 0x00048d21 & 0x00000001 != 0x00000000
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: Unable to reset channel,
+>>>>>>>> reset status -5
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: ath: phy1: Unable to set channel
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Event message available
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: wlan0: Failed to send nullfunc to AP
+>>>>>>>> 00:17:59:2c:c3:20 after 500ms, disconnecting
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Event message available
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Delete station
+>>>>>>>> 00:17:59:2c:c3:20
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Event message available
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: MLME event 39
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: MLME event
+>>>>>>>> frame - hexdump(len=26): c0 00 00 00 00 17 59 2c c3 20 00 15 6d 84 d7
+>>>>>>>> 14 00 17 59 2c c3 20 00 00 04 00
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: nl80211: Deauthenticate event
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Event DEAUTH (12) received
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Deauthentication
+>>>>>>>> notification
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0:  * reason 4
+>>>>>>>> (locally generated)
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0:  * address
+>>>>>>>> 00:17:59:2c:c3:20
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: Deauthentication frame
+>>>>>>>> IE(s) - hexdump(len=0): [NULL]
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0:
+>>>>>>>> CTRL-EVENT-DISCONNECTED bssid=00:17:59:2c:c3:20 reason=4
+>>>>>>>> locally_generated=1
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Auto connect
+>>>>>>>> enabled: try to reconnect (wps=0 wpa_state=9)
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Setting scan
+>>>>>>>> request: 0 sec 100000 usec
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: Added BSSID
+>>>>>>>> 00:17:59:2c:c3:20 into blacklist
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Another BSS in
+>>>>>>>> this ESS has been seen; try it next
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: BSSID 00:17:59:2c:c3:20
+>>>>>>>> blacklist count incremented to 2
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Not rescheduling
+>>>>>>>> scan to ensure that specific SSID scans occur
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]: wlan0: Disconnect event
+>>>>>>>> - remove keys
+>>>>>>>> Jan 15 16:36:56 MR89251 wpa_supplicant[1964]:
+>>>>>>>> wpa_driver_nl80211_set_key: ifindex=13 alg=0 addr=(nil) key_idx=0
+>>>>>>>> set_tx=0 seq_len=0 key_len=0
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: wlan0: moving STA 00:17:59:2c:c3:20 to state 3
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: wlan0: moving STA 00:17:59:2c:c3:20 to state 2
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: wlan0: moving STA 00:17:59:2c:c3:20 to state 1
+>>>>>>>> Jan 15 16:36:56 MR89251 kernel: wlan0: Removed STA 00:17:59:2c:c3:20
+>>>>>>>> (goes into associate timeout loop)
+>>>>>>>>
+>>>>>>>> Please let me know if you need any additional information or testing
+>>>>>>>> done.  Thanks.
+>>>>>>>> --
+>>>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
