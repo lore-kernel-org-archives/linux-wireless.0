@@ -1,97 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4072 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753711Ab3BDJhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 04:37:21 -0500
-Message-ID: <510F8147.9020008@broadcom.com> (sfid-20130204_103729_677614_63BE42FC)
-Date: Mon, 4 Feb 2013 10:37:11 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:50577 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754000Ab3BGO51 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 09:57:27 -0500
+Received: by mail-wg0-f47.google.com with SMTP id dr13so2126467wgb.14
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 06:57:26 -0800 (PST)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "Rafal Milecki" <zajec5@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: bcma: trouble with gpio
-References: <50F95D45.6060601@broadcom.com>
- <50FAD54F.8080601@hauke-m.de> <51091476.2020102@broadcom.com>
- <510EE8AA.50304@hauke-m.de>
-In-Reply-To: <510EE8AA.50304@hauke-m.de>
-Content-Type: text/plain;
- charset=windows-1252
+In-Reply-To: <1360246653.8038.9.camel@jlt4.sipsolutions.net>
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com> <1360225230.8038.1.camel@jlt4.sipsolutions.net>
+ <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
+ <1360228991.8038.3.camel@jlt4.sipsolutions.net> <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
+ <5113B42A.4020708@openwrt.org> <1360246653.8038.9.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 7 Feb 2013 06:57:05 -0800
+Message-ID: <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com> (sfid-20130207_155730_827163_D9FDB1A1)
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>, chaitanyatk@posedge.com,
+	linux-wireless@vger.kernel.org, maheshp@posedge.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/03/13 23:46, Hauke Mehrtens wrote:
-> On 01/30/2013 01:39 PM, Piotr Haber wrote:
->> On 01/19/13 18:18, Hauke Mehrtens wrote:
->>> On 01/18/2013 03:33 PM, Piotr Haber wrote:
->>>> Hi,
->>>>
->>>> I turned GPIO support in bcma (CONFIG_BCMA_DRIVER_GPIO)
->>>> and get this in log:
->>>>
->>>> bcma: bus0: Found chip with id 0xA8D8, rev 0x01 and package 0x0A
->>>> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
->>>> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
->>>> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
->>>> bcma: bus0: Found rev 6 PMU (capabilities 0x108C2606)
->>>> bcma: bus0: SPROM offset 0x830
->>>> bcma: bus0: PMU resource config unknown or not needed for device 0xA8D8
->>>> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->>>> bcma: bus0: Error registering GPIO driver: -28
->>>> bcma: bus0: Bus registered
->>>> bcma: bus1: Found chip with id 0x4313, rev 0x01 and package 0x08
->>>> bcma: bus1: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
->>>> bcma: bus1: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
->>>> bcma: bus1: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
->>>> bcma: bus1: Found rev 8 PMU (capabilities 0x084C3008)
->>>> bcma: bus1: SPROM offset 0x830
->>>> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->>>> bcma: bus1: Error registering GPIO driver: -28
->>>> bcma: bus1: Bus registered
->>>> bcma: bus2: Found chip with id 0x4313, rev 0x01 and package 0x08
->>>> bcma: bus2: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x24, class 0x0)
->>>> bcma: bus2: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x18, class 0x0)
->>>> bcma: bus2: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x11, class 0x0)
->>>> bcma: bus2: Found rev 8 PMU (capabilities 0x084C3008)
->>>> bcma: bus2: SPROM offset 0x830
->>>> gpiochip_add: gpios -1..14 (bcma_gpio) failed to register
->>>> bcma: bus2: Error registering GPIO driver: -28
->>>> bcma: bus2: Bus registered
->>>>
->>>> does that mean that gpio is not usable?
->>>
->>> At least it is not usable through the standard linux gpio interface.
->>>
->>>> what might be the problem?
->>>
->>> Is this -28 (ENOSPC) originally returned in gpiochip_find_base() in
->>> drivers/gpio/gpiolib.c?
->>> I have no idea what's going wrong here, could you provide me with your
->>> kernel config and what kernel version are you using?
->>>
->>>>
->>>> Kind regards
->>>> Piotr
->>>>
->>>
->>>
->> ok, tried on 3.8-rc4 (config included)
->> first loading of module is ok
->> unloading and loading again results in same messages as before
->>
->> seems like gpiochip_find_base call in gpiochip_add fails
->> not sure what's the reason thou
-> 
-> Thanks for the logs. I missed unregistering of the gpio driver in bcma
-> and that would explain your problems. I am unable to unload bcma on my
-> SoCs so I haven't noticed that.
-> 
-> Could your try this patch:
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/103377
-> 
-> Hauke
-> 
-that patch fixes a problem with loading/unloading
-thanks
+On Thu, Feb 7, 2013 at 6:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2013-02-07 at 15:03 +0100, Felix Fietkau wrote:
+>
+>> > But the problem is every time we have to test the Rx-AMSDU
+>> > which is mandatory for WFA 802.11n cert, we need to procure a adapter
+>> > which supports it, which is difficult. Thats the scenario we have faced
+>> > which lead us to work on this.With this feature in place we can use
+>> > any opensource adapter and driver for that purpose.
+>> >
+>> > Again, Its a trade off between stability and usability :-)
+>> How about injecting A-MSDU packets via cooked monitor mode or nl80211
+>> frame tx and thus shifting the debug-only code into userspace?
+>
+> nl80211 won't work -- no support for data frames (and I'd rather not add
+> it), but monitor mode (why cooked?) seems fine.
 
-
-
+But whats the use of sending an AMSDU if we are not connected?
+First check in the code is to check for a connection.
