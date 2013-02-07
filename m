@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36269 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752927Ab3BTRlU (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:42096 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759091Ab3BGRin (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:41:20 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 1/2] mac80211:  Stop timers before canceling work items.
-Date: Wed, 20 Feb 2013 09:41:08 -0800
-Message-Id: <1361382069-31729-1-git-send-email-greearb@candelatech.com> (sfid-20130220_184123_653697_BABBBF90)
+	Thu, 7 Feb 2013 12:38:43 -0500
+Received: by mail-oa0-f43.google.com with SMTP id l10so3090672oag.16
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 09:38:42 -0800 (PST)
+Message-ID: <5113E69D.4010209@lwfinger.net> (sfid-20130207_183849_896291_2C6FE617)
+Date: Thu, 07 Feb 2013 11:38:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Thomas Rosenkranz <tom.rosary@googlemail.com>
+CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: bugreport upstream: 0bda:819a RTL8188CUS WLAN doesn't work
+ out of the box
+References: <51045387.2040607@gmail.com> <5112A972.3060109@lwfinger.net> <CAOAX8-np_cY85=qL4TQCS9_d3tvggZTww7Maq1RWcasJsQxngw@mail.gmail.com> <5112EDAA.9050002@lwfinger.net> <CAOAX8-=_D9PncnaCGkfFKBkenxppQ-EksEQk5UwFKtBY+toRaQ@mail.gmail.com> <CAOAX8-nafHZiCYYP2-ApLMKJ-d3HKcbkENeztpPjLKv39EEzig@mail.gmail.com> <CAOAX8-nCRm2S0OX8TeNmZ9HGe0MB8UmA-huWE_QctgDhtFrZEA@mail.gmail.com> <5113D9C0.1080501@gmail.com> <CAOAX8-k28rV4mx3D9U_jLHbVPmphEd0ZsfwPp4TatVxkdts=_w@mail.gmail.com> <CAOAX8-m-nOLtSXAnWGHia8U2qsp_QPnJ-O0cqUy2FWwoLFh-_g@mail.gmail.com> <5113DCC2.3070306@gmail.com> <CAOAX8-kbMaT7ztvA9cJ7JA5YSHz-fWFvtgqJevpsQ=mBzSV96Q@mail.gmail.com>
+In-Reply-To: <CAOAX8-kbMaT7ztvA9cJ7JA5YSHz-fWFvtgqJevpsQ=mBzSV96Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 02/07/2013 11:01 AM, Thomas Rosenkranz wrote:
+> I know thats why i wanted to remove it before.
+> Sorry I didn't saw the last two commands they were shown as citation.
+> Finally rtl8192cu works with the patch
 
-Re-order the quiesce code so that timers are
-always stopped before work-items are flushed.  This was
-not the problem I saw, but I think it may still be more
-correct.
+Good. I'll submit a patch adding this USB ID to the standard kernels. I'll also 
+send it to you so that you can patch your kernel and do away with the writing of 
+new_id.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- net/mac80211/mlme.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+Larry
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 164ecf0..4001d1c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2946,6 +2946,13 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
-+	/* Stop timers before deleting work items, as timers could
-+	 * race and re-add the work-items.
-+	 * These will be re-established on connection.
-+	 */
-+	del_timer_sync(&ifmgd->conn_mon_timer);
-+	del_timer_sync(&ifmgd->bcn_mon_timer);
-+
- 	/*
- 	 * we need to use atomic bitops for the running bits
- 	 * only because both timers might fire at the same
-@@ -2960,13 +2967,9 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
- 
--	cancel_work_sync(&ifmgd->chswitch_work);
- 	if (del_timer_sync(&ifmgd->chswitch_timer))
- 		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
--
--	/* these will just be re-established on connection */
--	del_timer_sync(&ifmgd->conn_mon_timer);
--	del_timer_sync(&ifmgd->bcn_mon_timer);
-+	cancel_work_sync(&ifmgd->chswitch_work);
- }
- 
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
--- 
-1.7.3.4
 
