@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946749Ab3BHRRi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 12:17:38 -0500
-Message-ID: <1360343852.29851.26.camel@jlt4.sipsolutions.net> (sfid-20130208_182336_214168_5B8A14BF)
-Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Fri, 08 Feb 2013 18:17:32 +0100
-In-Reply-To: <20130208171155.GC2622@thinkpad-t410>
-References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
-	 <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
-	 <1360314212.29851.4.camel@jlt4.sipsolutions.net>
-	 <20130208171155.GC2622@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:45532 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751261Ab3BGMsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Feb 2013 07:48:22 -0500
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <eliad@wizery.com>, <arik@wizery.com>
+Subject: [PATCH] wlcore: fix wrong remote rates when starting STA role
+Date: Thu, 7 Feb 2013 14:47:24 +0200
+Message-ID: <1360241244-15832-1-git-send-email-coelho@ti.com> (sfid-20130207_134826_707653_145E11A2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-08 at 11:11 -0600, Seth Forshee wrote:
+In wl18xx, we use a new ACX command in order to set the remote
+supported rates, once we know it (ie. after association).  The wl12xx
+firmware doesn't support changing the rates after the STA is started,
+so we need to use all supported rates.
 
-> > I started wondering -- is there a reason to modify the entire TX path?
-> > Could we maybe bypass it instead and call the driver's TX op almost
-> > directly? The frames in question don't really need much TX handling, the
-> > only thing that might be relevant _could_ be rate control but even that
-> > I'd argue isn't really needed, just using rate_control_send_low() should
-> > be ok (by setting IEEE80211_TX_CTL_USE_MINRATE it will always return
-> > true). For the null data packets the sta pointer is also obvious, the AP
-> > station (BSSID) ... we don't need any of the extra monitor/whatever
-> > handling either.
-> > 
-> > That might be simpler overall?
-> 
-> Okay, I'll take a look at this.
-> 
-> Another option that might simplify things a bit  would be to use a
-> ieee80211_tx_data flag. If I added another interface into tx.c for
-> offchannel frames then the offchan argument would only be needed for
-> ieee80211_xmit() and ieee80211_tx(). Though it would be nice to avoid
-> adding an argument to ieee80211_xmit().
+Commit 530abe19 (wlcore: add ACX_PEER_CAP command) broke that by using
+wlvif->rate_set when starting the STA role.
 
-Oh, I forgot all about ROC and off-channel frames there, but those are
-public action frames (only?) so the same applies with min-rate etc.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Overall I'm not sure. On the one hand that might make the code changes
-simpler, on the other it might make the code more complex?
-
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 1201aca..6331f9e 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -510,10 +510,12 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	cmd->sta.hlid = wlvif->sta.hlid;
+ 	cmd->sta.session = wl->session_ids[wlvif->sta.hlid];
+ 	/*
+-	 * We don't have the correct remote rates in this stage. the rates
+-	 * will be reconfigured later, after authorization.
++	 * We don't have the correct remote rates in this stage.  The
++	 * rates will be reconfigured later, after association, if the
++	 * firmware supports ACX_PEER_CAP.  Otherwise, there's nothing
++	 * we can do, so use all supported_rates here.
+ 	 */
+-	cmd->sta.remote_rates = cpu_to_le32(wlvif->rate_set);
++	cmd->sta.remote_rates = cpu_to_le32(supported_rates);
+ 
+ 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
+ 		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
+-- 
+1.7.10.4
 
