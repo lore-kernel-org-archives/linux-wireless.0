@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f178.google.com ([209.85.160.178]:64131 "EHLO
-	mail-gh0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756755Ab3BRTUV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54735 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755004Ab3BGJWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 14:20:21 -0500
-Received: by mail-gh0-f178.google.com with SMTP id g24so633940ghb.37
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 11:20:20 -0800 (PST)
-Message-ID: <51227EF2.6040706@lwfinger.net> (sfid-20130218_202024_454869_BE7A5C1C)
-Date: Mon, 18 Feb 2013 13:20:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Mario Vietri <m.vietri@sns.it>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Linksys AE3000
-References: <web-120409979@sns.it>
-In-Reply-To: <web-120409979@sns.it>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 7 Feb 2013 04:22:48 -0500
+Message-ID: <1360228991.8038.3.camel@jlt4.sipsolutions.net> (sfid-20130207_102253_004126_E7D48C00)
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
+	maheshp@posedge.com
+Date: Thu, 07 Feb 2013 10:23:11 +0100
+In-Reply-To: <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com> (sfid-20130207_102010_516659_782CEA2D)
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com>
+	 <1360225230.8038.1.camel@jlt4.sipsolutions.net>
+	 <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
+	 (sfid-20130207_102010_516659_782CEA2D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/18/2013 12:03 PM, Mario Vietri wrote:
-> Dear Sirs,
->
-> I run an up-to-date ArchLinux system on a Toshiba Portege R600. I own a Linksys
-> AE3000 (0x13b1:0x003b) usb wifi adapter, with driver downloaded from WikiDevi as
-> per their AE3000 page, with the usual modifications.
-> The driver compiles, installs and runs correctly, until I begin watching a
-> Youtube video, when it causes a kernel panic. I can easily reproduce this crash
-> at will, and thus I could submit a kernel panic picture.
->
-> I have seen that this behaviour is hardly discussed on Google, and, though not
-> completely unknown, it seems to me to be under-reported. I am thus wondering
-> whether this has been done already, or if you think might be useful
-> to you (and to me, of course). Should it be of any interest to you, could you
-> please point me to a page where a list of all required info for proper reporting
-> is displayed?
+On Thu, 2013-02-07 at 14:49 +0530, Krishna Chaitanya wrote:
+> On Thu, Feb 7, 2013 at 1:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2013-02-07 at 00:01 -0800, chaitanyatk@posedge.com wrote:
+> >
+> 
+> > Hmm. I'm not exactly happy with using (one of) the last control flag for
+> > a pure debug facility.
+> >
+> Hmm...initially i tried to add qos header in the debugfs itself but to avoid
+> code redundancy went with the TX_CTL. But in either case we need some kind
+> of flag to skip adding the qos header by mac80211 (or) to set the AMSDU
+> bit in the qos control header.
 
-The usual way to report a kernel panic would be to post that photograph.
+I guess the question is whether we really need this code in the tree at
+all? It seems like a (relatively) obscure debug feature for which I'm
+not sure we should touch the TX fastpath?
 
-That said, I'm not aware of anyone here that debugs vendor drivers, i.e. the 
-ones that are not in the kernel. You will need to look at the cause of the 
-panic, trace it back to the driver, and try to fix it yourself.
-
-Because the chip in that device is an RT3573, perhaps the rt2x00 developers 
-might help you, but most of us have other things to do.
-
-Larry
-
+johannes
 
