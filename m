@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56293 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758300Ab3BNRdp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60497 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760591Ab3BHTaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 12:33:45 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U62gq-0001ND-GA
-	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2013 18:33:44 +0100
-Message-ID: <1360863221.8210.8.camel@jlt4.sipsolutions.net> (sfid-20130214_183348_010174_545EB4A2)
-Subject: Re: [PATCH] mac80211: constify IE parsing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 14 Feb 2013 18:33:41 +0100
-In-Reply-To: <1360683974-14634-1-git-send-email-johannes@sipsolutions.net> (sfid-20130212_164627_409696_0E554CAA)
-References: <1360683974-14634-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130212_164627_409696_0E554CAA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Feb 2013 14:30:30 -0500
+Date: Fri, 8 Feb 2013 14:25:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2013-02-04
+Message-ID: <20130208192538.GG2116@tuxdriver.com> (sfid-20130208_203055_450301_04CC5D4A)
+References: <1360001465.17993.30.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360001465.17993.30.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-12 at 16:46 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Feb 04, 2013 at 07:11:05PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Make all the parsed IE pointers const, and propagate
-> the change to all the users etc.
+> I've accumulated a bunch of patches again, so here's a new pull request
+> for mac80211-next.
+> 
+> The biggest change I have is undoubtedly Marco's mesh powersave
+> implementation. Beyond that, I have a patch from Emmanuel to modify the
+> DTIM period API in mac80211, scan improvements and a removal of some
+> previous workaround code from Stanislaw, dynamic short slot time from
+> Thomas and 64-bit station byte counters from Vladimir. I also made a
+> number of changes myself, some related to WoWLAN, some auth/deauth
+> improvements and most of them BSS list cleanups.
+> 
+> Let me know if there are any problems.
+> 
+> Thanks,
+> johannes
+> 
+> The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
+> 
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 3f52b7e328c526fa7a592af9bf5772c591ed38a4:
+> 
+>   mac80211: mesh power save basics (2013-02-04 18:57:47 +0100)
 
-Applied.
+Pulling now (and I'll take care of the mvm change for
+IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC)...
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
