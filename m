@@ -1,205 +1,434 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:46980 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946292Ab3BHLq3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 06:46:29 -0500
-Date: Fri, 8 Feb 2013 12:46:23 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH v2] mac80211: explicitly copy channels to VLANs where
- needed
-Message-ID: <20130208114623.GA30933@pandem0nium> (sfid-20130208_124636_490601_D714A1FD)
-References: <1360322072-17239-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:3737 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760148Ab3BHO4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:56:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/27] brcmfmac: implement support for deleting virtual
+ interfaces
+Date: Fri, 8 Feb 2013 15:53:41 +0100
+Message-ID: <1360335242-12608-7-git-send-email-arend@broadcom.com> (sfid-20130208_163817_869730_CF84F763)
+In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Qxx1br4bt0+wmkIi"
-In-Reply-To: <1360322072-17239-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Deletion of the virtual interface was not fully supported so
+adding it now. Tested using p2p_connect command in wpa_supplicant.
 
---Qxx1br4bt0+wmkIi
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 +
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |   64 +++++--
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  199 ++++++++++++--------
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    4 +
+ 4 files changed, 176 insertions(+), 92 deletions(-)
 
-Hey Johannes,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 82724d3..c4f30bd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -150,6 +150,7 @@
+ #define BRCMF_E_REASON_MINTXRATE		9
+ #define BRCMF_E_REASON_TXFAIL			10
+ 
++#define BRCMF_E_REASON_LINK_BSSCFG_DIS		4
+ #define BRCMF_E_REASON_FAST_ROAM_FAILED		5
+ #define BRCMF_E_REASON_DIRECTED_ROAM		6
+ #define BRCMF_E_REASON_TSPEC_REJECTED		7
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index cec4116..fff5722 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -827,6 +827,26 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_if *ifp, u8 ea[ETH_ALEN],
+ 	return err;
+ }
+ 
++static int brcmf_p2p_disable_p2p_if(struct brcmf_cfg80211_vif *vif)
++{
++	struct brcmf_cfg80211_info *cfg = wdev_to_cfg(&vif->wdev);
++	struct net_device *pri_ndev = cfg_to_ndev(cfg);
++	struct brcmf_if *ifp = netdev_priv(pri_ndev);
++	u8 *addr = vif->wdev.netdev->dev_addr;
++
++	return brcmf_fil_iovar_data_set(ifp, "p2p_ifdis", addr, ETH_ALEN);
++}
++
++static int brcmf_p2p_release_p2p_if(struct brcmf_cfg80211_vif *vif)
++{
++	struct brcmf_cfg80211_info *cfg = wdev_to_cfg(&vif->wdev);
++	struct net_device *pri_ndev = cfg_to_ndev(cfg);
++	struct brcmf_if *ifp = netdev_priv(pri_ndev);
++	u8 *addr = vif->wdev.netdev->dev_addr;
++
++	return brcmf_fil_iovar_data_set(ifp, "p2p_ifdel", addr, ETH_ALEN);
++}
++
+ /**
+  * brcmf_p2p_add_vif() - create a new P2P virtual interface.
+  *
+@@ -910,23 +930,43 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+ 	struct brcmf_cfg80211_vif *vif;
++	unsigned long jiffie_timeout = msecs_to_jiffies(1500);
++	bool wait_for_disable = false;
+ 	int err;
+ 
++	brcmf_dbg(TRACE, "delete P2P vif\n");
+ 	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ 
+-	if (brcmf_cfg80211_vif_event_armed(cfg))
+-		return -EBUSY;
++	switch (vif->wdev.iftype) {
++	case NL80211_IFTYPE_P2P_CLIENT:
++		if (test_bit(BRCMF_VIF_STATUS_DISCONNECTING, &vif->sme_state))
++			wait_for_disable = true;
++		break;
++
++	case NL80211_IFTYPE_P2P_GO:
++		if (!brcmf_p2p_disable_p2p_if(vif))
++			wait_for_disable = true;
++		break;
++
++	case NL80211_IFTYPE_P2P_DEVICE:
++	default:
++		return -ENOTSUPP;
++		break;
++	}
++
++	if (wait_for_disable)
++		wait_for_completion_timeout(&cfg->vif_disabled, 500);
++
++	brcmf_vif_clear_mgmt_ies(vif);
+ 
+ 	brcmf_cfg80211_arm_vif_event(cfg, vif);
+-	/* wait for firmware event */
+-	err = brcmf_cfg80211_wait_vif_event_timeout(cfg, BRCMF_E_IF_DEL,
+-						    msecs_to_jiffies(1500));
++	err = brcmf_p2p_release_p2p_if(vif);
++	if (!err)
++		/* wait for firmware event */
++		err = brcmf_cfg80211_wait_vif_event_timeout(cfg, BRCMF_E_IF_DEL,
++							    jiffie_timeout);
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+-	if (wdev->netdev)
+-		brcmf_dbg(INFO, "deleting vif \"%s\"\n", wdev->netdev->name);
+-	else
+-		brcmf_dbg(INFO, "deleting vif \"wdev-%u\"\n",
+-			  wdev->identifier);
+-	brcmf_err("enter - not supported yet\n");
+-	return -EOPNOTSUPP;
++	brcmf_free_vif(vif);
++
++	return err;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6cd47e2..d792c3b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -445,9 +445,103 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 	}
+ }
+ 
++static void brcmf_set_mpc(struct net_device *ndev, int mpc)
++{
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	s32 err = 0;
++
++	if (check_vif_up(ifp->vif)) {
++		err = brcmf_fil_iovar_int_set(ifp, "mpc", mpc);
++		if (err) {
++			brcmf_err("fail to set mpc\n");
++			return;
++		}
++		brcmf_dbg(INFO, "MPC : %d\n", mpc);
++	}
++}
++
++static s32
++brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
++			    struct net_device *ndev,
++			    bool aborted, bool fw_abort)
++{
++	struct brcmf_scan_params_le params_le;
++	struct cfg80211_scan_request *scan_request;
++	s32 err = 0;
++
++	brcmf_dbg(SCAN, "Enter\n");
++
++	/* clear scan request, because the FW abort can cause a second call */
++	/* to this functon and might cause a double cfg80211_scan_done      */
++	scan_request = cfg->scan_request;
++	cfg->scan_request = NULL;
++
++	if (timer_pending(&cfg->escan_timeout))
++		del_timer_sync(&cfg->escan_timeout);
++
++	if (fw_abort) {
++		/* Do a scan abort to stop the driver's scan engine */
++		brcmf_dbg(SCAN, "ABORT scan in firmware\n");
++		memset(&params_le, 0, sizeof(params_le));
++		memset(params_le.bssid, 0xFF, ETH_ALEN);
++		params_le.bss_type = DOT11_BSSTYPE_ANY;
++		params_le.scan_type = 0;
++		params_le.channel_num = cpu_to_le32(1);
++		params_le.nprobes = cpu_to_le32(1);
++		params_le.active_time = cpu_to_le32(-1);
++		params_le.passive_time = cpu_to_le32(-1);
++		params_le.home_time = cpu_to_le32(-1);
++		/* Scan is aborted by setting channel_list[0] to -1 */
++		params_le.channel_list[0] = cpu_to_le16(-1);
++		/* E-Scan (or anyother type) can be aborted by SCAN */
++		err = brcmf_fil_cmd_data_set(netdev_priv(ndev), BRCMF_C_SCAN,
++					     &params_le, sizeof(params_le));
++		if (err)
++			brcmf_err("Scan abort  failed\n");
++	}
++	/*
++	 * e-scan can be initiated by scheduled scan
++	 * which takes precedence.
++	 */
++	if (cfg->sched_escan) {
++		brcmf_dbg(SCAN, "scheduled scan completed\n");
++		cfg->sched_escan = false;
++		if (!aborted)
++			cfg80211_sched_scan_results(cfg_to_wiphy(cfg));
++		brcmf_set_mpc(ndev, 1);
++	} else if (scan_request) {
++		brcmf_dbg(SCAN, "ESCAN Completed scan: %s\n",
++			  aborted ? "Aborted" : "Done");
++		cfg80211_scan_done(scan_request, aborted);
++		brcmf_set_mpc(ndev, 1);
++	}
++	if (!test_and_clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
++		brcmf_err("Scan complete while device not scanning\n");
++		return -EPERM;
++	}
++
++	return err;
++}
++
+ static
+ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct net_device *ndev = wdev->netdev;
++
++	/* vif event pending in firmware */
++	if (brcmf_cfg80211_vif_event_armed(cfg))
++		return -EBUSY;
++
++	if (ndev) {
++		if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status) &&
++		    cfg->escan_info.ndev == ndev)
++			brcmf_notify_escan_complete(cfg, ndev, true,
++						    true);
++
++		brcmf_fil_iovar_int_set(netdev_priv(ndev), "mpc", 1);
++	}
++
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_STATION:
+@@ -525,21 +619,6 @@ done:
+ 	return err;
+ }
+ 
+-static void brcmf_set_mpc(struct net_device *ndev, int mpc)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	s32 err = 0;
+-
+-	if (check_vif_up(ifp->vif)) {
+-		err = brcmf_fil_iovar_int_set(ifp, "mpc", mpc);
+-		if (err) {
+-			brcmf_err("fail to set mpc\n");
+-			return;
+-		}
+-		brcmf_dbg(INFO, "MPC : %d\n", mpc);
+-	}
+-}
+-
+ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
+ 			     struct cfg80211_scan_request *request)
+ {
+@@ -620,69 +699,6 @@ static void brcmf_escan_prep(struct brcmf_scan_params_le *params_le,
+ }
+ 
+ static s32
+-brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+-			    struct net_device *ndev,
+-			    bool aborted, bool fw_abort)
+-{
+-	struct brcmf_scan_params_le params_le;
+-	struct cfg80211_scan_request *scan_request;
+-	s32 err = 0;
+-
+-	brcmf_dbg(SCAN, "Enter\n");
+-
+-	/* clear scan request, because the FW abort can cause a second call */
+-	/* to this functon and might cause a double cfg80211_scan_done      */
+-	scan_request = cfg->scan_request;
+-	cfg->scan_request = NULL;
+-
+-	if (timer_pending(&cfg->escan_timeout))
+-		del_timer_sync(&cfg->escan_timeout);
+-
+-	if (fw_abort) {
+-		/* Do a scan abort to stop the driver's scan engine */
+-		brcmf_dbg(SCAN, "ABORT scan in firmware\n");
+-		memset(&params_le, 0, sizeof(params_le));
+-		memset(params_le.bssid, 0xFF, ETH_ALEN);
+-		params_le.bss_type = DOT11_BSSTYPE_ANY;
+-		params_le.scan_type = 0;
+-		params_le.channel_num = cpu_to_le32(1);
+-		params_le.nprobes = cpu_to_le32(1);
+-		params_le.active_time = cpu_to_le32(-1);
+-		params_le.passive_time = cpu_to_le32(-1);
+-		params_le.home_time = cpu_to_le32(-1);
+-		/* Scan is aborted by setting channel_list[0] to -1 */
+-		params_le.channel_list[0] = cpu_to_le16(-1);
+-		/* E-Scan (or anyother type) can be aborted by SCAN */
+-		err = brcmf_fil_cmd_data_set(netdev_priv(ndev), BRCMF_C_SCAN,
+-					     &params_le, sizeof(params_le));
+-		if (err)
+-			brcmf_err("Scan abort  failed\n");
+-	}
+-	/*
+-	 * e-scan can be initiated by scheduled scan
+-	 * which takes precedence.
+-	 */
+-	if (cfg->sched_escan) {
+-		brcmf_dbg(SCAN, "scheduled scan completed\n");
+-		cfg->sched_escan = false;
+-		if (!aborted)
+-			cfg80211_sched_scan_results(cfg_to_wiphy(cfg));
+-		brcmf_set_mpc(ndev, 1);
+-	} else if (scan_request) {
+-		brcmf_dbg(SCAN, "ESCAN Completed scan: %s\n",
+-			  aborted ? "Aborted" : "Done");
+-		cfg80211_scan_done(scan_request, aborted);
+-		brcmf_set_mpc(ndev, 1);
+-	}
+-	if (!test_and_clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+-		brcmf_err("Scan complete while device not scanning\n");
+-		return -EPERM;
+-	}
+-
+-	return err;
+-}
+-
+-static s32
+ brcmf_run_escan(struct brcmf_cfg80211_info *cfg, struct net_device *ndev,
+ 		struct cfg80211_scan_request *request, u16 action)
+ {
+@@ -3474,6 +3490,22 @@ exit:
+ 	return err;
+ }
+ 
++s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif)
++{
++	s32 pktflags[] = {
++		BRCMF_VNDR_IE_PRBREQ_FLAG,
++		BRCMF_VNDR_IE_PRBRSP_FLAG,
++		BRCMF_VNDR_IE_BEACON_FLAG
++	};
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(pktflags); i++)
++		brcmf_vif_set_mgmt_ie(vif, pktflags[i], NULL, 0);
++
++	memset(&vif->saved_ie, 0, sizeof(vif->saved_ie));
++	return 0;
++}
++
+ static s32
+ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 			struct cfg80211_ap_settings *settings)
+@@ -4260,6 +4292,12 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+ 	struct station_info sinfo;
+ 
+ 	brcmf_dbg(CONN, "event %d, reason %d\n", event, reason);
++	if (event == BRCMF_E_LINK && reason == BRCMF_E_REASON_LINK_BSSCFG_DIS &&
++	    ndev != cfg_to_ndev(cfg)) {
++		brcmf_dbg(CONN, "AP mode link down\n");
++		complete(&cfg->vif_disabled);
++		return 0;
++	}
+ 
+ 	if (((event == BRCMF_E_ASSOC_IND) || (event == BRCMF_E_REASSOC_IND)) &&
+ 	    (reason == BRCMF_E_STATUS_SUCCESS)) {
+@@ -4316,6 +4354,8 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 		}
+ 		brcmf_link_down(ifp->vif);
+ 		brcmf_init_prof(ndev_to_prof(ndev));
++		if (ndev != cfg_to_ndev(cfg))
++			complete(&cfg->vif_disabled);
+ 	} else if (brcmf_is_nonetwork(cfg, e)) {
+ 		if (brcmf_is_ibssmode(ifp->vif))
+ 			clear_bit(BRCMF_VIF_STATUS_CONNECTING,
+@@ -4401,7 +4441,6 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 
+ 	case BRCMF_E_IF_DEL:
+ 		ifp->vif = NULL;
+-		brcmf_free_vif(vif);
+ 		mutex_unlock(&event->vif_event_lock);
+ 		/* event may not be upon user request */
+ 		if (brcmf_cfg80211_vif_event_armed(cfg))
+@@ -4507,7 +4546,7 @@ static s32 wl_init_priv(struct brcmf_cfg80211_info *cfg)
+ 	mutex_init(&cfg->usr_sync);
+ 	brcmf_init_escan(cfg);
+ 	brcmf_init_conf(cfg->conf);
+-
++	init_completion(&cfg->vif_disabled);
+ 	return err;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index a996afa..5068188 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -148,6 +148,7 @@ struct brcmf_cfg80211_profile {
+  * @BRCMF_VIF_STATUS_READY: ready for operation.
+  * @BRCMF_VIF_STATUS_CONNECTING: connect/join in progress.
+  * @BRCMF_VIF_STATUS_CONNECTED: connected/joined succesfully.
++ * @BRCMF_VIF_STATUS_DISCONNECTING: disconnect/disable in progress.
+  * @BRCMF_VIF_STATUS_AP_CREATING: interface configured for AP operation.
+  * @BRCMF_VIF_STATUS_AP_CREATED: AP operation started.
+  */
+@@ -155,6 +156,7 @@ enum brcmf_vif_status {
+ 	BRCMF_VIF_STATUS_READY,
+ 	BRCMF_VIF_STATUS_CONNECTING,
+ 	BRCMF_VIF_STATUS_CONNECTED,
++	BRCMF_VIF_STATUS_DISCONNECTING,
+ 	BRCMF_VIF_STATUS_AP_CREATING,
+ 	BRCMF_VIF_STATUS_AP_CREATED
+ };
+@@ -405,6 +407,7 @@ struct brcmf_cfg80211_info {
+ 	struct list_head vif_list;
+ 	u8 vif_cnt;
+ 	struct brcmf_cfg80211_vif_event vif_event;
++	struct completion vif_disabled;
+ };
+ 
+ /**
+@@ -479,6 +482,7 @@ void brcmf_free_vif(struct brcmf_cfg80211_vif *vif);
+ 
+ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+ 			  const u8 *vndr_ie_buf, u32 vndr_ie_len);
++s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif);
+ struct brcmf_tlv *brcmf_parse_tlvs(void *buf, int buflen, uint key);
+ u16 channel_to_chanspec(struct ieee80211_channel *ch);
+ u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state);
+-- 
+1.7.10.4
 
-On Fri, Feb 08, 2013 at 12:14:32PM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->=20
-> Currently the code assigns channel contexts to VLANs
-> (for use by the TX/RX code) when the AP master gets
-> its channel context assigned. This works fine, but
-> in the upcoming radar detection work the VLANs don't
-> require a channel context (during radar detection)
-> and assigning one to them anyway causes issues with
-> locking and also inconsistencies -- a VLAN interface
-> that is added before radar detection would get the
-> channel context, while one added during it wouldn't.
->=20
-> Fix these issues moving the channel context copying
-> to a new explicit operation that will not be used
-> in the radar detection code.
 
-Thanks for taking care of this! This looks so much
-better than my humble attempt to solve this locking issue...
-
-I'll drop my patch then and remove the remaining locks
-in the DFS patchset then.
-
-Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
->=20
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/cfg.c         |  2 ++
->  net/mac80211/chan.c        | 52 ++++++++++++++++++++++++++++++----------=
-------
->  net/mac80211/ieee80211_i.h |  2 ++
->  3 files changed, 38 insertions(+), 18 deletions(-)
->=20
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 799e706..68eca17 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -933,6 +933,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, st=
-ruct net_device *dev,
->  					IEEE80211_CHANCTX_SHARED);
->  	if (err)
->  		return err;
-> +	ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
-> =20
->  	/*
->  	 * Apply control port protocol, this allows us to
-> @@ -1047,6 +1048,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, s=
-truct net_device *dev)
->  	local->total_ps_buffered -=3D skb_queue_len(&sdata->u.ap.ps.bc_buf);
->  	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
-> =20
-> +	ieee80211_vif_copy_chanctx_to_vlans(sdata, true);
->  	ieee80211_vif_release_channel(sdata);
-> =20
->  	return 0;
-> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-> index ad35185..bf10da6 100644
-> --- a/net/mac80211/chan.c
-> +++ b/net/mac80211/chan.c
-> @@ -211,15 +211,6 @@ static void __ieee80211_vif_release_channel(struct i=
-eee80211_sub_if_data *sdata)
-> =20
->  	ctx =3D container_of(conf, struct ieee80211_chanctx, conf);
-> =20
-> -	if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
-> -		struct ieee80211_sub_if_data *vlan;
-> -
-> -		/* for the VLAN list */
-> -		ASSERT_RTNL();
-> -		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-> -			rcu_assign_pointer(vlan->vif.chanctx_conf, NULL);
-> -	}
-> -
->  	ieee80211_unassign_vif_chanctx(sdata, ctx);
->  	if (ctx->refcount =3D=3D 0)
->  		ieee80211_free_chanctx(local, ctx);
-> @@ -339,15 +330,6 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_i=
-f_data *sdata,
->  		goto out;
->  	}
-> =20
-> -	if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
-> -		struct ieee80211_sub_if_data *vlan;
-> -
-> -		/* for the VLAN list */
-> -		ASSERT_RTNL();
-> -		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-> -			rcu_assign_pointer(vlan->vif.chanctx_conf, &ctx->conf);
-> -	}
-> -
->  	ieee80211_recalc_smps_chanctx(local, ctx);
->   out:
->  	mutex_unlock(&local->chanctx_mtx);
-> @@ -430,6 +412,40 @@ void ieee80211_vif_vlan_copy_chanctx(struct ieee8021=
-1_sub_if_data *sdata)
->  	mutex_unlock(&local->chanctx_mtx);
->  }
-> =20
-> +void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *s=
-data,
-> +					 bool clear)
-> +{
-> +	struct ieee80211_local *local =3D sdata->local;
-> +	struct ieee80211_sub_if_data *vlan;
-> +	struct ieee80211_chanctx_conf *conf;
-> +
-> +	ASSERT_RTNL();
-> +
-> +	if (WARN_ON(sdata->vif.type !=3D NL80211_IFTYPE_AP))
-> +		return;
-> +
-> +	mutex_lock(&local->chanctx_mtx);
-> +
-> +	/*
-> +	 * Check that conf exists, even when clearing this function
-> +	 * must be called with the AP's channel context still there
-> +	 * as it would otherwise cause VLANs to have an invalid
-> +	 * channel context pointer for a while, possibly pointing
-> +	 * to a channel context that has already been freed.
-> +	 */
-> +	conf =3D rcu_dereference_protected(sdata->vif.chanctx_conf,
-> +				lockdep_is_held(&local->chanctx_mtx));
-> +	WARN_ON(!conf);
-> +
-> +	if (clear)
-> +		conf =3D NULL;
-> +
-> +	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-> +		rcu_assign_pointer(vlan->vif.chanctx_conf, conf);
-> +
-> +	mutex_unlock(&local->chanctx_mtx);
-> +}
-> +
->  void ieee80211_iter_chan_contexts_atomic(
->  	struct ieee80211_hw *hw,
->  	void (*iter)(struct ieee80211_hw *hw,
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 816bebb..f016507 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -1614,6 +1614,8 @@ ieee80211_vif_change_bandwidth(struct ieee80211_sub=
-_if_data *sdata,
->  			       const struct cfg80211_chan_def *chandef);
->  void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
->  void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata=
-);
-> +void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *s=
-data,
-> +					 bool clear);
-> =20
->  void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
->  				   struct ieee80211_chanctx *chanctx);
-> --=20
-> 1.8.0
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---Qxx1br4bt0+wmkIi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlEU5Y8ACgkQrzg/fFk7axanFgCdEp0ugNDuLtDi27vN3nwPhPb9
-n80An2A8Mk8kj+XlrWM4CLWIcoYvyHWM
-=Gc5r
------END PGP SIGNATURE-----
-
---Qxx1br4bt0+wmkIi--
