@@ -1,67 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub029-ca-8.exch029.serverdata.net ([64.78.52.51]:24271 "EHLO
-	hub029-CA-8.exch029.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753714Ab3BTSIA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59075 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946228Ab3BHLLX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 13:08:00 -0500
-MIME-Version: 1.0
-Date: Wed, 20 Feb 2013 09:59:54 -0800
-From: Yuji Sasaki <sasaki@silexamerica.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: ath6kl_sdio ad-hoc mode issue
-Content-Type: text/plain
-Message-ID: <c21396b6-52e9-4f55-a57d-7390c47c51ca@HUB029-CA-8.exch029.domain.local> (sfid-20130220_190804_526468_91143272)
+	Fri, 8 Feb 2013 06:11:23 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: explicitly copy channels to VLANs where needed
+Date: Fri,  8 Feb 2013 12:11:17 +0100
+Message-Id: <1360321877-16626-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_121127_355899_CD6C53F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm testing ath6kl_sdio driver (from compat-driver 3.8-rc7-1) on Freescale i.MX28 (Linux 2.6.35.3-571) with silex SD-SDMAN wireless module (AR6233 dualband SIP). When I test ad-hoc functionality, I frequentry experience warning as below;
+Currently the code assigns channel contexts to VLANs
+(for use by the TX/RX code) when the AP master gets
+its channel context assigned. This works fine, but
+in the upcoming radar detection work the VLANs don't
+require a channel context (during radar detection)
+and assigning one to them anyway causes issues with
+locking and also inconsistencies -- a VLAN interface
+that is added before radar detection would get the
+channel context, while one added during it wouldn't.
 
-# ------------[ cut here ]------------
-WARNING: at /home/sasaki/bttest/kernel/compat-drivers-3.8-rc7-1-u/net/wireless/ibss.c:35 __cfg80211_ibss_joined+0x74/0x168 [cfg80211]()
-Modules linked in: ath6kl_sdio ath6kl_core cfg80211 compat sx570_gpio ipt_REJECT xt_iprange iptable_filter ip_tables x_tables rfkill mxs_mmc mmc_block mmc_core [last unloaded: compat]
-Backtrace:
-[<c0023334>] (dump_backtrace+0x0/0x114) from [<c0242570>] (dump_stack+0x18/0x1c)
- r7:00000009 r6:00000023 r5:bf691144 r4:00000000
-[<c0242558>] (dump_stack+0x0/0x1c) from [<c003a6d8>] (warn_slowpath_common+0x54/0x6c)
-[<c003a684>] (warn_slowpath_common+0x0/0x6c) from [<c003a714>] (warn_slowpath_null+0x24/0x2c)
- r9:00100100 r8:c3fed368 r7:00000000 r6:c3e9288c r5:c3fed000
-r4:c3fed348
-[<c003a6f0>] (warn_slowpath_null+0x0/0x2c) from [<bf691144>] (__cfg80211_ibss_joined+0x74/0x168 [cfg80211])
-[<bf6910d0>] (__cfg80211_ibss_joined+0x0/0x168 [cfg80211]) from [<bf6791d0>] (cfg80211_process_wdev_events+0x174/0x1e4 [cfg80211])
- r7:00000000 r6:c3fed348 r5:c3fac000 r4:c3e92880
-[<bf67905c>] (cfg80211_process_wdev_events+0x0/0x1e4 [cfg80211]) from [<bf67928c>] (cfg80211_process_rdev_events+0x4c/0x80 [cfg80211])
-[<bf679240>] (cfg80211_process_rdev_events+0x0/0x80 [cfg80211]) from [<bf677658>] (cfg80211_event_work+0x28/0x58 [cfg80211])
- r7:c3e5e0c8 r6:bf677630 r5:c3e3800c r4:c3e38000
-[<bf677630>] (cfg80211_event_work+0x0/0x58 [cfg80211]) from [<c004e4e8>] (worker_thread+0x19c/0x25c)
- r5:c3e5e0c0 r4:c3fac000
-[<c004e34c>] (worker_thread+0x0/0x25c) from [<c00520d0>] (kthread+0x84/0x8c)
-[<c005204c>] (kthread+0x0/0x8c) from [<c003e07c>] (do_exit+0x0/0x6b0)
- r7:00000013 r6:c003e07c r5:c005204c r4:c3e6be90
----[ end trace 5ddf6435a0daeb23 ]---
+Fix these issues moving the channel context copying
+to a new explicit operation that will not be used
+in the radar detection code.
 
-It happens when I start a new ad-hoc group on i.MX28, then join another node (a PC-Linux, Fedora 18 / Kernel 3.7.8-202 + AR5005 ath5k driver) to that ad-hoc gruop.
-I tracked down why this warning happens.
-The warning is caused at __cfg80211_ibss_joined() in net/wireless/ibss.c, claiming bss pointer returned from cfg80211_get_bss() was NULL.
-The reason why cfg80211_get_bss() returns NULL is, the bssid parameter passed to __cfg80211_ibss_joined() was all zero (not NULL pointer).
-The reason why all-zero BSSID is passed to __cfg80211_ibss_joined() was found to be because, it is called from ath6kl_cfg80211_disconnect_event() in drivers/net/wireless/ath/ath6kl/cfg80211.c as;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c         |  2 ++
+ net/mac80211/chan.c        | 47 ++++++++++++++++++++++++++++------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 33 insertions(+), 18 deletions(-)
 
-        if (vif->nw_type & ADHOC_NETWORK) {
-                if (vif->wdev.iftype != NL80211_IFTYPE_ADHOC) {
-                        ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-                                   "%s: ath6k not in ibss mode\n", __func__);
-                        return;
-                }
-                memset(bssid, 0, ETH_ALEN);
-                cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
-                return;
-        }
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 799e706..68eca17 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -933,6 +933,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 					IEEE80211_CHANCTX_SHARED);
+ 	if (err)
+ 		return err;
++	ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+ 
+ 	/*
+ 	 * Apply control port protocol, this allows us to
+@@ -1047,6 +1048,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
+ 	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
+ 
++	ieee80211_vif_copy_chanctx_to_vlans(sdata, true);
+ 	ieee80211_vif_release_channel(sdata);
+ 
+ 	return 0;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index ad35185..84807ce 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -211,15 +211,6 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		struct ieee80211_sub_if_data *vlan;
+-
+-		/* for the VLAN list */
+-		ASSERT_RTNL();
+-		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+-			rcu_assign_pointer(vlan->vif.chanctx_conf, NULL);
+-	}
+-
+ 	ieee80211_unassign_vif_chanctx(sdata, ctx);
+ 	if (ctx->refcount == 0)
+ 		ieee80211_free_chanctx(local, ctx);
+@@ -339,15 +330,6 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-		struct ieee80211_sub_if_data *vlan;
+-
+-		/* for the VLAN list */
+-		ASSERT_RTNL();
+-		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+-			rcu_assign_pointer(vlan->vif.chanctx_conf, &ctx->conf);
+-	}
+-
+ 	ieee80211_recalc_smps_chanctx(local, ctx);
+  out:
+ 	mutex_unlock(&local->chanctx_mtx);
+@@ -430,6 +412,35 @@ void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&local->chanctx_mtx);
+ }
+ 
++void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
++					 bool clear)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *vlan;
++	struct ieee80211_chanctx_conf *conf;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP))
++		return;
++
++	ASSERT_RTNL();
++	mutex_lock(&local->chanctx_mtx);
++
++	if (clear) {
++		conf = NULL;
++	} else {
++		conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					lockdep_is_held(&local->chanctx_mtx));
++		if (WARN_ON(!conf))
++			goto out;
++	}
++
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++		rcu_assign_pointer(vlan->vif.chanctx_conf, conf);
++
++ out:
++	mutex_unlock(&local->chanctx_mtx);
++}
++
+ void ieee80211_iter_chan_contexts_atomic(
+ 	struct ieee80211_hw *hw,
+ 	void (*iter)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 816bebb..f016507 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1614,6 +1614,8 @@ ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
+ 			       const struct cfg80211_chan_def *chandef);
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
++void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
++					 bool clear);
+ 
+ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 				   struct ieee80211_chanctx *chanctx);
+-- 
+1.8.0
 
-I have no idea why all-zero BSSID is passed to cfg80211_ibss_joined() on disconnect event. As long as I tracked the code, bssid is only refered to retreive cfg80211_bss* pointer in  __cfg80211_ibss_joined(), and it just does not make sense to pass all-zero BSSID...it certainly returns NULL pointer.
-I think those two lines will be unnecessary, but I'm not sure the original intention.
-
---------
-Yuji Sasaki
-silex technology America, inc.
-201 East Sandpointe, #245, Santa Ana, CA 92707, USA
