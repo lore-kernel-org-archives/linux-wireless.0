@@ -1,101 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44611 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60260 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932633Ab3BKVeR (ORCPT
+	with ESMTP id S1946785Ab3BHRZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:34:17 -0500
-Message-ID: <1360618451.8738.46.camel@jlt4.sipsolutions.net> (sfid-20130211_223422_530836_2A816672)
-Subject: Re: [PATCH 2/3] mac80211: cache mesh beacon
+	Fri, 8 Feb 2013 12:25:57 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Mon, 11 Feb 2013 22:34:11 +0100
-In-Reply-To: <CAG6hwVN5vSxo5Cx0KypF4zQgy+rBudTgrDZ2z2dm8gsL-wRxgw@mail.gmail.com> (sfid-20130211_222455_883194_0E2B5F1F)
-References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
-	 <1360616843-24618-2-git-send-email-thomas@cozybit.com>
-	 <1360617458.8738.41.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVN5vSxo5Cx0KypF4zQgy+rBudTgrDZ2z2dm8gsL-wRxgw@mail.gmail.com>
-	 (sfid-20130211_222455_883194_0E2B5F1F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 09/14] mac80211: handle operating mode notification in beacons
+Date: Fri,  8 Feb 2013 18:25:39 +0100
+Message-Id: <1360344344-15742-10-git-send-email-johannes@sipsolutions.net> (sfid-20130208_182938_961640_DFFBDB6D)
+In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-11 at 13:24 -0800, Thomas Pedersen wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> >> +     sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
-> >> +     rcu_read_lock();
-> >
-> > This is weird since you already did it outside the function?
-> 
-> Yes, but we shouldn't rely on the caller creating an RCU read section?
+In beacons, an AP may include an operating mode notification
+element to advertise changes in the number of spatial streams
+it can receive. Handle this using the existing function that
+handles the action frame, but only handle NSS changes, not
+bandwidth changes which aren't allowed here.
 
-I don't really see a problem with that, but the other locking issue
-means that you need this anyway.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  3 ++-
+ net/mac80211/mlme.c        | 11 ++++++++---
+ net/mac80211/rx.c          |  3 ++-
+ net/mac80211/util.c        |  6 ++++++
+ net/mac80211/vht.c         |  6 +++++-
+ 5 files changed, 23 insertions(+), 6 deletions(-)
 
-> >> +static int
-> >> +ieee80211_mesh_rebuild_beacon(struct ieee80211_if_mesh *ifmsh)
-> >> +{
-> >> +     struct ieee80211_sub_if_data *sdata;
-> >> +     struct beacon_data *old_bcn;
-> >> +     int ret;
-> >> +     sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
-> >> +
-> >> +     rcu_read_lock();
-> >> +     old_bcn = rcu_dereference(ifmsh->beacon);
-> >> +     ret = ieee80211_mesh_build_beacon(ifmsh);
-> >
-> > This looks totally wrong. You must protect the assignment to
-> > ifmsg->beacon by some lock, so then you don't need the rcu_read_lock()
-> > here since you're under that lock, so this should be
-> > rcu_dereference_protected(..., lockdep_is_held(whatever_lock));
-> 
-> OK, I guess we better protect assignment by some lock then :)
-
-I'm sure there's some lock already? Otherwise doing mesh operations from
-userspace and the workqueue would probably be quite racy?
-
-> >> +     if (sdata->vif.bss_conf.enable_beacon &&
-> >> +         (changed & (BSS_CHANGED_BEACON |
-> >> +                     BSS_CHANGED_HT |
-> >> +                     BSS_CHANGED_BASIC_RATES |
-> >> +                     BSS_CHANGED_BEACON_INT)))
-> >> +             if (ieee80211_mesh_rebuild_beacon(&sdata->u.mesh))
-> >> +                     return;
-> >
-> > Does that return make any sense?
-> 
-> The alternative is to keep notifying the driver. I just wanted to stop
-> everything since we're out of memory, but we can keep calling
-> bss_info_change_notify() is you think that makes more sense.
-
-Either way is fine to me.
-
-> >> @@ -694,6 +833,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
-> >>       sdata->vif.bss_conf.enable_beacon = false;
-> >>       clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
-> >>       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-> >> +     kfree_rcu(ifmsh->beacon, rcu_head);
-> >
-> > I think you should set it to NULL first, just so it's clearer.
-> 
-> For who? It seems there is no need in this path, but OK.
-
-You don't have any synchronize_rcu() here so how can you be sure there's
-not someone, say in a tasklet, using ifmsh->beacon at this point?
-
-> >> @@ -883,6 +1023,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
-> >>       skb_queue_head_init(&ifmsh->ps.bc_buf);
-> >>       spin_lock_init(&ifmsh->mesh_preq_queue_lock);
-> >>       spin_lock_init(&ifmsh->sync_offset_lock);
-> >> +     RCU_INIT_POINTER(ifmsh->beacon, NULL);
-> >
-> > Isn't everything initialized to 0/null?
-> 
-> Yep, I wanted any needed RCU magic to happen here though.
-
-I don't think there's any RCU magic, particularly not with
-RCU_INIT_POINTER, but I don't mind the assignment much :)
-
-johannes
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 78b27e0..9ee9e63 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1196,6 +1196,7 @@ struct ieee802_11_elems {
+ 	u8 *pwr_constr_elem;
+ 	u8 *quiet_elem;	/* first quite element */
+ 	u8 *timeout_int;
++	u8 *vht_opmode;
+ 
+ 	/* length of them, respectively */
+ 	u8 ssid_len;
+@@ -1431,7 +1432,7 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band);
++				 enum ieee80211_band band, bool nss_only);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 23c3604..1ef3efe 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2494,6 +2494,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_channel *chan;
++	struct sta_info *sta;
+ 	u32 changed = 0;
+ 	bool erp_valid;
+ 	u8 erp_value = 0;
+@@ -2732,14 +2733,18 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			le16_to_cpu(mgmt->u.beacon.capab_info),
+ 			erp_valid, erp_value);
+ 
+-
+ 	mutex_lock(&local->sta_mtx);
++	sta = sta_info_get(sdata, bssid);
++
+ 	if (elems.ht_cap_elem && elems.ht_operation && elems.wmm_param &&
+ 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_HT))
+-		changed |= ieee80211_config_ht_tx(sdata,
+-						  sta_info_get(sdata, bssid),
++		changed |= ieee80211_config_ht_tx(sdata, sta,
+ 						  elems.ht_operation,
+ 						  bssid, true);
++
++	if (sta && elems.vht_opmode)
++		ieee80211_vht_handle_opmode(sdata, sta, *elems.vht_opmode,
++					    rx_status->band, true);
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (elems.country_elem && elems.pwr_constr_elem &&
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bef2a58..12a968b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2451,7 +2451,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			opmode = mgmt->u.action.u.vht_opmode_notif.operating_mode;
+ 
+ 			ieee80211_vht_handle_opmode(rx->sdata, rx->sta,
+-						    opmode, status->band);
++						    opmode, status->band,
++						    false);
+ 			goto handled;
+ 		}
+ 		default:
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b177b5a..c151ba2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -791,6 +791,12 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			else
+ 				elem_parse_failed = true;
+ 			break;
++		case WLAN_EID_VHT_OPMODE_NOTIF:
++			if (elen > 0)
++				elems->vht_opmode = pos;
++			else
++				elem_parse_failed = true;
++			break;
+ 		case WLAN_EID_MESH_ID:
+ 			elems->mesh_id = pos;
+ 			elems->mesh_id_len = elen;
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index a7d0d6d..3bb0eae 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -131,7 +131,7 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band)
++				 enum ieee80211_band band, bool nss_only)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+@@ -153,6 +153,9 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		changed |= IEEE80211_RC_NSS_CHANGED;
+ 	}
+ 
++	if (nss_only)
++		goto change;
++
+ 	switch (opmode & IEEE80211_VHT_OPMODE_CHANWIDTH_MASK) {
+ 	case IEEE80211_VHT_OPMODE_CHANWIDTH_20MHZ:
+ 		sta->vht_opmode_bandwidth = IEEE80211_STA_RX_BW_20;
+@@ -174,6 +177,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		changed |= IEEE80211_RC_NSS_CHANGED;
+ 	}
+ 
++ change:
+ 	if (changed)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
+-- 
+1.8.0
 
