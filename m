@@ -1,53 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29561 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774Ab3BFMJH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60244 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946785Ab3BHRZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 07:09:07 -0500
-Date: Wed, 6 Feb 2013 15:09:06 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath6kl: move ath6kl_wmi_startscan_cmd()
-Message-ID: <20130206120906.GT4989@mwanda> (sfid-20130206_130911_607138_B9F93577)
-References: <20121127072531.GB8239@elgon.mountain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121127072531.GB8239@elgon.mountain>
+	Fri, 8 Feb 2013 12:25:50 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 01/14] mac80211: pass station to ieee80211_vht_cap_ie_to_sta_vht_cap
+Date: Fri,  8 Feb 2013 18:25:31 +0100
+Message-Id: <1360344344-15742-2-git-send-email-johannes@sipsolutions.net> (sfid-20130208_182554_988247_FE95E752)
+In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whatever happened with this?
+From: Johannes Berg <johannes.berg@intel.com>
 
-regards,
-dan carpenter
+Like with HT, make things a bit simpler in future patches by
+passing the station to ieee80211_vht_cap_ie_to_sta_vht_cap()
+instead of the vht_cap pointer. Also disable VHT here if HT
+isn't supported.
 
-On Tue, Nov 27, 2012 at 10:25:32AM +0300, Dan Carpenter wrote:
-> Hello Kalle Valo,
-> 
-> The patch c8c72b74e289: "ath6kl: move ath6kl_wmi_startscan_cmd()" 
-> from Jul 19, 2012, leads to the following warning:
-> drivers/net/wireless/ath/ath6kl/wmi.c:2016 ath6kl_wmi_beginscan_cmd()
-> 	 error: buffer overflow 'sc->supp_rates' 2 <= 2
-> 
-> drivers/net/wireless/ath/ath6kl/wmi.c
-> 
->   2009          for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
->                                       ^^^^^^^^^^^^^^^^^^^
-> This is 3.
-> 
->   2010                  sband = ar->wiphy->bands[band];
->   2011  
->   2012                  if (!sband)
->   2013                          continue;
->   2014  
->   2015                  ratemask = rates[band];
->   2016                  supp_rates = sc->supp_rates[band].rates;
-> 
-> ->supp_rates has only ATH6KL_NUM_BANDS (2) elements so we are reading
-> one element beyond the end.
-> 
->   2017                  num_rates = 0;
-> 
-> regards,
-> dan carpenter
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c         | 3 +--
+ net/mac80211/ieee80211_i.h | 3 ++-
+ net/mac80211/mlme.c        | 3 +--
+ net/mac80211/vht.c         | 8 +++++---
+ 4 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e09c0c4..8f3e3a2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1256,8 +1256,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 
+ 	if (params->vht_capa)
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+-						    params->vht_capa,
+-						    &sta->sta.vht_cap);
++						    params->vht_capa, sta);
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 693d755..c872f5d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1426,7 +1426,8 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
+ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_supported_band *sband,
+ 					 struct ieee80211_vht_cap *vht_cap_ie,
+-					 struct ieee80211_sta_vht_cap *vht_cap);
++					 struct sta_info *sta);
++
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4ecf84a..31b1fb7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2200,8 +2200,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+-						    elems.vht_cap_elem,
+-						    &sta->sta.vht_cap);
++						    elems.vht_cap_elem, sta);
+ 
+ 	rate_control_rate_init(sta);
+ 
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index f311388..1606aa1 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -15,13 +15,15 @@
+ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_supported_band *sband,
+ 					 struct ieee80211_vht_cap *vht_cap_ie,
+-					 struct ieee80211_sta_vht_cap *vht_cap)
++					 struct sta_info *sta)
+ {
+-	if (WARN_ON_ONCE(!vht_cap))
+-		return;
++	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
+ 
+ 	memset(vht_cap, 0, sizeof(*vht_cap));
+ 
++	if (!sta->sta.ht_cap.ht_supported)
++		return;
++
+ 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 		return;
+ 
+-- 
+1.8.0
+
