@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4649 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1134 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760209Ab3BHO4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 09:56:42 -0500
+	id S1946262Ab3BHLGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 06:06:51 -0500
 From: "Arend van Spriel" <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
 cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Piotr Haber" <phaber@broadcom.com>,
 	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 25/27] brcmfmac: Cleanup of unused defines.
-Date: Fri, 8 Feb 2013 15:54:00 +0100
-Message-ID: <1360335242-12608-26-git-send-email-arend@broadcom.com> (sfid-20130208_163815_023012_79192368)
-In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
-References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+Subject: [PATCH 5/5] brcmfmac: remove unnecessary locking in trap info
+ processing
+Date: Fri, 8 Feb 2013 12:06:35 +0100
+Message-ID: <1360321595-31722-6-git-send-email-arend@broadcom.com> (sfid-20130208_120655_860074_EAD44B11)
+In-Reply-To: <1360321595-31722-1-git-send-email-arend@broadcom.com>
+References: <1360321595-31722-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Piotr Haber <phaber@broadcom.com>
 
-Remove some unused defines and comments. Also use same define
-for IE length.
+Locking host access in trap info processing
+is not needed as bus access functions do it on
+their own.
 
 Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/p2p.h         |    6 ------
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h |    2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-index 8fed9a3..9e0e962 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
-@@ -20,12 +20,6 @@
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 97764b4..3581763 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2721,10 +2721,8 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 	}
  
- struct brcmf_cfg80211_info;
+ 	/* Read hndrte_shared structure */
+-	sdio_claim_host(bus->sdiodev->func[1]);
+ 	rv = brcmf_sdbrcm_membytes(bus, false, addr, (u8 *)&sh_le,
+ 				   sizeof(struct sdpcm_shared_le));
+-	sdio_release_host(bus->sdiodev->func[1]);
+ 	if (rv < 0)
+ 		return rv;
  
--/* vendor ies max buffer length for probe response or beacon */
--#define VNDR_IES_MAX_BUF_LEN 1400
--/* normal vendor ies buffer length */
--#define VNDR_IES_BUF_LEN 512
--
--/* Structure to hold all saved P2P and WPS IEs for a BSSCFG */
- /**
-  * enum p2p_bss_type - different type of BSS configurations.
-  *
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index a020555..b886f22 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -172,7 +172,7 @@ enum brcmf_vif_status {
-  * @beacon_ie_len: IE info length for beacon frame.
-  */
- struct vif_saved_ie {
--	u8  probe_req_ie[VNDR_IES_BUF_LEN];
-+	u8  probe_req_ie[IE_MAX_LEN];
- 	u8  probe_res_ie[IE_MAX_LEN];
- 	u8  beacon_ie[IE_MAX_LEN];
- 	u8  assoc_req_ie[IE_MAX_LEN];
+@@ -2826,14 +2824,12 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
+ 	if ((sh->flags & SDPCM_SHARED_TRAP) == 0)
+ 		return 0;
+ 
+-	sdio_claim_host(bus->sdiodev->func[1]);
+ 	error = brcmf_sdbrcm_membytes(bus, false, sh->trap_addr, (u8 *)&tr,
+ 				      sizeof(struct brcmf_trap_info));
+ 	if (error < 0)
+ 		return error;
+ 
+ 	nbytes = brcmf_sdio_dump_console(bus, sh, data, count);
+-	sdio_release_host(bus->sdiodev->func[1]);
+ 	if (nbytes < 0)
+ 		return nbytes;
+ 
 -- 
 1.7.10.4
 
