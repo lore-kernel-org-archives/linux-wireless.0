@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946936Ab3BHUxQ (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:51141 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946611Ab3BHS2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 15:53:16 -0500
-Message-ID: <1360356792.29851.33.camel@jlt4.sipsolutions.net> (sfid-20130208_215320_686018_F323B66F)
-Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
+	Fri, 8 Feb 2013 13:28:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Fri, 08 Feb 2013 21:53:12 +0100
-In-Reply-To: <20130208204632.GE2622@thinkpad-t410>
-References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
-	 <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
-	 <1360314212.29851.4.camel@jlt4.sipsolutions.net>
-	 <20130208171155.GC2622@thinkpad-t410>
-	 <1360343852.29851.26.camel@jlt4.sipsolutions.net>
-	 <20130208181002.GD2622@thinkpad-t410>
-	 <1360350359.29851.27.camel@jlt4.sipsolutions.net>
-	 <20130208204632.GE2622@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
+Date: Fri,  8 Feb 2013 12:28:18 -0600
+Message-Id: <1360348098-8687-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130208_192855_618871_CA9D68F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-08 at 14:46 -0600, Seth Forshee wrote:
+A new model of the RTL8188CUS has appeared.
 
-> > > Well, I think the way that will be simplest with the fewest code changes
-> > > would be to use a tx control flag. Of course then we've gobbled up one
-> > > of the last available flags.
-> > 
-> > Let's do that anyway then. I still think we need to do the
-> > PS/scan/offchannel thing I described in another mail anyway, so that'd
-> > be a better interim step than changing all the prototypes...
-> 
-> When I originally looked at using a tx control flag I didn't think that
-> using IEEE80211_TX_CTL_TX_OFFCHAN would work, but now I'm not sure why.
-> Is there any reason not to do this?
+Reported-and-tested-by: Thomas Rosenkrantz <tom.rosary@googlemail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I guess you'd have to pre-assign the queue, since the code in
-ieee80211_tx() might skip that part, but that seems easy enough. Other
-than that, a driver that checks IEEE80211_TX_CTL_TX_OFFCHAN might treat
-that frame specially, but OTOH the only drivers using it right now are
-ours and TI's and they both have HW scan/roc, so your code never
-executes. What a future driver might do is anyone's guess...
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index 577c0dc..a73a17b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -285,6 +285,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
+ 	/* RTL8188CUS-VL */
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x818a, rtl92cu_hal_cfg)},
++	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x819a, rtl92cu_hal_cfg)},
+ 	/* 8188 Combo for BC4 */
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
+ 
+-- 
+1.8.1
 
