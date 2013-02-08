@@ -1,96 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:29590 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758459Ab3BKSCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 13:02:05 -0500
-Date: Mon, 11 Feb 2013 19:01:59 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.9] NFC pull request
-Message-ID: <20130211180159.GY20996@sortiz-mobl> (sfid-20130211_190209_491543_322F4045)
-References: <20130208132335.GB20996@sortiz-mobl>
- <20130208194324.GI2116@tuxdriver.com>
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:60558 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760050Ab3BHKJV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 05:09:21 -0500
+Received: by mail-bk0-f48.google.com with SMTP id jf20so1576651bkc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 02:09:20 -0800 (PST)
+Message-ID: <5114CECD.2040508@cozybit.com> (sfid-20130208_110926_807221_CFEFAAAE)
+Date: Fri, 08 Feb 2013 11:09:17 +0100
+From: Marco Porsch <marco@cozybit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130208194324.GI2116@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFCv2 2/3] mac80211: mesh power save doze scheduling
+References: <1360151325-6368-1-git-send-email-marco@cozybit.com>  <1360151325-6368-3-git-send-email-marco@cozybit.com>  (sfid-20130206_124915_323291_448699F4) <1360315234.29851.15.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1360315234.29851.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On 02/08/2013 10:20 AM, Johannes Berg wrote:
+> On Wed, 2013-02-06 at 12:48 +0100, Marco Porsch wrote:
+>
+>> For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
+>> a timer which triggers a doze call on expiry.
+>
+> That seems questionable -- drivers are not required to request each
+> beacon. I know you only want to make it work on ath9k, but I don't think
+> "stretching" the API, without even documenting it, is a good idea.
 
-On Fri, Feb 08, 2013 at 02:43:25PM -0500, John W. Linville wrote:
-> On Fri, Feb 08, 2013 at 02:23:35PM +0100, Samuel Ortiz wrote:
-> > Hi John,
-> > 
-> > This is the second NFC pull request for 3.9.
-> > 
-> > We have:
-> > 
-> > - A few pn533 fixes on top of Waldemar refactorization of the driver, one of
-> >   them fixes target mode.
-> > 
-> > - A new driver for Inside Secure microread chipset. It supports two
-> >   physical layers: i2c and MEI. The MEI one depends on a patchset that's
-> >   been sent to Greg Kroah-Hartman for inclusion into the 3.9 kernel [1]. The
-> >   dependency is a KConfig one which means this code is not buildable as long
-> >   as the MEI API is not usptream.
-> > 
-> > Thanks in advance for pulling them in.
-> > 
-> > [1] https://lkml.org/lkml/2013/2/8/165
-> > 
-> > 
-> > The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
-> > 
-> >   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
-> > 
-> > are available in the git repository at:
-> > 
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-2
-> > 
-> > for you to fetch changes up to 52f2eaeec11c16c219f0e99b8496fbba86889830:
-> > 
-> >   NFC: pn533: Fix target polling mode (2013-02-08 12:18:48 +0100)
-> 
-> Pulling now...
-The MEI bus API got some more comments from Greg Kroah-Hartman and got
-slightly changed. I fixed it up in my tree, and below is a pull request for
-getting this single patch. Please let me know if you want me to send the patch
-through email instead.
+Currently, we already use ieee80211_beacon_get_tim as time reference for 
+mesh sync's adjust_tbtt. And, as far as I know, all mesh-capable drivers 
+use the call for each and every beacon.
+So what would you recommend: keep using beacon_get and adding 
+documentation - or - creating an exported callback for awake_window_start?
 
+>> +static inline void mps_queue_work(struct ieee80211_sub_if_data *sdata,
+>> +				  enum mesh_deferred_task_flags flag)
+>> +{
+>> +	set_bit(flag, &sdata->u.mesh.wrkq_flags);
+>> +	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+>> +}
+>
+> Doing any sort of wakeup from here is also undesirable -- the workqueue
+> might actually sometimes be blocked for quite a while, I believe.
 
-The following changes since commit 8708aac79e4572ba673d7a21e94ddca9f3abb7fc:
+Yeah, right. Now that the hrtimer stuff is gone, I will check if the 
+remaining contexts allows skipping the work queue for wakeups.
 
-  rtlwifi: rtl8192cu: Add new USB ID (2013-02-08 14:51:43 -0500)
+>> +/**
+>> + * ieee80211_mps_hw_conf - check conditions for mesh PS and configure driver
+>> + *
+>> + * @sdata: local mesh subif
+>> + */
+>> +void ieee80211_mps_hw_conf(struct ieee80211_sub_if_data *sdata)
+>> +{
+>> +	struct ieee80211_local *local = sdata->local;
+>> +	bool enable;
+>> +
+>> +	enable = mps_hw_conf_check(local);
+>> +
+>> +	if (local->mps_enabled == enable)
+>> +		return;
+>> +
+>> +	if (enable) {
+>> +		mps_hw_conf_sta_prepare(local);
+>> +		local->hw.conf.flags |= IEEE80211_CONF_PS;
+>> +	} else {
+>> +		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+>> +	}
+>> +
+>> +	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>
+> For some reason I thought this was supposed to be covered by the new
+> mesh PS callbacks, why do you still need hw conf?
+>
+> Or wait -- this is only for general enable/disable, depending on the
+> other interfaces? I guess that's ok.
+>
+>> +	/* simple Deep Sleep implementation: only wake up for DTIM beacons */
+>> +	if (sta->local_pm == NL80211_MESH_POWER_DEEP_SLEEP)
+>> +		skip = tim->dtim_count ? tim->dtim_count : tim->dtim_period;
+>> +	/*
+>> +	 * determine time to peer TBTT (TSF % beacon_interval = 0).
+>> +	 * This approach is robust to delayed beacons.
+>> +	 */
+>> +	tsf_peer = tsf_local + sta->t_offset;
+>> +	nexttbtt_interval = sta->beacon_interval * skip -
+>> +			do_div(tsf_peer, sta->beacon_interval * skip);
+>> +
+>> +	mps_dbg(sta->sdata, "updating %pM next TBTT in %dus (%lldus awake)\n",
+>> +		sta->sta.addr, nexttbtt_interval,
+>> +		(long long) tsf_local - sta->nexttbtt_tsf);
+>> +
+>> +	sta->nexttbtt_tsf = tsf_local + nexttbtt_interval;
+>> +	sta->nexttbtt_jiffies = jiffies + usecs_to_jiffies(nexttbtt_interval);
+>> +
+>> +	mod_timer(&sta->nexttbtt_timer, sta->nexttbtt_jiffies +
+>> +			usecs_to_jiffies(BEACON_TIMEOUT));
+>
+> Is that some sort of recovery? jiffies can be up to 20ms (I think, in
+> that order of magnitude anyway) inaccurate.
 
-are available in the git repository at:
+Yeah, that timer just hits as recovery in case a beacon is not received. 
+Then it projects the next TBTT and goes to sleep again.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-3
+Thanks,
+--Marco
 
-for you to fetch changes up to cd48d8ba149484c4723a2b75159deeb83f3d2273:
-
-  NFC: microread: Fix mei physical layer (2013-02-11 18:35:36 +0100)
-
-----------------------------------------------------------------
-This 3rd NFC pull request for 3.9 contains a fix for the microread MEI
-physical layer support, as the MEI bus API changed.
-
->From the MEI code, we now pass the MEI id back to the driver probe routine,
-and we also pass a name and a MEI id table through the mei_bus_driver
-structure. A few renames as well like e.g. mei_bus_driver to mei_driver or
-mei_bus_client to mei_device in order to be closer to the driver model
-practices.
-
-----------------------------------------------------------------
-Samuel Ortiz (1):
-      NFC: microread: Fix mei physical layer
-
- drivers/nfc/microread/mei.c |   43 ++++++++++++++++++++++++-------------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
