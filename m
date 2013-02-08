@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:38901 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933800Ab3BTOYR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59373 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946353Ab3BHMvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 09:24:17 -0500
-Received: by mail-ie0-f177.google.com with SMTP id 16so9930777iea.22
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2013 06:24:17 -0800 (PST)
-Date: Wed, 20 Feb 2013 09:24:01 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: devel@lists.open80211s.org
-Cc: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless@vger.kernel.org,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [ath9k-devel] improve operational ANI in Mesh mode
-Message-ID: <20130220142401.GA21725@localhost> (sfid-20130220_152425_948109_C25A89BF)
-References: <alpine.DEB.2.02.1302191752110.31254@icf.org.ru>
- <CAJ-VmomPkPvABSJtdb6Y=fDNxyd_XtE6sk9yWQzw9qC7rjkwiA@mail.gmail.com>
- <alpine.DEB.2.02.1302192034420.7450@icf.org.ru>
- <CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com>
- <20771.50338.434076.484711@gargle.gargle.HOWL>
- <CAJ-VmokAP6hSxjGDUu7Q5rSg3dvxfLapQBSLgYCvWc9b0YEPgA@mail.gmail.com>
- <20771.51233.248133.141840@gargle.gargle.HOWL>
- <alpine.DEB.2.02.1302192258510.19584@icf.org.ru>
- <CAJ-Vmo=TmpSbt_y=b6w3=tEU4NiWViK95+3PVoKvnOfeqRFoKw@mail.gmail.com>
- <alpine.DEB.2.02.1302200027120.19533@icf.org.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.02.1302200027120.19533@icf.org.ru>
+	Fri, 8 Feb 2013 07:51:42 -0500
+Message-ID: <1360327897.29851.21.camel@jlt4.sipsolutions.net> (sfid-20130208_135146_306175_3E76577A)
+Subject: Re: 3.7.6+:  WARNING: at net/mac80211/iface.c:705 ieee80211_do_stop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 08 Feb 2013 13:51:37 +0100
+In-Reply-To: <5112F8D9.5060206@candelatech.com> (sfid-20130207_014415_868355_33170FE8)
+References: <5112F8D9.5060206@candelatech.com>
+	 (sfid-20130207_014415_868355_33170FE8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 20, 2013 at 12:31:13AM +0400, Georgiewskiy Yuriy wrote:
-> common.h
-> #define ATH_EP_RND(x, mul)                                              \
->         ((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
+On Wed, 2013-02-06 at 16:44 -0800, Ben Greear wrote:
+> This came from my patched 3.7.6+ kernel...it has some additional printout for the
+> WDS/flush states, in case that helps any...
+> 
+> Doesn't seem to have caused any lasting harm.
 
-Hmm, is that the same as:
+> [13051.973344] sta6: authenticate with 00:ab:87:60:10:10
+> [13052.099487] sta6: send auth to 00:ab:87:60:10:10 (try 1/3)
+> [13052.139177] sta6: authenticated
+> [13052.176209] sta6: Invalid WDS/flush state, type: 2  WDS: 5  flushed: 1
+> [13052.193241] ------------[ cut here ]------------
+> [13052.206642] WARNING: at /home/greearb/git/linux-3.7.dev.y/net/mac80211/iface.c:705 ieee80211_do_stop+0x647/0x6a0 [mac80211]()
 
-    (x + mul/2) / mul?
+Humm, ok, I see what happens here ... in ieee80211_do_stop() we flush
+stations first, and then later call ieee80211_mgd_stop(). That should
+clearly be the other way around (also the AP bit there), but I'm not
+entirely sure what to do. Probably just move the ieee80211_mgd_stop()
+call up to the start of the function.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+johannes
+
