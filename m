@@ -1,109 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53996 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759450Ab3BXBHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 20:07:17 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC 13/13] brcmsmac: activate AP support
-Date: Sun, 24 Feb 2013 02:06:11 +0100
-Message-Id: <1361667972-22909-14-git-send-email-hauke@hauke-m.de> (sfid-20130224_020725_850420_4AF84F8E)
-In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
-References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:1533 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759982Ab3BHO4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:56:36 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/27] brcmfmac: fix generation of the p2p related mac
+ addresses
+Date: Fri, 8 Feb 2013 15:53:40 +0100
+Message-ID: <1360335242-12608-6-git-send-email-arend@broadcom.com> (sfid-20130208_155643_311369_EECB1A5E)
+In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This activates the AP mode support.
+The driver determines the P2P interface address and device
+address from the primary mac address. However, the function
+used an invalid input. This caused a mac address mismatch
+between firmware and driver. This was hidden because the
+brcmf_if_add() function corrected the error upon receiving
+the IF_ADD event from firmware.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    9 +++++++--
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |   15 +++++++++++++++
- drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 ++
- 3 files changed, 24 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 1348d73..17880e8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -357,7 +357,8 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	struct brcms_info *wl = hw->priv;
- 
- 	/* Just STA for now */
--	if (vif->type != NL80211_IFTYPE_STATION) {
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    vif->type != NL80211_IFTYPE_AP) {
- 		brcms_err(wl->wlc->hw->d11core,
- 			  "%s: Attempt to add type %d, only STA for now\n",
- 			  __func__, vif->type);
-@@ -369,6 +370,9 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	brcms_c_mute(wl->wlc, false);
- 	if (vif->type == NL80211_IFTYPE_STATION)
- 		brcms_c_start_station(wl->wlc, vif->addr);
-+	else if (vif->type == NL80211_IFTYPE_AP)
-+		brcms_c_start_ap(wl->wlc, vif->addr, vif->bss_conf.bssid,
-+				 vif->bss_conf.ssid, vif->bss_conf.ssid_len);
- 	spin_unlock_bh(&wl->lock);
- 
- 	return 0;
-@@ -1043,7 +1047,8 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
- 
- 	/* channel change time is dependent on chip and band  */
- 	hw->channel_change_time = 7 * 1000;
--	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				     BIT(NL80211_IFTYPE_AP);
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 15bff24..d723e15 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2174,6 +2174,18 @@ void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr)
- 	wlc->bsscfg->type = BRCMS_TYPE_STATION;
- }
- 
-+void brcms_c_start_ap(struct brcms_c_info *wlc, u8 *addr, const u8 *bssid,
-+		      u8 *ssid, size_t ssid_len)
-+{
-+	brcms_c_set_ssid(wlc, ssid, ssid_len);
-+
-+	memcpy(wlc->pub->cur_etheraddr, addr, sizeof(wlc->pub->cur_etheraddr));
-+	memcpy(wlc->bsscfg->BSSID, bssid, sizeof(wlc->bsscfg->BSSID));
-+	wlc->bsscfg->type = BRCMS_TYPE_AP;
-+
-+	brcms_b_mctrl(wlc->hw, MCTL_AP | MCTL_INFRA, MCTL_AP | MCTL_INFRA);
-+}
-+
- /* Initialize GPIOs that are controlled by D11 core */
- static void brcms_c_gpio_init(struct brcms_c_info *wlc)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index ecc96f3..cec4116 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -132,12 +132,10 @@ static int brcmf_p2p_set_firmware(struct brcmf_p2p_info *p2p)
+  */
+ static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p)
  {
-@@ -3062,6 +3074,9 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
- 		return false;
+-	struct net_device *ndev = cfg_to_ndev(p2p->cfg);
+-
+ 	/* Generate the P2P Device Address.  This consists of the device's
+ 	 * primary MAC address with the locally administered bit set.
+ 	 */
+-	memcpy(p2p->dev_addr, ndev->dev_addr, ETH_ALEN);
++	memcpy(p2p->dev_addr, p2p->cfg->pub->mac, ETH_ALEN);
+ 	p2p->dev_addr[0] |= 0x02;
  
-+	if (wlc->bsscfg->type == BRCMS_TYPE_AP)
-+		return false;
-+
- 	return true;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 5e6db62..ecff925 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -332,6 +332,8 @@ extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
- extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
- extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
- extern void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr);
-+extern void brcms_c_start_ap(struct brcms_c_info *wlc, u8 *addr,
-+			     const u8 *bssid, u8 *ssid, size_t ssid_len);
- extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
- extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
- 				   struct sk_buff *beacon, u16 tim_offset,
+ 	/* Generate the P2P Interface Address.  If the discovery and connection
 -- 
 1.7.10.4
+
 
