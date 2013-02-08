@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:54191 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756097Ab3BZSaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 13:30:05 -0500
-MIME-Version: 1.0
-In-Reply-To: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
-References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Tue, 26 Feb 2013 10:29:43 -0800
-Message-ID: <CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com> (sfid-20130226_193030_818562_0768C99F)
-Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
-To: Michal Kazior <kazikcz@gmail.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:59060 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760023Ab3BHMiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 07:38:07 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/3] mac80211/minstrel_ht: remove the sampling bypass check for the lowest rate
+Date: Fri,  8 Feb 2013 13:38:02 +0100
+Message-Id: <1360327083-57298-2-git-send-email-nbd@openwrt.org> (sfid-20130208_133818_541168_3533B870)
+In-Reply-To: <1360327083-57298-1-git-send-email-nbd@openwrt.org>
+References: <1360327083-57298-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 23, 2013 at 11:34 AM, Michal Kazior <kazikcz@gmail.com> wrote:
-> Dbii F52N-PRO mini pci device reports an invalid
-> regdomain. This card has been reported to work on
-> MikroTik's RouterOS but failed on Linux:
->
-> [   14.320000] ath: EEPROM regdomain: 0xffff
-> [   14.320000] ath: EEPROM indicates we should expect a country code
-> [   14.320000] ath: invalid regulatory domain/country code 0xbfff
-> [   14.320000] ath: Invalid EEPROM contents
-> [   14.320000] ath9k 0000:00:12.0: Failed to initialize device
-> [   14.330000] ath9k: probe of 0000:00:12.0 failed with error -22
->
-> With the patch the device works fine.
->
-> Signed-off-by: Michal Kazior <kazikcz@gmail.com>
+It's more of an unnecessary micro-optimization and it prevents switching
+from long-GI to short-GI in HT20/single-stream for the lowest rate
 
-NACK. This comes up every now and then and this is not a valid device
-ID, this is an issue with the card, so what you can do is adjust the
-device ID post bootup. Not sure if distros have an easy way to set
-this up, if not perhaps this should be considered as this has come up
-twice before.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 9f9c453..5bb316a 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -231,10 +231,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 			if (!mr->cur_tp)
+ 				continue;
+ 
+-			/* ignore the lowest rate of each single-stream group */
+-			if (!i && minstrel_mcs_groups[group].streams == 1)
+-				continue;
+-
+ 			if ((mr->cur_tp > cur_prob_tp && mr->probability >
+ 			     MINSTREL_FRAC(3, 4)) || mr->probability > cur_prob) {
+ 				mg->max_prob_rate = index;
+-- 
+1.8.0.2
+
