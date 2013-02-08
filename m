@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:59620 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756332Ab3BVM1O (ORCPT
+Received: from mail-ia0-f179.google.com ([209.85.210.179]:37120 "EHLO
+	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946552Ab3BHQih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 07:27:14 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Fri, 8 Feb 2013 11:38:37 -0500
+Received: by mail-ia0-f179.google.com with SMTP id x24so4415834iak.10
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 08:38:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20775.25545.671357.512930@gargle.gargle.HOWL> (sfid-20130222_132718_974417_4AD9DB8A)
-Date: Fri, 22 Feb 2013 17:55:45 +0530
+In-Reply-To: <511508A6.8020104@openwrt.org>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+Date: Fri, 8 Feb 2013 08:38:36 -0800
+Message-ID: <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com> (sfid-20130208_174021_214033_A6DED38B)
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+From: Paul Stewart <pstew@google.com>
 To: Felix Fietkau <nbd@openwrt.org>
-Cc: Ben Greear <greearb@candelatech.com>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
-In-Reply-To: <51275837.4020708@openwrt.org>
-References: <1361498797-14361-1-git-send-email-greearb@candelatech.com>
-	<20774.62475.588131.344540@gargle.gargle.HOWL>
-	<5126F732.6040007@candelatech.com>
-	<20774.63702.208829.602903@gargle.gargle.HOWL>
-	<51270186.6070003@candelatech.com>
-	<51275837.4020708@openwrt.org>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Please also check if the station(s) that the frames are queued for are
-> in powersave state for some reason. That would prevent the tx path from
-> throwing them in the hw queue, yet they'd still take up pending-frame
-> slots. I was planning on fixing this eventually by expiring frames that
-> stay in the queue for too long, but haven't decided on the exact
-> approach yet.
+Could you share some of the test results?  I know with ChromeOS when
+we switched to 3.4, the first thing that tipped us off to the fact
+that we had inadvertently switch to minstrel was that our RvR
+throughput values had dropped significantly.  Has anyone done an RvR
+comparison between minstrel and the ath9k internal rate control
+lately?
 
-PS is disabled for multi-VIF.
+--
+Paul
 
-Sujith
+On Fri, Feb 8, 2013 at 6:16 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2013-02-08 3:08 PM, Sujith Manoharan wrote:
+>> Felix Fietkau wrote:
+>>> In many tests throughput with ath9k_rate_control has been shown to be
+>>> worse than with minstrel_ht (the mac8021 default RC).
+>>>
+>>> This module also has some other problems, like starting to use the
+>>> highest possible rate early in the connection, causing problems with
+>>> reliability of connection/authentication attempts.
+>>>
+>>> It also has a much more limited search space, ignoring many potentially
+>>> useful rates, caused by the design decision to operate on a sorted rate
+>>> set with the assumption that higher rates are always more unreliable
+>>> than lower rates. In some scenarios this assumption is not true, and
+>>> this can cause it to fall back to a really bad rate.
+>>>
+>>> minstrel_ht has been tested extensively in AP and client mode by lots of
+>>> users (mostly in the OpenWrt project, where it has been the default for
+>>> years).
+>>
+>> I don't think managed mode would have received much testing in OpenWRT.
+> I know quite a few people that use directional links with 4-addr
+> AP/Station. I also know a few people that put up some devices that roam
+> between multiple APs. Obviously it doesn't receive as much testing as AP
+> mode, but there are some active users stress testing it.
+>
+> - Felix
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
