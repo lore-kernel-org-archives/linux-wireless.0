@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:60817 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab3BRFFq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 00:05:46 -0500
-Received: by mail-we0-f181.google.com with SMTP id t44so4326311wey.12
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Feb 2013 21:05:45 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:36293 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758353Ab3BHOEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:04:21 -0500
+Message-ID: <511505E1.9080009@openwrt.org> (sfid-20130208_150424_313449_F5604662)
+Date: Fri, 08 Feb 2013 15:04:17 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <E09AA5D37894474C897FDF8284D04380@KGDOMAIN.local>
-References: <loom.20130214T000819-590@post.gmane.org> <CAGRGNgU4akuP=iKqUqpNbztB7P6DECm=-ug6QKxtsJdvMd9iCg@mail.gmail.com>
- <4A04400646FF41AE84629E8D1443AA89@KGDOMAIN.local> <CAGRGNgWBYOJeLnA64yT4Pp0JOd50UqnndA98Jmq1kRd25Fn-ZA@mail.gmail.com>
- <A91BB000EAB44D40A1C1EF25B3CD8761@KGDOMAIN.local> <CAGRGNgUnSuALDpZME=YrSDwTJQew+kdUHRrZskJBob8HHGcqVQ@mail.gmail.com>
- <E09AA5D37894474C897FDF8284D04380@KGDOMAIN.local>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 18 Feb 2013 16:05:25 +1100
-Message-ID: <CAGRGNgUN0W-YZS31XVOsvzUJpjjPf0HM3gbQBbOZyTbQoYacrA@mail.gmail.com> (sfid-20130218_060550_787668_14A05BFD)
-Subject: Re: Writing application code using sd8686
-To: "Kevin & Pauline Gordon" <kgordon@paradise.net.nz>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org> <20756.65038.7020.514691@gargle.gargle.HOWL>
+In-Reply-To: <20756.65038.7020.514691@gargle.gargle.HOWL>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kevin,
+On 2013-02-08 2:30 PM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> In many tests throughput with ath9k_rate_control has been shown to be
+>> worse than with minstrel_ht (the mac8021 default RC).
+>> 
+>> This module also has some other problems, like starting to use the
+>> highest possible rate early in the connection, causing problems with
+>> reliability of connection/authentication attempts.
+>> 
+>> It also has a much more limited search space, ignoring many potentially
+>> useful rates, caused by the design decision to operate on a sorted rate
+>> set with the assumption that higher rates are always more unreliable
+>> than lower rates. In some scenarios this assumption is not true, and
+>> this can cause it to fall back to a really bad rate.
+>> 
+>> minstrel_ht has been tested extensively in AP and client mode by lots of
+>> users (mostly in the OpenWrt project, where it has been the default for
+>> years).
+>> 
+>> The only advantage that ath9k_rate_control previously had over minstrel_ht
+>> was the support for using CCK rates as fall back in case MCS rates got
+>> too bad, but this has now also been taken care of.
+> 
+> Various rates are marked as invalid in the ath9k rate control module. I don't
+> know all the reasons, but the recommendation to disable certain rates came from
+> the internal algorithms team. How will this be handled ?
+I'm pretty sure it's because the algorithm isn't designed to handle more
+rates. It's a step-up/step-down type algorithm, and those typically only
+work with a sorted rateset, preferably duplicate free.
 
-On Sat, Feb 16, 2013 at 9:03 AM, Kevin & Pauline Gordon
-<kgordon@paradise.net.nz> wrote:
-> Many thanks for your comments Julian. Configuring files is fine if one is
-> not out and about. Today with free Wifi or for demo purposes gaining access
-> as a guest to local systems one needs an api (library) to:
-> Configure,
-> Open,
-> Enable Dhcp,
-> Scan,
-> Join
-> to automatically join local wifi access point on the fly.
-> If anyone has some thoughts on this, I am keen to hear (especially re
-> Libertas).
+Minstrel_ht selects rates in a different way that doesn't have the same
+limitations, so it can use the full rateset.
 
-Again, Libertas is irrelevant with respect to those operations, all
-the details of the driver are abstracted away from userspace programs.
+- Felix
 
-You're looking for something like Connman or Network Manager or Wicd.
-These manage the card and connect to the network, including scanning,
-joining, encryption, key management, dhcp, etc. They all have some
-form of interface which you can use to configure them, e.g. d-bus or
-some library or whatever.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
