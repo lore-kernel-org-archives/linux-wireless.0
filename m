@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43216 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:32896 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232Ab3BRP6Y (ORCPT
+	with ESMTP id S1947122Ab3BHWAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 10:58:24 -0500
-Message-ID: <1361203098.8555.35.camel@jlt4.sipsolutions.net> (sfid-20130218_165827_884628_E1A959DB)
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
+	Fri, 8 Feb 2013 17:00:15 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@open-mesh.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Marek Lindner <marek@open-mesh.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Date: Mon, 18 Feb 2013 16:58:18 +0100
-In-Reply-To: <20130218154906.GC4162@open-mesh.com>
-References: <20130215171938.GA4140@pandem0nium>
-	 <1361197831.8555.23.camel@jlt4.sipsolutions.net>
-	 <1361197982.8555.24.camel@jlt4.sipsolutions.net>
-	 <20130218144622.GA4162@open-mesh.com>
-	 <1361201387.8555.32.camel@jlt4.sipsolutions.net>
-	 <20130218153833.GB4162@open-mesh.com>
-	 <1361202206.8555.34.camel@jlt4.sipsolutions.net>
-	 <20130218154906.GC4162@open-mesh.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix AP beacon loss messages
+Date: Fri,  8 Feb 2013 23:00:09 +0100
+Message-Id: <1360360809-1750-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_230159_511514_F9422E00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 16:49 +0100, Antonio Quartulli wrote:
-> On Mon, Feb 18, 2013 at 07:43:26 -0800, Johannes Berg wrote:
-> > > I did not like this approach because the sta_info struct is so big that
-> > > when we want to fill the stats substruct only we will waste a lot of bytes.
-> > 
-> > I don't understand your point.
-> > 
-> > struct sta_info {
-> >    ...
-> >    struct stats stats;
-> > };
-> 
-> My concern is about those "..." that we are allocating within the sta_info struct
-> that we will never use for every non-peer station.
-> 
-> While if we used the struct below (with its own hash table), we would allocate
-> only the space needed for the stats.
-> 
-> > 
-> > struct stats_entry {
-> >    struct hash/list/whatever;
-> >    struct stats stats;
-> > };
-> > 
-> 
-> 
-> no?
-> Maybe I misunderstood your idea?
+From: Johannes Berg <johannes.berg@intel.com>
 
-But I'm not saying that these are mutually exclusive, I'm saying both
-should exist.
+The messages currently refer to probe request probes,
+but on some devices null data packets will be used
+instead. Make the messages more generic.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 15f2edd..40ce00c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1746,7 +1746,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (beacon)
+ 		mlme_dbg_ratelimited(sdata,
+-				     "detected beacon loss from AP - sending probe request\n");
++				     "detected beacon loss from AP - probing\n");
+ 
+ 	ieee80211_cqm_rssi_notify(&sdata->vif,
+ 		NL80211_CQM_RSSI_BEACON_LOSS_EVENT, GFP_KERNEL);
+@@ -2641,7 +2641,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
+ 		mlme_dbg_ratelimited(sdata,
+-				     "cancelling probereq poll due to a received beacon\n");
++				     "cancelling AP probe due to a received beacon\n");
+ 		mutex_lock(&local->mtx);
+ 		ifmgd->flags &= ~IEEE80211_STA_BEACON_POLL;
+ 		ieee80211_run_deferred_scan(local);
+-- 
+1.8.0
 
