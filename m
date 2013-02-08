@@ -1,101 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53924 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294Ab3BFVB2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60243 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946784Ab3BHRZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 16:01:28 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: [PATCH 0/4] Add support for off-channel powersave state in mac80211
-Date: Wed,  6 Feb 2013 15:01:14 -0600
-Message-Id: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com> (sfid-20130206_220134_053974_F21FF2D1)
+	Fri, 8 Feb 2013 12:25:50 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U3rhr-0000pC-BZ
+	for linux-wireless@vger.kernel.org; Fri, 08 Feb 2013 18:25:47 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/14] mac80211: HT/VHT improvements
+Date: Fri,  8 Feb 2013 18:25:30 +0100
+Message-Id: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_182553_968211_D74B3094)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+While continuing my VHT work I found a number of HT issues,
+which I'm addressing to get consistent code and behaviour.
+Some of the issues are minor, others like the change to not
+muck with the station's HT capabilities require changes in
+all drivers.
 
-As promised, here are the patches which add the off-channel powesave
-state. At a high level, the changes are:
+Overall the change with most potential impact would be the
+change to track the HT/VHT channel width changes, but that
+is a requirement. I myself removed it last year in commit
+24398e39c8ee4a9d9123eed322b859ece4d16cac ("mac80211: set HT
+channel before association") but that was a mistake, and in
+my analysis there I missed that the AP could switch from 20
+to 40 during operation -- if we had associated as a 40 MHz
+capable station (which we would if the driver supports it)
+then that'd still lead to deaf-ness problems.
 
- * Expand the PS configuration flag to be 2 bits and add helper
-   functions for reading and setting the modes
- * Change the terminology around PS states, i.e. disabled -> awake and
-   enabled -> doze
- * Add the off-channel PS state and put it to use
- * Minor driver updates based on these changes
- * Update brcmsmac to utilize the off-channel PS state
+Note that I'm making it disconnect if the AP switches to
+something that we can't support or is incompatible with our
+current channel contexts. We don't have much choice, but it
+should be unlikely since it's just regulatory changes or
+channel contexts -- the latter shouldn't happen due to the
+802.11 channelization.
 
-I've made every attempt to keep things functionally equivalent for every
-driver except for brcmsmac. That said, I've only been able to test on
-brcmsmac and ath9k, plus a basic sanity check with iwlwifi.
+Note that the last patch is completely untested so far :-)
 
-Thanks,
-Seth
-
-
-Seth Forshee (4):
-  mac80211: Convert PS configuration from a binary flag to a set of
-    modes
-  mac80211: Indicate hardware support for doze state rather than
-    powersave
-  mac80211: Add off-channel PS state
-  brcmsmac: Add support for off-channel powersave
-
- drivers/net/wireless/adm8211.c                     |    3 +-
- drivers/net/wireless/at76c50x-usb.c                |    3 +-
- drivers/net/wireless/ath/ar5523/ar5523.c           |    3 +-
- drivers/net/wireless/ath/ath5k/base.c              |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    2 +-
- drivers/net/wireless/ath/ath9k/init.c              |    2 +-
- drivers/net/wireless/ath/ath9k/main.c              |    2 +-
- drivers/net/wireless/ath/carl9170/fw.c             |    2 +-
- drivers/net/wireless/ath/carl9170/main.c           |    5 +-
- drivers/net/wireless/ath/carl9170/rx.c             |    2 +-
- drivers/net/wireless/b43/main.c                    |    3 +-
- drivers/net/wireless/b43legacy/main.c              |    3 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   18 ++-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    7 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    1 +
- drivers/net/wireless/iwlegacy/3945-mac.c           |    3 +-
- drivers/net/wireless/iwlegacy/4965-mac.c           |    2 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c        |    2 +-
- drivers/net/wireless/iwlwifi/dvm/power.c           |    3 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |    2 +-
- drivers/net/wireless/libertas_tf/main.c            |    3 +-
- drivers/net/wireless/mac80211_hwsim.c              |    5 +-
- drivers/net/wireless/mwl8k.c                       |    3 +-
- drivers/net/wireless/p54/fwio.c                    |    2 +-
- drivers/net/wireless/p54/main.c                    |    2 +-
- drivers/net/wireless/p54/txrx.c                    |    3 +-
- drivers/net/wireless/rt2x00/rt2400pci.c            |    4 +-
- drivers/net/wireless/rt2x00/rt2500pci.c            |    4 +-
- drivers/net/wireless/rt2x00/rt2500usb.c            |    4 +-
- drivers/net/wireless/rt2x00/rt2800lib.c            |    4 +-
- drivers/net/wireless/rt2x00/rt2x00config.c         |    4 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c            |    3 +-
- drivers/net/wireless/rt2x00/rt61pci.c              |    4 +-
- drivers/net/wireless/rt2x00/rt73usb.c              |    4 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |    3 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |    3 +-
- drivers/net/wireless/rtlwifi/base.c                |    2 +-
- drivers/net/wireless/rtlwifi/core.c                |    2 +-
- drivers/net/wireless/rtlwifi/ps.c                  |    4 +-
- drivers/net/wireless/ti/wl1251/main.c              |   10 +-
- drivers/net/wireless/ti/wlcore/main.c              |    5 +-
- drivers/net/wireless/zd1211rw/zd_mac.c             |    3 +-
- include/net/mac80211.h                             |  128 +++++++++++++-------
- net/mac80211/cfg.c                                 |    2 +-
- net/mac80211/debugfs.c                             |    2 +-
- net/mac80211/ieee80211_i.h                         |    7 ++
- net/mac80211/mlme.c                                |   31 ++---
- net/mac80211/offchannel.c                          |   40 +++---
- net/mac80211/tx.c                                  |    4 +-
- net/mac80211/util.c                                |    2 +-
- 51 files changed, 227 insertions(+), 143 deletions(-)
+johannes
 
