@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30692 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759189Ab3BYLub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 06:50:31 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:35647 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946671Ab3BHRMC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 12:12:02 -0500
+Date: Fri, 8 Feb 2013 11:11:55 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
 	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 5/6] mac80211: cleanup suspend/resume on ibss mode
-Date: Mon, 25 Feb 2013 12:50:07 +0100
-Message-Id: <1361793008-2857-5-git-send-email-sgruszka@redhat.com> (sfid-20130225_125035_075762_3C53B382)
-In-Reply-To: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
-References: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
+Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
+Message-ID: <20130208171155.GC2622@thinkpad-t410> (sfid-20130208_181347_134971_EC9696DA)
+References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
+ <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
+ <1360314212.29851.4.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360314212.29851.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove not used any longer suspend/resume code.
+On Fri, Feb 08, 2013 at 10:03:32AM +0100, Johannes Berg wrote:
+> On Thu, 2013-02-07 at 11:54 -0600, Seth Forshee wrote:
+> > Scans currently work by stopping the netdev tx queues but leaving the
+> > mac80211 queues active. This stops the flow of incoming packets while
+> > still allowing mac80211 to transmit nullfunc and probe request frames to
+> > facilitate scanning. However, the driver may try to wake the mac80211
+> > queues while in this state, which will also wake the netdev queues.
+> > 
+> > To prevent this, add a new queue stop reason,
+> > IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL, to be used when stopping the tx
+> > queues for off-channel operation. This prevents the netdev queues from
+> > waking when a driver wakes the mac80211 queues.
+> > 
+> > This also stops all frames from being transmitted, even those required
+> > for scanning. To get around this, add a new offchan_tx_ok argument to
+> > most of the tx interfaces. This flag can be set for frames which need to
+> > be transmitted during off-channel operation, allowing off-channel frames
+> > to be passed down to the driver if the queues have only been stopped for
+> > off-channel. Add ieee80211_tx_skb_offchannel() for transmitting
+> > off-channel frames with this flag set.
+> 
+> I started wondering -- is there a reason to modify the entire TX path?
+> Could we maybe bypass it instead and call the driver's TX op almost
+> directly? The frames in question don't really need much TX handling, the
+> only thing that might be relevant _could_ be rate control but even that
+> I'd argue isn't really needed, just using rate_control_send_low() should
+> be ok (by setting IEEE80211_TX_CTL_USE_MINRATE it will always return
+> true). For the null data packets the sta pointer is also obvious, the AP
+> station (BSSID) ... we don't need any of the extra monitor/whatever
+> handling either.
+> 
+> That might be simpler overall?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/ibss.c        | 29 +----------------------------
- net/mac80211/ieee80211_i.h |  4 ----
- 2 files changed, 1 insertion(+), 32 deletions(-)
+Okay, I'll take a look at this.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 40b71df..539d4a1 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -985,36 +985,9 @@ static void ieee80211_ibss_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct ieee80211_local *local = sdata->local;
--
--	if (local->quiescing) {
--		ifibss->timer_running = true;
--		return;
--	}
--
--	ieee80211_queue_work(&local->hw, &sdata->work);
--}
--
--#ifdef CONFIG_PM
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	if (del_timer_sync(&ifibss->timer))
--		ifibss->timer_running = true;
--}
--
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	if (ifibss->timer_running) {
--		add_timer(&ifibss->timer);
--		ifibss->timer_running = false;
--	}
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- }
--#endif
- 
- void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5230694..bd13db3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -489,8 +489,6 @@ struct ieee80211_if_ibss {
- 
- 	u32 basic_rates;
- 
--	bool timer_running;
--
- 	bool fixed_bssid;
- 	bool fixed_channel;
- 	bool privacy;
-@@ -1295,8 +1293,6 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_ibss_params *params);
- int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
--- 
-1.7.11.7
+Another option that might simplify things a bit  would be to use a
+ieee80211_tx_data flag. If I added another interface into tx.c for
+offchannel frames then the offchan argument would only be needed for
+ieee80211_xmit() and ieee80211_tx(). Though it would be nice to avoid
+adding an argument to ieee80211_xmit().
+
+Seth
 
