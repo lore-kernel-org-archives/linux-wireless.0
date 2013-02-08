@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:41933 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759549Ab3BGX36 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:39193 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758547Ab3BHOJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 18:29:58 -0500
-Message-ID: <511438CA.8060003@pengutronix.de> (sfid-20130208_003039_799337_C5BFD8BD)
-Date: Fri, 08 Feb 2013 00:29:14 +0100
-From: Marc Kleine-Budde <mkl@pengutronix.de>
+	Fri, 8 Feb 2013 09:09:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: netdev <netdev@vger.kernel.org>, linux-can@vger.kernel.org,
-	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, wil6210@qca.qualcomm.com,
-	brcm80211-dev-list@broadcom.com,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>
-Subject: Re: [PATCH] drivers: net: Remove remaining alloc/OOM messages
-References: <1360273587.27863.15.camel@joe-AO722>
-In-Reply-To: <1360273587.27863.15.camel@joe-AO722>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="----enig2UHVEOGTHORNDWVVOWLUJ"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20757.1753.863278.858198@gargle.gargle.HOWL> (sfid-20130208_151127_346067_4FD7308A)
+Date: Fri, 8 Feb 2013 19:38:25 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+In-Reply-To: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
-------enig2UHVEOGTHORNDWVVOWLUJ
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Felix Fietkau wrote:
+> In many tests throughput with ath9k_rate_control has been shown to be
+> worse than with minstrel_ht (the mac8021 default RC).
+> 
+> This module also has some other problems, like starting to use the
+> highest possible rate early in the connection, causing problems with
+> reliability of connection/authentication attempts.
+> 
+> It also has a much more limited search space, ignoring many potentially
+> useful rates, caused by the design decision to operate on a sorted rate
+> set with the assumption that higher rates are always more unreliable
+> than lower rates. In some scenarios this assumption is not true, and
+> this can cause it to fall back to a really bad rate.
+> 
+> minstrel_ht has been tested extensively in AP and client mode by lots of
+> users (mostly in the OpenWrt project, where it has been the default for
+> years).
 
-On 02/07/2013 10:46 PM, Joe Perches wrote:
-> alloc failures already get standardized OOM
-> messages and a dump_stack.
->=20
-> For the affected mallocs around these OOM messages:
->=20
-> Converted kmallocs with multiplies to kmalloc_array.
-> Converted a kmalloc/memcpy to kmemdup.
-> Removed now unused stack variables.
-> Removed unnecessary parentheses.
-> Neatened alignment.
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-> Let me know if you want multiple small patches instead.
->=20
->  drivers/net/can/usb/ems_usb.c                      |  4 +-
+I don't think managed mode would have received much testing in OpenWRT.
 
-For ems_usb.c
+> The only advantage that ath9k_rate_control previously had over minstrel_ht
+> was the support for using CCK rates as fall back in case MCS rates got
+> too bad, but this has now also been taken care of.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
+Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-regards,
-Marc
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+Sujith
 
-
-------enig2UHVEOGTHORNDWVVOWLUJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iEYEARECAAYFAlEUON8ACgkQjTAFq1RaXHNawgCghkTouziZz1s9EyqAQmRtnyTg
-t5QAoIsLAx7+P28BtRi4ralrnaIxHHZm
-=jak+
------END PGP SIGNATURE-----
-
-------enig2UHVEOGTHORNDWVVOWLUJ--
