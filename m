@@ -1,96 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14544 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3740 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760010Ab3B0PBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 10:01:00 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 8/8] mac80211: merge reconfig assign chanctx code
-Date: Wed, 27 Feb 2013 16:00:42 +0100
-Message-Id: <1361977242-17344-8-git-send-email-sgruszka@redhat.com> (sfid-20130227_160105_628125_820CE8DA)
-In-Reply-To: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
-References: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
+	id S1760213Ab3BHO4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:56:45 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 16/27] brcmfmac: change function signatures
+Date: Fri, 8 Feb 2013 15:53:51 +0100
+Message-ID: <1360335242-12608-17-git-send-email-arend@broadcom.com> (sfid-20130208_160130_663156_ED330DEB)
+In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/util.c | 47 ++++++++++++++++++++++-------------------------
- 1 file changed, 22 insertions(+), 25 deletions(-)
+cfg80211 api change needs to be applied. this change will be squashed
+with introducing commit:
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index f5d4e32..b7a856e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1357,6 +1357,25 @@ void ieee80211_stop_device(struct ieee80211_local *local)
- 	drv_stop(local);
+commit 68751daec95b07a74b18aa22b2f9c196991dbe81
+Author: Hante Meuleman <meuleman@broadcom.com>
+Date:   Mon Nov 26 12:21:27 2012 +0100
+
+    brcmfmac: add support for P2P listen mode.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index aac054c..1c854f6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -982,9 +982,9 @@ int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	memcpy(&p2p->remain_on_channel, channel, sizeof(*channel));
+ 	*cookie = p2p->remain_on_channel_cookie;
++	cfg80211_ready_on_channel(wdev, *cookie, channel, duration, GFP_KERNEL);
+ 
+ exit:
+-	cfg80211_ready_on_channel(wdev, *cookie, channel, duration, GFP_KERNEL);
+ 	return err;
  }
  
-+static void ieee80211_assign_chanctx(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+
-+	if (!local->use_chanctx)
-+		return;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (conf) {
-+		ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+		drv_assign_vif_chanctx(local, sdata, ctx);
-+	}
-+	mutex_unlock(&local->chanctx_mtx);
-+}
-+
- int ieee80211_reconfig(struct ieee80211_local *local)
- {
- 	struct ieee80211_hw *hw = &local->hw;
-@@ -1445,36 +1464,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	}
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		struct ieee80211_chanctx_conf *ctx_conf;
--
- 		if (!ieee80211_sdata_running(sdata))
- 			continue;
--
--		mutex_lock(&local->chanctx_mtx);
--		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--				lockdep_is_held(&local->chanctx_mtx));
--		if (ctx_conf) {
--			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
--					   conf);
--			drv_assign_vif_chanctx(local, sdata, ctx);
--		}
--		mutex_unlock(&local->chanctx_mtx);
-+		ieee80211_assign_chanctx(local, sdata);
- 	}
- 
- 	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata && local->use_chanctx && ieee80211_sdata_running(sdata)) {
--		struct ieee80211_chanctx_conf *ctx_conf;
--
--		mutex_lock(&local->chanctx_mtx);
--		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
--				lockdep_is_held(&local->chanctx_mtx));
--		if (ctx_conf) {
--			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
--					   conf);
--			drv_assign_vif_chanctx(local, sdata, ctx);
--		}
--		mutex_unlock(&local->chanctx_mtx);
--	}
-+	if (sdata && ieee80211_sdata_running(sdata))
-+		ieee80211_assign_chanctx(local, sdata);
- 
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
 -- 
-1.7.11.7
+1.7.10.4
+
 
