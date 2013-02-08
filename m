@@ -1,1198 +1,468 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:39699 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932140Ab3BZAOX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 19:14:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz
-Subject: [RFC/RFT 12/27] rtlwifi: rtl8188ee: Add new driver files - part 3
-Date: Mon, 25 Feb 2013 18:13:24 -0600
-Message-Id: <1361837619-2985-13-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011629_870230_E7ADF996)
-In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mms3.broadcom.com ([216.31.210.19]:1613 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760202Ab3BHO4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:56:41 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 12/27] brcmfmac: Update AP mode for GO creation.
+Date: Fri, 8 Feb 2013 15:53:47 +0100
+Message-ID: <1360335242-12608-13-git-send-email-arend@broadcom.com> (sfid-20130208_163813_269370_CC5AF849)
+In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
----
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.c | 851 ++++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.h | 301 ++++++++++
- 2 files changed, 1152 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.h
+From: Hante Meuleman <meuleman@broadcom.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-new file mode 100644
-index 0000000..a583ac2
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-@@ -0,0 +1,851 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
+With this update it is possible to create an P2P go. Handle the
+p2p go role in creation and the update beacon from cfg80211. Also
+store primary bss in global struct. Needed to map cfg device
+back to primary device.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |    5 +
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |    6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.h      |    3 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  255 +++++++++++++-------
+ 4 files changed, 183 insertions(+), 86 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 7707194..2c4ca59 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -39,4 +39,9 @@ struct brcmf_fil_chan_info_le {
+ 	__le32 scan_channel;
+ };
+ 
++struct brcmf_fil_bss_enable_le {
++	__le32 bsscfg_idx;
++	__le32 enable;
++};
 +
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../base.h"
-+#include "reg.h"
-+#include "def.h"
-+#include "fw.h"
-+
-+static void _rtl88e_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ #endif /* FWIL_TYPES_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index fa0127e..d5f9711 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -691,15 +691,17 @@ void brcmf_p2p_cancel_remain_on_channel(struct brcmf_if *ifp)
+  *
+  * @cfg: driver private data for cfg80211 interface.
+  */
+-void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg)
++void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg,
++		      struct brcmf_cfg80211_vif *vif)
+ {
+ 	struct brcmf_p2p_info *p2p;
+ 
+ 	p2p = &cfg->p2p;
+ 
+ 	p2p->cfg = cfg;
+-	brcmf_p2p_set_firmware(p2p);
++	p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif = vif;
+ 	brcmf_p2p_generate_bss_mac(p2p);
++	brcmf_p2p_set_firmware(p2p);
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+index 1bf57c1..4c1819c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+@@ -102,7 +102,8 @@ struct brcmf_p2p_info {
+ 	struct ieee80211_channel remain_on_channel;
+ };
+ 
+-void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg);
++void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg,
++		      struct brcmf_cfg80211_vif *vif);
+ void brcmf_p2p_detach(struct brcmf_p2p_info *p2p);
+ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 				       enum nl80211_iftype type, u32 *flags,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 3112265..c94d536 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3625,9 +3625,37 @@ s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif)
+ }
+ 
+ static s32
++brcmf_config_ap_mgmt_ie(struct brcmf_cfg80211_vif *vif,
++			struct cfg80211_beacon_data *beacon)
 +{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 tmp;
++	s32 err;
 +
-+	if (enable) {
-+		tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
-+		rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1,
-+			       tmp | 0x04);
-+
-+		tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL);
-+		rtl_write_byte(rtlpriv, REG_MCUFWDL, tmp | 0x01);
-+
-+		tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL + 2);
-+		rtl_write_byte(rtlpriv, REG_MCUFWDL + 2, tmp & 0xf7);
-+	} else {
-+		tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL);
-+		rtl_write_byte(rtlpriv, REG_MCUFWDL, tmp & 0xfe);
-+
-+		rtl_write_byte(rtlpriv, REG_MCUFWDL + 1, 0x00);
++	/* Set Beacon IEs to FW */
++	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_BEACON_FLAG,
++				    beacon->tail, beacon->tail_len);
++	if (err) {
++		brcmf_err("Set Beacon IE Failed\n");
++		return err;
 +	}
-+}
++	brcmf_dbg(TRACE, "Applied Vndr IEs for Beacon\n");
 +
-+static void _rtl88e_fw_block_write(struct ieee80211_hw *hw,
-+				   const u8 *buffer, u32 size)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 blk_sz = sizeof(u32);
-+	u8 *buf_ptr = (u8 *)buffer;
-+	u32 *pu4BytePtr = (u32 *)buffer;
-+	u32 i, offset, blk_cnt, remain;
++	/* Set Probe Response IEs to FW */
++	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBRSP_FLAG,
++				    beacon->proberesp_ies,
++				    beacon->proberesp_ies_len);
++	if (err)
++		brcmf_err("Set Probe Resp IE Failed\n");
++	else
++		brcmf_dbg(TRACE, "Applied Vndr IEs for Probe Resp\n");
 +
-+	blk_cnt = size / blk_sz;
-+	remain = size % blk_sz;
-+
-+	for (i = 0; i < blk_cnt; i++) {
-+		offset = i * blk_sz;
-+		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
-+				*(pu4BytePtr + i));
-+	}
-+
-+	if (remain) {
-+		offset = blk_cnt * blk_sz;
-+		buf_ptr += offset;
-+		for (i = 0; i < remain; i++) {
-+			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
-+						 offset + i), *(buf_ptr + i));
-+		}
-+	}
-+}
-+
-+static void _rtl88e_fw_page_write(struct ieee80211_hw *hw,
-+				  u32 page, const u8 *buffer, u32 size)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 value8;
-+	u8 u8page = (u8) (page & 0x07);
-+
-+	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
-+
-+	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
-+	_rtl88e_fw_block_write(hw, buffer, size);
-+}
-+
-+static void _rtl88e_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
-+{
-+	u32 fwlen = *pfwlen;
-+	u8 remain = (u8) (fwlen % 4);
-+
-+	remain = (remain == 0) ? 0 : (4 - remain);
-+
-+	while (remain > 0) {
-+		pfwbuf[fwlen] = 0;
-+		fwlen++;
-+		remain--;
-+	}
-+
-+	*pfwlen = fwlen;
-+}
-+
-+static void _rtl88e_write_fw(struct ieee80211_hw *hw,
-+			     enum version_8188e version, u8 *buffer, u32 size)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 *buf_ptr = (u8 *)buffer;
-+	u32 page_no, remain;
-+	u32 page, offset;
-+
-+	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
-+
-+	_rtl88e_fill_dummy(buf_ptr, &size);
-+
-+	page_no = size / FW_8192C_PAGE_SIZE;
-+	remain = size % FW_8192C_PAGE_SIZE;
-+
-+	if (page_no > 8) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "Page numbers should not greater then 8\n");
-+	}
-+
-+	for (page = 0; page < page_no; page++) {
-+		offset = page * FW_8192C_PAGE_SIZE;
-+		_rtl88e_fw_page_write(hw, page, (buf_ptr + offset),
-+				      FW_8192C_PAGE_SIZE);
-+	}
-+
-+	if (remain) {
-+		offset = page_no * FW_8192C_PAGE_SIZE;
-+		page = page_no;
-+		_rtl88e_fw_page_write(hw, page, (buf_ptr + offset),
-+				      remain);
-+	}
-+}
-+
-+static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	int err = -EIO;
-+	u32 counter = 0;
-+	u32 value32;
-+
-+	do {
-+		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
-+	} while ((counter++ < FW_8192C_POLLING_TIMEOUT_COUNT) &&
-+		 (!(value32 & FWDL_CHKSUM_RPT)));
-+
-+	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
-+			  value32);
-+		goto exit;
-+	}
-+
-+	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-+		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
-+
-+	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
-+	value32 |= MCUFWDL_RDY;
-+	value32 &= ~WINTINI_RDY;
-+	rtl_write_dword(rtlpriv, REG_MCUFWDL, value32);
-+
-+	rtl88e_firmware_selfreset(hw);
-+	counter = 0;
-+
-+	do {
-+		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
-+		if (value32 & WINTINI_RDY) {
-+			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-+				 "Polling FW ready success!! REG_MCUFWDL:0x%08x.\n",
-+				  value32);
-+			err = 0;
-+			goto exit;
-+		}
-+
-+		udelay(FW_8192C_POLLING_DELAY);
-+
-+	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
-+
-+	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
-+
-+exit:
 +	return err;
 +}
 +
-+int rtl88e_download_fw(struct ieee80211_hw *hw,
-+	bool buse_wake_on_wlan_fw
-+	)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct rtl92c_firmware_header *pfwheader;
-+	u8 *pfwdata;
-+	u32 fwsize;
-+	int err;
-+	enum version_8188e version = rtlhal->version;
-+
-+	if (!rtlhal->pfirmware)
-+		return 1;
-+
-+	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
-+	pfwdata = (u8 *)rtlhal->pfirmware;
-+	fwsize = rtlhal->fwsize;
-+	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
-+		 "normal Firmware SIZE %d\n", fwsize);
-+
-+	if (IS_FW_HEADER_EXIST(pfwheader)) {
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
-+			 "Firmware Version(%d), Signature(%#x), Size(%d)\n",
-+			 pfwheader->version, pfwheader->signature,
-+			 (int)sizeof(struct rtl92c_firmware_header));
-+
-+		pfwdata = pfwdata + sizeof(struct rtl92c_firmware_header);
-+		fwsize = fwsize - sizeof(struct rtl92c_firmware_header);
-+	}
-+
-+	if (rtl_read_byte(rtlpriv, REG_MCUFWDL) & BIT(7)) {
-+		rtl_write_byte(rtlpriv, REG_MCUFWDL, 0);
-+		rtl88e_firmware_selfreset(hw);
-+	}
-+	_rtl88e_enable_fw_download(hw, true);
-+	_rtl88e_write_fw(hw, version, pfwdata, fwsize);
-+	_rtl88e_enable_fw_download(hw, false);
-+
-+	err = _rtl88e_fw_free_to_go(hw);
-+	if (err) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "Firmware is not ready to run!\n");
++static s32
+ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 			struct cfg80211_ap_settings *settings)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	s32 ie_offset;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_tlv *ssid_ie;
+@@ -3636,6 +3664,8 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_tlv *rsn_ie;
+ 	struct brcmf_vs_tlv *wpa_ie;
+ 	struct brcmf_join_params join_params;
++	enum nl80211_iftype dev_role;
++	struct brcmf_fil_bss_enable_le bss_enable;
+ 
+ 	brcmf_dbg(TRACE, "channel_type=%d, beacon_interval=%d, dtim_period=%d,\n",
+ 		  cfg80211_get_chandef_type(&settings->chandef),
+@@ -3645,9 +3675,21 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		  settings->ssid, settings->ssid_len, settings->auth_type,
+ 		  settings->inactivity_timeout);
+ 
+-	if (!test_bit(BRCMF_VIF_STATUS_AP_CREATING, &ifp->vif->sme_state)) {
+-		brcmf_err("Not in AP creation mode\n");
+-		return -EPERM;
++	if (ifp->vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif) {
++		brcmf_dbg(TRACE, "Role = AP\n");
++		dev_role = NL80211_IFTYPE_AP;
++		if (!test_bit(BRCMF_VIF_STATUS_AP_CREATING,
++			      &ifp->vif->sme_state)) {
++			brcmf_err("Not in AP creation mode\n");
++			return -EPERM;
++		}
 +	} else {
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
-+			 "Firmware is ready to run!\n");
++		brcmf_dbg(TRACE, "Role = P2P GO\n");
++		dev_role = NL80211_IFTYPE_P2P_GO;
++		if (ifp->vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif) {
++			ifp = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif->ifp;
++			ndev = ifp->ndev;
++		}
+ 	}
+ 
+ 	memset(&ssid_le, 0, sizeof(ssid_le));
+@@ -3669,21 +3711,6 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 	}
+ 
+ 	brcmf_set_mpc(ndev, 0);
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1);
+-	if (err < 0) {
+-		brcmf_err("BRCMF_C_DOWN error %d\n", err);
+-		goto exit;
+-	}
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 1);
+-	if (err < 0) {
+-		brcmf_err("SET INFRA error %d\n", err);
+-		goto exit;
+-	}
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 1);
+-	if (err < 0) {
+-		brcmf_err("setting AP mode failed %d\n", err);
+-		goto exit;
+-	}
+ 
+ 	/* find the RSN_IE */
+ 	rsn_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
+@@ -3711,25 +3738,8 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
+ 		brcmf_configure_opensecurity(ifp);
+ 	}
+-	/* Set Beacon IEs to FW */
+-	err = brcmf_vif_set_mgmt_ie(ndev_to_vif(ndev),
+-				    BRCMF_VNDR_IE_BEACON_FLAG,
+-				    settings->beacon.tail,
+-				    settings->beacon.tail_len);
+-	if (err)
+-		brcmf_err("Set Beacon IE Failed\n");
+-	else
+-		brcmf_dbg(TRACE, "Applied Vndr IEs for Beacon\n");
+ 
+-	/* Set Probe Response IEs to FW */
+-	err = brcmf_vif_set_mgmt_ie(ndev_to_vif(ndev),
+-				    BRCMF_VNDR_IE_PRBRSP_FLAG,
+-				    settings->beacon.proberesp_ies,
+-				    settings->beacon.proberesp_ies_len);
+-	if (err)
+-		brcmf_err("Set Probe Resp IE Failed\n");
+-	else
+-		brcmf_dbg(TRACE, "Applied Vndr IEs for Probe Resp\n");
++	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
+ 
+ 	if (settings->beacon_interval) {
+ 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_BCNPRD,
+@@ -3747,23 +3757,62 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 			goto exit;
+ 		}
+ 	}
+-	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
+-	if (err < 0) {
+-		brcmf_err("BRCMF_C_UP error (%d)\n", err);
+-		goto exit;
++
++	if (dev_role == NL80211_IFTYPE_AP) {
++		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1);
++		if (err < 0) {
++			brcmf_err("BRCMF_C_DOWN error %d\n", err);
++			goto exit;
++		}
+ 		brcmf_fil_iovar_int_set(ifp, "apsta", 0);
+ 	}
+ 
+-	memset(&join_params, 0, sizeof(join_params));
+-	/* join parameters starts with ssid */
+-	memcpy(&join_params.ssid_le, &ssid_le, sizeof(ssid_le));
+-	/* create softap */
+-	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
+-				     &join_params, sizeof(join_params));
++	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_INFRA, 1);
+ 	if (err < 0) {
+-		brcmf_err("SET SSID error (%d)\n", err);
++		brcmf_err("SET INFRA error %d\n", err);
+ 		goto exit;
+ 	}
++	if (dev_role == NL80211_IFTYPE_AP) {
++		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 1);
++		if (err < 0) {
++			brcmf_err("setting AP mode failed %d\n", err);
++			goto exit;
++		}
++		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
++		if (err < 0) {
++			brcmf_err("BRCMF_C_UP error (%d)\n", err);
++			goto exit;
++		}
++
++		memset(&join_params, 0, sizeof(join_params));
++		/* join parameters starts with ssid */
++		memcpy(&join_params.ssid_le, &ssid_le, sizeof(ssid_le));
++		/* create softap */
++		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
++					     &join_params, sizeof(join_params));
++		if (err < 0) {
++			brcmf_err("SET SSID error (%d)\n", err);
++			goto exit;
++		}
++		brcmf_dbg(TRACE, "AP mode configuration complete\n");
++	} else {
++		err = brcmf_fil_bsscfg_data_set(ifp, "ssid", &ssid_le,
++						sizeof(ssid_le));
++		if (err < 0) {
++			brcmf_err("setting ssid failed %d\n", err);
++			goto exit;
++		}
++		bss_enable.bsscfg_idx = cpu_to_le32(ifp->bssidx);
++		bss_enable.enable = cpu_to_le32(1);
++		err = brcmf_fil_iovar_data_set(ifp, "bss", &bss_enable,
++					       sizeof(bss_enable));
++		if (err < 0) {
++			brcmf_err("bss_enable config failed %d\n", err);
++			goto exit;
++		}
++
++		brcmf_dbg(TRACE, "GO mode configuration complete\n");
++	}
+ 	clear_bit(BRCMF_VIF_STATUS_AP_CREATING, &ifp->vif->sme_state);
+ 	set_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
+ 
+@@ -3802,10 +3851,41 @@ exit:
+ 	return err;
+ }
+ 
++static s32
++brcmf_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *ndev,
++			     struct cfg80211_beacon_data *info)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	s32 err;
++
++	brcmf_dbg(TRACE, "Enter\n");
++
++	if (ifp->vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif) {
++		brcmf_dbg(TRACE, "Role = AP\n");
++		if (!test_bit(BRCMF_VIF_STATUS_AP_CREATED,
++			      &ifp->vif->sme_state)) {
++			brcmf_err("AP was not yet created\n");
++			return -EPERM;
++		}
++	} else {
++		brcmf_dbg(TRACE, "Role = P2P GO\n");
++		if (ifp->vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif) {
++			ifp = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif->ifp;
++			ndev = ifp->ndev;
++		}
 +	}
 +
-+	return 0;
++	err = brcmf_config_ap_mgmt_ie(ifp->vif, info);
++
++	return err;
 +}
 +
-+static bool _rtl88e_check_fw_read_last_h2c(struct ieee80211_hw *hw, u8 boxnum)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 val_hmetfr;
-+	bool result = false;
-+
-+	val_hmetfr = rtl_read_byte(rtlpriv, REG_HMETFR);
-+	if (((val_hmetfr >> boxnum) & BIT(0)) == 0)
-+		result = true;
-+	return result;
-+}
-+
-+static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
-+			      u8 element_id, u32 cmd_len, u8 *p_cmdbuffer)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	u8 boxnum;
-+	u16 box_reg = 0, box_extreg = 0;
-+	u8 u1b_tmp;
-+	bool isfw_read = false;
-+	u8 buf_index = 0;
-+	bool bwrite_sucess = false;
-+	u8 wait_h2c_limmit = 100;
-+	u8 wait_writeh2c_limmit = 100;
-+	u8 boxcontent[4], boxextcontent[2];
-+	u32 h2c_waitcounter = 0;
-+	unsigned long flag;
-+	u8 idx;
-+
-+	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, "come in\n");
-+
-+	while (true) {
-+		spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
-+		if (rtlhal->h2c_setinprogress) {
-+			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+				 "H2C set in progress! Wait to set..element_id(%d).\n",
-+				 element_id);
-+
-+			while (rtlhal->h2c_setinprogress) {
-+				spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock,
-+						       flag);
-+				h2c_waitcounter++;
-+				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+					 "Wait 100 us (%d times)...\n",
-+					 h2c_waitcounter);
-+				udelay(100);
-+
-+				if (h2c_waitcounter > 1000)
-+					return;
-+				spin_lock_irqsave(&rtlpriv->locks.h2c_lock,
-+						  flag);
-+			}
-+			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
-+		} else {
-+			rtlhal->h2c_setinprogress = true;
-+			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
-+			break;
-+		}
-+	}
-+
-+	while (!bwrite_sucess) {
-+		wait_writeh2c_limmit--;
-+		if (wait_writeh2c_limmit == 0) {
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+				 "Write H2C fail because no trigger for FW INT!\n");
-+			break;
-+		}
-+
-+		boxnum = rtlhal->last_hmeboxnum;
-+		switch (boxnum) {
-+		case 0:
-+			box_reg = REG_HMEBOX_0;
-+			box_extreg = REG_HMEBOX_EXT_0;
-+			break;
-+		case 1:
-+			box_reg = REG_HMEBOX_1;
-+			box_extreg = REG_HMEBOX_EXT_1;
-+			break;
-+		case 2:
-+			box_reg = REG_HMEBOX_2;
-+			box_extreg = REG_HMEBOX_EXT_2;
-+			break;
-+		case 3:
-+			box_reg = REG_HMEBOX_3;
-+			box_extreg = REG_HMEBOX_EXT_3;
-+			break;
-+		default:
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+				 "switch case not processed\n");
-+			break;
-+		}
-+
-+		isfw_read = _rtl88e_check_fw_read_last_h2c(hw, boxnum);
-+		while (!isfw_read) {
-+			wait_h2c_limmit--;
-+			if (wait_h2c_limmit == 0) {
-+				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+					 "Wating too long for FW read "
-+					 "clear HMEBox(%d)!\n", boxnum);
-+				break;
-+			}
-+
-+			udelay(10);
-+
-+			isfw_read = _rtl88e_check_fw_read_last_h2c(hw, boxnum);
-+			u1b_tmp = rtl_read_byte(rtlpriv, 0x130);
-+			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+				 "Wating for FW read clear HMEBox(%d)!!! "
-+				 "0x130 = %2x\n", boxnum, u1b_tmp);
-+		}
-+
-+		if (!isfw_read) {
-+			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+				 "Write H2C register BOX[%d] fail!!!!! "
-+				 "Fw do not read.\n", boxnum);
-+			break;
-+		}
-+
-+		memset(boxcontent, 0, sizeof(boxcontent));
-+		memset(boxextcontent, 0, sizeof(boxextcontent));
-+		boxcontent[0] = element_id;
-+		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+			 "Write element_id box_reg(%4x) = %2x\n",
-+			 box_reg, element_id);
-+
-+		switch (cmd_len) {
-+		case 1:
-+		case 2:
-+		case 3:
-+			/*boxcontent[0] &= ~(BIT(7));*/
-+			memcpy((u8 *)(boxcontent) + 1,
-+			       p_cmdbuffer + buf_index, cmd_len);
-+
-+			for (idx = 0; idx < 4; idx++) {
-+				rtl_write_byte(rtlpriv, box_reg + idx,
-+					       boxcontent[idx]);
-+			}
-+			break;
-+		case 4:
-+		case 5:
-+		case 6:
-+		case 7:
-+			/*boxcontent[0] |= (BIT(7));*/
-+			memcpy((u8 *)(boxextcontent),
-+			       p_cmdbuffer + buf_index+3, cmd_len-3);
-+			memcpy((u8 *)(boxcontent) + 1,
-+			       p_cmdbuffer + buf_index, 3);
-+
-+			for (idx = 0; idx < 2; idx++) {
-+				rtl_write_byte(rtlpriv, box_extreg + idx,
-+					       boxextcontent[idx]);
-+			}
-+
-+			for (idx = 0; idx < 4; idx++) {
-+				rtl_write_byte(rtlpriv, box_reg + idx,
-+					       boxcontent[idx]);
-+			}
-+			break;
-+		default:
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+				 "switch case not processed\n");
-+			break;
-+		}
-+
-+		bwrite_sucess = true;
-+
-+		rtlhal->last_hmeboxnum = boxnum + 1;
-+		if (rtlhal->last_hmeboxnum == 4)
-+			rtlhal->last_hmeboxnum = 0;
-+
-+		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
-+			 "pHalData->last_hmeboxnum  = %d\n",
-+			 rtlhal->last_hmeboxnum);
-+	}
-+
-+	spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
-+	rtlhal->h2c_setinprogress = false;
-+	spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
-+
-+	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, "go out\n");
-+}
-+
-+void rtl88e_fill_h2c_cmd(struct ieee80211_hw *hw,
-+			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer)
-+{
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	u32 tmp_cmdbuf[2];
-+
-+	if (rtlhal->fw_ready == false) {
-+		RT_ASSERT(false, "fail H2C cmd - Fw download fail!!!\n");
-+		return;
-+	}
-+
-+	memset(tmp_cmdbuf, 0, 8);
-+	memcpy(tmp_cmdbuf, p_cmdbuffer, cmd_len);
-+	_rtl88e_fill_h2c_command(hw, element_id, cmd_len, (u8 *)&tmp_cmdbuf);
-+
-+	return;
-+}
-+
-+void rtl88e_firmware_selfreset(struct ieee80211_hw *hw)
-+{
-+	u8 u1b_tmp;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN+1);
-+	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN+1, (u1b_tmp & (~BIT(2))));
-+	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN+1, (u1b_tmp | BIT(2)));
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
-+		 "_8051Reset88E(): 8051 reset success.\n");
-+}
-+
-+void rtl88e_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 u1_h2c_set_pwrmode[H2C_88E_PWEMODE_LENGTH] = { 0 };
-+	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
-+	u8 rlbm, power_state = 0;
-+	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, "FW LPS mode = %d\n", mode);
-+
-+	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, ((mode) ? 1 : 0));
-+	rlbm = 0;/*YJ, temp, 120316. FW now not support RLBM = 2.*/
-+	SET_H2CCMD_PWRMODE_PARM_RLBM(u1_h2c_set_pwrmode, rlbm);
-+	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode,
-+					 (rtlpriv->mac80211.p2p) ?
-+					 ppsc->smart_ps : 1);
-+	SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(u1_h2c_set_pwrmode,
-+					       ppsc->reg_max_lps_awakeintvl);
-+	SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(u1_h2c_set_pwrmode, 0);
-+	if (mode == FW_PS_ACTIVE_MODE)
-+		power_state |= FW_PWR_STATE_ACTIVE;
-+	else
-+		power_state |= FW_PWR_STATE_RF_OFF;
-+	SET_H2CCMD_PWRMODE_PARM_PWR_STATE(u1_h2c_set_pwrmode, power_state);
-+
-+	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
-+		      "rtl92c_set_fw_pwrmode(): u1_h2c_set_pwrmode\n",
-+		      u1_h2c_set_pwrmode, H2C_88E_PWEMODE_LENGTH);
-+	rtl88e_fill_h2c_cmd(hw, H2C_88E_SETPWRMODE, H2C_88E_PWEMODE_LENGTH,
-+			    u1_h2c_set_pwrmode);
-+}
-+
-+void rtl88e_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
-+{
-+	u8 u1_joinbssrpt_parm[1] = { 0 };
-+
-+	SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(u1_joinbssrpt_parm, mstatus);
-+
-+	rtl88e_fill_h2c_cmd(hw, H2C_88E_JOINBSSRPT, 1, u1_joinbssrpt_parm);
-+}
-+
-+void rtl88e_set_fw_ap_off_load_cmd(struct ieee80211_hw *hw,
-+				   u8 ap_offload_enable)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	u8 u1_apoffload_parm[H2C_88E_AP_OFFLOAD_LENGTH] = { 0 };
-+
-+	SET_H2CCMD_AP_OFFLOAD_ON(u1_apoffload_parm, ap_offload_enable);
-+	SET_H2CCMD_AP_OFFLOAD_HIDDEN(u1_apoffload_parm, mac->hiddenssid);
-+	SET_H2CCMD_AP_OFFLOAD_DENYANY(u1_apoffload_parm, 0);
-+
-+	rtl88e_fill_h2c_cmd(hw, H2C_88E_AP_OFFLOAD, H2C_88E_AP_OFFLOAD_LENGTH,
-+			    u1_apoffload_parm);
-+}
-+
-+static bool _rtl88e_cmd_send_packet(struct ieee80211_hw *hw,
-+				struct sk_buff *skb)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-+	struct rtl8192_tx_ring *ring;
-+	struct rtl_tx_desc *pdesc;
-+	u8 own;
-+	unsigned long flags;
-+	struct sk_buff *pskb = NULL;
-+
-+	ring = &rtlpci->tx_ring[BEACON_QUEUE];
-+
-+	pskb = __skb_dequeue(&ring->queue);
-+	if (pskb)
-+		kfree_skb(pskb);
-+
-+	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
-+
-+	pdesc = &ring->desc[0];
-+	own = (u8)rtlpriv->cfg->ops->get_desc((u8 *)pdesc, true, HW_DESC_OWN);
-+
-+	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *)pdesc, 1, 1, skb);
-+
-+	__skb_queue_tail(&ring->queue, skb);
-+
-+	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
-+
-+	rtlpriv->cfg->ops->tx_polling(hw, BEACON_QUEUE);
-+
-+	return true;
-+}
-+
-+#define BEACON_PG		0 /* ->1 */
-+#define PSPOLL_PG		2
-+#define NULL_PG			3
-+#define PROBERSP_PG		4 /* ->5 */
-+
-+#define TOTAL_RESERVED_PKT_LEN	768
-+
-+static u8 reserved_page_packet[TOTAL_RESERVED_PKT_LEN] = {
-+	/* page 0 beacon */
-+	0x80, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
-+	0xFF, 0xFF, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
-+	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x50, 0x08,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x64, 0x00, 0x00, 0x04, 0x00, 0x0C, 0x6C, 0x69,
-+	0x6E, 0x6B, 0x73, 0x79, 0x73, 0x5F, 0x77, 0x6C,
-+	0x61, 0x6E, 0x01, 0x04, 0x82, 0x84, 0x8B, 0x96,
-+	0x03, 0x01, 0x01, 0x06, 0x02, 0x00, 0x00, 0x2A,
-+	0x01, 0x00, 0x32, 0x08, 0x24, 0x30, 0x48, 0x6C,
-+	0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C, 0x18,
-+	0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x3D, 0x00, 0xDD, 0x06, 0x00, 0xE0, 0x4C, 0x02,
-+	0x01, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+
-+	/* page 1 beacon */
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x10, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x10, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+
-+	/* page 2  ps-poll */
-+	0xA4, 0x10, 0x01, 0xC0, 0x00, 0x40, 0x10, 0x10,
-+	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x18, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
-+	0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+
-+	/* page 3  null */
-+	0x48, 0x01, 0x00, 0x00, 0x00, 0x40, 0x10, 0x10,
-+	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
-+	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x72, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
-+	0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+
-+	/* page 4  probe_resp */
-+	0x50, 0x00, 0x00, 0x00, 0x00, 0x40, 0x10, 0x10,
-+	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
-+	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x00, 0x00,
-+	0x9E, 0x46, 0x15, 0x32, 0x27, 0xF2, 0x2D, 0x00,
-+	0x64, 0x00, 0x00, 0x04, 0x00, 0x0C, 0x6C, 0x69,
-+	0x6E, 0x6B, 0x73, 0x79, 0x73, 0x5F, 0x77, 0x6C,
-+	0x61, 0x6E, 0x01, 0x04, 0x82, 0x84, 0x8B, 0x96,
-+	0x03, 0x01, 0x01, 0x06, 0x02, 0x00, 0x00, 0x2A,
-+	0x01, 0x00, 0x32, 0x08, 0x24, 0x30, 0x48, 0x6C,
-+	0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C, 0x18,
-+	0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x3D, 0x00, 0xDD, 0x06, 0x00, 0xE0, 0x4C, 0x02,
-+	0x01, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+
-+	/* page 5  probe_resp */
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+};
-+
-+void rtl88e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	struct sk_buff *skb = NULL;
-+
-+	u32 totalpacketlen;
-+	bool rtstatus;
-+	u8 u1RsvdPageLoc[5] = { 0 };
-+	bool b_dlok = false;
-+
-+	u8 *beacon;
-+	u8 *p_pspoll;
-+	u8 *nullfunc;
-+	u8 *p_probersp;
-+	/*---------------------------------------------------------
-+	 *			(1) beacon
-+	 *---------------------------------------------------------
+ static int
+ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
+ 			   u8 *mac)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_scb_val_le scbval;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	s32 err;
+@@ -3815,6 +3895,8 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	brcmf_dbg(TRACE, "Enter %pM\n", mac);
+ 
++	if (ifp->vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
++		ifp = cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif->ifp;
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+@@ -3824,7 +3906,12 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
+ 				     &scbval, sizeof(scbval));
+ 	if (err)
+ 		brcmf_err("SCB_DEAUTHENTICATE_FOR_REASON failed %d\n", err);
+-
++	/*
++	 * Wait for the deauth event to come, supplicant will do the
++	 * delete iface immediately and we will have problem in sending
++	 * deauth frame if we delete the bss in firmware
 +	 */
-+	beacon = &reserved_page_packet[BEACON_PG * 128];
-+	SET_80211_HDR_ADDRESS2(beacon, mac->mac_addr);
-+	SET_80211_HDR_ADDRESS3(beacon, mac->bssid);
-+
-+	/*-------------------------------------------------------
-+	 *			(2) ps-poll
-+	 *--------------------------------------------------------
-+	 */
-+	p_pspoll = &reserved_page_packet[PSPOLL_PG * 128];
-+	SET_80211_PS_POLL_AID(p_pspoll, (mac->assoc_id | 0xc000));
-+	SET_80211_PS_POLL_BSSID(p_pspoll, mac->bssid);
-+	SET_80211_PS_POLL_TA(p_pspoll, mac->mac_addr);
-+
-+	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1RsvdPageLoc, PSPOLL_PG);
-+
-+	/*--------------------------------------------------------
-+	 *			(3) null data
-+	 *---------------------------------------------------------
-+	 */
-+	nullfunc = &reserved_page_packet[NULL_PG * 128];
-+	SET_80211_HDR_ADDRESS1(nullfunc, mac->bssid);
-+	SET_80211_HDR_ADDRESS2(nullfunc, mac->mac_addr);
-+	SET_80211_HDR_ADDRESS3(nullfunc, mac->bssid);
-+
-+	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1RsvdPageLoc, NULL_PG);
-+
-+	/*---------------------------------------------------------
-+	 *			(4) probe response
-+	 *----------------------------------------------------------
-+	 */
-+	p_probersp = &reserved_page_packet[PROBERSP_PG * 128];
-+	SET_80211_HDR_ADDRESS1(p_probersp, mac->bssid);
-+	SET_80211_HDR_ADDRESS2(p_probersp, mac->mac_addr);
-+	SET_80211_HDR_ADDRESS3(p_probersp, mac->bssid);
-+
-+	SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(u1RsvdPageLoc, PROBERSP_PG);
-+
-+	totalpacketlen = TOTAL_RESERVED_PKT_LEN;
-+
-+	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_LOUD,
-+		      "rtl88e_set_fw_rsvdpagepkt(): HW_VAR_SET_TX_CMD: ALL\n",
-+		      &reserved_page_packet[0], totalpacketlen);
-+	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
-+		      "rtl88e_set_fw_rsvdpagepkt(): HW_VAR_SET_TX_CMD: ALL\n",
-+		      u1RsvdPageLoc, 3);
-+
-+
-+	skb = dev_alloc_skb(totalpacketlen);
-+	memcpy(skb_put(skb, totalpacketlen),
-+	       &reserved_page_packet, totalpacketlen);
-+
-+	rtstatus = _rtl88e_cmd_send_packet(hw, skb);
-+
-+	if (rtstatus)
-+		b_dlok = true;
-+
-+	if (b_dlok) {
-+		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
-+			 "Set RSVD page location to Fw.\n");
-+		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
-+			      "H2C_RSVDPAGE:\n", u1RsvdPageLoc, 3);
-+		rtl88e_fill_h2c_cmd(hw, H2C_88E_RSVDPAGE,
-+				    sizeof(u1RsvdPageLoc), u1RsvdPageLoc);
-+	} else
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+			 "Set RSVD page location to Fw FAIL!!!!!!.\n");
-+}
-+
-+/*Shoud check FW support p2p or not.*/
-+static void rtl88e_set_p2p_ctw_period_cmd(struct ieee80211_hw *hw, u8 ctwindow)
-+{
-+	u8 u1_ctwindow_period[1] = {ctwindow};
-+
-+	rtl88e_fill_h2c_cmd(hw, H2C_88E_P2P_PS_CTW_CMD, 1, u1_ctwindow_period);
-+}
-+
-+void rtl88e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_ps_ctl *rtlps = rtl_psc(rtl_priv(hw));
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct rtl_p2p_ps_info *p2pinfo = &(rtlps->p2p_ps_info);
-+	struct p2p_ps_offload_t *p2p_ps_offload = &rtlhal->p2p_ps_offload;
-+	u8	i;
-+	u16	ctwindow;
-+	u32	start_time, tsf_low;
-+
-+	switch (p2p_ps_state) {
-+	case P2P_PS_DISABLE:
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_DISABLE\n");
-+		memset(p2p_ps_offload, 0, sizeof(struct p2p_ps_offload_t));
-+		break;
-+	case P2P_PS_ENABLE:
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_ENABLE\n");
-+		/* update CTWindow value. */
-+		if (p2pinfo->ctwindow > 0) {
-+			p2p_ps_offload->ctwindow_en = 1;
-+			ctwindow = p2pinfo->ctwindow;
-+			rtl88e_set_p2p_ctw_period_cmd(hw, ctwindow);
-+		}
-+
-+		/* hw only support 2 set of NoA */
-+		for (i = 0; i < p2pinfo->noa_num; i++) {
-+			/* To control the register setting for which NOA*/
-+			rtl_write_byte(rtlpriv, 0x5cf, (i << 4));
-+			if (i == 0)
-+				p2p_ps_offload->noa0_en = 1;
-+			else
-+				p2p_ps_offload->noa1_en = 1;
-+
-+			/* config P2P NoA Descriptor Register */
-+			rtl_write_dword(rtlpriv, 0x5E0,
-+					p2pinfo->noa_duration[i]);
-+			rtl_write_dword(rtlpriv, 0x5E4,
-+					p2pinfo->noa_interval[i]);
-+
-+			/*Get Current TSF value */
-+			tsf_low = rtl_read_dword(rtlpriv, REG_TSFTR);
-+
-+			start_time = p2pinfo->noa_start_time[i];
-+			if (p2pinfo->noa_count_type[i] != 1) {
-+				while (start_time <= (tsf_low + (50 * 1024))) {
-+					start_time += p2pinfo->noa_interval[i];
-+					if (p2pinfo->noa_count_type[i] != 255)
-+						p2pinfo->noa_count_type[i]--;
-+				}
-+			}
-+			rtl_write_dword(rtlpriv, 0x5E8, start_time);
-+			rtl_write_dword(rtlpriv, 0x5EC,
-+					p2pinfo->noa_count_type[i]);
-+		}
-+
-+		if ((p2pinfo->opp_ps == 1) || (p2pinfo->noa_num > 0)) {
-+			/* rst p2p circuit */
-+			rtl_write_byte(rtlpriv, REG_DUAL_TSF_RST, BIT(4));
-+
-+			p2p_ps_offload->offload_en = 1;
-+
-+			if (P2P_ROLE_GO == rtlpriv->mac80211.p2p) {
-+				p2p_ps_offload->role = 1;
-+				p2p_ps_offload->allstasleep = 0;
-+			} else {
-+				p2p_ps_offload->role = 0;
-+			}
-+
-+			p2p_ps_offload->discovery = 0;
-+		}
-+		break;
-+	case P2P_PS_SCAN:
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_SCAN\n");
-+		p2p_ps_offload->discovery = 1;
-+		break;
-+	case P2P_PS_SCAN_DONE:
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "P2P_PS_SCAN_DONE\n");
-+		p2p_ps_offload->discovery = 0;
-+		p2pinfo->p2p_ps_state = P2P_PS_ENABLE;
-+		break;
-+	default:
-+		break;
++	brcmf_delay(400);
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+ }
+@@ -3857,6 +3944,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	const struct ieee80211_mgmt *mgmt;
++	struct brcmf_if *ifp;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	s32 err = 0;
+ 	s32 ie_offset;
+@@ -3868,41 +3956,41 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	mgmt = (const struct ieee80211_mgmt *)buf;
+ 
+-	if (ieee80211_is_mgmt(mgmt->frame_control)) {
+-		if (ieee80211_is_probe_resp(mgmt->frame_control)) {
+-			/* Right now the only reason to get a probe response */
+-			/* is for p2p listen response from wpa_supplicant.   */
+-			/* Unfortunately the wpa_supplicant sends it on the  */
+-			/* primary ndev, while dongle wants it on the p2p    */
+-			/* vif. Since this is only reason for a probe        */
+-			/* response to be sent, the vif is taken from cfg.   */
+-			/* If ever desired to send proberesp for non p2p     */
+-			/* response then data should be checked for          */
+-			/* "DIRECT-". Note in future supplicant will take    */
+-			/* dedicated p2p wdev to do this and then this 'hack'*/
+-			/* is not needed anymore.                            */
+-			ie_offset =  DOT11_MGMT_HDR_LEN +
+-				     DOT11_BCN_PRB_FIXED_LEN;
+-			ie_len = len - ie_offset;
++	if (!ieee80211_is_mgmt(mgmt->frame_control)) {
++		brcmf_err("Driver only allows MGMT packet type\n");
++		return -EPERM;
 +	}
+ 
++	if (ieee80211_is_probe_resp(mgmt->frame_control)) {
++		/* Right now the only reason to get a probe response */
++		/* is for p2p listen response or for p2p GO from     */
++		/* wpa_supplicant. Unfortunately the probe is send   */
++		/* on primary ndev, while dongle wants it on the p2p */
++		/* vif. Since this is only reason for a probe        */
++		/* response to be sent, the vif is taken from cfg.   */
++		/* If ever desired to send proberesp for non p2p     */
++		/* response then data should be checked for          */
++		/* "DIRECT-". Note in future supplicant will take    */
++		/* dedicated p2p wdev to do this and then this 'hack'*/
++		/* is not needed anymore.                            */
++		ie_offset =  DOT11_MGMT_HDR_LEN +
++			     DOT11_BCN_PRB_FIXED_LEN;
++		ie_len = len - ie_offset;
++		ifp = netdev_priv(wdev->netdev);
++		vif = ifp->vif;
++		if (vif == cfg->p2p.bss_idx[P2PAPI_BSSCFG_PRIMARY].vif)
+ 			vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
+-			if (vif == NULL) {
+-				brcmf_err("No p2p device available for probe response\n");
+-				err = -ENODEV;
+-				goto exit;
+-			}
+-			err = brcmf_vif_set_mgmt_ie(vif,
+-						    BRCMF_VNDR_IE_PRBRSP_FLAG,
+-						    &buf[ie_offset],
+-						    ie_len);
+-			cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
+-						GFP_KERNEL);
+-			goto exit;
+-		}
++		err = brcmf_vif_set_mgmt_ie(vif,
++					    BRCMF_VNDR_IE_PRBRSP_FLAG,
++					    &buf[ie_offset],
++					    ie_len);
++		cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
++					GFP_KERNEL);
++	} else {
++		brcmf_dbg(TRACE, "Unhandled, fc=%04x!!\n", mgmt->frame_control);
++		brcmf_dbg_hex_dump(true, buf, len, "payload, len=%Zu\n", len);
+ 	}
+-	brcmf_dbg(TRACE, "Unhandled, is_mgmt %d, fc=%04x!!!!!\n",
+-		  ieee80211_is_mgmt(mgmt->frame_control), mgmt->frame_control);
+-exit:
 +
-+	rtl88e_fill_h2c_cmd(hw, H2C_88E_P2P_PS_OFFLOAD, 1,
-+			    (u8 *)p2p_ps_offload);
-+}
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.h b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.h
-new file mode 100644
-index 0000000..fea98aa
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.h
-@@ -0,0 +1,301 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL92C__FW__H__
-+#define __RTL92C__FW__H__
-+
-+#define FW_8192C_SIZE				0x8000
-+#define FW_8192C_START_ADDRESS			0x1000
-+#define FW_8192C_END_ADDRESS			0x5FFF
-+#define FW_8192C_PAGE_SIZE			4096
-+#define FW_8192C_POLLING_DELAY			5
-+#define FW_8192C_POLLING_TIMEOUT_COUNT		3000
-+
-+#define IS_FW_HEADER_EXIST(_pfwhdr)		\
-+	((_pfwhdr->signature&0xFFFF) == 0x88E1)
-+#define USE_OLD_WOWLAN_DEBUG_FW			0
-+
-+#define H2C_88E_RSVDPAGE_LOC_LEN		5
-+#define H2C_88E_PWEMODE_LENGTH			5
-+#define H2C_88E_JOINBSSRPT_LENGTH		1
-+#define H2C_88E_AP_OFFLOAD_LENGTH		3
-+#define H2C_88E_WOWLAN_LENGTH			3
-+#define H2C_88E_KEEP_ALIVE_CTRL_LENGTH		3
-+#if (USE_OLD_WOWLAN_DEBUG_FW == 0)
-+#define H2C_88E_REMOTE_WAKE_CTRL_LEN		1
-+#else
-+#define H2C_88E_REMOTE_WAKE_CTRL_LEN		3
-+#endif
-+#define H2C_88E_AOAC_GLOBAL_INFO_LEN		2
-+#define H2C_88E_AOAC_RSVDPAGE_LOC_LEN		7
-+
-+/* Fw PS state for RPWM.
-+ * BIT[2:0] = HW state
-+ * BIT[3] = Protocol PS state, 1: register active state, 0: register sleep state
-+ * BIT[4] = sub-state
-+ */
-+#define	FW_PS_GO_ON			BIT(0)
-+#define	FW_PS_TX_NULL			BIT(1)
-+#define	FW_PS_RF_ON			BIT(2)
-+#define	FW_PS_REGISTER_ACTIVE		BIT(3)
-+
-+#define	FW_PS_DPS			BIT(0)
-+#define	FW_PS_LCLK			(FW_PS_DPS)
-+#define	FW_PS_RF_OFF			BIT(1)
-+#define	FW_PS_ALL_ON			BIT(2)
-+#define	FW_PS_ST_ACTIVE			BIT(3)
-+#define	FW_PS_ISR_ENABLE		BIT(4)
-+#define	FW_PS_IMR_ENABLE		BIT(5)
-+
-+
-+#define	FW_PS_ACK			BIT(6)
-+#define	FW_PS_TOGGLE			BIT(7)
-+
-+ /* 88E RPWM value*/
-+ /* BIT[0] = 1: 32k, 0: 40M*/
-+#define	FW_PS_CLOCK_OFF			BIT(0)		/* 32k*/
-+#define	FW_PS_CLOCK_ON			0		/*40M*/
-+
-+#define	FW_PS_STATE_MASK		(0x0F)
-+#define	FW_PS_STATE_HW_MASK		(0x07)
-+/*ISR_ENABLE, IMR_ENABLE, and PS mode should be inherited.*/
-+#define	FW_PS_STATE_INT_MASK		(0x3F)
-+
-+#define	FW_PS_STATE(x)			(FW_PS_STATE_MASK & (x))
-+#define	FW_PS_STATE_HW(x)		(FW_PS_STATE_HW_MASK & (x))
-+#define	FW_PS_STATE_INT(x)		(FW_PS_STATE_INT_MASK & (x))
-+#define	FW_PS_ISR_VAL(x)		((x) & 0x70)
-+#define	FW_PS_IMR_MASK(x)		((x) & 0xDF)
-+#define	FW_PS_KEEP_IMR(x)		((x) & 0x20)
-+
-+#define	FW_PS_STATE_S0			(FW_PS_DPS)
-+#define	FW_PS_STATE_S1			(FW_PS_LCLK)
-+#define	FW_PS_STATE_S2			(FW_PS_RF_OFF)
-+#define	FW_PS_STATE_S3			(FW_PS_ALL_ON)
-+#define	FW_PS_STATE_S4			((FW_PS_ST_ACTIVE) | (FW_PS_ALL_ON))
-+
-+#define	FW_PS_STATE_ALL_ON_88E	(FW_PS_CLOCK_ON)
-+#define	FW_PS_STATE_RF_ON_88E	(FW_PS_CLOCK_ON)
-+#define	FW_PS_STATE_RF_OFF_88E	(FW_PS_CLOCK_ON)
-+#define	FW_PS_STATE_RF_OFF_LOW_PWR_88E	(FW_PS_CLOCK_OFF)
-+
-+#define	FW_PS_STATE_ALL_ON_92C		(FW_PS_STATE_S4)
-+#define	FW_PS_STATE_RF_ON_92C		(FW_PS_STATE_S3)
-+#define	FW_PS_STATE_RF_OFF_92C		(FW_PS_STATE_S2)
-+#define	FW_PS_STATE_RF_OFF_LOW_PWR_92C	(FW_PS_STATE_S1)
-+
-+/* For 88E H2C PwrMode Cmd ID 5.*/
-+#define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
-+#define	FW_PWR_STATE_RF_OFF		0
-+
-+#define	FW_PS_IS_ACK(x)			((x) & FW_PS_ACK)
-+#define	FW_PS_IS_CLK_ON(x)		((x) & (FW_PS_RF_OFF | FW_PS_ALL_ON))
-+#define	FW_PS_IS_RF_ON(x)		((x) & (FW_PS_ALL_ON))
-+#define	FW_PS_IS_ACTIVE(x)		((x) & (FW_PS_ST_ACTIVE))
-+#define	FW_PS_IS_CPWM_INT(x)		((x) & 0x40)
-+
-+#define	FW_CLR_PS_STATE(x)		((x) = ((x) & (0xF0)))
-+
-+#define	IS_IN_LOW_POWER_STATE_88E(fwpsstate)		\
-+	(FW_PS_STATE(fwpsstate) == FW_PS_CLOCK_OFF)
-+
-+#define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
-+#define	FW_PWR_STATE_RF_OFF	0
-+
-+struct rtl92c_firmware_header {
-+	u16 signature;
-+	u8 category;
-+	u8 function;
-+	u16 version;
-+	u8 subversion;
-+	u8 rsvd1;
-+	u8 month;
-+	u8 date;
-+	u8 hour;
-+	u8 minute;
-+	u16 ramcodesize;
-+	u16 rsvd2;
-+	u32 svnindex;
-+	u32 rsvd3;
-+	u32 rsvd4;
-+	u32 rsvd5;
-+};
-+
-+enum rtl8192c_h2c_cmd {
-+	H2C_88E_RSVDPAGE = 0,
-+	H2C_88E_JOINBSSRPT = 1,
-+	H2C_88E_SCAN = 2,
-+	H2C_88E_KEEP_ALIVE_CTRL = 3,
-+	H2C_88E_DISCONNECT_DECISION = 4,
-+#if (USE_OLD_WOWLAN_DEBUG_FW == 1)
-+	H2C_88E_WO_WLAN = 5,
-+#endif
-+	H2C_88E_INIT_OFFLOAD = 6,
-+#if (USE_OLD_WOWLAN_DEBUG_FW == 1)
-+	H2C_88E_REMOTE_WAKE_CTRL = 7,
-+#endif
-+	H2C_88E_AP_OFFLOAD = 8,
-+	H2C_88E_BCN_RSVDPAGE = 9,
-+	H2C_88E_PROBERSP_RSVDPAGE = 10,
-+
-+	H2C_88E_SETPWRMODE = 0x20,
-+	H2C_88E_PS_TUNING_PARA = 0x21,
-+	H2C_88E_PS_TUNING_PARA2 = 0x22,
-+	H2C_88E_PS_LPS_PARA = 0x23,
-+	H2C_88E_P2P_PS_OFFLOAD = 024,
-+
-+#if (USE_OLD_WOWLAN_DEBUG_FW == 0)
-+	H2C_88E_WO_WLAN = 0x80,
-+	H2C_88E_REMOTE_WAKE_CTRL = 0x81,
-+	H2C_88E_AOAC_GLOBAL_INFO = 0x82,
-+	H2C_88E_AOAC_RSVDPAGE = 0x83,
-+#endif
-+	/* Not defined in new 88E H2C CMD Format */
-+	H2C_88E_RA_MASK,
-+	H2C_88E_SELECTIVE_SUSPEND_ROF_CMD,
-+	H2C_88E_P2P_PS_MODE,
-+	H2C_88E_PSD_RESULT,
-+	/*Not defined CTW CMD for P2P yet*/
-+	H2C_88E_P2P_PS_CTW_CMD,
-+	MAX_88E_H2CCMD
-+};
-+
-+#define pagenum_128(_len)	(u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
-+
-+#define SET_88E_H2CCMD_WOWLAN_FUNC_ENABLE(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 0, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_PATTERN_MATCH_ENABLE(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 1, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_MAGIC_PKT_ENABLE(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 2, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_UNICAST_PKT_ENABLE(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 3, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_ALL_PKT_DROP(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 4, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_GPIO_ACTIVE(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 5, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_REKEY_WAKE_UP(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 6, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_DISCONNECT_WAKE_UP(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 7, 1, __value)
-+#define SET_88E_H2CCMD_WOWLAN_GPIONUM(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+#define SET_88E_H2CCMD_WOWLAN_GPIO_DURATION(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+2, 0, 8, __value)
-+
-+
-+#define SET_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd, __val)			\
-+	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
-+#define SET_H2CCMD_PWRMODE_PARM_RLBM(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 4, __value)
-+#define SET_H2CCMD_PWRMODE_PARM_SMART_PS(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 4, 4, __value)
-+#define SET_H2CCMD_PWRMODE_PARM_AWAKE_INTERVAL(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+2, 0, 8, __value)
-+#define SET_H2CCMD_PWRMODE_PARM_ALL_QUEUE_UAPSD(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __value)
-+#define SET_H2CCMD_PWRMODE_PARM_PWR_STATE(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __value)
-+#define GET_88E_H2CCMD_PWRMODE_PARM_MODE(__cmd)			\
-+	LE_BITS_TO_1BYTE(__cmd, 0, 8)
-+
-+#define SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(__ph2ccmd, __val)		\
-+	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
-+#define SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(__ph2ccmd, __val)		\
-+	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
-+#define SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(__ph2ccmd, __val)		\
-+	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
-+#define SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(__ph2ccmd, __val)		\
-+	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
-+
-+/* AP_OFFLOAD */
-+#define SET_H2CCMD_AP_OFFLOAD_ON(__cmd, __value)			\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 0, 8, __value)
-+#define SET_H2CCMD_AP_OFFLOAD_HIDDEN(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+#define SET_H2CCMD_AP_OFFLOAD_DENYANY(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+2, 0, 8, __value)
-+#define SET_H2CCMD_AP_OFFLOAD_WAKEUP_EVT_RPT(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __value)
-+
-+/* Keep Alive Control*/
-+#define SET_88E_H2CCMD_KEEP_ALIVE_ENABLE(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 0, 1, __value)
-+#define SET_88E_H2CCMD_KEEP_ALIVE_ACCPEPT_USER_DEFINED(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE(__cmd, 1, 1, __value)
-+#define SET_88E_H2CCMD_KEEP_ALIVE_PERIOD(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+
-+/*REMOTE_WAKE_CTRL */
-+#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_EN(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE(__cmd, 0, 1, __value)
-+#if (USE_OLD_WOWLAN_DEBUG_FW == 0)
-+#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_ARP_OFFLOAD_EN(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE(__cmd, 1, 1, __value)
-+#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_NDP_OFFLOAD_EN(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE(__cmd, 2, 1, __value)
-+#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_GTK_OFFLOAD_EN(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE(__cmd, 3, 1, __value)
-+#else
-+#define SET_88E_H2_REM_WAKE_ENC_ALG(__cmd, __value)		\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+#define SET_88E_H2CCMD_REMOTE_WAKE_CTRL_GROUP_ENC_ALG(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE((__cmd)+2, 0, 8, __value)
-+#endif
-+
-+/* GTK_OFFLOAD */
-+#define SET_88E_H2CCMD_AOAC_GLOBAL_INFO_PAIRWISE_ENC_ALG(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE(__cmd, 0, 8, __value)
-+#define SET_88E_H2CCMD_AOAC_GLOBAL_INFO_GROUP_ENC_ALG(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+
-+/* AOAC_RSVDPAGE_LOC */
-+#define SET_88E_H2CCMD_AOAC_RSVD_LOC_REM_WAKE_CTRL_INFO(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE((__cmd), 0, 8, __value)
-+#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+1, 0, 8, __value)
-+#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_NEIGHBOR_ADV(__cmd, __value) \
-+	SET_BITS_TO_LE_1BYTE((__cmd)+2, 0, 8, __value)
-+#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_RSP(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+3, 0, 8, __value)
-+#define SET_88E_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_INFO(__cmd, __value)	\
-+	SET_BITS_TO_LE_1BYTE((__cmd)+4, 0, 8, __value)
-+
-+int rtl88e_download_fw(struct ieee80211_hw *hw,
-+				bool buse_wake_on_wlan_fw);
-+void rtl88e_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
-+			 u32 cmd_len, u8 *p_cmdbuffer);
-+void rtl88e_firmware_selfreset(struct ieee80211_hw *hw);
-+void rtl88e_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
-+void rtl88e_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw,
-+				      u8 mstatus);
-+void rtl88e_set_fw_ap_off_load_cmd(struct ieee80211_hw *hw,  u8 enable);
-+void rtl88e_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished);
-+void rtl88e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state);
-+
-+#endif
+ 	return err;
+ }
+ 
+@@ -3946,8 +4034,8 @@ static s32 brcmf_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 		  "Enter: event %d reason %d\n", e->event_code, e->reason);
+ 
+ 	/* Firmware sends us two proberesponses for each idx one. At the */
+-	/* moment only bsscfgidx 0 is passed up to supplicant            */
+-	if (e->bsscfgidx)
++	/* moment anything but bsscfgidx 0 is passed up to supplicant    */
++	if (e->bsscfgidx == 0)
+ 		return 0;
+ 
+ 	/* Check if wpa_supplicant has registered for this frame */
+@@ -3999,6 +4087,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.flush_pmksa = brcmf_cfg80211_flush_pmksa,
+ 	.start_ap = brcmf_cfg80211_start_ap,
+ 	.stop_ap = brcmf_cfg80211_stop_ap,
++	.change_beacon = brcmf_cfg80211_change_beacon,
+ 	.del_station = brcmf_cfg80211_del_station,
+ 	.sched_scan_start = brcmf_cfg80211_sched_scan_start,
+ 	.sched_scan_stop = brcmf_cfg80211_sched_scan_stop,
+@@ -4727,7 +4816,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		brcmf_err("Failed to init iwm_priv (%d)\n", err);
+ 		goto cfg80211_attach_out;
+ 	}
+-	brcmf_p2p_attach(cfg);
++	brcmf_p2p_attach(cfg, vif);
+ 
+ 	ifp->vif = vif;
+ 	return cfg;
 -- 
-1.8.1.4
+1.7.10.4
+
 
