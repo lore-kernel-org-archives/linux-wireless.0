@@ -1,240 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54655 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528Ab3BGI5r (ORCPT
+Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:51740 "EHLO
+	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760000Ab3BHHLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 03:57:47 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove IEEE80211_HW_SCAN_WHILE_IDLE
-Date: Thu,  7 Feb 2013 09:58:09 +0100
-Message-Id: <1360227489-11145-1-git-send-email-johannes@sipsolutions.net> (sfid-20130207_095751_187755_D548B602)
+	Fri, 8 Feb 2013 02:11:14 -0500
+From: Amit SHAKYA <amit.shakya@stericsson.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 8 Feb 2013 08:10:59 +0100
+Subject: RE: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
+ interface
+Message-ID: <ECD438FDEF6BD742895E554C24725A40236E825AFA@EXDCVYMBSTM005.EQ1STM.local> (sfid-20130208_081126_667001_FCAFFC14)
+References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
+ <1359991708.10311.15.camel@jlt4.sipsolutions.net>
+ <ECD438FDEF6BD742895E554C24725A40236E82519C@EXDCVYMBSTM005.EQ1STM.local>
+ <201302061433.19375.chunkeey@googlemail.com>
+In-Reply-To: <201302061433.19375.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-There are only a few drivers that use HW scan, and
-all of those don't need a non-idle transition before
-starting the scan -- some don't even care about idle
-at all. Remove the flag and code associated with it.
-
-The only driver that really actually needed this is
-wl1251 and it can just do it itself in the hw_scan
-callback -- implement that.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c |  3 +--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |  1 -
- drivers/net/wireless/ti/wl1251/event.c      |  6 +++++-
- drivers/net/wireless/ti/wl1251/main.c       | 24 +++++++++++++++++++-----
- drivers/net/wireless/ti/wlcore/main.c       |  1 -
- include/net/mac80211.h                      |  5 -----
- net/mac80211/debugfs.c                      |  2 --
- net/mac80211/iface.c                        |  8 ++------
- net/mac80211/main.c                         |  3 ---
- 9 files changed, 27 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index 75f6f6c..0fccf72 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -151,8 +151,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 		    IEEE80211_HW_QUEUE_CONTROL |
- 		    IEEE80211_HW_SUPPORTS_PS |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
--		    IEEE80211_HW_WANT_MONITOR_VIF |
--		    IEEE80211_HW_SCAN_WHILE_IDLE;
-+		    IEEE80211_HW_WANT_MONITOR_VIF;
- 
- 	hw->offchannel_tx_hw_queue = IWL_AUX_QUEUE;
- 	hw->radiotap_mcs_details |= IEEE80211_RADIOTAP_MCS_HAVE_FMT;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index a6b05a0..ef7bc4b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -113,7 +113,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		    IEEE80211_HW_QUEUE_CONTROL |
- 		    IEEE80211_HW_WANT_MONITOR_VIF |
--		    IEEE80211_HW_SCAN_WHILE_IDLE |
- 		    IEEE80211_HW_NEED_DTIM_PERIOD |
- 		    IEEE80211_HW_SUPPORTS_PS |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index 5ec50a4..74ae8e1 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -29,6 +29,8 @@
- static int wl1251_event_scan_complete(struct wl1251 *wl,
- 				      struct event_mailbox *mbox)
- {
-+	int ret = 0;
-+
- 	wl1251_debug(DEBUG_EVENT, "status: 0x%x, channels: %d",
- 		     mbox->scheduled_scan_status,
- 		     mbox->scheduled_scan_channels);
-@@ -37,9 +39,11 @@ static int wl1251_event_scan_complete(struct wl1251 *wl,
- 		ieee80211_scan_completed(wl->hw, false);
- 		wl1251_debug(DEBUG_MAC80211, "mac80211 hw scan completed");
- 		wl->scanning = false;
-+		if (wl->hw->conf.flags & IEEE80211_CONF_IDLE)
-+			ret = wl1251_ps_set_mode(wl, STATION_IDLE);
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static void wl1251_event_mbox_dump(struct event_mailbox *mbox)
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index f47e8b0..bbbf68c 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -623,7 +623,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE && !wl->scanning) {
- 		if (conf->flags & IEEE80211_CONF_IDLE) {
- 			ret = wl1251_ps_set_mode(wl, STATION_IDLE);
- 			if (ret < 0)
-@@ -895,11 +895,21 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- 
-+	if (hw->conf.flags & IEEE80211_CONF_IDLE) {
-+		ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
-+		if (ret < 0)
-+			goto out_sleep;
-+		ret = wl1251_join(wl, wl->bss_type, wl->channel,
-+				  wl->beacon_int, wl->dtim_period);
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
-+
- 	skb = ieee80211_probereq_get(wl->hw, wl->vif, ssid, ssid_len,
- 				     req->ie_len);
- 	if (!skb) {
- 		ret = -ENOMEM;
--		goto out;
-+		goto out_idle;
- 	}
- 	if (req->ie_len)
- 		memcpy(skb_put(skb, req->ie_len), req->ie, req->ie_len);
-@@ -908,11 +918,11 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 				      skb->len);
- 	dev_kfree_skb(skb);
- 	if (ret < 0)
--		goto out_sleep;
-+		goto out_idle;
- 
- 	ret = wl1251_cmd_trigger_scan_to(wl, 0);
- 	if (ret < 0)
--		goto out_sleep;
-+		goto out_idle;
- 
- 	wl->scanning = true;
- 
-@@ -920,9 +930,13 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 			      req->n_channels, WL1251_SCAN_NUM_PROBES);
- 	if (ret < 0) {
- 		wl->scanning = false;
--		goto out_sleep;
-+		goto out_idle;
- 	}
-+	goto out_sleep;
- 
-+out_idle:
-+	if (hw->conf.flags & IEEE80211_CONF_IDLE)
-+		ret = wl1251_ps_set_mode(wl, STATION_IDLE);
- out_sleep:
- 	wl1251_ps_elp_sleep(wl);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index e1dfdf9..748bb01 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5639,7 +5639,6 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_AP_LINK_PS |
- 		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_TX_AMPDU_SETUP_IN_HW |
--		IEEE80211_HW_SCAN_WHILE_IDLE |
- 		IEEE80211_HW_QUEUE_CONTROL;
- 
- 	wl->hw->wiphy->cipher_suites = cipher_suites;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dc20df9..6fa7cc8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1368,10 +1368,6 @@ struct ieee80211_tx_control {
-  *	setup strictly in HW. mac80211 should not attempt to do this in
-  *	software.
-  *
-- * @IEEE80211_HW_SCAN_WHILE_IDLE: The device can do hw scan while
-- *	being idle (i.e. mac80211 doesn't have to go idle-off during the
-- *	the scan).
-- *
-  * @IEEE80211_HW_WANT_MONITOR_VIF: The driver would like to be informed of
-  *	a virtual monitor interface when monitor interfaces are the only
-  *	active interfaces.
-@@ -1413,7 +1409,6 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
- 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
- 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
--	IEEE80211_HW_SCAN_WHILE_IDLE			= 1<<24,
- 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
- 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
- };
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 8e604099..b0e32d6 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -151,8 +151,6 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
- 		sf += snprintf(buf + sf, mxln - sf, "AP_LINK_PS\n");
- 	if (local->hw.flags & IEEE80211_HW_TX_AMPDU_SETUP_IN_HW)
- 		sf += snprintf(buf + sf, mxln - sf, "TX_AMPDU_SETUP_IN_HW\n");
--	if (local->hw.flags & IEEE80211_HW_SCAN_WHILE_IDLE)
--		sf += snprintf(buf + sf, mxln - sf, "SCAN_WHILE_IDLE\n");
- 
- 	rv = simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
- 	kfree(buf);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index deb78e8..3ece8eb 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -151,12 +151,8 @@ static u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
- 		}
- 	}
- 
--	sdata = rcu_dereference_protected(local->scan_sdata,
--					  lockdep_is_held(&local->mtx));
--	if (sdata && !(local->hw.flags & IEEE80211_HW_SCAN_WHILE_IDLE)) {
--		scanning = true;
--		sdata->vif.bss_conf.idle = false;
--	}
-+	scanning = test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-+		   test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning);
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2bdd454..aa42488 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -707,9 +707,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		return -EINVAL;
- #endif
- 
--	if ((hw->flags & IEEE80211_HW_SCAN_WHILE_IDLE) && !local->ops->hw_scan)
--		return -EINVAL;
--
- 	if (!local->use_chanctx) {
- 		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
- 			const struct ieee80211_iface_combination *comb;
--- 
-1.8.0
-
+SGkgQ2hyaXN0aWFuLA0KDQpBY3R1YWxseSBJIGRlYnVnZ2VkIHRoaXMgaXNzdWUgcXVpdGUgc29t
+ZSB0aW1lIGJhY2sgZm9yIGEgY3VzdG9tZXIgcHJvamVjdC4gTm93IEkgZG9u4oCZdCBoYXZlIHRo
+ZSBzZXR1cCBhbHNvIGFzIEkgaGF2ZSBtb3ZlZCBvdXQgb2YgdGhlIHByb2plY3QuDQoNClNvIEkg
+YW0gYWZyYWlkIEkgd2lsbCBub3QgYmUgYWJsZSB0byB0ZXN0IGl0Lg0KDQpSZWdhcmRzDQpBbWl0
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJpc3RpYW4gTGFtcGFydGVy
+IFttYWlsdG86Y2h1bmtlZXlAZ29vZ2xlbWFpbC5jb21dIA0KU2VudDogV2VkbmVzZGF5LCBGZWJy
+dWFyeSAwNiwgMjAxMyA3OjAzIFBNDQpUbzogQW1pdCBTSEFLWUENCkNjOiBKb2hhbm5lcyBCZXJn
+OyBKb2huIFcuIExpbnZpbGxlOyBsaW51eC13aXJlbGVzcw0KU3ViamVjdDogUmU6IFtQQVRDSF0g
+bWFjODAyMTE6IEZpeCBQTiBjb3JydXB0aW9uIGluIGNhc2Ugb2YgbXVsdGlwbGUgdmlydHVhbCBp
+bnRlcmZhY2UNCg0KT24gV2VkbmVzZGF5LCBGZWJydWFyeSAwNiwgMjAxMyAwNzo1Njo0NiBBTSBB
+bWl0IFNIQUtZQSB3cm90ZToNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVz
+QHNpcHNvbHV0aW9ucy5uZXRdDQo+IE9uIE1vbiwgMjAxMy0wMi0wNCBhdCAxNjo0OCArMDUzMCwg
+QW1pdCBTaGFreWEgd3JvdGU6DQo+ID4gQEAgLTI3OTAsNyArMjc5MSwyMCBAQCBzdGF0aWMgdm9p
+ZCBpZWVlODAyMTFfcnhfaGFuZGxlcnMoc3RydWN0IA0KPiA+IGllZWU4MDIxMV9yeF9kYXRhICpy
+eCkNCj4gPiAgDQo+ID4gIAlyeC0+bG9jYWwtPnJ1bm5pbmdfcnhfaGFuZGxlciA9IHRydWU7DQo+
+ID4gIA0KPiA+IC0Jd2hpbGUgKChza2IgPSBfX3NrYl9kZXF1ZXVlKCZyeC0+bG9jYWwtPnJ4X3Nr
+Yl9xdWV1ZSkpKSB7DQo+ID4gKwlza2JfcXVldWVfd2Fsa19zYWZlKCZyeC0+bG9jYWwtPnJ4X3Nr
+Yl9xdWV1ZSwgc2tiLCB0bXApIHsNCj4gPiArCQlpZiAoIXNrYikNCj4gPiArCQkJYnJlYWs7DQo+
+ID4gKwkJaGRyID0gKHN0cnVjdCBpZWVlODAyMTFfaGRyICopIHNrYi0+ZGF0YTsNCj4gPiArCQkv
+Kg0KPiA+ICsJCSogQWRkaXRpb25hbCBjaGVjayB0byBlbnN1cmUgdGhhdCB0aGUgcGFja2V0cyBj
+b3JyZXNwb25kaW5nDQo+ID4gKwkJKiB0byBzYW1lIHN0YSBlbnRyeSBhcyBpbiByeC0+c3RhIGFy
+ZSBkZS1xdWV1ZWQuIFRoZSBxdWV1ZQ0KPiA+ICsJCSogY2FuIGhhdmUgZGlmZmVyZW50IGludGVy
+ZmFjZSBwYWNrZXRzIGluIGNhc2Ugb2YgbXVsdGlwbGUgdmlmcw0KPiA+ICsJCSovDQo+ID4gKwkJ
+aWYgKChyeC0+c3RhICYmIGhkcikgJiYgKGllZWU4MDIxMV9pc19kYXRhKGhkci0+ZnJhbWVfY29u
+dHJvbCkpDQo+ID4gKwkJCSYmIChtZW1jbXAocngtPnN0YS0+c3RhLmFkZHIsIGhkci0+YWRkcjIs
+IEVUSF9BTEVOKSkpDQo+ID4gKwkJCQkJY29udGludWU7DQo+ID4gKwkJX19za2JfdW5saW5rKHNr
+YiwgJnJ4LT5sb2NhbC0+cnhfc2tiX3F1ZXVlKTsNCg0KPiBJIHdvbmRlciBpZiB0aGlzIGNvdWxk
+IGxlYWQgdG8gbGVha2luZyBmcmFtZXMgaGVyZSwgaWYgdGhlIHN0YXRpb24gDQo+IGRpc2Nvbm5l
+Y3RzIG9yIHNvbWV0aGluZyB3aGlsZSB0aGVyZSBhcmUgZnJhbWVzIGZvciBpdCBvbiB0aGUgcXVl
+dWU/DQo+IElPVywgdGhlICJqdXN0IHNraXAgdGhhdCBmcmFtZSIgcGllY2Ugc2VlbXMgYSBiaXQg
+cXVlc3Rpb25hYmxlLg0KPiANCj5bQVNdIEJUVyB3ZSBkaWQgdGVzdCB0aGlzIG91dCBhbmQgZGlk
+buKAmXQgb2JzZXJ2ZSBhbnkgc3VjaCBpc3N1ZS4gQ2FuIHlvdQ0KPiAgICAgcGxlYXNlIGhlbHAg
+bWUgdW5kZXJzdGFuZCB0aGUgZmxvdyB3aGljaCBjb3VsZCBsZWFkIHRvIHRoZSBzYW1lPyANCkkg
+cmVhZCBpdCBsaWtlIHRoaXM6IElmIGEgc3RhdGlvbiBzdWRkZW5seSBkaXNhcHBlYXJzIChmb3Ig
+Z29vZCkgd2hpbGUgaXQgc3RpbGwgaGFzIHNvbWUgZGF0YSBpbiB0aGUgcmVvcmRlciBidWZmZXIs
+IHRoZSByZW9yZGVyIHJlbGVhc2UgdGltZXIgd2lsbCBwdXQgdGhlc2Ugb3JwaGFuZWQgZnJhbWVz
+IGludG8gcnhfc2tiX3F1ZXVlLiANCldpdGggdGhpcyBwYXRjaCwgdGhleSB3aWxsIG5ldmVyIGJl
+IGNsZWFyZWQgZnJvbSB0aGUgcXVldWUsIHVudGlsIGllZWU4MDIxMV91bnJlZ2lzdGVyX2h3IGlz
+IGNhbGxlZCBbd2hlbiB0aGUgZGV2aWNlIGlzIHVucmVnaXN0ZXJlZF0uDQoNClNvLCB5b3Ugd291
+bGQgbmVlZCB0byBnbyB0aHJvdWdoIHRoZSByeF9za2JfcXVldWUgZXZlcnl0aW1lIGEgSFQgc3Rh
+dGlvbiBpcyB0b3JuIGRvd24gYW5kIHJlbW92ZSB0aGUgYWZmZWN0ZWQgZnJhbWVzIGZyb20gdGhl
+cmUuDQoNCj4gICAgIEFsc28gaW4gY2FzZSB0aGlzIGlzIGFuIGlzc3VlLCBjYW4gd2UgdGFrZSBj
+YXJlIG9mIHRoaXMgaW4gdGhlIGNsZWFudXANCj4gICAgIHJlbGF0ZWQgdG8gZGlzY29ubmVjdD8N
+ClN1cmUsIHlvdSBjb3VsZCBkbyB0aGF0IGluIGllZWU4MDIxMV9zdGFfdGVhcl9kb3duX0JBX3Nl
+c3Npb25zLiBCdXQgeW91IGRvbid0IG5lZWQgdG8uIE9uIE1vbmRheSwgSSBwb3N0ZWQgYSBwYXRj
+aDoNCjxodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzEwMjcy
+NS5odG1sPg0KaXQgc2hvdWxkIHRha2UgY2FyZSBvZiB0aGUgaXNzdWUuIFNvLCBjYW4geW91IHRl
+c3QgaXQgcGxlYXNlPyANCg0KPiAgICAgSGVyZSBpdCBzZWVtcyBhIGNvbnNjaW91cyBlZmZvcnQg
+aGFzIGJlZW4gbWFkZSB0byBhdm9pZCBzcGlubG9jaw0KPiAgICAgKHJ4LT5sb2NhbC0+cnhfc2ti
+X3F1ZXVlLmxvY2spLCBhcyB0aGlzIGxvY2sgaXMgdGFrZW4gb25seSBmb3IgdGhlDQo+ICAgICBk
+dXJhdGlvbiBvZiBkZXF1ZXVlLiBUaGUgc3VnZ2VzdGVkIHNvbHV0aW9uIGF2b2lkcyB1c2luZyBz
+cGlubG9jay4NCk9oIG5vLCB0aGUgbG9ja2luZyBpcyB0aGVyZS4gc2tiX3VubGluayBpcyBkZWZp
+bmVkIGluIG5ldC9jb3JlL3NrYnVmZi5jIGFzIGEgc3Bpbl9sb2NrIHdyYXBwZWQgX19za2JfdW5s
+aW5rLiBUaGUgc2FtZSBpcyB0cnVlIGZvciBza2JfcXVldWVfdGFpbCBhbmQgX19za2JfcXVldWVf
+dGFpbC4gKE9yIGFyZSB5b3UgdGFsa2luZyBhYm91dCBzb21ldGhpbmcgZWxzZT8pDQoNClJlZ2Fy
+ZHMNCg0KQ2hyaXN0aWFuDQo=
