@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:46789 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756796Ab3BKOrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 09:47:43 -0500
-Message-ID: <51190341.40806@neratec.com> (sfid-20130211_154926_675338_3B5A99B6)
-Date: Mon, 11 Feb 2013 15:42:09 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-MIME-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:35933 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946702Ab3BHSKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 13:10:05 -0500
+Date: Fri, 8 Feb 2013 12:10:02 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [BUG] Beacon loss event every second
-References: <5118F682.8000502@neratec.com>  (sfid-20130211_145326_243072_B10AE6CB) <1360592857.8738.30.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360592857.8738.30.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
+Message-ID: <20130208181002.GD2622@thinkpad-t410> (sfid-20130208_191012_225445_06535202)
+References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
+ <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
+ <1360314212.29851.4.camel@jlt4.sipsolutions.net>
+ <20130208171155.GC2622@thinkpad-t410>
+ <1360343852.29851.26.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360343852.29851.26.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2013 03:27 PM, Johannes Berg wrote:
-> On Mon, 2013-02-11 at 14:47 +0100, Wojciech Dubowik wrote:
->> Hello,
->>
->>     On latest testing and mac80211-next I am getting beacon loss event
->> every second even when connection is perfect.
->>
->> Feb 11 14:49:52 wlanTS kernel: [14148.599482] wlan0: cancelling probereq
->> poll due to a received beacon
->> Has somebody already fixed it? Just asking before I start digging in.
-> I'm not aware of that.
-I have connection without sending any data.
+On Fri, Feb 08, 2013 at 06:17:32PM +0100, Johannes Berg wrote:
+> On Fri, 2013-02-08 at 11:11 -0600, Seth Forshee wrote:
+> 
+> > > I started wondering -- is there a reason to modify the entire TX path?
+> > > Could we maybe bypass it instead and call the driver's TX op almost
+> > > directly? The frames in question don't really need much TX handling, the
+> > > only thing that might be relevant _could_ be rate control but even that
+> > > I'd argue isn't really needed, just using rate_control_send_low() should
+> > > be ok (by setting IEEE80211_TX_CTL_USE_MINRATE it will always return
+> > > true). For the null data packets the sta pointer is also obvious, the AP
+> > > station (BSSID) ... we don't need any of the extra monitor/whatever
+> > > handling either.
+> > > 
+> > > That might be simpler overall?
+> > 
+> > Okay, I'll take a look at this.
+> > 
+> > Another option that might simplify things a bit  would be to use a
+> > ieee80211_tx_data flag. If I added another interface into tx.c for
+> > offchannel frames then the offchan argument would only be needed for
+> > ieee80211_xmit() and ieee80211_tx(). Though it would be nice to avoid
+> > adding an argument to ieee80211_xmit().
 
-I have seen that  ieee80211_sta_rx_notify doesn't count beacons
-so the time is not resetted. What was the reason not to count them
-for beacon loss work? Something connected with PS?
+This actually doesn't work out. ieee80211_tx_data doesn't propogate down
+to ieee80211_tx_frags() and isn't even there in the txpending case. So
+without more substantial changes it just turns back into an argument
+after a couple of levels.
 
-Anyway I should get the event every
+> Oh, I forgot all about ROC and off-channel frames there, but those are
+> public action frames (only?) so the same applies with min-rate etc.
 
-IEEE80211_BEACON_LOSS_COUNT * bcn period
+I thought of that and was going to check and see what kind of ROC frames
+are sent. Also probe request frames are obviously sent off-channel, but
+I'd guess the same applies to them as well?
 
-which in my case should be 7 * 30 ms = 210 ms and not 1 second.
+> Overall I'm not sure. On the one hand that might make the code changes
+> simpler, on the other it might make the code more complex?
 
-I will keep on digging.
+Well, I think the way that will be simplest with the fewest code changes
+would be to use a tx control flag. Of course then we've gobbled up one
+of the last available flags.
 
-Wojtek
->
-> johannes
->
+Seth
 
