@@ -1,91 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47816 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759964Ab3BZV2L (ORCPT
+Received: from mail-da0-f47.google.com ([209.85.210.47]:50520 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757385Ab3BHWzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:28:11 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] iwlwifi: mvm: fix AP/GO mode station removal
-Date: Tue, 26 Feb 2013 22:27:55 +0100
-Message-Id: <1361914077-18749-2-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222817_203537_47B77C7F)
-In-Reply-To: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
-References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
- <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 8 Feb 2013 17:55:43 -0500
+Received: by mail-da0-f47.google.com with SMTP id s35so2017958dak.34
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 14:55:43 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH] mac80211: fix CONFIG_MAC80211=n build breakage
+Date: Fri,  8 Feb 2013 14:54:37 -0800
+Message-Id: <1360364077-12204-1-git-send-email-thomas@cozybit.com> (sfid-20130208_235547_287234_C8B73589)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The original mesh_sta_cleanup() declaration should have been 
+inside the ifdef.
 
-When stations are removed while packets are in the queue,
-we drain the queues first, and then remove the stations.
-If this happens in AP mode while the interface is removed
-the MAC context might be removed from the firmware before
-we removed the station(s), resulting in a SYSASSERT 3421.
-This is because we remove the MAC context from the FW in
-stop_ap(), but only flush the station drain work later in
-remove_interface().
-
-Refactor the code a bit to have a common MAC context
-removal preparation first to solve this.
-
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ net/mac80211/mesh.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index e8264e1..7e169b0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -557,11 +557,9 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 	return ret;
- }
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index e5f6095..cd7868a 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -294,7 +294,6 @@ void mesh_plink_block(struct sta_info *sta);
+ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len,
+ 			 struct ieee80211_rx_status *rx_status);
+-void mesh_sta_cleanup(struct sta_info *sta);
  
--static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
--					 struct ieee80211_vif *vif)
-+static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
-+					struct ieee80211_vif *vif)
- {
--	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	u32 tfd_msk = 0, ac;
- 
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
-@@ -594,12 +592,21 @@ static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
- 		 */
- 		flush_work(&mvm->sta_drained_wk);
- 	}
-+}
-+
-+static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
-+					 struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+	iwl_mvm_prepare_mac_removal(mvm, vif);
- 
- 	mutex_lock(&mvm->mutex);
- 
- 	/*
- 	 * For AP/GO interface, the tear down of the resources allocated to the
--	 * interface should be handled as part of the bss_info_changed flow.
-+	 * interface is be handled as part of the stop_ap flow.
- 	 */
- 	if (vif->type == NL80211_IFTYPE_AP) {
- 		iwl_mvm_dealloc_int_sta(mvm, &mvmvif->bcast_sta);
-@@ -763,6 +770,8 @@ static void iwl_mvm_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
-+	iwl_mvm_prepare_mac_removal(mvm, vif);
-+
- 	mutex_lock(&mvm->mutex);
- 
- 	mvmvif->ap_active = false;
+ /* Private interfaces */
+ /* Mesh tables */
+@@ -367,6 +366,7 @@ void mesh_plink_quiesce(struct sta_info *sta);
+ void mesh_plink_restart(struct sta_info *sta);
+ void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
+ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata);
++void mesh_sta_cleanup(struct sta_info *sta);
+ #else
+ #define mesh_allocated	0
+ static inline void
 -- 
-1.8.0
+1.7.10.4
 
