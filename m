@@ -1,439 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43169 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756849Ab3BKMmH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 07:42:07 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/14] mac80211: move ieee80211_determine_chantype function
-Date: Mon, 11 Feb 2013 13:38:17 +0100
-Message-Id: <1360586298-15028-14-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134736_396318_9FB9E214)
-In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
-References: <[PATCH 00/14] mac80211: HT/VHT handling>
- <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+Received: from bear.ext.ti.com ([192.94.94.41]:58385 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759790Ab3BHIUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 03:20:13 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r188KCCe031244
+	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 02:20:12 -0600
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r188KCOH027110
+	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 02:20:12 -0600
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, <victorg@ti.com>
+Subject: [PATCH] wl18xx: add new phy configuration parameters for telec support
+Date: Fri, 8 Feb 2013 10:19:13 +0200
+Message-ID: <1360311553-2543-1-git-send-email-coelho@ti.com> (sfid-20130208_092019_015207_9D3FDEC5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Victor Goldenshtein <victorg@ti.com>
 
-The next patch will need it further up in the file, so
-move it unchanged now.
+Add back-off settings to the wl18xx_mac_and_phy_params.  We had an
+empty space where the new parameters are added, so this change doesn't
+affect backwards-compatibility with older firmwares.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Update WL18XX_CONF_VERSION accordingly.
+
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- net/mac80211/mlme.c | 390 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 195 insertions(+), 195 deletions(-)
+ drivers/net/wireless/ti/wl18xx/conf.h |    7 ++++---
+ drivers/net/wireless/ti/wl18xx/main.c |    5 +++++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2f13077..6b0c1c4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -174,6 +174,201 @@ static int ecw2cw(int ecw)
- 	return (1 << ecw) - 1;
- }
+diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
+index b5f1148..e34302e 100644
+--- a/drivers/net/wireless/ti/wl18xx/conf.h
++++ b/drivers/net/wireless/ti/wl18xx/conf.h
+@@ -23,7 +23,7 @@
+ #define __WL18XX_CONF_H__
  
-+static u32 chandef_downgrade(struct cfg80211_chan_def *c)
-+{
-+	u32 ret;
-+	int tmp;
-+
-+	switch (c->width) {
-+	case NL80211_CHAN_WIDTH_20:
-+		c->width = NL80211_CHAN_WIDTH_20_NOHT;
-+		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+		c->width = NL80211_CHAN_WIDTH_20;
-+		c->center_freq1 = c->chan->center_freq;
-+		ret = IEEE80211_STA_DISABLE_40MHZ |
-+		      IEEE80211_STA_DISABLE_VHT;
-+		break;
-+	case NL80211_CHAN_WIDTH_80:
-+		tmp = (30 + c->chan->center_freq - c->center_freq1)/20;
-+		/* n_P40 */
-+		tmp /= 2;
-+		/* freq_P40 */
-+		c->center_freq1 = c->center_freq1 - 20 + 40 * tmp;
-+		c->width = NL80211_CHAN_WIDTH_40;
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		c->center_freq2 = 0;
-+		c->width = NL80211_CHAN_WIDTH_80;
-+		ret = IEEE80211_STA_DISABLE_80P80MHZ |
-+		      IEEE80211_STA_DISABLE_160MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		/* n_P20 */
-+		tmp = (70 + c->chan->center_freq - c->center_freq1)/20;
-+		/* n_P80 */
-+		tmp /= 4;
-+		c->center_freq1 = c->center_freq1 - 40 + 80 * tmp;
-+		c->width = NL80211_CHAN_WIDTH_80;
-+		ret = IEEE80211_STA_DISABLE_80P80MHZ |
-+		      IEEE80211_STA_DISABLE_160MHZ;
-+		break;
-+	default:
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		WARN_ON_ONCE(1);
-+		c->width = NL80211_CHAN_WIDTH_20_NOHT;
-+		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-+		break;
-+	}
-+
-+	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
-+
-+	return ret;
-+}
-+
-+static u32
-+ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
-+			     struct ieee80211_supported_band *sband,
-+			     struct ieee80211_channel *channel,
-+			     const struct ieee80211_ht_operation *ht_oper,
-+			     const struct ieee80211_vht_operation *vht_oper,
-+			     struct cfg80211_chan_def *chandef)
-+{
-+	struct cfg80211_chan_def vht_chandef;
-+	u32 ht_cfreq, ret;
-+
-+	chandef->chan = channel;
-+	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-+	chandef->center_freq1 = channel->center_freq;
-+	chandef->center_freq2 = 0;
-+
-+	if (!ht_oper || !sband->ht_cap.ht_supported) {
-+		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	chandef->width = NL80211_CHAN_WIDTH_20;
-+
-+	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
-+						  channel->band);
-+	/* check that channel matches the right operating channel */
-+	if (channel->center_freq != ht_cfreq) {
-+		/*
-+		 * It's possible that some APs are confused here;
-+		 * Netgear WNDR3700 sometimes reports 4 higher than
-+		 * the actual channel in association responses, but
-+		 * since we look at probe response/beacon data here
-+		 * it should be OK.
-+		 */
-+		sdata_info(sdata,
-+			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
-+			   channel->center_freq, ht_cfreq,
-+			   ht_oper->primary_chan, channel->band);
-+		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	/* check 40 MHz support, if we have it */
-+	if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
-+		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+			chandef->width = NL80211_CHAN_WIDTH_40;
-+			chandef->center_freq1 += 10;
-+			break;
-+		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+			chandef->width = NL80211_CHAN_WIDTH_40;
-+			chandef->center_freq1 -= 10;
-+			break;
-+		}
-+	} else {
-+		/* 40 MHz (and 80 MHz) must be supported for VHT */
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	if (!vht_oper || !sband->vht_cap.vht_supported) {
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	vht_chandef.chan = channel;
-+	vht_chandef.center_freq1 =
-+		ieee80211_channel_to_frequency(vht_oper->center_freq_seg1_idx,
-+					       channel->band);
-+	vht_chandef.center_freq2 = 0;
-+
-+	if (vht_oper->center_freq_seg2_idx)
-+		vht_chandef.center_freq2 =
-+			ieee80211_channel_to_frequency(
-+				vht_oper->center_freq_seg2_idx,
-+				channel->band);
-+
-+	switch (vht_oper->chan_width) {
-+	case IEEE80211_VHT_CHANWIDTH_USE_HT:
-+		vht_chandef.width = chandef->width;
-+		break;
-+	case IEEE80211_VHT_CHANWIDTH_80MHZ:
-+		vht_chandef.width = NL80211_CHAN_WIDTH_80;
-+		break;
-+	case IEEE80211_VHT_CHANWIDTH_160MHZ:
-+		vht_chandef.width = NL80211_CHAN_WIDTH_160;
-+		break;
-+	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
-+		vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
-+		break;
-+	default:
-+		sdata_info(sdata,
-+			   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
-+			   vht_oper->chan_width);
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	if (!cfg80211_chandef_valid(&vht_chandef)) {
-+		sdata_info(sdata,
-+			   "AP VHT information is invalid, disable VHT\n");
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	if (cfg80211_chandef_identical(chandef, &vht_chandef)) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
-+		sdata_info(sdata,
-+			   "AP VHT information doesn't match HT, disable VHT\n");
-+		ret = IEEE80211_STA_DISABLE_VHT;
-+		goto out;
-+	}
-+
-+	*chandef = vht_chandef;
-+
-+	ret = 0;
-+
-+out:
-+	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
-+					IEEE80211_CHAN_DISABLED)) {
-+		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
-+			ret = IEEE80211_STA_DISABLE_HT |
-+			      IEEE80211_STA_DISABLE_VHT;
-+			goto out;
-+		}
-+
-+		ret |= chandef_downgrade(chandef);
-+	}
-+
-+	if (chandef->width != vht_chandef.width)
-+		sdata_info(sdata,
-+			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
-+
-+	WARN_ON_ONCE(!cfg80211_chandef_valid(chandef));
-+	return ret;
-+}
-+
- static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- 				  struct sta_info *sta,
- 				  struct ieee80211_ht_operation *ht_oper,
-@@ -3320,201 +3515,6 @@ int ieee80211_max_network_latency(struct notifier_block *nb,
- 	return 0;
- }
- 
--static u32 chandef_downgrade(struct cfg80211_chan_def *c)
--{
--	u32 ret;
--	int tmp;
--
--	switch (c->width) {
--	case NL80211_CHAN_WIDTH_20:
--		c->width = NL80211_CHAN_WIDTH_20_NOHT;
--		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
--		break;
--	case NL80211_CHAN_WIDTH_40:
--		c->width = NL80211_CHAN_WIDTH_20;
--		c->center_freq1 = c->chan->center_freq;
--		ret = IEEE80211_STA_DISABLE_40MHZ |
--		      IEEE80211_STA_DISABLE_VHT;
--		break;
--	case NL80211_CHAN_WIDTH_80:
--		tmp = (30 + c->chan->center_freq - c->center_freq1)/20;
--		/* n_P40 */
--		tmp /= 2;
--		/* freq_P40 */
--		c->center_freq1 = c->center_freq1 - 20 + 40 * tmp;
--		c->width = NL80211_CHAN_WIDTH_40;
--		ret = IEEE80211_STA_DISABLE_VHT;
--		break;
--	case NL80211_CHAN_WIDTH_80P80:
--		c->center_freq2 = 0;
--		c->width = NL80211_CHAN_WIDTH_80;
--		ret = IEEE80211_STA_DISABLE_80P80MHZ |
--		      IEEE80211_STA_DISABLE_160MHZ;
--		break;
--	case NL80211_CHAN_WIDTH_160:
--		/* n_P20 */
--		tmp = (70 + c->chan->center_freq - c->center_freq1)/20;
--		/* n_P80 */
--		tmp /= 4;
--		c->center_freq1 = c->center_freq1 - 40 + 80 * tmp;
--		c->width = NL80211_CHAN_WIDTH_80;
--		ret = IEEE80211_STA_DISABLE_80P80MHZ |
--		      IEEE80211_STA_DISABLE_160MHZ;
--		break;
--	default:
--	case NL80211_CHAN_WIDTH_20_NOHT:
--		WARN_ON_ONCE(1);
--		c->width = NL80211_CHAN_WIDTH_20_NOHT;
--		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
--		break;
--	}
--
--	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
--
--	return ret;
--}
--
--static u32
--ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
--			     struct ieee80211_supported_band *sband,
--			     struct ieee80211_channel *channel,
--			     const struct ieee80211_ht_operation *ht_oper,
--			     const struct ieee80211_vht_operation *vht_oper,
--			     struct cfg80211_chan_def *chandef)
--{
--	struct cfg80211_chan_def vht_chandef;
--	u32 ht_cfreq, ret;
--
--	chandef->chan = channel;
--	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
--	chandef->center_freq1 = channel->center_freq;
--	chandef->center_freq2 = 0;
--
--	if (!ht_oper || !sband->ht_cap.ht_supported) {
--		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	chandef->width = NL80211_CHAN_WIDTH_20;
--
--	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
--						  channel->band);
--	/* check that channel matches the right operating channel */
--	if (channel->center_freq != ht_cfreq) {
--		/*
--		 * It's possible that some APs are confused here;
--		 * Netgear WNDR3700 sometimes reports 4 higher than
--		 * the actual channel in association responses, but
--		 * since we look at probe response/beacon data here
--		 * it should be OK.
--		 */
--		sdata_info(sdata,
--			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
--			   channel->center_freq, ht_cfreq,
--			   ht_oper->primary_chan, channel->band);
--		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	/* check 40 MHz support, if we have it */
--	if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
--		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
--		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--			chandef->width = NL80211_CHAN_WIDTH_40;
--			chandef->center_freq1 += 10;
--			break;
--		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--			chandef->width = NL80211_CHAN_WIDTH_40;
--			chandef->center_freq1 -= 10;
--			break;
--		}
--	} else {
--		/* 40 MHz (and 80 MHz) must be supported for VHT */
--		ret = IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	if (!vht_oper || !sband->vht_cap.vht_supported) {
--		ret = IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	vht_chandef.chan = channel;
--	vht_chandef.center_freq1 =
--		ieee80211_channel_to_frequency(vht_oper->center_freq_seg1_idx,
--					       channel->band);
--	vht_chandef.center_freq2 = 0;
--
--	if (vht_oper->center_freq_seg2_idx)
--		vht_chandef.center_freq2 =
--			ieee80211_channel_to_frequency(
--				vht_oper->center_freq_seg2_idx,
--				channel->band);
--
--	switch (vht_oper->chan_width) {
--	case IEEE80211_VHT_CHANWIDTH_USE_HT:
--		vht_chandef.width = chandef->width;
--		break;
--	case IEEE80211_VHT_CHANWIDTH_80MHZ:
--		vht_chandef.width = NL80211_CHAN_WIDTH_80;
--		break;
--	case IEEE80211_VHT_CHANWIDTH_160MHZ:
--		vht_chandef.width = NL80211_CHAN_WIDTH_160;
--		break;
--	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
--		vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
--		break;
--	default:
--		sdata_info(sdata,
--			   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
--			   vht_oper->chan_width);
--		ret = IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	if (!cfg80211_chandef_valid(&vht_chandef)) {
--		sdata_info(sdata,
--			   "AP VHT information is invalid, disable VHT\n");
--		ret = IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	if (cfg80211_chandef_identical(chandef, &vht_chandef)) {
--		ret = 0;
--		goto out;
--	}
--
--	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
--		sdata_info(sdata,
--			   "AP VHT information doesn't match HT, disable VHT\n");
--		ret = IEEE80211_STA_DISABLE_VHT;
--		goto out;
--	}
--
--	*chandef = vht_chandef;
--
--	ret = 0;
--
--out:
--	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
--					IEEE80211_CHAN_DISABLED)) {
--		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
--			ret = IEEE80211_STA_DISABLE_HT |
--			      IEEE80211_STA_DISABLE_VHT;
--			goto out;
--		}
--
--		ret |= chandef_downgrade(chandef);
--	}
--
--	if (chandef->width != vht_chandef.width)
--		sdata_info(sdata,
--			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
--
--	WARN_ON_ONCE(!cfg80211_chandef_valid(chandef));
--	return ret;
--}
--
- static u8 ieee80211_ht_vht_rx_chains(struct ieee80211_sub_if_data *sdata,
- 				     struct cfg80211_bss *cbss)
- {
+ #define WL18XX_CONF_MAGIC	0x10e100ca
+-#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0005)
++#define WL18XX_CONF_VERSION	(WLCORE_CONF_VERSION | 0x0006)
+ #define WL18XX_CONF_MASK	0x0000ffff
+ #define WL18XX_CONF_SIZE	(WLCORE_CONF_SIZE + \
+ 				 sizeof(struct wl18xx_priv_conf))
+@@ -70,8 +70,9 @@ struct wl18xx_mac_and_phy_params {
+ 	u8 pwr_limit_reference_11_abg;
+ 	u8 per_chan_pwr_limit_arr_11p[NUM_OF_CHANNELS_11_P];
+ 	u8 pwr_limit_reference_11p;
+-	u8 spare1[9];
+-	u8 spare2[9];
++	u8 spare1;
++	u8 per_chan_bo_mode_11_abg[13];
++	u8 per_chan_bo_mode_11_p[4];
+ 	u8 primary_clock_setting_time;
+ 	u8 clock_valid_on_wake_up;
+ 	u8 secondary_clock_setting_time;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 0be1cfc..a10b7a7 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -547,6 +547,11 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
+ 		.pwr_limit_reference_11p	= 0x64,
++		.per_chan_bo_mode_11_abg	= { 0x00, 0x00, 0x00, 0x00,
++						    0x00, 0x00, 0x00, 0x00,
++						    0x00, 0x00, 0x00, 0x00,
++						    0x00 },
++		.per_chan_bo_mode_11_p		= { 0x00, 0x00, 0x00, 0x00 },
+ 		.per_chan_pwr_limit_arr_11p	= { 0xff, 0xff, 0xff, 0xff,
+ 						    0xff, 0xff, 0xff },
+ 		.psat				= 0,
 -- 
-1.8.0
+1.7.10.4
 
