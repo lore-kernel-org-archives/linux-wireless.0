@@ -1,63 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43779 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821Ab3BRTCA (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:57282 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758547Ab3BHOKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 14:02:00 -0500
-Message-ID: <1361214105.8555.39.camel@jlt4.sipsolutions.net> (sfid-20130218_200205_709366_9C0A55A3)
-Subject: Re: [PATCH] mac80211: fix the problem of unicast forwarding from DS
- to DS in Mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	cedric.voncken@acksys.fr
-Date: Mon, 18 Feb 2013 20:01:45 +0100
-In-Reply-To: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130218_124724_975470_FED20EF3)
-References: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20130218_124724_975470_FED20EF3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Feb 2013 09:10:17 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20757.1787.750865.225117@gargle.gargle.HOWL> (sfid-20130208_151228_176246_5AE77F0E)
+Date: Fri, 8 Feb 2013 19:38:59 +0530
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath9k: Print the negotiated HT capabilities
+In-Reply-To: <1359972504-8900-1-git-send-email-sujith@msujith.org>
+References: <1359972504-8900-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 19:16 +0800, Chun-Yeow Yeoh wrote:
-> Unicast frame with unknown forwarding information always trigger
-> the path discovery assuming destination is always located inside the
-> MBSS. This patch allows the forwarding to look for mesh gate if path
-> discovery inside the MBSS has failed.
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > 
-> Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  net/mac80211/tx.c |   15 ++++++++++++---
->  1 files changed, 12 insertions(+), 3 deletions(-)
+> Also, reduce the memory allocated for each row.
 > 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 5b9602b..dce3af3 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1844,9 +1844,18 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		}
->  
->  		if (!is_multicast_ether_addr(skb->data)) {
-> -			mpath = mesh_path_lookup(sdata, skb->data);
-> -			if (!mpath)
-> -				mppath = mpp_path_lookup(sdata, skb->data);
-> +			struct sta_info *next_hop;
-> +
-> +			mpath = mesh_path_lookup(skb->data, sdata);
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-as Thomas said, please rebase on mac80211-next.
+John, please drop this patch.
 
-> +			if (mpath)
-> +				next_hop = rcu_dereference(mpath->next_hop);
-> +
-> +			if (!mpath || (mpath && (!next_hop ||
-> +					!(mpath->flags & MESH_PATH_ACTIVE))))
-
-indentation here is also wrong.
-
-johannes
-
-
+Sujith
