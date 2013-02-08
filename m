@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59425 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:58717 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab3BOMLI (ORCPT
+	with ESMTP id S1946187Ab3BHJIe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 07:11:08 -0500
+	Fri, 8 Feb 2013 04:08:34 -0500
+Message-ID: <1360314503.29851.6.camel@jlt4.sipsolutions.net> (sfid-20130208_100844_659564_70F5684E)
+Subject: Re: [PATCHv9 1/3] mac80211: lock AP_VLAN list with iflist_mtx
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT v2 1/4] cfg80211: constify station parameter pointers
-Date: Fri, 15 Feb 2013 13:10:58 +0100
-Message-Id: <1360930261-30265-2-git-send-email-johannes@sipsolutions.net> (sfid-20130215_131112_862143_FB817871)
-In-Reply-To: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
-References: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 08 Feb 2013 10:08:23 +0100
+In-Reply-To: <1360262304-28362-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1360262304-28362-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2013-02-07 at 19:38 +0100, Simon Wunderlich wrote:
+> To remove the dependency to rtnl_lock() for
+> ieee80211_vif_use/release_channel in AP mode, protect the AP_VLAN
+> list with local->iflist_mtx instead.
+> 
+> RTNL can not be used from within mac80211 workers, but the
+> DFS AP interface requires to release channels (after DFS channel
+> availability checks).
 
-All the pointers point right into the skb data and
-not to anything that would be useful to change, so
-make them const.
+I have to say ... I don't like this churn.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> @@ -934,12 +936,14 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>  	 */
+>  	sdata->control_port_protocol = params->crypto.control_port_ethertype;
+>  	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
+> +	mutex_lock(&sdata->local->iflist_mtx);
+>  	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+>  		vlan->control_port_protocol =
+>  			params->crypto.control_port_ethertype;
+>  		vlan->control_port_no_encrypt =
+>  			params->crypto.control_port_no_encrypt;
+>  	}
+> +	mutex_unlock(&sdata->local->iflist_mtx);
+>  
+>  	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+>  	sdata->vif.bss_conf.dtim_period = params->dtim_period;
+> @@ -972,8 +976,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>  	ieee80211_bss_info_change_notify(sdata, changed);
+>  
+>  	netif_carrier_on(dev);
+> +	mutex_lock(&sdata->local->iflist_mtx);
+>  	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+>  		netif_carrier_on(vlan->dev);
+> +	mutex_unlock(&sdata->local->iflist_mtx);
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2d60db9..4b3b614 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -658,7 +658,7 @@ enum station_parameters_apply_mask {
-  * @ext_capab_len: number of extended capabilities
-  */
- struct station_parameters {
--	u8 *supported_rates;
-+	const u8 *supported_rates;
- 	struct net_device *vlan;
- 	u32 sta_flags_mask, sta_flags_set;
- 	u32 sta_modify_mask;
-@@ -667,13 +667,13 @@ struct station_parameters {
- 	u8 supported_rates_len;
- 	u8 plink_action;
- 	u8 plink_state;
--	struct ieee80211_ht_cap *ht_capa;
--	struct ieee80211_vht_cap *vht_capa;
-+	const struct ieee80211_ht_cap *ht_capa;
-+	const struct ieee80211_vht_cap *vht_capa;
- 	u8 uapsd_queues;
- 	u8 max_sp;
- 	enum nl80211_mesh_power_mode local_pm;
- 	u16 capability;
--	u8 *ext_capab;
-+	const u8 *ext_capab;
- 	u8 ext_capab_len;
- };
- 
--- 
-1.8.0
+Things like this are also questionable -- it still only works because
+the RTNL is there.
+
+I'm not sure what the solution would be though -- maybe allowing/using
+both locks.
+
+johannes
 
