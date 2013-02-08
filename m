@@ -1,35 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2034 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758666Ab3BNTzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 14:55:11 -0500
-Message-ID: <511D4112.6010908@broadcom.com> (sfid-20130214_205543_687079_F1153A4A)
-Date: Thu, 14 Feb 2013 20:54:58 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] brcmsmac: Downgrade d11hdrs_mac80211 error
- messages to warnings.
-References: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com>
-In-Reply-To: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:33057 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947094Ab3BHXAg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 18:00:36 -0500
+Message-ID: <1360364431.29851.40.camel@jlt4.sipsolutions.net> (sfid-20130209_000039_103847_DCD3729D)
+Subject: Re: [PATCH] mac80211: fix CONFIG_MAC80211=n build breakage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 09 Feb 2013 00:00:31 +0100
+In-Reply-To: <1360364077-12204-1-git-send-email-thomas@cozybit.com> (sfid-20130208_235546_505783_FFC77B27)
+References: <1360364077-12204-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20130208_235546_505783_FFC77B27)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2013 02:33 AM, Joe Perches wrote:
-> These messages don't seem to be errors but notifications
-> that some attribute isn't quite right.
-> 
-> Don't mark them as errors.
-> 
+On Fri, 2013-02-08 at 14:54 -0800, Thomas Pedersen wrote:
+> The original mesh_sta_cleanup() declaration should have been 
+> inside the ifdef.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c | 29 ++++++++++++--------------
->  1 file changed, 13 insertions(+), 16 deletions(-)
+Nah, the one in the #else can just be removed since it's only ever
+called from where the compiler can prove it won't be needed so no
+linkage is generated. I already fixed it anyway, and amended the
+original patch rebasing my tree.
 
+:-)
+
+johannes
 
