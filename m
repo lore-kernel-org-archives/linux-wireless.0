@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39912 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757857Ab3BZQYE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 11:24:04 -0500
-Date: Tue, 26 Feb 2013 17:05:36 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mac80211:  Fix crash due to un-canceled
- work-items.
-Message-ID: <20130226160536.GC5256@redhat.com> (sfid-20130226_172410_719542_EA93379A)
-References: <1361382069-31729-1-git-send-email-greearb@candelatech.com>
- <1361382069-31729-2-git-send-email-greearb@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361382069-31729-2-git-send-email-greearb@candelatech.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60767 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946949Ab3BHUaz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 15:30:55 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix chandef tracing bug
+Date: Fri,  8 Feb 2013 21:30:49 +0100
+Message-Id: <1360355449-20662-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_213058_453074_4BAECA0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 20, 2013 at 09:41:09AM -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> The monitor_work and beacon_connection_loss_work items were
-> not being canceled on disassociation (and not on deletion
-> either).  This leads to work-items trying to run after memory
-> has been deleted.
-[skip]
->  
-> +	/* Make sure some work items will not run after this.
-> +	 * Have to do this outside the ifmgd->mtx lock.
-> +	 */
-> +	cancel_work_sync(&ifmgd->monitor_work);
-> +	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
+From: Johannes Berg <johannes.berg@intel.com>
 
-Other works should be canceled as well. Ben, could you repost
-this patch with proper comment?
+The chandef tracing writes center_freq1 twice, so
+that it is always 0 (no driver supports 80+80 yet)
+and leaves center_freq2 unset. Fix this mistake.
 
-Stanislaw
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/trace.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index dd2b80a..0bdd7ae 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -36,7 +36,7 @@
+ 			__entry->control_freq = (c)->chan->center_freq;		\
+ 			__entry->chan_width = (c)->width;			\
+ 			__entry->center_freq1 = (c)->center_freq1;		\
+-			__entry->center_freq1 = (c)->center_freq2;
++			__entry->center_freq2 = (c)->center_freq2;
+ #define CHANDEF_PR_FMT	" control:%d MHz width:%d center: %d/%d MHz"
+ #define CHANDEF_PR_ARG	__entry->control_freq, __entry->chan_width,		\
+ 			__entry->center_freq1, __entry->center_freq2
+-- 
+1.8.0
+
