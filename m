@@ -1,93 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4284 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759785Ab3B0PAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 10:00:50 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 5/8] mac80211: cleanup suspend/resume on ibss mode
-Date: Wed, 27 Feb 2013 16:00:39 +0100
-Message-Id: <1361977242-17344-5-git-send-email-sgruszka@redhat.com> (sfid-20130227_160054_386399_D5AA0E66)
-In-Reply-To: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
-References: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555Ab3BHR2o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 12:28:44 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 11/14] mac80211: clean up channel use in ieee80211_config_ht_tx
+Date: Fri,  8 Feb 2013 18:25:41 +0100
+Message-Id: <1360344344-15742-12-git-send-email-johannes@sipsolutions.net> (sfid-20130208_190812_885353_2DCE361E)
+In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove not used any longer suspend/resume code.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The channel use is confusing, some uses the channel
+context and some the bss_conf.chandef. The latter is
+fine, so get rid of the channel context part.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ibss.c        | 29 +----------------------------
- net/mac80211/ieee80211_i.h |  4 ----
- 2 files changed, 1 insertion(+), 32 deletions(-)
+ net/mac80211/mlme.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 40b71df..539d4a1 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -985,36 +985,9 @@ static void ieee80211_ibss_timer(unsigned long data)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 440e448..8af59f8 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -181,7 +181,6 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
  {
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct ieee80211_local *local = sdata->local;
--
--	if (local->quiescing) {
--		ifibss->timer_running = true;
--		return;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_channel *chan;
+ 	u32 changed = 0;
+ 	u16 ht_opmode;
+@@ -190,23 +189,16 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON_ONCE(!sta))
+ 		return 0;
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (WARN_ON(!chanctx_conf)) {
+-		rcu_read_unlock();
+-		return 0;
 -	}
--
--	ieee80211_queue_work(&local->hw, &sdata->work);
--}
--
--#ifdef CONFIG_PM
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	chan = chanctx_conf->def.chan;
+-	rcu_read_unlock();
++	chan = sdata->vif.bss_conf.chandef.chan;
+ 	sband = local->hw.wiphy->bands[chan->band];
  
--	if (del_timer_sync(&ifibss->timer))
--		ifibss->timer_running = true;
--}
--
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--
--	if (ifibss->timer_running) {
--		add_timer(&ifibss->timer);
--		ifibss->timer_running = false;
--	}
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- }
--#endif
- 
- void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5230694..bd13db3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -489,8 +489,6 @@ struct ieee80211_if_ibss {
- 
- 	u32 basic_rates;
- 
--	bool timer_running;
--
- 	bool fixed_bssid;
- 	bool fixed_channel;
- 	bool privacy;
-@@ -1295,8 +1293,6 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
- int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_ibss_params *params);
- int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
--void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_40:
+-		if (sdata->vif.bss_conf.chandef.chan->center_freq >
++		if (chan->center_freq >
+ 				sdata->vif.bss_conf.chandef.center_freq1 &&
+ 		    chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
+ 			disable_40 = true;
+-		if (sdata->vif.bss_conf.chandef.chan->center_freq <
++		if (chan->center_freq <
+ 				sdata->vif.bss_conf.chandef.center_freq1 &&
+ 		    chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
+ 			disable_40 = true;
 -- 
-1.7.11.7
+1.8.0
 
