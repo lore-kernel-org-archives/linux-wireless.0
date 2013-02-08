@@ -1,128 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pikachu.3ti.be ([188.40.111.73]:38621 "EHLO pikachu.3ti.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422652Ab3BGXJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 18:09:09 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by pikachu.3ti.be (Postfix) with ESMTP id 15C54211E2
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2013 00:01:50 +0100 (CET)
-Received: from pikachu.3ti.be ([127.0.0.1])
-	by localhost (pikachu.3ti.be [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id ppf7bkA0Swx3 for <linux-wireless@vger.kernel.org>;
-	Fri,  8 Feb 2013 00:01:49 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by pikachu.3ti.be (Postfix) with ESMTP id 77F45211E2
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2013 00:01:49 +0100 (CET)
-Date: Fri, 8 Feb 2013 00:01:49 +0100 (CET)
-From: Dag Wieers <dag@wieers.com>
-To: linux-wireless@vger.kernel.org
-Subject: BCM4321 (b43) on AppleTV (1st gen)
-Message-ID: <alpine.LRH.2.02.1302072238200.2736@pikachu.3ti.be> (sfid-20130208_000913_987109_6C51FE3E)
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:58393 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753371Ab3BHSu3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 13:50:29 -0500
+Message-ID: <511548F2.5090602@lwfinger.net> (sfid-20130208_195218_946170_9FC4C43D)
+Date: Fri, 08 Feb 2013 12:50:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+To: Joe Perches <joe@perches.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
+References: <1360348098-8687-1-git-send-email-Larry.Finger@lwfinger.net> <1360348677.2268.7.camel@joe-AO722>
+In-Reply-To: <1360348677.2268.7.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 02/08/2013 12:37 PM, Joe Perches wrote:
+> On Fri, 2013-02-08 at 12:28 -0600, Larry Finger wrote:
+>> A new model of the RTL8188CUS has appeared.
+> []
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>> index 577c0dc..a73a17b 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>> @@ -285,6 +285,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+>>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
+>>   	/* RTL8188CUS-VL */
+>>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x818a, rtl92cu_hal_cfg)},
+>> +	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x819a, rtl92cu_hal_cfg)},
+>>   	/* 8188 Combo for BC4 */
+>>   	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
+>
+> One day would you please do a s/_VENDOR_/_VENDOR_/g
 
-For the OpenELEC project I am looking into getting better performance out 
-of the b43 driver on the AppleTV (1st gen) device . The website reports 
-the driver can do 802.11n (albeit on 2.4Ghz only), however using kernel 
-3.7.5 (and earlier) I cannot get more than 3 MB/sec out of it (usually 
-much less).
+Sure, even though that particular command would not accomplish what you want. I 
+know what you meant. :)
 
-Here's the information of the device from the PCI bus:
-----
-02:00.0 Network controller: Broadcom Corporation BCM4321 802.11a/b/g/n (rev 05)
-         Subsystem: Apple Inc. Device 008c
-         Physical Slot: 1
-         Flags: bus master, fast devsel, latency 0, IRQ 16
-         Memory at 22100000 (64-bit, non-prefetchable) [size=16K]
-         Capabilities: [40] Power Management version 3
-         Capabilities: [58] Vendor Specific Information: Len=78 <?>
-         Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
-         Capabilities: [d0] Express Endpoint, MSI 00
-         Capabilities: [100] Advanced Error Reporting
-         Capabilities: [13c] Virtual Channel
-         Capabilities: [160] Device Serial Number 4a-7a-12-ff-ff-27-00-23
-         Capabilities: [16c] Power Budgeting <?>
-         Kernel driver in use: b43-pci-bridge
-         Kernel modules: wl
-----
+Larry
 
-And the output of iwconfig:
-----
-wlan0     IEEE 802.11bg  ESSID:"zelfbestuur"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: 74:44:01:8D:90:5E
-           Bit Rate=54 Mb/s   Tx-Power=20 dBm
-           Retry  long limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
-           Link Quality=63/70  Signal level=-47 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:33  Invalid misc:1987   Missed beacon:0
-----
 
-The device's bit rate never exceeds 54 MB/s while other wireless devices 
-have iwconfig report e.g. IEEE 802.11abgn on the same netwerk:
-----
-wlan0     IEEE 802.11abgn  ESSID:"zelfbestuur"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: 74:44:01:8D:90:5E
-           Bit Rate=130 Mb/s   Tx-Power=15 dBm
-           Retry  long limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
-           Link Quality=55/70  Signal level=-55 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:4867638  Invalid misc:22386   Missed beacon:0
-
-03:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 (rev 34)
-         Subsystem: Intel Corporation Centrino Advanced-N 6205 AGN
-         Flags: bus master, fast devsel, latency 0, IRQ 45
-         Memory at f1400000 (64-bit, non-prefetchable) [size=8K]
-         Capabilities: [c8] Power Management version 3
-         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-         Capabilities: [e0] Express Endpoint, MSI 00
-         Capabilities: [100] Advanced Error Reporting
-         Capabilities: [140] Device Serial Number 8c-70-5a-ff-ff-c3-f2-64
-         Kernel driver in use: iwlwifi
-         Kernel modules: iwlwifi
-----
-
-Is there anything I can do to troubleshoot ? Are there any module 
-parameters that could help ?
-
-I have to mention that the device's interrupt is shared with the nvidia 
-driver.
-----
-  16:    6374726   IO-APIC-fasteoi   b43, nvidia
-----
-
-And that the kernel has been compiled using:
-----
-CONFIG_B43=m
-CONFIG_B43_SSB=y
-CONFIG_B43_PCI_AUTOSELECT=y
-CONFIG_B43_PCICORE_AUTOSELECT=y
-CONFIG_B43_PIO=y
-CONFIG_B43_PHY_N=y
-CONFIG_B43_PHY_LP=y
-CONFIG_B43_PHY_HT=y
-CONFIG_B43_LEDS=y
-CONFIG_B43_DEBUG=y
-----
-
-If the above can be trimmed down for this type of device I'd like to hear 
-that as well (e.g. I am not sure if we need PIO or LEDS in this case).
-
-PS I am also interested in any power management capabilities the 
-device has and that we could enable when the device is idle, since the 
-system lacks proper power management capabilities by itself 
-(suspend/hibernate) and seems to have a limited ACPI implementation.
-
-Thanks in advance for any insights,
--- 
--- dag wieers, dag@wieers.com, http://dag.wieers.com/
--- dagit linux solutions, info@dagit.net, http://dagit.net/
-
-[Any errors in spelling, tact or fact are transmission errors]
