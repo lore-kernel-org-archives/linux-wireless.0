@@ -1,78 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51582 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60845 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964Ab3BTRAp (ORCPT
+	with ESMTP id S1946959Ab3BHUrC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:00:45 -0500
-Message-ID: <1361379597.8629.39.camel@jlt4.sipsolutions.net> (sfid-20130220_180054_444131_D4C10143)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
+	Fri, 8 Feb 2013 15:47:02 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U3uqb-0003XD-6F
+	for linux-wireless@vger.kernel.org; Fri, 08 Feb 2013 21:47:01 +0100
+Message-ID: <1360356410.29851.30.camel@jlt4.sipsolutions.net> (sfid-20130208_215343_885648_67AAFD43)
+Subject: Re: [RFC 14/14] mac80211: properly track HT/VHT operation changes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 17:59:57 +0100
-In-Reply-To: <1361379331.19353.189.camel@edumazet-glaptop> (sfid-20130220_175537_373410_F2F98F44)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44)
+To: linux-wireless@vger.kernel.org
+Date: Fri, 08 Feb 2013 21:46:50 +0100
+In-Reply-To: <1360344344-15742-15-git-send-email-johannes@sipsolutions.net> (sfid-20130208_183812_452599_890EF4AF)
+References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+	 <1360344344-15742-15-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130208_183812_452599_890EF4AF)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 08:55 -0800, Eric Dumazet wrote:
-
-> > > It will make a huge difference, even on non pressure mode, as TCP
-> > > receive window will grow twice faster.
-> > 
-> > Hmm, why does that depend on the allocation size?
+On Fri, 2013-02-08 at 18:25 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> I guess you missed all the patches about skb->truesize on netdev
-
-Yeah, I don't follow netdev much any more...
-
-> > > -	skb = alloc_skb(128, GFP_ATOMIC);
-> > > +	fraglen = 128;
-> > > +	/* if we use order-1 pages, copy to get better TCP performance */
-> > > +	if (rxb->truesize > PAGE_SIZE)
-> > > +		fraglen = max_t(unsigned, fraglen, len);
-> > > +
-> > > +	skb = alloc_skb(fraglen, GFP_ATOMIC);
-> > 
-> > Hmm, I don't quite understand -- that's not doing any copy?
-> > 
-> > FWIW if you do the copy you should not "steal" the pages, then they'd be
-> > recycled in the RX ring right away.
+> A while ago, I made the mac80211 station code never change
+> the channel type after association. This solved a number of
+> issues but is ultimately wrong, we should react if the AP
+> changes the HT operation IE and switches bandwidth. One of
+> the issues is that we associate as HT40 capable, but if the
+> AP ever switches to 40 MHz we won't be able to receive such
+> frames because we never set our channel to 40 MHz.
 > 
-> Code should just works, please read the following lines in the same
-> function....
-> 
->         /* If frame is small enough to fit in skb->head, pull it completely.
->          * If not, only pull ieee80211_hdr so that splice() or TCP coalesce
->          * are more efficient.
->          */
+> This addresses this and VHT operation changes. If there's a
+> change that is incompatible with our setup, e.g. if the AP
+> decides to change the channel entirely (and for some reason
+> we still hear the beacon) we'll just disconnect.
 
-Oh, right, though I guess the comment is now wrong since practically
-every packet will be copied either here or in mac80211 (A-MSDUs are
-split up there)
+This part works. The rate control update is broken though ...
 
 johannes
 
