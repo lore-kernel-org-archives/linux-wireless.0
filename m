@@ -1,146 +1,618 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59075 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946228Ab3BHLLX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 06:11:23 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: explicitly copy channels to VLANs where needed
-Date: Fri,  8 Feb 2013 12:11:17 +0100
-Message-Id: <1360321877-16626-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_121127_355899_CD6C53F6)
+Received: from mms2.broadcom.com ([216.31.210.18]:3754 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760196Ab3BHO4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 09:56:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/27] brcmfmac: add support for P2P listen mode.
+Date: Fri, 8 Feb 2013 15:53:38 +0100
+Message-ID: <1360335242-12608-4-git-send-email-arend@broadcom.com> (sfid-20130208_163814_476016_B6AB9BA3)
+In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Currently the code assigns channel contexts to VLANs
-(for use by the TX/RX code) when the AP master gets
-its channel context assigned. This works fine, but
-in the upcoming radar detection work the VLANs don't
-require a channel context (during radar detection)
-and assigning one to them anyway causes issues with
-locking and also inconsistencies -- a VLAN interface
-that is added before radar detection would get the
-channel context, while one added during it wouldn't.
+With this patch a device can be put in p2p listen mode and becomes
+visible for other p2p devices (via p2p_find).
 
-Fix these issues moving the channel context copying
-to a new explicit operation that will not be used
-in the radar detection code.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/cfg.c         |  2 ++
- net/mac80211/chan.c        | 47 ++++++++++++++++++++++++++++------------------
- net/mac80211/ieee80211_i.h |  2 ++
- 3 files changed, 33 insertions(+), 18 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   13 ++
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    6 +-
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  150 +++++++++++++---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.h      |   15 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  189 +++++++++++++++++++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 +
+ 6 files changed, 341 insertions(+), 34 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 799e706..68eca17 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -933,6 +933,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 					IEEE80211_CHANCTX_SHARED);
- 	if (err)
- 		return err;
-+	ieee80211_vif_copy_chanctx_to_vlans(sdata, false);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index b61254d..82724d3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -452,6 +452,19 @@ struct brcmf_sta_info_le {
+ 	__le32	rx_decrypt_failures;	/* # of packet decrypted failed */
+ };
  
- 	/*
- 	 * Apply control port protocol, this allows us to
-@@ -1047,6 +1048,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
- 	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
++/*
++ * WLC_E_PROBRESP_MSG
++ * WLC_E_P2P_PROBREQ_MSG
++ * WLC_E_ACTION_FRAME_RX
++ */
++struct brcmf_rx_mgmt_data {
++	__be16	version;
++	__be16	chanspec;
++	__be32	rssi;
++	__be32	mactime;
++	__be32	rate;
++};
++
+ /* Bus independent dongle command */
+ struct brcmf_dcmd {
+ 	uint cmd;		/* common dongle cmd definition */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index 36901f7..8c39b51 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -83,6 +83,7 @@ struct brcmf_event;
+ 	BRCMF_ENUM_DEF(MULTICAST_DECODE_ERROR, 51) \
+ 	BRCMF_ENUM_DEF(TRACE, 52) \
+ 	BRCMF_ENUM_DEF(IF, 54) \
++	BRCMF_ENUM_DEF(P2P_DISC_LISTEN_COMPLETE, 55) \
+ 	BRCMF_ENUM_DEF(RSSI, 56) \
+ 	BRCMF_ENUM_DEF(PFN_SCAN_COMPLETE, 57) \
+ 	BRCMF_ENUM_DEF(EXTLOG_MSG, 58) \
+@@ -96,8 +97,11 @@ struct brcmf_event;
+ 	BRCMF_ENUM_DEF(DFS_AP_RESUME, 66) \
+ 	BRCMF_ENUM_DEF(ESCAN_RESULT, 69) \
+ 	BRCMF_ENUM_DEF(ACTION_FRAME_OFF_CHAN_COMPLETE, 70) \
++	BRCMF_ENUM_DEF(PROBERESP_MSG, 71) \
++	BRCMF_ENUM_DEF(P2P_PROBEREQ_MSG, 72) \
+ 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
+-	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74)
++	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
++	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75)
  
-+	ieee80211_vif_copy_chanctx_to_vlans(sdata, true);
- 	ieee80211_vif_release_channel(sdata);
+ #define BRCMF_ENUM_DEF(id, val) \
+ 	BRCMF_E_##id = (val),
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 25c6b7d..ecc96f3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -318,11 +318,6 @@ static s32 brcmf_p2p_deinit_discovery(struct brcmf_p2p_info *p2p)
+ 	brcmf_dbg(TRACE, "enter\n");
  
- 	return 0;
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index ad35185..84807ce 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -211,15 +211,6 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- 
- 	ctx = container_of(conf, struct ieee80211_chanctx, conf);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		struct ieee80211_sub_if_data *vlan;
--
--		/* for the VLAN list */
--		ASSERT_RTNL();
--		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--			rcu_assign_pointer(vlan->vif.chanctx_conf, NULL);
+ 	bss_dev = &p2p->bss_idx[P2PAPI_BSSCFG_DEVICE];
+-	if (bss_dev->vif == NULL) {
+-		brcmf_err("do nothing, not initialized\n");
+-		return -EINVAL;
 -	}
 -
- 	ieee80211_unassign_vif_chanctx(sdata, ctx);
- 	if (ctx->refcount == 0)
- 		ieee80211_free_chanctx(local, ctx);
-@@ -339,15 +330,6 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 		goto out;
+ 	ifp = bss_dev->vif->ifp;
+ 
+ 	/* Set the discovery state to SCAN */
+@@ -348,8 +343,7 @@ static s32 brcmf_p2p_deinit_discovery(struct brcmf_p2p_info *p2p)
+  *
+  * Initializes the discovery device and configure the virtual interface.
+  */
+-static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
+-				      const u8 *ie, u32 ie_len)
++static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p)
+ {
+ 	struct brcmf_cfg80211_vif *vif;
+ 	s32 ret = 0;
+@@ -357,9 +351,8 @@ static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
+ 	brcmf_dbg(TRACE, "enter\n");
+ 	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
+ 	if (vif) {
+-		brcmf_dbg(INFO,
+-			  "DISCOVERY init already done, just process IE\n");
+-		goto set_ie;
++		brcmf_dbg(INFO, "DISCOVERY init already done\n");
++		goto exit;
  	}
  
--	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		struct ieee80211_sub_if_data *vlan;
+ 	ret = brcmf_p2p_init_discovery(p2p);
+@@ -380,20 +373,36 @@ static int brcmf_p2p_enable_discovery(struct brcmf_p2p_info *p2p,
+ 	if (ret < 0)
+ 		brcmf_err("wsec error %d\n", ret);
+ 
+-set_ie:
+-	if (ie_len) {
+-		ret = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
+-					    ie, ie_len);
 -
--		/* for the VLAN list */
--		ASSERT_RTNL();
--		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--			rcu_assign_pointer(vlan->vif.chanctx_conf, &ctx->conf);
+-		if (ret < 0) {
+-			brcmf_err("set probreq ie occurs error %d\n", ret);
+-			goto exit;
+-		}
 -	}
--
- 	ieee80211_recalc_smps_chanctx(local, ctx);
-  out:
- 	mutex_unlock(&local->chanctx_mtx);
-@@ -430,6 +412,35 @@ void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata)
- 	mutex_unlock(&local->chanctx_mtx);
+ exit:
+ 	return ret;
  }
  
-+void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
-+					 bool clear)
++/**
++ * brcmf_p2p_configure_probereq() - Configure probe request data.
++ *
++ * @p2p: P2P specific data.
++ * @ie: buffer containing information elements.
++ * @ie_len: length of @ie buffer.
++ *
++ */
++static int brcmf_p2p_configure_probereq(struct brcmf_p2p_info *p2p,
++					const u8 *ie, u32 ie_len)
 +{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *vlan;
-+	struct ieee80211_chanctx_conf *conf;
++	struct brcmf_cfg80211_vif *vif;
++	s32 err = 0;
 +
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_AP))
-+		return;
++	brcmf_dbg(TRACE, "enter\n");
++	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
 +
-+	ASSERT_RTNL();
-+	mutex_lock(&local->chanctx_mtx);
++	err = brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG,
++				    ie, ie_len);
 +
-+	if (clear) {
-+		conf = NULL;
-+	} else {
-+		conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					lockdep_is_held(&local->chanctx_mtx));
-+		if (WARN_ON(!conf))
-+			goto out;
-+	}
++	if (err < 0)
++		brcmf_err("set probreq ie occurs error %d\n", err);
 +
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+		rcu_assign_pointer(vlan->vif.chanctx_conf, conf);
-+
-+ out:
-+	mutex_unlock(&local->chanctx_mtx);
++	return err;
 +}
 +
- void ieee80211_iter_chan_contexts_atomic(
- 	struct ieee80211_hw *hw,
- 	void (*iter)(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 816bebb..f016507 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1614,6 +1614,8 @@ ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
- 			       const struct cfg80211_chan_def *chandef);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
-+					 bool clear);
+ /*
+  * brcmf_p2p_escan() - initiate a P2P scan.
+  *
+@@ -420,9 +429,6 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+ 	struct brcmf_scan_params_le *sparams;
+ 	struct brcmf_ssid ssid;
  
- void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *chanctx);
+-	/* add padding if uneven */
+-	if (num_chans % 2)
+-		memsize += sizeof(__le16);
+ 	memsize += num_chans * sizeof(__le16);
+ 	memblk = kzalloc(memsize, GFP_KERNEL);
+ 	if (!memblk)
+@@ -639,8 +645,10 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ 		clear_bit(BRCMF_P2P_STATUS_GO_NEG_PHASE, &p2p->status);
+ 		brcmf_dbg(INFO, "P2P: GO_NEG_PHASE status cleared\n");
+ 
+-		err = brcmf_p2p_enable_discovery(p2p, request->ie,
+-						 request->ie_len);
++		err = brcmf_p2p_enable_discovery(p2p);
++		if (err == 0)
++			err = brcmf_p2p_configure_probereq(p2p, request->ie,
++							   request->ie_len);
+ 
+ 		/*
+ 		 * override .run_escan() callback.
+@@ -666,6 +674,92 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ 	return err;
+ }
+ 
++
++/**
++ * brcmf_p2p_remain_on_channel() - put device on channel and stay there.
++ *
++ * @wiphy: wiphy device.
++ * @channel: channel to stay on.
++ * @duration: time in ms to remain on channel.
++ *
++ */
++int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
++				struct ieee80211_channel *channel,
++				unsigned int duration, u64 *cookie)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_p2p_info *p2p = &cfg->p2p;
++	struct brcmf_cfg80211_vif *vif;
++	s32 err;
++	u16 chanspec;
++
++	brcmf_dbg(TRACE, "Enter, channel: %d, duration ms (%d)\n",
++		  ieee80211_frequency_to_channel(channel->center_freq),
++		  duration);
++
++	*cookie = 0;
++	err = brcmf_p2p_enable_discovery(p2p);
++	if (err)
++		goto exit;
++
++	chanspec = channel_to_chanspec(channel);
++	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
++	err = brcmf_p2p_set_discover_state(vif->ifp, WL_P2P_DISC_ST_LISTEN,
++					   chanspec, (u16)duration);
++	if (err)
++		goto exit;
++
++	memcpy(&p2p->remain_on_channel, channel,
++	       sizeof(p2p->remain_on_channel));
++
++	set_bit(BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL, &p2p->status);
++
++exit:
++	cfg80211_ready_on_channel(wdev, *cookie, channel, duration, GFP_KERNEL);
++	return err;
++}
++
++
++/**
++ * brcmf_p2p_notify_listen_complete() - p2p listen has completed.
++ *
++ * @ifp: interfac control.
++ * @e: event message. Not used, to make it usable for fweh event dispatcher.
++ * @data: payload of message. Not used.
++ *
++ */
++int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
++				     const struct brcmf_event_msg *e,
++				     void *data)
++{
++	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
++	struct brcmf_p2p_info *p2p = &cfg->p2p;
++
++	brcmf_dbg(TRACE, "Enter\n");
++	if (test_and_clear_bit(BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL,
++			       &p2p->status))
++		cfg80211_remain_on_channel_expired(&ifp->vif->wdev, 0,
++						   &p2p->remain_on_channel,
++						   GFP_KERNEL);
++	return 0;
++}
++
++
++/**
++ * brcmf_p2p_cancel_remain_on_channel() - cancel p2p listen state.
++ *
++ * @ifp: interfac control.
++ *
++ */
++void brcmf_p2p_cancel_remain_on_channel(struct brcmf_if *ifp)
++{
++	if (!ifp)
++		return;
++	brcmf_p2p_set_discover_state(ifp, WL_P2P_DISC_ST_SCAN, 0, 0);
++	brcmf_p2p_notify_listen_complete(ifp, NULL, NULL);
++}
++
++
+ /**
+  * brcmf_p2p_attach() - attach for P2P.
+  *
+@@ -689,7 +783,11 @@ void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg)
+  */
+ void brcmf_p2p_detach(struct brcmf_p2p_info *p2p)
+ {
+-	brcmf_p2p_deinit_discovery(p2p);
++	if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif != NULL) {
++		brcmf_p2p_cancel_remain_on_channel(
++			p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->ifp);
++		brcmf_p2p_deinit_discovery(p2p);
++	}
+ 	/* just set it all to zero */
+ 	memset(p2p, 0, sizeof(*p2p));
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+index f304adf..df93272 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.h
+@@ -60,10 +60,10 @@ struct p2p_bss {
+  * @BRCMF_P2P_STATUS_IF_DELETING: peer-to-peer vif delete sent to dongle.
+  * @BRCMF_P2P_STATUS_IF_CHANGING: peer-to-peer vif change sent to dongle.
+  * @BRCMF_P2P_STATUS_IF_CHANGED: peer-to-peer vif change completed on dongle.
+- * @BRCMF_P2P_STATUS_LISTEN_EXPIRED: listen duration expired.
+  * @BRCMF_P2P_STATUS_ACTION_TX_COMPLETED: action frame tx completed.
+  * @BRCMF_P2P_STATUS_ACTION_TX_NOACK: action frame tx not acked.
+  * @BRCMF_P2P_STATUS_GO_NEG_PHASE: P2P GO negotiation ongoing.
++ * @BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL: P2P listen, remaining on channel.
+  */
+ enum brcmf_p2p_status {
+ 	BRCMF_P2P_STATUS_IF_ADD = 0,
+@@ -71,10 +71,10 @@ enum brcmf_p2p_status {
+ 	BRCMF_P2P_STATUS_IF_DELETING,
+ 	BRCMF_P2P_STATUS_IF_CHANGING,
+ 	BRCMF_P2P_STATUS_IF_CHANGED,
+-	BRCMF_P2P_STATUS_LISTEN_EXPIRED,
+ 	BRCMF_P2P_STATUS_ACTION_TX_COMPLETED,
+ 	BRCMF_P2P_STATUS_ACTION_TX_NOACK,
+-	BRCMF_P2P_STATUS_GO_NEG_PHASE
++	BRCMF_P2P_STATUS_GO_NEG_PHASE,
++	BRCMF_P2P_STATUS_REMAIN_ON_CHANNEL
+ };
+ 
+ /**
+@@ -88,6 +88,7 @@ enum brcmf_p2p_status {
+  * @listen_timer: timer for @WL_P2P_DISC_ST_LISTEN discover state.
+  * @ssid: ssid for P2P GO.
+  * @listen_channel: channel for @WL_P2P_DISC_ST_LISTEN discover state.
++ * @remain_on_channel: contains copy of struct used by cfg80211.
+  */
+ struct brcmf_p2p_info {
+ 	struct brcmf_cfg80211_info *cfg;
+@@ -98,6 +99,7 @@ struct brcmf_p2p_info {
+ 	struct timer_list listen_timer;
+ 	struct brcmf_ssid ssid;
+ 	u8 listen_channel;
++	struct ieee80211_channel remain_on_channel;
+ };
+ 
+ void brcmf_p2p_attach(struct brcmf_cfg80211_info *cfg);
+@@ -110,5 +112,12 @@ int brcmf_p2p_start_device(struct wiphy *wiphy, struct wireless_dev *wdev);
+ void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev);
+ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+ 			struct cfg80211_scan_request *request);
++int brcmf_p2p_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
++				struct ieee80211_channel *channel,
++				unsigned int duration, u64 *cookie);
++int brcmf_p2p_notify_listen_complete(struct brcmf_if *ifp,
++				     const struct brcmf_event_msg *e,
++				     void *data);
++void brcmf_p2p_cancel_remain_on_channel(struct brcmf_if *ifp);
+ 
+ #endif /* WL_CFGP2P_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6b4e877..6ab6397 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3359,6 +3359,11 @@ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+ 			mgmt_ie_len = &saved_ie->probe_req_ie_len;
+ 			mgmt_ie_buf_len = sizeof(saved_ie->probe_req_ie);
+ 			break;
++		case BRCMF_VNDR_IE_PRBRSP_FLAG:
++			mgmt_ie_buf = saved_ie->probe_res_ie;
++			mgmt_ie_len = &saved_ie->probe_res_ie_len;
++			mgmt_ie_buf_len = sizeof(saved_ie->probe_res_ie);
++			break;
+ 		default:
+ 			err = -EPERM;
+ 			brcmf_err("not suitable type\n");
+@@ -3674,6 +3679,150 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
+ 	return err;
+ }
+ 
++
++static void
++brcmf_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
++				   struct wireless_dev *wdev,
++				   u16 frame_type, bool reg)
++{
++	struct brcmf_if *ifp = netdev_priv(wdev->netdev);
++	struct brcmf_cfg80211_vif *vif = ifp->vif;
++	u16 mgmt_type;
++
++	brcmf_dbg(TRACE, "Enter, frame_type %04x, reg=%d\n", frame_type, reg);
++
++	mgmt_type = (frame_type & IEEE80211_FCTL_STYPE) >> 4;
++	if (reg)
++		vif->mgmt_rx_reg |= BIT(mgmt_type);
++	else
++		vif->mgmt_rx_reg |= ~BIT(mgmt_type);
++}
++
++
++static int
++brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
++		       struct ieee80211_channel *chan, bool offchan,
++		       unsigned int wait, const u8 *buf, size_t len,
++		       bool no_cck, bool dont_wait_for_ack, u64 *cookie)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	const struct ieee80211_mgmt *mgmt;
++	struct brcmf_cfg80211_vif *vif;
++	s32 err = 0;
++	s32 ie_offset;
++	s32 ie_len;
++
++	brcmf_dbg(TRACE, "Enter\n");
++
++	*cookie = 0;
++
++	mgmt = (const struct ieee80211_mgmt *)buf;
++
++	if (ieee80211_is_mgmt(mgmt->frame_control)) {
++		if (ieee80211_is_probe_resp(mgmt->frame_control)) {
++			/* Right now the only reason to get a probe response */
++			/* is for p2p listen response from wpa_supplicant.   */
++			/* Unfortunately the wpa_supplicant sends it on the  */
++			/* primary ndev, while dongle wants it on the p2p    */
++			/* vif. Since this is only reason for a probe        */
++			/* response to be sent, the vif is taken from cfg.   */
++			/* If ever desired to send proberesp for non p2p     */
++			/* response then data should be checked for          */
++			/* "DIRECT-". Note in future supplicant will take    */
++			/* dedicated p2p wdev to do this and then this 'hack'*/
++			/* is not needed anymore.                            */
++			ie_offset =  DOT11_MGMT_HDR_LEN +
++				     DOT11_BCN_PRB_FIXED_LEN;
++			ie_len = len - ie_offset;
++
++			vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
++			if (vif == NULL) {
++				brcmf_err("No p2p device available for probe response\n");
++				err = -ENODEV;
++				goto exit;
++			}
++			err = brcmf_vif_set_mgmt_ie(vif,
++						    BRCMF_VNDR_IE_PRBRSP_FLAG,
++						    &buf[ie_offset],
++						    ie_len);
++			cfg80211_mgmt_tx_status(wdev, *cookie, buf, len, true,
++						GFP_KERNEL);
++			goto exit;
++		}
++	}
++	brcmf_dbg(TRACE, "Unhandled, is_mgmt %d, fc=%04x!!!!!\n",
++		  ieee80211_is_mgmt(mgmt->frame_control), mgmt->frame_control);
++exit:
++	return err;
++}
++
++
++static int
++brcmf_cfg80211_cancel_remain_on_channel(struct wiphy *wiphy,
++					struct wireless_dev *wdev,
++					u64 cookie)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_cfg80211_vif *vif;
++	int err = 0;
++
++	brcmf_dbg(TRACE, "Enter p2p listen cancel\n");
++
++	vif = cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
++	if (vif == NULL) {
++		brcmf_err("No p2p device available for probe response\n");
++		err = -ENODEV;
++		goto exit;
++	}
++	brcmf_p2p_cancel_remain_on_channel(vif->ifp);
++exit:
++	return err;
++}
++
++static s32 brcmf_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
++					     const struct brcmf_event_msg *e,
++					     void *data)
++{
++	struct wireless_dev *wdev;
++	struct brcmf_cfg80211_vif *vif = ifp->vif;
++	struct brcmf_rx_mgmt_data *rxframe = (struct brcmf_rx_mgmt_data *)data;
++	u16 chanspec = be16_to_cpu(rxframe->chanspec);
++	u8 *mgmt_frame;
++	u32 mgmt_frame_len;
++	s32 freq;
++	u16 mgmt_type;
++
++	brcmf_dbg(INFO,
++		  "Enter: event %d reason %d\n", e->event_code, e->reason);
++
++	/* Firmware sends us two proberesponses for each idx one. At the */
++	/* moment only bsscfgidx 0 is passed up to supplicant            */
++	if (e->bsscfgidx)
++		return 0;
++
++	/* Check if wpa_supplicant has registered for this frame */
++	brcmf_dbg(INFO, "vif->mgmt_rx_reg %04x\n", vif->mgmt_rx_reg);
++	mgmt_type = (IEEE80211_STYPE_PROBE_REQ & IEEE80211_FCTL_STYPE) >> 4;
++	if ((vif->mgmt_rx_reg & BIT(mgmt_type)) == 0)
++		return 0;
++
++	mgmt_frame = (u8 *)(rxframe + 1);
++	mgmt_frame_len = e->datalen - sizeof(*rxframe);
++	freq = ieee80211_channel_to_frequency(CHSPEC_CHANNEL(chanspec),
++					      CHSPEC_IS2G(chanspec) ?
++					      IEEE80211_BAND_2GHZ :
++					      IEEE80211_BAND_5GHZ);
++	wdev = ifp->ndev->ieee80211_ptr;
++	cfg80211_rx_mgmt(wdev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
++
++	brcmf_dbg(INFO,
++		  "mgmt_frame_len (%d) , e->datalen (%d), chanspec (%04x), freq (%d)\n",
++		  mgmt_frame_len, e->datalen, chanspec, freq);
++
++	return 0;
++}
++
++
+ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.add_virtual_intf = brcmf_cfg80211_add_iface,
+ 	.del_virtual_intf = brcmf_cfg80211_del_iface,
+@@ -3703,6 +3852,10 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.del_station = brcmf_cfg80211_del_station,
+ 	.sched_scan_start = brcmf_cfg80211_sched_scan_start,
+ 	.sched_scan_stop = brcmf_cfg80211_sched_scan_stop,
++	.mgmt_frame_register = brcmf_cfg80211_mgmt_frame_register,
++	.mgmt_tx = brcmf_cfg80211_mgmt_tx,
++	.remain_on_channel = brcmf_p2p_remain_on_channel,
++	.cancel_remain_on_channel = brcmf_cfg80211_cancel_remain_on_channel,
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	.testmode_cmd = brcmf_cfg80211_testmode
+ #endif
+@@ -3765,6 +3918,30 @@ static const struct ieee80211_iface_combination brcmf_iface_combos[] = {
+ 	}
+ };
+ 
++static const struct ieee80211_txrx_stypes
++brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_STATION] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_CLIENT] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_GO] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
++		      BIT(IEEE80211_STYPE_AUTH >> 4) |
++		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
++		      BIT(IEEE80211_STYPE_ACTION >> 4)
++	}
++};
++
+ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
+ {
+ 	struct wiphy *wiphy;
+@@ -3797,10 +3974,10 @@ static struct wiphy *brcmf_setup_wiphy(struct device *phydev)
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	wiphy->cipher_suites = __wl_cipher_suites;
+ 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
+-	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;	/* enable power
+-								 * save mode
+-								 * by default
+-								 */
++	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
++			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++	wiphy->mgmt_stypes = brcmf_txrx_stypes;
++	wiphy->max_remain_on_channel_duration = 5000;
+ 	brcmf_wiphy_pno_params(wiphy);
+ 	err = wiphy_register(wiphy);
+ 	if (err < 0) {
+@@ -4271,6 +4448,10 @@ static void brcmf_register_event_handlers(struct brcmf_cfg80211_info *cfg)
+ 			    brcmf_notify_sched_scan_results);
+ 	brcmf_fweh_register(cfg->pub, BRCMF_E_IF,
+ 			    brcmf_notify_vif_event);
++	brcmf_fweh_register(cfg->pub, BRCMF_E_P2P_PROBEREQ_MSG,
++			    brcmf_notify_rx_mgmt_p2p_probereq);
++	brcmf_fweh_register(cfg->pub, BRCMF_E_P2P_DISC_LISTEN_COMPLETE,
++			    brcmf_p2p_notify_listen_complete);
+ }
+ 
+ static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_info *cfg)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 691f613..a996afa 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -189,6 +189,7 @@ struct vif_saved_ie {
+  * @sme_state: SME state using enum brcmf_vif_status bits.
+  * @pm_block: power-management blocked.
+  * @list: linked list.
++ * @mgmt_rx_reg: registered rx mgmt frame types.
+  */
+ struct brcmf_cfg80211_vif {
+ 	struct brcmf_if *ifp;
+@@ -200,6 +201,7 @@ struct brcmf_cfg80211_vif {
+ 	bool pm_block;
+ 	struct vif_saved_ie saved_ie;
+ 	struct list_head list;
++	u16 mgmt_rx_reg;
+ };
+ 
+ /* association inform */
 -- 
-1.8.0
+1.7.10.4
+
 
