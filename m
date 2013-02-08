@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43516 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60912 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755566Ab3BRRZU (ORCPT
+	with ESMTP id S1946936Ab3BHUxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 12:25:20 -0500
-Message-ID: <1361208314.8555.37.camel@jlt4.sipsolutions.net> (sfid-20130218_182522_754469_B0A7A612)
-Subject: Re: [PATCH] cfg80211: fix station change if TDLS isn't supported
+	Fri, 8 Feb 2013 15:53:16 -0500
+Message-ID: <1360356792.29851.33.camel@jlt4.sipsolutions.net> (sfid-20130208_215320_686018_F323B66F)
+Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Date: Mon, 18 Feb 2013 18:25:14 +0100
-In-Reply-To: <512263B9.3000402@lwfinger.net> (sfid-20130218_182434_336242_32BE8C45)
-References: <51207925.5040702@lwfinger.net>
-	 <1361196149-10731-1-git-send-email-johannes@sipsolutions.net>
-	 <512263B9.3000402@lwfinger.net> (sfid-20130218_182434_336242_32BE8C45)
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Fri, 08 Feb 2013 21:53:12 +0100
+In-Reply-To: <20130208204632.GE2622@thinkpad-t410>
+References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
+	 <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
+	 <1360314212.29851.4.camel@jlt4.sipsolutions.net>
+	 <20130208171155.GC2622@thinkpad-t410>
+	 <1360343852.29851.26.camel@jlt4.sipsolutions.net>
+	 <20130208181002.GD2622@thinkpad-t410>
+	 <1360350359.29851.27.camel@jlt4.sipsolutions.net>
+	 <20130208204632.GE2622@thinkpad-t410>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 11:24 -0600, Larry Finger wrote:
-> On 02/18/2013 08:02 AM, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Larry noticed (and bisected) that commit df881293c6ba9a12868491a717b25
-> > "cfg80211: Pass TDLS peer's QoS/HT/VHT information during set_station"
-> > broke secure connections. This is is the case only for drivers that
-> > don't support TDLS, where any kind of change, even just the change of
-> > authorized flag that is required for normal operation, was rejected
-> > now. To fix this, remove the checks. I have some patches that will add
-> > proper verification for all the different cases later.
-> >
-> > Cc: Jouni Malinen <j@w1.fi>
-> > Bisected-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Johannes,
-> 
-> Thanks. This patch does fix the problem. The only thing I saw was an unused 
-> variable:
-> 
-> net/wireless/nl80211.c: In function ‘nl80211_set_station_tdls’:
-> net/wireless/nl80211.c:3421:37: warning: unused variable ‘rdev’ [-Wunused-variable]
-> 
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Fri, 2013-02-08 at 14:46 -0600, Seth Forshee wrote:
 
-Thanks, I'll fix that variable and apply the patch.
+> > > Well, I think the way that will be simplest with the fewest code changes
+> > > would be to use a tx control flag. Of course then we've gobbled up one
+> > > of the last available flags.
+> > 
+> > Let's do that anyway then. I still think we need to do the
+> > PS/scan/offchannel thing I described in another mail anyway, so that'd
+> > be a better interim step than changing all the prototypes...
+> 
+> When I originally looked at using a tx control flag I didn't think that
+> using IEEE80211_TX_CTL_TX_OFFCHAN would work, but now I'm not sure why.
+> Is there any reason not to do this?
+
+I guess you'd have to pre-assign the queue, since the code in
+ieee80211_tx() might skip that part, but that seems easy enough. Other
+than that, a driver that checks IEEE80211_TX_CTL_TX_OFFCHAN might treat
+that frame specially, but OTOH the only drivers using it right now are
+ours and TI's and they both have HW scan/roc, so your code never
+executes. What a future driver might do is anyone's guess...
 
 johannes
 
