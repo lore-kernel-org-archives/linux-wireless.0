@@ -1,42 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54735 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755004Ab3BGJWs (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:33958 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946957Ab3BHUcP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 04:22:48 -0500
-Message-ID: <1360228991.8038.3.camel@jlt4.sipsolutions.net> (sfid-20130207_102253_004126_E7D48C00)
-Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
-	maheshp@posedge.com
-Date: Thu, 07 Feb 2013 10:23:11 +0100
-In-Reply-To: <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com> (sfid-20130207_102010_516659_782CEA2D)
-References: <7384f4ddc838247a0f467708d66baa8c@posedge.com>
-	 <1360225230.8038.1.camel@jlt4.sipsolutions.net>
-	 <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
-	 (sfid-20130207_102010_516659_782CEA2D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Feb 2013 15:32:15 -0500
+Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
+	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id r18KWC1Y012707
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 15:32:12 -0500
+Received: (from pizza@localhost)
+	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id r18KWCaK012706
+	for linux-wireless@vger.kernel.org; Fri, 8 Feb 2013 15:32:12 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Subject: RFCv4: ST-E CW1100/1200 WLAN driver
+Date: Fri,  8 Feb 2013 15:31:53 -0500
+Message-Id: <1360355527-12159-1-git-send-email-pizza@shaftnet.org> (sfid-20130208_213359_062625_8A890FCA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 14:49 +0530, Krishna Chaitanya wrote:
-> On Thu, Feb 7, 2013 at 1:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Thu, 2013-02-07 at 00:01 -0800, chaitanyatk@posedge.com wrote:
-> >
-> 
-> > Hmm. I'm not exactly happy with using (one of) the last control flag for
-> > a pure debug facility.
-> >
-> Hmm...initially i tried to add qos header in the debugfs itself but to avoid
-> code redundancy went with the TX_CTL. But in either case we need some kind
-> of flag to skip adding the qos header by mac80211 (or) to set the AMSDU
-> bit in the qos control header.
+Here's the fourth patch series, now under drivers/net/wireless
 
-I guess the question is whether we really need this code in the tree at
-all? It seems like a (relatively) obscure debug feature for which I'm
-not sure we should touch the TX fastpath?
+This code submission has seen a fair amount of testing across SDIO and 
+SPI interfaces, using multiple vendors' cw1200 implementations.
 
-johannes
+It's stabilizing nicely.  Except for the fact that IBSS is still broken, 
+I consider this driver ready for submission.  As you can tell from the 
+changelog below, there have been a lot of changes since the last 
+submission.
+
+Most of the changes revolve around further simplifying IRQ handling and 
+eliminating various Kconfig flags.  API updates to v3.8 kernels, major 
+roaming state machine fixes, eliminating dynamic block ack configuration 
+(due to firmware bugs), and a pile of minor fixes and cleanups round 
+this out.
+
+There are still a couple bits of code present for older (<2.6.36 and <3.2) 
+kernels, which I will strip out for inclusion in compat-drivers once 
+this is mainlined.  (Is there a better process I should follow here?)
+
+As always, comments and feedback welcome.
+
+Changes from v3:
+
+ * Remove excessive [un]likely() compiler hinting  (Pontus Fuchs)
+ * Update to 3.7 API
+ * Move from drivers/staging to drivers/net/wireless
+ * Fix memory leak when FW download fails  (Pontus Fuchs)
+ * Incorrect length calculation for 16-bit I/O  (Pontus Fuchs)
+ * Minor sparse/smatch warnings  (Pontus Fuchs)
+ * Eliminate sbus_ops.reset() and code that it uses
+ * Elimnate CONFIG_CW1200_DEBUGFS  (Pontus Fuchs)
+ * Use SSID directly out of ieee80211_bss_conf
+ * Eliminate __devinit/__devexit and friends  (Pontus Fuchs)
+ * Convert CONFIG_CW1200_5GHZ_SUPPORT to a platform data flag  (Pontus Fuchs)
+ * Move NON_POWER_OF_TWO_BLOCKSIZES into platform data
+ * Move platform data to include/linux
+ * cfg80211_find_ie -> ieee80211_bss_get_ie  (Pontus Fuchs)
+ * Add proper RCU locking for v3.8  (Pontus Fuchs)
+ * Convert CONFIG_CW1200_USE_SDIO_IRQ into platform data flag
+ * Eliminate rid of sbus_ops.irq_enable()
+ * Elimnate IRQ polling support
+ * Push IRQ registration into the bus handling code
+ * Moved code from ap.[ch] into more appropriate places
+ * Eliminated CONFIG_CW1200_PM
+ * Elminate workarounds for former bad IRQ handling
+ * Don't log cmd timeout errors caused by device removal
+ * Always disable interrupts when irq handler is called
+ * FW Command timeout now triggers a full connection teardown
+ * cw1200_unjoin_work() triggers iee80211_connection_loss()
+ * Schedule unjoin_work() when we've detected a beacon loss event
+ * Cleanups in tx_unlock code
+ * Always trigger unjoin_work() when we report a connection loss
+ * Use threded IRQ handle for GPIO irq (Pontus Fuchs)
+ * Access Func 0 in standard way (Pontus Fuchs)
+ * Update to 3.8-rc5 API
+ * Eliminate dynamic BlockACK policy configuration
+ * Eliminated a pile of BUG_ON() and WARN_ON() calls
+ * Prevent deadlock on subsequent cmds after a cmd timeout happens
+
 
