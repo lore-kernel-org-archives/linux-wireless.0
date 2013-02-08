@@ -1,54 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:55948 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759317Ab3B1Sxe (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:63960 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754460Ab3BHBg3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 13:53:34 -0500
-Received: by mail-wi0-f172.google.com with SMTP id ez12so8129343wid.17
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2013 10:53:32 -0800 (PST)
+	Thu, 7 Feb 2013 20:36:29 -0500
+Received: by mail-bk0-f43.google.com with SMTP id jm19so1469463bkc.30
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 17:36:28 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <512F5709.60907@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
-	<20130228114724.GB16369@localhost>
-	<512F5709.60907@openwrt.org>
-Date: Thu, 28 Feb 2013 10:53:32 -0800
-Message-ID: <CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com> (sfid-20130228_195338_135324_98142330)
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAEFj984iH-04wx_ndDwWz9afTPZNvuerh4GLz-fKSBXQpFkYwA@mail.gmail.com>
+References: <773DB8A82AB6A046AE0195C68612A319014B7731@sbs2003.acksys.local>
+	<CAG6hwVOEdFoac=TO8AcZVSB4Y15usHRwNkrK3cVWerHTvArO9g@mail.gmail.com>
+	<CAEFj984iH-04wx_ndDwWz9afTPZNvuerh4GLz-fKSBXQpFkYwA@mail.gmail.com>
+Date: Fri, 8 Feb 2013 09:36:28 +0800
+Message-ID: <CAEFj9870CLx30ykL_mY02AfYwd9N1RC+6p20WaBOeFNkdOBfGg@mail.gmail.com> (sfid-20130208_023633_830916_DBCE59BC)
+Subject: Re: Mesh regression
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	open11s <devel@lists.open80211s.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2013 05:09, Felix Fietkau <nbd@openwrt.org> wrote:
+Hi, Cedric
 
->> The same could be said of PID...
-> I agree, we should remove that one as well.
+Are you able to explain the step-by-step on how you set up your mesh?
+I am not able recreate the problem here.
 
-One of the advantages of having multiple RC modules - even if they're
-not longer optimal - is to keep the API honest. :-)
+>>> If I run a ping from LAPTOP_A to MeshGate2 and on the same time, I
+>>> launch the following mesh initialization script
+>>>         iw phy phy0 interface add wlan0 type mp
+>>>         iw wlan0 set channel 36
+>>>         ifconfig wlan0 up
+>>>         iw wlan0 mesh join cvtest
+>>>         brctl addif br-lan wlan0
 
-I still keep onoe/amrr working in FreeBSD's ath(4) driver, primarily
-to make sure that I don't change the API without thinking too much
-about what other rate control modules do, but also to provide a
-simpler example of how the API works.
+Also, in which node that you launch the mesh initialization script
+during your ping process from laptop A to MeshGate2?
 
-Personally, I'd like to see more examples of rate control modules in
-LInux/FreeBSD, especially ones that start demanding more 802.11 state
-(ie, air-time QoS.)
+Beside, you mesh is setup without enabling the proactive tree-building
+mode on your MeshGate, am I right?
 
+Please advice. Thanks
 
+---
+Chun-Yeow
 
-Adrian
+On Fri, Feb 8, 2013 at 8:49 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Hi, Thomas
+>
+> Yes. I will take a look on this.
+>
+> Hi, Cedric
+>
+> Both the 2 mesh gates, only MeshGate1 has interface bridged to
+> Ethernet and MeshGate2 has "no" interface bridged to Ethernet, am I
+> right?
+>
+> ---
+> Chun-Yeow
+>
+> On Fri, Feb 8, 2013 at 4:02 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> + o11s-devel, Chun-Yeow
+>>
+>> For once I don't think this regression is my fault :)
+>>
+>> $ git log master-2012-06-08...master-2012-09-07  --oneline
+>> net/mac80211/mesh_hwmp.c
+>> 4bd4c2d mac80211: clean up mpath_move_to_queue()
+>> 2c53040 net: Fix (nearly-)kernel-doc comments for various functions
+>> bdcbd8e mac80211: clean up debugging
+>> 7ebfa46 mac80211: fix and improve mesh RANN processing
+>> 728b19e {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
+>> 3fbf4b7 mac80211: implement the proactive PREP generation
+>> a69cc44 mac80211: implement the proactive PREQ generation
+>> 35b3fe1 mac80211: Rename stainfo variable for the more common sta
+>> e3f5d16 mac80211: Remove unused variable
+>>
+>> Chun-Yeow, can you please take a look at the PREQ forwarding logic in
+>> the context of Cedric's problem?
+>>
+>> On Thu, Feb 7, 2013 at 8:29 AM, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
+>>> My test Platform is:
+>>>
+>>> LAPTOP_A ---------------- MeshGate 1 ---------------- MeshGate2
+>>> 192.168.3.1                  192.168.3.252               192.168.3.253
+>>> 08:00:27:c1:bf:06     Wistron_aa:41:ed              Wistron_aa:40:a8
+>>>                                                 Acksysco_00:2d:ef
+>>>
+>>> The meshgate2 have a mesh interface and a lan interface bridged
+>>> together, and IP address is set on the bridge.
+>>>
+>>> If I run a ping from LAPTOP_A to MeshGate2 and on the same time, I
+>>> launch the following mesh initialization script
+>>>         iw phy phy0 interface add wlan0 type mp
+>>>         iw wlan0 set channel 36
+>>>         ifconfig wlan0 up
+>>>         iw wlan0 mesh join cvtest
+>>>         brctl addif br-lan wlan0
+>>>
+>>> In this case, I get no response from the ping.
+>>> I spied the wireless with airpcap and wireshark:
+>>>         A PREQ frame is sent from the mesh gate but the "sta target"
+>>> field is not set with the other mesh gate. In this frame, the "sta
+>>> target" field is set to the destination mac address (Acksysco_00:2d:ef).
+>>>
+>>> I don't have this default with compat-2012-06-14.
+>>> I have this default with compat-2013-01-07 and compat-2012-09-07
+>>>
+>>> I attach a wireshark capture with the default. The frame #49 is PREQ
+>>> with field target sta address set to MAC address of LAPTOPB.
+>>>
+>>> Do not hesitate to request more information or new test, if necessary to
+>>> understand the default.
+>>>
+>>> Any help will appreciate.
+>>> Best regards.
+>>>
+>>> Voncken cedric
+>>
+>>
+>>
+>> --
+>> Thomas
