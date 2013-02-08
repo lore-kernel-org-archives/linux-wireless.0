@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1548 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758712Ab3BYKXI convert rfc822-to-8bit (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:57303 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946101Ab3BHJVj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 05:23:08 -0500
-Message-ID: <512B3B7C.8060508@broadcom.com> (sfid-20130225_112313_462843_F833FB14)
-Date: Mon, 25 Feb 2013 11:22:52 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	Fri, 8 Feb 2013 04:21:39 -0500
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id r189Lcig020167
+	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:38 -0600
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189Lcpm030749
+	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:38 -0600
+Received: from [172.24.79.4] (h79-4.vpn.ti.com [172.24.79.4])	by
+ dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189Las6009677	for
+ <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:37 -0600
+Message-ID: <1360315240.12803.27.camel@cumari.coelho.fi> (sfid-20130208_102422_744410_6CC53972)
+Subject: Re: [PATCH] wlcore: don't hide real error code when booting fails
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Date: Fri, 8 Feb 2013 11:20:40 +0200
+In-Reply-To: <1359535995-18092-1-git-send-email-coelho@ti.com>
+References: <1359535995-18092-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Dead code in brcms_c_compute_rspec
-References: <CACna6rx57gx7fLEq5Om7q2Pbn82vgRRhH5DpkKtsgyPjHKuEvA@mail.gmail.com>
-In-Reply-To: <CACna6rx57gx7fLEq5Om7q2Pbn82vgRRhH5DpkKtsgyPjHKuEvA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/13 14:20, Rafał Miłecki wrote:
-> Hey,
->
-> I was looking for adding support for more devices in b43 and wanted to
-> check how did you handled reading PHY type/id from rxchan/chanstat
-> (it's a part of hardware-specific part of RX header).
->
-> In rate.c you have brcms_c_compute_rspec which does:
-> phy_type = ((rxh->RxChan&  RXS_CHAN_PHYTYPE_MASK)>>  RXS_CHAN_PHYTYPE_SHIFT);
-> (you duplicate BRCMS_CHAN_PHYTYPE by the way).
->
-> The problem is that:
-> #define	RXS_CHAN_PHYTYPE_MASK	0x0007
-> and you're comparing the result to the
-> #define	PHY_TYPE_LCN		8
-> which looks like a minor dead code for me.
->
-> You may want to fix that.
->
+On Wed, 2013-01-30 at 10:53 +0200, Luciano Coelho wrote:
+> There's no need to hide the actual error that was reported when
+> booting fails.  For instance, on I/O error, we were returing
+> -EINVALID, which doesn't make sense at all.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-Thanks, Rafał
+Applied.
 
-That does not seem right. I will look into this.
-
-Gr. AvS
+--
+Luca.
 
