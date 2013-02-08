@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46573 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980Ab3BEJ4Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 04:56:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: qca_vkondrat@qca.qualcomm.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: provide 64-bit traffic counters
-Date: Tue,  5 Feb 2013 10:56:44 +0100
-Message-Id: <1360058204-12208-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_105632_028597_BD46E2C1)
+Received: from mms3.broadcom.com ([216.31.210.19]:4400 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946079Ab3BHIkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 03:40:05 -0500
+Message-ID: <5114B881.9000100@broadcom.com> (sfid-20130208_094034_835905_87AE383F)
+Date: Fri, 8 Feb 2013 09:34:09 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Onteddu Slreddy" <slreddy88@gmail.com>
+cc: netdev <netdev@vger.kernel.org>, linux-can@vger.kernel.org,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, wil6210@qca.qualcomm.com,
+	brcm80211-dev-list@broadcom.com,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>
+Subject: Re: Wifi basics documents
+References: <CAHT=_ri0JBrbPfWJrzjYR4eNDDW9ygMkJSDU4vJXEfh_STLK9g@mail.gmail.com>
+In-Reply-To: <CAHT=_ri0JBrbPfWJrzjYR4eNDDW9ygMkJSDU4vJXEfh_STLK9g@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/08/2013 07:55 AM, Onteddu Slreddy wrote:
+> Hello All,
+> 
+> 
+> I recently joined this group the group.
+> 
+> Can anybody suggest me places where I can get Documents which will explain
+> wifi  Architecture in brief i would like to know details like
+> 
+> In Linux for embedded systems:
+>         What is the software architecture for wifi
+>         What are each folders in kernel/net and kernel/drivers/net refer to
+>         What is wpa_supplicant how to know which version I have to use
+>         How to get  familiar with words like nl802.11, mac802.11, wext,
+> copat-wireless, compatwireless-openmac
+>         If I have to add a new chip driver what are the checklist points i
+> have to see
+> 
+> My Quesitions may be basic kindly bare with me
+> If any body have self prepared documents that will be great help for me
 
-"unsigned long" is already 64-bit on (most?) 64-bit
-machines, use u64 and tell cfg80211 that we provide
-64-bit counters now.
+802.11 is a IEEE standard that is freely available for download.
+Regarding Linux architecture and infrastructure there is a lot of
+information to be found on wireless.kernel.org.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 4 ++--
- net/mac80211/ieee80211_i.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Regards,
+Arend
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f4f7e76..fb06d13 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -449,8 +449,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	sinfo->generation = sdata->local->sta_generation;
- 
- 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
--			STATION_INFO_RX_BYTES |
--			STATION_INFO_TX_BYTES |
-+			STATION_INFO_RX_BYTES64 |
-+			STATION_INFO_TX_BYTES64 |
- 			STATION_INFO_RX_PACKETS |
- 			STATION_INFO_TX_PACKETS |
- 			STATION_INFO_TX_RETRIES |
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2b06ff1..4631de0 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -822,7 +822,7 @@ struct tpt_led_trigger {
- 	unsigned int blink_table_len;
- 	struct timer_list timer;
- 	unsigned long prev_traffic;
--	unsigned long tx_bytes, rx_bytes;
-+	u64 tx_bytes, rx_bytes;
- 	unsigned int active, want;
- 	bool running;
- };
--- 
-1.8.0
+
 
