@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2044 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756565Ab3B0Mah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 07:30:37 -0500
-Message-ID: <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
-Date: Wed, 27 Feb 2013 13:30:12 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes.berg@intel.com>
-Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
- userspace
-References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from shards.monkeyblade.net ([149.20.54.216]:37999 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760366Ab3BHWpD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Feb 2013 17:45:03 -0500
+Date: Fri, 08 Feb 2013 17:45:00 -0500 (EST)
+Message-Id: <20130208.174500.1518593039138341685.davem@davemloft.net> (sfid-20130208_234508_884321_8A706FB3)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-can@vger.kernel.org,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, wil6210@qca.qualcomm.com,
+	brcm80211-dev-list@broadcom.com,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCH] drivers: net: Remove remaining alloc/OOM messages
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1360273587.27863.15.camel@joe-AO722>
+References: <1360273587.27863.15.camel@joe-AO722>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/13 15:01, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+From: Joe Perches <joe@perches.com>
+Date: Thu, 07 Feb 2013 13:46:27 -0800
+
+> alloc failures already get standardized OOM
+> messages and a dump_stack.
 > 
-> In many cases, userspace may need to know which of the
-> 802.11 extended capabilities ("Extended Capabilities
-> element") are implemented in the driver or device, to
-> include them e.g. in beacons, assoc request/response
-> or other frames. Add a new nl80211 attribute to hold
-> the extended capabilities bitmap for this.
+> For the affected mallocs around these OOM messages:
 > 
-Hi,
+> Converted kmallocs with multiplies to kmalloc_array.
+> Converted a kmalloc/memcpy to kmemdup.
+> Removed now unused stack variables.
+> Removed unnecessary parentheses.
+> Neatened alignment.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-seems like this patch pushed wiphy info length over the limit
-for dual band devices.
-So userspace cannot get any info about phy capabilities.
-
-I know there is a patch for nl80211 and iw to allow splitting of this info,
-but it is not in 3.8
-Should we not revert it for stable then?
-
-Kind regards
-Piotr
-
+Applied, thanks Joe.
