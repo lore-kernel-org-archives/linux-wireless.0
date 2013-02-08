@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:35721 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865Ab3B0KBi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760233Ab3BHTGF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 05:01:38 -0500
-Message-ID: <512DD96C.5060001@asianux.com> (sfid-20130227_110154_820373_86EBFB8C)
-Date: Wed, 27 Feb 2013 18:01:16 +0800
-From: Chen Gang <gang.chen@asianux.com>
-MIME-Version: 1.0
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror
- when no -W* in EXTRA_CFLAGS
-References: <512DADCA.9040609@asianux.com> <1385870.TegBXpTM9i@lx-vladimir> <512DCA59.4040800@asianux.com> <1921426.IqHmmMU5eP@lx-vladimir>
-In-Reply-To: <1921426.IqHmmMU5eP@lx-vladimir>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Feb 2013 14:06:05 -0500
+Message-ID: <1360350359.29851.27.camel@jlt4.sipsolutions.net> (sfid-20130208_200609_760936_EDDEAC60)
+Subject: Re: [PATCH v3 1/2] mac80211: Fix tx queue handling during scans
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Fri, 08 Feb 2013 20:05:59 +0100
+In-Reply-To: <20130208181002.GD2622@thinkpad-t410>
+References: <1360189829.7910.84.camel@jlt4.sipsolutions.net>
+	 <1360259677-19278-1-git-send-email-seth.forshee@canonical.com>
+	 <1360314212.29851.4.camel@jlt4.sipsolutions.net>
+	 <20130208171155.GC2622@thinkpad-t410>
+	 <1360343852.29851.26.camel@jlt4.sipsolutions.net>
+	 <20130208181002.GD2622@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-于 2013年02月27日 17:46, Vladimir Kondratiev 写道:
-> Perhaps, it would be good idea to fight the original problem.
-> 
+On Fri, 2013-02-08 at 12:10 -0600, Seth Forshee wrote:
 
-  if my another 'beautify code' patches are applied into next-* tree.
-    (that means most of members think it is a good idea).
-    I will process the original problems (when processing, also cc to you).
+> Well, I think the way that will be simplest with the fewest code changes
+> would be to use a tx control flag. Of course then we've gobbled up one
+> of the last available flags.
 
-  :-)
+Let's do that anyway then. I still think we need to do the
+PS/scan/offchannel thing I described in another mail anyway, so that'd
+be a better interim step than changing all the prototypes...
 
-> I mean, fix warnings where possible. Example: there are lots of
-> "unused parameter" ones. Where it is false warning, add __maybe_unused
-> attribute. Like this:
-> 
-> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-> index c566927..83e43b7 100644
-> --- a/include/linux/kernel.h
-> +++ b/include/linux/kernel.h
-> @@ -163,8 +163,9 @@ extern int _cond_resched(void);
->  # define might_sleep() \
->         do { __might_sleep(__FILE__, __LINE__, 0); might_resched(); } while (0)
->  #else
-> -  static inline void __might_sleep(const char *file, int line,
-> -                                  int preempt_offset) { }
-> +  static inline void __might_sleep(const char *file __maybe_unused,
-> +                                  int line __maybe_unused,
-> +                                  int preempt_offset __maybe_unused) { }
->  # define might_sleep() do { might_resched(); } while (0)
->  #endif
->  
+johannes
 
-  thank you for your demo, it is valuable to me.
-
-  :-)
-
-
--- 
-Chen Gang
-
-Asianux Corporation
