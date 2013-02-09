@@ -1,207 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:52330 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374Ab3BAHc3 (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:50504 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760542Ab3BICW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 02:32:29 -0500
-From: "Zigman, Eran" <eranz@ti.com>
-To: Girish Bn <Girish.BN@lnties.com>, "Coelho, Luciano" <coelho@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: WL12XX drivers and firmware for Wi-Fi Pre Certifications Tests
-Date: Fri, 1 Feb 2013 07:32:23 +0000
-Message-ID: <58098F92B10CE64E898E9D20B13AA4830B5D30E8@DNCE05.ent.ti.com> (sfid-20130201_083248_991729_879FBDAC)
-References: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
-In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1EDF52@POCITMSEXMB02.LntUniverse.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Fri, 8 Feb 2013 21:22:59 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/4] mwifiex: define generic data type for PCIe ring buffers
+Date: Fri,  8 Feb 2013 18:18:08 -0800
+Message-Id: <1360376289-14861-4-git-send-email-bzhao@marvell.com> (sfid-20130209_032630_191709_41F5A86F)
+In-Reply-To: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
+References: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgR2lyaXNoLA0KW29sX1I1LjAwLjE0XSBpcyBub3QgZm9yIEpCLiBJdCdzIHRoZSBmaXJzdCBS
-NSBOTENQIHJlbGVhc2UsIGFuZCBpdCdzIG9uIEdCLg0KV2UgaGF2ZSAiSG93IFRvIiBvbiBvdXIg
-d2VicGFnZSB0byBidWlsZCBKQiByZWxlYXNlLiBZb3UgY2FuIGZpbmQgaXQgaW4gb21hcGVkaWEu
-Y29tDQpUaGUgcG9pbnQgaXMgV0w2IHdpdGggUEcyLjAgaXNuJ3Qgc3VwcG9ydGVkIHdpdGggb3Vy
-IGxhdGVzdCByZWxlYXNlIGFzIGZhciBhcyBJIHVuZGVyc3RhbmQsIHdoeSBjYW4ndCB5b3UgbW92
-ZSB0byB0aGUgbGF0ZXN0IFBHIHZlcnNpb24/IEl0IHNob3VsZCBiZSBwaW4gY29tcGF0aWJsZS4N
-Cg0KVGhhbmtzIGFuZCBSZWdhcmRzLA0KDQpFcmFuIFppZ21hbg0KVGV4YXMgSW5zdHJ1bWVudHMg
-SW5jDQpFQ1MgQXBwbGljYXRpb24gDQpDZWxsOiA0MDgtNjgwOTczNCwgT2ZmaWNlOiA3MjEzNzI2
-DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEdpcmlzaCBCbiBbbWFpbHRv
-OkdpcmlzaC5CTkBsbnRpZXMuY29tXSANClNlbnQ6IFdlZG5lc2RheSwgSmFudWFyeSAzMCwgMjAx
-MyA5OjA3IFBNDQpUbzogWmlnbWFuLCBFcmFuOyBDb2VsaG8sIEx1Y2lhbm8NCkNjOiBsaW51eC13
-aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFdMMTJYWCBkcml2ZXJzIGFuZCBmaXJt
-d2FyZSBmb3IgV2ktRmkgUHJlIENlcnRpZmljYXRpb25zIFRlc3RzDQoNCkhpIEVyYW4sDQoNCk91
-ciBQbGF0Zm9ybSAgaXMgYmFzZWQgb24gTFBDMzEzeCBhbmQgTGludXgga2VybmVsIDIuNi4yOC4y
-LiBUaGUgd2lyZWxlc3MgbW9kdWxlIGlzIEpvcmppbiBiYXNlZCBXTDEyNzEgUEcgMi4wIFdlIGFy
-ZSB1c2luZyB0aGUgZm9sbG93aW5nIGNvbXBhdCB3aXJlbGVzcyBwYWNrYWdlIGFuZCBmaXJtd2Fy
-ZSB2ZXJzaW9uIFRoZSBDb21wYXQgV2lyZWxlc3MgMy41IHBhY2thZ2UgZnJvbSBVUkwgaHR0cDov
-L2xpbnV4d2lyZWxlc3Mub3JnL2VuL3VzZXJzL0Rvd25sb2FkL3N0YWJsZS8jY29tcGF0LXdpcmVs
-ZXNzXzMuNV9zdGFibGVfcmVsZWFzZXMuDQpUaGUgU1IgZmlybXdhcmUgYmluYXJ5IGlzIHRha2Vu
-IGZyb20gVVJMIGh0dHBzOi8vZ2l0aHViLmNvbS9USS1PcGVuTGluay90aS11dGlscyBhbmQgYnJh
-bmNoIHI1X2piIGFuZCB0YWcgW29sX1I1LjAwLjE0XSAgYW5kIHRoZSBSZXZpc2lvbiBpcyBTaW5n
-bGUgUm9sZSAoU1IpOiAgKTogIFJldiA2LjMuNy4wLjEwNSBQbGVhc2Ugbm90ZSB0aGF0IG11bHRp
-LXJvbGUgd2lsbCBub3QgYmUgZW5hYmxlZCBDYW4geW91IGNvbmZpcm0gdXMgd2hldGhlciB0aGUg
-YWJvdmUgY29tYmluYXRpb24gaGFzIHBhc3NlZCBuZWNlc3NhcnkgUHJlLXF1YWxpZmljYXRpb24g
-dGVzdHMgZm9yIFdpLUZpIGFuZCBXaS1GaSBEaXJlY3Q/DQpJZiBub3QgYWJvdmUgY29tYmluYXRp
-b24sIHBsZWFzZSBzdWdnZXN0IHVzIHRoZSByaWdodCBjb21iaW5hdGlvbiB3aGljaCBoYXMgcGFz
-c2VkIHRlc3RzIGFuZCBpdCBjYW4gd29yayBvbiBXTDEyNzEgUEcgMi4wDQoNCg0KVGhhbmtzICYg
-UmVnYXJkcywNCkdpcmlzaA0KTCZUIElFUywNCktJQURCIEluZHVzdHJpYWwgQXJlYSwNCkhlYmJh
-bC1Ib290YWdhbGxpLCBNeXNvcmUgLSA1NzAgMDE4DQpUZWxlcGhvbmUgOiAgRElEKzkxLTgyMS0y
-NDA1NTUyDQpNb2JpbGU6ICs5MS05NzQxMjA2NDAyDQpFLW1haWwgSUQgOkdpcmlzaC5CTkBsbnRp
-ZXMuY29tDQp3d3cubG50aWVzLmNvbQ0KDQpUaGlzIG1haWwgaXMgY2xhc3NpZmllZCBhcyA6DQoo
-ICApIEwmVCBJRVMgUHJvcHJpZXRhcnkNCiggICkgTCZUIElFUyBDb25maWRlbnRpYWwNCihYKSBM
-JlQgSUVTIEludGVybmFsIFVzZQ0KKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KDQpUaGFu
-a3MgJiBSZWdhcmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0K
-SGViYmFsLUhvb3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRlbGVwaG9uZSA6ICBESUQrOTEt
-ODIxLTI0MDU1NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUtbWFpbCBJRCA6R2lyaXNoLkJO
-QGxudGllcy5jb20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFpbCBpcyBjbGFzc2lmaWVkIGFz
-IDoNCiggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0K
-KFgpIEwmVCBJRVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBHZW5lcmFsIEJ1c2luZXNzDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBaaWdtYW4sIEVyYW4gW21haWx0bzpl
-cmFuekB0aS5jb21dDQpTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDI5LCAyMDEzIDExOjU5IFBNDQpU
-bzogR2lyaXNoIEJuOyBDb2VsaG8sIEx1Y2lhbm8NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmcNClN1YmplY3Q6IFJFOiB3bDEyeHggKG9sX1I1LlNQMy4wNSkgZHJpdmVycyArIGZp
-cm13YXJlIChvbF9SNS5TUDMuMDUpIGRvZXNuJ3Qgd29yayBvbiBXTDEyNzEgKEhXIFBHIDIuMCkN
-Cg0KSGkgR2lyaXNoLA0KDQpQRzIuMCB3YXMgc3RvcHBlZCBiZWVuIHN1cHBvcnRlZCBkdWUgdG8g
-UlggTWlzbWF0Y2ggcHJvYmxlbSB0aGF0IGNhbWUgZHVlIHRvICJ3cm9uZy9wcm9ibGVtYXRpYyIg
-UFBEVSBjb21wbGV0ZSBpbnRlcnJ1cHQuIEluIFBHMy4wIHdlIG1vdmVkIGluIDEyN3ggdG8gd29y
-ayBhcyAxMjh4IGRldmljZXMsIGFuZCBzb2x2ZWQgdGhhdCBpc3N1ZS4NCg0KVGhhbmtzIGFuZCBS
-ZWdhcmRzLA0KDQpFcmFuIFppZ21hbg0KVGV4YXMgSW5zdHJ1bWVudHMgSW5jDQpFQ1MgQXBwbGlj
-YXRpb24NCkNlbGw6IDQwOC02ODA5NzM0LCBPZmZpY2U6IDcyMTM3MjYNCg0KDQotLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lyaXNoIEJuIFttYWlsdG86R2lyaXNoLkJOQGxudGll
-cy5jb21dDQpTZW50OiBUaHVyc2RheSwgSmFudWFyeSAyNCwgMjAxMyAxMDo0OCBQTQ0KVG86IFpp
-Z21hbiwgRXJhbjsgQ29lbGhvLCBMdWNpYW5vDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJu
-ZWwub3JnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJt
-d2FyZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoN
-CkhpIFRJIERldmVsb3BlcnMsDQoNCkkgYW0gc3RpbGwgd2FpdGluZyBmb3IgcmVwbHkgZnJvbSBU
-SSBvbiB3aGV0aGVyIG91ciBoYXJkd2FyZSBjYW4gcnVuIHN1Y2Nlc3NmdWxseSBydW4gdGhlIG9s
-X1I1LlNQMy4wNSBwYWNrYWdlIG9yIG5vdC4NCldlIHNwZW5kIGh1Z2UgYW1vdW50IG9mIHRpbWUg
-aW4gdGVzdGluZyB0aGUgcGFja2FnZS4gV2UgYXJlIHNlZWluZyB0aGUgaXNzdWUgd2l0aCB0aGUg
-ZmlybXdhcmUgYmluYXJpZXMgb25seS4gV2UgZG9uJ3QgaGF2ZSBhbiBhbnkgY29udHJvbCBvbiB0
-aGUgZmlybXdhcmUgYmluYXJpZXMgYW5kIGl0IGEgYmxhY2sgYm94IHRvIHVzLg0KSWYgdGhlIGZp
-cm13YXJlIGlzIG5vdCBzdXBwb3J0ZWQgb24gdGhlIG9sZGVyIGhhcmR3YXJlLCBwbGVhc2UgYXBw
-bHkgYSBwYXRjaCB0byB0aGUgZHJpdmVyIHdoaWNoIHdpbGwgcmVzdHJpY3QgcnVubmluZyB0aGUg
-bmV3IGRyaXZlcnMgb24gdGhlIG9sZGVyIGhhcmR3YXJlLg0KSXQgd2lsbCBhbHNvIGhlbHAgdG8g
-YXZvaWQgcGVvcGxlIHNwZW5kaW5nIHRpbWUgb24gdGhlIG5ldyBkcml2ZXJzIHdpdGggb2xkIGhh
-cmR3YXJlLg0KV2Ugd2FudGVkIHRvIG1ha2UgY3J1Y2lhbCBkZWNpc2lvbiBmb3Igb3VyIE5ldHdv
-cmsgU2VydmVyIHByb2R1Y3QgZmVhdHVyZXMgYmFzZWQgb24gdGhlIG91dGNvbWUgb2YgdGVzdGlu
-ZyBvbF9SNS5TUDMuMDUgcGFja2FnZSB3aGljaCB3ZSBjb3VsZG4ndCBhY2hpZXZlLg0KVGhpcyBo
-YXMgZGlzYXBwb2ludGVkIHVzIGEgbG90DQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpHaXJpc2gNCg0K
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEdpcmlzaCBCbg0KU2VudDogRnJpZGF5
-LCBKYW51YXJ5IDA0LCAyMDEzIDk6MTEgQU0NClRvOiAnWmlnbWFuLCBFcmFuJzsgJ0NvZWxobywg
-THVjaWFubycNCkNjOiAnbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnJw0KU3ViamVjdDog
-UkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBkcml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQMy4w
-NSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAoSFcgUEcgMi4wKQ0KDQpIaSwNCg0KRG8geW91IGhh
-dmUgYW55IHVwZGF0ZXMgb24gdGhlIHRlc3RpbmcgYXQgeW91ciBzaWRlPyBMZXQgdXMga25vdyBh
-bnkgcGF0aCBmb3J3YXJkIG9uIHRoaXM/DQoNClRoYW5rcyAmIFJlZ2FyZHMsDQpHaXJpc2gNCkwm
-VCBJRVMsDQpLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQpIZWJiYWwtSG9vdGFnYWxsaSwgTXlzb3Jl
-IC0gNTcwIDAxOA0KVGVsZXBob25lIDogIERJRCs5MS04MjEtMjQwNTU1Mg0KTW9iaWxlOiArOTEt
-OTc0MTIwNjQwMg0KRS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVzLmNvbQ0Kd3d3LmxudGllcy5j
-b20NCg0KVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KKCAgKSBMJlQgSUVTIFByb3ByaWV0
-YXJ5DQooICApIEwmVCBJRVMgQ29uZmlkZW50aWFsDQooWCkgTCZUIElFUyBJbnRlcm5hbCBVc2UN
-CiggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCkZyb206IEdpcmlzaCBCbg0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAyOCwgMjAxMiA2OjE3
-IFBNDQpUbzogJ1ppZ21hbiwgRXJhbic7IENvZWxobywgTHVjaWFubw0KQ2M6IGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBk
-cml2ZXJzICsgZmlybXdhcmUgKG9sX1I1LlNQMy4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAo
-SFcgUEcgMi4wKQ0KDQpIaSwNCg0KVGhhbmtzIGZvciB0aGUgc3VwcG9ydA0KQ2FuIHlvdSBsZXQg
-dXMga25vdyB3aGV0aGVyIHlvdSB3ZXJlIGFibGUgdG8gcmVwcm9kdWNlIHRoZSBpc3N1ZSB1c2lu
-ZyBSNS5TUDMgb24gV0wxMjcxTCAoSFcgUEcgMi4wKSBvbiBMaW51eD8NCg0KIFRoYW5rcyAmIFJl
-Z2FyZHMsDQpHaXJpc2gNCkwmVCBJRVMsDQpLSUFEQiBJbmR1c3RyaWFsIEFyZWEsDQpIZWJiYWwt
-SG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KVGVsZXBob25lIDogIERJRCs5MS04MjEtMjQw
-NTU1Mg0KTW9iaWxlOiArOTEtOTc0MTIwNjQwMg0KRS1tYWlsIElEIDpHaXJpc2guQk5AbG50aWVz
-LmNvbQ0Kd3d3LmxudGllcy5jb20NCg0KVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KKCAg
-KSBMJlQgSUVTIFByb3ByaWV0YXJ5DQooICApIEwmVCBJRVMgQ29uZmlkZW50aWFsDQooWCkgTCZU
-IElFUyBJbnRlcm5hbCBVc2UNCiggKSBMJlQgSUVTIEdlbmVyYWwgQnVzaW5lc3MNCg0KLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFppZ21hbiwgRXJhbiBbbWFpbHRvOmVyYW56QHRp
-LmNvbV0NClNlbnQ6IFNhdHVyZGF5LCBEZWNlbWJlciAyMiwgMjAxMiAxMjozNiBBTQ0KVG86IENv
-ZWxobywgTHVjaWFubzsgR2lyaXNoIEJuDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQpTdWJqZWN0OiBSRTogd2wxMnh4IChvbF9SNS5TUDMuMDUpIGRyaXZlcnMgKyBmaXJtd2Fy
-ZSAob2xfUjUuU1AzLjA1KSBkb2Vzbid0IHdvcmsgb24gV0wxMjcxIChIVyBQRyAyLjApDQoNCkx1
-Y2EsDQpXZSBoYXZlIHRlc3RlZCB0aGUgYmVsb3cgcmVsZWFzZSBSNS5TUDMgb24gQU0zMzV4IGFu
-ZCBXTDEyNzFMIChIVyBQRyAzLngpIG9uIExpbnV4IGJ1dCBub3Qgb24gUEcgMi4wLg0KSSBhbSBu
-b3Qgc3VyZSBpZiB0aGUgUjUuU1AzIGRyaXZlci9maXJtd2FyZSB3b3VsZCBoYXZlIGFueSBsaW1p
-dGF0aW9ucyBvZiBvbGQgdmVyc2lvbiBQRzIuMC4NCldlIHdpbGwgcnVuIHRoZSBleGFjdCBzY2Vu
-YXJpb3MgdGhhdCB5b3UgbWVudGlvbmVkIGZvciBXTDYgKFBHMy54KSBhbmQgdXBkYXRlLg0KDQoN
-CkNhbiB5b3UgcGxlYXNlIHNoZWQgc29tZSBsaWdodCBvbiB0aGlzIGFjdGl2aXR5LCBjdXN0b21l
-ci4uLg0KDQpUaGFua3MgYW5kIFJlZ2FyZHMsDQoNCkVyYW4gWmlnbWFuDQpUZXhhcyBJbnN0cnVt
-ZW50cyBJbmMNCkVDUyBBcHBsaWNhdGlvbg0KQ2VsbDogNDA4LTY4MDk3MzQsIE9mZmljZTogNzIx
-MzcyNg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDb2VsaG8sIEx1Y2lh
-bm8NClNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMTksIDIwMTIgMTE6MzIgQU0NClRvOiBaaWdt
-YW4sIEVyYW47IEdpcmlzaCBCbg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0K
-U3ViamVjdDogUmU6IHdsMTJ4eCAob2xfUjUuU1AzLjA1KSBkcml2ZXJzICsgZmlybXdhcmUgKG9s
-X1I1LlNQMy4wNSkgZG9lc24ndCB3b3JrIG9uIFdMMTI3MSAoSFcgUEcgMi4wKQ0KDQpIaSBFcmFu
-LA0KDQpDYW4geW91IHBsZWFzZSBjaGVjayBHaXJpc2gncyBlbWFpbCBiZWxvdyBhbmQgaGVscCBo
-aW0gd2l0aCB0aGlzPw0KDQpUaGFua3MhDQoNCi0tDQpMdWNhLg0KDQpPbiBXZWQsIDIwMTItMTIt
-MTkgYXQgMTQ6NDEgKzAwMDAsIEdpcmlzaCBCbiB3cm90ZToNCj4gSGksDQo+DQo+IFdlIGFyZSBj
-bGllbnQgaXMgdXNpbmcgdGhlIEpvcmppbiBXRzczMTAtMDAgV0xBTi9CVC9GTSBNb2R1bGUgZm9y
-IG9uZSBvZiB0aGUgV0xBTiBzZXJ2ZXIgbW9kdWxlLg0KPiBXZSBhcmUgcG9ydGluZyB0aGUgTGlu
-dXggb3BlbiBzb3VyY2UgZHJpdmVycyB0byBXTDEyNzEgYmFzZWQgSm9yamluIG1vZHVsZS4gT3Vy
-IGtlcm5lbCB2ZXJzaW9uIGlzIDIuNi4yOC4yIGFuZCBwcm9jZXNzb3IgaXMgTFBDMzEzMC4gVGhl
-IFBHIHZlciBvZiBXbDEyNzEgaXMgMi4NCj4gUmVjZW50bHkgd2UgaGF2ZSBiYWNrIHBvcnRlZCB0
-aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSB0aGUgVEktT3BlbkxpbmsgDQo+IHNpdGUgV2UgaGF2ZSB0
-YWtlbiB0aGUgd2wxMnh4IGRyaXZlcnMgZnJvbSANCj4gaHR0cHM6Ly9naXRodWIuY29tL1RJLU9w
-ZW5MaW5rL3dsMTJ4eCBhbmQgYnJhbmNoIHI1X2piIGFuZCB0YWcNCj4gb2xfUjUuU1AzLjA1IEFs
-c28gd2UgaGFkIHRha2VuIHRoZSBmaXJtd2FyZSBmcm9tIA0KPiBodHRwczovL2dpdGh1Yi5jb20v
-VEktT3BlbkxpbmsvdGktdXRpbHMgYW5kIGJyYW5jaCByNV9qYiBhbmQgdGFnDQo+IG9sX1I1LlNQ
-My4wNSBUaGUgc3VwcGxpY2FudCBhbHNvIHdhcyB0YWtlbiBmcm9tIA0KPiBodHRwczovL2dpdGh1
-Yi5jb20vVEktT3BlbkxpbmsvaG9zdGFwIGFuZCBicmFuY2ggcjVfamIgYW5kIHRhZw0KPiBvbF9S
-NS5TUDMuMDUNCj4NCj4gV2UgdXNpbmcgdGhlIG11bHRpLXJvbGUgZmVhdHVyZSBvZiB0aGUgZHJp
-dmVyLg0KPiBXZSBoYWQgc3BlY2lmaWNhbGx5IHRha2VuIGFib3ZlIHBhY2thZ2UgYXMgd2Ugd2Fu
-dGVkIHRoZSBBUCBjaGFubmVsIHN3aXRjaCBmdW5jdGlvbmFsaXR5LiBUaGlzIGZlYXR1cmUgaGFu
-ZGxlcyBhIHBhcnRpY3VsYXIgY2FzZSBsaWtlIGlmIHlvdSBzdGFydGVkIHRoZSBTVEEgb24gQ2hh
-bm5lbCBYIGFuZCBhbHNvIHlvdSB3aWxsIHN0YXJ0IEFQIChQMlAgR3JvdXAgT3duZXIpIG9uIHRo
-ZSBzYW1lIGNoYW5uZWwgKENoYW5uZWwgWCkuIE5vdyBpZiB5b3UgY2hhbmdlIHRoZSBjaGFubmVs
-IG9mIFN0YXRpb24gdG8gQ2hhbm5lbChZKSwgdGhlIGRyaXZlciBhdXRvbWF0aWNhbGx5IHdpbGwg
-dGFrZSBjYXJlIG9mIHJlc3RhcnRpbmcgdGhlIEFQKFAyUCBHTykgb24gdGhlIHNhbWUgY2hhbm5l
-bChDaGFubmVsIFkpLg0KPg0KPiBXZSBhcmUgZmFjaW5nIGlzc3VlIHdpdGggdGhpcyBwYWNrYWdl
-IGFuZCB0aGUgZHJpdmVycyB3b24ndCB3b3JrIHByb3Blcmx5IGZvciB1cy4NCj4gVGhlIG1ham9y
-IGlzc3VlcyBzZWVuIHdpdGggdGhpcyBwYWNrYWdlIGFyZSAxLiBXZSBhYmxlIHRvIGRvIHRoZSBz
-Y2FuIA0KPiBhbmQgY29ubmVjdCB0byBhbiBlbmNyeXB0ZWQgbmV0d29yay4gIEJ1dCB3aGVuIHdl
-IHJ1biBESENQIGNsaWVudCBvbiB3bGFuMCB0byBnZXQgdGhlIElQIGFkZHJlc3MgZnJvbSB0aGUg
-QWNjZXNzIFBvaW50LCB0aGUgZHJpdmVyIHRocm93cyAid2wxMnh4OiBCZWFjb24gbG9zcyBkZXRl
-Y3RlZCIgbWVzc2FnZSBhbmQgdGhlIGNvbm5lY3Rpb24gYnJlYWtzIGFuZCB0aGUgZHJpdmVyIGdl
-dHMgaW50byBTQ0FOIG1vZGUgYW5kIHdpbGwgdHJ5IHRvIHJlY29ubmVjdCB0byB0aGUgQWNjZXNz
-IFBvaW50LiBFdmVudHVhbGx5IHdlIGRvbid0IHJlY2VpdmUgdGhlIElQIGFkZHJlc3MgZnJvbSB0
-aGUgQWNjZXNzIFBvaW50Lg0KPiAyLiBJIHdhcyBhYmxlIHRvIHN0YXJ0IHRoZSBTdGF0aW9uIGFu
-ZCBBUCByb2xlIG9uIHRoZSBzYW1lIGNoYW5uZWwuIEJ1dCB0aGUgYWZ0ZXIgc3RhdGluZyB0aGUg
-QVAgcm9sZSwgc3RhdGlvbiByb2xlIHdpbGwgYmUgZGlzY29ubmVjdGVkIGF1dG9tYXRpY2FsbHkg
-YW5kIEkgd29uJ3QgYmUgYWJsZSB0byBkbyBzY2FuIGFuZCBjb25uZWN0aW9uIG9uIFNUQS4NCj4g
-My4gQWxzbyBjYW5ub3QgY29ubmVjdCB0byBteSBTeXN0ZW0gd2hpY2ggaXMgYWN0aW5nIGFzIFAy
-UCBHcm91cCBPd25lcihBUCkgZnJvbSBhbnkgb3RoZXIgV2ktRmkgZGV2aWNlIGxpa2UgaVBob25l
-L0xhcHRvcCBvciBhbnkgb3RoZXIuIFRoZSBpc3N1ZSBpcyBzZWVuIHdoZW4gU3lzdGVtIGlzIHNl
-dCB0byBQMlAgR08gZWl0aGVyIHVzaW5nIFNpbmdsZSBSb2xlIGZpcm13YXJlIG9ubHkgb3IgdXNp
-bmcgTXVsdGktcm9sZSBmaXJtd2FyZS4NCj4NCj4gV2Ugc3VzcGVjdCB0aGUgaXNzdWUgd2l0aCB0
-aGUgYWJvdmUgdmVyc2lvbnMgb2YgKG9sX1I1LlNQMy4wNSkgd2wxMjd4IA0KPiBmaXJtd2FyZSBh
-bmQgc3VycHJpc2luZ2x5IGFsbCB0aGUgYWJvdmUgdGhyZWUgaXNzdWVzIGFyZSBOT1Qgc2VlbiB3
-aGVuIA0KPiBJIHVzZSB0aGUgYmVsb3cgZmlybXdhcmUgdmVyc2lvbnMgKHdoaWNoIGlzIHF1aXRl
-IG9sZCkgU2luZ2xlIFJvbGUNCj4gKFNSKTogIFJldiA2LjMuNy4wLjEwNQ0KPiBNdWx0aS1Sb2xl
-KE1SKTogUmV2IDYuNS41LjAuMjENCj4NCj4NCj4gVGhlIGZpcm13YXJlIHZlcnNpb25zIHRha2Vu
-IGZyb20NCj4gaHR0cHM6Ly9naXRodWIuY29tL1RJLU9wZW5MaW5rL3RpLXV0aWxzIGFuZCBicmFu
-Y2ggcjVfamIgYW5kIHRhZw0KPiBvbF9SNS5TUDMuMDUgYXJlIFNpbmdsZSBSb2xlIChTUik6ICBS
-ZXYgNi4zLjEwLjAuMTMyIE11bHRpLVJvbGUgKE1SKToNCj4gUmV2IDYuNS43LjAuNDINCj4NCj4g
-Q2FuIHlvdSBsZXQgdXMga25vdyB3aGV0aGVyIFdsMTI3MSBodyBQRyBWZXIgMi4wIGNhbiBydW4g
-dGhlIG9sX1I1LlNQMy4wNSBmaXJtd2FyZSBzdWNjZXNzZnVsbHkgb3IgYW55IGhhcmR3YXJlIGxp
-bWl0YXRpb25zIHdpdGggV2wxMjcxPw0KPiBBbnkgc3VnZ2VzdGlvbnMgb24gdGhlIGFib3ZlIGlz
-c3VlcyB3aWxsIGJlIGdyZWF0bHkgaGVscGZ1bA0KPg0KPg0KPiBUaGFua3MgJiBSZWdhcmRzLA0K
-PiBHaXJpc2gNCj4gTCZUIElFUywNCj4gS0lBREIgSW5kdXN0cmlhbCBBcmVhLA0KPiBIZWJiYWwt
-SG9vdGFnYWxsaSwgTXlzb3JlIC0gNTcwIDAxOA0KPiBUZWxlcGhvbmUgOiAgRElEKzkxLTgyMS0y
-NDA1NTUyDQo+IE1vYmlsZTogKzkxLTk3NDEyMDY0MDINCj4gRS1tYWlsIElEIDpHaXJpc2guQk5A
-bG50aWVzLmNvbQ0KPiB3d3cubG50aWVzLmNvbQ0KPg0KPiBUaGlzIG1haWwgaXMgY2xhc3NpZmll
-ZCBhcyA6DQo+ICggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KPiAoICApIEwmVCBJRVMgQ29uZmlk
-ZW50aWFsDQo+IChYKSBMJlQgSUVTIEludGVybmFsIFVzZQ0KPiAoICkgTCZUIElFUyBHZW5lcmFs
-IEJ1c2luZXNzDQo+DQo+IExhcnNlbiAmIFRvdWJybyBMaW1pdGVkDQo+DQo+IHd3dy5sYXJzZW50
-b3Vicm8uY29tDQo+DQo+IFRoaXMgRW1haWwgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG9yIHBy
-aXZpbGVnZWQgaW5mb3JtYXRpb24gZm9yIHRoZSBpbnRlbmRlZCByZWNpcGllbnQgKHMpLiBJZiB5
-b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBwbGVhc2UgZG8gbm90IHVzZSBvciBk
-aXNzZW1pbmF0ZSB0aGUgaW5mb3JtYXRpb24sIG5vdGlmeSB0aGUgc2VuZGVyIGFuZCBkZWxldGUg
-aXQgZnJvbSB5b3VyIHN5c3RlbS4NCg0KTGFyc2VuICYgVG91YnJvIExpbWl0ZWQNCg0Kd3d3Lmxh
-cnNlbnRvdWJyby5jb20NCg0KVGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3Ig
-cHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVudCAocykuIElm
-IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBub3QgdXNlIG9y
-IGRpc3NlbWluYXRlIHRoZSBpbmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIgYW5kIGRlbGV0
-ZSBpdCBmcm9tIHlvdXIgc3lzdGVtLg0KTGFyc2VuICYgVG91YnJvIExpbWl0ZWQNCg0Kd3d3Lmxh
-cnNlbnRvdWJyby5jb20NCg0KVGhpcyBFbWFpbCBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgb3Ig
-cHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBmb3IgdGhlIGludGVuZGVkIHJlY2lwaWVudCAocykuIElm
-IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIHBsZWFzZSBkbyBub3QgdXNlIG9y
-IGRpc3NlbWluYXRlIHRoZSBpbmZvcm1hdGlvbiwgbm90aWZ5IHRoZSBzZW5kZXIgYW5kIGRlbGV0
-ZSBpdCBmcm9tIHlvdXIgc3lzdGVtLg0K
+From: Avinash Patil <patila@marvell.com>
+
+This patch defines PCIe ring buffer array pointer as void instead
+of mwifiex_pcie_buf_desc. This will enable us to use same pointers
+for ring operations instead of new structures if buffer descriptor
+structure changes.
+
+Also split out event buffer descriptor structure from struct
+mwifiex_pcie_buf_desc. For PCIe8766 TX/RX buffer descriptor is
+same as evevt buffer descriptor. Newer chips could use different
+TX/RX buffer descriptor while event descriptor remains the same.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |   49 ++++++++++++++++++----------------
+ drivers/net/wireless/mwifiex/pcie.h |   12 ++++++--
+ 2 files changed, 35 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 06aae55..6c15969 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -444,7 +444,7 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
+ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct mwifiex_pcie_buf_desc *desc;
++	struct mwifiex_evt_buf_desc *desc;
+ 	struct sk_buff *skb;
+ 	dma_addr_t buf_pa;
+ 	int i;
+@@ -474,7 +474,6 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
+ 		card->evt_buf_list[i] = skb;
+ 		card->evtbd_ring[i] = (void *)(card->evtbd_ring_vbase +
+ 				      (sizeof(*desc) * i));
+-
+ 		desc = card->evtbd_ring[i];
+ 		desc->paddr = buf_pa;
+ 		desc->len = (u16)skb->len;
+@@ -540,7 +539,7 @@ static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
+ static void mwifiex_cleanup_evt_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct mwifiex_pcie_buf_desc *desc;
++	struct mwifiex_evt_buf_desc *desc;
+ 	struct sk_buff *skb;
+ 	int i;
+ 
+@@ -695,7 +694,7 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
+ 	card->evtbd_wrptr = 0;
+ 	card->evtbd_rdptr = reg->evt_rollover_ind;
+ 
+-	card->evtbd_ring_size = sizeof(struct mwifiex_pcie_buf_desc) *
++	card->evtbd_ring_size = sizeof(struct mwifiex_evt_buf_desc) *
+ 							MWIFIEX_MAX_EVT_BD;
+ 	dev_dbg(adapter->dev, "info: evtbd_ring: Allocating %d bytes\n",
+ 		card->evtbd_ring_size);
+@@ -880,6 +879,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
+ 	struct sk_buff *skb;
+ 	dma_addr_t buf_pa;
+ 	u32 wrdoneidx, rdptr, unmap_count = 0;
++	struct mwifiex_pcie_buf_desc *desc;
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 
+@@ -922,9 +922,8 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
+ 		}
+ 
+ 		card->tx_buf_list[wrdoneidx] = NULL;
+-		card->txbd_ring[wrdoneidx]->paddr = 0;
+-		card->txbd_ring[wrdoneidx]->len = 0;
+-		card->txbd_ring[wrdoneidx]->flags = 0;
++		desc = card->txbd_ring[wrdoneidx];
++		memset(desc, 0, sizeof(*desc));
+ 		card->txbd_rdptr++;
+ 
+ 		if ((card->txbd_rdptr & reg->tx_mask) == num_tx_buffs)
+@@ -964,6 +963,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 	u32 wrindx;
+ 	int ret;
+ 	dma_addr_t buf_pa;
++	struct mwifiex_pcie_buf_desc *desc;
+ 	__le16 *tmp;
+ 
+ 	if (!(skb->data && skb->len)) {
+@@ -994,10 +994,11 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 		wrindx = card->txbd_wrptr & reg->tx_mask;
+ 		MWIFIEX_SKB_PACB(skb, &buf_pa);
+ 		card->tx_buf_list[wrindx] = skb;
+-		card->txbd_ring[wrindx]->paddr = buf_pa;
+-		card->txbd_ring[wrindx]->len = (u16)skb->len;
+-		card->txbd_ring[wrindx]->flags = MWIFIEX_BD_FLAG_FIRST_DESC |
+-						MWIFIEX_BD_FLAG_LAST_DESC;
++		desc = card->txbd_ring[wrindx];
++		desc->paddr = buf_pa;
++		desc->len = (u16)skb->len;
++		desc->flags = MWIFIEX_BD_FLAG_FIRST_DESC |
++			      MWIFIEX_BD_FLAG_LAST_DESC;
+ 
+ 		if ((++card->txbd_wrptr & reg->tx_mask) ==
+ 							MWIFIEX_MAX_TXRX_BD)
+@@ -1049,9 +1050,7 @@ done_unmap:
+ 	MWIFIEX_SKB_PACB(skb, &buf_pa);
+ 	pci_unmap_single(card->dev, buf_pa, skb->len, PCI_DMA_TODEVICE);
+ 	card->tx_buf_list[wrindx] = NULL;
+-	card->txbd_ring[wrindx]->paddr = 0;
+-	card->txbd_ring[wrindx]->len = 0;
+-	card->txbd_ring[wrindx]->flags = 0;
++	memset(desc, 0, sizeof(*desc));
+ 	return ret;
+ }
+ 
+@@ -1067,6 +1066,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 	dma_addr_t buf_pa;
+ 	int ret = 0;
+ 	struct sk_buff *skb_tmp = NULL;
++	struct mwifiex_pcie_buf_desc *desc;
+ 
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		mwifiex_pm_wakeup_card(adapter);
+@@ -1126,9 +1126,10 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 			"RECV DATA: Attach new sk_buff %p at rxbd_rdidx=%d\n",
+ 			skb_tmp, rd_index);
+ 		card->rx_buf_list[rd_index] = skb_tmp;
+-		card->rxbd_ring[rd_index]->paddr = buf_pa;
+-		card->rxbd_ring[rd_index]->len = skb_tmp->len;
+-		card->rxbd_ring[rd_index]->flags = 0;
++		desc = card->rxbd_ring[rd_index];
++		desc->paddr = buf_pa;
++		desc->len = skb_tmp->len;
++		desc->flags = 0;
+ 
+ 		if ((++card->rxbd_rdptr & reg->rx_mask) ==
+ 							MWIFIEX_MAX_TXRX_BD) {
+@@ -1471,6 +1472,7 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+ 	u32 rdptr = card->evtbd_rdptr & MWIFIEX_EVTBD_MASK;
+ 	u32 wrptr, event;
+ 	dma_addr_t buf_pa;
++	struct mwifiex_evt_buf_desc *desc;
+ 
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		mwifiex_pm_wakeup_card(adapter);
+@@ -1512,9 +1514,8 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+ 		/* Take the pointer and set it to event pointer in adapter
+ 		   and will return back after event handling callback */
+ 		card->evt_buf_list[rdptr] = NULL;
+-		card->evtbd_ring[rdptr]->paddr = 0;
+-		card->evtbd_ring[rdptr]->len = 0;
+-		card->evtbd_ring[rdptr]->flags = 0;
++		desc = card->evtbd_ring[rdptr];
++		memset(desc, 0, sizeof(*desc));
+ 
+ 		event = *(u32 *) &skb_cmd->data[INTF_HEADER_LEN];
+ 		adapter->event_cause = event;
+@@ -1555,6 +1556,7 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+ 	u32 rdptr = card->evtbd_rdptr & MWIFIEX_EVTBD_MASK;
+ 	u32 wrptr;
+ 	dma_addr_t buf_pa;
++	struct mwifiex_evt_buf_desc *desc;
+ 
+ 	if (!skb)
+ 		return 0;
+@@ -1581,9 +1583,10 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
+ 		MWIFIEX_SKB_PACB(skb, &buf_pa);
+ 		card->evt_buf_list[rdptr] = skb;
+ 		MWIFIEX_SKB_PACB(skb, &buf_pa);
+-		card->evtbd_ring[rdptr]->paddr = buf_pa;
+-		card->evtbd_ring[rdptr]->len = (u16)skb->len;
+-		card->evtbd_ring[rdptr]->flags = 0;
++		desc = card->evtbd_ring[rdptr];
++		desc->paddr = buf_pa;
++		desc->len = (u16)skb->len;
++		desc->flags = 0;
+ 		skb = NULL;
+ 	} else {
+ 		dev_dbg(adapter->dev,
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index 7ef660e..7ebdc74 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -155,6 +155,12 @@ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ };
+ 
++struct mwifiex_evt_buf_desc {
++	u64 paddr;
++	u16 len;
++	u16 flags;
++} __packed;
++
+ struct mwifiex_pcie_buf_desc {
+ 	u64 paddr;
+ 	u16 len;
+@@ -172,7 +178,7 @@ struct pcie_service_card {
+ 	u32 txbd_ring_size;
+ 	u8 *txbd_ring_vbase;
+ 	dma_addr_t txbd_ring_pbase;
+-	struct mwifiex_pcie_buf_desc *txbd_ring[MWIFIEX_MAX_TXRX_BD];
++	void *txbd_ring[MWIFIEX_MAX_TXRX_BD];
+ 	struct sk_buff *tx_buf_list[MWIFIEX_MAX_TXRX_BD];
+ 
+ 	u32 rxbd_wrptr;
+@@ -180,7 +186,7 @@ struct pcie_service_card {
+ 	u32 rxbd_ring_size;
+ 	u8 *rxbd_ring_vbase;
+ 	dma_addr_t rxbd_ring_pbase;
+-	struct mwifiex_pcie_buf_desc *rxbd_ring[MWIFIEX_MAX_TXRX_BD];
++	void *rxbd_ring[MWIFIEX_MAX_TXRX_BD];
+ 	struct sk_buff *rx_buf_list[MWIFIEX_MAX_TXRX_BD];
+ 
+ 	u32 evtbd_wrptr;
+@@ -188,7 +194,7 @@ struct pcie_service_card {
+ 	u32 evtbd_ring_size;
+ 	u8 *evtbd_ring_vbase;
+ 	dma_addr_t evtbd_ring_pbase;
+-	struct mwifiex_pcie_buf_desc *evtbd_ring[MWIFIEX_MAX_EVT_BD];
++	void *evtbd_ring[MWIFIEX_MAX_EVT_BD];
+ 	struct sk_buff *evt_buf_list[MWIFIEX_MAX_EVT_BD];
+ 
+ 	struct sk_buff *cmd_buf;
+-- 
+1.7.0.2
+
