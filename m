@@ -1,125 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53170 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761158Ab3BMXQM (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:52446 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760542Ab3BICWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 18:16:12 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 8 Feb 2013 21:22:48 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, green@qca.qualcomm.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] cfg80211: allow drivers to selectively disable 80/160 MHz
-Date: Thu, 14 Feb 2013 00:16:04 +0100
-Message-Id: <1360797364-9430-4-git-send-email-johannes@sipsolutions.net> (sfid-20130214_001635_279773_D4612F98)
-In-Reply-To: <1360797364-9430-1-git-send-email-johannes@sipsolutions.net>
-References: <1360797364-9430-1-git-send-email-johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/4] mwifiex: separate ring initialization and ring creation routines
+Date: Fri,  8 Feb 2013 18:18:07 -0800
+Message-Id: <1360376289-14861-3-git-send-email-bzhao@marvell.com> (sfid-20130209_032529_422796_FF5C80AB)
+In-Reply-To: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
+References: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Avinash Patil <patila@marvell.com>
 
-Some drivers might support 80 or 160 MHz only on some
-channels for whatever reason, so allow them to disable
-these channel widths. Also maintain the new flags when
-regulatory bandwidth limitations would disable these
-wide channels.
+This patch separates PCIe ring initialization from ring creation
+routines. This modularizes ring creation(TXBD, RXBD and event
+rings) functions.
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Readability has been improved while moving the code around.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- include/net/cfg80211.h | 12 ++++++++++++
- net/wireless/chan.c    |  7 ++++++-
- net/wireless/reg.c     |  8 ++++++++
- 3 files changed, 26 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/pcie.c |  327 +++++++++++++++++++++--------------
+ 1 files changed, 194 insertions(+), 133 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 767599c..80cf5af 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -100,6 +100,16 @@ enum ieee80211_band {
-  * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_OFDM: OFDM is not allowed on this channel.
-+ * @IEEE80211_CHAN_NO_80MHZ: If the driver supports 80 MHz on the band,
-+ *	this flag indicates that an 80 MHz channel cannot use this
-+ *	channel as the control or any of the secondary channels.
-+ *	This may be due to the driver or due to regulatory bandwidth
-+ *	restrictions.
-+ * @IEEE80211_CHAN_NO_160MHZ: If the driver supports 160 MHz on the band,
-+ *	this flag indicates that an 160 MHz channel cannot use this
-+ *	channel as the control or any of the secondary channels.
-+ *	This may be due to the driver or due to regulatory bandwidth
-+ *	restrictions.
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 29c539b..06aae55 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -372,13 +372,199 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
+ }
+ 
+ /*
+- * This function creates buffer descriptor ring for TX
++ * This function initializes TX buffer ring descriptors
++ */
++static int mwifiex_init_txq_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct mwifiex_pcie_buf_desc *desc;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
++		card->tx_buf_list[i] = NULL;
++		card->txbd_ring[i] = (void *)(card->txbd_ring_vbase +
++				     (sizeof(*desc) * i));
++		desc = card->txbd_ring[i];
++		memset(desc, 0, sizeof(*desc));
++	}
++
++	return 0;
++}
++
++/* This function initializes RX buffer ring descriptors. Each SKB is allocated
++ * here and after mapping PCI memory, its physical address is assigned to
++ * PCIE Rx buffer descriptor's physical address.
++ */
++static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct sk_buff *skb;
++	struct mwifiex_pcie_buf_desc *desc;
++	dma_addr_t buf_pa;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
++		/* Allocate skb here so that firmware can DMA data from it */
++		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
++		if (!skb) {
++			dev_err(adapter->dev,
++				"Unable to allocate skb for RX ring.\n");
++			kfree(card->rxbd_ring_vbase);
++			return -ENOMEM;
++		}
++
++		if (mwifiex_map_pci_memory(adapter, skb,
++					   MWIFIEX_RX_DATA_BUF_SIZE,
++					   PCI_DMA_FROMDEVICE))
++			return -1;
++
++		MWIFIEX_SKB_PACB(skb, &buf_pa);
++
++		dev_dbg(adapter->dev,
++			"info: RX ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
++			skb, skb->len, skb->data, (u32)buf_pa,
++			(u32)((u64)buf_pa >> 32));
++
++		card->rx_buf_list[i] = skb;
++		card->rxbd_ring[i] = (void *)(card->rxbd_ring_vbase +
++				     (sizeof(*desc) * i));
++		desc = card->rxbd_ring[i];
++		desc->paddr = buf_pa;
++		desc->len = (u16)skb->len;
++		desc->flags = 0;
++	}
++
++	return 0;
++}
++
++/* This function initializes event buffer ring descriptors. Each SKB is
++ * allocated here and after mapping PCI memory, its physical address is assigned
++ * to PCIE Rx buffer descriptor's physical address
++ */
++static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct mwifiex_pcie_buf_desc *desc;
++	struct sk_buff *skb;
++	dma_addr_t buf_pa;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
++		/* Allocate skb here so that firmware can DMA data from it */
++		skb = dev_alloc_skb(MAX_EVENT_SIZE);
++		if (!skb) {
++			dev_err(adapter->dev,
++				"Unable to allocate skb for EVENT buf.\n");
++			kfree(card->evtbd_ring_vbase);
++			return -ENOMEM;
++		}
++		skb_put(skb, MAX_EVENT_SIZE);
++
++		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
++					   PCI_DMA_FROMDEVICE))
++			return -1;
++
++		MWIFIEX_SKB_PACB(skb, &buf_pa);
++
++		dev_dbg(adapter->dev,
++			"info: EVT ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
++			skb, skb->len, skb->data, (u32)buf_pa,
++			(u32)((u64)buf_pa >> 32));
++
++		card->evt_buf_list[i] = skb;
++		card->evtbd_ring[i] = (void *)(card->evtbd_ring_vbase +
++				      (sizeof(*desc) * i));
++
++		desc = card->evtbd_ring[i];
++		desc->paddr = buf_pa;
++		desc->len = (u16)skb->len;
++		desc->flags = 0;
++	}
++
++	return 0;
++}
++
++/* This function cleans up TX buffer rings. If any of the buffer list has valid
++ * SKB address, associated SKB is freed.
++ */
++static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct sk_buff *skb;
++	struct mwifiex_pcie_buf_desc *desc;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
++		desc = card->txbd_ring[i];
++		if (card->tx_buf_list[i]) {
++			skb = card->tx_buf_list[i];
++			pci_unmap_single(card->dev, desc->paddr, skb->len,
++					 PCI_DMA_TODEVICE);
++			dev_kfree_skb_any(skb);
++		}
++		card->tx_buf_list[i] = NULL;
++		memset(desc, 0, sizeof(*desc));
++	}
++
++	return;
++}
++
++/* This function cleans up RX buffer rings. If any of the buffer list has valid
++ * SKB address, associated SKB is freed.
++ */
++static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct mwifiex_pcie_buf_desc *desc;
++	struct sk_buff *skb;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
++		desc = card->rxbd_ring[i];
++		if (card->rx_buf_list[i]) {
++			skb = card->rx_buf_list[i];
++			pci_unmap_single(card->dev, desc->paddr,
++					 MWIFIEX_RX_DATA_BUF_SIZE,
++					 PCI_DMA_FROMDEVICE);
++			dev_kfree_skb_any(skb);
++		}
++		memset(desc, 0, sizeof(*desc));
++	}
++
++	return;
++}
++
++/* This function cleans up event buffer rings. If any of the buffer list has
++ * valid SKB address, associated SKB is freed.
++ */
++static void mwifiex_cleanup_evt_ring(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++	struct mwifiex_pcie_buf_desc *desc;
++	struct sk_buff *skb;
++	int i;
++
++	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
++		desc = card->evtbd_ring[i];
++		if (card->evt_buf_list[i]) {
++			skb = card->evt_buf_list[i];
++			pci_unmap_single(card->dev, desc->paddr, MAX_EVENT_SIZE,
++					 PCI_DMA_FROMDEVICE);
++			dev_kfree_skb_any(skb);
++		}
++		card->evt_buf_list[i] = NULL;
++		memset(desc, 0, sizeof(*desc));
++	}
++
++	return;
++}
++
++/* This function creates buffer descriptor ring for TX
   */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED		= 1<<0,
-@@ -109,6 +119,8 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
- 	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
- 	IEEE80211_CHAN_NO_OFDM		= 1<<6,
-+	IEEE80211_CHAN_NO_80MHZ		= 1<<7,
-+	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
- };
+ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	int i;
  
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 9053345..c770694 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -379,6 +379,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	case NL80211_CHAN_WIDTH_80:
- 		if (!vht_cap->vht_supported)
- 			return false;
-+		prohibited_flags |= IEEE80211_CHAN_NO_80MHZ;
- 		width = 80;
- 		break;
- 	case NL80211_CHAN_WIDTH_160:
-@@ -386,6 +387,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 			return false;
- 		if (!(vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ))
- 			return false;
-+		prohibited_flags |= IEEE80211_CHAN_NO_160MHZ;
- 		width = 160;
- 		break;
- 	default:
-@@ -398,7 +400,10 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	 *	 allowed by the driver, or only certain combinations?
- 	 *	 For 40 MHz the driver can set the NO_HT40 flags, but for
- 	 *	 80/160 MHz and in particular 80+80 MHz this isn't really
--	 *	 feasible -- should we ask the driver here?
-+	 *	 feasible and we only have NO_80MHZ/NO_160MHZ so far but
-+	 *	 no way to cover 80+80 MHz or more complex restrictions.
-+	 *	 Note that the restrictions also need to be advertised to
-+	 *	 userspace, for example for P2P channel selection.
- 	 */
+ 	/*
+ 	 * driver maintaines the write pointer and firmware maintaines the read
+@@ -408,41 +594,15 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+ 		card->txbd_ring_vbase, (unsigned int)card->txbd_ring_pbase,
+ 		(u32)((u64)card->txbd_ring_pbase >> 32), card->txbd_ring_size);
  
- 	if (width > 20)
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 343b390..b6d01b3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -889,6 +889,10 @@ static void handle_channel(struct wiphy *wiphy,
+-	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+-		card->txbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
+-				     (card->txbd_ring_vbase +
+-				      (sizeof(struct mwifiex_pcie_buf_desc)
+-				       * i));
+-
+-		card->tx_buf_list[i] = NULL;
+-		card->txbd_ring[i]->paddr = 0;
+-		card->txbd_ring[i]->len = 0;
+-		card->txbd_ring[i]->flags = 0;
+-	}
+-
+-	return 0;
++	return mwifiex_init_txq_ring(adapter);
+ }
  
- 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
- 		bw_flags = IEEE80211_CHAN_NO_HT40;
-+	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(80))
-+		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
-+	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(160))
-+		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
+ static int mwifiex_pcie_delete_txbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	struct sk_buff *skb;
+-	int i;
  
- 	if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    request_wiphy && request_wiphy == wiphy &&
-@@ -1287,6 +1291,10 @@ static void handle_channel_custom(struct wiphy *wiphy,
+-	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+-		if (card->tx_buf_list[i]) {
+-			skb = card->tx_buf_list[i];
+-			pci_unmap_single(card->dev, card->txbd_ring[i]->paddr,
+-					 skb->len, PCI_DMA_TODEVICE);
+-			dev_kfree_skb_any(skb);
+-		}
+-		card->tx_buf_list[i] = NULL;
+-		card->txbd_ring[i]->paddr = 0;
+-		card->txbd_ring[i]->len = 0;
+-		card->txbd_ring[i]->flags = 0;
+-		card->txbd_ring[i] = NULL;
+-	}
++	mwifiex_cleanup_txq_ring(adapter);
  
- 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
- 		bw_flags = IEEE80211_CHAN_NO_HT40;
-+	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(80))
-+		bw_flags |= IEEE80211_CHAN_NO_80MHZ;
-+	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(160))
-+		bw_flags |= IEEE80211_CHAN_NO_160MHZ;
+ 	if (card->txbd_ring_vbase)
+ 		pci_free_consistent(card->dev, card->txbd_ring_size,
+@@ -464,9 +624,6 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	struct sk_buff *skb;
+-	int i;
+-	dma_addr_t buf_pa;
  
- 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
- 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+ 	/*
+ 	 * driver maintaines the read pointer and firmware maintaines the write
+@@ -496,39 +653,7 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
+ 		(u32)((u64)card->rxbd_ring_pbase >> 32),
+ 		card->rxbd_ring_size);
+ 
+-	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+-		card->rxbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
+-				     (card->rxbd_ring_vbase +
+-				      (sizeof(struct mwifiex_pcie_buf_desc)
+-				       * i));
+-
+-		/* Allocate skb here so that firmware can DMA data from it */
+-		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
+-		if (!skb) {
+-			dev_err(adapter->dev,
+-				"Unable to allocate skb for RX ring.\n");
+-			kfree(card->rxbd_ring_vbase);
+-			return -ENOMEM;
+-		}
+-		if (mwifiex_map_pci_memory(adapter, skb,
+-					   MWIFIEX_RX_DATA_BUF_SIZE,
+-					   PCI_DMA_FROMDEVICE))
+-			return -1;
+-
+-		MWIFIEX_SKB_PACB(skb, &buf_pa);
+-
+-		dev_dbg(adapter->dev, "info: RX ring: add new skb base: %p, "
+-			"buf_base: %p, buf_pbase: %#x:%x, buf_len: %#x\n",
+-			skb, skb->data, (u32)buf_pa, (u32)((u64)buf_pa >> 32),
+-			skb->len);
+-
+-		card->rx_buf_list[i] = skb;
+-		card->rxbd_ring[i]->paddr = buf_pa;
+-		card->rxbd_ring[i]->len = (u16)skb->len;
+-		card->rxbd_ring[i]->flags = 0;
+-	}
+-
+-	return 0;
++	return mwifiex_init_rxq_ring(adapter);
+ }
+ 
+ /*
+@@ -538,23 +663,8 @@ static int mwifiex_pcie_delete_rxbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	struct sk_buff *skb;
+-	int i;
+ 
+-	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+-		if (card->rx_buf_list[i]) {
+-			skb = card->rx_buf_list[i];
+-			pci_unmap_single(card->dev, card->rxbd_ring[i]->paddr ,
+-					 MWIFIEX_RX_DATA_BUF_SIZE,
+-					 PCI_DMA_FROMDEVICE);
+-			dev_kfree_skb_any(skb);
+-		}
+-		card->rx_buf_list[i] = NULL;
+-		card->rxbd_ring[i]->paddr = 0;
+-		card->rxbd_ring[i]->len = 0;
+-		card->rxbd_ring[i]->flags = 0;
+-		card->rxbd_ring[i] = NULL;
+-	}
++	mwifiex_cleanup_rxq_ring(adapter);
+ 
+ 	if (card->rxbd_ring_vbase)
+ 		pci_free_consistent(card->dev, card->rxbd_ring_size,
+@@ -576,9 +686,6 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	struct sk_buff *skb;
+-	int i;
+-	dma_addr_t buf_pa;
+ 
+ 	/*
+ 	 * driver maintaines the read pointer and firmware maintaines the write
+@@ -608,39 +715,7 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
+ 		(u32)((u64)card->evtbd_ring_pbase >> 32),
+ 		card->evtbd_ring_size);
+ 
+-	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
+-		card->evtbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
+-				      (card->evtbd_ring_vbase +
+-				       (sizeof(struct mwifiex_pcie_buf_desc)
+-					* i));
+-
+-		/* Allocate skb here so that firmware can DMA data from it */
+-		skb = dev_alloc_skb(MAX_EVENT_SIZE);
+-		if (!skb) {
+-			dev_err(adapter->dev,
+-				"Unable to allocate skb for EVENT buf.\n");
+-			kfree(card->evtbd_ring_vbase);
+-			return -ENOMEM;
+-		}
+-		skb_put(skb, MAX_EVENT_SIZE);
+-
+-		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
+-					   PCI_DMA_FROMDEVICE))
+-			return -1;
+-
+-		MWIFIEX_SKB_PACB(skb, &buf_pa);
+-		dev_dbg(adapter->dev, "info: Evt ring: add new skb. base: %p, "
+-			"buf_base: %p, buf_pbase: %#x:%x, buf_len: %#x\n",
+-			skb, skb->data, (u32)buf_pa, (u32)((u64)buf_pa >> 32),
+-			skb->len);
+-
+-		card->evt_buf_list[i] = skb;
+-		card->evtbd_ring[i]->paddr = buf_pa;
+-		card->evtbd_ring[i]->len = (u16)skb->len;
+-		card->evtbd_ring[i]->flags = 0;
+-	}
+-
+-	return 0;
++	return mwifiex_pcie_init_evt_ring(adapter);
+ }
+ 
+ /*
+@@ -650,22 +725,8 @@ static int mwifiex_pcie_delete_evtbd_ring(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	struct sk_buff *skb;
+-	int i;
+ 
+-	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
+-		if (card->evt_buf_list[i]) {
+-			skb = card->evt_buf_list[i];
+-			pci_unmap_single(card->dev, card->evtbd_ring[i]->paddr,
+-					 MAX_EVENT_SIZE, PCI_DMA_FROMDEVICE);
+-			dev_kfree_skb_any(skb);
+-		}
+-		card->evt_buf_list[i] = NULL;
+-		card->evtbd_ring[i]->paddr = 0;
+-		card->evtbd_ring[i]->len = 0;
+-		card->evtbd_ring[i]->flags = 0;
+-		card->evtbd_ring[i] = NULL;
+-	}
++	mwifiex_cleanup_evt_ring(adapter);
+ 
+ 	if (card->evtbd_ring_vbase)
+ 		pci_free_consistent(card->dev, card->evtbd_ring_size,
 -- 
-1.8.0
+1.7.0.2
 
