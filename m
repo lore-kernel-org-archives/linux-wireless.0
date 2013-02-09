@@ -1,68 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46497 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33304 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755060Ab3BEJev (ORCPT
+	with ESMTP id S1947344Ab3BIAfd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 04:34:51 -0500
-Message-ID: <1360056900.8376.0.camel@jlt4.sipsolutions.net> (sfid-20130205_103508_871504_41B096C0)
-Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
+	Fri, 8 Feb 2013 19:35:33 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Tue, 05 Feb 2013 10:35:00 +0100
-In-Reply-To: <20130205084405.GA7865@pandem0nium>
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359643448.8415.62.camel@jlt4.sipsolutions.net>
-	 <20130131163126.GB1387@pandem0nium>
-	 <1359650902.8415.93.camel@jlt4.sipsolutions.net>
-	 <20130131174758.GC2018@pandem0nium>
-	 <1359712620.8528.5.camel@jlt4.sipsolutions.net>
-	 <20130202221544.GA22363@pandem0nium>
-	 <1359999125.17993.15.camel@jlt4.sipsolutions.net>
-	 <20130205084405.GA7865@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC] cfg80211/mac80211: allow changing AP channel bandwidth while active
+Date: Sat,  9 Feb 2013 01:35:26 +0100
+Message-Id: <1360370126-20665-1-git-send-email-johannes@sipsolutions.net> (sfid-20130209_013537_234267_516E9FB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-05 at 09:44 +0100, Simon Wunderlich wrote:
-> On Mon, Feb 04, 2013 at 06:32:05PM +0100, Johannes Berg wrote:
-> > On Sat, 2013-02-02 at 23:15 +0100, Simon Wunderlich wrote:
-> > > On Fri, Feb 01, 2013 at 10:57:00AM +0100, Johannes Berg wrote:
-> > > > On Thu, 2013-01-31 at 18:47 +0100, Simon Wunderlich wrote:
-> > > > 
-> > 
-> > That sounds strange -- how does ath9k even know about an interface
-> > that's not UP? Maybe you mean it didn't start an AP?
-> 
-> Yeah, that is what I meant - the AP wasn't started on this on that interface.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok.
+An HT/VHT AP is allowed to change its bandwidth while operating,
+create a new capability and cfg80211 API to allow this.
 
-> > Why does the driver even report it by interface? It seems it should do
-> > it on a channel context, or even on the hw since it can only be a single
-> > channel in that case anyway?
-> 
-> Well, yeah the reporting is currently done per interface. Reporting radars
-> for the hw is certainly possible as well - channel contexts are currently
-> not implemented in ath9k (where I test). The latest patchset works the same
-> way, although we can change that if you prefer. For the current implementation
-> (single channel, single vif) it makes no difference, maybe for future implementations.
-> I don't know if there are any weird corner cases though, and we probably need to
-> adjust the mac80211 interface too when to report radars on certain channels only
-> (e.g. extension channel radar).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h       |  3 +++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/mac80211/cfg.c           | 18 ++++++++++++++++++
+ net/wireless/ap.c            | 10 ++++++++++
+ net/wireless/core.c          |  6 ++++++
+ net/wireless/core.h          |  3 +++
+ net/wireless/nl80211.c       | 14 ++++++++++----
+ 7 files changed, 53 insertions(+), 4 deletions(-)
 
-It really just seems strange to me to report radar on all/any other
-interfaces to userspace. If we leave it up to the drivers, we'll get all
-kinds of strange behaviour ;-)
-
-So it seems better to let mac80211 manage that?
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1cc4c36..bc670b2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1754,6 +1754,7 @@ struct cfg80211_gtk_rekey_data {
+  * @start_ap: Start acting in AP mode defined by the parameters.
+  * @change_beacon: Change the beacon parameters for an access point mode
+  *	interface. This should reject the call when AP mode wasn't started.
++ * @change_bandwidth: Change the AP's operating bandwidth.
+  * @stop_ap: Stop being an AP, including stopping beaconing.
+  *
+  * @add_station: Add a new station.
+@@ -1957,6 +1958,8 @@ struct cfg80211_ops {
+ 			    struct cfg80211_ap_settings *settings);
+ 	int	(*change_beacon)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_beacon_data *info);
++	int	(*change_bandwidth)(struct wiphy *wiphy, struct net_device *dev,
++				    const struct cfg80211_chan_def *chandef);
+ 	int	(*stop_ap)(struct wiphy *wiphy, struct net_device *dev);
+ 
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 122e9fd..1ed7e1c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3412,6 +3412,8 @@ enum nl80211_ap_sme_features {
+  *	stations the authenticated/associated bits have to be set in the mask.
+  * @NL80211_FEATURE_ADVERTISE_CHAN_LIMITS: cfg80211 advertises channel limits
+  *	(HT40, VHT 80/160 MHz) if this flag is set
++ * @NL80211_FEATURE_HAVE_AP_BW_SWITCH: AP mode can switch bandwidth (by using
++ *	the normal set channel command)
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3429,6 +3431,7 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_P2P_GO_OPPPS			= 1 << 12,
+ 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 13,
+ 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
++	NL80211_FEATURE_HAVE_AP_BW_SWITCH		= 1 << 15,
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 68eca17..d7fa932 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1005,6 +1005,23 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static int ieee80211_change_bandwidth(struct wiphy *wiphy,
++				      struct net_device *dev,
++				      const struct cfg80211_chan_def *chandef)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int ret;
++	u32 changed;
++
++	ret = ieee80211_vif_change_bandwidth(sdata, chandef, &changed);
++	if (ret)
++		return ret;
++
++	ieee80211_bss_info_change_notify(sdata, changed);
++
++	return 0;
++}
++
+ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+@@ -3283,6 +3300,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.set_default_mgmt_key = ieee80211_config_default_mgmt_key,
+ 	.start_ap = ieee80211_start_ap,
+ 	.change_beacon = ieee80211_change_beacon,
++	.change_bandwidth = ieee80211_change_bandwidth,
+ 	.stop_ap = ieee80211_stop_ap,
+ 	.add_station = ieee80211_add_station,
+ 	.del_station = ieee80211_del_station,
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index a4a14e8..aca91c6 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -108,3 +108,13 @@ bool cfg80211_rx_unexpected_4addr_frame(struct net_device *dev,
+ 	return ret;
+ }
+ EXPORT_SYMBOL(cfg80211_rx_unexpected_4addr_frame);
++
++int cfg80211_change_ap_bandwidth(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev,
++				 struct cfg80211_chan_def *chandef)
++{
++	/* XXX tracing */
++	if (!rdev->ops->change_bandwidth)
++		return -EBUSY;
++	return rdev->ops->change_bandwidth(&rdev->wiphy, dev, chandef);
++}
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index d915376..8d57a6f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -546,6 +546,12 @@ int wiphy_register(struct wiphy *wiphy)
+ 		have_band = true;
+ 	}
+ 
++	if (rdev->ops->change_bandwidth &&
++	    wiphy->interface_modes & BIT(NL80211_IFTYPE_AP))
++		wiphy->features |= NL80211_FEATURE_HAVE_AP_BW_SWITCH;
++	else
++		wiphy->features &= ~NL80211_FEATURE_HAVE_AP_BW_SWITCH;
++
+ 	if (!have_band) {
+ 		WARN_ON(1);
+ 		return -EINVAL;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 949c957..2dd6d34 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -307,6 +307,9 @@ int cfg80211_set_mesh_channel(struct cfg80211_registered_device *rdev,
+ /* AP */
+ int cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		     struct net_device *dev);
++int cfg80211_change_ap_bandwidth(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev,
++				 struct cfg80211_chan_def *chandef);
+ 
+ /* MLME */
+ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cae3968..b19c822 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1538,14 +1538,20 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
+ 	switch (iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		if (wdev->beacon_interval) {
+-			result = -EBUSY;
+-			break;
+-		}
+ 		if (!cfg80211_reg_can_beacon(&rdev->wiphy, &chandef)) {
+ 			result = -EINVAL;
+ 			break;
+ 		}
++		if (wdev->beacon_interval) {
++			if (wdev->channel != chandef.chan) {
++				result = -EBUSY;
++				break;
++			}
++			result = cfg80211_change_ap_bandwidth(rdev,
++							      wdev->netdev,
++							      &chandef);
++			break;
++		}
+ 		wdev->preset_chandef = chandef;
+ 		result = 0;
+ 		break;
+-- 
+1.8.0
 
