@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:47570 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754881Ab3BLKXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 05:23:48 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [BUG] Beacon loss event every second
-References: <5118F682.8000502@neratec.com>
-	<1360592857.8738.30.camel@jlt4.sipsolutions.net>
-	<51190341.40806@neratec.com> <87bobpc0ft.fsf@purkki.adurom.net>
-	<511A15D4.6070808@neratec.com>
-Date: Tue, 12 Feb 2013 12:23:47 +0200
-In-Reply-To: <511A15D4.6070808@neratec.com> (Wojciech Dubowik's message of
-	"Tue, 12 Feb 2013 11:13:40 +0100")
-Message-ID: <877gmdbzkc.fsf@purkki.adurom.net> (sfid-20130212_112353_796399_C91057FD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:43173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756914Ab3BKMmL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 07:42:11 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 10/14] mac80211: disable HT/VHT if AP has no HT/VHT capability
+Date: Mon, 11 Feb 2013 13:38:14 +0100
+Message-Id: <1360586298-15028-11-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134939_423296_3F820BE4)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I have a test pc with 3x AR9590 and 2x AR9390. Machine is based on i7
-> and hyperthreading is on so I have 8 cores.
-> I am using latest wireless testing ath9k and 3.8rc7 kernel.
->
-> What I see is that for some extended periods odf time beacons are not
-> processed in ieee80211_rx_mgmt_beacon
-> and that's why I get beacon loss. I am using 30ms beacon period.
->
->
-> What is really funny, that I get this beacon loss message every
-> second. Like is sth was locking ifmgd->mtx mutex
-> at constant intervals.
->
->
-> I will try to disable all cores and run in again to see if it's rcu problem.
+Having HT/VHT operation IEs but not capability IEs
+leads to a strange situation where we configure the
+channel to an HT or VHT bandwidth and then can't
+actually use it. Prevent this by checking that the
+HT and VHT capability IEs are present as well as
+the operation IEs; if not, disable HT and/or VHT.
 
-You could also try wireless-next or wireless-testing to pinpoint if the
-problem is in wireless code or not.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2d8deaa..6e6031e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3588,16 +3588,22 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT) &&
+ 	    sband->ht_cap.ht_supported) {
+-		const u8 *ht_oper_ie;
++		const u8 *ht_oper_ie, *ht_cap;
+ 
+ 		ht_oper_ie = ieee80211_bss_get_ie(cbss, WLAN_EID_HT_OPERATION);
+ 		if (ht_oper_ie && ht_oper_ie[1] >= sizeof(*ht_oper))
+ 			ht_oper = (void *)(ht_oper_ie + 2);
++
++		ht_cap = ieee80211_bss_get_ie(cbss, WLAN_EID_HT_CAPABILITY);
++		if (!ht_cap || ht_cap[1] < sizeof(struct ieee80211_ht_cap)) {
++			ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
++			ht_oper = NULL;
++		}
+ 	}
+ 
+ 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT) &&
+ 	    sband->vht_cap.vht_supported) {
+-		const u8 *vht_oper_ie;
++		const u8 *vht_oper_ie, *vht_cap;
+ 
+ 		vht_oper_ie = ieee80211_bss_get_ie(cbss,
+ 						   WLAN_EID_VHT_OPERATION);
+@@ -3610,6 +3616,12 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+ 		}
++
++		vht_cap = ieee80211_bss_get_ie(cbss, WLAN_EID_VHT_CAPABILITY);
++		if (!vht_cap || vht_cap[1] < sizeof(struct ieee80211_vht_cap)) {
++			ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
++			vht_oper = NULL;
++		}
+ 	}
+ 
+ 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
 -- 
-Kalle Valo
+1.8.0
+
