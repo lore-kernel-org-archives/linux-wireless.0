@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:42862 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932168Ab3BGVkP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43008 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755853Ab3BKLsC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 16:40:15 -0500
-Received: by mail-we0-f169.google.com with SMTP id t11so2536859wey.14
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 13:40:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
-	<CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
-	<CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
-	<CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
-	<CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
-	<CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
-	<CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
-	<CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
-	<CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
-	<CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com>
-	<CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
-Date: Thu, 7 Feb 2013 13:40:13 -0800
-Message-ID: <CAJ-VmomvQKNHP008vXA8dHrSnG1mUkkx1yoBy6B1jwv_VxTZjw@mail.gmail.com> (sfid-20130207_224020_786154_77103F12)
-Subject: Re: Auth Packet TX Delay
-From: Adrian Chadd <adrian@freebsd.org>
-To: Robert Shade <robert.shade@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 Feb 2013 06:48:02 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U4rrd-0000e2-Hb
+	for linux-wireless@vger.kernel.org; Mon, 11 Feb 2013 12:48:01 +0100
+Message-ID: <1360583279.8738.17.camel@jlt4.sipsolutions.net> (sfid-20130211_124806_569618_74EDF15A)
+Subject: Re: [PATCH v2] mac80211: explicitly copy channels to VLANs where
+ needed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 12:47:59 +0100
+In-Reply-To: <1360322072-17239-1-git-send-email-johannes@sipsolutions.net> (sfid-20130208_121440_204800_57254D40)
+References: <1360322072-17239-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130208_121440_204800_57254D40)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 February 2013 11:43, Robert Shade <robert.shade@gmail.com> wrote:
-> AR9160 / AR9106
+On Fri, 2013-02-08 at 12:14 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Currently the code assigns channel contexts to VLANs
+> (for use by the TX/RX code) when the AP master gets
+> its channel context assigned. This works fine, but
+> in the upcoming radar detection work the VLANs don't
+> require a channel context (during radar detection)
+> and assigning one to them anyway causes issues with
+> locking and also inconsistencies -- a VLAN interface
+> that is added before radar detection would get the
+> channel context, while one added during it wouldn't.
+> 
+> Fix these issues moving the channel context copying
+> to a new explicit operation that will not be used
+> in the radar detection code.
 
-Things are getting into a really odd state if that particular initial
-calibration isn't finishing...
+Applied.
 
-Things I can think of:
+johannes
 
-* There's some kind of noise going on that's angering the PHY (eg a spur);
-* We should be doing a cold reset instead of a warm reset, upon a
-channel change; (That fixes some issues I've seen on the AR9280 in
-some environments);
-* Bad/incorrectly hooked up antenans.
-
->From a software side, nothing much can be going wrong. as long as the
-driver isn't doing something stupid like running multiple copies of
-the reset / setup path on different CPUs/threads, it should be
-reliable.
-
-HTH,
-
-
-
-Adrian
