@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:57094 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758Ab3BCBD0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2013 20:03:26 -0500
-Received: by mail-pb0-f47.google.com with SMTP id rp8so2652254pbb.20
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Feb 2013 17:03:26 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 0/3] implement active mesh scanning
-Date: Sat,  2 Feb 2013 17:02:18 -0800
-Message-Id: <1359853341-29237-1-git-send-email-thomas@cozybit.com> (sfid-20130203_020333_794624_39F746E9)
+Received: from nbd.name ([46.4.11.11]:54882 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932710Ab3BKV4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 16:56:44 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v3 1/3] mac80211/minstrel_ht: show the number of retries for each rate in debugfs
+Date: Mon, 11 Feb 2013 22:56:38 +0100
+Message-Id: <1360619800-80582-1-git-send-email-nbd@openwrt.org> (sfid-20130211_225649_030533_E14C9602)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set improves the mesh scanning functionality by:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-	- responding to broadcast or directed probe requests
-	- allowing the user to generate a directed mesh probe request, ie:
-		iw mesh0 scan ssid foo
-	  on a mesh interface will send probe requests where the ssid "foo" has
-	  been filled into the mesh ID IE.
-
-Also patch 1 caches the mesh beacon in a struct beacon_data each time it
-changes so probe responses can be quickly built. This is also convenient when
-the TIM IE becomes needed for PS.
-
-Applies on mac80211-next/master
-
-Thomas Pedersen (3):
-  mac80211: cache mesh beacon
-  mac80211: generate mesh probe requests
-  mac80211: generate mesh probe responses
-
- net/mac80211/cfg.c         |    2 +
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mesh.c        |  199 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/mesh.h        |    3 +
- net/mac80211/mesh_plink.c  |    6 +-
- net/mac80211/rx.c          |    5 +-
- net/mac80211/tx.c          |   72 +++++-----------
- net/mac80211/util.c        |    1 +
- 8 files changed, 229 insertions(+), 60 deletions(-)
-
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index e788f76..f2b7d26 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -38,8 +38,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	file->private_data = ms;
+ 	p = ms->buf;
+-	p += sprintf(p, "type      rate     throughput  ewma prob   this prob  "
+-			"this succ/attempt   success    attempts\n");
++	p += sprintf(p, "type         rate     throughput  ewma prob   this prob  "
++			"retry   this succ/attempt   success    attempts\n");
+ 	for (i = 0; i < MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS; i++) {
+ 		char htmode = '2';
+ 		char gimode = 'L';
+@@ -64,18 +64,19 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 			*(p++) = (idx == mi->max_tp_rate) ? 'T' : ' ';
+ 			*(p++) = (idx == mi->max_tp_rate2) ? 't' : ' ';
+ 			*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
+-			p += sprintf(p, "MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
++			p += sprintf(p, " MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
+ 					MCS_GROUP_RATES + j);
+ 
+ 			tp = mr->cur_tp / 10;
+ 			prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
+ 			eprob = MINSTREL_TRUNC(mr->probability * 1000);
+ 
+-			p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
+-					"%3u(%3u)   %8llu    %8llu\n",
++			p += sprintf(p, "      %6u.%1u   %6u.%1u    %6u.%1u    "
++					"%3u            %3u(%3u)  %8llu    %8llu\n",
+ 					tp / 10, tp % 10,
+ 					eprob / 10, eprob % 10,
+ 					prob / 10, prob % 10,
++					mr->retry_count,
+ 					mr->last_success,
+ 					mr->last_attempts,
+ 					(unsigned long long)mr->succ_hist,
 -- 
-1.7.10.4
+1.8.0.2
 
