@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:50981 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933Ab3BETDn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43017 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755883Ab3BKLuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 14:03:43 -0500
-Received: by mail-ob0-f172.google.com with SMTP id tb18so551849obb.17
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Feb 2013 11:03:42 -0800 (PST)
-Message-ID: <5111578D.7060300@lwfinger.net> (sfid-20130205_200346_941719_016CCA80)
-Date: Tue, 05 Feb 2013 13:03:41 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Thomas Rosenkranz <tom.rosary@googlemail.com>
-CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: FW: 0bda:819a RTL8188CUS WLAN doesn't work out of the box in
- downstream and upstreamkernel
-References: <51102B22.20702@gmail.com> <CAOAX8-k-Nbx4Om8fkEHRW2jmZCxKpsMY6oEZMAvdEQpXWn9Mdw@mail.gmail.com> <511043C0.2020405@gmail.com> <CAOAX8-kFtWuwEvz9v7hBzOwtohJx0NezrDHC0iVwXF29YYSCgQ@mail.gmail.com>
-In-Reply-To: <CAOAX8-kFtWuwEvz9v7hBzOwtohJx0NezrDHC0iVwXF29YYSCgQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 11 Feb 2013 06:50:09 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U4rtg-0000kY-Po
+	for linux-wireless@vger.kernel.org; Mon, 11 Feb 2013 12:50:08 +0100
+Message-ID: <1360583405.8738.22.camel@jlt4.sipsolutions.net> (sfid-20130211_125014_062966_75DEE3F8)
+Subject: Re: [PATCH] mac80211: introduce beacon-only timing data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 12:50:05 +0100
+In-Reply-To: <1360160966-26163-1-git-send-email-johannes@sipsolutions.net> (sfid-20130206_152911_650604_90D399DD)
+References: <1360160966-26163-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130206_152911_650604_90D399DD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2013 12:30 PM, Thomas Rosenkranz wrote:
-> your link didn't work, got driver from realtek homepage
->
-> tommy@Tommy-AIO:~$ modinfo 8192cu | egrep 'versi|filen|819'
-> filename:       /lib/modules/3.2.0-37-generic/kernel/drivers/net/wireless/8192cu.ko
-> version:        v3.4.4_4749.20121105
-> srcversion:     657E53E8FE213B566819C54
-> alias:          usb:v0BDAp8191d*dc*dsc*dp*ic*isc*ip*
-> vermagic:       3.2.0-37-generic SMP mod_unload modversions
-> parm:           rtw_chip_version:int
->
-> still the crash after trying to removethe modul
+On Wed, 2013-02-06 at 15:29 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In order to be able to predict the next DTIM TBTT
+> in the driver, add the ability to use timing data
+> from beacons only with the new hardware flag
+> IEEE80211_HW_TIMING_BEACON_ONLY and the BSS info
+> value sync_dtim_count which is only valid if the
+> timing data came from a beacon. The data can only
+> come from a beacon, and if no beacon was received
+> before association it is updated later together
+> with the DTIM count notification.
 
-Sorry, but I do not debug the vendor drivers.
+Applied.
 
-Larry
-
+johannes
 
