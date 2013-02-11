@@ -1,96 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:44599 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356Ab3BTWI5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 17:08:57 -0500
-Received: by mail-wg0-f48.google.com with SMTP id 16so6734265wgi.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2013 14:08:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5124D7DC.6010708@candelatech.com>
-References: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
- <CAGRGNgVY+v9ko0MicEp5ozjrv38TG87sTw78SZhLLEqaK=XQ8Q@mail.gmail.com> <5124D7DC.6010708@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 21 Feb 2013 09:08:35 +1100
-Message-ID: <CAGRGNgVJ94_TFs7jrCxegYJMn4M25hSOaJR+i25bo1p4N9p_-g@mail.gmail.com> (sfid-20130220_230901_034546_67758645)
-Subject: Re: [PATCH] mac80211: Clean up work-queues on disassociation.
-To: Ben Greear <greearb@candelatech.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:60678 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757820Ab3BKTBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 14:01:36 -0500
+Message-ID: <1360609295.2028.44.camel@joe-AO722> (sfid-20130211_200141_548348_1B4586C3)
+Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
+From: Joe Perches <joe@perches.com>
+To: Solomon Peachy <pizza@shaftnet.org>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Mon, 11 Feb 2013 11:01:35 -0800
+In-Reply-To: <20130211185322.GB3123@shaftnet.org>
+References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
+	 <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
+	 <1360372559.13487.14.camel@joe-AO722> <20130211185322.GB3123@shaftnet.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On Mon, 2013-02-11 at 13:53 -0500, Solomon Peachy wrote:
+> On Fri, Feb 08, 2013 at 05:15:59PM -0800, Joe Perches wrote:
+> > Could you please run your patches through
+> > scripts/checkpatch.pl --strict
+> 
+> If you think it's bad now, you should have seen the state of the code 
+> when I first "inherited" it.  :)
 
-On Thu, Feb 21, 2013 at 1:04 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/19/2013 10:23 PM, Julian Calaby wrote:
->>
->> Hi Ben,
->>
->> On Wed, Feb 20, 2013 at 1:11 PM,  <greearb@candelatech.com> wrote:
->>>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> The monitor_work and beacon_connection_loss_work items were
->>> not being canceled on disassociation (and not on deletion
->>> either).  This leads to work-items trying to run after memory
->>> has been deleted.
->>>
->>> I could not find a cleaner way to do this because the
->>> cancel_work_sync for these items must be done outside
->>> of the ifmgd->mtx.
->>>
->>> In addition, re-order the quiesce code so that timers are
->>> always stopped before work-items are flushed.  This was
->>> not the problem I saw, but I think it may still be more
->>> correct.
->>>
->>> This fixes the crashes we see in 3.7.9+.  The crash stack
->>> trace itself isn't so helpful, but this warning gives
->>> more useful info:
->>
->>
->> [snip]
->>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>> ---
->>>
->>> NOTE:  Please do not apply this until it is reviewed by Johannes,
->>> at least.
->>>
->>>   net/mac80211/mlme.c |   68
->>> +++++++++++++++++++++++++++++++++++++++++++++-----
->>>   1 files changed, 61 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->>> index 164ecf0..5a65144 100644
->>> --- a/net/mac80211/mlme.c
->>> +++ b/net/mac80211/mlme.c
->>> @@ -3262,6 +3282,8 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data
->>> *sdata,
->>>          struct ieee80211_mgd_auth_data *auth_data;
->>>          u16 auth_alg;
->>>          int err;
->>> +       bool maybe_cancel_work = false;
->>> +       bool hit_err_clear = false;
->>
->>
->> You could replace these with a single variable.
->
->
-> I don't see how.  It seems that we should only cancel the work items
-> if we called set_disassoc AND if the subsequent attempts to (re)associate
-> failed.
->
-> Maybe I missed something?
+No doubt, but that wasn't my point.
 
-No, I misread the code. Sorry for the noise.
+> Question -- as a matter of policy, is the goal to have a completely 
+> clean checkpatch run?  I get that there should be no ERRORs, but 
+> WARNINGs/CHECKs are not considered fatal for a reason, right?
 
-Thanks,
+No.  It's just a guideline.  As far as I'm concerned,
+ignore every checkpatch message you don't agree with.
 
--- 
-Julian Calaby
+Just be aware that there's a tool to help you get your
+code looking more like what most others generally consider
+"kernel style".
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Though when you add "new" code, stuff like
+
+	> +     u32 sdio_reg_addr_17bit ;
+
+is untidy because of the space before the semicolon.
+
+
