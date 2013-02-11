@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932773Ab3BOMPI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34247 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758718Ab3BKTae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 07:15:08 -0500
-Message-ID: <1360930499.15040.7.camel@jlt4.sipsolutions.net> (sfid-20130215_131511_894106_7D22F0C6)
-Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into
- neighbour_update
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-Date: Fri, 15 Feb 2013 13:14:59 +0100
-In-Reply-To: <1360928446-543-1-git-send-email-marco@cozybit.com> (sfid-20130215_124056_325990_55BC105E)
-References: <1360928446-543-1-git-send-email-marco@cozybit.com>
-	 (sfid-20130215_124056_325990_55BC105E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Feb 2013 14:30:34 -0500
+Date: Mon, 11 Feb 2013 14:27:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-02-11
+Message-ID: <20130211192728.GD10986@tuxdriver.com> (sfid-20130211_203225_092366_869A6845)
+References: <1360168561.7910.24.camel@jlt4.sipsolutions.net>
+ <1360267300.8038.13.camel@jlt4.sipsolutions.net>
+ <1360580674.8738.14.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360580674.8738.14.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 12:40 +0100, Marco Porsch wrote:
+On Mon, Feb 11, 2013 at 12:04:34PM +0100, Johannes Berg wrote:
+> Hi,
+> 
+> I feel stupid now, I was testing corner cases and found *another*
+> bug ... :( So here's a new pull request.
+> 
+> Here are three fixes still for the 3.8 stream, the fix from Cong Ding
+> for the bad sizeof (Stephen Hemminger had pointed it out before but I'd
+> promptly forgotten), a mac80211 managed-mode channel context usage fix
+> where a downgrade would never stop until reaching non-HT and a bug in
+> the channel determination that could cause invalid channels like HT40+
+> on channel 11 to be used.
+> 
+> Please pull or let me know of any problems.
+> 
+> johannes
+> 
+> The following changes since commit c49dc9008b1c641a86837297df7c90cef070571b:
+> 
+>   cfg80211: off by one in ieee80211_bss() (2013-01-24 15:47:22 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 3d9646d0abd02c552f6f15c302b31aa321c2fa8b:
+> 
+>   mac80211: fix channel selection bug (2013-02-11 11:12:26 +0100)
+> 
+> ----------------------------------------------------------------
+> Cong Ding (1):
+>       mac80211: fix error in sizeof() usage
+> 
+> Johannes Berg (2):
+>       mac80211: fix managed mode channel context use
+>       mac80211: fix channel selection bug
+> 
+>  net/mac80211/cfg.c  |  3 ++-
+>  net/mac80211/mlme.c | 11 +++++++----
+>  2 files changed, 9 insertions(+), 5 deletions(-)
 
-> -	/* The current tsf is a first approximation for the timestamp
-> -	 * for the received beacon.  Further down we try to get a
-> -	 * better value from the rx_status->mactime field if
-> -	 * available. Also we have to call drv_get_tsf() before
-> -	 * entering the rcu-read section.*/
+Pulling now -- no guarantees that it will make the loop before 3.8
+is released!
 
-I don't think you should drop this comment; also why not just address
-it? There's a timestamp in rx_status that should be the correct one for
-ath9k (which is pretty much all this seems to work on anyway :) )
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
