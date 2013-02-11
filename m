@@ -1,243 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42539 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478Ab3BDLNO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42837 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754617Ab3BKLEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 06:13:14 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W . Linville" <linville@tuxdriver.com>
-CC: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 0/2] wireless: expand per-station byte counters to 64bit
-Date: Mon, 4 Feb 2013 13:13:10 +0200
-Message-ID: <1545359.lClxPtAl2j@lx-vladimir> (sfid-20130204_121319_926192_DF7E8513)
-In-Reply-To: <1359628924.8415.5.camel@jlt4.sipsolutions.net>
-References: <6017229.5ECEUbBVAL@lx-vladimir> <1359628924.8415.5.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 11 Feb 2013 06:04:46 -0500
+Message-ID: <1360580674.8738.14.camel@jlt4.sipsolutions.net> (sfid-20130211_120451_892838_B8937FF9)
+Subject: pull-request: mac80211 2013-02-11
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 12:04:34 +0100
+In-Reply-To: <1360267300.8038.13.camel@jlt4.sipsolutions.net> (sfid-20130207_210125_019256_B62FB536)
+References: <1360168561.7910.24.camel@jlt4.sipsolutions.net>
+	 (sfid-20130206_173555_899354_0EC3DE1D) <1360267300.8038.13.camel@jlt4.sipsolutions.net>
+	 (sfid-20130207_210125_019256_B62FB536)
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-jeqQmg1zjoce9e1kL/bV"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 31, 2013 11:42:04 AM Johannes Berg wrote:
-> On Thu, 2013-01-31 at 11:46 +0200, Vladimir Kondratiev wrote:
-> > Hi,
-> > 
-> > Now wifi drivers reports per-station info using struct station_info;
-> > and currently for the data counters it has:
-> > 	u32 rx_bytes;
-> > 	u32 tx_bytes;
-> > 
-> > while for device-wide statistics one can use ndo_get_stats64() to fill
-> > 64-bit counters in the struct rtnl_link_stats64, per-station statistics
-> > are 32-bit.
-> > 
-> > This becomes problematic with gigabit speeds now observed for .11ac and .11ad -
-> > counters overflown every few seconds.
-> > 
-> > I'd like to extend rx and tx byte counters to 64-bit.
-> > 
-> > What is better - expand existing fields in struct station_info as:
-> > 	u64 rx_bytes;
-> > 	u64 tx_bytes;
-> 
-> This.
-> 
-> > or add ne ones like:
-> > 	u64 rx_bytes64;
-> > 	u64 tx_bytes64;
-> 
-> I don't see a reason to do this.
-> 
-> > 
-> > Then, I'll add
-> > 	NL80211_STA_INFO_RX_BYTES64,
-> > 	NL80211_STA_INFO_TX_BYTES64,
-> > to the enum nl80211_sta_info
-> > 
-> > Before doing patch, I'd like to hear comments.
-> > Any consideration why is this not to be done or done differently?
-> 
-> Sounds good to me.
-> 
-> Two points:
-> 
-> 1) You should provide the RX_TX_BYTES attributes, but I think only if
-> the value fits into 32 bits. That way, we don't report invalid
-> information.
-> 
-> 2a) Need to be careful in downstream drivers/mac80211, they should also
-> be converted to use 64-bit counters when gathering the data. Otherwise,
-> userspace might assume the value is actually 64-bit, when it rolled over
-> in mac80211.
-> 
-> 2b) An alternative to converting all the non-mac80211 drivers and
-> mac80211 would be to add new station info flags: STATION_INFO_TX_BYTES64
-> and STATION_INFO_RX_BYTES64. You'd still fill the rx_bytes/tx_bytes
-> values, but if the driver sets STATION_INFO_TX_BYTES you'd never use a
-> 64-bit attribute in nl80211.
-> 
-> I think 2a is preferable, but it'd be a bunch of work to make sure to
-> catch all drivers, and some devices might not actually have 64-bit
-> counters (if the data comes from firmware)? So 2b might be a better
-> choice.
-> 
-> johannes
-> 
 
-Patches follows.
+--=-jeqQmg1zjoce9e1kL/bV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-patch 1 expands counters and patch 2 uses this 64-bit counters for
-the ath6kl - only easy to find driver with 64-bit counters.
+Hi,
 
->From e08b764685cc8887b36f97e2f7957498dbc48b60 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>
-Date: Fri, 1 Feb 2013 16:01:35 +0200
-Subject: [PATCH 1/2] wireless: expand per-station byte counters to 64bit
+I feel stupid now, I was testing corner cases and found *another*
+bug ... :( So here's a new pull request.
 
-In per-station statistics, present 32bit counters are too small
-for practical purposes - with gigabit speeds, it get overlapped
-every few seconds.
+Here are three fixes still for the 3.8 stream, the fix from Cong Ding
+for the bad sizeof (Stephen Hemminger had pointed it out before but I'd
+promptly forgotten), a mac80211 managed-mode channel context usage fix
+where a downgrade would never stop until reaching non-HT and a bug in
+the channel determination that could cause invalid channels like HT40+
+on channel 11 to be used.
 
-Expand counters in the struct station_info to be 64-bit.
-Driver can still fill only 32-bit and indicate in @filled
-only bits like STATION_INFO_[TR]X_BYTES; in case driver provides
-full 64-bit counter, it should also set in @filled
-bit STATION_INFO_[TR]RX_BYTES64
+Please pull or let me know of any problems.
 
-Netlink sends both 32-bit and 64-bit counters, if present, to not break
-user space.
+johannes
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>
----
- include/net/cfg80211.h       |   12 ++++++++----
- include/uapi/linux/nl80211.h |    4 ++++
- net/wireless/nl80211.c       |   10 +++++++++-
- 3 files changed, 21 insertions(+), 5 deletions(-)
+The following changes since commit c49dc9008b1c641a86837297df7c90cef070571b=
+:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 36e076e..bcb6b70 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -672,8 +672,10 @@ struct station_parameters {
-  * @STATION_INFO_SIGNAL: @signal filled
-  * @STATION_INFO_TX_BITRATE: @txrate fields are filled
-  *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
-- * @STATION_INFO_RX_PACKETS: @rx_packets filled
-- * @STATION_INFO_TX_PACKETS: @tx_packets filled
-+ * @STATION_INFO_RX_PACKETS: @rx_packets filled with 32-bit value
-+ * @STATION_INFO_TX_PACKETS: @tx_packets filled with 32-bit value
-+ * @STATION_INFO_RX_PACKETS64: @rx_packets filled with 64-bit value
-+ * @STATION_INFO_TX_PACKETS64: @tx_packets filled with 64-bit value
-  * @STATION_INFO_TX_RETRIES: @tx_retries filled
-  * @STATION_INFO_TX_FAILED: @tx_failed filled
-  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
-@@ -714,6 +716,8 @@ enum station_info_flags {
- 	STATION_INFO_LOCAL_PM		= 1<<21,
- 	STATION_INFO_PEER_PM		= 1<<22,
- 	STATION_INFO_NONPEER_PM		= 1<<23,
-+	STATION_INFO_RX_BYTES64		= 1<<24,
-+	STATION_INFO_TX_BYTES64		= 1<<25,
- };
- 
- /**
-@@ -835,8 +839,8 @@ struct station_info {
- 	u32 filled;
- 	u32 connected_time;
- 	u32 inactive_time;
--	u32 rx_bytes;
--	u32 tx_bytes;
-+	u64 rx_bytes;
-+	u64 tx_bytes;
- 	u16 llid;
- 	u16 plid;
- 	u8 plink_state;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7dbc1..5c7d54c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1851,6 +1851,8 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_INACTIVE_TIME: time since last activity (u32, msecs)
-  * @NL80211_STA_INFO_RX_BYTES: total received bytes (u32, from this station)
-  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this station)
-+ * @NL80211_STA_INFO_RX_BYTES64: total received bytes (u64, from this station)
-+ * @NL80211_STA_INFO_TX_BYTES64: total transmitted bytes (u64, to this station)
-  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
-  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
-  * 	containing info as possible, see &enum nl80211_rate_info
-@@ -1903,6 +1905,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_LOCAL_PM,
- 	NL80211_STA_INFO_PEER_PM,
- 	NL80211_STA_INFO_NONPEER_PM,
-+	NL80211_STA_INFO_RX_BYTES64,
-+	NL80211_STA_INFO_TX_BYTES64,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b5978ab..b3a9c8e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3059,10 +3059,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_RX_BYTES) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
--			sinfo->rx_bytes))
-+			(u32)sinfo->rx_bytes))
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_TX_BYTES) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
-+			(u32)sinfo->tx_bytes))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
-+	    nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
-+			sinfo->rx_bytes))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_TX_BYTES64) &&
-+	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES64,
- 			sinfo->tx_bytes))
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_LLID) &&
--- 
-1.7.10.4
+  cfg80211: off by one in ieee80211_bss() (2013-01-24 15:47:22 +0100)
 
->From ec3c391673d70078008213d6243881919c977b07 Mon Sep 17 00:00:00 2001
-From: Vladimir Kondratiev <qca_vkondrat-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>
-Date: Fri, 1 Feb 2013 16:03:34 +0200
-Subject: [PATCH 2/2] ath6kl: provide 64-bit per-station byte counters
+are available in the git repository at:
 
-Internally, 64-bit byte counters maintained for per-station
-statistics. Tell to the netlink that full 64-bit value provided
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat-A+ZNKFmMK5xy9aJCnZT0Uw@public.gmane.org>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+for you to fetch changes up to 3d9646d0abd02c552f6f15c302b31aa321c2fa8b:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 4225cca..90b1a93 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1778,14 +1778,16 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	if (vif->target_stats.rx_byte) {
- 		sinfo->rx_bytes = vif->target_stats.rx_byte;
--		sinfo->filled |= STATION_INFO_RX_BYTES;
-+		sinfo->filled |= STATION_INFO_RX_BYTES |
-+				 STATION_INFO_RX_BYTES64;
- 		sinfo->rx_packets = vif->target_stats.rx_pkt;
- 		sinfo->filled |= STATION_INFO_RX_PACKETS;
- 	}
- 
- 	if (vif->target_stats.tx_byte) {
- 		sinfo->tx_bytes = vif->target_stats.tx_byte;
--		sinfo->filled |= STATION_INFO_TX_BYTES;
-+		sinfo->filled |= STATION_INFO_TX_BYTES |
-+				 STATION_INFO_TX_BYTES64;
- 		sinfo->tx_packets = vif->target_stats.tx_pkt;
- 		sinfo->filled |= STATION_INFO_TX_PACKETS;
- 	}
--- 
-1.7.10.4
+  mac80211: fix channel selection bug (2013-02-11 11:12:26 +0100)
+
+----------------------------------------------------------------
+Cong Ding (1):
+      mac80211: fix error in sizeof() usage
+
+Johannes Berg (2):
+      mac80211: fix managed mode channel context use
+      mac80211: fix channel selection bug
+
+ net/mac80211/cfg.c  |  3 ++-
+ net/mac80211/mlme.c | 11 +++++++----
+ 2 files changed, 9 insertions(+), 5 deletions(-)
+
+
+--=-jeqQmg1zjoce9e1kL/bV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRGNBCAAoJEDBSmw7B7bqrZu0QAIgwOfX7wh2+Yo17xYyf7Fcm
+UYZCBCLYSqaYSrHThOgYXToWNnzof8NFGmIHAr6l03Lepgu8K8uKBRRbyExdvrT8
+o/doZcFajPwA7Dog0Xrs1UAGp8exdjedUVT1IbS+lDiGzLs3d5oeozMvkfVV5ecx
+hcRa05MCKtym+O9n5ZGl2STc51dhscXmBxRQzUUic1DZjYUofMpKs2VCqPbyktEU
+iVY7HGZOjsi4ykLS+9zx/qtMCeghqxq+1grOUhmrf4A3ruNt7l5ALZUzm927wJLg
+AECRIKteMEd3p3qwus3uF4IxA/ru+fhr72+rRbpNdjnDAlSvOVyPSGtsqGCvhniy
+ALX/R9mKIEmRNGC+36TJueT1gcEpPhQgQSOvKFIDSFfFOWcDywrIm1JgWQGCwTo9
+Od6KFFbYM/qQyEvgXnUFnAB/5CXKzkTGS3bhyPF3vnnh8piXdIGFVs6Ayq4Rttan
+RW+/oQbjK9MibIYm4ULHesnPXGL/FvUdn3+aT2XOphWT6bZrjmpDOGwrCEtxwYdq
+QUyIul0FKtCQ+FPNvSNsNVQgnowqLmOiyqk2qLOz/d0OjEuHxtoophc4zYIuexUq
+LIJKW2Xvpnt28DMzdO2WxIC9wB+S1itiNEy+Cr67/mOBvGaFAznAlxKvqosnSIZq
+/gO/i3o7/euzqBOymJo/
+=Pcr5
+-----END PGP SIGNATURE-----
+
+--=-jeqQmg1zjoce9e1kL/bV--
 
