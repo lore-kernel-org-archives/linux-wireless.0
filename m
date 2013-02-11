@@ -1,100 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60244 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946785Ab3BHRZu (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58004 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758472Ab3BKTHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 12:25:50 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 01/14] mac80211: pass station to ieee80211_vht_cap_ie_to_sta_vht_cap
-Date: Fri,  8 Feb 2013 18:25:31 +0100
-Message-Id: <1360344344-15742-2-git-send-email-johannes@sipsolutions.net> (sfid-20130208_182554_988247_FE95E752)
-In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
-References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 11 Feb 2013 14:07:44 -0500
+Date: Mon, 11 Feb 2013 14:07:41 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, apw@canonical.com
+Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
+Message-ID: <20130211190741.GC3123@shaftnet.org> (sfid-20130211_200927_934685_F539B9D8)
+References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
+ <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
+ <1360372559.13487.14.camel@joe-AO722>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0vzXIDBeUiKkjNJl"
+In-Reply-To: <1360372559.13487.14.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Like with HT, make things a bit simpler in future patches by
-passing the station to ieee80211_vht_cap_ie_to_sta_vht_cap()
-instead of the vht_cap pointer. Also disable VHT here if HT
-isn't supported.
+--0vzXIDBeUiKkjNJl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 3 +--
- net/mac80211/ieee80211_i.h | 3 ++-
- net/mac80211/mlme.c        | 3 +--
- net/mac80211/vht.c         | 8 +++++---
- 4 files changed, 9 insertions(+), 8 deletions(-)
+On Fri, Feb 08, 2013 at 05:15:59PM -0800, Joe Perches wrote:
+> Could you please run your patches through
+> scripts/checkpatch.pl --strict
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e09c0c4..8f3e3a2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1256,8 +1256,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 
- 	if (params->vht_capa)
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
--						    params->vht_capa,
--						    &sta->sta.vht_cap);
-+						    params->vht_capa, sta);
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 693d755..c872f5d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1426,7 +1426,8 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
- void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_supported_band *sband,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
--					 struct ieee80211_sta_vht_cap *vht_cap);
-+					 struct sta_info *sta);
-+
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4ecf84a..31b1fb7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2200,8 +2200,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 
- 	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
--						    elems.vht_cap_elem,
--						    &sta->sta.vht_cap);
-+						    elems.vht_cap_elem, sta);
- 
- 	rate_control_rate_init(sta);
- 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index f311388..1606aa1 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -15,13 +15,15 @@
- void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_supported_band *sband,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
--					 struct ieee80211_sta_vht_cap *vht_cap)
-+					 struct sta_info *sta)
- {
--	if (WARN_ON_ONCE(!vht_cap))
--		return;
-+	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
- 
- 	memset(vht_cap, 0, sizeof(*vht_cap));
- 
-+	if (!sta->sta.ht_cap.ht_supported)
-+		return;
-+
- 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
- 		return;
- 
--- 
-1.8.0
+As an aside, the output of scripts/Lindent actually results in=20
+checkpatch ERRORs -- 'u16 *ctrl_reg' gets converted to 'u16 * ctrl_reg',=20
+for example.
 
+(Using GNU indent 2.2.11)
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--0vzXIDBeUiKkjNJl
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRGUF9PuLgii2759ARAnjZAJ9mLx7YKxNs4Nj2bWnnxndI0T3+zACfRlZw
++QDTIc3ZnhWPBIG8IO6KsYI=
+=W60B
+-----END PGP SIGNATURE-----
+
+--0vzXIDBeUiKkjNJl--
