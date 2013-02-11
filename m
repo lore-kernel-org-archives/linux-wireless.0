@@ -1,79 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:47741 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759931Ab3BYQJo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43021 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755883Ab3BKLvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 11:09:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH] b43: Fix lockdep splat on module unload
-Date: Mon, 25 Feb 2013 10:09:24 -0600
-Message-Id: <1361808564-22684-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130225_170953_613852_B1F14FFF)
+	Mon, 11 Feb 2013 06:51:31 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U4rv0-0000lu-48
+	for linux-wireless@vger.kernel.org; Mon, 11 Feb 2013 12:51:30 +0100
+Message-ID: <1360583487.8738.25.camel@jlt4.sipsolutions.net> (sfid-20130211_125352_222727_FA9F6462)
+Subject: Re: [PATCH] mac80211: simplify idle handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 12:51:27 +0100
+In-Reply-To: <1360192626-13998-1-git-send-email-johannes@sipsolutions.net> (sfid-20130207_001654_967351_CB04CCD5)
+References: <1360192626-13998-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130207_001654_967351_CB04CCD5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On unload, b43 produces a lockdep warning that can be summarized in the
-following way:
+On Thu, 2013-02-07 at 00:17 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Now that we have channel contexts, idle is (pretty
+> much) equivalent to not having a channel context.
+> Change the code to use this relation so that there
+> no longer is a need for a lot of idle recalculate
+> calls everywhere.
 
- ======================================================
- [ INFO: possible circular locking dependency detected ]
- 3.8.0-wl+ #117 Not tainted
- -------------------------------------------------------
- modprobe/5557 is trying to acquire lock:
-  ((&wl->firmware_load)){+.+.+.}, at: [<ffffffff81062160>] flush_work+0x0/0x2a0
+Applied.
 
- but task is already holding lock:
-  (rtnl_mutex){+.+.+.}, at: [<ffffffff813bd7d2>] rtnl_lock+0x12/0x20
-
- which lock already depends on the new lock.
- [ INFO: possible circular locking dependency detected ]
- ======================================================
-
-The full output is available at http://lkml.indiana.edu/hypermail/linux/kernel/1302.3/00060.html.
-To summarize, commit 6b6fa58 added a 'cancel_work_sync(&wl->firmware_load)'
-call in the wrong place.
-
-The fix is to move the cancel_work_sync() call to b43_bcma_remove() and
-b43_ssb_remove(). Thanks to Johannes Berg and Michael Buesch for help in
-diagnosing the log output.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V3.5+]
----
- drivers/net/wireless/b43/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 806e34c..0568273 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4214,7 +4214,6 @@ redo:
- 	mutex_unlock(&wl->mutex);
- 	cancel_delayed_work_sync(&dev->periodic_work);
- 	cancel_work_sync(&wl->tx_work);
--	cancel_work_sync(&wl->firmware_load);
- 	mutex_lock(&wl->mutex);
- 	dev = wl->current_dev;
- 	if (!dev || b43_status(dev) < B43_STAT_STARTED) {
-@@ -5434,6 +5433,7 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	/* We must cancel any work here before unregistering from ieee80211,
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
-+	cancel_work_sync(&wl->firmware_load);
- 
- 	B43_WARN_ON(!wl);
- 	if (!wldev->fw.ucode.data)
-@@ -5510,6 +5510,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 	/* We must cancel any work here before unregistering from ieee80211,
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
-+	cancel_work_sync(&wl->firmware_load);
- 
- 	B43_WARN_ON(!wl);
- 	if (!wldev->fw.ucode.data)
--- 
-1.8.1.4
+johannes
 
