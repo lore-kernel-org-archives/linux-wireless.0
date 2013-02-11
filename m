@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13196 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548Ab3B1Huw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43140 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756915Ab3BKMiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 02:50:52 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Myoungje Kim <mjei78@gmail.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	David Miller <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<ath6kl-devel@qca.qualcomm.com>
-Subject: Re: Fwd: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to avoid loss of bytes in a TCP segment" (#27)
-References: <torvalds/linux/pull/27@github.com>
-	<CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
-	<20130227174207.GB2082@tuxdriver.com>
-	<CABzs15BFOUWH=fMnerKW9-84PZKy5+2eN8XDhiCHTEHHjYf31w@mail.gmail.com>
-Date: Thu, 28 Feb 2013 09:50:45 +0200
-In-Reply-To: <CABzs15BFOUWH=fMnerKW9-84PZKy5+2eN8XDhiCHTEHHjYf31w@mail.gmail.com>
-	(Myoungje Kim's message of "Thu, 28 Feb 2013 12:11:56 +0900")
-Message-ID: <87ehg0j2qy.fsf@kamboji.qca.qualcomm.com> (sfid-20130228_085104_043729_01364875)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 11 Feb 2013 07:38:24 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/14] mac80211: pass station to ieee80211_vht_cap_ie_to_sta_vht_cap
+Date: Mon, 11 Feb 2013 13:38:05 +0100
+Message-Id: <1360586298-15028-2-git-send-email-johannes@sipsolutions.net> (sfid-20130211_133829_043937_31B34255)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Myoungje,
+From: Johannes Berg <johannes.berg@intel.com>
 
-(adding ath6kl-devel)
+Like with HT, make things a bit simpler in future patches by
+passing the station to ieee80211_vht_cap_ie_to_sta_vht_cap()
+instead of the vht_cap pointer. Also disable VHT here if HT
+isn't supported.
 
-Myoungje Kim <mjei78@gmail.com> writes:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c         | 3 +--
+ net/mac80211/ieee80211_i.h | 3 ++-
+ net/mac80211/mlme.c        | 3 +--
+ net/mac80211/vht.c         | 8 +++++---
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-> How I appreciate your e-mail about my trivial patch.
-> I am very happy due to receiving your reply(even though 'CC' ^^;)
->
-> You don't need to count the ways you hate GitHub pull requests, 
-> now I knew that enough ^^.
-> It was the only easy way I've thought to commit to the main tree.
-> You already know that I am very beginner.
->
->
-> I'm ashamed to say that I spent about 3 weeks to find and debug this issue.
-> My patch looks so simple,
-> but I don't want anyone to trouble spending or wasting their time like me
-> due to this issue makes me suspect all of linux kernel TCP/IP stack and curl,
-> wget, ftp client, user HTTP client, library, everything of my system.
-> So it made me to make pull request through github I`ve ever known as the way to
-> commit.
->
-> One more, now I knew that how to commit and how much I want to commit ^^.
-> Thanks and have a good day~
-
-No worries, it always takes some time to learn the process. And I hope
-you send more ath6kl patches in the future :)
-
-I'm on vacation right, but I will take a look at your patch next week.
-
-BTW, I have documented the process of sending patches to ath6kl here:
-
-http://wireless.kernel.org/en/users/Drivers/ath6kl#Hacking_on_ath6kl
-
-Hopefully that helps. Please let me know if I need to improve it.
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e09c0c4..8f3e3a2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1256,8 +1256,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 
+ 	if (params->vht_capa)
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+-						    params->vht_capa,
+-						    &sta->sta.vht_cap);
++						    params->vht_capa, sta);
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 817a829..2512124 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1419,7 +1419,8 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
+ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_supported_band *sband,
+ 					 struct ieee80211_vht_cap *vht_cap_ie,
+-					 struct ieee80211_sta_vht_cap *vht_cap);
++					 struct sta_info *sta);
++
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ade324e..f1c8532 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2200,8 +2200,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+-						    elems.vht_cap_elem,
+-						    &sta->sta.vht_cap);
++						    elems.vht_cap_elem, sta);
+ 
+ 	rate_control_rate_init(sta);
+ 
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index f311388..1606aa1 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -15,13 +15,15 @@
+ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_supported_band *sband,
+ 					 struct ieee80211_vht_cap *vht_cap_ie,
+-					 struct ieee80211_sta_vht_cap *vht_cap)
++					 struct sta_info *sta)
+ {
+-	if (WARN_ON_ONCE(!vht_cap))
+-		return;
++	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
+ 
+ 	memset(vht_cap, 0, sizeof(*vht_cap));
+ 
++	if (!sta->sta.ht_cap.ht_supported)
++		return;
++
+ 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 		return;
+ 
 -- 
-Kalle Valo
+1.8.0
+
