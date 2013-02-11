@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:35965 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753933Ab3BVKH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 05:07:59 -0500
-Message-ID: <51274372.9030600@neratec.com> (sfid-20130222_110804_908071_EE843B9B)
-Date: Fri, 22 Feb 2013 11:07:46 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:52351 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759136Ab3BKTZM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 14:25:12 -0500
+Date: Mon, 11 Feb 2013 14:25:10 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
+Message-ID: <20130211192509.GD3123@shaftnet.org> (sfid-20130211_202517_460294_37184951)
+References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
+ <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
+ <1360372559.13487.14.camel@joe-AO722>
+ <20130211185322.GB3123@shaftnet.org>
+ <1360609295.2028.44.camel@joe-AO722>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-References: <20130215171938.GA4140@pandem0nium>
-In-Reply-To: <20130215171938.GA4140@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zS7rBR6csb6tI2e1"
+In-Reply-To: <1360609295.2028.44.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2013 06:19 PM, Simon Wunderlich wrote:
-> Hello wireless folks,
-> 
-> Mathias Kretschmer and me would like to bring another new feature to the kernel:
-> Collecting information for (non-peer) stations. [...]
-> 
-> Cheers,
->         Simon
-> 
-Hi Simon,
 
-our areas of operations obviously highly overlap, since I did the same
-consideration path only recently ;)
+--zS7rBR6csb6tI2e1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For the frequency planning feature we are currently working on, I need those
-extended statistics you are proposing with additional filtering rules (OUI or mask
-based) to classify peers.
+On Mon, Feb 11, 2013 at 11:01:35AM -0800, Joe Perches wrote:
+> No.  It's just a guideline.  As far as I'm concerned,
+> ignore every checkpatch message you don't agree with.
 
-My initial idea was to do a sliding time window aggregation of those statistics in
-the kernel with almost the same interface to the userspace you are proposing.
+Okay, glad to hear that.  (there are still several hundred that should=20
+be fixed, but mass renaming variables is a bit of a PITA..)
 
-But with your integration of the spectral feature I realized how efficient relay
-based continuous data transfer is (as compared to sending samples over netlink).
-Consequently I revised the initial plan and consider realizing the extended
-statistics collection in userspace.
+> Just be aware that there's a tool to help you get your
+> code looking more like what most others generally consider
+> "kernel style".
 
-The modifications required in the kernel are minimal:
-* create relay file in debugfs
-* provide enable flag in debugfs
-* based on this flag, extract relevant information from frames and write to relay
+Yeah, I've known about checkpatch; but when it generates the better part of
+800 complaints, sometimes finding the ones that matter is a little difficul=
+t.
 
-This way, you move complexity out of the kernel and maximize flexibility for
-statistical evaluation in userspace. Also, the overhead for moving data between
-kernel and userspace is minimized, since you do them in bulk.
+> Though when you add "new" code, stuff like
+>=20
+> 	> +     u32 sdio_reg_addr_17bit ;
+>=20
+> is untidy because of the space before the semicolon.
 
-This is all in the planning phase, so I have no proof-of-concept patches yet.
-Would just like to hear what your thoughts are and whether this could be the way
-to go.
+No argument from here.
 
+FWIW, while I've worked quite a bit of this codebase, there are still=20
+large swaths of this driver I haven't given more than a cursory glance=20
+because they haven't needed debugging.
 
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
 
-Thanks for your initiative
-Zefir
+--zS7rBR6csb6tI2e1
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRGUWVPuLgii2759ARArvJAKDJGXS2RJWZ4rJxYWfap5VDs2D4LACeKW8R
+Yuev0TNDLGq/y7iuy71T+M4=
+=0YHe
+-----END PGP SIGNATURE-----
+
+--zS7rBR6csb6tI2e1--
