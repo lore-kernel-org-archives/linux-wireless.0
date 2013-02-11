@@ -1,56 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49837 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756353Ab3BVMzQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35436 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758813Ab3BKUpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 07:55:16 -0500
-Message-ID: <51276AA6.4000805@candelatech.com> (sfid-20130222_135522_106859_7AAFDC4A)
-Date: Fri, 22 Feb 2013 04:55:02 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 11 Feb 2013 15:45:32 -0500
+Date: Mon, 11 Feb 2013 15:33:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.9] NFC pull request
+Message-ID: <20130211203308.GE10986@tuxdriver.com> (sfid-20130211_214536_726643_AE5119D2)
+References: <20130208132335.GB20996@sortiz-mobl>
+ <20130208194324.GI2116@tuxdriver.com>
+ <20130211180159.GY20996@sortiz-mobl>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
-References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL> <51270186.6070003@candelatech.com> <51275837.4020708@openwrt.org> <20775.25545.671357.512930@gargle.gargle.HOWL> <512766B8.3030008@openwrt.org>
-In-Reply-To: <512766B8.3030008@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130211180159.GY20996@sortiz-mobl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/22/2013 04:38 AM, Felix Fietkau wrote:
-> On 2013-02-22 1:25 PM, Sujith Manoharan wrote:
->> Felix Fietkau wrote:
->>> Please also check if the station(s) that the frames are queued for are
->>> in powersave state for some reason. That would prevent the tx path from
->>> throwing them in the hw queue, yet they'd still take up pending-frame
->>> slots. I was planning on fixing this eventually by expiring frames that
->>> stay in the queue for too long, but haven't decided on the exact
->>> approach yet.
->>
->> PS is disabled for multi-VIF.
-> What about off-channel PS due to scans, etc.
+On Mon, Feb 11, 2013 at 07:01:59PM +0100, Samuel Ortiz wrote:
+> Hi John,
+> 
+> On Fri, Feb 08, 2013 at 02:43:25PM -0500, John W. Linville wrote:
+> > On Fri, Feb 08, 2013 at 02:23:35PM +0100, Samuel Ortiz wrote:
+> > > Hi John,
+> > > 
+> > > This is the second NFC pull request for 3.9.
+> > > 
+> > > We have:
+> > > 
+> > > - A few pn533 fixes on top of Waldemar refactorization of the driver, one of
+> > >   them fixes target mode.
+> > > 
+> > > - A new driver for Inside Secure microread chipset. It supports two
+> > >   physical layers: i2c and MEI. The MEI one depends on a patchset that's
+> > >   been sent to Greg Kroah-Hartman for inclusion into the 3.9 kernel [1]. The
+> > >   dependency is a KConfig one which means this code is not buildable as long
+> > >   as the MEI API is not usptream.
+> > > 
+> > > Thanks in advance for pulling them in.
+> > > 
+> > > [1] https://lkml.org/lkml/2013/2/8/165
+> > > 
+> > > 
+> > > The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
+> > > 
+> > >   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
+> > > 
+> > > are available in the git repository at:
+> > > 
+> > > 
+> > >   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-2
+> > > 
+> > > for you to fetch changes up to 52f2eaeec11c16c219f0e99b8496fbba86889830:
+> > > 
+> > >   NFC: pn533: Fix target polling mode (2013-02-08 12:18:48 +0100)
+> > 
+> > Pulling now...
+> The MEI bus API got some more comments from Greg Kroah-Hartman and got
+> slightly changed. I fixed it up in my tree, and below is a pull request for
+> getting this single patch. Please let me know if you want me to send the patch
+> through email instead.
+> 
+> 
+> The following changes since commit 8708aac79e4572ba673d7a21e94ddca9f3abb7fc:
+> 
+>   rtlwifi: rtl8192cu: Add new USB ID (2013-02-08 14:51:43 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-3
+> 
+> for you to fetch changes up to cd48d8ba149484c4723a2b75159deeb83f3d2273:
+> 
+>   NFC: microread: Fix mei physical layer (2013-02-11 18:35:36 +0100)
+> 
+> ----------------------------------------------------------------
+> This 3rd NFC pull request for 3.9 contains a fix for the microread MEI
+> physical layer support, as the MEI bus API changed.
+> 
+> From the MEI code, we now pass the MEI id back to the driver probe routine,
+> and we also pass a name and a MEI id table through the mei_bus_driver
+> structure. A few renames as well like e.g. mei_bus_driver to mei_driver or
+> mei_bus_client to mei_device in order to be closer to the driver model
+> practices.
+> 
+> ----------------------------------------------------------------
+> Samuel Ortiz (1):
+>       NFC: microread: Fix mei physical layer
+> 
+>  drivers/nfc/microread/mei.c |   43 ++++++++++++++++++++++++-------------------
+>  1 file changed, 24 insertions(+), 19 deletions(-)
 
-Scan is always locked to the same channel in this setup (once
-a single station is associated).
-
-The stations stay associated while this problem happens (the
-high-priority queue seems to work just fine, which may be
-the reason they stay associated just fine.)
-
-In some cases, I see packets delivered around 30 seconds late...
-aside from PS and off-channel..any idea what could make a packet
-stick around that long in the tx queues?
-
-Thanks,
-Ben
-
->
-> - Felix
->
-
+Pulling now...
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
