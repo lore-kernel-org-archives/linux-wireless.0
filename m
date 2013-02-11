@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:63214 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933359Ab3BTRY7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43171 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756849Ab3BKMmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:24:59 -0500
-Message-ID: <1361381096.19353.195.camel@edumazet-glaptop> (sfid-20130220_182513_015437_7A8955FF)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 09:24:56 -0800
-In-Reply-To: <1361379686.8629.41.camel@jlt4.sipsolutions.net>
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Feb 2013 07:42:09 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 11/14] mac80211: clean up channel use in ieee80211_config_ht_tx
+Date: Mon, 11 Feb 2013 13:38:15 +0100
+Message-Id: <1360586298-15028-12-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134838_065147_41C59234)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 18:01 +0100, Johannes Berg wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> FWIW, I think just using order-0 pages and turning 8k A-MSDUs off by
-> default makes more sense, A-MSDU is rarely used to begin with ...
-> 
+The channel use is confusing, some uses the channel
+context and some the bss_conf.chandef. The latter is
+fine, so get rid of the channel context part.
 
-My suggested patch makes sure that if someone needs 8k A-MSDU, iwlwifi
-still works correctly.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-> Also, if we copy larger frames here, we should also take into account
-> the (variable) 802.11 header length to avoid copying into a position
-> where the IP header ends up being unaligned.
-
-But the current code already has this problem (if its a problem at all,
-as on x86 NET_IP_ALIGN is 0)
-
-I only increase available tailroom in the skb. Right now there is enough
-room for IP and tcp headers.
-
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6e6031e..2f13077 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -181,7 +181,6 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_channel *chan;
+ 	u32 changed = 0;
+ 	u16 ht_opmode;
+@@ -190,23 +189,16 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON_ONCE(!sta))
+ 		return 0;
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (WARN_ON(!chanctx_conf)) {
+-		rcu_read_unlock();
+-		return 0;
+-	}
+-	chan = chanctx_conf->def.chan;
+-	rcu_read_unlock();
++	chan = sdata->vif.bss_conf.chandef.chan;
+ 	sband = local->hw.wiphy->bands[chan->band];
+ 
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_40:
+-		if (sdata->vif.bss_conf.chandef.chan->center_freq >
++		if (chan->center_freq >
+ 				sdata->vif.bss_conf.chandef.center_freq1 &&
+ 		    chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
+ 			disable_40 = true;
+-		if (sdata->vif.bss_conf.chandef.chan->center_freq <
++		if (chan->center_freq <
+ 				sdata->vif.bss_conf.chandef.center_freq1 &&
+ 		    chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
+ 			disable_40 = true;
+-- 
+1.8.0
 
