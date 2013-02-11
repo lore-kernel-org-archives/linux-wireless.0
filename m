@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33858 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750753Ab3BPFpk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756962Ab3BKMiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Feb 2013 00:45:40 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Mon, 11 Feb 2013 07:38:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: coding style cleanup in bss parameter update
-Date: Fri, 15 Feb 2013 21:44:29 -0800
-Message-Id: <1360993470-4828-2-git-send-email-bzhao@marvell.com> (sfid-20130216_064543_525115_47B7B2D0)
-In-Reply-To: <1360993470-4828-1-git-send-email-bzhao@marvell.com>
-References: <1360993470-4828-1-git-send-email-bzhao@marvell.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/14] wireless: define operating mode action frame
+Date: Mon, 11 Feb 2013 13:38:07 +0100
+Message-Id: <1360586298-15028-4-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134332_424978_FB6F5DFA)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-They all can make one line.
+Define the action frame format, the VHT category
+and its action types and the field format and EID
+for operating mode notifications. The frame may
+be used outside of VHT context as well, so don't
+include "VHT" in the names.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/scan.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
+ include/linux/ieee80211.h | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 949234f..e275aec 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1485,20 +1485,15 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
- 	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
- 	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
--	priv->curr_bss_params.bss_descriptor.ht_cap_offset =
--		0;
-+	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
- 	priv->curr_bss_params.bss_descriptor.bcn_ht_oper = NULL;
--	priv->curr_bss_params.bss_descriptor.ht_info_offset =
--		0;
--	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 =
--		NULL;
--	priv->curr_bss_params.bss_descriptor.
--		bss_co_2040_offset = 0;
-+	priv->curr_bss_params.bss_descriptor.ht_info_offset = 0;
-+	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 = NULL;
-+	priv->curr_bss_params.bss_descriptor.bss_co_2040_offset = 0;
- 	priv->curr_bss_params.bss_descriptor.bcn_ext_cap = NULL;
- 	priv->curr_bss_params.bss_descriptor.ext_cap_offset = 0;
- 	priv->curr_bss_params.bss_descriptor.beacon_buf = NULL;
--	priv->curr_bss_params.bss_descriptor.beacon_buf_size =
--		0;
-+	priv->curr_bss_params.bss_descriptor.beacon_buf_size = 0;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 8d74522..602c99f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -726,6 +726,30 @@ enum ieee80211_ht_chanwidth_values {
+ 	IEEE80211_HT_CHANWIDTH_ANY = 1,
+ };
  
- 	/* Make a copy of current BSSID descriptor */
- 	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
++/**
++ * enum ieee80211_opmode_bits - VHT operating mode field bits
++ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK: channel width mask
++ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ: 20 MHz channel width
++ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_40MHZ: 40 MHz channel width
++ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_80MHZ: 80 MHz channel width
++ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_160MHZ: 160 MHz or 80+80 MHz channel width
++ * @IEEE80211_OPMODE_NOTIF_RX_NSS_MASK: number of spatial streams mask
++ *	(the NSS value is the value of this field + 1)
++ * @IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT: number of spatial streams shift
++ * @IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF: indicates streams in SU-MIMO PPDU
++ *	using a beamforming steering matrix
++ */
++enum ieee80211_vht_opmode_bits {
++	IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK	= 3,
++	IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ	= 0,
++	IEEE80211_OPMODE_NOTIF_CHANWIDTH_40MHZ	= 1,
++	IEEE80211_OPMODE_NOTIF_CHANWIDTH_80MHZ	= 2,
++	IEEE80211_OPMODE_NOTIF_CHANWIDTH_160MHZ	= 3,
++	IEEE80211_OPMODE_NOTIF_RX_NSS_MASK	= 0x70,
++	IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT	= 4,
++	IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF	= 0x80,
++};
++
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
+ 
+ struct ieee80211_mgmt {
+@@ -856,6 +880,10 @@ struct ieee80211_mgmt {
+ 					__le16 capability;
+ 					u8 variable[0];
+ 				} __packed tdls_discover_resp;
++				struct {
++					u8 action_code;
++					u8 operating_mode;
++				} __packed vht_opmode_notif;
+ 			} u;
+ 		} __packed action;
+ 	} u;
+@@ -1610,6 +1638,7 @@ enum ieee80211_eid {
+ 
+ 	WLAN_EID_VHT_CAPABILITY = 191,
+ 	WLAN_EID_VHT_OPERATION = 192,
++	WLAN_EID_OPMODE_NOTIF = 199,
+ 
+ 	/* 802.11ad */
+ 	WLAN_EID_NON_TX_BSSID_CAP =  83,
+@@ -1664,6 +1693,7 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_WMM = 17,
+ 	WLAN_CATEGORY_FST = 18,
+ 	WLAN_CATEGORY_UNPROT_DMG = 20,
++	WLAN_CATEGORY_VHT = 21,
+ 	WLAN_CATEGORY_VENDOR_SPECIFIC_PROTECTED = 126,
+ 	WLAN_CATEGORY_VENDOR_SPECIFIC = 127,
+ };
+@@ -1689,6 +1719,13 @@ enum ieee80211_ht_actioncode {
+ 	WLAN_HT_ACTION_ASEL_IDX_FEEDBACK = 7,
+ };
+ 
++/* VHT action codes */
++enum ieee80211_vht_actioncode {
++	WLAN_VHT_ACTION_COMPRESSED_BF = 0,
++	WLAN_VHT_ACTION_GROUPID_MGMT = 1,
++	WLAN_VHT_ACTION_OPMODE_NOTIF = 2,
++};
++
+ /* Self Protected Action codes */
+ enum ieee80211_self_protected_actioncode {
+ 	WLAN_SP_RESERVED = 0,
 -- 
-1.7.0.2
+1.8.0
 
