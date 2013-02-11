@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49172 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757384Ab3BVUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 15:09:27 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:43154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757008Ab3BKMi2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 07:38:28 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.9] ath9k: fix RSSI dummy marker value
-Date: Fri, 22 Feb 2013 21:09:17 +0100
-Message-Id: <1361563757-85141-1-git-send-email-nbd@openwrt.org> (sfid-20130222_210930_791638_255E44E5)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 08/14] mac80211: fix ieee80211_change_chandef name
+Date: Mon, 11 Feb 2013 13:38:12 +0100
+Message-Id: <1360586298-15028-9-git-send-email-johannes@sipsolutions.net> (sfid-20130211_133832_351583_809343D7)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RSSI is being stored internally as s8 in several places. The indication
-of an unset RSSI value, ATH_RSSI_DUMMY_MARKER, was supposed to have been
-set to 127, but ended up being set to 0x127 because of a code cleanup
-mistake. This could lead to invalid signal strength values in a few
-places.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
+This should be called ieee80211_change_chanctx() since
+it changes the channel context, not a chandef.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/chan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 5f845be..050ca4a 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -27,7 +27,7 @@
- #define WME_MAX_BA              WME_BA_BMP_SIZE
- #define ATH_TID_MAX_BUFS        (2 * WME_MAX_BA)
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 038f249..8fc56e4 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -9,7 +9,7 @@
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
  
--#define ATH_RSSI_DUMMY_MARKER   0x127
-+#define ATH_RSSI_DUMMY_MARKER   127
- #define ATH_RSSI_LPF_LEN 		10
- #define RSSI_LPF_THRESHOLD		-20
- #define ATH_RSSI_EP_MULTIPLIER     (1<<7)
+-static void ieee80211_change_chandef(struct ieee80211_local *local,
++static void ieee80211_change_chanctx(struct ieee80211_local *local,
+ 				     struct ieee80211_chanctx *ctx,
+ 				     const struct cfg80211_chan_def *chandef)
+ {
+@@ -49,7 +49,7 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 		if (!compat)
+ 			continue;
+ 
+-		ieee80211_change_chandef(local, ctx, compat);
++		ieee80211_change_chanctx(local, ctx, compat);
+ 
+ 		return ctx;
+ 	}
+@@ -172,7 +172,7 @@ static void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 	if (WARN_ON_ONCE(!compat))
+ 		return;
+ 
+-	ieee80211_change_chandef(local, ctx, compat);
++	ieee80211_change_chanctx(local, ctx, compat);
+ }
+ 
+ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.0.2
+1.8.0
 
