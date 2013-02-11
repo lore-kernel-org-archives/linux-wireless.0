@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60497 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760591Ab3BHTaa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932531Ab3BKVWx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 14:30:30 -0500
-Date: Fri, 8 Feb 2013 14:25:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-02-04
-Message-ID: <20130208192538.GG2116@tuxdriver.com> (sfid-20130208_203055_450301_04CC5D4A)
-References: <1360001465.17993.30.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360001465.17993.30.camel@jlt4.sipsolutions.net>
+	Mon, 11 Feb 2013 16:22:53 -0500
+Message-ID: <1360617742.8738.43.camel@jlt4.sipsolutions.net> (sfid-20130211_222256_489092_5DBCC112)
+Subject: Re: [PATCH] rtlwifi: Initialize rate_init member of struct
+ rate_control_ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Catalin Iacob <iacobcatalin@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 22:22:22 +0100
+In-Reply-To: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com> (sfid-20130211_221826_368182_FF033C33)
+References: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
+	 (sfid-20130211_221826_368182_FF033C33)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 04, 2013 at 07:11:05PM +0100, Johannes Berg wrote:
-> John,
+On Mon, 2013-02-11 at 22:18 +0100, Catalin Iacob wrote:
+> This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
 > 
-> I've accumulated a bunch of patches again, so here's a new pull request
-> for mac80211-next.
+> rate_control_rate_init assumes the rate_init member of
+> struct rate_control_ops is not NULL therefore not initializing it leads to
+> an oops as soon the driver succesfully associates to an AP.
 > 
-> The biggest change I have is undoubtedly Marco's mesh powersave
-> implementation. Beyond that, I have a patch from Emmanuel to modify the
-> DTIM period API in mac80211, scan improvements and a removal of some
-> previous workaround code from Stanislaw, dynamic short slot time from
-> Thomas and 64-bit station byte counters from Vladimir. I also made a
-> number of changes myself, some related to WoWLAN, some auth/deauth
-> improvements and most of them BSS list cleanups.
-> 
-> Let me know if there are any problems.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
-> 
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 3f52b7e328c526fa7a592af9bf5772c591ed38a4:
-> 
->   mac80211: mesh power save basics (2013-02-04 18:57:47 +0100)
+> The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
+> is ok because rate_update is checked for NULL before being
+> called.
 
-Pulling now (and I'll take care of the mvm change for
-IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC)...
+OTOH, if the driver supports HT then rate_update is critical to its
+functioning properly, e.g. for SMPS updates.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
