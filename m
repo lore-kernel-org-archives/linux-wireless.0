@@ -1,37 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55824 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903Ab3B1WlU (ORCPT
+Received: from mail-da0-f42.google.com ([209.85.210.42]:45712 "EHLO
+	mail-da0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932078Ab3BKVIs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 17:41:20 -0500
-Message-ID: <1362091275.8330.13.camel@jlt4.sipsolutions.net> (sfid-20130228_234123_393639_0036F219)
-Subject: Re: [PATCHv3] cfg80211: Extend support for IEEE 802.11r Fast BSS
- Transition
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 28 Feb 2013 23:41:15 +0100
-In-Reply-To: <20130227151427.GA19980@jouni.qca.qualcomm.com>
-References: <20130221060843.GA24491@w1.fi>
-	 <1361565394.3420.17.camel@jlt4.sipsolutions.net>
-	 <20130226103819.GA5630@jouni.qca.qualcomm.com>
-	 <1361910682.8440.7.camel@jlt4.sipsolutions.net>
-	 <20130227151427.GA19980@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Feb 2013 16:08:48 -0500
+Received: by mail-da0-f42.google.com with SMTP id z17so2906796dal.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:08:47 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 3/3] mac80211: generate mesh probe responses
+Date: Mon, 11 Feb 2013 13:07:23 -0800
+Message-Id: <1360616843-24618-3-git-send-email-thomas@cozybit.com> (sfid-20130211_221237_065184_05798D19)
+In-Reply-To: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-27 at 17:14 +0200, Jouni Malinen wrote:
-> Add NL80211_CMD_UPDATE_FT_IES to support update of FT IEs to the WLAN
-> driver and NL80211_CMD_FT_EVENT to send FT events from the WLAN driver.
-> This will carry the target AP's MAC address along with the relevant
-> Information Elements. This event is used to report received FT IEs
-> (MDIE, FTIE, RSN IE, TIE, RICIE). These changes allow FT to be supported
-> with drivers that use an internal SME instead of user space option (like
-> FT implementation in wpa_supplicant with mac80211-based drivers).
+Mesh interfaces will now respond to any broadcast (or
+matching directed mesh) probe requests with a probe
+response.
 
-Applied.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c   |    5 ++--
+ 2 files changed, 66 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index ffbe1d5..0bb7754 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -862,6 +862,66 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	sdata->u.mesh.timers_running = 0;
+ }
+ 
++static void
++ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
++			    struct ieee80211_mgmt *mgmt, size_t len)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct sk_buff *presp;
++	struct beacon_data *bcn;
++	struct ieee80211_mgmt *hdr;
++	struct ieee802_11_elems elems;
++	size_t baselen;
++	u8 *pos, *end;
++
++	end = ((u8 *) mgmt) + len;
++	pos = mgmt->u.probe_req.variable;
++	baselen = (u8 *) pos - (u8 *) mgmt;
++	if (baselen > len)
++		return;
++
++	ieee802_11_parse_elems(pos, len - baselen, &elems);
++
++	/* 802.11-2012 10.1.4.3.2 */
++	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
++	     !is_broadcast_ether_addr(mgmt->da)) ||
++	    elems.ssid_len != 0)
++		return;
++
++	if (elems.mesh_id_len != 0 &&
++	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
++	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len))) {
++		mpl_dbg(sdata, "ignoring probe request for different MBSS\n");
++		return;
++	}
++
++	rcu_read_lock();
++	bcn = rcu_dereference(ifmsh->beacon);
++
++	if (!bcn)
++		goto out;
++
++	presp = dev_alloc_skb(local->tx_headroom +
++			      bcn->head_len + bcn->tail_len);
++	if (WARN_ON(!presp))
++		goto out;
++
++	skb_reserve(presp, local->tx_headroom);
++	memcpy(skb_put(presp, bcn->head_len), bcn->head, bcn->head_len);
++	memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
++	hdr = (struct ieee80211_mgmt *) presp->data;
++	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					 IEEE80211_STYPE_PROBE_RESP);
++	memcpy(hdr->da, mgmt->sa, ETH_ALEN);
++	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
++	IEEE80211_SKB_CB(presp)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	ieee80211_tx_skb(sdata, presp);
++out:
++	rcu_read_unlock();
++	return;
++}
++
+ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 					u16 stype,
+ 					struct ieee80211_mgmt *mgmt,
+@@ -951,6 +1011,9 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_mesh_rx_bcn_presp(sdata, stype, mgmt, skb->len,
+ 					    rx_status);
+ 		break;
++	case IEEE80211_STYPE_PROBE_REQ:
++		ieee80211_mesh_rx_probe_req(sdata, mgmt, skb->len);
++		break;
+ 	case IEEE80211_STYPE_ACTION:
+ 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
+ 		break;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b5f1bba..34aa975 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2692,8 +2692,9 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_PROBE_REQ):
+-		/* process only for ibss */
+-		if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
++		/* process only for ibss and mesh */
++		if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	default:
+-- 
+1.7.10.4
 
