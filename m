@@ -1,81 +1,439 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:51740 "EHLO
-	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760000Ab3BHHLO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43169 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756849Ab3BKMmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 02:11:14 -0500
-From: Amit SHAKYA <amit.shakya@stericsson.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 8 Feb 2013 08:10:59 +0100
-Subject: RE: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
- interface
-Message-ID: <ECD438FDEF6BD742895E554C24725A40236E825AFA@EXDCVYMBSTM005.EQ1STM.local> (sfid-20130208_081126_667001_FCAFFC14)
-References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
- <1359991708.10311.15.camel@jlt4.sipsolutions.net>
- <ECD438FDEF6BD742895E554C24725A40236E82519C@EXDCVYMBSTM005.EQ1STM.local>
- <201302061433.19375.chunkeey@googlemail.com>
-In-Reply-To: <201302061433.19375.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 11 Feb 2013 07:42:07 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 13/14] mac80211: move ieee80211_determine_chantype function
+Date: Mon, 11 Feb 2013 13:38:17 +0100
+Message-Id: <1360586298-15028-14-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134736_396318_9FB9E214)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQ2hyaXN0aWFuLA0KDQpBY3R1YWxseSBJIGRlYnVnZ2VkIHRoaXMgaXNzdWUgcXVpdGUgc29t
-ZSB0aW1lIGJhY2sgZm9yIGEgY3VzdG9tZXIgcHJvamVjdC4gTm93IEkgZG9u4oCZdCBoYXZlIHRo
-ZSBzZXR1cCBhbHNvIGFzIEkgaGF2ZSBtb3ZlZCBvdXQgb2YgdGhlIHByb2plY3QuDQoNClNvIEkg
-YW0gYWZyYWlkIEkgd2lsbCBub3QgYmUgYWJsZSB0byB0ZXN0IGl0Lg0KDQpSZWdhcmRzDQpBbWl0
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJpc3RpYW4gTGFtcGFydGVy
-IFttYWlsdG86Y2h1bmtlZXlAZ29vZ2xlbWFpbC5jb21dIA0KU2VudDogV2VkbmVzZGF5LCBGZWJy
-dWFyeSAwNiwgMjAxMyA3OjAzIFBNDQpUbzogQW1pdCBTSEFLWUENCkNjOiBKb2hhbm5lcyBCZXJn
-OyBKb2huIFcuIExpbnZpbGxlOyBsaW51eC13aXJlbGVzcw0KU3ViamVjdDogUmU6IFtQQVRDSF0g
-bWFjODAyMTE6IEZpeCBQTiBjb3JydXB0aW9uIGluIGNhc2Ugb2YgbXVsdGlwbGUgdmlydHVhbCBp
-bnRlcmZhY2UNCg0KT24gV2VkbmVzZGF5LCBGZWJydWFyeSAwNiwgMjAxMyAwNzo1Njo0NiBBTSBB
-bWl0IFNIQUtZQSB3cm90ZToNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVz
-QHNpcHNvbHV0aW9ucy5uZXRdDQo+IE9uIE1vbiwgMjAxMy0wMi0wNCBhdCAxNjo0OCArMDUzMCwg
-QW1pdCBTaGFreWEgd3JvdGU6DQo+ID4gQEAgLTI3OTAsNyArMjc5MSwyMCBAQCBzdGF0aWMgdm9p
-ZCBpZWVlODAyMTFfcnhfaGFuZGxlcnMoc3RydWN0IA0KPiA+IGllZWU4MDIxMV9yeF9kYXRhICpy
-eCkNCj4gPiAgDQo+ID4gIAlyeC0+bG9jYWwtPnJ1bm5pbmdfcnhfaGFuZGxlciA9IHRydWU7DQo+
-ID4gIA0KPiA+IC0Jd2hpbGUgKChza2IgPSBfX3NrYl9kZXF1ZXVlKCZyeC0+bG9jYWwtPnJ4X3Nr
-Yl9xdWV1ZSkpKSB7DQo+ID4gKwlza2JfcXVldWVfd2Fsa19zYWZlKCZyeC0+bG9jYWwtPnJ4X3Nr
-Yl9xdWV1ZSwgc2tiLCB0bXApIHsNCj4gPiArCQlpZiAoIXNrYikNCj4gPiArCQkJYnJlYWs7DQo+
-ID4gKwkJaGRyID0gKHN0cnVjdCBpZWVlODAyMTFfaGRyICopIHNrYi0+ZGF0YTsNCj4gPiArCQkv
-Kg0KPiA+ICsJCSogQWRkaXRpb25hbCBjaGVjayB0byBlbnN1cmUgdGhhdCB0aGUgcGFja2V0cyBj
-b3JyZXNwb25kaW5nDQo+ID4gKwkJKiB0byBzYW1lIHN0YSBlbnRyeSBhcyBpbiByeC0+c3RhIGFy
-ZSBkZS1xdWV1ZWQuIFRoZSBxdWV1ZQ0KPiA+ICsJCSogY2FuIGhhdmUgZGlmZmVyZW50IGludGVy
-ZmFjZSBwYWNrZXRzIGluIGNhc2Ugb2YgbXVsdGlwbGUgdmlmcw0KPiA+ICsJCSovDQo+ID4gKwkJ
-aWYgKChyeC0+c3RhICYmIGhkcikgJiYgKGllZWU4MDIxMV9pc19kYXRhKGhkci0+ZnJhbWVfY29u
-dHJvbCkpDQo+ID4gKwkJCSYmIChtZW1jbXAocngtPnN0YS0+c3RhLmFkZHIsIGhkci0+YWRkcjIs
-IEVUSF9BTEVOKSkpDQo+ID4gKwkJCQkJY29udGludWU7DQo+ID4gKwkJX19za2JfdW5saW5rKHNr
-YiwgJnJ4LT5sb2NhbC0+cnhfc2tiX3F1ZXVlKTsNCg0KPiBJIHdvbmRlciBpZiB0aGlzIGNvdWxk
-IGxlYWQgdG8gbGVha2luZyBmcmFtZXMgaGVyZSwgaWYgdGhlIHN0YXRpb24gDQo+IGRpc2Nvbm5l
-Y3RzIG9yIHNvbWV0aGluZyB3aGlsZSB0aGVyZSBhcmUgZnJhbWVzIGZvciBpdCBvbiB0aGUgcXVl
-dWU/DQo+IElPVywgdGhlICJqdXN0IHNraXAgdGhhdCBmcmFtZSIgcGllY2Ugc2VlbXMgYSBiaXQg
-cXVlc3Rpb25hYmxlLg0KPiANCj5bQVNdIEJUVyB3ZSBkaWQgdGVzdCB0aGlzIG91dCBhbmQgZGlk
-buKAmXQgb2JzZXJ2ZSBhbnkgc3VjaCBpc3N1ZS4gQ2FuIHlvdQ0KPiAgICAgcGxlYXNlIGhlbHAg
-bWUgdW5kZXJzdGFuZCB0aGUgZmxvdyB3aGljaCBjb3VsZCBsZWFkIHRvIHRoZSBzYW1lPyANCkkg
-cmVhZCBpdCBsaWtlIHRoaXM6IElmIGEgc3RhdGlvbiBzdWRkZW5seSBkaXNhcHBlYXJzIChmb3Ig
-Z29vZCkgd2hpbGUgaXQgc3RpbGwgaGFzIHNvbWUgZGF0YSBpbiB0aGUgcmVvcmRlciBidWZmZXIs
-IHRoZSByZW9yZGVyIHJlbGVhc2UgdGltZXIgd2lsbCBwdXQgdGhlc2Ugb3JwaGFuZWQgZnJhbWVz
-IGludG8gcnhfc2tiX3F1ZXVlLiANCldpdGggdGhpcyBwYXRjaCwgdGhleSB3aWxsIG5ldmVyIGJl
-IGNsZWFyZWQgZnJvbSB0aGUgcXVldWUsIHVudGlsIGllZWU4MDIxMV91bnJlZ2lzdGVyX2h3IGlz
-IGNhbGxlZCBbd2hlbiB0aGUgZGV2aWNlIGlzIHVucmVnaXN0ZXJlZF0uDQoNClNvLCB5b3Ugd291
-bGQgbmVlZCB0byBnbyB0aHJvdWdoIHRoZSByeF9za2JfcXVldWUgZXZlcnl0aW1lIGEgSFQgc3Rh
-dGlvbiBpcyB0b3JuIGRvd24gYW5kIHJlbW92ZSB0aGUgYWZmZWN0ZWQgZnJhbWVzIGZyb20gdGhl
-cmUuDQoNCj4gICAgIEFsc28gaW4gY2FzZSB0aGlzIGlzIGFuIGlzc3VlLCBjYW4gd2UgdGFrZSBj
-YXJlIG9mIHRoaXMgaW4gdGhlIGNsZWFudXANCj4gICAgIHJlbGF0ZWQgdG8gZGlzY29ubmVjdD8N
-ClN1cmUsIHlvdSBjb3VsZCBkbyB0aGF0IGluIGllZWU4MDIxMV9zdGFfdGVhcl9kb3duX0JBX3Nl
-c3Npb25zLiBCdXQgeW91IGRvbid0IG5lZWQgdG8uIE9uIE1vbmRheSwgSSBwb3N0ZWQgYSBwYXRj
-aDoNCjxodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXdpcmVsZXNzL21zZzEwMjcy
-NS5odG1sPg0KaXQgc2hvdWxkIHRha2UgY2FyZSBvZiB0aGUgaXNzdWUuIFNvLCBjYW4geW91IHRl
-c3QgaXQgcGxlYXNlPyANCg0KPiAgICAgSGVyZSBpdCBzZWVtcyBhIGNvbnNjaW91cyBlZmZvcnQg
-aGFzIGJlZW4gbWFkZSB0byBhdm9pZCBzcGlubG9jaw0KPiAgICAgKHJ4LT5sb2NhbC0+cnhfc2ti
-X3F1ZXVlLmxvY2spLCBhcyB0aGlzIGxvY2sgaXMgdGFrZW4gb25seSBmb3IgdGhlDQo+ICAgICBk
-dXJhdGlvbiBvZiBkZXF1ZXVlLiBUaGUgc3VnZ2VzdGVkIHNvbHV0aW9uIGF2b2lkcyB1c2luZyBz
-cGlubG9jay4NCk9oIG5vLCB0aGUgbG9ja2luZyBpcyB0aGVyZS4gc2tiX3VubGluayBpcyBkZWZp
-bmVkIGluIG5ldC9jb3JlL3NrYnVmZi5jIGFzIGEgc3Bpbl9sb2NrIHdyYXBwZWQgX19za2JfdW5s
-aW5rLiBUaGUgc2FtZSBpcyB0cnVlIGZvciBza2JfcXVldWVfdGFpbCBhbmQgX19za2JfcXVldWVf
-dGFpbC4gKE9yIGFyZSB5b3UgdGFsa2luZyBhYm91dCBzb21ldGhpbmcgZWxzZT8pDQoNClJlZ2Fy
-ZHMNCg0KQ2hyaXN0aWFuDQo=
+From: Johannes Berg <johannes.berg@intel.com>
+
+The next patch will need it further up in the file, so
+move it unchanged now.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 390 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 195 insertions(+), 195 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2f13077..6b0c1c4 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -174,6 +174,201 @@ static int ecw2cw(int ecw)
+ 	return (1 << ecw) - 1;
+ }
+ 
++static u32 chandef_downgrade(struct cfg80211_chan_def *c)
++{
++	u32 ret;
++	int tmp;
++
++	switch (c->width) {
++	case NL80211_CHAN_WIDTH_20:
++		c->width = NL80211_CHAN_WIDTH_20_NOHT;
++		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		c->width = NL80211_CHAN_WIDTH_20;
++		c->center_freq1 = c->chan->center_freq;
++		ret = IEEE80211_STA_DISABLE_40MHZ |
++		      IEEE80211_STA_DISABLE_VHT;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		tmp = (30 + c->chan->center_freq - c->center_freq1)/20;
++		/* n_P40 */
++		tmp /= 2;
++		/* freq_P40 */
++		c->center_freq1 = c->center_freq1 - 20 + 40 * tmp;
++		c->width = NL80211_CHAN_WIDTH_40;
++		ret = IEEE80211_STA_DISABLE_VHT;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++		c->center_freq2 = 0;
++		c->width = NL80211_CHAN_WIDTH_80;
++		ret = IEEE80211_STA_DISABLE_80P80MHZ |
++		      IEEE80211_STA_DISABLE_160MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_160:
++		/* n_P20 */
++		tmp = (70 + c->chan->center_freq - c->center_freq1)/20;
++		/* n_P80 */
++		tmp /= 4;
++		c->center_freq1 = c->center_freq1 - 40 + 80 * tmp;
++		c->width = NL80211_CHAN_WIDTH_80;
++		ret = IEEE80211_STA_DISABLE_80P80MHZ |
++		      IEEE80211_STA_DISABLE_160MHZ;
++		break;
++	default:
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		WARN_ON_ONCE(1);
++		c->width = NL80211_CHAN_WIDTH_20_NOHT;
++		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
++		break;
++	}
++
++	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
++
++	return ret;
++}
++
++static u32
++ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_supported_band *sband,
++			     struct ieee80211_channel *channel,
++			     const struct ieee80211_ht_operation *ht_oper,
++			     const struct ieee80211_vht_operation *vht_oper,
++			     struct cfg80211_chan_def *chandef)
++{
++	struct cfg80211_chan_def vht_chandef;
++	u32 ht_cfreq, ret;
++
++	chandef->chan = channel;
++	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
++	chandef->center_freq1 = channel->center_freq;
++	chandef->center_freq2 = 0;
++
++	if (!ht_oper || !sband->ht_cap.ht_supported) {
++		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	chandef->width = NL80211_CHAN_WIDTH_20;
++
++	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
++						  channel->band);
++	/* check that channel matches the right operating channel */
++	if (channel->center_freq != ht_cfreq) {
++		/*
++		 * It's possible that some APs are confused here;
++		 * Netgear WNDR3700 sometimes reports 4 higher than
++		 * the actual channel in association responses, but
++		 * since we look at probe response/beacon data here
++		 * it should be OK.
++		 */
++		sdata_info(sdata,
++			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
++			   channel->center_freq, ht_cfreq,
++			   ht_oper->primary_chan, channel->band);
++		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	/* check 40 MHz support, if we have it */
++	if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
++		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++			chandef->width = NL80211_CHAN_WIDTH_40;
++			chandef->center_freq1 += 10;
++			break;
++		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++			chandef->width = NL80211_CHAN_WIDTH_40;
++			chandef->center_freq1 -= 10;
++			break;
++		}
++	} else {
++		/* 40 MHz (and 80 MHz) must be supported for VHT */
++		ret = IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	if (!vht_oper || !sband->vht_cap.vht_supported) {
++		ret = IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	vht_chandef.chan = channel;
++	vht_chandef.center_freq1 =
++		ieee80211_channel_to_frequency(vht_oper->center_freq_seg1_idx,
++					       channel->band);
++	vht_chandef.center_freq2 = 0;
++
++	if (vht_oper->center_freq_seg2_idx)
++		vht_chandef.center_freq2 =
++			ieee80211_channel_to_frequency(
++				vht_oper->center_freq_seg2_idx,
++				channel->band);
++
++	switch (vht_oper->chan_width) {
++	case IEEE80211_VHT_CHANWIDTH_USE_HT:
++		vht_chandef.width = chandef->width;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80MHZ:
++		vht_chandef.width = NL80211_CHAN_WIDTH_80;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_160MHZ:
++		vht_chandef.width = NL80211_CHAN_WIDTH_160;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
++		vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
++		break;
++	default:
++		sdata_info(sdata,
++			   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
++			   vht_oper->chan_width);
++		ret = IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	if (!cfg80211_chandef_valid(&vht_chandef)) {
++		sdata_info(sdata,
++			   "AP VHT information is invalid, disable VHT\n");
++		ret = IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	if (cfg80211_chandef_identical(chandef, &vht_chandef)) {
++		ret = 0;
++		goto out;
++	}
++
++	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
++		sdata_info(sdata,
++			   "AP VHT information doesn't match HT, disable VHT\n");
++		ret = IEEE80211_STA_DISABLE_VHT;
++		goto out;
++	}
++
++	*chandef = vht_chandef;
++
++	ret = 0;
++
++out:
++	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
++					IEEE80211_CHAN_DISABLED)) {
++		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
++			ret = IEEE80211_STA_DISABLE_HT |
++			      IEEE80211_STA_DISABLE_VHT;
++			goto out;
++		}
++
++		ret |= chandef_downgrade(chandef);
++	}
++
++	if (chandef->width != vht_chandef.width)
++		sdata_info(sdata,
++			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
++
++	WARN_ON_ONCE(!cfg80211_chandef_valid(chandef));
++	return ret;
++}
++
+ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 				  struct sta_info *sta,
+ 				  struct ieee80211_ht_operation *ht_oper,
+@@ -3320,201 +3515,6 @@ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 	return 0;
+ }
+ 
+-static u32 chandef_downgrade(struct cfg80211_chan_def *c)
+-{
+-	u32 ret;
+-	int tmp;
+-
+-	switch (c->width) {
+-	case NL80211_CHAN_WIDTH_20:
+-		c->width = NL80211_CHAN_WIDTH_20_NOHT;
+-		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+-		break;
+-	case NL80211_CHAN_WIDTH_40:
+-		c->width = NL80211_CHAN_WIDTH_20;
+-		c->center_freq1 = c->chan->center_freq;
+-		ret = IEEE80211_STA_DISABLE_40MHZ |
+-		      IEEE80211_STA_DISABLE_VHT;
+-		break;
+-	case NL80211_CHAN_WIDTH_80:
+-		tmp = (30 + c->chan->center_freq - c->center_freq1)/20;
+-		/* n_P40 */
+-		tmp /= 2;
+-		/* freq_P40 */
+-		c->center_freq1 = c->center_freq1 - 20 + 40 * tmp;
+-		c->width = NL80211_CHAN_WIDTH_40;
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		break;
+-	case NL80211_CHAN_WIDTH_80P80:
+-		c->center_freq2 = 0;
+-		c->width = NL80211_CHAN_WIDTH_80;
+-		ret = IEEE80211_STA_DISABLE_80P80MHZ |
+-		      IEEE80211_STA_DISABLE_160MHZ;
+-		break;
+-	case NL80211_CHAN_WIDTH_160:
+-		/* n_P20 */
+-		tmp = (70 + c->chan->center_freq - c->center_freq1)/20;
+-		/* n_P80 */
+-		tmp /= 4;
+-		c->center_freq1 = c->center_freq1 - 40 + 80 * tmp;
+-		c->width = NL80211_CHAN_WIDTH_80;
+-		ret = IEEE80211_STA_DISABLE_80P80MHZ |
+-		      IEEE80211_STA_DISABLE_160MHZ;
+-		break;
+-	default:
+-	case NL80211_CHAN_WIDTH_20_NOHT:
+-		WARN_ON_ONCE(1);
+-		c->width = NL80211_CHAN_WIDTH_20_NOHT;
+-		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+-		break;
+-	}
+-
+-	WARN_ON_ONCE(!cfg80211_chandef_valid(c));
+-
+-	return ret;
+-}
+-
+-static u32
+-ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+-			     struct ieee80211_supported_band *sband,
+-			     struct ieee80211_channel *channel,
+-			     const struct ieee80211_ht_operation *ht_oper,
+-			     const struct ieee80211_vht_operation *vht_oper,
+-			     struct cfg80211_chan_def *chandef)
+-{
+-	struct cfg80211_chan_def vht_chandef;
+-	u32 ht_cfreq, ret;
+-
+-	chandef->chan = channel;
+-	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
+-	chandef->center_freq1 = channel->center_freq;
+-	chandef->center_freq2 = 0;
+-
+-	if (!ht_oper || !sband->ht_cap.ht_supported) {
+-		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	chandef->width = NL80211_CHAN_WIDTH_20;
+-
+-	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
+-						  channel->band);
+-	/* check that channel matches the right operating channel */
+-	if (channel->center_freq != ht_cfreq) {
+-		/*
+-		 * It's possible that some APs are confused here;
+-		 * Netgear WNDR3700 sometimes reports 4 higher than
+-		 * the actual channel in association responses, but
+-		 * since we look at probe response/beacon data here
+-		 * it should be OK.
+-		 */
+-		sdata_info(sdata,
+-			   "Wrong control channel: center-freq: %d ht-cfreq: %d ht->primary_chan: %d band: %d - Disabling HT\n",
+-			   channel->center_freq, ht_cfreq,
+-			   ht_oper->primary_chan, channel->band);
+-		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	/* check 40 MHz support, if we have it */
+-	if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
+-		switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+-		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-			chandef->width = NL80211_CHAN_WIDTH_40;
+-			chandef->center_freq1 += 10;
+-			break;
+-		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-			chandef->width = NL80211_CHAN_WIDTH_40;
+-			chandef->center_freq1 -= 10;
+-			break;
+-		}
+-	} else {
+-		/* 40 MHz (and 80 MHz) must be supported for VHT */
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	if (!vht_oper || !sband->vht_cap.vht_supported) {
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	vht_chandef.chan = channel;
+-	vht_chandef.center_freq1 =
+-		ieee80211_channel_to_frequency(vht_oper->center_freq_seg1_idx,
+-					       channel->band);
+-	vht_chandef.center_freq2 = 0;
+-
+-	if (vht_oper->center_freq_seg2_idx)
+-		vht_chandef.center_freq2 =
+-			ieee80211_channel_to_frequency(
+-				vht_oper->center_freq_seg2_idx,
+-				channel->band);
+-
+-	switch (vht_oper->chan_width) {
+-	case IEEE80211_VHT_CHANWIDTH_USE_HT:
+-		vht_chandef.width = chandef->width;
+-		break;
+-	case IEEE80211_VHT_CHANWIDTH_80MHZ:
+-		vht_chandef.width = NL80211_CHAN_WIDTH_80;
+-		break;
+-	case IEEE80211_VHT_CHANWIDTH_160MHZ:
+-		vht_chandef.width = NL80211_CHAN_WIDTH_160;
+-		break;
+-	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
+-		vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
+-		break;
+-	default:
+-		sdata_info(sdata,
+-			   "AP VHT operation IE has invalid channel width (%d), disable VHT\n",
+-			   vht_oper->chan_width);
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	if (!cfg80211_chandef_valid(&vht_chandef)) {
+-		sdata_info(sdata,
+-			   "AP VHT information is invalid, disable VHT\n");
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	if (cfg80211_chandef_identical(chandef, &vht_chandef)) {
+-		ret = 0;
+-		goto out;
+-	}
+-
+-	if (!cfg80211_chandef_compatible(chandef, &vht_chandef)) {
+-		sdata_info(sdata,
+-			   "AP VHT information doesn't match HT, disable VHT\n");
+-		ret = IEEE80211_STA_DISABLE_VHT;
+-		goto out;
+-	}
+-
+-	*chandef = vht_chandef;
+-
+-	ret = 0;
+-
+-out:
+-	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
+-					IEEE80211_CHAN_DISABLED)) {
+-		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
+-			ret = IEEE80211_STA_DISABLE_HT |
+-			      IEEE80211_STA_DISABLE_VHT;
+-			goto out;
+-		}
+-
+-		ret |= chandef_downgrade(chandef);
+-	}
+-
+-	if (chandef->width != vht_chandef.width)
+-		sdata_info(sdata,
+-			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
+-
+-	WARN_ON_ONCE(!cfg80211_chandef_valid(chandef));
+-	return ret;
+-}
+-
+ static u8 ieee80211_ht_vht_rx_chains(struct ieee80211_sub_if_data *sdata,
+ 				     struct cfg80211_bss *cbss)
+ {
+-- 
+1.8.0
+
