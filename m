@@ -1,115 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.laptop.org ([18.85.2.166]:36987 "EHLO swan.laptop.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933508Ab3BSUUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 15:20:05 -0500
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, bzhao@marvell.com
-Subject: [PATCH] mwifiex: don't drop carrier flag over suspend
-Message-Id: <20130219200947.70319FA975@dev.laptop.org> (sfid-20130219_212013_421897_ACB3499B)
-Date: Tue, 19 Feb 2013 15:09:47 -0500 (EST)
+Received: from he.sipsolutions.net ([78.46.109.217]:43167 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756828Ab3BKMmG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 07:42:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 12/14] mac80211: add ieee80211_vif_change_bandwidth
+Date: Mon, 11 Feb 2013 13:38:16 +0100
+Message-Id: <1360586298-15028-13-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134635_169100_CDC290F5)
+In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+References: <[PATCH 00/14] mac80211: HT/VHT handling>
+ <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the system suspends with mwifiex wifi powered on, and is then woken
-by an ICMP ping packet, the ping response is discarded by the kernel
-because the kernel incorrectly thinks there is no carrier.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I can't see any valid reason to want to report loss of carrier here,
-so remove the offending code.
+For HT and VHT the current bandwidth can change,
+add the function ieee80211_vif_change_bandwidth()
+to take care of this. It returns a failure if the
+new bandwidth isn't compatible with the existing
+channel context, the caller has to handle that.
+When it happens, also inform the driver that the
+bandwidth changed for this virtual interface (no
+drivers would actually care today though.)
 
-Fixes http://dev.laptop.org/ticket/12554
+Changing to/from HT/VHT isn't allowed though.
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c | 10 +---------
- drivers/net/wireless/mwifiex/sdio.c |  9 ---------
- 2 files changed, 1 insertion(+), 18 deletions(-)
+ include/net/mac80211.h     |  4 ++++
+ net/mac80211/chan.c        | 49 ++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  4 ++++
+ 3 files changed, 57 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index b879e13..db29dea 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -157,7 +157,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
--	int hs_actived, i;
-+	int hs_actived;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a3a0bdf..db5330a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -210,6 +210,9 @@ struct ieee80211_chanctx_conf {
+  *	changed (currently only in P2P client mode, GO mode will be later)
+  * @BSS_CHANGED_DTIM_PERIOD: the DTIM period value was changed (set when
+  *	it becomes valid, managed mode only)
++ * @BSS_CHANGED_BANDWIDTH: The bandwidth used by this interface changed,
++ *	note that this is only called when it changes after the channel
++ *	context had been assigned.
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -233,6 +236,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_TXPOWER		= 1<<18,
+ 	BSS_CHANGED_P2P_PS		= 1<<19,
+ 	BSS_CHANGED_DTIM_PERIOD		= 1<<20,
++	BSS_CHANGED_BANDWIDTH		= 1<<21,
  
- 	if (pdev) {
- 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-@@ -177,9 +177,6 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
- 	/* Indicate device suspended */
- 	adapter->is_suspended = true;
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		netif_carrier_off(adapter->priv[i]->netdev);
--
- 	return 0;
- }
- 
-@@ -195,7 +192,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
--	int i;
- 
- 	if (pdev) {
- 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-@@ -217,10 +213,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
- 
- 	adapter->is_suspended = false;
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		if (adapter->priv[i]->media_connected)
--			netif_carrier_on(adapter->priv[i]->netdev);
--
- 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
- 			  MWIFIEX_ASYNC_CMD);
- 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 5a1c1d0..133ecb5 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -161,7 +161,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
- 	mmc_pm_flag_t pm_flag = 0;
--	int i;
- 	int ret = 0;
- 
- 	if (func) {
-@@ -198,9 +197,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 	/* Indicate device suspended */
- 	adapter->is_suspended = true;
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		netif_carrier_off(adapter->priv[i]->netdev);
--
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 8fc56e4..2ad6c4d 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -336,6 +336,55 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
  	return ret;
  }
  
-@@ -220,7 +216,6 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
- 	mmc_pm_flag_t pm_flag = 0;
--	int i;
- 
- 	if (func) {
- 		pm_flag = sdio_get_host_pm_caps(func);
-@@ -243,10 +238,6 @@ static int mwifiex_sdio_resume(struct device *dev)
- 
- 	adapter->is_suspended = false;
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		if (adapter->priv[i]->media_connected)
--			netif_carrier_on(adapter->priv[i]->netdev);
--
- 	/* Disable Host Sleep */
- 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
- 			  MWIFIEX_ASYNC_CMD);
++int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
++				   const struct cfg80211_chan_def *chandef,
++				   u32 *changed)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++	int ret;
++
++	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
++				     IEEE80211_CHAN_DISABLED))
++		return -EINVAL;
++
++	mutex_lock(&local->chanctx_mtx);
++	if (cfg80211_chandef_identical(chandef, &sdata->vif.bss_conf.chandef)) {
++		ret = 0;
++		goto out;
++	}
++
++	if (chandef->width == NL80211_CHAN_WIDTH_20_NOHT ||
++	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (!conf) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ctx = container_of(conf, struct ieee80211_chanctx, conf);
++	if (!cfg80211_chandef_compatible(&conf->def, chandef)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	sdata->vif.bss_conf.chandef = *chandef;
++
++	ieee80211_recalc_chanctx_chantype(local, ctx);
++
++	*changed |= BSS_CHANGED_BANDWIDTH;
++	ret = 0;
++ out:
++	mutex_unlock(&local->chanctx_mtx);
++	return ret;
++}
++
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ {
+ 	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c1bb491..a66f52f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1602,6 +1602,10 @@ int __must_check
+ ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
+ 			  const struct cfg80211_chan_def *chandef,
+ 			  enum ieee80211_chanctx_mode mode);
++int __must_check
++ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
++			       const struct cfg80211_chan_def *chandef,
++			       u32 *changed);
+ void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.1.2
+1.8.0
 
