@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:37716 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865Ab3B0PIh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44585 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932535Ab3BKVVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 10:08:37 -0500
-Received: by mail-ie0-f174.google.com with SMTP id k10so714948iea.33
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 07:08:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
-References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
-Date: Wed, 27 Feb 2013 16:08:36 +0100
-Message-ID: <CAL1gcdPbmPZ=v4TVJYWiFqC1fxh9fzdXiGK3M6-HJqU_tAHdVQ@mail.gmail.com> (sfid-20130227_160840_631761_A5FD3A31)
-Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 Feb 2013 16:21:04 -0500
+Message-ID: <1360617645.8738.42.camel@jlt4.sipsolutions.net> (sfid-20130211_222111_009659_99668683)
+Subject: Re: [PATCH 3/3] mac80211: generate mesh probe responses
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Date: Mon, 11 Feb 2013 22:20:45 +0100
+In-Reply-To: <1360616843-24618-3-git-send-email-thomas@cozybit.com> (sfid-20130211_220850_670177_78A066DA)
+References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+	 <1360616843-24618-3-git-send-email-thomas@cozybit.com>
+	 (sfid-20130211_220850_670177_78A066DA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
-> interface combinations with NL80211_IFTYPE_MESH_POINT present.
-> Add appropriate ifdefs to avoid running into errors.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On Mon, 2013-02-11 at 13:07 -0800, Thomas Pedersen wrote:
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> +	if (elems.mesh_id_len != 0 &&
+> +	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
+> +	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len))) {
+> +		mpl_dbg(sdata, "ignoring probe request for different MBSS\n");
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 1031db6..189744d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1236,8 +1236,10 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
->          */
->         if_limit = &rt2x00dev->if_limits_ap;
->         if_limit->max = rt2x00dev->ops->max_ap_intf;
-> -       if_limit->types = BIT(NL80211_IFTYPE_AP) |
-> -                       BIT(NL80211_IFTYPE_MESH_POINT);
-> +       if_limit->types = BIT(NL80211_IFTYPE_AP);
-> +#ifdef CONFIG_MAC80211_MESH
-> +       if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
-> +#endif
->
->         /*
->          * Build up AP interface combinations structure.
-> @@ -1309,7 +1311,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
->                 rt2x00dev->hw->wiphy->interface_modes |=
->                     BIT(NL80211_IFTYPE_ADHOC) |
->                     BIT(NL80211_IFTYPE_AP) |
-> +#ifdef CONFIG_MAC80211_MESH
->                     BIT(NL80211_IFTYPE_MESH_POINT) |
-> +#endif
->                     BIT(NL80211_IFTYPE_WDS);
->
->         rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
-> --
-> 1.8.0.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	presp = dev_alloc_skb(local->tx_headroom +
+> +			      bcn->head_len + bcn->tail_len);
+> +	if (WARN_ON(!presp))
+> +		goto out;
+
+same as before.
 
 
+> +	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
 
--- 
----
-Gertjan
+I also think you should probably drop both mpl_dbg() statements as
+they're likely to just be noise for any other debugging when you
+actually use this?
+
+johannes
+
