@@ -1,45 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:41576 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757078Ab3BAQkr (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:65284 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932611Ab3BKVY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 11:40:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 3/6] rtlwifi: rtl8192c: Fix W=1 warning
-Date: Fri,  1 Feb 2013 10:40:24 -0600
-Message-Id: <1359736827-30977-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130201_174114_558184_92F88F80)
-In-Reply-To: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 11 Feb 2013 16:24:56 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j10so2785138bkw.40
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:24:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1360617458.8738.41.camel@jlt4.sipsolutions.net>
+References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+ <1360616843-24618-2-git-send-email-thomas@cozybit.com> <1360617458.8738.41.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 11 Feb 2013 13:24:34 -0800
+Message-ID: <CAG6hwVN5vSxo5Cx0KypF4zQgy+rBudTgrDZ2z2dm8gsL-wRxgw@mail.gmail.com> (sfid-20130211_222459_526130_C224D325)
+Subject: Re: [PATCH 2/3] mac80211: cache mesh beacon
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When this driver is built with "make W=1", the following warning occurs:
+On Mon, Feb 11, 2013 at 1:17 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-02-11 at 13:07 -0800, Thomas Pedersen wrote:
+>
+>> +static int
+>> +ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+>> +{
+>> +     struct beacon_data *bcn;
+>> +     int head_len, tail_len;
+>> +     struct sk_buff *skb;
+>> +     struct ieee80211_mgmt *mgmt;
+>> +     struct ieee80211_chanctx_conf *chanctx_conf;
+>> +     enum ieee80211_band band;
+>> +     u8 *pos;
+>> +     struct ieee80211_sub_if_data *sdata;
+>> +     int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
+>> +                   sizeof(mgmt->u.beacon);
+>> +
+>> +     sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
+>> +     rcu_read_lock();
+>
+> This is weird since you already did it outside the function?
 
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:907:4: warning: comparison is always false due to limited range of data type [-Wtype-limits]
+Yes, but we shouldn't rely on the caller creating an RCU read section?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>> +     chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>> +     band = chanctx_conf->def.chan->band;
+>
+> could be NULL? I guess not at this point though.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index 1cdf5a2..b793a65 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -669,7 +669,8 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
- 	u8 thermalvalue, delta, delta_lck, delta_iqk;
- 	long ele_a, ele_d, temp_cck, val_x, value32;
- 	long val_y, ele_c = 0;
--	u8 ofdm_index[2], cck_index = 0, ofdm_index_old[2], cck_index_old = 0;
-+	u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
-+	s8 cck_index = 0;
- 	int i;
- 	bool is2t = IS_92C_SERIAL(rtlhal->version);
- 	s8 txpwr_level[2] = {0, 0};
+Yeah it will have been set.
+
+>> +static int
+>> +ieee80211_mesh_rebuild_beacon(struct ieee80211_if_mesh *ifmsh)
+>> +{
+>> +     struct ieee80211_sub_if_data *sdata;
+>> +     struct beacon_data *old_bcn;
+>> +     int ret;
+>> +     sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
+>> +
+>> +     rcu_read_lock();
+>> +     old_bcn = rcu_dereference(ifmsh->beacon);
+>> +     ret = ieee80211_mesh_build_beacon(ifmsh);
+>
+> This looks totally wrong. You must protect the assignment to
+> ifmsg->beacon by some lock, so then you don't need the rcu_read_lock()
+> here since you're under that lock, so this should be
+> rcu_dereference_protected(..., lockdep_is_held(whatever_lock));
+
+OK, I guess we better protect assignment by some lock then :)
+
+>> +     if (sdata->vif.bss_conf.enable_beacon &&
+>> +         (changed & (BSS_CHANGED_BEACON |
+>> +                     BSS_CHANGED_HT |
+>> +                     BSS_CHANGED_BASIC_RATES |
+>> +                     BSS_CHANGED_BEACON_INT)))
+>> +             if (ieee80211_mesh_rebuild_beacon(&sdata->u.mesh))
+>> +                     return;
+>
+> Does that return make any sense?
+
+The alternative is to keep notifying the driver. I just wanted to stop
+everything since we're out of memory, but we can keep calling
+bss_info_change_notify() is you think that makes more sense.
+
+>>       changed |= ieee80211_mps_local_status_update(sdata);
+>>
+>> +     if (WARN_ON(ieee80211_mesh_build_beacon(ifmsh))) {
+>
+> no warning for memory allocation failures please
+
+OK.
+
+>> @@ -694,6 +833,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+>>       sdata->vif.bss_conf.enable_beacon = false;
+>>       clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+>>       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
+>> +     kfree_rcu(ifmsh->beacon, rcu_head);
+>
+> I think you should set it to NULL first, just so it's clearer.
+
+For who? It seems there is no need in this path, but OK.
+
+>> @@ -883,6 +1023,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+>>       skb_queue_head_init(&ifmsh->ps.bc_buf);
+>>       spin_lock_init(&ifmsh->mesh_preq_queue_lock);
+>>       spin_lock_init(&ifmsh->sync_offset_lock);
+>> +     RCU_INIT_POINTER(ifmsh->beacon, NULL);
+>
+> Isn't everything initialized to 0/null?
+
+Yep, I wanted any needed RCU magic to happen here though.
+
 -- 
-1.8.1
-
+Thomas
