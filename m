@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56136 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138Ab3BUTpp (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:53325 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932691Ab3BKV6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 14:45:45 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U8c5Q-0001uP-Cw
-	for linux-wireless@vger.kernel.org; Thu, 21 Feb 2013 20:45:44 +0100
-Message-ID: <1361475941.8327.2.camel@jlt4.sipsolutions.net> (sfid-20130221_204549_623915_D15DCAFB)
-Subject: Re: [PATCH] wireless: move sequence number arithmetic to ieee80211.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 21 Feb 2013 20:45:41 +0100
-In-Reply-To: <1361182271-23692-1-git-send-email-johannes@sipsolutions.net> (sfid-20130218_111121_143638_F1463279)
-References: <1361182271-23692-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130218_111121_143638_F1463279)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Feb 2013 16:58:55 -0500
+Received: by mail-oa0-f52.google.com with SMTP id k14so6651454oag.39
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:58:55 -0800 (PST)
+Message-ID: <5119699D.8010703@lwfinger.net> (sfid-20130211_225900_593018_9D99FA42)
+Date: Mon, 11 Feb 2013 15:58:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Catalin Iacob <iacobcatalin@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Initialize rate_init member of struct rate_control_ops
+References: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
+In-Reply-To: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 11:11 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Move the sequence number arithmetic code from mac80211 to
-> ieee80211.h so others can use it. Also rename the functions
-> from _seq to _sn, they operate on the sequence number, not
-> the sequence_control field.
-> 
-> Also move macros to convert the sequence control to/from
-> the sequence number value from various drivers.
+On 02/11/2013 03:18 PM, Catalin Iacob wrote:
+> This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
+>
+> rate_control_rate_init assumes the rate_init member of
+> struct rate_control_ops is not NULL therefore not initializing it leads to
+> an oops as soon the driver succesfully associates to an AP.
+>
+> The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
+> is ok because rate_update is checked for NULL before being
+> called.
+>
+> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
 
-Applied.
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-johannes
+John,
+
+This patch should be applied. Obviously, I missed the oops in my testing.
+
+The real fix will be to not supply any rate-control operations as suggested by 
+Johannes, but that will take some time.
+
+Larry
 
