@@ -1,105 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:63410 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757681Ab3BKQbD (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:47199 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167Ab3BKHzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 11:31:03 -0500
-Received: by mail-ob0-f175.google.com with SMTP id uz6so6154406obc.20
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 08:31:01 -0800 (PST)
+	Mon, 11 Feb 2013 02:55:05 -0500
+Received: by mail-we0-f170.google.com with SMTP id z53so4702695wey.29
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Feb 2013 23:55:03 -0800 (PST)
 MIME-Version: 1.0
-Date: Tue, 12 Feb 2013 00:31:01 +0800
-Message-ID: <CAHirt9hpnpBb5K31rgeAp1mFROPw2dTDmAZMyC1NLF+3+mKEUg@mail.gmail.com> (sfid-20130211_173108_743034_073582DA)
-Subject: About iwl4965 AP mode support
-From: Heiher <admin@heiher.info>
-To: sgruszka@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=f46d0442821046b92f04d5756fa8
+In-Reply-To: <1360250827.8038.10.camel@jlt4.sipsolutions.net>
+References: <7384f4ddc838247a0f467708d66baa8c@posedge.com> <1360225230.8038.1.camel@jlt4.sipsolutions.net>
+ <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
+ <1360228991.8038.3.camel@jlt4.sipsolutions.net> <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
+ <5113B42A.4020708@openwrt.org> <1360246653.8038.9.camel@jlt4.sipsolutions.net>
+ <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com>
+ <5113C5E0.5050509@openwrt.org> <1360250827.8038.10.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 11 Feb 2013 13:24:42 +0530
+Message-ID: <CABPxzYLY5-MmePjUUGedC4rT88b328u7AKOeHREuF11BuOjYGA@mail.gmail.com> (sfid-20130211_085517_681941_152A0488)
+Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>, chaitanyatk@posedge.com,
+	linux-wireless@vger.kernel.org, maheshp@posedge.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---f46d0442821046b92f04d5756fa8
-Content-Type: text/plain; charset=UTF-8
+On Thu, Feb 7, 2013 at 8:57 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2013-02-07 at 16:18 +0100, Felix Fietkau wrote:
+>
+>> > But whats the use of sending an AMSDU if we are not connected?
+>> > First check in the code is to check for a connection.
+>> I mentioned cooked monitor because putting the hw in monitor mode may
+>> not always be desirable, and cooked monitor bypasses that.
+>
+> You can pass "flags none" on the iw command line and it shouldn't change
+> much then, but yeah, still might do a few other things. Anyway cooked
+> should work fine.
 
-Hello,
-
-I modifed iwl4965 kernel driver by this patch iwl4965-ap-mode.diff.
-the wifi station can connect to this access point after hostapd
-service started and ping client address from access point is ok. but
-the problem is the wifi connection not stable, the connection will
-automatically disconnect.
-
-Please help me.. Thanks!
-
---
-Best regards!
-Heiher
-https://heiher.info
-
---f46d0442821046b92f04d5756fa8
-Content-Type: application/octet-stream; name="iwl4965-ap-mode.diff"
-Content-Disposition: attachment; filename="iwl4965-ap-mode.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hd1u882n1
-
-ZGlmZiAtLWdpdCBhLzQ5NjUtbWFjLmMgYi80OTY1LW1hYy5jCmluZGV4IGVhYzRkYzguLjE5YTk3
-M2YgMTAwNjQ0Ci0tLSBhLzQ5NjUtbWFjLmMKKysrIGIvNDk2NS1tYWMuYwpAQCAtNTY5NCw2ICs1
-Njk0LDM5IEBAIGlsNDk2NV9iZ19yeF9yZXBsZW5pc2goc3RydWN0IHdvcmtfc3RydWN0ICpkYXRh
-KQogICoKICAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKi8KIAorc3RhdGljIGNvbnN0IHN0cnVjdCBpZWVl
-ODAyMTFfaWZhY2VfbGltaXQgaXdsYWduX3N0YV9hcF9saW1pdHNbXSA9IHsKKwl7CisJCS5tYXgg
-PSAxLAorCQkudHlwZXMgPSBCSVQoTkw4MDIxMV9JRlRZUEVfU1RBVElPTiksCisJfSwKKwl7CisJ
-CS5tYXggPSAxLAorCQkudHlwZXMgPSBCSVQoTkw4MDIxMV9JRlRZUEVfQVApLAorCX0sCit9Owor
-CitzdGF0aWMgY29uc3Qgc3RydWN0IGllZWU4MDIxMV9pZmFjZV9saW1pdCBpd2xhZ25fMnN0YV9s
-aW1pdHNbXSA9IHsKKwl7CisJCS5tYXggPSAyLAorCQkudHlwZXMgPSBCSVQoTkw4MDIxMV9JRlRZ
-UEVfU1RBVElPTiksCisJfSwKK307CisKK3N0YXRpYyBjb25zdCBzdHJ1Y3QgaWVlZTgwMjExX2lm
-YWNlX2NvbWJpbmF0aW9uCitpd2xhZ25faWZhY2VfY29tYmluYXRpb25zX2R1YWxtb2RlW10gPSB7
-CisJeyAubnVtX2RpZmZlcmVudF9jaGFubmVscyA9IDEsCisJICAubWF4X2ludGVyZmFjZXMgPSAy
-LAorCSAgLmJlYWNvbl9pbnRfaW5mcmFfbWF0Y2ggPSB0cnVlLAorCSAgLmxpbWl0cyA9IGl3bGFn
-bl9zdGFfYXBfbGltaXRzLAorCSAgLm5fbGltaXRzID0gQVJSQVlfU0laRShpd2xhZ25fc3RhX2Fw
-X2xpbWl0cyksCisJfSwKKwl7IC5udW1fZGlmZmVyZW50X2NoYW5uZWxzID0gMSwKKwkgIC5tYXhf
-aW50ZXJmYWNlcyA9IDIsCisJICAubGltaXRzID0gaXdsYWduXzJzdGFfbGltaXRzLAorCSAgLm5f
-bGltaXRzID0gQVJSQVlfU0laRShpd2xhZ25fMnN0YV9saW1pdHMpLAorCX0sCit9OworCiAjZGVm
-aW5lIFVDT0RFX1JFQURZX1RJTUVPVVQJKDQgKiBIWikKIAogLyoKQEAgLTU3MjIsMTMgKzU3NTUs
-MjAgQEAgaWw0OTY1X21hY19zZXR1cF9yZWdpc3RlcihzdHJ1Y3QgaWxfcHJpdiAqaWwsIHUzMiBt
-YXhfcHJvYmVfbGVuZ3RoKQogCWh3LT5zdGFfZGF0YV9zaXplID0gc2l6ZW9mKHN0cnVjdCBpbF9z
-dGF0aW9uX3ByaXYpOwogCWh3LT52aWZfZGF0YV9zaXplID0gc2l6ZW9mKHN0cnVjdCBpbF92aWZf
-cHJpdik7CiAKLQlody0+d2lwaHktPmludGVyZmFjZV9tb2RlcyA9CisJaHctPndpcGh5LT5pbnRl
-cmZhY2VfbW9kZXMgPSBCSVQoTkw4MDIxMV9JRlRZUEVfQVApIHwKIAkgICAgQklUKE5MODAyMTFf
-SUZUWVBFX1NUQVRJT04pIHwgQklUKE5MODAyMTFfSUZUWVBFX0FESE9DKTsKIAogCWh3LT53aXBo
-eS0+ZmxhZ3MgfD0KIAkgICAgV0lQSFlfRkxBR19DVVNUT01fUkVHVUxBVE9SWSB8IFdJUEhZX0ZM
-QUdfRElTQUJMRV9CRUFDT05fSElOVFMgfAogCSAgICBXSVBIWV9GTEFHX0lCU1NfUlNOOwogCisJ
-aWYgKGh3LT53aXBoeS0+aW50ZXJmYWNlX21vZGVzICYgQklUKE5MODAyMTFfSUZUWVBFX0FQKSkg
-eworCQlody0+d2lwaHktPmlmYWNlX2NvbWJpbmF0aW9ucyA9CisJCQlpd2xhZ25faWZhY2VfY29t
-YmluYXRpb25zX2R1YWxtb2RlOworCQlody0+d2lwaHktPm5faWZhY2VfY29tYmluYXRpb25zID0K
-KwkJCUFSUkFZX1NJWkUoaXdsYWduX2lmYWNlX2NvbWJpbmF0aW9uc19kdWFsbW9kZSk7CisJfQor
-CiAJLyoKIAkgKiBGb3Igbm93LCBkaXNhYmxlIFBTIGJ5IGRlZmF1bHQgYmVjYXVzZSBpdCBhZmZl
-Y3RzCiAJICogUlggcGVyZm9ybWFuY2Ugc2lnbmlmaWNhbnRseS4KQEAgLTU5OTksNiArNjAzOSw4
-IEBAIGlsNDk2NV9tYWNfc3RhX2FkZChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0IGll
-ZWU4MDIxMV92aWYgKnZpZiwKIAlzdGFfcHJpdi0+Y29tbW9uLnN0YV9pZCA9IElMX0lOVkFMSURf
-U1RBVElPTjsKIAogCWF0b21pY19zZXQoJnN0YV9wcml2LT5wZW5kaW5nX2ZyYW1lcywgMCk7CisJ
-aWYgKHZpZi0+dHlwZSA9PSBOTDgwMjExX0lGVFlQRV9BUCkKKwkJc3RhX3ByaXYtPmNsaWVudCA9
-IHRydWU7CiAKIAlyZXQgPQogCSAgICBpbF9hZGRfc3RhdGlvbl9jb21tb24oaWwsIHN0YS0+YWRk
-ciwgaXNfYXAsIHN0YSwgJnN0YV9pZCk7CmRpZmYgLS1naXQgYS80OTY1LmMgYi80OTY1LmMKaW5k
-ZXggNWRiMTE3MS4uOTEwZmQ4NiAxMDA2NDQKLS0tIGEvNDk2NS5jCisrKyBiLzQ5NjUuYwpAQCAt
-MTgwMyw2ICsxODAzLDkgQEAgaWw0OTY1X3Bvc3RfYXNzb2NpYXRlKHN0cnVjdCBpbF9wcml2ICpp
-bCkKIAljYXNlIE5MODAyMTFfSUZUWVBFX0FESE9DOgogCQlpbDQ5NjVfc2VuZF9iZWFjb25fY21k
-KGlsKTsKIAkJYnJlYWs7CisJY2FzZSBOTDgwMjExX0lGVFlQRV9BUDoKKwkJaWw0OTY1X3NlbmRf
-YmVhY29uX2NtZChpbCk7CisJCWJyZWFrOwogCWRlZmF1bHQ6CiAJCUlMX0VSUigiJXMgU2hvdWxk
-IG5vdCBiZSBjYWxsZWQgaW4gJWQgbW9kZVxuIiwgX19mdW5jX18sCiAJCSAgICAgICB2aWYtPnR5
-cGUpOwpkaWZmIC0tZ2l0IGEvY29tbW9uLmMgYi9jb21tb24uYwppbmRleCA2MTdhZWI5Li5mNDE1
-NGI4IDEwMDY0NAotLS0gYS9jb21tb24uYworKysgYi9jb21tb24uYwpAQCAtMzk3MSw2ICszOTcx
-LDkgQEAgaWxfY29ubmVjdGlvbl9pbml0X3J4X2NvbmZpZyhzdHJ1Y3QgaWxfcHJpdiAqaWwpCiAJ
-CWlsLT5zdGFnaW5nLmZpbHRlcl9mbGFncyA9CiAJCSAgICBSWE9OX0ZJTFRFUl9CQ09OX0FXQVJF
-X01TSyB8IFJYT05fRklMVEVSX0FDQ0VQVF9HUlBfTVNLOwogCQlicmVhazsKKwljYXNlIE5MODAy
-MTFfSUZUWVBFX0FQOgorCQlpbC0+c3RhZ2luZy5kZXZfdHlwZSA9IFJYT05fREVWX1RZUEVfQVA7
-CisJCWJyZWFrOwogCWRlZmF1bHQ6CiAJCUlMX0VSUigiVW5zdXBwb3J0ZWQgaW50ZXJmYWNlIHR5
-cGUgJWRcbiIsIGlsLT52aWYtPnR5cGUpOwogCQlyZXR1cm47CkBAIC01MjkzLDcgKzUyOTYsNyBA
-QCBpbF9tYWNfYnNzX2luZm9fY2hhbmdlZChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0
-IGllZWU4MDIxMV92aWYgKnZpZiwKIAkgKiBtYWM4MDIxMSBkZWNpZGVzIHRvIGRvIGJvdGggY2hh
-bmdlcyBhdCBvbmNlIGJlY2F1c2UKIAkgKiBpdCB3aWxsIGludm9rZSBwb3N0X2Fzc29jaWF0ZS4K
-IAkgKi8KLQlpZiAodmlmLT50eXBlID09IE5MODAyMTFfSUZUWVBFX0FESE9DICYmIChjaGFuZ2Vz
-ICYgQlNTX0NIQU5HRURfQkVBQ09OKSkKKwlpZiAoKCh2aWYtPnR5cGUgPT0gTkw4MDIxMV9JRlRZ
-UEVfQURIT0MpIHx8ICh2aWYtPnR5cGUgPT0gTkw4MDIxMV9JRlRZUEVfQVApKSAmJiAoY2hhbmdl
-cyAmIEJTU19DSEFOR0VEX0JFQUNPTikpCiAJCWlsX2JlYWNvbl91cGRhdGUoaHcsIHZpZik7CiAK
-IAlpZiAoY2hhbmdlcyAmIEJTU19DSEFOR0VEX0VSUF9QUkVBTUJMRSkgewo=
---f46d0442821046b92f04d5756fa8--
+Even in the cooked monitor case, the setting of qos_header is done
+in the ieee80211_xmit(), so we still need to have some flag to know
+if its an AMSDU/Not based, even if we set the bit in the user space
+this will overwrite that.
