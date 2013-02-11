@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:57444 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751962Ab3BYQmY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 11:42:24 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UA18T-0003iE-N8
-	for linux-wireless@vger.kernel.org; Mon, 25 Feb 2013 17:42:41 +0100
-Received: from c-68-53-95-0.hsd1.tn.comcast.net ([68.53.95.0])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 17:42:41 +0100
-Received: from aaraines by c-68-53-95-0.hsd1.tn.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 17:42:41 +0100
-To: linux-wireless@vger.kernel.org
-From: Drew Raines <aaraines@gmail.com>
-Subject: Re: drivers/net/wireless/iwlwifi/dvm/tx.c and arch/x86/kernel/apic/ipi.c: Kernel trace when roaming between different Access Points with the same ESSID
-Date: Mon, 25 Feb 2013 10:42:07 -0600
-Message-ID: <87bob8cpls.fsf@mid.raines.me> (sfid-20130225_174227_935194_CC1F9DD7)
-References: <CAD77+gQFfNvz02=0FWDq+KUGk5QO_MywWw=NBMk6YaFGNQ4+kA@mail.gmail.com>
-	<CAD77+gTFDbNopgJjMv+BGJCbueR-k8Uiyq41DfOeF_t1oJm7EA@mail.gmail.com>
-	<87d2vowff1.fsf@mid.raines.me>
-Mime-Version: 1.0
-Content-Type: text/plain
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:49585 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756148Ab3BKMDx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 07:03:53 -0500
+Received: by mail-bk0-f51.google.com with SMTP id ik5so2546845bkc.24
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 04:03:52 -0800 (PST)
+Message-ID: <5118DE25.9090908@cozybit.com> (sfid-20130211_130357_626047_FCD27F25)
+Date: Mon, 11 Feb 2013 13:03:49 +0100
+From: Marco Porsch <marco@cozybit.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFCv2 2/3] mac80211: mesh power save doze scheduling
+References: <1360151325-6368-1-git-send-email-marco@cozybit.com>   <1360151325-6368-3-git-send-email-marco@cozybit.com>   (sfid-20130206_124915_323291_448699F4) <1360315234.29851.15.camel@jlt4.sipsolutions.net>  <5114CECD.2040508@cozybit.com> (sfid-20130208_110921_709130_DD21AFD9) <1360360665.29851.37.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1360360665.29851.37.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drew Raines wrote:
-
-> Richard Hartmann wrote:
+On 02/08/2013 10:57 PM, Johannes Berg wrote:
+> On Fri, 2013-02-08 at 11:09 +0100, Marco Porsch wrote:
 >
->> Yet another one, this time during high USB i/o load.
+>>>> For mesh Awake Windows wakeup on SWBA (beacon_get_tim) and start
+>>>> a timer which triggers a doze call on expiry.
+>>>
+>>> That seems questionable -- drivers are not required to request each
+>>> beacon. I know you only want to make it work on ath9k, but I don't think
+>>> "stretching" the API, without even documenting it, is a good idea.
+>>
+>> Currently, we already use ieee80211_beacon_get_tim as time reference for
+>> mesh sync's adjust_tbtt. And, as far as I know, all mesh-capable drivers
+>> use the call for each and every beacon.
 >
-> I've been suffering this issue as well since some version of the
-> experimental Wheezy packages of 3.7.x, but it's also happening with a
-> make-kpkg build of 3.8.
+> Oops, why did I miss that before? :-)
 >
-> If I switch APs in my house, my connection immediately fails and it
-> won't work until I power the radio off and back on with the hardware
-> switch on the side of the laptop.  I can't even `modprobe -r iwlwifi'
-> the driver ("FATAL: Module iwlwifi is in use.").
+>> So what would you recommend: keep using beacon_get and adding
+>> documentation - or - creating an exported callback for awake_window_start?
+>
+> I guess you could add it... However, I don't really fully understand.
+> There's no guarantee that fetching the beacon is done anywhere close to
+> TBTT? Or does ath9k happen to do it just after TXing a beacon? You're
+> encoding quite a lot of ath9k-specific assumptions here it seems?
 
-As I was messing around with downgrading my kernel package (where'd
-3.5-trunk go??) it occurred to me that I hadn't yet tried a more
-recent version of firmware-iwlwifi.  I had been on 0.36+wheezy.1.
-After installing 0.37 from experimental, this issue seems to have
-disappeared.  I've been roaming around the house watching my wlan0
-reassociate several times with a `ping -i3' running and it hasn't
-lost its connection.
+I think the assumption is currently correct for ath5k, ath9k, ath9k_htc, 
+carl9170 and rt2800 (that's as far as I checked). All of these fetch a 
+beacon on SWBA/PRETBTT interrupt (more or less) immediately before TBTT.
 
-Richard, if you haven't updated, you might want to try:
-
-  sudo apt-get -t experimental install firmware-iwlwifi
-
-Thanks to the Intel guys for keeping this excellent hardware going on
-Linux!
-
--Drew
-
+--Marco
