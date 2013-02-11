@@ -1,85 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135Ab3BOMUR (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:56636 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759938Ab3BKVht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 07:20:17 -0500
-Message-ID: <1360930807.15040.10.camel@jlt4.sipsolutions.net> (sfid-20130215_132021_617031_E6B73DBD)
-Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
- flag to a set of modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Date: Fri, 15 Feb 2013 13:20:07 +0100
-In-Reply-To: <20130213170445.GC22867@thinkpad-t410>
-References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
-	 <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
-	 <1360767970.8868.24.camel@jlt4.sipsolutions.net>
-	 <20130213170445.GC22867@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Feb 2013 16:37:49 -0500
+Received: by mail-ob0-f180.google.com with SMTP id ef5so6636116obb.11
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:37:49 -0800 (PST)
+Message-ID: <511964AB.6080701@lwfinger.net> (sfid-20130211_223753_754924_7AF585FE)
+Date: Mon, 11 Feb 2013 15:37:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Catalin Iacob <iacobcatalin@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rtlwifi: Initialize rate_init member of struct rate_control_ops
+References: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
+In-Reply-To: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[-ilw list, it just bothers me about putting emails into quarantine]
+On 02/11/2013 03:18 PM, Catalin Iacob wrote:
+> This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
+>
+> rate_control_rate_init assumes the rate_init member of
+> struct rate_control_ops is not NULL therefore not initializing it leads to
+> an oops as soon the driver succesfully associates to an AP.
+>
+> The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
+> is ok because rate_update is checked for NULL before being
+> called.
+>
+> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rc.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
+> index 204f46c..6ad8bb7 100644
+> --- a/drivers/net/wireless/rtlwifi/rc.c
+> +++ b/drivers/net/wireless/rtlwifi/rc.c
+> @@ -217,6 +217,12 @@ static void rtl_tx_status(void *ppriv,
+>   	}
+>   }
+>
+> +static void rtl_rate_init(void *ppriv,
+> +			  struct ieee80211_supported_band *sband,
+> +			  struct ieee80211_sta *sta, void *priv_sta)
+> +{
+> +}
+> +
+>   static void *rtl_rate_alloc(struct ieee80211_hw *hw,
+>   		struct dentry *debugfsdir)
+>   {
+> @@ -261,6 +267,7 @@ static struct rate_control_ops rtl_rate_ops = {
+>   	.free = rtl_rate_free,
+>   	.alloc_sta = rtl_rate_alloc_sta,
+>   	.free_sta = rtl_rate_free_sta,
+> +	.rate_init = rtl_rate_init,
+>   	.tx_status = rtl_tx_status,
+>   	.get_rate = rtl_get_rate,
+>   };
 
-> > I'm not really convinced this is the right thing to do. Sooner or later,
-> > multi-virtual interface support will become more relevant, and then all
-> > of this is completely moot because then powersave is entirely disabled
-> > and not handled right now.
-> 
-> Hmm, I don't recall you really going into any detail regarding
-> powersave, only managing the queues for off-channel. Though I can see
-> that multi-vif throws a wrench into things, even if I don't understand
-> all the details.
+Shouldn't rate_control_rate_init() in net/mac80211/rate.h be changed to protect 
+against the oops? I don't see any value in the client driver having to provide a 
+dummy routine. The rtlwifi family of drivers use their own rate-control 
+mechanism, and get no rate-control info from mac80211.
 
-Yeah, that must've been another time. I've evidently been kicking around
-these ideas in my head for long enough to not be able to tell apart
-reality and dream any more ;-)
+Larry
 
-> > Is all this really worth it? It seems a quick fix for brcmsmac might be
-> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
-> > enabled in the config, and then go implement a real solution like I
-> > described earlier with powersave being separated out of the core
-> > mac80211 routines, and actually made possible for multiple interfaces?
-> 
-> Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
-> PS is sent the flag won't be set, as we're still on the operating
-> channel. When we're actually off-channel the value of PM doesn't matter
-> for the types of frames which are being sent. 
-
-Oh, right.
-
-> The only quick fix I've
-> found is to watch out for frames with PM set and set the powersave bit
-> while they're being transmitted.
-
-That's ugly.
-
-> I'm going to have to spend some time trying to grok how powersave would
-> work out with multiple interfaces. Honestly though I don't know that
-> multiple interfaces is something that we have any interest in at the
-> moment, and if not then it may be difficult for me to justify spending
-> much time on it.
-
-Yeah, I know, nobody really seems to care, but the current code is so
-crappy ... do I have to _make_ people care by just removing all
-powersave code? Hard to justify too ... :)
-
-johannes
 
