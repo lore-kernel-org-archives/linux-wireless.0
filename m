@@ -1,95 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50104 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44452 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758710Ab3BTIkk (ORCPT
+	with ESMTP id S1759513Ab3BKUjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 03:40:40 -0500
+	Mon, 11 Feb 2013 15:39:47 -0500
+Message-ID: <1360615181.8738.37.camel@jlt4.sipsolutions.net> (sfid-20130211_213951_274921_23F273A2)
+Subject: Re: pull-request: mac80211 2013-02-11
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9 2/2] nl80211: remove TCP WoWLAN information
-Date: Wed, 20 Feb 2013 09:40:34 +0100
-Message-Id: <1361349634-9669-3-git-send-email-johannes@sipsolutions.net> (sfid-20130220_094046_168403_498D4677)
-In-Reply-To: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
-References: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 11 Feb 2013 21:39:41 +0100
+In-Reply-To: <20130211192728.GD10986@tuxdriver.com>
+References: <1360168561.7910.24.camel@jlt4.sipsolutions.net>
+	 <1360267300.8038.13.camel@jlt4.sipsolutions.net>
+	 <1360580674.8738.14.camel@jlt4.sipsolutions.net>
+	 <20130211192728.GD10986@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-02-11 at 14:27 -0500, John W. Linville wrote:
 
-Just like the radar information, the TCP WoWLAN capability
-data can increase the wiphy information and make it too
-big. Remove the TCP WoWLAN information; no driver supports
-it and new userspace tools will be required as well.
+> > Here are three fixes still for the 3.8 stream, the fix from Cong Ding
+> > for the bad sizeof (Stephen Hemminger had pointed it out before but I'd
+> > promptly forgotten), a mac80211 managed-mode channel context usage fix
+> > where a downgrade would never stop until reaching non-HT and a bug in
+> > the channel determination that could cause invalid channels like HT40+
+> > on channel 11 to be used.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 45 ---------------------------------------------
- 1 file changed, 45 deletions(-)
+> Pulling now -- no guarantees that it will make the loop before 3.8
+> is released!
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f4785a0..f8363b8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -904,48 +904,6 @@ nla_put_failure:
- 	return -ENOBUFS;
- }
- 
--#ifdef CONFIG_PM
--static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
--					struct sk_buff *msg)
--{
--	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
--	struct nlattr *nl_tcp;
--
--	if (!tcp)
--		return 0;
--
--	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
--	if (!nl_tcp)
--		return -ENOBUFS;
--
--	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
--			tcp->data_payload_max))
--		return -ENOBUFS;
--
--	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
--			tcp->data_payload_max))
--		return -ENOBUFS;
--
--	if (tcp->seq && nla_put_flag(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ))
--		return -ENOBUFS;
--
--	if (tcp->tok && nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
--				sizeof(*tcp->tok), tcp->tok))
--		return -ENOBUFS;
--
--	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
--			tcp->data_interval_max))
--		return -ENOBUFS;
--
--	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
--			tcp->wake_payload_max))
--		return -ENOBUFS;
--
--	nla_nest_end(msg, nl_tcp);
--	return 0;
--}
--#endif
--
- static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flags,
- 			      struct cfg80211_registered_device *dev)
- {
-@@ -1320,9 +1278,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 				goto nla_put_failure;
- 		}
- 
--		if (nl80211_send_wowlan_tcp_caps(dev, msg))
--			goto nla_put_failure;
--
- 		nla_nest_end(msg, nl_wowlan);
- 	}
- #endif
--- 
-1.8.0
+Yeah, I understand. I'll post them to stable afterwards if not.
+
+johannes
 
