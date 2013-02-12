@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:58669 "EHLO
-	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751236Ab3BFFuv (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:42407 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758485Ab3BLPZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 00:50:51 -0500
-From: Amit SHAKYA <amit.shakya@stericsson.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Feb 2013 06:50:33 +0100
-Subject: RE: [PATCH] mac80211: Fix PN corruption in case of multiple virtual
- interface
-Message-ID: <ECD438FDEF6BD742895E554C24725A40236E825180@EXDCVYMBSTM005.EQ1STM.local> (sfid-20130206_065056_566541_258E43F9)
-References: <1359976737-28059-1-git-send-email-amit.shakya@stericsson.com>
- <1359991708.10311.15.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359991708.10311.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 12 Feb 2013 10:25:46 -0500
+Received: by mail-qc0-f174.google.com with SMTP id z24so70398qcq.33
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 07:25:45 -0800 (PST)
 MIME-Version: 1.0
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+Date: Tue, 12 Feb 2013 18:25:16 +0300
+Message-ID: <CA+E=qVekDjNovz4rT4eJZTjwJyf5PUdCuaE--kkhdJrxf4BB-g@mail.gmail.com> (sfid-20130212_162550_819494_BA6E97AA)
+Subject: Random stall issue with Intel Corporation Centrino Advanced-N 6205
+ [Taylor Peak]
+To: ilw@linux.intel.com, Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TXkgY29tbWVudHMgaW5saW5lW0FTXToNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNl
-bnQ6IE1vbmRheSwgRmVicnVhcnkgMDQsIDIwMTMgODo1OCBQTQ0KVG86IEFtaXQgU0hBS1lBOyBD
-aHJpc3RpYW4gTGFtcGFydGVyDQpDYzogSm9obiBXLiBMaW52aWxsZTsgbGludXgtd2lyZWxlc3MN
-ClN1YmplY3Q6IFJlOiBbUEFUQ0hdIG1hYzgwMjExOiBGaXggUE4gY29ycnVwdGlvbiBpbiBjYXNl
-IG9mIG11bHRpcGxlIHZpcnR1YWwgaW50ZXJmYWNlDQoNCk9uIE1vbiwgMjAxMy0wMi0wNCBhdCAx
-Njo0OCArMDUzMCwgQW1pdCBTaGFreWEgd3JvdGU6DQo+IEluIGNhc2Ugb2YgbXVsdGlwbGUgdmly
-dHVhbCBpbnRlcmZhY2UsIGlmIEFFUyBpcyBjb25maWd1cmVkIG9uIA0KPiBtdWx0aXBsZSBpbnRl
-cmZhY2UgdGhlbiB0aGVyZSBhcmUgY2hhbmNlcyBvZiBzdG9yZWQgUE4gY29ycnVwdGlvbiwgDQo+
-IGNhdXNpbmcgdHJhZmZpYyB0byBzdG9wLg0KDQpJbnRlcmVzdGluZywgbmljZSBmaW5kLg0KDQo+
-IEluIGNhc2UsIGllZWU4MDIxMV9yeF9oYW5kbGVycyBwcm9jZXNzaW5nIGlzIGdvaW5nIG9uIGZv
-ciBza2JzIA0KPiByZWNlaXZlZCBvbiBvbmUgdmlmIGFuZCBhdCB0aGUgc2FtZSB0aW1lLCByeCBh
-Z2dyZWdhdGlvbiByZW9yZGVyIHRpbWVyIA0KPiBleHBpcmVzIG9uIGFub3RoZXIgdmlmIHRoZW4g
-c3RhX3J4X2FnZ19yZW9yZGVyX3RpbWVyX2V4cGlyZWQgaXMgDQo+IGludm9rZWQgYW5kIGl0IHdp
-bGwgcHVzaCBza2JzIGludG8gdGhlIHNpbmdsZSBxdWV1ZSAobG9jYWwtPnJ4X3NrYl9xdWV1ZSku
-DQo+IGllZWU4MDIxMV9yeF9oYW5kbGVycyBpbiB0aGUgd2hpbGUgbG9vcCBhc3N1bWVzIHRoYXQg
-dGhlIHNrYnMgYXJlIGZvciANCj4gdGhlIHNhbWUgVElEIGFuZCBzYW1lIHN0YS4NCg0KVGhpcyBp
-cyBiZWNhdXNlIG9mIHN0cnVjdCBpZWVlODAyMTFfcnhfZGF0YSwgcHJlc3VtYWJseT8gSU9XLCB0
-aGUgbG9vcCBkb2Vzbid0IHJlYWxseSBhc3N1bWUgaXQsIGl0J3MgdGhlIGZhY3QgdGhhdCB0aGUg
-bG9vcCBpcyBjYWxsZWQgd2l0aCBhIGdpdmVuIHN0cnVjdCBpZWVlODAyMTFfcnhfZGF0YSwgcmln
-aHQ/DQpbQVNdIFllcw0KDQo+IFRoaXMgYXNzdW1wdGlvbiBkb2Vzbid0IGhvbGQgZ29vZCBpbiB0
-aGlzIHNjZW5hcmlvIGFuZCB0aGUgUE4gZ2V0cyANCj4gY29ycnVwdGVkIGJ5IFBOIHJlY2VpdmVk
-IGluIG90aGVyIHZpZidzIHNrYiwgY2F1c2luZyB0cmFmZmljIHRvIHN0b3AgDQo+IGR1ZSB0byBQ
-TiBtaXNtYXRjaC4NCj4gVGhpcyBjYW4gYmUgYXZvaWRlZCBieSBjb21wYXJpbmcgc291cmNlIG1h
-YyBhZGRyZXMgaW4gcmVjZWl2ZWQgc2tiJ3MgDQo+IHdpdGggdGhlIHN0YSdzIG1hYyBhZGRyZXNz
-IGZvciB3aGljaCBwcm9jZXNzaW5nIGlzIGdvaW5nIG9uLCB3aGVuIGRlLXF1ZXVlaW5nLg0KDQoN
-Cg0KPiBAQCAtMjc5MCw3ICsyNzkxLDIwIEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9yeF9oYW5k
-bGVycyhzdHJ1Y3QgDQo+IGllZWU4MDIxMV9yeF9kYXRhICpyeCkNCj4gIA0KPiAgCXJ4LT5sb2Nh
-bC0+cnVubmluZ19yeF9oYW5kbGVyID0gdHJ1ZTsNCj4gIA0KPiAtCXdoaWxlICgoc2tiID0gX19z
-a2JfZGVxdWV1ZSgmcngtPmxvY2FsLT5yeF9za2JfcXVldWUpKSkgew0KPiArCXNrYl9xdWV1ZV93
-YWxrX3NhZmUoJnJ4LT5sb2NhbC0+cnhfc2tiX3F1ZXVlLCBza2IsIHRtcCkgew0KPiArCQlpZiAo
-IXNrYikNCj4gKwkJCWJyZWFrOw0KPiArCQloZHIgPSAoc3RydWN0IGllZWU4MDIxMV9oZHIgKikg
-c2tiLT5kYXRhOw0KPiArCQkvKg0KPiArCQkqIEFkZGl0aW9uYWwgY2hlY2sgdG8gZW5zdXJlIHRo
-YXQgdGhlIHBhY2tldHMgY29ycmVzcG9uZGluZw0KPiArCQkqIHRvIHNhbWUgc3RhIGVudHJ5IGFz
-IGluIHJ4LT5zdGEgYXJlIGRlLXF1ZXVlZC4gVGhlIHF1ZXVlDQo+ICsJCSogY2FuIGhhdmUgZGlm
-ZmVyZW50IGludGVyZmFjZSBwYWNrZXRzIGluIGNhc2Ugb2YgbXVsdGlwbGUgdmlmcw0KPiArCQkq
-Lw0KPiArCQlpZiAoKHJ4LT5zdGEgJiYgaGRyKSAmJiAoaWVlZTgwMjExX2lzX2RhdGEoaGRyLT5m
-cmFtZV9jb250cm9sKSkNCj4gKwkJCSYmIChtZW1jbXAocngtPnN0YS0+c3RhLmFkZHIsIGhkci0+
-YWRkcjIsIEVUSF9BTEVOKSkpDQo+ICsJCQkJCWNvbnRpbnVlOw0KPiArCQlfX3NrYl91bmxpbmso
-c2tiLCAmcngtPmxvY2FsLT5yeF9za2JfcXVldWUpOw0KDQpBcGFydCBmcm9tIHRoZSBjdXJpb3Vz
-IGNvZGluZyBzdHlsZSAoeW91IGRvbid0IG5lZWQgYW55IG9mIHRob3NlIGV4dHJhIHBhcmVudGhl
-c2VzLCAmJiBzaG91bGQgYmUgb24gdGhlIHByZXZpb3VzIGxpbmUsIHRoZSBpZiBjb250aW51YXRp
-b24gaW5kZW50ZWQgdG8gdGhlIG9wZW5pbmcgcGFyZW50aGVzaXMsIGNvbnRpbnVlIG9ubHkgaW5k
-ZW50ZWQgb25lIHRhYiksIEkgd29uZGVyIGlmIHRoaXMgY291bGQgbGVhZCB0byBsZWFraW5nIGZy
-YW1lcyBoZXJlLCBpZiB0aGUgc3RhdGlvbiBkaXNjb25uZWN0cyBvciBzb21ldGhpbmcgd2hpbGUg
-dGhlcmUgYXJlIGZyYW1lcyBmb3IgaXQgb24gdGhlIHF1ZXVlPw0KSU9XLCB0aGUgImp1c3Qgc2tp
-cCB0aGF0IGZyYW1lIiBwaWVjZSBzZWVtcyBhIGJpdCBxdWVzdGlvbmFibGUuDQoNCltBU10gWWVh
-aCwgSSByZWFsaXplZCB0aGlzIHBhcmVudGhlc2lzL2luZGVudGF0aW9uIGlzc3VlICh3b3VsZCBm
-aXggaXQpLkJUVyB3ZSBkaWQgdGVzdCB0aGlzIG91dCBhbmQgZGlkbuKAmXQgb2JzZXJ2ZSBhbnkg
-c3VjaCBpc3N1ZS4gQ2FuIHlvdSBwbGVhc2UgaGVscCBtZSB1bmRlcnN0YW5kIHRoZSBmbG93IHdo
-aWNoIGNvdWxkIGxlYWQgdG8gdGhlIHNhbWU/DQoNCkNocmlzdGlhbiwgaXMgdGhlcmUgYW55IHJl
-YXNvbiB0byBub3QganVzdCBoYXZlIHRoZSBxdWV1ZSBiZSBvbiB0aGUgc3RhY2ssIGFuZCB1c2Ug
-YSBzZXBhcmF0ZSBzcGlubG9jayBpbiB0aGUgbG9jYWwgc3RydWN0IHRvIGxvY2sgb3V0IHRoZSB1
-bndhbnRlZCBjb25jdXJyZW5jeT8gSXQgc2VlbXMgdG8gbWUgdGhhdCBzaG91bGQgd29yayBqdXN0
-IGFzIHdlbGwsIHNpbmNlIHRoZXJlIGFyZSBuZXZlciBmcmFtZXMgb24gdGhlIHJ4X3NrYl9xdWV1
-ZSBmb3IgdmVyeSBsb25nLCByaWdodD8NCg0Kam9oYW5uZXMNCg0K
+Hi,
+
+I'm hitting subj issue, at some random point mentioned card stops
+packet processing and stalls,
+and I'm getting a lot of "iwlwifi 0000:03:00.0: fail to flush all tx
+fifo queues" lines in dmesg.
+
+wpa_supplicant does not even notice that it's disconnected, and does
+not try to re-establish wireless connection.
+
+Looks like many users suffer from this issue, please see:
+https://bugzilla.kernel.org/show_bug.cgi?id=48921
+
+Looks like there's no fix except disabling 802.11n functionality. It's
+not an option, nowadays internet connection is faster than
+802.11g speeds.
+
+Can we get any public comment from Intel devs?
+
+Regards
+Vasily
