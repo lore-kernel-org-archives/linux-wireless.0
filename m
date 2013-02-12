@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933241Ab3BLQCm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:42 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/15] iwlwifi: dvm: apply beacon changes immediately
-Date: Tue, 12 Feb 2013 17:02:03 +0100
-Message-Id: <1360684927-1367-11-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170256_196094_5CCC4E77)
-In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+Received: from purkki.adurom.net ([80.68.90.206]:53569 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758815Ab3BLNfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 08:35:43 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Joe Perches <joe@perches.com>
+Cc: Solomon Peachy <pizza@shaftnet.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
+References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
+	<1360355527-12159-2-git-send-email-pizza@shaftnet.org>
+	<1360372559.13487.14.camel@joe-AO722>
+	<20130211185322.GB3123@shaftnet.org>
+	<1360609295.2028.44.camel@joe-AO722>
+Date: Tue, 12 Feb 2013 15:35:41 +0200
+In-Reply-To: <1360609295.2028.44.camel@joe-AO722> (Joe Perches's message of
+	"Mon, 11 Feb 2013 11:01:35 -0800")
+Message-ID: <87vc9xac42.fsf@purkki.adurom.net> (sfid-20130212_143546_725212_EFBF180D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Joe Perches <joe@perches.com> writes:
 
-If the AP/GO beacon changes, apply such a change
-immediately, otherwise the AP/GO beacon can be
-stale for a long time.
+>> Question -- as a matter of policy, is the goal to have a completely 
+>> clean checkpatch run?  I get that there should be no ERRORs, but 
+>> WARNINGs/CHECKs are not considered fatal for a reason, right?
+>
+> No.  It's just a guideline.  As far as I'm concerned,
+> ignore every checkpatch message you don't agree with.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/rxon.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+BTW, I think this is becoming a major problem. I have had discussions
+with various people who consider checkpatch as some sort of automatic
+upstream compliance system. I'm a bit worried about that. People should
+consider just as a tool next to other tools, not as the holy bible.
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rxon.c b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-index 9fabd26..23be948 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-@@ -1545,10 +1545,9 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 				bss_conf->bssid);
- 	}
- 
--	if (changes & BSS_CHANGED_BEACON && vif->type == NL80211_IFTYPE_ADHOC &&
--	    priv->beacon_ctx) {
-+	if (changes & BSS_CHANGED_BEACON && priv->beacon_ctx == ctx) {
- 		if (iwlagn_update_beacon(priv, vif))
--			IWL_ERR(priv, "Error sending IBSS beacon\n");
-+			IWL_ERR(priv, "Error updating beacon\n");
- 	}
- 
- 	mutex_unlock(&priv->mutex);
+Joe, when working with checkpatch documentation you could try to
+emphasise that part (or it might be that you have already done that).
+
+Just my 0.02 EUR.
+
 -- 
-1.8.0
-
+Kalle Valo
