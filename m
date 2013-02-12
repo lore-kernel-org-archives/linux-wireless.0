@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47031 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932180Ab3BZQvg (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:62530 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933662Ab3BLSXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 11:51:36 -0500
-Message-ID: <512CE816.6090000@candelatech.com> (sfid-20130226_175139_774935_A1CF211B)
-Date: Tue, 26 Feb 2013 08:51:34 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 12 Feb 2013 13:23:43 -0500
+Received: by mail-bk0-f52.google.com with SMTP id jk13so174371bkc.11
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 10:23:42 -0800 (PST)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
-References: <1361326267-16847-1-git-send-email-greearb@candelatech.com> <20130225102020.GA1735@redhat.com> <512B9799.6000708@candelatech.com> <20130226155537.GA1486@redhat.com>
-In-Reply-To: <20130226155537.GA1486@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <511A8254.8060306@cozybit.com>
+References: <1360616843-24618-1-git-send-email-thomas@cozybit.com> <511A8254.8060306@cozybit.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 12 Feb 2013 10:23:21 -0800
+Message-ID: <CAG6hwVMwws5D=0WRYR6CtmmDKo=_wSTAi4gpK9KDafCcMkaWqg@mail.gmail.com> (sfid-20130212_192355_013933_B38E9103)
+Subject: Re: [PATCH 1/3] mac80211: consolidate MBSS change notification
+To: Marco Porsch <marco@cozybit.com>
+Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2013 07:55 AM, Stanislaw Gruszka wrote:
-> On Mon, Feb 25, 2013 at 08:55:53AM -0800, Ben Greear wrote:
->> On 02/25/2013 02:20 AM, Stanislaw Gruszka wrote:
->>> On Tue, Feb 19, 2013 at 06:11:07PM -0800, greearb@candelatech.com wrote:
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> The monitor_work and beacon_connection_loss_work items were
->>>> not being canceled on disassociation (and not on deletion
->>>> either).  This leads to work-items trying to run after memory
->>>> has been deleted.
->>>>
->>>> I could not find a cleaner way to do this because the
->>>> cancel_work_sync for these items must be done outside
->>>> of the ifmgd->mtx.
->>>>
->>>> In addition, re-order the quiesce code so that timers are
->>>> always stopped before work-items are flushed.  This was
->>>> not the problem I saw, but I think it may still be more
->>>> correct.
->>>
->>> I think this patch is quite complicated and simpler solution
->>> can be used. We stop timers on disassociate, and since
->>
->> I think my second patch was closer to what you have...
+On Tue, Feb 12, 2013 at 9:56 AM, Marco Porsch <marco@cozybit.com> wrote:
+> On 02/11/2013 10:07 PM, Thomas Pedersen wrote:
+>> +       if (ifmsh->nonpeer_pm != nonpeer_pm ||
+>> +           ifmsh->ps_peers_light_sleep != light_sleep_cnt ||
+>> +           ifmsh->ps_peers_deep_sleep != deep_sleep_cnt)
+>> +               changed = BSS_CHANGED_BEACON;
 >
-> Yes, I see, I missed your second patch.
 >
->>> +	/*
->>> +	 * We canceled timers during disassoc, but works still can be pending.
->>> +	 * Even if we they do not perform action when unassociated, we should
->>> +	 * assure we stop them, before freeing resources.
->>> +	 */
->>
->> The comment is a bit misleading....as I saw in my testing, it could actually
->> crash the system because the entire station could be deleted by the time
->> the work-item tries to complete.
+> Here it only affects the beacon if the number of light/deep sleep peers
+> changed from/to zero or non-zero.
+> The following should avoid some unnecessary updates:
 >
-> Not sure if I understand. If I did not missed something, all works callbacks
-> check ifmgd->associated pointer and quit instantly if it is null. So as long
-> we do not free sdata, is fine to have them pending after disassociate.
+> !ifmsh->ps_peers_deep_sleep != !deep_sleep_cnt ||
+> !ifmsh->ps_peers_deep_sleep != !deep_sleep_cnt)
 
-Right, but in the old code, there is nothing to keep you from
-freeing sdata with work still pending.  Thus the crash I saw.
+Ah nice. I'll add this to the v2, not checking deep_sleep_cnt twice of course :)
 
-
-> However we should use ifmgd->mtx to protect ifmgd->associated and
-> ifmgd->bssid in ieee80211_beacon_connection_loss_work()
-
-Maybe so...I haven't looked at that code in any detail.
-
-Thanks,
-Ben
-
->
-> Stanislaw
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+--
+Thomas
