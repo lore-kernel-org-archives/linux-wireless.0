@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2226 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755556Ab3BYOSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 09:18:53 -0500
-Message-ID: <512B72BE.5050808@broadcom.com> (sfid-20130225_151858_670233_272AD3BD)
-Date: Mon, 25 Feb 2013 15:18:38 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:38099 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932675Ab3BLAMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Feb 2013 19:12:43 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcmsmac: export firmware version to ethtool
-References: <1361720494-27131-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1361720494-27131-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20761.34987.125000.908722@gargle.gargle.HOWL> (sfid-20130212_011247_263546_62B715AD)
+Date: Tue, 12 Feb 2013 05:41:23 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+In-Reply-To: <511935F2.8080103@candelatech.com>
+References: <511935F2.8080103@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/13 16:41, Hauke Mehrtens wrote:
-> This exports the firmware version in use to userspace through ethtool.
->
-> root@OpenWrt:/# ethtool -i wlan0
-> firmware-version: 610.812
+Ben Greear wrote:
+> axq-qnum:                    2          3         1         0
+> axq-depth:                   0          0         0         0
+> axq-ampdu_depth:             0          0         0         0
+> axq-stopped                  1          0         0         0
+> tx-in-progress               0          0         0         0
+> pending-frames             125          0         0         0
 
-This info is already available under debugfs although I prefer your 
-formatting :-) :
+The frames appear to be stuck in the pending queue.
 
-$ sudo cat hardware
-board vendor: 1028
-board type: e
-board revision: 2203
-board flags: 200
-board flags2: 1000
-firmware revision: 262032c
-
-Gr. AvS
-
+Sujith
