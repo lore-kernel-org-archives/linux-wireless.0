@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:52482 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753900Ab3BDDiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Feb 2013 22:38:08 -0500
-Message-ID: <1359949087.32609.14.camel@joe-AO722> (sfid-20130204_043812_612826_04D65A16)
-Subject: linux ZD1211RW MAINTAINERS?
-From: Joe Perches <joe@perches.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 03 Feb 2013 19:38:07 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:47673 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758736Ab3BLPzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 10:55:40 -0500
+Message-ID: <1360684532.29913.1.camel@jlt4.sipsolutions.net> (sfid-20130212_165543_919575_FBCCF880)
+Subject: Re: [konusllaptop] [PATCH 1/1] Fix WPA with VLAN on AP side with ps
+ client
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 12 Feb 2013 16:55:32 +0100
+In-Reply-To: <1360683806-15238-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_165247_002980_F5F59D43)
+References: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de>
+	 <1360683806-15238-2-git-send-email-michael-dev@fami-braun.de>
+	 (sfid-20130212_165247_002980_F5F59D43)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Daniel.
+On Tue, 2013-02-12 at 16:43 +0100, Michael Braun wrote:
+> When sending a broadcast while at least on of the connected stations is
+> sleeping, it gets queued and send after a DTIM beacon is sent.
+> If the packet was to be sent on a vlan interface, the vif used for dequeing
+> from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+> required to use the correct per-vlan broadcast/multicast key.
+> 
+> This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+> ---
+>  net/mac80211/tx.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 2ef0e19..93681f5 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -2770,7 +2770,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+>  				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+>  		}
+>  
+> -		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+> +		struct ieee80211_sub_if_data *frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+> +		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
 
-Your old address bounces.
+Please make your code warning-free and adhere to CodingStyle.
 
-Would this patch be correct or do you still
-maintain the ZD1211RW driver?
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b98c89b..f5d9e00 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8956,7 +8956,7 @@ F:	drivers/net/hamradio/*scc.c
- F:	drivers/net/hamradio/z8530.h
- 
- ZD1211RW WIRELESS DRIVER
--M:	Daniel Drake <dsd@gentoo.org>
-+M:	Daniel Drake <dsd@laptop.org>
- M:	Ulrich Kunitz <kune@deine-taler.de>
- W:	http://zd1211.ath.cx/wiki/DriverRewrite
- L:	linux-wireless@vger.kernel.org
-
-
+johannes
 
