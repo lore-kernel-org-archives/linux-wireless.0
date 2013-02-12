@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f42.google.com ([209.85.210.42]:48315 "EHLO
-	mail-da0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935042Ab3BTUOZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47831 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933389Ab3BLQkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 15:14:25 -0500
-Message-ID: <1361391262.19353.223.camel@edumazet-glaptop> (sfid-20130220_212339_650207_2B6E0AB3)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 12:14:22 -0800
-In-Reply-To: <1361390290.8579.4.camel@jlt4.sipsolutions.net>
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
-	 <1361381096.19353.195.camel@edumazet-glaptop>
-	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
-	 <1361387854.19353.214.camel@edumazet-glaptop>
-	 (sfid-20130220_201740_409859_E87FECD4) <1361390290.8579.4.camel@jlt4.sipsolutions.net>
+	Tue, 12 Feb 2013 11:40:11 -0500
+Message-ID: <1360687205.29913.6.camel@jlt4.sipsolutions.net> (sfid-20130212_174015_632385_109B80FF)
+Subject: Re: [PATCHv2 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 12 Feb 2013 17:40:05 +0100
+In-Reply-To: <1360687114.29913.5.camel@jlt4.sipsolutions.net> (sfid-20130212_173850_784059_F68F7C1F)
+References: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de>
+	 <1360687038-17610-2-git-send-email-michael-dev@fami-braun.de>
+	 (sfid-20130212_173731_351014_1564560C) <1360687114.29913.5.camel@jlt4.sipsolutions.net>
+	 (sfid-20130212_173850_784059_F68F7C1F)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 20:58 +0100, Johannes Berg wrote:
-
-> Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
-> CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+On Tue, 2013-02-12 at 17:38 +0100, Johannes Berg wrote:
+> On Tue, 2013-02-12 at 17:37 +0100, Michael Braun wrote:
+> > When sending a broadcast while at least on of the connected stations is
+> > sleeping, it gets queued and send after a DTIM beacon is sent.
+> > If the packet was to be sent on a vlan interface, the vif used for dequeing
+> > from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+> > required to use the correct per-vlan broadcast/multicast key.
+> > 
+> > This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+> > 
+> > Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> > 
+> > V2: fix compile warning
 > 
-> > On x86 we should not doing anything.
+> That "V2" should be after the ---, but in any case:
 > 
-> We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
-> defined.
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -2728,6 +2728,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+> >  	struct ps_data *ps;
+> >  	struct ieee80211_tx_info *info;
+> >  	struct ieee80211_chanctx_conf *chanctx_conf;
+> > +	struct ieee80211_sub_if_data *frame_sdata;
+> 
+> There's already an sdata variable, why not write *sdata, *frame_sdata?
 
-Thanks !
+Actually you could even just use it since it's not needed after getting
+the "ps" pointer.
 
-BTW, comment is outdated, as it mentions __skb_push(), while
-its not used.
-
-
+johannes
 
