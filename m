@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:59310 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759790Ab3B0MDC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48045 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932151Ab3BLRps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 07:03:02 -0500
-Received: by mail-wi0-f181.google.com with SMTP id hm6so539575wib.14
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 04:03:00 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [PATCH 2/2] mac80211: fix the check for mcs rates masking
-Date: Wed, 27 Feb 2013 13:00:34 +0100
-Message-Id: <1361966434-28343-2-git-send-email-karl.beldan@gmail.com> (sfid-20130227_130306_989968_06E5A2D1)
-In-Reply-To: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
-References: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
+	Tue, 12 Feb 2013 12:45:48 -0500
+Message-ID: <1360691139.29913.8.camel@jlt4.sipsolutions.net> (sfid-20130212_184550_832363_EB019B91)
+Subject: Re: [PATCHv2 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: michael-dev <michael-dev@fami-braun.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 12 Feb 2013 18:45:39 +0100
+In-Reply-To: <c35750825fc4c49d07d9d6e232b46623@fami-braun.de> (sfid-20130212_184310_653774_8CDBA907)
+References: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de>
+	 <1360687038-17610-2-git-send-email-michael-dev@fami-braun.de>
+	 (sfid-20130212_173731_351014_1564560C) <1360687114.29913.5.camel@jlt4.sipsolutions.net>
+	 <c35750825fc4c49d07d9d6e232b46623@fami-braun.de>
+	 (sfid-20130212_184310_653774_8CDBA907)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Tue, 2013-02-12 at 18:42 +0100, michael-dev wrote:
 
-Currently the mcs bitrates mask rate_idx_mcs_mask is only applied when
-the pre-ht bitrates mask rate_idx_mask of the same band differs from the
-default mask.
-Fix it by comparing the rate_idx_mcs_mask with the ht_cap.mcs.rx_mask, the
-copy of the rate_idx_mcs_mask is now done if the check succeeds.
-This results, when no pre-ht bitrates is disabled && an mcs idx is, to
-one more memcmp, otherwise the cost remains identical.
+> >> -		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+> >> +		frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+> >> +		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
+> >>  			break;
+> > 
+> > This can now crash the machine.
+> 
+> why? when?
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/rate.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+There's no guarantee that the VLAN interface isn't destroyed while the
+frame is stuck on the buffer queue.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index cfbd7d5..4c0a14d 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -460,8 +460,11 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	 * the common case.
- 	 */
- 	mask = txrc->rate_idx_mask;
--	memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
--	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
-+	if (mask != (1 << txrc->sband->n_bitrates) - 1 ||
-+		memcmp(txrc->sband->ht_cap.mcs.rx_mask, txrc->rate_idx_mcs_mask,
-+		       sizeof(txrc->rate_idx_mcs_mask))) {
-+		memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
-+
- 		if (sta) {
- 			/* Filter out rates that the STA does not support */
- 			mask &= sta->sta.supp_rates[info->band];
--- 
-1.7.10.GIT
+> What would be a better approach?
+
+This is probably fine, but incomplete -- frames for a VLAN need to be
+removed from the PS queue when it goes down.
+
+johannes
 
