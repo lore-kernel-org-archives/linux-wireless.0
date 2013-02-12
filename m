@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756432Ab3BVLwJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 06:52:09 -0500
-Message-ID: <1361533924.8146.5.camel@jlt4.sipsolutions.net> (sfid-20130222_125214_541642_A714B822)
-Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
- coexistence mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Piotr Haber <phaber@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 22 Feb 2013 12:52:04 +0100
-In-Reply-To: <1361524092-4814-2-git-send-email-phaber@broadcom.com> (sfid-20130222_100804_524805_03F665CB)
-References: <1361524092-4814-1-git-send-email-phaber@broadcom.com>
-	 <1361524092-4814-2-git-send-email-phaber@broadcom.com>
-	 (sfid-20130222_100804_524805_03F665CB)
-Content-Type: text/plain; charset="UTF-8"
+Received: from perches-mx.perches.com ([206.117.179.246]:41038 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933425Ab3BLTyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 14:54:35 -0500
+Message-ID: <1360698872.17456.11.camel@joe-AO722> (sfid-20130212_205440_378369_4D61C32A)
+Subject: Re: [PATCH] rtlwifi: Rework Kconfig
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 12 Feb 2013 11:54:32 -0800
+In-Reply-To: <511a9bda.qSVbJjBneEGprv+8%Larry.Finger@lwfinger.net>
+References: <511a9bda.qSVbJjBneEGprv+8%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-22 at 10:08 +0100, Piotr Haber wrote:
-> Some devices share antenna/analog front end between Wifi
-> and Bluetooth. The hardware coexistence interface allows
-> them to do so, but there are situations when it would
-> be beneficial if software had a way to have influence on it
-> as well. It can be used to protect time sensitive
-> traffic in presence of Bluetooth voice stream,
-> for an example EAPOL handshake or DHCP negotiation.
-> 
-> This patch adds new attribute to SET_WIPHY command
-> and a new field in struct wiphy to allow control of the
-> coexistence behavior. Devices that do not share resources
-> with Bluetooth can ignore this parameter.
+On Tue, 2013-02-12 at 13:45 -0600, Larry Finger wrote:
+> As the number of drivers in the rtlwifi family has grown, the Kconfig
+> section for them has grown unwieldy. This change has two effects: (1)
+> Variable RTLWIFI_DEBUG is documented, and (2) the entries for the
+> drivers that depend on RTLWIFI and indented.
 
-Apart from a few minor technical comments that I'll omit for now, I'm
-not sure what value this really has? EAPOL can already be "protected" by
-way of knowing when the station is marked authorized, and DHCP is pretty
-tricky because it could take "forever", might not be there at all, etc.
+trivial note below:
 
-What application would actually call this? I don't really see how it
-could be integrated like that.
+> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/Kconfig
+> @@ -1,8 +1,26 @@
+[]
+> +config RTLWIFI_DEBUG
+> +	bool "Debugging output for rtlwifi driver family"
+> +	depends on RTLWIFI
+> +	default y
+> +	---help---
+> +	This option is needed for the "debug=n" module option to produce any
+> +	output. For embedded or other memory-limited systems, choose "N".
+> +	For all other systems, or if in doubt, use "Y".
 
-johannes
+using "debug=n" here can be a bit confusing given the
+"N" and "Y" that follow it.
+
+maybe debug=<0x...> module parameter to control debug
+message level output.
+
 
