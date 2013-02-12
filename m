@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2649 "EHLO mms1.broadcom.com"
+Received: from mail.neratec.com ([80.75.119.105]:49627 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759334Ab3BGUSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:18:32 -0500
-Message-ID: <51140C0F.5070209@broadcom.com> (sfid-20130207_211851_012461_1C3B4A48)
-Date: Thu, 7 Feb 2013 21:18:23 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1756263Ab3BLKaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 05:30:14 -0500
+Message-ID: <511A1867.6060708@neratec.com> (sfid-20130212_113020_865710_72F0C836)
+Date: Tue, 12 Feb 2013 11:24:39 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 MIME-Version: 1.0
-To: "Tim Gardner" <tim.gardner@canonical.com>
-cc: linux-kernel@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH wireless-next] brcmsmac: fix u16 overflow warning
-References: <1360265735-42450-1-git-send-email-tim.gardner@canonical.com>
-In-Reply-To: <1360265735-42450-1-git-send-email-tim.gardner@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Kalle Valo <kvalo@adurom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [BUG] Beacon loss event every second
+References: <5118F682.8000502@neratec.com> <1360592857.8738.30.camel@jlt4.sipsolutions.net> <51190341.40806@neratec.com> <87bobpc0ft.fsf@purkki.adurom.net> <511A15D4.6070808@neratec.com> <877gmdbzkc.fsf@purkki.adurom.net>
+In-Reply-To: <877gmdbzkc.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2013 08:35 PM, Tim Gardner wrote:
-> DOT11_MIN_BEACON_PERIOD and DOT11_MAX_BEACON_PERIOD are
-> superfluous. The only invalid beacon period is 0. Comparing
-> a 16 bit quantity to 0xffff also causes a compile warning:
-> 
-> drivers/net/wireless/brcm80211/brcmsmac/main.c:5560 brcms_c_set_beacon_period()
->  warn: impossible condition '(period > 65535) => (0-65535 > 65535)'
-> 
-> Observed from smatch analysis.
-> 
-> Cc: Brett Rudley <brudley@broadcom.com>
-> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-> Cc: Hante Meuleman <meuleman@broadcom.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-> Cc: Hauke Mehrtens <hauke@hauke-m.de>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: brcm80211-dev-list@broadcom.com
-> Cc: netdev@vger.kernel.org
+On 02/12/2013 11:23 AM, Kalle Valo wrote:
+> Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+>
+>> I have a test pc with 3x AR9590 and 2x AR9390. Machine is based on i7
+>> and hyperthreading is on so I have 8 cores.
+>> I am using latest wireless testing ath9k and 3.8rc7 kernel.
+>>
+>> What I see is that for some extended periods odf time beacons are not
+>> processed in ieee80211_rx_mgmt_beacon
+>> and that's why I get beacon loss. I am using 30ms beacon period.
+>>
+>>
+>> What is really funny, that I get this beacon loss message every
+>> second. Like is sth was locking ifmgd->mtx mutex
+>> at constant intervals.
+>>
+>>
+>> I will try to disable all cores and run in again to see if it's rcu problem.
+> You could also try wireless-next or wireless-testing to pinpoint if the
+> problem is in wireless code or not.
+>
+I see it on wireless-testing and mac80211-next. I will try with other 
+driver later today.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index c26992a..080b54d 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -101,8 +101,6 @@
->  #define DOT11_RTS_LEN			16
->  #define DOT11_CTS_LEN			10
->  #define DOT11_BA_BITMAP_LEN		128
-> -#define DOT11_MIN_BEACON_PERIOD		1
-> -#define DOT11_MAX_BEACON_PERIOD		0xFFFF
->  #define DOT11_MAXNUMFRAGS		16
->  #define DOT11_MAX_FRAG_LEN		2346
->  
-> @@ -5555,8 +5553,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
->  
->  int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
->  {
-> -	if (period < DOT11_MIN_BEACON_PERIOD ||
-> -	    period > DOT11_MAX_BEACON_PERIOD)
-> +	if (period == 0)
->  		return -EINVAL;
->  
->  	wlc->default_bss->beacon_period = period;
-> 
-
-
+I can see also other problem like authentication frame always timing out 
+the first time
+but I will handle it later.
