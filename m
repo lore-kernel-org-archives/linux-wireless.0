@@ -1,95 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54118 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760176Ab3B0RpU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758698Ab3BLQil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 12:45:20 -0500
-Date: Wed, 27 Feb 2013 12:42:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	Myoungje Kim <mjei78@gmail.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Fwd: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to
- avoid loss of bytes in a TCP segment" (#27)
-Message-ID: <20130227174207.GB2082@tuxdriver.com> (sfid-20130227_184531_158017_0EF0CB7B)
-References: <torvalds/linux/pull/27@github.com>
- <CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
+	Tue, 12 Feb 2013 11:38:41 -0500
+Message-ID: <1360687114.29913.5.camel@jlt4.sipsolutions.net> (sfid-20130212_173850_784059_F68F7C1F)
+Subject: Re: [PATCHv2 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 12 Feb 2013 17:38:34 +0100
+In-Reply-To: <1360687038-17610-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173731_351014_1564560C)
+References: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de>
+	 <1360687038-17610-2-git-send-email-michael-dev@fami-braun.de>
+	 (sfid-20130212_173731_351014_1564560C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks!  I'll ask Kalle to take a look, since ath6kl is his baby...
+On Tue, 2013-02-12 at 17:37 +0100, Michael Braun wrote:
+> When sending a broadcast while at least on of the connected stations is
+> sleeping, it gets queued and send after a DTIM beacon is sent.
+> If the packet was to be sent on a vlan interface, the vif used for dequeing
+> from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+> required to use the correct per-vlan broadcast/multicast key.
+> 
+> This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+> 
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> 
+> V2: fix compile warning
 
-On Wed, Feb 27, 2013 at 09:19:09AM -0800, Linus Torvalds wrote:
-> "How do I hate GitHub pull requests? Let me count the ways...."
-> 
-> That said, the bug description alone makes this worth forwarding,
-> despite the cluelessness of GitHub pull requests. Myoungje Kim spent
-> some time explaining the issue, so while I despise the github pull
-> request format, I'm not faulting the effort spent on describing the
-> patch.
-> 
->                   Linus
-> 
-> ---------- Forwarded message ----------
-> From: Steven Kim <notifications@github.com>
-> Date: Tue, Feb 26, 2013 at 9:17 PM
-> Subject: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to avoid
-> loss of bytes in a TCP segment" (#27)
-> To: torvalds/linux <linux@noreply.github.com>
-> 
-> 
-> I found the driver bug which occur loss of some bytes on the TCP/IP stack.
-> 
-> Either first 3 bytes of the first received tcp segment or last one
-> over MTU size file can be loss due to the byte alignment problem.
-> Although ATH6KL_HTC_ALIGN_BYTES was defined
-> for 'extra bytes for htc header alignment'
-> in the patch "Fix buffer alignment for scatter-gather I/O"(1df94a8),
-> there exists the bytes loss issue which means that it will be truncated
-> 3 bytes in the transmitted file contents if a file which
-> has over MTU size is transferred through TCP/IP stack.
-> It doesn't look like TCP/IP stack bug of 3.5 or the latest version of
-> kernel but the byte alignment issue.
-> This patch is to use the roundup() function for the byte alignment
-> rather than the predefined ATH6KL_HTC_ALIGN_BYTES.
-> 
-> Signed-off-by: Myoungje Kim mjei78@gmail.com
-> 
-> ________________________________
-> 
-> You can merge this Pull Request by running
-> 
->   git pull https://github.com/kingpotato/linux master
-> 
-> Or view, comment on, or merge it at:
-> 
->   https://github.com/torvalds/linux/pull/27
-> 
-> Commit Summary
-> 
-> ath6kl: Fix the byte alignment rule to avoid loss of bytes in a TCP segment
-> 
-> File Changes
-> 
-> M drivers/net/wireless/ath/ath6kl/init.c (4)
-> M drivers/net/wireless/ath/ath6kl/main.c (4)
-> 
-> Patch Links:
-> 
-> https://github.com/torvalds/linux/pull/27.patch
-> https://github.com/torvalds/linux/pull/27.diff
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+That "V2" should be after the ---, but in any case:
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -2728,6 +2728,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+>  	struct ps_data *ps;
+>  	struct ieee80211_tx_info *info;
+>  	struct ieee80211_chanctx_conf *chanctx_conf;
+> +	struct ieee80211_sub_if_data *frame_sdata;
+
+There's already an sdata variable, why not write *sdata, *frame_sdata?
+ 
+> @@ -2770,7 +2771,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+>  				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+>  		}
+>  
+> -		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+> +		frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+> +		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
+>  			break;
+
+This can now crash the machine.
+
+johannes
+
