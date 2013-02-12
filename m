@@ -1,137 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555Ab3BHR2h (ORCPT
+Received: from a-keller-035.fem.tu-ilmenau.de ([141.24.40.99]:57256 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933729Ab3BLTCb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 12:28:37 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 12/14] mac80211: add ieee80211_vif_change_bandwidth
-Date: Fri,  8 Feb 2013 18:25:42 +0100
-Message-Id: <1360344344-15742-13-git-send-email-johannes@sipsolutions.net> (sfid-20130208_183543_684982_0B82E846)
-In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
-References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 12 Feb 2013 14:02:31 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+	Michael Braun <michael-dev@fami-braun.de>
+Subject: [RFCv4 1/2] mac80211: fix WPA with VLAN on AP side with ps-sta
+Date: Tue, 12 Feb 2013 19:51:45 +0100
+Message-Id: <1360695107-5721-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_200233_969527_F54FE387)
+In-Reply-To: <1360695107-5721-1-git-send-email-michael-dev@fami-braun.de>
+References: <1360695107-5721-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
-For HT and VHT the current bandwidth can change,
-add the function ieee80211_vif_change_bandwidth()
-to take care of this. It returns a failure if the
-new bandwidth isn't compatible with the existing
-channel context, the caller has to handle that.
-When it happens, also inform the driver that the
-bandwidth changed for this virtual interface (no
-drivers would actually care today though.)
+This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
 
-Changing to/from HT/VHT isn't allowed though.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 ---
- include/net/mac80211.h     |  4 ++++
- net/mac80211/chan.c        | 49 ++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |  4 ++++
- 3 files changed, 57 insertions(+)
+V2: fix compile warning
+V3: simplify change
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a3a0bdf..db5330a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -210,6 +210,9 @@ struct ieee80211_chanctx_conf {
-  *	changed (currently only in P2P client mode, GO mode will be later)
-  * @BSS_CHANGED_DTIM_PERIOD: the DTIM period value was changed (set when
-  *	it becomes valid, managed mode only)
-+ * @BSS_CHANGED_BANDWIDTH: The bandwidth used by this interface changed,
-+ *	note that this is only called when it changes after the channel
-+ *	context had been assigned.
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -233,6 +236,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_TXPOWER		= 1<<18,
- 	BSS_CHANGED_P2P_PS		= 1<<19,
- 	BSS_CHANGED_DTIM_PERIOD		= 1<<20,
-+	BSS_CHANGED_BANDWIDTH		= 1<<21,
+ net/mac80211/tx.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2ef0e19..ee169b1 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2770,6 +2770,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 		}
  
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 8fc56e4..2ad6c4d 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -336,6 +336,55 @@ int ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 	return ret;
- }
- 
-+int ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
-+				   const struct cfg80211_chan_def *chandef,
-+				   u32 *changed)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_chanctx_conf *conf;
-+	struct ieee80211_chanctx *ctx;
-+	int ret;
-+
-+	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
-+				     IEEE80211_CHAN_DISABLED))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->chanctx_mtx);
-+	if (cfg80211_chandef_identical(chandef, &sdata->vif.bss_conf.chandef)) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	if (chandef->width == NL80211_CHAN_WIDTH_20_NOHT ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-+					 lockdep_is_held(&local->chanctx_mtx));
-+	if (!conf) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+	if (!cfg80211_chandef_compatible(&conf->def, chandef)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	sdata->vif.bss_conf.chandef = *chandef;
-+
-+	ieee80211_recalc_chanctx_chantype(local, ctx);
-+
-+	*changed |= BSS_CHANGED_BANDWIDTH;
-+	ret = 0;
-+ out:
-+	mutex_unlock(&local->chanctx_mtx);
-+	return ret;
-+}
-+
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- {
- 	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9ee9e63..57e390b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1609,6 +1609,10 @@ int __must_check
- ieee80211_vif_use_channel(struct ieee80211_sub_if_data *sdata,
- 			  const struct cfg80211_chan_def *chandef,
- 			  enum ieee80211_chanctx_mode mode);
-+int __must_check
-+ieee80211_vif_change_bandwidth(struct ieee80211_sub_if_data *sdata,
-+			       const struct cfg80211_chan_def *chandef,
-+			       u32 *changed);
- void ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_vlan_copy_chanctx(struct ieee80211_sub_if_data *sdata);
- void ieee80211_vif_copy_chanctx_to_vlans(struct ieee80211_sub_if_data *sdata,
++		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+ 		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+ 			break;
+ 		dev_kfree_skb_any(skb);
 -- 
-1.8.0
+1.7.10.4
 
