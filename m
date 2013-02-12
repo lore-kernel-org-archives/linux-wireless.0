@@ -1,44 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51593 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759439Ab3BMOcT (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:59535 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932342Ab3BLR4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 09:32:19 -0500
-Message-ID: <1360765934.8868.14.camel@jlt4.sipsolutions.net> (sfid-20130213_153227_079587_3F99A296)
-Subject: Re: [PATCH] mac80211: start auth/assoc timeout on frame status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 13 Feb 2013 15:32:14 +0100
-In-Reply-To: <511BA1E5.40402@neratec.com>
-References: <1359638935-16613-1-git-send-email-johannes@sipsolutions.net>
-	   (sfid-20130131_142837_609017_1B1D23D2) <1359992600.10311.25.camel@jlt4.sipsolutions.net>
-	  <511B9807.6000200@neratec.com>
-	 <1360765274.8868.13.camel@jlt4.sipsolutions.net>
-	 <511BA1E5.40402@neratec.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Feb 2013 12:56:40 -0500
+Received: by mail-bk0-f49.google.com with SMTP id w11so164010bku.36
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 09:56:39 -0800 (PST)
+Message-ID: <511A8254.8060306@cozybit.com> (sfid-20130212_185644_270404_C008285F)
+Date: Tue, 12 Feb 2013 18:56:36 +0100
+From: Marco Porsch <marco@cozybit.com>
+MIME-Version: 1.0
+To: devel@lists.open80211s.org
+CC: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] mac80211: consolidate MBSS change notification
+References: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1360616843-24618-1-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-13 at 15:23 +0100, Wojciech Dubowik wrote:
+On 02/11/2013 10:07 PM, Thomas Pedersen wrote:
+> A few mesh utility functions will call
+> ieee80211_bss_info_change_notify(), and then the caller
+> might notify the driver of the same change again. Avoid
+> this redundancy by propagating the BSS changes and
+> generally calling bss_info_change_notify() once per
+> change.
+>
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+>   net/mac80211/cfg.c        |   19 +++++++++++--------
+>   net/mac80211/mesh.c       |    2 +-
+>   net/mac80211/mesh.h       |   10 +++++-----
+>   net/mac80211/mesh_plink.c |   33 ++++++++++++++++++---------------
+>   net/mac80211/mesh_ps.c    |   24 ++++++++++++++++++------
+>   5 files changed, 53 insertions(+), 35 deletions(-)
 
-> >> I have seen it before in my testing and it gets
-> >> a lot worse with system load.  Sometimes it can
-> >> retry auth/assoc frames for 10 seconds before
-> >> connecting.
-> >> Anyway it always looses the first authentication frame.
-> > I think I see what's happening -- can you try this patch?
-> >
-> > http://p.sipsolutions.net/61f4271fed0e446b.txt
-> >
-> I have tried and it doesn't do timeout anymore. I will continue
-> testing with more load.
+[...]
 
-Ok. I just realized that it needs to receive frames for this to happen,
-which may not happen here because my environment is quiet.
+> diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+> index b677962..aa83eac 100644
+> --- a/net/mac80211/mesh_ps.c
+> +++ b/net/mac80211/mesh_ps.c
+> @@ -74,14 +74,17 @@ static void mps_qos_null_tx(struct sta_info *sta)
+>    * @sdata: local mesh subif
+>    *
+>    * sets the non-peer power mode and triggers the driver PS (re-)configuration
+> + * Return BSS_CHANGED_BEACON if a beacon update is necessary.
+>    */
+> -void ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata)
+> +u32 ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata)
+>   {
+>   	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>   	struct sta_info *sta;
+>   	bool peering = false;
+>   	int light_sleep_cnt = 0;
+>   	int deep_sleep_cnt = 0;
+> +	u32 changed = 0;
+> +	enum nl80211_mesh_power_mode nonpeer_pm;
+>
+>   	rcu_read_lock();
+>   	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
+> @@ -115,17 +118,25 @@ void ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata)
+>   	 */
+>   	if (peering) {
+>   		mps_dbg(sdata, "setting non-peer PM to active for peering\n");
+> -		ifmsh->nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
+> +		nonpeer_pm = NL80211_MESH_POWER_ACTIVE;
+>   	} else if (light_sleep_cnt || deep_sleep_cnt) {
+>   		mps_dbg(sdata, "setting non-peer PM to deep sleep\n");
+> -		ifmsh->nonpeer_pm = NL80211_MESH_POWER_DEEP_SLEEP;
+> +		nonpeer_pm = NL80211_MESH_POWER_DEEP_SLEEP;
+>   	} else {
+>   		mps_dbg(sdata, "setting non-peer PM to user value\n");
+> -		ifmsh->nonpeer_pm = ifmsh->mshcfg.power_mode;
+> +		nonpeer_pm = ifmsh->mshcfg.power_mode;
+>   	}
+>
+> +	if (ifmsh->nonpeer_pm != nonpeer_pm ||
+> +	    ifmsh->ps_peers_light_sleep != light_sleep_cnt ||
+> +	    ifmsh->ps_peers_deep_sleep != deep_sleep_cnt)
+> +		changed = BSS_CHANGED_BEACON;
 
-Let me know, I'll also try to test a bit more.
+Here it only affects the beacon if the number of light/deep sleep peers 
+changed from/to zero or non-zero.
+The following should avoid some unnecessary updates:
 
-johannes
+!ifmsh->ps_peers_deep_sleep != !deep_sleep_cnt ||
+!ifmsh->ps_peers_deep_sleep != !deep_sleep_cnt)
+
+> +
+> +	ifmsh->nonpeer_pm = nonpeer_pm;
+>   	ifmsh->ps_peers_light_sleep = light_sleep_cnt;
+>   	ifmsh->ps_peers_deep_sleep = deep_sleep_cnt;
+> +
+> +	return changed;
+>   }
+>
+>   /**
 
