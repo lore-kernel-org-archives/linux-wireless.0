@@ -1,102 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:44309 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161639Ab3BONsn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47344 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759093Ab3BLOB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 08:48:43 -0500
-Received: by mail-bk0-f41.google.com with SMTP id q16so1542927bkw.14
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 05:48:42 -0800 (PST)
-Message-ID: <511E3CB7.4040207@cozybit.com> (sfid-20130215_144848_013245_04E096CB)
-Date: Fri, 15 Feb 2013 14:48:39 +0100
-From: Marco Porsch <marco@cozybit.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into neighbour_update
-References: <1360928446-543-1-git-send-email-marco@cozybit.com>  	 (sfid-20130215_124056_325990_55BC105E) <1360930499.15040.7.camel@jlt4.sipsolutions.net>   <3fance.mi9hwg.2rw1te-qmf@mx.google.com>   (sfid-20130215_134116_713607_1FD8E99F) <1360932381.15040.11.camel@jlt4.sipsolutions.net>  <511E38B2.40900@cozybit.com> (sfid-20130215_143133_867871_FDF7438A) <1360935431.15040.14.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360935431.15040.14.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 12 Feb 2013 09:01:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: advertise operating mode notification capability
+Date: Tue, 12 Feb 2013 15:01:22 +0100
+Message-Id: <1360677682-3694-2-git-send-email-johannes@sipsolutions.net> (sfid-20130212_150133_173774_2580BAA0)
+In-Reply-To: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2013 02:37 PM, Johannes Berg wrote:
-> On Fri, 2013-02-15 at 14:31 +0100, Marco Porsch wrote:
->> Hi,
->>
->> On 02/15/2013 01:46 PM, Johannes Berg wrote:
->>> On Fri, 2013-02-15 at 12:40 +0000, marco@cozybit.com wrote:
->>>> Please check again. The comment is split in two and placed on the respective new positions.
->>>
->>> Yeah, I see, the API is just total shit. First passing the TSF and then
->>> calculating it to override? Why not do the calculation outside the API
->>> always?
->>
->> The TBTT calculation does intentionally not use the mactime value.
->>
->> Synchronization uses the time in local TSF units and the exact same time
->> point in peers TSF units at the time of sending/receiving (mactime field).
->> The TBTT calculation uses the time of NOW, i.e. the current TSF after
->> possible delays in firmware/driver/rx-handler which may have outdated
->> the mactime field.
->
-> I'm talking about this API:
->
-> mesh_neighbour_update:
-> ...
-> 	tsf = drv_get_tsf()
-> ...
-> 	sync_ops->rx_bcn(..., tsf)
->
->
-> mesh_sync_offset_rx_bcn(..., t_r):
-> 	...
-> 	if (have_better_timestamp)
-> 		t_r = get_better_timestamp()
->
->
-> You can hardly claim that's an intuitive API.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hm, alright. Just saying that ieee80211_mps_sta_tbtt_update still uses 
-the unchanged TSF value. But hey :)
+Use the new extended capabilities advertising to advertise
+the fact that operating mode notification is supported.
 
-What would be more favourable then?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h | 2 ++
+ net/mac80211/main.c       | 9 +++++++++
+ 2 files changed, 11 insertions(+)
 
-a) second variable in mesh_sync_offset_rx_bcn
-
-mesh_neighbour_update:
-...
-	tsf = drv_get_tsf()
-...
-	sync_ops->rx_bcn(..., tsf)
-
-	ieee80211_mps_sta_tbtt_update(..., tsf);
-
-
-mesh_sync_offset_rx_bcn(..., tsf):
-	...
-	if (have_better_timestamp)
-		t_r = get_better_timestamp()
-	else
-		t_r = tsf;
-
-
-b) second variable in mesh_neighbour_update
-
-mesh_neighbour_update:
-...
-	tsf = drv_get_tsf()
-	if (have_better_timestamp)
-		t_r = get_better_timestamp()
-	else
-		t_r = tsf;
-...
-	sync_ops->rx_bcn(..., t_r)
-
-	ieee80211_mps_sta_tbtt_update(..., tsf);
-
-
---Marco
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 4aed928..9164c45 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1788,6 +1788,8 @@ enum ieee80211_tdls_actioncode {
+ #define WLAN_EXT_CAPA5_TDLS_ENABLED	BIT(5)
+ #define WLAN_EXT_CAPA5_TDLS_PROHIBITED	BIT(6)
+ 
++#define WLAN_EXT_CAPA8_OPMODE_NOTIF	BIT(6)
++
+ /* TDLS specific payload type in the LLC/SNAP header */
+ #define WLAN_TDLS_SNAP_RFTYPE	0x2
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 38b3468..26531a3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -501,6 +501,11 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
+ 	},
+ };
+ 
++static const u8 extended_capabilities[] = {
++	0, 0, 0, 0, 0, 0, 0,
++	WLAN_EXT_CAPA8_OPMODE_NOTIF,
++};
++
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -557,6 +562,10 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 			WIPHY_FLAG_REPORTS_OBSS |
+ 			WIPHY_FLAG_OFFCHAN_TX;
+ 
++	wiphy->extended_capabilities = extended_capabilities;
++	wiphy->extended_capabilities_mask = extended_capabilities;
++	wiphy->extended_capabilities_len = ARRAY_SIZE(extended_capabilities);
++
+ 	if (ops->remain_on_channel)
+ 		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 
+-- 
+1.8.0
 
