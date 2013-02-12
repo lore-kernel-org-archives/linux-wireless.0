@@ -1,84 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:36859 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755232Ab3BSAgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 19:36:54 -0500
-Date: Tue, 19 Feb 2013 04:04:44 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: txpower setting regression
-Message-ID: <alpine.DEB.2.02.1302190349180.12894@icf.org.ru> (sfid-20130219_013658_949427_DAA370B1)
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-635903113-1361232284=:12894"
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:52032 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752041Ab3BLH47 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 02:56:59 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] nl80211: add packet offset information for wowlan pattern
+Date: Mon, 11 Feb 2013 23:56:41 -0800
+Message-Id: <1360655802-21515-2-git-send-email-bzhao@marvell.com> (sfid-20130212_085702_656862_FB3378DD)
+In-Reply-To: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
+References: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
----1050998036-635903113-1361232284=:12894
-Content-Type: TEXT/PLAIN; format=flowed; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+If user knows the location of a wowlan pattern to be matched in
+Rx packet, he can provide an offset with the pattern. This will
+help drivers to ignore initial bytes and match the pattern
+efficiently.
 
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  3 +++
+ net/wireless/nl80211.c       | 12 +++++++++---
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-Hi all, there is some kind of regression with setting transmit power, hardware is warious
-ar9280 cards, all work as sould with compat-wireless-3.6 and compat-drivers-2013-02-13, i 
-have modified regulatory database:
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 77686ca..a5b0ea3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1576,6 +1576,7 @@ struct cfg80211_pmksa {
+  *	one bit per byte, in same format as nl80211
+  * @pattern: bytes to match where bitmask is 1
+  * @pattern_len: length of pattern (in bytes)
++ * @pkt_offset: packet offset (in bytes)
+  *
+  * Internal note: @mask and @pattern are allocated in one chunk of
+  * memory, free @mask only!
+@@ -1583,6 +1584,7 @@ struct cfg80211_pmksa {
+ struct cfg80211_wowlan_trig_pkt_pattern {
+ 	u8 *mask, *pattern;
+ 	int pattern_len;
++	int pkt_offset;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b233211..14da5b3 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2910,6 +2910,8 @@ enum nl80211_tx_power_setting {
+  *	Note that the pattern matching is done as though frames were not
+  *	802.11 frames but 802.3 frames, i.e. the frame is fully unpacked
+  *	first (including SNAP header unpacking) and then matched.
++ * @NL80211_WOWLAN_PKTPAT_OFFSET: packet offset, pattern is matched after
++ *	these fixed number of bytes of received packet
+  * @NUM_NL80211_WOWLAN_PKTPAT: number of attributes
+  * @MAX_NL80211_WOWLAN_PKTPAT: max attribute number
+  */
+@@ -2917,6 +2919,7 @@ enum nl80211_wowlan_packet_pattern_attr {
+ 	__NL80211_WOWLAN_PKTPAT_INVALID,
+ 	NL80211_WOWLAN_PKTPAT_MASK,
+ 	NL80211_WOWLAN_PKTPAT_PATTERN,
++	NL80211_WOWLAN_PKTPAT_OFFSET,
+ 
+ 	NUM_NL80211_WOWLAN_PKTPAT,
+ 	MAX_NL80211_WOWLAN_PKTPAT = NUM_NL80211_WOWLAN_PKTPAT - 1,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 93bc63e..c512596 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6953,8 +6953,11 @@ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 					    DIV_ROUND_UP(pat_len, 8),
+ 					    rdev->wowlan->patterns[i].mask) ||
+ 				    nla_put(msg, NL80211_WOWLAN_PKTPAT_PATTERN,
+-					    pat_len,
+-					    rdev->wowlan->patterns[i].pattern))
++					  pat_len,
++					  rdev->wowlan->patterns[i].pattern) ||
++				    nla_put_u32(msg,
++					  NL80211_WOWLAN_PKTPAT_OFFSET,
++					  rdev->wowlan->patterns[i].pkt_offset))
+ 					goto nla_put_failure;
+ 				nla_nest_end(msg, nl_pat);
+ 			}
+@@ -7070,7 +7073,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 				  nla_data(pat), nla_len(pat), NULL);
+ 			err = -EINVAL;
+ 			if (!pat_tb[NL80211_WOWLAN_PKTPAT_MASK] ||
+-			    !pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN])
++			    !pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN] ||
++			    !pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET])
+ 				goto error;
+ 			pat_len = nla_len(pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN]);
+ 			mask_len = DIV_ROUND_UP(pat_len, 8);
+@@ -7096,6 +7100,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 			memcpy(new_triggers.patterns[i].pattern,
+ 			       nla_data(pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN]),
+ 			       pat_len);
++			new_triggers.patterns[i].pkt_offset = nla_get_u32(
++					pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET]);
+ 			i++;
+ 		}
+ 	}
+-- 
+1.8.0
 
-iw reg get
-country RU:
-     (2402 - 2494 @ 40), (24, 23)
-     (5030 - 5835 @ 40), (24, 23)
-
-with compat-wireless-3.6 and compat-drivers-2013-02-13 i can change txpower in this rules,
-iw list show channels and it's power according to database rules:
-
-                 Frequencies:
-                         * 2412 MHz [1] (23.0 dBm)
-                         * 2417 MHz [2] (23.0 dBm)
-                         * 2422 MHz [3] (23.0 dBm)
-                         * 2427 MHz [4] (23.0 dBm)
-                         * 2432 MHz [5] (23.0 dBm)
-                         * 2437 MHz [6] (23.0 dBm)
-                         * 2442 MHz [7] (23.0 dBm)
-                         * 2447 MHz [8] (23.0 dBm)
-                         * 2452 MHz [9] (23.0 dBm)
-                         * 2457 MHz [10] (23.0 dBm)
-                         * 2462 MHz [11] (23.0 dBm)
-                         * 2467 MHz [12] (23.0 dBm)
-                         * 2472 MHz [13] (23.0 dBm)
-                         * 2484 MHz [14] (23.0 dBm)
-
-but with compat-drivers 3.7.6 and 3.8-rc7 i cannot set power level, 
-iw phy phy0 set txpower fixed 10/limit 10/iw dev dev0/etc give same 
-error - command failed: Operation not supported (-95), and iw list 
-give strange output like this:
-
-                 Frequencies:
-                         * 2412 MHz [1] (20.0 dBm)
-                         * 2417 MHz [2] (21.0 dBm)
-                         * 2422 MHz [3] (21.0 dBm)
-                         * 2427 MHz [4] (21.0 dBm)
-                         * 2432 MHz [5] (21.0 dBm)
-                         * 2437 MHz [6] (21.0 dBm)
-                         * 2442 MHz [7] (21.0 dBm)
-                         * 2447 MHz [8] (21.0 dBm)
-                         * 2452 MHz [9] (21.0 dBm)
-                         * 2457 MHz [10] (21.0 dBm)
-                         * 2462 MHz [11] (20.0 dBm)
-                         * 2467 MHz [12] (23.0 dBm)
-                         * 2472 MHz [13] (23.0 dBm)
- 		        * 2484 MHz [14] (23.0 dBm)
-
-and channel levels different on different cards.
-
-
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-635903113-1361232284=:12894--
