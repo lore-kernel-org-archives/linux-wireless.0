@@ -1,96 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52746 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758103Ab3BFV3y (ORCPT
+Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:37059 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758571Ab3BLQhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 16:29:54 -0500
-Message-ID: <1360186206.7910.75.camel@jlt4.sipsolutions.net> (sfid-20130206_222958_319448_C8B5FFAD)
-Subject: Re: [PATCH 5/7] mac80211: Expand powersave configuration flag to be
- two bits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Arend van Spriel <arend@broadcom.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Date: Wed, 06 Feb 2013 22:30:06 +0100
-In-Reply-To: <20130206180227.GB6280@thinkpad-t410>
-References: <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
-	 <1359645648.8415.77.camel@jlt4.sipsolutions.net>
-	 <20130131163355.GE28799@thinkpad-t410>
-	 <1359651229.8415.99.camel@jlt4.sipsolutions.net>
-	 <20130131171826.GG28799@thinkpad-t410>
-	 <1359654634.8415.101.camel@jlt4.sipsolutions.net>
-	 <20130205225101.GB29557@thinkpad-t410>
-	 <1360169290.7910.29.camel@jlt4.sipsolutions.net>
-	 <20130206170952.GA6280@thinkpad-t410>
-	 <1360172656.7910.60.camel@jlt4.sipsolutions.net>
-	 <20130206180227.GB6280@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Feb 2013 11:37:19 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [PATCHv2 0/1] mac80211: fix VLAN support on AP with ps-sta
+Date: Tue, 12 Feb 2013 17:37:17 +0100
+Message-Id: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173722_904967_36A32732)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-06 at 12:02 -0600, Seth Forshee wrote:
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
-> > Ah, wl1251 is the weird thing that wants to be told when to wake up/go
-> > to sleep, and then sends nulldata packets itself ... so when we send
-> > nulldata packets *again* for off-channel, because it also uses software
-> > scanning. Like I said before -- "stupidest powersave implementation on
-> > the planet".
-> 
-> Ah, I had wondered what hardware that code was there for :-)
+Users are affected by not receiving the broadcasts indended for them, which for
+example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
+might be affected as packets might be disclosed to non-intended stas, though
+mixing vlan and non-vlan stas might be rare.
+This problem is triggered more often by smartphones (which enabled me to track
+it down) as they power sleep more often (I guess), but a single sleeping sta on
+the ap stops the packet for all connected stas of the ap.
+The problem exists in older kernels (at least 3.3.7) as well.
 
-I was actually wrong -- wl1251 has HW scan so it doesn't matter.
-However, iwlegacy does this...
+The following patch fixes this by restoring the per-vlan sdata using the
+skb->dev entry.
 
-> So I think the approach I'm advocating could possibly make things better
-> for wl1251. If it's told about going to off-channel powersave rather
-> than being told it's leaving powersave, maybe it can do the right thing
-> with the nullfunc frames without mac80211 generating the extra nullfunc.
-> I don't know that for sure though because I don't understand how the
-> hardware works.
+Is it safe to assume that skb->dev is always set correctly there?
+This patch works for me with the vlan-interface within a bridge.
 
-Probably not. For iwlegacy anyway it won't help.
+Would it be better to maintain the power sleeping state of the stas on a
+per-interface basis, as this would permit one group of non-sleeping stas to
+receive while another group has sleeping stas? Of course this would not
+prevent non-targetted groups of stas to be waked up, but implementing the
+latter sounds difficult to me.
 
-> > > So using these definition powersave is already a mandatory feature for
-> > > any hardware which uses software scanning. 
-> > 
-> > Even offloaded scanning, it's just not visible to mac80211 then.
-> 
-> Okay, sure. I'm just thinking of things from the mac80211 perspective.
+Example old backtrace:
 
-Right, sure.
+Using good key:
+[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
 
-> > > All I'm really doing is
-> > > making this explicit, and drivers would now opt in to being placed into
-> > > the doze state rather than opting into powersave in general. And of
-> > > course drivers are now told about transitions to the non-doze powersave
-> > > state (what I'm calling offchannel), so that drivers which need to do
-> > > hardware configuration for this state can do so.
-> > 
-> > Ok, so maybe just calling it offchannel makes more sense, although that
-> > really interacts only this way with powersave in managed mode, in P2P GO
-> > mode .... oh well.
-> 
-> I admit I've only been considering managed mode and know next to nothing
-> about P2P GO mode. If I'm creating problems for any other modes I'd
-> definitely like to know about it so I can take it into consideration.
+Using wrong key:
+[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
 
-No no, I'm just saying there "powersave" could have even more
-meanings ...
+Example new backtrace:
+[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
 
-johannes
+
+Michael Braun (1):
+  mac80211: Fix WPA with VLAN on AP side with ps client
+
+ net/mac80211/tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+1.7.10.4
 
