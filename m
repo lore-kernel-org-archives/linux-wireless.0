@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757101Ab3BMN0M (ORCPT
+Received: from gast-008.fem.tu-ilmenau.de ([141.24.44.8]:49540 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758454Ab3BLPwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 08:26:12 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: jan.brummer@tabos.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: always unblock CSA queue stop when disconnecting
-Date: Wed, 13 Feb 2013 14:26:06 +0100
-Message-Id: <1360761966-32111-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_142616_988845_62AF5833)
+	Tue, 12 Feb 2013 10:52:43 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [konusllaptop] [PATCH 1/1] Fix WPA with VLAN on AP side with ps client
+Date: Tue, 12 Feb 2013 16:43:26 +0100
+Message-Id: <1360683806-15238-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_165247_002980_F5F59D43)
+In-Reply-To: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de>
+References: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
-In some cases when disconnecting after (or during?) CSA
-the queues might not recover, and then the only way to
-recover is reloading the module.
-
-Fix this by always unblocking the queue CSA reason when
-disconnecting.
-
-Reported-by: Jan-Michael Brummer <jan.brummer@tabos.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
 ---
- net/mac80211/mlme.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d75c650..f9da6de 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2059,6 +2059,9 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
- 			       true, frame_buf);
- 	ifmgd->flags &= ~IEEE80211_STA_CSA_RECEIVED;
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+					IEEE80211_MAX_QUEUE_MAP,
-+					IEEE80211_QUEUE_STOP_REASON_CSA);
- 	mutex_unlock(&ifmgd->mtx);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2ef0e19..93681f5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2770,7 +2770,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 		}
  
- 	/*
-@@ -2099,9 +2102,6 @@ static void ieee80211_csa_connection_drop_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_sub_if_data,
- 			     u.mgd.csa_connection_drop_work);
- 
--	ieee80211_wake_queues_by_reason(&sdata->local->hw,
--					IEEE80211_MAX_QUEUE_MAP,
--					IEEE80211_QUEUE_STOP_REASON_CSA);
- 	__ieee80211_disconnect(sdata);
- }
- 
+-		if (!ieee80211_tx_prepare(sdata, &tx, skb))
++		struct ieee80211_sub_if_data *frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
++		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
+ 			break;
+ 		dev_kfree_skb_any(skb);
+ 	}
 -- 
-1.8.0
+1.7.10.4
 
