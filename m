@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757661Ab3BZVrQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:47:16 -0500
-Message-ID: <1361915231.8440.28.camel@jlt4.sipsolutions.net> (sfid-20130226_224729_841823_70E3C315)
-Subject: Re: [PATCH v2 1/2] mac80211:  Stop timers before canceling work
- items.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Feb 2013 22:47:11 +0100
-In-Reply-To: <1361382069-31729-1-git-send-email-greearb@candelatech.com> (sfid-20130220_184123_653697_BABBBF90)
-References: <1361382069-31729-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130220_184123_653697_BABBBF90)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:50674 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933044Ab3BLN0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 08:26:46 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac and IBSS
+References: <1360604039.1559.44.camel@dcbw.foobar.com>
+Date: Tue, 12 Feb 2013 15:26:45 +0200
+In-Reply-To: <1360604039.1559.44.camel@dcbw.foobar.com> (Dan Williams's
+	message of "Mon, 11 Feb 2013 11:33:59 -0600")
+Message-ID: <87zjz9aciy.fsf@purkki.adurom.net> (sfid-20130212_142648_807110_8532E809)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 09:41 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Re-order the quiesce code so that timers are
-> always stopped before work-items are flushed.  This was
-> not the problem I saw, but I think it may still be more
-> correct.
+Dan Williams <dcbw@redhat.com> writes:
 
-Applied both, adding Cc stable.
+> Had a bug report that a 4313 doesn't support IBSS mode, and dug around
+> and found out that brcmsmac only supports STA mode.  Is that really true
+> and there's no IBSS support in the smac driver?  Is that a firmware or
+> driver limitation?  Seems odd that this got missed during the merge
+> reviews as IBSS is pretty basic functionality that all the kernel wifi
+> drivers have had for 5 or 7 years.
 
-johannes
+Are you saying that we should require Ad-Hoc mode from all drivers? I
+hope not, I consider it as a niche feature. It also has it's own
+problems, power save and encryption at least come to my mind.
 
+-- 
+Kalle Valo
