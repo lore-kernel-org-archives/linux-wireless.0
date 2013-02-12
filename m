@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:37904 "EHLO arroyo.ext.ti.com"
+Received: from mail.neratec.com ([80.75.119.105]:50336 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946121Ab3BHJUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 04:20:50 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id r189Kn97007109
-	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:20:49 -0600
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189KnHt029845
-	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:20:49 -0600
-Received: from [172.24.79.4] (h79-4.vpn.ti.com [172.24.79.4])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189KlWF009308	for
- <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:20:48 -0600
-Message-ID: <1360315191.12803.25.camel@cumari.coelho.fi> (sfid-20130208_102053_539446_75BAA127)
-Subject: Re: [PATCH] wlcore: use single-role version when verifying the PLT
- firmware
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Fri, 8 Feb 2013 11:19:51 +0200
-In-Reply-To: <1355300062-19677-1-git-send-email-coelho@ti.com>
-References: <1355300062-19677-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1756434Ab3BLKwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 05:52:07 -0500
+Message-ID: <511A1D88.6080406@neratec.com> (sfid-20130212_115212_239845_C7A10C72)
+Date: Tue, 12 Feb 2013 11:46:32 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [BUG] Beacon loss event every second
+References: <5118F682.8000502@neratec.com> <1360592857.8738.30.camel@jlt4.sipsolutions.net> <51190341.40806@neratec.com> <87bobpc0ft.fsf@purkki.adurom.net> <511A15D4.6070808@neratec.com> <877gmdbzkc.fsf@purkki.adurom.net> <511A1867.6060708@neratec.com>
+In-Reply-To: <511A1867.6060708@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-12-12 at 10:14 +0200, Luciano Coelho wrote:
-> The PLT firmware used by wl12xx for calibration always has the same
-> version number as the single-role firmware.
-> 
-> Currntly the driver rejects the PLT firmware since anything that is
-> not single-role uses the multi-role version.  Fix this by using the
-> single-role version for everything except multi-role.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+On 02/12/2013 11:24 AM, Wojciech Dubowik wrote:
+> On 02/12/2013 11:23 AM, Kalle Valo wrote:
+>> Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
+>>
+>>> I have a test pc with 3x AR9590 and 2x AR9390. Machine is based on i7
+>>> and hyperthreading is on so I have 8 cores.
+>>> I am using latest wireless testing ath9k and 3.8rc7 kernel.
+>>>
+>>> What I see is that for some extended periods odf time beacons are not
+>>> processed in ieee80211_rx_mgmt_beacon
+>>> and that's why I get beacon loss. I am using 30ms beacon period.
+>>>
+>>>
+>>> What is really funny, that I get this beacon loss message every
+>>> second. Like is sth was locking ifmgd->mtx mutex
+>>> at constant intervals.
+>>>
+>>>
+>>> I will try to disable all cores and run in again to see if it's rcu 
+>>> problem.
+>> You could also try wireless-next or wireless-testing to pinpoint if the
+>> problem is in wireless code or not.
+>>
+> I see it on wireless-testing and mac80211-next. I will try with other 
+> driver later today.
+>
+> I can see also other problem like authentication frame always timing 
+> out the first time
+> but I will handle it later.
+It has turned out that I had bad irq, switch to polling problem. Without 
+interrupts for wireless
+cards I will for sure see such problems.
 
-Applied.
+Sorry for spamming.
 
---
-Luca.
+Wojtek
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
