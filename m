@@ -1,156 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1800 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757152Ab3BFRlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:41:11 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/12] brcmfmac: Track pending 8021x frames per ifp.
-Date: Wed, 6 Feb 2013 18:40:39 +0100
-Message-ID: <1360172447-2424-5-git-send-email-arend@broadcom.com> (sfid-20130206_184120_905498_7AC7D8AF)
-In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:47248 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933044Ab3BLNZ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 08:25:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: stop modifying HT SMPS capability
+Date: Tue, 12 Feb 2013 14:25:52 +0100
+Message-Id: <1360675552-29511-1-git-send-email-johannes@sipsolutions.net> (sfid-20130212_142603_624993_5F6F6E47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Pending 8021x frames were tracked per dongle. This should be
-done per ifp.
+Instead of modifying the HT SMPS capability field
+for stations, track the SMPS mode explicitly in a
+new field in the station struct and use it in the
+drivers that care about it. This simplifies the
+code using it.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    7 +++---
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   25 ++++++++++----------
- 2 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-rs.c   |  3 +--
+ drivers/net/wireless/iwlegacy/common.c    | 16 +++++++---------
+ drivers/net/wireless/iwlwifi/dvm/rs.c     |  6 ++----
+ drivers/net/wireless/iwlwifi/dvm/sta.c    | 17 +++++++----------
+ drivers/net/wireless/iwlwifi/mvm/rs.c     |  6 ++----
+ drivers/net/wireless/rt2x00/rt2x00queue.c |  5 +----
+ include/net/mac80211.h                    |  2 ++
+ net/mac80211/ht.c                         | 19 +++++++++++++++++++
+ net/mac80211/rc80211_minstrel_ht.c        |  6 +-----
+ net/mac80211/rx.c                         | 16 ++++++----------
+ net/mac80211/sta_info.c                   |  2 ++
+ 11 files changed, 50 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index a2f32fb..f0e81a8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -489,9 +489,6 @@ struct brcmf_pub {
- 	struct mutex proto_block;
- 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
+diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
+index f3b8e91..e8324b5 100644
+--- a/drivers/net/wireless/iwlegacy/4965-rs.c
++++ b/drivers/net/wireless/iwlegacy/4965-rs.c
+@@ -1183,8 +1183,7 @@ il4965_rs_switch_to_mimo2(struct il_priv *il, struct il_lq_sta *lq_sta,
+ 	if (!conf_is_ht(conf) || !sta->ht_cap.ht_supported)
+ 		return -1;
  
--	atomic_t pend_8021x_cnt;
--	wait_queue_head_t pend_8021x_wait;
+-	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2) ==
+-	    WLAN_HT_CAP_SM_PS_STATIC)
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 1f59860..4c9aafb 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1830,32 +1830,30 @@ il_set_ht_add_station(struct il_priv *il, u8 idx, struct ieee80211_sta *sta)
+ {
+ 	struct ieee80211_sta_ht_cap *sta_ht_inf = &sta->ht_cap;
+ 	__le32 sta_flags;
+-	u8 mimo_ps_mode;
+ 
+ 	if (!sta || !sta_ht_inf->ht_supported)
+ 		goto done;
+ 
+-	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
+ 	D_ASSOC("spatial multiplexing power save mode: %s\n",
+-		(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ? "static" :
+-		(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ? "dynamic" :
++		(sta->smps_mode == IEEE80211_SMPS_STATIC) ? "static" :
++		(sta->smps_mode == IEEE80211_SMPS_DYNAMIC) ? "dynamic" :
+ 		"disabled");
+ 
+ 	sta_flags = il->stations[idx].sta.station_flags;
+ 
+ 	sta_flags &= ~(STA_FLG_RTS_MIMO_PROT_MSK | STA_FLG_MIMO_DIS_MSK);
+ 
+-	switch (mimo_ps_mode) {
+-	case WLAN_HT_CAP_SM_PS_STATIC:
++	switch (sta->smps_mode) {
++	case IEEE80211_SMPS_STATIC:
+ 		sta_flags |= STA_FLG_MIMO_DIS_MSK;
+ 		break;
+-	case WLAN_HT_CAP_SM_PS_DYNAMIC:
++	case IEEE80211_SMPS_DYNAMIC:
+ 		sta_flags |= STA_FLG_RTS_MIMO_PROT_MSK;
+ 		break;
+-	case WLAN_HT_CAP_SM_PS_DISABLED:
++	case IEEE80211_SMPS_OFF:
+ 		break;
+ 	default:
+-		IL_WARN("Invalid MIMO PS mode %d\n", mimo_ps_mode);
++		IL_WARN("Invalid MIMO PS mode %d\n", sta->smps_mode);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
+index b25de02..abe3042 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
+@@ -1289,8 +1289,7 @@ static int rs_switch_to_mimo2(struct iwl_priv *priv,
+ 	if (!conf_is_ht(conf) || !sta->ht_cap.ht_supported)
+ 		return -1;
+ 
+-	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2)
+-						== WLAN_HT_CAP_SM_PS_STATIC)
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+@@ -1345,8 +1344,7 @@ static int rs_switch_to_mimo3(struct iwl_priv *priv,
+ 	if (!conf_is_ht(conf) || !sta->ht_cap.ht_supported)
+ 		return -1;
+ 
+-	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2)
+-						== WLAN_HT_CAP_SM_PS_STATIC)
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+diff --git a/drivers/net/wireless/iwlwifi/dvm/sta.c b/drivers/net/wireless/iwlwifi/dvm/sta.c
+index 6deab38..d5faf74 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/dvm/sta.c
+@@ -196,7 +196,6 @@ static void iwl_sta_calc_ht_flags(struct iwl_priv *priv,
+ 				  __le32 *flags, __le32 *mask)
+ {
+ 	struct ieee80211_sta_ht_cap *sta_ht_inf = &sta->ht_cap;
+-	u8 mimo_ps_mode;
+ 
+ 	*mask = STA_FLG_RTS_MIMO_PROT_MSK |
+ 		STA_FLG_MIMO_DIS_MSK |
+@@ -208,26 +207,24 @@ static void iwl_sta_calc_ht_flags(struct iwl_priv *priv,
+ 	if (!sta || !sta_ht_inf->ht_supported)
+ 		return;
+ 
+-	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
 -
- 	struct brcmf_fweh_info fweh;
- #ifdef DEBUG
- 	struct dentry *dbgfs_dir;
-@@ -518,6 +515,8 @@ struct brcmf_cfg80211_vif;
-  * @idx: interface index in device firmware.
-  * @bssidx: index of bss associated with this interface.
-  * @mac_addr: assigned mac address.
-+ * @pend_8021x_cnt: tracks outstanding number of 802.1x frames.
-+ * @pend_8021x_wait: used for signalling change in count.
+ 	IWL_DEBUG_INFO(priv, "STA %pM SM PS mode: %s\n",
+ 			sta->addr,
+-			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ?
++			(sta->smps_mode == IEEE80211_SMPS_STATIC) ?
+ 			"static" :
+-			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ?
++			(sta->smps_mode == IEEE80211_SMPS_DYNAMIC) ?
+ 			"dynamic" : "disabled");
+ 
+-	switch (mimo_ps_mode) {
+-	case WLAN_HT_CAP_SM_PS_STATIC:
++	switch (sta->smps_mode) {
++	case IEEE80211_SMPS_STATIC:
+ 		*flags |= STA_FLG_MIMO_DIS_MSK;
+ 		break;
+-	case WLAN_HT_CAP_SM_PS_DYNAMIC:
++	case IEEE80211_SMPS_DYNAMIC:
+ 		*flags |= STA_FLG_RTS_MIMO_PROT_MSK;
+ 		break;
+-	case WLAN_HT_CAP_SM_PS_DISABLED:
++	case IEEE80211_SMPS_OFF:
+ 		break;
+ 	default:
+-		IWL_WARN(priv, "Invalid MIMO PS mode %d\n", mimo_ps_mode);
++		IWL_WARN(priv, "Invalid MIMO PS mode %d\n", sta->smps_mode);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 8ba36e5..56b636d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1229,8 +1229,7 @@ static int rs_switch_to_mimo2(struct iwl_mvm *mvm,
+ 	if (!sta->ht_cap.ht_supported)
+ 		return -1;
+ 
+-	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2)
+-						== WLAN_HT_CAP_SM_PS_STATIC)
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+@@ -1282,8 +1281,7 @@ static int rs_switch_to_mimo3(struct iwl_mvm *mvm,
+ 	if (!sta->ht_cap.ht_supported)
+ 		return -1;
+ 
+-	if (((sta->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >> 2)
+-						== WLAN_HT_CAP_SM_PS_STATIC)
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index f35d85a..9503e69 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -343,10 +343,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 		 * when using more then one tx stream (>MCS7).
+ 		 */
+ 		if (sta && txdesc->u.ht.mcs > 7 &&
+-		    ((sta->ht_cap.cap &
+-		      IEEE80211_HT_CAP_SM_PS) >>
+-		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
+-		    WLAN_HT_CAP_SM_PS_DYNAMIC)
++		    sta->smps_mode == IEEE80211_SMPS_DYNAMIC)
+ 			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
+ 	} else {
+ 		txdesc->u.ht.mcs = rt2x00_get_rate_mcs(hwrate->mcs);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 70f3806..cf2e014 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1238,6 +1238,7 @@ enum ieee80211_sta_rx_bandwidth {
+  *	station can receive at the moment, changed by operating mode
+  *	notifications and capabilities. The value is only valid after
+  *	the station moves to associated state.
++ * @smps_mode: current SMPS mode (off, static or dynamic)
   */
- struct brcmf_if {
- 	struct brcmf_pub *drvr;
-@@ -529,6 +528,8 @@ struct brcmf_if {
- 	int idx;
- 	s32 bssidx;
- 	u8 mac_addr[ETH_ALEN];
-+	atomic_t pend_8021x_cnt;
-+	wait_queue_head_t pend_8021x_wait;
- };
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+@@ -1250,6 +1251,7 @@ struct ieee80211_sta {
+ 	u8 max_sp;
+ 	u8 rx_nss;
+ 	enum ieee80211_sta_rx_bandwidth bandwidth;
++	enum ieee80211_smps_mode smps_mode;
  
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 797969b..c7434ee 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -102,6 +102,7 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+ 	int i, max_tx_streams;
+ 	bool changed;
+ 	enum ieee80211_sta_rx_bandwidth bw;
++	enum ieee80211_smps_mode smps_mode;
  
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 7554125..9a4494a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -217,7 +217,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	if (is_multicast_ether_addr(eh->h_dest))
- 		drvr->tx_multicast++;
- 	if (ntohs(eh->h_proto) == ETH_P_PAE)
--		atomic_inc(&drvr->pend_8021x_cnt);
-+		atomic_inc(&ifp->pend_8021x_cnt);
+ 	memset(&ht_cap, 0, sizeof(ht_cap));
  
- 	/* If the protocol uses a data header, apply it */
- 	brcmf_proto_hdrpush(drvr, ifp->idx, skb);
-@@ -348,6 +348,7 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
- 	u16 type;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_pub *drvr = bus_if->drvr;
-+	struct brcmf_if *ifp;
+@@ -216,6 +217,24 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+ 		ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 ?
+ 				IEEE80211_STA_RX_BW_40 : IEEE80211_STA_RX_BW_20;
  
- 	brcmf_proto_hdrpull(drvr, &ifidx, txp);
- 
-@@ -355,9 +356,10 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
- 	type = ntohs(eh->h_proto);
- 
- 	if (type == ETH_P_PAE) {
--		atomic_dec(&drvr->pend_8021x_cnt);
--		if (waitqueue_active(&drvr->pend_8021x_wait))
--			wake_up(&drvr->pend_8021x_wait);
-+		ifp = drvr->iflist[ifidx];
-+		atomic_dec(&ifp->pend_8021x_cnt);
-+		if (waitqueue_active(&ifp->pend_8021x_wait))
-+			wake_up(&ifp->pend_8021x_wait);
- 	}
- }
- 
-@@ -565,7 +567,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 		return -EAGAIN;
- 	}
- 
--	atomic_set(&drvr->pend_8021x_cnt, 0);
-+	atomic_set(&ifp->pend_8021x_cnt, 0);
- 
- 	/* Get current TOE mode from dongle */
- 	if (brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0
-@@ -686,6 +688,8 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, int ifidx, s32 bssidx,
- 	INIT_WORK(&ifp->setmacaddr_work, _brcmf_set_mac_address);
- 	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
- 
-+	init_waitqueue_head(&ifp->pend_8021x_wait);
++	switch ((ht_cap.cap & IEEE80211_HT_CAP_SM_PS)
++			>> IEEE80211_HT_CAP_SM_PS_SHIFT) {
++	case WLAN_HT_CAP_SM_PS_INVALID:
++	case WLAN_HT_CAP_SM_PS_STATIC:
++		smps_mode = IEEE80211_SMPS_STATIC;
++		break;
++	case WLAN_HT_CAP_SM_PS_DYNAMIC:
++		smps_mode = IEEE80211_SMPS_DYNAMIC;
++		break;
++	case WLAN_HT_CAP_SM_PS_DISABLED:
++		smps_mode = IEEE80211_SMPS_OFF;
++		break;
++	}
 +
- 	if (addr_mask != NULL)
- 		for (i = 0; i < ETH_ALEN; i++)
- 			ifp->mac_addr[i] = drvr->mac[i] ^ addr_mask[i];
-@@ -763,8 +767,6 @@ int brcmf_attach(uint bus_hdrlen, struct device *dev)
++	if (smps_mode != sta->sta.smps_mode)
++		changed = true;
++	sta->sta.smps_mode = smps_mode;
++
+ 	return changed;
+ }
  
- 	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 732df88..9e7c328 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -695,7 +695,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	int ack_dur;
+ 	int stbc;
+ 	int i;
+-	unsigned int smps;
  
--	init_waitqueue_head(&drvr->pend_8021x_wait);
+ 	/* fall back to the old minstrel for legacy stations */
+ 	if (!sta->ht_cap.ht_supported)
+@@ -731,9 +730,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
+ 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+ 
+-	smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
+-		IEEE80211_HT_CAP_SM_PS_SHIFT;
 -
- 	return ret;
+ 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
+ 		mi->groups[i].supported = 0;
+ 		if (minstrel_mcs_groups[i].flags & IEEE80211_TX_RC_SHORT_GI) {
+@@ -751,7 +747,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 			continue;
  
- fail:
-@@ -879,19 +881,18 @@ void brcmf_detach(struct device *dev)
- 	kfree(drvr);
- }
+ 		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
+-		if (smps == WLAN_HT_CAP_SM_PS_STATIC &&
++		if (sta->smps_mode == IEEE80211_SMPS_STATIC &&
+ 		    minstrel_mcs_groups[i].streams > 1)
+ 			continue;
  
--static int brcmf_get_pend_8021x_cnt(struct brcmf_pub *drvr)
-+static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp)
- {
--	return atomic_read(&drvr->pend_8021x_cnt);
-+	return atomic_read(&ifp->pend_8021x_cnt);
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 30f1ba6..68a9e9c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2375,31 +2375,27 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		switch (mgmt->u.action.u.ht_smps.action) {
+ 		case WLAN_HT_ACTION_SMPS: {
+ 			struct ieee80211_supported_band *sband;
+-			u8 smps;
++			enum ieee80211_smps_mode smps_mode;
  
- int brcmf_netdev_wait_pend8021x(struct net_device *ndev)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_pub *drvr = ifp->drvr;
- 	int err;
+ 			/* convert to HT capability */
+ 			switch (mgmt->u.action.u.ht_smps.smps_control) {
+ 			case WLAN_HT_SMPS_CONTROL_DISABLED:
+-				smps = WLAN_HT_CAP_SM_PS_DISABLED;
++				smps_mode = IEEE80211_SMPS_OFF;
+ 				break;
+ 			case WLAN_HT_SMPS_CONTROL_STATIC:
+-				smps = WLAN_HT_CAP_SM_PS_STATIC;
++				smps_mode = IEEE80211_SMPS_STATIC;
+ 				break;
+ 			case WLAN_HT_SMPS_CONTROL_DYNAMIC:
+-				smps = WLAN_HT_CAP_SM_PS_DYNAMIC;
++				smps_mode = IEEE80211_SMPS_DYNAMIC;
+ 				break;
+ 			default:
+ 				goto invalid;
+ 			}
+-			smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
  
--	err = wait_event_timeout(drvr->pend_8021x_wait,
--				 !brcmf_get_pend_8021x_cnt(drvr),
-+	err = wait_event_timeout(ifp->pend_8021x_wait,
-+				 !brcmf_get_pend_8021x_cnt(ifp),
- 				 msecs_to_jiffies(MAX_WAIT_FOR_8021X_TX));
+ 			/* if no change do nothing */
+-			if ((rx->sta->sta.ht_cap.cap &
+-					IEEE80211_HT_CAP_SM_PS) == smps)
++			if (rx->sta->sta.smps_mode == smps_mode)
+ 				goto handled;
+-
+-			rx->sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SM_PS;
+-			rx->sta->sta.ht_cap.cap |= smps;
++			rx->sta->sta.smps_mode = smps_mode;
  
- 	WARN_ON(!err);
+ 			sband = rx->local->hw.wiphy->bands[status->band];
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 19db20a..07b312e 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -375,6 +375,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
+ 		sta->last_seq_ctrl[i] = cpu_to_le16(USHRT_MAX);
+ 
++	sta->sta.smps_mode = IEEE80211_SMPS_OFF;
++
+ 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
+ 
+ 	return sta;
 -- 
-1.7.10.4
-
+1.8.0
 
