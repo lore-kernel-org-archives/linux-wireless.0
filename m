@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43394 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863Ab3BDPm2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51171 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932230Ab3BLTpf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 10:42:28 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U2OBf-000357-Rn
-	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:42:28 +0100
-Message-ID: <1359992573.10311.24.camel@jlt4.sipsolutions.net> (sfid-20130204_164304_849321_CB4513AC)
-Subject: Re: [PATCH 1/2] mac80211: allow transmitting deauth with tainted key
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 12 Feb 2013 14:45:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Date: Mon, 04 Feb 2013 16:42:53 +0100
-In-Reply-To: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net> (sfid-20130131_141448_355132_8437FAF0)
-References: <1359638107-15306-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130131_141448_355132_8437FAF0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: wireless-regdb@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] wireless-regdb: Add specific data for Serbia for the 2 GHz and 5 GHz bands.
+Date: Tue, 12 Feb 2013 14:39:16 -0500
+Message-Id: <1360697956-18658-1-git-send-email-linville@tuxdriver.com> (sfid-20130212_204538_264269_70A4B6CA)
+In-Reply-To: <1360695461-4529-1-git-send-email-linville@tuxdriver.com>
+References: <1360695461-4529-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-31 at 14:15 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When we had a connection for WoWLAN and after resume it
-> needed to be disconnected, the previous commit enabled
-> sending a deauth frame to the AP. This frame would not
-> go through on MFP-enabled networks as the key for it is
-> marked tainted before the frame is transmitted.
-> 
-> Allow a tainted key to be used for deauth frames. Worst
-> case, we'll use a wrong key because the PTK was rekeyed
-> while suspended, but more likely the PTK is still fine
-> and the taint flag really only applies to the GTK(s).
+From: "John W. Linville" <linville@tuxdriver.com>
 
-Applied both.
+Based on information provided by Ognjen Ikovic on 7 Feb 2013:
 
-johannes
+Message-ID:
+<CAL1G+-FzSYfdQX36P_ri2sKtW_JwT66hvf5wV83gqvJOL1hMug@mail.gmail.com>
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+v2 -- change "1 W" to "1000 mW" so the database will build...
+
+ db.txt | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index a6b94b1..0270c2f 100644
+--- a/db.txt
++++ b/db.txt
+@@ -642,9 +642,15 @@ country RO: DFS-ETSI
+         # 60 gHz band channels 1-4, ref: Etsi En 302 567
+         (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
++
++# Source:
++# http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
+ country RS:
+-        # 60 gHz band channels 1-4, ref: Etsi En 302 567
+-        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
++	(2400 - 2483.5 @ 40), (N/A, 100 mW)
++	(5150 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR
++	(5470 - 5725 @ 20), (3, 1000 mW), DFS
++	# 60 gHz band channels 1-4, ref: Etsi En 302 567
++	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
+ country RU:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.11.7
 
