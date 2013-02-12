@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:59496 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757426Ab3BGUKw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131Ab3BLJJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:10:52 -0500
-Date: Thu, 7 Feb 2013 14:10:44 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 0/4] Add support for off-channel powersave state in
- mac80211
-Message-ID: <20130207201044.GC4378@thinkpad-t410> (sfid-20130207_211059_344595_328B2B8B)
-References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
- <1360186322.7910.76.camel@jlt4.sipsolutions.net>
- <20130207181543.GA4378@thinkpad-t410>
- <51140811.3000108@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51140811.3000108@broadcom.com>
+	Tue, 12 Feb 2013 04:09:27 -0500
+Message-ID: <1360660163.8178.5.camel@jlt4.sipsolutions.net> (sfid-20130212_100932_383439_D9017360)
+Subject: Re: [PATCH] nl80211: add packet offset information for wowlan
+ pattern
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 12 Feb 2013 10:09:23 +0100
+In-Reply-To: <1360655802-21515-2-git-send-email-bzhao@marvell.com>
+References: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
+	 <1360655802-21515-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 07, 2013 at 09:01:21PM +0100, Arend van Spriel wrote:
-> On 02/07/2013 07:15 PM, Seth Forshee wrote:
-> > On Wed, Feb 06, 2013 at 10:32:02PM +0100, Johannes Berg wrote:
-> >> On Wed, 2013-02-06 at 15:01 -0600, Seth Forshee wrote:
-> >>> Hi Johannes,
-> >>>
-> >>> As promised, here are the patches which add the off-channel powesave
-> >>> state. At a high level, the changes are:
-> >>>
-> >>>  * Expand the PS configuration flag to be 2 bits and add helper
-> >>>    functions for reading and setting the modes
-> >>>  * Change the terminology around PS states, i.e. disabled -> awake and
-> >>>    enabled -> doze
-> >>>  * Add the off-channel PS state and put it to use
-> >>>  * Minor driver updates based on these changes
-> >>>  * Update brcmsmac to utilize the off-channel PS state
-> > 
-> > Hmm, I guess I should have mentioned that these patches were written on
-> > top of the version 2 patches I sent for adding the off-channel queue
-> > stop reason, etc. I'll need to resend them before they're likely to
-> > apply cleanly anywhere.
-> > 
-> >> That's a lot of driver changes ... :)
-> > 
-> > A large number of those changes were made by sed ;-)
-> > 
-> >> I've been trying to disentangle the mess a bit. It looks like I was
-> >> completely wrong about wl1251, it has HW scan so we don't care about its
-> >> weird PS behaviour (1).
-> >>
-> >> That leaves us with a few different drivers:
-> >>  * iwlegacy -- has PS support but not NULLFUNC_STACK, so generates a
-> >>    wakeup to the AP when we want to go scan ...
-> >>  * drivers like iwlwifi/wl12xx have HW scan and don't set NULLFUNC_STACK
-> >>  * drivers like ath5k/9k/... have all SW but set NULLFUNC_STACK
-> >>  * drivers that just don't have powersave
-> > 
-> > I tried to ensure that the patches would result in equivalent behavior
-> > for all drivers except brcmsmac (which will behave better). But I
-> > obviously wan't able to test every driver to verify this.
-> > 
-> > I suspect b43 should also be updated similarly to brcmsmac. The only
-> > hardware I have that uses b43 is a macbook whose wireless functions too
-> > poorly to be a good test case.
+On Mon, 2013-02-11 at 23:56 -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
 > 
-> If I recall correctly b43 has a Kconfig option to allow it to support
-> the same devices brcmsmac supports.
+> If user knows the location of a wowlan pattern to be matched in
+> Rx packet, he can provide an offset with the pattern. This will
+> help drivers to ignore initial bytes and match the pattern
+> efficiently.
 
-You're right; I forgot about that. It looks like that will make it at
-least claim to support my BCM43224. I'll have to give that a try.
+This is a bit tricky. Right now, the documentation says:
 
-Thanks for the suggestion.
+ * @NL80211_WOWLAN_TRIG_PKT_PATTERN: wake up on the specified packet patterns
+ *      which are passed in an array of nested attributes, each nested attribute
+ *      defining a with attributes from &struct nl80211_wowlan_trig_pkt_pattern.
+ *      Each pattern defines a wakeup packet. The matching is done on the MSDU,
+ *      i.e. as though the packet was an 802.3 packet, so the pattern matching
+ *      is done after the packet is converted to the MSDU.
 
-Seth
+I don't mind adding the offset, but not all devices will support that
+(ours doesn't) so when advertising the feature it needs to be documented
+to be something like the maximum possible offset? So you also need to
+modify the documentation for that and the code in nl80211_send_wiphy().
+
+> @@ -7070,7 +7073,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+>  				  nla_data(pat), nla_len(pat), NULL);
+>  			err = -EINVAL;
+>  			if (!pat_tb[NL80211_WOWLAN_PKTPAT_MASK] ||
+> -			    !pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN])
+> +			    !pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN] ||
+> +			    !pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET])
+>  				goto error;
+
+You can't just break backward compatibility like that, the new attribute
+must be optional and assumed 0 if it's not present.
+
+> @@ -7096,6 +7100,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+>  			memcpy(new_triggers.patterns[i].pattern,
+>  			       nla_data(pat_tb[NL80211_WOWLAN_PKTPAT_PATTERN]),
+>  			       pat_len);
+> +			new_triggers.patterns[i].pkt_offset = nla_get_u32(
+> +					pat_tb[NL80211_WOWLAN_PKTPAT_OFFSET]);
+
+Since all existing users of the API would ignore the pkt_offset, you
+must reject the configuration if the offset exceeds the maximum
+permissible offset the device advertises (existing ones would advertise
+0)
+
+johannes
 
