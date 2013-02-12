@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34247 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758718Ab3BKTae (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44257 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750982Ab3BLU0l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 14:30:34 -0500
-Date: Mon, 11 Feb 2013 14:27:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 12 Feb 2013 15:26:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-02-11
-Message-ID: <20130211192728.GD10986@tuxdriver.com> (sfid-20130211_203225_092366_869A6845)
-References: <1360168561.7910.24.camel@jlt4.sipsolutions.net>
- <1360267300.8038.13.camel@jlt4.sipsolutions.net>
- <1360580674.8738.14.camel@jlt4.sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 12 Feb 2013 12:19:11 -0800
+Subject: RE: [PATCH] nl80211: add packet offset information for wowlan
+ pattern
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D2EABEA@SC-VEXCH1.marvell.com> (sfid-20130212_212645_821578_12644463)
+References: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
+	 <1360655802-21515-2-git-send-email-bzhao@marvell.com>
+ <1360660163.8178.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1360660163.8178.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360580674.8738.14.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 11, 2013 at 12:04:34PM +0100, Johannes Berg wrote:
-> Hi,
-> 
-> I feel stupid now, I was testing corner cases and found *another*
-> bug ... :( So here's a new pull request.
-> 
-> Here are three fixes still for the 3.8 stream, the fix from Cong Ding
-> for the bad sizeof (Stephen Hemminger had pointed it out before but I'd
-> promptly forgotten), a mac80211 managed-mode channel context usage fix
-> where a downgrade would never stop until reaching non-HT and a bug in
-> the channel determination that could cause invalid channels like HT40+
-> on channel 11 to be used.
-> 
-> Please pull or let me know of any problems.
-> 
-> johannes
-> 
-> The following changes since commit c49dc9008b1c641a86837297df7c90cef070571b:
-> 
->   cfg80211: off by one in ieee80211_bss() (2013-01-24 15:47:22 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 3d9646d0abd02c552f6f15c302b31aa321c2fa8b:
-> 
->   mac80211: fix channel selection bug (2013-02-11 11:12:26 +0100)
-> 
-> ----------------------------------------------------------------
-> Cong Ding (1):
->       mac80211: fix error in sizeof() usage
-> 
-> Johannes Berg (2):
->       mac80211: fix managed mode channel context use
->       mac80211: fix channel selection bug
-> 
->  net/mac80211/cfg.c  |  3 ++-
->  net/mac80211/mlme.c | 11 +++++++----
->  2 files changed, 9 insertions(+), 5 deletions(-)
-
-Pulling now -- no guarantees that it will make the loop before 3.8
-is released!
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+SGkgSm9oYW5uZXMsDQoNCj4gT24gTW9uLCAyMDEzLTAyLTExIGF0IDIzOjU2IC0wODAwLCBCaW5n
+IFpoYW8gd3JvdGU6DQo+ID4gRnJvbTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxs
+LmNvbT4NCj4gPg0KPiA+IElmIHVzZXIga25vd3MgdGhlIGxvY2F0aW9uIG9mIGEgd293bGFuIHBh
+dHRlcm4gdG8gYmUgbWF0Y2hlZCBpbg0KPiA+IFJ4IHBhY2tldCwgaGUgY2FuIHByb3ZpZGUgYW4g
+b2Zmc2V0IHdpdGggdGhlIHBhdHRlcm4uIFRoaXMgd2lsbA0KPiA+IGhlbHAgZHJpdmVycyB0byBp
+Z25vcmUgaW5pdGlhbCBieXRlcyBhbmQgbWF0Y2ggdGhlIHBhdHRlcm4NCj4gPiBlZmZpY2llbnRs
+eS4NCj4gDQo+IFRoaXMgaXMgYSBiaXQgdHJpY2t5LiBSaWdodCBub3csIHRoZSBkb2N1bWVudGF0
+aW9uIHNheXM6DQo+IA0KPiAgKiBATkw4MDIxMV9XT1dMQU5fVFJJR19QS1RfUEFUVEVSTjogd2Fr
+ZSB1cCBvbiB0aGUgc3BlY2lmaWVkIHBhY2tldCBwYXR0ZXJucw0KPiAgKiAgICAgIHdoaWNoIGFy
+ZSBwYXNzZWQgaW4gYW4gYXJyYXkgb2YgbmVzdGVkIGF0dHJpYnV0ZXMsIGVhY2ggbmVzdGVkIGF0
+dHJpYnV0ZQ0KPiAgKiAgICAgIGRlZmluaW5nIGEgd2l0aCBhdHRyaWJ1dGVzIGZyb20gJnN0cnVj
+dCBubDgwMjExX3dvd2xhbl90cmlnX3BrdF9wYXR0ZXJuLg0KPiAgKiAgICAgIEVhY2ggcGF0dGVy
+biBkZWZpbmVzIGEgd2FrZXVwIHBhY2tldC4gVGhlIG1hdGNoaW5nIGlzIGRvbmUgb24gdGhlIE1T
+RFUsDQo+ICAqICAgICAgaS5lLiBhcyB0aG91Z2ggdGhlIHBhY2tldCB3YXMgYW4gODAyLjMgcGFj
+a2V0LCBzbyB0aGUgcGF0dGVybiBtYXRjaGluZw0KPiAgKiAgICAgIGlzIGRvbmUgYWZ0ZXIgdGhl
+IHBhY2tldCBpcyBjb252ZXJ0ZWQgdG8gdGhlIE1TRFUuDQo+IA0KPiBJIGRvbid0IG1pbmQgYWRk
+aW5nIHRoZSBvZmZzZXQsIGJ1dCBub3QgYWxsIGRldmljZXMgd2lsbCBzdXBwb3J0IHRoYXQNCj4g
+KG91cnMgZG9lc24ndCkgc28gd2hlbiBhZHZlcnRpc2luZyB0aGUgZmVhdHVyZSBpdCBuZWVkcyB0
+byBiZSBkb2N1bWVudGVkDQo+IHRvIGJlIHNvbWV0aGluZyBsaWtlIHRoZSBtYXhpbXVtIHBvc3Np
+YmxlIG9mZnNldD8gU28geW91IGFsc28gbmVlZCB0bw0KPiBtb2RpZnkgdGhlIGRvY3VtZW50YXRp
+b24gZm9yIHRoYXQgYW5kIHRoZSBjb2RlIGluIG5sODAyMTFfc2VuZF93aXBoeSgpLg0KPiANCj4g
+PiBAQCAtNzA3MCw3ICs3MDczLDggQEAgc3RhdGljIGludCBubDgwMjExX3NldF93b3dsYW4oc3Ry
+dWN0IHNrX2J1ZmYgKnNrYiwgc3RydWN0IGdlbmxfaW5mbyAqaW5mbykNCj4gPiAgCQkJCSAgbmxh
+X2RhdGEocGF0KSwgbmxhX2xlbihwYXQpLCBOVUxMKTsNCj4gPiAgCQkJZXJyID0gLUVJTlZBTDsN
+Cj4gPiAgCQkJaWYgKCFwYXRfdGJbTkw4MDIxMV9XT1dMQU5fUEtUUEFUX01BU0tdIHx8DQo+ID4g
+LQkJCSAgICAhcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9QQVRURVJOXSkNCj4gPiArCQkJ
+ICAgICFwYXRfdGJbTkw4MDIxMV9XT1dMQU5fUEtUUEFUX1BBVFRFUk5dIHx8DQo+ID4gKwkJCSAg
+ICAhcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9PRkZTRVRdKQ0KPiA+ICAJCQkJZ290byBl
+cnJvcjsNCj4gDQo+IFlvdSBjYW4ndCBqdXN0IGJyZWFrIGJhY2t3YXJkIGNvbXBhdGliaWxpdHkg
+bGlrZSB0aGF0LCB0aGUgbmV3IGF0dHJpYnV0ZQ0KPiBtdXN0IGJlIG9wdGlvbmFsIGFuZCBhc3N1
+bWVkIDAgaWYgaXQncyBub3QgcHJlc2VudC4NCj4gDQo+ID4gQEAgLTcwOTYsNiArNzEwMCw4IEBA
+IHN0YXRpYyBpbnQgbmw4MDIxMV9zZXRfd293bGFuKHN0cnVjdCBza19idWZmICpza2IsIHN0cnVj
+dCBnZW5sX2luZm8gKmluZm8pDQo+ID4gIAkJCW1lbWNweShuZXdfdHJpZ2dlcnMucGF0dGVybnNb
+aV0ucGF0dGVybiwNCj4gPiAgCQkJICAgICAgIG5sYV9kYXRhKHBhdF90YltOTDgwMjExX1dPV0xB
+Tl9QS1RQQVRfUEFUVEVSTl0pLA0KPiA+ICAJCQkgICAgICAgcGF0X2xlbik7DQo+ID4gKwkJCW5l
+d190cmlnZ2Vycy5wYXR0ZXJuc1tpXS5wa3Rfb2Zmc2V0ID0gbmxhX2dldF91MzIoDQo+ID4gKwkJ
+CQkJcGF0X3RiW05MODAyMTFfV09XTEFOX1BLVFBBVF9PRkZTRVRdKTsNCj4gDQo+IFNpbmNlIGFs
+bCBleGlzdGluZyB1c2VycyBvZiB0aGUgQVBJIHdvdWxkIGlnbm9yZSB0aGUgcGt0X29mZnNldCwg
+eW91DQo+IG11c3QgcmVqZWN0IHRoZSBjb25maWd1cmF0aW9uIGlmIHRoZSBvZmZzZXQgZXhjZWVk
+cyB0aGUgbWF4aW11bQ0KPiBwZXJtaXNzaWJsZSBvZmZzZXQgdGhlIGRldmljZSBhZHZlcnRpc2Vz
+IChleGlzdGluZyBvbmVzIHdvdWxkIGFkdmVydGlzZQ0KPiAwKQ0KDQpUaGFua3MgZm9yIHlvdXIg
+Y29tbWVudHMuDQoNClRoZSByZXZpc2VkIHYyIHBhdGNoIGhhcyBiZWVuIHN1Ym1pdHRlZC4gUGxl
+YXNlIHJldmlldy4NCg0KUmVnYXJkcywNCkJpbmcNCg==
