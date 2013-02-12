@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:40933 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932448Ab3BSJnV convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:57432 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932915Ab3BLPs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 04:43:21 -0500
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 27333-06 for <linux-wireless@vger.kernel.org>;
- Tue, 19 Feb 2013 09:43:15 +0000 (GMT)
+	Tue, 12 Feb 2013 10:48:56 -0500
+Received: by mail-ob0-f176.google.com with SMTP id v19so215699obq.35
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 07:48:55 -0800 (PST)
+Message-ID: <511A6465.8050307@lwfinger.net> (sfid-20130212_164903_719066_8FBB192C)
+Date: Tue, 12 Feb 2013 09:48:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Subject: RE: [PATCH] b43: Increase number of RX DMA slots
-Date: Tue, 19 Feb 2013 09:42:28 -0000
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com> (sfid-20130219_104329_246750_978FD6CD)
-In-Reply-To: <20130219.005206.397289032011003833.davem@davemloft.net>
-References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net> <20130219.005206.397289032011003833.davem@davemloft.net>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "David Miller" <davem@davemloft.net>, <Larry.Finger@lwfinger.net>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <bittorf@bluebottle.com>,
-	<stable@vger.kernel.org>
+To: =?ISO-8859-1?Q?M=E1rk_V=E1rdai?= <vardai.mark@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8723e linux driver
+References: <CABXVimEHA4WabDT-ycvmdcQd6VT3rmhNzy1UjR+qv=QD6W8JpQ@mail.gmail.com> <CABXVimHizEXzHqjvBTJyYZMXaqZRYLUQDxwfZ1B83bftMrgT9w@mail.gmail.com>
+In-Reply-To: <CABXVimHizEXzHqjvBTJyYZMXaqZRYLUQDxwfZ1B83bftMrgT9w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Bastian Bittorf reported that some of the silent freezes on a Linksys WRT54G
-> > were due to overflow of the RX DMA ring buffer, which was created with 64
-> > slots. That finding reminded me that I was seeing similar crashed on a netbook,
-> > which also has a relatively slow processor. After increasing the number of
-> > slots to 128, runs on the netbook that previously failed now worked; however,
-> > I found that 109 slots had been used in one test. For that reason, the number
-> > of slots is being increased to 256.
+On 02/12/2013 09:13 AM, Márk Várdai wrote:
+> Hi All,
+>
+> I got back an email-bot of Larry Finger's inbox, so that's why I'm
+> writting to this list in connection with my laptop Toshiba Satellite
+> C855-10M. It has wireless network card: rtl8273e (I'm not 100% sure
+> whether my problem could come from the last letters, but hope the best
+> not :)). So I have ubuntu 12.04 installed on this computer. I tried
+> out the compat-driver and what I have found on ubuntu wiki
+> http://askubuntu.com/questions/139632/wireless-card-realtek-rtl8723ae-bt-is-not-recognized
+> too. Both was working but not 100%. Later I tried out the latest
+> mainstream kernel from ubuntu
+> (http://kernel.ubuntu.com/~kernel-ppa/mainline/) v3.8-rc7-raring/
+> <http://kernel.ubuntu.com/%7Ekernel-ppa/mainline/v3.8-rc7-raring/>. To get
+> it work I separately copied the firmware (at this moment only what was included
+> in the
+> |rtl_92ce_92se_92de_8723ae_linux_mac80211_0006.0514.2012.tar.gz file or to
+> be more precise from the version 0007, but I do not find the download link
+> for it.|
 
-Surely the driver should work even if all the RX buffers get filled?
-Increasing the number of buffers is just hiding the issue.
-A burst of 300 back to back small packets probably fills the 256 slots.
+As my mail bot told you, I don't do private consulting of the type you wanted.
 
-I realise that dropping frames isn't ideal, and that small numbers
-of buffers can make it impossible to receive long fragmented IP
-messages. but increasing the number of buffers doesn't seem to
-be the best fix for a 'silent freeze'.
+The firmware is found in the linux-firmware git repo. There is no separate 
+download site for it. Ubuntu needs to update whatever package provides the 
+firmware to provide the latest firmware files. You should pass that info on to them.
 
-It might be that the driver would be more robust if it only ever
-put rx buffers into all but one of the ring slots.
+> With ubuntu 12.04/kernel-3.8rc7+firmware it was working except one special
+> thing. I can't tell the exact reproduction step, but what is very close
+> to it I would say a really cold reboot ( I mean here that switch off the
+> computer and let is for some hours to really cool down, for example for a
+> night.) then turn on the computer and then it can't connect to
+> the wifi router. But If I switch off manually the wifi on the laptop (it can
+> be managed by keyboard settings) and turn it back again that from that moment
+> it is working (not all the cases,but most of the cases is working ). So my
+> question would be whether does any of you have any idea what I can do
+> to avoid this
+> strange situation? The laptop is used by my mother so for her it is
+> not an option to
+> switch it off and on again. I can accept it that I write a small script to
+> disable and enable again the wifi but in the past when I tried out the
+> previous methods (so not kernel 3.8) unloading the module and load it
+> back sometimes
+> does not solve the problem. The wifi is good, because under windows 7/8 it is
+> working well. Can any of you help me to solve this issue? What should
+> I have to do,
+> what kind of log should I send and so on.
 
-	David
+When you are having the cold start problem, are scans working? In other words, 
+does the command 'sudo /usr/sbin/iwlist scan' return any APs?
+
+Is the wifi blocked? What is the output of '/usr/sbin/rfkill list'?
+
+Finally, what does the log shown by the output of dmesg show? I will not need 
+all of it - only the part after rtl8723ae starts.
+
+I am not a user of Ubuntu and that distro might place iwlist and rfkill in 
+different places than on my system. In addition, rfkill might not be installed. 
+If not, then use the package loader to install it.
+
+Larry
+
 
 
 
