@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:39823 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757238Ab3BVMe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 07:34:56 -0500
-Message-ID: <512765E3.5040103@neratec.com> (sfid-20130222_133505_023442_3526B6AE)
-Date: Fri, 22 Feb 2013 13:34:43 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-References: <20130215171938.GA4140@pandem0nium> <51274372.9030600@neratec.com> <20130222114340.GA11803@pandem0nium>
-In-Reply-To: <20130222114340.GA11803@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:37039 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932267Ab3BLQfj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 11:35:39 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [konusllaptop] [PATCHv2 0/1] mac80211: fix VLAN support on AP with ps-sta
+Date: Tue, 12 Feb 2013 17:35:36 +0100
+Message-Id: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173543_546980_E6B59D27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/22/2013 12:43 PM, Simon Wunderlich wrote:
-> Hello Zefir,
-> [...] 
-> 
-> it is nice to hear that the relayfs approach works well. :)
-> 
-It does. Before the system was limited to 15k samples/second (with netlink), now
-it can handle 50 kS/s.
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
-> Our biggest performance issue is probably the syscall for every packet, so minimizing
-> data to be sent to userspace and aggregate it to would benefit to our performance
-> problem.
-> 
-Did not check what happens under the hood when you write to a relay buffer, but
-since it is tagged as 'efficient' channel to userspace, I don't expect there is
-much of an overhead issue. Needs to be verified.
+Users are affected by not receiving the broadcasts indended for them, which for
+example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
+might be affected as packets might be disclosed to non-intended stas, though
+mixing vlan and non-vlan stas might be rare.
+This problem is triggered more often by smartphones (which enabled me to track
+it down) as they power sleep more often (I guess), but a single sleeping sta on
+the ap stops the packet for all connected stas of the ap.
+The problem exists in older kernels (at least 3.3.7) as well.
 
-> I would also agree that this approach is simpler as we don't have to manage lists
-> of clients and purge them. And we can evaluation in userspace, just as everyone
-> needs for its application (maybe some of these statistics are not of general interest).
-> 
-Right. Take the MAC address based filtering we need to have for our application.
-It is not useful for most, while any statistics without that feature are worthless
-to us. And we are not going to bloat kernel based statistics collection to fit
-everyone's needs, I guess.
+The following patch fixes this by restoring the per-vlan sdata using the
+skb->dev entry.
 
-> Issues I see are:
->  * the relayfs has to be regularly polled for new data (maybe multiple times a second),
->    so it can't overflow. I'm just looking at a dump from a running iperf test, it shows
->    ~12000 packets per second (at 70Mbit/s). Assuming we are sending 64 byte of metainfo
->    per packet, this would sum up to 768k every second. Doing the statistics computation
->    in userspace makes no difference to doing it in kernelspace, imho.
-See above, 50k spectral samples per second (76 bytes each) on an embedded platform
-(600MHz PPC) works fine. Agree, computational overhead remains the same - if you
-do it on the device itself. Think of a large installation with low profile APs
-that provide this data raw over the backbone.
+Is it safe to assume that skb->dev is always set correctly there?
+This patch works for me with the vlan-interface within a bridge.
 
->  * in-kernel drivers can't use the gathered statistics (that would affect 802.11s)
-Agree, if it needs to be evaluated by drivers, that's a different use-case.
+Would it be better to maintain the power sleeping state of the stas on a
+per-interface basis, as this would permit one group of non-sleeping stas to
+receive while another group has sleeping stas? Of course this would not
+prevent non-targetted groups of stas to be waked up, but implementing the
+latter sounds difficult to me.
 
-Maybe the best take is to start on top of the statistics generated for in kernel
-usage and forward it to userspace over the proposed relay channel.
+Example old backtrace:
 
->  * I wonder how debugfs use in mac80211 for this kind of feature is acceptable. This
->    would be a question for Johannes. :)
-> 
-Sounds already quite application specific to me, so I'd expect debugfs would not
-be the worst location to place it ;)
+Using good key:
+[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
 
-> Thanks for sharing your thoughts!
-> 
-> Cheers,
-> 	Simon
-> 
+Using wrong key:
+[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
+
+Example new backtrace:
+[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
+
+
+Michael Braun (1):
+  mac80211: Fix WPA with VLAN on AP side with ps client
+
+ net/mac80211/tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+1.7.10.4
 
