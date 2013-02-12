@@ -1,76 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173007pub.verizon.net ([206.46.173.7]:32872 "EHLO
-	vms173007pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935134Ab3BTUxN (ORCPT
+Received: from gast-008.fem.tu-ilmenau.de ([141.24.44.8]:49541 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758470Ab3BLPwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 15:53:13 -0500
-Received: from odin.tremily.us ([unknown] [72.68.84.219])
- by vms173007.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0MIJ0060RB7QKS40@vms173007.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Wed, 20 Feb 2013 13:52:44 -0600 (CST)
-Date: Wed, 20 Feb 2013 14:52:37 -0500
-From: "W. Trevor King" <wking@tremily.us>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac and AP mode
-Message-id: <20130220195237.GO14102@odin.tremily.us> (sfid-20130220_215317_017810_1A769C16)
-References: <1360604039.1559.44.camel@dcbw.foobar.com>
- <511940E6.7010303@hauke-m.de> <20130220173315.GK14102@odin.tremily.us>
- <512523EF.6040703@hauke-m.de>
-MIME-version: 1.0
-Content-type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature"; boundary=0kRkyLZR5zsR9u2P
-In-reply-to: <512523EF.6040703@hauke-m.de>
+	Tue, 12 Feb 2013 10:52:43 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [konusllaptop] [PATCH 0/1] Fix VLAN support on AP with ps-sta
+Date: Tue, 12 Feb 2013 16:43:25 +0100
+Message-Id: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_165247_699771_96E5E796)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
---0kRkyLZR5zsR9u2P
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Users are affected by not receiving the broadcasts indended for them, which for
+example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
+might be affected as packets might be disclosed to non-intended stas, though
+mixing vlan and non-vlan stas might be rare.
+This problem is triggered more often by smartphones (which enabled me to track
+it down) as they power sleep more often (I guess), but a single sleeping sta on
+the ap stops the packet for all connected stas of the ap.
+The problem exists in older kernels (at least 3.3.7) as well.
 
-On Wed, Feb 20, 2013 at 08:28:47PM +0100, Hauke Mehrtens wrote:
-> brcmsmac does not support AP mode, in [1] I was talking about b43,
-> here I am talking about planing to add AP mode to brcmsmac, there is
-> currently no code available.
+The following patch fixes this by restoring the per-vlan sdata using the
+skb->dev entry.
 
-Thanks.  Looking through the post again, it is pretty clear you were
-talking about b43; I just got confused after a bunch of reading :p.
+Is it safe to assume that skb->dev is always set correctly there?
+This patch works for me with the vlan-interface within a bridge.
 
-I know absolutely nothing about wireless modules at the moment, but
-I'm happy to help/test/=E2=80=A6.  I'll start reading through the source for
-b43 and brcmsmac, but if anyone wants to shed some light on a useful
-direction, I'd appreciate it.
+Would it be better to maintain the power sleeping state of the stas on a
+per-interface basis, as this would permit one group of non-sleeping stas to
+receive while another group has sleeping stas? Of course this would not
+prevent non-targetted groups of stas to be waked up, but implementing the
+latter sounds difficult to me.
 
-Cheers,
-Trevor
+Example old backtrace:
 
---=20
-This email may be signed or encrypted with GnuPG (http://www.gnupg.org).
-For more information, see http://en.wikipedia.org/wiki/Pretty_Good_Privacy
+Using good key:
+[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
 
---0kRkyLZR5zsR9u2P
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
+Using wrong key:
+[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
+[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
+[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Example new backtrace:
+[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
+[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
 
-iQIcBAEBAgAGBQJRJSmDAAoJEEUbTsx0l5OMKgsP/27OUv7Pwm5jJRIsqTAu1Pum
-+UrfHCeVygJOyiRVjoD6BlOxE/1q4VSTBuBoPNrEPMgDwMgYhiK31mInwufydRPi
-Sody+fxbsDEpaYoKTNL6MOKbDdZMs32y/wP4b917XpVyZuP8k8WrmDRTz3xBCJVN
-fkO3egedoQ7a4Nd0hQiQcg0ST3HVacA1bRi+/IhfK8KjXlTRaOVKXAUHmsjlm7T5
-dyACtFiSnDuO6IF+YvNMEGTztmMiucf+nn797c4vvonRncHA3f0yFJLjkjrMiPO9
-G5jwD9qXvXmhZpr19y1vKtoLzmBQnFREs3g4w0jczzu7JcNQZFmB1coGMu8OPw7Q
-39ZOpKtisEJQiR/Ei1GQ9IXqSVWrQtaCX+YnidT/FOAvdnQkTvXSG+tVqX3fOs7J
-FD9/lpn3T+E44J3+TqV5q/vl9QpxbM7z2I4vvQa0a4P7A8ohtVFZiKf4mhJyvVMA
-gC9tCFx4jqbZ8bZmt+DqlwT1e0h07XMiErpFAsnlO6FmzvjO9580LBGIQwmcj26v
-la4xyYObZ/fYuEXQDB79OHn2Ca7JUtCPEL8hPoIN3GyZPtgS6y+d3iKQ1ExiCiwj
-BtrlMGcUYhCkjYUhvqV/C8AbIB8M5HiId9QgozhQLu3Ltt5O+MVkzGg9+63Duy9Q
-3kus3QFsFVJ5ZCJc3O+a
-=dqkW
------END PGP SIGNATURE-----
 
---0kRkyLZR5zsR9u2P--
+Michael Braun (1):
+  Fix WPA with VLAN on AP side with ps client
+
+ net/mac80211/tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+1.7.10.4
+
