@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759233Ab3BYKUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 05:20:17 -0500
-Date: Mon, 25 Feb 2013 11:20:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
-Message-ID: <20130225102020.GA1735@redhat.com> (sfid-20130225_112025_800503_40CB9108)
-References: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47704 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758579Ab3BLQCR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Feb 2013 11:02:17 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/15] iwlwifi: mvm: fix locking in iwl_mvm_ipv6_addr_change
+Date: Tue, 12 Feb 2013 17:01:59 +0100
+Message-Id: <1360684927-1367-7-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170222_413914_5D6FAB92)
+In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
+ <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 06:11:07PM -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> The monitor_work and beacon_connection_loss_work items were
-> not being canceled on disassociation (and not on deletion
-> either).  This leads to work-items trying to run after memory
-> has been deleted.
-> 
-> I could not find a cleaner way to do this because the
-> cancel_work_sync for these items must be done outside
-> of the ifmgd->mtx.
-> 
-> In addition, re-order the quiesce code so that timers are
-> always stopped before work-items are flushed.  This was
-> not the problem I saw, but I think it may still be more
-> correct.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I think this patch is quite complicated and simpler solution
-can be used. We stop timers on disassociate, and since
-we nullify ifmgd->associated under ifmgd->mtx, work procedures
-will perform no action. The only thing we should care are works
-queued to workqueue internals, and stop them before we remove
-the interface, to stop workqueue code to use our freed
-ifmgd->*_work data.
+inet6_dev->lock can be taken from a timer. Disabled bottom
+halves when we take it.
 
-Regarding quiesce, I'm working on suspend/resume changes where this
-function become not necessary, so I'll remove it.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Below is alternative fix proposition for the problem.
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index bdddb0b..15a24214 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3992,6 +3992,17 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 9a95c37..5b2c675 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -97,14 +97,14 @@ void iwl_mvm_ipv6_addr_change(struct ieee80211_hw *hw,
+ 	struct inet6_ifaddr *ifa;
+ 	int idx = 0;
  
-+	/*
-+	 * We canceled timers during disassoc, but works still can be pending.
-+	 * Even if we they do not perform action when unassociated, we should
-+	 * assure we stop them, before freeing resources.
-+	 */
-+	cancel_work_sync(&ifmgd->request_smps_work);
-+	cancel_work_sync(&ifmgd->monitor_work);
-+	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
-+	cancel_work_sync(&ifmgd->csa_connection_drop_work);
-+	cancel_work_sync(&ifmgd->chswitch_work);
-+
- 	mutex_lock(&ifmgd->mtx);
- 	if (ifmgd->assoc_data)
- 		ieee80211_destroy_assoc_data(sdata, false);
+-	read_lock(&idev->lock);
++	read_lock_bh(&idev->lock);
+ 	list_for_each_entry(ifa, &idev->addr_list, if_list) {
+ 		mvmvif->target_ipv6_addrs[idx] = ifa->addr;
+ 		idx++;
+ 		if (idx >= IWL_PROTO_OFFLOAD_NUM_IPV6_ADDRS)
+ 			break;
+ 	}
+-	read_unlock(&idev->lock);
++	read_unlock_bh(&idev->lock);
+ 
+ 	mvmvif->num_target_ipv6_addrs = idx;
+ }
 -- 
-1.7.11.7
+1.8.0
 
