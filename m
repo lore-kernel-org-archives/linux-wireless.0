@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51759 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab3BUBGQ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56341 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284Ab3BMTZb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 20:06:16 -0500
-Message-ID: <51257304.10109@candelatech.com> (sfid-20130221_020619_907481_72CCE586)
-Date: Wed, 20 Feb 2013 17:06:12 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 13 Feb 2013 14:25:31 -0500
+Date: Wed, 13 Feb 2013 13:25:19 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
+ flag to a set of modes
+Message-ID: <20130213192519.GD22867@thinkpad-t410> (sfid-20130213_202535_654107_2B75F7D9)
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+ <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
+ <1360767970.8868.24.camel@jlt4.sipsolutions.net>
+ <20130213170445.GC22867@thinkpad-t410>
+ <511BE15B.8090507@broadcom.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
- high.
-References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL> <511BC243.8010409@candelatech.com> <20770.57339.20017.225929@gargle.gargle.HOWL> <51255360.6060603@candelatech.com>
-In-Reply-To: <51255360.6060603@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <511BE15B.8090507@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/20/2013 02:51 PM, Ben Greear wrote:
-> On 02/18/2013 06:14 PM, Sujith Manoharan wrote:
->> Ben Greear wrote:
->>> On 02/11/2013 04:11 PM, Sujith Manoharan wrote:
->>>> Ben Greear wrote:
->>>>> axq-qnum:                    2          3         1         0
->>>>> axq-depth:                   0          0         0         0
->>>>> axq-ampdu_depth:             0          0         0         0
->>>>> axq-stopped                  1          0         0         0
->>>>> tx-in-progress               0          0         0         0
->>>>> pending-frames             125          0         0         0
->>>>
->>>> The frames appear to be stuck in the pending queue.
->>>
->>> Any ideas on what code to go poking at?
->>
->> xmit.c would be a good place. Can you also post the kernel log with some
->> debugging information ? debug=0x8f49 would be good.
+On Wed, Feb 13, 2013 at 07:54:19PM +0100, Arend van Spriel wrote:
+> On 02/13/2013 06:04 PM, Seth Forshee wrote:
+> >> Is all this really worth it? It seems a quick fix for brcmsmac might be
+> >> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
+> >> > enabled in the config, and then go implement a real solution like I
+> >> > described earlier with powersave being separated out of the core
+> >> > mac80211 routines, and actually made possible for multiple interfaces?
+> > Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
+> > PS is sent the flag won't be set, as we're still on the operating
+> > channel. When we're actually off-channel the value of PM doesn't matter
+> > for the types of frames which are being sent. The only quick fix I've
+> > found is to watch out for frames with PM set and set the powersave bit
+> > while they're being transmitted.
+> 
+> I actually don't see that one fly. The frames are posted on a DMA fifo
+> towards the hardware so in the driver we have no clue when that frame is
+> being processes/transmitted hence no way of knowing when to write the
+> register(s).
 
-I was 2/2 hitting the problem without debug set, but
-had two clean runs with debugging enabled.  Either I'm
-unlucky, or enabling debugging messes with things enough
-to make the problem go away :P
+There's a couple of ways of doing it. I had a working patch at one point
+but can't seem to find it now, so I'm not sure which way I used. You're
+right though that we can't tell when the hardware is actually processing
+or transmitting the frame, so in either case MCTL_HPS has to be set
+before you put the frame in the tx fifo.
 
-Maybe looking at the xmit number can give some info?
+The first option is that for any frame with PM set, set MCTL_HPS when
+mac80211 hands off the frame and clear it once it has finished
+transmitting.
 
-> axq-qnum:                    2          3         1         0
-> axq-depth:                   0          0         0         0
-> axq-ampdu_depth:             0          0         0         0
-> axq-stopped                  1          0         0         0
-> tx-in-progress               0          0         0         0
-> pending-frames             123          0         0         0
-> txq_headidx:                 7          0         0         6
-> txq_tailidx:                 7          0         0         6
+The second option is to look specifically for nullfunc frames and set or
+clear MCTL_HPS based on the value of PM.
 
-For instance, in this case, why do we have pending frames, the axq-stopped,
-and no axq depth?  Is that an invalid state to begin with?  Once
-it gets in the hung state, those numbers never change.  I'd assume
-something should be poking more packets out of the pending frames
-down into the axq logic?
+Either of these should work fine with the current mac80211 code, but
+overall the second one is probably a little safer.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Seth
 
