@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59211 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754637Ab3BOKuI (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:47222 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755666Ab3BMEtq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 05:50:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 12 Feb 2013 23:49:46 -0500
+Date: Wed, 13 Feb 2013 10:08:33 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix harmless station flush warning
-Date: Fri, 15 Feb 2013 11:49:56 +0100
-Message-Id: <1360925396-18355-1-git-send-email-johannes@sipsolutions.net> (sfid-20130215_115014_486099_278D969B)
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] iw: Add VHT info in link query
+Message-ID: <20130213043833.GA842@markyou.marvell.com> (sfid-20130213_054950_071209_98B0F769)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Show VHT mcs, nss and bw, if present, in
+iw dev link.
 
-If an interface is set down while authenticating or
-associating, there's a station entry that will be
-removed by the flushing in do_stop() and that will
-cause a warning. It's otherwise harmless, but avoid
-the warning by calling ieee80211_mgd_stop() first.
+Eg.,
+Connected to 10:6f:3f:4d:94:b4 (on mlan0)
+        SSID: 122920
+        freq: 5180
+        RX: 0 bytes (0 packets)
+        TX: 88 bytes (1 packets)
+        signal: -51 dBm
+        tx bitrate: 650.0 MBit/s VHT-MCS 7 80Mhz short GI VHT-NSS 2
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+        bss flags:
+        dtim period:    1
+        beacon int:     100
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- net/mac80211/iface.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ link.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 4a7129c..fe62a99 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -695,6 +695,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+diff --git a/link.c b/link.c
+index 3470c4d..ef8f4d3 100644
+--- a/link.c
++++ b/link.c
+@@ -187,10 +187,20 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
  
- 	ieee80211_roc_purge(sdata);
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_mgd_stop(sdata);
-+
- 	/*
- 	 * Remove all stations associated with this interface.
- 	 *
-@@ -782,8 +785,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 			}
+ 			if (rinfo[NL80211_RATE_INFO_MCS])
+ 				printf(" MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]));
++			if (rinfo[NL80211_RATE_INFO_VHT_MCS])
++				printf(" VHT-MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_VHT_MCS]));
+ 			if (rinfo[NL80211_RATE_INFO_40_MHZ_WIDTH])
+ 				printf(" 40Mhz");
++			if (rinfo[NL80211_RATE_INFO_80_MHZ_WIDTH])
++				printf(" 80Mhz");
++			if (rinfo[NL80211_RATE_INFO_80P80_MHZ_WIDTH])
++				printf(" 80P80Mhz");
++			if (rinfo[NL80211_RATE_INFO_160_MHZ_WIDTH])
++				printf(" 160Mhz");
+ 			if (rinfo[NL80211_RATE_INFO_SHORT_GI])
+ 				printf(" short GI");
++			if (rinfo[NL80211_RATE_INFO_VHT_NSS])
++				printf(" VHT-NSS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_VHT_NSS]));
+ 			printf("\n");
  		}
- 		spin_unlock_irqrestore(&ps->bc_buf.lock, flags);
--	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--		ieee80211_mgd_stop(sdata);
  	}
- 
- 	if (going_down)
 -- 
-1.8.0
+1.8.0.3
 
