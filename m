@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52903 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51593 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757465Ab3BFWK2 (ORCPT
+	with ESMTP id S1759439Ab3BMOcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 17:10:28 -0500
-Message-ID: <1360188651.7910.80.camel@jlt4.sipsolutions.net> (sfid-20130206_231031_585207_E5BB62C7)
-Subject: Re: [PATCH 3/4] mac80211: Improve error handling for off-channel
- operation
+	Wed, 13 Feb 2013 09:32:19 -0500
+Message-ID: <1360765934.8868.14.camel@jlt4.sipsolutions.net> (sfid-20130213_153227_079587_3F99A296)
+Subject: Re: [PATCH] mac80211: start auth/assoc timeout on frame status
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Wed, 06 Feb 2013 23:10:51 +0100
-In-Reply-To: <20130206220517.GC6280@thinkpad-t410>
-References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
-	 <1360162873-17240-4-git-send-email-seth.forshee@canonical.com>
-	 <1360187077.7910.78.camel@jlt4.sipsolutions.net>
-	 <20130206220517.GC6280@thinkpad-t410>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 13 Feb 2013 15:32:14 +0100
+In-Reply-To: <511BA1E5.40402@neratec.com>
+References: <1359638935-16613-1-git-send-email-johannes@sipsolutions.net>
+	   (sfid-20130131_142837_609017_1B1D23D2) <1359992600.10311.25.camel@jlt4.sipsolutions.net>
+	  <511B9807.6000200@neratec.com>
+	 <1360765274.8868.13.camel@jlt4.sipsolutions.net>
+	 <511BA1E5.40402@neratec.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-06 at 16:05 -0600, Seth Forshee wrote:
-> On Wed, Feb 06, 2013 at 10:44:37PM +0100, Johannes Berg wrote:
-> > On Wed, 2013-02-06 at 09:01 -0600, Seth Forshee wrote:
-> > > Errors in sending the nullfunc frame to set powersave at the AP for
-> > > off-channel operation can lead to high packet loss. Add error handling
-> > > to fail going off-channel when this happens, and return an error to
-> > > userspace.
-> > 
-> > With the flushes in place, have you ever seen this fail? This and patch
-> > ones seems like a lot of churn for only half of what you'd want -- what
-> > you really want is to know if the AP ACKed the frame...
-> 
-> That's a good point. I've seen iw fail to initiate scans, but I can't
-> say whether or not any of them was due to the queues being stopped for
-> some reason. When I was testing NetworkManager was still managing the
-> interface, so at least some failures were undobtedly because another
-> scan was ongoing.
+On Wed, 2013-02-13 at 15:23 +0100, Wojciech Dubowik wrote:
 
-Yeah you'd expect that. I think you could tell the difference -- EBUSY
-vs. whatever other error code you chose?
+> >> I have seen it before in my testing and it gets
+> >> a lot worse with system load.  Sometimes it can
+> >> retry auth/assoc frames for 10 seconds before
+> >> connecting.
+> >> Anyway it always looses the first authentication frame.
+> > I think I see what's happening -- can you try this patch?
+> >
+> > http://p.sipsolutions.net/61f4271fed0e446b.txt
+> >
+> I have tried and it doesn't do timeout anymore. I will continue
+> testing with more load.
 
-> I'd considered trying to expand this to check whether or not the frame
-> was acked -- in fact just today I captured a trace where the AP didn't
-> ack the frame but the STA went off-channel anyway. I'm not sure how to
-> implement that yet, and haven't found time to look into it.
+Ok. I just realized that it needs to receive frames for this to happen,
+which may not happen here because my environment is quiet.
 
-It means waiting for the TX status from the driver, which might not
-really come with all drivers at all, making it somewhat tricky in
-general.
-
-Anyway my point is that this doesn't really help all that much, and
-patch 1 and 3 together is a lot of churn ...
+Let me know, I'll also try to test a bit more.
 
 johannes
 
