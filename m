@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59752 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51708 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753967Ab3BON6d (ORCPT
+	with ESMTP id S934025Ab3BMPGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 08:58:33 -0500
-Message-ID: <1360936708.15040.18.camel@jlt4.sipsolutions.net> (sfid-20130215_145838_277092_BB6338D7)
-Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into
- neighbour_update
+	Wed, 13 Feb 2013 10:06:20 -0500
+Message-ID: <1360767970.8868.24.camel@jlt4.sipsolutions.net> (sfid-20130213_160625_377832_EF71C4D5)
+Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
+ flag to a set of modes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org
-Date: Fri, 15 Feb 2013 14:58:28 +0100
-In-Reply-To: <511E3CB7.4040207@cozybit.com> (sfid-20130215_144844_328347_5B0B2D91)
-References: <1360928446-543-1-git-send-email-marco@cozybit.com>
-	  	 (sfid-20130215_124056_325990_55BC105E) <1360930499.15040.7.camel@jlt4.sipsolutions.net>
-	   <3fance.mi9hwg.2rw1te-qmf@mx.google.com>
-	   (sfid-20130215_134116_713607_1FD8E99F) <1360932381.15040.11.camel@jlt4.sipsolutions.net>
-	  <511E38B2.40900@cozybit.com>
-	 (sfid-20130215_143133_867871_FDF7438A) <1360935431.15040.14.camel@jlt4.sipsolutions.net>
-	 <511E3CB7.4040207@cozybit.com> (sfid-20130215_144844_328347_5B0B2D91)
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Luciano Coelho <coelho@ti.com>, ath9k-devel@lists.ath9k.org,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Date: Wed, 13 Feb 2013 16:06:10 +0100
+In-Reply-To: <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+	 <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 14:48 +0100, Marco Porsch wrote:
-
-> > I'm talking about this API:
-> >
-> > mesh_neighbour_update:
-> > ...
-> > 	tsf = drv_get_tsf()
-> > ...
-> > 	sync_ops->rx_bcn(..., tsf)
-> >
-> >
-> > mesh_sync_offset_rx_bcn(..., t_r):
-> > 	...
-> > 	if (have_better_timestamp)
-> > 		t_r = get_better_timestamp()
-> >
-> >
-> > You can hardly claim that's an intuitive API.
+On Wed, 2013-02-06 at 15:01 -0600, Seth Forshee wrote:
+> The powersave configuration in struct ieee80211_conf is currently a
+> binary state, either enabled or disabled. This is inadequate for
+> expressing the situation during off-channel operation, when powersave is
+> set at the AP to request bufferring of frames but the hardware remains
+> fully awake. Some drivers (e.g. brcmsmac) need to perform configuration
+> to support this in-between state but lack the information to do so.
 > 
-> Hm, alright. Just saying that ieee80211_mps_sta_tbtt_update still uses 
-> the unchanged TSF value. But hey :)
+> To prepare for adding an off-channel powersave mode, expand the current
+> powersave configuration flag to two bits to support expressing another
+> state. Add helper functions for setting and retrieving the state, and
+> convert mac80211 and drivers to use these functions.
+> 
+> In changing from a binary flag to powersave mode, also update the
+> terminology used to name the states for clarity. The "enabled" state is
+> changed to "doze" to indicate a low power hardware state, and the
+> "disabled" state is changed to "awake" to indicate a fully powerd on
+> hardware state. This is consistent with the terminology defined in IEEE
+> 802.11-2012 section 10.2.1.2.
 
-Well, that function doesn't exist in this patch...
+Ok so I'm reviewing this again.
 
-> What would be more favourable then?
+I'm not really convinced this is the right thing to do. Sooner or later,
+multi-virtual interface support will become more relevant, and then all
+of this is completely moot because then powersave is entirely disabled
+and not handled right now.
 
-I guess you can tell I'm not in a good mood today. I think any use of
-get_tsf() for operation is a complete waste of time, there's no way you
-can get the timings correct. You could be preempted, and suddenly sleep
-for a few tens or hundreds milliseconds, so none of this makes any
-sense... To properly do it you have to do calculations in relative times
-and let the device apply them.
+Is all this really worth it? It seems a quick fix for brcmsmac might be
+to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
+enabled in the config, and then go implement a real solution like I
+described earlier with powersave being separated out of the core
+mac80211 routines, and actually made possible for multiple interfaces?
 
 johannes
 
