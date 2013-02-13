@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52110 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934926Ab3BTT6i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 14:58:38 -0500
-Message-ID: <1361390290.8579.4.camel@jlt4.sipsolutions.net> (sfid-20130220_205853_849162_10187BDB)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 20:58:10 +0100
-In-Reply-To: <1361387854.19353.214.camel@edumazet-glaptop> (sfid-20130220_201740_409859_E87FECD4)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
-	 <1361381096.19353.195.camel@edumazet-glaptop>
-	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
-	 <1361387854.19353.214.camel@edumazet-glaptop>
-	 (sfid-20130220_201740_409859_E87FECD4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.neratec.com ([80.75.119.105]:40621 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934249Ab3BMPq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 10:46:58 -0500
+Message-ID: <511BB425.2030400@neratec.com> (sfid-20130213_164809_555361_BF3D8D7D)
+Date: Wed, 13 Feb 2013 16:41:25 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: start auth/assoc timeout on frame status
+References: <1359638935-16613-1-git-send-email-johannes@sipsolutions.net> <1359992600.10311.25.camel@jlt4.sipsolutions.net> <511B9807.6000200@neratec.com> <1360765274.8868.13.camel@jlt4.sipsolutions.net> <511BA1E5.40402@neratec.com> <1360765934.8868.14.camel@jlt4.sipsolutions.net> <1360766384.8868.15.camel@jlt4.sipsolutions.net> <511BAF4D.7090706@neratec.com> <20763.45827.549496.955059@gargle.gargle.HOWL>
+In-Reply-To: <20763.45827.549496.955059@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 11:17 -0800, Eric Dumazet wrote:
-> On Wed, 2013-02-20 at 19:16 +0100, Johannes Berg wrote:
-> 
-> > Yes and no. The current code doesn't pull in much data, not even the IP
-> > header, so worst case it copies 14 bytes (ethernet header) in mac80211
-> > to obtain alignment. By pulling in everything here, it later has to copy
-> > everything again later to obtain alignment.
-> 
-> Can you give me pointers to the code doing that ?
+On 02/13/2013 04:36 PM, Sujith Manoharan wrote:
+> Wojciech Dubowik wrote:
+>> I don't see anymore timeouts. Sometimes station tries to authenticate,
+>> sends direct probe, timeouts and then goes again with auth message.
+> If you are using ath9k_rate_control, can you check if you still see the issue
+> with minstrel_ht ?
+I am using minstrel.
 
-Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
-CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+The above problem actually came from my  setup. I was using
+my hostpad with trial support for ap_scan=2, that's what I am
+trying to work on now. My test scripts are not very mature yet...
 
-> On x86 we should not doing anything.
+With stock hostapd and ap_scan=1 it seems to work quite
+fine.
 
-We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
-defined.
-
-johannes
-
+Wojtek
