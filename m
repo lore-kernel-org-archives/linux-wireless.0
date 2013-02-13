@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2906 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755116Ab3BGU22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:28:28 -0500
-From: Tim Gardner <tim.gardner@canonical.com>
-To: linux-kernel@vger.kernel.org
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH wireless-next V2] brcmsmac: avoid 512 byte stack variable
-Date: Thu,  7 Feb 2013 13:28:09 -0700
-Message-Id: <1360268889-52985-1-git-send-email-tim.gardner@canonical.com> (sfid-20130207_212847_313038_47769057)
-In-Reply-To: <51140CFB.1060100@broadcom.com>
-References: <51140CFB.1060100@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:39950 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934410Ab3BMQlt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 11:41:49 -0500
+Message-ID: <511BC243.8010409@candelatech.com> (sfid-20130213_174218_148417_8646BAF1)
+Date: Wed, 13 Feb 2013 08:41:39 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL>
+In-Reply-To: <20761.34987.125000.908722@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dynamically allocate the probe response template which
-avoids potential stack corruption. Observed with smatch:
+On 02/11/2013 04:11 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> axq-qnum:                    2          3         1         0
+>> axq-depth:                   0          0         0         0
+>> axq-ampdu_depth:             0          0         0         0
+>> axq-stopped                  1          0         0         0
+>> tx-in-progress               0          0         0         0
+>> pending-frames             125          0         0         0
+>
+> The frames appear to be stuck in the pending queue.
 
-drivers/net/wireless/brcm80211/brcmsmac/main.c:7412 brcms_c_bss_update_probe_resp()
- warn: 'prb_resp' puts 512 bytes on stack
+Any ideas on what code to go poking at?
 
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index c26992a..ea88abe 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7408,9 +7408,13 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
- 			      struct brcms_bss_cfg *cfg,
- 			      bool suspend)
- {
--	u16 prb_resp[BCN_TMPL_LEN / 2];
-+	u16 *prb_resp;
- 	int len = BCN_TMPL_LEN;
- 
-+	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
-+	if (!prb_resp)
-+		return;
-+
- 	/*
- 	 * write the probe response to hardware, or save in
- 	 * the config structure
-@@ -7444,6 +7448,8 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
- 
- 	if (suspend)
- 		brcms_c_enable_mac(wlc);
-+
-+	kfree(prb_resp);
- }
- 
- void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
