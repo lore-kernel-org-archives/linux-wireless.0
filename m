@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:37999 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760366Ab3BHWpD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53276 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760454Ab3BMXsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 17:45:03 -0500
-Date: Fri, 08 Feb 2013 17:45:00 -0500 (EST)
-Message-Id: <20130208.174500.1518593039138341685.davem@davemloft.net> (sfid-20130208_234508_884321_8A706FB3)
-To: joe@perches.com
-Cc: netdev@vger.kernel.org, linux-can@vger.kernel.org,
-	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, wil6210@qca.qualcomm.com,
-	brcm80211-dev-list@broadcom.com,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH] drivers: net: Remove remaining alloc/OOM messages
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1360273587.27863.15.camel@joe-AO722>
-References: <1360273587.27863.15.camel@joe-AO722>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 13 Feb 2013 18:48:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, green@qca.qualcomm.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 1/3] regulatory: allow VHT channels in world roaming
+Date: Thu, 14 Feb 2013 00:47:52 +0100
+Message-Id: <1360799274-16088-2-git-send-email-johannes@sipsolutions.net> (sfid-20130214_004810_651220_97A30DEF)
+In-Reply-To: <1360799274-16088-1-git-send-email-johannes@sipsolutions.net>
+References: <1360799274-16088-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Thu, 07 Feb 2013 13:46:27 -0800
+From: Johannes Berg <johannes.berg@intel.com>
 
-> alloc failures already get standardized OOM
-> messages and a dump_stack.
-> 
-> For the affected mallocs around these OOM messages:
-> 
-> Converted kmallocs with multiplies to kmalloc_array.
-> Converted a kmalloc/memcpy to kmemdup.
-> Removed now unused stack variables.
-> Removed unnecessary parentheses.
-> Neatened alignment.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+For VHT, the wider bandwidths (up to 160 MHz) need
+to be allowed. Since world roaming only covers the
+case of connecting to an AP, it can be opened up
+there, we will rely on the AP to know the local
+regulations.
 
-Applied, thanks Joe.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e97d5b0..bf35e1f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -184,14 +184,14 @@ static const struct ieee80211_regdomain world_regdom = {
+ 			NL80211_RRF_NO_IBSS |
+ 			NL80211_RRF_NO_OFDM),
+ 		/* IEEE 802.11a, channel 36..48 */
+-		REG_RULE(5180-10, 5240+10, 40, 6, 20,
++		REG_RULE(5180-10, 5240+10, 80, 6, 20,
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
+ 
+-		/* NB: 5260 MHz - 5700 MHz requies DFS */
++		/* NB: 5260 MHz - 5700 MHz requires DFS */
+ 
+ 		/* IEEE 802.11a, channel 149..165 */
+-		REG_RULE(5745-10, 5825+10, 40, 6, 20,
++		REG_RULE(5745-10, 5825+10, 80, 6, 20,
+ 			NL80211_RRF_PASSIVE_SCAN |
+ 			NL80211_RRF_NO_IBSS),
+ 
+-- 
+1.8.0
+
