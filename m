@@ -1,93 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51218 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754409Ab3BMNC7 (ORCPT
+Received: from mail-da0-f43.google.com ([209.85.210.43]:64051 "EHLO
+	mail-da0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934004Ab3BMUPg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 08:02:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: chaitanya.mgit@gmail.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't call bss_info_changed on p2p-device/monitor
-Date: Wed, 13 Feb 2013 14:02:52 +0100
-Message-Id: <1360760572-28364-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_140303_577453_12828F58)
+	Wed, 13 Feb 2013 15:15:36 -0500
+Received: by mail-da0-f43.google.com with SMTP id u36so708235dak.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 12:15:35 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 3/3] mac80211: generate mesh probe responses
+Date: Wed, 13 Feb 2013 12:14:21 -0800
+Message-Id: <1360786461-30107-3-git-send-email-thomas@cozybit.com> (sfid-20130213_211543_942233_BA760A3C)
+In-Reply-To: <1360786461-30107-1-git-send-email-thomas@cozybit.com>
+References: <1360786461-30107-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Mesh interfaces will now respond to any broadcast (or
+matching directed mesh) probe requests with a probe
+response.
 
-Since the idle decision rework, mac80211 started calling
-bss_info_changed() for the driver's monitor interface,
-which causes a crash for iwlwifi, but drivers generally
-don't expect this to happen. Therefore, avoid it.
-
-While at it, also prevent calling it in such cases and
-only print a warning. For the P2P Device interface the
-idle will no longer be called (no channel context), so
-also prevent that and warn on it.
-
-Reported-by: Chaitanya <chaitanya.mgit@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- net/mac80211/chan.c       | 10 ++++++++--
- net/mac80211/driver-ops.h | 17 ++++++++++-------
- 2 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 038f249..b2ccb74 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -137,7 +137,10 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_recalc_txpower(sdata);
- 	sdata->vif.bss_conf.idle = false;
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
- 
- 	return 0;
+v2:
+	less verbose (Johannes)
+
+ net/mac80211/mesh.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c   |    5 +++--
+ 2 files changed, 64 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index d9426e0..aecbf67 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -862,6 +862,64 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	sdata->u.mesh.timers_running = 0;
  }
-@@ -186,7 +189,10 @@ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
- 	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
  
- 	sdata->vif.bss_conf.idle = true;
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
++static void
++ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
++			    struct ieee80211_mgmt *mgmt, size_t len)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct sk_buff *presp;
++	struct beacon_data *bcn;
++	struct ieee80211_mgmt *hdr;
++	struct ieee802_11_elems elems;
++	size_t baselen;
++	u8 *pos, *end;
 +
-+	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
- 
- 	drv_unassign_vif_chanctx(local, sdata, ctx);
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 2b08b99..ee56d07 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -207,13 +207,16 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- {
- 	might_sleep();
- 
--	WARN_ON_ONCE(changed & (BSS_CHANGED_BEACON |
--				BSS_CHANGED_BEACON_ENABLED) &&
--		     sdata->vif.type != NL80211_IFTYPE_AP &&
--		     sdata->vif.type != NL80211_IFTYPE_ADHOC &&
--		     sdata->vif.type != NL80211_IFTYPE_MESH_POINT);
--	WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE &&
--		     changed & ~BSS_CHANGED_IDLE);
-+	if (WARN_ON_ONCE(changed & (BSS_CHANGED_BEACON |
-+				    BSS_CHANGED_BEACON_ENABLED) &&
-+			 sdata->vif.type != NL80211_IFTYPE_AP &&
-+			 sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+			 sdata->vif.type != NL80211_IFTYPE_MESH_POINT))
++	end = ((u8 *) mgmt) + len;
++	pos = mgmt->u.probe_req.variable;
++	baselen = (u8 *) pos - (u8 *) mgmt;
++	if (baselen > len)
 +		return;
 +
-+	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
-+			 sdata->vif.type == NL80211_IFTYPE_MONITOR))
++	ieee802_11_parse_elems(pos, len - baselen, &elems);
++
++	/* 802.11-2012 10.1.4.3.2 */
++	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
++	     !is_broadcast_ether_addr(mgmt->da)) ||
++	    elems.ssid_len != 0)
 +		return;
- 
- 	check_sdata_in_driver(sdata);
- 
++
++	if (elems.mesh_id_len != 0 &&
++	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
++	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len)))
++		return;
++
++	rcu_read_lock();
++	bcn = rcu_dereference(ifmsh->beacon);
++
++	if (!bcn)
++		goto out;
++
++	presp = dev_alloc_skb(local->tx_headroom +
++			      bcn->head_len + bcn->tail_len);
++	if (!presp)
++		goto out;
++
++	skb_reserve(presp, local->tx_headroom);
++	memcpy(skb_put(presp, bcn->head_len), bcn->head, bcn->head_len);
++	memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
++	hdr = (struct ieee80211_mgmt *) presp->data;
++	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					 IEEE80211_STYPE_PROBE_RESP);
++	memcpy(hdr->da, mgmt->sa, ETH_ALEN);
++	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
++	IEEE80211_SKB_CB(presp)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	ieee80211_tx_skb(sdata, presp);
++out:
++	rcu_read_unlock();
++	return;
++}
++
+ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 					u16 stype,
+ 					struct ieee80211_mgmt *mgmt,
+@@ -951,6 +1009,9 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_mesh_rx_bcn_presp(sdata, stype, mgmt, skb->len,
+ 					    rx_status);
+ 		break;
++	case IEEE80211_STYPE_PROBE_REQ:
++		ieee80211_mesh_rx_probe_req(sdata, mgmt, skb->len);
++		break;
+ 	case IEEE80211_STYPE_ACTION:
+ 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
+ 		break;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b5f1bba..34aa975 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2692,8 +2692,9 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_PROBE_REQ):
+-		/* process only for ibss */
+-		if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
++		/* process only for ibss and mesh */
++		if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	default:
 -- 
-1.8.0
+1.7.10.4
 
