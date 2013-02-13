@@ -1,68 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22662 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759926Ab3BZKGK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51218 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754409Ab3BMNC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 05:06:10 -0500
-Date: Tue, 26 Feb 2013 13:04:51 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ray_cs: read past the end of the array
-Message-ID: <20130226100451.GA12364@longonot.mountain> (sfid-20130226_110615_720329_399DBC51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 13 Feb 2013 08:02:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: chaitanya.mgit@gmail.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't call bss_info_changed on p2p-device/monitor
+Date: Wed, 13 Feb 2013 14:02:52 +0100
+Message-Id: <1360760572-28364-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_140303_577453_12828F58)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"translate" should either be set or disabled.  We also use it an
-offset into the framing[] array when we're generating the proc
-file.  Framing looks like this:
+From: Johannes Berg <johannes.berg@intel.com>
 
-static const char *framing[] = { "Encapsulation", "Translation" }
+Since the idle decision rework, mac80211 started calling
+bss_info_changed() for the driver's monitor interface,
+which causes a crash for iwlwifi, but drivers generally
+don't expect this to happen. Therefore, avoid it.
 
-So when we're setting translate we need to restrict the values to
-either 1 or 0 or it can an out of bounds read.
+While at it, also prevent calling it in such cases and
+only print a warning. For the P2P Device interface the
+idle will no longer be called (no channel context), so
+also prevent that and warn on it.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reported-by: Chaitanya <chaitanya.mgit@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Compile tested only.  This function currently doesn't have
-permission checks but maybe it should.
+ net/mac80211/chan.c       | 10 ++++++++--
+ net/mac80211/driver-ops.h | 17 ++++++++++-------
+ 2 files changed, 18 insertions(+), 9 deletions(-)
 
-There are a couple other overflow warnings in this file that look
-valid, but I don't know what was intended.
-
-drivers/net/wireless/ray_cs.c:602 init_startup_params() error: memcpy() 'b4_default_startup_parms' too small (85 vs 93)
-drivers/net/wireless/ray_cs.c:965 translate_frame() warn: buffer overflow '(ptx->var)->org' 3 <= 3
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index e7cf37f..6ee5055 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -144,7 +144,7 @@ static int psm;
- static char *essid;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 038f249..b2ccb74 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -137,7 +137,10 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
  
- /* Default to encapsulation unless translation requested */
--static int translate = 1;
-+static bool translate = 1;
- 
- static int country = USA;
- 
-@@ -178,7 +178,7 @@ module_param(hop_dwell, int, 0);
- module_param(beacon_period, int, 0);
- module_param(psm, int, 0);
- module_param(essid, charp, 0);
--module_param(translate, int, 0);
-+module_param(translate, bool, 0);
- module_param(country, int, 0);
- module_param(sniffer, int, 0);
- module_param(bc, int, 0);
-@@ -1353,7 +1353,7 @@ static int ray_get_range(struct net_device *dev, struct iw_request_info *info,
- static int ray_set_framing(struct net_device *dev, struct iw_request_info *info,
- 			   union iwreq_data *wrqu, char *extra)
- {
--	translate = *(extra);	/* Set framing mode */
-+	translate = !!*(extra);	/* Set framing mode */
+ 	ieee80211_recalc_txpower(sdata);
+ 	sdata->vif.bss_conf.idle = false;
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
++
++	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
  
  	return 0;
  }
+@@ -186,7 +189,10 @@ static void ieee80211_unassign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(sdata->vif.chanctx_conf, NULL);
+ 
+ 	sdata->vif.bss_conf.idle = true;
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
++
++	if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
+ 
+ 	drv_unassign_vif_chanctx(local, sdata, ctx);
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 2b08b99..ee56d07 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -207,13 +207,16 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ {
+ 	might_sleep();
+ 
+-	WARN_ON_ONCE(changed & (BSS_CHANGED_BEACON |
+-				BSS_CHANGED_BEACON_ENABLED) &&
+-		     sdata->vif.type != NL80211_IFTYPE_AP &&
+-		     sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+-		     sdata->vif.type != NL80211_IFTYPE_MESH_POINT);
+-	WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE &&
+-		     changed & ~BSS_CHANGED_IDLE);
++	if (WARN_ON_ONCE(changed & (BSS_CHANGED_BEACON |
++				    BSS_CHANGED_BEACON_ENABLED) &&
++			 sdata->vif.type != NL80211_IFTYPE_AP &&
++			 sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++			 sdata->vif.type != NL80211_IFTYPE_MESH_POINT))
++		return;
++
++	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
++			 sdata->vif.type == NL80211_IFTYPE_MONITOR))
++		return;
+ 
+ 	check_sdata_in_driver(sdata);
+ 
+-- 
+1.8.0
+
