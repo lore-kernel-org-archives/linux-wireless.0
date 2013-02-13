@@ -1,79 +1,463 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f44.google.com ([209.85.210.44]:50172 "EHLO
-	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754206Ab3BTRjs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50944 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933854Ab3BML03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:39:48 -0500
-Message-ID: <1361381986.19353.205.camel@edumazet-glaptop> (sfid-20130220_183956_441414_E1C93D32)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 09:39:46 -0800
-In-Reply-To: <1361379597.8629.39.camel@jlt4.sipsolutions.net>
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44) <1361379597.8629.39.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Feb 2013 06:26:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/2] mac80211: pass queue bitmap to flush operation
+Date: Wed, 13 Feb 2013 12:26:22 +0100
+Message-Id: <1360754783-13549-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_122636_036590_482C46AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 17:59 +0100, Johannes Berg wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Yeah, I don't follow netdev much any more...
-> 
+There are a number of situations in which mac80211 only
+really needs to flush queues for one virtual interface,
+and in fact during this frames might be transmitted on
+other virtual interfaces. Calculate and pass a queue
+bitmap to the driver so it knows which queues to flush.
 
-Short answer : tcp stack has autotuning sk_rcvbuf, tracking _memory_ use
-of a socket.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ar5523/ar5523.c           |  2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |  2 +-
+ drivers/net/wireless/ath/carl9170/main.c           |  2 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  2 +-
+ drivers/net/wireless/iwlegacy/common.c             |  3 +--
+ drivers/net/wireless/iwlegacy/common.h             |  2 +-
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  2 +-
+ drivers/net/wireless/mac80211_hwsim.c              |  2 +-
+ drivers/net/wireless/p54/main.c                    |  2 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |  2 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c            |  2 +-
+ drivers/net/wireless/rtlwifi/core.c                |  2 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  2 +-
+ include/net/mac80211.h                             |  9 ++++++---
+ net/mac80211/driver-ops.h                          |  7 ++++---
+ net/mac80211/ieee80211_i.h                         |  2 ++
+ net/mac80211/iface.c                               |  2 +-
+ net/mac80211/mlme.c                                |  8 ++++----
+ net/mac80211/offchannel.c                          |  4 ++--
+ net/mac80211/pm.c                                  |  2 +-
+ net/mac80211/scan.c                                |  4 ++--
+ net/mac80211/trace.h                               | 11 +++++++----
+ net/mac80211/util.c                                | 22 ++++++++++++++++++++++
+ 23 files changed, 64 insertions(+), 34 deletions(-)
 
-If network layer provides 8k fat skbs (holding 1500 bytes), the
-advertised TCP receive window will be much smaller than if network layer
-provides 2k skbs.
-
-Its quite visible in a tcpdump in the beginning of a tcp session.
-
-You'll see how linux grows the receive window, before and after my
-patch. You'll see how the sender can send its data faster.
-
-Providing nice skbs is a way to speedup Internet browsing, as most http
-traffic happen exactly while tcp receiver didnt yet advertised a big
-window. (Especially visible with large RTT)
-
-> > 
-> >         /* If frame is small enough to fit in skb->head, pull it completely.
-> >          * If not, only pull ieee80211_hdr so that splice() or TCP coalesce
-> >          * are more efficient.
-> >          */
-> 
-> Oh, right, though I guess the comment is now wrong since practically
-> every packet will be copied either here or in mac80211 (A-MSDUs are
-> split up there)
-
-Comment is not 'wrong', it describes what happens here.
-
-If there is enough room in skb->head to avoid attaching a page fragment
-to the skb, lets copy the frame so that the page fragment can be reused
-by the NIC driver immediately.
-
-
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 7157f7d..afd1e36 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -1091,7 +1091,7 @@ static int ar5523_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return ret;
+ }
+ 
+-static void ar5523_flush(struct ieee80211_hw *hw, bool drop)
++static void ar5523_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct ar5523 *ar = hw->priv;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5432f12..a5e1f8c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1748,7 +1748,7 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
++static void ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index f293b3f..08b1931 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1703,7 +1703,7 @@ found:
+ 	return 0;
+ }
+ 
+-static void carl9170_op_flush(struct ieee80211_hw *hw, bool drop)
++static void carl9170_op_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct ar9170 *ar = hw->priv;
+ 	unsigned int vid;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index b1dd560..7090f92 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -712,7 +712,7 @@ static void brcms_ops_rfkill_poll(struct ieee80211_hw *hw)
+ 	wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, blocked);
+ }
+ 
+-static void brcms_ops_flush(struct ieee80211_hw *hw, bool drop)
++static void brcms_ops_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct brcms_info *wl = hw->priv;
+ 
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 4c9aafb..3a76ca8 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4698,8 +4698,7 @@ out:
+ }
+ EXPORT_SYMBOL(il_mac_change_interface);
+ 
+-void
+-il_mac_flush(struct ieee80211_hw *hw, bool drop)
++void il_mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct il_priv *il = hw->priv;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(500);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 96f2025..853fe58 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1724,7 +1724,7 @@ void il_mac_remove_interface(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif);
+ int il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    enum nl80211_iftype newtype, bool newp2p);
+-void il_mac_flush(struct ieee80211_hw *hw, bool drop);
++void il_mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
+ int il_alloc_txq_mem(struct il_priv *il);
+ void il_free_txq_mem(struct il_priv *il);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 0fccf72..99f9dc0 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -997,7 +997,7 @@ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
+ }
+ 
+-static void iwlagn_mac_flush(struct ieee80211_hw *hw, bool drop)
++static void iwlagn_mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b73e497..e75c36b 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1389,7 +1389,7 @@ static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-static void mac80211_hwsim_flush(struct ieee80211_hw *hw, bool drop)
++static void mac80211_hwsim_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	/* Not implemented, queues only on kernel side */
+ }
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index aadda99..ee654a6 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -670,7 +670,7 @@ static unsigned int p54_flush_count(struct p54_common *priv)
+ 	return total;
+ }
+ 
+-static void p54_flush(struct ieee80211_hw *dev, bool drop)
++static void p54_flush(struct ieee80211_hw *dev, u32 queues, bool drop)
+ {
+ 	struct p54_common *priv = dev->priv;
+ 	unsigned int total, i;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 9a3f31a..cf385e6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -1358,7 +1358,7 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw,
+ 		      struct ieee80211_vif *vif, u16 queue,
+ 		      const struct ieee80211_tx_queue_params *params);
+ void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw);
+-void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop);
++void rt2x00mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop);
+ int rt2x00mac_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
+ int rt2x00mac_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
+ void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 20c6ecc..9161c02 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -748,7 +748,7 @@ void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_rfkill_poll);
+ 
+-void rt2x00mac_flush(struct ieee80211_hw *hw, bool drop)
++void rt2x00mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct data_queue *queue;
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index d3ce9fb..b5a7a26 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1166,7 +1166,7 @@ static void rtl_op_rfkill_poll(struct ieee80211_hw *hw)
+  * before switch channle or power save, or tx buffer packet
+  * maybe send after offchannel or rf sleep, this may cause
+  * dis-association by AP */
+-static void rtl_op_flush(struct ieee80211_hw *hw, bool drop)
++static void rtl_op_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 2c2ff3e..5e59c63 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4946,7 +4946,7 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+-static void wlcore_op_flush(struct ieee80211_hw *hw, bool drop)
++static void wlcore_op_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cf2e014..7c93ee7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2419,8 +2419,11 @@ enum ieee80211_rate_control_changed {
+  * @testmode_dump: Implement a cfg80211 test mode dump. The callback can sleep.
+  *
+  * @flush: Flush all pending frames from the hardware queue, making sure
+- *	that the hardware queues are empty. If the parameter @drop is set
+- *	to %true, pending frames may be dropped. The callback can sleep.
++ *	that the hardware queues are empty. The @queues parameter is a bitmap
++ *	of queues to flush, which is useful if different virtual interfaces
++ *	use different hardware queues; it may also indicate all queues.
++ *	If the parameter @drop is set to %true, pending frames may be dropped.
++ *	The callback can sleep.
+  *
+  * @channel_switch: Drivers that need (or want) to offload the channel
+  *	switch operation for CSAs received from the AP may implement this
+@@ -2670,7 +2673,7 @@ struct ieee80211_ops {
+ 			     struct netlink_callback *cb,
+ 			     void *data, int len);
+ #endif
+-	void (*flush)(struct ieee80211_hw *hw, bool drop);
++	void (*flush)(struct ieee80211_hw *hw, u32 queues, bool drop);
+ 	void (*channel_switch)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_channel_switch *ch_switch);
+ 	int (*napi_poll)(struct ieee80211_hw *hw, int budget);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 2b08b99..d537906 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -738,13 +738,14 @@ static inline void drv_rfkill_poll(struct ieee80211_local *local)
+ 		local->ops->rfkill_poll(&local->hw);
+ }
+ 
+-static inline void drv_flush(struct ieee80211_local *local, bool drop)
++static inline void drv_flush(struct ieee80211_local *local,
++			     u32 queues, bool drop)
+ {
+ 	might_sleep();
+ 
+-	trace_drv_flush(local, drop);
++	trace_drv_flush(local, queues, drop);
+ 	if (local->ops->flush)
+-		local->ops->flush(&local->hw, drop);
++		local->ops->flush(&local->hw, queues, drop);
+ 	trace_drv_return_void(local);
+ }
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1f82abf..5f2c7c9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1541,6 +1541,8 @@ static inline void ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ {
+ 	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
+ }
++void ieee80211_flush_queues(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata);
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 40ff030..f11543d 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -92,7 +92,7 @@ static u32 ieee80211_idle_on(struct ieee80211_local *local)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_IDLE)
+ 		return 0;
+ 
+-	drv_flush(local, false);
++	ieee80211_flush_queues(local, NULL);
+ 
+ 	local->hw.conf.flags |= IEEE80211_CONF_IDLE;
+ 	return IEEE80211_CONF_CHANGE_IDLE;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 63784c6..98591af 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1436,7 +1436,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		else {
+ 			ieee80211_send_nullfunc(local, sdata, 1);
+ 			/* Flush to get the tx status of nullfunc frame */
+-			drv_flush(local, false);
++			ieee80211_flush_queues(local, sdata);
+ 		}
+ 	}
+ 
+@@ -1754,7 +1754,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* flush out any pending frame (e.g. DELBA) before deauth/disassoc */
+ 	if (tx)
+-		drv_flush(local, false);
++		ieee80211_flush_queues(local, sdata);
+ 
+ 	/* deauthenticate/disassociate now */
+ 	if (tx || frame_buf)
+@@ -1763,7 +1763,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* flush out frame */
+ 	if (tx)
+-		drv_flush(local, false);
++		ieee80211_flush_queues(local, sdata);
+ 
+ 	/* clear bssid only after building the needed mgmt frames */
+ 	memset(ifmgd->bssid, 0, ETH_ALEN);
+@@ -1934,7 +1934,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+ 	run_again(ifmgd, ifmgd->probe_timeout);
+ 	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+-		drv_flush(sdata->local, false);
++		ieee80211_flush_queues(sdata->local, sdata);
+ }
+ 
+ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index cc79b4a..a3ed44a 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -120,7 +120,7 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 	 */
+ 	ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
+-	drv_flush(local, false);
++	ieee80211_flush_queues(local, NULL);
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -373,7 +373,7 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+ 		ieee80211_roc_notify_destroy(roc);
+ 
+ 		if (started) {
+-			drv_flush(local, false);
++			ieee80211_flush_queues(local, NULL);
+ 
+ 			local->tmp_channel = NULL;
+ 			ieee80211_hw_config(local, 0);
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 53801d2..d51e1bd 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -54,7 +54,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	/* flush out all packets */
+ 	synchronize_net();
+ 
+-	drv_flush(local, false);
++	ieee80211_flush_queues(local, NULL);
+ 
+ 	local->quiescing = true;
+ 	/* make quiescing visible to timers everywhere */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6d0b89e..5d99563 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -335,7 +335,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	ieee80211_offchannel_stop_vifs(local);
+ 
+ 	/* ensure nullfunc is transmitted before leaving operating channel */
+-	drv_flush(local, false);
++	ieee80211_flush_queues(local, NULL);
+ 
+ 	ieee80211_configure_filter(local);
+ 
+@@ -668,7 +668,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
+ 	ieee80211_offchannel_stop_vifs(local);
+ 
+ 	if (local->ops->flush) {
+-		drv_flush(local, false);
++		ieee80211_flush_queues(local, NULL);
+ 		*next_delay = 0;
+ 	} else
+ 		*next_delay = HZ / 10;
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0bdd7ae..9582b96 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -940,23 +940,26 @@ TRACE_EVENT(drv_get_survey,
+ );
+ 
+ TRACE_EVENT(drv_flush,
+-	TP_PROTO(struct ieee80211_local *local, bool drop),
++	TP_PROTO(struct ieee80211_local *local,
++		 u32 queues, bool drop),
+ 
+-	TP_ARGS(local, drop),
++	TP_ARGS(local, queues, drop),
+ 
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+ 		__field(bool, drop)
++		__field(u32, queues)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
+ 		__entry->drop = drop;
++		__entry->queues = queues;
+ 	),
+ 
+ 	TP_printk(
+-		LOCAL_PR_FMT " drop:%d",
+-		LOCAL_PR_ARG, __entry->drop
++		LOCAL_PR_FMT " queues:0x%x drop:%d",
++		LOCAL_PR_ARG, __entry->queues, __entry->drop
+ 	)
+ );
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 091ef08..8c7fdc9 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -511,6 +511,28 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queues);
+ 
++void ieee80211_flush_queues(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata)
++{
++	u32 queues;
++
++	if (sdata && local->hw.flags & IEEE80211_HW_QUEUE_CONTROL) {
++		int ac;
++
++		queues = 0;
++
++		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
++			queues |= BIT(sdata->vif.hw_queue[ac]);
++		if (sdata->vif.cab_queue != IEEE80211_INVAL_HW_QUEUE)
++			queues |= BIT(sdata->vif.cab_queue);
++	} else {
++		/* all queues */
++		queues = BIT(local->hw.queues) - 1;
++	}
++
++	drv_flush(local, queues, false);
++}
++
+ void ieee80211_iterate_active_interfaces(
+ 	struct ieee80211_hw *hw, u32 iter_flags,
+ 	void (*iterator)(void *data, u8 *mac,
+-- 
+1.8.0
 
