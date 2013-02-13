@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60020 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206Ab3BOPn6 (ORCPT
+Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:60162 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759204Ab3BMOuq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 10:43:58 -0500
-Message-ID: <1360943029.15040.20.camel@jlt4.sipsolutions.net> (sfid-20130215_164400_801062_59F224FC)
-Subject: Re: [PATCH] mac80211: enable vif.cab_queue for mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, Bob Copeland <bob@cozybit.com>
-Date: Fri, 15 Feb 2013 16:43:49 +0100
-In-Reply-To: <1360941514-9579-1-git-send-email-me@bobcopeland.com> (sfid-20130215_161930_899883_2EAFE24E)
-References: <1360941514-9579-1-git-send-email-me@bobcopeland.com>
-	 (sfid-20130215_161930_899883_2EAFE24E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Feb 2013 09:50:46 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+	Michael Braun <michael-dev@fami-braun.de>
+Subject: [RFCv5 1/2] mac80211: free ps->bc_buf skbs on vlan device stop
+Date: Wed, 13 Feb 2013 13:51:19 +0100
+Message-Id: <1360759880-5669-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130213_155055_526044_F505A9C5)
+In-Reply-To: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
+References: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 10:18 -0500, Bob Copeland wrote:
-> Since mesh powersaving was added, pending bcast/mcast frames may go out the
-> CAB queue now.  Unfortunately, the queue was only set up for AP mode, so we
-> would try to tx on the IEEE80211_INVAL_HW_QUEUE.  Allow cab_queue for mesh
-> interfaces as well.
+When the vlan device is removed, ps->bc_buf processing can no longer
+send its frames.
 
-Applied.
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+V4: Add this patch.
+V5: add spin_lock, switch order of patches
+ net/mac80211/iface.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-johannes
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 40ff030..bb1cdc6 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -680,6 +680,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+ 	int i, flushed;
++	struct ps_data *ps;
+ 
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+@@ -758,6 +759,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 					 u.vlan.list)
+ 			dev_close(vlan->dev);
+ 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
++	} else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		/* remove all packets in parent bc_buf pointing to this dev */
++		ps = &sdata->bss->ps;
++
++	        spin_lock_irqsave(&ps->bc_buf.lock, flags);
++		skb_queue_walk_safe(&ps->bc_buf, skb, tmp) {
++			if (skb->dev == sdata->dev) {
++				__skb_unlink(skb, &ps->bc_buf);
++				local->total_ps_buffered--;
++				kfree_skb(skb);
++			}
++		}
++        	spin_unlock_irqrestore(&ps->bc_buf.lock, flags);
+ 	} else if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		ieee80211_mgd_stop(sdata);
+ 	}
+-- 
+1.7.10.4
 
