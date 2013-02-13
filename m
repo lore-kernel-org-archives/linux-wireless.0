@@ -1,179 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:55587 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933056Ab3BLMUq (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37203 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760868Ab3BMVwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 07:20:46 -0500
+	Wed, 13 Feb 2013 16:52:38 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hi8so6316886wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 13:52:37 -0800 (PST)
+Message-ID: <511C0B22.6090600@gmail.com> (sfid-20130213_225242_342923_C40D3DC2)
+Date: Wed, 13 Feb 2013 22:52:34 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_a80c38007bc0fd153ca283e870fc9761"
-Date: Tue, 12 Feb 2013 13:15:36 +0100
-From: michael-dev <michael-dev@fami-braun.de>
-To: <linux-wireless@vger.kernel.org>
-Cc: <projekt-wlan@fem.tu-ilmenau.de>
-Subject: VLAN support broken
-Reply-To: <projekt-wlan@fem.tu-ilmenau.de>,
-	  <linux-wireless@vger.kernel.org>
-Message-ID: <a5de216143f5905d943b7604efbc5fae@fami-braun.de> (sfid-20130212_132051_121737_1E3EF719)
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org, green@qca.qualcomm.com
+Subject: Re: Russia RD Update - add 5GHz channels
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=_a80c38007bc0fd153ca283e870fc9761
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Michael Green wrote:
 
-Hi,
+> CHANGE to:
+> Band [MHz]		Max BW [MHz]	Max gain	Max EIRP [dBm=A0(mW)]
+> 2402.000 - 2482.000	40		N/A		20.00 (100.00)
+> 5170-5330		40		N/A		20.00 (100.00)
+> 5650-5710		40		N/A		30.00 (1000.00)
 
-I'm running OpenWRT von AR9003 (ath9k, Kernel 3.7.6 with 
-compat-wireless 2013-01-07 and openwrt patches) cards and have trouble 
-using vlans.
-In the test setup, two STAs connect using WPA (CCMP only) and are 
-assigned into the same VLAN.
-The VLAN device is bridged by hostapd.
+patch??
 
-With the first STA, everything is fine. Then the second STA connects. 
-Now hostapd sets it pairwise keys and moves the STA into the 
-VLAN-WLAN-device (i.e. wlan0_2.501).
-Then, the broadcasts start to be encryted with the GTK of the primary 
-wlan device (i.e. wlan0_2), although wlan0_2.501 is in the bridge. 
-Hostapd did not change the GTK of any device while this happens. As soon 
-as the second STA disconnects, the AP encrypts using the original key 
-again. Sending broadcasts from the STA to the AP works fine, though.
+> Source Document .PDF  attached.
 
-Debug:
-I modified hostapd / wpa_supplicants driver_nl80211.c to print the keys 
-whenever set_key is called, which uses nl80211's ADD_KEY/SET_KEY api.
-Further, the kernel was patched to print the key used to encrypt 
-broadcasts packets by editing net/mac80211/tx.c:ieee80211_tx_h_select_k 
-in the "else if (is_multicast_ether_addr(hdr->addr1)" section to call 
-pr_err using the content of key->conf.key.
-
-Logs:
-The first STA configures the GTK, sees broadcasts (router 
-advertisments) incoming. The the second STAs connects and the first STA 
-no longer receives (decrypted) broadcasts from the AP.
-AP Logs are attached. wlan0 has neither ipv4 nor ipv6 address assigned 
-nor is it in any bridge. wlan0_2.501 is in a bridge. There is only one 
-bssid (wlan0).
-First, you see hostapd assigning GTK to wlan0 and wlan0_2.501. Then 
-thinks work fine, the wrong key is only used rarely. Then the second STA 
-connects. A few packets later, the wrong key gets used mostly. Then the 
-second STA disconnects. Almost immediately the good key is used again.
-
-Any hints?
-
-Thanks alot!
-
-M. Braun
---=_a80c38007bc0fd153ca283e870fc9761
-Content-Transfer-Encoding: base64
-Content-Type: application/octet-stream;
- name=ap-log-20130212.txt.xz
-Content-Disposition: attachment;
- filename=ap-log-20130212.txt.xz;
- size=5712
-
-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
-scRn+wIAAAAABFla
---=_a80c38007bc0fd153ca283e870fc9761--
-
+Where does it come from? NO reference to official documents.
