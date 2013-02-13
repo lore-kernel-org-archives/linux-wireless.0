@@ -1,138 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:35599 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755128Ab3BPXsM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759036Ab3BMTJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Feb 2013 18:48:12 -0500
-Message-ID: <51201AB8.4060700@lwfinger.net> (sfid-20130217_004817_282791_13D70C4F)
-Date: Sat, 16 Feb 2013 17:48:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-CC: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: usb: allocate URB control message setup_packet
- and data buffer separately
-References: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
-In-Reply-To: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 13 Feb 2013 14:09:54 -0500
+Message-ID: <1360782582.8868.28.camel@jlt4.sipsolutions.net> (sfid-20130213_200958_872306_C9FEB5E3)
+Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
+ flag to a set of modes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Date: Wed, 13 Feb 2013 20:09:42 +0100
+In-Reply-To: <511BE15B.8090507@broadcom.com>
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+	 <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
+	 <1360767970.8868.24.camel@jlt4.sipsolutions.net>
+	 <20130213170445.GC22867@thinkpad-t410> <511BE15B.8090507@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/16/2013 05:00 PM, Jussi Kivilinna wrote:
-> rtlwifi allocates both setup_packet and data buffer of control message urb,
-> using shared kmalloc in _usbctrl_vendorreq_async_write. Structure used for
-> allocating is:
-> 	struct {
-> 		u8 data[254];
-> 		struct usb_ctrlrequest dr;
-> 	};
->
-> Because 'struct usb_ctrlrequest' is __packed, setup packet is unaligned and
-> DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to memory
-> corruptions and freezes.
->
-> Patch changes setup packet to be allocated separately.
->
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+On Wed, 2013-02-13 at 19:54 +0100, Arend van Spriel wrote:
+> On 02/13/2013 06:04 PM, Seth Forshee wrote:
+> >> Is all this really worth it? It seems a quick fix for brcmsmac might be
+> >> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
+> >> > enabled in the config, and then go implement a real solution like I
+> >> > described earlier with powersave being separated out of the core
+> >> > mac80211 routines, and actually made possible for multiple interfaces?
+> > Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
+> > PS is sent the flag won't be set, as we're still on the operating
+> > channel. When we're actually off-channel the value of PM doesn't matter
+> > for the types of frames which are being sent. The only quick fix I've
+> > found is to watch out for frames with PM set and set the powersave bit
+> > while they're being transmitted.
+> 
+> I actually don't see that one fly. The frames are posted on a DMA fifo
+> towards the hardware so in the driver we have no clue when that frame is
+> being processes/transmitted hence no way of knowing when to write the
+> register(s).
 
-The only change I would make is to convert the WARN_ON to WARN_ON_ONCE. In case 
-something goes wrong, there is no need to spam the logs.
+I think the various flushing would prevent issues there, no?
 
-I am not crazy about the overhead in allocating two different blocks for each 
-output packet, but if it is necessary, then it has to happen.
-
-Larry
-
-> ---
->   drivers/net/wireless/rtlwifi/usb.c |   44 +++++++++++++++++++++++-------------
->   1 file changed, 28 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-> index 476eaef..d98fcdb 100644
-> --- a/drivers/net/wireless/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/rtlwifi/usb.c
-> @@ -42,8 +42,12 @@
->
->   static void usbctrl_async_callback(struct urb *urb)
->   {
-> -	if (urb)
-> -		kfree(urb->context);
-> +	if (urb) {
-> +		/* free dr */
-> +		kfree(urb->setup_packet);
-> +		/* free databuf */
-> +		kfree(urb->transfer_buffer);
-> +	}
->   }
->
->   static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
-> @@ -55,39 +59,47 @@ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
->   	u8 reqtype;
->   	struct usb_ctrlrequest *dr;
->   	struct urb *urb;
-> -	struct rtl819x_async_write_data {
-> -		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
-> -		struct usb_ctrlrequest dr;
-> -	} *buf;
-> +	const u16 databuf_maxlen = REALTEK_USB_VENQT_MAX_BUF_SIZE;
-> +	u8 *databuf;
-> +
-> +	if (WARN_ON(len > databuf_maxlen))
-> +		len = databuf_maxlen;
->
->   	pipe = usb_sndctrlpipe(udev, 0); /* write_out */
->   	reqtype =  REALTEK_USB_VENQT_WRITE;
->
-> -	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
-> -	if (!buf)
-> +	dr = kmalloc(sizeof(*dr), GFP_ATOMIC);
-> +	if (!dr)
->   		return -ENOMEM;
->
-> +	databuf = kmalloc(databuf_maxlen, GFP_ATOMIC);
-> +	if (!databuf) {
-> +		kfree(dr);
-> +		return -ENOMEM;
-> +	}
-> +
->   	urb = usb_alloc_urb(0, GFP_ATOMIC);
->   	if (!urb) {
-> -		kfree(buf);
-> +		kfree(databuf);
-> +		kfree(dr);
->   		return -ENOMEM;
->   	}
->
-> -	dr = &buf->dr;
-> -
->   	dr->bRequestType = reqtype;
->   	dr->bRequest = request;
->   	dr->wValue = cpu_to_le16(value);
->   	dr->wIndex = cpu_to_le16(index);
->   	dr->wLength = cpu_to_le16(len);
->   	/* data are already in little-endian order */
-> -	memcpy(buf, pdata, len);
-> +	memcpy(databuf, pdata, len);
->   	usb_fill_control_urb(urb, udev, pipe,
-> -			     (unsigned char *)dr, buf, len,
-> -			     usbctrl_async_callback, buf);
-> +			     (unsigned char *)dr, databuf, len,
-> +			     usbctrl_async_callback, NULL);
->   	rc = usb_submit_urb(urb, GFP_ATOMIC);
-> -	if (rc < 0)
-> -		kfree(buf);
-> +	if (rc < 0) {
-> +		kfree(databuf);
-> +		kfree(dr);
-> +	}
->   	usb_free_urb(urb);
->   	return rc;
->   }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+johannes
 
