@@ -1,45 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36638 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046Ab3BUFmA (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:57827 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761310Ab3BMXxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 00:42:00 -0500
-Message-ID: <5125B39F.3010200@candelatech.com> (sfid-20130221_064208_622948_FCB333A5)
-Date: Wed, 20 Feb 2013 21:41:51 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 13 Feb 2013 18:53:33 -0500
+Received: by mail-wg0-f48.google.com with SMTP id 16so1447843wgi.27
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 15:53:32 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless-regdb: change Max_EIRP in 5150-5250 for ES (Spain)
+Date: Thu, 14 Feb 2013 00:52:53 +0100
+Message-Id: <1360799573-4665-1-git-send-email-xose.vazquez@gmail.com> (sfid-20130214_005341_862499_43C7EBD0)
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
- high.
-References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL> <511BC243.8010409@candelatech.com> <20770.57339.20017.225929@gargle.gargle.HOWL> <51255360.6060603@candelatech.com> <51257304.10109@candelatech.com> <20773.31380.740958.31338@gargle.gargle.HOWL>
-In-Reply-To: <20773.31380.740958.31338@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/20/2013 05:38 PM, Sujith Manoharan wrote:
-> Ben Greear wrote:
->> For instance, in this case, why do we have pending frames, the axq-stopped,
->> and no axq depth?  Is that an invalid state to begin with?  Once
->> it gets in the hung state, those numbers never change.  I'd assume
->> something should be poking more packets out of the pending frames
->> down into the axq logic?
->
-> Something is broken in the xmit path, definitely.
+I did cut&paste from DE rules, but DE lowers the limit
+in 5150-5250 to 100mW for "neighborhood reasons" [1].
+Even when 200mW is completely legal in DE.
 
-Ok, so here's a question:  In the ath_tx_complete method,
-the pending_frames counter is only decremented if txq == c->tx.txq_map[q].
+put 200mW, as Spanish law says:
 
-Maybe it should always be decremented?
+Banda 5150 – 5350 MHz: En esta banda el uso por el servicio móvil en sistemas de
+acceso inalámbrico incluyendo comunicaciones electrónicas y redes de área local, se
+restringe para su utilización únicamente en el interior de recintos. La potencia isotrópica
+radiada equivalente máxima será de 200 mW (p.i.r.e.), siendo la densidad máxima de
+p.i.r.e. media de 10 mW/MHz en cualquier banda de 1 MHz. Este valor se refiere a la
+potencia promediada sobre una ráfaga de transmisión ajustada a la máxima potencia
 
-What kinds of things could cause txq to not equal the txq-map[q]?
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
 
-Thanks,
-Ben
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN - 128 RLANs en 5 GHz (pag. 232)
 
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
 
+[1] http://marc.info/?l=linux-wireless&m=127429049514439
+
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Luis R. Rodriguez <mcgrof@frijolero.org>
+Cc: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index c5861b8..6f618c0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -269,7 +269,7 @@ country EG:
+ 
+ country ES: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+-	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.11.7
 
