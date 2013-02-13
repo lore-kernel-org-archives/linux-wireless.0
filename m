@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14198 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752211Ab3BJH6A (ORCPT
+Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:60161 "EHLO
+	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759524Ab3BMOuq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Feb 2013 02:58:00 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: netdev <netdev@vger.kernel.org>, <linux-can@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<e1000-devel@lists.sourceforge.net>, <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<wil6210@qca.qualcomm.com>, <brcm80211-dev-list@broadcom.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>
-Subject: Re: [PATCH] drivers: net: Remove remaining alloc/OOM messages
-Date: Sun, 10 Feb 2013 09:57:54 +0200
-Message-ID: <1877379.y4GS62BPgg@lx-vladimir> (sfid-20130210_085844_975457_31EBAA5B)
-In-Reply-To: <1360273587.27863.15.camel@joe-AO722>
-References: <1360273587.27863.15.camel@joe-AO722>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 13 Feb 2013 09:50:46 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+	Michael Braun <michael-dev@fami-braun.de>
+Subject: [RFCv5 2/2] mac80211: fix WPA with VLAN on AP side with ps-sta
+Date: Wed, 13 Feb 2013 13:51:20 +0100
+Message-Id: <1360759880-5669-3-git-send-email-michael-dev@fami-braun.de> (sfid-20130213_155054_893757_130A17D9)
+In-Reply-To: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
+References: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 07, 2013 01:46:27 PM Joe Perches wrote:
-> alloc failures already get standardized OOM
-> messages and a dump_stack.
-> 
-> For the affected mallocs around these OOM messages:
-> 
-> Converted kmallocs with multiplies to kmalloc_array.
-> Converted a kmalloc/memcpy to kmemdup.
-> Removed now unused stack variables.
-> Removed unnecessary parentheses.
-> Neatened alignment.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> 
+When sending a broadcast while at least on of the connected stations is
+sleeping, it gets queued and send after a DTIM beacon is sent.
+If the packet was to be sent on a vlan interface, the vif used for dequeing
+from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
+required to use the correct per-vlan broadcast/multicast key.
 
-For wil6210:
+This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
 
-Acked--by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+V2: fix compile warning
+V3: simplify change
+ net/mac80211/tx.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks, Vladimir
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f476aa6..71385bf 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2785,6 +2785,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 		}
+ 
++		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+ 		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+ 			break;
+ 		dev_kfree_skb_any(skb);
+-- 
+1.7.10.4
+
