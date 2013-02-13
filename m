@@ -1,77 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47703 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758026Ab3BZUz1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 15:55:27 -0500
-Message-ID: <1361912099.8440.21.camel@jlt4.sipsolutions.net> (sfid-20130226_215534_874685_9E7FE72F)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marc MERLIN <marc@merlins.org>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Tue, 26 Feb 2013 21:54:59 +0100
-In-Reply-To: <20130223061414.GA16883@merlins.org>
-References: <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <20130223061414.GA16883@merlins.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:11532 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758487Ab3BMN1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 08:27:17 -0500
+Date: Wed, 13 Feb 2013 14:27:05 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2x00: check for dma mappings errors
+Message-ID: <20130213132704.GB1912@redhat.com> (sfid-20130213_142720_398098_F4EC9CCD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-22 at 22:14 -0800, Marc MERLIN wrote:
-> On Wed, Feb 20, 2013 at 10:15:03AM +0100, Johannes Berg wrote:
-> > On Wed, 2013-02-20 at 10:12 +0100, Johannes Berg wrote:
-> > > On Tue, 2013-02-19 at 08:21 -0800, Eric Dumazet wrote:
-> > > > On Tue, 2013-02-19 at 11:03 +0100, Johannes Berg wrote:
-> > > > > On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
-> > > > > 
-> > > > > > > chrome: page allocation failure: order:1, mode:0x4020
-> > > > > > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > > > > > > Call Trace:
-> > > > > > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
-> > > > > 
-> > > > > > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> > > > > > 
-> > > > > > It should hopefully use order-0 pages
-> > > > > 
-> > > > > It will, do that then, unfortunately it can't switch at runtime because
-> > > > > it advertised this support to the access point or clients.
-> > > > 
-> > > > What are the drawbacks of setting amsdu_size_8K to 0 by default ?
-> > > 
-> > > We're discussing this now, the only downside would be that we couldn't
-> > > receive 8k A-MSDUs. Thing is, practically nobody uses A-MSDU anyway, and
-> > > even when I suspect the difference between 4k and 8k won't be huge.
-> > 
-> > OTOH, this affects the protocol, and when you really can't allocate any
-> > order-1 pages you pointed out yourself that many other things also won't
-> > work, so I'm not really sure it makes a big difference if we change the
-> > driver?
-> 
-> That as an unscientific test, but when I did the NFS eats all my pages
-> test using ethernet, my system didn't hang like it did with iwlagn.
-> 
-> So while the NFS code is definitely doing something wrong when it uses
-> its default huge buffers, the e1000e code deals with it without hanging
-> my system.
-> 
-> So thanks for trying to improve the iwlagn code to avoid those system
-> lockups.
+Check output of dma_map_single functions which nowadays can fail (when
+IOMMU is used). On write_beacon callbacks just print error, similar
+like padding error is handled by rt2800_write_beacon. 
 
-We'll be submitting a patch to make single pages default.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c   | 12 +++++++++---
+ drivers/net/wireless/rt2x00/rt2500pci.c   |  7 +++++--
+ drivers/net/wireless/rt2x00/rt2x00.h      |  4 +++-
+ drivers/net/wireless/rt2x00/rt2x00queue.c | 26 +++++++++++++++++++-------
+ 4 files changed, 36 insertions(+), 13 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index a2d2bc2..221beaa 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1185,8 +1185,14 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 
+-	rt2x00queue_map_txskb(entry);
+-
++	if (rt2x00queue_map_txskb(entry)) {
++		ERROR(rt2x00dev, "Fail to map beacon, aborting\n");
++		goto out;
++	}
++	/*
++	 * Enable beaconing again.
++	 */
++	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
+ 	/*
+ 	 * Write the TX descriptor for the beacon.
+ 	 */
+@@ -1196,7 +1202,7 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 	 * Dump beacon to userspace through debugfs.
+ 	 */
+ 	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
+-
++out:
+ 	/*
+ 	 * Enable beaconing again.
+ 	 */
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 9bea10f..39edc59 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1338,7 +1338,10 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
+ 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
+ 
+-	rt2x00queue_map_txskb(entry);
++	if (rt2x00queue_map_txskb(entry)) {
++		ERROR(rt2x00dev, "Fail to map beacon, aborting\n");
++		goto out;
++	}
+ 
+ 	/*
+ 	 * Write the TX descriptor for the beacon.
+@@ -1349,7 +1352,7 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 	 * Dump beacon to userspace through debugfs.
+ 	 */
+ 	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
+-
++out:
+ 	/*
+ 	 * Enable beaconing again.
+ 	 */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 9a3f31a..086abb4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -1169,8 +1169,10 @@ static inline bool rt2x00_is_soc(struct rt2x00_dev *rt2x00dev)
+ /**
+  * rt2x00queue_map_txskb - Map a skb into DMA for TX purposes.
+  * @entry: Pointer to &struct queue_entry
++ *
++ * Returns -ENOMEM if mapping fail, 0 otherwise.
+  */
+-void rt2x00queue_map_txskb(struct queue_entry *entry);
++int rt2x00queue_map_txskb(struct queue_entry *entry);
+ 
+ /**
+  * rt2x00queue_unmap_skb - Unmap a skb from DMA.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index f35d85a..e26ec9d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -87,24 +87,35 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct queue_entry *entry, gfp_t gfp)
+ 	skbdesc->entry = entry;
+ 
+ 	if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags)) {
+-		skbdesc->skb_dma = dma_map_single(rt2x00dev->dev,
+-						  skb->data,
+-						  skb->len,
+-						  DMA_FROM_DEVICE);
++		dma_addr_t skb_dma;
++
++		skb_dma = dma_map_single(rt2x00dev->dev, skb->data, skb->len,
++					 DMA_FROM_DEVICE);
++		if (unlikely(dma_mapping_error(rt2x00dev->dev, skb_dma))) {
++			dev_kfree_skb_any(skb);
++			return NULL;
++		}
++
++		skbdesc->skb_dma = skb_dma;
+ 		skbdesc->flags |= SKBDESC_DMA_MAPPED_RX;
+ 	}
+ 
+ 	return skb;
+ }
+ 
+-void rt2x00queue_map_txskb(struct queue_entry *entry)
++int rt2x00queue_map_txskb(struct queue_entry *entry)
+ {
+ 	struct device *dev = entry->queue->rt2x00dev->dev;
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 
+ 	skbdesc->skb_dma =
+ 	    dma_map_single(dev, entry->skb->data, entry->skb->len, DMA_TO_DEVICE);
++
++	if (unlikely(dma_mapping_error(dev, skbdesc->skb_dma)))
++		return -ENOMEM;
++
+ 	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00queue_map_txskb);
+ 
+@@ -545,8 +556,9 @@ static int rt2x00queue_write_tx_data(struct queue_entry *entry,
+ 	/*
+ 	 * Map the skb to DMA.
+ 	 */
+-	if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags))
+-		rt2x00queue_map_txskb(entry);
++	if (test_bit(REQUIRE_DMA, &rt2x00dev->cap_flags) &&
++	    rt2x00queue_map_txskb(entry))
++		return -ENOMEM;
+ 
+ 	return 0;
+ }
+-- 
+1.7.11.7
 
