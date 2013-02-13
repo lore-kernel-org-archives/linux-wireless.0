@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.pripojeni.net ([178.22.112.14]:58421 "EHLO
-	smtp.pripojeni.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758152Ab3BGNou (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:45646 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753548Ab3BMJXw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 08:44:50 -0500
-From: Jiri Slaby <jslaby@suse.cz>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, linux-kernel@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH] NET: ath5k, check ath5k_eeprom_mode_from_channel retval
-Date: Thu,  7 Feb 2013 14:44:40 +0100
-Message-Id: <1360244680-10370-1-git-send-email-jslaby@suse.cz> (sfid-20130207_144510_171679_C7D2EEE4)
+	Wed, 13 Feb 2013 04:23:52 -0500
+Message-ID: <1360747368.12803.93.camel@cumari.coelho.fi> (sfid-20130213_102402_221339_BE834138)
+Subject: Re: [PATCH] cfg80211: check vendor IE length to avoid overrun
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <j@w1.fi>
+Date: Wed, 13 Feb 2013 11:22:48 +0200
+In-Reply-To: <1360746917.8868.4.camel@jlt4.sipsolutions.net>
+References: <1360692698-24208-1-git-send-email-coelho@ti.com>
+	 <1360746917.8868.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It can, if invalid argument given, return a negative value. In that
-case we would access arrays out-of-bounds and such. Check the value
-and yell loudly if that happened as it would be a bug in the
-implementation. (Instead of silently corrupting memory.)
+On Wed, 2013-02-13 at 10:15 +0100, Johannes Berg wrote:
+> On Tue, 2013-02-12 at 20:11 +0200, Luciano Coelho wrote:
+> > cfg80211_find_vendor_ie() was checking only that the vendor IE would
+> > fit in the remaining IEs buffer.  If a corrupt includes a vendor IE
+> > that is too small, we could potentially overrun the IEs buffer.
+> > 
+> > Fix this by checking that the vendor IE fits in the reported IE length
+> > field and skip it otherwise.
+> 
+> Applied. I changed the BUILD_BUG_ON to be != 1 since it has to be that,
+> but if one breaks that ...
 
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath5k/phy.c   | 4 ++++
- drivers/net/wireless/ath/ath5k/reset.c | 2 ++
- 2 files changed, 6 insertions(+)
+Okay.  But it actually needs to be 1 in the cfg80211_find_ie() function,
+not here.  Here we just need to make sure that ie->len is guaranteed to
+fit in what we got.  cfg80211_find_ie() guarantees that we have at least
+2 bytes, thus the >= 2 I used.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index ab363f3..a78afa9 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1613,6 +1613,10 @@ ath5k_hw_update_noise_floor(struct ath5k_hw *ah)
- 	ah->ah_cal_mask |= AR5K_CALIBRATION_NF;
- 
- 	ee_mode = ath5k_eeprom_mode_from_channel(ah->ah_current_channel);
-+	if (WARN_ON(ee_mode < 0)) {
-+		ah->ah_cal_mask &= ~AR5K_CALIBRATION_NF;
-+		return;
-+	}
- 
- 	/* completed NF calibration, test threshold */
- 	nf = ath5k_hw_read_measured_noise_floor(ah);
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 4084b10..e2d8b2c 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -985,6 +985,8 @@ ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
- 		return;
- 
- 	ee_mode = ath5k_eeprom_mode_from_channel(channel);
-+	if (WARN_ON(ee_mode < 0))
-+		return;
- 
- 	/* Adjust power delta for channel 14 */
- 	if (channel->center_freq == 2484)
--- 
-1.8.1.1
+Anyway, this is all *extremely* nitpicky already. :P
 
+--
+Luca.
 
