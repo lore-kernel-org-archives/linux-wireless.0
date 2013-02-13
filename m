@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43294 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755920Ab3BDPIy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 10:08:54 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U2NfB-0002Yi-6q
-	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:08:53 +0100
-Message-ID: <1359990557.10311.6.camel@jlt4.sipsolutions.net> (sfid-20130204_160857_686362_4AAD5A4D)
-Subject: Re: [PATCH 1/2] mac80211: send deauth when connection is lost
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 04 Feb 2013 16:09:17 +0100
-In-Reply-To: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net> (sfid-20130131_140546_138447_A35D7420)
-References: <1359637562-22399-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130131_140546_138447_A35D7420)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4016 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932297Ab3BMSzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 13:55:08 -0500
+Message-ID: <511BE15B.8090507@broadcom.com> (sfid-20130213_195514_377530_0271B083)
+Date: Wed, 13 Feb 2013 19:54:19 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"Jouni Malinen" <jouni@qca.qualcomm.com>,
+	"Vasanthakumar Thiagarajan" <vthiagar@qca.qualcomm.com>,
+	"Senthil Balasubramanian" <senthilb@qca.qualcomm.com>,
+	"Christian Lamparter" <chunkeey@googlemail.com>,
+	"Ivo van Doorn" <IvDoorn@gmail.com>,
+	"Gertjan van Wingerde" <gwingerde@gmail.com>,
+	"Helmut Schaa" <helmut.schaa@googlemail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Chaoming Li" <chaoming_li@realsil.com.cn>,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	"Intel Linux Wireless" <ilw@linux.intel.com>,
+	"Luciano Coelho" <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a
+ binary flag to a set of modes
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+ <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
+ <1360767970.8868.24.camel@jlt4.sipsolutions.net>
+ <20130213170445.GC22867@thinkpad-t410>
+In-Reply-To: <20130213170445.GC22867@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-01-31 at 14:06 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If the driver determines the connection is lost,
-> send a deauth frame to the AP anyway just in case
-> it still considers the connection alive. The frame
-> might not go through, but at least we've tried.
+On 02/13/2013 06:04 PM, Seth Forshee wrote:
+>> Is all this really worth it? It seems a quick fix for brcmsmac might be
+>> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
+>> > enabled in the config, and then go implement a real solution like I
+>> > described earlier with powersave being separated out of the core
+>> > mac80211 routines, and actually made possible for multiple interfaces?
+> Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
+> PS is sent the flag won't be set, as we're still on the operating
+> channel. When we're actually off-channel the value of PM doesn't matter
+> for the types of frames which are being sent. The only quick fix I've
+> found is to watch out for frames with PM set and set the powersave bit
+> while they're being transmitted.
 
-Applied.
+I actually don't see that one fly. The frames are posted on a DMA fifo
+towards the hardware so in the driver we have no clue when that frame is
+being processes/transmitted hence no way of knowing when to write the
+register(s).
 
-johannes
+Gr. AvS
 
