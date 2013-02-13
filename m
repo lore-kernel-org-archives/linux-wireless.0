@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:39261 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934588Ab3BTCmI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51305 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755811Ab3BMNdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 21:42:08 -0500
-Message-ID: <512437FA.2030105@lwfinger.net> (sfid-20130220_034219_680685_178CC15B)
-Date: Tue, 19 Feb 2013 20:42:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: David Miller <davem@davemloft.net>, David.Laight@aculab.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, bittorf@bluebottle.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] b43: Increase number of RX DMA slots
-References: <20130219.005206.397289032011003833.davem@davemloft.net> <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com> <5123BCFF.5090408@lwfinger.net> <20130219.131553.787630407148880340.davem@davemloft.net> <5123C43D.2020602@lwfinger.net> <CAGRGNgWZ0qUJSSkjmP8o4VaPRBdN67J=RPy5+45rWaQQXWnWrQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgWZ0qUJSSkjmP8o4VaPRBdN67J=RPy5+45rWaQQXWnWrQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 13 Feb 2013 08:33:24 -0500
+Message-ID: <1360762400.8868.10.camel@jlt4.sipsolutions.net> (sfid-20130213_143332_496430_4EB0C4B5)
+Subject: Re: [PATCH] cfg80211: configuration for WoWLAN over TCP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Date: Wed, 13 Feb 2013 14:33:20 +0100
+In-Reply-To: <1360596853-13610-1-git-send-email-johannes@sipsolutions.net> (sfid-20130211_163429_244766_66451F64)
+References: <1360596853-13610-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130211_163429_244766_66451F64)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2013 06:47 PM, Julian Calaby wrote:
->
-> Is it be possible to increase the number of slots at runtime? Maybe an
-> even better solution would be to keep the existing number of slots,
-> and if they run out, reset and increase incrementally to some sensible
-> maximum value.
+On Mon, 2013-02-11 at 16:34 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Intel Wireless devices are able to make a TCP connection
+> after suspending, sending some data and waking up when
+> the connection receives wakeup data (or breaks). Add the
+> WoWLAN configuration and feature advertising API for it.
 
-The number could be increased a bit, but on systems with 32-bit DMA such as the 
-BCM4318, the maximum size of the ring buffer is 4KB. Even more importantly, each 
-slot is allocated an skb of 2390 bytes. Even at 256 slots, the memory allocation 
-is pretty large.
+Applied.
 
-Larry
+johannes
 
