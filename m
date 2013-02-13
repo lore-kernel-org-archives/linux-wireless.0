@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43171 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51452 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756849Ab3BKMmJ (ORCPT
+	with ESMTP id S934043Ab3BMOEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 07:42:09 -0500
+	Wed, 13 Feb 2013 09:04:12 -0500
+Message-ID: <1360764243.8868.11.camel@jlt4.sipsolutions.net> (sfid-20130213_150418_217563_9BB7E369)
+Subject: Re: [PATCHv10 2/2] mac80211: add radar detection command/event
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/14] mac80211: clean up channel use in ieee80211_config_ht_tx
-Date: Mon, 11 Feb 2013 13:38:15 +0100
-Message-Id: <1360586298-15028-12-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134838_065147_41C59234)
-In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
-References: <[PATCH 00/14] mac80211: HT/VHT handling>
- <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
+	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
+	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 13 Feb 2013 15:04:03 +0100
+In-Reply-To: <1360343782-32149-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1360343782-32149-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1360343782-32149-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2013-02-08 at 18:16 +0100, Simon Wunderlich wrote:
+> Add command to trigger radar detection in the driver/FW.
+> Once radar detection is started it should continuously
+> monitor for radars as long as the channel active.
+> If radar is detected usermode notified with 'radar
+> detected' event.
 
-The channel use is confusing, some uses the channel
-context and some the bss_conf.chandef. The latter is
-fine, so get rid of the channel context part.
+Applied both -- I changed a few minor things (and corrected the function
+name mistake).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+I may need reminding to apply the iw patches when this has gone to
+John's tree.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6e6031e..2f13077 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -181,7 +181,6 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
--	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_channel *chan;
- 	u32 changed = 0;
- 	u16 ht_opmode;
-@@ -190,23 +189,16 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON_ONCE(!sta))
- 		return 0;
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (WARN_ON(!chanctx_conf)) {
--		rcu_read_unlock();
--		return 0;
--	}
--	chan = chanctx_conf->def.chan;
--	rcu_read_unlock();
-+	chan = sdata->vif.bss_conf.chandef.chan;
- 	sband = local->hw.wiphy->bands[chan->band];
- 
- 	switch (sdata->vif.bss_conf.chandef.width) {
- 	case NL80211_CHAN_WIDTH_40:
--		if (sdata->vif.bss_conf.chandef.chan->center_freq >
-+		if (chan->center_freq >
- 				sdata->vif.bss_conf.chandef.center_freq1 &&
- 		    chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
- 			disable_40 = true;
--		if (sdata->vif.bss_conf.chandef.chan->center_freq <
-+		if (chan->center_freq <
- 				sdata->vif.bss_conf.chandef.center_freq1 &&
- 		    chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
- 			disable_40 = true;
--- 
-1.8.0
+johannes
 
