@@ -1,35 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55772 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53092 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760920Ab3B1WRp (ORCPT
+	with ESMTP id S965005Ab3BMWzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 17:17:45 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UBBnM-0003Og-75
-	for linux-wireless@vger.kernel.org; Thu, 28 Feb 2013 23:17:44 +0100
-Message-ID: <1362089861.8330.11.camel@jlt4.sipsolutions.net> (sfid-20130228_231748_700306_E9E60259)
-Subject: Re: [PATCH] cfg80211: prohibit zero keepalive interval
+	Wed, 13 Feb 2013 17:55:12 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Date: Thu, 28 Feb 2013 23:17:41 +0100
-In-Reply-To: <1361913166-17570-1-git-send-email-johannes@sipsolutions.net> (sfid-20130226_221256_413864_51CD2849)
-References: <1361913166-17570-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130226_221256_413864_51CD2849)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Wojciech.Dubowik@neratec.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix auth/assoc timeout handling
+Date: Wed, 13 Feb 2013 23:55:04 +0100
+Message-Id: <1360796104-32455-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_235517_826065_A2C916AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-26 at 22:12 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> It's not useful to specify a 0 keepalive interval, this
-> would send too much data. Prohibit this to also avoid
-> device issues.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied.
+In my commit 1672c0e31917f49d31d30d79067103432bc20cc7
+("mac80211: start auth/assoc timeout on frame status")
+I broke auth/assoc timeout handling: in case we wait
+for the TX status, it now leaves the timeout field set
+to 0, which is a valid time and can compare as being
+before now ("jiffies"). Thus, if the work struct runs
+for some other reason, the auth/assoc is treated as
+having timed out.
 
-johannes
+Fix this by introducing a separate "timeout_started"
+variable that tracks whether the timeout has started
+and is checked before timing out.
+
+Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/mlme.c        | 23 +++++++++++++++++++----
+ 2 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 959888c..815e019 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -343,6 +343,7 @@ struct ieee80211_mgd_auth_data {
+ 	u8 key[WLAN_KEY_LEN_WEP104];
+ 	u8 key_len, key_idx;
+ 	bool done;
++	bool timeout_started;
+ 
+ 	u16 sae_trans, sae_status;
+ 	size_t data_len;
+@@ -364,6 +365,7 @@ struct ieee80211_mgd_assoc_data {
+ 	bool wmm, uapsd;
+ 	bool have_beacon, need_beacon;
+ 	bool synced;
++	bool timeout_started;
+ 
+ 	u8 ap_ht_param;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7d4cde7..cafefb2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1999,6 +1999,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 	sdata_info(sdata, "authenticated\n");
+ 	ifmgd->auth_data->done = true;
+ 	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
++	ifmgd->auth_data->timeout_started = true;
+ 	run_again(ifmgd, ifmgd->auth_data->timeout);
+ 
+ 	if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
+@@ -2333,6 +2334,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 			   "%pM rejected association temporarily; comeback duration %u TU (%u ms)\n",
+ 			   mgmt->sa, tu, ms);
+ 		assoc_data->timeout = jiffies + msecs_to_jiffies(ms);
++		assoc_data->timeout_started = true;
+ 		if (ms > IEEE80211_ASSOC_TIMEOUT)
+ 			run_again(ifmgd, assoc_data->timeout);
+ 		return RX_MGMT_NONE;
+@@ -2456,6 +2458,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata, "direct probe responded\n");
+ 		ifmgd->auth_data->tries = 0;
+ 		ifmgd->auth_data->timeout = jiffies;
++		ifmgd->auth_data->timeout_started = true;
+ 		run_again(ifmgd, ifmgd->auth_data->timeout);
+ 	}
+ }
+@@ -2541,6 +2544,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 		/* continue assoc process */
+ 		ifmgd->assoc_data->timeout = jiffies;
++		ifmgd->assoc_data->timeout_started = true;
+ 		run_again(ifmgd, ifmgd->assoc_data->timeout);
+ 		return;
+ 	}
+@@ -2933,7 +2937,10 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
+ 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
++		ifmgd->auth_data->timeout_started = true;
+ 		run_again(ifmgd, auth_data->timeout);
++	} else {
++		auth_data->timeout_started = false;
+ 	}
+ 
+ 	return 0;
+@@ -2967,7 +2974,10 @@ static int ieee80211_do_assoc(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
+ 		assoc_data->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
++		assoc_data->timeout_started = true;
+ 		run_again(&sdata->u.mgd, assoc_data->timeout);
++	} else {
++		assoc_data->timeout_started = false;
+ 	}
+ 
+ 	return 0;
+@@ -3006,6 +3016,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			} else {
+ 				ifmgd->auth_data->timeout = jiffies - 1;
+ 			}
++			ifmgd->auth_data->timeout_started = true;
+ 		} else if (ifmgd->assoc_data &&
+ 			   (ieee80211_is_assoc_req(fc) ||
+ 			    ieee80211_is_reassoc_req(fc))) {
+@@ -3016,10 +3027,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			} else {
+ 				ifmgd->assoc_data->timeout = jiffies - 1;
+ 			}
++			ifmgd->assoc_data->timeout_started = true;
+ 		}
+ 	}
+ 
+-	if (ifmgd->auth_data &&
++	if (ifmgd->auth_data && ifmgd->auth_data->timeout_started &&
+ 	    time_after(jiffies, ifmgd->auth_data->timeout)) {
+ 		if (ifmgd->auth_data->done) {
+ 			/*
+@@ -3038,10 +3050,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			cfg80211_send_auth_timeout(sdata->dev, bssid);
+ 			mutex_lock(&ifmgd->mtx);
+ 		}
+-	} else if (ifmgd->auth_data)
++	} else if (ifmgd->auth_data && ifmgd->auth_data->timeout_started)
+ 		run_again(ifmgd, ifmgd->auth_data->timeout);
+ 
+-	if (ifmgd->assoc_data &&
++	if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started &&
+ 	    time_after(jiffies, ifmgd->assoc_data->timeout)) {
+ 		if ((ifmgd->assoc_data->need_beacon &&
+ 		     !ifmgd->assoc_data->have_beacon) ||
+@@ -3056,7 +3068,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			cfg80211_send_assoc_timeout(sdata->dev, bssid);
+ 			mutex_lock(&ifmgd->mtx);
+ 		}
+-	} else if (ifmgd->assoc_data)
++	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
+ 		run_again(ifmgd, ifmgd->assoc_data->timeout);
+ 
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+@@ -4031,6 +4043,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata, "waiting for beacon from %pM\n",
+ 			   ifmgd->bssid);
+ 		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
++		assoc_data->timeout_started = true;
+ 		assoc_data->need_beacon = true;
+ 	} else if (beacon_ies) {
+ 		const u8 *tim_ie = cfg80211_find_ie(WLAN_EID_TIM,
+@@ -4046,6 +4059,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 		assoc_data->have_beacon = true;
+ 		assoc_data->timeout = jiffies;
++		assoc_data->timeout_started = true;
+ 
+ 		if (local->hw.flags & IEEE80211_HW_TIMING_BEACON_ONLY) {
+ 			sdata->vif.bss_conf.sync_tsf = beacon_ies->tsf;
+@@ -4055,6 +4069,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	} else {
+ 		assoc_data->timeout = jiffies;
++		assoc_data->timeout_started = true;
+ 	}
+ 	rcu_read_unlock();
+ 
+-- 
+1.8.0
 
