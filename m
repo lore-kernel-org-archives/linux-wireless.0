@@ -1,236 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:50118 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755401Ab3BRQIn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57419 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932154Ab3BNXvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 11:08:43 -0500
-Received: by mail-bk0-f41.google.com with SMTP id q16so2607415bkw.14
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 08:08:41 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Cc: sleffler@google.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCHv2 3/3] ath9k: mesh powersave support
-Date: Mon, 18 Feb 2013 17:08:29 +0100
-Message-Id: <1361203709-16669-3-git-send-email-marco@cozybit.com> (sfid-20130218_170858_273728_8571E617)
-In-Reply-To: <1361203709-16669-1-git-send-email-marco@cozybit.com>
-References: <1361203709-16669-1-git-send-email-marco@cozybit.com>
+	Thu, 14 Feb 2013 18:51:46 -0500
+Message-ID: <1360885896.9475.0.camel@jlt4.sipsolutions.net> (sfid-20130215_005149_424901_87EE8B0D)
+Subject: Re: [PATCH v3] cfg80211: clean up mesh plink station change API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Fri, 15 Feb 2013 00:51:36 +0100
+In-Reply-To: <CAG6hwVP+D0M-ww8-Joym50WPgL=TUwML3ffjgxT=Mx4q1FHZCA@mail.gmail.com> (sfid-20130214_235252_728553_840C4000)
+References: <1360881457-30562-1-git-send-email-johannes@sipsolutions.net>
+	 <CAG6hwVP+D0M-ww8-Joym50WPgL=TUwML3ffjgxT=Mx4q1FHZCA@mail.gmail.com>
+	 (sfid-20130214_235252_728553_840C4000)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register mesh PS ops on interface add and de-register on
-removal.
+On Thu, 2013-02-14 at 14:52 -0800, Thomas Pedersen wrote:
+> On Thu, Feb 14, 2013 at 2:37 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > Make the ability to leave the plink_state unchanged not use a
+> > magic -1 variable that isn't in the enum, but an explicit change
+> > flag; reject invalid plink states or actions and move the needed
+> > constants for plink actions to the right header file. Also
+> > reject plink_state changes for non-mesh interfaces.
+> >
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> > diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> > index 909053a..8e1a03e 100644
+> > --- a/net/mac80211/cfg.c
+> > +++ b/net/mac80211/cfg.c
+> > @@ -1261,7 +1261,9 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+> >         if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> >  #ifdef CONFIG_MAC80211_MESH
+> >                 u32 changed = 0;
+> > -               if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED) {
+> > +               if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED &&
+> > +                   (params->sta_modify_mask &
+> > +                                       STATION_PARAM_APPLY_PLINK_STATE)) {
+> >                         switch (params->plink_state) {
+> >                         case NL80211_PLINK_ESTAB:
+> >                                 if (sta->plink_state != NL80211_PLINK_ESTAB)
+> > @@ -1292,12 +1294,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+> >                                 /*  nothing  */
+> >                                 break;
+> >                         }
+> > +               } else if (params->sta_modify_mask &
+> > +                                       STATION_PARAM_APPLY_PLINK_STATE) {
+> > +                       return -EINVAL;
+> 
+> It would make sense to disallow setting plink_action if MPM is in userspace.
 
-React to doze/wakeup calls issued by mac80211.
-Add a PS status flag PS_MAC80211_CTL to store last mesh PS
-command from mac80211.
+I'm not sure what you mean?
 
-Initialize HW beacon wakeup registers.
-On doze call configure the HW to wakeup on the given TSF value.
-
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
- drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++++++++-
- drivers/net/wireless/ath/ath9k/hw.c     |   17 +++++++--
- drivers/net/wireless/ath/ath9k/main.c   |   63 ++++++++++++++++++++++++++++++-
- 4 files changed, 95 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 97c90b2..b82727b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -652,6 +652,7 @@ enum sc_op_flags {
- #define PS_WAIT_FOR_TX_ACK        BIT(3)
- #define PS_BEACON_SYNC            BIT(4)
- #define PS_WAIT_FOR_ANI           BIT(5)
-+#define PS_MAC80211_CTL           BIT(6)
- 
- struct ath_rate_table;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index dd37719..7ef698b 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -599,6 +599,23 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- }
- 
-+static void ath9k_beacon_config_mesh(struct ath_softc *sc,
-+				     struct ath_beacon_config *conf)
-+{
-+	struct ath9k_beacon_state bs;
-+
-+	/*
-+	 * when PS is enabled, ath9k_hw_setrxabort is set.
-+	 * to wake up again to receive peers' beacons, we set an
-+	 * arbitrary initial value for sleepduration here
-+	 */
-+	memset(&bs, 0, sizeof(bs));
-+	bs.bs_sleepduration = IEEE80211_MS_TO_TU(100);
-+	ath9k_hw_set_sta_beacon_timers(sc->sc_ah, &bs);
-+
-+	ath9k_beacon_config_adhoc(sc, conf);
-+}
-+
- bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -707,9 +724,11 @@ void ath9k_set_beacon(struct ath_softc *sc)
- 		ath9k_beacon_config_ap(sc, cur_conf);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_MESH_POINT:
- 		ath9k_beacon_config_adhoc(sc, cur_conf);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		ath9k_beacon_config_mesh(sc, cur_conf);
-+		break;
- 	case NL80211_IFTYPE_STATION:
- 		ath9k_beacon_config_sta(sc, cur_conf);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 42cf3c7..0e0fe03 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2254,16 +2254,24 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- }
- EXPORT_SYMBOL(ath9k_hw_beaconinit);
- 
-+/**
-+ * ath9k_hw_set_sta_beacon_timers
-+ *
-+ * in mesh mode overwriting AR_NEXT_TBTT_TIMER and setting AR_TBTT_TIMER_EN
-+ * would shift the own TBTT
-+ */
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 				    const struct ath9k_beacon_state *bs)
- {
- 	u32 nextTbtt, beaconintval, dtimperiod, beacontimeout;
-+	u32 ar_timer_mode = AR_DTIM_TIMER_EN | AR_TIM_TIMER_EN;
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
-+	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
-+		REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
- 
- 	REG_WRITE(ah, AR_BEACON_PERIOD,
- 		  TU_TO_USEC(bs->bs_intval));
-@@ -2317,9 +2325,10 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
--	REG_SET_BIT(ah, AR_TIMER_MODE,
--		    AR_TBTT_TIMER_EN | AR_TIM_TIMER_EN |
--		    AR_DTIM_TIMER_EN);
-+	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
-+		ar_timer_mode |= AR_TBTT_TIMER_EN;
-+
-+	REG_SET_BIT(ah, AR_TIMER_MODE, ar_timer_mode);
- 
- 	/* TSF Out of Range Threshold */
- 	REG_WRITE(ah, AR_TSFOOR_THRESHOLD, bs->bs_tsfoor_threshold);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 5432f12..93c66cb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -132,7 +132,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 				     PS_WAIT_FOR_CAB |
- 				     PS_WAIT_FOR_PSPOLL_DATA |
- 				     PS_WAIT_FOR_TX_ACK |
--				     PS_WAIT_FOR_ANI))) {
-+				     PS_WAIT_FOR_ANI |
-+				     PS_MAC80211_CTL))) {
- 		mode = ATH9K_PM_NETWORK_SLEEP;
- 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
- 			ath9k_btcoex_stop_gen_timer(sc);
-@@ -150,6 +151,59 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- }
- 
-+static void ath9k_mesh_wakeup_set(struct ath_softc *sc, u64 nexttbtt)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_beacon_state bs;
-+	u32 nexttbtttu = TSF_TO_TU(nexttbtt >> 32, nexttbtt);
-+
-+	memset(&bs, 0, sizeof(bs));
-+	bs.bs_nexttbtt = nexttbtttu;
-+	bs.bs_nextdtim = nexttbtttu;
-+	/* arbitrary high values to avoid frequent wakeups */
-+	bs.bs_intval = 1000;
-+	bs.bs_dtimperiod = 4000;
-+	bs.bs_sleepduration = 1000;
-+
-+	ath9k_hw_set_sta_beacon_timers(ah, &bs);
-+}
-+
-+static void ath9k_mesh_doze(struct ieee80211_hw *hw, u64 nexttbtt)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	unsigned long flags;
-+
-+	ath9k_ps_wakeup(sc);
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	/* in mesh mode mac80211 checks beacons and CAB */
-+	sc->ps_flags &= ~(PS_WAIT_FOR_BEACON |
-+			  PS_WAIT_FOR_CAB |
-+			  PS_MAC80211_CTL);
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+
-+	if (nexttbtt)
-+		ath9k_mesh_wakeup_set(sc, nexttbtt);
-+
-+	ath9k_ps_restore(sc);
-+}
-+
-+static void ath9k_mesh_wakeup(struct ieee80211_hw *hw)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	unsigned long flags;
-+
-+	ath9k_ps_wakeup(sc);
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	sc->ps_flags |= PS_MAC80211_CTL;
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-+	ath9k_ps_restore(sc);
-+}
-+
-+static const struct ieee80211_mps_ops ath9k_mesh_ps_ops = {
-+	.hw_doze = ath9k_mesh_doze,
-+	.hw_wakeup = ath9k_mesh_wakeup,
-+};
-+
- static void __ath_cancel_work(struct ath_softc *sc)
- {
- 	cancel_work_sync(&sc->paprd_work);
-@@ -931,6 +985,11 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 			ah->opmode = NL80211_IFTYPE_ADHOC;
- 		else
- 			ah->opmode = NL80211_IFTYPE_STATION;
-+
-+		if (ah->opmode == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_mps_init(hw, &ath9k_mesh_ps_ops);
-+		else if (old_opmode == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_mps_init(hw, NULL);
- 	}
- 
- 	ath9k_hw_setopmode(ah);
-@@ -1164,7 +1223,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	 * We just prepare to enable PS. We have to wait until our AP has
- 	 * ACK'd our null data frame to disable RX otherwise we'll ignore
- 	 * those ACKs and end up retransmitting the same null data frames.
--	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
-+	 * IEEE80211_CONF_CHANGE_PS is passed by mac80211 for STA or mesh mode.
- 	 */
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		unsigned long flags;
--- 
-1.7.9.5
+johannes
 
