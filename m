@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755267Ab3BENrm (ORCPT
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:57705 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759245Ab3BNXHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 08:47:42 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U2is8-0004PF-TT
-	for linux-wireless@vger.kernel.org; Tue, 05 Feb 2013 14:47:41 +0100
-Message-ID: <1360072085.8376.7.camel@jlt4.sipsolutions.net> (sfid-20130205_144746_318099_8E21CFE2)
-Subject: Re: [PATCH] cfg80211: pass wiphy to cfg80211_ref_bss/put_bss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 05 Feb 2013 14:48:05 +0100
-In-Reply-To: <1359992842-14660-1-git-send-email-johannes@sipsolutions.net> (sfid-20130204_164706_960708_BA11AF9A)
-References: <1359992842-14660-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130204_164706_960708_BA11AF9A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Feb 2013 18:07:51 -0500
+Received: by mail-ee0-f53.google.com with SMTP id e53so1580639eek.40
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 15:07:50 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH] mac80211_hwsim: ask mac80211 to reserve space for chanctx.drv_priv
+Date: Fri, 15 Feb 2013 00:03:14 +0100
+Message-Id: <1360882994-13250-1-git-send-email-karl@eleaks.org> (sfid-20130215_000755_381127_1DBABC17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-04 at 16:47 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This prepares for using the spinlock instead of krefs
-> which is needed in the next patch to track the refs
-> of combined BSSes correctly.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Applied.
+Otherwise memory corruption occurs when using channel contexts (ATM when
+param 'channel' > 1).
 
-johannes
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b73e497..cffdf4f 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2247,6 +2247,7 @@ static int __init init_mac80211_hwsim(void)
+ 		/* ask mac80211 to reserve space for magic */
+ 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
+ 		hw->sta_data_size = sizeof(struct hwsim_sta_priv);
++		hw->chanctx_data_size = sizeof(struct hwsim_chanctx_priv);
+ 
+ 		memcpy(data->channels_2ghz, hwsim_channels_2ghz,
+ 			sizeof(hwsim_channels_2ghz));
+-- 
+1.7.10.GIT
+
 
