@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1533 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759982Ab3BHO4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 09:56:36 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/27] brcmfmac: fix generation of the p2p related mac
- addresses
-Date: Fri, 8 Feb 2013 15:53:40 +0100
-Message-ID: <1360335242-12608-6-git-send-email-arend@broadcom.com> (sfid-20130208_155643_311369_EECB1A5E)
-In-Reply-To: <1360335242-12608-1-git-send-email-arend@broadcom.com>
-References: <1360335242-12608-1-git-send-email-arend@broadcom.com>
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:36201 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758688Ab3BNTyB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 14:54:01 -0500
+Received: by mail-bk0-f50.google.com with SMTP id jg9so1232293bkc.23
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 11:54:00 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+Subject: Re: How can I find out the ssid of an inteface in AP mode?
+Date: Thu, 14 Feb 2013 20:53:57 +0100
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <511D3AA4.7000209@swiss-wireless.com.ar>
+In-Reply-To: <511D3AA4.7000209@swiss-wireless.com.ar>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302142053.57519.chunkeey@googlemail.com> (sfid-20130214_205406_357154_F1A802A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver determines the P2P interface address and device
-address from the primary mac address. However, the function
-used an invalid input. This caused a mac address mismatch
-between firmware and driver. This was hidden because the
-brcmf_if_add() function corrected the error upon receiving
-the IF_ADD event from firmware.
+On Thursday, February 14, 2013 08:27:32 PM Beat Meier wrote:
+> Hello
+> 
+> How can I find out the ssid of an inteface in AP mode (using hostapd)?
+start up hostapd_cli 
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+(usually it connects to the right wlanX interface, otherwise
+execute interface wlanX)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index ecc96f3..cec4116 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -132,12 +132,10 @@ static int brcmf_p2p_set_firmware(struct brcmf_p2p_info *p2p)
-  */
- static void brcmf_p2p_generate_bss_mac(struct brcmf_p2p_info *p2p)
- {
--	struct net_device *ndev = cfg_to_ndev(p2p->cfg);
--
- 	/* Generate the P2P Device Address.  This consists of the device's
- 	 * primary MAC address with the locally administered bit set.
- 	 */
--	memcpy(p2p->dev_addr, ndev->dev_addr, ETH_ALEN);
-+	memcpy(p2p->dev_addr, p2p->cfg->pub->mac, ETH_ALEN);
- 	p2p->dev_addr[0] |= 0x02;
- 
- 	/* Generate the P2P Interface Address.  If the discovery and connection
--- 
-1.7.10.4
+get_config
 
+(And then look for ssid=xyz)
 
+> I have several hostapd files and dependend on several stuff I start 
+> hostap with different config files. One difference is the ssid and
+> at runtime I need to know which is active  with some scripts.
+>
+> I have still not found how to get this information if the interface is 
+> in AP mode because
+>    iw dev wlan0 link
+> does not work in AP mode...
+> In my opinion this could be implemented in
+>    iw dev wlan0 survey dump
+> which also prints the frecuency IF REALY not already implemented...
+> 
+> No one does need this feature?
+No, the kernel does not manage AP interfaces. Everything 
+is done by hostapd (the userspace daemon).
+
+Regards,
+	Christian 
