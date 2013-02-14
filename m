@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moh1-ve2.go2.pl ([193.17.41.132]:59930 "EHLO moh1-ve2.go2.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753974Ab3BEWjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 17:39:25 -0500
-Received: from moh1-ve2.go2.pl (unknown [10.0.0.132])
-	by moh1-ve2.go2.pl (Postfix) with ESMTP id D78B11044009
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Feb 2013 23:39:13 +0100 (CET)
-Received: from unknown (unknown [10.0.0.42])
-	by moh1-ve2.go2.pl (Postfix) with SMTP
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Feb 2013 23:39:13 +0100 (CET)
-Date: Tue, 5 Feb 2013 23:39:08 +0100
-From: Tomasz Guszkowski <tsg@o2.pl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54usb: corrected USB ID for T-Com Sinus 154 data II
-Message-Id: <20130205233908.0fd8a9a0a58e940e54e86c15@o2.pl> (sfid-20130205_233928_464968_7CDF7D30)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:39052 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab3BNEp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 23:45:27 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr12so1524234wgb.11
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 20:45:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <511C65F2.1080201@gnoutcheff.name>
+References: <5100BEF7.4000107@gnoutcheff.name> <CAGRGNgWg=4CgjXpdceNfsy6X0_q=SFY8CegJsTf60yGd_NBuLQ@mail.gmail.com>
+ <511C65F2.1080201@gnoutcheff.name>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 14 Feb 2013 15:45:05 +1100
+Message-ID: <CAGRGNgWQqNXdN1ke2AaVM3eiRMupq1G22MCC=ZBZTXDKwPwbgw@mail.gmail.com> (sfid-20130214_054530_321151_03005BB8)
+Subject: Re: [ath5k] [bugreport] BIOS hang if wifi was connected before reboot
+To: Daniel Gnoutcheff <daniel@gnoutcheff.name>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 5 Feb 2013, Christian Lamparter wrote:
+Hi Daniel,
 
-> (Added John [He takes all the driver patches ;).
+On Thu, Feb 14, 2013 at 3:20 PM, Daniel Gnoutcheff
+<daniel@gnoutcheff.name> wrote:
+> Hello Julian, thanks for your response and advice.  (Sorry for my very
+> slow reply.)
 >
-> John, do you want/need a line-wrapped commit message
-> of the original patch or is this OK?)
->
-> On Tuesday, February 05, 2013 10:10:31 PM Tomasz Guszkowski wrote:
->> Corrected USB ID for T-Com Sinus 154 data II. ISL3887-based.
->> The device was tested in managed mode with no security, WEP
->> 128 bit and WPA-PSK (TKIP) with firmware 2.13.1.0.lm87.arm
->> (md5sum: 7d676323ac60d6e1a3b6d61e8c528248). It works.
+> On 01/24/2013 01:45 AM, Julian Calaby wrote:
+>> On Thu, Jan 24, 2013 at 3:56 PM, Daniel Gnoutcheff
+>> <daniel@gnoutcheff.name> wrote:
+>>> Up until recently, it seems that NetworkManager would always disconnect upon
+>>> shutdown and thus avoided this bug, but this changed in Ubuntu 12.10.
+> <snip>
 >>
->> Signed-off-by: Tomasz Guszkowski <tsg@o2.pl>
-> Cc: <stable@vger.kernel.org>
-> Acked-By: Christian Lamparter <chunkeey@googlemail.com>
->> ---
+>> Have you raised a bug with Ubuntu's Network Manager maintainers about this?
 >
-> I'll take care of updating the wireless.kernel.org wiki
-> <http://wireless.kernel.org/en/users/Drivers/p54/devices>
-> entry later this week.
+> I have now.  Upon investigation, it appears that this is caused by a
+> combination of (upstream) bugs in wpa_supplicant and NetworkManager.
+> Fixing either of these bugs restores the intended behavior (and is an
+> effective workaround for the BIOS bug).  The NetworkManager bug has
+> already been fixed in upstream's git.  For the record, the relevant bug
+> reports are:
 >
-> OT: The latest supported firmware for LM87 is: 2.13.25.0.lm87.arm
-> Did you experience issues with the new version, or do you simply
-> stick with the old 2.13.1.0 because it does work just as well?
+> For NetworkManager:
+>   https://bugs.launchpad.net/network-manager/+bug/1124803
+>   https://bugzilla.gnome.org/show_bug.cgi?id=683932
+> For wpa_supplicant:
+>   https://bugs.launchpad.net/ubuntu/+source/wpa/+bug/1124789
+>   http://w1.fi/bugz/show_bug.cgi?id=474
 
-I stayed with 2.13.1.0, because it was the first version that
-worked.
+Good work, hopefully those fixes get pushed out soon.
 
-You had triggered my curiosity. I have just done a fast test with 
-2.13.25.0.lm87.arm (md5sum: 39be687c87544b892e7a8ffe7ffd9371) 
-and "iwlist wlan0 scan" found several networks, so it seems
-to work. Unfortunately, at the moment I have no own network at hand,
-so can't try connecting. I will do more thorough tests soon, maybe
-tomorrow, and let you know about the results.
+Thanks,
 
-Tomek
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
