@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43013 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755883Ab3BKLt1 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45573 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756910Ab3BNJiR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 06:49:27 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U4rt0-0000hG-BK
-	for linux-wireless@vger.kernel.org; Mon, 11 Feb 2013 12:49:26 +0100
-Message-ID: <1360583364.8738.20.camel@jlt4.sipsolutions.net> (sfid-20130211_124929_666445_DDA7FA47)
-Subject: Re: [PATCH] cfg80211: remove scan ies NULL check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 11 Feb 2013 12:49:24 +0100
-In-Reply-To: <1360079641-14357-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_165345_419164_1209E500)
-References: <1360079641-14357-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130205_165345_419164_1209E500)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Feb 2013 04:38:17 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH 5/6] ath6kl: Fix a debugfs crash for USB devices
+Date: Thu, 14 Feb 2013 15:08:09 +0530
+Message-ID: <1360834689-11187-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130214_103821_943590_E77135BD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-05 at 16:54 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There's no way scan BSS IEs can be NULL as even
-> if the allocation fails the frame is discarded.
-> Remove some code checking for this and document
-> that it is always non-NULL.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Applied.
+Credit distribution stats is currently implemented
+only for SDIO. This fixes a crash in debugfs for
+USB interface.
 
-johannes
+BUG: unable to handle kernel NULL pointer dereference at   (null)
+IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+*pde = b62bd067
+Oops: 0000 [#1] SMP
+
+EIP: 0060:[<f91c2048>] EFLAGS: 00210246 CPU: 0
+EIP is at read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+EAX: 00000000 EBX: e6f7a9c0 ECX: e7b148b8 EDX: 00000000
+ESI: 000000c8 EDI: e7b14000 EBP: e6e09f64 ESP: e6e09f30
+DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process cat (pid: 4058, ti=e6e08000 task=e50cf230 task.ti=e6e08000)
+Stack:
+00008000 00000000 e6e09f64 c1132d3c 00004e71 e50cf230 00008000 089e4000
+e7b148b8 00000000 e6f7a9c0 00008000 089e4000 e6e09f8c c11331fc e6e09f98
+00000001 e6e09f7c f91c2010 e6e09fac e6f7a9c0 089e4877 089e4000 e6e09fac
+
+	Call Trace:
+	[<c1132d3c>] ? rw_verify_area+0x6c/0x120
+	[<c11331fc>] vfs_read+0x8c/0x160
+	[<f91c2010>] ? read_file_war_stats+0x130/0x130 [ath6kl_core]
+	[<c113330d>] sys_read+0x3d/0x70
+	[<c15755b4>] syscall_call+0x7/0xb
+	[<c1570000>] ? fill_powernow_table_pstate+0x127/0x127
+
+Cc: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 15cfe30..0dbb67b 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -658,6 +658,9 @@ static ssize_t read_file_credit_dist_stats(struct file *file,
+ 	unsigned int buf_len, len = 0;
+ 	ssize_t ret_cnt;
+ 
++	if (ar->hif_type != ATH6KL_HIF_TYPE_SDIO)
++		return -EINVAL;
++
+ 	buf_len = CREDIT_INFO_DISPLAY_STRING_LEN +
+ 		  get_queue_depth(&target->cred_dist_list) * CREDIT_INFO_LEN;
+ 	buf = kzalloc(buf_len, GFP_KERNEL);
+-- 
+1.7.9.5
 
