@@ -1,134 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:4045 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932230Ab3BLTpd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 14:45:33 -0500
-Date: Tue, 12 Feb 2013 13:45:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Rework Kconfig
-Message-ID: <511a9bda.qSVbJjBneEGprv+8%Larry.Finger@lwfinger.net> (sfid-20130212_204536_418264_5C15EC2B)
+Received: from mail.neratec.com ([80.75.119.105]:44036 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934593Ab3BNMOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 07:14:44 -0500
+Message-ID: <511CD3E7.50900@neratec.com> (sfid-20130214_131449_244525_4C2A169C)
+Date: Thu, 14 Feb 2013 13:09:11 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?ISO-8859-1?Q?Magnus_Cederl=F6f?= <mcider@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Possible bug with probe_send_count set to 0 and then checked
+ if greater than 0
+References: <CAND6uNnMB0i9fvVSmqHtCMkf4XVr8dHUz+m1m3CxDCT+j2XD5Q@mail.gmail.com>
+In-Reply-To: <CAND6uNnMB0i9fvVSmqHtCMkf4XVr8dHUz+m1m3CxDCT+j2XD5Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the number of drivers in the rtlwifi family has grown, the Kconfig
-section for them has grown unwieldy. This change has two effects: (1)
-Variable RTLWIFI_DEBUG is documented, and (2) the entries for the
-drivers that depend on RTLWIFI and indented.
+On 02/14/2013 12:58 PM, Magnus Cederlöf wrote:
+> In net/mac80211/mlme.c function ieee80211_sta_tx_notify:
+> If a null frame was acked, ieee80211_sta_reset_conn_monitor is called.
+> This function sets probe_send_count to 0.
+> After the call to ieee80211_sta_reset_conn_monitor, it is checked if
+> probe_set_count is > 0.
+> This means that ieee80211_queue_work will not be called even though
+> the nullfunc was successful.
+>
+> The symptom of this error is that when using power save, it will take
+> 500ms to enter power save again after a successfully acked null frame.
+I am looking at it now and I see that it happens without power save
+as well. I have just started putting printk around so I am not so far.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Wojtek
+> What case will the check for 'probe_send_count > 0' cover?
+>
+> Regards,
+> Magnus Cederlöf
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-John,
-
-This patch has no particular urgency. It makes no functional
-change in the kernel,
-
-Thanks,
-
-Larry
----
-
- Kconfig |   50 +++++++++++++++++++++++++-------------------------
- 1 file changed, 25 insertions(+), 25 deletions(-)
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/Kconfig
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/Kconfig
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/Kconfig
-@@ -1,8 +1,26 @@
-+config RTLWIFI
-+	tristate "Realtek wireless card support"
-+	depends on MAC80211
-+	select FW_LOADER
-+	---help---
-+	  This is common code for RTL8192CE/RTL8192CU/RTL8192SE/RTL8723AE
-+	  drivers.  This module does nothing by itself - the various front-end
-+	  drivers need to be enabled to support any desired devices.
-+
-+	  If you choose to build as a module, it'll be called rtlwifi.
-+
-+config RTLWIFI_DEBUG
-+	bool "Debugging output for rtlwifi driver family"
-+	depends on RTLWIFI
-+	default y
-+	---help---
-+	This option is needed for the "debug=n" module option to produce any
-+	output. For embedded or other memory-limited systems, choose "N".
-+	For all other systems, or if in doubt, use "Y".
-+
- config RTL8192CE
- 	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
--	depends on MAC80211 && PCI
--	select FW_LOADER
--	select RTLWIFI
-+	depends on RTLWIFI && PCI
- 	select RTL8192C_COMMON
- 	---help---
- 	This is the driver for Realtek RTL8192CE/RTL8188CE 802.11n PCIe
-@@ -12,9 +30,7 @@ config RTL8192CE
- 
- config RTL8192SE
- 	tristate "Realtek RTL8192SE/RTL8191SE PCIe Wireless Network Adapter"
--	depends on MAC80211 && PCI
--	select FW_LOADER
--	select RTLWIFI
-+	depends on RTLWIFI && PCI
- 	---help---
- 	This is the driver for Realtek RTL8192SE/RTL8191SE 802.11n PCIe
- 	wireless network adapters.
-@@ -23,9 +39,7 @@ config RTL8192SE
- 
- config RTL8192DE
- 	tristate "Realtek RTL8192DE/RTL8188DE PCIe Wireless Network Adapter"
--	depends on MAC80211 && PCI
--	select FW_LOADER
--	select RTLWIFI
-+	depends on RTLWIFI && PCI
- 	---help---
- 	This is the driver for Realtek RTL8192DE/RTL8188DE 802.11n PCIe
- 	wireless network adapters.
-@@ -34,9 +48,7 @@ config RTL8192DE
- 
- config RTL8723AE
- 	tristate "Realtek RTL8723AE PCIe Wireless Network Adapter"
--	depends on MAC80211 && PCI && EXPERIMENTAL
--	select FW_LOADER
--	select RTLWIFI
-+	depends on RTLWIFI && PCI
- 	---help---
- 	This is the driver for Realtek RTL8723AE 802.11n PCIe
- 	wireless network adapters.
-@@ -45,9 +57,7 @@ config RTL8723AE
- 
- config RTL8192CU
- 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
--	depends on MAC80211 && USB
--	select FW_LOADER
--	select RTLWIFI
-+	depends on RTLWIFI && USB
- 	select RTL8192C_COMMON
- 	---help---
- 	This is the driver for Realtek RTL8192CU/RTL8188CU 802.11n USB
-@@ -55,16 +65,6 @@ config RTL8192CU
- 
- 	If you choose to build it as a module, it will be called rtl8192cu
- 
--config RTLWIFI
--	tristate
--	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
--	default m
--
--config RTLWIFI_DEBUG
--	bool "Additional debugging output"
--	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE || RTL8723AE
--	default y
--
- config RTL8192C_COMMON
- 	tristate
- 	depends on RTL8192CE || RTL8192CU
