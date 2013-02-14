@@ -1,258 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53991 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759438Ab3BXBHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 20:07:13 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC 12/13] brcmsmac: add support for probe response template
-Date: Sun, 24 Feb 2013 02:06:10 +0100
-Message-Id: <1361667972-22909-13-git-send-email-hauke@hauke-m.de> (sfid-20130224_020723_270872_E5FDA306)
-In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
-References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.neratec.com ([80.75.119.105]:45838 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756071Ab3BNNOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 08:14:19 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcider@gmail.com, Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH] mac80211: fix ieee80211_sta_tx_notify for nullfunc
+Date: Thu, 14 Feb 2013 14:08:37 +0100
+Message-Id: <1360847317-31387-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130214_141423_159188_29A3B6F6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ucode is able to answer probe response by itself. This writes such
-a template into the specific memory. Currently the probe requests are
-also send to mac80211 so there are more answers send to a requesting
-client. We have to make the ucode stop sending probe requests to the
-driver.
+Function ieee80211_sta_reset_conn_monitor has been
+resetting probe_send_count too early and nullfunc
+check was never called after succesfull ack.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reported-by: Magnus Cederlöf <mcider@gmail.com>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   11 ++
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  112 +++++---------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    1 +
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    2 +
- 4 files changed, 42 insertions(+), 84 deletions(-)
+ net/mac80211/mlme.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 3bb0aec..1348d73 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -538,6 +538,15 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&wl->lock);
- 	}
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cafefb2..a7fb276 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1637,17 +1637,18 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+ 	if (!ieee80211_is_data(hdr->frame_control))
+ 	    return;
  
-+	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
-+		struct sk_buff *probe_resp;
-+
-+		spin_lock_bh(&wl->lock);
-+		probe_resp = ieee80211_proberesp_get(hw, vif);
-+		brcms_c_set_new_probe_resp(wl->wlc, probe_resp);
-+		spin_unlock_bh(&wl->lock);
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
- 		/* Beaconing should be enabled/disabled (beaconing modes) */
- 		brcms_err(core, "%s: Beacon enabled: %s\n", __func__,
-@@ -1036,6 +1045,8 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
- 	hw->channel_change_time = 7 * 1000;
- 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 
-+	hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
-+
- 	hw->rate_control_algorithm = "minstrel_ht";
- 
- 	hw->sta_data_size = 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 7c97de8..15bff24 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -451,6 +451,8 @@ static void brcms_c_detach_mfree(struct brcms_c_info *wlc)
- 	kfree(wlc->hw);
- 	if (wlc->beacon)
- 		dev_kfree_skb_any(wlc->beacon);
-+	if (wlc->probe_resp)
-+		dev_kfree_skb_any(wlc->probe_resp);
- 
- 	/* free the wlc */
- 	kfree(wlc);
-@@ -7323,69 +7325,6 @@ brcms_c_mod_prb_rsp_rate_table(struct brcms_c_info *wlc, uint frame_len)
- 	}
- }
- 
--/*	Max buffering needed for beacon template/prb resp template is 142 bytes.
-- *
-- *	PLCP header is 6 bytes.
-- *	802.11 A3 header is 24 bytes.
-- *	Max beacon frame body template length is 112 bytes.
-- *	Max probe resp frame body template length is 110 bytes.
-- *
-- *      *len on input contains the max length of the packet available.
-- *
-- *	The *len value is set to the number of bytes in buf used, and starts
-- *	with the PLCP and included up to, but not including, the 4 byte FCS.
-- */
--static void
--brcms_c_bcn_prb_template(struct brcms_c_info *wlc, u16 type,
--			 u32 bcn_rspec,
--			 struct brcms_bss_cfg *cfg, u16 *buf, int *len)
--{
--	static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
--	struct cck_phy_hdr *plcp;
--	struct ieee80211_mgmt *h;
--	int hdr_len, body_len;
+-	if (ack)
+-		ieee80211_sta_reset_conn_monitor(sdata);
 -
--	hdr_len = D11_PHY_HDR_LEN + DOT11_MAC_HDR_LEN;
--
--	/* calc buffer size provided for frame body */
--	body_len = *len - hdr_len;
--	/* return actual size */
--	*len = hdr_len + body_len;
--
--	/* format PHY and MAC headers */
--	memset(buf, 0, hdr_len);
--
--	plcp = (struct cck_phy_hdr *) buf;
--
--	/*
--	 * PLCP for Probe Response frames are filled in from
--	 * core's rate table
--	 */
--	if (type == IEEE80211_STYPE_BEACON)
--		/* fill in PLCP */
--		brcms_c_compute_plcp(wlc, bcn_rspec,
--				 (DOT11_MAC_HDR_LEN + body_len + FCS_LEN),
--				 (u8 *) plcp);
--
--	/* "Regular" and 16 MBSS but not for 4 MBSS */
--	/* Update the phytxctl for the beacon based on the rspec */
--	brcms_c_beacon_phytxctl_txant_upd(wlc, bcn_rspec);
--
--	h = (struct ieee80211_mgmt *)&plcp[1];
--
--	/* fill in 802.11 header */
--	h->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | type);
--
--	/* DUR is 0 for multicast bcn, or filled in by MAC for prb resp */
--	/* A1 filled in by MAC for prb resp, broadcast for bcn */
--	if (type == IEEE80211_STYPE_BEACON)
--		memcpy(&h->da, &ether_bcast, ETH_ALEN);
--	memcpy(&h->sa, &wlc->pub->cur_etheraddr, ETH_ALEN);
--	memcpy(&h->bssid, &cfg->BSSID, ETH_ALEN);
--
--	/* SEQ filled in by MAC */
--}
--
- int brcms_c_get_header_len(void)
- {
- 	return TXOFF;
-@@ -7526,6 +7465,20 @@ void brcms_c_set_new_beacon(struct brcms_c_info *wlc, struct sk_buff *beacon,
- 	brcms_c_update_beacon(wlc);
- }
- 
-+void brcms_c_set_new_probe_resp(struct brcms_c_info *wlc,
-+				struct sk_buff *probe_resp)
-+{
-+	if (!probe_resp)
+ 	if (ieee80211_is_nullfunc(hdr->frame_control) &&
+ 	    sdata->u.mgd.probe_send_count > 0) {
+ 		if (ack)
+-			sdata->u.mgd.probe_send_count = 0;
++			ieee80211_sta_reset_conn_monitor(sdata);
+ 		else
+ 			sdata->u.mgd.nullfunc_failed = true;
+ 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
 +		return;
-+	if (wlc->probe_resp)
-+		dev_kfree_skb_any(wlc->probe_resp);
-+	wlc->probe_resp = probe_resp;
+ 	}
 +
-+	/* add PLCP */
-+	skb_push(wlc->probe_resp, D11_PHY_HDR_LEN);
-+	brcms_c_update_probe_resp(wlc, false);
-+}
-+
- /* Write ssid into shared memory */
- static void
- brcms_c_shm_ssid_upd(struct brcms_c_info *wlc, struct brcms_bss_cfg *cfg)
-@@ -7545,30 +7498,19 @@ brcms_c_shm_ssid_upd(struct brcms_c_info *wlc, struct brcms_bss_cfg *cfg)
- static void
- brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
- 			      struct brcms_bss_cfg *cfg,
-+			      struct sk_buff *probe_resp,
- 			      bool suspend)
- {
--	u16 *prb_resp;
--	int len = BCN_TMPL_LEN;
-+	int len;
- 
--	prb_resp = kmalloc(BCN_TMPL_LEN, GFP_ATOMIC);
--	if (!prb_resp)
--		return;
--
--	/*
--	 * write the probe response to hardware, or save in
--	 * the config structure
--	 */
--
--	/* create the probe response template */
--	brcms_c_bcn_prb_template(wlc, IEEE80211_STYPE_PROBE_RESP, 0,
--				 cfg, prb_resp, &len);
-+	len = min_t(size_t, probe_resp->len, BCN_TMPL_LEN);
- 
- 	if (suspend)
- 		brcms_c_suspend_mac_and_wait(wlc);
- 
- 	/* write the probe response into the template region */
- 	brcms_b_write_template_ram(wlc->hw, T_PRS_TPL_BASE,
--				    (len + 3) & ~3, prb_resp);
-+				    (len + 3) & ~3, probe_resp->data);
- 
- 	/* write the length of the probe response frame (+PLCP/-FCS) */
- 	brcms_b_write_shm(wlc->hw, M_PRB_RESP_FRM_LEN, (u16) len);
-@@ -7582,13 +7524,11 @@ brcms_c_bss_update_probe_resp(struct brcms_c_info *wlc,
- 	 * PLCP header for the call to brcms_c_mod_prb_rsp_rate_table()
- 	 * by subtracting the PLCP len and adding the FCS.
- 	 */
--	len += (-D11_PHY_HDR_LEN + FCS_LEN);
--	brcms_c_mod_prb_rsp_rate_table(wlc, (u16) len);
-+	brcms_c_mod_prb_rsp_rate_table(wlc,
-+				      (u16)len + FCS_LEN - D11_PHY_HDR_LEN);
- 
- 	if (suspend)
- 		brcms_c_enable_mac(wlc);
--
--	kfree(prb_resp);
++	if (ack)
++		ieee80211_sta_reset_conn_monitor(sdata);
  }
  
- void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
-@@ -7596,8 +7536,12 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
- 	/* update AP or IBSS probe responses */
--	if (wlc->pub->up && bsscfg->type == BRCMS_TYPE_AP)
--		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
-+	if (wlc->pub->up && bsscfg->type == BRCMS_TYPE_AP) {
-+		if (!wlc->probe_resp)
-+			return;
-+		brcms_c_bss_update_probe_resp(wlc, bsscfg, wlc->probe_resp,
-+					      suspend);
-+	}
- }
- 
- int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index 82382da..b5d7a38 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -567,6 +567,7 @@ struct brcms_c_info {
- 	struct sk_buff *beacon;
- 	u16 beacon_tim_offset;
- 	u16 beacon_dtim_period;
-+	struct sk_buff *probe_resp;
- };
- 
- /* antsel module specific state */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 6ed0a20..5e6db62 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -336,6 +336,8 @@ extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
- extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
- 				   struct sk_buff *beacon, u16 tim_offset,
- 				   u16 dtim_period);
-+extern void brcms_c_set_new_probe_resp(struct brcms_c_info *wlc,
-+				       struct sk_buff *probe_resp);
- extern void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid,
- 			     size_t ssid_len);
- 
+ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
 -- 
 1.7.10.4
 
