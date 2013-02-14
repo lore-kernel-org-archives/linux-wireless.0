@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54854 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755715Ab3BXLin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 06:38:43 -0500
-Message-ID: <5129FBB8.1080505@hauke-m.de> (sfid-20130224_123852_665943_7C5D7E9A)
-Date: Sun, 24 Feb 2013 12:38:32 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:36833 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752582Ab3BNACN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Feb 2013 19:02:13 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hi8so2100586wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 16:02:12 -0800 (PST)
+Message-ID: <511C2981.4000806@gmail.com> (sfid-20130214_010221_602864_1446A666)
+Date: Thu, 14 Feb 2013 01:02:09 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Arend Van Spriel <arend@broadcom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: Re: [RFC 00/13] brcmsmac: add AP mode
-References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de> <A47087626F2942499CF47E79803E771E0431BF4D@SJEXCHMB13.corp.ad.broadcom.com>
-In-Reply-To: <A47087626F2942499CF47E79803E771E0431BF4D@SJEXCHMB13.corp.ad.broadcom.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ Serbia (RS) on 2.4 and 5GHz
+References: <CAL1G+-HfPJnwvisiE5Vr0ihenwKzL3_QL40DLPP_PsPyv+nveQ@mail.gmail.com> <20130206192544.GH2148@tuxdriver.com> <511C1745.4000502@gmail.com>
+In-Reply-To: <511C1745.4000502@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2013 11:21 AM, Arend Van Spriel wrote:
-> On Sunday, February 24, 2013 2:05 AM, Hauke Mehrtens wrote:
->> This patch series contains some cleanup patches for brcmsmac and then
->> adds beacon and probe response template upload.
->> With these features AP mode support is added in the last patch.
+On 02/13/2013 11:44 PM, Xose Vazquez Perez wrote:
+
+> Serbia is under ETSI/CEPT rules( ECC/DEC/(04)08 ), see summary[1]:
 > 
-> Someone was bound to start on this and we are lately too focussed on
-> brcmfmac. We will review the patches and found out whether our test
-> framework can cover AP mode.
-
-Yes this needs some review and more testing, I hope this also works with
-power saving stations and so on.
-
->> When running AP mode in 5GHz band on my BCM43224 I get the following
->> errors, and I do not see the network with my Intel IWL6300, the
->> regulation restrictions in channel.c where changed before:
+> 5 GHz current rules are too much liberal and incomplete:
 > 
-> 5GHz is a bit tricky. I will need to find out whether AP mode can work with
-> the current ucode.
+> country RS:
+> 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+> 	(5150 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR
+> 	(5470 - 5725 @ 20), (3, 1000 mW), DFS
+> 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+> 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
 
-Currently brcmsmac completely denies beaconing on 5GHz in channel.c, how
-could that be changed and still compatible with the interpretation of
-the regulation rules by your lawyers?
+> They should be changed to "standard" ETSI rules:
+> 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+> 	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+> 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+> 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
 
->> [  829.608000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait:
->> waited 83000 uS and MI_MACSSPNDD is still not on.
->> [  829.616000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff808d, phydebug
->> 0x0000000d, psm_brc 0x0000
-> 
-> It generally indicates a hang in the ucode. Are you using the firmware from
-> the linux-firmware repository?
+sorry,
 
-Instead of these error messages I also got a complete system hang when
-compiling a kernel without lock debugging, the difference between this
-result with lock debugging and the hang without lock debugging is
-probably resulted from different timings.
+5150-5250 should be 200 mW:
+ 	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
 
-I used the ucode extracted from the proprietary driver, because only
-this ucode works with my BCM4716, this is ucode 666.2 from driver
-5.100.138. I will try the ucode from linux-firmware today.
+<http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF>
 
->> The probe responses are currently send by the ucode based on the
->> template and by mac80211. I was searching for a switch so disable probe
->> request forwarding from the ucode to the driver.
-> 
-> I am pretty sure there is. I will look into this and let you know.
-
-That would be nice.
-
->> The structure of brcmsmac is pretty complicated, because it copies many
->> addresses into its own structs and does not use mac80211 structs in
->> main.c.
-> 
-> Yeah. Basically, a lot of conversions are done at mac80211 interface to keep
-> the low-level driver code similar to the code base it came from. That is the
-> path taken. I would like to see a replacement driver some day that shares more
-> structure definitions with the linux wireless subsystem, but for now that is just
-> me daydreaming ;-)
-
-I saw your code for beaconing and probe response templates, but I mostly
-replaced it with a new version because this architecture was not
-compatible with mac80211. For the Phy code it makes sense and it is
-probably not so hard to stay near your proprietary code base, but I do
-not think this works very well with the rest of the code mostly in main.c.
-
-Hauke
+2. that in the frequency band 5.150-5.350 MHz, WAS/RLANs stations
+shall be restricted to indoor use with a maximum mean e.i.r.p. of
+200 mW and a maximum mean e.i.r.p. density of 10 mW/MHz in any 1MHz
+band;
