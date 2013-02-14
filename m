@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54932 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754448Ab3BDVp3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 16:45:29 -0500
-Date: Mon, 4 Feb 2013 16:41:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-02-01
-Message-ID: <20130204214112.GD2123@tuxdriver.com> (sfid-20130204_224545_695326_D1FF721F)
-References: <20130201173302.GC4733@joana>
+Received: from mms3.broadcom.com ([216.31.210.19]:4852 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932509Ab3BNT4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 14:56:37 -0500
+Message-ID: <511D416C.5070802@broadcom.com> (sfid-20130214_205643_086053_806D424D)
+Date: Thu, 14 Feb 2013 20:56:28 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130201173302.GC4733@joana>
+To: "Joe Perches" <joe@perches.com>
+cc: "Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] brcmsmac: Remove unnecessary memset casts
+References: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com>
+ <6b2fcef4f4983542d3fd08005cfe06d7cd82e97e.1360805256.git.joe@perches.com>
+In-Reply-To: <6b2fcef4f4983542d3fd08005cfe06d7cd82e97e.1360805256.git.joe@perches.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 01, 2013 at 03:33:02PM -0200, Gustavo Padovan wrote:
-> Hi John,
+On 02/14/2013 02:33 AM, Joe Perches wrote:
+> Remove the casts of the first argument of memset.
 > 
-> Two simple fixes for 3.8. One of the patches fixes a situation where the
-> connection wasn't terminated if a timeout ocurrs for LE an SCO connections.
-> The other fixes prevent NULL dereference in the SMP code, it is a security fix
-> as well.
-> 
-> Please pull, or let me know of any problems!
-> 
->         Gustavo
-> 
+> Neaten the style by using the sizeof the actual variable
+> being memset not the sizeof the type of variable.
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Joe Perches <joe@perches.com>
 > ---
-> The following changes since commit b7e98b5100aad9290d7f06fcb9d1e80f7f62f05f:
-> 
->   Bluetooth: Check if the hci connection exists in SCO shutdown (2013-01-10 03:53:32 -0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
-> 
-> for you to fetch changes up to 4c02e2d444595200d0b18b889994aac3611cd288:
-> 
->   Bluetooth: Fix hci_conn timeout routine (2013-01-31 15:38:02 -0200)
+>  drivers/net/wireless/brcm80211/brcmsmac/main.c | 23 ++++++++++-------------
+>  1 file changed, 10 insertions(+), 13 deletions(-)
 
-Pulling now...
+For new code we try to stick to that style. Thanks for going through the
+existing code.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Gr. AvS
+
