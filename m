@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60743 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755620Ab3BVLgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 06:36:33 -0500
-Message-ID: <51275837.4020708@openwrt.org> (sfid-20130222_123636_575333_EFB64A7F)
-Date: Fri, 22 Feb 2013 12:36:23 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
-References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL> <51270186.6070003@candelatech.com>
-In-Reply-To: <51270186.6070003@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:55163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989Ab3BNLNI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 06:13:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: remove and renumber NL80211_FEATURE_FULL_AP_CLIENT_STATE
+Date: Thu, 14 Feb 2013 12:13:04 +0100
+Message-Id: <1360840384-13986-1-git-send-email-johannes@sipsolutions.net> (sfid-20130214_121311_772413_A31329D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-02-22 6:26 AM, Ben Greear wrote:
-> On 02/21/2013 08:49 PM, Sujith Manoharan wrote:
->> Ben Greear wrote:
->>> I'll be happy to test patches, but I'm not sure how to go about
->>> debugging the real problem on my own.  Maybe some stats could
->>> be added to the xmit debugfs file to help diagnose the problem,
->>> or maybe some other debugfs info will help?
->>>
->>> I can't reproduce the problem with ath9k debugging set at the
->>> previous suggested level, so it would have to be something
->>> less invasive.
->>>
->>> As for just stations going out of range, it remains locked up
->>> even with signal level goes back to -20, so it's not just a simple
->>> station-out-of range issues..
->>
->> Sure, but I think that filtered frames are not handled properly,
->> especially with aggregation, since the debugfs stats from your earlier email
->> showed a large counter (from a private patch ?):
->>
->> TXERR Filtered:            224          0         0         0
-> 
-> Yeah, guess that patch never made it upstream.  The pertinent bit is:
-Please also check if the station(s) that the frames are queued for are
-in powersave state for some reason. That would prevent the tx path from
-throwing them in the hw queue, yet they'd still take up pending-frame
-slots. I was planning on fixing this eventually by expiring frames that
-stay in the queue for too long, but haven't decided on the exact
-approach yet.
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+Adding the flag to mac80211 already without testing was
+clearly a mistake, one that we now pay for by having to
+reserve bit 13 forever. The problem is cfg80211 doesn't
+allow capability/rate changes for station entries that
+were added unassociated, so the station entries cannot
+be set up properly when marked associated.
+
+Change the NL80211_FEATURE_FULL_AP_CLIENT_STATE number
+to make it clear to userspace implementations that all
+current kernels don't actually support it, even though
+the previous bit is set, and of course also remove the
+flag from mac80211 until we test and fix the issues.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/uapi/linux/nl80211.h | 3 ++-
+ net/mac80211/main.c          | 3 +--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1fd6e561..db6ef0b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3461,8 +3461,9 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_NEED_OBSS_SCAN			= 1 << 10,
+ 	NL80211_FEATURE_P2P_GO_CTWIN			= 1 << 11,
+ 	NL80211_FEATURE_P2P_GO_OPPPS			= 1 << 12,
+-	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 13,
++	/* bit 13 is reserved */
+ 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
++	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
+ };
+ 
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 75a78c6..4c894da 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -572,8 +572,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	wiphy->features |= NL80211_FEATURE_SK_TX_STATUS |
+ 			   NL80211_FEATURE_SAE |
+ 			   NL80211_FEATURE_HT_IBSS |
+-			   NL80211_FEATURE_VIF_TXPOWER |
+-			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
++			   NL80211_FEATURE_VIF_TXPOWER;
+ 
+ 	if (!ops->hw_scan)
+ 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-- 
+1.8.0
 
