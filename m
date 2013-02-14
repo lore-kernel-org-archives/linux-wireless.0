@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43384 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753506Ab3BDPkL (ORCPT
+Received: from hetz2.bluebottle.com ([176.9.57.138]:49809 "EHLO
+	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758971Ab3BNUlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 10:40:11 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U2O9S-00032G-3w
-	for linux-wireless@vger.kernel.org; Mon, 04 Feb 2013 16:40:10 +0100
-Message-ID: <1359992435.10311.19.camel@jlt4.sipsolutions.net> (sfid-20130204_164015_603432_7D6A9A79)
-Subject: Re: [PATCH] cfg80211: fix BSS list hidden SSID lookup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 04 Feb 2013 16:40:35 +0100
-In-Reply-To: <1359742986-12932-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_192315_970791_397EE812)
-References: <1359742986-12932-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130201_192315_970791_397EE812)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Feb 2013 15:41:46 -0500
+Date: Thu, 14 Feb 2013 21:35:53 +0100
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org
+Subject: Re: WRT54g / b43 / mac802.11 BREAKTHROUGH
+Message-ID: <20130214203553.GA27934@medion.lan> (sfid-20130214_214152_580175_700956AA)
+References: <1342612598.5006a476022c6@mail.bluebottle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342612598.5006a476022c6@mail.bluebottle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-01 at 19:23 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+* Bastian Bittorf <bittorf@bluebottle.com> [18.07.2012 17:43]:
+> hi devs!
 > 
-> When trying to find a hidden SSID, the lookup function
-> is done wrong; the code is trying to combine the two
-> lookups into one, and as a consequence doesn't always
-> find the entry at all. To understand this, consider a
-> case where multiple BSS entries with the same channel
-> and BSSID exist but have different SSID length. Then
-> comparing against the probe response SSID length is
-> bound to cause problems since the hidden one might be
-> either zeroed out or zero-length.
-> 
-> To fix this we need to do two lookups for the two ways
-> to hide SSIDs.
+> yesterday we had a breaktrough debugging b43 in our hackspace maschinenraum/m18[1,2]
+> at weimar.freifunk.net[3,4] - since a long time our darling wrt54g suffers from a
+> hanging wifi and bad performance[5], but the workaround is easy: now it's up to
+> you to fix the rootcause.
 
-Applied.
+[...]
 
-johannes
+another issues was found, see https://dev.openwrt.org/ticket/7552#comment:69
 
+"...under high load and have found that probably some of the silent freezes
+are due to overflow of the RX DMA buffer, seems like b43 does not
+handlre such a situation at all."
+
+https://dev.openwrt.org/attachment/ticket/7552/840-b43-workaround-rx-fifo-overflow.patch
+
+the patch is working so far, but is only a workaround.
+has somebody a better code-idea?
+
+bye, bastian
