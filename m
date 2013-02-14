@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:63942 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756496Ab3BNJOt (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:56811 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752771Ab3BNAGV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 04:14:49 -0500
-Received: by mail-we0-f169.google.com with SMTP id t11so1775654wey.14
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 01:14:48 -0800 (PST)
+	Wed, 13 Feb 2013 19:06:21 -0500
+Received: by mail-lb0-f181.google.com with SMTP id gm6so1392369lbb.12
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 16:06:20 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAMXmbB=xuBErzdLdePGG1JBD3M++6wXkPcGsRKWXGDGqdKFrBw@mail.gmail.com>
-References: <CAMXmbB=xuBErzdLdePGG1JBD3M++6wXkPcGsRKWXGDGqdKFrBw@mail.gmail.com>
-Date: Thu, 14 Feb 2013 10:14:48 +0100
-Message-ID: <CA+icZUWoZX1a0_kqR_Bz94TkzOw2GjmcvPGjjNNkhebPkCOP3A@mail.gmail.com> (sfid-20130214_101454_074005_65211AEB)
-Subject: Re: WPA2 encryption doesn't work with Intel AGN 5300 in kernel 3.8
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: scalpel4k <scalpel4k@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAAU0D9f54W7L=kwTYEC4o8n4nr5hnSSOSNzQxEBDWLkPUFM6mQ@mail.gmail.com>
+References: <CAAU0D9f54W7L=kwTYEC4o8n4nr5hnSSOSNzQxEBDWLkPUFM6mQ@mail.gmail.com>
+Date: Thu, 14 Feb 2013 01:06:19 +0100
+Message-ID: <CAAU0D9d-uESonqoz11Dpd9K7gyRXf9ASsKtX3xtXZHYyO_Jwig@mail.gmail.com> (sfid-20130214_010625_988971_170D847E)
+Subject: Forcing Realtek based usb device into wireless G mode
+From: Hendrik-Jan Heins <hjheins@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 14, 2013 at 10:10 AM, scalpel4k <scalpel4k@gmail.com> wrote:
-> Attached is the kernel log when I was trying to connect to a WPA2
-> secure WLAN. This is only one of the kernels I have tried, a plain
-> vanilla rc7 still has the same issue.
-> Connecting to an unsecured WLAN does work. For the WPA2 WLAN I have to
-> switch back to a 3.7 kernel where everything is working properly.
->
-> I hope this was enough information
->
+Dear list,
 
-The subject line is this time a bit more meaningful :-).
-More informations like your kernel-config and/or lspci/lsusb might be helpful.
-Check the docs section on <wireless.kernel.org> on how to debug iwlwifi.
+Currently  I have an issue with a USB wireless device that does not
+work in n-mode. It does however work in g-mode.
+So far I have found out that setting my access point to g-mode will
+force the whole network into g-mode, and thus the card works.
+However, I would like to keep my network running in n-mode and just
+force the card into g-mode.
 
-- Sedat -
+I tried: "iwconfig wlan1 rate 54M"
+but this does not work, according to iwconfig the card stays on 300M.
 
-> bye Michi
+Does anyone know how I can force this either in userland or maybe by
+modifying the driver source?
+
+The device:
+USB ID 0bda:8172 Realtek Semiconductor Corp. RTL8191SU 802.11n WLAN Adapter
+
+the driver in kernel 2.6.32:
+r8192s_usb
+though I would also like to use this device on a kernel 3.0.63, and I
+am not sure the same driver is in use there.
+
+thank you.
+
+Hendrik-Jan
