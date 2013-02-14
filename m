@@ -1,72 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:65195 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758727Ab3BSSIj (ORCPT
+Received: from mail-vb0-f49.google.com ([209.85.212.49]:37878 "EHLO
+	mail-vb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab3BNEUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 13:08:39 -0500
-Received: by mail-qc0-f174.google.com with SMTP id z24so2651655qcq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2013 10:08:38 -0800 (PST)
+	Wed, 13 Feb 2013 23:20:06 -0500
+Received: by mail-vb0-f49.google.com with SMTP id s24so1241464vbi.22
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 20:20:05 -0800 (PST)
+Message-ID: <511C65F2.1080201@gnoutcheff.name> (sfid-20130214_052011_061754_9F5D91E2)
+Date: Wed, 13 Feb 2013 23:20:02 -0500
+From: Daniel Gnoutcheff <daniel@gnoutcheff.name>
 MIME-Version: 1.0
-Date: Tue, 19 Feb 2013 12:02:27 -0600
-Message-ID: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com> (sfid-20130219_190843_461974_6CB4298E)
-Subject: mwifiex crash when removing interface while scanning
-From: Daniel Drake <dsd@laptop.org>
-To: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [ath5k] [bugreport] BIOS hang if wifi was connected before reboot
+References: <5100BEF7.4000107@gnoutcheff.name> <CAGRGNgWg=4CgjXpdceNfsy6X0_q=SFY8CegJsTf60yGd_NBuLQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgWg=4CgjXpdceNfsy6X0_q=SFY8CegJsTf60yGd_NBuLQ@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello Julian, thanks for your response and advice.  (Sorry for my very
+slow reply.)
 
-Testing mwifiex_sdio on XO-4 (8787) on Linux 3.8. In OLPC's use case
-we quite regularly will power down the wireless card when it is not
-being actively used. This is currently proving problematic.
+On 01/24/2013 01:45 AM, Julian Calaby wrote:
+> On Thu, Jan 24, 2013 at 3:56 PM, Daniel Gnoutcheff
+> <daniel@gnoutcheff.name> wrote:
+>> Hello all,
+>>
+>> I have a Lenovo Thinkpad R61 7733A82 running Ubuntu 12.10 on kernel 3.7.4
+>> with an Atheros AR5212 PCI-Express wireless card which is reported in dmesg
+>> as:
+>>   ath5k: phy0: Atheros AR5414 chip found (MAC: 0xa3, PHY: 0x61)
+>>
+>> If I connect this card to some network and then perform a warm reboot
+>> without disconnecting from that network, then the system seems to lock up in
+>> the middle of the BIOS self-test.
+> 
+> My guess is that this is a bug in the BIOS itself, not an issue with
+> the Linux drivers, and I'd contact Lenovo support to see if this can
+> be fixed.
 
-Here is a test case reproducing one of the failures we are seeing:
+Yep, this looks like a BIOS bug to me too.  Rebooting with kexec works fine.
 
-First, run this script:
+About two and a half weeks ago, I gave Lenovo tech support a call, and
+the representative I talked to indicated that he didn't have a good way
+to contact the firmware/hardware engineers.  He suggested that I report
+this to Lenovo's forum, which I did at:
 
-insmod mwifiex_sdio.ko
-sleep 1
-ifconfig eth0 up
-iwlist eth0 scan &
-sleep 0.5
-rmmod mwifiex_sdio
 
-It normally runs fine the first time, no errors, but run it again and
-it terminates with these errors:
+https://forums.lenovo.com/t5/Linux-Discussion/R61-w-Ubuntu-hangs-in-POST-if-rebooting-while-connected-to-wifi/td-p/1011759
 
-    mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
-    eth0      Failed to read scan data : No such device
+I haven't gotten any response so far.
 
->From this point, things are pretty screwed up. Try to load the driver again...
+My support options are somewhat limited, as my warranty has long since
+expired.  Even if it hadn't, I'm not sure that Lenovo would care, given
+that they're apparently neglecting other, much more annoying BIOS bugs
+(like [1]).
 
-insmod mwifiex_sdio.ko
-mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
-mwifiex_sdio mmc0:0001:1: WLAN FW is active
-mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
-(331.391420) = 0xa9, act = 0x0
-mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
-mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
-mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
-mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
-mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
-mwifiex_sdio mmc0:0001:1: last_event_index = 0
-mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
-mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
-mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
-mwifiex_sdio mmc0:0001:1: cmd timeout
-mwifiex_sdio: Resetting card...
-WARNING: driver mwifiex_sdio did not remove its interrupt handler!
-mmc0: card 0001 removed
+>> Up until recently, it seems that NetworkManager would always disconnect upon
+>> shutdown and thus avoided this bug, but this changed in Ubuntu 12.10.  
+<snip>
+> 
+> Have you raised a bug with Ubuntu's Network Manager maintainers about this?
 
-and it doesn't come back.
+I have now.  Upon investigation, it appears that this is caused by a
+combination of (upstream) bugs in wpa_supplicant and NetworkManager.
+Fixing either of these bugs restores the intended behavior (and is an
+effective workaround for the BIOS bug).  The NetworkManager bug has
+already been fixed in upstream's git.  For the record, the relevant bug
+reports are:
 
-Let me know how we can help further debugging.
+For NetworkManager:
+  https://bugs.launchpad.net/network-manager/+bug/1124803
+  https://bugzilla.gnome.org/show_bug.cgi?id=683932
+For wpa_supplicant:
+  https://bugs.launchpad.net/ubuntu/+source/wpa/+bug/1124789
+  http://w1.fi/bugz/show_bug.cgi?id=474
 
-Thanks
-Daniel
+Thanks!
+
+[1]
+https://forums.lenovo.com/t5/Linux-Discussion/BIOS-Bug-Enabling-Fn-Ctrl-swap-breaks-Ctrl-Alt-Up/td-p/430663
