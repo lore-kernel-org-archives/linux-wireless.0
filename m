@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.236.10]:45388 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753124Ab3BZSMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 13:12:07 -0500
-Date: Tue, 26 Feb 2013 22:12:00 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: =?ISO-8859-2?Q?Micha=B3_Kazior?= <kazikcz@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
-In-Reply-To: <CABvG-CVVzBJ9M4VXq0HsNDyaDbcSWB-pmftXJYLKEg01zqHvDA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1302262208260.13622@icf.org.ru> (sfid-20130226_191211_553968_781816CC)
-References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com> <alpine.DEB.2.02.1302232342380.15538@icf.org.ru> <CABvG-CVVzBJ9M4VXq0HsNDyaDbcSWB-pmftXJYLKEg01zqHvDA@mail.gmail.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:63265 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934183Ab3BNL6v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 06:58:51 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hm14so6919163wib.9
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 03:58:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-690646527-1361902320=:13622"
+Date: Thu, 14 Feb 2013 12:58:43 +0100
+Message-ID: <CAND6uNnMB0i9fvVSmqHtCMkf4XVr8dHUz+m1m3CxDCT+j2XD5Q@mail.gmail.com> (sfid-20130214_125854_451687_9DEAC5E3)
+Subject: Possible bug with probe_send_count set to 0 and then checked if
+ greater than 0
+From: =?ISO-8859-1?Q?Magnus_Cederl=F6f?= <mcider@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+In net/mac80211/mlme.c function ieee80211_sta_tx_notify:
+If a null frame was acked, ieee80211_sta_reset_conn_monitor is called.
+This function sets probe_send_count to 0.
+After the call to ieee80211_sta_reset_conn_monitor, it is checked if
+probe_set_count is > 0.
+This means that ieee80211_queue_work will not be called even though
+the nullfunc was successful.
 
----1050998036-690646527-1361902320=:13622
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+The symptom of this error is that when using power save, it will take
+500ms to enter power save again after a successfully acked null frame.
 
-On 2013-02-26 18:49 +0100, Micha? Kazior wrote Georgiewskiy Yuriy:
+What case will the check for 'probe_send_count > 0' cover?
 
-MK>On 23 February 2013 20:45, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-MK>> hm, strange, i have this cards, and it's works fine, exactly not fine, but works,
-MK>> and as i known it's EOS since 2012.
-MK>
-MK>Apparently some of them have their EEPROM programmed incorrectly.
-MK>Perhaps different revisions? Beats me.
-MK>
-MK>The one in question has "F52N/F50N/F20N V7" printed on the board and
-MK>"FCC ID:VKV-Ff52N" on a sticker. Is yours any different?
-
-hm, may be, have f52n/f50n/f20n next line 
-1132 v6 он the board, and have no any FCC on sticker, seems only serial 
-number or something like this on it.
-
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-690646527-1361902320=:13622--
+Regards,
+Magnus Cederl�f
