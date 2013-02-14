@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40931 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758808Ab3BKSpM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56702 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758666Ab3BNUCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 13:45:12 -0500
-Date: Mon, 11 Feb 2013 13:45:09 -0500 (EST)
-Message-Id: <20130211.134509.1039159764058878012.davem@davemloft.net> (sfid-20130211_194522_678491_33BAAB82)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	johannes.berg@intel.com
-Subject: Re: [PATCH] cfg80211: configuration for WoWLAN over TCP
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1360596853-13610-1-git-send-email-johannes@sipsolutions.net>
-References: <1360596853-13610-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 14 Feb 2013 15:02:14 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U650X-0003tA-0p
+	for linux-wireless@vger.kernel.org; Thu, 14 Feb 2013 21:02:13 +0100
+Message-ID: <1360872130.8210.16.camel@jlt4.sipsolutions.net> (sfid-20130214_210217_669625_0A9C87F8)
+Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
+ userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 14 Feb 2013 21:02:10 +0100
+In-Reply-To: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net> (sfid-20130212_150133_849592_60D3E9ED)
+References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130212_150133_849592_60D3E9ED)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 11 Feb 2013 16:34:13 +0100
-
+On Tue, 2013-02-12 at 15:01 +0100, Johannes Berg wrote:
 > From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Intel Wireless devices are able to make a TCP connection
-> after suspending, sending some data and waking up when
-> the connection receives wakeup data (or breaks). Add the
-> WoWLAN configuration and feature advertising API for it.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> In many cases, userspace may need to know which of the
+> 802.11 extended capabilities ("Extended Capabilities
+> element") are implemented in the driver or device, to
+> include them e.g. in beacons, assoc request/response
+> or other frames. Add a new nl80211 attribute to hold
+> the extended capabilities bitmap for this.
 
-No objections from me:
+Applied both.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+johannes
+
