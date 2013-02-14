@@ -1,91 +1,418 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25677 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754660Ab3B0Kqi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 05:46:38 -0500
-Message-ID: <1361961985.15573.11.camel@dcbw.foobar.com> (sfid-20130227_114658_309700_325D4839)
-Subject: Re: [PATCH 3.9] libertas: fix crash for SD8688
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Lubomir Rintel <lkundrak@v3.sk>, Harro Haan <hrhaan@gmail.com>,
-	Daniel Drake <dsd@laptop.org>,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Date: Wed, 27 Feb 2013 11:46:25 +0100
-In-Reply-To: <1361912315-26024-1-git-send-email-bzhao@marvell.com>
-References: <1361912315-26024-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:61501 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934815Ab3BNTVc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Feb 2013 14:21:32 -0500
+Received: by mail-pa0-f43.google.com with SMTP id bh2so1404461pad.2
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 11:21:31 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v3 1/2] mac80211: cache mesh beacon
+Date: Thu, 14 Feb 2013 11:20:13 -0800
+Message-Id: <1360869614-29297-1-git-send-email-thomas@cozybit.com> (sfid-20130214_202141_028195_022B4077)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-26 at 12:58 -0800, Bing Zhao wrote:
-> For SD8688, FUNC_INIT command is queued before fw_ready flag is
-> set. This causes the following crash as lbs_thread blocks any
-> command if fw_ready is not set.
+Previously, the entire mesh beacon would be generated each
+time the beacon timer fired. Instead generate a beacon
+head and tail (so the TIM can easily be inserted when mesh
+power save is on) when starting a mesh or the MBSS
+parameters change.
 
-While we're at this; does somebody want to take over Libertas
-maintainership?  I don't have time for it anymore (and truth be told,
-haven't for a long time).  So I'm happy if Daniel or Bing or anyone else
-who are already doing all this take it over.  I've got a few Libertas
-devices (usb8388, sd8686, sd8687, cf8385) that I'm happy to send to
-anyone who wants them.
+Also add a mutex for protecting beacon updates and
+preventing leaks.
 
-I'll ack a patch to MAINTAINERS to switch to somebody else.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-Dan
+v2:
+	less verbose, fix RCU usage (Johannes)
+	protect beacon updates (Johannes)
 
-> [  209.338953] [<c0502248>] (__schedule+0x610/0x764) from [<bf20ae24>] (__lbs_cmd+0xb8/0x130 [libertas])
-> [  209.348340] [<bf20ae24>] (__lbs_cmd+0xb8/0x130 [libertas]) from [<bf222474>] (if_sdio_finish_power_on+0xec/0x1b0 [libertas_sdio])
-> [  209.360136] [<bf222474>] (if_sdio_finish_power_on+0xec/0x1b0 [libertas_sdio]) from [<bf2226c4>] (if_sdio_power_on+0x18c/0x20c [libertas_sdio])
-> [  209.373052] [<bf2226c4>] (if_sdio_power_on+0x18c/0x20c [libertas_sdio]) from [<bf222944>] (if_sdio_probe+0x200/0x31c [libertas_sdio])
-> [  209.385316] [<bf222944>] (if_sdio_probe+0x200/0x31c [libertas_sdio]) from [<bf01d820>] (sdio_bus_probe+0x94/0xfc [mmc_core])
-> [  209.396748] [<bf01d820>] (sdio_bus_probe+0x94/0xfc [mmc_core]) from [<c02e729c>] (driver_probe_device+0x12c/0x348)
-> [  209.407214] [<c02e729c>] (driver_probe_device+0x12c/0x348) from [<c02e7530>] (__driver_attach+0x78/0x9c)
-> [  209.416798] [<c02e7530>] (__driver_attach+0x78/0x9c) from [<c02e5658>] (bus_for_each_dev+0x50/0x88)
-> [  209.425946] [<c02e5658>] (bus_for_each_dev+0x50/0x88) from [<c02e6810>] (bus_add_driver+0x108/0x268)
-> [  209.435180] [<c02e6810>] (bus_add_driver+0x108/0x268) from [<c02e782c>] (driver_register+0xa4/0x134)
-> [  209.444426] [<c02e782c>] (driver_register+0xa4/0x134) from [<bf22601c>] (if_sdio_init_module+0x1c/0x3c [libertas_sdio])
-> [  209.455339] [<bf22601c>] (if_sdio_init_module+0x1c/0x3c [libertas_sdio]) from [<c00085b8>] (do_one_initcall+0x98/0x174)
-> [  209.466236] [<c00085b8>] (do_one_initcall+0x98/0x174) from [<c0076504>] (load_module+0x1c5c/0x1f80)
-> [  209.475390] [<c0076504>] (load_module+0x1c5c/0x1f80) from [<c007692c>] (sys_init_module+0x104/0x128)
-> [  209.484632] [<c007692c>] (sys_init_module+0x104/0x128) from [<c0008c40>] (ret_fast_syscall+0x0/0x38)
-> 
-> Fix it by setting fw_ready flag prior to queuing FUNC_INIT command.
-> 
-> Cc: <stable@vger.kernel.org> # 3.5+
-> Reported-by: Lubomir Rintel <lkundrak@v3.sk>
-> Tested-by: Lubomir Rintel <lkundrak@v3.sk>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 739309e..4557833 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -825,6 +825,11 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
->  
->  	sdio_release_host(func);
->  
-> +	/* Set fw_ready before queuing any commands so that
-> +	 * lbs_thread won't block from sending them to firmware.
-> +	 */
-> +	priv->fw_ready = 1;
-> +
->  	/*
->  	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
->  	 */
-> @@ -839,7 +844,6 @@ static void if_sdio_finish_power_on(struct if_sdio_card *card)
->  			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
->  	}
->  
-> -	priv->fw_ready = 1;
->  	wake_up(&card->pwron_waitq);
->  
->  	if (!card->started) {
+v3:
+	don't drop ieee80211_mps_set_frame_flags (Marco)
+	fix sparse RCU warnings (Johannes)
+	propagate mesh start failure reason (Johannes)
 
+ net/mac80211/cfg.c         |    9 +--
+ net/mac80211/ieee80211_i.h |    3 +
+ net/mac80211/mesh.c        |  153 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mesh.h        |    5 +-
+ net/mac80211/mesh_plink.c  |    4 +-
+ net/mac80211/tx.c          |   61 +++---------------
+ 6 files changed, 170 insertions(+), 65 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c3869ba..0800fb3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1800,11 +1800,10 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		conf->power_mode = nconf->power_mode;
+ 		ieee80211_mps_local_status_update(sdata);
+ 	}
+-	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask)) {
++	if (_chg_mesh_attr(NL80211_MESHCONF_AWAKE_WINDOW, mask))
+ 		conf->dot11MeshAwakeWindowDuration =
+ 			nconf->dot11MeshAwakeWindowDuration;
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+-	}
++	ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 	return 0;
+ }
+ 
+@@ -1830,9 +1829,7 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err)
+ 		return err;
+ 
+-	ieee80211_start_mesh(sdata);
+-
+-	return 0;
++	return ieee80211_start_mesh(sdata);
+ }
+ 
+ static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d702f7d..388580a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -580,6 +580,9 @@ struct ieee80211_if_mesh {
+ 	u32 mesh_seqnum;
+ 	bool accepting_plinks;
+ 	int num_gates;
++	struct beacon_data __rcu *beacon;
++	/* just protects beacon updates for now */
++	struct mutex mtx;
+ 	const u8 *ie;
+ 	u8 ie_len;
+ 	enum {
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0adec3d..2eee2f1 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -171,7 +171,7 @@ void mesh_sta_cleanup(struct sta_info *sta)
+ 	}
+ 
+ 	if (changed)
+-		ieee80211_bss_info_change_notify(sdata, changed);
++		ieee80211_mbss_info_change_notify(sdata, changed);
+ }
+ 
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+@@ -593,7 +593,7 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
+ 	mesh_path_expire(sdata);
+ 
+ 	changed = mesh_accept_plinks_update(sdata);
+-	ieee80211_bss_info_change_notify(sdata, changed);
++	ieee80211_mbss_info_change_notify(sdata, changed);
+ 
+ 	mod_timer(&ifmsh->housekeeping_timer,
+ 		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
+@@ -644,7 +644,140 @@ void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
+ }
+ #endif
+ 
+-void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
++static int
++ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
++{
++	struct beacon_data *bcn;
++	int head_len, tail_len;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	enum ieee80211_band band;
++	u8 *pos;
++	struct ieee80211_sub_if_data *sdata;
++	int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
++		      sizeof(mgmt->u.beacon);
++
++	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
++	rcu_read_lock();
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	band = chanctx_conf->def.chan->band;
++	rcu_read_unlock();
++
++	head_len = hdr_len +
++		   2 + /* NULL SSID */
++		   2 + 8 + /* supported rates */
++		   2 + 3; /* DS params */
++	tail_len = 2 + (IEEE80211_MAX_SUPP_RATES - 8) +
++		   2 + sizeof(struct ieee80211_ht_cap) +
++		   2 + sizeof(struct ieee80211_ht_operation) +
++		   2 + ifmsh->mesh_id_len +
++		   2 + sizeof(struct ieee80211_meshconf_ie) +
++		   2 + sizeof(__le16) + /* awake window */
++		   ifmsh->ie_len;
++
++	bcn = kzalloc(sizeof(*bcn) + head_len + tail_len, GFP_KERNEL);
++	/* need an skb for IE builders to operate on */
++	skb = dev_alloc_skb(max(head_len, tail_len));
++
++	if (!bcn || !skb)
++		goto out_free;
++
++	/*
++	 * pointers go into the block we allocated,
++	 * memory is | beacon_data | head | tail |
++	 */
++	bcn->head = ((u8 *) bcn) + sizeof(*bcn);
++
++	/* fill in the head */
++	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
++	memset(mgmt, 0, hdr_len);
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_BEACON);
++	eth_broadcast_addr(mgmt->da);
++	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
++	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
++	ieee80211_mps_set_frame_flags(sdata, NULL, (void *) mgmt);
++	mgmt->u.beacon.beacon_int =
++		cpu_to_le16(sdata->vif.bss_conf.beacon_int);
++	mgmt->u.beacon.capab_info |= cpu_to_le16(
++		sdata->u.mesh.security ? WLAN_CAPABILITY_PRIVACY : 0);
++
++	pos = skb_put(skb, 2);
++	*pos++ = WLAN_EID_SSID;
++	*pos++ = 0x0;
++
++	if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
++	    mesh_add_ds_params_ie(skb, sdata))
++		goto out_free;
++
++	bcn->head_len = skb->len;
++	memcpy(bcn->head, skb->data, bcn->head_len);
++
++	/* now the tail */
++	skb_trim(skb, 0);
++	bcn->tail = bcn->head + bcn->head_len;
++
++	if (ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
++	    mesh_add_rsn_ie(skb, sdata) ||
++	    mesh_add_ht_cap_ie(skb, sdata) ||
++	    mesh_add_ht_oper_ie(skb, sdata) ||
++	    mesh_add_meshid_ie(skb, sdata) ||
++	    mesh_add_meshconf_ie(skb, sdata) ||
++	    mesh_add_awake_window_ie(skb, sdata) ||
++	    mesh_add_vendor_ies(skb, sdata))
++		goto out_free;
++
++	bcn->tail_len = skb->len;
++	memcpy(bcn->tail, skb->data, bcn->tail_len);
++
++	dev_kfree_skb(skb);
++	rcu_assign_pointer(ifmsh->beacon, bcn);
++	return 0;
++out_free:
++	kfree(bcn);
++	dev_kfree_skb(skb);
++	return -ENOMEM;
++}
++
++static int
++ieee80211_mesh_rebuild_beacon(struct ieee80211_if_mesh *ifmsh)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct beacon_data *old_bcn;
++	int ret;
++	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
++
++	mutex_lock(&ifmsh->mtx);
++
++	old_bcn = rcu_dereference_protected(ifmsh->beacon,
++					    lockdep_is_held(&ifmsh->mtx));
++	ret = ieee80211_mesh_build_beacon(ifmsh);
++	if (ret)
++		/* just reuse old beacon */
++		goto out;
++
++	if (old_bcn)
++		kfree_rcu(old_bcn, rcu_head);
++out:
++	mutex_unlock(&ifmsh->mtx);
++	return ret;
++}
++
++void ieee80211_mbss_info_change_notify(struct ieee80211_sub_if_data *sdata,
++				       u32 changed)
++{
++	if (sdata->vif.bss_conf.enable_beacon &&
++	    (changed & (BSS_CHANGED_BEACON |
++			BSS_CHANGED_HT |
++			BSS_CHANGED_BASIC_RATES |
++			BSS_CHANGED_BEACON_INT)))
++		if (ieee80211_mesh_rebuild_beacon(&sdata->u.mesh))
++			return;
++	ieee80211_bss_info_change_notify(sdata, changed);
++}
++
++int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -677,9 +810,15 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 
+ 	changed |= ieee80211_mps_local_status_update(sdata);
+ 
++	if (ieee80211_mesh_build_beacon(ifmsh)) {
++		ieee80211_stop_mesh(sdata);
++		return -ENOMEM;
++	}
++
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(sdata->dev);
++	return 0;
+ }
+ 
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+@@ -694,6 +833,12 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.bss_conf.enable_beacon = false;
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
++	mutex_lock(&ifmsh->mtx);
++	kfree_rcu(rcu_dereference_protected(ifmsh->beacon,
++					    lockdep_is_held(&ifmsh->mtx)),
++		  rcu_head);
++	rcu_assign_pointer(ifmsh->beacon, NULL);
++	mutex_unlock(&ifmsh->mtx);
+ 
+ 	/* flush STAs and mpaths on this iface */
+ 	sta_info_flush(sdata);
+@@ -883,6 +1028,8 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	skb_queue_head_init(&ifmsh->ps.bc_buf);
+ 	spin_lock_init(&ifmsh->mesh_preq_queue_lock);
+ 	spin_lock_init(&ifmsh->sync_offset_lock);
++	RCU_INIT_POINTER(ifmsh->beacon, NULL);
++	mutex_init(&ifmsh->mtx);
+ 
+ 	sdata->vif.bss_conf.bssid = zero_addr;
+ }
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index a1bad31..1a1da87 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -239,10 +239,13 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 		struct sta_info *sta, struct sk_buff *skb);
+ void ieee80211s_stop(void);
+ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
++int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh);
+ const struct ieee80211_mesh_sync_ops *ieee80211_mesh_sync_ops_get(u8 method);
++/* wrapper for ieee80211_bss_info_change_notify() */
++void ieee80211_mbss_info_change_notify(struct ieee80211_sub_if_data *sdata,
++				       u32 changed);
+ 
+ /* mesh power save */
+ u32 ieee80211_mps_local_status_update(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 7765139..f7526e5 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -508,7 +508,7 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
+ 	rcu_read_unlock();
+-	ieee80211_bss_info_change_notify(sdata, changed);
++	ieee80211_mbss_info_change_notify(sdata, changed);
+ }
+ 
+ static void mesh_plink_timer(unsigned long data)
+@@ -1090,5 +1090,5 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	rcu_read_unlock();
+ 
+ 	if (changed)
+-		ieee80211_bss_info_change_notify(sdata, changed);
++		ieee80211_mbss_info_change_notify(sdata, changed);
+ }
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7d8c629..fe644f9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2444,71 +2444,26 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 						 IEEE80211_STYPE_BEACON);
+ 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+-		struct ieee80211_mgmt *mgmt;
+ 		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-		u8 *pos;
+-		int hdr_len = offsetof(struct ieee80211_mgmt, u.beacon) +
+-			      sizeof(mgmt->u.beacon);
++		struct beacon_data *bcn = rcu_dereference(ifmsh->beacon);
+ 
+-#ifdef CONFIG_MAC80211_MESH
+-		if (!sdata->u.mesh.mesh_id_len)
++		if (!bcn)
+ 			goto out;
+-#endif
+ 
+ 		if (ifmsh->sync_ops)
+ 			ifmsh->sync_ops->adjust_tbtt(
+ 						sdata);
+ 
+ 		skb = dev_alloc_skb(local->tx_headroom +
+-				    hdr_len +
+-				    2 + /* NULL SSID */
+-				    2 + 8 + /* supported rates */
+-				    2 + 3 + /* DS params */
++				    bcn->head_len +
+ 				    256 + /* TIM IE */
+-				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
+-				    2 + sizeof(struct ieee80211_ht_cap) +
+-				    2 + sizeof(struct ieee80211_ht_operation) +
+-				    2 + sdata->u.mesh.mesh_id_len +
+-				    2 + sizeof(struct ieee80211_meshconf_ie) +
+-				    sdata->u.mesh.ie_len +
+-				    2 + sizeof(__le16)); /* awake window */
++				    bcn->tail_len);
+ 		if (!skb)
+ 			goto out;
+-
+-		skb_reserve(skb, local->hw.extra_tx_headroom);
+-		mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
+-		memset(mgmt, 0, hdr_len);
+-		mgmt->frame_control =
+-		    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
+-		eth_broadcast_addr(mgmt->da);
+-		memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+-		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+-		ieee80211_mps_set_frame_flags(sdata, NULL, (void *) mgmt);
+-		mgmt->u.beacon.beacon_int =
+-			cpu_to_le16(sdata->vif.bss_conf.beacon_int);
+-		mgmt->u.beacon.capab_info |= cpu_to_le16(
+-			sdata->u.mesh.security ? WLAN_CAPABILITY_PRIVACY : 0);
+-
+-		pos = skb_put(skb, 2);
+-		*pos++ = WLAN_EID_SSID;
+-		*pos++ = 0x0;
+-
+-		band = chanctx_conf->def.chan->band;
+-
+-		if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
+-		    mesh_add_ds_params_ie(skb, sdata) ||
+-		    ieee80211_beacon_add_tim(sdata, &ifmsh->ps, skb) ||
+-		    ieee80211_add_ext_srates_ie(sdata, skb, true, band) ||
+-		    mesh_add_rsn_ie(skb, sdata) ||
+-		    mesh_add_ht_cap_ie(skb, sdata) ||
+-		    mesh_add_ht_oper_ie(skb, sdata) ||
+-		    mesh_add_meshid_ie(skb, sdata) ||
+-		    mesh_add_meshconf_ie(skb, sdata) ||
+-		    mesh_add_awake_window_ie(skb, sdata) ||
+-		    mesh_add_vendor_ies(skb, sdata)) {
+-			pr_err("o11s: couldn't add ies!\n");
+-			goto out;
+-		}
++		skb_reserve(skb, local->tx_headroom);
++		memcpy(skb_put(skb, bcn->head_len), bcn->head, bcn->head_len);
++		ieee80211_beacon_add_tim(sdata, &ifmsh->ps, skb);
++		memcpy(skb_put(skb, bcn->tail_len), bcn->tail, bcn->tail_len);
+ 	} else {
+ 		WARN_ON(1);
+ 		goto out;
+-- 
+1.7.10.4
 
