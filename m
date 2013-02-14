@@ -1,99 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42178 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755045Ab3BEPmI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54884 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756741Ab3BNJ3z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 10:42:08 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] iw: prefer 64-bit byte counters for sta_info
-Date: Tue, 5 Feb 2013 17:41:44 +0200
-Message-ID: <1360078904-13056-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130205_164224_446271_86AFEA6E)
-In-Reply-To: <1360078904-13056-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1360078904-13056-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 14 Feb 2013 04:29:55 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Wojciech.Dubowik@neratec.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: fix auth/assoc timeout handling
+Date: Thu, 14 Feb 2013 10:29:38 +0100
+Message-Id: <1360834178-11599-1-git-send-email-johannes@sipsolutions.net> (sfid-20130214_103000_695358_DC6C573F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- link.c    |   14 ++++++++++++--
- station.c |   12 ++++++++++--
- 2 files changed, 22 insertions(+), 4 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/link.c b/link.c
-index 3470c4d..3a6b15a 100644
---- a/link.c
-+++ b/link.c
-@@ -121,6 +121,8 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_RX_BYTES] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_BYTES] = { .type = NLA_U32 },
-+		[NL80211_STA_INFO_RX_BYTES64] = { .type = NLA_U64 },
-+		[NL80211_STA_INFO_TX_BYTES64] = { .type = NLA_U64 },
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-@@ -159,11 +161,19 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
- 		return NL_SKIP;
+In my commit 1672c0e31917f49d31d30d79067103432bc20cc7
+("mac80211: start auth/assoc timeout on frame status")
+I broke auth/assoc timeout handling: in case we wait
+for the TX status, it now leaves the timeout field set
+to 0, which is a valid time and can compare as being
+before now ("jiffies"). Thus, if the work struct runs
+for some other reason, the auth/assoc is treated as
+having timed out.
+
+Fix this by introducing a separate "timeout_started"
+variable that tracks whether the timeout has started
+and is checked before timing out.
+
+Additionally, for proper TX status handling the change
+requires that the skb->dev pointer is set up for all
+the frames, so set it up for all frames in mac80211.
+
+Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Tested-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/mlme.c        | 23 +++++++++++++++++++----
+ net/mac80211/sta_info.c    |  2 ++
+ net/mac80211/tx.c          |  2 ++
+ 4 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 959888c..815e019 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -343,6 +343,7 @@ struct ieee80211_mgd_auth_data {
+ 	u8 key[WLAN_KEY_LEN_WEP104];
+ 	u8 key_len, key_idx;
+ 	bool done;
++	bool timeout_started;
+ 
+ 	u16 sae_trans, sae_status;
+ 	size_t data_len;
+@@ -364,6 +365,7 @@ struct ieee80211_mgd_assoc_data {
+ 	bool wmm, uapsd;
+ 	bool have_beacon, need_beacon;
+ 	bool synced;
++	bool timeout_started;
+ 
+ 	u8 ap_ht_param;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7d4cde7..cafefb2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1999,6 +1999,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 	sdata_info(sdata, "authenticated\n");
+ 	ifmgd->auth_data->done = true;
+ 	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
++	ifmgd->auth_data->timeout_started = true;
+ 	run_again(ifmgd, ifmgd->auth_data->timeout);
+ 
+ 	if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
+@@ -2333,6 +2334,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 			   "%pM rejected association temporarily; comeback duration %u TU (%u ms)\n",
+ 			   mgmt->sa, tu, ms);
+ 		assoc_data->timeout = jiffies + msecs_to_jiffies(ms);
++		assoc_data->timeout_started = true;
+ 		if (ms > IEEE80211_ASSOC_TIMEOUT)
+ 			run_again(ifmgd, assoc_data->timeout);
+ 		return RX_MGMT_NONE;
+@@ -2456,6 +2458,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata, "direct probe responded\n");
+ 		ifmgd->auth_data->tries = 0;
+ 		ifmgd->auth_data->timeout = jiffies;
++		ifmgd->auth_data->timeout_started = true;
+ 		run_again(ifmgd, ifmgd->auth_data->timeout);
+ 	}
+ }
+@@ -2541,6 +2544,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 		/* continue assoc process */
+ 		ifmgd->assoc_data->timeout = jiffies;
++		ifmgd->assoc_data->timeout_started = true;
+ 		run_again(ifmgd, ifmgd->assoc_data->timeout);
+ 		return;
+ 	}
+@@ -2933,7 +2937,10 @@ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
+ 		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
++		ifmgd->auth_data->timeout_started = true;
+ 		run_again(ifmgd, auth_data->timeout);
++	} else {
++		auth_data->timeout_started = false;
  	}
  
--	if (sinfo[NL80211_STA_INFO_RX_BYTES] && sinfo[NL80211_STA_INFO_RX_PACKETS])
-+	if (sinfo[NL80211_STA_INFO_RX_BYTES64] && sinfo[NL80211_STA_INFO_RX_PACKETS])
-+		printf("\tRX: %llu bytes (%u packets)\n",
-+			(unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_BYTES64]),
-+			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
-+	else if (sinfo[NL80211_STA_INFO_RX_BYTES] && sinfo[NL80211_STA_INFO_RX_PACKETS])
- 		printf("\tRX: %u bytes (%u packets)\n",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]),
- 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
--	if (sinfo[NL80211_STA_INFO_TX_BYTES] && sinfo[NL80211_STA_INFO_TX_PACKETS])
-+	if (sinfo[NL80211_STA_INFO_TX_BYTES64] && sinfo[NL80211_STA_INFO_TX_PACKETS])
-+		printf("\tTX: %llu bytes (%u packets)\n",
-+			(unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_TX_BYTES64]),
-+			nla_get_u32(sinfo[NL80211_STA_INFO_TX_PACKETS]));
-+	else if (sinfo[NL80211_STA_INFO_TX_BYTES] && sinfo[NL80211_STA_INFO_TX_PACKETS])
- 		printf("\tTX: %u bytes (%u packets)\n",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]),
- 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_PACKETS]));
-diff --git a/station.c b/station.c
-index 247f445..5b132d9 100644
---- a/station.c
-+++ b/station.c
-@@ -42,6 +42,8 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_INACTIVE_TIME] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_RX_BYTES] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_BYTES] = { .type = NLA_U32 },
-+		[NL80211_STA_INFO_RX_BYTES64] = { .type = NLA_U64 },
-+		[NL80211_STA_INFO_TX_BYTES64] = { .type = NLA_U64 },
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-@@ -91,13 +93,19 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 	if (sinfo[NL80211_STA_INFO_INACTIVE_TIME])
- 		printf("\n\tinactive time:\t%u ms",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_INACTIVE_TIME]));
--	if (sinfo[NL80211_STA_INFO_RX_BYTES])
-+	if (sinfo[NL80211_STA_INFO_RX_BYTES64])
-+		printf("\n\trx bytes:\t%llu", (unsigned long long)
-+			nla_get_u64(sinfo[NL80211_STA_INFO_RX_BYTES64]));
-+	else if (sinfo[NL80211_STA_INFO_RX_BYTES])
- 		printf("\n\trx bytes:\t%u",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_BYTES]));
- 	if (sinfo[NL80211_STA_INFO_RX_PACKETS])
- 		printf("\n\trx packets:\t%u",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_RX_PACKETS]));
--	if (sinfo[NL80211_STA_INFO_TX_BYTES])
-+	if (sinfo[NL80211_STA_INFO_TX_BYTES64])
-+		printf("\n\ttx bytes:\t%llu", (unsigned long long)
-+			nla_get_u64(sinfo[NL80211_STA_INFO_TX_BYTES64]));
-+	else if (sinfo[NL80211_STA_INFO_TX_BYTES])
- 		printf("\n\ttx bytes:\t%u",
- 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_BYTES]));
- 	if (sinfo[NL80211_STA_INFO_TX_PACKETS])
+ 	return 0;
+@@ -2967,7 +2974,10 @@ static int ieee80211_do_assoc(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
+ 		assoc_data->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
++		assoc_data->timeout_started = true;
+ 		run_again(&sdata->u.mgd, assoc_data->timeout);
++	} else {
++		assoc_data->timeout_started = false;
+ 	}
+ 
+ 	return 0;
+@@ -3006,6 +3016,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			} else {
+ 				ifmgd->auth_data->timeout = jiffies - 1;
+ 			}
++			ifmgd->auth_data->timeout_started = true;
+ 		} else if (ifmgd->assoc_data &&
+ 			   (ieee80211_is_assoc_req(fc) ||
+ 			    ieee80211_is_reassoc_req(fc))) {
+@@ -3016,10 +3027,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			} else {
+ 				ifmgd->assoc_data->timeout = jiffies - 1;
+ 			}
++			ifmgd->assoc_data->timeout_started = true;
+ 		}
+ 	}
+ 
+-	if (ifmgd->auth_data &&
++	if (ifmgd->auth_data && ifmgd->auth_data->timeout_started &&
+ 	    time_after(jiffies, ifmgd->auth_data->timeout)) {
+ 		if (ifmgd->auth_data->done) {
+ 			/*
+@@ -3038,10 +3050,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			cfg80211_send_auth_timeout(sdata->dev, bssid);
+ 			mutex_lock(&ifmgd->mtx);
+ 		}
+-	} else if (ifmgd->auth_data)
++	} else if (ifmgd->auth_data && ifmgd->auth_data->timeout_started)
+ 		run_again(ifmgd, ifmgd->auth_data->timeout);
+ 
+-	if (ifmgd->assoc_data &&
++	if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started &&
+ 	    time_after(jiffies, ifmgd->assoc_data->timeout)) {
+ 		if ((ifmgd->assoc_data->need_beacon &&
+ 		     !ifmgd->assoc_data->have_beacon) ||
+@@ -3056,7 +3068,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			cfg80211_send_assoc_timeout(sdata->dev, bssid);
+ 			mutex_lock(&ifmgd->mtx);
+ 		}
+-	} else if (ifmgd->assoc_data)
++	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
+ 		run_again(ifmgd, ifmgd->assoc_data->timeout);
+ 
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+@@ -4031,6 +4043,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata, "waiting for beacon from %pM\n",
+ 			   ifmgd->bssid);
+ 		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
++		assoc_data->timeout_started = true;
+ 		assoc_data->need_beacon = true;
+ 	} else if (beacon_ies) {
+ 		const u8 *tim_ie = cfg80211_find_ie(WLAN_EID_TIM,
+@@ -4046,6 +4059,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 		assoc_data->have_beacon = true;
+ 		assoc_data->timeout = jiffies;
++		assoc_data->timeout_started = true;
+ 
+ 		if (local->hw.flags & IEEE80211_HW_TIMING_BEACON_ONLY) {
+ 			sdata->vif.bss_conf.sync_tsf = beacon_ies->tsf;
+@@ -4055,6 +4069,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	} else {
+ 		assoc_data->timeout = jiffies;
++		assoc_data->timeout_started = true;
+ 	}
+ 	rcu_read_unlock();
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 19db20a..fb3b586 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1120,6 +1120,8 @@ static void ieee80211_send_null_response(struct ieee80211_sub_if_data *sdata,
+ 
+ 	drv_allow_buffered_frames(local, sta, BIT(tid), 1, reason, false);
+ 
++	skb->dev = sdata->dev;
++
+ 	rcu_read_lock();
+ 	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 	if (WARN_ON(!chanctx_conf)) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 20ef617..40018a0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2773,6 +2773,8 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	skb_set_queue_mapping(skb, ac);
+ 	skb->priority = tid;
+ 
++	skb->dev = sdata->dev;
++
+ 	/*
+ 	 * The other path calling ieee80211_xmit is from the tasklet,
+ 	 * and while we can handle concurrent transmissions locking
 -- 
-1.7.10.4
+1.8.0
 
