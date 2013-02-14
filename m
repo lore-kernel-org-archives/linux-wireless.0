@@ -1,29 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035Ab3BOTYx (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:50479 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934815Ab3BNTVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 14:24:53 -0500
-Message-ID: <1360956286.15040.21.camel@jlt4.sipsolutions.net> (sfid-20130215_202458_667302_48E44D75)
-Subject: Re: [PATCH] mac80211: Fix incorrect use of STA_PR_FMT in trace
- points
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Feb 2013 20:24:46 +0100
-In-Reply-To: <1360955748-26608-1-git-send-email-seth.forshee@canonical.com>
-References: <1360955748-26608-1-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Feb 2013 14:21:34 -0500
+Received: by mail-pb0-f41.google.com with SMTP id um15so283651pbc.14
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 11:21:34 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v3 2/2] mac80211: generate mesh probe responses
+Date: Thu, 14 Feb 2013 11:20:14 -0800
+Message-Id: <1360869614-29297-2-git-send-email-thomas@cozybit.com> (sfid-20130214_202141_677006_AB81C83A)
+In-Reply-To: <1360869614-29297-1-git-send-email-thomas@cozybit.com>
+References: <1360869614-29297-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 13:15 -0600, Seth Forshee wrote:
-> Several tracepoints are using STA_PR_FMT where STA_PR_ARG should be
-> used, resulting in messages like "phy0 sta:ARG TYPE NOT FIELD BUT 1".
-> Change these to STA_PR_ARG.
+Mesh interfaces will now respond to any broadcast (or
+matching directed mesh) probe requests with a probe
+response.
 
-Heh, I'd seen them but never found the cause ... thanks, applied!
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-johannes
+v2:
+	less verbose (Johannes)
+
+ net/mac80211/mesh.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c   |    5 +++--
+ 2 files changed, 63 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 2eee2f1..b7a20ae 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -867,6 +867,63 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	sdata->u.mesh.timers_running = 0;
+ }
+ 
++static void
++ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
++			    struct ieee80211_mgmt *mgmt, size_t len)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct sk_buff *presp;
++	struct beacon_data *bcn;
++	struct ieee80211_mgmt *hdr;
++	struct ieee802_11_elems elems;
++	size_t baselen;
++	u8 *pos, *end;
++
++	end = ((u8 *) mgmt) + len;
++	pos = mgmt->u.probe_req.variable;
++	baselen = (u8 *) pos - (u8 *) mgmt;
++	if (baselen > len)
++		return;
++
++	ieee802_11_parse_elems(pos, len - baselen, &elems);
++
++	/* 802.11-2012 10.1.4.3.2 */
++	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
++	     !is_broadcast_ether_addr(mgmt->da)) ||
++	    elems.ssid_len != 0)
++		return;
++
++	if (elems.mesh_id_len != 0 &&
++	    (elems.mesh_id_len != ifmsh->mesh_id_len ||
++	     memcmp(elems.mesh_id, ifmsh->mesh_id, ifmsh->mesh_id_len)))
++		return;
++
++	rcu_read_lock();
++	bcn = rcu_dereference(ifmsh->beacon);
++
++	if (!bcn)
++		goto out;
++
++	presp = dev_alloc_skb(local->tx_headroom +
++			      bcn->head_len + bcn->tail_len);
++	if (!presp)
++		goto out;
++
++	skb_reserve(presp, local->tx_headroom);
++	memcpy(skb_put(presp, bcn->head_len), bcn->head, bcn->head_len);
++	memcpy(skb_put(presp, bcn->tail_len), bcn->tail, bcn->tail_len);
++	hdr = (struct ieee80211_mgmt *) presp->data;
++	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					 IEEE80211_STYPE_PROBE_RESP);
++	memcpy(hdr->da, mgmt->sa, ETH_ALEN);
++	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
++	IEEE80211_SKB_CB(presp)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	ieee80211_tx_skb(sdata, presp);
++out:
++	rcu_read_unlock();
++}
++
+ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 					u16 stype,
+ 					struct ieee80211_mgmt *mgmt,
+@@ -956,6 +1013,9 @@ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_mesh_rx_bcn_presp(sdata, stype, mgmt, skb->len,
+ 					    rx_status);
+ 		break;
++	case IEEE80211_STYPE_PROBE_REQ:
++		ieee80211_mesh_rx_probe_req(sdata, mgmt, skb->len);
++		break;
+ 	case IEEE80211_STYPE_ACTION:
+ 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
+ 		break;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 30f1ba6..296a4ae 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2718,8 +2718,9 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_PROBE_REQ):
+-		/* process only for ibss */
+-		if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
++		/* process only for ibss and mesh */
++		if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
+ 			return RX_DROP_MONITOR;
+ 		break;
+ 	default:
+-- 
+1.7.10.4
 
