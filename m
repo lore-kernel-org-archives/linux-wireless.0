@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11482 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754999Ab3BOKah (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34582 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753967Ab3BOOWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 05:30:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Ryan Hsu <ryanhsu@qca.qualcomm.com>
-Subject: Re: [PATCH 5/6] ath6kl: Fix a debugfs crash for USB devices
-References: <1360834689-11187-1-git-send-email-mohammed@qca.qualcomm.com>
-Date: Fri, 15 Feb 2013 12:30:30 +0200
-In-Reply-To: <1360834689-11187-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Thu, 14 Feb 2013 15:08:09
-	+0530")
-Message-ID: <871uchamyh.fsf@kamboji.qca.qualcomm.com> (sfid-20130215_113041_675294_37CF5E8F)
+	Fri, 15 Feb 2013 09:22:54 -0500
+Message-ID: <511E44B8.3000308@qca.qualcomm.com> (sfid-20130215_152258_533663_7630BA09)
+Date: Fri, 15 Feb 2013 19:52:48 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Julien Massot <jmassot@aldebaran-robotics.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: ath6kl: AR6004 failed to start on computer boot
+References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> <87ehghanxe.fsf@kamboji.qca.qualcomm.com> <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com>
+In-Reply-To: <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
+Hi,
 
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 02/15/2013 07:40 PM, Julien Massot wrote:
+> Hi Kalle
 >
-> Credit distribution stats is currently implemented
-> only for SDIO. This fixes a crash in debugfs for
-> USB interface.
+>> IIRC you mentioned on IRC that you don't see this anymore, is that
+>> correct?
 >
-> BUG: unable to handle kernel NULL pointer dereference at   (null)
-> IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
-> *pde = b62bd067
-> Oops: 0000 [#1] SMP
+> I still have the problem on a reboot, but the device initialize itself
+> properly after a normal boot.
+>
+> It's still a problem for me, I obtain exactly the same log.
+> ath6kl: Failed to start hardware: -5
+> Dec 13 01:43:21 x201 kernel: [   24.843781] ath6kl: Failed to init
+> ath6kl core: -5
+> Dec 13 01:43:21 x201 kernel: [   24.843849] ath6kl_usb: probe of
+> 2-1.2:1.0 failed with error -5
 
-[...]
+In x86 I remember this issue can be seen, I will try to take
+a look at this by finding some time :)
 
-> --- a/drivers/net/wireless/ath/ath6kl/debug.c
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
-> @@ -658,6 +658,9 @@ static ssize_t read_file_credit_dist_stats(struct file *file,
->  	unsigned int buf_len, len = 0;
->  	ssize_t ret_cnt;
->  
-> +	if (ar->hif_type != ATH6KL_HIF_TYPE_SDIO)
-> +		return -EINVAL;
-
-Actually I think it would be better not to even create the debugfs when
-using sdio.
+>
+> If you need to test anything don't hesitate to request me.
+>
+>
 
 -- 
-Kalle Valo
+thanks,
+shafi
