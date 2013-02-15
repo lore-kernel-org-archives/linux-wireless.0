@@ -1,51 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45186 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757325Ab3BRUaM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60067 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935884Ab3BOPql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 15:30:12 -0500
-Date: Mon, 18 Feb 2013 15:28:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-02-18
-Message-ID: <20130218202844.GE12505@tuxdriver.com> (sfid-20130218_213016_214429_969928FF)
-References: <1361216202.8555.49.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361216202.8555.49.camel@jlt4.sipsolutions.net>
+	Fri, 15 Feb 2013 10:46:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/5] cfg80211: clean up station WME attribute parsing
+Date: Fri, 15 Feb 2013 16:46:32 +0100
+Message-Id: <1360943194-14810-4-git-send-email-johannes@sipsolutions.net> (sfid-20130215_164645_587475_2CC5707C)
+In-Reply-To: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
+References: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 18, 2013 at 08:36:42PM +0100, Johannes Berg wrote:
-> John,
-> 
-> Like iwlwifi-next, this would almost be suitable for rc1.
-> 
-> I have a fix for station management on non-TDLS drivers, a CAB queue
-> crash fix for mesh, a fix for an annoying (but harmless) warning, a
-> tracing fix and a documentation fix. Other than that, only a few mesh
-> cleanups.
-> 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit 93c78c5debeb9c7101ecc73347d4730c26a98c05:
-> 
->   mac80211_hwsim: ask mac80211 to reserve space for chanctx.drv_priv (2013-02-15 09:41:45 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 8c6d59ee3509acd474365c34db291b950d2e66bf:
-> 
->   cfg80211: fix station change if TDLS isn't supported (2013-02-18 18:26:24 +0100)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Pulling now...
+Parse the attributes first, and then disable the apply
+flag if needed.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 68 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5523150..a8ae6419 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3839,6 +3839,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
++	if (!rdev->ops->add_station)
++		return -EOPNOTSUPP;
++
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -3891,8 +3894,30 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	if (!rdev->ops->add_station)
+-		return -EOPNOTSUPP;
++	if (info->attrs[NL80211_ATTR_STA_WME]) {
++		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
++		struct nlattr *nla;
++
++		nla = info->attrs[NL80211_ATTR_STA_WME];
++		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
++				       nl80211_sta_wme_policy);
++		if (err)
++			return err;
++
++		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
++			params.uapsd_queues =
++			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
++		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
++			return -EINVAL;
++
++		if (tb[NL80211_STA_WME_MAX_SP])
++			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
++
++		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
++			return -EINVAL;
++
++		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
++	}
+ 
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+@@ -3901,36 +3926,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		/* parse WME attributes if sta is WME capable */
+-		if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
+-		    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
+-		    info->attrs[NL80211_ATTR_STA_WME]) {
+-			struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+-			struct nlattr *nla;
+-
+-			nla = info->attrs[NL80211_ATTR_STA_WME];
+-			err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
+-					       nl80211_sta_wme_policy);
+-			if (err)
+-				return err;
+-
+-			if (tb[NL80211_STA_WME_UAPSD_QUEUES])
+-				params.uapsd_queues =
+-				     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
+-			if (params.uapsd_queues &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
+-				return -EINVAL;
++		/* ignore WME attributes if iface/sta is not capable */
++		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
++		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
++			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
+ 
+-			if (tb[NL80211_STA_WME_MAX_SP])
+-				params.max_sp =
+-				     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
+-
+-			if (params.max_sp &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
+-				return -EINVAL;
+-
+-			params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
+-		}
+ 		/* TDLS peers cannot be added */
+ 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+ 			return -EINVAL;
+@@ -3951,6 +3951,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(params.vlan);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
+@@ -3959,6 +3962,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
