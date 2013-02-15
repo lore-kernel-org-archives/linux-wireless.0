@@ -1,59 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50204 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57465 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753421Ab3BTJMo (ORCPT
+	with ESMTP id S935182Ab3BOAKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 04:12:44 -0500
-Message-ID: <1361351538.8629.3.camel@jlt4.sipsolutions.net> (sfid-20130220_101252_930264_DBD3955C)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
+	Thu, 14 Feb 2013 19:10:40 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 10:12:18 +0100
-In-Reply-To: <1361290909.19353.140.camel@edumazet-glaptop> (sfid-20130219_172155_748777_C3ED0F5E)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT 2/4] cfg80211: clean up station WME attribute parsing
+Date: Fri, 15 Feb 2013 01:10:31 +0100
+Message-Id: <1360887033-21167-3-git-send-email-johannes@sipsolutions.net> (sfid-20130215_011046_928679_6508DC79)
+In-Reply-To: <1360887033-21167-1-git-send-email-johannes@sipsolutions.net>
+References: <1360887033-21167-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-19 at 08:21 -0800, Eric Dumazet wrote:
-> On Tue, 2013-02-19 at 11:03 +0100, Johannes Berg wrote:
-> > On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
-> > 
-> > > > chrome: page allocation failure: order:1, mode:0x4020
-> > > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > > > Call Trace:
-> > > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
-> > 
-> > > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> > > 
-> > > It should hopefully use order-0 pages
-> > 
-> > It will, do that then, unfortunately it can't switch at runtime because
-> > it advertised this support to the access point or clients.
-> 
-> What are the drawbacks of setting amsdu_size_8K to 0 by default ?
+From: Johannes Berg <johannes.berg@intel.com>
 
-We're discussing this now, the only downside would be that we couldn't
-receive 8k A-MSDUs. Thing is, practically nobody uses A-MSDU anyway, and
-even when I suspect the difference between 4k and 8k won't be huge.
+Parse the attributes first, and then disable the apply
+flag if needed.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 68 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5523150..a8ae6419 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3839,6 +3839,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
++	if (!rdev->ops->add_station)
++		return -EOPNOTSUPP;
++
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -3891,8 +3894,30 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	if (!rdev->ops->add_station)
+-		return -EOPNOTSUPP;
++	if (info->attrs[NL80211_ATTR_STA_WME]) {
++		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
++		struct nlattr *nla;
++
++		nla = info->attrs[NL80211_ATTR_STA_WME];
++		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
++				       nl80211_sta_wme_policy);
++		if (err)
++			return err;
++
++		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
++			params.uapsd_queues =
++			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
++		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
++			return -EINVAL;
++
++		if (tb[NL80211_STA_WME_MAX_SP])
++			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
++
++		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
++			return -EINVAL;
++
++		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
++	}
+ 
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+@@ -3901,36 +3926,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		/* parse WME attributes if sta is WME capable */
+-		if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
+-		    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
+-		    info->attrs[NL80211_ATTR_STA_WME]) {
+-			struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+-			struct nlattr *nla;
+-
+-			nla = info->attrs[NL80211_ATTR_STA_WME];
+-			err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
+-					       nl80211_sta_wme_policy);
+-			if (err)
+-				return err;
+-
+-			if (tb[NL80211_STA_WME_UAPSD_QUEUES])
+-				params.uapsd_queues =
+-				     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
+-			if (params.uapsd_queues &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
+-				return -EINVAL;
++		/* ignore WME attributes if iface/sta is not capable */
++		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
++		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
++			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
+ 
+-			if (tb[NL80211_STA_WME_MAX_SP])
+-				params.max_sp =
+-				     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
+-
+-			if (params.max_sp &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
+-				return -EINVAL;
+-
+-			params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
+-		}
+ 		/* TDLS peers cannot be added */
+ 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+ 			return -EINVAL;
+@@ -3951,6 +3951,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(params.vlan);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
+@@ -3959,6 +3962,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
+-- 
+1.8.0
 
