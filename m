@@ -1,101 +1,742 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.236.10]:50871 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757483Ab3BSBMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 20:12:21 -0500
-Date: Tue, 19 Feb 2013 05:12:20 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: txpower setting regression
-In-Reply-To: <alpine.DEB.2.02.1302190349180.12894@icf.org.ru>
-Message-ID: <alpine.DEB.2.02.1302190511530.15277@icf.org.ru> (sfid-20130219_021227_960090_370BBD83)
-References: <alpine.DEB.2.02.1302190349180.12894@icf.org.ru>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1051000339-23634651-1361236340=:15277"
+Received: from he.sipsolutions.net ([78.46.109.217]:60070 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935884Ab3BOPqm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2013 10:46:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/5] cfg80211: comprehensively check station changes
+Date: Fri, 15 Feb 2013 16:46:34 +0100
+Message-Id: <1360943194-14810-6-git-send-email-johannes@sipsolutions.net> (sfid-20130215_164650_749791_7175AA1E)
+In-Reply-To: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
+References: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Johannes Berg <johannes.berg@intel.com>
 
----1051000339-23634651-1361236340=:15277
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+The station change API isn't being checked properly before
+drivers are called, and as a result it is difficult to see
+what should be allowed and what not.
 
-On 2013-02-19 04:04 +0400, Georgiewskiy Yuriy wrote linux-wireless@vger.ker...:
+In order to comprehensively check the API parameters parse
+everything first, and then have the driver call a function
+(cfg80211_check_station_change()) with the additionally
+information about the kind of station that is being changed;
+this allows the function to make better decisions than the
+old code could.
 
-hm, update - on 3.8.0 all ok
+While at it, also add a few checks, particularly in mesh
+and clarify the TDLS station lifetime in documentation.
 
-GY>
-GY>Hi all, there is some kind of regression with setting transmit power,
-GY>hardware is warious
-GY>ar9280 cards, all work as sould with compat-wireless-3.6 and
-GY>compat-drivers-2013-02-13, i have modified regulatory database:
-GY>
-GY>iw reg get
-GY>country RU:
-GY>    (2402 - 2494 @ 40), (24, 23)
-GY>    (5030 - 5835 @ 40), (24, 23)
-GY>
-GY>with compat-wireless-3.6 and compat-drivers-2013-02-13 i can change txpower
-GY>in this rules,
-GY>iw list show channels and it's power according to database rules:
-GY>
-GY>                Frequencies:
-GY>                        * 2412 MHz [1] (23.0 dBm)
-GY>                        * 2417 MHz [2] (23.0 dBm)
-GY>                        * 2422 MHz [3] (23.0 dBm)
-GY>                        * 2427 MHz [4] (23.0 dBm)
-GY>                        * 2432 MHz [5] (23.0 dBm)
-GY>                        * 2437 MHz [6] (23.0 dBm)
-GY>                        * 2442 MHz [7] (23.0 dBm)
-GY>                        * 2447 MHz [8] (23.0 dBm)
-GY>                        * 2452 MHz [9] (23.0 dBm)
-GY>                        * 2457 MHz [10] (23.0 dBm)
-GY>                        * 2462 MHz [11] (23.0 dBm)
-GY>                        * 2467 MHz [12] (23.0 dBm)
-GY>                        * 2472 MHz [13] (23.0 dBm)
-GY>                        * 2484 MHz [14] (23.0 dBm)
-GY>
-GY>but with compat-drivers 3.7.6 and 3.8-rc7 i cannot set power level, iw phy
-GY>phy0 set txpower fixed 10/limit 10/iw dev dev0/etc give same error - command
-GY>failed: Operation not supported (-95), and iw list give strange output like
-GY>this:
-GY>
-GY>                Frequencies:
-GY>                        * 2412 MHz [1] (20.0 dBm)
-GY>                        * 2417 MHz [2] (21.0 dBm)
-GY>                        * 2422 MHz [3] (21.0 dBm)
-GY>                        * 2427 MHz [4] (21.0 dBm)
-GY>                        * 2432 MHz [5] (21.0 dBm)
-GY>                        * 2437 MHz [6] (21.0 dBm)
-GY>                        * 2442 MHz [7] (21.0 dBm)
-GY>                        * 2447 MHz [8] (21.0 dBm)
-GY>                        * 2452 MHz [9] (21.0 dBm)
-GY>                        * 2457 MHz [10] (21.0 dBm)
-GY>                        * 2462 MHz [11] (20.0 dBm)
-GY>                        * 2467 MHz [12] (23.0 dBm)
-GY>                        * 2472 MHz [13] (23.0 dBm)
-GY>		        * 2484 MHz [14] (23.0 dBm)
-GY>
-GY>and channel levels different on different cards.
-GY>
-GY>
-GY>C уважением                       With Best Regards
-GY>Георгиевский Юрий.                Georgiewskiy Yuriy
-GY>+7 4872 711666                    +7 4872 711666
-GY>факс +7 4872 711143               fax +7 4872 711143
-GY>Компания ООО "Ай Ти Сервис"       IT Service Ltd
-GY>http://nkoort.ru                  http://nkoort.ru
-GY>JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-GY>YG129-RIPE                        YG129-RIPE
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   8 +-
+ include/net/cfg80211.h                     |  47 ++++-
+ include/uapi/linux/nl80211.h               |  16 +-
+ net/mac80211/cfg.c                         | 125 +++++++-----
+ net/wireless/nl80211.c                     | 297 +++++++++++++++++------------
+ 5 files changed, 319 insertions(+), 174 deletions(-)
 
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1051000339-23634651-1361236340=:15277--
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a7fb442..76e34a8 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2992,13 +2992,15 @@ static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
++	int err;
+ 
+ 	if (vif->nw_type != AP_NETWORK)
+ 		return -EOPNOTSUPP;
+ 
+-	/* Use this only for authorizing/unauthorizing a station */
+-	if (!(params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)))
+-		return -EOPNOTSUPP;
++	err = cfg80211_check_station_change(wiphy, params,
++					    CFG80211_STA_AP_MLME_CLIENT);
++	if (err)
++		return err;
+ 
+ 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_AUTHORIZED))
+ 		return ath6kl_wmi_ap_set_mlme(ar->wmi, vif->fw_vif_idx,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4b3b614..38f66e0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -678,6 +678,48 @@ struct station_parameters {
+ };
+ 
+ /**
++ * enum cfg80211_station_type - the type of station being modified
++ * @CFG80211_STA_AP_CLIENT: client of an AP interface
++ * @CFG80211_STA_AP_MLME_CLIENT: client of an AP interface that has
++ *	the AP MLME in the device
++ * @CFG80211_STA_AP_STA: AP station on managed interface
++ * @CFG80211_STA_IBSS: IBSS station
++ * @CFG80211_STA_TDLS_PEER_SETUP: TDLS peer on managed interface (dummy entry
++ *	while TDLS setup is in progress, it moves out of this state when
++ *	being marked authorized)
++ * @CFG80211_STA_TDLS_PEER_ACTIVE: TDLS peer on managed interface (active
++ *	entry that is operating, has been marked authorized by userspace)
++ * @CFG80211_STA_MESH_PEER_NONSEC: peer on mesh interface (non-secured)
++ * @CFG80211_STA_MESH_PEER_SECURE: peer on mesh interface (secured)
++ */
++enum cfg80211_station_type {
++	CFG80211_STA_AP_CLIENT,
++	CFG80211_STA_AP_MLME_CLIENT,
++	CFG80211_STA_AP_STA,
++	CFG80211_STA_IBSS,
++	CFG80211_STA_TDLS_PEER_SETUP,
++	CFG80211_STA_TDLS_PEER_ACTIVE,
++	CFG80211_STA_MESH_PEER_NONSEC,
++	CFG80211_STA_MESH_PEER_SECURE,
++};
++
++/**
++ * cfg80211_check_station_change - validate parameter changes
++ * @wiphy: the wiphy this operates on
++ * @params: the new parameters for a station
++ * @statype: the type of station being modified
++ *
++ * Utility function for the @change_station driver method. Call this function
++ * with the appropriate station type looking up the station (and checking that
++ * it exists). It will verify whether the station change is acceptable, and if
++ * not will return an error code. Note that it may modify the parameters for
++ * backward compatibility reasons, so don't use them before calling this.
++ */
++int cfg80211_check_station_change(struct wiphy *wiphy,
++				  struct station_parameters *params,
++				  enum cfg80211_station_type statype);
++
++/**
+  * enum station_info_flags - station information flags
+  *
+  * Used by the driver to indicate which info in &struct station_info
+@@ -1770,9 +1812,8 @@ struct cfg80211_gtk_rekey_data {
+  * @change_station: Modify a given station. Note that flags changes are not much
+  *	validated in cfg80211, in particular the auth/assoc/authorized flags
+  *	might come to the driver in invalid combinations -- make sure to check
+- *	them, also against the existing state! Also, supported_rates changes are
+- *	not checked in station mode -- drivers need to reject (or ignore) them
+- *	for anything but TDLS peers.
++ *	them, also against the existing state! Drivers must call
++ *	cfg80211_check_station_change() to validate the information.
+  * @get_station: get station information for the station identified by @mac
+  * @dump_station: dump station callback -- resume dump at index @idx
+  *
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5b7601f..9844c10 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -36,7 +36,21 @@
+  * The station is still assumed to belong to the AP interface it was added
+  * to.
+  *
+- * TODO: need more info?
++ * Station handling varies per interface type and depending on the driver's
++ * capabilities.
++ *
++ * For drivers supporting TDLS with external setup (WIPHY_FLAG_SUPPORTS_TDLS
++ * and WIPHY_FLAG_TDLS_EXTERNAL_SETUP), the station lifetime is as follows:
++ *  - a setup station entry is added, not yet authorized, without any rate
++ *    or capability information, this just exists to avoid race conditions
++ *  - when the TDLS setup is done, a single NL80211_CMD_SET_STATION is valid
++ *    to add rate and capability information to the station and at the same
++ *    time mark it authorized.
++ *  - %NL80211_TDLS_ENABLE_LINK is then used
++ *  - after this, the only valid operation is to remove it by tearing down
++ *    the TDLS link (%NL80211_TDLS_DISABLE_LINK)
++ *
++ * TODO: need more info for other interface types
+  */
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b13dcb3..f0129e9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1177,6 +1177,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 			mask |= BIT(NL80211_STA_FLAG_ASSOCIATED);
+ 		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+ 			set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
++	} else if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++		/*
++		 * TDLS -- everything follows authorized, but
++		 * only becoming authorized is possible, not
++		 * going back
++		 */
++		if (set & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
++			set |= BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++			       BIT(NL80211_STA_FLAG_ASSOCIATED);
++			mask |= BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				BIT(NL80211_STA_FLAG_ASSOCIATED);
++		}
+ 	}
+ 
+ 	ret = sta_apply_auth_flags(local, sta, mask, set);
+@@ -1261,9 +1273,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		u32 changed = 0;
+-		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED &&
+-		    (params->sta_modify_mask &
+-					STATION_PARAM_APPLY_PLINK_STATE)) {
++
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE) {
+ 			switch (params->plink_state) {
+ 			case NL80211_PLINK_ESTAB:
+ 				if (sta->plink_state != NL80211_PLINK_ESTAB)
+@@ -1294,21 +1305,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 				/*  nothing  */
+ 				break;
+ 			}
+-		} else if (params->sta_modify_mask &
+-					STATION_PARAM_APPLY_PLINK_STATE) {
+-			return -EINVAL;
+-		} else {
+-			switch (params->plink_action) {
+-			case NL80211_PLINK_ACTION_NO_ACTION:
+-				/* nothing */
+-				break;
+-			case NL80211_PLINK_ACTION_OPEN:
+-				changed |= mesh_plink_open(sta);
+-				break;
+-			case NL80211_PLINK_ACTION_BLOCK:
+-				changed |= mesh_plink_block(sta);
+-				break;
+-			}
++		}
++
++		switch (params->plink_action) {
++		case NL80211_PLINK_ACTION_NO_ACTION:
++			/* nothing */
++			break;
++		case NL80211_PLINK_ACTION_OPEN:
++			changed |= mesh_plink_open(sta);
++			break;
++		case NL80211_PLINK_ACTION_BLOCK:
++			changed |= mesh_plink_block(sta);
++			break;
+ 		}
+ 
+ 		if (params->local_pm)
+@@ -1354,8 +1362,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	 * defaults -- if userspace wants something else we'll
+ 	 * change it accordingly in sta_apply_parameters()
+ 	 */
+-	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+-	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
++	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
++		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
++	}
+ 
+ 	err = sta_apply_parameters(local, sta, params);
+ 	if (err) {
+@@ -1364,8 +1374,8 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	/*
+-	 * for TDLS, rate control should be initialized only when supported
+-	 * rates are known.
++	 * for TDLS, rate control should be initialized only when
++	 * rates are known and station is marked authorized
+ 	 */
+ 	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
+ 		rate_control_rate_init(sta);
+@@ -1402,50 +1412,67 @@ static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ static int ieee80211_change_station(struct wiphy *wiphy,
+-				    struct net_device *dev,
+-				    u8 *mac,
++				    struct net_device *dev, u8 *mac,
+ 				    struct station_parameters *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *vlansdata;
++	enum cfg80211_station_type statype;
+ 	int err;
+ 
+ 	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_bss(sdata, mac);
+ 	if (!sta) {
+-		mutex_unlock(&local->sta_mtx);
+-		return -ENOENT;
++		err = -ENOENT;
++		goto out_err;
+ 	}
+ 
+-	/* in station mode, some updates are only valid with TDLS */
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    (params->supported_rates || params->ht_capa || params->vht_capa ||
+-	     params->sta_modify_mask ||
+-	     (params->sta_flags_mask & BIT(NL80211_STA_FLAG_WME))) &&
+-	    !test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+-		mutex_unlock(&local->sta_mtx);
+-		return -EINVAL;
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_MESH_POINT:
++		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
++			statype = CFG80211_STA_MESH_PEER_SECURE;
++		else
++			statype = CFG80211_STA_MESH_PEER_NONSEC;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		statype = CFG80211_STA_IBSS;
++		break;
++	case NL80211_IFTYPE_STATION:
++		if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++			statype = CFG80211_STA_AP_STA;
++			break;
++		}
++		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			statype = CFG80211_STA_TDLS_PEER_ACTIVE;
++		else
++			statype = CFG80211_STA_TDLS_PEER_SETUP;
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_AP_VLAN:
++		statype = CFG80211_STA_AP_CLIENT;
++		break;
++	default:
++		err = -EOPNOTSUPP;
++		goto out_err;
+ 	}
+ 
++	err = cfg80211_check_station_change(wiphy, params, statype);
++	if (err)
++		goto out_err;
++
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		bool prev_4addr = false;
+ 		bool new_4addr = false;
+ 
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+-		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
+-			mutex_unlock(&local->sta_mtx);
+-			return -EINVAL;
+-		}
+-
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+ 			if (vlansdata->u.vlan.sta) {
+-				mutex_unlock(&local->sta_mtx);
+-				return -EBUSY;
++				err = -EBUSY;
++				goto out_err;
+ 			}
+ 
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+@@ -1472,12 +1499,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	}
+ 
+ 	err = sta_apply_parameters(local, sta, params);
+-	if (err) {
+-		mutex_unlock(&local->sta_mtx);
+-		return err;
+-	}
++	if (err)
++		goto out_err;
+ 
+-	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
++	/* When peer becomes authorized, init rate control as well */
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
++	    test_sta_flag(sta, WLAN_STA_AUTHORIZED))
+ 		rate_control_rate_init(sta);
+ 
+ 	mutex_unlock(&local->sta_mtx);
+@@ -1487,7 +1514,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		ieee80211_recalc_ps(local, -1);
+ 		ieee80211_recalc_ps_vif(sdata);
+ 	}
++
+ 	return 0;
++out_err:
++	mutex_unlock(&local->sta_mtx);
++	return err;
+ }
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 148053c..3d6c0c9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3531,6 +3531,149 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 	return genlmsg_reply(msg, info);
+ }
+ 
++int cfg80211_check_station_change(struct wiphy *wiphy,
++				  struct station_parameters *params,
++				  enum cfg80211_station_type statype)
++{
++	printk(KERN_DEBUG "change station request\n");
++#define LOG_RETURN do { printk(KERN_DEBUG "invalid - %d\n", __LINE__); return -EINVAL; } while (0)
++	if (params->listen_interval != -1)
++		LOG_RETURN;
++	if (params->aid)
++		LOG_RETURN;
++	/* only these flags exist at all */
++	if (params->sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				       BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
++				       BIT(NL80211_STA_FLAG_WME) |
++				       BIT(NL80211_STA_FLAG_MFP) |
++				       BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				       BIT(NL80211_STA_FLAG_TDLS_PEER) |
++				       BIT(NL80211_STA_FLAG_ASSOCIATED)))
++		LOG_RETURN;
++	if (params->sta_flags_set & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				      BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
++				      BIT(NL80211_STA_FLAG_WME) |
++				      BIT(NL80211_STA_FLAG_MFP) |
++				      BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				      BIT(NL80211_STA_FLAG_TDLS_PEER) |
++				      BIT(NL80211_STA_FLAG_ASSOCIATED)))
++		LOG_RETURN;
++
++	switch (statype) {
++	case CFG80211_STA_MESH_PEER_NONSEC:
++	case CFG80211_STA_MESH_PEER_SECURE:
++		/*
++		 * No ignoring the TDLS flag here -- the userspace mesh
++		 * code doesn't have the bug of including TDLS in the
++		 * mask everywhere.
++		 */
++		if (params->sta_flags_mask &
++				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				  BIT(NL80211_STA_FLAG_MFP) |
++				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
++			LOG_RETURN;
++		break;
++	case CFG80211_STA_TDLS_PEER_SETUP:
++	case CFG80211_STA_TDLS_PEER_ACTIVE:
++		if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
++			LOG_RETURN;
++		/* ignore since it can't change */
++		params->sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
++		break;
++	default:
++		/* disallow mesh-specific things */
++		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
++			LOG_RETURN;
++		if (params->local_pm)
++			LOG_RETURN;
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
++			LOG_RETURN;
++	}
++
++	if (statype != CFG80211_STA_TDLS_PEER_SETUP &&
++	    statype != CFG80211_STA_TDLS_PEER_ACTIVE) {
++		/* TDLS can't be set, ... */
++		if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++			LOG_RETURN;
++		/*
++		 * ... but don't bother the driver with it. This works around
++		 * a hostapd/wpa_supplicant issue -- it always includes the
++		 * TLDS_PEER flag in the mask even for AP mode.
++		 */
++		params->sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
++	}
++
++	if (statype != CFG80211_STA_TDLS_PEER_SETUP) {
++		/* reject other things that can't change */
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_UAPSD)
++			LOG_RETURN;
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_CAPABILITY)
++			LOG_RETURN;
++		if (params->supported_rates)
++			LOG_RETURN;
++		if (params->ext_capab || params->ht_capa || params->vht_capa)
++			LOG_RETURN;
++	}
++
++	if (statype != CFG80211_STA_AP_CLIENT) {
++		if (params->vlan)
++			LOG_RETURN;
++	}
++
++	switch (statype) {
++	case CFG80211_STA_AP_MLME_CLIENT:
++		/* Use this only for authorizing/unauthorizing a station */
++		if (!(params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)))
++			return -EOPNOTSUPP;
++		break;
++	case CFG80211_STA_AP_CLIENT:
++		/* accept only the listed bits */
++		if (params->sta_flags_mask &
++				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				  BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
++				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
++				  BIT(NL80211_STA_FLAG_WME) |
++				  BIT(NL80211_STA_FLAG_MFP)))
++			LOG_RETURN;
++
++		/* but authenticated/associated only if driver handles it */
++		if (!(wiphy->features & NL80211_FEATURE_FULL_AP_CLIENT_STATE) &&
++		    params->sta_flags_mask &
++				(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				 BIT(NL80211_STA_FLAG_ASSOCIATED)))
++			LOG_RETURN;
++		break;
++	case CFG80211_STA_IBSS:
++	case CFG80211_STA_AP_STA:
++		/* reject any changes other than AUTHORIZED */
++		if (params->sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
++			LOG_RETURN;
++		break;
++	case CFG80211_STA_TDLS_PEER_SETUP:
++		/* reject any changes other than AUTHORIZED or WME */
++		if (params->sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++					       BIT(NL80211_STA_FLAG_WME)))
++			LOG_RETURN;
++		break;
++	case CFG80211_STA_TDLS_PEER_ACTIVE:
++		/* reject any changes */
++		LOG_RETURN;
++	case CFG80211_STA_MESH_PEER_NONSEC:
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
++			LOG_RETURN;
++		break;
++	case CFG80211_STA_MESH_PEER_SECURE:
++		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
++			LOG_RETURN;
++		break;
++	}
++
++	printk(KERN_DEBUG "a-ok\n");
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_check_station_change);
++
+ /*
+  * Get vlan interface making sure it is running and on the right wiphy.
+  */
+@@ -3553,6 +3696,13 @@ static struct net_device *get_vlan(struct genl_info *info,
+ 		goto error;
+ 	}
+ 
++	if (v->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    v->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    v->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
++		ret = -EINVAL;
++		goto error;
++	}
++
+ 	if (!netif_running(v)) {
+ 		ret = -ENETDOWN;
+ 		goto error;
+@@ -3631,15 +3781,18 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	int err;
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct station_parameters params;
+-	u8 *mac_addr = NULL;
++	u8 *mac_addr;
++	int err;
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+ 	params.listen_interval = -1;
+ 
++	if (!rdev->ops->change_station)
++		return -EOPNOTSUPP;
++
+ 	if (info->attrs[NL80211_ATTR_STA_AID])
+ 		return -EINVAL;
+ 
+@@ -3671,9 +3824,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+ 		return -EINVAL;
+ 
+-	if (!rdev->ops->change_station)
+-		return -EOPNOTSUPP;
+-
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+ 
+@@ -3703,133 +3853,33 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.local_pm = pm;
+ 	}
+ 
++	/* Include parameters for TDLS peer (will check later) */
++	err = nl80211_set_station_tdls(info, &params);
++	if (err)
++		return err;
++
++	params.vlan = get_vlan(info, rdev);
++	if (IS_ERR(params.vlan))
++		return PTR_ERR(params.vlan);
++
+ 	switch (dev->ieee80211_ptr->iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		/* disallow mesh-specific things */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-
+-		/* TDLS can't be set, ... */
+-		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+-			return -EINVAL;
+-		/*
+-		 * ... but don't bother the driver with it. This works around
+-		 * a hostapd/wpa_supplicant issue -- it always includes the
+-		 * TLDS_PEER flag in the mask even for AP mode.
+-		 */
+-		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
+-
+-		/* accept only the listed bits */
+-		if (params.sta_flags_mask &
+-				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
+-				  BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
+-				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
+-				  BIT(NL80211_STA_FLAG_WME) |
+-				  BIT(NL80211_STA_FLAG_MFP)))
+-			return -EINVAL;
+-
+-		/* but authenticated/associated only if driver handles it */
+-		if (!(rdev->wiphy.features &
+-				NL80211_FEATURE_FULL_AP_CLIENT_STATE) &&
+-		    params.sta_flags_mask &
+-				(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				 BIT(NL80211_STA_FLAG_ASSOCIATED)))
+-			return -EINVAL;
+-
+-		/* reject other things that can't change */
+-		if (params.supported_rates)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-
+-		/* must be last in here for error handling */
+-		params.vlan = get_vlan(info, rdev);
+-		if (IS_ERR(params.vlan))
+-			return PTR_ERR(params.vlan);
+-		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		/*
+-		 * Don't allow userspace to change the TDLS_PEER flag,
+-		 * but silently ignore attempts to change it since we
+-		 * don't have state here to verify that it doesn't try
+-		 * to change the flag.
+-		 */
+-		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
+-		/* Include parameters for TDLS peer (driver will check) */
+-		err = nl80211_set_station_tdls(info, &params);
+-		if (err)
+-			return err;
+-		/* disallow things sta doesn't support */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-		/* reject any changes other than AUTHORIZED or WME (for TDLS) */
+-		if (params.sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
+-					      BIT(NL80211_STA_FLAG_WME)))
+-			return -EINVAL;
+-		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		/* disallow things sta doesn't support */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-		/* reject any changes other than AUTHORIZED */
+-		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
+-			return -EINVAL;
+-		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		/* disallow things mesh doesn't support */
+-		if (params.vlan)
+-			return -EINVAL;
+-		if (params.supported_rates)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-		/*
+-		 * No special handling for TDLS here -- the userspace
+-		 * mesh code doesn't have this bug.
+-		 */
+-		if (params.sta_flags_mask &
+-				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				  BIT(NL80211_STA_FLAG_MFP) |
+-				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
+-			return -EINVAL;
+ 		break;
+ 	default:
+-		return -EOPNOTSUPP;
++		err = -EOPNOTSUPP;
++		goto out_put_vlan;
+ 	}
+ 
+-	/* be aware of params.vlan when changing code here */
+-
++	/* driver will call cfg80211_check_station_change() */
+ 	err = rdev_change_station(rdev, dev, mac_addr, &params);
+ 
++ out_put_vlan:
+ 	if (params.vlan)
+ 		dev_put(params.vlan);
+ 
+@@ -3951,8 +4001,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		/* ignore uAPSD data */
+ 		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
+ 
+-		/* associated is disallowed */
+-		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
++		/* these are disallowed */
++		if (params.sta_flags_mask &
++				(BIT(NL80211_STA_FLAG_ASSOCIATED) |
++				 BIT(NL80211_STA_FLAG_AUTHENTICATED)))
+ 			return -EINVAL;
+ 		/* Only TDLS peers can be added */
+ 		if (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
+@@ -3963,6 +4015,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		/* ... with external setup is supported */
+ 		if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
+ 			return -EOPNOTSUPP;
++		/*
++		 * Older wpa_supplicant versions always mark the TDLS peer
++		 * as authorized, but it shouldn't yet be.
++		 */
++		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_AUTHORIZED);
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+-- 
+1.8.0
+
