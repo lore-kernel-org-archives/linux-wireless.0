@@ -1,100 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757544Ab3BRW4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 17:56:31 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: simon.wunderlich@s2003.tu-chemnitz.de,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: conditionally add back per-channel radar information
-Date: Mon, 18 Feb 2013 23:56:26 +0100
-Message-Id: <1361228186-11861-1-git-send-email-johannes@sipsolutions.net> (sfid-20130218_235633_078140_52376F38)
+Received: from gecko.sbs.de ([194.138.37.40]:31745 "EHLO gecko.sbs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932895Ab3BOI5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2013 03:57:35 -0500
+Message-ID: <1360918601.12484.6.camel@djensen-laptop> (sfid-20130215_095738_385911_A3239FDB)
+Subject: Re: [RFC] iw: support split wiphy dump
+From: Dennis H Jensen <dennis.h.jensen@siemens.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 15 Feb 2013 09:56:41 +0100
+In-Reply-To: <1360856422.8210.2.camel@jlt4.sipsolutions.net>
+References: <1360855759-2377-1-git-send-email-johannes@sipsolutions.net>
+	 <1360856049-2546-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130214_163418_636491_ECBFFDA6) <1360856422.8210.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2013-02-14 at 16:40 +0100, Johannes Berg wrote:
+> On Thu, 2013-02-14 at 16:34 +0100, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > This adds support for the new split wiphy dump,
+> > it only uses it for "iw list", not for "info"
+> > though, so far. Using it for "info" would mean
+> > querying the kernel capability first and then
+> > using get/dump (with filter) depending on that.
+> 
+> Dennis, are you up for implementing this in wpa_supplicant?
 
-If userspace is updated to deal with large split wiphy
-information dumps, add back the radar information to
-each channel that previously pushed the data over the
-limit of a single netlink message.
+Great, this will solve it. I can handle the wpa_supplicant; give me a
+couple of days to get it sorted.
 
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+What's the procedure, do I post to both lists or just the hostap?
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fff4160..945ca2b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -540,7 +540,8 @@ static inline void *nl80211hdr_put(struct sk_buff *skb, u32 portid, u32 seq,
- }
- 
- static int nl80211_msg_put_channel(struct sk_buff *msg,
--				   struct ieee80211_channel *chan)
-+				   struct ieee80211_channel *chan,
-+				   bool large)
- {
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
- 			chan->center_freq))
-@@ -555,9 +556,22 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_IBSS))
- 		goto nla_put_failure;
--	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
--	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
--		goto nla_put_failure;
-+	if (chan->flags & IEEE80211_CHAN_RADAR) {
-+		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
-+			goto nla_put_failure;
-+		if (large) {
-+			u32 time;
-+
-+			time = elapsed_jiffies_msecs(chan->dfs_state_entered);
-+
-+			if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_STATE,
-+					chan->dfs_state))
-+				goto nla_put_failure;
-+			if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_TIME,
-+					time))
-+				goto nla_put_failure;
-+		}
-+	}
- 	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
- 		goto nla_put_failure;
-@@ -1289,7 +1303,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
- 
- 					chan = &sband->channels[i];
- 
--					if (nl80211_msg_put_channel(msg, chan))
-+					if (nl80211_msg_put_channel(msg, chan,
-+								    split))
- 						goto nla_put_failure;
- 
- 					nla_nest_end(msg, nl_freq);
-@@ -9405,7 +9420,7 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
- 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_BEFORE);
- 	if (!nl_freq)
- 		goto nla_put_failure;
--	if (nl80211_msg_put_channel(msg, channel_before))
-+	if (nl80211_msg_put_channel(msg, channel_before, false))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, nl_freq);
- 
-@@ -9413,7 +9428,7 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
- 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_AFTER);
- 	if (!nl_freq)
- 		goto nla_put_failure;
--	if (nl80211_msg_put_channel(msg, channel_after))
-+	if (nl80211_msg_put_channel(msg, channel_after, false))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, nl_freq);
- 
--- 
-1.8.0
+//Dennis
 
