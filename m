@@ -1,199 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7336 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758544Ab3BNTLO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961Ab3BOMLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 14:11:14 -0500
-Date: Thu, 14 Feb 2013 21:10:54 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] cfg80211: Pass TDLS peer's QoS/HT/VHT information during
- set_station
-Message-ID: <20130214191054.GA29004@jouni.qca.qualcomm.com> (sfid-20130214_201117_553578_DCE88630)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 15 Feb 2013 07:11:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT v2 2/4] cfg80211: clean up station WME attribute parsing
+Date: Fri, 15 Feb 2013 13:10:59 +0100
+Message-Id: <1360930261-30265-3-git-send-email-johannes@sipsolutions.net> (sfid-20130215_131116_523715_E40DEBC0)
+In-Reply-To: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
+References: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The information of the peer's capabilities is required for the driver
-to perform TDLS Peer UAPSD operations. This information of the peer is
-passed by the supplicant using NL80211_CMD_SET_STATION command. This
-commit enhances the function nl80211_set_station to pass this
-information of the peer to the driver in case this command is used
-with the TDLS peer STA.
+From: Johannes Berg <johannes.berg@intel.com>
 
-In addition, make the HT/VHT capability configuration handled more
-consistently for other STA cases (reject both instead of just HT).
+Parse the attributes first, and then disable the apply
+flag if needed.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c     |    6 ++--
- net/wireless/nl80211.c |   89 +++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 85 insertions(+), 10 deletions(-)
+ net/wireless/nl80211.c | 68 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 31 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a4c0a0d..76107a2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1411,9 +1411,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 		return -ENOENT;
- 	}
- 
--	/* in station mode, supported rates are only valid with TDLS */
-+	/* in station mode, some updates are only valid with TDLS */
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--	    params->supported_rates &&
-+	    (params->supported_rates || params->ht_capa || params->vht_capa ||
-+	     params->sta_modify_mask ||
-+	     (params->sta_flags_mask & BIT(NL80211_STA_FLAG_WME))) &&
- 	    !test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
- 		mutex_unlock(&local->sta_mtx);
- 		return -EINVAL;
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1216573..ee59443 100644
+index 5523150..a8ae6419 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3302,6 +3302,63 @@ static struct net_device *get_vlan(struct genl_info *info,
- 	return ERR_PTR(ret);
- }
+@@ -3839,6 +3839,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
  
-+static struct nla_policy
-+nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
-+	[NL80211_STA_WME_UAPSD_QUEUES] = { .type = NLA_U8 },
-+	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
-+};
-+
-+static int nl80211_set_station_tdls(struct genl_info *info,
-+				    struct station_parameters *params)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct nlattr *tb[NL80211_STA_WME_MAX + 1];
-+	struct nlattr *nla;
-+	int err;
-+
-+	/* Can only set if TDLS ... */
-+	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
+ 	memset(&params, 0, sizeof(params));
+ 
++	if (!rdev->ops->add_station)
 +		return -EOPNOTSUPP;
 +
-+	/* ... with external setup is supported */
-+	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
-+		return -EOPNOTSUPP;
-+
-+	/* Dummy STA entry gets updated once the peer capabilities are known */
-+	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
-+		params->ht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
-+	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+		params->vht_capa =
-+			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
-+
-+	/* parse WME attributes if present */
-+	if (!info->attrs[NL80211_ATTR_STA_WME])
-+		return 0;
-+
-+	nla = info->attrs[NL80211_ATTR_STA_WME];
-+	err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
-+			       nl80211_sta_wme_policy);
-+	if (err)
-+		return err;
-+
-+	if (tb[NL80211_STA_WME_UAPSD_QUEUES])
-+		params->uapsd_queues = nla_get_u8(
-+			tb[NL80211_STA_WME_UAPSD_QUEUES]);
-+	if (params->uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
-+		return -EINVAL;
-+
-+	if (tb[NL80211_STA_WME_MAX_SP])
-+		params->max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
-+
-+	if (params->max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
-+		return -EINVAL;
-+
-+	params->sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
-+
-+	return 0;
-+}
-+
- static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -3343,8 +3400,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_len(info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY]);
- 	}
- 
--	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL] ||
--	    info->attrs[NL80211_ATTR_HT_CAPABILITY])
-+	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+ 	if (!info->attrs[NL80211_ATTR_MAC])
  		return -EINVAL;
  
- 	if (!rdev->ops->change_station)
-@@ -3417,6 +3473,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+@@ -3891,8 +3894,30 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
  			return -EINVAL;
- 		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
- 			return -EINVAL;
-+		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
-+		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+			return -EINVAL;
+ 	}
  
- 		/* must be last in here for error handling */
- 		params.vlan = get_vlan(info, rdev);
-@@ -3432,13 +3491,29 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		 * to change the flag.
- 		 */
- 		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
--		/* fall through */
-+		/* Include parameters for TDLS peer (driver will check) */
-+		err = nl80211_set_station_tdls(info, &params);
+-	if (!rdev->ops->add_station)
+-		return -EOPNOTSUPP;
++	if (info->attrs[NL80211_ATTR_STA_WME]) {
++		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
++		struct nlattr *nla;
++
++		nla = info->attrs[NL80211_ATTR_STA_WME];
++		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
++				       nl80211_sta_wme_policy);
 +		if (err)
 +			return err;
-+		/* disallow things sta doesn't support */
-+		if (params.plink_action)
++
++		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
++			params.uapsd_queues =
++			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
++		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
 +			return -EINVAL;
-+		if (params.local_pm)
++
++		if (tb[NL80211_STA_WME_MAX_SP])
++			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
++
++		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
 +			return -EINVAL;
-+		/* reject any changes other than AUTHORIZED or WME (for TDLS) */
-+		if (params.sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
-+					      BIT(NL80211_STA_FLAG_WME)))
-+			return -EINVAL;
-+		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		/* disallow things sta doesn't support */
- 		if (params.plink_action)
- 			return -EINVAL;
- 		if (params.local_pm)
- 			return -EINVAL;
-+		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
-+		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+			return -EINVAL;
- 		/* reject any changes other than AUTHORIZED */
- 		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
- 			return -EINVAL;
-@@ -3453,6 +3528,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
- 			return -EINVAL;
-+		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
-+		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
-+			return -EINVAL;
- 		/*
- 		 * No special handling for TDLS here -- the userspace
- 		 * mesh code doesn't have this bug.
-@@ -3477,11 +3555,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
++
++		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
++	}
  
--static struct nla_policy
--nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
--	[NL80211_STA_WME_UAPSD_QUEUES] = { .type = NLA_U8 },
--	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
--};
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+@@ -3901,36 +3926,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		/* parse WME attributes if sta is WME capable */
+-		if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
+-		    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
+-		    info->attrs[NL80211_ATTR_STA_WME]) {
+-			struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+-			struct nlattr *nla;
+-
+-			nla = info->attrs[NL80211_ATTR_STA_WME];
+-			err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
+-					       nl80211_sta_wme_policy);
+-			if (err)
+-				return err;
+-
+-			if (tb[NL80211_STA_WME_UAPSD_QUEUES])
+-				params.uapsd_queues =
+-				     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
+-			if (params.uapsd_queues &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
+-				return -EINVAL;
++		/* ignore WME attributes if iface/sta is not capable */
++		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
++		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
++			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
  
- static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- {
+-			if (tb[NL80211_STA_WME_MAX_SP])
+-				params.max_sp =
+-				     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
+-
+-			if (params.max_sp &
+-					~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
+-				return -EINVAL;
+-
+-			params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
+-		}
+ 		/* TDLS peers cannot be added */
+ 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+ 			return -EINVAL;
+@@ -3951,6 +3951,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(params.vlan);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
+@@ -3959,6 +3962,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++		/* ignore uAPSD data */
++		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
++
+ 		/* associated is disallowed */
+ 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
+ 			return -EINVAL;
 -- 
-1.7.9.5
+1.8.0
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
