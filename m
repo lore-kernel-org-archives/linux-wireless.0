@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:63672 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946552Ab3BHQYN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932964Ab3BOJVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 11:24:13 -0500
-Received: by mail-ob0-f171.google.com with SMTP id x4so3945915obh.30
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 08:24:12 -0800 (PST)
-Message-ID: <511526A8.4010604@lwfinger.net> (sfid-20130208_172556_559794_5AB30236)
-Date: Fri, 08 Feb 2013 10:24:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dag Wieers <dag@wieers.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: BCM4321 (b43) on AppleTV (1st gen)
-References: <alpine.LRH.2.02.1302072238200.2736@pikachu.3ti.be>
-In-Reply-To: <alpine.LRH.2.02.1302072238200.2736@pikachu.3ti.be>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 15 Feb 2013 04:21:12 -0500
+Message-ID: <1360920070.15040.6.camel@jlt4.sipsolutions.net> (sfid-20130215_102117_194558_F6AC1B29)
+Subject: Re: [RFC] iw: support split wiphy dump
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dennis H Jensen <dennis.h.jensen@siemens.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 15 Feb 2013 10:21:10 +0100
+In-Reply-To: <1360918601.12484.6.camel@djensen-laptop>
+References: <1360855759-2377-1-git-send-email-johannes@sipsolutions.net>
+	 <1360856049-2546-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130214_163418_636491_ECBFFDA6) <1360856422.8210.2.camel@jlt4.sipsolutions.net>
+	 <1360918601.12484.6.camel@djensen-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2013 05:01 PM, Dag Wieers wrote:
-> And that the kernel has been compiled using:
-> ----
-> CONFIG_B43=m
-> CONFIG_B43_SSB=y
-> CONFIG_B43_PCI_AUTOSELECT=y
-> CONFIG_B43_PCICORE_AUTOSELECT=y
-> CONFIG_B43_PIO=y
-> CONFIG_B43_PHY_N=y
-> CONFIG_B43_PHY_LP=y
-> CONFIG_B43_PHY_HT=y
-> CONFIG_B43_LEDS=y
-> CONFIG_B43_DEBUG=y
-> ----
->
-> If the above can be trimmed down for this type of device I'd like to hear that
-> as well (e.g. I am not sure if we need PIO or LEDS in this case).
->
-> PS I am also interested in any power management capabilities the device has and
-> that we could enable when the device is idle, since the system lacks proper
-> power management capabilities by itself (suspend/hibernate) and seems to have a
-> limited ACPI implementation.
+On Fri, 2013-02-15 at 09:56 +0100, Dennis H Jensen wrote:
+> On Thu, 2013-02-14 at 16:40 +0100, Johannes Berg wrote:
+> > On Thu, 2013-02-14 at 16:34 +0100, Johannes Berg wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > This adds support for the new split wiphy dump,
+> > > it only uses it for "iw list", not for "info"
+> > > though, so far. Using it for "info" would mean
+> > > querying the kernel capability first and then
+> > > using get/dump (with filter) depending on that.
+> > 
+> > Dennis, are you up for implementing this in wpa_supplicant?
+> 
+> Great, this will solve it. I can handle the wpa_supplicant; give me a
+> couple of days to get it sorted.
 
-As no one else seems to be responding, I'll try.
+FWIW, I think for wpa_s there are two possibilities:
+ 1) simply always use NL_F_DUMP with NL80211_CMD_GET_WIPHY, and include
+    the filter & split attributes; this will mean on old kernels it will
+    retrieve information for all devices so you have to filter it
+ 2) query the nl80211 global features first when initialising the
+    nl80211 sockets, and then use NL_F_DUMP with the filter only if the
+    feature is supported in the kernel
 
-In the configuration, you certainly do not need PIO or LEDS. For that particular 
-device, you also do not need PHY_LP, as that is strictly an 802.11g PHY. As to 
-power-management capabilities, there are no configurable parameters.
+Both are about the same difficulty because for 2) you need the extra
+feature command (once at init) while for 1) you need an extra command to
+get the wiphy index for the device you care about for filtering. For 1)
+that command would be NL80211_CMD_GET_INTERFACE.
 
-What throughput do you get with Broadcom-wl with your setup? That will give you 
-an idea of the potential performance of the device. As the equivalent of wl was 
-used for the reverse engineering, that will certainly be the upper limit of what 
-b43 can do. Only if the RE was perfect could we match that result.
+> What's the procedure, do I post to both lists or just the hostap?
 
-Larry
+Just hostap is fine.
 
+johannes
 
