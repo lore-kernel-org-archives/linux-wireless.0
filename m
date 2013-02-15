@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56140 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138Ab3BUUqv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60020 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206Ab3BOPn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 15:46:51 -0500
-Message-ID: <512687B5.5050208@candelatech.com> (sfid-20130221_214656_571536_F76B0ECD)
-Date: Thu, 21 Feb 2013 12:46:45 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] VHT capability override
-References: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>  <5126797F.4030300@candelatech.com> <1361479008.8327.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361479008.8327.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 15 Feb 2013 10:43:58 -0500
+Message-ID: <1360943029.15040.20.camel@jlt4.sipsolutions.net> (sfid-20130215_164400_801062_59F224FC)
+Subject: Re: [PATCH] mac80211: enable vif.cab_queue for mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, Bob Copeland <bob@cozybit.com>
+Date: Fri, 15 Feb 2013 16:43:49 +0100
+In-Reply-To: <1360941514-9579-1-git-send-email-me@bobcopeland.com> (sfid-20130215_161930_899883_2EAFE24E)
+References: <1360941514-9579-1-git-send-email-me@bobcopeland.com>
+	 (sfid-20130215_161930_899883_2EAFE24E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2013 12:36 PM, Johannes Berg wrote:
-> On Thu, 2013-02-21 at 11:46 -0800, Ben Greear wrote:
->> On 02/21/2013 11:11 AM, Johannes Berg wrote:
->>> I got a request to support this for testing. Anyone need other
->>> parameters? The multi-bit fields are a bit tricky so I didn't
->>> implement all of them yet.
->>
->> I haven't managed to acquire any VHT hardware yet (or look at features
->> in detail yet), but the option set looks good to me.
->
-> How would you do the wpa_s code?
+On Fri, 2013-02-15 at 10:18 -0500, Bob Copeland wrote:
+> Since mesh powersaving was added, pending bcast/mcast frames may go out the
+> CAB queue now.  Unfortunately, the queue was only set up for AP mode, so we
+> would try to tx on the IEEE80211_INVAL_HW_QUEUE.  Allow cab_queue for mesh
+> interfaces as well.
 
-*Could* use lots of boolean options like I did last time for HT,
-but perhaps something like vht_caps=0xdead would be better
-(ie, all flags in one argument) to cut down on the amount of
-code needed...
+Applied.
 
-Maybe Jouni is the one to ask...
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
