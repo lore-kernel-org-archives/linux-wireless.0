@@ -1,41 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47293 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59429 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754018Ab3BENtq (ORCPT
+	with ESMTP id S1752893Ab3BOMLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 08:49:46 -0500
-Message-ID: <1360072210.8376.9.camel@jlt4.sipsolutions.net> (sfid-20130205_144950_996774_14518D3F)
-Subject: Re: [RFC] cfg80211: configuration for WoWLAN over TCP
+	Fri, 15 Feb 2013 07:11:08 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 05 Feb 2013 14:50:10 +0100
-In-Reply-To: <51110D86.8030500@gmail.com> (sfid-20130205_144759_494055_8E3FC786)
-References: <1360062367-15970-1-git-send-email-johannes@sipsolutions.net>
-	 <51110D86.8030500@gmail.com> (sfid-20130205_144759_494055_8E3FC786)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC/RFT v2 3/4] cfg80211: unify station WME parsing
+Date: Fri, 15 Feb 2013 13:11:00 +0100
+Message-Id: <1360930261-30265-4-git-send-email-johannes@sipsolutions.net> (sfid-20130215_131114_248352_998C4EA3)
+In-Reply-To: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
+References: <1360930261-30265-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-05 at 14:47 +0100, Pontus Fuchs wrote:
-> On 2013-02-05 12:06, Johannes Berg wrote:
-> >
-> > Intel Wireless devices are able to make a TCP connection
-> > after suspending, sending some data and waking up when
-> > the connection receives wakeup data (or breaks). Add the
-> > WoWLAN configuration and feature advertising API for it.
-> >
-> 
-> What's protecting this feature from stomping on an existing connection 
-> when specifying the source port?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Nothing. Presumably if you specify it you know what you're doing, and
-don't also create a connection to the same IP from the same port?
+Instead of copying the code, create a new function
+to parse the station's WME information.
 
-Hmm. Maybe we could allocate the socket anyway and make it allocate the
-chosen port, failing if it isn't available? I guess I need to check the
-APIs.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 72 ++++++++++++++++++++------------------------------
+ 1 file changed, 29 insertions(+), 43 deletions(-)
 
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a8ae6419..148053c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3570,30 +3570,13 @@ nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
+ 	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
+ };
+ 
+-static int nl80211_set_station_tdls(struct genl_info *info,
+-				    struct station_parameters *params)
++static int nl80211_parse_sta_wme(struct genl_info *info,
++				 struct station_parameters *params)
+ {
+-	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+ 	struct nlattr *nla;
+ 	int err;
+ 
+-	/* Can only set if TDLS ... */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
+-		return -EOPNOTSUPP;
+-
+-	/* ... with external setup is supported */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
+-		return -EOPNOTSUPP;
+-
+-	/* Dummy STA entry gets updated once the peer capabilities are known */
+-	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+-		params->ht_capa =
+-			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+-	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-		params->vht_capa =
+-			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
+-
+ 	/* parse WME attributes if present */
+ 	if (!info->attrs[NL80211_ATTR_STA_WME])
+ 		return 0;
+@@ -3621,6 +3604,30 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ 	return 0;
+ }
+ 
++static int nl80211_set_station_tdls(struct genl_info *info,
++				    struct station_parameters *params)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++
++	/* Can only set if TDLS ... */
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
++		return -EOPNOTSUPP;
++
++	/* ... with external setup is supported */
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
++		return -EOPNOTSUPP;
++
++	/* Dummy STA entry gets updated once the peer capabilities are known */
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
++		params->ht_capa =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
++		params->vht_capa =
++			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
++
++	return nl80211_parse_sta_wme(info, params);
++}
++
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -3894,30 +3901,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_STA_WME]) {
+-		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+-		struct nlattr *nla;
+-
+-		nla = info->attrs[NL80211_ATTR_STA_WME];
+-		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
+-				       nl80211_sta_wme_policy);
+-		if (err)
+-			return err;
+-
+-		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
+-			params.uapsd_queues =
+-			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
+-		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
+-			return -EINVAL;
+-
+-		if (tb[NL80211_STA_WME_MAX_SP])
+-			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
+-
+-		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
+-			return -EINVAL;
+-
+-		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
+-	}
++	err = nl80211_parse_sta_wme(info, &params);
++	if (err)
++		return err;
+ 
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+-- 
+1.8.0
 
