@@ -1,41 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51686 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59486 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757096Ab3BMO5Q (ORCPT
+	with ESMTP id S1751135Ab3BOMUR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 09:57:16 -0500
-Message-ID: <1360767428.8868.18.camel@jlt4.sipsolutions.net> (sfid-20130213_155719_952378_9527D82B)
-Subject: Re: [PATCH] nl80211: Don't add empty bands or disabled channels in
- NL80211_CMD_GET_WIPHY
+	Fri, 15 Feb 2013 07:20:17 -0500
+Message-ID: <1360930807.15040.10.camel@jlt4.sipsolutions.net> (sfid-20130215_132021_617031_E6B73DBD)
+Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
+ flag to a set of modes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dennis H Jensen <dennis.h.jensen@siemens.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Wed, 13 Feb 2013 15:57:08 +0100
-In-Reply-To: <1360688424-11514-1-git-send-email-dennis.h.jensen@siemens.com>
-References: <1360688424-11514-1-git-send-email-dennis.h.jensen@siemens.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
+Date: Fri, 15 Feb 2013 13:20:07 +0100
+In-Reply-To: <20130213170445.GC22867@thinkpad-t410>
+References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
+	 <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
+	 <1360767970.8868.24.camel@jlt4.sipsolutions.net>
+	 <20130213170445.GC22867@thinkpad-t410>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-12 at 18:00 +0100, Dennis H Jensen wrote:
-> This patch resolves issues where the driver reports too many channels
-> for them all to fit in one netlink message, as long as some are
-> disabled, and makes it possible to use non-standard channels and
-> customized regulatory databases.
+[-ilw list, it just bothers me about putting emails into quarantine]
 
-I don't think this is a good idea -- the state of a channel being
-"disabled" can change due to regulatory database, so it's useful to know
-which channels are actually registered and disabled via regulatory and
-which aren't even present at all.
+> > I'm not really convinced this is the right thing to do. Sooner or later,
+> > multi-virtual interface support will become more relevant, and then all
+> > of this is completely moot because then powersave is entirely disabled
+> > and not handled right now.
+> 
+> Hmm, I don't recall you really going into any detail regarding
+> powersave, only managing the queues for off-channel. Though I can see
+> that multi-vif throws a wrench into things, even if I don't understand
+> all the details.
 
-Since you must be hacking the drivers anyway, you could just not
-register those channels you're not using, right?
+Yeah, that must've been another time. I've evidently been kicking around
+these ideas in my head for long enough to not be able to tell apart
+reality and dream any more ;-)
 
-Maybe there'd be a way to allocate larger messages, but I suppose the
-right fix would be to split up the dump in a way that it can support
-arbitrarily many channels, which will also require userspace changes
-though (and has to be done in a backward compatible way.)
+> > Is all this really worth it? It seems a quick fix for brcmsmac might be
+> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
+> > enabled in the config, and then go implement a real solution like I
+> > described earlier with powersave being separated out of the core
+> > mac80211 routines, and actually made possible for multiple interfaces?
+> 
+> Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
+> PS is sent the flag won't be set, as we're still on the operating
+> channel. When we're actually off-channel the value of PM doesn't matter
+> for the types of frames which are being sent. 
+
+Oh, right.
+
+> The only quick fix I've
+> found is to watch out for frames with PM set and set the powersave bit
+> while they're being transmitted.
+
+That's ugly.
+
+> I'm going to have to spend some time trying to grok how powersave would
+> work out with multiple interfaces. Honestly though I don't know that
+> multiple interfaces is something that we have any interest in at the
+> moment, and if not then it may be difficult for me to justify spending
+> much time on it.
+
+Yeah, I know, nobody really seems to care, but the current code is so
+crappy ... do I have to _make_ people care by just removing all
+powersave code? Hard to justify too ... :)
 
 johannes
 
