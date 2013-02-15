@@ -1,440 +1,750 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:52446 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760542Ab3BICWs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60095 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536Ab3BOQFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 21:22:48 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Fri, 15 Feb 2013 11:05:24 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/4] mwifiex: separate ring initialization and ring creation routines
-Date: Fri,  8 Feb 2013 18:18:07 -0800
-Message-Id: <1360376289-14861-3-git-send-email-bzhao@marvell.com> (sfid-20130209_032529_422796_FF5C80AB)
-In-Reply-To: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
-References: <1360376289-14861-1-git-send-email-bzhao@marvell.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 5/5] cfg80211: comprehensively check station changes
+Date: Fri, 15 Feb 2013 17:05:18 +0100
+Message-Id: <1360944318-24959-1-git-send-email-johannes@sipsolutions.net> (sfid-20130215_170528_613678_7AD302F3)
+In-Reply-To: <1360943194-14810-6-git-send-email-johannes@sipsolutions.net>
+References: <1360943194-14810-6-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch separates PCIe ring initialization from ring creation
-routines. This modularizes ring creation(TXBD, RXBD and event
-rings) functions.
+The station change API isn't being checked properly before
+drivers are called, and as a result it is difficult to see
+what should be allowed and what not.
 
-Readability has been improved while moving the code around.
+In order to comprehensively check the API parameters parse
+everything first, and then have the driver call a function
+(cfg80211_check_station_change()) with the additionally
+information about the kind of station that is being changed;
+this allows the function to make better decisions than the
+old code could.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+While at it, also add a few checks, particularly in mesh
+and clarify the TDLS station lifetime in documentation.
+
+To be able to reduce a few checks, ignore any flag set bits
+when the mask isn't set, they shouldn't be applied then.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/pcie.c |  327 +++++++++++++++++++++--------------
- 1 files changed, 194 insertions(+), 133 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   8 +-
+ include/net/cfg80211.h                     |  47 ++++-
+ include/uapi/linux/nl80211.h               |  16 +-
+ net/mac80211/cfg.c                         | 125 ++++++++-----
+ net/wireless/nl80211.c                     | 288 +++++++++++++++++------------
+ 5 files changed, 310 insertions(+), 174 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 29c539b..06aae55 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -372,13 +372,199 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a7fb442..76e34a8 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2992,13 +2992,15 @@ static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct ath6kl *ar = ath6kl_priv(dev);
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
++	int err;
  
- /*
-- * This function creates buffer descriptor ring for TX
-+ * This function initializes TX buffer ring descriptors
+ 	if (vif->nw_type != AP_NETWORK)
+ 		return -EOPNOTSUPP;
+ 
+-	/* Use this only for authorizing/unauthorizing a station */
+-	if (!(params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)))
+-		return -EOPNOTSUPP;
++	err = cfg80211_check_station_change(wiphy, params,
++					    CFG80211_STA_AP_MLME_CLIENT);
++	if (err)
++		return err;
+ 
+ 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_AUTHORIZED))
+ 		return ath6kl_wmi_ap_set_mlme(ar->wmi, vif->fw_vif_idx,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4b3b614..38f66e0 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -678,6 +678,48 @@ struct station_parameters {
+ };
+ 
+ /**
++ * enum cfg80211_station_type - the type of station being modified
++ * @CFG80211_STA_AP_CLIENT: client of an AP interface
++ * @CFG80211_STA_AP_MLME_CLIENT: client of an AP interface that has
++ *	the AP MLME in the device
++ * @CFG80211_STA_AP_STA: AP station on managed interface
++ * @CFG80211_STA_IBSS: IBSS station
++ * @CFG80211_STA_TDLS_PEER_SETUP: TDLS peer on managed interface (dummy entry
++ *	while TDLS setup is in progress, it moves out of this state when
++ *	being marked authorized)
++ * @CFG80211_STA_TDLS_PEER_ACTIVE: TDLS peer on managed interface (active
++ *	entry that is operating, has been marked authorized by userspace)
++ * @CFG80211_STA_MESH_PEER_NONSEC: peer on mesh interface (non-secured)
++ * @CFG80211_STA_MESH_PEER_SECURE: peer on mesh interface (secured)
 + */
-+static int mwifiex_init_txq_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	int i;
++enum cfg80211_station_type {
++	CFG80211_STA_AP_CLIENT,
++	CFG80211_STA_AP_MLME_CLIENT,
++	CFG80211_STA_AP_STA,
++	CFG80211_STA_IBSS,
++	CFG80211_STA_TDLS_PEER_SETUP,
++	CFG80211_STA_TDLS_PEER_ACTIVE,
++	CFG80211_STA_MESH_PEER_NONSEC,
++	CFG80211_STA_MESH_PEER_SECURE,
++};
 +
-+	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
-+		card->tx_buf_list[i] = NULL;
-+		card->txbd_ring[i] = (void *)(card->txbd_ring_vbase +
-+				     (sizeof(*desc) * i));
-+		desc = card->txbd_ring[i];
-+		memset(desc, 0, sizeof(*desc));
-+	}
-+
-+	return 0;
-+}
-+
-+/* This function initializes RX buffer ring descriptors. Each SKB is allocated
-+ * here and after mapping PCI memory, its physical address is assigned to
-+ * PCIE Rx buffer descriptor's physical address.
++/**
++ * cfg80211_check_station_change - validate parameter changes
++ * @wiphy: the wiphy this operates on
++ * @params: the new parameters for a station
++ * @statype: the type of station being modified
++ *
++ * Utility function for the @change_station driver method. Call this function
++ * with the appropriate station type looking up the station (and checking that
++ * it exists). It will verify whether the station change is acceptable, and if
++ * not will return an error code. Note that it may modify the parameters for
++ * backward compatibility reasons, so don't use them before calling this.
 + */
-+static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct sk_buff *skb;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	dma_addr_t buf_pa;
-+	int i;
++int cfg80211_check_station_change(struct wiphy *wiphy,
++				  struct station_parameters *params,
++				  enum cfg80211_station_type statype);
 +
-+	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
-+		/* Allocate skb here so that firmware can DMA data from it */
-+		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
-+		if (!skb) {
-+			dev_err(adapter->dev,
-+				"Unable to allocate skb for RX ring.\n");
-+			kfree(card->rxbd_ring_vbase);
-+			return -ENOMEM;
-+		}
-+
-+		if (mwifiex_map_pci_memory(adapter, skb,
-+					   MWIFIEX_RX_DATA_BUF_SIZE,
-+					   PCI_DMA_FROMDEVICE))
-+			return -1;
-+
-+		MWIFIEX_SKB_PACB(skb, &buf_pa);
-+
-+		dev_dbg(adapter->dev,
-+			"info: RX ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
-+			skb, skb->len, skb->data, (u32)buf_pa,
-+			(u32)((u64)buf_pa >> 32));
-+
-+		card->rx_buf_list[i] = skb;
-+		card->rxbd_ring[i] = (void *)(card->rxbd_ring_vbase +
-+				     (sizeof(*desc) * i));
-+		desc = card->rxbd_ring[i];
-+		desc->paddr = buf_pa;
-+		desc->len = (u16)skb->len;
-+		desc->flags = 0;
-+	}
-+
-+	return 0;
-+}
-+
-+/* This function initializes event buffer ring descriptors. Each SKB is
-+ * allocated here and after mapping PCI memory, its physical address is assigned
-+ * to PCIE Rx buffer descriptor's physical address
-+ */
-+static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	struct sk_buff *skb;
-+	dma_addr_t buf_pa;
-+	int i;
-+
-+	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
-+		/* Allocate skb here so that firmware can DMA data from it */
-+		skb = dev_alloc_skb(MAX_EVENT_SIZE);
-+		if (!skb) {
-+			dev_err(adapter->dev,
-+				"Unable to allocate skb for EVENT buf.\n");
-+			kfree(card->evtbd_ring_vbase);
-+			return -ENOMEM;
-+		}
-+		skb_put(skb, MAX_EVENT_SIZE);
-+
-+		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
-+					   PCI_DMA_FROMDEVICE))
-+			return -1;
-+
-+		MWIFIEX_SKB_PACB(skb, &buf_pa);
-+
-+		dev_dbg(adapter->dev,
-+			"info: EVT ring: skb=%p len=%d data=%p buf_pa=%#x:%x\n",
-+			skb, skb->len, skb->data, (u32)buf_pa,
-+			(u32)((u64)buf_pa >> 32));
-+
-+		card->evt_buf_list[i] = skb;
-+		card->evtbd_ring[i] = (void *)(card->evtbd_ring_vbase +
-+				      (sizeof(*desc) * i));
-+
-+		desc = card->evtbd_ring[i];
-+		desc->paddr = buf_pa;
-+		desc->len = (u16)skb->len;
-+		desc->flags = 0;
-+	}
-+
-+	return 0;
-+}
-+
-+/* This function cleans up TX buffer rings. If any of the buffer list has valid
-+ * SKB address, associated SKB is freed.
-+ */
-+static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct sk_buff *skb;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	int i;
-+
-+	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
-+		desc = card->txbd_ring[i];
-+		if (card->tx_buf_list[i]) {
-+			skb = card->tx_buf_list[i];
-+			pci_unmap_single(card->dev, desc->paddr, skb->len,
-+					 PCI_DMA_TODEVICE);
-+			dev_kfree_skb_any(skb);
-+		}
-+		card->tx_buf_list[i] = NULL;
-+		memset(desc, 0, sizeof(*desc));
-+	}
-+
-+	return;
-+}
-+
-+/* This function cleans up RX buffer rings. If any of the buffer list has valid
-+ * SKB address, associated SKB is freed.
-+ */
-+static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	struct sk_buff *skb;
-+	int i;
-+
-+	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
-+		desc = card->rxbd_ring[i];
-+		if (card->rx_buf_list[i]) {
-+			skb = card->rx_buf_list[i];
-+			pci_unmap_single(card->dev, desc->paddr,
-+					 MWIFIEX_RX_DATA_BUF_SIZE,
-+					 PCI_DMA_FROMDEVICE);
-+			dev_kfree_skb_any(skb);
-+		}
-+		memset(desc, 0, sizeof(*desc));
-+	}
-+
-+	return;
-+}
-+
-+/* This function cleans up event buffer rings. If any of the buffer list has
-+ * valid SKB address, associated SKB is freed.
-+ */
-+static void mwifiex_cleanup_evt_ring(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+	struct mwifiex_pcie_buf_desc *desc;
-+	struct sk_buff *skb;
-+	int i;
-+
-+	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
-+		desc = card->evtbd_ring[i];
-+		if (card->evt_buf_list[i]) {
-+			skb = card->evt_buf_list[i];
-+			pci_unmap_single(card->dev, desc->paddr, MAX_EVENT_SIZE,
-+					 PCI_DMA_FROMDEVICE);
-+			dev_kfree_skb_any(skb);
-+		}
-+		card->evt_buf_list[i] = NULL;
-+		memset(desc, 0, sizeof(*desc));
-+	}
-+
-+	return;
-+}
-+
-+/* This function creates buffer descriptor ring for TX
++/**
+  * enum station_info_flags - station information flags
+  *
+  * Used by the driver to indicate which info in &struct station_info
+@@ -1770,9 +1812,8 @@ struct cfg80211_gtk_rekey_data {
+  * @change_station: Modify a given station. Note that flags changes are not much
+  *	validated in cfg80211, in particular the auth/assoc/authorized flags
+  *	might come to the driver in invalid combinations -- make sure to check
+- *	them, also against the existing state! Also, supported_rates changes are
+- *	not checked in station mode -- drivers need to reject (or ignore) them
+- *	for anything but TDLS peers.
++ *	them, also against the existing state! Drivers must call
++ *	cfg80211_check_station_change() to validate the information.
+  * @get_station: get station information for the station identified by @mac
+  * @dump_station: dump station callback -- resume dump at index @idx
+  *
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5b7601f..9844c10 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -36,7 +36,21 @@
+  * The station is still assumed to belong to the AP interface it was added
+  * to.
+  *
+- * TODO: need more info?
++ * Station handling varies per interface type and depending on the driver's
++ * capabilities.
++ *
++ * For drivers supporting TDLS with external setup (WIPHY_FLAG_SUPPORTS_TDLS
++ * and WIPHY_FLAG_TDLS_EXTERNAL_SETUP), the station lifetime is as follows:
++ *  - a setup station entry is added, not yet authorized, without any rate
++ *    or capability information, this just exists to avoid race conditions
++ *  - when the TDLS setup is done, a single NL80211_CMD_SET_STATION is valid
++ *    to add rate and capability information to the station and at the same
++ *    time mark it authorized.
++ *  - %NL80211_TDLS_ENABLE_LINK is then used
++ *  - after this, the only valid operation is to remove it by tearing down
++ *    the TDLS link (%NL80211_TDLS_DISABLE_LINK)
++ *
++ * TODO: need more info for other interface types
   */
- static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	int i;
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b13dcb3..f0129e9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1177,6 +1177,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 			mask |= BIT(NL80211_STA_FLAG_ASSOCIATED);
+ 		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+ 			set |= BIT(NL80211_STA_FLAG_ASSOCIATED);
++	} else if (test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++		/*
++		 * TDLS -- everything follows authorized, but
++		 * only becoming authorized is possible, not
++		 * going back
++		 */
++		if (set & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
++			set |= BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++			       BIT(NL80211_STA_FLAG_ASSOCIATED);
++			mask |= BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				BIT(NL80211_STA_FLAG_ASSOCIATED);
++		}
+ 	}
+ 
+ 	ret = sta_apply_auth_flags(local, sta, mask, set);
+@@ -1261,9 +1273,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		u32 changed = 0;
+-		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED &&
+-		    (params->sta_modify_mask &
+-					STATION_PARAM_APPLY_PLINK_STATE)) {
++
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE) {
+ 			switch (params->plink_state) {
+ 			case NL80211_PLINK_ESTAB:
+ 				if (sta->plink_state != NL80211_PLINK_ESTAB)
+@@ -1294,21 +1305,18 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 				/*  nothing  */
+ 				break;
+ 			}
+-		} else if (params->sta_modify_mask &
+-					STATION_PARAM_APPLY_PLINK_STATE) {
+-			return -EINVAL;
+-		} else {
+-			switch (params->plink_action) {
+-			case NL80211_PLINK_ACTION_NO_ACTION:
+-				/* nothing */
+-				break;
+-			case NL80211_PLINK_ACTION_OPEN:
+-				changed |= mesh_plink_open(sta);
+-				break;
+-			case NL80211_PLINK_ACTION_BLOCK:
+-				changed |= mesh_plink_block(sta);
+-				break;
+-			}
++		}
++
++		switch (params->plink_action) {
++		case NL80211_PLINK_ACTION_NO_ACTION:
++			/* nothing */
++			break;
++		case NL80211_PLINK_ACTION_OPEN:
++			changed |= mesh_plink_open(sta);
++			break;
++		case NL80211_PLINK_ACTION_BLOCK:
++			changed |= mesh_plink_block(sta);
++			break;
+ 		}
+ 
+ 		if (params->local_pm)
+@@ -1354,8 +1362,10 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	 * defaults -- if userspace wants something else we'll
+ 	 * change it accordingly in sta_apply_parameters()
+ 	 */
+-	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+-	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
++	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
++		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
++	}
+ 
+ 	err = sta_apply_parameters(local, sta, params);
+ 	if (err) {
+@@ -1364,8 +1374,8 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	}
  
  	/*
- 	 * driver maintaines the write pointer and firmware maintaines the read
-@@ -408,41 +594,15 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
- 		card->txbd_ring_vbase, (unsigned int)card->txbd_ring_pbase,
- 		(u32)((u64)card->txbd_ring_pbase >> 32), card->txbd_ring_size);
- 
--	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
--		card->txbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
--				     (card->txbd_ring_vbase +
--				      (sizeof(struct mwifiex_pcie_buf_desc)
--				       * i));
--
--		card->tx_buf_list[i] = NULL;
--		card->txbd_ring[i]->paddr = 0;
--		card->txbd_ring[i]->len = 0;
--		card->txbd_ring[i]->flags = 0;
--	}
--
--	return 0;
-+	return mwifiex_init_txq_ring(adapter);
+-	 * for TDLS, rate control should be initialized only when supported
+-	 * rates are known.
++	 * for TDLS, rate control should be initialized only when
++	 * rates are known and station is marked authorized
+ 	 */
+ 	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
+ 		rate_control_rate_init(sta);
+@@ -1402,50 +1412,67 @@ static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
  }
  
- static int mwifiex_pcie_delete_txbd_ring(struct mwifiex_adapter *adapter)
+ static int ieee80211_change_station(struct wiphy *wiphy,
+-				    struct net_device *dev,
+-				    u8 *mac,
++				    struct net_device *dev, u8 *mac,
+ 				    struct station_parameters *params)
  {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	struct sk_buff *skb;
--	int i;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *vlansdata;
++	enum cfg80211_station_type statype;
+ 	int err;
  
--	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
--		if (card->tx_buf_list[i]) {
--			skb = card->tx_buf_list[i];
--			pci_unmap_single(card->dev, card->txbd_ring[i]->paddr,
--					 skb->len, PCI_DMA_TODEVICE);
--			dev_kfree_skb_any(skb);
+ 	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_bss(sdata, mac);
+ 	if (!sta) {
+-		mutex_unlock(&local->sta_mtx);
+-		return -ENOENT;
++		err = -ENOENT;
++		goto out_err;
+ 	}
+ 
+-	/* in station mode, some updates are only valid with TDLS */
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    (params->supported_rates || params->ht_capa || params->vht_capa ||
+-	     params->sta_modify_mask ||
+-	     (params->sta_flags_mask & BIT(NL80211_STA_FLAG_WME))) &&
+-	    !test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+-		mutex_unlock(&local->sta_mtx);
+-		return -EINVAL;
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_MESH_POINT:
++		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
++			statype = CFG80211_STA_MESH_PEER_SECURE;
++		else
++			statype = CFG80211_STA_MESH_PEER_NONSEC;
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		statype = CFG80211_STA_IBSS;
++		break;
++	case NL80211_IFTYPE_STATION:
++		if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++			statype = CFG80211_STA_AP_STA;
++			break;
++		}
++		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			statype = CFG80211_STA_TDLS_PEER_ACTIVE;
++		else
++			statype = CFG80211_STA_TDLS_PEER_SETUP;
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_AP_VLAN:
++		statype = CFG80211_STA_AP_CLIENT;
++		break;
++	default:
++		err = -EOPNOTSUPP;
++		goto out_err;
+ 	}
+ 
++	err = cfg80211_check_station_change(wiphy, params, statype);
++	if (err)
++		goto out_err;
++
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		bool prev_4addr = false;
+ 		bool new_4addr = false;
+ 
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+-		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
+-			mutex_unlock(&local->sta_mtx);
+-			return -EINVAL;
 -		}
--		card->tx_buf_list[i] = NULL;
--		card->txbd_ring[i]->paddr = 0;
--		card->txbd_ring[i]->len = 0;
--		card->txbd_ring[i]->flags = 0;
--		card->txbd_ring[i] = NULL;
+-
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+ 			if (vlansdata->u.vlan.sta) {
+-				mutex_unlock(&local->sta_mtx);
+-				return -EBUSY;
++				err = -EBUSY;
++				goto out_err;
+ 			}
+ 
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+@@ -1472,12 +1499,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	}
+ 
+ 	err = sta_apply_parameters(local, sta, params);
+-	if (err) {
+-		mutex_unlock(&local->sta_mtx);
+-		return err;
 -	}
-+	mwifiex_cleanup_txq_ring(adapter);
++	if (err)
++		goto out_err;
  
- 	if (card->txbd_ring_vbase)
- 		pci_free_consistent(card->dev, card->txbd_ring_size,
-@@ -464,9 +624,6 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	struct sk_buff *skb;
--	int i;
--	dma_addr_t buf_pa;
+-	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
++	/* When peer becomes authorized, init rate control as well */
++	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
++	    test_sta_flag(sta, WLAN_STA_AUTHORIZED))
+ 		rate_control_rate_init(sta);
  
- 	/*
- 	 * driver maintaines the read pointer and firmware maintaines the write
-@@ -496,39 +653,7 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
- 		(u32)((u64)card->rxbd_ring_pbase >> 32),
- 		card->rxbd_ring_size);
- 
--	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
--		card->rxbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
--				     (card->rxbd_ring_vbase +
--				      (sizeof(struct mwifiex_pcie_buf_desc)
--				       * i));
--
--		/* Allocate skb here so that firmware can DMA data from it */
--		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
--		if (!skb) {
--			dev_err(adapter->dev,
--				"Unable to allocate skb for RX ring.\n");
--			kfree(card->rxbd_ring_vbase);
--			return -ENOMEM;
--		}
--		if (mwifiex_map_pci_memory(adapter, skb,
--					   MWIFIEX_RX_DATA_BUF_SIZE,
--					   PCI_DMA_FROMDEVICE))
--			return -1;
--
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
--
--		dev_dbg(adapter->dev, "info: RX ring: add new skb base: %p, "
--			"buf_base: %p, buf_pbase: %#x:%x, buf_len: %#x\n",
--			skb, skb->data, (u32)buf_pa, (u32)((u64)buf_pa >> 32),
--			skb->len);
--
--		card->rx_buf_list[i] = skb;
--		card->rxbd_ring[i]->paddr = buf_pa;
--		card->rxbd_ring[i]->len = (u16)skb->len;
--		card->rxbd_ring[i]->flags = 0;
--	}
--
--	return 0;
-+	return mwifiex_init_rxq_ring(adapter);
+ 	mutex_unlock(&local->sta_mtx);
+@@ -1487,7 +1514,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		ieee80211_recalc_ps(local, -1);
+ 		ieee80211_recalc_ps_vif(sdata);
+ 	}
++
+ 	return 0;
++out_err:
++	mutex_unlock(&local->sta_mtx);
++	return err;
  }
  
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 148053c..f664ed9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3178,6 +3178,7 @@ static int parse_station_flags(struct genl_info *info,
+ 		sta_flags = nla_data(nla);
+ 		params->sta_flags_mask = sta_flags->mask;
+ 		params->sta_flags_set = sta_flags->set;
++		params->sta_flags_set &= params->sta_flags_mask;
+ 		if ((params->sta_flags_mask |
+ 		     params->sta_flags_set) & BIT(__NL80211_STA_FLAG_INVALID))
+ 			return -EINVAL;
+@@ -3531,6 +3532,136 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 	return genlmsg_reply(msg, info);
+ }
+ 
++int cfg80211_check_station_change(struct wiphy *wiphy,
++				  struct station_parameters *params,
++				  enum cfg80211_station_type statype)
++{
++	if (params->listen_interval != -1)
++		return -EINVAL;
++	if (params->aid)
++		return -EINVAL;
++
++	/* When you run into this, adjust the code below for the new flag */
++	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
++
++	switch (statype) {
++	case CFG80211_STA_MESH_PEER_NONSEC:
++	case CFG80211_STA_MESH_PEER_SECURE:
++		/*
++		 * No ignoring the TDLS flag here -- the userspace mesh
++		 * code doesn't have the bug of including TDLS in the
++		 * mask everywhere.
++		 */
++		if (params->sta_flags_mask &
++				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				  BIT(NL80211_STA_FLAG_MFP) |
++				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
++			return -EINVAL;
++		break;
++	case CFG80211_STA_TDLS_PEER_SETUP:
++	case CFG80211_STA_TDLS_PEER_ACTIVE:
++		if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
++			return -EINVAL;
++		/* ignore since it can't change */
++		params->sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
++		break;
++	default:
++		/* disallow mesh-specific things */
++		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
++			return -EINVAL;
++		if (params->local_pm)
++			return -EINVAL;
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
++			return -EINVAL;
++	}
++
++	if (statype != CFG80211_STA_TDLS_PEER_SETUP &&
++	    statype != CFG80211_STA_TDLS_PEER_ACTIVE) {
++		/* TDLS can't be set, ... */
++		if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
++			return -EINVAL;
++		/*
++		 * ... but don't bother the driver with it. This works around
++		 * a hostapd/wpa_supplicant issue -- it always includes the
++		 * TLDS_PEER flag in the mask even for AP mode.
++		 */
++		params->sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
++	}
++
++	if (statype != CFG80211_STA_TDLS_PEER_SETUP) {
++		/* reject other things that can't change */
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_UAPSD)
++			return -EINVAL;
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_CAPABILITY)
++			return -EINVAL;
++		if (params->supported_rates)
++			return -EINVAL;
++		if (params->ext_capab || params->ht_capa || params->vht_capa)
++			return -EINVAL;
++	}
++
++	if (statype != CFG80211_STA_AP_CLIENT) {
++		if (params->vlan)
++			return -EINVAL;
++	}
++
++	switch (statype) {
++	case CFG80211_STA_AP_MLME_CLIENT:
++		/* Use this only for authorizing/unauthorizing a station */
++		if (!(params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED)))
++			return -EOPNOTSUPP;
++		break;
++	case CFG80211_STA_AP_CLIENT:
++		/* accept only the listed bits */
++		if (params->sta_flags_mask &
++				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++				  BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
++				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
++				  BIT(NL80211_STA_FLAG_WME) |
++				  BIT(NL80211_STA_FLAG_MFP)))
++			return -EINVAL;
++
++		/* but authenticated/associated only if driver handles it */
++		if (!(wiphy->features & NL80211_FEATURE_FULL_AP_CLIENT_STATE) &&
++		    params->sta_flags_mask &
++				(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++				 BIT(NL80211_STA_FLAG_ASSOCIATED)))
++			return -EINVAL;
++		break;
++	case CFG80211_STA_IBSS:
++	case CFG80211_STA_AP_STA:
++		/* reject any changes other than AUTHORIZED */
++		if (params->sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
++			return -EINVAL;
++		break;
++	case CFG80211_STA_TDLS_PEER_SETUP:
++		/* reject any changes other than AUTHORIZED or WME */
++		if (params->sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++					       BIT(NL80211_STA_FLAG_WME)))
++			return -EINVAL;
++		/* force (at least) rates when authorizing */
++		if (params->sta_flags_set & BIT(NL80211_STA_FLAG_AUTHORIZED) &&
++		    !params->supported_rates)
++			return -EINVAL;
++		break;
++	case CFG80211_STA_TDLS_PEER_ACTIVE:
++		/* reject any changes */
++		return -EINVAL;
++	case CFG80211_STA_MESH_PEER_NONSEC:
++		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
++			return -EINVAL;
++		break;
++	case CFG80211_STA_MESH_PEER_SECURE:
++		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
++			return -EINVAL;
++		break;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_check_station_change);
++
  /*
-@@ -538,23 +663,8 @@ static int mwifiex_pcie_delete_rxbd_ring(struct mwifiex_adapter *adapter)
+  * Get vlan interface making sure it is running and on the right wiphy.
+  */
+@@ -3553,6 +3684,13 @@ static struct net_device *get_vlan(struct genl_info *info,
+ 		goto error;
+ 	}
+ 
++	if (v->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    v->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    v->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
++		ret = -EINVAL;
++		goto error;
++	}
++
+ 	if (!netif_running(v)) {
+ 		ret = -ENETDOWN;
+ 		goto error;
+@@ -3631,15 +3769,18 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
  {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	struct sk_buff *skb;
--	int i;
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	int err;
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct station_parameters params;
+-	u8 *mac_addr = NULL;
++	u8 *mac_addr;
++	int err;
  
--	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
--		if (card->rx_buf_list[i]) {
--			skb = card->rx_buf_list[i];
--			pci_unmap_single(card->dev, card->rxbd_ring[i]->paddr ,
--					 MWIFIEX_RX_DATA_BUF_SIZE,
--					 PCI_DMA_FROMDEVICE);
--			dev_kfree_skb_any(skb);
--		}
--		card->rx_buf_list[i] = NULL;
--		card->rxbd_ring[i]->paddr = 0;
--		card->rxbd_ring[i]->len = 0;
--		card->rxbd_ring[i]->flags = 0;
--		card->rxbd_ring[i] = NULL;
--	}
-+	mwifiex_cleanup_rxq_ring(adapter);
+ 	memset(&params, 0, sizeof(params));
  
- 	if (card->rxbd_ring_vbase)
- 		pci_free_consistent(card->dev, card->rxbd_ring_size,
-@@ -576,9 +686,6 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	struct sk_buff *skb;
--	int i;
--	dma_addr_t buf_pa;
+ 	params.listen_interval = -1;
  
- 	/*
- 	 * driver maintaines the read pointer and firmware maintaines the write
-@@ -608,39 +715,7 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
- 		(u32)((u64)card->evtbd_ring_pbase >> 32),
- 		card->evtbd_ring_size);
++	if (!rdev->ops->change_station)
++		return -EOPNOTSUPP;
++
+ 	if (info->attrs[NL80211_ATTR_STA_AID])
+ 		return -EINVAL;
  
--	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
--		card->evtbd_ring[i] = (struct mwifiex_pcie_buf_desc *)
--				      (card->evtbd_ring_vbase +
--				       (sizeof(struct mwifiex_pcie_buf_desc)
--					* i));
+@@ -3671,9 +3812,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+ 		return -EINVAL;
+ 
+-	if (!rdev->ops->change_station)
+-		return -EOPNOTSUPP;
 -
--		/* Allocate skb here so that firmware can DMA data from it */
--		skb = dev_alloc_skb(MAX_EVENT_SIZE);
--		if (!skb) {
--			dev_err(adapter->dev,
--				"Unable to allocate skb for EVENT buf.\n");
--			kfree(card->evtbd_ring_vbase);
--			return -ENOMEM;
--		}
--		skb_put(skb, MAX_EVENT_SIZE);
--
--		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
--					   PCI_DMA_FROMDEVICE))
--			return -1;
--
--		MWIFIEX_SKB_PACB(skb, &buf_pa);
--		dev_dbg(adapter->dev, "info: Evt ring: add new skb. base: %p, "
--			"buf_base: %p, buf_pbase: %#x:%x, buf_len: %#x\n",
--			skb, skb->data, (u32)buf_pa, (u32)((u64)buf_pa >> 32),
--			skb->len);
--
--		card->evt_buf_list[i] = skb;
--		card->evtbd_ring[i]->paddr = buf_pa;
--		card->evtbd_ring[i]->len = (u16)skb->len;
--		card->evtbd_ring[i]->flags = 0;
--	}
--
--	return 0;
-+	return mwifiex_pcie_init_evt_ring(adapter);
- }
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
  
- /*
-@@ -650,22 +725,8 @@ static int mwifiex_pcie_delete_evtbd_ring(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	struct sk_buff *skb;
--	int i;
+@@ -3703,133 +3841,33 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.local_pm = pm;
+ 	}
  
--	for (i = 0; i < MWIFIEX_MAX_EVT_BD; i++) {
--		if (card->evt_buf_list[i]) {
--			skb = card->evt_buf_list[i];
--			pci_unmap_single(card->dev, card->evtbd_ring[i]->paddr,
--					 MAX_EVENT_SIZE, PCI_DMA_FROMDEVICE);
--			dev_kfree_skb_any(skb);
--		}
--		card->evt_buf_list[i] = NULL;
--		card->evtbd_ring[i]->paddr = 0;
--		card->evtbd_ring[i]->len = 0;
--		card->evtbd_ring[i]->flags = 0;
--		card->evtbd_ring[i] = NULL;
--	}
-+	mwifiex_cleanup_evt_ring(adapter);
++	/* Include parameters for TDLS peer (will check later) */
++	err = nl80211_set_station_tdls(info, &params);
++	if (err)
++		return err;
++
++	params.vlan = get_vlan(info, rdev);
++	if (IS_ERR(params.vlan))
++		return PTR_ERR(params.vlan);
++
+ 	switch (dev->ieee80211_ptr->iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		/* disallow mesh-specific things */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-
+-		/* TDLS can't be set, ... */
+-		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+-			return -EINVAL;
+-		/*
+-		 * ... but don't bother the driver with it. This works around
+-		 * a hostapd/wpa_supplicant issue -- it always includes the
+-		 * TLDS_PEER flag in the mask even for AP mode.
+-		 */
+-		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
+-
+-		/* accept only the listed bits */
+-		if (params.sta_flags_mask &
+-				~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
+-				  BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
+-				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
+-				  BIT(NL80211_STA_FLAG_WME) |
+-				  BIT(NL80211_STA_FLAG_MFP)))
+-			return -EINVAL;
+-
+-		/* but authenticated/associated only if driver handles it */
+-		if (!(rdev->wiphy.features &
+-				NL80211_FEATURE_FULL_AP_CLIENT_STATE) &&
+-		    params.sta_flags_mask &
+-				(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				 BIT(NL80211_STA_FLAG_ASSOCIATED)))
+-			return -EINVAL;
+-
+-		/* reject other things that can't change */
+-		if (params.supported_rates)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-
+-		/* must be last in here for error handling */
+-		params.vlan = get_vlan(info, rdev);
+-		if (IS_ERR(params.vlan))
+-			return PTR_ERR(params.vlan);
+-		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_STATION:
+-		/*
+-		 * Don't allow userspace to change the TDLS_PEER flag,
+-		 * but silently ignore attempts to change it since we
+-		 * don't have state here to verify that it doesn't try
+-		 * to change the flag.
+-		 */
+-		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
+-		/* Include parameters for TDLS peer (driver will check) */
+-		err = nl80211_set_station_tdls(info, &params);
+-		if (err)
+-			return err;
+-		/* disallow things sta doesn't support */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-		/* reject any changes other than AUTHORIZED or WME (for TDLS) */
+-		if (params.sta_flags_mask & ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
+-					      BIT(NL80211_STA_FLAG_WME)))
+-			return -EINVAL;
+-		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		/* disallow things sta doesn't support */
+-		if (params.plink_action)
+-			return -EINVAL;
+-		if (params.local_pm)
+-			return -EINVAL;
+-		if (params.sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-		/* reject any changes other than AUTHORIZED */
+-		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
+-			return -EINVAL;
+-		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		/* disallow things mesh doesn't support */
+-		if (params.vlan)
+-			return -EINVAL;
+-		if (params.supported_rates)
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY])
+-			return -EINVAL;
+-		if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
+-		    info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-			return -EINVAL;
+-		/*
+-		 * No special handling for TDLS here -- the userspace
+-		 * mesh code doesn't have this bug.
+-		 */
+-		if (params.sta_flags_mask &
+-				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+-				  BIT(NL80211_STA_FLAG_MFP) |
+-				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
+-			return -EINVAL;
+ 		break;
+ 	default:
+-		return -EOPNOTSUPP;
++		err = -EOPNOTSUPP;
++		goto out_put_vlan;
+ 	}
  
- 	if (card->evtbd_ring_vbase)
- 		pci_free_consistent(card->dev, card->evtbd_ring_size,
+-	/* be aware of params.vlan when changing code here */
+-
++	/* driver will call cfg80211_check_station_change() */
+ 	err = rdev_change_station(rdev, dev, mac_addr, &params);
+ 
++ out_put_vlan:
+ 	if (params.vlan)
+ 		dev_put(params.vlan);
+ 
+@@ -3908,6 +3946,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+ 
++	/* When you run into this, adjust the code below for the new flag */
++	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
++
+ 	switch (dev->ieee80211_ptr->iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+@@ -3951,8 +3992,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		/* ignore uAPSD data */
+ 		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
+ 
+-		/* associated is disallowed */
+-		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
++		/* these are disallowed */
++		if (params.sta_flags_mask &
++				(BIT(NL80211_STA_FLAG_ASSOCIATED) |
++				 BIT(NL80211_STA_FLAG_AUTHENTICATED)))
+ 			return -EINVAL;
+ 		/* Only TDLS peers can be added */
+ 		if (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)))
+@@ -3963,6 +4006,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		/* ... with external setup is supported */
+ 		if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
+ 			return -EOPNOTSUPP;
++		/*
++		 * Older wpa_supplicant versions always mark the TDLS peer
++		 * as authorized, but it shouldn't yet be.
++		 */
++		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_AUTHORIZED);
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
 -- 
-1.7.0.2
+1.8.0
 
