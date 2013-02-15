@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:53325 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932691Ab3BKV6z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42569 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab3BOTPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:58:55 -0500
-Received: by mail-oa0-f52.google.com with SMTP id k14so6651454oag.39
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:58:55 -0800 (PST)
-Message-ID: <5119699D.8010703@lwfinger.net> (sfid-20130211_225900_593018_9D99FA42)
-Date: Mon, 11 Feb 2013 15:58:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 15 Feb 2013 14:15:10 -0500
+Date: Fri, 15 Feb 2013 14:06:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2012-02-15
+Message-ID: <20130215190600.GC4981@tuxdriver.com> (sfid-20130215_201515_748396_E154FED9)
+References: <1360874926.8210.28.camel@jlt4.sipsolutions.net>
+ <1360918340.8622.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Catalin Iacob <iacobcatalin@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Initialize rate_init member of struct rate_control_ops
-References: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
-In-Reply-To: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360918340.8622.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2013 03:18 PM, Catalin Iacob wrote:
-> This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
->
-> rate_control_rate_init assumes the rate_init member of
-> struct rate_control_ops is not NULL therefore not initializing it leads to
-> an oops as soon the driver succesfully associates to an AP.
->
-> The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
-> is ok because rate_update is checked for NULL before being
-> called.
->
-> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
+On Fri, Feb 15, 2013 at 09:52:20AM +0100, Johannes Berg wrote:
+> Hi John,
+> 
+> Sorry the resend/rebase -- Fengguang Wu's build testing found a
+> kernel-doc error ... (I guess I should run that myself)
+> 
+> Please pull to get
+>  * radar detection work from Simon
+>  * mesh improvements from Thomas
+>  * a connection monitoring/powersave fix from Wojciech
+>  * TDLS-related station management work from Jouni
+>  * VLAN crypto fixes from Michael Braun
+>  * CCK support in minstrel_ht from Felix
+>  * an SMPS (not SMSP, oops) related improvement in mac80211 (Emmanuel)
+>  * some WoWLAN work from Amitkumar Karwar: pattern match offset and a
+>    documentation fix
+>  * some WoWLAN work from myself (TCP connection wakeup feature API)
+>  * and a lot of VHT (and some HT) work (also from myself)
+> 
+> And a number of more random cleanups/fixes. I merged mac80211/master to
+> avoid a merge problem there.
+> 
+> johannes
+> 
+> 
+> The following changes since commit 9c35d7d2368f54313b988a01c408e5cf863ffd9e:
+> 
+>   mac80211: Add flushes before going off-channel (2013-02-11 22:52:21 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to 93c78c5debeb9c7101ecc73347d4730c26a98c05:
+> 
+>   mac80211_hwsim: ask mac80211 to reserve space for chanctx.drv_priv (2013-02-15 09:41:45 +0100)
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Pulling now...
 
-John,
-
-This patch should be applied. Obviously, I missed the oops in my testing.
-
-The real fix will be to not supply any rate-control operations as suggested by 
-Johannes, but that will take some time.
-
-Larry
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
