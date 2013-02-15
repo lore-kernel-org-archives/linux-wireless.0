@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58920 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab3BOJMZ (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:50093 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933028Ab3BOMkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 04:12:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: add correct docbook entries
-Date: Fri, 15 Feb 2013 10:12:20 +0100
-Message-Id: <1360919540-14691-1-git-send-email-johannes@sipsolutions.net> (sfid-20130215_101236_981116_BD37E708)
+	Fri, 15 Feb 2013 07:40:52 -0500
+Received: by mail-ie0-f178.google.com with SMTP id c13so4582862ieb.23
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 04:40:51 -0800 (PST)
+Date: Fri, 15 Feb 2013 07:40:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: devel@lists.open80211s.org
+Cc: Marco Porsch <marco@cozybit.com>, vthiagar@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	senthilb@qca.qualcomm.com
+Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into
+ neighbour_update
+Message-ID: <20130215124046.GA3493@localhost> (sfid-20130215_134055_908224_BAF7A78F)
+References: <1360928446-543-1-git-send-email-marco@cozybit.com>
+ <1360930499.15040.7.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360930499.15040.7.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Feb 15, 2013 at 01:14:59PM +0100, Johannes Berg wrote:
+> On Fri, 2013-02-15 at 12:40 +0100, Marco Porsch wrote:
+> 
+> > -	/* The current tsf is a first approximation for the timestamp
+> > -	 * for the received beacon.  Further down we try to get a
+> > -	 * better value from the rx_status->mactime field if
+> > -	 * available. Also we have to call drv_get_tsf() before
+> > -	 * entering the rcu-read section.*/
+> 
+> I don't think you should drop this comment; also why not just address
+> it? There's a timestamp in rx_status that should be the correct one for
+> ath9k (which is pretty much all this seems to work on anyway :) )
 
-Update the 802.11 book to list the correct
-data structures.
+The comment is just moved?  Mesh already uses rx_status->mactime, if
+the driver supplies it, which the comment says :)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/DocBook/80211.tmpl | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 42e7f03..284ced7 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -107,8 +107,8 @@
- !Finclude/net/cfg80211.h key_params
- !Finclude/net/cfg80211.h survey_info_flags
- !Finclude/net/cfg80211.h survey_info
--!Finclude/net/cfg80211.h beacon_parameters
--!Finclude/net/cfg80211.h plink_actions
-+!Finclude/net/cfg80211.h cfg80211_beacon_data
-+!Finclude/net/cfg80211.h cfg80211_ap_settings
- !Finclude/net/cfg80211.h station_parameters
- !Finclude/net/cfg80211.h station_info_flags
- !Finclude/net/cfg80211.h rate_info_flags
 -- 
-1.8.0
-
+Bob Copeland %% www.bobcopeland.com
