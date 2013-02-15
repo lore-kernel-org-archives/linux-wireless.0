@@ -1,41 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:50520 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758609Ab3BLJY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 04:24:29 -0500
-Message-ID: <511A0A4B.6010507@lri.fr> (sfid-20130212_102441_508885_F0FBEC71)
-Date: Tue, 12 Feb 2013 10:24:27 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath9k: Fix IBSS joiner mode
-References: <1359972504-8900-1-git-send-email-sujith@msujith.org> <1359972504-8900-3-git-send-email-sujith@msujith.org>
-In-Reply-To: <1359972504-8900-3-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:60068 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935885Ab3BOPql (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Feb 2013 10:46:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/5] cfg80211: unify station WME parsing
+Date: Fri, 15 Feb 2013 16:46:33 +0100
+Message-Id: <1360943194-14810-5-git-send-email-johannes@sipsolutions.net> (sfid-20130215_164647_871700_BBB13B3A)
+In-Reply-To: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
+References: <1360943194-14810-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/02/2013 11:08, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> On joining an existing IBSS network, beaconing has to start
-> only after a TSF sync has happened by receiving a beacon from
-> the BSS. In creator mode, beaconing can start immediately after
-> a HW reset has been done.
-> 
-> Now that mac80211 notifies the driver of the mode type (creator/joiner)
-> via ieee80211_bss_conf->ibss_creator, make use of it to properly setup
-> the HW beacon timers.
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
+From: Johannes Berg <johannes.berg@intel.com>
 
-Even though my IBSS network isn't as large as it was when i experienced
-the most severe problems, i see no stuck beacon now; the network is much
-more reliable.
+Instead of copying the code, create a new function
+to parse the station's WME information.
 
-Thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 72 ++++++++++++++++++++------------------------------
+ 1 file changed, 29 insertions(+), 43 deletions(-)
 
-Tested-by: Nicolas Cavallari <nicolas.cavallari@lri.fr>
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a8ae6419..148053c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3570,30 +3570,13 @@ nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
+ 	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
+ };
+ 
+-static int nl80211_set_station_tdls(struct genl_info *info,
+-				    struct station_parameters *params)
++static int nl80211_parse_sta_wme(struct genl_info *info,
++				 struct station_parameters *params)
+ {
+-	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+ 	struct nlattr *nla;
+ 	int err;
+ 
+-	/* Can only set if TDLS ... */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
+-		return -EOPNOTSUPP;
+-
+-	/* ... with external setup is supported */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
+-		return -EOPNOTSUPP;
+-
+-	/* Dummy STA entry gets updated once the peer capabilities are known */
+-	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+-		params->ht_capa =
+-			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+-	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
+-		params->vht_capa =
+-			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
+-
+ 	/* parse WME attributes if present */
+ 	if (!info->attrs[NL80211_ATTR_STA_WME])
+ 		return 0;
+@@ -3621,6 +3604,30 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+ 	return 0;
+ }
+ 
++static int nl80211_set_station_tdls(struct genl_info *info,
++				    struct station_parameters *params)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++
++	/* Can only set if TDLS ... */
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
++		return -EOPNOTSUPP;
++
++	/* ... with external setup is supported */
++	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
++		return -EOPNOTSUPP;
++
++	/* Dummy STA entry gets updated once the peer capabilities are known */
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
++		params->ht_capa =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY])
++		params->vht_capa =
++			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
++
++	return nl80211_parse_sta_wme(info, params);
++}
++
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -3894,30 +3901,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
+-	if (info->attrs[NL80211_ATTR_STA_WME]) {
+-		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+-		struct nlattr *nla;
+-
+-		nla = info->attrs[NL80211_ATTR_STA_WME];
+-		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
+-				       nl80211_sta_wme_policy);
+-		if (err)
+-			return err;
+-
+-		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
+-			params.uapsd_queues =
+-			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
+-		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
+-			return -EINVAL;
+-
+-		if (tb[NL80211_STA_WME_MAX_SP])
+-			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
+-
+-		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
+-			return -EINVAL;
+-
+-		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
+-	}
++	err = nl80211_parse_sta_wme(info, &params);
++	if (err)
++		return err;
+ 
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+-- 
+1.8.0
+
