@@ -1,210 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:47218 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757120Ab3BAQku (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:53900 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab3BOFAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 11:40:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 6/6] rtlwifi: rtl8723ae: Fix W=1 compile warnings
-Date: Fri,  1 Feb 2013 10:40:27 -0600
-Message-Id: <1359736827-30977-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130201_174058_006848_941AD59A)
-In-Reply-To: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1359736827-30977-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 15 Feb 2013 00:00:09 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hm6so683440wib.8
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 21:00:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4A04400646FF41AE84629E8D1443AA89@KGDOMAIN.local>
+References: <loom.20130214T000819-590@post.gmane.org> <CAGRGNgU4akuP=iKqUqpNbztB7P6DECm=-ug6QKxtsJdvMd9iCg@mail.gmail.com>
+ <4A04400646FF41AE84629E8D1443AA89@KGDOMAIN.local>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 15 Feb 2013 15:59:47 +1100
+Message-ID: <CAGRGNgWBYOJeLnA64yT4Pp0JOd50UqnndA98Jmq1kRd25Fn-ZA@mail.gmail.com> (sfid-20130215_060016_230362_11832E0B)
+Subject: Re: Writing application code using sd8686
+To: "Kevin & Pauline Gordon" <kgordon@paradise.net.nz>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whe this driver is built with "make W=1", the following warnings are output:
+Hi Kevin,
 
-drivers/net/wireless/rtlwifi/rtl8723ae/fw.c:515:5: warning: variable ‘own’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c:1436:5: warning: variable ‘bt_retry_cnt’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/hw.c:706:6: warning: variable ‘reg_ratr’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/hw.c:2033:41: warning: variable ‘cur_rfstate’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:620:23: warning: variable ‘radiob_arraylen’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:619:7: warning: variable ‘radiob_array_table’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:617:7: warning: variable ‘rtstatus’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:1534:6: warning: variable ‘bbvalue’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:1716:6: warning: variable ‘reg_ecc’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:1715:61: warning: variable ‘reg_ec4’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/phy.c:1715:34: warning: variable ‘reg_eac’ set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/rtlwifi/rtl8723ae/trx.c:247:6: warning: variable ‘psaddr’ set but not used [-Wunused-but-set-variable]
+Firstly, please CC linux-wireless or reply to all. I don't support or
+assist people off-list. Also, don't top post. Quote the relevant parts
+of the email you're replying to, then respond to them underneath. This
+helps people to quickly read the entire discussion.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.c      |  2 --
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c |  2 --
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c      |  8 ++------
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.c     | 20 ++------------------
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c     |  2 --
- 5 files changed, 4 insertions(+), 30 deletions(-)
+On Fri, Feb 15, 2013 at 2:55 PM, Kevin & Pauline Gordon
+<kgordon@paradise.net.nz> wrote:
+> Hi Julian,
+>
+> My main interest is wireless control of a robot
+> (http://www.rescuerobot.org). I have been writing code in C# for a System on
+> Module board using http://www.ghielectronics.com/catalog/product/128 and
+> http://www.ghielectronics.com/catalog/product/379 . The supplier has been
+> struggling with software problems
+> http://www.tinyclr.com/forum/topic?id=10844&page=3#msg108916 so I thought I
+> would experiment with Linux hence purchased an excellent board at
+> http://www.isee.biz/products/processor-boards/igepv2-board . After writing a
+> mass of C# code in NETMF (tinyclr) and regretting it, I am now enjoying
+> configuring wifi on the IGEPV2 (poky to ubuntu) using the libertas module in
+> Poky.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
-index 3b71dab..35cb8f8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/fw.c
-@@ -512,7 +512,6 @@ static bool _rtl8723ae_cmd_send_packet(struct ieee80211_hw *hw,
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl8192_tx_ring *ring;
- 	struct rtl_tx_desc *pdesc;
--	u8 own;
- 	unsigned long flags;
- 	struct sk_buff *pskb = NULL;
- 
-@@ -525,7 +524,6 @@ static bool _rtl8723ae_cmd_send_packet(struct ieee80211_hw *hw,
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 
- 	pdesc = &ring->desc[0];
--	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
- 
- 	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-index 887d521..68c2834 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.c
-@@ -1433,7 +1433,6 @@ static void _rtl8723ae_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
- 	struct rtl_pci_priv *rtlpcipriv = rtl_pcipriv(hw);
--	u8 bt_retry_cnt;
- 	u8 bt_info_original;
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
- 		 "[BTCoex] Get bt info by fw!!\n");
-@@ -1445,7 +1444,6 @@ static void _rtl8723ae_dm_bt_coexist_2_ant(struct ieee80211_hw *hw)
- 				 "[BTCoex] c2h for btInfo not rcvd yet!!\n");
- 	}
- 
--	bt_retry_cnt = rtlhal->hal_coex_8723.bt_retry_cnt;
- 	bt_info_original = rtlhal->hal_coex_8723.c2h_bt_info_original;
- 
- 	/* when bt inquiry or page scan, we have to set h2c 0x25
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-index 0a8c038..1498048 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-@@ -703,11 +703,9 @@ static void _rtl8723ae_hw_configure(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
- 	u8 reg_bw_opmode;
--	u32 reg_ratr, reg_prsr;
-+	u32 reg_prsr;
- 
- 	reg_bw_opmode = BW_OPMODE_20MHZ;
--	reg_ratr = RATE_ALL_CCK | RATE_ALL_OFDM_AG |
--	    RATE_ALL_OFDM_1SS | RATE_ALL_OFDM_2SS;
- 	reg_prsr = RATE_ALL_CCK | RATE_ALL_OFDM_AG;
- 
- 	rtl_write_byte(rtlpriv, REG_INIRTS_RATE_SEL, 0x8);
-@@ -2030,7 +2028,7 @@ bool rtl8723ae_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--	enum rf_pwrstate e_rfpowerstate_toset, cur_rfstate;
-+	enum rf_pwrstate e_rfpowerstate_toset;
- 	u8 u1tmp;
- 	bool actuallyset = false;
- 
-@@ -2049,8 +2047,6 @@ bool rtl8723ae_gpio_radio_on_off_checking(struct ieee80211_hw *hw, u8 *valid)
- 		spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 	}
- 
--	cur_rfstate = ppsc->rfpwr_state;
--
- 	rtl_write_byte(rtlpriv, REG_GPIO_IO_SEL_2,
- 		       rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL_2)&~(BIT(1)));
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-index 3d8536b..eafbb18 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.c
-@@ -614,17 +614,11 @@ bool rtl8723ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int i;
--	bool rtstatus = true;
- 	u32 *radioa_array_table;
--	u32 *radiob_array_table;
--	u16 radioa_arraylen, radiob_arraylen;
-+	u16 radioa_arraylen;
- 
- 	radioa_arraylen = Rtl8723ERADIOA_1TARRAYLENGTH;
- 	radioa_array_table = RTL8723E_RADIOA_1TARRAY;
--	radiob_arraylen = RTL8723E_RADIOB_1TARRAYLENGTH;
--	radiob_array_table = RTL8723E_RADIOB_1TARRAY;
--
--	rtstatus = true;
- 
- 	switch (rfpath) {
- 	case RF90_PATH_A:
-@@ -1531,11 +1525,8 @@ static void _rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw,
- 		0x522, 0x550, 0x551, 0x040
- 	};
- 	const u32 retrycount = 2;
--	u32 bbvalue;
- 
- 	if (t == 0) {
--		bbvalue = rtl_get_bbreg(hw, 0x800, MASKDWORD);
--
- 		phy_save_adda_regs(hw, adda_reg, rtlphy->adda_backup, 16);
- 		phy_save_mac_regs(hw, iqk_mac_reg, rtlphy->iqk_mac_backup);
- 	}
-@@ -1712,8 +1703,7 @@ void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery)
- 	long result[4][8];
- 	u8 i, final_candidate;
- 	bool patha_ok, pathb_ok;
--	long reg_e94, reg_e9c, reg_ea4, reg_eac, reg_eb4, reg_ebc, reg_ec4,
--	    reg_ecc, reg_tmp = 0;
-+	long reg_e94, reg_e9c, reg_ea4, reg_eb4, reg_ebc, reg_tmp = 0;
- 	bool is12simular, is13simular, is23simular;
- 	bool start_conttx = false, singletone = false;
- 	u32 iqk_bb_reg[10] = {
-@@ -1780,21 +1770,15 @@ void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery)
- 		reg_e94 = result[i][0];
- 		reg_e9c = result[i][1];
- 		reg_ea4 = result[i][2];
--		reg_eac = result[i][3];
- 		reg_eb4 = result[i][4];
- 		reg_ebc = result[i][5];
--		reg_ec4 = result[i][6];
--		reg_ecc = result[i][7];
- 	}
- 	if (final_candidate != 0xff) {
- 		rtlphy->reg_e94 = reg_e94 = result[final_candidate][0];
- 		rtlphy->reg_e9c = reg_e9c = result[final_candidate][1];
- 		reg_ea4 = result[final_candidate][2];
--		reg_eac = result[final_candidate][3];
- 		rtlphy->reg_eb4 = reg_eb4 = result[final_candidate][4];
- 		rtlphy->reg_ebc = reg_ebc = result[final_candidate][5];
--		reg_ec4 = result[final_candidate][6];
--		reg_ecc = result[final_candidate][7];
- 		patha_ok = pathb_ok = true;
- 	} else {
- 		rtlphy->reg_e94 = rtlphy->reg_eb4 = 0x100;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index ce8ad12..b1fd2b3 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -244,7 +244,6 @@ static void _rtl8723ae_translate_rx_signal_stuff(struct ieee80211_hw *hw,
- 	struct ieee80211_hdr *hdr;
- 	u8 *tmp_buf;
- 	u8 *praddr;
--	u8 *psaddr;
- 	__le16 fc;
- 	u16 type;
- 	bool packet_matchbssid, packet_toself, packet_beacon = false;
-@@ -255,7 +254,6 @@ static void _rtl8723ae_translate_rx_signal_stuff(struct ieee80211_hw *hw,
- 	fc = hdr->frame_control;
- 	type = WLAN_FC_GET_TYPE(fc);
- 	praddr = hdr->addr1;
--	psaddr = ieee80211_get_SA(hdr);
- 
- 	packet_matchbssid = ((IEEE80211_FTYPE_CTL != type) &&
- 			    (!compare_ether_addr(mac->bssid,
+Sounds interesting.
+
+The advice I'm going to give you assumes that the board on the robot
+is running Linux. If it isn't then this is not really the right place
+to be asking this question. If you're after .NET code to operate the
+wireless module directly without the help of Linux or the standard
+Linux wireless tools, you'll need to contact Marvell, the manufacturer
+of the board, or write it yourself.
+
+> I have setup eclipse on ubuntu and wish to start writing c/c++ code to
+> experiment with linux wireless. The IGEPV2 contains a Marvell 88w8686B1.
+>
+> Is there a SDK or example code available on the net for the Marvell
+> 88w8686B1. I have downloaded the driver package from Marvell which contains
+> the source code for SD8686 (Marvell88w8686_d0acbab79fde.rar). I have no
+> experience of programming in the Linux environment but have plenty of books
+> to help.
+
+I assume that you want to transmit data using TCP or UDP sockets over
+a wireless link between the robot and some other device. I'm also
+going to assume that some third device will be an access point and
+both the robot and the other device will connect to it.
+
+You need to do three things:
+1. Ensure that the driver is installed and working
+2. Establish a wireless link.
+3. Obtain or set an IP address.
+4. Determine the remote IP address.
+5. Establish a socket connection between the two computers.
+
+For 1, from what you've said above, it seems that this is already done.
+
+For 2 and 3, the simplest way would be to install the network-manager
+daemon and talk to it over d-bus, and there are modules for Mono /
+.NET to communicate over d-bus. There may even be modules for Mono /
+.NET to interface directly with network manager. Note that there are
+other tools that perform the same functions, e.g. wicd or Connman and
+you should be able to interface with them in a similar manner.
+
+If that's not an option, you'll have to do it more manually. There may
+be tools installed on the board to help you, or you could install
+wpa_supplicant and configure it to maintain the wireless connection
+for you. Note that wpa_supplicant can be controlled and configured
+over d-bus. wpa_supplicant only manages the connection, and setting or
+obtaining an IP address must be done separately. If you're using a
+static IP address, you could use ifconfig, which should already be
+installed, to set it. If you want a dynamic IP address and use DHCP,
+you'll need to ensure that a DHCP client is installed and determine
+how to operate it. You'll then have to figure out some way to run
+these tools after wpa_supplicant connects to the wireless network.
+
+4 and 5 are beyond the scope of the advice I can give you as I have no
+experience with .NET, but once the wireless link is connected and IP
+address set, everything works exactly the same as communicating over
+any other IP network.
+
+Oh, one last thing: this advice applies to practically any wireless
+device on any system running Linux.
+
+> I would much appreciate your advice.
+>
+> Regards,
+> Kevin Gordon
+>
+>
+> -----Original Message-----
+> From: Julian Calaby [mailto:julian.calaby@gmail.com]
+> Sent: Thursday, 14 February 2013 5:36 p.m.
+> To: Kevin Gordon
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: Writing application code using sd8686
+>
+> Hi Kevin,
+>
+> On Thu, Feb 14, 2013 at 10:13 AM, Kevin Gordon <kgordon@paradise.net.nz>
+> wrote:
+>> Is it possible to write C/C++ code to use sd8686.bin driver? Is there a
+> SDK or
+>> header/source files available? I would much appreciate your advice.
+>
+> What exactly are you trying to do here?
+>
+> sd8686.bin is the firmware image for Marvell 8686 wireless cards, not
+> a driver as such.
+>
+> If you're after a driver to use those cards under Linux, you need to
+> ensure that your kernel the "libertas" driver available.
+
+Thanks,
+
 -- 
-1.8.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
