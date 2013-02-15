@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57592 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab3B1Dzt (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22822 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692Ab3BOKLg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 22:55:49 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Fri, 15 Feb 2013 05:11:36 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: ath6kl: move ath6kl_wmi_startscan_cmd()
+References: <20121127072531.GB8239@elgon.mountain>
+	<20130206120906.GT4989@mwanda>
+Date: Fri, 15 Feb 2013 12:11:11 +0200
+In-Reply-To: <20130206120906.GT4989@mwanda> (Dan Carpenter's message of "Wed,
+	6 Feb 2013 15:09:06 +0300")
+Message-ID: <87a9r5anuo.fsf@kamboji.qca.qualcomm.com> (sfid-20130215_111139_229413_303CEAFA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20782.54505.239733.82364@gargle.gargle.HOWL> (sfid-20130228_045553_204960_CE303883)
-Date: Thu, 28 Feb 2013 09:24:17 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-In-Reply-To: <512ECE01.8010102@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> I don't see the point in keeping that algorithm around. It has known
-> design flaws that make it perform poorly in several scenarios, and
-> fixing some of the flaws require basically rewriting it.
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-I ran some comparison throughput tests between minstrel_ht and ath9k RC
-and minstrel showed lower numbers (~10Mbps difference). This is in a clean
-environment (OTA). IMO, we can switch the default to minstrel_ht, but keep
-the ath9k RC until the perf. gap is fixed. I think this was Google's concern too,
-a drop in the average throughput. This was in the STA->AP direction.
+> Whatever happened with this?
 
-In the AP->STA direction (AP: DB120, STA: AR9280), the numbers were really low.
-The highest that I could see was ~165 Mbps, while with WNDR3700 (stock FW), the
-average throughput was ~185 Mbps and an occasional high of 190 and above.
+It got buried inside my todo folder, sorry about that. I will look at it
+soon.
 
-Sujith
+-- 
+Kalle Valo
