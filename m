@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48939 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151Ab3BLRpg (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:62396 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753967Ab3BOOKp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 12:45:36 -0500
-Date: Tue, 12 Feb 2013 12:41:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2012-02-12
-Message-ID: <20130212174131.GD2086@tuxdriver.com> (sfid-20130212_184542_043988_09C85377)
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <20130212173750.GC2086@tuxdriver.com>
+	Fri, 15 Feb 2013 09:10:45 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr12so2828446wgb.35
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 06:10:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130212173750.GC2086@tuxdriver.com>
+In-Reply-To: <87ehghanxe.fsf@kamboji.qca.qualcomm.com>
+References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com>
+	<87ehghanxe.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 15 Feb 2013 15:10:43 +0100
+Message-ID: <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com> (sfid-20130215_151049_077689_4C5782BA)
+Subject: Re: ath6kl: AR6004 failed to start on computer boot
+From: Julien Massot <jmassot@aldebaran-robotics.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 12:37:50PM -0500, John W. Linville wrote:
-> On Tue, Feb 12, 2013 at 05:01:31PM +0100, Johannes Berg wrote:
-> > John,
-> > 
-> > We continue work on our new driver, but I also have a WoWLAN and AP mode
-> > improvement for the previous driver and a change to use threaded
-> > interrupts to prepare us for working with non-PCIe devices.
-> > 
-> > Please pull.
-> > 
-> > Thanks,
-> > johannes
-> > 
-> > 
-> > 
-> > The following changes since commit 8457703f1e86aaf0f134402dd1e09e1f13e65222:
-> > 
-> >   ath6kl: provide 64-bit per-station byte counters (2013-02-11 15:34:58 -0500)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> > 
-> > for you to fetch changes up to 36eed56a8f7e1bd7fb5014ea0e702708e1702f30:
-> > 
-> >   iwlwifi: mvm: beautify code in rx_handlers (2013-02-12 16:52:26 +0100)
-> 
-> Pulling now...
+Hi Kalle
 
-Hmmm...
+> IIRC you mentioned on IRC that you don't see this anymore, is that
+> correct?
 
-  CC [M]  drivers/net/wireless/iwlwifi/mvm/mac80211.o
-drivers/net/wireless/iwlwifi/mvm/mac80211.c: In function ‘iwl_mvm_mac_setup_register’:
-drivers/net/wireless/iwlwifi/mvm/mac80211.c:116:1: error: expected expression before ‘<<’ token
-drivers/net/wireless/iwlwifi/mvm/mac80211.c:120:9: error: exponent has no digits
-make[3]: *** [drivers/net/wireless/iwlwifi/mvm/mac80211.o] Error 1
-make[2]: *** [drivers/net/wireless/iwlwifi/mvm] Error 2
-make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
-make: *** [drivers/net/wireless/] Error 2
+I still have the problem on a reboot, but the device initialize itself
+properly after a normal boot.
+
+It's still a problem for me, I obtain exactly the same log.
+ath6kl: Failed to start hardware: -5
+Dec 13 01:43:21 x201 kernel: [   24.843781] ath6kl: Failed to init
+ath6kl core: -5
+Dec 13 01:43:21 x201 kernel: [   24.843849] ath6kl_usb: probe of
+2-1.2:1.0 failed with error -5
+
+If you need to test anything don't hesitate to request me.
+
+Regards,
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Julien
