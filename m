@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199Ab3BRTDc (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:38261 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932322Ab3BOCwK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 14:03:32 -0500
-Message-ID: <1361214203.8555.40.camel@jlt4.sipsolutions.net> (sfid-20130218_200335_423752_A342798B)
-Subject: Re: [PATCH] mac80211: fix the problem of unicast forwarding from DS
- to DS in Mesh
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	cedric.voncken@acksys.fr
-Date: Mon, 18 Feb 2013 20:03:23 +0100
-In-Reply-To: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130218_124724_975470_FED20EF3)
-References: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20130218_124724_975470_FED20EF3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Feb 2013 21:52:10 -0500
+Received: by mail-pb0-f54.google.com with SMTP id rr4so422674pbb.13
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 18:52:10 -0800 (PST)
+From: Matteo <matteo.danieletto@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Subject: Protocol Stack TCP read/write Parameters
+Message-Id: <5D600F60-780E-4B48-B298-E08B581241E3@gmail.com> (sfid-20130215_035215_336540_8FEDA408)
+Date: Thu, 14 Feb 2013 18:52:05 -0800
+To: linux-wireless@vger.kernel.org
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 19:16 +0800, Chun-Yeow Yeoh wrote:
-> Unicast frame with unknown forwarding information always trigger
-> the path discovery assuming destination is always located inside the
-> MBSS. This patch allows the forwarding to look for mesh gate if path
-> discovery inside the MBSS has failed.
-> 
-> Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  net/mac80211/tx.c |   15 ++++++++++++---
->  1 files changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 5b9602b..dce3af3 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1844,9 +1844,18 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		}
->  
->  		if (!is_multicast_ether_addr(skb->data)) {
-> -			mpath = mesh_path_lookup(sdata, skb->data);
-> -			if (!mpath)
-> -				mppath = mpp_path_lookup(sdata, skb->data);
-> +			struct sta_info *next_hop;
-> +
-> +			mpath = mesh_path_lookup(skb->data, sdata);
-> +			if (mpath)
-> +				next_hop = rcu_dereference(mpath->next_hop);
-> +
-> +			if (!mpath || (mpath && (!next_hop ||
-> +					!(mpath->flags & MESH_PATH_ACTIVE))))
-> +				mppath = mpp_path_lookup(skb->data, sdata);
+Hi all,
+it is my first time I write here, so sorry if I am asking something well know but I don't know where I can begin.
+I tried to find something from google, but now I have a big confusion in my head.
 
-Heck, even the logic is wrong. Ok actually just weird -- if (!mpath || !
-next_hop || ...) would be totally sufficient.
+The problem is that I have to read/modify a few parameters from the TCP/IP protocol stack and more precisely into the Link layer.
 
-> +			if (mppath && mpath)
-> +				mesh_path_del(mpath->dst, mpath->sdata);
+The parameters are like the following:
 
-You really delete paths because packets are transmitted along them?
+-the total number of original MAC packets transmitted in the sampling interval
+-the value of the 802.11 contention window at time k, i.e., the maximum number of slots the node will wait before transmitting a packet at the MAC level
+-the total number of MAC retransmissions in the sampling interval
 
-johannes
+I have to know if it is possible and any guideline so I can start.
 
+Thanks a lot
+
+
+Matteo
