@@ -1,164 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39804 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159Ab3BGLtl (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:34234 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754752Ab3BPXLW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 06:49:41 -0500
-Received: from p579e6d82.dip0.t-ipconnect.de ([87.158.109.130] helo=pandem0nium)
-	by cora.hrz.tu-chemnitz.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.80.1)
-	(envelope-from <simon.wunderlich@s2003.tu-chemnitz.de>)
-	id 1U3Pz1-0005OJ-5P
-	for linux-wireless@vger.kernel.org; Thu, 07 Feb 2013 12:49:39 +0100
-Received: from dotslash by pandem0nium with local (Exim 4.72)
-	(envelope-from <simon.wunderlich@s2003.tu-chemnitz.de>)
-	id 1U3Pyx-00074w-FL
-	for linux-wireless@vger.kernel.org; Thu, 07 Feb 2013 12:49:35 +0100
-Date: Thu, 7 Feb 2013 12:49:35 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+	Sat, 16 Feb 2013 18:11:22 -0500
+Subject: [PATCH] rtlwifi: usb: allocate URB control message setup_packet and
+ data buffer separately
 To: linux-wireless@vger.kernel.org
-Subject: [martin@hundeboll.net: [B.A.T.M.A.N.] Announcing the Wireless
- Battle Mesh v6 (15th of April - 21st of April 2013, Aalborg, Denmark)]
-Message-ID: <20130207114935.GA27195@pandem0nium> (sfid-20130207_124946_459063_018B3672)
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: stable@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sun, 17 Feb 2013 01:00:16 +0200
+Message-ID: <20130216230016.15041.99979.stgit@localhost6.localdomain6> (sfid-20130217_001129_420149_8D41A84D)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rtlwifi allocates both setup_packet and data buffer of control message urb,
+using shared kmalloc in _usbctrl_vendorreq_async_write. Structure used for
+allocating is:
+	struct {
+		u8 data[254];
+		struct usb_ctrlrequest dr;
+	};
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Because 'struct usb_ctrlrequest' is __packed, setup packet is unaligned and
+DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to memory
+corruptions and freezes.
 
-Hey wireless enthusiasts,
+Patch changes setup packet to be allocated separately.
 
-I'd just to send this again to remind that the signup deadline for
-hotel/food for this event is coming nearer.
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/rtlwifi/usb.c |   44 +++++++++++++++++++++++-------------
+ 1 file changed, 28 insertions(+), 16 deletions(-)
 
-If you are interested in open source WiFi and mesh networks, this should
-be a very interesting event to join. ;) I'll be there too, along
-with other protocol implementors, wireless hackers, openwrt developers, ...
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 476eaef..d98fcdb 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -42,8 +42,12 @@
+ 
+ static void usbctrl_async_callback(struct urb *urb)
+ {
+-	if (urb)
+-		kfree(urb->context);
++	if (urb) {
++		/* free dr */
++		kfree(urb->setup_packet);
++		/* free databuf */
++		kfree(urb->transfer_buffer);
++	}
+ }
+ 
+ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+@@ -55,39 +59,47 @@ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+ 	u8 reqtype;
+ 	struct usb_ctrlrequest *dr;
+ 	struct urb *urb;
+-	struct rtl819x_async_write_data {
+-		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+-		struct usb_ctrlrequest dr;
+-	} *buf;
++	const u16 databuf_maxlen = REALTEK_USB_VENQT_MAX_BUF_SIZE;
++	u8 *databuf;
++
++	if (WARN_ON(len > databuf_maxlen))
++		len = databuf_maxlen;
+ 
+ 	pipe = usb_sndctrlpipe(udev, 0); /* write_out */
+ 	reqtype =  REALTEK_USB_VENQT_WRITE;
+ 
+-	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
+-	if (!buf)
++	dr = kmalloc(sizeof(*dr), GFP_ATOMIC);
++	if (!dr)
+ 		return -ENOMEM;
+ 
++	databuf = kmalloc(databuf_maxlen, GFP_ATOMIC);
++	if (!databuf) {
++		kfree(dr);
++		return -ENOMEM;
++	}
++
+ 	urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!urb) {
+-		kfree(buf);
++		kfree(databuf);
++		kfree(dr);
+ 		return -ENOMEM;
+ 	}
+ 
+-	dr = &buf->dr;
+-
+ 	dr->bRequestType = reqtype;
+ 	dr->bRequest = request;
+ 	dr->wValue = cpu_to_le16(value);
+ 	dr->wIndex = cpu_to_le16(index);
+ 	dr->wLength = cpu_to_le16(len);
+ 	/* data are already in little-endian order */
+-	memcpy(buf, pdata, len);
++	memcpy(databuf, pdata, len);
+ 	usb_fill_control_urb(urb, udev, pipe,
+-			     (unsigned char *)dr, buf, len,
+-			     usbctrl_async_callback, buf);
++			     (unsigned char *)dr, databuf, len,
++			     usbctrl_async_callback, NULL);
+ 	rc = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (rc < 0)
+-		kfree(buf);
++	if (rc < 0) {
++		kfree(databuf);
++		kfree(dr);
++	}
+ 	usb_free_urb(urb);
+ 	return rc;
+ }
 
-Cheers,
-	Simon
-
------ Forwarded message from Martin Hundeb=C3=B8ll <martin@hundeboll.net> -=
-----
-
-Date: Fri, 04 Jan 2013 16:15:47 +0100
-=46rom: Martin Hundeb=C3=B8ll <martin@hundeboll.net>
-To: battlemesh@ml.ninux.org, linux-wireless@vger.kernel.org,
-	olsr-users@lists.olsr.org, b.a.t.m.a.n@lists.open-mesh.org,
-	babel-users@lists.alioth.debian.org
-Subject: [B.A.T.M.A.N.] Announcing the Wireless Battle Mesh v6 (15th of
-	April - 21st of April 2013, Aalborg, Denmark)
-User-Agent: Mozilla/5.0 (X11; Linux x86_64;
-	rv:17.0) Gecko/17.0 Thunderbird/17.0
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-      Announcing the Wireless Battle Mesh v6
-   (15th of April - 21st of April 2013, Aalborg, Denmark)
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-The next 'Wireless Battle of the Mesh' will take place from
-Mon 15th till Sun 21st of April at the University of Aalborg,
-Denmark. The event aims to bring together people from across
-the globe to test the performance of different routing
-protocols for ad-hoc networks, like Babel, B.A.T.M.A.N., BMX,
-OLSR, and 802.11s. Of course, new protocols (working on
-OpenWRT) are always welcome!
-
-It is not required to be active within the mentioned
-protocols, so if you are a mesh networking enthusiast,
-community networking activist, or have an interest in mesh
-networks in general, you have to check this out!
-
-Information about the event is gathered at:
-http://battlemesh.org/BattleMeshV6
-
-
-Location
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-The event takes place at the University of Aalborg, Denmark.
-There will be room for hacking with software and hardware,
-talks and presentations, as well as informal discussions
-between participants.
-
-
-Participant Registration and Fee
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D
-
-The event itself is free of charge and open for all, so to
-register without hotel and food supply, simply add your name
-to the participant table.
-http://battlemesh.org/BattleMeshV6/Participants
-
-If you wish low cost cost accomodation and low cost food supply,
-several special group bookings have been arranged. Payment
-in advance is required to get the full benefit of the
-discount. Therefore, this year's edition features an "early
-bird low cost" registration program: A bed in a nearby hotel
-=66rom Monday till Sunday plus breakfast and dinner for the
-entire week are available for 1500 DKK (~201=E2=82=AC) if the
-payment is made before February 15th, 2013. The price goes
-up to 1900 DKK (~255=E2=82=AC) for all payments made after February
-15th. These late arrangements are subject to availability.
-Of course, this package is not compulsory. You can also
-find your own bed and food supply yourself during the event
-if you wish to do so.
-
-Credit card payments for accomodation and food can be carried
-out here: https://www.erap.aau.dk/event/index.php/bmv6
-
-
-Warm Up
-=3D=3D=3D=3D=3D=3D=3D
-
-As with Wireless BattleMesh V5 in Athens, we would like to
-arrange a warm up event in the preceeding weekend. So far, we
-have explored options like Djurslands Net and Net4Sams=C3=B8, but
-nothing is final yet. Suggestions and ideas for this is more
-than welcome!
-
-
-Spread the Word
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-Feel free to spread the word by forwarding this mail to all
-lists / people that might be interested in it. Blogging
-about the event is more than welcome, and if you do so,
-please add a ping-back to the wiki page:
-http://battlemesh.org/BattleMeshV6
-
-
-Contact
-=3D=3D=3D=3D=3D=3D=3D
-
-* Web: http://battlemesh.org/BattleMeshV6
-* Email: http://ml.ninux.org/mailman/listinfo/battlemesh
-* IRC: irc.freenode.net #battlemesh
-
------ End forwarded message -----
-
---YiEDa0DAkWCtVeE4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlETlM8ACgkQrzg/fFk7axY3TwCgmRpujtF0l2boZdRKQUKx2/JQ
-WHMAn3HkGMO3qJGDvsYR3d636jmq7ADl
-=6oDa
------END PGP SIGNATURE-----
-
---YiEDa0DAkWCtVeE4--
