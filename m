@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:55208 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932350Ab3BMJkD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 04:40:03 -0500
-Received: by mail-bk0-f44.google.com with SMTP id j4so449067bkw.31
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 01:40:01 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Andrew Wasielewski <andrew@wasielewski.co.uk>
-Subject: Re: WARNING: at drivers/net/wireless/p54/main.c:443 p54_work+0x66/0x80 [p54common]() (Not tainted)
-Date: Wed, 13 Feb 2013 10:39:58 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <1732818.7oJIpSJZSL@localhost.localdomain> <201302071657.12783.chunkeey@googlemail.com> <2215579.kyTgX4RlnS@localhost.localdomain>
-In-Reply-To: <2215579.kyTgX4RlnS@localhost.localdomain>
+Received: from mx3.wp.pl ([212.77.101.7]:53474 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754124Ab3BPTjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Feb 2013 14:39:31 -0500
+Date: Sat, 16 Feb 2013 20:39:33 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] rt2800usb_txdone_entry_check: Warning - TX status
+ report missed for queue XX entry ZZ
+Message-ID: <20130216193933.GA2158@localhost.localdomain> (sfid-20130216_203935_904433_01D23873)
+References: <5119664D.9030902@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302131039.58880.chunkeey@googlemail.com> (sfid-20130213_104010_563498_0E294939)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5119664D.9030902@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Andrew
+Hi
 
-On Tuesday, February 12, 2013 01:04:11 AM Andrew Wasielewski wrote:
-> On Thursday 07 February 2013 16:57:12 Christian Lamparter wrote:
-> > On Thursday, February 07, 2013 12:51:38 AM Andrew Wasielewski wrote:
-> > > On Wednesday 30 January 2013 01:06:52 Christian Lamparter wrote:
-> > > > On Wednesday, January 30, 2013 12:04:38 AM Andrew Wasielewski wrote:
-> > > > Reloading the driver (modprobe -r p54usb && modprobe p54usb) or replugging the 
-> > > > device should have helped. Anyway, the clean "reset" procedure for these devices
-> > > > is known but to Conexant. 
-> > > modprobing p54usb works with the driver, but I still have to restart hostapd for
-> > > it to pick up the now-working driver.  Good news is it hasn't happened again.
-> > Ah, you should be able to do this automatically. For example with Debian
-> > (and Ubuntu?) you can add an entry into your /etc/network/interfaces:
-> I don't have /etc/network/interfaces in ClearOS.  Also my wlan0 doesn't have 
-> an IP address directly, as it is bridged with wired eth0 in br0.  Can that be
-> accomodated?
-Do you know how hostapd is started? Is it done automatically, or do you
-have some sort of custom initscript?
+On Mon, Feb 11, 2013 at 10:44:45PM +0100, Xose Vazquez Perez wrote:
+> ( 3.7.6-102.fc17.x86_64 + compat-drivers-3.8-rc7-1 )
+> 
+> with this device:
+> usb 2-1.5: new high-speed USB device number 9 using ehci_hcd
+> usb 2-1.5: New USB device found, idVendor=148f, idProduct=5370
+> usb 2-1.5: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> usb 2-1.5: Product: 802.11 n WLAN
+> usb 2-1.5: Manufacturer: Ralink
+> usb 2-1.5: SerialNumber: 1.0
+> usb 2-1.5: reset high-speed USB device number 9 using ehci_hcd
+> phy4 -> rt2x00_set_chip: Info - Chipset detected - rt: 5390, rf: 5370, rev: 0502.
+> ieee80211 phy4: Selected rate control algorithm 'minstrel_ht'
+> Registered led device: rt2800usb-phy4::radio
+> Registered led device: rt2800usb-phy4::assoc
+> Registered led device: rt2800usb-phy4::quality
+> phy4 -> rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'.
+> phy4 -> rt2x00lib_request_firmware: Info - Firmware detected - version: 0.33.
+> phy4 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+> phy4 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+> phy4 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+> phy4 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - CWmin: 4, CWmax: 10, Aifs: 2, TXop: 0.
+> 
+> and debug enabled, I see a lot of:
+> Feb 11 22:34:28 chuchi kernel: [  935.675466] phy5 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 7
+> Feb 11 22:34:29 chuchi kernel: [  935.745710] phy5 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 11
+> Feb 11 22:34:29 chuchi kernel: [  935.747333] phy5 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 12
 
-> > and it will automatically restart hostapd when the device
-> > is replugged/driver is reloaded.
-> > [Note: The driver can detect if the firmware is dead. I'm
-> > thinking about implementing a simple reset-when-dead feature.
-> > Would you be willing to test it once it materializes? I'm
-> > asking because I don't have any isl3886usb. Just the PCI
-> > versions and two isl3887usb].
-> Happy to test anything you can offer.  However is there any way to trigger /
-> simulate firmware failure, as it doesn't happen very often (fortunately) by
-> itself.
-Sure, crashing the firmware is easy (garbage in, garbage out). But we don't
-need to do that, we can simply assume it "crashed" and then test
-if the reset code works properly [otherwise it might take all day since
-as you said: they happen, but not very often). I'm thinking of taking a
-closer looksie this weekend.
+We discussed this some time ago. Basically those messages can be
+ignored. Thread below give some more light on the problem:
+http://thread.gmane.org/gmane.linux.drivers.rt2x00.user/497
 
-> If I come across anything that looks viable I can test it.  If I can find a
-> MicroATX M/b that will fit the Shuttle case I will upgrade - ideally one with
-> a PCIe slot for wireless and PCI for the ADSL2+ card.  It's a FN41V3 if 
-> anyone has any suggestions.
-Are you sure a MicroATX M/b fits? It looks like the FN41V3 is a proprietary 
-form factor. Do you think you can cram a mini-itx inside the case? If you
-can, then you could look at a cheap ATOM or BOBCAT mainboard. Some of them
-still have a conventional PCI slot and most also do have a minipcie-slot
-too (which is preferable since you won't need any pcie<->minipcie adapters)
-
-Regards,
-	Christian
+Stanislaw
