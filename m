@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:42495 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755004Ab3BYXZk (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:55778 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027Ab3BPEIx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 18:25:40 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Lubomir Rintel <lkundrak@v3.sk>, Daniel Drake <dsd@laptop.org>
-CC: Harro Haan <hrhaan@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 25 Feb 2013 15:21:23 -0800
-Subject: RE: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D7F8FF0@SC-VEXCH1.marvell.com> (sfid-20130226_002556_567542_EBC5E13E)
-References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
-	 <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com>
-	 <1361249203.14137.27.camel@unicorn.kokotovo>
-	 <477F20668A386D41ADCC57781B1F70430D9D6CEA08@SC-VEXCH1.marvell.com>
- <1361730693.31709.1.camel@unicorn.kokotovo>
-In-Reply-To: <1361730693.31709.1.camel@unicorn.kokotovo>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 15 Feb 2013 23:08:53 -0500
+Received: by mail-we0-f180.google.com with SMTP id k14so3314563wer.39
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 20:08:52 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru>
+References: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru>
+Date: Fri, 15 Feb 2013 20:08:51 -0800
+Message-ID: <CAJ-Vmo=W5b_tsb1u-RXwzRqM=tA9=myvLSuZWyy3drSmSmda+g@mail.gmail.com> (sfid-20130216_050858_343549_A2880D38)
+Subject: Re: improve operational ANI in Mesh mode
+From: Adrian Chadd <adrian@freebsd.org>
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuaWVsLA0KDQo+ID4gVGhlcmUgc2VlbXMgdG8gYmUgYSByYWNlIGNvbmRpdGlvbiBpbiBs
-YnNfdGhyZWFkKCkuDQo+ID4NCj4gPiBBdCBsaW5lIDU4MjoNCj4gPiAgNTgyICAgICAgICAgICAg
-ICAgICBpZiAoIXByaXYtPmZ3X3JlYWR5KQ0KPiA+ICA1ODMgICAgICAgICAgICAgICAgICAgICAg
-ICAgY29udGludWU7DQo+ID4NCj4gPiBUaGUgZndfcmVhZHkgaXMgMCwgc28geW91IG5ldmVyIGdl
-dCB0aGUgY2hhbmNlIHRvIGV4ZWN1dGUgdGhlIEZVTkNfSU5JVCBjb21tYW5kLg0KPiA+DQo+ID4g
-IDYxNyAgICAgICAgICAgICAgICAgLyogRXhlY3V0ZSB0aGUgbmV4dCBjb21tYW5kICovDQo+ID4g
-IDYxOCAgICAgICAgICAgICAgICAgaWYgKCFwcml2LT5kbmxkX3NlbnQgJiYgIXByaXYtPmN1cl9j
-bWQpDQo+ID4gIDYxOSAgICAgICAgICAgICAgICAgICAgICAgICBsYnNfZXhlY3V0ZV9uZXh0X2Nv
-bW1hbmQocHJpdik7DQo+ID4NCj4gPg0KPiA+IENvdWxkIHlvdSB0cnkgdGhlIGZvbGxvd2luZyBj
-aGFuZ2U/DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0
-YXMvaWZfc2Rpby5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZQ0KPiA+IGluZGV4IDczOTMw
-OWUuLjhmNWQ5NzcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0
-YXMvaWZfc2Rpby5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvaWZf
-c2Rpby5jDQo+ID4gQEAgLTgyNSw2ICs4MjUsOCBAQCBzdGF0aWMgdm9pZCBpZl9zZGlvX2Zpbmlz
-aF9wb3dlcl9vbihzdHJ1Y3QgaWZfc2Rpb19jYXJkICpjYXINCj4gPg0KPiA+ICAgICAgICAgc2Rp
-b19yZWxlYXNlX2hvc3QoZnVuYyk7DQo+ID4NCj4gPiArICAgICAgIHByaXYtPmZ3X3JlYWR5ID0g
-MTsNCj4gPiArDQo+ID4gICAgICAgICAvKg0KPiA+ICAgICAgICAgICogRlVOQ19JTklUIGlzIHJl
-cXVpcmVkIGZvciBTRDg2ODggV0xBTi9CVCBtdWx0aXBsZSBmdW5jdGlvbnMNCj4gPiAgICAgICAg
-ICAqLw0KPiA+IEBAIC04MzksNyArODQxLDYgQEAgc3RhdGljIHZvaWQgaWZfc2Rpb19maW5pc2hf
-cG93ZXJfb24oc3RydWN0IGlmX3NkaW9fY2FyZCAqY2FyDQo+ID4gICAgICAgICAgICAgICAgICAg
-ICAgICAgbmV0ZGV2X2FsZXJ0KHByaXYtPmRldiwgIkNNRF9GVU5DX0lOSVQgY21kIGZhaWxlZFxu
-Iik7DQo+ID4gICAgICAgICB9DQo+ID4NCj4gPiAtICAgICAgIHByaXYtPmZ3X3JlYWR5ID0gMTsN
-Cj4gPiAgICAgICAgIHdha2VfdXAoJmNhcmQtPnB3cm9uX3dhaXRxKTsNCj4gPg0KPiA+ICAgICAg
-ICAgaWYgKCFjYXJkLT5zdGFydGVkKSB7DQo+IA0KPiBUaGFuayB5b3UuDQo+IEV2ZXJ5dGhpbmcg
-c2VlbSB0byB3b3JrIGZpbmUgZm9yIG1lIHdpdGggdGhlIHBhdGNoIGFwcGxpZWQuDQoNCkRvIHlv
-dSBoYXZlIGFueSBjb25jZXJuIGZvciBPTFBDIHBsYXRmb3JtcyB3aXRoIGFib3ZlIGNoYW5nZT8g
-SWYgaXQgZG9lc24ndCBzZWVtIHRvIGJyZWFrIE9MUEMgSSB3aWxsIHNlbmQgYSBwYXRjaCB0byB0
-aGUgbGlzdC4NCg0KVGhhbmtzLA0KQmluZw0KDQo=
+I think this is correct.
+
+
+
+adrian
+
+
+On 15 February 2013 18:43, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+>
+> Hi, in our setups we experience pure ANI operational in mesh mode
+> VS AP mode, after debuffing and digging in ANI code i find what ANI
+> in AP mode work in limited mode, i try this mode with mesh and seems
+> getting same good operation as in AP mode, i am not familiar with ANI
+> may be there is another better way to fix this issue?
+>
+> changes what i made:
+>
+> diff -ruN compat-drivers-3.7.6-1/drivers/net/wireless/ath/ath9k/ani.c
+> compat-drivers-3.7.6-1-new/drivers/net/wireless/ath/ath9k/ani.c
+> --- compat-drivers-3.7.6-1/drivers/net/wireless/ath/ath9k/ani.c 2013-02-11
+> 04:23:53.000000000 +0400
+> +++ compat-drivers-3.7.6-1-new/drivers/net/wireless/ath/ath9k/ani.c
+> 2013-02-16 05:03:46.640746411 +0400
+> @@ -303,7 +303,8 @@
+>         ah->stats.ast_ani_reset++;
+>
+>         /* only allow a subset of functions in AP mode */
+> -       if (ah->opmode == NL80211_IFTYPE_AP) {
+> +       if (ah->opmode == NL80211_IFTYPE_AP || ah->opmode ==
+> NL80211_IFTYPE_MESH_POINT) {
+> +               ath_dbg(common, ANI, "only allow a subset of functions in AP
+> or MESH mode");
+>                 if (IS_CHAN_2GHZ(chan)) {
+>                         ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
+>                                             ATH9K_ANI_FIRSTEP_LEVEL);
+> @@ -323,7 +324,8 @@
+>
+>         if (is_scanning ||
+>             (ah->opmode != NL80211_IFTYPE_STATION &&
+> -            ah->opmode != NL80211_IFTYPE_ADHOC)) {
+> +            ah->opmode != NL80211_IFTYPE_ADHOC && +         ah->opmode !=
+> NL80211_IFTYPE_MESH_POINT)) {
+>                 /*
+>                  * If we're scanning or in AP mode, the defaults (ini)
+>                  * should be in place. For an AP we assume the historical
+>
+>
+>
+> C уважением                       With Best Regards
+> Георгиевский Юрий.                Georgiewskiy Yuriy
+> +7 4872 711666                    +7 4872 711666
+> факс +7 4872 711143               fax +7 4872 711143
+> Компания ООО "Ай Ти Сервис"       IT Service Ltd
+> http://nkoort.ru                  http://nkoort.ru
+> JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+> YG129-RIPE                        YG129-RIPE
