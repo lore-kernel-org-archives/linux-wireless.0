@@ -1,54 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:62632 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757542Ab3BVQk1 (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:37949 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965Ab3BPSmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 11:40:27 -0500
-Received: by mail-ea0-f173.google.com with SMTP id i1so354731eaa.4
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2013 08:40:26 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] carl9170: fix frame drop and WARN due to minstrel_ht change
-Date: Fri, 22 Feb 2013 17:40:21 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <201302220130.45434.chunkeey@googlemail.com> <51279938.6030807@openwrt.org>
-In-Reply-To: <51279938.6030807@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302221740.22323.chunkeey@googlemail.com> (sfid-20130222_174031_552778_64499FC4)
+	Sat, 16 Feb 2013 13:42:24 -0500
+Received: by mail-pa0-f45.google.com with SMTP id kl14so2166390pab.4
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Feb 2013 10:42:23 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/3] mac80211: stringify mesh peering events
+Date: Sat, 16 Feb 2013 10:41:05 -0800
+Message-Id: <1361040066-5771-2-git-send-email-thomas@cozybit.com> (sfid-20130216_194226_970592_6C6808F9)
+In-Reply-To: <1361040066-5771-1-git-send-email-thomas@cozybit.com>
+References: <1361040066-5771-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 22 February 2013 17:13:44 Felix Fietkau wrote:
-> On 2013-02-22 1:30 AM, Christian Lamparter wrote:
-> > With "mac80211/minstrel_ht: add support for using CCK rates"
-> > minstrel_ht selects legacy CCK rates as viable rates for
-> > outgoing frames which might be sent as part of an A-MPDU
-> > [IEEE80211_TX_CTL_AMPDU is set].
-> > 
-> > This behavior triggered the following WARN_ON in the driver:
-> >> WARNING: at carl9170/tx.c:995 carl9170_op_tx+0x1dd/0x6fd
-> > The driver assumed that the rate control algorithm made a
-> > mistake and dropped the frame.
-> > 
-> > This patch removes the noisy warning altogether and allows
-> > said A-MPDU frames with CCK sample and/or fallback rates to
-> > be transmitted seamlessly.
-> Shouldn't it prevent aggregation of frames with CCK in the fallback rate
-> chain? I don't think transmitting an A-MPDU with a CCK rate works.
-IEEE80211_TX_CTL_AMPDU is set on a per-frame base and not per-rate
-(so strictly speaking for such frames we ought to form aggregates 
-even with CCK rates...  Which of course would be - as you said it - 
-totally bonkers.
+Convert mesh peering events into strings and make the
+debug output a little easier to read. Also stop printing
+the llid and plid since these don't change across peering
+states and are random numbers anyway so they just amount
+to noise.
 
-But of course, the code in the patch does the right thing in
-this case. It only sets the aggregation bit (for the HW) for
-MCS rates.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |   38 ++++++++++++++++++++++++--------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-BTW: doesn't minstrel_ht also select cck rates for sampling.
-(i.e.: as the rate[0]/first rate? Is this alright?!)
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index d74bdf9..07d396d 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -37,6 +37,28 @@ enum plink_event {
+ 	CLS_IGNR
+ };
+ 
++static const char * const mplstates[] = {
++	[NL80211_PLINK_LISTEN] = "LISTEN",
++	[NL80211_PLINK_OPN_SNT] = "OPN-SNT",
++	[NL80211_PLINK_OPN_RCVD] = "OPN-RCVD",
++	[NL80211_PLINK_CNF_RCVD] = "CNF_RCVD",
++	[NL80211_PLINK_ESTAB] = "ESTAB",
++	[NL80211_PLINK_HOLDING] = "HOLDING",
++	[NL80211_PLINK_BLOCKED] = "BLOCKED"
++};
++
++static const char * const mplevents[] = {
++	[PLINK_UNDEFINED] = "NONE",
++	[OPN_ACPT] = "OPN_ACPT",
++	[OPN_RJCT] = "OPN_RJCT",
++	[OPN_IGNR] = "OPN_IGNR",
++	[CNF_ACPT] = "CNF_ACPT",
++	[CNF_RJCT] = "CNF_RJCT",
++	[CNF_IGNR] = "CNF_IGNR",
++	[CLS_ACPT] = "CLS_ACPT",
++	[CLS_IGNR] = "CLS_IGNR"
++};
++
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			       enum ieee80211_self_protected_actioncode action,
+ 			       u8 *da, __le16 llid, __le16 plid, __le16 reason);
+@@ -668,15 +690,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 	u8 *baseaddr;
+ 	u32 changed = 0;
+ 	__le16 plid, llid, reason;
+-	static const char * const mplstates[] = {
+-		[NL80211_PLINK_LISTEN] = "LISTEN",
+-		[NL80211_PLINK_OPN_SNT] = "OPN-SNT",
+-		[NL80211_PLINK_OPN_RCVD] = "OPN-RCVD",
+-		[NL80211_PLINK_CNF_RCVD] = "CNF_RCVD",
+-		[NL80211_PLINK_ESTAB] = "ESTAB",
+-		[NL80211_PLINK_HOLDING] = "HOLDING",
+-		[NL80211_PLINK_BLOCKED] = "BLOCKED"
+-	};
+ 
+ 	/* need action_code, aux */
+ 	if (len < IEEE80211_MIN_ACTION_SIZE + 3)
+@@ -849,11 +862,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	mpl_dbg(sdata,
+-		"Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
+-		mgmt->sa, mplstates[sta->plink_state],
+-		le16_to_cpu(sta->llid), le16_to_cpu(sta->plid),
+-		event);
++	mpl_dbg(sdata, "peer %pM in state %s got event %s\n", mgmt->sa,
++		       mplstates[sta->plink_state], mplevents[event]);
+ 	reason = 0;
+ 	spin_lock_bh(&sta->lock);
+ 	switch (sta->plink_state) {
+-- 
+1.7.10.4
 
-Regards,
-	Christian
