@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42906 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347Ab3BROdG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 09:33:06 -0500
-Message-ID: <1361197982.8555.24.camel@jlt4.sipsolutions.net> (sfid-20130218_153311_039970_DF720F40)
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Date: Mon, 18 Feb 2013 15:33:02 +0100
-In-Reply-To: <1361197831.8555.23.camel@jlt4.sipsolutions.net> (sfid-20130218_153041_336693_8960F747)
-References: <20130215171938.GA4140@pandem0nium>
-	 <1361197831.8555.23.camel@jlt4.sipsolutions.net>
-	 (sfid-20130218_153041_336693_8960F747)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34383 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753165Ab3BPNZx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Feb 2013 08:25:53 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] ssb: fix unaligned access to mac address
+Date: Sat, 16 Feb 2013 14:25:40 +0100
+Message-Id: <1361021140-19871-1-git-send-email-hauke@hauke-m.de> (sfid-20130216_142600_027602_45FAF12B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 15:30 +0100, Johannes Berg wrote:
-> On Fri, 2013-02-15 at 18:19 +0100, Simon Wunderlich wrote:
-> 
-> > Commands we would like to propose are:
-> >  * start collecting - this feature should not run by default to avoid bloating memory for users who
-> >    don't even need this
-> >  * stop collecting
-> >  * read - dumps the data for all stations
-> >  * read + reset - dump the data and reset information for all stations. This should also clean up stations,
-> >    at least those which are not connected to the BSS, to not bloat the station table.
-> > 
-> > I guess the right position to implement this is mac80211 receive path. Our intended platform
-> > is ath9k/ath5k, but that feature should work with any mac80211 driver. We don't care if sta_info
-> > structs are allocated or custom structures are used, as long as we can receive a list of stations
-> > which includes peer and non-peer stations, along with their statistics.
-> > 
-> > We are looking forward to your thoughts. :)
-> 
-> I would argue that since most of the sta_info struct is used for
-> operational stuff, you shouldn't use it, but have a separate struct and
-> maybe embed that separate struct in sta_info for its statistics.
-> 
-> I'd also not use the existing nl80211 station APIs since this could be
-> an optional feature for many things, and it will likely break existing
-> expectations, e.g. that all stations listed by "iw wlan0 station dump"
-> are clients connected to an AP interface.
-> 
-> It could be argued that this API then should also not even include the
-> connected stations when listing ones, i.e. explicitly be non-connected
-> stations.
+The mac address should be aligned to u16 to prevent an unaligned access
+in drivers/ssb/pci.c where it is casted to __be16.
 
-Or maybe use the APIs, but require including a special attribute in the
-dump/get request message in order to dump/get the/a non-connected
-station(s), and only include those attributes that are relevant.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/ssb/ssb.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 22958d6..457e8eb 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -26,6 +26,7 @@ struct ssb_sprom_core_pwr_info {
+ 
+ struct ssb_sprom {
+ 	u8 revision;
++	u8 country_code;	/* Country Code */
+ 	u8 il0mac[6];		/* MAC address for 802.11b/g */
+ 	u8 et0mac[6];		/* MAC address for Ethernet */
+ 	u8 et1mac[6];		/* MAC address for 802.11a */
+@@ -36,7 +37,6 @@ struct ssb_sprom {
+ 	u16 board_rev;		/* Board revision number from SPROM. */
+ 	u16 board_num;		/* Board number from SPROM. */
+ 	u16 board_type;		/* Board type from SPROM. */
+-	u8 country_code;	/* Country Code */
+ 	char alpha2[2];		/* Country Code as two chars like EU or US */
+ 	u8 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
+ 	u8 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
+-- 
+1.7.10.4
 
