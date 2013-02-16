@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53925 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754686Ab3BFR62 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57630 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965Ab3BPSm0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:58:28 -0500
-Message-ID: <511299BA.905@candelatech.com> (sfid-20130206_185833_803968_2A91EE34)
-Date: Wed, 06 Feb 2013 09:58:18 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Cong Ding <dinggnu@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: mac80211/cfg.c: fix error using of sizeof()
-References: <1360167826-29265-1-git-send-email-dinggnu@gmail.com>
-In-Reply-To: <1360167826-29265-1-git-send-email-dinggnu@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 16 Feb 2013 13:42:26 -0500
+Received: by mail-pb0-f46.google.com with SMTP id uo15so1049876pbc.5
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Feb 2013 10:42:26 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 3/3] mac80211: don't spam mesh probe response messages
+Date: Sat, 16 Feb 2013 10:41:06 -0800
+Message-Id: <1361040066-5771-3-git-send-email-thomas@cozybit.com> (sfid-20130216_194229_654147_69699B11)
+In-Reply-To: <1361040066-5771-1-git-send-email-thomas@cozybit.com>
+References: <1361040066-5771-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2013 08:23 AM, Cong Ding wrote:
-> Using 'sizeof' on array given as function argument returns size of a pointer
-> rather than the size of array.
->
-> Signed-off-by: Cong Ding <dinggnu@gmail.com>
-> ---
->   net/mac80211/cfg.c |    3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 661b878..af561d5 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2058,7 +2058,8 @@ static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
->   {
->   	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->
-> -	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
-> +	memcpy(sdata->vif.bss_conf.mcast_rate, rate,
-> +			sizeof(int) * IEEE80211_NUM_BANDS);
+If mesh plink debugging is enabled, this gets annoying in
+a crowded environment, fast.
 
-Should it perhaps be:  sizeof(*rate) * IEEE80211_NUM_BANDS
-just in case the type ever changes?
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks,
-Ben
-
->
->   	return 0;
->   }
->
-
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index b022332..29ce2aa 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -925,7 +925,6 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					 IEEE80211_STYPE_PROBE_RESP);
+ 	memcpy(hdr->da, mgmt->sa, ETH_ALEN);
+-	mpl_dbg(sdata, "sending probe resp. to %pM\n", hdr->da);
+ 	IEEE80211_SKB_CB(presp)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, presp);
+ out:
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
