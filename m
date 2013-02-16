@@ -1,80 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:45177 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751606Ab3BWGqF (ORCPT
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:35599 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128Ab3BPXsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 01:46:05 -0500
-Date: Sat, 23 Feb 2013 00:46:00 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: carl9170 A-MPDU transmit problem
-Message-ID: <20130223064600.GA27187@thinkpad-t410> (sfid-20130223_074615_731372_F9DB479B)
-References: <20130222205044.GD1418@thinkpad-t410>
- <201302222307.38229.chunkeey@googlemail.com>
- <20130222225454.GF1418@thinkpad-t410>
- <201302230048.52018.chunkeey@googlemail.com>
+	Sat, 16 Feb 2013 18:48:12 -0500
+Message-ID: <51201AB8.4060700@lwfinger.net> (sfid-20130217_004817_282791_13D70C4F)
+Date: Sat, 16 Feb 2013 17:48:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302230048.52018.chunkeey@googlemail.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+CC: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb: allocate URB control message setup_packet
+ and data buffer separately
+References: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
+In-Reply-To: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 23, 2013 at 12:48:51AM +0100, Christian Lamparter wrote:
-> On Friday 22 February 2013 23:54:54 Seth Forshee wrote:
-> > On Fri, Feb 22, 2013 at 11:07:37PM +0100, Christian Lamparter wrote:
-> > > About the "frame gets passed down..." thing. Do you know
-> > > if this frame is received by the firmware or if it is
-> > > stuck in the usb-pipe? (if you have DEBUGFS support, you
-> > > can look at tx_ampdu_upload. If it's value stays the same
-> > > (that is >= 1. If it drops to 0, then it should be fine)
-> > > until the DELBA rolls around, then something is wrong with
-> > > the USB BUS). 
-> > 
-> > tx_ampdu_upload is one of the things I was monitoring. In one example,
-> > frames with sequence numbers 1282 - 1286 are put in the tx_pending
-> > queue, increasing tx_ampdu_upload to 5. All 5 frames are passed to
-> > carl9170_usb_tx() (this is what I mean when I say the frame gets passed
-> > down), but only the first 4 are transmitted, and tx_ampdu_upload
-> > decrements down to 1. It stays at 1 until the DELBA comes, at which
-> > point it finally gets transmitted and tx_ampdu_upload decrements to 0.
-> > So it sounds like there's a USB bus problem. I've verified that this
-> > problem shows up on multiple machines.
-> 
-> Thanks.
-> 
-> So it looks like we need to ask whenever the USB transport
-> is reliable or not. Did you (by any change) also monitor
-> "usb_tx_anch_urbs" [And does it get stuck at some > 1 value
-> as well?]. I'm asking this because if the driver has more than
-> 8 (=AR9170_NUM_TX_URBS) concurrently outgoing URBs, the 
-> overflow is queued in tx_wait. Of course, the urb completion
-> handler (carl9170_usb_tx_data_complete) takes care of
-> delivering the next frame in the tx_wait line and so on...
-> But according to your report, this doesn't seem to work!
-> What's a bit odd is that the device is able to recover. Because 
-> normally if there is an USB error, the endpoint will halt and
-> no traffic will get through it anymore [So the DELBA should be
-> stuck as well!].
+On 02/16/2013 05:00 PM, Jussi Kivilinna wrote:
+> rtlwifi allocates both setup_packet and data buffer of control message urb,
+> using shared kmalloc in _usbctrl_vendorreq_async_write. Structure used for
+> allocating is:
+> 	struct {
+> 		u8 data[254];
+> 		struct usb_ctrlrequest dr;
+> 	};
+>
+> Because 'struct usb_ctrlrequest' is __packed, setup packet is unaligned and
+> DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to memory
+> corruptions and freezes.
+>
+> Patch changes setup packet to be allocated separately.
+>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-The carl9170 usb code seems to be working properly. If tx_anch_urbs
-reaches 8 the overflow is queued in tx_wait as you said, and the next
-queued frame gets delivered from carl9170_usb_tx_data_complete(). The
-stuck frame does get passed to a successful usb_submit_urb() call before
-tx stops, but it still isn't transmitted until the DELBA comes along
-(and tx_anch_urbs decrements to 1 and then gets stuck there while tx is
-stalled, as would be expected).
+The only change I would make is to convert the WARN_ON to WARN_ON_ONCE. In case 
+something goes wrong, there is no need to spam the logs.
 
-> When you were testing this at a different machine, did you
-> use the same cable/hub? Or did you plug it into the USB
-> port directly?
+I am not crazy about the overhead in allocating two different blocks for each 
+output packet, but if it is necessary, then it has to happen.
 
-In both cases the adapter was plugged directly into the machine's USB
-ports.
+Larry
 
-> BTW: Is this a DWA-160 REV A1 or A2?
+> ---
+>   drivers/net/wireless/rtlwifi/usb.c |   44 +++++++++++++++++++++++-------------
+>   1 file changed, 28 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+> index 476eaef..d98fcdb 100644
+> --- a/drivers/net/wireless/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/rtlwifi/usb.c
+> @@ -42,8 +42,12 @@
+>
+>   static void usbctrl_async_callback(struct urb *urb)
+>   {
+> -	if (urb)
+> -		kfree(urb->context);
+> +	if (urb) {
+> +		/* free dr */
+> +		kfree(urb->setup_packet);
+> +		/* free databuf */
+> +		kfree(urb->transfer_buffer);
+> +	}
+>   }
+>
+>   static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+> @@ -55,39 +59,47 @@ static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+>   	u8 reqtype;
+>   	struct usb_ctrlrequest *dr;
+>   	struct urb *urb;
+> -	struct rtl819x_async_write_data {
+> -		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+> -		struct usb_ctrlrequest dr;
+> -	} *buf;
+> +	const u16 databuf_maxlen = REALTEK_USB_VENQT_MAX_BUF_SIZE;
+> +	u8 *databuf;
+> +
+> +	if (WARN_ON(len > databuf_maxlen))
+> +		len = databuf_maxlen;
+>
+>   	pipe = usb_sndctrlpipe(udev, 0); /* write_out */
+>   	reqtype =  REALTEK_USB_VENQT_WRITE;
+>
+> -	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
+> -	if (!buf)
+> +	dr = kmalloc(sizeof(*dr), GFP_ATOMIC);
+> +	if (!dr)
+>   		return -ENOMEM;
+>
+> +	databuf = kmalloc(databuf_maxlen, GFP_ATOMIC);
+> +	if (!databuf) {
+> +		kfree(dr);
+> +		return -ENOMEM;
+> +	}
+> +
+>   	urb = usb_alloc_urb(0, GFP_ATOMIC);
+>   	if (!urb) {
+> -		kfree(buf);
+> +		kfree(databuf);
+> +		kfree(dr);
+>   		return -ENOMEM;
+>   	}
+>
+> -	dr = &buf->dr;
+> -
+>   	dr->bRequestType = reqtype;
+>   	dr->bRequest = request;
+>   	dr->wValue = cpu_to_le16(value);
+>   	dr->wIndex = cpu_to_le16(index);
+>   	dr->wLength = cpu_to_le16(len);
+>   	/* data are already in little-endian order */
+> -	memcpy(buf, pdata, len);
+> +	memcpy(databuf, pdata, len);
+>   	usb_fill_control_urb(urb, udev, pipe,
+> -			     (unsigned char *)dr, buf, len,
+> -			     usbctrl_async_callback, buf);
+> +			     (unsigned char *)dr, databuf, len,
+> +			     usbctrl_async_callback, NULL);
+>   	rc = usb_submit_urb(urb, GFP_ATOMIC);
+> -	if (rc < 0)
+> -		kfree(buf);
+> +	if (rc < 0) {
+> +		kfree(databuf);
+> +		kfree(dr);
+> +	}
+>   	usb_free_urb(urb);
+>   	return rc;
+>   }
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-A2
-
-Thanks,
-Seth
