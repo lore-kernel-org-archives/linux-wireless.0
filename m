@@ -1,133 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.nanl.de ([217.115.11.12]:56781 "EHLO mail.nanl.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760152Ab3BHPqZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 10:46:25 -0500
-Received: from mail-ia0-f174.google.com (mail-ia0-f174.google.com [209.85.210.174])
-	by mail.nanl.de (Postfix) with ESMTPSA id 30853403DD
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2013 15:45:03 +0000 (UTC)
-Received: by mail-ia0-f174.google.com with SMTP id o25so4265261iad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 07:46:18 -0800 (PST)
+Received: from mail-gh0-f173.google.com ([209.85.160.173]:47511 "EHLO
+	mail-gh0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177Ab3BQGil (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Feb 2013 01:38:41 -0500
+Received: by mail-gh0-f173.google.com with SMTP id g2so392504ghb.32
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Feb 2013 22:38:40 -0800 (PST)
+Message-ID: <51207925.5040702@lwfinger.net> (sfid-20130217_073844_625945_C097584C)
+Date: Sun, 17 Feb 2013 00:31:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1360336045-5501-1-git-send-email-jogo@openwrt.org>
-References: <1360336045-5501-1-git-send-email-jogo@openwrt.org>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Fri, 8 Feb 2013 16:45:58 +0100
-Message-ID: <CAOiHx=kq+ocX7RycEDDny5eFDazExWj1sw=nEp1x9frkNe8qQw@mail.gmail.com> (sfid-20130208_164628_691738_C2E1FBC5)
-Subject: Re: [PATCH] mwl8k: fix band for supported channels
-To: linux-wireless@vger.kernel.org
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+To: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Regression caused by commit df88129
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Yogesh and Nishant to the loop - maybe you guys should add
-yourself to MAINTAINERS.
+Jouni and Johannes,
 
-On 8 February 2013 16:07, Jonas Gorski <jogo@openwrt.org> wrote:
-> The band field for the supported channels were left unpopulated, making
-> them default to 0 == IEEE80211_BAND_2GHZ, even for the 5GHz channels.
->
-> This resulted in null pointer accesses if anything tries to access
-> wiphy->bands[channel->band] of a 5GHz channel on 5GHz only cards, since
-> wiphy->bands[2GHZ] is NULL for them (e.g. cfg80211_chandef_usable does).
->
-> Example kernel OOPS:
->
-> [  665.669993] Unable to handle kernel NULL pointer dereference at virtual address 00000016
-> [  665.678194] pgd = c6d58000
-> [  665.680941] [00000016] *pgd=06f8a831, *pte=00000000, *ppte=00000000
-> [  665.687303] Internal error: Oops: 17 [#1]
-> (...)
-> [  666.116373] Backtrace:
-> [  666.118866] [<bf0368dc>] (cfg80211_chandef_usable+0x0/0x1bc [cfg80211]) from [<bf025e64>] (nl80211_leave_mesh+0x244/0x264 [cfg80211])
-> [  666.130919]  r7:c6d12100 r6:0000143c r5:c0611c48 r4:c0611b98
-> [  666.136668] [<bf025d84>] (nl80211_leave_mesh+0x164/0x264 [cfg80211]) from [<bf02634c>] (nl80211_remain_on_channel+0x2a0/0x358 [cfg80211])
-> [  666.149074]  r7:c6d12000 r6:c6d12000 r5:c6f4f368 r4:00000003
-> [  666.154814] [<bf0262ec>] (nl80211_remain_on_channel+0x240/0x358 [cfg80211]) from [<bf02ddb0>] (nl80211_set_wiphy+0x264/0x560 [cfg80211])
-> [  666.167150] [<bf02db4c>] (nl80211_set_wiphy+0x0/0x560 [cfg80211]) from [<c01f94e0>] (genl_rcv_msg+0x1b8/0x1f8)
-> [  666.177205] [<c01f9328>] (genl_rcv_msg+0x0/0x1f8) from [<c01f89a0>] (netlink_rcv_skb+0x58/0xb4)
-> [  666.185949] [<c01f8948>] (netlink_rcv_skb+0x0/0xb4) from [<c01f931c>] (genl_rcv+0x20/0x2c)
-> [  666.194251]  r6:c6f70780 r5:0000002c r4:c6f70780 r3:00000001
-> [  666.199973] [<c01f92fc>] (genl_rcv+0x0/0x2c) from [<c01f8418>] (netlink_unicast+0x154/0x1f4)
-> [  666.208449]  r4:c785ea00 r3:c01f92fc
-> [  666.212057] [<c01f82c4>] (netlink_unicast+0x0/0x1f4) from [<c01f8790>] (netlink_sendmsg+0x230/0x2b0)
-> [  666.221240] [<c01f8560>] (netlink_sendmsg+0x0/0x2b0) from [<c01cccf8>] (sock_sendmsg+0x90/0xa4)
-> [  666.229986] [<c01ccc68>] (sock_sendmsg+0x0/0xa4) from [<c01cdcb0>] (__sys_sendmsg+0x290/0x298)
-> [  666.238637]  r9:00000000 r8:c0611ec8 r6:0000002c r5:c0610000 r4:c0611f64
-> [  666.245411] [<c01cda20>] (__sys_sendmsg+0x0/0x298) from [<c01cf52c>] (sys_sendmsg+0x44/0x6c)
-> [  666.253897] [<c01cf4e8>] (sys_sendmsg+0x0/0x6c) from [<c00090a0>] (ret_fast_syscall+0x0/0x2c)
-> [  666.262460]  r6:00000000 r5:beeff96c r4:00000005
->
-> Signed-off-by: Jonas Gorski <jogo@openwrt.org>
-> ---
-> I abbreviated the OOPS to the (IMHO) important parts, to keep it short
-> and readable.
->
->  drivers/net/wireless/mwl8k.c |   36 ++++++++++++++++++------------------
->  1 file changed, 18 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> index 51634f2..3437670 100644
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -334,20 +334,20 @@ struct mwl8k_sta {
->  #define MWL8K_STA(_sta) ((struct mwl8k_sta *)&((_sta)->drv_priv))
->
->  static const struct ieee80211_channel mwl8k_channels_24[] = {
-> -       { .center_freq = 2412, .hw_value = 1, },
-> -       { .center_freq = 2417, .hw_value = 2, },
-> -       { .center_freq = 2422, .hw_value = 3, },
-> -       { .center_freq = 2427, .hw_value = 4, },
-> -       { .center_freq = 2432, .hw_value = 5, },
-> -       { .center_freq = 2437, .hw_value = 6, },
-> -       { .center_freq = 2442, .hw_value = 7, },
-> -       { .center_freq = 2447, .hw_value = 8, },
-> -       { .center_freq = 2452, .hw_value = 9, },
-> -       { .center_freq = 2457, .hw_value = 10, },
-> -       { .center_freq = 2462, .hw_value = 11, },
-> -       { .center_freq = 2467, .hw_value = 12, },
-> -       { .center_freq = 2472, .hw_value = 13, },
-> -       { .center_freq = 2484, .hw_value = 14, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2412, .hw_value = 1, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2417, .hw_value = 2, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2422, .hw_value = 3, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2427, .hw_value = 4, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2432, .hw_value = 5, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2437, .hw_value = 6, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2442, .hw_value = 7, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2447, .hw_value = 8, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2452, .hw_value = 9, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2457, .hw_value = 10, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2462, .hw_value = 11, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2467, .hw_value = 12, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2472, .hw_value = 13, },
-> +       { .band = IEEE80211_BAND_2GHZ, .center_freq = 2484, .hw_value = 14, },
->  };
->
->  static const struct ieee80211_rate mwl8k_rates_24[] = {
-> @@ -368,10 +368,10 @@ static const struct ieee80211_rate mwl8k_rates_24[] = {
->  };
->
->  static const struct ieee80211_channel mwl8k_channels_50[] = {
-> -       { .center_freq = 5180, .hw_value = 36, },
-> -       { .center_freq = 5200, .hw_value = 40, },
-> -       { .center_freq = 5220, .hw_value = 44, },
-> -       { .center_freq = 5240, .hw_value = 48, },
-> +       { .band = IEEE80211_BAND_5GHZ, .center_freq = 5180, .hw_value = 36, },
-> +       { .band = IEEE80211_BAND_5GHZ, .center_freq = 5200, .hw_value = 40, },
-> +       { .band = IEEE80211_BAND_5GHZ, .center_freq = 5220, .hw_value = 44, },
-> +       { .band = IEEE80211_BAND_5GHZ, .center_freq = 5240, .hw_value = 48, },
->  };
->
->  static const struct ieee80211_rate mwl8k_rates_50[] = {
-> --
-> 1.7.10.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A recent pull of the wireless-testing tree caused my wireless to break. The 
+wireless devices can authenticate and associate as follows:
+
+wlan0: authenticate with c0:3f:0e:be:2b:44
+wlan0: capabilities/regulatory prevented using AP HT/VHT configuration, downgraded
+wlan0: send auth to c0:3f:0e:be:2b:44 (try 1/3)
+wlan0: authenticated
+wlan0: associate with c0:3f:0e:be:2b:44 (try 1/3)
+wlan0: RX AssocResp from c0:3f:0e:be:2b:44 (capab=0x411 status=0 aid=3)
+wlan0: associated
+IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
+b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: 
+c0:3f:0e:be:2b:44
+b43-phy0 debug: Using hardware based encryption for keyidx: 1, mac: 
+ff:ff:ff:ff:ff:ff
+wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
+wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
+
+These dropped frame messages persist, and prevent the connection from being 
+completed. The code in question is in routine ieee80211_subif_start_xmit() of 
+file net/mac80211/tx.c as follows:
+
+==============================================================
+         if (unlikely(!ieee80211_vif_is_mesh(&sdata->vif) &&
+                      !is_multicast_ether_addr(hdr.addr1) && !authorized &&
+                      (cpu_to_be16(ethertype) != sdata->control_port_protocol ||
+                       !ether_addr_equal(sdata->vif.addr, skb->data + ETH_ALEN)))) {
+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+                 net_info_ratelimited("%s: dropped frame to %pM (unauthorized 
+port)\n",
+                                     dev->name, hdr.addr1);
+#endif
+
+                 I802_DEBUG_INC(local->tx_handlers_drop_unauth_port);
+
+                 goto fail_rcu;
+         }
+==============================================================
+
+When the if statement is rewritten as 'if (A || B)', it turns out that A is 
+true, and B is false.
+
+The regression was bisected to commit df881293c6ba9a12868491a717b25cb14ec1fa4a.
+
+==============================================================
+commit df881293c6ba9a12868491a717b25cb14ec1fa4a
+Author: Jouni Malinen <jouni@qca.qualcomm.com>
+Date:   Thu Feb 14 21:10:54 2013 +0200
+
+     cfg80211: Pass TDLS peer's QoS/HT/VHT information during set_station
+
+     The information of the peer's capabilities is required for the driver
+     to perform TDLS Peer UAPSD operations. This information of the peer is
+     passed by the supplicant using NL80211_CMD_SET_STATION command. This
+     commit enhances the function nl80211_set_station to pass this
+     information of the peer to the driver in case this command is used
+     with the TDLS peer STA.
+
+     In addition, make the HT/VHT capability configuration handled more
+     consistently for other STA cases (reject both instead of just HT).
+
+     Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+==============================================================
+
+If you need any more debugging output for this problem, please let me know.
+
+Thanks,
+
+Larry
