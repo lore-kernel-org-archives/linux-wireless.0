@@ -1,66 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50250 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933782Ab3BTJPV (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:35491 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab3BQIiI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 04:15:21 -0500
-Message-ID: <1361351703.8629.5.camel@jlt4.sipsolutions.net> (sfid-20130220_101537_804793_4DC135F4)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 10:15:03 +0100
-In-Reply-To: <1361351538.8629.3.camel@jlt4.sipsolutions.net> (sfid-20130220_101252_930264_DBD3955C)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 17 Feb 2013 03:38:08 -0500
+Message-ID: <20130217103804.1927484whwl62fwg@www.dalek.fi> (sfid-20130217_093812_634447_C6E205A7)
+Date: Sun, 17 Feb 2013 10:38:04 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb: allocate URB control message
+ setup_packet and data buffer separately
+References: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
+ <51201AB8.4060700@lwfinger.net> <512037A5.2010203@gmail.com>
+In-Reply-To: <512037A5.2010203@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 10:12 +0100, Johannes Berg wrote:
-> On Tue, 2013-02-19 at 08:21 -0800, Eric Dumazet wrote:
-> > On Tue, 2013-02-19 at 11:03 +0100, Johannes Berg wrote:
-> > > On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
-> > > 
-> > > > > chrome: page allocation failure: order:1, mode:0x4020
-> > > > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > > > > Call Trace:
-> > > > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
-> > > 
-> > > > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> > > > 
-> > > > It should hopefully use order-0 pages
-> > > 
-> > > It will, do that then, unfortunately it can't switch at runtime because
-> > > it advertised this support to the access point or clients.
-> > 
-> > What are the drawbacks of setting amsdu_size_8K to 0 by default ?
-> 
-> We're discussing this now, the only downside would be that we couldn't
-> receive 8k A-MSDUs. Thing is, practically nobody uses A-MSDU anyway, and
-> even when I suspect the difference between 4k and 8k won't be huge.
+Quoting Dave Kilroy <kilroyd@googlemail.com>:
 
-OTOH, this affects the protocol, and when you really can't allocate any
-order-1 pages you pointed out yourself that many other things also won't
-work, so I'm not really sure it makes a big difference if we change the
-driver?
+> On 16/02/2013 23:48, Larry Finger wrote:
+>> On 02/16/2013 05:00 PM, Jussi Kivilinna wrote:
+>>> rtlwifi allocates both setup_packet and data buffer of control message urb,
+>>> using shared kmalloc in _usbctrl_vendorreq_async_write. Structure used for
+>>> allocating is:
+>>>    struct {
+>>>        u8 data[254];
+>>>        struct usb_ctrlrequest dr;
+>>>    };
+>>>
+>>> Because 'struct usb_ctrlrequest' is __packed, setup packet is unaligned and
+>>> DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to memory
+>>> corruptions and freezes.
+>>>
+>>> Patch changes setup packet to be allocated separately.
+>>
+>> I am not crazy about the overhead in allocating two different  
+>> blocks for each output packet, but if it is necessary, then it has  
+>> to happen.
+>>>  static int _usbctrl_vendorreq_async_write(struct usb_device  
+>>> *udev, u8 request,
+>>> @@ -55,39 +59,47 @@ static int  
+>>> _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+>>>      u8 reqtype;
+>>>      struct usb_ctrlrequest *dr;
+>>>      struct urb *urb;
+>>> -    struct rtl819x_async_write_data {
+>>> -        u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+>>> -        struct usb_ctrlrequest dr;
+>>> -    } *buf;
+>>
+>
+> If dr isn't at the appropriate alignment, wouldn't padding out the  
+> data buffer achieve the same thing? Something like:
+>
+> struct rtl819x_async_write_data {
+> -        u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+> +        u8 data[ALIGN(REALTEK_USB_VENQT_MAX_BUF_SIZE, ALIGNMENT)];
+>         struct usb_ctrlrequest dr;
+>     } *buf;
+>
+> Where ALIGNMENT is whatever the required alignment is.
 
-johannes
+Either it needs to be ARCH_DMA_MINALIGN (need to use ifdefs) or  
+KMALLOC_MIN_ALIGN, which appearently is defined only for SLUB, not  
+SLAB or SLOB.
+
+-Jussi
+
+>
+>
+> Dave.
+>
+>
+
+
 
