@@ -1,80 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:60887 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759770Ab3BMPtT (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:38052 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754710Ab3BQBvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 10:49:19 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-	Michael Braun <michael-dev@fami-braun.de>
-Subject: [PATCHv6 0/2] mac80211: fix VLAN support on AP with ps-sta
-Date: Wed, 13 Feb 2013 16:49:14 +0100
-Message-Id: <1360770556-6716-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130213_164936_016905_0C22257E)
+	Sat, 16 Feb 2013 20:51:37 -0500
+Message-ID: <512037A5.2010203@gmail.com> (sfid-20130217_025142_011029_F0F70DB1)
+Date: Sun, 17 Feb 2013 01:51:33 +0000
+From: Dave Kilroy <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb: allocate URB control message setup_packet
+ and data buffer separately
+References: <20130216230016.15041.99979.stgit@localhost6.localdomain6> <51201AB8.4060700@lwfinger.net>
+In-Reply-To: <51201AB8.4060700@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+On 16/02/2013 23:48, Larry Finger wrote:
+> On 02/16/2013 05:00 PM, Jussi Kivilinna wrote:
+>> rtlwifi allocates both setup_packet and data buffer of control 
+>> message urb,
+>> using shared kmalloc in _usbctrl_vendorreq_async_write. Structure 
+>> used for
+>> allocating is:
+>>     struct {
+>>         u8 data[254];
+>>         struct usb_ctrlrequest dr;
+>>     };
+>>
+>> Because 'struct usb_ctrlrequest' is __packed, setup packet is 
+>> unaligned and
+>> DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to 
+>> memory
+>> corruptions and freezes.
+>>
+>> Patch changes setup packet to be allocated separately.
+>
+> I am not crazy about the overhead in allocating two different blocks 
+> for each output packet, but if it is necessary, then it has to happen.
+>>   static int _usbctrl_vendorreq_async_write(struct usb_device *udev, 
+>> u8 request,
+>> @@ -55,39 +59,47 @@ static int _usbctrl_vendorreq_async_write(struct 
+>> usb_device *udev, u8 request,
+>>       u8 reqtype;
+>>       struct usb_ctrlrequest *dr;
+>>       struct urb *urb;
+>> -    struct rtl819x_async_write_data {
+>> -        u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+>> -        struct usb_ctrlrequest dr;
+>> -    } *buf;
+>
 
-Users are affected by not receiving the broadcasts indended for them, which for
-example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
-might be affected as packets might be disclosed to non-intended stas, though
-mixing vlan and non-vlan stas might be rare.
-This problem is triggered more often by smartphones (which enabled me to track
-it down) as they power sleep more often (I guess), but a single sleeping sta on
-the ap stops the packet for all connected stas of the ap.
-The problem exists in older kernels (at least 3.3.7) as well.
+If dr isn't at the appropriate alignment, wouldn't padding out the data 
+buffer achieve the same thing? Something like:
 
-The following patch fixes this by restoring the per-vlan sdata using the
-skb->dev entry.
+struct rtl819x_async_write_data {
+-        u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
++        u8 data[ALIGN(REALTEK_USB_VENQT_MAX_BUF_SIZE, ALIGNMENT)];
+         struct usb_ctrlrequest dr;
+     } *buf;
 
-This patch works for me with the vlan-interface within a bridge.
-Is the bc_buf cleanup safe this way or does it need locks?
+Where ALIGNMENT is whatever the required alignment is.
 
-Would it be better to maintain the power sleeping state of the stas on a
-per-interface basis, as this would permit one group of non-sleeping stas to
-receive while another group has sleeping stas? Of course this would not
-prevent non-targetted groups of stas to be waked up, but implementing the
-latter sounds difficult to me.
 
-Thanks to Johannes Berg for his help with this patch series.
-
-Example old backtrace:
-
-Using good key:
-[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
-
-Using wrong key:
-[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
-
-Example new backtrace:
-[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
-
-Michael Braun (2):
-  mac80211: free ps->bc_buf skbs on vlan device stop
-  mac80211: fix WPA with VLAN on AP side with ps-sta
-
- net/mac80211/iface.c |   14 ++++++++++++++
- net/mac80211/tx.c    |    1 +
- 2 files changed, 15 insertions(+)
-
--- 
-1.7.10.4
-
+Dave.
