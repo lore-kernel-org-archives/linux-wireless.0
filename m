@@ -1,45 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47692 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135Ab3BLQCN (ORCPT
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:32918 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab3BQIjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:13 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/15] iwlwifi: don't ack the card state notification
-Date: Tue, 12 Feb 2013 17:01:53 +0100
-Message-Id: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170216_256139_A92A6B96)
-In-Reply-To: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
+	Sun, 17 Feb 2013 03:39:20 -0500
+Message-ID: <20130217103918.20454kiev61cyt2c@www.dalek.fi> (sfid-20130217_093924_015767_124DAFCE)
+Date: Sun, 17 Feb 2013 10:39:18 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb: allocate URB control message
+ setup_packet and data buffer separately
+References: <20130216230016.15041.99979.stgit@localhost6.localdomain6>
+ <51201AB8.4060700@lwfinger.net>
+In-Reply-To: <51201AB8.4060700@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Quoting Larry Finger <Larry.Finger@lwfinger.net>:
 
-This is not needed with MVM firmware.
+> On 02/16/2013 05:00 PM, Jussi Kivilinna wrote:
+>> rtlwifi allocates both setup_packet and data buffer of control message urb,
+>> using shared kmalloc in _usbctrl_vendorreq_async_write. Structure used for
+>> allocating is:
+>> 	struct {
+>> 		u8 data[254];
+>> 		struct usb_ctrlrequest dr;
+>> 	};
+>>
+>> Because 'struct usb_ctrlrequest' is __packed, setup packet is unaligned and
+>> DMA mapping of both 'data' and 'dr' confuses ARM/sunxi, leading to memory
+>> corruptions and freezes.
+>>
+>> Patch changes setup packet to be allocated separately.
+>>
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>
+> The only change I would make is to convert the WARN_ON to  
+> WARN_ON_ONCE. In case something goes wrong, there is no need to spam  
+> the logs.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw.c | 4 ----
- 1 file changed, 4 deletions(-)
+Ok.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 90473c2..d3d959d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -621,10 +621,6 @@ int iwl_mvm_rx_card_state_notif(struct iwl_mvm *mvm,
- 			  (flags & CT_KILL_CARD_DISABLED) ?
- 			  "Reached" : "Not reached");
- 
--	if (flags & CARD_DISABLED_MSK)
--		iwl_write32(mvm->trans, CSR_UCODE_DRV_GP1_SET,
--			    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
--
- 	return 0;
- }
- 
--- 
-1.8.0
+>
+> I am not crazy about the overhead in allocating two different blocks  
+> for each output packet, but if it is necessary, then it has to happen.
+>
+
+It already happens for '*_sync_read' calls, where setup_packet is  
+alloced in 'usb_control_message'.
+
+-Jussi
+
+> Larry
+>
+>> ---
+>>  drivers/net/wireless/rtlwifi/usb.c |   44  
+>> +++++++++++++++++++++++-------------
+>>  1 file changed, 28 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/usb.c  
+>> b/drivers/net/wireless/rtlwifi/usb.c
+>> index 476eaef..d98fcdb 100644
+>> --- a/drivers/net/wireless/rtlwifi/usb.c
+>> +++ b/drivers/net/wireless/rtlwifi/usb.c
+>> @@ -42,8 +42,12 @@
+>>
+>>  static void usbctrl_async_callback(struct urb *urb)
+>>  {
+>> -	if (urb)
+>> -		kfree(urb->context);
+>> +	if (urb) {
+>> +		/* free dr */
+>> +		kfree(urb->setup_packet);
+>> +		/* free databuf */
+>> +		kfree(urb->transfer_buffer);
+>> +	}
+>>  }
+>>
+>>  static int _usbctrl_vendorreq_async_write(struct usb_device *udev,  
+>> u8 request,
+>> @@ -55,39 +59,47 @@ static int  
+>> _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+>>  	u8 reqtype;
+>>  	struct usb_ctrlrequest *dr;
+>>  	struct urb *urb;
+>> -	struct rtl819x_async_write_data {
+>> -		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+>> -		struct usb_ctrlrequest dr;
+>> -	} *buf;
+>> +	const u16 databuf_maxlen = REALTEK_USB_VENQT_MAX_BUF_SIZE;
+>> +	u8 *databuf;
+>> +
+>> +	if (WARN_ON(len > databuf_maxlen))
+>> +		len = databuf_maxlen;
+>>
+>>  	pipe = usb_sndctrlpipe(udev, 0); /* write_out */
+>>  	reqtype =  REALTEK_USB_VENQT_WRITE;
+>>
+>> -	buf = kmalloc(sizeof(*buf), GFP_ATOMIC);
+>> -	if (!buf)
+>> +	dr = kmalloc(sizeof(*dr), GFP_ATOMIC);
+>> +	if (!dr)
+>>  		return -ENOMEM;
+>>
+>> +	databuf = kmalloc(databuf_maxlen, GFP_ATOMIC);
+>> +	if (!databuf) {
+>> +		kfree(dr);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>>  	urb = usb_alloc_urb(0, GFP_ATOMIC);
+>>  	if (!urb) {
+>> -		kfree(buf);
+>> +		kfree(databuf);
+>> +		kfree(dr);
+>>  		return -ENOMEM;
+>>  	}
+>>
+>> -	dr = &buf->dr;
+>> -
+>>  	dr->bRequestType = reqtype;
+>>  	dr->bRequest = request;
+>>  	dr->wValue = cpu_to_le16(value);
+>>  	dr->wIndex = cpu_to_le16(index);
+>>  	dr->wLength = cpu_to_le16(len);
+>>  	/* data are already in little-endian order */
+>> -	memcpy(buf, pdata, len);
+>> +	memcpy(databuf, pdata, len);
+>>  	usb_fill_control_urb(urb, udev, pipe,
+>> -			     (unsigned char *)dr, buf, len,
+>> -			     usbctrl_async_callback, buf);
+>> +			     (unsigned char *)dr, databuf, len,
+>> +			     usbctrl_async_callback, NULL);
+>>  	rc = usb_submit_urb(urb, GFP_ATOMIC);
+>> -	if (rc < 0)
+>> -		kfree(buf);
+>> +	if (rc < 0) {
+>> +		kfree(databuf);
+>> +		kfree(dr);
+>> +	}
+>>  	usb_free_urb(urb);
+>>  	return rc;
+>>  }
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+
+
 
