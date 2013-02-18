@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:56641 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab3B0Gz0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44354 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756926Ab3BRWUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 01:55:26 -0500
-Message-ID: <512DADCA.9040609@asianux.com> (sfid-20130227_075535_184267_CB40922C)
-Date: Wed, 27 Feb 2013 14:55:06 +0800
-From: Chen Gang <gang.chen@asianux.com>
-MIME-Version: 1.0
-To: qca_vkondrat@qca.qualcomm.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>
-Subject: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror
- when no -W* in EXTRA_CFLAGS
-Content-Type: text/plain; charset=GB2312
+	Mon, 18 Feb 2013 17:20:08 -0500
+Message-ID: <1361226001.8555.51.camel@jlt4.sipsolutions.net> (sfid-20130218_232013_821654_A677B8AE)
+Subject: Re: [PATCH v2] iw: add packet offset information for wowlan pattern
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 18 Feb 2013 23:20:01 +0100
+In-Reply-To: <1360700187-22806-2-git-send-email-bzhao@marvell.com>
+References: <1360700187-22806-1-git-send-email-bzhao@marvell.com>
+	 <1360700187-22806-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-02-12 at 12:16 -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Now user can provide packet offset along with the pattern in
+> "iw wowlan" command. Default offset will be 0 when it is not
+> provided.
+> 
+> A trailing ':' should be used for single byte pattern to
+> distinguish it from an offset.
+> Ex. "iw phy phy# wowlan patterns 18 43:" means wakeup on
+> offset 18 pattern 0x43.
 
-  When make with EXTRA_CFLAGS=-W, it will report error.
-  so give a check in Makefile.
+>  			if (tb_wowlan[NL80211_WOWLAN_TRIG_PKT_PATTERN]) {
+>  				pat = nla_data(tb_wowlan[NL80211_WOWLAN_TRIG_PKT_PATTERN]);
+> -				printf("\t\t * wake up on pattern match, up to %u patterns of %u-%u bytes\n",
+> -					pat->max_patterns, pat->min_pattern_len, pat->max_pattern_len);
+> +				printf("\t\t * wake up on pattern match, up to %u patterns of %u-%u bytes,\n"
+> +					"\t\t   maximum packet offset %u bytes\n",
+> +					pat->max_patterns, pat->min_pattern_len, pat->max_pattern_len, pat->max_pkt_offset);
 
-Signed-off-by: Chen Gang <gang.chen@asianux.com>
----
- drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+This will in the best case print something random on old kernels, and in
+the absolute worst case crash, so please fix that by detecting the size
+of the struct.
 
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index 9396dc9..d288eea 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -9,5 +9,7 @@ wil6210-objs += wmi.o
- wil6210-objs += interrupt.o
- wil6210-objs += txrx.o
- 
--subdir-ccflags-y += -Werror
-+ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
-+	subdir-ccflags-y += -Werror
-+endif
- subdir-ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.7.7.6
+johannes
+
