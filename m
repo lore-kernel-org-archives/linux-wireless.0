@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:53772 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731Ab3BRLiP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43786 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199Ab3BRTDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 06:38:15 -0500
-From: Kumar Amit Mehta <gmate.amit@gmail.com>
-To: linville@tuxdriver.com
-Cc: sarah.a.sharp@linux.intel.com, dan.carpenter@oracle.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] net: wireless: orinoco: orinoco_usb.c: fix DMA buffers on stack
-Date: Mon, 18 Feb 2013 03:37:44 -0800
-Message-Id: <1361187464-24174-1-git-send-email-gmate.amit@gmail.com> (sfid-20130218_124017_014601_2386C8D4)
+	Mon, 18 Feb 2013 14:03:32 -0500
+Message-ID: <1361214203.8555.40.camel@jlt4.sipsolutions.net> (sfid-20130218_200335_423752_A342798B)
+Subject: Re: [PATCH] mac80211: fix the problem of unicast forwarding from DS
+ to DS in Mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	cedric.voncken@acksys.fr
+Date: Mon, 18 Feb 2013 20:03:23 +0100
+In-Reply-To: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130218_124724_975470_FED20EF3)
+References: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20130218_124724_975470_FED20EF3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an instance of DMA buffer on stack(being passed to
-usb_control_msg) for the wireless USB version of the Agere Orinoco card driver.
-It also fixes the missing audit for the return value of firmware download
-routine. Found using smatch.
+On Mon, 2013-02-18 at 19:16 +0800, Chun-Yeow Yeoh wrote:
+> Unicast frame with unknown forwarding information always trigger
+> the path discovery assuming destination is always located inside the
+> MBSS. This patch allows the forwarding to look for mesh gate if path
+> discovery inside the MBSS has failed.
+> 
+> Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  net/mac80211/tx.c |   15 ++++++++++++---
+>  1 files changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 5b9602b..dce3af3 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1844,9 +1844,18 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>  		}
+>  
+>  		if (!is_multicast_ether_addr(skb->data)) {
+> -			mpath = mesh_path_lookup(sdata, skb->data);
+> -			if (!mpath)
+> -				mppath = mpp_path_lookup(sdata, skb->data);
+> +			struct sta_info *next_hop;
+> +
+> +			mpath = mesh_path_lookup(skb->data, sdata);
+> +			if (mpath)
+> +				next_hop = rcu_dereference(mpath->next_hop);
+> +
+> +			if (!mpath || (mpath && (!next_hop ||
+> +					!(mpath->flags & MESH_PATH_ACTIVE))))
+> +				mppath = mpp_path_lookup(skb->data, sdata);
 
-Signed-off-by: Kumar Amit Mehta <gmate.amit@gmail.com>
----
- drivers/net/wireless/orinoco/orinoco_usb.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Heck, even the logic is wrong. Ok actually just weird -- if (!mpath || !
+next_hop || ...) would be totally sufficient.
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index 01624dc..7744f42 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -804,10 +804,15 @@ static inline int ezusb_8051_cpucs(struct ezusb_priv *upriv, int reset)
- static int ezusb_firmware_download(struct ezusb_priv *upriv,
- 				   struct ez_usb_fw *fw)
- {
--	u8 fw_buffer[FW_BUF_SIZE];
-+	u8 *fw_buffer;
- 	int retval, addr;
- 	int variant_offset;
- 
-+	fw_buffer = kmalloc(FW_BUF_SIZE, GFP_KERNEL);
-+	if (!fw_buffer) {
-+		printk(KERN_ERR PFX "Out of memory for firmware buffer.\n");
-+		return -ENOMEM;
-+	}
- 	/*
- 	 * This byte is 1 and should be replaced with 0.  The offset is
- 	 * 0x10AD in version 0.0.6.  The byte in question should follow
-@@ -859,6 +864,7 @@ static int ezusb_firmware_download(struct ezusb_priv *upriv,
- 	printk(KERN_ERR PFX "Firmware download failed, error %d\n",
- 	       retval);
-  exit:
-+	kfree(fw_buffer);
- 	return retval;
- }
- 
-@@ -1681,7 +1687,8 @@ static int ezusb_probe(struct usb_interface *interface,
- 		firmware.code = fw_entry->data;
- 	}
- 	if (firmware.size && firmware.code) {
--		ezusb_firmware_download(upriv, &firmware);
-+		if (ezusb_firmware_download(upriv, &firmware))
-+			goto error;
- 	} else {
- 		err("No firmware to download");
- 		goto error;
--- 
-1.7.9.5
+> +			if (mppath && mpath)
+> +				mesh_path_del(mpath->dst, mpath->sdata);
+
+You really delete paths because packets are transmitted along them?
+
+johannes
 
