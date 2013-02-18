@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:54643 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752999Ab3BTFN5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 00:13:57 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 19 Feb 2013 21:06:03 -0800
-Subject: RE: mwifiex crash when removing interface while scanning
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com> (sfid-20130220_061401_128644_352F63CC)
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:42333 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978Ab3BRLNU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 06:13:20 -0500
+Message-ID: <1361185996.8555.7.camel@jlt4.sipsolutions.net> (sfid-20130218_121322_548919_13510956)
+Subject: Re: patch : mac80211:Multicast patch for linux-2.6.28.1 (wl12xx
+ drivers)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Girish Bn <Girish.BN@lnties.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 18 Feb 2013 12:13:16 +0100
+In-Reply-To: <1361185913.8555.6.camel@jlt4.sipsolutions.net> (sfid-20130218_121202_160075_39158588)
+References: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com>
+	 (sfid-20130218_120856_334947_2BD0FBB7) <1361185913.8555.6.camel@jlt4.sipsolutions.net>
+	 (sfid-20130218_121202_160075_39158588)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
-
-> > insmod mwifiex_sdio.ko
-> > sleep 1
-> > ifconfig eth0 up
-> > iwlist eth0 scan &
-> > sleep 0.5
-> > rmmod mwifiex_sdio
-> >
-> > It normally runs fine the first time, no errors, but run it again and
-> > it terminates with these errors:
-> >
-> >     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
-> >     eth0      Failed to read scan data : No such device
-
-After this error message, do you see the sd8787 card is removed from the bus?
-
-"mmc0: card 0001 removed"
-
-> >
-> > From this point, things are pretty screwed up. Try to load the driver again...
-> >
-> > insmod mwifiex_sdio.ko
-> > mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
-> > mwifiex_sdio mmc0:0001:1: WLAN FW is active
-> > mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
-> > (331.391420) = 0xa9, act = 0x0
-> > mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
-> > mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
-> > mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
-> > mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
-> > mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
-> > mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
-> > mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
-> > mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
-> > mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
-> > mwifiex_sdio mmc0:0001:1: last_event_index = 0
-> > mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
-> > mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
-> > mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
-> > mwifiex_sdio mmc0:0001:1: cmd timeout
-> > mwifiex_sdio: Resetting card...
-> > WARNING: driver mwifiex_sdio did not remove its interrupt handler!
-> > mmc0: card 0001 removed
-> >
-> > and it doesn't come back.
-> >
-> > Let me know how we can help further debugging.
+On Mon, 2013-02-18 at 12:11 +0100, Johannes Berg wrote:
+> On Mon, 2013-02-18 at 11:09 +0000, Girish Bn wrote:
+> > Hi All,
+> > 
+> > The below patch file is required in order for the multicasting to work properly on Linux kernel below 3.2 for wl12xx drivers
+> > diff -Naur a/net/mac80211/iface.c b/net/mac80211/iface.c
+> > --- a/net/mac80211/iface.c          2012-09-22 22:59:15.000000000 +0530
+> > +++ b/net/mac80211/iface.c      2013-02-07 12:06:03.958268798 +0530
+> > @@ -811,6 +811,9 @@
+> >                .ndo_uninit                        = ieee80211_teardown_sdata,
+> >                .ndo_start_xmit                               = ieee80211_subif_start_xmit,
+> >                .ndo_set_rx_mode        = ieee80211_set_multicast_list,
+> > +#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0))
+> > +             .ndo_set_multicast_list = ieee80211_set_multicast_list,
+> > +#endif
 > 
-> I will try this test with my SD8787 card and get back to you later.
+> LOL.
 
-My card works fine with a Ricoh controller on x86_64 machine. Of course the power is not cut when I remove the mwifiex_sdio module.
+Also this:
 
-I can upgrade my XO-4 to kernel 3.8 if feasible. Please let me know if a HOW-TO doc is available.
+> This mail is classified as :
+> (  ) L&T IES Proprietary
+> (  ) L&T IES Confidential
+> (X) L&T IES Internal Use
+> ( ) L&T IES General Business
 
-Thanks,
-Bing
+
+In other words, you never even wanted me to see that email, which is
+just as well since it's completely bogus for upstream.
+
+johannes
 
