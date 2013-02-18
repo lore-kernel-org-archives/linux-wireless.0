@@ -1,129 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25944 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754001Ab3BDLx0 (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:50118 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755401Ab3BRQIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 06:53:26 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/2] wireless: expand per-station byte counters to 64bit
-Date: Mon, 4 Feb 2013 13:53:11 +0200
-Message-ID: <1359978792-7121-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130204_125330_118178_E755F29A)
-In-Reply-To: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 18 Feb 2013 11:08:43 -0500
+Received: by mail-bk0-f41.google.com with SMTP id q16so2607415bkw.14
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 08:08:41 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Cc: sleffler@google.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [PATCHv2 3/3] ath9k: mesh powersave support
+Date: Mon, 18 Feb 2013 17:08:29 +0100
+Message-Id: <1361203709-16669-3-git-send-email-marco@cozybit.com> (sfid-20130218_170858_273728_8571E617)
+In-Reply-To: <1361203709-16669-1-git-send-email-marco@cozybit.com>
+References: <1361203709-16669-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In per-station statistics, present 32bit counters are too small
-for practical purposes - with gigabit speeds, it get overlapped
-every few seconds.
+Register mesh PS ops on interface add and de-register on
+removal.
 
-Expand counters in the struct station_info to be 64-bit.
-Driver can still fill only 32-bit and indicate in @filled
-only bits like STATION_INFO_[TR]X_BYTES; in case driver provides
-full 64-bit counter, it should also set in @filled
-bit STATION_INFO_[TR]RX_BYTES64
+React to doze/wakeup calls issued by mac80211.
+Add a PS status flag PS_MAC80211_CTL to store last mesh PS
+command from mac80211.
 
-Netlink sends both 32-bit and 64-bit counters, if present, to not break
-user space.
+Initialize HW beacon wakeup registers.
+On doze call configure the HW to wakeup on the given TSF value.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Marco Porsch <marco@cozybit.com>
 ---
- include/net/cfg80211.h       |   12 ++++++++----
- include/uapi/linux/nl80211.h |    4 ++++
- net/wireless/nl80211.c       |   10 +++++++++-
- 3 files changed, 21 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
+ drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.c     |   17 +++++++--
+ drivers/net/wireless/ath/ath9k/main.c   |   63 ++++++++++++++++++++++++++++++-
+ 4 files changed, 95 insertions(+), 7 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 36e076e..bcb6b70 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -672,8 +672,10 @@ struct station_parameters {
-  * @STATION_INFO_SIGNAL: @signal filled
-  * @STATION_INFO_TX_BITRATE: @txrate fields are filled
-  *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
-- * @STATION_INFO_RX_PACKETS: @rx_packets filled
-- * @STATION_INFO_TX_PACKETS: @tx_packets filled
-+ * @STATION_INFO_RX_PACKETS: @rx_packets filled with 32-bit value
-+ * @STATION_INFO_TX_PACKETS: @tx_packets filled with 32-bit value
-+ * @STATION_INFO_RX_PACKETS64: @rx_packets filled with 64-bit value
-+ * @STATION_INFO_TX_PACKETS64: @tx_packets filled with 64-bit value
-  * @STATION_INFO_TX_RETRIES: @tx_retries filled
-  * @STATION_INFO_TX_FAILED: @tx_failed filled
-  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
-@@ -714,6 +716,8 @@ enum station_info_flags {
- 	STATION_INFO_LOCAL_PM		= 1<<21,
- 	STATION_INFO_PEER_PM		= 1<<22,
- 	STATION_INFO_NONPEER_PM		= 1<<23,
-+	STATION_INFO_RX_BYTES64		= 1<<24,
-+	STATION_INFO_TX_BYTES64		= 1<<25,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 97c90b2..b82727b 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -652,6 +652,7 @@ enum sc_op_flags {
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
+ #define PS_WAIT_FOR_ANI           BIT(5)
++#define PS_MAC80211_CTL           BIT(6)
  
- /**
-@@ -835,8 +839,8 @@ struct station_info {
- 	u32 filled;
- 	u32 connected_time;
- 	u32 inactive_time;
--	u32 rx_bytes;
--	u32 tx_bytes;
-+	u64 rx_bytes;
-+	u64 tx_bytes;
- 	u16 llid;
- 	u16 plid;
- 	u8 plink_state;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7dbc1..5c7d54c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1851,6 +1851,8 @@ enum nl80211_sta_bss_param {
-  * @NL80211_STA_INFO_INACTIVE_TIME: time since last activity (u32, msecs)
-  * @NL80211_STA_INFO_RX_BYTES: total received bytes (u32, from this station)
-  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this station)
-+ * @NL80211_STA_INFO_RX_BYTES64: total received bytes (u64, from this station)
-+ * @NL80211_STA_INFO_TX_BYTES64: total transmitted bytes (u64, to this station)
-  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
-  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
-  * 	containing info as possible, see &enum nl80211_rate_info
-@@ -1903,6 +1905,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_LOCAL_PM,
- 	NL80211_STA_INFO_PEER_PM,
- 	NL80211_STA_INFO_NONPEER_PM,
-+	NL80211_STA_INFO_RX_BYTES64,
-+	NL80211_STA_INFO_TX_BYTES64,
+ struct ath_rate_table;
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b5978ab..b3a9c8e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3059,10 +3059,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_RX_BYTES) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
--			sinfo->rx_bytes))
-+			(u32)sinfo->rx_bytes))
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_TX_BYTES) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
-+			(u32)sinfo->tx_bytes))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_RX_BYTES64) &&
-+	    nla_put_u64(msg, NL80211_STA_INFO_RX_BYTES64,
-+			sinfo->rx_bytes))
-+		goto nla_put_failure;
-+	if ((sinfo->filled & STATION_INFO_TX_BYTES64) &&
-+	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES64,
- 			sinfo->tx_bytes))
- 		goto nla_put_failure;
- 	if ((sinfo->filled & STATION_INFO_LLID) &&
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index dd37719..7ef698b 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -599,6 +599,23 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
+ 
++static void ath9k_beacon_config_mesh(struct ath_softc *sc,
++				     struct ath_beacon_config *conf)
++{
++	struct ath9k_beacon_state bs;
++
++	/*
++	 * when PS is enabled, ath9k_hw_setrxabort is set.
++	 * to wake up again to receive peers' beacons, we set an
++	 * arbitrary initial value for sleepduration here
++	 */
++	memset(&bs, 0, sizeof(bs));
++	bs.bs_sleepduration = IEEE80211_MS_TO_TU(100);
++	ath9k_hw_set_sta_beacon_timers(sc->sc_ah, &bs);
++
++	ath9k_beacon_config_adhoc(sc, conf);
++}
++
+ bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -707,9 +724,11 @@ void ath9k_set_beacon(struct ath_softc *sc)
+ 		ath9k_beacon_config_ap(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_MESH_POINT:
+ 		ath9k_beacon_config_adhoc(sc, cur_conf);
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		ath9k_beacon_config_mesh(sc, cur_conf);
++		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		ath9k_beacon_config_sta(sc, cur_conf);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 42cf3c7..0e0fe03 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2254,16 +2254,24 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ }
+ EXPORT_SYMBOL(ath9k_hw_beaconinit);
+ 
++/**
++ * ath9k_hw_set_sta_beacon_timers
++ *
++ * in mesh mode overwriting AR_NEXT_TBTT_TIMER and setting AR_TBTT_TIMER_EN
++ * would shift the own TBTT
++ */
+ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 				    const struct ath9k_beacon_state *bs)
+ {
+ 	u32 nextTbtt, beaconintval, dtimperiod, beacontimeout;
++	u32 ar_timer_mode = AR_DTIM_TIMER_EN | AR_TIM_TIMER_EN;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
++	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
++		REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
+ 
+ 	REG_WRITE(ah, AR_BEACON_PERIOD,
+ 		  TU_TO_USEC(bs->bs_intval));
+@@ -2317,9 +2325,10 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ 
+-	REG_SET_BIT(ah, AR_TIMER_MODE,
+-		    AR_TBTT_TIMER_EN | AR_TIM_TIMER_EN |
+-		    AR_DTIM_TIMER_EN);
++	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
++		ar_timer_mode |= AR_TBTT_TIMER_EN;
++
++	REG_SET_BIT(ah, AR_TIMER_MODE, ar_timer_mode);
+ 
+ 	/* TSF Out of Range Threshold */
+ 	REG_WRITE(ah, AR_TSFOOR_THRESHOLD, bs->bs_tsfoor_threshold);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5432f12..93c66cb 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -132,7 +132,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 				     PS_WAIT_FOR_CAB |
+ 				     PS_WAIT_FOR_PSPOLL_DATA |
+ 				     PS_WAIT_FOR_TX_ACK |
+-				     PS_WAIT_FOR_ANI))) {
++				     PS_WAIT_FOR_ANI |
++				     PS_MAC80211_CTL))) {
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+ 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
+ 			ath9k_btcoex_stop_gen_timer(sc);
+@@ -150,6 +151,59 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ }
+ 
++static void ath9k_mesh_wakeup_set(struct ath_softc *sc, u64 nexttbtt)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_beacon_state bs;
++	u32 nexttbtttu = TSF_TO_TU(nexttbtt >> 32, nexttbtt);
++
++	memset(&bs, 0, sizeof(bs));
++	bs.bs_nexttbtt = nexttbtttu;
++	bs.bs_nextdtim = nexttbtttu;
++	/* arbitrary high values to avoid frequent wakeups */
++	bs.bs_intval = 1000;
++	bs.bs_dtimperiod = 4000;
++	bs.bs_sleepduration = 1000;
++
++	ath9k_hw_set_sta_beacon_timers(ah, &bs);
++}
++
++static void ath9k_mesh_doze(struct ieee80211_hw *hw, u64 nexttbtt)
++{
++	struct ath_softc *sc = hw->priv;
++	unsigned long flags;
++
++	ath9k_ps_wakeup(sc);
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	/* in mesh mode mac80211 checks beacons and CAB */
++	sc->ps_flags &= ~(PS_WAIT_FOR_BEACON |
++			  PS_WAIT_FOR_CAB |
++			  PS_MAC80211_CTL);
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++
++	if (nexttbtt)
++		ath9k_mesh_wakeup_set(sc, nexttbtt);
++
++	ath9k_ps_restore(sc);
++}
++
++static void ath9k_mesh_wakeup(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++	unsigned long flags;
++
++	ath9k_ps_wakeup(sc);
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	sc->ps_flags |= PS_MAC80211_CTL;
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++	ath9k_ps_restore(sc);
++}
++
++static const struct ieee80211_mps_ops ath9k_mesh_ps_ops = {
++	.hw_doze = ath9k_mesh_doze,
++	.hw_wakeup = ath9k_mesh_wakeup,
++};
++
+ static void __ath_cancel_work(struct ath_softc *sc)
+ {
+ 	cancel_work_sync(&sc->paprd_work);
+@@ -931,6 +985,11 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
+ 			ah->opmode = NL80211_IFTYPE_ADHOC;
+ 		else
+ 			ah->opmode = NL80211_IFTYPE_STATION;
++
++		if (ah->opmode == NL80211_IFTYPE_MESH_POINT)
++			ieee80211_mps_init(hw, &ath9k_mesh_ps_ops);
++		else if (old_opmode == NL80211_IFTYPE_MESH_POINT)
++			ieee80211_mps_init(hw, NULL);
+ 	}
+ 
+ 	ath9k_hw_setopmode(ah);
+@@ -1164,7 +1223,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * We just prepare to enable PS. We have to wait until our AP has
+ 	 * ACK'd our null data frame to disable RX otherwise we'll ignore
+ 	 * those ACKs and end up retransmitting the same null data frames.
+-	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
++	 * IEEE80211_CONF_CHANGE_PS is passed by mac80211 for STA or mesh mode.
+ 	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+ 		unsigned long flags;
 -- 
-1.7.10.4
+1.7.9.5
 
