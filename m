@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46169 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590Ab3BGJBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 04:01:15 -0500
-Message-ID: <1360227613.12095.59.camel@cumari.coelho.fi> (sfid-20130207_100119_164565_7DD9DB1A)
-Subject: Re: [PATCH] mac80211: remove IEEE80211_HW_SCAN_WHILE_IDLE
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Thu, 7 Feb 2013 11:00:13 +0200
-In-Reply-To: <1360227489-11145-1-git-send-email-johannes@sipsolutions.net>
-References: <1360227489-11145-1-git-send-email-johannes@sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:43100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753604Ab3BRPUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 10:20:09 -0500
+Message-ID: <1361200801.8555.29.camel@jlt4.sipsolutions.net> (sfid-20130218_162014_601375_F4347BE7)
+Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into
+ neighbour_update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Date: Mon, 18 Feb 2013 16:20:01 +0100
+In-Reply-To: <512243AB.6000801@cozybit.com> (sfid-20130218_160727_852714_70BEB0A2)
+References: <1360928446-543-1-git-send-email-marco@cozybit.com>
+	   	 (sfid-20130215_124056_325990_55BC105E) <1360930499.15040.7.camel@jlt4.sipsolutions.net>
+	    <3fance.mi9hwg.2rw1te-qmf@mx.google.com>
+	    (sfid-20130215_134116_713607_1FD8E99F) <1360932381.15040.11.camel@jlt4.sipsolutions.net>
+	   <511E38B2.40900@cozybit.com>
+	  (sfid-20130215_143133_867871_FDF7438A) <1360935431.15040.14.camel@jlt4.sipsolutions.net>
+	  <511E3CB7.4040207@cozybit.com>
+	 (sfid-20130215_144844_328347_5B0B2D91) <1360936708.15040.18.camel@jlt4.sipsolutions.net>
+	 <512243AB.6000801@cozybit.com> (sfid-20130218_160727_852714_70BEB0A2)
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 09:58 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-02-18 at 16:07 +0100, Marco Porsch wrote:
+
+> > I guess you can tell I'm not in a good mood today. I think any use of
+> > get_tsf() for operation is a complete waste of time, there's no way you
+> > can get the timings correct. You could be preempted, and suddenly sleep
+> > for a few tens or hundreds milliseconds, so none of this makes any
+> > sense... To properly do it you have to do calculations in relative times
+> > and let the device apply them.
 > 
-> There are only a few drivers that use HW scan, and
-> all of those don't need a non-idle transition before
-> starting the scan -- some don't even care about idle
-> at all. Remove the flag and code associated with it.
+> I don't get your last sentence here. Maybe you can elaborate?
+
+I'm saying what could happens is this:
+
+ tsf = drv_get_tsf()
+ [be preempted, 100ms later]
+ do_something_with(tsf)
+
+so I think using drv_get_tsf() is pretty much always wrong.
+
+
+> Concerning timestamp vs. TSF usage; wow - I tested it when using the 
+> timestamp value for TBTT scheduling. Works fine. Works even better than 
+> TSF as it slightly reduces the measured wakeup overhead.
 > 
-> The only driver that really actually needed this is
-> wl1251 and it can just do it itself in the hw_scan
-> callback -- implement that.
+> Hm, I was sure the TSF as in *now* would be more appropriate than the 
+> TSF at receipt time... But either way, if it works better and is less 
+> ugly, it is a win-win =)
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+> I'll send an updated patch with the more intuitive API.
 
-For the WiLink drivers:
+:)
 
->  drivers/net/wireless/ti/wl1251/event.c      |  6 +++++-
->  drivers/net/wireless/ti/wl1251/main.c       | 24 +++++++++++++++++++-----
->  drivers/net/wireless/ti/wlcore/main.c       |  1 -
-
-Acked-by: Luciano Coelho <coelho@ti.com>
-
-I'll (hopefully) be able to test the wl1251 change next week.
-
---
-Luca.
+johannes
 
