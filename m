@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42922 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42466 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751504Ab3BROja (ORCPT
+	with ESMTP id S1751439Ab3BRLqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 09:39:30 -0500
+	Mon, 18 Feb 2013 06:46:05 -0500
+Message-ID: <1361187960.8555.9.camel@jlt4.sipsolutions.net> (sfid-20130218_124610_221595_1DCC6673)
+Subject: Re: patch : mac80211:Multicast patch for linux-2.6.28.1 (wl12xx
+ drivers)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, backports@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] compat-drivers: rename GPL file to COPYING
-Date: Mon, 18 Feb 2013 15:39:23 +0100
-Message-Id: <1361198363-29244-1-git-send-email-johannes@sipsolutions.net> (sfid-20130218_153933_907582_235184B8)
+To: Girish Bn <Girish.BN@lnties.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 18 Feb 2013 12:46:00 +0100
+In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1F72BC@POCITMSEXMB02.LntUniverse.com>
+References: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com>
+	 (sfid-20130218_120856_334947_2BD0FBB7) <1361185913.8555.6.camel@jlt4.sipsolutions.net>
+	 (sfid-20130218_121202_160075_39158588) <1361185996.8555.7.camel@jlt4.sipsolutions.net>
+	 <45566970CF58C74CB52107862E0541CD1D1F72BC@POCITMSEXMB02.LntUniverse.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-02-18 at 11:25 +0000, Girish Bn wrote:
+> Hi,
 
-Code or other references in the kernel would point to
-a file called "COPYING" (as in the upstream kernel),
-so rename the GPL file to that name.
+(please don't top-post)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- COPYRIGHT => COPYING | 0
- 1 file changed, 0 insertions(+), 0 deletions(-)
- rename COPYRIGHT => COPYING (100%)
+> This particular change is required on for the multicast to work
+> successfully on Linux kernel 2.6.28.2. I thought through this forum I
+> can make others to use this patch to resolve multicast issue. I accept
+> that I am new to open source. If any proper way to make multicast to
+> work, please suggest otherwise discard the patch. For me this patch is
+> working to receive IGMP packets over the Wireless network
 
-diff --git a/COPYRIGHT b/COPYING
-similarity index 100%
-rename from COPYRIGHT
-rename to COPYING
--- 
-1.8.0
+This particular patch is not required upstream because upstream has long
+moved past 2.6.28(.2). If you need this included in TI's special compat
+version you need to talk to them.
+
+In any case, I cannot and will not apply patches to any tree that carry
+a "confidential information" footer and/or don't have a sign-off.
+
+johannes
 
