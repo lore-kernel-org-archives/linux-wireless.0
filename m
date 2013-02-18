@@ -1,111 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snvl-smtp1.trimble.com ([155.63.64.31]:33302 "EHLO
-	snvl-smtp1.trimble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755613Ab3BETGY convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:59836 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755344Ab3BRQIk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 14:06:24 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: Regulatory Database incorrect for US (FCC)
-Date: Tue, 5 Feb 2013 11:59:41 -0700
-Message-ID: <C77C279BA71FD14985DC8E75FB265AB70E0A0B31@usw-am-xch-02.am.trimblecorp.net> (sfid-20130205_200628_334307_C85E1C49)
-From: "Ian Welch" <ian_welch@trimble.com>
-To: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Cc: "Max Collins" <max_collins@trimble.com>,
-	"David Bird" <David_Bird@Trimble.com>,
-	"Geoffrey Kirk" <Geoffrey_Kirk@Trimble.com>
+	Mon, 18 Feb 2013 11:08:40 -0500
+Received: by mail-bk0-f45.google.com with SMTP id i18so2615664bkv.18
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 08:08:38 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Cc: sleffler@google.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [PATCHv2 1/3] mac80211: move mesh sync beacon handler into neighbour_update
+Date: Mon, 18 Feb 2013 17:08:27 +0100
+Message-Id: <1361203709-16669-1-git-send-email-marco@cozybit.com> (sfid-20130218_170932_511213_E4E87736)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-	The most recent version of the wireless-regdb has incorrect
-antenna gain and conducted power parameters for operation in the US. The
-parameters called out in the regdb file for country US: are 3dBi peak
-antenna gain and 27dBm conducted power "(2402 - 2472 @ 40), (3, 27)".
-Per FCC Part 15.247 paragraph (b)(3) the peak output power should be 1W
-and according to section (b)(4) the peak antenna gain should be 6dBi.  I
-would like to know why 3dBi and 27dBm were selected and propose that
-these be change to 6dBi and 30dBm respectively. 
+Move the beacon handler into mesh_neighbour_update where the STA
+pointer is already available. This avoids additional overhead
+and simplifies the handler.
+The repositioning will also benefit mesh PS which uses T_r and
+the updated T_offset value.
 
+Rename the handler to better reflect its purpose.
 
--Link to regdb file:
-http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-201
-3.01.11.tar.gz
+Signed-off-by: Marco Porsch <marco@cozybit.com>
+---
 
+v2:
+calculate T_r outside mesh sync handler (Johannes)
+remove unused variables
 
--Link to FCC Part 15.247
-http://www.ecfr.gov/cgi-bin/text-idx?c=ecfr&SID=4d6c95d3919126f0773ed7d1
-94eb4932&rgn=div8&view=text&node=47:1.0.1.1.16.3.234.31&idno=47
+ net/mac80211/ieee80211_i.h |    9 ++++-----
+ net/mac80211/mesh.c        |    7 +------
+ net/mac80211/mesh.h        |    4 +++-
+ net/mac80211/mesh_plink.c  |   31 +++++++++++++++++++++++++-----
+ net/mac80211/mesh_sync.c   |   45 ++++++++++----------------------------------
+ 5 files changed, 44 insertions(+), 52 deletions(-)
 
-
-====FCC Part 15.247====
-(b) The maximum peak conducted output power of the intentional radiator
-shall not exceed the following:
-
-(1) For frequency hopping systems operating in the 2400-2483.5 MHz band
-employing at least 75 non-overlapping hopping channels, and all
-frequency hopping systems in the 5725-5850 MHz band: 1 watt. For all
-other frequency hopping systems in the 2400-2483.5 MHz band: 0.125
-watts.
-
-(2) For frequency hopping systems operating in the 902-928 MHz band: 1
-watt for systems employing at least 50 hopping channels; and, 0.25 watts
-for systems employing less than 50 hopping channels, but at least 25
-hopping channels, as permitted under paragraph (a)(1)(i) of this
-section.
-
-(3) For systems using digital modulation in the 902-928 MHz, 2400-2483.5
-MHz, and 5725-5850 MHz bands: 1 Watt. As an alternative to a peak power
-measurement, compliance with the one Watt limit can be based on a
-measurement of the maximum conducted output power. Maximum Conducted
-Output Power is defined as the total transmit power delivered to all
-antennas and antenna elements averaged across all symbols in the
-signaling alphabet when the transmitter is operating at its maximum
-power control level. Power must be summed across all antennas and
-antenna elements. The average must not include any time intervals during
-which the transmitter is off or is transmitting at a reduced power
-level. If multiple modes of operation are possible (e.g., alternative
-modulation methods), the maximum conducted output power is the highest
-total transmit power occurring in any mode.
-
-(4) The conducted output power limit specified in paragraph (b) of this
-section is based on the use of antennas with directional gains that do
-not exceed 6 dBi. Except as shown in paragraph (c) of this section, if
-transmitting antennas of directional gain greater than 6 dBi are used,
-the conducted output power from the intentional radiator shall be
-reduced below the stated values in paragraphs (b)(1), (b)(2), and (b)(3)
-of this section, as appropriate, by the amount in dB that the
-directional gain of the antenna exceeds 6 dBi.
-
-(i) Systems operating in the 2400-2483.5 MHz band that are used
-exclusively for fixed, point-to-point operations may employ transmitting
-antennas with directional gain greater than 6 dBi provided the maximum
-peak output power of the intentional radiator is reduced by 1 dB for
-every 3 dB that the directional gain of the antenna exceeds 6 dBi.
-
-(ii) Systems operating in the 5725-5850 MHz band that are used
-exclusively for fixed, point-to-point operations may employ transmitting
-antennas with directional gain greater than 6 dBi without any
-corresponding reduction in transmitter peak output power.
-
-(iii) Fixed, point-to-point operation, as used in paragraphs (b)(3)(i)
-and (b)(3)(ii) of this section, excludes the use of point-to-multipoint
-systems, omnidirectional applications, and multiple co-located
-intentional radiators transmitting the same information. The operator of
-the spread spectrum intentional radiator or, if the equipment is
-professionally installed, the installer is responsible for ensuring that
-the system is used exclusively for fixed, point-to-point operations. The
-instruction manual furnished with the intentional radiator shall contain
-language in the installation instructions informing the operator and the
-installer of this responsibility.
-
-	
-
-
-Ian Welch 
-10355 Westmoor Dr.
-Westminster, CO 80021
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 388580a..631760f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -529,11 +529,10 @@ struct ieee80211_if_ibss {
+  */
+ struct ieee802_11_elems;
+ struct ieee80211_mesh_sync_ops {
+-	void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
+-			     u16 stype,
+-			     struct ieee80211_mgmt *mgmt,
+-			     struct ieee802_11_elems *elems,
+-			     struct ieee80211_rx_status *rx_status);
++	void (*rx_bcn)(struct sta_info *sta,
++		       struct ieee80211_mgmt *mgmt,
++		       struct ieee802_11_elems *elems,
++		       u64 t_r);
+ 	void (*adjust_tbtt)(struct ieee80211_sub_if_data *sdata);
+ 	/* add other framework functions here */
+ };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 29ce2aa..94682d2 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -938,7 +938,6 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_rx_status *rx_status)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_channel *channel;
+ 	size_t baselen;
+@@ -974,11 +973,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	if (mesh_matches_local(sdata, &elems))
+-		mesh_neighbour_update(sdata, mgmt->sa, &elems);
+-
+-	if (ifmsh->sync_ops)
+-		ifmsh->sync_ops->rx_bcn_presp(sdata,
+-			stype, mgmt, &elems, rx_status);
++		mesh_neighbour_update(sdata, mgmt, &elems, rx_status);
+ }
+ 
+ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 336c88a..ac02f38 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -283,7 +283,9 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
+ 
+ /* Mesh plinks */
+ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+-			   u8 *hw_addr, struct ieee802_11_elems *ie);
++			   struct ieee80211_mgmt *mgmt,
++			   struct ieee802_11_elems *ie,
++			   struct ieee80211_rx_status *rx_status);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 07d396d..d40fedd 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -12,6 +12,7 @@
+ #include "ieee80211_i.h"
+ #include "rate.h"
+ #include "mesh.h"
++#include "driver-ops.h"
+ 
+ #define PLINK_GET_LLID(p) (p + 2)
+ #define PLINK_GET_PLID(p) (p + 4)
+@@ -497,23 +498,43 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
+  * Initiates peering if appropriate.
+  */
+ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
+-			   u8 *hw_addr,
+-			   struct ieee802_11_elems *elems)
++			   struct ieee80211_mgmt *mgmt,
++			   struct ieee802_11_elems *elems,
++			   struct ieee80211_rx_status *rx_status)
+ {
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct sta_info *sta;
+ 	u32 changed = 0;
++	u64 t_r;
++
++	/*
++	 * If available, calculate the time the beacon timestamp field was
++	 * received from the rx_status->mactime field. Otherwise get the
++	 * current TSF as approximation before entering rcu-read section.
++	 */
++	if (ieee80211_have_rx_timestamp(rx_status))
++		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
++						       24 + 12 +
++						       elems->total_len +
++						       FCS_LEN,
++						       24);
++	else
++		t_r = drv_get_tsf(local, sdata);
+ 
+-	sta = mesh_sta_info_get(sdata, hw_addr, elems);
++	sta = mesh_sta_info_get(sdata, mgmt->sa, elems);
+ 	if (!sta)
+ 		goto out;
+ 
+ 	if (mesh_peer_accepts_plinks(elems) &&
+ 	    sta->plink_state == NL80211_PLINK_LISTEN &&
+-	    sdata->u.mesh.accepting_plinks &&
+-	    sdata->u.mesh.mshcfg.auto_open_plinks &&
++	    ifmsh->accepting_plinks && ifmsh->mshcfg.auto_open_plinks &&
+ 	    rssi_threshold_check(sta, sdata))
+ 		changed = mesh_plink_open(sta);
+ 
++	if (ifmsh->sync_ops)
++		ifmsh->sync_ops->rx_bcn(sta, mgmt, elems, t_r);
++
+ 	ieee80211_mps_frame_release(sta, elems);
+ out:
+ 	rcu_read_unlock();
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index 05a256b..6170ec2 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -75,35 +75,21 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+ 		drv_set_tsf(local, sdata, tsf + tsfdelta);
+ }
+ 
+-static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+-				   u16 stype,
+-				   struct ieee80211_mgmt *mgmt,
+-				   struct ieee802_11_elems *elems,
+-				   struct ieee80211_rx_status *rx_status)
++static void mesh_sync_offset_rx_bcn(struct sta_info *sta,
++				    struct ieee80211_mgmt *mgmt,
++				    struct ieee802_11_elems *elems,
++				    u64 t_r)
+ {
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-	struct ieee80211_local *local = sdata->local;
+-	struct sta_info *sta;
+-	u64 t_t, t_r;
++	u64 t_t;
+ 
+ 	WARN_ON(ifmsh->mesh_sp_id != IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET);
+ 
+ 	/* standard mentions only beacons */
+-	if (stype != IEEE80211_STYPE_BEACON)
++	if (!ieee80211_is_beacon(mgmt->frame_control))
+ 		return;
+ 
+-	/* The current tsf is a first approximation for the timestamp
+-	 * for the received beacon.  Further down we try to get a
+-	 * better value from the rx_status->mactime field if
+-	 * available. Also we have to call drv_get_tsf() before
+-	 * entering the rcu-read section.*/
+-	t_r = drv_get_tsf(local, sdata);
+-
+-	rcu_read_lock();
+-	sta = sta_info_get(sdata, mgmt->sa);
+-	if (!sta)
+-		goto no_sync;
+-
+ 	/* check offset sync conditions (13.13.2.2.1)
+ 	 *
+ 	 * TODO also sync to
+@@ -114,17 +100,9 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		clear_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
+ 		msync_dbg(sdata, "STA %pM : is adjusting TBTT\n",
+ 			  sta->sta.addr);
+-		goto no_sync;
++		return;
+ 	}
+ 
+-	if (ieee80211_have_rx_timestamp(rx_status))
+-		/* time when timestamp field was received */
+-		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
+-						       24 + 12 +
+-						       elems->total_len +
+-						       FCS_LEN,
+-						       24);
+-
+ 	/* Timing offset calculation (see 13.13.2.2.2) */
+ 	t_t = le64_to_cpu(mgmt->u.beacon.timestamp);
+ 	sta->t_offset = t_t - t_r;
+@@ -144,7 +122,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 				  sta->sta.addr,
+ 				  (long long) t_clockdrift);
+ 			clear_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
+-			goto no_sync;
++			return;
+ 		}
+ 
+ 		spin_lock_bh(&ifmsh->sync_offset_lock);
+@@ -159,9 +137,6 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 			  sta->sta.addr,
+ 			  (long long) sta->t_offset);
+ 	}
+-
+-no_sync:
+-	rcu_read_unlock();
+ }
+ 
+ static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
+@@ -200,7 +175,7 @@ static const struct sync_method sync_methods[] = {
+ 	{
+ 		.method = IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET,
+ 		.ops = {
+-			.rx_bcn_presp = &mesh_sync_offset_rx_bcn_presp,
++			.rx_bcn = &mesh_sync_offset_rx_bcn,
+ 			.adjust_tbtt = &mesh_sync_offset_adjust_tbtt,
+ 		}
+ 	},
+-- 
+1.7.9.5
 
