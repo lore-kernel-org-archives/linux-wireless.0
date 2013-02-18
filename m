@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4282 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756727Ab3BFRlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:41:09 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/12] brcmfmac: Remove copy mac address from drvr at
- netdev up.
-Date: Wed, 6 Feb 2013 18:40:37 +0100
-Message-ID: <1360172447-2424-3-git-send-email-arend@broadcom.com> (sfid-20130206_184121_778039_EF608FF6)
-In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368Ab3BRLL7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 06:11:59 -0500
+Message-ID: <1361185913.8555.6.camel@jlt4.sipsolutions.net> (sfid-20130218_121202_160075_39158588)
+Subject: Re: patch : mac80211:Multicast patch for linux-2.6.28.1 (wl12xx
+ drivers)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Girish Bn <Girish.BN@lnties.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 18 Feb 2013 12:11:53 +0100
+In-Reply-To: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com> (sfid-20130218_120856_334947_2BD0FBB7)
+References: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com>
+	 (sfid-20130218_120856_334947_2BD0FBB7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Mon, 2013-02-18 at 11:09 +0000, Girish Bn wrote:
+> Hi All,
+> 
+> The below patch file is required in order for the multicasting to work properly on Linux kernel below 3.2 for wl12xx drivers
+> diff -Naur a/net/mac80211/iface.c b/net/mac80211/iface.c
+> --- a/net/mac80211/iface.c          2012-09-22 22:59:15.000000000 +0530
+> +++ b/net/mac80211/iface.c      2013-02-07 12:06:03.958268798 +0530
+> @@ -811,6 +811,9 @@
+>                .ndo_uninit                        = ieee80211_teardown_sdata,
+>                .ndo_start_xmit                               = ieee80211_subif_start_xmit,
+>                .ndo_set_rx_mode        = ieee80211_set_multicast_list,
+> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0))
+> +             .ndo_set_multicast_list = ieee80211_set_multicast_list,
+> +#endif
 
-At netdev up the mac address from drvr is copied to netdev mac
-address. This is incorrect and mac address was already set by
-brcmf_net_attach by copying it from ifp.
+LOL.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 2104a4f..7554125 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -567,8 +567,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 
- 	atomic_set(&drvr->pend_8021x_cnt, 0);
- 
--	memcpy(ndev->dev_addr, drvr->mac, ETH_ALEN);
--
- 	/* Get current TOE mode from dongle */
- 	if (brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_ol) >= 0
- 	    && (toe_ol & TOE_TX_CSUM_OL) != 0)
--- 
-1.7.10.4
-
+johannes
 
