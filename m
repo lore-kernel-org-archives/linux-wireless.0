@@ -1,71 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52221 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43874 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934793Ab3BTU1n (ORCPT
+	with ESMTP id S1754537Ab3BRTgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 15:27:43 -0500
-Message-ID: <1361392043.8579.14.camel@jlt4.sipsolutions.net> (sfid-20130220_212752_588524_802F9D29)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
+	Mon, 18 Feb 2013 14:36:50 -0500
+Message-ID: <1361216202.8555.49.camel@jlt4.sipsolutions.net> (sfid-20130218_203653_583574_D82616B2)
+Subject: pull-request: mac80211-next 2013-02-18
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 21:27:23 +0100
-In-Reply-To: <1361391262.19353.223.camel@edumazet-glaptop> (sfid-20130220_211427_725228_379FD1B7)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
-	 <1361379331.19353.189.camel@edumazet-glaptop>
-	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
-	 <1361381096.19353.195.camel@edumazet-glaptop>
-	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
-	 <1361387854.19353.214.camel@edumazet-glaptop>
-	 (sfid-20130220_201740_409859_E87FECD4) <1361390290.8579.4.camel@jlt4.sipsolutions.net>
-	 <1361391262.19353.223.camel@edumazet-glaptop>
-	 (sfid-20130220_211427_725228_379FD1B7)
-Content-Type: text/plain; charset="UTF-8"
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 18 Feb 2013 20:36:42 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-OzXik0mu6JL8sr3atoWL"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 12:14 -0800, Eric Dumazet wrote:
-> On Wed, 2013-02-20 at 20:58 +0100, Johannes Berg wrote:
-> 
-> > Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
-> > CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
-> > 
-> > > On x86 we should not doing anything.
-> > 
-> > We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
-> > defined.
-> 
-> Thanks !
 
-:-)
-Hey, I introduced that config symbol back then for precisely this
-reason ;-)
+--=-OzXik0mu6JL8sr3atoWL
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> BTW, comment is outdated, as it mentions __skb_push(), while
-> its not used.
+John,
 
-Oops, good point, now I wonder what it did actually refer to. Time to
-dig in git history, I'll fix it.
+Like iwlwifi-next, this would almost be suitable for rc1.
 
+I have a fix for station management on non-TDLS drivers, a CAB queue
+crash fix for mesh, a fix for an annoying (but harmless) warning, a
+tracing fix and a documentation fix. Other than that, only a few mesh
+cleanups.
+
+Please pull.
+
+Thanks,
 johannes
+
+The following changes since commit 93c78c5debeb9c7101ecc73347d4730c26a98c05=
+:
+
+  mac80211_hwsim: ask mac80211 to reserve space for chanctx.drv_priv (2013-=
+02-15 09:41:45 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
+-john
+
+for you to fetch changes up to 8c6d59ee3509acd474365c34db291b950d2e66bf:
+
+  cfg80211: fix station change if TDLS isn't supported (2013-02-18 18:26:24=
+ +0100)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      mac80211: enable vif.cab_queue for mesh
+
+Johannes Berg (4):
+      mac80211: clean up mesh code
+      cfg80211: add correct docbook entries
+      mac80211: fix harmless station flush warning
+      cfg80211: fix station change if TDLS isn't supported
+
+Seth Forshee (1):
+      mac80211: Fix incorrect use of STA_PR_FMT in trace points
+
+Thomas Pedersen (3):
+      mac80211: clean up mesh HT operation
+      mac80211: stringify mesh peering events
+      mac80211: don't spam mesh probe response messages
+
+ Documentation/DocBook/80211.tmpl |   4 +-
+ net/mac80211/cfg.c               |  14 ++--
+ net/mac80211/iface.c             |   8 ++-
+ net/mac80211/main.c              |   3 +-
+ net/mac80211/mesh.c              | 116 +++++++++++++++++----------------
+ net/mac80211/mesh.h              | 105 +++++++++++++++---------------
+ net/mac80211/mesh_hwmp.c         |  68 ++++++++++----------
+ net/mac80211/mesh_pathtbl.c      |  89 +++++++++++++-------------
+ net/mac80211/mesh_plink.c        | 134 +++++++++++++++++++----------------=
+----
+ net/mac80211/mesh_sync.c         |  47 +++++---------
+ net/mac80211/rx.c                |  12 ++--
+ net/mac80211/sta_info.h          |   2 -
+ net/mac80211/trace.h             |   6 +-
+ net/mac80211/tx.c                |  26 ++++----
+ net/wireless/nl80211.c           |   9 ---
+ 15 files changed, 309 insertions(+), 334 deletions(-)
+
+
+--=-OzXik0mu6JL8sr3atoWL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRIoLKAAoJEDBSmw7B7bqryNkQAIB6U1C89wT6UAdNb+7blYKY
+BhSqYOvN6yWNnzmhoGOp9sB/pjR33hbuA2SMDL5x4rnqSV7Ml8muxP8jyIF1dd+z
+H4oEILAYunSVcZumC7Htyt+ZTAgBtTgiGh2UDFCGSW3j2eGIGL9+Qgq8jh9zwS0J
+XsbG1sHtClFPimkDNAEN4WD6fIVPdAQekbuxPXRtixMlwyS/EsaojokSDSVFSMKV
+lpzkHdJDsElHZCO2lLf70hiOf0M9nmDJSCAPlE9tbkUnrMd/RUtRvi/InBXPw+gP
+Gm4SBA7SQPLQprbpA+vBSGqW0lu38GojxMyMT8TWsaUTnrAJIkwF344CH9ivUqVW
+sDE4zTj7MxENAjS0bVGVMS+pdU+nDnuikKIHmDHXiYp6PAv/zD4ypzl4CkRnTWRd
+PM2K4YYydMYMq/VwSPqK6OeBb95OlwqX4sC9rr1edmmlyyN2XVRb8wHEFhC+R+L/
+3R14xEpCjPlSw7NzyqWRXQI7NUxGg3mNMsSkk4FO/0FmyWnDt3vkBgBjnyYM/NFy
+IpceuXqxtFEz/hlOKp8Xrus8Y9x1OehYs2EiNK+RE0rH0D5ywRrnz/mw/8FvZY8j
+IE0T14HjzCD9dmwvX/K9UVg56XJD6pc8LuP1fopoSWmuoQVTiXjF1YCXtnSAzoo9
+UaL61mj3ilM1L7nCPF44
+=cXD1
+-----END PGP SIGNATURE-----
+
+--=-OzXik0mu6JL8sr3atoWL--
 
