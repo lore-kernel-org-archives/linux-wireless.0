@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40146 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935114Ab3BTOEP (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:52780 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752793Ab3BRPH1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 09:04:15 -0500
-Message-ID: <5124D7DC.6010708@candelatech.com> (sfid-20130220_150420_306882_B5C67FCC)
-Date: Wed, 20 Feb 2013 06:04:12 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 18 Feb 2013 10:07:27 -0500
+Received: by mail-bk0-f52.google.com with SMTP id jk13so2526861bkc.25
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 07:07:26 -0800 (PST)
+Message-ID: <512243AB.6000801@cozybit.com> (sfid-20130218_160732_583126_595E9E56)
+Date: Mon, 18 Feb 2013 16:07:23 +0100
+From: Marco Porsch <marco@cozybit.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Clean up work-queues on disassociation.
-References: <1361326267-16847-1-git-send-email-greearb@candelatech.com> <CAGRGNgVY+v9ko0MicEp5ozjrv38TG87sTw78SZhLLEqaK=XQ8Q@mail.gmail.com>
-In-Reply-To: <CAGRGNgVY+v9ko0MicEp5ozjrv38TG87sTw78SZhLLEqaK=XQ8Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into neighbour_update
+References: <1360928446-543-1-git-send-email-marco@cozybit.com>   	 (sfid-20130215_124056_325990_55BC105E) <1360930499.15040.7.camel@jlt4.sipsolutions.net>    <3fance.mi9hwg.2rw1te-qmf@mx.google.com>    (sfid-20130215_134116_713607_1FD8E99F) <1360932381.15040.11.camel@jlt4.sipsolutions.net>   <511E38B2.40900@cozybit.com>  (sfid-20130215_143133_867871_FDF7438A) <1360935431.15040.14.camel@jlt4.sipsolutions.net>  <511E3CB7.4040207@cozybit.com> (sfid-20130215_144844_328347_5B0B2D91) <1360936708.15040.18.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1360936708.15040.18.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2013 10:23 PM, Julian Calaby wrote:
-> Hi Ben,
+Hi,
+
+On 02/15/2013 02:58 PM, Johannes Berg wrote:
+> On Fri, 2013-02-15 at 14:48 +0100, Marco Porsch wrote:
 >
-> On Wed, Feb 20, 2013 at 1:11 PM,  <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
+>>> I'm talking about this API:
+>>>
+>>> mesh_neighbour_update:
+>>> ...
+>>> 	tsf = drv_get_tsf()
+>>> ...
+>>> 	sync_ops->rx_bcn(..., tsf)
+>>>
+>>>
+>>> mesh_sync_offset_rx_bcn(..., t_r):
+>>> 	...
+>>> 	if (have_better_timestamp)
+>>> 		t_r = get_better_timestamp()
+>>>
+>>>
+>>> You can hardly claim that's an intuitive API.
 >>
->> The monitor_work and beacon_connection_loss_work items were
->> not being canceled on disassociation (and not on deletion
->> either).  This leads to work-items trying to run after memory
->> has been deleted.
->>
->> I could not find a cleaner way to do this because the
->> cancel_work_sync for these items must be done outside
->> of the ifmgd->mtx.
->>
->> In addition, re-order the quiesce code so that timers are
->> always stopped before work-items are flushed.  This was
->> not the problem I saw, but I think it may still be more
->> correct.
->>
->> This fixes the crashes we see in 3.7.9+.  The crash stack
->> trace itself isn't so helpful, but this warning gives
->> more useful info:
+>> Hm, alright. Just saying that ieee80211_mps_sta_tbtt_update still uses
+>> the unchanged TSF value. But hey :)
 >
-> [snip]
+> Well, that function doesn't exist in this patch...
 >
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>
->> NOTE:  Please do not apply this until it is reviewed by Johannes,
->> at least.
->>
->>   net/mac80211/mlme.c |   68 +++++++++++++++++++++++++++++++++++++++++++++-----
->>   1 files changed, 61 insertions(+), 7 deletions(-)
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 164ecf0..5a65144 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -2954,19 +2978,15 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
->>
->>          cancel_work_sync(&ifmgd->request_smps_work);
->>
->> +       sdata_err(sdata, "Cancel-work-sync monitor_work, sta_quiesce.\n");
+>> What would be more favourable then?
 >
-> Debug code?
+> I guess you can tell I'm not in a good mood today. I think any use of
+> get_tsf() for operation is a complete waste of time, there's no way you
+> can get the timings correct. You could be preempted, and suddenly sleep
+> for a few tens or hundreds milliseconds, so none of this makes any
+> sense... To properly do it you have to do calculations in relative times
+> and let the device apply them.
 
-Err, yes..will remove.
+I don't get your last sentence here. Maybe you can elaborate?
 
->>   void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
->> @@ -3262,6 +3282,8 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
->>          struct ieee80211_mgd_auth_data *auth_data;
->>          u16 auth_alg;
->>          int err;
->> +       bool maybe_cancel_work = false;
->> +       bool hit_err_clear = false;
->
-> You could replace these with a single variable.
+Concerning timestamp vs. TSF usage; wow - I tested it when using the 
+timestamp value for TBTT scheduling. Works fine. Works even better than 
+TSF as it slightly reduces the measured wakeup overhead.
 
-I don't see how.  It seems that we should only cancel the work items
-if we called set_disassoc AND if the subsequent attempts to (re)associate
-failed.
+Hm, I was sure the TSF as in *now* would be more appropriate than the 
+TSF at receipt time... But either way, if it works better and is less 
+ugly, it is a win-win =)
 
-Maybe I missed something?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+I'll send an updated patch with the more intuitive API.
