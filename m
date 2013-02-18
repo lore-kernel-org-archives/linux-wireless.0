@@ -1,254 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56844 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760010Ab3B0PA5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 10:00:57 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from mx-relay11-haj2.antispameurope.com ([83.246.65.211]:38917 "EHLO
+	mx-relay11-haj2.antispameurope.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756872Ab3BRToG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 14:44:06 -0500
+Message-ID: <512282AB.40604@fokus.fraunhofer.de> (sfid-20130218_204411_379239_6A8120A0)
+Date: Mon, 18 Feb 2013 20:36:11 +0100
+From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
+CC: Antonio Quartulli <antonio@open-mesh.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	Thomas Pedersen <thomas@cozybit.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 6/8] mac80211: cleanup suspend/resume on mesh mode
-Date: Wed, 27 Feb 2013 16:00:40 +0100
-Message-Id: <1361977242-17344-6-git-send-email-sgruszka@redhat.com> (sfid-20130227_160059_939319_B2C6B732)
-In-Reply-To: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
-References: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
+	Marek Lindner <marek@open-mesh.com>
+Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
+ stations
+References: <20130215171938.GA4140@pandem0nium>  <1361197831.8555.23.camel@jlt4.sipsolutions.net>  <1361197982.8555.24.camel@jlt4.sipsolutions.net>  <20130218144622.GA4162@open-mesh.com>  <1361201387.8555.32.camel@jlt4.sipsolutions.net>  <20130218153833.GB4162@open-mesh.com>  <1361202206.8555.34.camel@jlt4.sipsolutions.net>  <20130218154906.GC4162@open-mesh.com>  <1361203098.8555.35.camel@jlt4.sipsolutions.net>  <20130218160705.GD4162@open-mesh.com> <1361206302.8555.36.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1361206302.8555.36.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove not used any longer suspend/resume code.
+On 02/18/2013 05:51 PM, Johannes Berg wrote:
+> On Mon, 2013-02-18 at 17:07 +0100, Antonio Quartulli wrote:
+>> On Mon, Feb 18, 2013 at 07:58:18 -0800, Johannes Berg wrote:
+>>> On Mon, 2013-02-18 at 16:49 +0100, Antonio Quartulli wrote:
+>>>> On Mon, Feb 18, 2013 at 07:43:26 -0800, Johannes Berg wrote:
+>>>>>> I did not like this approach because the sta_info struct is so big that
+>>>>>> when we want to fill the stats substruct only we will waste a lot of bytes.
+>>>>>
+>>>>> I don't understand your point.
+>>>>>
+>>>>> struct sta_info {
+>>>>>     ...
+>>>>>     struct stats stats;
+>>>>> };
+>>>>
+>>>> My concern is about those "..." that we are allocating within the sta_info struct
+>>>> that we will never use for every non-peer station.
+>>>>
+>>>> While if we used the struct below (with its own hash table), we would allocate
+>>>> only the space needed for the stats.
+>>>>
+>>>>>
+>>>>> struct stats_entry {
+>>>>>     struct hash/list/whatever;
+>>>>>     struct stats stats;
+>>>>> };
+>>>>>
+>>>>
+>>>>
+>>>> no?
+>>>> Maybe I misunderstood your idea?
+>>>
+>>> But I'm not saying that these are mutually exclusive, I'm saying both
+>>> should exist.
+>>
+>> Ah ok..Sorry, but I did not take this as an option :)
+>>
+>> So, if I understood correctly, this means one table lookup for peer stations,
+>> while two table lookups for non peers (first in sta_hash, which will fail). Right?
+>>
+>> This would save one look up for each peer, since we have to do perform one of
+>> them anyway (now I fully understood your previous statement!).
+>
+> Right... But the failing sta lookup has to happen anyway, so it really
+> adds practically no cost in the peer case, and a singe lookup in the
+> "non-peer already exists" case.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/ieee80211_i.h |  2 --
- net/mac80211/mesh.c        | 57 ++--------------------------------------------
- net/mac80211/mesh.h        | 12 ----------
- net/mac80211/mesh_plink.c  | 27 +---------------------
- net/mac80211/sta_info.h    |  2 --
- 5 files changed, 3 insertions(+), 97 deletions(-)
+IMHO, this is the most efficient implementation for most practical use 
+cases, where 'peer' traffic accounts more the majority of the traffic. 
+Hence it should be in the 'fast path', while the extra lookup for 'non 
+peer' traffic should be tolerable.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bd13db3..6f3258a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -540,8 +540,6 @@ struct ieee80211_if_mesh {
- 	struct timer_list mesh_path_timer;
- 	struct timer_list mesh_path_root_timer;
- 
--	unsigned long timers_running;
--
- 	unsigned long wrkq_flags;
- 
- 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 29ce2aa..f5d1afa 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -13,10 +13,6 @@
- #include "ieee80211_i.h"
- #include "mesh.h"
- 
--#define TMR_RUNNING_HK	0
--#define TMR_RUNNING_MP	1
--#define TMR_RUNNING_MPR	2
--
- static int mesh_allocated;
- static struct kmem_cache *rm_cache;
- 
-@@ -50,11 +46,6 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
- 
- 	set_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags);
- 
--	if (local->quiescing) {
--		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
--		return;
--	}
--
- 	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
-@@ -479,15 +470,8 @@ static void ieee80211_mesh_path_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	struct ieee80211_local *local = sdata->local;
--
--	if (local->quiescing) {
--		set_bit(TMR_RUNNING_MP, &ifmsh->timers_running);
--		return;
--	}
- 
--	ieee80211_queue_work(&local->hw, &sdata->work);
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- }
- 
- static void ieee80211_mesh_path_root_timer(unsigned long data)
-@@ -495,16 +479,10 @@ static void ieee80211_mesh_path_root_timer(unsigned long data)
- 	struct ieee80211_sub_if_data *sdata =
- 		(struct ieee80211_sub_if_data *) data;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	struct ieee80211_local *local = sdata->local;
- 
- 	set_bit(MESH_WORK_ROOT, &ifmsh->wrkq_flags);
- 
--	if (local->quiescing) {
--		set_bit(TMR_RUNNING_MPR, &ifmsh->timers_running);
--		return;
--	}
--
--	ieee80211_queue_work(&local->hw, &sdata->work);
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- }
- 
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh)
-@@ -622,35 +600,6 @@ static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
- 		  round_jiffies(TU_TO_EXP_TIME(interval)));
- }
- 
--#ifdef CONFIG_PM
--void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--
--	/* use atomic bitops in case all timers fire at the same time */
--
--	if (del_timer_sync(&ifmsh->housekeeping_timer))
--		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
--	if (del_timer_sync(&ifmsh->mesh_path_timer))
--		set_bit(TMR_RUNNING_MP, &ifmsh->timers_running);
--	if (del_timer_sync(&ifmsh->mesh_path_root_timer))
--		set_bit(TMR_RUNNING_MPR, &ifmsh->timers_running);
--}
--
--void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
--{
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--
--	if (test_and_clear_bit(TMR_RUNNING_HK, &ifmsh->timers_running))
--		add_timer(&ifmsh->housekeeping_timer);
--	if (test_and_clear_bit(TMR_RUNNING_MP, &ifmsh->timers_running))
--		add_timer(&ifmsh->mesh_path_timer);
--	if (test_and_clear_bit(TMR_RUNNING_MPR, &ifmsh->timers_running))
--		add_timer(&ifmsh->mesh_path_root_timer);
--	ieee80211_mesh_root_setup(ifmsh);
--}
--#endif
--
- static int
- ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- {
-@@ -871,8 +820,6 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	local->fif_other_bss--;
- 	atomic_dec(&local->iff_allmultis);
- 	ieee80211_configure_filter(local);
--
--	sdata->u.mesh.timers_running = 0;
- }
- 
- static void
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 336c88a..6ffabbe 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -313,8 +313,6 @@ void mesh_path_timer(unsigned long data);
- void mesh_path_flush_by_nexthop(struct sta_info *sta);
- void mesh_path_discard_frame(struct ieee80211_sub_if_data *sdata,
- 			     struct sk_buff *skb);
--void mesh_path_quiesce(struct ieee80211_sub_if_data *sdata);
--void mesh_path_restart(struct ieee80211_sub_if_data *sdata);
- void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata);
- 
- bool mesh_action_is_path_sel(struct ieee80211_mgmt *mgmt);
-@@ -359,22 +357,12 @@ static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
- 
--void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
--void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata);
--void mesh_plink_quiesce(struct sta_info *sta);
--void mesh_plink_restart(struct sta_info *sta);
- void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
- void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_stop(void);
- #else
- static inline void
- ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local) {}
--static inline void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata)
--{}
--static inline void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata)
--{}
--static inline void mesh_plink_quiesce(struct sta_info *sta) {}
--static inline void mesh_plink_restart(struct sta_info *sta) {}
- static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
- { return false; }
- static inline void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 07d396d..08df966 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -534,10 +534,8 @@ static void mesh_plink_timer(unsigned long data)
- 	 */
- 	sta = (struct sta_info *) data;
- 
--	if (sta->sdata->local->quiescing) {
--		sta->plink_timer_was_running = true;
-+	if (sta->sdata->local->quiescing)
- 		return;
--	}
- 
- 	spin_lock_bh(&sta->lock);
- 	if (sta->ignore_plink_timer) {
-@@ -598,29 +596,6 @@ static void mesh_plink_timer(unsigned long data)
- 	}
- }
- 
--#ifdef CONFIG_PM
--void mesh_plink_quiesce(struct sta_info *sta)
--{
--	if (!ieee80211_vif_is_mesh(&sta->sdata->vif))
--		return;
--
--	/* no kernel mesh sta timers have been initialized */
--	if (sta->sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
--		return;
--
--	if (del_timer_sync(&sta->plink_timer))
--		sta->plink_timer_was_running = true;
--}
--
--void mesh_plink_restart(struct sta_info *sta)
--{
--	if (sta->plink_timer_was_running) {
--		add_timer(&sta->plink_timer);
--		sta->plink_timer_was_running = false;
--	}
--}
--#endif
--
- static inline void mesh_plink_timer_set(struct sta_info *sta, int timeout)
- {
- 	sta->plink_timer.expires = jiffies + (HZ * timeout / 1000);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 4947341..e5868c3 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -281,7 +281,6 @@ struct sta_ampdu_mlme {
-  * @plink_state: peer link state
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-- * @plink_timer_was_running: used by suspend/resume to restore timers
-  * @t_offset: timing offset relative to this host
-  * @t_offset_setpoint: reference timing offset of this sta to be used when
-  * 	calculating clockdrift
-@@ -379,7 +378,6 @@ struct sta_info {
- 	__le16 reason;
- 	u8 plink_retries;
- 	bool ignore_plink_timer;
--	bool plink_timer_was_running;
- 	enum nl80211_plink_state plink_state;
- 	u32 plink_timeout;
- 	struct timer_list plink_timer;
+My five cents,
+
+Mathias
+
+> johannes
+>
+
+
 -- 
-1.7.11.7
-
+Fraunhofer FOKUS - RESourCe Optimised Networks
+Dr. Mathias Kretschmer
+Schloss Birlinghoven; D-53754 Sankt Augustin
+T +49-2241-14-3466, F +49-2241-14-1050,
+E mathias.kretschmer@fokus.fraunhofer.de
+http://www.fokus.fraunhofer.de/en/rescon
