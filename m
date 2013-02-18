@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:45446 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302Ab3BFAoY (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:60103 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756350Ab3BRTOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 19:44:24 -0500
-Message-ID: <5111A766.70006@lwfinger.net> (sfid-20130206_014431_085876_4827912F)
-Date: Tue, 05 Feb 2013 18:44:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 18 Feb 2013 14:14:40 -0500
+Received: by mail-wg0-f43.google.com with SMTP id e12so4957888wge.22
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 11:14:39 -0800 (PST)
+Message-ID: <51227D9C.3090106@gmail.com> (sfid-20130218_201449_437204_134AD747)
+Date: Mon, 18 Feb 2013 20:14:36 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix NULL dereference BUG when using
- new_id
-References: <1360108823-5141-1-git-send-email-Larry.Finger@lwfinger.net> <1360109904.2857.36.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1360109904.2857.36.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: m.vietri@sns.it, linux-wireless <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: Linksys AE3000
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2013 06:18 PM, Ben Hutchings wrote:
-> On Tue, 2013-02-05 at 18:00 -0600, Larry Finger wrote:
->> When the new_id entry is used for a foreign USB device, rtlwifi BUGS with
->> a NULL pointer dereference.
-> [...]
->
-> So set no_dynamic_id in the usb_driver structures.
->
-> (But I wonder why USB behaves differently from PCI, which requires that
-> the dynamic ID's driver_data value (defaulting to 0) matches a value
-> used in a static ID entry.)
+Mario Vietri wrote:
 
-I don't know why USB differs from PCI, but we do need the dynamic ID here as 
-there are always new IDs being issued. One of the criteria for adding the ID to 
-the table is that it works OK with dynamic addition. These devices are 
-frequently reported by users that do not have the skills to build their own kernel.
+> I run an up-to-date ArchLinux system on a Toshiba Portege 
+> R600. I own a Linksys AE3000 (0x13b1:0x003b) usb wifi adapter, 
+> with driver downloaded from WikiDevi as per their AE3000 page, 
+> with the usual modifications.
 
-Larry
+Linksys AE3000 brings a RT3593 chip.
+And still there is no support for any Ralink/Mediatek 3T3R chip
+(RF3053/RF3853)/(RT3883/RT3563/RT3573/RT3593/RT3662)
+in the rt2800{usb,pci} kernel drivers.
 
-
+The only think you can do is try latest driver from mediatek:
+http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501
+(unsupported by linux-wireless/rt2x00 mailing lists)
