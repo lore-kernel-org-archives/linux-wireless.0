@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45190 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757195Ab3BVPyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 10:54:04 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, c_manoha@qca.qualcomm.com
-Subject: [PATCH 3.9] ath9k_htc: fix signal strength handling issues
-Date: Fri, 22 Feb 2013 16:53:52 +0100
-Message-Id: <1361548432-83349-1-git-send-email-nbd@openwrt.org> (sfid-20130222_165412_216644_E878743E)
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:58669 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756133Ab3BRUK6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 15:10:58 -0500
+Message-ID: <51228ACF.3060500@lwfinger.net> (sfid-20130218_211113_804457_48B72F51)
+Date: Mon, 18 Feb 2013 14:10:55 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Bastian Bittorf <bittorf@bluebottle.com>,
+	Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] b43: Increase number of RX DMA slots
+References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net> <CACna6rwLgE+o2mcRTemLFAqzdsEoA9Xyx8GyEQTh5qbv1iZ04A@mail.gmail.com>
+In-Reply-To: <CACna6rwLgE+o2mcRTemLFAqzdsEoA9Xyx8GyEQTh5qbv1iZ04A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath9k commit 2ef167557c0a26c88162ecffb017bfcc51eb7b29
-(ath9k: fix signal strength reporting issues) fixed an issue where the
-reported per-frame signal strength reported to mac80211 was being
-overwritten with an internal average. The same issue is also present
-in ath9k_htc.
-In addition to preventing the driver from overwriting the value, this
-commit also ensures that the internal average (which is used for ANI)
-only tracks beacons of the AP that we're connected to.
+On 02/18/2013 10:18 AM, Rafał Miłecki wrote:
+> 2013/2/18 Larry Finger <Larry.Finger@lwfinger.net>:
+>> Bastian Bittorf reported that some of the silent freezes on a Linksys WRT54G
+>> were due to overflow of the RX DMA ring buffer, which was created with 64
+>> slots. That finding reminded me that I was seeing similar crashed on a netbook,
+>> which also has a relatively slow processor. After increasing the number of
+>> slots to 128, runs on the netbook that previously failed now worked; however,
+>> I found that 109 slots had been used in one test. For that reason, the number
+>> of slots is being increased to 256.
+>
+> So probably ideal solution is to use 128 *and* fix the driver's
+> failing on overflow ;)
+>
+> Did you try it on some old device? Just for sure firmware&DMA will
+> handle it correctly.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+I tested on BCM4318 (which is pretty old), and two different BCM4312 (14e4:4315) 
+units. I think the firmware and DMA can handle it. After all, all the TX rings 
+have 256 slots. There is, however, a question of the memory. TX only acquires 
+the buffers when needed, but RX has to get them in advance, thus 256 slots there 
+will waste a lot of memory.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index b6a5a08..8788621 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -1067,15 +1067,19 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 
- 	last_rssi = priv->rx.last_rssi;
- 
--	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
--						     ATH_RSSI_EP_MULTIPLIER);
-+	if (ieee80211_is_beacon(hdr->frame_control) &&
-+	    !is_zero_ether_addr(common->curbssid) &&
-+	    ether_addr_equal(hdr->addr3, common->curbssid)) {
-+		s8 rssi = rxbuf->rxstatus.rs_rssi;
- 
--	if (rxbuf->rxstatus.rs_rssi < 0)
--		rxbuf->rxstatus.rs_rssi = 0;
-+		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-+			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
- 
--	if (ieee80211_is_beacon(fc))
--		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
-+		if (rssi < 0)
-+			rssi = 0;
-+
-+		priv->ah->stats.avgbrssi = rssi;
-+	}
- 
- 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
--- 
-1.8.0.2
+I agree that there be two patches, depending on Bastian's testing. The slot size 
+change can be backported to stable.
+
+Larry
 
