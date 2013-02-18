@@ -1,72 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45573 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756910Ab3BNJiR (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:38344 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101Ab3BRONQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 04:38:17 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Ryan Hsu <ryanhsu@qca.qualcomm.com>
-Subject: [PATCH 5/6] ath6kl: Fix a debugfs crash for USB devices
-Date: Thu, 14 Feb 2013 15:08:09 +0530
-Message-ID: <1360834689-11187-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130214_103821_943590_E77135BD)
+	Mon, 18 Feb 2013 09:13:16 -0500
+Received: by mail-pb0-f44.google.com with SMTP id wz12so1688337pbc.31
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 06:13:16 -0800 (PST)
+Message-ID: <512236F9.1040907@gmail.com> (sfid-20130218_151320_158378_80DE8268)
+Date: Mon, 18 Feb 2013 22:13:13 +0800
+From: lina <lina.lastname@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: BCM4331
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Hi,
 
-Credit distribution stats is currently implemented
-only for SDIO. This fixes a crash in debugfs for
-USB interface.
+A quick question, does the latest kernel support the bcm4331 wireless
+card? or does it still need compat-wireless and etc.
 
-BUG: unable to handle kernel NULL pointer dereference at   (null)
-IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
-*pde = b62bd067
-Oops: 0000 [#1] SMP
+Thanks with best regards,
 
-EIP: 0060:[<f91c2048>] EFLAGS: 00210246 CPU: 0
-EIP is at read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
-EAX: 00000000 EBX: e6f7a9c0 ECX: e7b148b8 EDX: 00000000
-ESI: 000000c8 EDI: e7b14000 EBP: e6e09f64 ESP: e6e09f30
-DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-Process cat (pid: 4058, ti=e6e08000 task=e50cf230 task.ti=e6e08000)
-Stack:
-00008000 00000000 e6e09f64 c1132d3c 00004e71 e50cf230 00008000 089e4000
-e7b148b8 00000000 e6f7a9c0 00008000 089e4000 e6e09f8c c11331fc e6e09f98
-00000001 e6e09f7c f91c2010 e6e09fac e6f7a9c0 089e4877 089e4000 e6e09fac
-
-	Call Trace:
-	[<c1132d3c>] ? rw_verify_area+0x6c/0x120
-	[<c11331fc>] vfs_read+0x8c/0x160
-	[<f91c2010>] ? read_file_war_stats+0x130/0x130 [ath6kl_core]
-	[<c113330d>] sys_read+0x3d/0x70
-	[<c15755b4>] syscall_call+0x7/0xb
-	[<c1570000>] ? fill_powernow_table_pstate+0x127/0x127
-
-Cc: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 15cfe30..0dbb67b 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -658,6 +658,9 @@ static ssize_t read_file_credit_dist_stats(struct file *file,
- 	unsigned int buf_len, len = 0;
- 	ssize_t ret_cnt;
- 
-+	if (ar->hif_type != ATH6KL_HIF_TYPE_SDIO)
-+		return -EINVAL;
-+
- 	buf_len = CREDIT_INFO_DISPLAY_STRING_LEN +
- 		  get_queue_depth(&target->cred_dist_list) * CREDIT_INFO_LEN;
- 	buf = kzalloc(buf_len, GFP_KERNEL);
--- 
-1.7.9.5
 
