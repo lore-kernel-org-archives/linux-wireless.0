@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:46321 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757486Ab3BGUht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:37:49 -0500
-Message-ID: <1360269467.27863.9.camel@joe-AO722> (sfid-20130207_213815_538913_1349F29F)
-Subject: [PATCH] mwl8k: Remove unnecessary alloc/OOM messages
-From: Joe Perches <joe@perches.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Thu, 07 Feb 2013 12:37:47 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:43779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab3BRTCA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 14:02:00 -0500
+Message-ID: <1361214105.8555.39.camel@jlt4.sipsolutions.net> (sfid-20130218_200205_709366_9C0A55A3)
+Subject: Re: [PATCH] mac80211: fix the problem of unicast forwarding from DS
+ to DS in Mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	cedric.voncken@acksys.fr
+Date: Mon, 18 Feb 2013 20:01:45 +0100
+In-Reply-To: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20130218_124724_975470_FED20EF3)
+References: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20130218_124724_975470_FED20EF3)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-alloc failures already get standardized OOM
-messages and a dump_stack.
+On Mon, 2013-02-18 at 19:16 +0800, Chun-Yeow Yeoh wrote:
+> Unicast frame with unknown forwarding information always trigger
+> the path discovery assuming destination is always located inside the
+> MBSS. This patch allows the forwarding to look for mesh gate if path
+> discovery inside the MBSS has failed.
+> 
+> Reported-by: Cedric Voncken <cedric.voncken@acksys.fr>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  net/mac80211/tx.c |   15 ++++++++++++---
+>  1 files changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 5b9602b..dce3af3 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1844,9 +1844,18 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>  		}
+>  
+>  		if (!is_multicast_ether_addr(skb->data)) {
+> -			mpath = mesh_path_lookup(sdata, skb->data);
+> -			if (!mpath)
+> -				mppath = mpp_path_lookup(sdata, skb->data);
+> +			struct sta_info *next_hop;
+> +
+> +			mpath = mesh_path_lookup(skb->data, sdata);
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/mwl8k.c | 2 --
- 1 file changed, 2 deletions(-)
+as Thomas said, please rebase on mac80211-next.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 224cf91..e31f779 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1146,7 +1146,6 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw, int index)
- 
- 	rxq->buf = kcalloc(MWL8K_RX_DESCS, sizeof(*rxq->buf), GFP_KERNEL);
- 	if (rxq->buf == NULL) {
--		wiphy_err(hw->wiphy, "failed to alloc RX skbuff list\n");
- 		pci_free_consistent(priv->pdev, size, rxq->rxd, rxq->rxd_dma);
- 		return -ENOMEM;
- 	}
-@@ -1439,7 +1438,6 @@ static int mwl8k_txq_init(struct ieee80211_hw *hw, int index)
- 
- 	txq->skb = kcalloc(MWL8K_TX_DESCS, sizeof(*txq->skb), GFP_KERNEL);
- 	if (txq->skb == NULL) {
--		wiphy_err(hw->wiphy, "failed to alloc TX skbuff list\n");
- 		pci_free_consistent(priv->pdev, size, txq->txd, txq->txd_dma);
- 		return -ENOMEM;
- 	}
+> +			if (mpath)
+> +				next_hop = rcu_dereference(mpath->next_hop);
+> +
+> +			if (!mpath || (mpath && (!next_hop ||
+> +					!(mpath->flags & MESH_PATH_ACTIVE))))
+
+indentation here is also wrong.
+
+johannes
 
 
