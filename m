@@ -1,46 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19359 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754815Ab3BQIcL convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:49250 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757062Ab3BRUD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Feb 2013 03:32:11 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression caused by commit df88129
-Date: Sun, 17 Feb 2013 08:32:09 +0000
-Message-ID: <8887AA04B7EC49479420AE48C5F94A93017ABCAD@NASANEXD02D.na.qualcomm.com> (sfid-20130217_093220_938752_56B9E81C)
-In-Reply-To: <51207925.5040702@lwfinger.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 18 Feb 2013 15:03:56 -0500
+Date: Mon, 18 Feb 2013 15:03:54 -0500 (EST)
+Message-Id: <20130218.150354.2133157066560518829.davem@davemloft.net> (sfid-20130218_210404_115468_7A6DD954)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2013-02-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130218195448.GC12505@tuxdriver.com>
+References: <20130218195448.GC12505@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 18 Feb 2013 14:54:48 -0500
 
+> Please let me know if there are problems!
 
-On 2/17/13 8:31 AM, "Larry Finger" <Larry.Finger@lwfinger.net> wrote:
-
->A recent pull of the wireless-testing tree caused my wireless to break.
->The
->wireless devices can authenticate and associate as follows:
-
->wlan0: RX AssocResp from c0:3f:0e:be:2b:44 (capab=0x411 status=0 aid=3)
->wlan0: associated
->IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
->wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
-
-Which wpa_supplicant version are you using here? I'm assuming this is with
-WPA2.
-
-It sounds like the AP STA entry does not get authorized properly. I did see
-some issues when working on the patch, but fixed those. The version that
-was
-sent out should have worked fine since I did manage to complete TDLS setup
-with it (i.e., send and receive frames through the AP to another STA).
-
-I will be flying for the rest of Sunday, so may not be able to do much
-about this before Monday.
-
-- Jouni
-
+I'll pull this and sans build problems will push it back out to
+net-next, thanks John.
