@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56138 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44348 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753138Ab3BUTq0 (ORCPT
+	with ESMTP id S1756771Ab3BRWQT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 14:46:26 -0500
+	Mon, 18 Feb 2013 17:16:19 -0500
+Message-ID: <1361225773.8555.50.camel@jlt4.sipsolutions.net> (sfid-20130218_231622_328182_D9254EFF)
+Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wireless: remove unused VHT MCS defines
-Date: Thu, 21 Feb 2013 20:46:21 +0100
-Message-Id: <1361475981-19517-1-git-send-email-johannes@sipsolutions.net> (sfid-20130221_204628_512495_789D773F)
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 18 Feb 2013 23:16:13 +0100
+In-Reply-To: <5122A7C7.3070508@candelatech.com> (sfid-20130218_231436_933191_3F8FE600)
+References: <5122A7C7.3070508@candelatech.com>
+	 (sfid-20130218_231436_933191_3F8FE600)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
+> We often see crashes in work-queue processing when deleting
+> lots of wifi station interfaces.  I'm guessing that there is probably
+> a work item that was not properly un-registered before deleting
+> memory.  I have backported some wifi fixes from upstream, so
+> maybe they are to blame, but in case anyone has any suggestions
+> for places to look, please let me know.
 
-There's an enum with the same values (but slightly
-different names except for NOT_SUPPORTED) that is
-actually used, so remove the defines.
+Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 226a5f4..bfc72fd 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1330,11 +1330,6 @@ struct ieee80211_vht_operation {
- } __packed;
- 
- 
--#define IEEE80211_VHT_MCS_ZERO_TO_SEVEN_SUPPORT 0
--#define IEEE80211_VHT_MCS_ZERO_TO_EIGHT_SUPPORT 1
--#define IEEE80211_VHT_MCS_ZERO_TO_NINE_SUPPORT  2
--#define IEEE80211_VHT_MCS_NOT_SUPPORTED 3
--
- /* 802.11ac VHT Capabilities */
- #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895			0x00000000
- #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991			0x00000001
--- 
-1.8.0
+johannes
 
