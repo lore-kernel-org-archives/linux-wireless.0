@@ -1,75 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56720 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023Ab3BDKJk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757544Ab3BRW4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 05:09:40 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] ath9k: Print the negotiated HT capabilities
-Date: Mon,  4 Feb 2013 15:38:22 +0530
-Message-Id: <1359972504-8900-1-git-send-email-sujith@msujith.org> (sfid-20130204_110943_690799_B85A0EBF)
+	Mon, 18 Feb 2013 17:56:31 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: simon.wunderlich@s2003.tu-chemnitz.de,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: conditionally add back per-channel radar information
+Date: Mon, 18 Feb 2013 23:56:26 +0100
+Message-Id: <1361228186-11861-1-git-send-email-johannes@sipsolutions.net> (sfid-20130218_235633_078140_52376F38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Also, reduce the memory allocated for each row.
+If userspace is updated to deal with large split wiphy
+information dumps, add back the radar information to
+each channel that previously pushed the data over the
+limit of a single netlink message.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c | 12 +++++++++++-
- drivers/net/wireless/ath/ath9k/rc.h |  6 ++++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c | 29 ++++++++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 714558d..62abd70 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1364,7 +1364,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 	if (rc->rate_table == NULL)
- 		return 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fff4160..945ca2b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -540,7 +540,8 @@ static inline void *nl80211hdr_put(struct sk_buff *skb, u32 portid, u32 seq,
+ }
  
--	max = 80 + rc->rate_table_size * 1024 + 1;
-+	max = 80 + rc->rate_table_size * 256 + 1;
- 	buf = kmalloc(max, GFP_KERNEL);
- 	if (buf == NULL)
- 		return -ENOMEM;
-@@ -1410,6 +1410,16 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 			stats->per);
- 	}
- 
-+	if (rc->ht_cap & WLAN_RC_HT_FLAG) {
-+		len += snprintf(buf + len, max - len, "\nNegotiated HT caps: ");
-+		PR_HT_CAP((rc->ht_cap & WLAN_RC_HT_FLAG), "[HT20]");
-+		PR_HT_CAP((rc->ht_cap & WLAN_RC_40_FLAG), "[HT40]");
-+		PR_HT_CAP((rc->ht_cap & WLAN_RC_DS_FLAG), "[2-Stream]");
-+		PR_HT_CAP((rc->ht_cap & WLAN_RC_TS_FLAG), "[3-Stream]");
-+		PR_HT_CAP((rc->ht_cap & WLAN_RC_SGI_FLAG), "[SGI]");
-+		len += snprintf(buf + len, max - len, "\n");
+ static int nl80211_msg_put_channel(struct sk_buff *msg,
+-				   struct ieee80211_channel *chan)
++				   struct ieee80211_channel *chan,
++				   bool large)
+ {
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_FREQ,
+ 			chan->center_freq))
+@@ -555,9 +556,22 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
+ 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_IBSS))
+ 		goto nla_put_failure;
+-	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
+-	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
+-		goto nla_put_failure;
++	if (chan->flags & IEEE80211_CHAN_RADAR) {
++		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
++			goto nla_put_failure;
++		if (large) {
++			u32 time;
++
++			time = elapsed_jiffies_msecs(chan->dfs_state_entered);
++
++			if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_STATE,
++					chan->dfs_state))
++				goto nla_put_failure;
++			if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_TIME,
++					time))
++				goto nla_put_failure;
++		}
 +	}
-+
- 	if (len > max)
- 		len = max;
+ 	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
+ 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
+ 		goto nla_put_failure;
+@@ -1289,7 +1303,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
  
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index 267dbfc..d9089b9 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -131,6 +131,12 @@ enum {
- #define WLAN_RC_SGI_FLAG        (0x08)
- #define WLAN_RC_HT_FLAG         (0x10)
+ 					chan = &sband->channels[i];
  
-+#define PR_HT_CAP(_cond, _str)						\
-+	do {								\
-+		if (_cond)						\
-+			len += snprintf(buf + len, max - len, _str);	\
-+	} while (0)
-+
- /**
-  * struct ath_rate_table - Rate Control table
-  * @rate_cnt: total number of rates for the given wireless mode
+-					if (nl80211_msg_put_channel(msg, chan))
++					if (nl80211_msg_put_channel(msg, chan,
++								    split))
+ 						goto nla_put_failure;
+ 
+ 					nla_nest_end(msg, nl_freq);
+@@ -9405,7 +9420,7 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_BEFORE);
+ 	if (!nl_freq)
+ 		goto nla_put_failure;
+-	if (nl80211_msg_put_channel(msg, channel_before))
++	if (nl80211_msg_put_channel(msg, channel_before, false))
+ 		goto nla_put_failure;
+ 	nla_nest_end(msg, nl_freq);
+ 
+@@ -9413,7 +9428,7 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
+ 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_AFTER);
+ 	if (!nl_freq)
+ 		goto nla_put_failure;
+-	if (nl80211_msg_put_channel(msg, channel_after))
++	if (nl80211_msg_put_channel(msg, channel_after, false))
+ 		goto nla_put_failure;
+ 	nla_nest_end(msg, nl_freq);
+ 
 -- 
-1.8.1.2
+1.8.0
 
