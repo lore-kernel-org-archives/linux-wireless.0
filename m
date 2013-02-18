@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:41061 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab3BYFII (ORCPT
+Received: from mail-ye0-f169.google.com ([209.85.213.169]:56086 "EHLO
+	mail-ye0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755566Ab3BRRYN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 00:08:08 -0500
-Received: by mail-wi0-f182.google.com with SMTP id hi18so2710607wib.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2013 21:08:07 -0800 (PST)
+	Mon, 18 Feb 2013 12:24:13 -0500
+Received: by mail-ye0-f169.google.com with SMTP id l13so1057511yen.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 09:24:12 -0800 (PST)
+Message-ID: <512263B9.3000402@lwfinger.net> (sfid-20130218_182419_821783_45207BE9)
+Date: Mon, 18 Feb 2013 11:24:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1361726886.8129.9.camel@jlt4.sipsolutions.net>
-References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com>
-	<1361564916.3420.11.camel@jlt4.sipsolutions.net>
-	<CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
-	<A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com>
-	<1361726886.8129.9.camel@jlt4.sipsolutions.net>
-Date: Sun, 24 Feb 2013 21:08:07 -0800
-Message-ID: <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com> (sfid-20130225_060814_162283_B5F04602)
-Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
- coexistence mode
-From: Adrian Chadd <adrian@freebsd.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Piotr Haber <phaber@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: linux-wireless@vger.kernel.org, j@w1.fi,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] cfg80211: fix station change if TDLS isn't supported
+References: <51207925.5040702@lwfinger.net> <1361196149-10731-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1361196149-10731-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 February 2013 09:28, Johannes Berg <johannes@sipsolutions.net> wrote:
-
->> In the driver we could inspect each sk_buff and boost priority of any
->> BOOTP packets so that it will end up in the AC_VO fifo and have
->> hardware coexistence handle it further. I consider that more a
->> pragmatic fix, which is not always the worst thing to go for.
+On 02/18/2013 08:02 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Well, I don't really think that's the best idea. Sniffing the protocol
-> is clumsy at best.
-
-Sure, but it's the kind of thing that commercial devices do in order
-to work around real world issues.
-
-So it'd be nice to have a programmatic way to detect things (eg bootp
-packets going out) and signal the driver via some side channel to do
-things like btcoex weight changing.
-
-But it'd also be nice to do it based on QoS too.
-
->> However, I would prefer a solution is which user-space, ie. dhcp
->> client can control the priority and/or BT coexistence.
+> Larry noticed (and bisected) that commit df881293c6ba9a12868491a717b25
+> "cfg80211: Pass TDLS peer's QoS/HT/VHT information during set_station"
+> broke secure connections. This is is the case only for drivers that
+> don't support TDLS, where any kind of change, even just the change of
+> authorized flag that is required for normal operation, was rejected
+> now. To fix this, remove the checks. I have some patches that will add
+> proper verification for all the different cases later.
 >
-> It's not just BT coex btw, with multi-channel support it might also be
-> interesting to not switch channels while DHCP is going on, for example.
+> Cc: Jouni Malinen <j@w1.fi>
+> Bisected-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Right.
+Johannes,
 
+Thanks. This patch does fix the problem. The only thing I saw was an unused 
+variable:
 
+net/wireless/nl80211.c: In function ‘nl80211_set_station_tdls’:
+net/wireless/nl80211.c:3421:37: warning: unused variable ‘rdev’ [-Wunused-variable]
 
-Adrian
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
+
+> ---
+>   net/wireless/nl80211.c | 8 --------
+>   1 file changed, 8 deletions(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 580ffea..d86af75 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -3423,14 +3423,6 @@ static int nl80211_set_station_tdls(struct genl_info *info,
+>   	struct nlattr *nla;
+>   	int err;
+>
+> -	/* Can only set if TDLS ... */
+> -	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS))
+> -		return -EOPNOTSUPP;
+> -
+> -	/* ... with external setup is supported */
+> -	if (!(rdev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP))
+> -		return -EOPNOTSUPP;
+> -
+>   	/* Dummy STA entry gets updated once the peer capabilities are known */
+>   	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+>   		params->ht_capa =
+>
+
