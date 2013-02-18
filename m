@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42668 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784Ab3BOTaK (ORCPT
+Received: from mailout1.ltindia.com ([125.18.18.132]:12564 "EHLO
+	mailout1.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab3BRLYq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 14:30:10 -0500
-Date: Fri, 15 Feb 2013 14:26:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: fix 'phys_addr' may be used uninitialized
-Message-ID: <20130215192627.GE4981@tuxdriver.com> (sfid-20130215_203016_271629_FB147B93)
-References: <20130215095221.GE4392@redhat.com>
+	Mon, 18 Feb 2013 06:24:46 -0500
+From: Girish Bn <Girish.BN@lnties.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: patch : mac80211:Multicast patch for linux-2.6.28.1 (wl12xx
+ drivers)
+Date: Mon, 18 Feb 2013 11:25:55 +0000
+Message-ID: <45566970CF58C74CB52107862E0541CD1D1F72BC@POCITMSEXMB02.LntUniverse.com> (sfid-20130218_122450_291969_8B9194A6)
+References: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com>
+	 (sfid-20130218_120856_334947_2BD0FBB7)
+ <1361185913.8555.6.camel@jlt4.sipsolutions.net>
+	 (sfid-20130218_121202_160075_39158588)
+ <1361185996.8555.7.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1361185996.8555.7.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130215095221.GE4392@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I still get the warning when building wireless-next on my F17 box
-with this patch applied...
-
-On Fri, Feb 15, 2013 at 10:52:21AM +0100, Stanislaw Gruszka wrote:
-> This should fix:
-> 
-> drivers/net/wireless/iwlegacy/4965-mac.c:1847:33: warning: 'phys_addr' may be used uninitialized in this function [-Wmaybe-uninitialized]
-> 
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-> index 7941eb3..d2ab1cf 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> @@ -1843,7 +1843,7 @@ il4965_tx_skb(struct il_priv *il,
->  	il->ops->txq_attach_buf_to_tfd(il, txq, txcmd_phys, firstlen, 1, 0);
->  	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
->  	dma_unmap_len_set(out_meta, len, firstlen);
-> -	if (secondlen)
-> +	if (secondlen > 0)
->  		il->ops->txq_attach_buf_to_tfd(il, txq, phys_addr, secondlen,
->  					       0, 0);
->  
-> -- 
-> 1.7.11.7
-> 
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+SGksDQoNClRoaXMgcGFydGljdWxhciBjaGFuZ2UgaXMgcmVxdWlyZWQgb24gZm9yIHRoZSBtdWx0
+aWNhc3QgdG8gd29yayBzdWNjZXNzZnVsbHkgb24gTGludXgga2VybmVsIDIuNi4yOC4yLiBJIHRo
+b3VnaHQgdGhyb3VnaCB0aGlzIGZvcnVtIEkgY2FuIG1ha2Ugb3RoZXJzIHRvIHVzZSB0aGlzIHBh
+dGNoIHRvIHJlc29sdmUgbXVsdGljYXN0IGlzc3VlLiBJIGFjY2VwdCB0aGF0IEkgYW0gbmV3IHRv
+IG9wZW4gc291cmNlLiBJZiBhbnkgcHJvcGVyIHdheSB0byBtYWtlIG11bHRpY2FzdCB0byB3b3Jr
+LCBwbGVhc2Ugc3VnZ2VzdCBvdGhlcndpc2UgZGlzY2FyZCB0aGUgcGF0Y2guIEZvciBtZSB0aGlz
+IHBhdGNoIGlzIHdvcmtpbmcgdG8gcmVjZWl2ZSBJR01QIHBhY2tldHMgb3ZlciB0aGUgV2lyZWxl
+c3MgbmV0d29yaw0KDQpUaGFua3MgJiBSZWdhcmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIg
+SW5kdXN0cmlhbCBBcmVhLA0KSGViYmFsLUhvb3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRl
+bGVwaG9uZSA6ICBESUQrOTEtODIxLTI0MDU1NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUt
+bWFpbCBJRCA6R2lyaXNoLkJOQGxudGllcy5jb20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFp
+bCBpcyBjbGFzc2lmaWVkIGFzIDoNCiggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQg
+SUVTIENvbmZpZGVudGlhbA0KKFgpIEwmVCBJRVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBH
+ZW5lcmFsIEJ1c2luZXNzDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpv
+aGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KU2VudDogTW9u
+ZGF5LCBGZWJydWFyeSAxOCwgMjAxMyA0OjQzIFBNDQpUbzogR2lyaXNoIEJuDQpDYzogbGludXgt
+d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogcGF0Y2ggOiBtYWM4MDIxMTpN
+dWx0aWNhc3QgcGF0Y2ggZm9yIGxpbnV4LTIuNi4yOC4xICh3bDEyeHggZHJpdmVycykNCg0KT24g
+TW9uLCAyMDEzLTAyLTE4IGF0IDEyOjExICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBP
+biBNb24sIDIwMTMtMDItMTggYXQgMTE6MDkgKzAwMDAsIEdpcmlzaCBCbiB3cm90ZToNCj4gPiBI
+aSBBbGwsDQo+ID4NCj4gPiBUaGUgYmVsb3cgcGF0Y2ggZmlsZSBpcyByZXF1aXJlZCBpbiBvcmRl
+ciBmb3IgdGhlIG11bHRpY2FzdGluZyB0bw0KPiA+IHdvcmsgcHJvcGVybHkgb24gTGludXgga2Vy
+bmVsIGJlbG93IDMuMiBmb3Igd2wxMnh4IGRyaXZlcnMgZGlmZiAtTmF1ciBhL25ldC9tYWM4MDIx
+MS9pZmFjZS5jIGIvbmV0L21hYzgwMjExL2lmYWNlLmMNCj4gPiAtLS0gYS9uZXQvbWFjODAyMTEv
+aWZhY2UuYyAgICAgICAgICAyMDEyLTA5LTIyIDIyOjU5OjE1LjAwMDAwMDAwMCArMDUzMA0KPiA+
+ICsrKyBiL25ldC9tYWM4MDIxMS9pZmFjZS5jICAgICAgMjAxMy0wMi0wNyAxMjowNjowMy45NTgy
+Njg3OTggKzA1MzANCj4gPiBAQCAtODExLDYgKzgxMSw5IEBADQo+ID4gICAgICAgICAgICAgICAg
+Lm5kb191bmluaXQgICAgICAgICAgICAgICAgICAgICAgICA9IGllZWU4MDIxMV90ZWFyZG93bl9z
+ZGF0YSwNCj4gPiAgICAgICAgICAgICAgICAubmRvX3N0YXJ0X3htaXQgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgPSBpZWVlODAyMTFfc3ViaWZfc3RhcnRfeG1pdCwNCj4gPiAgICAgICAg
+ICAgICAgICAubmRvX3NldF9yeF9tb2RlICAgICAgICA9IGllZWU4MDIxMV9zZXRfbXVsdGljYXN0
+X2xpc3QsDQo+ID4gKyNpZiAoTElOVVhfVkVSU0lPTl9DT0RFIDwgS0VSTkVMX1ZFUlNJT04oMywy
+LDApKQ0KPiA+ICsgICAgICAgICAgICAgLm5kb19zZXRfbXVsdGljYXN0X2xpc3QgPQ0KPiA+ICtp
+ZWVlODAyMTFfc2V0X211bHRpY2FzdF9saXN0LCAjZW5kaWYNCj4NCj4gTE9MLg0KDQpBbHNvIHRo
+aXM6DQoNCj4gVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KPiAoICApIEwmVCBJRVMgUHJv
+cHJpZXRhcnkNCj4gKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KPiAoWCkgTCZUIElFUyBJbnRl
+cm5hbCBVc2UNCj4gKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KDQoNCkluIG90aGVyIHdv
+cmRzLCB5b3UgbmV2ZXIgZXZlbiB3YW50ZWQgbWUgdG8gc2VlIHRoYXQgZW1haWwsIHdoaWNoIGlz
+IGp1c3QgYXMgd2VsbCBzaW5jZSBpdCdzIGNvbXBsZXRlbHkgYm9ndXMgZm9yIHVwc3RyZWFtLg0K
+DQpqb2hhbm5lcw0KDQpMYXJzZW4gJiBUb3Vicm8gTGltaXRlZA0KDQp3d3cubGFyc2VudG91YnJv
+LmNvbQ0KDQpUaGlzIEVtYWlsIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2Vk
+IGluZm9ybWF0aW9uIGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBu
+b3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5h
+dGUgdGhlIGluZm9ybWF0aW9uLCBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20g
+eW91ciBzeXN0ZW0uDQo=
