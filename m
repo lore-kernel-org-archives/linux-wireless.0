@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47910 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386Ab3BUBiJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42800 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755657Ab3BROBi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 20:38:09 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20773.31273.604966.176099@gargle.gargle.HOWL> (sfid-20130221_023813_776068_72779712)
-Date: Thu, 21 Feb 2013 07:06:41 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
- high.
-In-Reply-To: <51255360.6060603@candelatech.com>
-References: <511935F2.8080103@candelatech.com>
-	<20761.34987.125000.908722@gargle.gargle.HOWL>
-	<511BC243.8010409@candelatech.com>
-	<20770.57339.20017.225929@gargle.gargle.HOWL>
-	<51255360.6060603@candelatech.com>
+	Mon, 18 Feb 2013 09:01:38 -0500
+Message-ID: <1361196089.8555.12.camel@jlt4.sipsolutions.net> (sfid-20130218_150144_762234_DEA874EE)
+Subject: Re: Regression caused by commit df88129
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 18 Feb 2013 15:01:29 +0100
+In-Reply-To: <51207925.5040702@lwfinger.net> (sfid-20130217_073124_813060_AAE5AFC8)
+References: <51207925.5040702@lwfinger.net>
+	 (sfid-20130217_073124_813060_AAE5AFC8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
->  From the AP lockup case, dmesg is full of stuff like this:
+On Sun, 2013-02-17 at 00:31 -0600, Larry Finger wrote:
+> Jouni and Johannes,
 > 
-> [ 1819.538577] vap1: delba from 00:3f:d1:e4:32:51 (initiator) tid 0 reason code 37
-> [ 1819.640602] vap1: Rx A-MPDU request on 00:6f:f9:68:b1:31 tid 0 result 0
-> [ 1819.690601] vap1: Rx A-MPDU request on 00:01:ab:ba:da:d3 tid 0 result 0
-> [ 1819.778013] vap1: RX session timer expired on 00:59:82:d1:d8:8c tid 0
-> [ 1819.778040] vap1: Rx BA session stop requested for 00:59:82:d1:d8:8c tid 0 recipient reason: 39
-> [ 1819.814600] vap1: delba from 00:59:82:d1:d8:8c (initiator) tid 0 reason code 37
-> [ 1819.820010] vap1: RX session timer expired on 00:eb:69:fc:4b:db tid 0
-> [ 1819.820034] vap1: Rx BA session stop requested for 00:eb:69:fc:4b:db tid 0 recipient reason: 39
-> [ 1819.863631] vap1: delba from 00:eb:69:fc:4b:db (initiator) tid 0 reason code 37
-> [ 1819.978012] vap1: RX session timer expired on 00:39:9a:d1:0e:10 tid 0
-> [ 1819.978035] vap1: Rx BA session stop requested for 00:39:9a:d1:0e:10 tid 0 recipient reason: 39
-> [ 1820.014580] vap1: delba from 00:39:9a:d1:0e:10 (initiator) tid 0 reason code 37
+> A recent pull of the wireless-testing tree caused my wireless to break. The 
+> wireless devices can authenticate and associate as follows:
+> 
+> wlan0: authenticate with c0:3f:0e:be:2b:44
+> wlan0: capabilities/regulatory prevented using AP HT/VHT configuration, downgraded
+> wlan0: send auth to c0:3f:0e:be:2b:44 (try 1/3)
+> wlan0: authenticated
+> wlan0: associate with c0:3f:0e:be:2b:44 (try 1/3)
+> wlan0: RX AssocResp from c0:3f:0e:be:2b:44 (capab=0x411 status=0 aid=3)
+> wlan0: associated
+> IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
+> b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: 
+> c0:3f:0e:be:2b:44
+> b43-phy0 debug: Using hardware based encryption for keyidx: 1, mac: 
+> ff:ff:ff:ff:ff:ff
+> wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
+> wlan0: dropped frame to c0:3f:0e:be:2b:44 (unauthorized port)
 
-The ADDBA sessions are being torn down aggressively.
+Yeah, it's obvious that this would happen for drivers not supporting
+TDLS -- will send a patch.
 
-> TXERR Filtered:            224          0         0         0
+johannes
 
-The recipient has gone out of range and frames are being filtered here.
-As a quick test, can you disable PowerSave on the client and check if the issue
-still happens ?
-
-Sujith
