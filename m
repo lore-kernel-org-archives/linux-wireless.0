@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:51870 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758244Ab3BSQVx (ORCPT
+Received: from mail-gg0-f178.google.com ([209.85.161.178]:36580 "EHLO
+	mail-gg0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757885Ab3BSR5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 11:21:53 -0500
-Message-ID: <1361290909.19353.140.camel@edumazet-glaptop> (sfid-20130219_172158_275337_F5CF5FF4)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 19 Feb 2013 08:21:49 -0800
-In-Reply-To: <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Feb 2013 12:57:22 -0500
+Message-ID: <5123BCFF.5090408@lwfinger.net> (sfid-20130219_185727_465971_48EC1D4C)
+Date: Tue, 19 Feb 2013 11:57:19 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Laight <David.Laight@ACULAB.COM>
+CC: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bittorf@bluebottle.com, stable@vger.kernel.org
+Subject: Re: [PATCH] b43: Increase number of RX DMA slots
+References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net> <20130219.005206.397289032011003833.davem@davemloft.net> <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-19 at 11:03 +0100, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
-> 
-> > > chrome: page allocation failure: order:1, mode:0x4020
-> > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > > Call Trace:
-> > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
-> 
-> > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> > 
-> > It should hopefully use order-0 pages
-> 
-> It will, do that then, unfortunately it can't switch at runtime because
-> it advertised this support to the access point or clients.
+On 02/19/2013 03:42 AM, David Laight wrote:
+> Surely the driver should work even if all the RX buffers get filled?
+> Increasing the number of buffers is just hiding the issue.
+> A burst of 300 back to back small packets probably fills the 256 slots.
+>
+> I realise that dropping frames isn't ideal, and that small numbers
+> of buffers can make it impossible to receive long fragmented IP
+> messages. but increasing the number of buffers doesn't seem to
+> be the best fix for a 'silent freeze'.
+>
+> It might be that the driver would be more robust if it only ever
+> put rx buffers into all but one of the ring slots.
 
-What are the drawbacks of setting amsdu_size_8K to 0 by default ?
+The real problem is that some (perhaps all) versions of the firmware, which 
+manages the 'in' pointer of the FIFO ring, appears to fail to detect the ring 
+full condition. That is the real cause of the freeze; however, we do not have 
+access to the firmware source. We don't even have the right to redistribute it, 
+which is why we have the b43-fwcutter work around.
 
-Alternative would be :
+I just reviewed about 8 months of logs on my laptop and discovered that my 2.0 
+GHz dual CPU system once used 59 of 64 slots. On an netbook with an Atom running 
+at 1.6 GHz, 109 slots were used. Clearly, the much slower CPU in a Linksys 
+WRT54G needs more than 64, but testing to determine how many is in progress.
 
-- As long as we cant allocate order-1 pages (to refill the RX ring),
-copy incoming frames into order-0 pages, so that order-1 pages are still
-available for the NIC.
+Current thinking is that we will change the number of slots to 128, and add code 
+to the driver to detect the overflow and reset the device when it occurs. The 
+increased memory usage should be manageable, most systems will never hit the 
+condition, and the packet loss will be minimal for those that do.
 
+Larry
 
 
