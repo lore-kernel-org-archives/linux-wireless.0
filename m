@@ -1,193 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:36964 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755811Ab3BMNrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 08:47:00 -0500
-Message-ID: <511B9807.6000200@neratec.com> (sfid-20130213_144705_445488_5170CC28)
-Date: Wed, 13 Feb 2013 14:41:27 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:52302 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933152Ab3BSS2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2013 13:28:17 -0500
+Message-ID: <5123C43D.2020602@lwfinger.net> (sfid-20130219_192829_175186_AF258F03)
+Date: Tue, 19 Feb 2013 12:28:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: start auth/assoc timeout on frame status
-References: <1359638935-16613-1-git-send-email-johannes@sipsolutions.net>  (sfid-20130131_142837_609017_1B1D23D2) <1359992600.10311.25.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359992600.10311.25.camel@jlt4.sipsolutions.net>
-Content-Type: multipart/mixed;
- boundary="------------070300020009070106040302"
+To: David Miller <davem@davemloft.net>
+CC: David.Laight@ACULAB.COM, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	bittorf@bluebottle.com, stable@vger.kernel.org
+Subject: Re: [PATCH] b43: Increase number of RX DMA slots
+References: <20130219.005206.397289032011003833.davem@davemloft.net> <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com> <5123BCFF.5090408@lwfinger.net> <20130219.131553.787630407148880340.davem@davemloft.net>
+In-Reply-To: <20130219.131553.787630407148880340.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070300020009070106040302
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On 02/19/2013 12:15 PM, David Miller wrote:
 
-There is a regression introduced with this patch.
-On my ath9k AP + ath9k STA I get timeout for
-management frames even when they are acked.
-
-Attached syslog and iw event before and after
-this patch.
-
-I have seen it before in my testing and it gets
-a lot worse with system load.  Sometimes it can
-retry auth/assoc frames for 10 seconds before
-connecting.
-Anyway it always looses the first authentication frame.
-
-Wojtek
-
-
-On 02/04/2013 04:43 PM, Johannes Berg wrote:
-> On Thu, 2013-01-31 at 14:28 +0100, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> When sending authentication/association frames they
->> might take a bit of time to go out because we may
->> have to synchronise with the AP, in particular in
->> the case where it's really a P2P GO. In this case
->> the 200ms fixed timeout could potentially be too
->> short if the beacon interval is relatively large.
->>
->> For drivers that report TX status we can do better.
->> Instead of starting the timeout directly, start it
->> only when the frame status arrives. Since then the
->> frame was out on the air, we can wait shorter (the
->> typical response time is supposed to be 30ms, wait
->> 100ms.) Also, if the frame failed to be transmitted
->> try again right away instead of waiting.
-> Applied.
+> I understand your constraints, but this is a trivially remotely
+> DoS'able condition even on slow CPU atom laptops.
 >
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Send an "expansive" full sized frame followed by 300 or so 64-byte UDP
+> packets --> instant hang.
+
+Thanks for the suggestion for a test. I think the reset solution should survive 
+with only some packet loss, but we will find out.
+
+Larry
 
 
---------------070300020009070106040302
-Content-Type: text/plain; charset=UTF-8;
- name="regression.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="regression.txt"
-
-W2JlZm9yZSBjb21taXQgbWFjODAyMTE6IHN0YXJ0IGF1dGgvYXNzb2MgdGltZW91dCBvbiBm
-cmFtZSBzdGF0dXNdCipzeXNsb2cqCkZlYiAxMyAxNDozMzozMyB3bGFuVFMga2VybmVsOiBb
-IDU0ODYuMzI0MDY5XSBkZXZpY2Ugd2xhbjEgZW50ZXJlZCBwcm9taXNjdW91cyBtb2RlCkZl
-YiAxMyAxNDozMzozMyB3bGFuVFMga2VybmVsOiBbIDU0ODYuMzM1MDY3XSBJUHY2OiBBRERS
-Q09ORihORVRERVZfVVApOiB3bGFuMTogbGluayBpcyBub3QgcmVhZHkKRmViIDEzIDE0OjMz
-OjMzIHdsYW5UUyBrZXJuZWw6IFsgNTQ4Ni4zNDY4NTBdIElQdjY6IEFERFJDT05GKE5FVERF
-Vl9DSEFOR0UpOiB3bGFuMTogbGluayBiZWNvbWVzIHJlYWR5CkZlYiAxMyAxNDozMzozMyB3
-bGFuVFMga2VybmVsOiBbIDU0ODYuMzQ2ODY5XSB3bGFuX2JyOiBwb3J0IDEod2xhbjEpIGVu
-dGVyZWQgZm9yd2FyZGluZyBzdGF0ZQpGZWIgMTMgMTQ6MzM6MzMgd2xhblRTIGtlcm5lbDog
-WyA1NDg2LjM0Njg3MV0gd2xhbl9icjogcG9ydCAxKHdsYW4xKSBlbnRlcmVkIGZvcndhcmRp
-bmcgc3RhdGUKRmViIDEzIDE0OjMzOjM4IHdsYW5UUyBrZXJuZWw6IFsgNTQ5MS4zNTU0MDJd
-IElQdjY6IEFERFJDT05GKE5FVERFVl9VUCk6IHdsYW4wOiBsaW5rIGlzIG5vdCByZWFkeQpG
-ZWIgMTMgMTQ6MzM6NDEgd2xhblRTIGtlcm5lbDogWyA1NDk0LjA3NDY3NF0gd2xhbjA6IGF1
-dGhlbnRpY2F0ZSB3aXRoIDA0OmYwOjIxOjAyOjQ2OjQ2CkZlYiAxMyAxNDozMzo0MSB3bGFu
-VFMga2VybmVsOiBbIDU0OTQuMDc3NjQ0XSB3bGFuMDogc2VuZCBhdXRoIHRvIDA0OmYwOjIx
-OjAyOjQ2OjQ2ICh0cnkgMS8zKQpGZWIgMTMgMTQ6MzM6NDEgd2xhblRTIGhvc3RhcGQ6IHds
-YW4xOiBTVEEgMDQ6ZjA6MjE6MDI6NDY6NDUgSUVFRSA4MDIuMTE6IGF1dGhlbnRpY2F0ZWQK
-RmViIDEzIDE0OjMzOjQxIHdsYW5UUyBrZXJuZWw6IFsgNTQ5NC4wOTk3MjRdIHdsYW4wOiBh
-dXRoZW50aWNhdGVkCkZlYiAxMyAxNDozMzo0MSB3bGFuVFMga2VybmVsOiBbIDU0OTQuMTAw
-Mjg1XSBhdGg5ayAwMDAwOjAxOjAwLjAgd2xhbjA6IGRpc2FibGluZyBIVCBhcyBXTU0vUW9T
-IGlzIG5vdCBzdXBwb3J0ZWQgYnkgdGhlIEFQCkZlYiAxMyAxNDozMzo0MSB3bGFuVFMga2Vy
-bmVsOiBbIDU0OTQuMTAwMjkwXSBhdGg5ayAwMDAwOjAxOjAwLjAgd2xhbjA6IGRpc2FibGlu
-ZyBWSFQgYXMgV01NL1FvUyBpcyBub3Qgc3VwcG9ydGVkIGJ5IHRoZSBBUApGZWIgMTMgMTQ6
-MzM6NDEgd2xhblRTIGhvc3RhcGQ6IHdsYW4xOiBTVEEgMDQ6ZjA6MjE6MDI6NDY6NDUgSUVF
-RSA4MDIuMTE6IGFzc29jaWF0ZWQgKGFpZCAxKQpGZWIgMTMgMTQ6MzM6NDEgd2xhblRTIGtl
-cm5lbDogWyA1NDk0LjEwNDE0Ml0gd2xhbjA6IGFzc29jaWF0ZSB3aXRoIDA0OmYwOjIxOjAy
-OjQ2OjQ2ICh0cnkgMS8zKQpGZWIgMTMgMTQ6MzM6NDEgd2xhblRTIGtlcm5lbDogWyA1NDk0
-LjEwNzczMV0gd2xhbjA6IFJYIEFzc29jUmVzcCBmcm9tIDA0OmYwOjIxOjAyOjQ2OjQ2IChj
-YXBhYj0weDExIHN0YXR1cz0wIGFpZD0xKQpGZWIgMTMgMTQ6MzM6NDEgd2xhblRTIGtlcm5l
-bDogWyA1NDk0LjEwNzgwMF0gd2xhbjA6IGFzc29jaWF0ZWQKRmViIDEzIDE0OjMzOjQxIHds
-YW5UUyBrZXJuZWw6IFsgNTQ5NC4xMDkxNDRdIElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFO
-R0UpOiB3bGFuMDogbGluayBiZWNvbWVzIHJlYWR5CkZlYiAxMyAxNDozMzo0MSB3bGFuVFMg
-a2VybmVsOiBbIDU0OTQuMTE1OTk2XSB3bGFuMDogZHJvcHBlZCBmcmFtZSB0byAwNDpmMDoy
-MTowMjo0Njo0NiAodW5hdXRob3JpemVkIHBvcnQpCkZlYiAxMyAxNDozMzo0MSB3bGFuVFMg
-aG9zdGFwZDogd2xhbjE6IFNUQSAwNDpmMDoyMTowMjo0Njo0NSBSQURJVVM6IHN0YXJ0aW5n
-IGFjY291bnRpbmcgc2Vzc2lvbiA1MTFCOTYyRC0wMDAwMDAwMApGZWIgMTMgMTQ6MzM6NDEg
-d2xhblRTIGhvc3RhcGQ6IHdsYW4xOiBTVEEgMDQ6ZjA6MjE6MDI6NDY6NDUgV1BBOiBwYWly
-d2lzZSBrZXkgaGFuZHNoYWtlIGNvbXBsZXRlZCAoUlNOKQpGZWIgMTMgMTQ6MzM6NDggd2xh
-blRTIGtlcm5lbDogWyA1NTAxLjM3MjA0OV0gd2xhbl9icjogcG9ydCAxKHdsYW4xKSBlbnRl
-cmVkIGZvcndhcmRpbmcgc3RhdGUKKml3IGV2ZW50KgoxMzYwNzYyNDE5LjAwODg5Mzogd2xh
-bjAgKHBoeSAjMCk6IHNjYW4gc3RhcnRlZAoxMzYwNzYyNDIxLjYxNjExMTogd2xhbjAgKHBo
-eSAjMCk6IHNjYW4gZmluaXNoZWQ6IDI0MTIgMjQxNyAyNDIyIDI0MjcgMjQzMiAyNDM3IDI0
-NDIgMjQ0NyAyNDUyIDI0NTcgMjQ2MiA1MTgwIDUyMDAgNTIyMCA1MjQwIDUyNjAgNTI4MCA1
-MzAwIDUzMjAgNTUwMCA1NTIwIDU1NDAgNTU2MCA1NTgwIDU2NjAgNTY4MCA1NzAwIDU3NDUg
-NTc2NSA1Nzg1IDU4MDUgNTgyNSwgIiIKMTM2MDc2MjQyMS42MTg5MTk6IHdsYW4wOiBuZXcg
-c3RhdGlvbiAwNDpmMDoyMTowMjo0Njo0NgoxMzYwNzYyNDIxLjY0MDYzMDogd2xhbjEgKHBo
-eSAjMSk6IG1nbXQgVFggc3RhdHVzIChjb29raWUgZmZmZjg4MDFmZTRjYTEwMCk6IGFja2Vk
-CjEzNjA3NjI0MjEuNjQxMTc1OiB3bGFuMCAocGh5ICMwKTogYXV0aCAwNDpmMDoyMTowMjo0
-Njo0NiAtPiAwNDpmMDoyMTowMjo0Njo0NSBzdGF0dXM6IDA6IFN1Y2Nlc3NmdWwgW2ZyYW1l
-OiBiMCAwMCAyYyAwMCAwNCBmMCAyMSAwMiA0NiA0NSAwNCBmMCAyMSAwMiA0NiA0NiAwNCBm
-MCAyMSAwMiA0NiA0NiBmMCAwYiAwMCAwMCAwMiAwMCAwMCAwMF0KMTM2MDc2MjQyMS42NDY0
-NjA6IHdsYW4xIChwaHkgIzEpOiBtZ210IFRYIHN0YXR1cyAoY29va2llIGZmZmY4ODAxYzQw
-ZmU5MDApOiBhY2tlZAoxMzYwNzYyNDIxLjY0ODcwOTogd2xhbjE6IG5ldyBzdGF0aW9uIDA0
-OmYwOjIxOjAyOjQ2OjQ1CjEzNjA3NjI0MjEuNjQ5MjQxOiB3bGFuMCAocGh5ICMwKTogYXNz
-b2MgMDQ6ZjA6MjE6MDI6NDY6NDYgLT4gMDQ6ZjA6MjE6MDI6NDY6NDUgc3RhdHVzOiAwOiBT
-dWNjZXNzZnVsIFtmcmFtZTogMTAgMDAgMmMgMDAgMDQgZjAgMjEgMDIgNDYgNDUgMDQgZjAg
-MjEgMDIgNDYgNDYgMDQgZjAgMjEgMDIgNDYgNDYgMDAgMGMgMTEgMDAgMDAgMDAgMDEgYzAg
-MDEgMDIgYjAgYzhdCjEzNjA3NjI0MjEuNjUwNDM3OiB3bGFuMCAocGh5ICMwKTogY29ubmVj
-dGVkIHRvIDA0OmYwOjIxOjAyOjQ2OjQ2CgoKW2FmdGVyIGNvbW1pdCBtYWM4MDIxMTogc3Rh
-cnQgYXV0aC9hc3NvYyB0aW1lb3V0IG9uIGZyYW1lIHN0YXR1c10KKnN5c2xvZyoKRmViIDEz
-IDE0OjM4OjUzIHdsYW5UUyBrZXJuZWw6IFsgNTgwNS45MDIzNjldIGRldmljZSB3bGFuMSBl
-bnRlcmVkIHByb21pc2N1b3VzIG1vZGUKRmViIDEzIDE0OjM4OjUzIHdsYW5UUyBrZXJuZWw6
-IFsgNTgwNS45MDY5MDhdIElQdjY6IEFERFJDT05GKE5FVERFVl9VUCk6IHdsYW4xOiBsaW5r
-IGlzIG5vdCByZWFkeQpGZWIgMTMgMTQ6Mzg6NTMgd2xhblRTIGtlcm5lbDogWyA1ODA1Ljkx
-ODUxMF0gSVB2NjogQUREUkNPTkYoTkVUREVWX0NIQU5HRSk6IHdsYW4xOiBsaW5rIGJlY29t
-ZXMgcmVhZHkKRmViIDEzIDE0OjM4OjUzIHdsYW5UUyBrZXJuZWw6IFsgNTgwNS45MTg1Mjdd
-IHdsYW5fYnI6IHBvcnQgMSh3bGFuMSkgZW50ZXJlZCBmb3J3YXJkaW5nIHN0YXRlCkZlYiAx
-MyAxNDozODo1MyB3bGFuVFMga2VybmVsOiBbIDU4MDUuOTE4NTI5XSB3bGFuX2JyOiBwb3J0
-IDEod2xhbjEpIGVudGVyZWQgZm9yd2FyZGluZyBzdGF0ZQpGZWIgMTMgMTQ6Mzk6MDEgd2xh
-blRTIGtlcm5lbDogWyA1ODEzLjY4NjA1MV0gd2xhbjA6IGF1dGhlbnRpY2F0ZSB3aXRoIDA0
-OmYwOjIxOjAyOjQ2OjQ2CkZlYiAxMyAxNDozOTowMSB3bGFuVFMgaG9zdGFwZDogd2xhbjE6
-IFNUQSAwNDpmMDoyMTowMjo0Njo0NSBJRUVFIDgwMi4xMTogYXV0aGVudGljYXRlZApGZWIg
-MTMgMTQ6Mzk6MDEgd2xhblRTIGhvc3RhcGQ6IHdsYW4xOiBTVEEgMDQ6ZjA6MjE6MDI6NDY6
-NDUgSUVFRSA4MDIuMTE6IGF1dGhlbnRpY2F0ZWQKRmViIDEzIDE0OjM5OjAxIHdsYW5UUyBr
-ZXJuZWw6IFsgNTgxMy42OTA5NTZdIHdsYW4wOiBzZW5kIGF1dGggdG8gMDQ6ZjA6MjE6MDI6
-NDY6NDYgKHRyeSAxLzMpCkZlYiAxMyAxNDozOTowMSB3bGFuVFMga2VybmVsOiBbIDU4MTMu
-NjkxMDU5XSB3bGFuMDogc2VuZCBhdXRoIHRvIDA0OmYwOjIxOjAyOjQ2OjQ2ICh0cnkgMi8z
-KQpGZWIgMTMgMTQ6Mzk6MDEgd2xhblRTIGtlcm5lbDogWyA1ODEzLjY5MjcwN10gd2xhbjA6
-IGF1dGhlbnRpY2F0ZWQKRmViIDEzIDE0OjM5OjAxIHdsYW5UUyBrZXJuZWw6IFsgNTgxMy42
-OTQ2NzNdIGF0aDlrIDAwMDA6MDE6MDAuMCB3bGFuMDogZGlzYWJsaW5nIEhUIGFzIFdNTS9R
-b1MgaXMgbm90IHN1cHBvcnRlZCBieSB0aGUgQVAKRmViIDEzIDE0OjM5OjAxIHdsYW5UUyBr
-ZXJuZWw6IFsgNTgxMy42OTQ2NzRdIGF0aDlrIDAwMDA6MDE6MDAuMCB3bGFuMDogZGlzYWJs
-aW5nIFZIVCBhcyBXTU0vUW9TIGlzIG5vdCBzdXBwb3J0ZWQgYnkgdGhlIEFQCkZlYiAxMyAx
-NDozOTowMSB3bGFuVFMgaG9zdGFwZDogd2xhbjE6IFNUQSAwNDpmMDoyMTowMjo0Njo0NSBJ
-RUVFIDgwMi4xMTogYXNzb2NpYXRlZCAoYWlkIDEpCkZlYiAxMyAxNDozOTowMSB3bGFuVFMg
-a2VybmVsOiBbIDU4MTMuNjk4NDI0XSB3bGFuMDogYXNzb2NpYXRlIHdpdGggMDQ6ZjA6MjE6
-MDI6NDY6NDYgKHRyeSAxLzMpCkZlYiAxMyAxNDozOTowMSB3bGFuVFMga2VybmVsOiBbIDU4
-MTMuNzAxMTU0XSB3bGFuMDogUlggQXNzb2NSZXNwIGZyb20gMDQ6ZjA6MjE6MDI6NDY6NDYg
-KGNhcGFiPTB4MTEgc3RhdHVzPTAgYWlkPTEpCkZlYiAxMyAxNDozOTowMSB3bGFuVFMga2Vy
-bmVsOiBbIDU4MTMuNzAxMTg3XSB3bGFuMDogYXNzb2NpYXRlZApGZWIgMTMgMTQ6Mzk6MDEg
-d2xhblRTIGtlcm5lbDogWyA1ODEzLjcwMTI4OF0gSVB2NjogQUREUkNPTkYoTkVUREVWX0NI
-QU5HRSk6IHdsYW4wOiBsaW5rIGJlY29tZXMgcmVhZHkKRmViIDEzIDE0OjM5OjAxIHdsYW5U
-UyBob3N0YXBkOiB3bGFuMTogU1RBIDA0OmYwOjIxOjAyOjQ2OjQ1IFJBRElVUzogc3RhcnRp
-bmcgYWNjb3VudGluZyBzZXNzaW9uIDUxMUI5NzZELTAwMDAwMDAwCkZlYiAxMyAxNDozOTow
-MSB3bGFuVFMgaG9zdGFwZDogd2xhbjE6IFNUQSAwNDpmMDoyMTowMjo0Njo0NSBXUEE6IHBh
-aXJ3aXNlIGtleSBoYW5kc2hha2UgY29tcGxldGVkIChSU04pCippdyBldmVudCoKMTM2MDc2
-MjczOC42MTUzMzg6IHdsYW4wIChwaHkgIzApOiBzY2FuIHN0YXJ0ZWQKMTM2MDc2Mjc0MS4y
-MjQ1Mjg6IHdsYW4wIChwaHkgIzApOiBzY2FuIGZpbmlzaGVkOiAyNDEyIDI0MTcgMjQyMiAy
-NDI3IDI0MzIgMjQzNyAyNDQyIDI0NDcgMjQ1MiAyNDU3IDI0NjIgNTE4MCA1MjAwIDUyMjAg
-NTI0MCA1MjYwIDUyODAgNTMwMCA1MzIwIDU1MDAgNTUyMCA1NTQwIDU1NjAgNTU4MCA1NjYw
-IDU2ODAgNTcwMCA1NzQ1IDU3NjUgNTc4NSA1ODA1IDU4MjUsICIiCjEzNjA3NjI3NDEuMjI5
-OTY5OiB3bGFuMDogbmV3IHN0YXRpb24gMDQ6ZjA6MjE6MDI6NDY6NDYKMTM2MDc2Mjc0MS4y
-MzEzODI6IHdsYW4xIChwaHkgIzEpOiBtZ210IFRYIHN0YXR1cyAoY29va2llIGZmZmY4ODAy
-MDJiM2U1MDApOiBhY2tlZAoxMzYwNzYyNzQxLjIzMTQwNzogd2xhbjEgKHBoeSAjMSk6IG1n
-bXQgVFggc3RhdHVzIChjb29raWUgZmZmZjg4MDIwMmIzZTYwMCk6IGFja2VkCjEzNjA3NjI3
-NDEuMjMxODk4OiB3bGFuMCAocGh5ICMwKTogYXV0aCAwNDpmMDoyMTowMjo0Njo0NiAtPiAw
-NDpmMDoyMTowMjo0Njo0NSBzdGF0dXM6IDA6IFN1Y2Nlc3NmdWwgW2ZyYW1lOiBiMCAwMCAy
-YyAwMCAwNCBmMCAyMSAwMiA0NiA0NSAwNCBmMCAyMSAwMiA0NiA0NiAwNCBmMCAyMSAwMiA0
-NiA0NiBmMCAwYiAwMCAwMCAwMiAwMCAwMCAwMF0KMTM2MDc2Mjc0MS4yMzgzMTQ6IHdsYW4x
-IChwaHkgIzEpOiBtZ210IFRYIHN0YXR1cyAoY29va2llIGZmZmY4ODAyMDJiM2UzMDApOiBh
-Y2tlZAoxMzYwNzYyNzQxLjI0MDEyMTogd2xhbjE6IG5ldyBzdGF0aW9uIDA0OmYwOjIxOjAy
-OjQ2OjQ1CjEzNjA3NjI3NDEuMjQwMjgwOiB3bGFuMCAocGh5ICMwKTogYXNzb2MgMDQ6ZjA6
-MjE6MDI6NDY6NDYgLT4gMDQ6ZjA6MjE6MDI6NDY6NDUgc3RhdHVzOiAwOiBTdWNjZXNzZnVs
-IFtmcmFtZTogMTAgMDAgMmMgMDAgMDQgZjAgMjEgMDIgNDYgNDUgMDQgZjAgMjEgMDIgNDYg
-NDYgMDQgZjAgMjEgMDIgNDYgNDYgMjAgMGMgMTEgMDAgMDAgMDAgMDEgYzAgMDEgMDIgYjAg
-YzhdCjEzNjA3NjI3NDEuMjQwMzI2OiB3bGFuMCAocGh5ICMwKTogY29ubmVjdGVkIHRvIDA0
-OmYwOjIxOjAyOjQ2OjQ2CgoK
---------------070300020009070106040302--
