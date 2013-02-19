@@ -1,30 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:32873 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965133Ab3BMXL7 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:41886 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758355Ab3BSQgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 18:11:59 -0500
-Received: by mail-bk0-f54.google.com with SMTP id w5so811569bku.13
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 15:11:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1360795927.8868.30.camel@jlt4.sipsolutions.net>
-References: <1360786461-30107-1-git-send-email-thomas@cozybit.com> <1360795927.8868.30.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 13 Feb 2013 15:11:36 -0800
-Message-ID: <CAG6hwVMKj5JKpRWgJ3x0_+DsQ13AiXhC6G18RM9OUUrX1UQypA@mail.gmail.com> (sfid-20130214_001202_651947_CC0A85ED)
-Subject: Re: [PATCH v2 1/3] mac80211: consolidate MBSS change notification
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Feb 2013 11:36:54 -0500
+Message-ID: <1361291809.19353.145.camel@edumazet-glaptop> (sfid-20130219_173702_652671_77AABC5C)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Tue, 19 Feb 2013 08:36:49 -0800
+In-Reply-To: <20130219161830.GD21764@merlins.org>
+References: <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <20130219161830.GD21764@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 13, 2013 at 2:52 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Applied all, removing the useless "return" in patch 2 and also adding a
-> proper return value there if beacon allocation fails.
+On Tue, 2013-02-19 at 08:18 -0800, Marc MERLIN wrote:
 
-Great, thanks for the review.
+> 
+> Forgive the newbie question: would the inability to get pages cause
+> interrupts to be disabled or at least something that would stop the mouse
+> cursor and the keyboard from working?
+> 
 
--- 
-Thomas
+Maybe these things also need order-1 pages to work ;)
+
+Any kmem_cache using order-1 or order-2 pages can not allocate new slabs
+
+For example, TCP sockets can not be allocated anymore, and fork() might
+not work anymore (kernel stacks need order-1 pages)
+
+I dont remember your case, but do you use CONFIG_COMPACTION=y ?
+
+
+
