@@ -1,105 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53935 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758968Ab3BXBGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Feb 2013 20:06:44 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC 02/13] brcmsmac: add interface type to brcms_bss_cfg
-Date: Sun, 24 Feb 2013 02:06:00 +0100
-Message-Id: <1361667972-22909-3-git-send-email-hauke@hauke-m.de> (sfid-20130224_020657_334097_30432A7D)
-In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
-References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:56946 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718Ab3BSNgR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2013 08:36:17 -0500
+Message-ID: <51237FC7.3070509@suse.cz> (sfid-20130219_143634_543525_5DDEF567)
+Date: Tue, 19 Feb 2013 14:36:07 +0100
+From: Jiri Slaby <jslaby@suse.cz>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: Re: [PATCH] NET: ath5k, check ath5k_eeprom_mode_from_channel retval
+References: <1360244680-10370-1-git-send-email-jslaby@suse.cz> <CAFtRNNwUaGFejpGHydDKD1Sn4zLYbmAeyO5zkS7wsHFZ_2yRfA@mail.gmail.com>
+In-Reply-To: <CAFtRNNwUaGFejpGHydDKD1Sn4zLYbmAeyO5zkS7wsHFZ_2yRfA@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------040609090703070509000205"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to easily check in which mode the device is
-currently running. This also adds a function to start station mode.
+This is a multi-part message in MIME format.
+--------------040609090703070509000205
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On 02/18/2013 01:47 AM, Nick Kossifidis wrote:
+> int
+> ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+> {
+>         switch (channel->hw_value) {
+>         case AR5K_MODE_11A:
+>                 return AR5K_EEPROM_MODE_11A;
+>         case AR5K_MODE_11G:
+>                 return AR5K_EEPROM_MODE_11G;
+>         case AR5K_MODE_11B:
+>                 return AR5K_EEPROM_MODE_11B;
+>         default:
+>                 return -1;
+>         }
+> }
+> 
+> I think we should just change that default to return 0 instead and add
+> an ATH5K_WARN there.
+
+Something like the attached patch? It needs ah to be propagated to
+eeprom. If you are fine with that, I'll send it as patch...
+
+thanks,
+-- 
+js
+suse labs
+
+--------------040609090703070509000205
+Content-Type: text/x-patch;
+ name="0001-ath5k-cleanup-channel-to-eprom_mode-function.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-ath5k-cleanup-channel-to-eprom_mode-function.patch"
+
+>From 0e75c33da1f8b35ff1d25f08650e95fc97c01528 Mon Sep 17 00:00:00 2001
+From: Jiri Slaby <jslaby@suse.cz>
+Date: Tue, 19 Feb 2013 14:31:13 +0100
+Subject: [PATCH] ath5k: cleanup channel to eprom_mode function
+
+Stop returning negative values from ath5k_eeprom_mode_from_channel.
+Warn about that case instead and return the default/0/A. This cleans
+up the callers, but needs to pass ah down to
+ath5k_eeprom_mode_from_channel for ATH5K_WARN.
+
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    3 ++-
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |    6 ++++++
- drivers/net/wireless/brcm80211/brcmsmac/main.h        |    8 ++++++++
- drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    1 +
- 4 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath5k/eeprom.c |  6 ++++--
+ drivers/net/wireless/ath/ath5k/eeprom.h |  5 ++++-
+ drivers/net/wireless/ath/ath5k/phy.c    | 20 +++-----------------
+ drivers/net/wireless/ath/ath5k/reset.c  |  4 +---
+ 4 files changed, 12 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index ab678ae..577df22 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -364,9 +364,10 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	}
- 
- 	spin_lock_bh(&wl->lock);
--	memcpy(wl->pub->cur_etheraddr, vif->addr, sizeof(vif->addr));
- 	wl->mute_tx = false;
- 	brcms_c_mute(wl->wlc, false);
-+	if (vif->type == NL80211_IFTYPE_STATION)
-+		brcms_c_start_station(wl->wlc, vif->addr);
- 	spin_unlock_bh(&wl->lock);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 5f455ba..5696257 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2163,6 +2163,12 @@ void brcms_b_switch_macfreq(struct brcms_hardware *wlc_hw, u8 spurmode)
- 	}
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index b7e0258..94d34ee 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1779,7 +1779,8 @@ ath5k_eeprom_detach(struct ath5k_hw *ah)
  }
  
-+void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr)
-+{
-+	memcpy(wlc->pub->cur_etheraddr, addr, sizeof(wlc->pub->cur_etheraddr));
-+	wlc->bsscfg->type = BRCMS_TYPE_STATION;
-+}
-+
- /* Initialize GPIOs that are controlled by D11 core */
- static void brcms_c_gpio_init(struct brcms_c_info *wlc)
+ int
+-ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
++ath5k_eeprom_mode_from_channel(struct ath5k_hw *ah,
++		struct ieee80211_channel *channel)
  {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index fb44774..dbf027c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -576,10 +576,17 @@ struct antsel_info {
- 	struct brcms_antselcfg antcfg_cur; /* current antenna config (auto) */
+ 	switch (channel->hw_value) {
+ 	case AR5K_MODE_11A:
+@@ -1789,6 +1790,7 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+ 	case AR5K_MODE_11B:
+ 		return AR5K_EEPROM_MODE_11B;
+ 	default:
+-		return -1;
++		ATH5K_WARN(ah, "channel is not A/B/G!");
++		return AR5K_EEPROM_MODE_11A;
+ 	}
+ }
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index 94a9bbe..dcc3e40 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -494,5 +494,8 @@ struct ath5k_eeprom_info {
+ 	u32	ee_antenna[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
  };
  
-+enum brcms_bss_type {
-+	BRCMS_TYPE_STATION,
-+	BRCMS_TYPE_AP,
-+	BRCMS_TYPE_ADHOC,
-+};
++struct ath5k_hw;
 +
- /*
-  * BSS configuration state
-  *
-  * wlc: wlc to which this bsscfg belongs to.
-+ * type: interface type
-  * up: is this configuration up operational
-  * enable: is this configuration enabled
-  * associated: is BSS in ASSOCIATED state
-@@ -599,6 +606,7 @@ struct antsel_info {
-  */
- struct brcms_bss_cfg {
- 	struct brcms_c_info *wlc;
-+	enum brcms_bss_type type;
- 	bool up;
- 	bool enable;
- 	bool associated;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 382fb09..aa8580f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -333,5 +333,6 @@ extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
- extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
- extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
- extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
-+extern void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr);
+ int
+-ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel);
++ath5k_eeprom_mode_from_channel(struct ath5k_hw *ah,
++		struct ieee80211_channel *channel);
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index a78afa9..d6bc7cb 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1612,11 +1612,7 @@ ath5k_hw_update_noise_floor(struct ath5k_hw *ah)
  
- #endif				/* _BRCM_PUB_H_ */
+ 	ah->ah_cal_mask |= AR5K_CALIBRATION_NF;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(ah->ah_current_channel);
+-	if (WARN_ON(ee_mode < 0)) {
+-		ah->ah_cal_mask &= ~AR5K_CALIBRATION_NF;
+-		return;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, ah->ah_current_channel);
+ 
+ 	/* completed NF calibration, test threshold */
+ 	nf = ath5k_hw_read_measured_noise_floor(ah);
+@@ -2317,12 +2313,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
+ 
+ 	def_ant = ah->ah_def_ant;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (ee_mode < 0) {
+-		ATH5K_ERR(ah,
+-			"invalid channel: %d\n", channel->center_freq);
+-		return;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	switch (ant_mode) {
+ 	case AR5K_ANTMODE_DEFAULT:
+@@ -3622,12 +3613,7 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (ee_mode < 0) {
+-		ATH5K_ERR(ah,
+-			"invalid channel: %d\n", channel->center_freq);
+-		return -EINVAL;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	/* Initialize TX power table */
+ 	switch (ah->ah_radio) {
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index e2d8b2c..a3399c4 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -984,9 +984,7 @@ ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 	if (ah->ah_version == AR5K_AR5210)
+ 		return;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (WARN_ON(ee_mode < 0))
+-		return;
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	/* Adjust power delta for channel 14 */
+ 	if (channel->center_freq == 2484)
 -- 
-1.7.10.4
+1.8.1.2
 
+
+--------------040609090703070509000205--
