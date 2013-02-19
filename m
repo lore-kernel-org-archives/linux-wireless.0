@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47758 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758302Ab3BKTFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 14:05:21 -0500
-Message-ID: <511940E6.7010303@hauke-m.de> (sfid-20130211_200524_992762_10787BF4)
-Date: Mon, 11 Feb 2013 20:05:10 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:45951 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499Ab3BSBRM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Feb 2013 20:17:12 -0500
+Received: by mail-bk0-f42.google.com with SMTP id jk7so2815165bkc.29
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 17:17:10 -0800 (PST)
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: brcmsmac and IBSS
-References: <1360604039.1559.44.camel@dcbw.foobar.com>
-In-Reply-To: <1360604039.1559.44.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1361214203.8555.40.camel@jlt4.sipsolutions.net>
+References: <1361186207-1390-1-git-send-email-yeohchunyeow@gmail.com>
+	<1361214203.8555.40.camel@jlt4.sipsolutions.net>
+Date: Tue, 19 Feb 2013 09:17:10 +0800
+Message-ID: <CAEFj986wkWBKy_-1+xzQamy4WYaj3Sy22ENCjw_NpX5Xa7jOhA@mail.gmail.com> (sfid-20130219_021715_888296_7E9E89B3)
+Subject: Re: [PATCH] mac80211: fix the problem of unicast forwarding from DS
+ to DS in Mesh
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	cedric.voncken@acksys.fr
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2013 06:33 PM, Dan Williams wrote:
-> Hi,
-> 
-> Had a bug report that a 4313 doesn't support IBSS mode, and dug around
-> and found out that brcmsmac only supports STA mode.  Is that really true
-> and there's no IBSS support in the smac driver?  Is that a firmware or
-> driver limitation?  Seems odd that this got missed during the merge
-> reviews as IBSS is pretty basic functionality that all the kernel wifi
-> drivers have had for 5 or 7 years.
-> 
-> Dan
+>> +                     if (!mpath || (mpath && (!next_hop ||
+>> +                                     !(mpath->flags & MESH_PATH_ACTIVE))))
+>> +                             mppath = mpp_path_lookup(skb->data, sdata);
+>
+> Heck, even the logic is wrong. Ok actually just weird -- if (!mpath || !
+> next_hop || ...) would be totally sufficient.
 
-I started to add AP mode support to brcmsmac. The hardware is capable of
-all the stuff needed. At least the firmware extracted from the
-proprietary driver is also capable of everything needed, but I think the
-normal firmware has the same features. At least the BCM43224 is used in
-standalone APs.
+We go to lookup for mppath if mpath is unavailable, or if mpath is
+available but the next_hop is NULL or the path is inactive.
 
-Hauke
+---
+Chun-Yeow
