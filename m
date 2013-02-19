@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36581 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209Ab3BIAqq (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:40933 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932448Ab3BSJnV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 19:46:46 -0500
-Received: by mail-pa0-f47.google.com with SMTP id bj3so2384650pad.34
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Feb 2013 16:46:46 -0800 (PST)
-Date: Fri, 8 Feb 2013 16:46:44 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Other alloc/OOM message question
-Message-ID: <20130209004644.GC31290@kroah.com> (sfid-20130209_014703_126087_B463CCC4)
-References: <1360273587.27863.15.camel@joe-AO722>
- <20130208.174500.1518593039138341685.davem@davemloft.net>
- <1360369799.13487.5.camel@joe-AO722>
+	Tue, 19 Feb 2013 04:43:21 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 27333-06 for <linux-wireless@vger.kernel.org>;
+ Tue, 19 Feb 2013 09:43:15 +0000 (GMT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360369799.13487.5.camel@joe-AO722>
+Content-Type: text/plain;
+	charset="Windows-1252"
+Subject: RE: [PATCH] b43: Increase number of RX DMA slots
+Date: Tue, 19 Feb 2013 09:42:28 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com> (sfid-20130219_104329_246750_978FD6CD)
+In-Reply-To: <20130219.005206.397289032011003833.davem@davemloft.net>
+References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net> <20130219.005206.397289032011003833.davem@davemloft.net>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "David Miller" <davem@davemloft.net>, <Larry.Finger@lwfinger.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <bittorf@bluebottle.com>,
+	<stable@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 08, 2013 at 04:29:59PM -0800, Joe Perches wrote:
-> On Fri, 2013-02-08 at 17:45 -0500, David Miller wrote:
-> > From: Joe Perches <joe@perches.com>
-> > Date: Thu, 07 Feb 2013 13:46:27 -0800
-> > > alloc failures already get standardized OOM
-> > > messages and a dump_stack.
-> 
-> Does anyone know if all the other alloc's like
-> dma_alloc_coherent, dma_alloc_noncoherent,
-> pci_alloc_consistent always produce OOM messages
-> via page_alloc/warn_alloc_failed for all arches?
+> > Bastian Bittorf reported that some of the silent freezes on a Linksys WRT54G
+> > were due to overflow of the RX DMA ring buffer, which was created with 64
+> > slots. That finding reminded me that I was seeing similar crashed on a netbook,
+> > which also has a relatively slow processor. After increasing the number of
+> > slots to 128, runs on the netbook that previously failed now worked; however,
+> > I found that 109 slots had been used in one test. For that reason, the number
+> > of slots is being increased to 256.
 
-If not, they should, to allow this type of cleanups.
+Surely the driver should work even if all the RX buffers get filled?
+Increasing the number of buffers is just hiding the issue.
+A burst of 300 back to back small packets probably fills the 256 slots.
 
-thanks,
+I realise that dropping frames isn't ideal, and that small numbers
+of buffers can make it impossible to receive long fragmented IP
+messages. but increasing the number of buffers doesn't seem to
+be the best fix for a 'silent freeze'.
 
-greg k-h
+It might be that the driver would be more robust if it only ever
+put rx buffers into all but one of the ring slots.
+
+	David
+
+
+
