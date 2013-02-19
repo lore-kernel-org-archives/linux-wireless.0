@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:42407 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758485Ab3BLPZq (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:52960 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab3BSQSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 10:25:46 -0500
-Received: by mail-qc0-f174.google.com with SMTP id z24so70398qcq.33
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 07:25:45 -0800 (PST)
+	Tue, 19 Feb 2013 11:18:39 -0500
+Date: Tue, 19 Feb 2013 08:18:30 -0800
+From: Marc MERLIN <marc@merlins.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs copies out
+Message-ID: <20130219161830.GD21764@merlins.org> (sfid-20130219_171848_051483_06E9AD49)
+References: <20120410051127.GA32048@merlins.org> <1334038263.2907.1.camel@edumazet-glaptop> <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org> <1342419529.3265.12217.camel@edumazet-glaptop> <20120716151826.GA10586@merlins.org> <1342455717.2830.14.camel@edumazet-glaptop> <20130219040557.GB4778@merlins.org> <1361251033.19353.120.camel@edumazet-glaptop> <1361268221.8553.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-Date: Tue, 12 Feb 2013 18:25:16 +0300
-Message-ID: <CA+E=qVekDjNovz4rT4eJZTjwJyf5PUdCuaE--kkhdJrxf4BB-g@mail.gmail.com> (sfid-20130212_162550_819494_BA6E97AA)
-Subject: Random stall issue with Intel Corporation Centrino Advanced-N 6205
- [Taylor Peak]
-To: ilw@linux.intel.com, Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1361268221.8553.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Feb 19, 2013 at 11:03:41AM +0100, Johannes Berg wrote:
+> On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
+> 
+> > > chrome: page allocation failure: order:1, mode:0x4020
+> > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
+> > > Call Trace:
+> > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
+> 
+> > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
+> > 
+> > It should hopefully use order-0 pages
+> 
+> It will, do that then, unfortunately it can't switch at runtime because
+> it advertised this support to the access point or clients.
 
-I'm hitting subj issue, at some random point mentioned card stops
-packet processing and stalls,
-and I'm getting a lot of "iwlwifi 0000:03:00.0: fail to flush all tx
-fifo queues" lines in dmesg.
+Forgive the newbie question: would the inability to get pages cause
+interrupts to be disabled or at least something that would stop the mouse
+cursor and the keyboard from working?
 
-wpa_supplicant does not even notice that it's disconnected, and does
-not try to re-establish wireless connection.
-
-Looks like many users suffer from this issue, please see:
-https://bugzilla.kernel.org/show_bug.cgi?id=48921
-
-Looks like there's no fix except disabling 802.11n functionality. It's
-not an option, nowadays internet connection is faster than
-802.11g speeds.
-
-Can we get any public comment from Intel devs?
-
-Regards
-Vasily
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
