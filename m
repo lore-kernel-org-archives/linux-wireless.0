@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60477 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756874Ab3BVVIj (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:63956 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932823Ab3BSSlu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 16:08:39 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U8zrC-0006ov-O3
-	for linux-wireless@vger.kernel.org; Fri, 22 Feb 2013 22:08:38 +0100
-Message-ID: <1361567313.3420.18.camel@jlt4.sipsolutions.net> (sfid-20130222_220843_812042_9CEAB88D)
-Subject: Re: [PATCH] cfg80211: move exported event functions into nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 22 Feb 2013 22:08:33 +0100
-In-Reply-To: <1361567242-18718-1-git-send-email-johannes@sipsolutions.net> (sfid-20130222_220733_722326_49E9F512)
-References: <1361567242-18718-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130222_220733_722326_49E9F512)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Feb 2013 13:41:50 -0500
+Received: by mail-wg0-f47.google.com with SMTP id dr13so5627354wgb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2013 10:41:49 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: ignore extra GMAC cores on BCM4706
+Date: Tue, 19 Feb 2013 19:41:42 +0100
+Message-Id: <1361299302-4567-1-git-send-email-zajec5@gmail.com> (sfid-20130219_194153_707981_08A05F8F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-22 at 22:07 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This is the sort of thing gcc's LTO could do, but since
-> we don't have that yet we can also do it manually. The
-> advantage is reduced code, both source and binary, e.g.
-> on x86-64
-> 
->    text	   data	    bss	    dec	    hex	filename
->  442825	  56230	    776	 499831	  7a077	cfg80211.ko (before)
->  441585	  56230	    776	 498591	  79b9f	cfg80211.ko (after)
-> 
-> a reduction of ~1k.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This was noticed on two BCM4706 SoCs (the second core wasn't connected
+to anything or working correctly). It matches the Broadcom's code from
+hndpci.c file.
 
-I should also say:
+V2: add a short comment to explain why we ignore extra cores
+---
+ drivers/bcma/main.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-But in order to not complicate the code move only those
-functions that are simple wrappers, not those that have
-functionality of their own.
-
-johannes
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 9a6188a..f72f52b 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -120,6 +120,11 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 			continue;
+ 		}
+ 
++		/* Only first GMAC core on BCM4706 is connected and working */
++		if (core->id.id == BCMA_CORE_4706_MAC_GBIT &&
++		    core->core_unit > 0)
++			continue;
++
+ 		core->dev.release = bcma_release_core_dev;
+ 		core->dev.bus = &bcma_bus_type;
+ 		dev_set_name(&core->dev, "bcma%d:%d", bus->num, dev_id);
+-- 
+1.7.10.4
 
