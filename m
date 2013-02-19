@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:57303 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946101Ab3BHJVj (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:65195 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758727Ab3BSSIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 04:21:39 -0500
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id r189Lcig020167
-	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:38 -0600
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189Lcpm030749
-	for <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:38 -0600
-Received: from [172.24.79.4] (h79-4.vpn.ti.com [172.24.79.4])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r189Las6009677	for
- <linux-wireless@vger.kernel.org>; Fri, 8 Feb 2013 03:21:37 -0600
-Message-ID: <1360315240.12803.27.camel@cumari.coelho.fi> (sfid-20130208_102422_744410_6CC53972)
-Subject: Re: [PATCH] wlcore: don't hide real error code when booting fails
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Fri, 8 Feb 2013 11:20:40 +0200
-In-Reply-To: <1359535995-18092-1-git-send-email-coelho@ti.com>
-References: <1359535995-18092-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 19 Feb 2013 13:08:39 -0500
+Received: by mail-qc0-f174.google.com with SMTP id z24so2651655qcq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2013 10:08:38 -0800 (PST)
 MIME-Version: 1.0
+Date: Tue, 19 Feb 2013 12:02:27 -0600
+Message-ID: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com> (sfid-20130219_190843_461974_6CB4298E)
+Subject: mwifiex crash when removing interface while scanning
+From: Daniel Drake <dsd@laptop.org>
+To: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-01-30 at 10:53 +0200, Luciano Coelho wrote:
-> There's no need to hide the actual error that was reported when
-> booting fails.  For instance, on I/O error, we were returing
-> -EINVALID, which doesn't make sense at all.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+Hi,
 
-Applied.
+Testing mwifiex_sdio on XO-4 (8787) on Linux 3.8. In OLPC's use case
+we quite regularly will power down the wireless card when it is not
+being actively used. This is currently proving problematic.
 
---
-Luca.
+Here is a test case reproducing one of the failures we are seeing:
 
+First, run this script:
+
+insmod mwifiex_sdio.ko
+sleep 1
+ifconfig eth0 up
+iwlist eth0 scan &
+sleep 0.5
+rmmod mwifiex_sdio
+
+It normally runs fine the first time, no errors, but run it again and
+it terminates with these errors:
+
+    mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
+    eth0      Failed to read scan data : No such device
+
+>From this point, things are pretty screwed up. Try to load the driver again...
+
+insmod mwifiex_sdio.ko
+mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
+mwifiex_sdio mmc0:0001:1: WLAN FW is active
+mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
+(331.391420) = 0xa9, act = 0x0
+mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
+mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
+mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
+mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
+mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
+mwifiex_sdio mmc0:0001:1: last_event_index = 0
+mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
+mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
+mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
+mwifiex_sdio mmc0:0001:1: cmd timeout
+mwifiex_sdio: Resetting card...
+WARNING: driver mwifiex_sdio did not remove its interrupt handler!
+mmc0: card 0001 removed
+
+and it doesn't come back.
+
+Let me know how we can help further debugging.
+
+Thanks
+Daniel
