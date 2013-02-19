@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:39193 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758547Ab3BHOJk (ORCPT
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:62276 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758254Ab3BSSB5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 09:09:40 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 19 Feb 2013 13:01:57 -0500
+Received: by mail-bk0-f49.google.com with SMTP id w11so3205110bku.8
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Feb 2013 10:01:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20757.1753.863278.858198@gargle.gargle.HOWL> (sfid-20130208_151127_346067_4FD7308A)
-Date: Fri, 8 Feb 2013 19:38:25 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-In-Reply-To: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1361197194.8555.17.camel@jlt4.sipsolutions.net>
+References: <1361042551-15598-1-git-send-email-thomas@cozybit.com> <1361197194.8555.17.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 19 Feb 2013 10:01:33 -0800
+Message-ID: <CAG6hwVOnRhFAVgL9LrdFdaAuoB0zYZxSi+t4iSvwZ_c31h4Saw@mail.gmail.com> (sfid-20130219_190213_331462_CEDD5FC7)
+Subject: Re: [RFC] mac80211: make CONFIG_MAC80211_MESH=y default
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> In many tests throughput with ath9k_rate_control has been shown to be
-> worse than with minstrel_ht (the mac8021 default RC).
-> 
-> This module also has some other problems, like starting to use the
-> highest possible rate early in the connection, causing problems with
-> reliability of connection/authentication attempts.
-> 
-> It also has a much more limited search space, ignoring many potentially
-> useful rates, caused by the design decision to operate on a sorted rate
-> set with the assumption that higher rates are always more unreliable
-> than lower rates. In some scenarios this assumption is not true, and
-> this can cause it to fall back to a really bad rate.
-> 
-> minstrel_ht has been tested extensively in AP and client mode by lots of
-> users (mostly in the OpenWrt project, where it has been the default for
-> years).
+On Mon, Feb 18, 2013 at 6:19 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2013-02-16 at 11:22 -0800, Thomas Pedersen wrote:
+>> Increases mac80211 memory use by about 95K.
+>>
+>> At least Ubuntu, Debian, and Arch Linux already enable
+>> this in their default kernels.
+>
+> *shrug*
+>
+> I guess I don't really see a problem with this, although only a small
+> subset of drivers really supports it. Anyone really wanting to build for
+> a small system will probably turn it off anyway.
+>
+> OTOH, if distros enable it, I also don't see much point in changing
+> it ;-)
 
-I don't think managed mode would have received much testing in OpenWRT.
+Heh, good point. I guess this is an attempt to elevate mesh from the
+status of "2nd-class citizen" into the realm of "good enough to
+default =y" :)
 
-> The only advantage that ath9k_rate_control previously had over minstrel_ht
-> was the support for using CCK rates as fall back in case MCS rates got
-> too bad, but this has now also been taken care of.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+If it's all the same to you I'll go ahead and submit this as a PATCH then.
 
-Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-Sujith
-
+-- 
+Thomas
