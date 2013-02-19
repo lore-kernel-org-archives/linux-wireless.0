@@ -1,79 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:36928 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276Ab3BZC3g (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46548 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758232Ab3BSLME (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 21:29:36 -0500
-Received: by mail-bk0-f51.google.com with SMTP id ik5so1620733bkc.38
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 18:29:35 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 26 Feb 2013 10:29:34 +0800
-Message-ID: <CAPgLHd-bG936v1J73Ag1d9azE=TePh3JRgi-ZiN3B1unbFxorw@mail.gmail.com> (sfid-20130226_032940_084550_553D1A10)
-Subject: [PATCH -next] wil6210: convert to use simple_open()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: qca_vkondrat@qca.qualcomm.com, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Feb 2013 06:12:04 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1U7l7D-0005Kz-NY
+	for linux-wireless@vger.kernel.org; Tue, 19 Feb 2013 12:12:03 +0100
+Message-ID: <1361272321.8553.5.camel@jlt4.sipsolutions.net> (sfid-20130219_121210_431288_9FA11F68)
+Subject: reminder: mac80211-next tree management
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 19 Feb 2013 12:12:01 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Now that 3.8 is released, we can obviously only pick up important fixes
+for 3.9, and everything else for 3.10. I'm still going to apply
+everything to mac80211-next for now and then cleanly rebase once we get
+to -rc1 and the wireless/net trees open.
 
-This removes an open coded simple_open() function and
-replaces file operations references to the function
-with simple_open() instead.
+This means you'll see a rebase in a week or two.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/ath/wil6210/debugfs.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 65fc968..1e709bf 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -312,14 +312,6 @@ static const struct file_operations fops_memread = {
- 	.llseek		= seq_lseek,
- };
- 
--static int wil_default_open(struct inode *inode, struct file *file)
--{
--	if (inode->i_private)
--		file->private_data = inode->i_private;
--
--	return 0;
--}
--
- static ssize_t wil_read_file_ioblob(struct file *file, char __user *user_buf,
- 				size_t count, loff_t *ppos)
- {
-@@ -361,7 +353,7 @@ static ssize_t wil_read_file_ioblob(struct file *file, char __user *user_buf,
- 
- static const struct file_operations fops_ioblob = {
- 	.read =		wil_read_file_ioblob,
--	.open =		wil_default_open,
-+	.open =		simple_open,
- 	.llseek =	default_llseek,
- };
- 
-@@ -396,7 +388,7 @@ static ssize_t wil_write_file_reset(struct file *file, const char __user *buf,
- 
- static const struct file_operations fops_reset = {
- 	.write = wil_write_file_reset,
--	.open  = wil_default_open,
-+	.open  = simple_open,
- };
- /*---------Tx descriptor------------*/
- 
-@@ -526,7 +518,7 @@ static ssize_t wil_write_file_ssid(struct file *file, const char __user *buf,
- static const struct file_operations fops_ssid = {
- 	.read = wil_read_file_ssid,
- 	.write = wil_write_file_ssid,
--	.open  = wil_default_open,
-+	.open  = simple_open,
- };
- 
- /*----------------*/
-
+johannes
 
