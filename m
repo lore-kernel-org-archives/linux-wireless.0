@@ -1,57 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:37044 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932267Ab3BLQfs (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:44400 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506Ab3BSFRQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:35:48 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-	Michael Braun <michael-dev@fami-braun.de>
-Subject: [konusllaptop] [PATCHv2 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
-Date: Tue, 12 Feb 2013 17:35:37 +0100
-Message-Id: <1360686937-17277-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173550_764851_399348D4)
-In-Reply-To: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
-References: <1360686937-17277-1-git-send-email-michael-dev@fami-braun.de>
+	Tue, 19 Feb 2013 00:17:16 -0500
+Message-ID: <1361251033.19353.120.camel@edumazet-glaptop> (sfid-20130219_061917_530878_1ED7A14C)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Mon, 18 Feb 2013 21:17:13 -0800
+In-Reply-To: <20130219040557.GB4778@merlins.org>
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+On Mon, 2013-02-18 at 20:05 -0800, Marc MERLIN wrote:
+> On Mon, Jul 16, 2012 at 06:21:57PM +0200, Eric Dumazet wrote:
+> > > No, it's atually when I'm 'uploading' from my laptop to my server.
+> > > One interesting thing is that my server is running lvm2 with snapshots,
+> > > which makes writes slower than my laptop can push data over the network, so
+> > > it's definitely causing buffers to fill up.
+> > > I just did a download test and got 4.5MB/s sustained without problems.
+> > 
+> > Hmm, nfs apparently is able to push lot of data, try to reduce
+> > rsize/wsize to sane values, like 32K instead of 512K ?
+> > 
+> > gargamel:/mnt/dshelf2/ /net/gargamel/mnt/dshelf2 nfs4
+> > rw,nosuid,nodev,relatime,vers=4.0,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,port=0,timeo=600,retrans=2,sec=sys,clientaddr=192.168.205.7,local_lock=none,addr=192.168.205.3 0 0
+> > 
+> > You could trace svc_sock_setbufsize() and check how large is set
+> > sk_sndbuf
+> 
+> My apologies, I totally dropped the ball on this.
+> 
+> So, the problem was still there in more recent kernels.
+> 
+> TL;DR:
+> - reducing nfs buffers removes the full hang
+> - iwlwifi has a problem where lack of pages causes the whoe machine to hang
+> - NFS copies out, even with buffers down to 32K is very wonky and cp does not
+>   return until over 2mn after the copy is actually finished.
+>   (I have a trace of what's hung in cp/nfs when this happens)
+> 
+> 
+> Details:
+> 
+> It's still pretty severe because whatever blocks doesn't just end up
+> blocking disk IO, but actually blocking interrupts altogether since my mouse
+> can't move for a minute or more until some buffer flushes.
+> 
+> The last trace I got during this (I can't do sysrq because I have a broken 
+> Lenovo T530 without a sysrq key, and typing doesn't really work when
+> interrupts aren't firing).
+> 
+> Not sure if it's useful. First chrome had an issue, and then iwlwifi
+> 
+> chrome: page allocation failure: order:1, mode:0x4020
+> Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
+> Call Trace:
+>  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
+>  [<ffffffff810d8cfd>] __alloc_pages_nodemask+0x66a/0x702
+>  [<ffffffff8108a948>] ? arch_local_irq_save+0x15/0x1b
+>  [<ffffffff811064af>] alloc_pages_current+0xcd/0xee
+>  [<ffffffffa039b579>] iwl_rx_allocate+0x8c/0x271 [iwlwifi]
+>  [<ffffffffa039c24e>] iwl_irq_tasklet+0x7e5/0x91c [iwlwifi]
+>  [<ffffffff8104805e>] tasklet_action+0x80/0xd2
+>  [<ffffffff81047c99>] __do_softirq+0xdf/0x1c5
+>  [<ffffffff814c1ed6>] ? _raw_spin_lock+0x1b/0x1f
+>  [<ffffffff810a7f37>] ? handle_irq_event+0x4d/0x62
+>  [<ffffffff814c7f5c>] call_softirq+0x1c/0x30
+>  [<ffffffff8101104e>] do_softirq+0x41/0x7f
+>  [<ffffffff81047e52>] irq_exit+0x3f/0xa7
+>  [<ffffffff81010d40>] do_IRQ+0x88/0x9f
+>  [<ffffffff814c246d>] common_interrupt+0x6d/0x6d
+>  <EOI> Mem-Info:
 
-This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+It should hopefully use order-0 pages
 
-V2: fix compile warning
----
- net/mac80211/tx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Some drivers cant fallback to low order page allocations.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2ef0e19..583c025 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2728,6 +2728,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	struct ps_data *ps;
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct ieee80211_sub_if_data *frame_sdata;
- 
- 	sdata = vif_to_sdata(vif);
- 
-@@ -2770,7 +2771,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
- 
--		if (!ieee80211_tx_prepare(sdata, &tx, skb))
-+		frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
-+		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
- 			break;
- 		dev_kfree_skb_any(skb);
- 	}
--- 
-1.7.10.4
+mlx4 is another example (it uses order-2 pages )
+
+
+
