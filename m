@@ -1,104 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:46028 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753714Ab3BTRtj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:49:39 -0500
-Date: Wed, 20 Feb 2013 18:49:32 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Thomas =?utf-8?B?SMO8aG4=?= <thomas@net.t-labs.tu-berlin.de>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-Message-ID: <20130220174932.GB1556@pandem0nium> (sfid-20130220_184942_588701_75007408)
-References: <20130215171938.GA4140@pandem0nium>
- <6A268FEF-5C88-4376-A701-09ECEAC1EF2A@net.t-labs.tu-berlin.de>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:52010 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934876Ab3BSXcC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2013 18:32:02 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Feb 2013 15:31:40 -0800
+Subject: RE: mwifiex crash when removing interface while scanning
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com> (sfid-20130220_003206_853386_C8A65B79)
+References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
+In-Reply-To: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
-In-Reply-To: <6A268FEF-5C88-4376-A701-09ECEAC1EF2A@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Daniel,
 
---KFztAG8eRSV9hGtP
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Hi,
+> 
+> Testing mwifiex_sdio on XO-4 (8787) on Linux 3.8. In OLPC's use case
+> we quite regularly will power down the wireless card when it is not
+> being actively used. This is currently proving problematic.
 
-Hey Thomas,
+I have an XO-4. Perhaps I can update to kernel 3.8?
 
-On Tue, Feb 19, 2013 at 10:32:29AM +0100, Thomas H=C3=BChn wrote:
-> Hi all,
->=20
-> You motivate your proposal of collecting several statistics from non-peer=
-ing stations in IBBS networks with:
-> (1) "The statistics are then used to evaluate link quality and make some =
-higher level decisions"=20
-> &=20
-> (2)"reading every packet from this monitor interface has a huge thoughput=
- limitation"
->=20
-> Could you go into more details about what "higher level" decisions you ha=
-ve in mind ?
-> Until now you just listed a bunch of values you like to monitor on a per =
-packet level without any concrete usage idea or algorithms that could make =
-use of it.
-> I could guess that a common goal would be to increase performance in wire=
-less networks, but lets get concrete about the approach you have in mind.
-> A lot of recent theoretical research in wireless goes towards interferenc=
-e management, multi-user and so the gains of using channel state informatio=
-n as feedback that is worth its overhead. But this direction would question=
- the packet level granularity you described=E2=80=A6 so what about aggregat=
-ed statistics ?=20
+> 
+> Here is a test case reproducing one of the failures we are seeing:
+> 
+> First, run this script:
+> 
+> insmod mwifiex_sdio.ko
+> sleep 1
+> ifconfig eth0 up
+> iwlist eth0 scan &
+> sleep 0.5
+> rmmod mwifiex_sdio
+> 
+> It normally runs fine the first time, no errors, but run it again and
+> it terminates with these errors:
+> 
+>     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
+>     eth0      Failed to read scan data : No such device
+> 
+> From this point, things are pretty screwed up. Try to load the driver again...
+> 
+> insmod mwifiex_sdio.ko
+> mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
+> mwifiex_sdio mmc0:0001:1: WLAN FW is active
+> mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
+> (331.391420) = 0xa9, act = 0x0
+> mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+> mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+> mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+> mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+> mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
+> mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
+> mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
+> mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
+> mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
+> mwifiex_sdio mmc0:0001:1: last_event_index = 0
+> mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
+> mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
+> mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
+> mwifiex_sdio mmc0:0001:1: cmd timeout
+> mwifiex_sdio: Resetting card...
+> WARNING: driver mwifiex_sdio did not remove its interrupt handler!
+> mmc0: card 0001 removed
+> 
+> and it doesn't come back.
+> 
+> Let me know how we can help further debugging.
 
-thanks for your questions, we did not explain this in detail and I think Ma=
-thias can
-give some more background on this, but I'll try to explain:
+I will try this test with my SD8787 card and get back to you later.
 
-We are currently evaluating some statistics in userspace by collecting pack=
-ets via the monitor
-interface. We evaluate sequence number jumps (which indicate packet loss du=
-e to interference),
-signal levels and such to throw this in a model to assess the channel quali=
-ty. This is used
-to make routing decisions according to channel qualities within a network (=
-assume a multihop
-mesh-like network). One problem we see here is that reading and evaluating =
-these packets in
-userspace is performance, reading every packet just uses a lot of CPU cycle=
-s (because of
-the transfer kernel->userspace and such). Therefore we would like to move t=
-his statistics
-collection into kernelspace, and only retrieve aggregated statistics.
+Thanks,
+Bing
 
-So the goal for us to improve performance of the channel assessment we are =
-already doing, and
-use it for this custom routing software. Maybe other users can use a simila=
-r approach on
-other kinds of routing software, or even completely different tasks I'm cur=
-rently not aware
-of (e.g. these 802.11s use cases).
-
-Cheers,
-	Simon
-
---KFztAG8eRSV9hGtP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlElDKwACgkQrzg/fFk7axaCxgCg1HTBl4pWMEjdHcfKEhch/Cw7
-jyYAoI8IsiTJxn2PLzcsHcv6P5TPUAcE
-=dRgk
------END PGP SIGNATURE-----
-
---KFztAG8eRSV9hGtP--
+> 
+> Thanks
+> Daniel
