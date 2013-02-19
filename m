@@ -1,238 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47818 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759965Ab3BZV2E (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57402 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933814Ab3BSXYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:28:04 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] iwlwifi: fix wakeup status query and packet reporting
-Date: Tue, 26 Feb 2013 22:27:56 +0100
-Message-Id: <1361914077-18749-3-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222808_680974_2FBF6182)
-In-Reply-To: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
-References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
- <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 19 Feb 2013 18:24:37 -0500
+Message-ID: <512409B1.7090800@candelatech.com> (sfid-20130220_002440_751673_4E93B2BD)
+Date: Tue, 19 Feb 2013 15:24:33 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
+References: <5122A7C7.3070508@candelatech.com>  (sfid-20130218_231436_933191_3F8FE600) <1361225773.8555.50.camel@jlt4.sipsolutions.net> <51240249.6060801@candelatech.com>
+In-Reply-To: <51240249.6060801@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/19/2013 02:52 PM, Ben Greear wrote:
+> On 02/18/2013 02:16 PM, Johannes Berg wrote:
+>> On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
+>>> We often see crashes in work-queue processing when deleting
+>>> lots of wifi station interfaces.  I'm guessing that there is probably
+>>> a work item that was not properly un-registered before deleting
+>>> memory.  I have backported some wifi fixes from upstream, so
+>>> maybe they are to blame, but in case anyone has any suggestions
+>>> for places to look, please let me know.
+>>
+>> Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
+>
+> That did not catch anything.
 
-The wakeup packet in the status response is padded out
-to a multiple of 4 bytes by the firmware for transfer
-to the host, take that into account when checking the
-length of the command.
+Ahh, enabled a bunch more debugging options, and got this:
 
-Also, the reported wakeup packet includes the FCS but
-the userspace API doesn't, so remove that. If it is a
-data packet it is reported as an 802.3 packet but I
-forgot to take into account and remove the encryption
-head/tail, fix all of that as well.
+sta40: deauthenticating from 00:88:aa:88:aa:88 by local choice (reason=3)
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux-3.7.dev.y/lib/debugobjects.c:261 debug_print_object+0x7c/0x8d()
+Hardware name: To be filled by O.E.M.
+ODEBUG: free active (active state 0) object type: work_struct hint: ieee80211_sta_monitor_work+0x0/0x14 [mac80211]
+Modules linked in: nf_nat_ipv4 nf_nat 8021q garp stp llc macvlan pktgen lockd sunrpc f71882fg iTCO_wdt iTCO_vendor_support coretemp gpio_ich hwmon mperf kvm 
+cdc_acm snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep microcode snd_seq snd_seq_device serio_raw pcspkr snd_pcm ath9k ath9k_common ath9k_hw ath 
+i2c_i801 ppdev mac80211 lpc_ich cfg80211 snd_page_alloc e1000e snd_timer snd soundcore parport_pc parport uinput ipv6 i915 video i2c_algo_bit drm_kms_helper drm 
+i2c_core [last unloaded: iptable_nat]
+Pid: 14743, comm: iw Tainted: G         C O 3.7.9+ #11
+Call Trace:
+  [<ffffffff81087ef8>] warn_slowpath_common+0x80/0x98
+  [<ffffffff81087fa4>] warn_slowpath_fmt+0x41/0x43
+  [<ffffffff812a2608>] debug_print_object+0x7c/0x8d
+  [<ffffffffa025f5ad>] ? ieee80211_beacon_connection_loss_work+0x88/0x88 [mac80211]
+  [<ffffffff812a2b9a>] ? debug_check_no_obj_freed+0x65/0x1c3
+  [<ffffffff812a2bca>] debug_check_no_obj_freed+0x95/0x1c3
+  [<ffffffff8149f465>] ? netdev_release+0x39/0x3e
+  [<ffffffff8114cc69>] slab_free_hook+0x70/0x79
+  [<ffffffff8114ea3e>] kfree+0x62/0xb7
+  [<ffffffff8149f465>] netdev_release+0x39/0x3e
+  [<ffffffff8136ad67>] device_release+0x52/0x8a
+  [<ffffffff812937db>] kobject_release+0x121/0x158
+  [<ffffffff81293612>] kobject_put+0x4c/0x50
+  [<ffffffff8148f0d7>] netdev_run_todo+0x25c/0x27e
+  [<ffffffff8149b2a0>] rtnl_unlock+0x9/0xb
+  [<ffffffffa01d31a7>] nl80211_post_doit+0x49/0x4e [cfg80211]
+  [<ffffffff814b0928>] genl_rcv_msg+0x25b/0x288
+  [<ffffffff814b06a3>] ? genl_lock+0x12/0x14
+  [<ffffffff814b06cd>] ? genl_rcv+0x28/0x28
+  [<ffffffff814aef13>] netlink_rcv_skb+0x3e/0x8f
+  [<ffffffff814b06c6>] genl_rcv+0x21/0x28
+  [<ffffffff814aecd1>] netlink_unicast+0xe9/0x16f
+  [<ffffffff814af4b3>] netlink_sendmsg+0x264/0x282
+  [<ffffffff8147d785>] ? rcu_read_unlock+0x5b/0x5d
+  [<ffffffff814784ab>] __sock_sendmsg_nosec+0x58/0x61
+  [<ffffffff814798e6>] __sock_sendmsg+0x3d/0x48
+  [<ffffffff8147995a>] sock_sendmsg+0x69/0x82
+  [<ffffffff8112c835>] ? might_fault+0x84/0x8b
+  [<ffffffff814849ce>] ? copy_from_user+0x2a/0x2c
+  [<ffffffff81484da0>] ? verify_iovec+0x4f/0xa3
+  [<ffffffff8147b8e7>] __sys_sendmsg+0x1fe/0x280
+  [<ffffffff810a8058>] ? up_read+0x1e/0x36
+  [<ffffffff8116ea14>] ? fcheck_files+0xac/0xea
+  [<ffffffff8116efd3>] ? fget_light+0x35/0xae
+  [<ffffffff8147badb>] sys_sendmsg+0x3d/0x5b
+  [<ffffffff815595e9>] system_call_fastpath+0x16/0x1b
+---[ end trace 791ff0751a368327 ]---
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c  | 103 ++++++++++++++++++++++++---------
- drivers/net/wireless/iwlwifi/mvm/mvm.h |   4 ++
- 2 files changed, 80 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index c64d864..9f0a611 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -192,6 +192,11 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 					   sizeof(wkc), &wkc);
- 		data->error = ret != 0;
- 
-+		mvm->ptk_ivlen = key->iv_len;
-+		mvm->ptk_icvlen = key->icv_len;
-+		mvm->gtk_ivlen = key->iv_len;
-+		mvm->gtk_icvlen = key->icv_len;
-+
- 		/* don't upload key again */
- 		goto out_unlock;
- 	}
-@@ -304,9 +309,13 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 	 */
- 	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
- 		key->hw_key_idx = 0;
-+		mvm->ptk_ivlen = key->iv_len;
-+		mvm->ptk_icvlen = key->icv_len;
- 	} else {
- 		data->gtk_key_idx++;
- 		key->hw_key_idx = data->gtk_key_idx;
-+		mvm->gtk_ivlen = key->iv_len;
-+		mvm->gtk_icvlen = key->icv_len;
- 	}
- 
- 	ret = iwl_mvm_set_sta_key(mvm, vif, sta, key, true);
-@@ -649,6 +658,11 @@ int iwl_mvm_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	/* We reprogram keys and shouldn't allocate new key indices */
- 	memset(mvm->fw_key_table, 0, sizeof(mvm->fw_key_table));
- 
-+	mvm->ptk_ivlen = 0;
-+	mvm->ptk_icvlen = 0;
-+	mvm->ptk_ivlen = 0;
-+	mvm->ptk_icvlen = 0;
-+
- 	/*
- 	 * The D3 firmware still hardcodes the AP station ID for the
- 	 * BSS we're associated with as 0. As a result, we have to move
-@@ -783,7 +797,6 @@ static void iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
- 	struct iwl_wowlan_status *status;
- 	u32 reasons;
- 	int ret, len;
--	bool pkt8023 = false;
- 	struct sk_buff *pkt = NULL;
- 
- 	iwl_trans_read_mem_bytes(mvm->trans, base,
-@@ -824,7 +837,8 @@ static void iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
- 	status = (void *)cmd.resp_pkt->data;
- 
- 	if (len - sizeof(struct iwl_cmd_header) !=
--	    sizeof(*status) + le32_to_cpu(status->wake_packet_bufsize)) {
-+	    sizeof(*status) +
-+	    ALIGN(le32_to_cpu(status->wake_packet_bufsize), 4)) {
- 		IWL_ERR(mvm, "Invalid WoWLAN status response!\n");
- 		goto out;
- 	}
-@@ -836,61 +850,96 @@ static void iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
- 		goto report;
- 	}
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_MAGIC_PACKET) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_MAGIC_PACKET)
- 		wakeup.magic_pkt = true;
--		pkt8023 = true;
--	}
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_PATTERN) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_PATTERN)
- 		wakeup.pattern_idx =
- 			le16_to_cpu(status->pattern_number);
--		pkt8023 = true;
--	}
- 
- 	if (reasons & (IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_MISSED_BEACON |
- 		       IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_DEAUTH))
- 		wakeup.disconnect = true;
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_GTK_REKEY_FAILURE) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_GTK_REKEY_FAILURE)
- 		wakeup.gtk_rekey_failure = true;
--		pkt8023 = true;
--	}
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_RFKILL_DEASSERTED) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_RFKILL_DEASSERTED)
- 		wakeup.rfkill_release = true;
--		pkt8023 = true;
--	}
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_EAPOL_REQUEST) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_EAPOL_REQUEST)
- 		wakeup.eap_identity_req = true;
--		pkt8023 = true;
--	}
- 
--	if (reasons & IWL_WOWLAN_WAKEUP_BY_FOUR_WAY_HANDSHAKE) {
-+	if (reasons & IWL_WOWLAN_WAKEUP_BY_FOUR_WAY_HANDSHAKE)
- 		wakeup.four_way_handshake = true;
--		pkt8023 = true;
--	}
- 
- 	if (status->wake_packet_bufsize) {
--		u32 pktsize = le32_to_cpu(status->wake_packet_bufsize);
--		u32 pktlen = le32_to_cpu(status->wake_packet_length);
-+		int pktsize = le32_to_cpu(status->wake_packet_bufsize);
-+		int pktlen = le32_to_cpu(status->wake_packet_length);
-+		const u8 *pktdata = status->wake_packet;
-+		struct ieee80211_hdr *hdr = (void *)pktdata;
-+		int truncated = pktlen - pktsize;
-+
-+		/* this would be a firmware bug */
-+		if (WARN_ON_ONCE(truncated < 0))
-+			truncated = 0;
-+
-+		if (ieee80211_is_data(hdr->frame_control)) {
-+			int hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+			int ivlen = 0, icvlen = 4; /* also FCS */
- 
--		if (pkt8023) {
- 			pkt = alloc_skb(pktsize, GFP_KERNEL);
- 			if (!pkt)
- 				goto report;
--			memcpy(skb_put(pkt, pktsize), status->wake_packet,
--			       pktsize);
-+
-+			memcpy(skb_put(pkt, hdrlen), pktdata, hdrlen);
-+			pktdata += hdrlen;
-+			pktsize -= hdrlen;
-+
-+			if (ieee80211_has_protected(hdr->frame_control)) {
-+				if (is_multicast_ether_addr(hdr->addr1)) {
-+					ivlen = mvm->gtk_ivlen;
-+					icvlen += mvm->gtk_icvlen;
-+				} else {
-+					ivlen = mvm->ptk_ivlen;
-+					icvlen += mvm->ptk_icvlen;
-+				}
-+			}
-+
-+			/* if truncated, FCS/ICV is (partially) gone */
-+			if (truncated >= icvlen) {
-+				icvlen = 0;
-+				truncated -= icvlen;
-+			} else {
-+				icvlen -= truncated;
-+				truncated = 0;
-+			}
-+
-+			pktsize -= ivlen + icvlen;
-+			pktdata += ivlen;
-+
-+			memcpy(skb_put(pkt, pktsize), pktdata, pktsize);
-+
- 			if (ieee80211_data_to_8023(pkt, vif->addr, vif->type))
- 				goto report;
- 			wakeup.packet = pkt->data;
- 			wakeup.packet_present_len = pkt->len;
--			wakeup.packet_len = pkt->len - (pktlen - pktsize);
-+			wakeup.packet_len = pkt->len - truncated;
- 			wakeup.packet_80211 = false;
- 		} else {
-+			int fcslen = 4;
-+
-+			if (truncated >= 4) {
-+				truncated -= 4;
-+				fcslen = 0;
-+			} else {
-+				fcslen -= truncated;
-+				truncated = 0;
-+			}
-+			pktsize -= fcslen;
- 			wakeup.packet = status->wake_packet;
- 			wakeup.packet_present_len = pktsize;
--			wakeup.packet_len = pktlen;
-+			wakeup.packet_len = pktlen - truncated;
- 			wakeup.packet_80211 = true;
- 		}
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 4e339cc..537711b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -327,6 +327,10 @@ struct iwl_mvm {
- 	struct led_classdev led;
- 
- 	struct ieee80211_vif *p2p_device_vif;
-+
-+#ifdef CONFIG_PM_SLEEP
-+	int gtk_ivlen, gtk_icvlen, ptk_ivlen, ptk_icvlen;
-+#endif
- };
- 
- /* Extract MVM priv from op_mode and _hw */
+Will go poke around in the code to see what I can see....
+
+
+Thanks,
+Ben
+
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
