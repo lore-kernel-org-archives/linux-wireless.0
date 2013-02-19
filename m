@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25944 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754001Ab3BDLx3 (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:55677 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756851Ab3BSJ5z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 06:53:29 -0500
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/2] ath6kl: provide 64-bit per-station byte counters
-Date: Mon, 4 Feb 2013 13:53:12 +0200
-Message-ID: <1359978792-7121-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130204_125344_517706_2C8473F1)
-In-Reply-To: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1359978792-7121-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 19 Feb 2013 04:57:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
+References: <1361156480-32566-1-git-send-email-Larry.Finger@lwfinger.net>
+	<20130219.005206.397289032011003833.davem@davemloft.net>
+	<AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
+Date: Tue, 19 Feb 2013 10:57:54 +0100
+Message-ID: <CACna6rz9qRFT_YXJN961=LqzQmhaTPbq+_2UG_LoV7hVgQ7gDA@mail.gmail.com> (sfid-20130219_105804_859424_0EACD5E9)
+Subject: Re: [PATCH] b43: Increase number of RX DMA slots
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: David Laight <David.Laight@aculab.com>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, bittorf@bluebottle.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Internally, 64-bit byte counters maintained for per-station
-statistics. Tell to the netlink that full 64-bit value provided
+2013/2/19 David Laight <David.Laight@aculab.com>:
+>> > Bastian Bittorf reported that some of the silent freezes on a Linksys WRT54G
+>> > were due to overflow of the RX DMA ring buffer, which was created with 64
+>> > slots. That finding reminded me that I was seeing similar crashed on a netbook,
+>> > which also has a relatively slow processor. After increasing the number of
+>> > slots to 128, runs on the netbook that previously failed now worked; however,
+>> > I found that 109 slots had been used in one test. For that reason, the number
+>> > of slots is being increased to 256.
+>
+> Surely the driver should work even if all the RX buffers get filled?
+> Increasing the number of buffers is just hiding the issue.
+> A burst of 300 back to back small packets probably fills the 256 slots.
+>
+> I realise that dropping frames isn't ideal, and that small numbers
+> of buffers can make it impossible to receive long fragmented IP
+> messages. but increasing the number of buffers doesn't seem to
+> be the best fix for a 'silent freeze'.
+>
+> It might be that the driver would be more robust if it only ever
+> put rx buffers into all but one of the ring slots.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+That's what I said ;) I have this on my TODO, but I need to resolve my
+issues with ethernet first.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 4225cca..90b1a93 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1778,14 +1778,16 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	if (vif->target_stats.rx_byte) {
- 		sinfo->rx_bytes = vif->target_stats.rx_byte;
--		sinfo->filled |= STATION_INFO_RX_BYTES;
-+		sinfo->filled |= STATION_INFO_RX_BYTES |
-+				 STATION_INFO_RX_BYTES64;
- 		sinfo->rx_packets = vif->target_stats.rx_pkt;
- 		sinfo->filled |= STATION_INFO_RX_PACKETS;
- 	}
- 
- 	if (vif->target_stats.tx_byte) {
- 		sinfo->tx_bytes = vif->target_stats.tx_byte;
--		sinfo->filled |= STATION_INFO_TX_BYTES;
-+		sinfo->filled |= STATION_INFO_TX_BYTES |
-+				 STATION_INFO_TX_BYTES64;
- 		sinfo->tx_packets = vif->target_stats.tx_pkt;
- 		sinfo->filled |= STATION_INFO_TX_PACKETS;
- 	}
 -- 
-1.7.10.4
-
+Rafał
