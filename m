@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47820 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163Ab3BZV2I (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:58738 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933094Ab3BTAtT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:28:08 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dor Shaish <dor.shaish@intel.com>
-Subject: [PATCH 4/4] iwlwifi: mvm: Remove testing of static PIC in PhyDB
-Date: Tue, 26 Feb 2013 22:27:57 +0100
-Message-Id: <1361914077-18749-4-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222815_092170_8E97DA0A)
-In-Reply-To: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
-References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
- <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 19 Feb 2013 19:49:19 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 19 Feb 2013 16:49:15 -0800
+Subject: RE: [PATCH v2] iw: add packet offset information for wowlan pattern
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE5FE@SC-VEXCH1.marvell.com> (sfid-20130220_014922_181321_8F91FBCB)
+References: <1360700187-22806-1-git-send-email-bzhao@marvell.com>
+	 <1360700187-22806-2-git-send-email-bzhao@marvell.com>
+ <1361226227.8555.55.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1361226227.8555.55.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dor Shaish <dor.shaish@intel.com>
-
-The PIC was supposed to be a small signature appended to the
-PhyDB data, but the signature isn't really static and thus
-attempting to check it just causes the warnings spuriously
-so remove them.
-
-Signed-off-by: Dor Shaish <dor.shaish@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-phy-db.c | 16 ----------------
- 1 file changed, 16 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-index 14fc8d3..3392011 100644
---- a/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-@@ -136,12 +136,6 @@ struct iwl_calib_res_notif_phy_db {
- 	u8 data[];
- } __packed;
- 
--#define IWL_PHY_DB_STATIC_PIC cpu_to_le32(0x21436587)
--static inline void iwl_phy_db_test_pic(__le32 pic)
--{
--	WARN_ON(IWL_PHY_DB_STATIC_PIC != pic);
--}
--
- struct iwl_phy_db *iwl_phy_db_init(struct iwl_trans *trans)
- {
- 	struct iwl_phy_db *phy_db = kzalloc(sizeof(struct iwl_phy_db),
-@@ -260,11 +254,6 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db, struct iwl_rx_packet *pkt,
- 			(size - CHANNEL_NUM_SIZE) / phy_db->channel_num;
- 	}
- 
--	/* Test PIC */
--	if (type != IWL_PHY_DB_CFG)
--		iwl_phy_db_test_pic(*(((__le32 *)phy_db_notif->data) +
--				      (size / sizeof(__le32)) - 1));
--
- 	IWL_DEBUG_INFO(phy_db->trans,
- 		       "%s(%d): [PHYDB]SET: Type %d , Size: %d\n",
- 		       __func__, __LINE__, type, size);
-@@ -372,11 +361,6 @@ int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
- 		*size = entry->size;
- 	}
- 
--	/* Test PIC */
--	if (type != IWL_PHY_DB_CFG)
--		iwl_phy_db_test_pic(*(((__le32 *)*data) +
--				      (*size / sizeof(__le32)) - 1));
--
- 	IWL_DEBUG_INFO(phy_db->trans,
- 		       "%s(%d): [PHYDB] GET: Type %d , Size: %d\n",
- 		       __func__, __LINE__, type, *size);
--- 
-1.8.0
-
+SGkgSm9oYW5uZXMsDQoNCj4gQWxzby4uLg0KPiANCj4gPiAgQ09NTUFORCh3b3dsYW4sIGVuYWJs
+ZSwgIlthbnldIFtkaXNjb25uZWN0XSBbbWFnaWMtcGFja2V0XSBbZ3RrLXJla2V5LWZhaWx1cmVd
+IFtlYXAtaWRlbnRpdHktDQo+IHJlcXVlc3RdIg0KPiA+IC0JIiBbNHdheS1oYW5kc2hha2VdIFty
+ZmtpbGwtcmVsZWFzZV0gW3BhdHRlcm5zIDxwYXR0ZXJuPipdIiwNCj4gPiArCSIgWzR3YXktaGFu
+ZHNoYWtlXSBbcmZraWxsLXJlbGVhc2VdIFtwYXR0ZXJucyBbb2Zmc2V0MV0gPHBhdHRlcm4xPiAu
+Li5dIiwNCj4gPiAgCU5MODAyMTFfQ01EX1NFVF9XT1dMQU4sIDAsIENJQl9QSFksIGhhbmRsZV93
+b3dsYW5fZW5hYmxlLA0KPiA+ICAJIkVuYWJsZSBXb1dMQU4gd2l0aCB0aGUgZ2l2ZW4gdHJpZ2dl
+cnMuXG4iDQo+ID4gIAkiRWFjaCBwYXR0ZXJuIGlzIGdpdmVuIGFzIGEgYnl0ZXN0cmluZyB3aXRo
+ICctJyBpbiBwbGFjZXMgd2hlcmUgYW55IGJ5dGVcbiINCj4gPiAgCSJtYXkgYmUgcHJlc2VudCwg
+ZS5nLiAwMDoxMToyMjotOjQ0IHdpbGwgbWF0Y2ggMDA6MTE6MjI6MzM6NDQgYW5kXG4iDQo+ID4g
+LQkiMDA6MTE6MjI6MzM6ZmY6NDQgZXRjLiIpOw0KPiA+ICsJIjAwOjExOjIyOjMzOmZmOjQ0IGV0
+Yy5cbiINCj4gPiArCSJVc2UgJzonIGZvciBzaW5nbGUgYnl0ZSBwYXR0ZXJuIGFzIHdlbGwsIGUu
+Zy4gMTggNDM6IHdpbGwgbWF0Y2ggJzQzJyAiDQo+ID4gKwkiYWZ0ZXIgMTggYnl0ZXMgb2Ygb2Zm
+c2V0IGluIFJ4IHBhY2tldC4iKTsNCj4gDQo+IElzIHRoZXJlIG1heWJlIGEgc2xpZ2h0bHkgbW9y
+ZSBpbnR1aXRpdmUgc3ludGF4PyBJJ20gbm90IHJlYWxseSB3b3JyaWVkDQo+IGFib3V0IHRoZSBi
+cmVhayBvZiBwYXR0ZXJuIGJlaW5nIGp1c3QgYSBzaW5nbGUgYnl0ZSwgYnV0IGl0IHNlZW1zIHRv
+IG1lDQo+IHNvbWV0aGluZyBsaWtlIDxvZmZzZXQ+KzxwYXR0ZXJuPiBvciBzbyB3b3VsZCBiZSBl
+YXNpZXIgdG8gdW5kZXJzdGFuZD8NCj4gDQo+IGl3IHdvd2xhbiBlbmFibGUgZGlzY29ubmVjdCBw
+YXR0ZXJucyAxNCs4ODo4RQ0KPiANCj4gSXQgd291bGQgYWxzbyBiZSBtb3JlIG9idmlvdXNseSB3
+cm9uZyB0byBhbiBvbGQgaXcgdmVyc2lvbiAtLSBpdCB3b3VsZA0KPiByZWplY3QgdGhpcywgd2hp
+bGUgaXQgd291bGQgYWNjZXB0ICIxNCA4ODo4RSIgYXMgdHdvIHBhdHRlcm5zLg0KDQpUaGFua3Mg
+Zm9yIHlvdXIgY29tbWVudHMuDQoNClYzIHRha2VzIGNhcmUgb2YgdGhpcyBhcyB3ZWxsIGFzIHRo
+ZSBvbGQga2VybmVscy4gUGxlYXNlIGNoZWNrLg0KDQpUaGFua3MsDQpCaW5nDQoNCj4gDQo+IGpv
+aGFubmVzDQoNCg==
