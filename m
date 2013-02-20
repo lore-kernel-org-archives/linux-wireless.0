@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50515 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760061Ab3B0Obm (ORCPT
+Received: from mail-da0-f42.google.com ([209.85.210.42]:48315 "EHLO
+	mail-da0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935042Ab3BTUOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 09:31:42 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: phaber@broadcom.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9] nl80211: remove channel width and extended capa advertising
-Date: Wed, 27 Feb 2013 15:31:36 +0100
-Message-Id: <1361975496-5862-1-git-send-email-johannes@sipsolutions.net> (sfid-20130227_153146_957263_5EE9E83F)
+	Wed, 20 Feb 2013 15:14:25 -0500
+Message-ID: <1361391262.19353.223.camel@edumazet-glaptop> (sfid-20130220_212339_650207_2B6E0AB3)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 12:14:22 -0800
+In-Reply-To: <1361390290.8579.4.camel@jlt4.sipsolutions.net>
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+	 <1361379331.19353.189.camel@edumazet-glaptop>
+	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
+	 <1361381096.19353.195.camel@edumazet-glaptop>
+	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
+	 <1361387854.19353.214.camel@edumazet-glaptop>
+	 (sfid-20130220_201740_409859_E87FECD4) <1361390290.8579.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-02-20 at 20:58 +0100, Johannes Berg wrote:
 
-This is another case of data increasing the size of the
-wiphy information significantly with a new feature, for
-now remove this as well.
+> Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
+> CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+> 
+> > On x86 we should not doing anything.
+> 
+> We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
+> defined.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c    |  3 +--
- net/wireless/nl80211.c | 21 ---------------------
- 2 files changed, 1 insertion(+), 23 deletions(-)
+Thanks !
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 33b75b9..9220021 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -367,8 +367,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 	rdev->wiphy.rts_threshold = (u32) -1;
- 	rdev->wiphy.coverage_class = 0;
- 
--	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH |
--			       NL80211_FEATURE_ADVERTISE_CHAN_LIMITS;
-+	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH;
- 
- 	return &rdev->wiphy;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e652d05..7a7b621 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -557,18 +557,6 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
- 		goto nla_put_failure;
--	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
--	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
--		goto nla_put_failure;
--	if ((chan->flags & IEEE80211_CHAN_NO_HT40PLUS) &&
--	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_PLUS))
--		goto nla_put_failure;
--	if ((chan->flags & IEEE80211_CHAN_NO_80MHZ) &&
--	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_80MHZ))
--		goto nla_put_failure;
--	if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
--	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
--		goto nla_put_failure;
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 			DBM_TO_MBM(chan->max_power)))
-@@ -1310,15 +1298,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 			dev->wiphy.max_acl_mac_addrs))
- 		goto nla_put_failure;
- 
--	if (dev->wiphy.extended_capabilities &&
--	    (nla_put(msg, NL80211_ATTR_EXT_CAPA,
--		     dev->wiphy.extended_capabilities_len,
--		     dev->wiphy.extended_capabilities) ||
--	     nla_put(msg, NL80211_ATTR_EXT_CAPA_MASK,
--		     dev->wiphy.extended_capabilities_len,
--		     dev->wiphy.extended_capabilities_mask)))
--		goto nla_put_failure;
--
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
--- 
-1.8.0
+BTW, comment is outdated, as it mentions __skb_push(), while
+its not used.
+
+
 
