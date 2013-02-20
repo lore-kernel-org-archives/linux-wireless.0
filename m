@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56252 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754686Ab3BFRzA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:55:00 -0500
-Message-ID: <511298E8.7090801@candelatech.com> (sfid-20130206_185548_201888_40B543D4)
-Date: Wed, 06 Feb 2013 09:54:48 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:54643 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752999Ab3BTFN5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 00:13:57 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Feb 2013 21:06:03 -0800
+Subject: RE: mwifiex crash when removing interface while scanning
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com> (sfid-20130220_061401_128644_352F63CC)
+References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Cong Ding <dinggnu@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: mac80211/cfg.c: fix error using of sizeof()
-References: <1360167826-29265-1-git-send-email-dinggnu@gmail.com>  (sfid-20130206_172354_765098_665D60D0) <1360168022.7910.22.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360168022.7910.22.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2013 08:27 AM, Johannes Berg wrote:
-> On Wed, 2013-02-06 at 17:23 +0100, Cong Ding wrote:
->> Using 'sizeof' on array given as function argument returns size of a pointer
->> rather than the size of array.
->
-> Oops, yeah, Stephen Hemminger pointed this out a month or so ago and I
-> forgot to change it, thanks.
+Hi Daniel,
 
-This needs to be back-ported for 3.7 stable?  Perhaps the code below
-corresponds (from copy_mesh_setup)?
+> > insmod mwifiex_sdio.ko
+> > sleep 1
+> > ifconfig eth0 up
+> > iwlist eth0 scan &
+> > sleep 0.5
+> > rmmod mwifiex_sdio
+> >
+> > It normally runs fine the first time, no errors, but run it again and
+> > it terminates with these errors:
+> >
+> >     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
+> >     eth0      Failed to read scan data : No such device
 
+After this error message, do you see the sd8787 card is removed from the bus?
 
-	/* mcast rate setting in Mesh Node */
-	memcpy(sdata->vif.bss_conf.mcast_rate, setup->mcast_rate,
-						sizeof(setup->mcast_rate));
+"mmc0: card 0001 removed"
+
+> >
+> > From this point, things are pretty screwed up. Try to load the driver again...
+> >
+> > insmod mwifiex_sdio.ko
+> > mwifiex_sdio mmc0:0001:1: WLAN FW already running! Skip FW dnld
+> > mwifiex_sdio mmc0:0001:1: WLAN FW is active
+> > mwifiex_sdio mmc0:0001:1: mwifiex_cmd_timeout_func: Timeout cmd id
+> > (331.391420) = 0xa9, act = 0x0
+> > mwifiex_sdio mmc0:0001:1: num_data_h2c_failure = 0
+> > mwifiex_sdio mmc0:0001:1: num_cmd_h2c_failure = 0
+> > mwifiex_sdio mmc0:0001:1: num_cmd_timeout = 1
+> > mwifiex_sdio mmc0:0001:1: num_tx_timeout = 0
+> > mwifiex_sdio mmc0:0001:1: last_cmd_index = 1
+> > mwifiex_sdio mmc0:0001:1: last_cmd_id: 00 00 a9 00 00 00 00 00 00 00
+> > mwifiex_sdio mmc0:0001:1: last_cmd_act: 00 00 00 00 00 00 00 00 00 00
+> > mwifiex_sdio mmc0:0001:1: last_cmd_resp_index = 0
+> > mwifiex_sdio mmc0:0001:1: last_cmd_resp_id: 00 00 00 00 00 00 00 00 00 00
+> > mwifiex_sdio mmc0:0001:1: last_event_index = 0
+> > mwifiex_sdio mmc0:0001:1: last_event: 00 00 00 00 00 00 00 00 00 00
+> > mwifiex_sdio mmc0:0001:1: data_sent=1 cmd_sent=1
+> > mwifiex_sdio mmc0:0001:1: ps_mode=0 ps_state=0
+> > mwifiex_sdio mmc0:0001:1: cmd timeout
+> > mwifiex_sdio: Resetting card...
+> > WARNING: driver mwifiex_sdio did not remove its interrupt handler!
+> > mmc0: card 0001 removed
+> >
+> > and it doesn't come back.
+> >
+> > Let me know how we can help further debugging.
+> 
+> I will try this test with my SD8787 card and get back to you later.
+
+My card works fine with a Ricoh controller on x86_64 machine. Of course the power is not cut when I remove the mwifiex_sdio module.
+
+I can upgrade my XO-4 to kernel 3.8 if feasible. Please let me know if a HOW-TO doc is available.
 
 Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Bing
 
