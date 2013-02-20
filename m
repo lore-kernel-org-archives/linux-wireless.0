@@ -1,95 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:49206 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab3BLHlC (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47307 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885Ab3BTWvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 02:41:02 -0500
-Received: by mail-ie0-f169.google.com with SMTP id 13so8989456iea.0
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 23:41:01 -0800 (PST)
+	Wed, 20 Feb 2013 17:51:17 -0500
+Message-ID: <51255360.6060603@candelatech.com> (sfid-20130220_235121_277559_3DBF4FBE)
+Date: Wed, 20 Feb 2013 14:51:12 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Date: Tue, 12 Feb 2013 08:41:01 +0100
-Message-ID: <CADwvPCsGtzDyY4=yjMuX0qha-cdZHdZ-BTAhuwD7jb8pVXYPdw@mail.gmail.com> (sfid-20130212_084107_631620_D6113F56)
-Subject: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35 platform
-From: Johannes Braun <jjo.braun@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath6kl-devel@qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL> <511BC243.8010409@candelatech.com> <20770.57339.20017.225929@gargle.gargle.HOWL>
+In-Reply-To: <20770.57339.20017.225929@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 02/18/2013 06:14 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> On 02/11/2013 04:11 PM, Sujith Manoharan wrote:
+>>> Ben Greear wrote:
+>>>> axq-qnum:                    2          3         1         0
+>>>> axq-depth:                   0          0         0         0
+>>>> axq-ampdu_depth:             0          0         0         0
+>>>> axq-stopped                  1          0         0         0
+>>>> tx-in-progress               0          0         0         0
+>>>> pending-frames             125          0         0         0
+>>>
+>>> The frames appear to be stuck in the pending queue.
+>>
+>> Any ideas on what code to go poking at?
+>
+> xmit.c would be a good place. Can you also post the kernel log with some
+> debugging information ? debug=0x8f49 would be good.
 
-in my company we are using a Freescale imx35 based platform with a
-3.7.6 Kernel. Currently I am trying to get the Silex SX-SDCAN (AR6003)
-module up and running on this platform. But I have some trouble. The
-module is connected via sdio.
+I started working on this again.  Here's a better description of the test
+case:
 
-My first try was with the ath6kl_sdio driver module of our kernel
-(vanilla 3.7.6) which ends in the following error:
-root@generic-armv6:~# modprobe ath6kl_sdio
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: World regulatory domain updated:
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-cfg80211: Calling CRDA for country: DE
-cfg80211: Regulatory domain changed to country: DE
-cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:   (2400000 KHz - 2483000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-cfg80211:   (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-ath6kl: temporary war to avoid sdio crc error
-ath6kl: host only supports scatter of :1 entries, need: 16
-ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144 api 3
-ath6kl: abi version mismatch: host(0x1), target(0x0)
-mmc0: Timeout waiting for hardware interrupt.
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath6kl/sdio.c:487
-ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio]()
-Modules linked in: ath6kl_sdio(+) ath6kl_core cfg80211 firmware_class ipv6
-[<c0014860>] (unwind_backtrace+0x0/0xfc) from [<c03a5fa8>]
-(dump_stack+0x20/0x24)
-[<c03a5fa8>] (dump_stack+0x20/0x24) from [<c001ef14>]
-(warn_slowpath_common+0x5c/0x74)
-[<c001ef14>] (warn_slowpath_common+0x5c/0x74) from [<c001ef58>]
-(warn_slowpath_null+0x2c/0x34)
-[<c001ef58>] (warn_slowpath_null+0x2c/0x34) from [<bf10f56c>]
-(ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio])
-[<bf10f56c>] (ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio]) from
-[<c02cbdec>] (sdio_irq_thread+0x1dc/0x288)
-[<c02cbdec>] (sdio_irq_thread+0x1dc/0x288) from [<c0041824>] (kthread+0xb4/0xc0)
-[<c0041824>] (kthread+0xb4/0xc0) from [<c000e5c8>] (ret_from_fork+0x14/0x20)
----[ end trace af8071666a83a3e8 ]---
-mmc0: Timeout waiting for hardware interrupt.
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath6kl/sdio.c:487
-ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio]()
-Modules linked in: ath6kl_sdio(+) ath6kl_core cfg80211 firmware_class ipv6
-[<c0014860>] (unwind_backtrace+0x0/0xfc) from [<c03a5fa8>]
-(dump_stack+0x20/0x24)
-[<c03a5fa8>] (dump_stack+0x20/0x24) from [<c001ef14>]
-(warn_slowpath_common+0x5c/0x74)
-[<c001ef14>] (warn_slowpath_common+0x5c/0x74) from [<c001ef58>]
-(warn_slowpath_null+0x2c/0x34)
-[<c001ef58>] (warn_slowpath_null+0x2c/0x34) from [<bf10f56c>]
-(ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio])
-[<bf10f56c>] (ath6kl_sdio_irq_handler+0x78/0x84 [ath6kl_sdio]) from
-[<c02cbdec>] (sdio_irq_thread+0x1dc/0x288)
-[<c02cbdec>] (sdio_irq_thread+0x1dc/0x288) from [<c0041824>] (kthread+0xb4/0xc0)
-[<c0041824>] (kthread+0xb4/0xc0) from [<c000e5c8>] (ret_from_fork+0x14/0x20)
----[ end trace af8071666a83a3e9 ]---
+I have 32 stations connected to an AP, both ath9k, 3.7.9+ kernel.
 
-Then I used the actual head of the github probject of ath6kl. I
-checked it out and built a kernel with the sources. The result was a
-3.7 kernel, the ath6kl_sdio.ko module and all the other modules. But
-when I`m trying load the ath6kl module via "modprobe ath6kl_sdio" I
-get the same error as before with our 3.7.6 kernel. See the log above.
+Each station is configured to pass 64kbps traffic bi-directional
+UDP traffic, 1500 byte packets.  The traffic is generated externally
+(the AP is bridged to an ethernet device, the stations are bridged
+in software using AF_PACKET sockets.
 
-Does someone have an idea what`s whats the issue?
+At attenuator sits between the two systems.
 
-Best regards
-Johannes
+I ramp up the attenuation in 10db increments from 0 to 95.
+
+At some point, the AP wedges it's xmit queue.  It appears it still
+receives traffic fine (I see lots of packets coming in the AP
+interface and going out the ethernet port).
+
+On a second run, it was the station machine that locked up.
+One thing that may be interesting:  queue V0 appears to be
+passing traffic fine (at least as far as the ath9k xmit debugfs
+file shows), but queue BE is wedged.
+
+ From the AP lockup case, dmesg is full of stuff like this:
+
+[ 1819.538577] vap1: delba from 00:3f:d1:e4:32:51 (initiator) tid 0 reason code 37
+[ 1819.640602] vap1: Rx A-MPDU request on 00:6f:f9:68:b1:31 tid 0 result 0
+[ 1819.690601] vap1: Rx A-MPDU request on 00:01:ab:ba:da:d3 tid 0 result 0
+[ 1819.778013] vap1: RX session timer expired on 00:59:82:d1:d8:8c tid 0
+[ 1819.778040] vap1: Rx BA session stop requested for 00:59:82:d1:d8:8c tid 0 recipient reason: 39
+[ 1819.814600] vap1: delba from 00:59:82:d1:d8:8c (initiator) tid 0 reason code 37
+[ 1819.820010] vap1: RX session timer expired on 00:eb:69:fc:4b:db tid 0
+[ 1819.820034] vap1: Rx BA session stop requested for 00:eb:69:fc:4b:db tid 0 recipient reason: 39
+[ 1819.863631] vap1: delba from 00:eb:69:fc:4b:db (initiator) tid 0 reason code 37
+[ 1819.978012] vap1: RX session timer expired on 00:39:9a:d1:0e:10 tid 0
+[ 1819.978035] vap1: Rx BA session stop requested for 00:39:9a:d1:0e:10 tid 0 recipient reason: 39
+[ 1820.014580] vap1: delba from 00:39:9a:d1:0e:10 (initiator) tid 0 reason code 37
+[ 1820.184596] vap1: Rx A-MPDU request on 00:3f:d1:e4:32:51 tid 0 result 0
+[ 1820.192554] vap1: Rx A-MPDU request on 00:00:c5:89:c5:93 tid 0 result 0
+[ 1820.578013] vap1: RX session timer expired on 00:dc:23:64:e2:f5 tid 0
+[ 1820.578041] vap1: Rx BA session stop requested for 00:dc:23:64:e2:f5 tid 0 recipient reason: 39
+[ 1820.610580] vap1: delba from 00:dc:23:64:e2:f5 (initiator) tid 0 reason code 37
+[ 1820.635016] vap1: RX session timer expired on 00:fb:a4:41:62:1a tid 0
+[ 1820.635045] vap1: Rx BA session stop requested for 00:fb:a4:41:62:1a tid 0 recipient reason: 39
+[ 1820.664631] vap1: Rx BA session stop requested for 00:22:b6:3c:26:13 tid 0 inititator reason: 0
+[ 1820.763599] vap1: Rx A-MPDU request on 00:22:b6:3c:26:13 tid 0 result 0
+[ 1820.857649] vap1: Rx A-MPDU request on 00:e3:11:12:3a:14 tid 0 result 0
+
+
+# From the AP lockup case:
+
+[root@lf0301-demo1 ~]# cat /debug/ieee80211/wiphy0/ath9k/xmit ;sleep 10; cat /debug/ieee80211/wiphy0/ath9k/xmit ;
+Num-Tx-Queues: 10  tx-queues-setup: 0x10f poll-work-seen: 1823
+                             BE         BK        VI        VO
+
+MPDUs Queued:              500          0         0      4102
+MPDUs Completed:           473          0         0      4102
+MPDUs XRetried:             27          0         0         0
+Aggregates:                200          0         0         0
+AMPDUs Queued HW:        97039          0         0         0
+AMPDUs Queued SW:        11299          0         0         0
+AMPDUs Completed:       107982          0         0         0
+AMPDUs Retried:            410          0         0         0
+AMPDUs XRetried:           116          0         0         0
+TXERR Filtered:            224          0         0         0
+FIFO Underrun:               0          0         0         0
+TXOP Exceeded:               0          0         0         0
+TXTIMER Expiry:              0          0         0         0
+DESC CFG Error:              0          0         0         0
+DATA Underrun:               0          0         0         0
+DELIM Underrun:              0          0         0         0
+TX-Pkts-All:            108598          0         0      4102
+TX-Bytes-All:        164436206          0         0    304838
+hw-put-tx-buf:          107863          0         0      4096
+hw-tx-start:                 0          0         0         0
+hw-tx-proc-desc:             0          0         0         0
+TX-Failed:                   0          0         0         0
+txq-memory-address:   f2b724e8   f2b725a4  f2b7242c  f2b72370
+axq-qnum:                    2          3         1         0
+axq-depth:                   0          0         0         0
+axq-ampdu_depth:             0          0         0         0
+axq-stopped                  1          0         0         0
+tx-in-progress               0          0         0         0
+pending-frames             123          0         0         0
+txq_headidx:                 7          0         0         0
+txq_tailidx:                 7          0         0         0
+axq_q empty:                   1          1         1         1
+axq_acq empty:                 1          1         1         1
+txq_fifo[0] empty:             1          1         1         1
+txq_fifo[1] empty:             1          1         1         1
+txq_fifo[2] empty:             1          1         1         1
+txq_fifo[3] empty:             1          1         1         1
+txq_fifo[4] empty:             1          1         1         1
+txq_fifo[5] empty:             1          1         1         1
+txq_fifo[6] empty:             1          1         1         1
+txq_fifo[7] empty:             1          1         1         1
+Num-Tx-Queues: 10  tx-queues-setup: 0x10f poll-work-seen: 1833
+                             BE         BK        VI        VO
+
+MPDUs Queued:              500          0         0      4140
+MPDUs Completed:           473          0         0      4140
+MPDUs XRetried:             27          0         0         0
+Aggregates:                200          0         0         0
+AMPDUs Queued HW:        97039          0         0         0
+AMPDUs Queued SW:        11299          0         0         0
+AMPDUs Completed:       107982          0         0         0
+AMPDUs Retried:            410          0         0         0
+AMPDUs XRetried:           116          0         0         0
+TXERR Filtered:            224          0         0         0
+FIFO Underrun:               0          0         0         0
+TXOP Exceeded:               0          0         0         0
+TXTIMER Expiry:              0          0         0         0
+DESC CFG Error:              0          0         0         0
+DATA Underrun:               0          0         0         0
+DELIM Underrun:              0          0         0         0
+TX-Pkts-All:            108598          0         0      4140
+TX-Bytes-All:        164436206          0         0    306788
+hw-put-tx-buf:          107863          0         0      4134
+hw-tx-start:                 0          0         0         0
+hw-tx-proc-desc:             0          0         0         0
+TX-Failed:                   0          0         0         0
+txq-memory-address:   f2b724e8   f2b725a4  f2b7242c  f2b72370
+axq-qnum:                    2          3         1         0
+axq-depth:                   0          0         0         0
+axq-ampdu_depth:             0          0         0         0
+axq-stopped                  1          0         0         0
+tx-in-progress               0          0         0         0
+pending-frames             123          0         0         0
+txq_headidx:                 7          0         0         6
+txq_tailidx:                 7          0         0         6
+axq_q empty:                   1          1         1         1
+axq_acq empty:                 1          1         1         1
+txq_fifo[0] empty:             1          1         1         1
+txq_fifo[1] empty:             1          1         1         1
+txq_fifo[2] empty:             1          1         1         1
+txq_fifo[3] empty:             1          1         1         1
+txq_fifo[4] empty:             1          1         1         1
+txq_fifo[5] empty:             1          1         1         1
+txq_fifo[6] empty:             1          1         1         1
+txq_fifo[7] empty:             1          1         1         1
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
