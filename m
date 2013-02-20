@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55759 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52221 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497Ab3BGP0r (ORCPT
+	with ESMTP id S934793Ab3BTU1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 10:26:47 -0500
-Message-ID: <1360250827.8038.10.camel@jlt4.sipsolutions.net> (sfid-20130207_162652_208598_C23FF57A)
-Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+	Wed, 20 Feb 2013 15:27:43 -0500
+Message-ID: <1361392043.8579.14.camel@jlt4.sipsolutions.net> (sfid-20130220_212752_588524_802F9D29)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
-	maheshp@posedge.com
-Date: Thu, 07 Feb 2013 16:27:07 +0100
-In-Reply-To: <5113C5E0.5050509@openwrt.org>
-References: <7384f4ddc838247a0f467708d66baa8c@posedge.com>
-	 <1360225230.8038.1.camel@jlt4.sipsolutions.net>
-	 <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
-	 <1360228991.8038.3.camel@jlt4.sipsolutions.net>
-	 <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
-	 <5113B42A.4020708@openwrt.org>
-	 <1360246653.8038.9.camel@jlt4.sipsolutions.net>
-	 <CABPxzYJG3xP0_Wy-1HMjWx-YoHp5WmhrfBH5vBvOJ4WQ_7Nzrg@mail.gmail.com>
-	 <5113C5E0.5050509@openwrt.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 21:27:23 +0100
+In-Reply-To: <1361391262.19353.223.camel@edumazet-glaptop> (sfid-20130220_211427_725228_379FD1B7)
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+	 <1361379331.19353.189.camel@edumazet-glaptop>
+	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
+	 <1361381096.19353.195.camel@edumazet-glaptop>
+	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
+	 <1361387854.19353.214.camel@edumazet-glaptop>
+	 (sfid-20130220_201740_409859_E87FECD4) <1361390290.8579.4.camel@jlt4.sipsolutions.net>
+	 <1361391262.19353.223.camel@edumazet-glaptop>
+	 (sfid-20130220_211427_725228_379FD1B7)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 16:18 +0100, Felix Fietkau wrote:
+On Wed, 2013-02-20 at 12:14 -0800, Eric Dumazet wrote:
+> On Wed, 2013-02-20 at 20:58 +0100, Johannes Berg wrote:
+> 
+> > Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
+> > CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+> > 
+> > > On x86 we should not doing anything.
+> > 
+> > We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
+> > defined.
+> 
+> Thanks !
 
-> > But whats the use of sending an AMSDU if we are not connected?
-> > First check in the code is to check for a connection.
-> I mentioned cooked monitor because putting the hw in monitor mode may
-> not always be desirable, and cooked monitor bypasses that.
+:-)
+Hey, I introduced that config symbol back then for precisely this
+reason ;-)
 
-You can pass "flags none" on the iw command line and it shouldn't change
-much then, but yeah, still might do a few other things. Anyway cooked
-should work fine.
+> BTW, comment is outdated, as it mentions __skb_push(), while
+> its not used.
+
+Oops, good point, now I wonder what it did actually refer to. Time to
+dig in git history, I'll fix it.
 
 johannes
 
