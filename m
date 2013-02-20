@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:60198 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758360Ab3BLPNg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 10:13:36 -0500
-Received: by mail-oa0-f43.google.com with SMTP id l10so180226oag.30
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Feb 2013 07:13:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CABXVimEHA4WabDT-ycvmdcQd6VT3rmhNzy1UjR+qv=QD6W8JpQ@mail.gmail.com>
-References: <CABXVimEHA4WabDT-ycvmdcQd6VT3rmhNzy1UjR+qv=QD6W8JpQ@mail.gmail.com>
-Date: Tue, 12 Feb 2013 16:13:35 +0100
-Message-ID: <CABXVimHizEXzHqjvBTJyYZMXaqZRYLUQDxwfZ1B83bftMrgT9w@mail.gmail.com> (sfid-20130212_161343_258056_8F8332B2)
-Subject: rtl8723e linux driver
-From: =?ISO-8859-1?Q?M=E1rk_V=E1rdai?= <vardai.mark@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:54733 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758048Ab3BTTHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 14:07:11 -0500
+Message-ID: <1361387228.3043.3.camel@joe-AO722> (sfid-20130220_200717_165244_6F5BF98C)
+Subject: Re: [PATCH] ssb: fix unaligned access to mac address
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Date: Wed, 20 Feb 2013 11:07:08 -0800
+In-Reply-To: <51250E6B.3030308@lwfinger.net>
+References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de>
+	 <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com>
+	 <1361381489.3065.1.camel@joe-AO722> <51250E6B.3030308@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Wed, 2013-02-20 at 11:56 -0600, Larry Finger wrote:
 
-I got back an email-bot of Larry Finger's inbox, so that's why I'm
-writting to this list in connection with my laptop Toshiba Satellite
-C855-10M. It has wireless network card: rtl8273e (I'm not 100% sure
-whether my problem could come from the last letters, but hope the best
-not :)). So I have ubuntu 12.04 installed on this computer. I tried
-out the compat-driver and what I have found on ubuntu wiki
-http://askubuntu.com/questions/139632/wireless-card-realtek-rtl8723ae-bt-is-not-recognized
-too. Both was working but not 100%. Later I tried out the latest
-mainstream kernel from ubuntu
-(http://kernel.ubuntu.com/~kernel-ppa/mainline/) v3.8-rc7-raring/
-<http://kernel.ubuntu.com/%7Ekernel-ppa/mainline/v3.8-rc7-raring/>. To get
-it work I separately copied the firmware (at this moment only what was included
-in the
-|rtl_92ce_92se_92de_8723ae_linux_mac80211_0006.0514.2012.tar.gz file or to
-be more precise from the version 0007, but I do not find the download link
-for it.|
+> I like the looks of sprom_get_mac() over that ugly
+> *(((__be16 *)out->il0mac) 
+> construct, but this patch breaks ssb.
+> The resulting MAC address is all ones.
+[]
+> > @@ -539,10 +533,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+> >   			ARRAY_SIZE(out->core_pwr_info));
+> >
+> >   	/* extract the MAC address */
+> > -	for (i = 0; i < 3; i++) {
+> > -		v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
+> > -		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+> > -	}
+> > +	sprom_get_mac(out->il0mac, &in[SSB_SPROM8_IL0MAC]);
 
-With ubuntu 12.04/kernel-3.8rc7+firmware it was working except one special
-thing. I can't tell the exact reproduction step, but what is very close
-to it I would say a really cold reboot ( I mean here that switch off the
-computer and let is for some hours to really cool down, for example for a
-night.) then turn on the computer and then it can't connect to
-the wifi router. But If I switch off manually the wifi on the laptop (it can
-be managed by keyboard settings) and turn it back again that from that moment
-it is working (not all the cases,but most of the cases is working ). So my
-question would be whether does any of you have any idea what I can do
-to avoid this
-strange situation? The laptop is used by my mother so for her it is
-not an option to
-switch it off and on again. I can accept it that I write a small script to
-disable and enable again the wifi but in the past when I tried out the
-previous methods (so not kernel 3.8) unloading the module and load it
-back sometimes
-does not solve the problem. The wifi is good, because under windows 7/8 it is
-working well. Can any of you help me to solve this issue? What should
-I have to do,
-what kind of log should I send and so on.
+Yup, I did a stupid.
+
+This one should be:
+
+	sprom_get_mac(out->il0mac, &in[SPOFF(SSB_SPROM8_IL0MAC)]);
 
 
-Thanks and regards,
-Mark
