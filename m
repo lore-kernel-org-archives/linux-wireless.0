@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54169 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758314Ab3BFWFW (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:51698 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934793Ab3BTU1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 17:05:22 -0500
-Date: Wed, 6 Feb 2013 16:05:17 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 3/4] mac80211: Improve error handling for off-channel
- operation
-Message-ID: <20130206220517.GC6280@thinkpad-t410> (sfid-20130206_230534_312134_5DEBEE3F)
-References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
- <1360162873-17240-4-git-send-email-seth.forshee@canonical.com>
- <1360187077.7910.78.camel@jlt4.sipsolutions.net>
+	Wed, 20 Feb 2013 15:27:52 -0500
+Received: by mail-ie0-f182.google.com with SMTP id k14so10381134iea.41
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2013 12:27:52 -0800 (PST)
+Date: Wed, 20 Feb 2013 15:27:36 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+Cc: devel@lists.open80211s.org, Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] improve operational ANI in Mesh mode
+Message-ID: <20130220202736.GD21725@localhost> (sfid-20130220_212758_474549_0B773C61)
+References: <CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com>
+ <20771.50338.434076.484711@gargle.gargle.HOWL>
+ <CAJ-VmokAP6hSxjGDUu7Q5rSg3dvxfLapQBSLgYCvWc9b0YEPgA@mail.gmail.com>
+ <20771.51233.248133.141840@gargle.gargle.HOWL>
+ <alpine.DEB.2.02.1302192258510.19584@icf.org.ru>
+ <CAJ-Vmo=TmpSbt_y=b6w3=tEU4NiWViK95+3PVoKvnOfeqRFoKw@mail.gmail.com>
+ <alpine.DEB.2.02.1302200027120.19533@icf.org.ru>
+ <20130220142401.GA21725@localhost>
+ <alpine.DEB.2.02.1302202351280.2057@icf.org.ru>
+ <20130220202524.GC21725@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360187077.7910.78.camel@jlt4.sipsolutions.net>
+In-Reply-To: <20130220202524.GC21725@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 10:44:37PM +0100, Johannes Berg wrote:
-> On Wed, 2013-02-06 at 09:01 -0600, Seth Forshee wrote:
-> > Errors in sending the nullfunc frame to set powersave at the AP for
-> > off-channel operation can lead to high packet loss. Add error handling
-> > to fail going off-channel when this happens, and return an error to
-> > userspace.
-> 
-> With the flushes in place, have you ever seen this fail? This and patch
-> ones seems like a lot of churn for only half of what you'd want -- what
-> you really want is to know if the AP ACKed the frame...
+On Wed, Feb 20, 2013 at 03:25:24PM -0500, Bob Copeland wrote:
+> That takes the value read from the card, and multiplies it by
+> ATH_RSSI_EP_MULTIPLIER, which is 1<<7.  So now it's in fixed-point
+> with a 6-bit fractional part.
 
-That's a good point. I've seen iw fail to initiate scans, but I can't
-say whether or not any of them was due to the queues being stopped for
-some reason. When I was testing NetworkManager was still managing the
-interface, so at least some failures were undobtedly because another
-scan was ongoing.
+Sorry, off-by-one: 7-bit fractional part.
 
-I'd considered trying to expand this to check whether or not the frame
-was acked -- in fact just today I captured a trace where the AP didn't
-ack the frame but the STA went off-channel anyway. I'm not sure how to
-implement that yet, and haven't found time to look into it.
-
-Seth
-
+-- 
+Bob Copeland %% www.bobcopeland.com
