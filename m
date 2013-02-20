@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lizzard.sbs.de ([194.138.37.39]:31101 "EHLO lizzard.sbs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932366Ab3BLRL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 12:11:59 -0500
-From: Dennis H Jensen <dennis.h.jensen@siemens.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	Dennis H Jensen <dennis.h.jensen@siemens.com>
-Subject: [PATCH] nl80211: Don't add empty bands or disabled channels in NL80211_CMD_GET_WIPHY
-Date: Tue, 12 Feb 2013 18:00:24 +0100
-Message-Id: <1360688424-11514-1-git-send-email-dennis.h.jensen@siemens.com> (sfid-20130212_181205_257844_18A2C50E)
+Received: from he.sipsolutions.net ([78.46.109.217]:50250 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933782Ab3BTJPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 04:15:21 -0500
+Message-ID: <1361351703.8629.5.camel@jlt4.sipsolutions.net> (sfid-20130220_101537_804793_4DC135F4)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 10:15:03 +0100
+In-Reply-To: <1361351538.8629.3.camel@jlt4.sipsolutions.net> (sfid-20130220_101252_930264_DBD3955C)
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2013-02-20 at 10:12 +0100, Johannes Berg wrote:
+> On Tue, 2013-02-19 at 08:21 -0800, Eric Dumazet wrote:
+> > On Tue, 2013-02-19 at 11:03 +0100, Johannes Berg wrote:
+> > > On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
+> > > 
+> > > > > chrome: page allocation failure: order:1, mode:0x4020
+> > > > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
+> > > > > Call Trace:
+> > > > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
+> > > 
+> > > > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
+> > > > 
+> > > > It should hopefully use order-0 pages
+> > > 
+> > > It will, do that then, unfortunately it can't switch at runtime because
+> > > it advertised this support to the access point or clients.
+> > 
+> > What are the drawbacks of setting amsdu_size_8K to 0 by default ?
+> 
+> We're discussing this now, the only downside would be that we couldn't
+> receive 8k A-MSDUs. Thing is, practically nobody uses A-MSDU anyway, and
+> even when I suspect the difference between 4k and 8k won't be huge.
 
-This patch resolves issues where the driver reports too many channels
-for them all to fit in one netlink message, as long as some are
-disabled, and makes it possible to use non-standard channels and
-customized regulatory databases.
+OTOH, this affects the protocol, and when you really can't allocate any
+order-1 pages you pointed out yourself that many other things also won't
+work, so I'm not really sure it makes a big difference if we change the
+driver?
 
-Signed-off-by: Dennis H Jensen <dennis.h.jensen@siemens.com>
-
----
- net/wireless/nl80211.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 807d448..8cd274d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -986,6 +986,15 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 		if (!dev->wiphy.bands[band])
- 			continue;
- 
-+		/* don't add band info if all channels are disabled */
-+		for (i = 0; i < dev->wiphy.bands[band]->n_channels; i++) {
-+			chan = &dev->wiphy.bands[band]->channels[i];
-+			if (!(chan->flags & IEEE80211_CHAN_DISABLED))
-+				break;
-+		}
-+		if (i == dev->wiphy.bands[band]->n_channels)
-+			continue;
-+
- 		nl_band = nla_nest_start(msg, band);
- 		if (!nl_band)
- 			goto nla_put_failure;
-@@ -1018,12 +1027,15 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 			goto nla_put_failure;
- 
- 		for (i = 0; i < dev->wiphy.bands[band]->n_channels; i++) {
-+			/* don't add disabled frequencies */
-+			chan = &dev->wiphy.bands[band]->channels[i];
-+			if (chan->flags & IEEE80211_CHAN_DISABLED)
-+				continue;
-+
- 			nl_freq = nla_nest_start(msg, i);
- 			if (!nl_freq)
- 				goto nla_put_failure;
- 
--			chan = &dev->wiphy.bands[band]->channels[i];
--
- 			if (nl80211_msg_put_channel(msg, chan))
- 				goto nla_put_failure;
- 
--- 
-1.7.9.5
+johannes
 
