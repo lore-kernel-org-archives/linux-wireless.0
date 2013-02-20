@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54882 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932710Ab3BKV4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:56:44 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:50104 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758710Ab3BTIkk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 03:40:40 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v3 1/3] mac80211/minstrel_ht: show the number of retries for each rate in debugfs
-Date: Mon, 11 Feb 2013 22:56:38 +0100
-Message-Id: <1360619800-80582-1-git-send-email-nbd@openwrt.org> (sfid-20130211_225649_030533_E14C9602)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9 2/2] nl80211: remove TCP WoWLAN information
+Date: Wed, 20 Feb 2013 09:40:34 +0100
+Message-Id: <1361349634-9669-3-git-send-email-johannes@sipsolutions.net> (sfid-20130220_094046_168403_498D4677)
+In-Reply-To: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
+References: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index e788f76..f2b7d26 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -38,8 +38,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+Just like the radar information, the TCP WoWLAN capability
+data can increase the wiphy information and make it too
+big. Remove the TCP WoWLAN information; no driver supports
+it and new userspace tools will be required as well.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 45 ---------------------------------------------
+ 1 file changed, 45 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f4785a0..f8363b8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -904,48 +904,6 @@ nla_put_failure:
+ 	return -ENOBUFS;
+ }
  
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, "type      rate     throughput  ewma prob   this prob  "
--			"this succ/attempt   success    attempts\n");
-+	p += sprintf(p, "type         rate     throughput  ewma prob   this prob  "
-+			"retry   this succ/attempt   success    attempts\n");
- 	for (i = 0; i < MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS; i++) {
- 		char htmode = '2';
- 		char gimode = 'L';
-@@ -64,18 +64,19 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 			*(p++) = (idx == mi->max_tp_rate) ? 'T' : ' ';
- 			*(p++) = (idx == mi->max_tp_rate2) ? 't' : ' ';
- 			*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
--			p += sprintf(p, "MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
-+			p += sprintf(p, " MCS%-2u", (minstrel_mcs_groups[i].streams - 1) *
- 					MCS_GROUP_RATES + j);
+-#ifdef CONFIG_PM
+-static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
+-					struct sk_buff *msg)
+-{
+-	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
+-	struct nlattr *nl_tcp;
+-
+-	if (!tcp)
+-		return 0;
+-
+-	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
+-	if (!nl_tcp)
+-		return -ENOBUFS;
+-
+-	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
+-			tcp->data_payload_max))
+-		return -ENOBUFS;
+-
+-	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
+-			tcp->data_payload_max))
+-		return -ENOBUFS;
+-
+-	if (tcp->seq && nla_put_flag(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ))
+-		return -ENOBUFS;
+-
+-	if (tcp->tok && nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
+-				sizeof(*tcp->tok), tcp->tok))
+-		return -ENOBUFS;
+-
+-	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
+-			tcp->data_interval_max))
+-		return -ENOBUFS;
+-
+-	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
+-			tcp->wake_payload_max))
+-		return -ENOBUFS;
+-
+-	nla_nest_end(msg, nl_tcp);
+-	return 0;
+-}
+-#endif
+-
+ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flags,
+ 			      struct cfg80211_registered_device *dev)
+ {
+@@ -1320,9 +1278,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 				goto nla_put_failure;
+ 		}
  
- 			tp = mr->cur_tp / 10;
- 			prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
- 			eprob = MINSTREL_TRUNC(mr->probability * 1000);
- 
--			p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
--					"%3u(%3u)   %8llu    %8llu\n",
-+			p += sprintf(p, "      %6u.%1u   %6u.%1u    %6u.%1u    "
-+					"%3u            %3u(%3u)  %8llu    %8llu\n",
- 					tp / 10, tp % 10,
- 					eprob / 10, eprob % 10,
- 					prob / 10, prob % 10,
-+					mr->retry_count,
- 					mr->last_success,
- 					mr->last_attempts,
- 					(unsigned long long)mr->succ_hist,
+-		if (nl80211_send_wowlan_tcp_caps(dev, msg))
+-			goto nla_put_failure;
+-
+ 		nla_nest_end(msg, nl_wowlan);
+ 	}
+ #endif
 -- 
-1.8.0.2
+1.8.0
 
