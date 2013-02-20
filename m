@@ -1,80 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53584 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818Ab3B0Jql convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52110 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934926Ab3BTT6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 04:46:41 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Chen Gang <gang.chen@asianux.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
-	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror when no -W* in EXTRA_CFLAGS
-Date: Wed, 27 Feb 2013 11:46:37 +0200
-Message-ID: <1921426.IqHmmMU5eP@lx-vladimir> (sfid-20130227_104713_835092_AF644CF1)
-In-Reply-To: <512DCA59.4040800@asianux.com>
-References: <512DADCA.9040609@asianux.com> <1385870.TegBXpTM9i@lx-vladimir> <512DCA59.4040800@asianux.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 20 Feb 2013 14:58:38 -0500
+Message-ID: <1361390290.8579.4.camel@jlt4.sipsolutions.net> (sfid-20130220_205853_849162_10187BDB)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 20:58:10 +0100
+In-Reply-To: <1361387854.19353.214.camel@edumazet-glaptop> (sfid-20130220_201740_409859_E87FECD4)
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+	 <1361379331.19353.189.camel@edumazet-glaptop>
+	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
+	 <1361381096.19353.195.camel@edumazet-glaptop>
+	 (sfid-20130220_182502_483935_369E6954) <1361384183.8579.1.camel@jlt4.sipsolutions.net>
+	 <1361387854.19353.214.camel@edumazet-glaptop>
+	 (sfid-20130220_201740_409859_E87FECD4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, February 27, 2013 04:56:57 PM Chen Gang wrote:
-> 于 2013年02月27日 16:45, Vladimir Kondratiev 写道:
-> > On Wednesday, February 27, 2013 02:55:06 PM Chen Gang wrote:
-> >>
-> >>   When make with EXTRA_CFLAGS=-W, it will report error.
-> >>   so give a check in Makefile.
-> >>
-> >> Signed-off-by: Chen Gang <gang.chen@asianux.com>
-> >> ---
-> >>  drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
-> >>  1 files changed, 3 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-> >> index 9396dc9..d288eea 100644
-> >> --- a/drivers/net/wireless/ath/wil6210/Makefile
-> >> +++ b/drivers/net/wireless/ath/wil6210/Makefile
-> >> @@ -9,5 +9,7 @@ wil6210-objs += wmi.o
-> >>  wil6210-objs += interrupt.o
-> >>  wil6210-objs += txrx.o
-> >>  
-> >> -subdir-ccflags-y += -Werror
-> >> +ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
-> >> +	subdir-ccflags-y += -Werror
-> >> +endif
-> >>  subdir-ccflags-y += -D__CHECK_ENDIAN__
-> >>
-> > Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> > 
-> > Well, agree; -W triggers lots of warnings, I suspect all other places that use
-> > -Werror should be problematic. Worth fixing all others? Quick look for v3.8 raises:
-> > 
+On Wed, 2013-02-20 at 11:17 -0800, Eric Dumazet wrote:
+> On Wed, 2013-02-20 at 19:16 +0100, Johannes Berg wrote:
 > 
->   thank you for your suggestion.
->   after this patch applied, I will do for others (let you as signed-of-by, too).
+> > Yes and no. The current code doesn't pull in much data, not even the IP
+> > header, so worst case it copies 14 bytes (ethernet header) in mac80211
+> > to obtain alignment. By pulling in everything here, it later has to copy
+> > everything again later to obtain alignment.
+> 
+> Can you give me pointers to the code doing that ?
 
-Perhaps, it would be good idea to fight the original problem.
+Sure: net/mac80211/rx.c ~line 1900, look for #ifndef
+CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
 
-I mean, fix warnings where possible. Example: there are lots of
-"unused parameter" ones. Where it is false warning, add __maybe_unused
-attribute. Like this:
+> On x86 we should not doing anything.
 
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index c566927..83e43b7 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -163,8 +163,9 @@ extern int _cond_resched(void);
- # define might_sleep() \
-        do { __might_sleep(__FILE__, __LINE__, 0); might_resched(); } while (0)
- #else
--  static inline void __might_sleep(const char *file, int line,
--                                  int preempt_offset) { }
-+  static inline void __might_sleep(const char *file __maybe_unused,
-+                                  int line __maybe_unused,
-+                                  int preempt_offset __maybe_unused) { }
- # define might_sleep() do { might_resched(); } while (0)
- #endif
- 
+We don't do anything if CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is
+defined.
+
+johannes
 
