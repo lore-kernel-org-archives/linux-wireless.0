@@ -1,143 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:33728 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932367Ab3BYKGy (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:46028 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753714Ab3BTRtj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 05:06:54 -0500
-Received: by mail-bk0-f54.google.com with SMTP id w5so1197776bku.13
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 02:06:53 -0800 (PST)
-Message-ID: <512B37BA.6060605@cozybit.com> (sfid-20130225_110658_992942_4E8A4591)
-Date: Mon, 25 Feb 2013 11:06:50 +0100
-From: Marco Porsch <marco@cozybit.com>
+	Wed, 20 Feb 2013 12:49:39 -0500
+Date: Wed, 20 Feb 2013 18:49:32 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Thomas =?utf-8?B?SMO8aG4=?= <thomas@net.t-labs.tu-berlin.de>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, antonio@open-mesh.com,
+	marek@open-mesh.com,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
+ stations
+Message-ID: <20130220174932.GB1556@pandem0nium> (sfid-20130220_184942_588701_75007408)
+References: <20130215171938.GA4140@pandem0nium>
+ <6A268FEF-5C88-4376-A701-09ECEAC1EF2A@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	sleffler@google.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCHv2 2/3] mac80211: mesh power save doze scheduling
-References: <1361203709-16669-1-git-send-email-marco@cozybit.com>  <1361203709-16669-2-git-send-email-marco@cozybit.com>  (sfid-20130218_170842_350606_DE89DB9F) <1361372480.8629.33.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361372480.8629.33.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
+In-Reply-To: <6A268FEF-5C88-4376-A701-09ECEAC1EF2A@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
-On 02/20/2013 04:01 PM, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 17:08 +0100, Marco Porsch wrote:
->
->> +/**
->> + * ieee80211_mps_init - register callbacks for mesh powersave mode
->> + *
->> + * @hw: the hardware
->> + * @ops: callbacks for this device
->> + *
->> + * called by driver on mesh interface add/remove
->> + */
->> +#ifdef CONFIG_MAC80211_MESH
->> +void ieee80211_mps_init(struct ieee80211_hw *hw,
->> +			const struct ieee80211_mps_ops *ops);
->> +#else
->> +static inline void ieee80211_mps_init(struct ieee80211_hw *hw,
->> +				      const struct ieee80211_mps_ops *ops)
->> +{ return; }
->> +#endif
->
-> The "return" there is spurious. Is it really worth providing a static
-> inline? It seems drivers might want to #ifdef it anyway so they don't
-> have carry around the ops struct and the called functions if mesh isn't
-> compiled in.
+--KFztAG8eRSV9hGtP
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Ok, that seems reasonable. And that one function would be gone if I just 
-use additional ieee80211_ops (see below).
+Hey Thomas,
 
->> +static bool mps_doze_check_sta(struct ieee80211_local *local, u64 *nexttbtt)
->> +{
->> +       struct sta_info *sta;
->> +       bool allow = true;
->> +       u64 nexttbtt_min = ULLONG_MAX;
->> +
->> +       mutex_lock(&local->sta_mtx);
->> +       list_for_each_entry(sta, &local->sta_list, list) {
->> +               if (!ieee80211_vif_is_mesh(&sta->sdata->vif) ||
->> +                   !ieee80211_sdata_running(sta->sdata) ||
->> +                   sta->plink_state != NL80211_PLINK_ESTAB) {
->> +                       continue;
->
-> This is strange, why bother with the else if there's a continue?
+On Tue, Feb 19, 2013 at 10:32:29AM +0100, Thomas H=C3=BChn wrote:
+> Hi all,
+>=20
+> You motivate your proposal of collecting several statistics from non-peer=
+ing stations in IBBS networks with:
+> (1) "The statistics are then used to evaluate link quality and make some =
+higher level decisions"=20
+> &=20
+> (2)"reading every packet from this monitor interface has a huge thoughput=
+ limitation"
+>=20
+> Could you go into more details about what "higher level" decisions you ha=
+ve in mind ?
+> Until now you just listed a bunch of values you like to monitor on a per =
+packet level without any concrete usage idea or algorithms that could make =
+use of it.
+> I could guess that a common goal would be to increase performance in wire=
+less networks, but lets get concrete about the approach you have in mind.
+> A lot of recent theoretical research in wireless goes towards interferenc=
+e management, multi-user and so the gains of using channel state informatio=
+n as feedback that is worth its overhead. But this direction would question=
+ the packet level granularity you described=E2=80=A6 so what about aggregat=
+ed statistics ?=20
 
-I don't quite get this comment. The current logic is like this:
+thanks for your questions, we did not explain this in detail and I think Ma=
+thias can
+give some more background on this, but I'll try to explain:
 
-if (unrelated cases) {
-	continue;
-} else if (related and blocking) {
-	allow = false;
-	break;
-} else if (related, non-blocking and new minimum) {
-	min = sta->nexttbtt;
-}
+We are currently evaluating some statistics in userspace by collecting pack=
+ets via the monitor
+interface. We evaluate sequence number jumps (which indicate packet loss du=
+e to interference),
+signal levels and such to throw this in a model to assess the channel quali=
+ty. This is used
+to make routing decisions according to channel qualities within a network (=
+assume a multihop
+mesh-like network). One problem we see here is that reading and evaluating =
+these packets in
+userspace is performance, reading every packet just uses a lot of CPU cycle=
+s (because of
+the transfer kernel->userspace and such). Therefore we would like to move t=
+his statistics
+collection into kernelspace, and only retrieve aggregated statistics.
 
->> +               } else if (test_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB) ||
->> +                          test_sta_flag(sta, WLAN_STA_MPSP_OWNER) ||
->> +                          test_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT) ||
->> +                          !timer_pending(&sta->nexttbtt_timer) ||
->> +                          time_after(jiffies, sta->nexttbtt_jiffies)) {
->
-> Are you sure jiffies are good enough? Some systems have HZ=33 or so I
-> think, which makes a jiffy like 30ms.
+So the goal for us to improve performance of the channel assessment we are =
+already doing, and
+use it for this custom routing software. Maybe other users can use a simila=
+r approach on
+other kinds of routing software, or even completely different tasks I'm cur=
+rently not aware
+of (e.g. these 802.11s use cases).
 
-Hm, jiffies is what I have available easily. Using the TSF would be 
-obvious but may suffer from delay when obtaining it. Umm... hrtimers again?
+Cheers,
+	Simon
 
->> +                       allow = false;
->> +                       break;
->> +               } else if (sta->nexttbtt_tsf < nexttbtt_min) {
->> +                       nexttbtt_min = sta->nexttbtt_tsf;
->> +               }
->
-> ditto, why bother with else after break?
->
->> +       if (nexttbtt_min != ULLONG_MAX)
->> +               *nexttbtt = nexttbtt_min;
->
-> The API of this function is very strange. Sometimes it might set it,
-> sometimes it might leave it, but that's not even consistent with the
-> "allow" return value ... It seems it'd be better to always set it.
+--KFztAG8eRSV9hGtP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Alright. Will just have to make sure to hand out zero as invalid value, 
-not ULLONG_MAX.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
->> +/**
->> + * ieee80211_mps_doze - trigger radio doze state after checking conditions
->> + *
->> + * @local: local interface data
->
-> "interface"? hardly.
+iEYEARECAAYFAlElDKwACgkQrzg/fFk7axaCxgCg1HTBl4pWMEjdHcfKEhch/Cw7
+jyYAoI8IsiTJxn2PLzcsHcv6P5TPUAcE
+=dRgk
+-----END PGP SIGNATURE-----
 
-* @local: mac80211 hw info struct
-
->> +void ieee80211_mps_doze(struct ieee80211_local *local)
->> +{
->> +	u64 nexttbtt = 0;
->
-> and get rid of the assignment here.
->
->> +
->> +void ieee80211_mps_init(struct ieee80211_hw *hw,
->> +			const struct ieee80211_mps_ops *ops)
->> +{
->> +	struct ieee80211_local *local = hw_to_local(hw);
->> +
->> +	if (!ops)
->> +		local->mps_enabled = false;
->
-> Allowing that seems pointless ... in fact, why is there this assignment
-> function anyway? It seems these are pretty normal, if #ifdef MESH,
-> driver callbacks?
-
-So may I just add them to the ieee80211_ops under #ifdef? That would 
-certainly make things easier. I would add a HW capability flag for MPS 
-doze as well.
-
---Marco
+--KFztAG8eRSV9hGtP--
