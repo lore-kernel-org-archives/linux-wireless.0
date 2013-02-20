@@ -1,214 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:50279 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757857Ab3BZQPn (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:63214 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933359Ab3BTRY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 11:15:43 -0500
-Received: by mail-wi0-f176.google.com with SMTP id hm14so5096868wib.9
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2013 08:15:42 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 26 Feb 2013 17:15:41 +0100
-Message-ID: <CAMEN=G7J08P2+tG85zMXFj3LhmXL9Nv2YO2p8whB8U-b1zjjTA@mail.gmail.com> (sfid-20130226_171547_597458_9F29041C)
-Subject: Performance of Ralink 3072 USB Sticks 300Mbit
-From: Juan Carlos Garza Fernandez <juancarlosgarza@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 20 Feb 2013 12:24:59 -0500
+Message-ID: <1361381096.19353.195.camel@edumazet-glaptop> (sfid-20130220_182513_015437_7A8955FF)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 09:24:56 -0800
+In-Reply-To: <1361379686.8629.41.camel@jlt4.sipsolutions.net>
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+	 <1361379331.19353.189.camel@edumazet-glaptop>
+	 (sfid-20130220_175537_373410_F2F98F44) <1361379686.8629.41.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Wed, 2013-02-20 at 18:01 +0100, Johannes Berg wrote:
 
-I am evaluating the performance of some USB sticks, some of them have
-a Ralink chipset,  yet I don't get thoughputs anything near the
-300Mbit that all of the sticks advertise and I would like to ask this
-forum if anyone has any hints about why.
+> FWIW, I think just using order-0 pages and turning 8k A-MSDUs off by
+> default makes more sense, A-MSDU is rarely used to begin with ...
+> 
 
-I will describe my system and my test procedure.
+My suggested patch makes sure that if someone needs 8k A-MSDU, iwlwifi
+still works correctly.
 
-I basically build an access point using HostAPD (0.7.3) using DHCP and
-I transfer a file using Samba for the shared folders functionality,
-from a Linux 3.4.7 system into a Windows system. If the trasfer is
-done via our Gigabit network, I get transfer rates of 100 Mbit (which
-is the maximum that the Linux box can deliver as it has a 100 Mbit
-adapter). When transfering the file via Wireless, and after tweaking
-the HostAPD conf file a bit I could get a maximum of 3.3 MBps (~ 27
-Mbit) which is 10% from the advertised speed. My Windows PC has an
-Atheros AR9287 which is 2T2R as well and thus is be able to handle the
-300 Mbit. Both devices are 1m apart and I chose channel 6 which is the
-least polluted one in my environment.
+> Also, if we copy larger frames here, we should also take into account
+> the (variable) 802.11 header length to avoid copying into a position
+> where the IP header ends up being unaligned.
 
-I am mainly interested in the Access Point transfers, yet I have
-tested the Ad-Hoc connection as well (yet only 802.11.g 54Mbit) and
-with that I get even slower transfer rates.
+But the current code already has this problem (if its a problem at all,
+as on x86 NET_IP_ALIGN is 0)
 
-USB Chipset
-Ralink 3072
-
-Linux box:
-Kernel 3.4.7 Vanilla
-
-HostAPD conf:
-#===============================
-interface=wlan2
-driver=nl80211
-ssid=LLS0610007xx
-channel=6
-hw_mode=g
-max_num_sta=5
-ctrl_interface=/var/run/hostapd
-ignore_broadcast_ssid=0
-rts_threshold=2347
-fragm_threshold=2346
-macaddr_acl=0
-logger_syslog=-1
-logger_syslog_level=0
-logger_stdout=-1
-logger_stdout_level=0
-dump_file=/tmp/hostapd.dump
-ieee80211n=1
-ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40][TX-STBC][RX-STBC12]
-
-auth_algs=1
-wpa=2
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=CCMP
-wpa_group_rekey=86400
-wpa_gmk_rekey=86400
-wpa_passphrase=0123456789
-#===============================
+I only increase available tailroom in the skb. Right now there is enough
+room for IP and tcp headers.
 
 
-iw list:
 
-Wiphy phy4
-        Band 1:
-                Capabilities: 0x2f2
-                        HT20/HT40
-                        Static SM Power Save
-                        RX Greenfield
-                        RX HT20 SGI
-                        RX HT40 SGI
-                        TX STBC
-                        RX STBC 2-streams
-                        Max AMSDU length: 3839 bytes
-                        No DSSS/CCK HT40
-                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-                Minimum RX AMPDU time spacing: 2 usec (0x04)
-                HT RX MCS rate indexes supported: 0-15, 32
-                TX unequal modulation not supported
-                HT TX Max spatial streams: 2
-                HT TX MCS rate indexes supported may differ
-                Frequencies:
-                        * 2412 MHz [1] (0.0 dBm)
-                        * 2417 MHz [2] (0.0 dBm)
-                        * 2422 MHz [3] (0.0 dBm)
-                        * 2427 MHz [4] (0.0 dBm)
-                        * 2432 MHz [5] (0.0 dBm)
-                        * 2437 MHz [6] (0.0 dBm)
-                        * 2442 MHz [7] (0.0 dBm)
-                        * 2447 MHz [8] (0.0 dBm)
-                        * 2452 MHz [9] (0.0 dBm)
-                        * 2457 MHz [10] (0.0 dBm)
-                        * 2462 MHz [11] (0.0 dBm)
-                        * 2467 MHz [12] (0.0 dBm) (passive scanning, no IBSS)
-                        * 2472 MHz [13] (0.0 dBm) (passive scanning, no IBSS)
-                        * 2484 MHz [14] (0.0 dBm) (passive scanning, no IBSS)
-                Bitrates (non-HT):
-                        * 1.0 Mbps
-                        * 2.0 Mbps (short preamble supported)
-                        * 5.5 Mbps (short preamble supported)
-                        * 11.0 Mbps (short preamble supported)
-                        * 6.0 Mbps
-                        * 9.0 Mbps
-                        * 12.0 Mbps
-                        * 18.0 Mbps
-                        * 24.0 Mbps
-                        * 36.0 Mbps
-                        * 48.0 Mbps
-                        * 54.0 Mbps
-        max # scan SSIDs: 4
-        max scan IEs length: 2257 bytes
-        Coverage class: 0 (up to 0m)
-        Supported Ciphers:
-                * WEP40 (00-0f-ac:1)
-                * WEP104 (00-0f-ac:5)
-                * TKIP (00-0f-ac:2)
-                * CCMP (00-0f-ac:4)
-        Available Antennas: TX 0 RX 0
-        Supported interface modes:
-                 * IBSS
-                 * managed
-                 * AP
-                 * AP/VLAN
-                 * WDS
-                 * monitor
-        software interface modes (can always be added):
-                 * AP/VLAN
-                 * monitor
-        interface combinations are not supported
-        Supported commands:
-                 * new_interface
-                 * set_interface
-                 * new_key
-                 * new_beacon
-                 * new_station
-                 * set_bss
-                 * authenticate
-                 * associate
-                 * deauthenticate
-                 * disassociate
-                 * join_ibss
-                 * remain_on_channel
-                 * set_tx_bitrate_mask
-                 * action
-                 * frame_wait_cancel
-                 * set_wiphy_netns
-                 * set_channel
-                 * set_wds_peer
-                 * Unknown command (84)
-                 * Unknown command (87)
-                 * Unknown command (85)
-                 * connect
-                 * disconnect
-        Supported TX frame types:
-                 * IBSS: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * managed: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * mesh point: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * P2P-client: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                 * P2P-GO: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-        Supported RX frame types:
-                 * IBSS: 0xd0
-                 * managed: 0x40 0xd0
-                 * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-                 * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-                 * mesh point: 0xb0 0xc0 0xd0
-                 * P2P-client: 0x40 0xd0
-                 * P2P-GO: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-        HT Capability overrides:
-                 * MCS: ff ff ff ff ff ff ff ff ff ff
-                 * maximum A-MSDU length
-                 * supported channel width
-                 * short GI for 40 MHz
-                 * max A-MPDU length exponent
-                 * min MPDU start spacing
-        Device supports TX status socket option.
-        Device supports HT-IBSS.
-
-
-Does anyone have a clue?
-
-
-Regards,
-
---
-________________________________
-Juan Carlos Garza
