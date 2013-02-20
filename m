@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2477 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759236Ab3BGTfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 14:35:50 -0500
-From: Tim Gardner <tim.gardner@canonical.com>
-To: linux-kernel@vger.kernel.org
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH wireless-next] brcmsmac: fix u16 overflow warning
-Date: Thu,  7 Feb 2013 12:35:35 -0700
-Message-Id: <1360265735-42450-1-git-send-email-tim.gardner@canonical.com> (sfid-20130207_203610_563459_6E716B3C)
+Received: from mail-we0-f169.google.com ([74.125.82.169]:48531 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933094Ab3BTAsR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2013 19:48:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <5123C43D.2020602@lwfinger.net>
+References: <20130219.005206.397289032011003833.davem@davemloft.net>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
+ <5123BCFF.5090408@lwfinger.net> <20130219.131553.787630407148880340.davem@davemloft.net>
+ <5123C43D.2020602@lwfinger.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 20 Feb 2013 11:47:54 +1100
+Message-ID: <CAGRGNgWZ0qUJSSkjmP8o4VaPRBdN67J=RPy5+45rWaQQXWnWrQ@mail.gmail.com> (sfid-20130220_014823_351825_370BC2F8)
+Subject: Re: [PATCH] b43: Increase number of RX DMA slots
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: David Miller <davem@davemloft.net>, David.Laight@aculab.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, bittorf@bluebottle.com,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DOT11_MIN_BEACON_PERIOD and DOT11_MAX_BEACON_PERIOD are
-superfluous. The only invalid beacon period is 0. Comparing
-a 16 bit quantity to 0xffff also causes a compile warning:
+Hi Larry,
 
-drivers/net/wireless/brcm80211/brcmsmac/main.c:5560 brcms_c_set_beacon_period()
- warn: impossible condition '(period > 65535) => (0-65535 > 65535)'
+On Wed, Feb 20, 2013 at 5:28 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/19/2013 12:15 PM, David Miller wrote:
+>
+>> I understand your constraints, but this is a trivially remotely
+>> DoS'able condition even on slow CPU atom laptops.
+>>
+>> Send an "expansive" full sized frame followed by 300 or so 64-byte UDP
+>> packets --> instant hang.
+>
+>
+> Thanks for the suggestion for a test. I think the reset solution should
+> survive with only some packet loss, but we will find out.
 
-Observed from smatch analysis.
+Is it be possible to increase the number of slots at runtime? Maybe an
+even better solution would be to keep the existing number of slots,
+and if they run out, reset and increase incrementally to some sensible
+maximum value.
 
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index c26992a..080b54d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -101,8 +101,6 @@
- #define DOT11_RTS_LEN			16
- #define DOT11_CTS_LEN			10
- #define DOT11_BA_BITMAP_LEN		128
--#define DOT11_MIN_BEACON_PERIOD		1
--#define DOT11_MAX_BEACON_PERIOD		0xFFFF
- #define DOT11_MAXNUMFRAGS		16
- #define DOT11_MAX_FRAG_LEN		2346
- 
-@@ -5555,8 +5553,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
- 
- int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
- {
--	if (period < DOT11_MIN_BEACON_PERIOD ||
--	    period > DOT11_MAX_BEACON_PERIOD)
-+	if (period == 0)
- 		return -EINVAL;
- 
- 	wlc->default_bss->beacon_period = period;
 -- 
-1.7.9.5
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
