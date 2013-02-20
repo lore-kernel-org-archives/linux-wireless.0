@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:54883 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932604Ab3BZVDn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 16:03:43 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: Lubomir Rintel <lkundrak@v3.sk>, Harro Haan <hrhaan@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Tue, 26 Feb 2013 12:59:46 -0800
-Subject: RE: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D7F932B@SC-VEXCH1.marvell.com> (sfid-20130226_220403_866896_243C7C28)
-References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
-	<477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com>
-	<1361249203.14137.27.camel@unicorn.kokotovo>
-	<477F20668A386D41ADCC57781B1F70430D9D6CEA08@SC-VEXCH1.marvell.com>
-	<1361730693.31709.1.camel@unicorn.kokotovo>
-	<477F20668A386D41ADCC57781B1F70430D9D7F8FF0@SC-VEXCH1.marvell.com>
- <CAMLZHHTnRUT0pbpKR7=wVSDkOxo65tnA_JWYGtq9rejsVy2scQ@mail.gmail.com>
-In-Reply-To: <CAMLZHHTnRUT0pbpKR7=wVSDkOxo65tnA_JWYGtq9rejsVy2scQ@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:50371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab3BTKGs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 05:06:48 -0500
+Message-ID: <1361354804.8629.15.camel@jlt4.sipsolutions.net> (sfid-20130220_110710_686710_F2EC05E0)
+Subject: Re: [RFC 1/2] mac80211: disconnect on suspend in managed mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 Feb 2013 11:06:44 +0100
+In-Reply-To: <20130219164714.GA27140@redhat.com>
+References: <20130219164714.GA27140@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Tue, 2013-02-19 at 17:47 +0100, Stanislaw Gruszka wrote:
+> If possible that after suspend cfg80211 receive request to disconnect
+> what require action on interface that was removed during suspend.
+> Problem can manifest itself by various warnings similar to below one:
+[...]
+> To fix the problem disconnect from AP during suspend.
 
-> > Do you have any concern for OLPC platforms with above change? If it doesn't seem to break OLPC I
-> will send a patch to the list.
-> 
-> Looks fine to me. Thanks for investigating.
+This will fix the immediate problem, but not in general. What if we're
+joined to an IBSS while suspending? A similar thing could happen. Or
+operating as an AP? Or joined to a mesh? etc.
 
-Thanks. I've just sent the patch.
+I think it'd be better to implement this as explicit disconnect, leave,
+teardown, whatever ... in cfg80211 rather than mac80211, although then
+of course mac80211 could have a bunch of cleanups, e.g. the various
+_quiesce functions could be reduced then I think.
 
-Regards,
-Bing
+johannes
+
