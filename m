@@ -1,100 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48437 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755710Ab3BEWvL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758617Ab3BTKgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 17:51:11 -0500
-Date: Tue, 5 Feb 2013 16:51:01 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Arend van Spriel <arend@broadcom.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 5/7] mac80211: Expand powersave configuration flag to be
- two bits
-Message-ID: <20130205225101.GB29557@thinkpad-t410> (sfid-20130205_235115_434151_91299710)
-References: <1359503255-18270-1-git-send-email-seth.forshee@canonical.com>
- <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
- <1359645648.8415.77.camel@jlt4.sipsolutions.net>
- <20130131163355.GE28799@thinkpad-t410>
- <1359651229.8415.99.camel@jlt4.sipsolutions.net>
- <20130131171826.GG28799@thinkpad-t410>
- <1359654634.8415.101.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359654634.8415.101.camel@jlt4.sipsolutions.net>
+	Wed, 20 Feb 2013 05:36:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] nl80211: conditionally add back TCP WoWLAN information
+Date: Wed, 20 Feb 2013 11:36:26 +0100
+Message-Id: <1361356586-11496-4-git-send-email-johannes@sipsolutions.net> (sfid-20130220_113639_709963_BEB82C25)
+In-Reply-To: <1361356586-11496-1-git-send-email-johannes@sipsolutions.net>
+References: <1361356586-11496-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 06:50:34PM +0100, Johannes Berg wrote:
-> On Thu, 2013-01-31 at 11:18 -0600, Seth Forshee wrote:
-> 
-> > > > Actually one of the last bugs I fixed before sending these was a place
-> > > > where I had used disabled instead of !enabled, and the frames ended up
-> > > > with PM set when it shouldn't have been.
-> > > > 
-> > > > I agree though that the distinction is confusing. Maybe some better
-> > > > state names are needed. Perhaps awake, offchannel, and doze?
-> > > 
-> > > I think what you really want is to distinguish between "HW can go to
-> > > powersave" and "PM bit should be set"? That's pretty much what your
-> > > CONF_PS_ENABLED and CONF_PS_OFFCHANNEL means, respectively, but maybe
-> > 
-> > Correct, with the understanding that "HW can go to powersave" also
-> > implies "PM bit should be set."
-> > 
-> > Another approach would be to keep the CONF_PS flag the same and add a
-> > CONF_PM flag or similar. I didn't go with this approach because CONF_PS
-> > && !CONF_PM really doesn't make any sense, which really doesn't help
-> > with reducing confusion. The advantage is that it separates setting PM
-> > from PS for those driver that don't support PS but need to configure the
-> > hardware to set PM for off-channel.
-> 
-> Good point, that'd work too. PS && !PM would never be used, I guess?
-> It'd also have the advantage of not having to touch all the drivers?
-> 
-> It doesn't really matter all that much to me though, I just think what
-> you have right now is (too) confusing.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Johannes,
+Add back the previously removed TCP WoWLAN information,
+but only if userspace is prepared to deal with large
+wiphy capability data dumps.
 
-I've been thinking about and playing around with these ideas. I've
-implemented the CONF_PM idea, and it does end up with fewer changes, but
-I just don't think separating powersave from setting PM makes much
-sense. In the end it just seems like a kludge to fix a problem with
-Broadcom chips, and if I want a kludge I can do it entirely within the
-driver.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 46 insertions(+), 2 deletions(-)
 
-So what I'm planning to do know is implement the awake/doze/offchannel
-powersave modes like I had mentioned, but taking things a bit further.
-I'd change IEEE80211_HW_SUPPORTS_PS to SUPPORTS_PS_DOZE, indicating
-support for a low-power powersave state rather than support for
-powersave in general. All hardware will be reconfigured for
-awake<->offchannel transitions (though most drivers can simply ignore
-these transitions), but hardware will only be put in the doze state if
-it indicates PS_DOZE support.
-
-This will make it compulsory for all drivers to indicate whether or not
-they require IEEE802111_HW_PS_NULLFUNC_STACK. I'll simply set this flag
-for any drivers not currently supporting powersave.
-
-In practice the changes shouldn't end up much different than what I have
-in these patches, but I think it's conceptually cleaner (and less
-confusing!). Does this sound reasonable to you?
-
-Thanks,
-Seth
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fa35b07..4701893a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -925,8 +925,49 @@ nla_put_failure:
+ }
+ 
+ #ifdef CONFIG_PM
++static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
++					struct sk_buff *msg)
++{
++	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
++	struct nlattr *nl_tcp;
++
++	if (!tcp)
++		return 0;
++
++	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
++	if (!nl_tcp)
++		return -ENOBUFS;
++
++	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
++			tcp->data_payload_max))
++		return -ENOBUFS;
++
++	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
++			tcp->data_payload_max))
++		return -ENOBUFS;
++
++	if (tcp->seq && nla_put_flag(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ))
++		return -ENOBUFS;
++
++	if (tcp->tok && nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
++				sizeof(*tcp->tok), tcp->tok))
++		return -ENOBUFS;
++
++	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
++			tcp->data_interval_max))
++		return -ENOBUFS;
++
++	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
++			tcp->wake_payload_max))
++		return -ENOBUFS;
++
++	nla_nest_end(msg, nl_tcp);
++	return 0;
++}
++
+ static int nl80211_send_wowlan(struct sk_buff *msg,
+-			       struct cfg80211_registered_device *dev)
++			       struct cfg80211_registered_device *dev,
++			       bool large)
+ {
+ 	struct nlattr *nl_wowlan;
+ 
+@@ -968,6 +1009,9 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
+ 			return -ENOBUFS;
+ 	}
+ 
++	if (large && nl80211_send_wowlan_tcp_caps(dev, msg))
++		return -ENOBUFS;
++
+ 	nla_nest_end(msg, nl_wowlan);
+ 
+ 	return 0;
+@@ -1404,7 +1448,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 			break;
+ 	case 6:
+ #ifdef CONFIG_PM
+-		if (nl80211_send_wowlan(msg, dev))
++		if (nl80211_send_wowlan(msg, dev, split))
+ 			goto nla_put_failure;
+ 		(*split_start)++;
+ 		if (split)
+-- 
+1.8.0
 
