@@ -1,49 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52289 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934716Ab3BTUqz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40146 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935114Ab3BTOEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 15:46:55 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: eric.dumazet@gmail.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: clarify alignment comment
-Date: Wed, 20 Feb 2013 21:46:42 +0100
-Message-Id: <1361393202-10281-1-git-send-email-johannes@sipsolutions.net> (sfid-20130220_214701_592057_04D1B4D9)
+	Wed, 20 Feb 2013 09:04:15 -0500
+Message-ID: <5124D7DC.6010708@candelatech.com> (sfid-20130220_150420_306882_B5C67FCC)
+Date: Wed, 20 Feb 2013 06:04:12 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Clean up work-queues on disassociation.
+References: <1361326267-16847-1-git-send-email-greearb@candelatech.com> <CAGRGNgVY+v9ko0MicEp5ozjrv38TG87sTw78SZhLLEqaK=XQ8Q@mail.gmail.com>
+In-Reply-To: <CAGRGNgVY+v9ko0MicEp5ozjrv38TG87sTw78SZhLLEqaK=XQ8Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/19/2013 10:23 PM, Julian Calaby wrote:
+> Hi Ben,
+>
+> On Wed, Feb 20, 2013 at 1:11 PM,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The monitor_work and beacon_connection_loss_work items were
+>> not being canceled on disassociation (and not on deletion
+>> either).  This leads to work-items trying to run after memory
+>> has been deleted.
+>>
+>> I could not find a cleaner way to do this because the
+>> cancel_work_sync for these items must be done outside
+>> of the ifmgd->mtx.
+>>
+>> In addition, re-order the quiesce code so that timers are
+>> always stopped before work-items are flushed.  This was
+>> not the problem I saw, but I think it may still be more
+>> correct.
+>>
+>> This fixes the crashes we see in 3.7.9+.  The crash stack
+>> trace itself isn't so helpful, but this warning gives
+>> more useful info:
+>
+> [snip]
+>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>
+>> NOTE:  Please do not apply this until it is reviewed by Johannes,
+>> at least.
+>>
+>>   net/mac80211/mlme.c |   68 +++++++++++++++++++++++++++++++++++++++++++++-----
+>>   1 files changed, 61 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 164ecf0..5a65144 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -2954,19 +2978,15 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
+>>
+>>          cancel_work_sync(&ifmgd->request_smps_work);
+>>
+>> +       sdata_err(sdata, "Cancel-work-sync monitor_work, sta_quiesce.\n");
+>
+> Debug code?
 
-The comment says something about __skb_push(), but that
-isn't even called in the code any more. Looking at the
-git history, that comment never even made sense when it
-was still called, so just replace that part to note it
-still works even when align isn't 0 or 2.
+Err, yes..will remove.
 
-Reported-by: Eric Dumazet <eric.dumazet@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>>   void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+>> @@ -3262,6 +3282,8 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+>>          struct ieee80211_mgd_auth_data *auth_data;
+>>          u16 auth_alg;
+>>          int err;
+>> +       bool maybe_cancel_work = false;
+>> +       bool hit_err_clear = false;
+>
+> You could replace these with a single variable.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index bb73ed2d..acf006f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1894,8 +1894,10 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 		 * 'align' will only take the values 0 or 2 here
- 		 * since all frames are required to be aligned
- 		 * to 2-byte boundaries when being passed to
--		 * mac80211. That also explains the __skb_push()
--		 * below.
-+		 * mac80211; the code here works just as well if
-+		 * that isn't true, but mac80211 assumes it can
-+		 * access fields as 2-byte aligned (e.g. for
-+		 * compare_ether_addr)
- 		 */
- 		align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) & 3;
- 		if (align) {
+I don't see how.  It seems that we should only cancel the work items
+if we called set_disassoc AND if the subsequent attempts to (re)associate
+failed.
+
+Maybe I missed something?
+
+Thanks,
+Ben
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
