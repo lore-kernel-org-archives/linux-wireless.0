@@ -1,730 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:38370 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1947056Ab3BHUcq (ORCPT
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:64071 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756469Ab3BTR5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 15:32:46 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 10/14] cw1200: v4: Main processing loop
-Date: Fri,  8 Feb 2013 15:32:03 -0500
-Message-Id: <1360355527-12159-11-git-send-email-pizza@shaftnet.org> (sfid-20130208_214311_967760_6256007E)
-In-Reply-To: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
-References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
+	Wed, 20 Feb 2013 12:57:06 -0500
+Received: by mail-yh0-f41.google.com with SMTP id 47so1473745yhr.28
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2013 09:57:06 -0800 (PST)
+Message-ID: <51250E6B.3030308@lwfinger.net> (sfid-20130220_185711_592861_BB3286A9)
+Date: Wed, 20 Feb 2013 11:56:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: fix unaligned access to mac address
+References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de>  <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com> <1361381489.3065.1.camel@joe-AO722>
+In-Reply-To: <1361381489.3065.1.camel@joe-AO722>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/20/2013 11:31 AM, Joe Perches wrote:
+> On Mon, 2013-02-18 at 17:09 +0100, Rafał Miłecki wrote:
+>> 2013/2/16 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> The mac address should be aligned to u16 to prevent an unaligned access
+>>> in drivers/ssb/pci.c where it is casted to __be16.
+> []
+>>> diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+> []
+>>> @@ -26,6 +26,7 @@ struct ssb_sprom_core_pwr_info {
+>>>
+>>>   struct ssb_sprom {
+>>>          u8 revision;
+>>> +       u8 country_code;        /* Country Code */
+>>>          u8 il0mac[6];           /* MAC address for 802.11b/g */
+>>
+>> It looks a little hacky to me too, it's easy to forget about that
+>> requirement and break that again in the future.
+>>
+>> What about not casting il0mac to u16 at all? Maybe we should just fill
+>> it as u8 (which it is)?
+>>
+>
+> Perhaps this?
+>
+> From: Joe Perches <joe@perches.com>
+> Subject: [PATCH] ssb: pci: Standardize a function to get mac address
+>
+> Don't require alignment of mac addresses to u16.
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>   drivers/ssb/pci.c | 44 ++++++++++++++++++--------------------------
+>   1 file changed, 18 insertions(+), 26 deletions(-)
+>
+> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+> index e9d9496..62fc9b5 100644
+> --- a/drivers/ssb/pci.c
+> +++ b/drivers/ssb/pci.c
+> @@ -231,6 +231,15 @@ static inline u8 ssb_crc8(u8 crc, u8 data)
+>   	return t[crc ^ data];
+>   }
+>
+> +static void sprom_get_mac(char *mac, const u16 *in)
+> +{
+> +	int i;
+> +	for (i = 0; i < 3; i++) {
+> +		*mac++ = in[i];
+> +		*mac++ = in[i] >> 8;
+> +	}
+> +}
+> +
+>   static u8 ssb_sprom_crc(const u16 *sprom, u16 size)
+>   {
+>   	int word;
+> @@ -341,8 +350,6 @@ static s8 r123_extract_antgain(u8 sprom_revision, const u16 *in,
+>
+>   static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+>   {
+> -	int i;
+> -	u16 v;
+>   	u16 loc[3];
+>
+>   	if (out->revision == 3)			/* rev 3 moved MAC */
+> @@ -352,19 +359,10 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+>   		loc[1] = SSB_SPROM1_ET0MAC;
+>   		loc[2] = SSB_SPROM1_ET1MAC;
+>   	}
+> -	for (i = 0; i < 3; i++) {
+> -		v = in[SPOFF(loc[0]) + i];
+> -		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+> -	}
+> +	sprom_get_mac(out->il0mac, &in[SPOFF(loc[0])]);
+>   	if (out->revision < 3) { 	/* only rev 1-2 have et0, et1 */
+> -		for (i = 0; i < 3; i++) {
+> -			v = in[SPOFF(loc[1]) + i];
+> -			*(((__be16 *)out->et0mac) + i) = cpu_to_be16(v);
+> -		}
+> -		for (i = 0; i < 3; i++) {
+> -			v = in[SPOFF(loc[2]) + i];
+> -			*(((__be16 *)out->et1mac) + i) = cpu_to_be16(v);
+> -		}
+> +		sprom_get_mac(out->et0mac, &in[SPOFF(loc[1])]);
+> +		sprom_get_mac(out->et1mac, &in[SPOFF(loc[2])]);
+>   	}
+>   	SPEX(et0phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0A, 0);
+>   	SPEX(et1phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1A,
+> @@ -454,19 +452,15 @@ static void sprom_extract_r458(struct ssb_sprom *out, const u16 *in)
+>
+>   static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+>   {
+> -	int i;
+> -	u16 v;
+>   	u16 il0mac_offset;
+>
+>   	if (out->revision == 4)
+>   		il0mac_offset = SSB_SPROM4_IL0MAC;
+>   	else
+>   		il0mac_offset = SSB_SPROM5_IL0MAC;
+> -	/* extract the MAC address */
+> -	for (i = 0; i < 3; i++) {
+> -		v = in[SPOFF(il0mac_offset) + i];
+> -		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+> -	}
+> +
+> +	sprom_get_mac(out->il0mac, &in[SPOFF(il0mac_offset)]);
+> +
+>   	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
+>   	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
+>   	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
+> @@ -530,7 +524,7 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+>   static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+>   {
+>   	int i;
+> -	u16 v, o;
+> +	u16 o;
+>   	u16 pwr_info_offset[] = {
+>   		SSB_SROM8_PWR_INFO_CORE0, SSB_SROM8_PWR_INFO_CORE1,
+>   		SSB_SROM8_PWR_INFO_CORE2, SSB_SROM8_PWR_INFO_CORE3
+> @@ -539,10 +533,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+>   			ARRAY_SIZE(out->core_pwr_info));
+>
+>   	/* extract the MAC address */
+> -	for (i = 0; i < 3; i++) {
+> -		v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
+> -		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+> -	}
+> +	sprom_get_mac(out->il0mac, &in[SSB_SPROM8_IL0MAC]);
+> +
+>   	SPEX(board_rev, SSB_SPROM8_BOARDREV, 0xFFFF, 0);
+>   	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
+>   	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
+>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/bh.c | 661 +++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/bh.h |  28 ++
- 2 files changed, 689 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/bh.c
- create mode 100644 drivers/net/wireless/cw1200/bh.h
+I like the looks of sprom_get_mac() over that ugly *(((__be16 *)out->il0mac) 
+construct, but this patch breaks ssb. The resulting MAC address is all ones. I 
+have not yet figured out the problem.
 
-diff --git a/drivers/net/wireless/cw1200/bh.c b/drivers/net/wireless/cw1200/bh.c
-new file mode 100644
-index 0000000..c2cbec9
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/bh.c
-@@ -0,0 +1,661 @@
-+/*
-+ * Device handling thread implementation for mac80211 ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * Based on:
-+ * ST-Ericsson UMAC CW1200 driver, which is
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/module.h>
-+#include <net/mac80211.h>
-+#include <linux/kthread.h>
-+#include <linux/timer.h>
-+
-+#include "cw1200.h"
-+#include "bh.h"
-+#include "hwio.h"
-+#include "wsm.h"
-+#include "sbus.h"
-+#include "debug.h"
-+#include "fwio.h"
-+
-+static int cw1200_bh(void *arg);
-+
-+/* TODO: Verify these numbers with WSM specification. */
-+#define DOWNLOAD_BLOCK_SIZE_WR	(0x1000 - 4)
-+/* an SPI message cannot be bigger than (2"12-1)*2 bytes
-+ * "*2" to cvt to bytes */
-+#define MAX_SZ_RD_WR_BUFFERS	(DOWNLOAD_BLOCK_SIZE_WR*2)
-+#define PIGGYBACK_CTRL_REG	(2)
-+#define EFFECTIVE_BUF_SIZE	(MAX_SZ_RD_WR_BUFFERS - PIGGYBACK_CTRL_REG)
-+
-+/* Suspend state privates */
-+enum cw1200_bh_pm_state {
-+	CW1200_BH_RESUMED = 0,
-+	CW1200_BH_SUSPEND,
-+	CW1200_BH_SUSPENDED,
-+	CW1200_BH_RESUME,
-+};
-+
-+typedef int (*cw1200_wsm_handler)(struct cw1200_common *priv,
-+	u8 *data, size_t size);
-+
-+#ifndef CW1200_USE_COMPAT_KTHREAD
-+static void cw1200_bh_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+	container_of(work, struct cw1200_common, bh_work);
-+	pr_debug("[BH] %s enter\n", __func__);
-+	cw1200_bh(priv);
-+	pr_debug("[BH] %s exit\n", __func__);
-+}
-+#endif
-+
-+int cw1200_register_bh(struct cw1200_common *priv)
-+{
-+	int err = 0;
-+#ifdef CW1200_USE_COMPAT_KTHREAD
-+	struct sched_param param = { .sched_priority = 1 };
-+	BUG_ON(priv->bh_thread);
-+#else
-+	/* Realtime workqueue */
-+	priv->bh_workqueue = alloc_workqueue("cw1200_bh",
-+				WQ_MEM_RECLAIM | WQ_HIGHPRI
-+				| WQ_CPU_INTENSIVE, 1);
-+
-+	if (!priv->bh_workqueue)
-+		return -ENOMEM;
-+
-+	INIT_WORK(&priv->bh_work, cw1200_bh_work);
-+#endif
-+
-+	pr_debug("[BH] register.\n");
-+
-+	atomic_set(&priv->bh_rx, 0);
-+	atomic_set(&priv->bh_tx, 0);
-+	atomic_set(&priv->bh_term, 0);
-+	atomic_set(&priv->bh_suspend, CW1200_BH_RESUMED);
-+	priv->bh_error = 0;
-+	priv->hw_bufs_used = 0;
-+	priv->buf_id_tx = 0;
-+	priv->buf_id_rx = 0;
-+	init_waitqueue_head(&priv->bh_wq);
-+	init_waitqueue_head(&priv->bh_evt_wq);
-+
-+#ifdef CW1200_USE_COMPAT_KTHREAD
-+	priv->bh_thread = kthread_create(&cw1200_bh, priv, "cw1200_bh");
-+	if (IS_ERR(priv->bh_thread)) {
-+		err = PTR_ERR(priv->bh_thread);
-+		priv->bh_thread = NULL;
-+	} else {
-+		WARN_ON(sched_setscheduler(priv->bh_thread,
-+					   SCHED_FIFO, &param));
-+#ifndef CW1200_NO_PUT_TASK_STRUCT
-+		get_task_struct(priv->bh_thread);
-+#endif
-+		wake_up_process(priv->bh_thread);
-+	}
-+#else
-+	err = !queue_work(priv->bh_workqueue, &priv->bh_work);
-+	WARN_ON(err);
-+#endif
-+	return err;
-+}
-+
-+void cw1200_unregister_bh(struct cw1200_common *priv)
-+{
-+#ifdef CW1200_USE_COMPAT_KTHREAD
-+	struct task_struct *thread = priv->bh_thread;
-+	if (WARN_ON(!thread))
-+		return;
-+#endif
-+
-+	atomic_add(1, &priv->bh_term);
-+	wake_up(&priv->bh_wq);
-+
-+#ifdef CW1200_USE_COMPAT_KTHREAD
-+	kthread_stop(thread);
-+#ifndef CW1200_NO_PUT_TASK_STRUCT
-+	put_task_struct(thread);
-+#endif
-+	priv->bh_thread = NULL;
-+#else
-+	flush_workqueue(priv->bh_workqueue);
-+
-+	destroy_workqueue(priv->bh_workqueue);
-+	priv->bh_workqueue = NULL;
-+#endif
-+
-+	pr_debug("[BH] unregistered.\n");
-+}
-+
-+void cw1200_irq_handler(struct cw1200_common *priv)
-+{
-+	pr_debug("[BH] irq.\n");
-+
-+	/* Disable Interrupts! */
-+	/* NOTE:  sbus_ops->lock already held */
-+	__cw1200_irq_enable(priv, 0);
-+
-+	if (/* WARN_ON */(priv->bh_error))
-+		return;
-+
-+	if (atomic_add_return(1, &priv->bh_rx) == 1)
-+		wake_up(&priv->bh_wq);
-+}
-+EXPORT_SYMBOL_GPL(cw1200_irq_handler);
-+
-+void cw1200_bh_wakeup(struct cw1200_common *priv)
-+{
-+	pr_debug("[BH] wakeup.\n");
-+	if (priv->bh_error) {
-+		pr_err("[BH] wakeup failed (BH error)\n");
-+		return;
-+	}
-+
-+	if (atomic_add_return(1, &priv->bh_tx) == 1)
-+		wake_up(&priv->bh_wq);
-+}
-+
-+int cw1200_bh_suspend(struct cw1200_common *priv)
-+{
-+	pr_debug("[BH] suspend.\n");
-+	if (priv->bh_error) {
-+		wiphy_warn(priv->hw->wiphy, "BH error -- can't suspend\n");
-+		return -EINVAL;
-+	}
-+
-+	atomic_set(&priv->bh_suspend, CW1200_BH_SUSPEND);
-+	wake_up(&priv->bh_wq);
-+	return wait_event_timeout(priv->bh_evt_wq, priv->bh_error ||
-+		(CW1200_BH_SUSPENDED == atomic_read(&priv->bh_suspend)),
-+		 1 * HZ) ? 0 : -ETIMEDOUT;
-+}
-+
-+int cw1200_bh_resume(struct cw1200_common *priv)
-+{
-+	pr_debug("[BH] resume.\n");
-+	if (priv->bh_error) {
-+		wiphy_warn(priv->hw->wiphy, "BH error -- can't resume\n");
-+		return -EINVAL;
-+	}
-+
-+	atomic_set(&priv->bh_suspend, CW1200_BH_RESUME);
-+	wake_up(&priv->bh_wq);
-+	return wait_event_timeout(priv->bh_evt_wq, priv->bh_error ||
-+		(CW1200_BH_RESUMED == atomic_read(&priv->bh_suspend)),
-+		1 * HZ) ? 0 : -ETIMEDOUT;
-+}
-+
-+static inline void wsm_alloc_tx_buffer(struct cw1200_common *priv)
-+{
-+	++priv->hw_bufs_used;
-+}
-+
-+int wsm_release_tx_buffer(struct cw1200_common *priv, int count)
-+{
-+	int ret = 0;
-+	int hw_bufs_used = priv->hw_bufs_used;
-+
-+	priv->hw_bufs_used -= count;
-+	if (WARN_ON(priv->hw_bufs_used < 0))
-+		ret = -1;
-+	else if (hw_bufs_used >= priv->wsm_caps.numInpChBufs)
-+		ret = 1;
-+	if (!priv->hw_bufs_used)
-+		wake_up(&priv->bh_evt_wq);
-+	return ret;
-+}
-+
-+static int cw1200_bh_read_ctrl_reg(struct cw1200_common *priv,
-+					  u16 *ctrl_reg)
-+{
-+	int ret;
-+
-+	ret = cw1200_reg_read_16(priv,
-+			ST90TDS_CONTROL_REG_ID, ctrl_reg);
-+	if (ret) {
-+		ret = cw1200_reg_read_16(priv,
-+				ST90TDS_CONTROL_REG_ID, ctrl_reg);
-+		if (ret)
-+			pr_err("[BH] Failed to read control register.\n");
-+	}
-+
-+	return ret;
-+}
-+
-+static int cw1200_device_wakeup(struct cw1200_common *priv)
-+{
-+	u16 ctrl_reg;
-+	int ret;
-+
-+	pr_debug("[BH] Device wakeup.\n");
-+
-+	/* First, set the dpll register */
-+	ret = cw1200_reg_write_32(priv, ST90TDS_TSET_GEN_R_W_REG_ID, cw1200_dpll_from_clk(priv->hw_refclk));
-+	if (WARN_ON(ret))
-+		return ret;
-+
-+	/* To force the device to be always-on, the host sets WLAN_UP to 1 */
-+	ret = cw1200_reg_write_16(priv, ST90TDS_CONTROL_REG_ID,
-+			ST90TDS_CONT_WUP_BIT);
-+	if (WARN_ON(ret))
-+		return ret;
-+
-+	ret = cw1200_bh_read_ctrl_reg(priv, &ctrl_reg);
-+	if (WARN_ON(ret))
-+		return ret;
-+
-+	/* If the device returns WLAN_RDY as 1, the device is active and will
-+	 * remain active. */
-+	if (ctrl_reg & ST90TDS_CONT_RDY_BIT) {
-+		pr_debug("[BH] Device awake.\n");
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Must be called from BH thraed. */
-+void cw1200_enable_powersave(struct cw1200_common *priv,
-+			     bool enable)
-+{
-+	pr_debug("[BH] Powerave is %s.\n",
-+			enable ? "enabled" : "disabled");
-+	priv->powersave_enabled = enable;
-+}
-+
-+static int cw1200_bh_rx_helper(struct cw1200_common *priv,
-+			       uint16_t *ctrl_reg,
-+			       int *tx)
-+{
-+	size_t read_len = 0;
-+	struct sk_buff *skb_rx = NULL;
-+	struct wsm_hdr *wsm;
-+	size_t wsm_len;
-+	u16 wsm_id;
-+	u8 wsm_seq;
-+	int rx_resync = 1;
-+
-+	size_t alloc_len;
-+	u8 *data;
-+
-+	read_len = (*ctrl_reg & ST90TDS_CONT_NEXT_LEN_MASK) * 2;
-+	if (!read_len)
-+		return 0; /* No more work */
-+
-+	if (WARN_ON((read_len < sizeof(struct wsm_hdr)) ||
-+		    (read_len > EFFECTIVE_BUF_SIZE))) {
-+		pr_debug("Invalid read len: %zu (%04x)",
-+		       read_len, *ctrl_reg);
-+		goto err;
-+	}
-+
-+	/* Add SIZE of PIGGYBACK reg (CONTROL Reg)
-+	 * to the NEXT Message length + 2 Bytes for SKB */
-+	read_len = read_len + 2;
-+
-+	alloc_len = priv->sbus_ops->align_size(
-+		priv->sbus_priv, read_len);
-+
-+	/* Check if not exceeding CW1200 capabilities */
-+	if (WARN_ON_ONCE(alloc_len > EFFECTIVE_BUF_SIZE)) {
-+		pr_debug("Read aligned len: %zu\n",
-+		       alloc_len);
-+	}
-+
-+	skb_rx = dev_alloc_skb(alloc_len);
-+	if (WARN_ON(!skb_rx))
-+		goto err;
-+
-+	skb_trim(skb_rx, 0);
-+	skb_put(skb_rx, read_len);
-+	data = skb_rx->data;
-+	if (WARN_ON(!data))
-+		goto err;
-+
-+	if (WARN_ON(cw1200_data_read(priv, data, alloc_len))) {
-+		pr_err("rx blew up, len %zu\n", alloc_len);
-+		goto err;
-+	}
-+
-+	/* Piggyback */
-+	*ctrl_reg = __le16_to_cpu(
-+		((__le16 *)data)[alloc_len / 2 - 1]);
-+
-+	wsm = (struct wsm_hdr *)data;
-+	wsm_len = __le16_to_cpu(wsm->len);
-+	if (WARN_ON(wsm_len > read_len))
-+		goto err;
-+
-+	if (priv->wsm_enable_wsm_dumps)
-+		print_hex_dump_bytes("<-- ",
-+				     DUMP_PREFIX_NONE,
-+				     data, wsm_len);
-+
-+	wsm_id  = __le16_to_cpu(wsm->id) & 0xFFF;
-+	wsm_seq = (__le16_to_cpu(wsm->id) >> 13) & 7;
-+
-+	skb_trim(skb_rx, wsm_len);
-+
-+	if (wsm_id == 0x0800) {
-+		wsm_handle_exception(priv,
-+				     &data[sizeof(*wsm)],
-+				     wsm_len - sizeof(*wsm));
-+		goto err;
-+	} else if (!rx_resync) {
-+		if (WARN_ON(wsm_seq != priv->wsm_rx_seq))
-+			goto err;
-+	}
-+	priv->wsm_rx_seq = (wsm_seq + 1) & 7;
-+	rx_resync = 0;
-+
-+	if (wsm_id & 0x0400) {
-+		int rc = wsm_release_tx_buffer(priv, 1);
-+		if (WARN_ON(rc < 0))
-+			return rc;
-+		else if (rc > 0)
-+			*tx = 1;
-+	}
-+
-+	/* cw1200_wsm_rx takes care on SKB livetime */
-+	if (WARN_ON(wsm_handle_rx(priv, wsm_id, wsm, &skb_rx)))
-+		goto err;
-+
-+	if (skb_rx) {
-+		dev_kfree_skb(skb_rx);
-+		skb_rx = NULL;
-+	}
-+
-+	return 0;
-+
-+err:
-+	if (skb_rx) {
-+		dev_kfree_skb(skb_rx);
-+		skb_rx = NULL;
-+	}
-+	return -1;
-+}
-+
-+static int cw1200_bh_tx_helper(struct cw1200_common *priv,
-+			       int *pending_tx,
-+			       int *tx_burst)
-+{
-+	size_t tx_len;
-+	u8 *data;
-+	int ret;
-+	struct wsm_hdr *wsm;
-+
-+	if (priv->device_can_sleep) {
-+		ret = cw1200_device_wakeup(priv);
-+		if (WARN_ON(ret < 0)) { /* Error in wakeup */
-+			*pending_tx = 1;
-+			return 0;
-+		} else if (ret) { /* Woke up */
-+			priv->device_can_sleep = false;
-+		} else { /* Did not awake */
-+			*pending_tx = 1;
-+			return 0;
-+		}
-+	}
-+
-+	wsm_alloc_tx_buffer(priv);
-+	ret = wsm_get_tx(priv, &data, &tx_len, tx_burst);
-+	if (ret <= 0) {
-+		wsm_release_tx_buffer(priv, 1);
-+		if (WARN_ON(ret < 0))
-+			return ret; /* Error */
-+		return 0; /* No work */
-+	}
-+
-+	wsm = (struct wsm_hdr *)data;
-+	BUG_ON(tx_len < sizeof(*wsm));
-+	BUG_ON(__le16_to_cpu(wsm->len) != tx_len);
-+
-+	atomic_add(1, &priv->bh_tx);
-+
-+	tx_len = priv->sbus_ops->align_size(
-+		priv->sbus_priv, tx_len);
-+
-+	/* Check if not exceeding CW1200 capabilities */
-+	if (WARN_ON_ONCE(tx_len > EFFECTIVE_BUF_SIZE))
-+		pr_debug("Write aligned len: %zu\n", tx_len);
-+
-+	wsm->id &= __cpu_to_le16(0xffff ^ WSM_TX_SEQ(WSM_TX_SEQ_MAX));
-+	wsm->id |= __cpu_to_le16(WSM_TX_SEQ(priv->wsm_tx_seq));
-+
-+	if (WARN_ON(cw1200_data_write(priv, data, tx_len))) {
-+		pr_err("tx blew up, len %zu\n", tx_len);
-+		wsm_release_tx_buffer(priv, 1);
-+		return -1; /* Error */
-+	}
-+
-+	if (priv->wsm_enable_wsm_dumps)
-+		print_hex_dump_bytes("--> ",
-+				     DUMP_PREFIX_NONE,
-+				     data,
-+				     __le16_to_cpu(wsm->len));
-+
-+	wsm_txed(priv, data);
-+	priv->wsm_tx_seq = (priv->wsm_tx_seq + 1) & WSM_TX_SEQ_MAX;
-+
-+	if (*tx_burst > 1) {
-+		cw1200_debug_tx_burst(priv);
-+		return 1; /* Work remains */
-+	}
-+
-+	return 0;
-+}
-+
-+static int cw1200_bh(void *arg)
-+{
-+	struct cw1200_common *priv = arg;
-+	int rx, tx, term, suspend;
-+	u16 ctrl_reg = 0;
-+	int tx_allowed;
-+	int pending_tx = 0;
-+	int tx_burst;
-+	long status;
-+	u32 dummy;
-+	int ret;
-+
-+	for (;;) {
-+		if (!priv->hw_bufs_used &&
-+		    priv->powersave_enabled &&
-+		    !priv->device_can_sleep &&
-+		    !atomic_read(&priv->recent_scan)) {
-+			status = 1 * HZ;
-+			pr_debug("[BH] Device wakedown. No data.\n");
-+			WARN_ON(cw1200_reg_write_16(priv,
-+						ST90TDS_CONTROL_REG_ID, 0));
-+			priv->device_can_sleep = true;
-+		} else if (priv->hw_bufs_used) {
-+			/* Interrupt loss detection */
-+			status = 1 * HZ;
-+		} else {
-+			status = MAX_SCHEDULE_TIMEOUT;
-+		}
-+
-+		/* Dummy Read for SDIO retry mechanism*/
-+		if ((priv->hw_type != -1) &&
-+		    (atomic_read(&priv->bh_rx) == 0) &&
-+		    (atomic_read(&priv->bh_tx) == 0))
-+			cw1200_reg_read(priv, ST90TDS_CONFIG_REG_ID,
-+					&dummy, sizeof(dummy));
-+
-+		pr_debug("[BH] waiting ...\n");
-+		status = wait_event_interruptible_timeout(priv->bh_wq, ({
-+				rx = atomic_xchg(&priv->bh_rx, 0);
-+				tx = atomic_xchg(&priv->bh_tx, 0);
-+				term = atomic_xchg(&priv->bh_term, 0);
-+				suspend = pending_tx ?
-+					0 : atomic_read(&priv->bh_suspend);
-+				(rx || tx || term || suspend || priv->bh_error);
-+			}), status);
-+
-+		pr_debug("[BH] - rx: %d, tx: %d, term: %d, suspend: %d, status: %ld\n",
-+			 rx, tx, term, suspend, status);
-+
-+		/* Did an error occur? */
-+		if ((status < 0 && status != -ERESTARTSYS) ||
-+		    term || priv->bh_error) {
-+			break;
-+		}
-+		if (!status) {  /* wait_event timed out */
-+			unsigned long timestamp = jiffies;
-+			long timeout;
-+			int pending = 0;
-+			int i;
-+
-+			/* Check to see if we have any outstanding frames */
-+			if (priv->hw_bufs_used && (!rx || !tx)) {
-+				wiphy_warn(priv->hw->wiphy, "Missed interrupt? (%d frames outstanding)\n", priv->hw_bufs_used);
-+				rx = 1;
-+
-+				/* Get a timestamp of "oldest" frame */
-+				for (i = 0; i < 4; ++i)
-+					pending += cw1200_queue_get_xmit_timestamp(
-+						&priv->tx_queue[i],
-+						&timestamp, priv->pending_frame_id);
-+
-+				/* Check if frame transmission is timed out.
-+				 * Add an extra second with respect to possible
-+				 * interrupt loss. */
-+				timeout = timestamp +
-+					WSM_CMD_LAST_CHANCE_TIMEOUT +
-+					1 * HZ  -
-+					jiffies;
-+
-+				/* And terminate BH thread if the frame is "stuck" */
-+				if (pending && timeout < 0) {
-+					wiphy_warn(priv->hw->wiphy,
-+						   "Timeout waiting for TX confirm (%d/%d pending, %ld vs %lu).\n", priv->hw_bufs_used, pending, timestamp, jiffies);
-+					break;
-+				}
-+			} else if (!priv->device_can_sleep
-+				   && !atomic_read(&priv->recent_scan)) {
-+				pr_debug("[BH] Device wakedown. Timeout.\n");
-+				WARN_ON(cw1200_reg_write_16(priv, ST90TDS_CONTROL_REG_ID, 0));
-+				priv->device_can_sleep = true;
-+			}
-+			goto done;
-+		} else if (suspend) {
-+			pr_debug("[BH] Device suspend.\n");
-+			if (priv->powersave_enabled) {
-+				pr_debug("[BH] Device wakedown. Suspend.\n");
-+				WARN_ON(cw1200_reg_write_16(priv,
-+						ST90TDS_CONTROL_REG_ID, 0));
-+				priv->device_can_sleep = true;
-+			}
-+
-+			atomic_set(&priv->bh_suspend, CW1200_BH_SUSPENDED);
-+			wake_up(&priv->bh_evt_wq);
-+			status = wait_event_interruptible(priv->bh_wq,
-+					CW1200_BH_RESUME == atomic_read(
-+						&priv->bh_suspend));
-+			if (status < 0) {
-+				wiphy_err(priv->hw->wiphy,
-+					"%s: Failed to wait for resume: %ld.\n",
-+					__func__, status);
-+				break;
-+			}
-+			pr_debug("[BH] Device resume.\n");
-+			atomic_set(&priv->bh_suspend, CW1200_BH_RESUMED);
-+			wake_up(&priv->bh_evt_wq);
-+			atomic_add(1, &priv->bh_rx);
-+			goto done;
-+		}
-+
-+	rx:
-+		tx += pending_tx;
-+		pending_tx = 0;
-+
-+		if (cw1200_bh_read_ctrl_reg(priv, &ctrl_reg))
-+			break;
-+
-+		/* Don't bother trying to rx unless we have data to read */
-+		if (ctrl_reg & ST90TDS_CONT_NEXT_LEN_MASK) {
-+			ret = cw1200_bh_rx_helper(priv, &ctrl_reg, &tx);
-+			if (ret < 0)
-+				break;
-+			/* Double up here if there's more data.. */
-+			if (ctrl_reg & ST90TDS_CONT_NEXT_LEN_MASK) {
-+				ret = cw1200_bh_rx_helper(priv, &ctrl_reg, &tx);
-+				if (ret < 0)
-+					break;
-+			}
-+		}
-+
-+	tx:
-+		if (tx) {
-+			tx = 0;
-+
-+			BUG_ON(priv->hw_bufs_used > priv->wsm_caps.numInpChBufs);
-+			tx_burst = priv->wsm_caps.numInpChBufs - priv->hw_bufs_used;
-+			tx_allowed = tx_burst > 0;
-+
-+			if (!tx_allowed) {
-+				/* Buffers full.  Ensure we process tx after we handle rx.. */
-+				pending_tx = tx;
-+				goto done_rx;
-+			}
-+			ret = cw1200_bh_tx_helper(priv, &pending_tx, &tx_burst);
-+			if (ret < 0)
-+				break;
-+			if (ret > 0) /* More to transmit */
-+				tx = ret;
-+
-+			/* Re-read ctrl reg */
-+			if (cw1200_bh_read_ctrl_reg(priv, &ctrl_reg))
-+				break;
-+		}
-+
-+	done_rx:
-+		if (priv->bh_error)
-+			break;
-+		if (ctrl_reg & ST90TDS_CONT_NEXT_LEN_MASK)
-+			goto rx;
-+		if (tx)
-+			goto tx;
-+
-+	done:
-+		/* Re-enable device interrupts */
-+		priv->sbus_ops->lock(priv->sbus_priv);
-+		__cw1200_irq_enable(priv, 1);
-+		priv->sbus_ops->unlock(priv->sbus_priv);
-+	}
-+
-+	/* Explicitly disable device interrupts */
-+	priv->sbus_ops->lock(priv->sbus_priv);
-+	__cw1200_irq_enable(priv, 0);
-+	priv->sbus_ops->unlock(priv->sbus_priv);
-+
-+	if (!term) {
-+		pr_err("[BH] Fatal error, exiting.\n");
-+		priv->bh_error = 1;
-+		/* TODO: schedule_work(recovery) */
-+#ifdef CW1200_USE_COMPAT_KTHREAD
-+#ifndef CW1200_NO_PUT_TASK_STRUCT
-+		put_task_struct(priv->bh_thread);
-+#else
-+		for (;;) {
-+			int status = wait_event_interruptible(priv->bh_wq, ({
-+				term = atomic_xchg(&priv->bh_term, 0);
-+				(term);
-+			}));
-+		if (status || term)
-+			break;
-+	}
-+#endif
-+#endif
-+	}
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/cw1200/bh.h b/drivers/net/wireless/cw1200/bh.h
-new file mode 100644
-index 0000000..fd8a8c5
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/bh.h
-@@ -0,0 +1,28 @@
-+/*
-+ * Device handling thread interface for mac80211 ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef CW1200_BH_H
-+#define CW1200_BH_H
-+
-+/* extern */ struct cw1200_common;
-+
-+int cw1200_register_bh(struct cw1200_common *priv);
-+void cw1200_unregister_bh(struct cw1200_common *priv);
-+void cw1200_irq_handler(struct cw1200_common *priv);
-+void cw1200_bh_wakeup(struct cw1200_common *priv);
-+int cw1200_bh_suspend(struct cw1200_common *priv);
-+int cw1200_bh_resume(struct cw1200_common *priv);
-+/* Must be called from BH thread. */
-+void cw1200_enable_powersave(struct cw1200_common *priv,
-+			     bool enable);
-+int wsm_release_tx_buffer(struct cw1200_common *priv, int count);
-+
-+#endif /* CW1200_BH_H */
--- 
-1.8.1.2
+Larry
 
