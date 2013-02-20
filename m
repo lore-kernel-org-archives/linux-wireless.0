@@ -1,84 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:36344 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab3BFLtN (ORCPT
+Received: from mail-da0-f44.google.com ([209.85.210.44]:41033 "EHLO
+	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab3BTQzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 06:49:13 -0500
-Received: by mail-bk0-f54.google.com with SMTP id w5so594465bku.27
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Feb 2013 03:49:11 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
-Subject: [RFCv2 0/3] mesh power save - hardware doze
-Date: Wed,  6 Feb 2013 12:48:42 +0100
-Message-Id: <1360151325-6368-1-git-send-email-marco@cozybit.com> (sfid-20130206_124916_881824_23D02F08)
+	Wed, 20 Feb 2013 11:55:35 -0500
+Message-ID: <1361379331.19353.189.camel@edumazet-glaptop> (sfid-20130220_175543_728527_9EC6E6E0)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 08:55:31 -0800
+In-Reply-To: <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744) <1361377243.8629.34.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commits #2 and #3 implement the actual power saving mechanism
-for mesh.
+On Wed, 2013-02-20 at 17:20 +0100, Johannes Berg wrote:
+> On Wed, 2013-02-20 at 07:11 -0800, Eric Dumazet wrote:
+> > On Wed, 2013-02-20 at 10:15 +0100, Johannes Berg wrote:
+> > 
+> > > OTOH, this affects the protocol, and when you really can't allocate any
+> > > order-1 pages you pointed out yourself that many other things also won't
+> > > work, so I'm not really sure it makes a big difference if we change the
+> > > driver?
+> > 
+> > It will make a huge difference, even on non pressure mode, as TCP
+> > receive window will grow twice faster.
+> 
+> Hmm, why does that depend on the allocation size?
 
-When the current peer link states allow doze state, the HW is
-configured accordingly.
-STA wake up from doze state for
-1) sending their own beacon and tailing awake window
-2) receiving beacons of peers they are in light sleep towards
-In these two situations a Mesh Peer Service Period may be
-initiated to extend the awake phase to transmit/receive
-frames.
+I guess you missed all the patches about skb->truesize on netdev
 
-Design goal was to implement most PS routines in mac80211 to
-keep maintainability high and allow simple driver adaption.
-Since mesh PS requires waiting for beacon/multicasts (CAB) per
-STA, these routines are re-implemented in mac80211.
+> 
+> > Unless wifi speed reaches 10Gbps, following patch should do the trick
+> > 
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
+> > index a4eed20..77a3ee3 100644
+> > --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
+> > +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+> > @@ -750,7 +750,12 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+> >  	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+> >  	 * ieee80211_hdr pulled.
+> >  	 */
+> > -	skb = alloc_skb(128, GFP_ATOMIC);
+> > +	fraglen = 128;
+> > +	/* if we use order-1 pages, copy to get better TCP performance */
+> > +	if (rxb->truesize > PAGE_SIZE)
+> > +		fraglen = max_t(unsigned, fraglen, len);
+> > +
+> > +	skb = alloc_skb(fraglen, GFP_ATOMIC);
+> 
+> Hmm, I don't quite understand -- that's not doing any copy?
+> 
+> FWIW if you do the copy you should not "steal" the pages, then they'd be
+> recycled in the RX ring right away.
 
-The implementation should be capable of managing multiple
-concurrent mesh vif, although this has rarely been tested, yet.
+Code should just works, please read the following lines in the same
+function....
 
-(For more info see https://github.com/cozybit/open80211s/wiki
-/Mesh-Powersave-Implementation-Notes.)
+        /* If frame is small enough to fit in skb->head, pull it completely.
+         * If not, only pull ieee80211_hdr so that splice() or TCP coalesce
+         * are more efficient.
+         */
+        hdrlen = (len <= skb_tailroom(skb)) ? len : sizeof(*hdr);
 
-On some test devices (WNDR3700/3800 with openwrt r35284) I
-experience frequent crashes ("Data bus error"). Adding udelay
-to ath9k_hw_set_power_awake and ath9k_set_power_network_sleep as
-described in https://dev.openwrt.org/ticket/9107 seems to help.
-I am unsure if I just stumble over a bug or cause it myself
-here.
+        memcpy(skb_put(skb, hdrlen), hdr, hdrlen);
+        fraglen = len - hdrlen;
 
-v2:
-mac80211:
-- trigger wakeups in HW (Johannes)
-- got rid of hrtimer usage (Johannes)
-- got rid of pre-TBTT wakeup margin
-- got rid of HW sleep/awake status variable in local
-- fix deep sleep wakeup schedule
-ath9k:
-- program HW's TIM timer registers to perform wakeups
+        if (fraglen) {
+                int offset = (void *)hdr + hdrlen -
+                             rxb_addr(rxb) + rxb_offset(rxb);
 
-Marco Porsch (3):
-  mac80211: move mesh sync beacon handler into neighbour_update
-  mac80211: mesh power save doze scheduling
-  ath9k: mesh powersave support
+                skb_add_rx_frag(skb, 0, rxb_steal_page(rxb), offset,
+                                fraglen, rxb->truesize);
+        }
 
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
- drivers/net/wireless/ath/ath9k/beacon.c |   21 +-
- drivers/net/wireless/ath/ath9k/hw.c     |   20 +-
- drivers/net/wireless/ath/ath9k/main.c   |   67 ++++++-
- include/net/mac80211.h                  |   29 +++
- net/mac80211/ieee80211_i.h              |   17 +-
- net/mac80211/mesh.c                     |   25 ++-
- net/mac80211/mesh.h                     |   22 ++-
- net/mac80211/mesh_plink.c               |   17 +-
- net/mac80211/mesh_ps.c                  |  316 +++++++++++++++++++++++++++++++
- net/mac80211/mesh_sync.c                |   47 ++---
- net/mac80211/sta_info.c                 |    3 +
- net/mac80211/sta_info.h                 |   10 +
- net/mac80211/tx.c                       |    2 +
- 14 files changed, 541 insertions(+), 56 deletions(-)
 
--- 
-1.7.9.5
 
