@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:33261 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757402Ab3BTRrX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51074 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934593Ab3BTOOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 12:47:23 -0500
-Received: by mail-lb0-f182.google.com with SMTP id gg6so6219404lbb.13
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Feb 2013 09:47:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
-Date: Wed, 20 Feb 2013 11:47:21 -0600
-Message-ID: <CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com> (sfid-20130220_184726_832050_C6210F1F)
-Subject: Re: mwifiex crash when removing interface while scanning
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 20 Feb 2013 09:14:04 -0500
+Message-ID: <1361369637.8629.20.camel@jlt4.sipsolutions.net> (sfid-20130220_151408_025211_3FDE6D1C)
+Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 20 Feb 2013 15:13:57 +0100
+In-Reply-To: <5124D90E.7070307@candelatech.com>
+References: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
+	  (sfid-20130220_031220_995074_BF5628B4) <1361354394.8629.11.camel@jlt4.sipsolutions.net>
+	 <5124D90E.7070307@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 11:06 PM, Bing Zhao <bzhao@marvell.com> wrote:
->> >     mwifiex_sdio mmc0:0001:1: rx_pending=0, tx_pending=0, cmd_pending=-1
->> >     eth0      Failed to read scan data : No such device
->
-> After this error message, do you see the sd8787 card is removed from the bus?
->
-> "mmc0: card 0001 removed"
+On Wed, 2013-02-20 at 06:09 -0800, Ben Greear wrote:
 
-No.
+> >> @@ -2668,6 +2681,10 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+> >>   			       false, frame_buf);
+> >>   	mutex_unlock(&ifmgd->mtx);
+> >>
+> >> +	/* Have to do this outside the ifmgd->mtx lock. */
+> >> +	cancel_work_sync(&ifmgd->monitor_work);
+> >> +	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
+> >
+> > OTOH, you do this many many times, and that doesn't seem necessary...
+> >
+> > If the work structs run when we disconnected, that's ok, they just
+> > musn't run after we destroy the interface, so I think it'd be much
+> > better to just put the two lines into ieee80211_mgd_stop() instead of
+> > all the other places.
+> 
+> Ok, that sounds promising to me.  For that matter, could we just call the sta_quiesce
+> method in mgd_stop?  It would be nice to have all of the final timer and work-queue cleanup
+> in a single place.
 
-> My card works fine with a Ricoh controller on x86_64 machine. Of course the power is not cut when I remove the mwifiex_sdio module.
+That might be interesting, but I think we'd have to clear the
+timer_pending thing afterwards?
 
-Under this kernel, I'm not sure if the power is or isn't being cut at
-this point. I don't think this is relevant though; regular
-insmod/rmmod cycles work fine, the problem only appears when tearing
-down the interface while a scan is in progress.
+> And, maybe add some checks in the work-callback methods to bail early if the station
+> isn't connected?
 
-> I can upgrade my XO-4 to kernel 3.8 if feasible. Please let me know if a HOW-TO doc is available.
+They already do :)
 
-You will need a serial console connected, as there is no output on the
-LCD at this time when running the upstream kernel.
+johannes
 
-http://wiki.laptop.org/go/User:DanielDrake/Run_upstream_kernel_on_XO-4
-
-Daniel
