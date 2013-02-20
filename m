@@ -1,81 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6795 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754575Ab3BEStw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 13:49:52 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Hugh Dickins <hughd@google.com>,
-	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: iwlwifi: regression in 3.8-rc4 and 3.7.3
-Date: Tue, 5 Feb 2013 18:49:47 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301929C9D@HASMSX103.ger.corp.intel.com> (sfid-20130205_195010_779012_FEA922DF)
-References: <alpine.LNX.2.00.1301192141540.1303@eggly.anvils>
- <CA+icZUWULf9-3vEQHM59HM7+PPXxvpWGnNB137+=WyEXj9noiQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301920DA0@HASMSX103.ger.corp.intel.com>
- <alpine.LNX.2.00.1301192331140.3905@eggly.anvils>
- <20130205180831.GA29557@thinkpad-t410>
-In-Reply-To: <20130205180831.GA29557@thinkpad-t410>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:52605 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934126Ab3BTRba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 12:31:30 -0500
+Message-ID: <1361381489.3065.1.camel@joe-AO722> (sfid-20130220_183135_340252_E646A02A)
+Subject: Re: [PATCH] ssb: fix unaligned access to mac address
+From: Joe Perches <joe@perches.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Date: Wed, 20 Feb 2013 09:31:29 -0800
+In-Reply-To: <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com>
+References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de>
+	 <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > > On Sun, Jan 20, 2013 at 6:56 AM, Hugh Dickins <hughd@google.com>
-> wrote:
-> > > > > After sending the first 2MB, scp over wireless becomes
-> > > > > unbearably slow, with frequent stalls: on this ThinkPad T420s running
-> 3.8-rc4 or 3.7.3.
-> > > > > Not always, but often.
-> > > > >
-> > > >
-> > > > There is one pending iwlwifi-fixes, dunno if it will fix your issue.
-> > > > [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-
-> > > > fixes.git;a=commitdiff;h=c3e5d7181afb66657393066bccce0956fab09ab3
-> > >
-> > > Right - so the 2 patches are unrelated, and the one Sedat is pointing at is
-> relevant for 3.8 only. It fixes a bug that has been introduced in 3.8.
+On Mon, 2013-02-18 at 17:09 +0100, Rafał Miłecki wrote:
+> 2013/2/16 Hauke Mehrtens <hauke@hauke-m.de>:
+> > The mac address should be aligned to u16 to prevent an unaligned access
+> > in drivers/ssb/pci.c where it is casted to __be16.
+[]
+> > diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+[]
+> > @@ -26,6 +26,7 @@ struct ssb_sprom_core_pwr_info {
 > >
-> > Yes, I have now given that one a try, but it does not affect my issue.
-> >
-> > > Regarding the issue Hugh is suffering from, I have to say that I am a little
-> confused since I am pretty sure the patch is right. Now, it might uncover other
-> pre-existing bugs. All I can say is that I don't think that reverting the patch is
-> *so* problematic since the patch really wants to solve a rare case. If it causes
-> issues, we can simply revert it. It only means that when I will get a little bit of
-> time, I might need to ask you a few logs. Thanks for the report (and the
-> bisection).
-> >
-> > Sure, let me know what to do, once you have time to investigate.
-> >
-> > So far as I know, I'm the first to notice: so we can probably leave it
-> > in 3.8-rc for now, until/unless it gives wider trouble.
-> >
-> > But reverting from 3.7-stable soon would be a good idea, regressions
-> > there being more tiresome.
+> >  struct ssb_sprom {
+> >         u8 revision;
+> > +       u8 country_code;        /* Country Code */
+> >         u8 il0mac[6];           /* MAC address for 802.11b/g */
 > 
-> I'm seeing iwlwifi performance problems in 3.8 as well, and have heard from
-> several other saying the same thing. Testing with iperf shows very little data
-> getting through most of the time.
+> It looks a little hacky to me too, it's easy to forget about that
+> requirement and break that again in the future.
 > 
-> Reverting f590dcec944552f9a4a61155810f3abd17d6465d on top of 3.8-rc6
-> seems to have eliminated the problems for me, so far at least. I'll request some
-> testing from others as well.
+> What about not casting il0mac to u16 at all? Maybe we should just fill
+> it as u8 (which it is)?
 > 
-> Seth
 
-So the revert patch is on its way: http://git.kernel.org/?p=linux/kernel/git/davem/net.git;a=commit;h=ae023b2795d36f0f077e157428eb7eafa29ee412
+Perhaps this?
 
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] ssb: pci: Standardize a function to get mac address
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Don't require alignment of mac addresses to u16.
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/ssb/pci.c | 44 ++++++++++++++++++--------------------------
+ 1 file changed, 18 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index e9d9496..62fc9b5 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -231,6 +231,15 @@ static inline u8 ssb_crc8(u8 crc, u8 data)
+ 	return t[crc ^ data];
+ }
+ 
++static void sprom_get_mac(char *mac, const u16 *in)
++{
++	int i;
++	for (i = 0; i < 3; i++) {
++		*mac++ = in[i];
++		*mac++ = in[i] >> 8;
++	}
++}
++
+ static u8 ssb_sprom_crc(const u16 *sprom, u16 size)
+ {
+ 	int word;
+@@ -341,8 +350,6 @@ static s8 r123_extract_antgain(u8 sprom_revision, const u16 *in,
+ 
+ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+ {
+-	int i;
+-	u16 v;
+ 	u16 loc[3];
+ 
+ 	if (out->revision == 3)			/* rev 3 moved MAC */
+@@ -352,19 +359,10 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+ 		loc[1] = SSB_SPROM1_ET0MAC;
+ 		loc[2] = SSB_SPROM1_ET1MAC;
+ 	}
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(loc[0]) + i];
+-		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+-	}
++	sprom_get_mac(out->il0mac, &in[SPOFF(loc[0])]);
+ 	if (out->revision < 3) { 	/* only rev 1-2 have et0, et1 */
+-		for (i = 0; i < 3; i++) {
+-			v = in[SPOFF(loc[1]) + i];
+-			*(((__be16 *)out->et0mac) + i) = cpu_to_be16(v);
+-		}
+-		for (i = 0; i < 3; i++) {
+-			v = in[SPOFF(loc[2]) + i];
+-			*(((__be16 *)out->et1mac) + i) = cpu_to_be16(v);
+-		}
++		sprom_get_mac(out->et0mac, &in[SPOFF(loc[1])]);
++		sprom_get_mac(out->et1mac, &in[SPOFF(loc[2])]);
+ 	}
+ 	SPEX(et0phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0A, 0);
+ 	SPEX(et1phyaddr, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1A,
+@@ -454,19 +452,15 @@ static void sprom_extract_r458(struct ssb_sprom *out, const u16 *in)
+ 
+ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ {
+-	int i;
+-	u16 v;
+ 	u16 il0mac_offset;
+ 
+ 	if (out->revision == 4)
+ 		il0mac_offset = SSB_SPROM4_IL0MAC;
+ 	else
+ 		il0mac_offset = SSB_SPROM5_IL0MAC;
+-	/* extract the MAC address */
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(il0mac_offset) + i];
+-		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+-	}
++
++	sprom_get_mac(out->il0mac, &in[SPOFF(il0mac_offset)]);
++
+ 	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
+ 	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
+ 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
+@@ -530,7 +524,7 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+ {
+ 	int i;
+-	u16 v, o;
++	u16 o;
+ 	u16 pwr_info_offset[] = {
+ 		SSB_SROM8_PWR_INFO_CORE0, SSB_SROM8_PWR_INFO_CORE1,
+ 		SSB_SROM8_PWR_INFO_CORE2, SSB_SROM8_PWR_INFO_CORE3
+@@ -539,10 +533,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+ 			ARRAY_SIZE(out->core_pwr_info));
+ 
+ 	/* extract the MAC address */
+-	for (i = 0; i < 3; i++) {
+-		v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
+-		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+-	}
++	sprom_get_mac(out->il0mac, &in[SSB_SPROM8_IL0MAC]);
++
+ 	SPEX(board_rev, SSB_SPROM8_BOARDREV, 0xFFFF, 0);
+ 	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
+ 	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
+-- 
+1.8.1.2.459.gbcd45b4.dirty
+
+
 
