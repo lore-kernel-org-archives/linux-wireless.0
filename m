@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56840 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751756Ab3BAAOR (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38004 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758164Ab3BTAjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jan 2013 19:14:17 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: move locking into cfg80211_bss_age
-Date: Fri,  1 Feb 2013 01:14:37 +0100
-Message-Id: <1359677677-22891-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_011420_099121_A624F42E)
+	Tue, 19 Feb 2013 19:39:31 -0500
+Message-ID: <51241B3B.9030405@candelatech.com> (sfid-20130220_013935_236838_C8A8CBC3)
+Date: Tue, 19 Feb 2013 16:39:23 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
+References: <5122A7C7.3070508@candelatech.com>  (sfid-20130218_231436_933191_3F8FE600) <1361225773.8555.50.camel@jlt4.sipsolutions.net> <51240249.6060801@candelatech.com> <512409B1.7090800@candelatech.com> <51240EE6.9040201@candelatech.com>
+In-Reply-To: <51240EE6.9040201@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/19/2013 03:46 PM, Ben Greear wrote:
+> On 02/19/2013 03:24 PM, Ben Greear wrote:
+>> On 02/19/2013 02:52 PM, Ben Greear wrote:
+>>> On 02/18/2013 02:16 PM, Johannes Berg wrote:
+>>>> On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
+>>>>> We often see crashes in work-queue processing when deleting
+>>>>> lots of wifi station interfaces.  I'm guessing that there is probably
+>>>>> a work item that was not properly un-registered before deleting
+>>>>> memory.  I have backported some wifi fixes from upstream, so
+>>>>> maybe they are to blame, but in case anyone has any suggestions
+>>>>> for places to look, please let me know.
+>>>>
+>>>> Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
+>>>
+>>> That did not catch anything.
+>
+> So, maybe the problem is in the sta_quiesce logic.
+>
+> It cancels the work items before it stops the timers, so
+> I think it could re-add the work before the timers are
+> stopped??
 
-There's no reason for it to require external
-locking, move it into the function.
+Maybe not just this, at least.  In my case, I'm never seeing the
+sta_quiesce code called at all..I guess it is just for cases
+where we are quiescing the hardware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/scan.c  | 3 ++-
- net/wireless/sysfs.c | 2 --
- 2 files changed, 2 insertions(+), 3 deletions(-)
+So, what is supposed to clean up these work items (and timers?)
+when we are deleting an interface?
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index cae380f..05dbc5b 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -231,15 +231,16 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
--/* must hold dev->bss_lock! */
- void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-                       unsigned long age_secs)
- {
- 	struct cfg80211_internal_bss *bss;
- 	unsigned long age_jiffies = msecs_to_jiffies(age_secs * MSEC_PER_SEC);
- 
-+	spin_lock_bh(&dev->bss_lock);
- 	list_for_each_entry(bss, &dev->bss_list, list)
- 		bss->ts -= age_jiffies;
-+	spin_unlock_bh(&dev->bss_lock);
- }
- 
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 9bf6d5e..73bf39f 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -108,9 +108,7 @@ static int wiphy_resume(struct device *dev)
- 	int ret = 0;
- 
- 	/* Age scan results with time spent in suspend */
--	spin_lock_bh(&rdev->bss_lock);
- 	cfg80211_bss_age(rdev, get_seconds() - rdev->suspend_at);
--	spin_unlock_bh(&rdev->bss_lock);
- 
- 	if (rdev->ops->resume) {
- 		rtnl_lock();
+Thanks,
+Ben
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
