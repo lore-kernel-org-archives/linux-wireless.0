@@ -1,69 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.ltindia.com ([125.18.18.132]:12564 "EHLO
-	mailout1.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045Ab3BRLYq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50378 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757746Ab3BTKIz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 06:24:46 -0500
-From: Girish Bn <Girish.BN@lnties.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: patch : mac80211:Multicast patch for linux-2.6.28.1 (wl12xx
- drivers)
-Date: Mon, 18 Feb 2013 11:25:55 +0000
-Message-ID: <45566970CF58C74CB52107862E0541CD1D1F72BC@POCITMSEXMB02.LntUniverse.com> (sfid-20130218_122450_291969_8B9194A6)
-References: <45566970CF58C74CB52107862E0541CD1D1F72A2@POCITMSEXMB02.LntUniverse.com>
-	 (sfid-20130218_120856_334947_2BD0FBB7)
- <1361185913.8555.6.camel@jlt4.sipsolutions.net>
-	 (sfid-20130218_121202_160075_39158588)
- <1361185996.8555.7.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361185996.8555.7.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 20 Feb 2013 05:08:55 -0500
+Message-ID: <1361354928.8629.17.camel@jlt4.sipsolutions.net> (sfid-20130220_110906_640334_BAA70538)
+Subject: Re: [PATCH 1/1] net: rfkill: Fix sparse warning in
+ rfkill-regulator.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, linville@tuxdriver.com
+Date: Wed, 20 Feb 2013 11:08:48 +0100
+In-Reply-To: <1361267868-2316-1-git-send-email-sachin.kamat@linaro.org> (sfid-20130219_110850_873316_C9085702)
+References: <1361267868-2316-1-git-send-email-sachin.kamat@linaro.org>
+	 (sfid-20130219_110850_873316_C9085702)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNClRoaXMgcGFydGljdWxhciBjaGFuZ2UgaXMgcmVxdWlyZWQgb24gZm9yIHRoZSBtdWx0
-aWNhc3QgdG8gd29yayBzdWNjZXNzZnVsbHkgb24gTGludXgga2VybmVsIDIuNi4yOC4yLiBJIHRo
-b3VnaHQgdGhyb3VnaCB0aGlzIGZvcnVtIEkgY2FuIG1ha2Ugb3RoZXJzIHRvIHVzZSB0aGlzIHBh
-dGNoIHRvIHJlc29sdmUgbXVsdGljYXN0IGlzc3VlLiBJIGFjY2VwdCB0aGF0IEkgYW0gbmV3IHRv
-IG9wZW4gc291cmNlLiBJZiBhbnkgcHJvcGVyIHdheSB0byBtYWtlIG11bHRpY2FzdCB0byB3b3Jr
-LCBwbGVhc2Ugc3VnZ2VzdCBvdGhlcndpc2UgZGlzY2FyZCB0aGUgcGF0Y2guIEZvciBtZSB0aGlz
-IHBhdGNoIGlzIHdvcmtpbmcgdG8gcmVjZWl2ZSBJR01QIHBhY2tldHMgb3ZlciB0aGUgV2lyZWxl
-c3MgbmV0d29yaw0KDQpUaGFua3MgJiBSZWdhcmRzLA0KR2lyaXNoDQpMJlQgSUVTLA0KS0lBREIg
-SW5kdXN0cmlhbCBBcmVhLA0KSGViYmFsLUhvb3RhZ2FsbGksIE15c29yZSAtIDU3MCAwMTgNClRl
-bGVwaG9uZSA6ICBESUQrOTEtODIxLTI0MDU1NTINCk1vYmlsZTogKzkxLTk3NDEyMDY0MDINCkUt
-bWFpbCBJRCA6R2lyaXNoLkJOQGxudGllcy5jb20NCnd3dy5sbnRpZXMuY29tDQoNClRoaXMgbWFp
-bCBpcyBjbGFzc2lmaWVkIGFzIDoNCiggICkgTCZUIElFUyBQcm9wcmlldGFyeQ0KKCAgKSBMJlQg
-SUVTIENvbmZpZGVudGlhbA0KKFgpIEwmVCBJRVMgSW50ZXJuYWwgVXNlDQooICkgTCZUIElFUyBH
-ZW5lcmFsIEJ1c2luZXNzDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpv
-aGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KU2VudDogTW9u
-ZGF5LCBGZWJydWFyeSAxOCwgMjAxMyA0OjQzIFBNDQpUbzogR2lyaXNoIEJuDQpDYzogbGludXgt
-d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogcGF0Y2ggOiBtYWM4MDIxMTpN
-dWx0aWNhc3QgcGF0Y2ggZm9yIGxpbnV4LTIuNi4yOC4xICh3bDEyeHggZHJpdmVycykNCg0KT24g
-TW9uLCAyMDEzLTAyLTE4IGF0IDEyOjExICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0KPiBP
-biBNb24sIDIwMTMtMDItMTggYXQgMTE6MDkgKzAwMDAsIEdpcmlzaCBCbiB3cm90ZToNCj4gPiBI
-aSBBbGwsDQo+ID4NCj4gPiBUaGUgYmVsb3cgcGF0Y2ggZmlsZSBpcyByZXF1aXJlZCBpbiBvcmRl
-ciBmb3IgdGhlIG11bHRpY2FzdGluZyB0bw0KPiA+IHdvcmsgcHJvcGVybHkgb24gTGludXgga2Vy
-bmVsIGJlbG93IDMuMiBmb3Igd2wxMnh4IGRyaXZlcnMgZGlmZiAtTmF1ciBhL25ldC9tYWM4MDIx
-MS9pZmFjZS5jIGIvbmV0L21hYzgwMjExL2lmYWNlLmMNCj4gPiAtLS0gYS9uZXQvbWFjODAyMTEv
-aWZhY2UuYyAgICAgICAgICAyMDEyLTA5LTIyIDIyOjU5OjE1LjAwMDAwMDAwMCArMDUzMA0KPiA+
-ICsrKyBiL25ldC9tYWM4MDIxMS9pZmFjZS5jICAgICAgMjAxMy0wMi0wNyAxMjowNjowMy45NTgy
-Njg3OTggKzA1MzANCj4gPiBAQCAtODExLDYgKzgxMSw5IEBADQo+ID4gICAgICAgICAgICAgICAg
-Lm5kb191bmluaXQgICAgICAgICAgICAgICAgICAgICAgICA9IGllZWU4MDIxMV90ZWFyZG93bl9z
-ZGF0YSwNCj4gPiAgICAgICAgICAgICAgICAubmRvX3N0YXJ0X3htaXQgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgPSBpZWVlODAyMTFfc3ViaWZfc3RhcnRfeG1pdCwNCj4gPiAgICAgICAg
-ICAgICAgICAubmRvX3NldF9yeF9tb2RlICAgICAgICA9IGllZWU4MDIxMV9zZXRfbXVsdGljYXN0
-X2xpc3QsDQo+ID4gKyNpZiAoTElOVVhfVkVSU0lPTl9DT0RFIDwgS0VSTkVMX1ZFUlNJT04oMywy
-LDApKQ0KPiA+ICsgICAgICAgICAgICAgLm5kb19zZXRfbXVsdGljYXN0X2xpc3QgPQ0KPiA+ICtp
-ZWVlODAyMTFfc2V0X211bHRpY2FzdF9saXN0LCAjZW5kaWYNCj4NCj4gTE9MLg0KDQpBbHNvIHRo
-aXM6DQoNCj4gVGhpcyBtYWlsIGlzIGNsYXNzaWZpZWQgYXMgOg0KPiAoICApIEwmVCBJRVMgUHJv
-cHJpZXRhcnkNCj4gKCAgKSBMJlQgSUVTIENvbmZpZGVudGlhbA0KPiAoWCkgTCZUIElFUyBJbnRl
-cm5hbCBVc2UNCj4gKCApIEwmVCBJRVMgR2VuZXJhbCBCdXNpbmVzcw0KDQoNCkluIG90aGVyIHdv
-cmRzLCB5b3UgbmV2ZXIgZXZlbiB3YW50ZWQgbWUgdG8gc2VlIHRoYXQgZW1haWwsIHdoaWNoIGlz
-IGp1c3QgYXMgd2VsbCBzaW5jZSBpdCdzIGNvbXBsZXRlbHkgYm9ndXMgZm9yIHVwc3RyZWFtLg0K
-DQpqb2hhbm5lcw0KDQpMYXJzZW4gJiBUb3Vicm8gTGltaXRlZA0KDQp3d3cubGFyc2VudG91YnJv
-LmNvbQ0KDQpUaGlzIEVtYWlsIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBvciBwcml2aWxlZ2Vk
-IGluZm9ybWF0aW9uIGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50IChzKS4gSWYgeW91IGFyZSBu
-b3QgdGhlIGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGRvIG5vdCB1c2Ugb3IgZGlzc2VtaW5h
-dGUgdGhlIGluZm9ybWF0aW9uLCBub3RpZnkgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGl0IGZyb20g
-eW91ciBzeXN0ZW0uDQo=
+On Tue, 2013-02-19 at 15:27 +0530, Sachin Kamat wrote:
+> 'rfkill_regulator_ops' is used only in this file. Hence make it static.
+> Silences the following warning:
+> net/rfkill/rfkill-regulator.c:54:19: warning:
+> symbol 'rfkill_regulator_ops' was not declared. Should it be static?
+
+I'll take this, but it isn't going anywhere until the merge window opens
+again.
+
+johannes
+
