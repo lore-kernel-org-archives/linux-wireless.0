@@ -1,44 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:39655 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383Ab3BFQXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 11:23:54 -0500
-From: Cong Ding <dinggnu@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Cong Ding <dinggnu@gmail.com>
-Subject: [PATCH] net: mac80211/cfg.c: fix error using of sizeof()
-Date: Wed,  6 Feb 2013 17:23:45 +0100
-Message-Id: <1360167826-29265-1-git-send-email-dinggnu@gmail.com> (sfid-20130206_172417_771949_9209F9B7)
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:43497 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933343Ab3BTAJl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Feb 2013 19:09:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Feb 2013 16:09:35 -0800
+Subject: RE: [PATCH] mwifiex: don't drop carrier flag over suspend
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE5CF@SC-VEXCH1.marvell.com> (sfid-20130220_010945_756553_6382CD0A)
+References: <20130219200947.70319FA975@dev.laptop.org>
+In-Reply-To: <20130219200947.70319FA975@dev.laptop.org>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using 'sizeof' on array given as function argument returns size of a pointer
-rather than the size of array.
+Hi Daniel,
 
-Signed-off-by: Cong Ding <dinggnu@gmail.com>
----
- net/mac80211/cfg.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> If the system suspends with mwifiex wifi powered on, and is then woken
+> by an ICMP ping packet, the ping response is discarded by the kernel
+> because the kernel incorrectly thinks there is no carrier.
+> 
+> I can't see any valid reason to want to report loss of carrier here,
+> so remove the offending code.
+> 
+> Fixes http://dev.laptop.org/ticket/12554
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 661b878..af561d5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2058,7 +2058,8 @@ static int ieee80211_set_mcast_rate(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	memcpy(sdata->vif.bss_conf.mcast_rate, rate, sizeof(rate));
-+	memcpy(sdata->vif.bss_conf.mcast_rate, rate,
-+			sizeof(int) * IEEE80211_NUM_BANDS);
- 
- 	return 0;
- }
--- 
-1.7.9.5
+Thanks for the patch.
+
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/pcie.c | 10 +---------
+>  drivers/net/wireless/mwifiex/sdio.c |  9 ---------
+>  2 files changed, 1 insertion(+), 18 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+> index b879e13..db29dea 100644
+> --- a/drivers/net/wireless/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/mwifiex/pcie.c
+> @@ -157,7 +157,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>  {
+>  	struct mwifiex_adapter *adapter;
+>  	struct pcie_service_card *card;
+> -	int hs_actived, i;
+> +	int hs_actived;
+> 
+>  	if (pdev) {
+>  		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+> @@ -177,9 +177,6 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	/* Indicate device suspended */
+>  	adapter->is_suspended = true;
+> 
+> -	for (i = 0; i < adapter->priv_num; i++)
+> -		netif_carrier_off(adapter->priv[i]->netdev);
+> -
+>  	return 0;
+>  }
+> 
+> @@ -195,7 +192,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+>  {
+>  	struct mwifiex_adapter *adapter;
+>  	struct pcie_service_card *card;
+> -	int i;
+> 
+>  	if (pdev) {
+>  		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+> @@ -217,10 +213,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+> 
+>  	adapter->is_suspended = false;
+> 
+> -	for (i = 0; i < adapter->priv_num; i++)
+> -		if (adapter->priv[i]->media_connected)
+> -			netif_carrier_on(adapter->priv[i]->netdev);
+> -
+>  	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+>  			  MWIFIEX_ASYNC_CMD);
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+> index 5a1c1d0..133ecb5 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
+> @@ -161,7 +161,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
+>  	struct sdio_mmc_card *card;
+>  	struct mwifiex_adapter *adapter;
+>  	mmc_pm_flag_t pm_flag = 0;
+> -	int i;
+>  	int ret = 0;
+> 
+>  	if (func) {
+> @@ -198,9 +197,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
+>  	/* Indicate device suspended */
+>  	adapter->is_suspended = true;
+> 
+> -	for (i = 0; i < adapter->priv_num; i++)
+> -		netif_carrier_off(adapter->priv[i]->netdev);
+> -
+>  	return ret;
+>  }
+> 
+> @@ -220,7 +216,6 @@ static int mwifiex_sdio_resume(struct device *dev)
+>  	struct sdio_mmc_card *card;
+>  	struct mwifiex_adapter *adapter;
+>  	mmc_pm_flag_t pm_flag = 0;
+> -	int i;
+> 
+>  	if (func) {
+>  		pm_flag = sdio_get_host_pm_caps(func);
+> @@ -243,10 +238,6 @@ static int mwifiex_sdio_resume(struct device *dev)
+> 
+>  	adapter->is_suspended = false;
+> 
+> -	for (i = 0; i < adapter->priv_num; i++)
+> -		if (adapter->priv[i]->media_connected)
+> -			netif_carrier_on(adapter->priv[i]->netdev);
+> -
+>  	/* Disable Host Sleep */
+>  	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+>  			  MWIFIEX_ASYNC_CMD);
+> --
+> 1.8.1.2
 
