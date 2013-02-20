@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57046 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756774Ab3BFTa1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52150 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934590Ab3BTUJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 14:30:27 -0500
-Date: Wed, 6 Feb 2013 14:25:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ognjen Ikovic <ognjen.ikovic@lacitadelleing.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	robertbasic.com@gmail.com
-Subject: Re: wireless-regdb: Update regulatory rules for Serbia (RS) on 2.4
- and 5GHz
-Message-ID: <20130206192544.GH2148@tuxdriver.com> (sfid-20130206_203031_347537_45E08F9E)
-References: <CAL1G+-HfPJnwvisiE5Vr0ihenwKzL3_QL40DLPP_PsPyv+nveQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL1G+-HfPJnwvisiE5Vr0ihenwKzL3_QL40DLPP_PsPyv+nveQ@mail.gmail.com>
+	Wed, 20 Feb 2013 15:09:54 -0500
+Message-ID: <1361390977.8579.11.camel@jlt4.sipsolutions.net> (sfid-20130220_211006_641474_0A048A7C)
+Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
+ copies out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
+	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 20 Feb 2013 21:09:37 +0100
+In-Reply-To: <1361373064.19353.180.camel@edumazet-glaptop> (sfid-20130220_161110_395796_DBAC0744)
+References: <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
+	 <1342419529.3265.12217.camel@edumazet-glaptop>
+	 <20120716151826.GA10586@merlins.org>
+	 <1342455717.2830.14.camel@edumazet-glaptop>
+	 <20130219040557.GB4778@merlins.org>
+	 <1361251033.19353.120.camel@edumazet-glaptop>
+	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	 <1361290909.19353.140.camel@edumazet-glaptop>
+	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
+	 <1361373064.19353.180.camel@edumazet-glaptop>
+	 (sfid-20130220_161110_395796_DBAC0744)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ognjen,
+On Wed, 2013-02-20 at 07:11 -0800, Eric Dumazet wrote:
 
-Thank you so much for this timely message!  I apologize for having
-overlooked it so far.
+> diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
+> index a4eed20..77a3ee3 100644
+> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
+> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+> @@ -750,7 +750,12 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+>  	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+>  	 * ieee80211_hdr pulled.
+>  	 */
+> -	skb = alloc_skb(128, GFP_ATOMIC);
+> +	fraglen = 128;
+> +	/* if we use order-1 pages, copy to get better TCP performance */
+> +	if (rxb->truesize > PAGE_SIZE)
+> +		fraglen = max_t(unsigned, fraglen, len);
 
-I don't suppose that you could translate the information you have
-provided into the format used within the regulatory database file?
-Also, could you provide a link to the original regulatory document
-(even if it is in Serbian)?
+Btw, shouldn't this rather be something like
 
-Ideally you could post a patch for the db.txt file.  If that is a
-problem, simply posting the information should be sufficient.
+if (rxb->truesize > PAGE_SIZE && len < SKB_WITH_OVERHEAD(PAGE_SIZE))
 
-Thanks!
+to avoid allocating large SKBs in the case that this actually is a big
+8k A-MSDU? That wouldn't be given to the TCP RX path anyway because
+mac80211 will split the A-MSDU into MSDUs and memcpy along the way.
 
-John
+Anyway we're preparing a patch for 4k A-MSDU (which is really just
+something like 3782 bytes or something).
 
-On Thu, Jan 31, 2013 at 03:18:56PM +0100, Ognjen Ikovic wrote:
-> Dear Mr. John,
-> 
-> my name is Ognjen Ikovic and I am R&D engineer from Novi Sad, Serbia. I
-> have noticed that You are listed as maintainer for the wireless-regdb
-> database, congratulations on a fine work You are doing.
-> 
-> I have noticed the following inputs in the regulatory database for Serbia
-> which are not in line with regulatory documents for Serbia:
-> 
-> country RS:
->         # 60 gHz band channels 1-4, ref: Etsi En 302 567
->         (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-> 
-> I was wondering if You could, please, update the regulatory database with
-> new information:
-> 
-> *WAS/RLANs for indoor usage:*
-> 1. Frequency Band 2400-2483.5 MHz;  Power 100mW e.i.r.p.; Channel spacing:
-> None;
-> CEPT document:  ERC/DEC/(01)07, ERC/DEC/(04)07, ERC/REC/70-03; ETSI
-> standard EN 300 328
-> 
-> 2. Frequency Band 5150-5350 MHz;  Power 200mW e.i.r.p.;
-> CEPT document:  ERC/DEC/(99)24, ECC/DEC/(04)08, ERC/REC/70-03; ETSI
-> standard: EN 300 836, EN 301 893
-> 
-> *WAS/RLANs for outdoor usage:*
-> 1. Frequency Band 2400-2483.5 MHz;  Power 100mW e.i.r.p.; Channel spacing:
-> None;
-> CEPT document:  ERC/DEC/(01)07, ERC/REC/70-03; ETSI standard EN 300 328
-> 
-> 2. Frequency Band 5470-5725 MHz;  Power 1W e.i.r.p; Channel spacing: 20
-> MHz; TCP required 3dB;  DFS required;
-> CEPT document: ECC/DEC/(04)08; ETSI standard: EN 301 893
-> 
-> I have regulatory document with these information, but it is on Serbian
-> language. If You need more information regarding this subject do not
-> hesitate to contact me.
-> 
-> Best regards,
-> 
-> Ognjen Ikovic
-> 
-> -- 
-> Ognjen Ikovic
-> Staff engineer
-> ognjen.ikovic@lacitadelleing.com
-> +381640272551
-> LaCitadelle Inzenjering
-> www.lacitadelleing.com
+johannes
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
