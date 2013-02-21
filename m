@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755050Ab3BKKOU (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51690 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab3BUCCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 05:14:20 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix channel selection bug
-Date: Mon, 11 Feb 2013 11:14:13 +0100
-Message-Id: <1360577653-20260-1-git-send-email-johannes@sipsolutions.net> (sfid-20130211_111423_564069_232BE3F9)
+	Wed, 20 Feb 2013 21:02:14 -0500
+Message-ID: <51258020.1060906@candelatech.com> (sfid-20130221_030237_631196_F3E5965A)
+Date: Wed, 20 Feb 2013 18:02:08 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+References: <511935F2.8080103@candelatech.com> <20761.34987.125000.908722@gargle.gargle.HOWL> <511BC243.8010409@candelatech.com> <20770.57339.20017.225929@gargle.gargle.HOWL> <51255360.6060603@candelatech.com> <20773.31273.604966.176099@gargle.gargle.HOWL>
+In-Reply-To: <20773.31273.604966.176099@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/20/2013 05:36 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>>   From the AP lockup case, dmesg is full of stuff like this:
+>>
+>> [ 1819.538577] vap1: delba from 00:3f:d1:e4:32:51 (initiator) tid 0 reason code 37
+>> [ 1819.640602] vap1: Rx A-MPDU request on 00:6f:f9:68:b1:31 tid 0 result 0
+>> [ 1819.690601] vap1: Rx A-MPDU request on 00:01:ab:ba:da:d3 tid 0 result 0
+>> [ 1819.778013] vap1: RX session timer expired on 00:59:82:d1:d8:8c tid 0
+>> [ 1819.778040] vap1: Rx BA session stop requested for 00:59:82:d1:d8:8c tid 0 recipient reason: 39
+>> [ 1819.814600] vap1: delba from 00:59:82:d1:d8:8c (initiator) tid 0 reason code 37
+>> [ 1819.820010] vap1: RX session timer expired on 00:eb:69:fc:4b:db tid 0
+>> [ 1819.820034] vap1: Rx BA session stop requested for 00:eb:69:fc:4b:db tid 0 recipient reason: 39
+>> [ 1819.863631] vap1: delba from 00:eb:69:fc:4b:db (initiator) tid 0 reason code 37
+>> [ 1819.978012] vap1: RX session timer expired on 00:39:9a:d1:0e:10 tid 0
+>> [ 1819.978035] vap1: Rx BA session stop requested for 00:39:9a:d1:0e:10 tid 0 recipient reason: 39
+>> [ 1820.014580] vap1: delba from 00:39:9a:d1:0e:10 (initiator) tid 0 reason code 37
+>
+> The ADDBA sessions are being torn down aggressively.
+>
+>> TXERR Filtered:            224          0         0         0
+>
+> The recipient has gone out of range and frames are being filtered here.
+> As a quick test, can you disable PowerSave on the client and check if the issue
+> still happens ?
 
-When trying to connect to an AP that advertises HT but not
-VHT, the mac80211 code erroneously uses the configuration
-from the AP as is instead of checking it against regulatory
-and local capabilities. This can lead to using an invalid
-or even inexistent channel (like 11/HT40+).
+Powersave is always disabled in our tests...can't use it with multiple VIFS
+as far as I know...
 
-Additionally, the return flags from downgrading must be
-ORed together, to collect them from all of the downgrades.
-Also clarify the message.
+System doesn't recover if we drop the attenuation back to optimal levels, btw.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Ben
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3b9cb51..5107248 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3400,6 +3400,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 
- 	ret = 0;
- 
-+out:
- 	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 					IEEE80211_CHAN_DISABLED)) {
- 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
-@@ -3408,14 +3409,13 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 			goto out;
- 		}
- 
--		ret = chandef_downgrade(chandef);
-+		ret |= chandef_downgrade(chandef);
- 	}
- 
- 	if (chandef->width != vht_chandef.width)
- 		sdata_info(sdata,
--			   "local regulatory prevented using AP HT/VHT configuration, downgraded\n");
-+			   "capabilities/regulatory prevented using AP HT/VHT configuration, downgraded\n");
- 
--out:
- 	WARN_ON_ONCE(!cfg80211_chandef_valid(chandef));
- 	return ret;
- }
+>
+> Sujith
+>
+
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
