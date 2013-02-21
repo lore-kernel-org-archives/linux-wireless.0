@@ -1,484 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:35782 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932269Ab3BZAOl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56004 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753814Ab3BUTLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 19:14:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz
-Subject: [RFC/RFT 20/27] rtlwifi: rtl8188ee: Add files for new driver - part 11
-Date: Mon, 25 Feb 2013 18:13:32 -0600
-Message-Id: <1361837619-2985-21-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011454_998246_88BAA8DC)
-In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 21 Feb 2013 14:11:55 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/3] cfg80211: refactor association parameters
+Date: Thu, 21 Feb 2013 20:11:46 +0100
+Message-Id: <1361473906-14941-4-git-send-email-johannes@sipsolutions.net> (sfid-20130221_201201_502510_C0654F5B)
+In-Reply-To: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>
+References: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
----
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c | 402 ++++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.h |  36 +++
- 2 files changed, 438 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.h
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-new file mode 100644
-index 0000000..cff2dd6
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-@@ -0,0 +1,402 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2013  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
+cfg80211_mlme_assoc() has grown far too many arguments,
+make the caller build almost all of the driver struct
+and pass that to the function instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.h    | 21 +++++------------
+ net/wireless/mlme.c    | 64 +++++++++++++-------------------------------------
+ net/wireless/nl80211.c | 54 ++++++++++++++++++++----------------------
+ net/wireless/sme.c     | 28 ++++++++++++----------
+ 4 files changed, 63 insertions(+), 104 deletions(-)
+
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index c2f94f2..9a2be8d 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -330,24 +330,15 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+-			  const u8 *bssid, const u8 *prev_bssid,
++			  const u8 *bssid,
+ 			  const u8 *ssid, int ssid_len,
+-			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt,
+-			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
+-			  struct ieee80211_ht_cap *ht_capa_mask,
+-			  struct ieee80211_vht_cap *vht_capa,
+-			  struct ieee80211_vht_cap *vht_capa_mask);
++			  struct cfg80211_assoc_request *req);
+ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+-			struct net_device *dev, struct ieee80211_channel *chan,
+-			const u8 *bssid, const u8 *prev_bssid,
++			struct net_device *dev,
++			struct ieee80211_channel *chan,
++			const u8 *bssid,
+ 			const u8 *ssid, int ssid_len,
+-			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt,
+-			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
+-			struct ieee80211_ht_cap *ht_capa_mask,
+-			struct ieee80211_vht_cap *vht_capa,
+-			struct ieee80211_vht_cap *vht_capa_mask);
++			struct cfg80211_assoc_request *req);
+ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 			   struct net_device *dev, const u8 *bssid,
+ 			   const u8 *ie, int ie_len, u16 reason,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 1372a13..ea484aa 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -387,26 +387,18 @@ void cfg80211_oper_and_vht_capa(struct ieee80211_vht_cap *vht_capa,
+ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+-			  const u8 *bssid, const u8 *prev_bssid,
++			  const u8 *bssid,
+ 			  const u8 *ssid, int ssid_len,
+-			  const u8 *ie, int ie_len, bool use_mfp,
+-			  struct cfg80211_crypto_settings *crypt,
+-			  u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
+-			  struct ieee80211_ht_cap *ht_capa_mask,
+-			  struct ieee80211_vht_cap *vht_capa,
+-			  struct ieee80211_vht_cap *vht_capa_mask)
++			  struct cfg80211_assoc_request *req)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	struct cfg80211_assoc_request req;
+ 	int err;
+ 	bool was_connected = false;
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+-	memset(&req, 0, sizeof(req));
+-
+-	if (wdev->current_bss && prev_bssid &&
+-	    ether_addr_equal(wdev->current_bss->pub.bssid, prev_bssid)) {
++	if (wdev->current_bss && req->prev_bssid &&
++	    ether_addr_equal(wdev->current_bss->pub.bssid, req->prev_bssid)) {
+ 		/*
+ 		 * Trying to reassociate: Allow this to proceed and let the old
+ 		 * association to be dropped when the new one is completed.
+@@ -418,47 +410,30 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	} else if (wdev->current_bss)
+ 		return -EALREADY;
+ 
+-	req.ie = ie;
+-	req.ie_len = ie_len;
+-	memcpy(&req.crypto, crypt, sizeof(req.crypto));
+-	req.use_mfp = use_mfp;
+-	req.prev_bssid = prev_bssid;
+-	req.flags = assoc_flags;
+-	if (ht_capa)
+-		memcpy(&req.ht_capa, ht_capa, sizeof(req.ht_capa));
+-	if (ht_capa_mask)
+-		memcpy(&req.ht_capa_mask, ht_capa_mask,
+-		       sizeof(req.ht_capa_mask));
+-	cfg80211_oper_and_ht_capa(&req.ht_capa_mask,
++	cfg80211_oper_and_ht_capa(&req->ht_capa_mask,
+ 				  rdev->wiphy.ht_capa_mod_mask);
+-	if (vht_capa)
+-		memcpy(&req.vht_capa, vht_capa, sizeof(req.vht_capa));
+-	if (vht_capa_mask)
+-		memcpy(&req.vht_capa_mask, vht_capa_mask,
+-		       sizeof(req.vht_capa_mask));
+-	cfg80211_oper_and_vht_capa(&req.vht_capa_mask,
++	cfg80211_oper_and_vht_capa(&req->vht_capa_mask,
+ 				   rdev->wiphy.vht_capa_mod_mask);
+ 
+-	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
+-				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+-	if (!req.bss) {
++	req->bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
++				    WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
++	if (!req->bss) {
+ 		if (was_connected)
+ 			wdev->sme_state = CFG80211_SME_CONNECTED;
+ 		return -ENOENT;
+ 	}
+ 
+-	err = cfg80211_can_use_chan(rdev, wdev, req.bss->channel,
+-				    CHAN_MODE_SHARED);
++	err = cfg80211_can_use_chan(rdev, wdev, chan, CHAN_MODE_SHARED);
+ 	if (err)
+ 		goto out;
+ 
+-	err = rdev_assoc(rdev, dev, &req);
++	err = rdev_assoc(rdev, dev, req);
+ 
+ out:
+ 	if (err) {
+ 		if (was_connected)
+ 			wdev->sme_state = CFG80211_SME_CONNECTED;
+-		cfg80211_put_bss(&rdev->wiphy, req.bss);
++		cfg80211_put_bss(&rdev->wiphy, req->bss);
+ 	}
+ 
+ 	return err;
+@@ -467,24 +442,17 @@ out:
+ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev,
+ 			struct ieee80211_channel *chan,
+-			const u8 *bssid, const u8 *prev_bssid,
++			const u8 *bssid,
+ 			const u8 *ssid, int ssid_len,
+-			const u8 *ie, int ie_len, bool use_mfp,
+-			struct cfg80211_crypto_settings *crypt,
+-			u32 assoc_flags, struct ieee80211_ht_cap *ht_capa,
+-			struct ieee80211_ht_cap *ht_capa_mask,
+-			struct ieee80211_vht_cap *vht_capa,
+-			struct ieee80211_vht_cap *vht_capa_mask)
++			struct cfg80211_assoc_request *req)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
+ 	mutex_lock(&rdev->devlist_mtx);
+ 	wdev_lock(wdev);
+-	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+-				    ssid, ssid_len, ie, ie_len, use_mfp, crypt,
+-				    assoc_flags, ht_capa, ht_capa_mask,
+-				    vht_capa, vht_capa_mask);
++	err = __cfg80211_mlme_assoc(rdev, dev, chan, bssid,
++				    ssid, ssid_len, req);
+ 	wdev_unlock(wdev);
+ 	mutex_unlock(&rdev->devlist_mtx);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a52107d..cf42014 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5951,16 +5951,10 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+-	struct cfg80211_crypto_settings crypto;
+ 	struct ieee80211_channel *chan;
+-	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
+-	int err, ssid_len, ie_len = 0;
+-	bool use_mfp = false;
+-	u32 flags = 0;
+-	struct ieee80211_ht_cap *ht_capa = NULL;
+-	struct ieee80211_ht_cap *ht_capa_mask = NULL;
+-	struct ieee80211_vht_cap *vht_capa = NULL;
+-	struct ieee80211_vht_cap *vht_capa_mask = NULL;
++	struct cfg80211_assoc_request req = {};
++	const u8 *bssid, *ssid;
++	int err, ssid_len = 0;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -5988,54 +5982,58 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
+ 
+ 	if (info->attrs[NL80211_ATTR_IE]) {
+-		ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+-		ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
++		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
++		req.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_USE_MFP]) {
+ 		enum nl80211_mfp mfp =
+ 			nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
+ 		if (mfp == NL80211_MFP_REQUIRED)
+-			use_mfp = true;
++			req.use_mfp = true;
+ 		else if (mfp != NL80211_MFP_NO)
+ 			return -EINVAL;
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
+-		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
++		req.prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
+ 
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_HT]))
+-		flags |= ASSOC_REQ_DISABLE_HT;
++		req.flags |= ASSOC_REQ_DISABLE_HT;
+ 
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
+-		ht_capa_mask =
+-			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]);
++		memcpy(&req.ht_capa_mask,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK]),
++		       sizeof(req.ht_capa_mask));
+ 
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY]) {
+-		if (!ht_capa_mask)
++		if (!info->attrs[NL80211_ATTR_HT_CAPABILITY_MASK])
+ 			return -EINVAL;
+-		ht_capa = nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++		memcpy(&req.ht_capa,
++		       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]),
++		       sizeof(req.ht_capa));
+ 	}
+ 
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_DISABLE_VHT]))
+-		flags |= ASSOC_REQ_DISABLE_VHT;
++		req.flags |= ASSOC_REQ_DISABLE_VHT;
+ 
+ 	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY_MASK])
+-		vht_capa_mask =
+-			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY_MASK]);
++		memcpy(&req.vht_capa_mask,
++		       nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY_MASK]),
++		       sizeof(req.vht_capa_mask));
+ 
+ 	if (info->attrs[NL80211_ATTR_VHT_CAPABILITY]) {
+-		if (!vht_capa_mask)
++		if (!info->attrs[NL80211_ATTR_VHT_CAPABILITY_MASK])
+ 			return -EINVAL;
+-		vht_capa = nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
++		memcpy(&req.vht_capa,
++		       nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]),
++		       sizeof(req.vht_capa));
+ 	}
+ 
+-	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
++	err = nl80211_crypto_settings(rdev, info, &req.crypto, 1);
+ 	if (!err)
+-		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+-					  ssid, ssid_len, ie, ie_len, use_mfp,
+-					  &crypto, flags, ht_capa, ht_capa_mask,
+-					  vht_capa, vht_capa_mask);
++		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid,
++					  ssid, ssid_len, &req);
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 7da118c..bad4c4b 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -159,7 +159,7 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+ 	struct cfg80211_connect_params *params;
+-	const u8 *prev_bssid = NULL;
++	struct cfg80211_assoc_request req = {};
+ 	int err;
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+@@ -186,18 +186,20 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
+ 		BUG_ON(!rdev->ops->assoc);
+ 		wdev->conn->state = CFG80211_CONN_ASSOCIATING;
+ 		if (wdev->conn->prev_bssid_valid)
+-			prev_bssid = wdev->conn->prev_bssid;
+-		err = __cfg80211_mlme_assoc(rdev, wdev->netdev,
+-					    params->channel, params->bssid,
+-					    prev_bssid,
+-					    params->ssid, params->ssid_len,
+-					    params->ie, params->ie_len,
+-					    params->mfp != NL80211_MFP_NO,
+-					    &params->crypto,
+-					    params->flags, &params->ht_capa,
+-					    &params->ht_capa_mask,
+-					    &params->vht_capa,
+-					    &params->vht_capa_mask);
++			req.prev_bssid = wdev->conn->prev_bssid;
++		req.ie = params->ie;
++		req.ie_len = params->ie_len;
++		req.use_mfp = params->mfp != NL80211_MFP_NO;
++		req.crypto = params->crypto;
++		req.flags = params->flags;
++		req.ht_capa = params->ht_capa;
++		req.ht_capa_mask = params->ht_capa_mask;
++		req.vht_capa = params->vht_capa;
++		req.vht_capa_mask = params->vht_capa_mask;
 +
-+#include "../wifi.h"
-+#include "../core.h"
-+#include "../pci.h"
-+#include "reg.h"
-+#include "def.h"
-+#include "phy.h"
-+#include "dm.h"
-+#include "hw.h"
-+#include "sw.h"
-+#include "trx.h"
-+#include "led.h"
-+#include "table.h"
-+
-+#include <linux/vmalloc.h>
-+#include <linux/module.h>
-+
-+static void rtl88e_init_aspm_vars(struct ieee80211_hw *hw)
-+{
-+	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-+
-+	/*close ASPM for AMD defaultly */
-+	rtlpci->const_amdpci_aspm = 0;
-+
-+	/* ASPM PS mode.
-+	 * 0 - Disable ASPM,
-+	 * 1 - Enable ASPM without Clock Req,
-+	 * 2 - Enable ASPM with Clock Req,
-+	 * 3 - Alwyas Enable ASPM with Clock Req,
-+	 * 4 - Always Enable ASPM without Clock Req.
-+	 * set defult to RTL8192CE:3 RTL8192E:2
-+	 */
-+	rtlpci->const_pci_aspm = 3;
-+
-+	/*Setting for PCI-E device */
-+	rtlpci->const_devicepci_aspm_setting = 0x03;
-+
-+	/*Setting for PCI-E bridge */
-+	rtlpci->const_hostpci_aspm_setting = 0x02;
-+
-+	/* In Hw/Sw Radio Off situation.
-+	 * 0 - Default,
-+	 * 1 - From ASPM setting without low Mac Pwr,
-+	 * 2 - From ASPM setting with low Mac Pwr,
-+	 * 3 - Bus D3
-+	 * set default to RTL8192CE:0 RTL8192SE:2
-+	 */
-+	rtlpci->const_hwsw_rfoff_d3 = 0;
-+
-+	/* This setting works for those device with
-+	 * backdoor ASPM setting such as EPHY setting.
-+	 * 0 - Not support ASPM,
-+	 * 1 - Support ASPM,
-+	 * 2 - According to chipset.
-+	 */
-+	rtlpci->const_support_pciaspm = 1;
-+}
-+
-+int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
-+{
-+	int err = 0;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-+	const struct firmware *firmware;
-+	char *fw_name = NULL;
-+	u8 tid;
-+
-+	rtl8188ee_bt_reg_init(hw);
-+
-+	rtlpriv->dm.dm_initialgain_enable = 1;
-+	rtlpriv->dm.dm_flag = 0;
-+	rtlpriv->dm.disable_framebursting = 0;
-+	rtlpriv->dm.thermalvalue = 0;
-+	rtlpci->transmit_config = CFENDFORM | BIT(15);
-+
-+	/* compatible 5G band 88ce just 2.4G band & smsp */
-+	rtlpriv->rtlhal.current_bandtype = BAND_ON_2_4G;
-+	rtlpriv->rtlhal.bandset = BAND_ON_2_4G;
-+	rtlpriv->rtlhal.macphymode = SINGLEMAC_SINGLEPHY;
-+
-+	rtlpci->receive_config = (RCR_APPFCS |
-+				  RCR_APP_MIC |
-+				  RCR_APP_ICV |
-+				  RCR_APP_PHYST_RXFF |
-+				  RCR_HTC_LOC_CTRL |
-+				  RCR_AMF |
-+				  RCR_ACF |
-+				  RCR_ADF |
-+				  RCR_AICV |
-+				  RCR_ACRC32 |
-+				  RCR_AB |
-+				  RCR_AM |
-+				  RCR_APM |
-+				  0);
-+
-+	rtlpci->irq_mask[0] =
-+				(u32) (IMR_PSTIMEOUT	|
-+				IMR_HSISR_IND_ON_INT	|
-+				IMR_C2HCMD		|
-+				IMR_HIGHDOK		|
-+				IMR_MGNTDOK		|
-+				IMR_BKDOK		|
-+				IMR_BEDOK		|
-+				IMR_VIDOK		|
-+				IMR_VODOK		|
-+				IMR_RDU			|
-+				IMR_ROK			|
-+				0);
-+	rtlpci->irq_mask[1] = (u32) (IMR_RXFOVW | 0);
-+	rtlpci->sys_irq_mask = (u32) (HSIMR_PDN_INT_EN | HSIMR_RON_INT_EN);
-+	/* for LPS & IPS */
-+	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
-+	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
-+	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	rtlpriv->psc.reg_fwctrl_lps = 3;
-+	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
-+	/* for ASPM, you can close aspm through
-+	 * set const_support_pciaspm = 0
-+	 */
-+	rtl88e_init_aspm_vars(hw);
-+
-+	if (rtlpriv->psc.reg_fwctrl_lps == 1)
-+		rtlpriv->psc.fwctrl_psmode = FW_PS_MIN_MODE;
-+	else if (rtlpriv->psc.reg_fwctrl_lps == 2)
-+		rtlpriv->psc.fwctrl_psmode = FW_PS_MAX_MODE;
-+	else if (rtlpriv->psc.reg_fwctrl_lps == 3)
-+		rtlpriv->psc.fwctrl_psmode = FW_PS_DTIM_MODE;
-+
-+	/* for firmware buf */
-+	rtlpriv->rtlhal.pfirmware = vmalloc(0x8000);
-+	if (!rtlpriv->rtlhal.pfirmware) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "Can't alloc buffer for fw.\n");
-+		return 1;
-+	}
-+
-+	fw_name = "rtlwifi/rtl8188efw.bin";
-+	err = request_firmware(&firmware, fw_name, rtlpriv->io.dev);
-+
-+	if (err) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "Failed to request firmware!\n");
-+		return 1;
-+	}
-+	if (firmware->size > 0x8000) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 "Firmware is too big!\n");
-+		release_firmware(firmware);
-+		return 1;
-+	}
-+	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
-+	rtlpriv->rtlhal.fwsize = firmware->size;
-+	release_firmware(firmware);
-+
-+	/* for early mode */
-+	rtlpriv->rtlhal.earlymode_enable = true;
-+	rtlpriv->rtlhal.max_earlymode_num = 10;
-+	for (tid = 0; tid < 8; tid++)
-+		skb_queue_head_init(&rtlpriv->mac80211.skb_waitq[tid]);
-+
-+	/*low power */
-+	rtlpriv->psc.low_power_enable = false;
-+	if (rtlpriv->psc.low_power_enable) {
-+		init_timer(&rtlpriv->works.fw_clockoff_timer);
-+		setup_timer(&rtlpriv->works.fw_clockoff_timer,
-+			    rtl88ee_fw_clk_off_timer_callback,
-+			    (unsigned long)hw);
-+	}
-+
-+	init_timer(&rtlpriv->works.fast_antenna_training_timer);
-+	setup_timer(&rtlpriv->works.fast_antenna_training_timer,
-+		    rtl88e_dm_fast_antenna_training_callback,
-+		    (unsigned long)hw);
-+	return err;
-+}
-+
-+void rtl88e_deinit_sw_vars(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	if (rtlpriv->rtlhal.pfirmware) {
-+		vfree(rtlpriv->rtlhal.pfirmware);
-+		rtlpriv->rtlhal.pfirmware = NULL;
-+	}
-+
-+	if (rtlpriv->psc.low_power_enable)
-+		del_timer_sync(&rtlpriv->works.fw_clockoff_timer);
-+
-+	del_timer_sync(&rtlpriv->works.fast_antenna_training_timer);
-+}
-+
-+static struct rtl_hal_ops rtl8188ee_hal_ops = {
-+	.init_sw_vars = rtl88e_init_sw_vars,
-+	.deinit_sw_vars = rtl88e_deinit_sw_vars,
-+	.read_eeprom_info = rtl88ee_read_eeprom_info,
-+	.interrupt_recognized = rtl88ee_interrupt_recognized,/*need check*/
-+	.hw_init = rtl88ee_hw_init,
-+	.hw_disable = rtl88ee_card_disable,
-+	.hw_suspend = rtl88ee_suspend,
-+	.hw_resume = rtl88ee_resume,
-+	.enable_interrupt = rtl88ee_enable_interrupt,
-+	.disable_interrupt = rtl88ee_disable_interrupt,
-+	.set_network_type = rtl88ee_set_network_type,
-+	.set_chk_bssid = rtl88ee_set_check_bssid,
-+	.set_qos = rtl88ee_set_qos,
-+	.set_bcn_reg = rtl88ee_set_beacon_related_registers,
-+	.set_bcn_intv = rtl88ee_set_beacon_interval,
-+	.update_interrupt_mask = rtl88ee_update_interrupt_mask,
-+	.get_hw_reg = rtl88ee_get_hw_reg,
-+	.set_hw_reg = rtl88ee_set_hw_reg,
-+	.update_rate_tbl = rtl88ee_update_hal_rate_tbl,
-+	.fill_tx_desc = rtl88ee_tx_fill_desc,
-+	.fill_tx_cmddesc = rtl88ee_tx_fill_cmddesc,
-+	.query_rx_desc = rtl88ee_rx_query_desc,
-+	.set_channel_access = rtl88ee_update_channel_access_setting,
-+	.radio_onoff_checking = rtl88ee_gpio_radio_on_off_checking,
-+	.set_bw_mode = rtl88e_phy_set_bw_mode,
-+	.switch_channel = rtl88e_phy_sw_chnl,
-+	.dm_watchdog = rtl88e_dm_watchdog,
-+	.scan_operation_backup = rtl88e_phy_scan_operation_backup,
-+	.set_rf_power_state = rtl88e_phy_set_rf_power_state,
-+	.led_control = rtl88ee_led_control,
-+	.set_desc = rtl88ee_set_desc,
-+	.get_desc = rtl88ee_get_desc,
-+	.tx_polling = rtl88ee_tx_polling,
-+	.enable_hw_sec = rtl88ee_enable_hw_security_config,
-+	.set_key = rtl88ee_set_key,
-+	.init_sw_leds = rtl88ee_init_sw_leds,
-+	.allow_all_destaddr = rtl88ee_allow_all_destaddr,
-+	.get_bbreg = rtl88e_phy_query_bb_reg,
-+	.set_bbreg = rtl88e_phy_set_bb_reg,
-+	.get_rfreg = rtl88e_phy_query_rf_reg,
-+	.set_rfreg = rtl88e_phy_set_rf_reg,
-+};
-+
-+static struct rtl_mod_params rtl88ee_mod_params = {
-+	.sw_crypto = false,
-+	.inactiveps = true,
-+	.swctrl_lps = false,
-+	.fwctrl_lps = true,
-+	.debug = DBG_EMERG,
-+};
-+
-+static struct rtl_hal_cfg rtl88ee_hal_cfg = {
-+	.bar_id = 2,
-+	.write_readback = true,
-+	.name = "rtl88e_pci",
-+	.fw_name = "rtlwifi/rtl8188efw.bin",
-+	.ops = &rtl8188ee_hal_ops,
-+	.mod_params = &rtl88ee_mod_params,
-+
-+	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
-+	.maps[SYS_FUNC_EN] = REG_SYS_FUNC_EN,
-+	.maps[SYS_CLK] = REG_SYS_CLKR,
-+	.maps[MAC_RCR_AM] = AM,
-+	.maps[MAC_RCR_AB] = AB,
-+	.maps[MAC_RCR_ACRC32] = ACRC32,
-+	.maps[MAC_RCR_ACF] = ACF,
-+	.maps[MAC_RCR_AAP] = AAP,
-+
-+	.maps[EFUSE_ACCESS] = REG_EFUSE_ACCESS,
-+
-+	.maps[EFUSE_TEST] = REG_EFUSE_TEST,
-+	.maps[EFUSE_CTRL] = REG_EFUSE_CTRL,
-+	.maps[EFUSE_CLK] = 0,
-+	.maps[EFUSE_CLK_CTRL] = REG_EFUSE_CTRL,
-+	.maps[EFUSE_PWC_EV12V] = PWC_EV12V,
-+	.maps[EFUSE_FEN_ELDR] = FEN_ELDR,
-+	.maps[EFUSE_LOADER_CLK_EN] = LOADER_CLK_EN,
-+	.maps[EFUSE_ANA8M] = ANA8M,
-+	.maps[EFUSE_HWSET_MAX_SIZE] = HWSET_MAX_SIZE,
-+	.maps[EFUSE_MAX_SECTION_MAP] = EFUSE_MAX_SECTION,
-+	.maps[EFUSE_REAL_CONTENT_SIZE] = EFUSE_REAL_CONTENT_LEN,
-+	.maps[EFUSE_OOB_PROTECT_BYTES_LEN] = EFUSE_OOB_PROTECT_BYTES,
-+
-+	.maps[RWCAM] = REG_CAMCMD,
-+	.maps[WCAMI] = REG_CAMWRITE,
-+	.maps[RCAMO] = REG_CAMREAD,
-+	.maps[CAMDBG] = REG_CAMDBG,
-+	.maps[SECR] = REG_SECCFG,
-+	.maps[SEC_CAM_NONE] = CAM_NONE,
-+	.maps[SEC_CAM_WEP40] = CAM_WEP40,
-+	.maps[SEC_CAM_TKIP] = CAM_TKIP,
-+	.maps[SEC_CAM_AES] = CAM_AES,
-+	.maps[SEC_CAM_WEP104] = CAM_WEP104,
-+
-+	.maps[RTL_IMR_BCNDMAINT6] = IMR_BCNDMAINT6,
-+	.maps[RTL_IMR_BCNDMAINT5] = IMR_BCNDMAINT5,
-+	.maps[RTL_IMR_BCNDMAINT4] = IMR_BCNDMAINT4,
-+	.maps[RTL_IMR_BCNDMAINT3] = IMR_BCNDMAINT3,
-+	.maps[RTL_IMR_BCNDMAINT2] = IMR_BCNDMAINT2,
-+	.maps[RTL_IMR_BCNDMAINT1] = IMR_BCNDMAINT1,
-+/*	.maps[RTL_IMR_BCNDOK8] = IMR_BCNDOK8,     */   /*need check*/
-+	.maps[RTL_IMR_BCNDOK7] = IMR_BCNDOK7,
-+	.maps[RTL_IMR_BCNDOK6] = IMR_BCNDOK6,
-+	.maps[RTL_IMR_BCNDOK5] = IMR_BCNDOK5,
-+	.maps[RTL_IMR_BCNDOK4] = IMR_BCNDOK4,
-+	.maps[RTL_IMR_BCNDOK3] = IMR_BCNDOK3,
-+	.maps[RTL_IMR_BCNDOK2] = IMR_BCNDOK2,
-+	.maps[RTL_IMR_BCNDOK1] = IMR_BCNDOK1,
-+/*	.maps[RTL_IMR_TIMEOUT2] = IMR_TIMEOUT2,*/
-+/*	.maps[RTL_IMR_TIMEOUT1] = IMR_TIMEOUT1,*/
-+
-+	.maps[RTL_IMR_TXFOVW] = IMR_TXFOVW,
-+	.maps[RTL_IMR_PSTIMEOUT] = IMR_PSTIMEOUT,
-+	.maps[RTL_IMR_BCNINT] = IMR_BCNDMAINT0,
-+	.maps[RTL_IMR_RXFOVW] = IMR_RXFOVW,
-+	.maps[RTL_IMR_RDU] = IMR_RDU,
-+	.maps[RTL_IMR_ATIMEND] = IMR_ATIMEND,
-+	.maps[RTL_IMR_BDOK] = IMR_BCNDOK0,
-+	.maps[RTL_IMR_MGNTDOK] = IMR_MGNTDOK,
-+	.maps[RTL_IMR_TBDER] = IMR_TBDER,
-+	.maps[RTL_IMR_HIGHDOK] = IMR_HIGHDOK,
-+	.maps[RTL_IMR_TBDOK] = IMR_TBDOK,
-+	.maps[RTL_IMR_BKDOK] = IMR_BKDOK,
-+	.maps[RTL_IMR_BEDOK] = IMR_BEDOK,
-+	.maps[RTL_IMR_VIDOK] = IMR_VIDOK,
-+	.maps[RTL_IMR_VODOK] = IMR_VODOK,
-+	.maps[RTL_IMR_ROK] = IMR_ROK,
-+	.maps[RTL_IBSS_INT_MASKS] = (IMR_BCNDMAINT0 | IMR_TBDOK | IMR_TBDER),
-+
-+	.maps[RTL_RC_CCK_RATE1M] = DESC92C_RATE1M,
-+	.maps[RTL_RC_CCK_RATE2M] = DESC92C_RATE2M,
-+	.maps[RTL_RC_CCK_RATE5_5M] = DESC92C_RATE5_5M,
-+	.maps[RTL_RC_CCK_RATE11M] = DESC92C_RATE11M,
-+	.maps[RTL_RC_OFDM_RATE6M] = DESC92C_RATE6M,
-+	.maps[RTL_RC_OFDM_RATE9M] = DESC92C_RATE9M,
-+	.maps[RTL_RC_OFDM_RATE12M] = DESC92C_RATE12M,
-+	.maps[RTL_RC_OFDM_RATE18M] = DESC92C_RATE18M,
-+	.maps[RTL_RC_OFDM_RATE24M] = DESC92C_RATE24M,
-+	.maps[RTL_RC_OFDM_RATE36M] = DESC92C_RATE36M,
-+	.maps[RTL_RC_OFDM_RATE48M] = DESC92C_RATE48M,
-+	.maps[RTL_RC_OFDM_RATE54M] = DESC92C_RATE54M,
-+
-+	.maps[RTL_RC_HT_RATEMCS7] = DESC92C_RATEMCS7,
-+	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
-+};
-+
-+static DEFINE_PCI_DEVICE_TABLE(rtl88ee_pci_ids) = {
-+	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8179, rtl88ee_hal_cfg)},
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(pci, rtl88ee_pci_ids);
-+
-+MODULE_AUTHOR("zhiyuan_yang	<zhiyuan_yang@realsil.com.cn>");
-+MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
-+MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Realtek 8188E 802.11n PCI wireless");
-+MODULE_FIRMWARE("rtlwifi/rtl8188efw.bin");
-+
-+module_param_named(swenc, rtl88ee_mod_params.sw_crypto, bool, 0444);
-+module_param_named(debug, rtl88ee_mod_params.debug, int, 0444);
-+module_param_named(ips, rtl88ee_mod_params.inactiveps, bool, 0444);
-+module_param_named(swlps, rtl88ee_mod_params.swctrl_lps, bool, 0444);
-+module_param_named(fwlps, rtl88ee_mod_params.fwctrl_lps, bool, 0444);
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
-+
-+static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
-+
-+static struct pci_driver rtl88ee_driver = {
-+	.name = KBUILD_MODNAME,
-+	.id_table = rtl88ee_pci_ids,
-+	.probe = rtl_pci_probe,
-+	.remove = rtl_pci_disconnect,
-+	.driver.pm = &rtlwifi_pm_ops,
-+};
-+
-+module_pci_driver(rtl88ee_driver);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.h b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.h
-new file mode 100644
-index 0000000..85e02b3
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.h
-@@ -0,0 +1,36 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2013  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL92CE_SW_H__
-+#define __RTL92CE_SW_H__
-+
-+int rtl88e_init_sw_vars(struct ieee80211_hw *hw);
-+void rtl88e_deinit_sw_vars(struct ieee80211_hw *hw);
-+
-+#endif
++		err = __cfg80211_mlme_assoc(rdev, wdev->netdev, params->channel,
++					    params->bssid, params->ssid,
++					    params->ssid_len, &req);
+ 		if (err)
+ 			__cfg80211_mlme_deauth(rdev, wdev->netdev, params->bssid,
+ 					       NULL, 0,
 -- 
-1.8.1.4
+1.8.0
 
