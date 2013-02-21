@@ -1,27 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47693 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758026Ab3BZUyJ (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:52299 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751002Ab3BUFO0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 15:54:09 -0500
-Message-ID: <1361912044.8440.20.camel@jlt4.sipsolutions.net> (sfid-20130226_215412_927833_59E1468F)
-Subject: Re: [PATCH 3.9] mac80211: fix monitor mode channel reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Feb 2013 21:54:04 +0100
-In-Reply-To: <1361642534-39566-1-git-send-email-nbd@openwrt.org>
-References: <1361642534-39566-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Feb 2013 00:14:26 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.9] mwifiex: fix system freeze while reloading driver
+Date: Wed, 20 Feb 2013 21:12:58 -0800
+Message-Id: <1361423578-14967-1-git-send-email-bzhao@marvell.com> (sfid-20130221_061430_299995_DB072E47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-02-23 at 19:02 +0100, Felix Fietkau wrote:
-> When not using channel contexts with only monitor mode interfaces being
-> active, report local->monitor_chandef to userspace.
+From: Avinash Patil <patila@marvell.com>
 
-Makes sense, applied.
+Unload sequence for mwifiex PCIE driver is as follows:
+1. Invoking cleanup module from kernel results into
+   pci_unregister_driver
+2. Kernel invokes PCIE remove() handler which disconnects all
+   interfaces.
+3. One step during disconnect is to clean PCIE TX rings.
+   During this we read txbd_rdptr from FW.
 
-johannes
+While loading driver next time, we see pci_enable_device()
+results into system freeze. This may have happened because we
+accessed PCI device after unregistering from bus driver.
+Removing this ioread() operation resolves this bug.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |   11 +----------
+ 1 files changed, 1 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 4b54bcf..c4627bc 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -916,17 +916,8 @@ static int mwifiex_pcie_delete_sleep_cookie_buf(struct mwifiex_adapter *adapter)
+ static int mwifiex_clean_pcie_ring_buf(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	u32 rdptr;
+-
+-	/* Read the TX ring read pointer set by firmware */
+-	if (mwifiex_read_reg(adapter, reg->tx_rdptr, &rdptr)) {
+-		dev_err(adapter->dev,
+-			"Flush TXBD: failed to read reg->tx_rdptr\n");
+-		return -1;
+-	}
+ 
+-	if (!mwifiex_pcie_txbd_empty(card, rdptr)) {
++	if (!mwifiex_pcie_txbd_empty(card, card->txbd_rdptr)) {
+ 		card->txbd_flush = 1;
+ 		/* write pointer already set at last send
+ 		 * send dnld-rdy intr again, wait for completion.
+-- 
+1.7.0.2
 
