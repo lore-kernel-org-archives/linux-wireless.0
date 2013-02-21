@@ -1,84 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63041 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954Ab3BRIkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 03:40:51 -0500
-Date: Mon, 18 Feb 2013 09:40:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: fix 'phys_addr' may be used uninitialized
-Message-ID: <20130218084037.GB1583@redhat.com> (sfid-20130218_094057_636677_3ED2953F)
-References: <20130215095221.GE4392@redhat.com>
- <20130215192627.GE4981@tuxdriver.com>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:61659 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753123Ab3BUODp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Feb 2013 09:03:45 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hm6so7603186wib.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2013 06:03:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130215192627.GE4981@tuxdriver.com>
+In-Reply-To: <511E44B8.3000308@qca.qualcomm.com>
+References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com>
+	<87ehghanxe.fsf@kamboji.qca.qualcomm.com>
+	<CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com>
+	<511E44B8.3000308@qca.qualcomm.com>
+Date: Thu, 21 Feb 2013 15:03:43 +0100
+Message-ID: <CADGp=QfOyyTpwEg1=XXiyvRE7ZOGsn6TfiPQHs3+Jc3C69RM6Q@mail.gmail.com> (sfid-20130221_150352_741943_52CEFF57)
+Subject: Re: ath6kl: AR6004 failed to start on computer boot
+From: Julien Massot <jmassot@aldebaran-robotics.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 15, 2013 at 02:26:27PM -0500, John W. Linville wrote:
-> I still get the warning when building wireless-next on my F17 box
-> with this patch applied...
+Hi,
+I just find a quick and dirty patch to workaround this issue.
+I just reset the device on initialization failure.
 
-I have no warning of F17 with:
+I hope this helps to understand the real issue.
 
-gcc-4.7.2-2.fc17.x86_64
+[    7.012514] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/bdata.bin
+[    7.035276] cfg80211: World regulatory domain updated:
+[    7.035287] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[    7.035299] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[    7.037916] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/fw-3.bin
+[    9.378940] ath6kl: f59afe4c
+[    9.379054] ath6kl: f59afe6c
+[    9.379391] ath6kl_usb: probe of 1-7:1.0 failed with error -5
+Here I reset the device.
 
-perhaps you use i686 or kernel config is different.
+[    9.380081] usbcore: registered new interface driver ath6kl_usb
+[   10.396824] usb 1-7: USB disconnect, address 7
+[   10.712160] usb 1-7: new high speed USB device using ehci_hcd and address 8
+[   10.832491] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/bdata.bin
+[   10.838218] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/fw-3.bin
+[   11.026652] ath6kl: f5287c50
 
-This warning must be a false positive. The code looks like below:
+and it works..
 
-        secondlen = skb->len - hdr_len;
-        if (secondlen > 0) {
-                phys_addr =
-                    pci_map_single(il->pci_dev, skb->data + hdr_len, secondlen,
-                                   PCI_DMA_TODEVICE);
-                if (unlikely(pci_dma_mapping_error(il->pci_dev, phys_addr)))
-                        goto drop_unlock;
-        }
-	/* */
-        if (secondlen > 0)
-                il->ops->txq_attach_buf_to_tfd(il, txq, phys_addr, secondlen,
-                                               0, 0);
+---
+drivers/net/wireless/ath/ath6kl/main.c | 1 +
+drivers/net/wireless/ath/ath6kl/usb.c  | 1 +
+ 2 files changed, 2 insertions(+)
 
-and there are no other places where phys_addr is used.
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c
+b/drivers/net/wireless/ath/ath6kl/main.c
+index d0080b3..9060380 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -375,6 +375,7 @@ void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 	if (status)
+ 		ath6kl_err("failed to reset target\n");
+ }
++EXPORT_SYMBOL(ath6kl_reset_device);
 
-I just realized that secondlen is u16, so there is no difference between
-"if (secondlen)" and "if (secondlen > 0)". So this patch can be dropped.
+ static void ath6kl_install_static_wep_keys(struct ath6kl_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c
+b/drivers/net/wireless/ath/ath6kl/usb.c
+index c7b87be..910bef9 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1121,6 +1121,7 @@ static int ath6kl_usb_probe(struct usb_interface
+*interface,
+ 	ret = ath6kl_core_init(ar, ATH6KL_HTC_TYPE_PIPE);
+ 	if (ret) {
+ 		ath6kl_err("Failed to init ath6kl core: %d\n", ret);
++                ath6kl_reset_device(ar, ar->target_type, true, true);
+ 		goto err_core_free;
+ 	}
 
-Stanislaw
-
-> On Fri, Feb 15, 2013 at 10:52:21AM +0100, Stanislaw Gruszka wrote:
-> > This should fix:
-> > 
-> > drivers/net/wireless/iwlegacy/4965-mac.c:1847:33: warning: 'phys_addr' may be used uninitialized in this function [-Wmaybe-uninitialized]
-> > 
-> > Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> >  drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-> > index 7941eb3..d2ab1cf 100644
-> > --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> > +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> > @@ -1843,7 +1843,7 @@ il4965_tx_skb(struct il_priv *il,
-> >  	il->ops->txq_attach_buf_to_tfd(il, txq, txcmd_phys, firstlen, 1, 0);
-> >  	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
-> >  	dma_unmap_len_set(out_meta, len, firstlen);
-> > -	if (secondlen)
-> > +	if (secondlen > 0)
-> >  		il->ops->txq_attach_buf_to_tfd(il, txq, phys_addr, secondlen,
-> >  					       0, 0);
-> >  
-> > -- 
-> > 1.7.11.7
-> > 
-> > 
-> 
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+--
+Regards,
+Julien
