@@ -1,24 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab3BRO0w (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:34768 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922Ab3BUCGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 09:26:52 -0500
-Message-ID: <1361197608.8555.20.camel@jlt4.sipsolutions.net> (sfid-20130218_152657_177254_DA60B383)
-Subject: Re: [PATCH 1/3] mac80211: clean up mesh HT operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Mon, 18 Feb 2013 15:26:48 +0100
-In-Reply-To: <1361040066-5771-1-git-send-email-thomas@cozybit.com> (sfid-20130216_194220_938261_812011A3)
-References: <1361040066-5771-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20130216_194220_938261_812011A3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 20 Feb 2013 21:06:19 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20773.32951.976684.849906@gargle.gargle.HOWL> (sfid-20130221_030622_947568_6D6CDD4C)
+Date: Thu, 21 Feb 2013 07:34:39 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+In-Reply-To: <51258020.1060906@candelatech.com>
+References: <511935F2.8080103@candelatech.com>
+	<20761.34987.125000.908722@gargle.gargle.HOWL>
+	<511BC243.8010409@candelatech.com>
+	<20770.57339.20017.225929@gargle.gargle.HOWL>
+	<51255360.6060603@candelatech.com>
+	<20773.31273.604966.176099@gargle.gargle.HOWL>
+	<51258020.1060906@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied all. I guess I could say "I told you so" about patch 3 ;-)
+Ben Greear wrote:
+> Powersave is always disabled in our tests...can't use it with multiple VIFS
+> as far as I know...
 
-johannes
+Ah, yes.
 
+> System doesn't recover if we drop the attenuation back to optimal levels, btw.
+
+Ok.
+
+Sujith
