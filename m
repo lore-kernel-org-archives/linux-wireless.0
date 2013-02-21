@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:43244 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053Ab3BFAAw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56247 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759933Ab3BUUgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 19:00:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl8192cu: Fix NULL dereference BUG when using new_id
-Date: Tue,  5 Feb 2013 18:00:23 -0600
-Message-Id: <1360108823-5141-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130206_010102_502671_D415D61B)
+	Thu, 21 Feb 2013 15:36:54 -0500
+Message-ID: <1361479008.8327.3.camel@jlt4.sipsolutions.net> (sfid-20130221_213701_403179_9E883D4B)
+Subject: Re: [PATCH 0/3] VHT capability override
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 21 Feb 2013 21:36:48 +0100
+In-Reply-To: <5126797F.4030300@candelatech.com>
+References: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>
+	 <5126797F.4030300@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the new_id entry is used for a foreign USB device, rtlwifi BUGS with
-a NULL pointer dereference.
+On Thu, 2013-02-21 at 11:46 -0800, Ben Greear wrote:
+> On 02/21/2013 11:11 AM, Johannes Berg wrote:
+> > I got a request to support this for testing. Anyone need other
+> > parameters? The multi-bit fields are a bit tricky so I didn't
+> > implement all of them yet.
+> 
+> I haven't managed to acquire any VHT hardware yet (or look at features
+> in detail yet), but the option set looks good to me.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
+How would you do the wpa_s code?
 
-John,
-
-Although this patch should be backported to stable kernels, the new_id
-feature is rarely used, thus the patch should not have any particular
-priority.
-
-Larry
----
-
- drivers/net/wireless/rtlwifi/usb.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index d42bbe2..77a7517 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -977,6 +977,9 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtl_dbgp_flag_init(hw);
- 	/* Init IO handler */
- 	_rtl_usb_io_handler_init(&udev->dev, hw);
-+	if (!rtlpriv->cfg || !rtlpriv->cfg->ops ||
-+	    !rtlpriv->cfg->ops->read_chip_version)
-+		return -ENODEV;
- 	rtlpriv->cfg->ops->read_chip_version(hw);
- 	/*like read eeprom and so on */
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
--- 
-1.8.1
+johannes
 
