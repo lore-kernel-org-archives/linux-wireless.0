@@ -1,140 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:50353 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752041Ab3BLH5D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 02:57:03 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] iw: add packet offset information for wowlan pattern
-Date: Mon, 11 Feb 2013 23:56:42 -0800
-Message-Id: <1360655802-21515-3-git-send-email-bzhao@marvell.com> (sfid-20130212_085706_977636_7A2C654A)
-In-Reply-To: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
-References: <1360655802-21515-1-git-send-email-bzhao@marvell.com>
+Received: from icf.org.ru ([91.193.237.1]:48467 "EHLO icf.org.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752829Ab3BUAhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Feb 2013 19:37:37 -0500
+Date: Thu, 21 Feb 2013 04:37:30 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+cc: devel@lists.open80211s.org, Adrian Chadd <adrian@freebsd.org>,
+	ath9k-devel@lists.ath9k.org, Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless@vger.kernel.org,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: [ath9k-devel] improve operational ANI in Mesh mode
+In-Reply-To: <alpine.DEB.2.02.1302202327450.2057@icf.org.ru>
+Message-ID: <alpine.DEB.2.02.1302210432480.22701@icf.org.ru> (sfid-20130221_013743_135047_190094DD)
+References: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru> <20130219134028.GA26332@pandem0nium> <alpine.DEB.2.02.1302191752110.31254@icf.org.ru> <CAJ-VmomPkPvABSJtdb6Y=fDNxyd_XtE6sk9yWQzw9qC7rjkwiA@mail.gmail.com> <alpine.DEB.2.02.1302192034420.7450@icf.org.ru>
+ <CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com> <20771.50338.434076.484711@gargle.gargle.HOWL> <CAJ-VmokAP6hSxjGDUu7Q5rSg3dvxfLapQBSLgYCvWc9b0YEPgA@mail.gmail.com> <20771.51233.248133.141840@gargle.gargle.HOWL>
+ <alpine.DEB.2.02.1302192258510.19584@icf.org.ru> <CAJ-Vmo=TmpSbt_y=b6w3=tEU4NiWViK95+3PVoKvnOfeqRFoKw@mail.gmail.com> <alpine.DEB.2.02.1302200027120.19533@icf.org.ru> <CAEFj9871wuavGjjs=KRPK0Wq3gxeOxLP_Az6OU7LAJFw+W=6-g@mail.gmail.com>
+ <alpine.DEB.2.02.1302202327450.2057@icf.org.ru>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-284047418-1361407050=:22701"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Now user can provide packet offset along with the pattern in
-"iw wowlan" command. Default offset will be 0 when it is not
-provided.
+---1050998036-284047418-1361407050=:22701
+Content-Type: TEXT/PLAIN; charset=KOI8-R
+Content-Transfer-Encoding: 8BIT
 
-A trailing ':' should be used for single byte pattern to
-distinguish it from an offset.
-Ex. "iw phy phy# wowlan patterns 18 43:" means wakeup on
-offset 18 pattern 0x43.
+On 2013-02-20 23:31 +0400, Georgiewskiy Yuriy wrote Yeoh Chun-Yeow:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- util.c   |  2 ++
- wowlan.c | 30 +++++++++++++++++++++++-------
- 2 files changed, 25 insertions(+), 7 deletions(-)
+GY>On 2013-02-20 11:30 +0800, Yeoh Chun-Yeow wrote devel@lists.open80211s.org:
+GY>
+GY>YC>> but, there is some funny rssi processing sometimes:
+GY>YC>>
+GY>YC>>
+GY>YC>>         /* Update Beacon RSSI, this is used by ANI. */
+GY>YC>>         ah->stats.avgbrssi = rssi;
+GY>YC>>
+GY>YC>> may be i don't understand something, but looks strange.
+GY>YC>
+GY>YC>If I am not mistaken, mesh node (802.11s) does not process beacon RSSI in ath9k,
+GY>
+GY>Yes, you are right, 802.11s not hit this code path, but there is people who use ibss
+GY>and seems have problems with ani too.
 
-diff --git a/util.c b/util.c
-index c272c1d..6ef86cd 100644
---- a/util.c
-+++ b/util.c
-@@ -75,6 +75,8 @@ int parse_hex_mask(char *hexmask, unsigned char **result, size_t *result_len,
- 		if (cp) {
- 			*cp = 0;
- 			cp++;
-+		} else if (!strlen(hexmask)) {
-+			break;
- 		}
- 
- 		if (result_mask && (strcmp(hexmask, "-") == 0 ||
-diff --git a/wowlan.c b/wowlan.c
-index 6d324ef..a314c7d 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -26,7 +26,8 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 	int err = -ENOBUFS;
- 	unsigned char *pat, *mask;
- 	size_t patlen;
--	int patnum = 0;
-+	int patnum = 0, pkt_offset;
-+	char *eptr;
- 
- 	wowlan = nla_nest_start(msg, NL80211_ATTR_WOWLAN_TRIGGERS);
- 	if (!wowlan)
-@@ -62,7 +63,16 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 			}
- 			break;
- 		case PS_PAT:
--			if (parse_hex_mask(argv[0], &pat, &patlen, &mask)) {
-+			pkt_offset = strtoul(argv[0], &eptr, 10);
-+			if (eptr != argv[0] + strlen(argv[0])) {
-+				/* packet offset is not provided, set default value to 0 */
-+				pkt_offset = 0;
-+			} else {
-+				argv++;
-+				argc--;
-+			}
-+
-+			if (!argc || parse_hex_mask(argv[0], &pat, &patlen, &mask)) {
- 				err = 1;
- 				goto nla_put_failure;
- 			}
-@@ -71,6 +81,7 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 				DIV_ROUND_UP(patlen, 8), mask);
- 			NLA_PUT(patterns, NL80211_WOWLAN_PKTPAT_PATTERN,
- 				patlen, pat);
-+			NLA_PUT_U32(patterns, NL80211_WOWLAN_PKTPAT_OFFSET, pkt_offset);
- 			nla_nest_end(patterns, pattern);
- 			free(mask);
- 			free(pat);
-@@ -91,12 +102,14 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 	return err;
- }
- COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [eap-identity-request]"
--	" [4way-handshake] [rfkill-release] [patterns <pattern>*]",
-+	" [4way-handshake] [rfkill-release] [patterns [offset1] <pattern1> ...]",
- 	NL80211_CMD_SET_WOWLAN, 0, CIB_PHY, handle_wowlan_enable,
- 	"Enable WoWLAN with the given triggers.\n"
- 	"Each pattern is given as a bytestring with '-' in places where any byte\n"
- 	"may be present, e.g. 00:11:22:-:44 will match 00:11:22:33:44 and\n"
--	"00:11:22:33:ff:44 etc.");
-+	"00:11:22:33:ff:44 etc.\n"
-+	"Use ':' for single byte pattern as well, e.g. 18 43: will match '43' "
-+	"after 18 bytes of offset in Rx packet.");
- 
- 
- static int handle_wowlan_disable(struct nl80211_state *state, struct nl_cb *cb,
-@@ -152,23 +165,26 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
- 				    trig[NL80211_WOWLAN_TRIG_PKT_PATTERN],
- 				    rem_pattern) {
- 			struct nlattr *patattr[NUM_NL80211_WOWLAN_PKTPAT];
--			int i, patlen, masklen;
-+			int i, patlen, masklen, pkt_offset;
- 			uint8_t *mask, *pat;
- 			nla_parse(patattr, MAX_NL80211_WOWLAN_PKTPAT,
- 				  nla_data(pattern), nla_len(pattern),
- 				  NULL);
- 			if (!patattr[NL80211_WOWLAN_PKTPAT_MASK] ||
--			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN]) {
-+			    !patattr[NL80211_WOWLAN_PKTPAT_PATTERN] ||
-+			    !patattr[NL80211_WOWLAN_PKTPAT_OFFSET]) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
- 			masklen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
- 			patlen = nla_len(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
-+			pkt_offset = nla_get_u32(patattr[NL80211_WOWLAN_PKTPAT_OFFSET]);
- 			if (DIV_ROUND_UP(patlen, 8) != masklen) {
- 				printf(" * (invalid pattern specification)\n");
- 				continue;
- 			}
--			printf(" * wake up on pattern: ");
-+			printf(" * wake up on packet offset: %d", pkt_offset);
-+			printf(" pattern: ");
- 			pat = nla_data(patattr[NL80211_WOWLAN_PKTPAT_PATTERN]);
- 			mask = nla_data(patattr[NL80211_WOWLAN_PKTPAT_MASK]);
- 			for (i = 0; i < patlen; i++) {
--- 
-1.8.0
+hm, but ibss not hit this path too because is_mybeacon is 0 in this mode, 
+seems this works only for station mode.
 
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1050998036-284047418-1361407050=:22701--
