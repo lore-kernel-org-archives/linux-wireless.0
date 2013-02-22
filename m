@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41985 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759263Ab3BGSik (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 13:38:40 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Received: from nbd.name ([46.4.11.11]:45190 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757195Ab3BVPyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2013 10:54:04 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, victorg@ti.com, linville@tuxdriver.com,
-	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
-	adrian@freebsd.org, j@w1.fi, coelho@ti.com, igalc@ti.com,
-	nbd@nbd.name, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 2/2] iw: print DFS states for channels if available
-Date: Thu,  7 Feb 2013 19:38:24 +0100
-Message-Id: <1360262304-28362-6-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130207_193846_184193_7106EA41)
-In-Reply-To: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1360262304-28362-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Cc: linville@tuxdriver.com, c_manoha@qca.qualcomm.com
+Subject: [PATCH 3.9] ath9k_htc: fix signal strength handling issues
+Date: Fri, 22 Feb 2013 16:53:52 +0100
+Message-Id: <1361548432-83349-1-git-send-email-nbd@openwrt.org> (sfid-20130222_165412_216644_E878743E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- info.c |   25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+The ath9k commit 2ef167557c0a26c88162ecffb017bfcc51eb7b29
+(ath9k: fix signal strength reporting issues) fixed an issue where the
+reported per-frame signal strength reported to mac80211 was being
+overwritten with an internal average. The same issue is also present
+in ath9k_htc.
+In addition to preventing the driver from overwriting the value, this
+commit also ensures that the internal average (which is used for ANI)
+only tracks beacons of the AP that we're connected to.
 
-diff --git a/info.c b/info.c
-index 14db37f..bcf36d7 100644
---- a/info.c
-+++ b/info.c
-@@ -49,6 +49,20 @@ static char *cipher_name(__u32 c)
- 	}
- }
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index b6a5a08..8788621 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1067,15 +1067,19 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
  
-+static char *dfs_state_name(enum nl80211_dfs_state state)
-+{
-+	switch (state) {
-+	case NL80211_DFS_USABLE:
-+		return "usable";
-+	case NL80211_DFS_AVAILABLE:
-+		return "available";
-+	case NL80211_DFS_UNAVAILABLE:
-+		return "unavailable";
-+	default:
-+		return "unknown";
+ 	last_rssi = priv->rx.last_rssi;
+ 
+-	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
+-						     ATH_RSSI_EP_MULTIPLIER);
++	if (ieee80211_is_beacon(hdr->frame_control) &&
++	    !is_zero_ether_addr(common->curbssid) &&
++	    ether_addr_equal(hdr->addr3, common->curbssid)) {
++		s8 rssi = rxbuf->rxstatus.rs_rssi;
+ 
+-	if (rxbuf->rxstatus.rs_rssi < 0)
+-		rxbuf->rxstatus.rs_rssi = 0;
++		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+ 
+-	if (ieee80211_is_beacon(fc))
+-		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
++		if (rssi < 0)
++			rssi = 0;
++
++		priv->ah->stats.avgbrssi = rssi;
 +	}
-+}
-+
- static int print_phy_handler(struct nl_msg *msg, void *arg)
- {
- 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-@@ -147,6 +161,17 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
-  next:
- 			if (open)
- 				printf(")");
-+			if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
-+				enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
-+				unsigned long time;
-+
-+				printf(" DFS state: %s", dfs_state_name(state));
-+				if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
-+					time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
-+					printf(" (for %lu sec)", time/1000);
-+				}
-+			}
-+
- 			printf("\n");
- 		}
  
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
 -- 
-1.7.10.4
+1.8.0.2
 
