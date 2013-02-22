@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:50093 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933028Ab3BOMkw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49837 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756353Ab3BVMzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 07:40:52 -0500
-Received: by mail-ie0-f178.google.com with SMTP id c13so4582862ieb.23
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Feb 2013 04:40:51 -0800 (PST)
-Date: Fri, 15 Feb 2013 07:40:46 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: devel@lists.open80211s.org
-Cc: Marco Porsch <marco@cozybit.com>, vthiagar@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	mcgrof@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	senthilb@qca.qualcomm.com
-Subject: Re: [PATCH 1/3] mac80211: move mesh sync beacon handler into
- neighbour_update
-Message-ID: <20130215124046.GA3493@localhost> (sfid-20130215_134055_908224_BAF7A78F)
-References: <1360928446-543-1-git-send-email-marco@cozybit.com>
- <1360930499.15040.7.camel@jlt4.sipsolutions.net>
+	Fri, 22 Feb 2013 07:55:16 -0500
+Message-ID: <51276AA6.4000805@candelatech.com> (sfid-20130222_135522_106859_7AAFDC4A)
+Date: Fri, 22 Feb 2013 04:55:02 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360930499.15040.7.camel@jlt4.sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
+References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL> <51270186.6070003@candelatech.com> <51275837.4020708@openwrt.org> <20775.25545.671357.512930@gargle.gargle.HOWL> <512766B8.3030008@openwrt.org>
+In-Reply-To: <512766B8.3030008@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 15, 2013 at 01:14:59PM +0100, Johannes Berg wrote:
-> On Fri, 2013-02-15 at 12:40 +0100, Marco Porsch wrote:
-> 
-> > -	/* The current tsf is a first approximation for the timestamp
-> > -	 * for the received beacon.  Further down we try to get a
-> > -	 * better value from the rx_status->mactime field if
-> > -	 * available. Also we have to call drv_get_tsf() before
-> > -	 * entering the rcu-read section.*/
-> 
-> I don't think you should drop this comment; also why not just address
-> it? There's a timestamp in rx_status that should be the correct one for
-> ath9k (which is pretty much all this seems to work on anyway :) )
+On 02/22/2013 04:38 AM, Felix Fietkau wrote:
+> On 2013-02-22 1:25 PM, Sujith Manoharan wrote:
+>> Felix Fietkau wrote:
+>>> Please also check if the station(s) that the frames are queued for are
+>>> in powersave state for some reason. That would prevent the tx path from
+>>> throwing them in the hw queue, yet they'd still take up pending-frame
+>>> slots. I was planning on fixing this eventually by expiring frames that
+>>> stay in the queue for too long, but haven't decided on the exact
+>>> approach yet.
+>>
+>> PS is disabled for multi-VIF.
+> What about off-channel PS due to scans, etc.
 
-The comment is just moved?  Mesh already uses rx_status->mactime, if
-the driver supplies it, which the comment says :)
+Scan is always locked to the same channel in this setup (once
+a single station is associated).
+
+The stations stay associated while this problem happens (the
+high-priority queue seems to work just fine, which may be
+the reason they stay associated just fine.)
+
+In some cases, I see packets delivered around 30 seconds late...
+aside from PS and off-channel..any idea what could make a packet
+stick around that long in the tx queues?
+
+Thanks,
+Ben
+
+>
+> - Felix
+>
+
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
