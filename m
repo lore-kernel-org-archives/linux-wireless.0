@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:45664 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757420Ab3BYTwu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49923 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755538Ab3BVUPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 14:52:50 -0500
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: carl9170 A-MPDU transmit problem
-Date: Mon, 25 Feb 2013 20:52:46 +0100
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1302251024200.1526-100000@iolanthe.rowland.org> <20130225191357.GE6605@xanatos> <20130225194623.GI13296@thinkpad-t410>
-In-Reply-To: <20130225194623.GI13296@thinkpad-t410>
+	Fri, 22 Feb 2013 15:15:15 -0500
+Date: Fri, 22 Feb 2013 15:01:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, c_manoha@qca.qualcomm.com
+Subject: Re: [PATCH 3.9] ath9k_htc: fix signal strength handling issues
+Message-ID: <20130222200138.GB23235@tuxdriver.com> (sfid-20130222_211520_786260_3BC7ACBA)
+References: <1361548432-83349-1-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302252052.47208.chunkeey@googlemail.com> (sfid-20130225_205256_161110_4A47E99E)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1361548432-83349-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, February 25, 2013 08:46:23 PM Seth Forshee wrote:
-> On Mon, Feb 25, 2013 at 11:13:57AM -0800, Sarah Sharp wrote:
-> > Hmm, yeah, that kind of points to an Intel xHCI hardware issue.  It's
-> > too bad you don't have a USB analyzer (the high speed ones are about
-> > $480).  Can you send me a link so I can purchase the device and test it
-> > with my analyzer?
-> 
-> Hmm. This looks the same, but it sounds like there are multiple hardware
-> versions sold under the same name so I'm not sure. The one I have is
-> hardware version A2.
-> 
-> http://www.amazon.com/D-Link-DWA-160-Extreme-N-Dual-Band-802-11n/dp/B00127OVHI
-> 
-Or this one:
-<http://www.ebay.com/itm/D-Link-DWA-160-300Mbps-Xtreme-N-Duo-Band-Wireless-USB-Adapter-Win7-Vista-XP-/180869622792>
+  CC      drivers/net/wireless/ath/ath9k/htc_drv_txrx.o
+drivers/net/wireless/ath/ath9k/htc_drv_txrx.c: In function ‘ath9k_rx_prepare’:
+drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1071:6: error: implicit declaration of function ‘is_zero_ether_addr’ [-Werror=implicit-function-declaration]
+drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1072:6: error: implicit declaration of function ‘ether_addr_equal’ [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
 
-In the description they say it's A2 (so it should be the same Seth is using)
-(Note: The "current" DWA-160 have RaLink/MediaTek chips)
+On Fri, Feb 22, 2013 at 04:53:52PM +0100, Felix Fietkau wrote:
+> The ath9k commit 2ef167557c0a26c88162ecffb017bfcc51eb7b29
+> (ath9k: fix signal strength reporting issues) fixed an issue where the
+> reported per-frame signal strength reported to mac80211 was being
+> overwritten with an internal average. The same issue is also present
+> in ath9k_htc.
+> In addition to preventing the driver from overwriting the value, this
+> commit also ensures that the internal average (which is used for ANI)
+> only tracks beacons of the AP that we're connected to.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> index b6a5a08..8788621 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> @@ -1067,15 +1067,19 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+>  
+>  	last_rssi = priv->rx.last_rssi;
+>  
+> -	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+> -		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
+> -						     ATH_RSSI_EP_MULTIPLIER);
+> +	if (ieee80211_is_beacon(hdr->frame_control) &&
+> +	    !is_zero_ether_addr(common->curbssid) &&
+> +	    ether_addr_equal(hdr->addr3, common->curbssid)) {
+> +		s8 rssi = rxbuf->rxstatus.rs_rssi;
+>  
+> -	if (rxbuf->rxstatus.rs_rssi < 0)
+> -		rxbuf->rxstatus.rs_rssi = 0;
+> +		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+> +			rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
+>  
+> -	if (ieee80211_is_beacon(fc))
+> -		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
+> +		if (rssi < 0)
+> +			rssi = 0;
+> +
+> +		priv->ah->stats.avgbrssi = rssi;
+> +	}
+>  
+>  	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+>  	rx_status->band = hw->conf.channel->band;
+> -- 
+> 1.8.0.2
+> 
+> 
 
-Regards,
-	Chr
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
