@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43851 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907Ab3BDSDW (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26478 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755834Ab3BVOuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 13:03:22 -0500
-Message-ID: <1360001021.17993.26.camel@jlt4.sipsolutions.net> (sfid-20130204_190325_456713_4F467CB0)
-Subject: Re: [PATCH 2/3] mac80211: generate mesh probe requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Mon, 04 Feb 2013 19:03:41 +0100
-In-Reply-To: <CAG6hwVO+FvT4K3W5m0ddcyUBnFfMeg5eJrXE=77ipG1G-MbA7Q@mail.gmail.com> (sfid-20130204_185846_251995_0F69E0FD)
-References: <1359853341-29237-1-git-send-email-thomas@cozybit.com>
-	 <1359853341-29237-3-git-send-email-thomas@cozybit.com>
-	 <1359999522.17993.20.camel@jlt4.sipsolutions.net>
-	 <CAG6hwVO+FvT4K3W5m0ddcyUBnFfMeg5eJrXE=77ipG1G-MbA7Q@mail.gmail.com>
-	 (sfid-20130204_185846_251995_0F69E0FD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Feb 2013 09:50:54 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH v2 5/5] ath6kl: Fix a debugfs crash for USB devices
+Date: Fri, 22 Feb 2013 20:20:46 +0530
+Message-ID: <1361544646-9059-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130222_155111_266188_CB090129)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-04 at 09:58 -0800, Thomas Pedersen wrote:
-> On Mon, Feb 4, 2013 at 9:38 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Sat, 2013-02-02 at 17:02 -0800, Thomas Pedersen wrote:
-> >
-> >> -     pos = skb_put(skb, ie_ssid_len);
-> >> -     *pos++ = WLAN_EID_SSID;
-> >> +     if (ieee80211_vif_is_mesh(vif)) {
-> >> +             pos = skb_put(skb, 2 + 2 + ssid_len);
-> >> +             *pos++ = WLAN_EID_SSID;
-> >> +             *pos++ = 0;
-> >> +             /* NOTE: mesh ID will be out of order */
-> >
-> > Why put it out of order?
-> >
-> > Also I'm not convinced that it's a good idea to translate "SSID" from
-> > the userspace API to "mesh ID" silently? Might make more sense to have
-> > those separately maybe? I mean, it seems reasonable to even think you
-> > might scan for a mesh network when you're not a mesh interface, for
-> > example?
-> 
-> Yeah that makes more sense,  but will obviously require more work.
-> I'll just drop this for now.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I guess the other question is if you actually want this at all. I mean,
-if you just do patch 1 and 3, then unless you want to actively scan for
-multiple networks you can just include the mesh ID in the IE parameter.
-Seems for many purposes that could be acceptable already. Now I'm not
-saying that you shouldn't put it into the kernel, there certainly could
-be value in that, just saying that in terms of effort that might be
-easier?
+Credit distribution stats is currently implemented
+only for SDIO. This fixes a crash in debugfs for
+USB interface.
 
-johannes
+BUG: unable to handle kernel NULL pointer dereference at   (null)
+IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+*pde = b62bd067
+Oops: 0000 [#1] SMP
+
+EIP: 0060:[<f91c2048>] EFLAGS: 00210246 CPU: 0
+EIP is at read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+EAX: 00000000 EBX: e6f7a9c0 ECX: e7b148b8 EDX: 00000000
+ESI: 000000c8 EDI: e7b14000 EBP: e6e09f64 ESP: e6e09f30
+DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process cat (pid: 4058, ti=e6e08000 task=e50cf230 task.ti=e6e08000)
+Stack:
+00008000 00000000 e6e09f64 c1132d3c 00004e71 e50cf230 00008000 089e4000
+e7b148b8 00000000 e6f7a9c0 00008000 089e4000 e6e09f8c c11331fc e6e09f98
+00000001 e6e09f7c f91c2010 e6e09fac e6f7a9c0 089e4877 089e4000 e6e09fac
+
+	Call Trace:
+	[<c1132d3c>] ? rw_verify_area+0x6c/0x120
+	[<c11331fc>] vfs_read+0x8c/0x160
+	[<f91c2010>] ? read_file_war_stats+0x130/0x130 [ath6kl_core]
+	[<c113330d>] sys_read+0x3d/0x70
+	[<c15755b4>] syscall_call+0x7/0xb
+	[<c1570000>] ? fill_powernow_table_pstate+0x127/0x127
+
+Cc: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 15cfe30..c557367 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1752,8 +1752,10 @@ int ath6kl_debug_init_fs(struct ath6kl *ar)
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
+ 
+-	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
+-			    &fops_credit_dist_stats);
++	if (ar->hif_type != ATH6KL_HIF_TYPE_SDIO)
++		debugfs_create_file("credit_dist_stats", S_IRUSR,
++				    ar->debugfs_phy, ar,
++				    &fops_credit_dist_stats);
+ 
+ 	debugfs_create_file("endpoint_stats", S_IRUSR | S_IWUSR,
+ 			    ar->debugfs_phy, ar, &fops_endpoint_stats);
+-- 
+1.7.9.5
 
