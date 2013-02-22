@@ -1,105 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39725 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248Ab3BBWP4 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:4592 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757664Ab3BVQ72 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2013 17:15:56 -0500
-Date: Sat, 2 Feb 2013 23:15:44 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 2/3] mac80211: add radar detection command/event
-Message-ID: <20130202221544.GA22363@pandem0nium> (sfid-20130202_231600_462098_F4B717AC)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359462120-22898-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359643448.8415.62.camel@jlt4.sipsolutions.net>
- <20130131163126.GB1387@pandem0nium>
- <1359650902.8415.93.camel@jlt4.sipsolutions.net>
- <20130131174758.GC2018@pandem0nium>
- <1359712620.8528.5.camel@jlt4.sipsolutions.net>
+	Fri, 22 Feb 2013 11:59:28 -0500
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>
+Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
+ coexistence mode
+Date: Fri, 22 Feb 2013 16:59:16 +0000
+Message-ID: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com> (sfid-20130222_175932_172287_75421F29)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-In-Reply-To: <1359712620.8528.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2013-02-22 at 13:32 +0000, Johannes Berg wrote:
+> On Fri, 2013-02-22 at 13:32 +0000, Piotr Haber wrote:
+> > > Apart from a few minor technical comments that I'll omit for now, I'm
+> > > not sure what value this really has? EAPOL can already be "protected" by
+> > > way of knowing when the station is marked authorized, and DHCP is pretty
+> > > tricky because it could take "forever", might not be there at all, etc.
+> >
+> > By "protect" I meant give Wifi a priority over BT so these time sensitive things 
+> > can finish quicker/on first try, limiting the possibility of dropping packets because of BT 
+> > using the medium.
+>
+> I know :)
+>
+> > This is supposed to be temporary and time limited, so if say DHCP finishes in the window 
+> > we give it - great, if not the coexistence goes back to default behavior and Wifi traffic is
+> > treated as usual. 
+>
+> That's not even documented/implemented, the way I read the patch you'd
+> have to set it back manually.
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Actually, the timeout is in brcmfmac so it currently relies on common sense of the driver developers (they tend to use it from time to time though).
 
-On Fri, Feb 01, 2013 at 10:57:00AM +0100, Johannes Berg wrote:
-> On Thu, 2013-01-31 at 18:47 +0100, Simon Wunderlich wrote:
->=20
-> > > > What I've tried:
-> > > >  * configure 2 SSIDs in hostapd, start it
-> > > >  * both wlan0 and wlan0-1 got created
-> > > >  * only wlan0 comes up, wlan0-1 was rejected because of missing cha=
-nnel combinations
-> > > >  * now I've injected a radar - which should be sent to wlan0 and wl=
-an0-1
-> > > >  * wlan0 could send the event, but wlan0-1 had no bss configured an=
-d therefore no chandef
-> > > >=20
-> > > > I can change this comment to "may happen to devices which have curr=
-ently no BSS configured",
-> > > > maybe that it is not so confusing ...
-> > >=20
-> > > Not sure I understand, how would the radar detected event come to an
-> > > interface that doesn't really exist for the driver?
-> >=20
-> > wlan0-1 exists and was created, but no AP was ever started - because ho=
-stapd tried
-> > to start the AP on a DFS channel when wlan0 was already active, and tha=
-nks to our
-> > interface combinations this is not allowed. Therefore, the vif.bss_conf=
-=2Echandef is empty.
-> >=20
-> > The interface does exist for the driver (interface add succeeded), but =
-start_ap failed,
-> > so it is a virgin AP interface.
-> >=20
-> > I think this behaviour is correct like that ...
->=20
-> So ... starting the AP failed because it was a different channel, it was
-> added to the driver because multiple AP interfaces were allowed but the
-> specific channel wasn't allowed (in addition) when it was started? But I
-> still don't see why that interface should get an event since it doesn't
-> even have a channel yet, except maybe preset_chan which is really only
-> for backward compatibility reasons?
->=20
-> What am I missing? Where does the event on wlan0-1 come from anyway?
+> > > What application would actually call this? I don't really see how it
+> > > could be integrated like that.
+> >
+> > For EAPOL wpa_supplicant might use it. For DHCP it could be used from enter/exit hooks
+> > via iw or some other utility able to send nl messages.
+>
+> See that's the thing, I don't really see the point for EAPOL: you could
+> just as well start protecting when the association is done, and end it
+> when the station is marked authorized. That will have protected any
+> EAPOL (or other protocols for that matter) traffic.
 
-In the (dummy) ath9k part I'm handling the radar by simply sending radar ev=
-ents
-to all ieee80211_vifs which are registered on this phy - regardless their
-status, if they are up or not. That's why both wlan0 and wlan0-1 get the
-event in my example. Of course, sending the event to wlan0-1 is pretty
-useless in my case, but we should better check. :)
+Ah, did we miss some cfg80211 API call that can tell us a station is authorized.
 
-Cheers,
-	Simon
->=20
+> Similarly, you could give it a certain timeout to protect DHCP traffic.
+> I guess the only thing that would seem necessary would be a notification
+> of "DHCP done" that would allow you to drop the protection right away.
 
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+We discussed this and we could start protecting when we see a BOOTP message, but indeed the end is not that straightforward and would need a "DHCP done" notification. However, if we have that there is little overhead in having a "DHCP start" notification and I would prefer to avoid looking into the sk_buff to check the protocol. The knowledge of DHCP start and done is not a responsibility of the driver.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+> > This feature is styled after Android one.
+>
+> I know, I'm (vaguely) familiar with that.
+>
+> > There a Wifi state machine tries to "protect" DHCP traffic.
+>
+> Is there any *reason* for it though? Would it ever call it after the
+> connection is fully established?
 
-iEYEARECAAYFAlENkBAACgkQrzg/fFk7axaP5QCg7Sp6CZgjqQA6GnltlijC8D4L
-BooAniLh40bGag3XhYy9sIpBJoujmbfE
-=hSmJ
------END PGP SIGNATURE-----
+That obviously depends on the DHCP lease time or a renewal request. So it could be called afterwards as well.
 
---k+w/mQv8wyuph6w0--
+> To me this seems not very well thought out.
+
+Have to admit that it is a bit uninspired to reuse. In Android bcmdhd it is actually done by driver private ioctl, which did seem like a worse idea. Considered doing it entirely in the driver, but decided that it could be beneficial for dhcp clients to use such an interface and (arguably) for supplicant as well.
+
+We'll do some more thinking and see whether there will be a RFC v2 ;-)
+
+Gr. AvS
