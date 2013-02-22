@@ -1,174 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:59416 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754728Ab3BVAaw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36484 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab3BVF0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 19:30:52 -0500
-Received: by mail-ea0-f169.google.com with SMTP id d13so42080eaa.14
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Feb 2013 16:30:51 -0800 (PST)
-Subject: [PATCH] carl9170: fix frame drop and WARN due to minstrel_ht change
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 22 Feb 2013 01:30:44 +0100
+	Fri, 22 Feb 2013 00:26:36 -0500
+Message-ID: <51270186.6070003@candelatech.com> (sfid-20130222_062641_830802_1CB6196B)
+Date: Thu, 21 Feb 2013 21:26:30 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201302220130.45434.chunkeey@googlemail.com> (sfid-20130222_013057_103280_957D8923)
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [RFC] ath9k:  Detect and work-around tx-queue hang.
+References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL>
+In-Reply-To: <20774.63702.208829.602903@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With "mac80211/minstrel_ht: add support for using CCK rates"
-minstrel_ht selects legacy CCK rates as viable rates for
-outgoing frames which might be sent as part of an A-MPDU
-[IEEE80211_TX_CTL_AMPDU is set].
+On 02/21/2013 08:49 PM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> I'll be happy to test patches, but I'm not sure how to go about
+>> debugging the real problem on my own.  Maybe some stats could
+>> be added to the xmit debugfs file to help diagnose the problem,
+>> or maybe some other debugfs info will help?
+>>
+>> I can't reproduce the problem with ath9k debugging set at the
+>> previous suggested level, so it would have to be something
+>> less invasive.
+>>
+>> As for just stations going out of range, it remains locked up
+>> even with signal level goes back to -20, so it's not just a simple
+>> station-out-of range issues..
+>
+> Sure, but I think that filtered frames are not handled properly,
+> especially with aggregation, since the debugfs stats from your earlier email
+> showed a large counter (from a private patch ?):
+>
+> TXERR Filtered:            224          0         0         0
 
-This behavior triggered the following WARN_ON in the driver:
-> WARNING: at carl9170/tx.c:995 carl9170_op_tx+0x1dd/0x6fd
-The driver assumed that the rate control algorithm made a
-mistake and dropped the frame.
+Yeah, guess that patch never made it upstream.  The pertinent bit is:
 
-This patch removes the noisy warning altogether and allows
-said A-MPDU frames with CCK sample and/or fallback rates to
-be transmitted seamlessly.
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -579,6 +579,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+         PR("AMPDUs Completed:", a_completed);
+         PR("AMPDUs Retried:  ", a_retries);
+         PR("AMPDUs XRetried: ", a_xretries);
++       PR("TXERR Filtered:  ", txerr_filtered);
+         PR("FIFO Underrun:   ", fifo_underrun);
+         PR("TXOP Exceeded:   ", xtxop);
+         PR("TXTIMER Expiry:  ", timer_exp);
+@@ -867,6 +868,8 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+                         TX_STAT_INC(qnum, completed);
+         }
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/tx.c |   69 +++++++++++++-------------------
- 1 file changed, 28 insertions(+), 41 deletions(-)
++       if (ts->ts_status & ATH9K_TXERR_FILT)
++               TX_STAT_INC(qnum, txerr_filtered);
+         if (ts->ts_status & ATH9K_TXERR_FIFO)
+                 TX_STAT_INC(qnum, fifo_underrun);
+         if (ts->ts_status & ATH9K_TXERR_XTXOP)
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 9c0b150..c61cafa 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -387,8 +387,7 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
- 	u8 tid;
- 
- 	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
--	    txinfo->flags & IEEE80211_TX_CTL_INJECTED ||
--	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
-+	    txinfo->flags & IEEE80211_TX_CTL_INJECTED)
- 		return;
- 
- 	rcu_read_lock();
-@@ -981,30 +980,6 @@ static int carl9170_tx_prepare(struct ar9170 *ar,
- 
- 		SET_VAL(CARL9170_TX_SUPER_AMPDU_FACTOR,
- 			txc->s.ampdu_settings, factor);
--
--		for (i = 0; i < CARL9170_TX_MAX_RATES; i++) {
--			txrate = &info->control.rates[i];
--			if (txrate->idx >= 0) {
--				txc->s.ri[i] =
--					CARL9170_TX_SUPER_RI_AMPDU;
--
--				if (WARN_ON(!(txrate->flags &
--					      IEEE80211_TX_RC_MCS))) {
--					/*
--					 * Not sure if it's even possible
--					 * to aggregate non-ht rates with
--					 * this HW.
--					 */
--					goto err_out;
--				}
--				continue;
--			}
--
--			txrate->idx = 0;
--			txrate->count = ar->hw->max_rate_tries;
--		}
--
--		mac_tmp |= cpu_to_le16(AR9170_TX_MAC_AGGR);
- 	}
- 
- 	/*
-@@ -1012,11 +987,31 @@ static int carl9170_tx_prepare(struct ar9170 *ar,
- 	 * taken from mac_control. For all fallback rate, the firmware
- 	 * updates the mac_control flags from the rate info field.
- 	 */
--	for (i = 1; i < CARL9170_TX_MAX_RATES; i++) {
-+	for (i = 0; i < CARL9170_TX_MAX_RATES; i++) {
-+		__le32 phy_set;
- 		txrate = &info->control.rates[i];
- 		if (txrate->idx < 0)
- 			break;
- 
-+		phy_set = carl9170_tx_physet(ar, info, txrate);
-+		if (i == 0) {
-+			/* first rate - part of the hw's frame header */
-+			txc->f.phy_control = phy_set;
-+
-+			if (ampdu && txrate->flags & IEEE80211_TX_RC_MCS)
-+				mac_tmp |= cpu_to_le16(AR9170_TX_MAC_AGGR);
-+			if (carl9170_tx_rts_check(ar, txrate, ampdu, no_ack))
-+				mac_tmp |= cpu_to_le16(AR9170_TX_MAC_PROT_RTS);
-+			else if (carl9170_tx_cts_check(ar, txrate))
-+				mac_tmp |= cpu_to_le16(AR9170_TX_MAC_PROT_CTS);
-+
-+		} else {
-+			/* fallback rates are stored in the firmware's
-+			 * retry rate set array.
-+			 */
-+			txc->s.rr[i - 1] = phy_set;
-+		}
-+
- 		SET_VAL(CARL9170_TX_SUPER_RI_TRIES, txc->s.ri[i],
- 			txrate->count);
- 
-@@ -1027,21 +1022,13 @@ static int carl9170_tx_prepare(struct ar9170 *ar,
- 			txc->s.ri[i] |= (AR9170_TX_MAC_PROT_CTS <<
- 				CARL9170_TX_SUPER_RI_ERP_PROT_S);
- 
--		txc->s.rr[i - 1] = carl9170_tx_physet(ar, info, txrate);
-+		if (ampdu && (txrate->flags & IEEE80211_TX_RC_MCS))
-+			txc->s.ri[i] |= CARL9170_TX_SUPER_RI_AMPDU;
- 	}
- 
--	txrate = &info->control.rates[0];
--	SET_VAL(CARL9170_TX_SUPER_RI_TRIES, txc->s.ri[0], txrate->count);
--
--	if (carl9170_tx_rts_check(ar, txrate, ampdu, no_ack))
--		mac_tmp |= cpu_to_le16(AR9170_TX_MAC_PROT_RTS);
--	else if (carl9170_tx_cts_check(ar, txrate))
--		mac_tmp |= cpu_to_le16(AR9170_TX_MAC_PROT_CTS);
--
- 	txc->s.len = cpu_to_le16(skb->len);
- 	txc->f.length = cpu_to_le16(len + FCS_LEN);
- 	txc->f.mac_control = mac_tmp;
--	txc->f.phy_control = carl9170_tx_physet(ar, info, txrate);
- 
- 	arinfo = (void *)info->rate_driver_data;
- 	arinfo->timeout = jiffies;
-@@ -1381,9 +1368,9 @@ static void carl9170_tx(struct ar9170 *ar)
- }
- 
- static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
--	struct ieee80211_sta *sta, struct sk_buff *skb)
-+	struct ieee80211_sta *sta, struct sk_buff *skb,
-+	struct ieee80211_tx_info *txinfo)
- {
--	struct _carl9170_tx_superframe *super = (void *) skb->data;
- 	struct carl9170_sta_info *sta_info;
- 	struct carl9170_sta_tid *agg;
- 	struct sk_buff *iter;
-@@ -1450,7 +1437,7 @@ err_unlock:
- 
- err_unlock_rcu:
- 	rcu_read_unlock();
--	super->f.mac_control &= ~cpu_to_le16(AR9170_TX_MAC_AGGR);
-+	txinfo->flags &= ~IEEE80211_TX_CTL_AMPDU;
- 	carl9170_tx_status(ar, skb, false);
- 	ar->tx_dropped++;
- 	return false;
-@@ -1492,7 +1479,7 @@ void carl9170_op_tx(struct ieee80211_hw *hw,
- 		 * sta == NULL checks are redundant in this
- 		 * special case.
- 		 */
--		run = carl9170_tx_ampdu_queue(ar, sta, skb);
-+		run = carl9170_tx_ampdu_queue(ar, sta, skb, info);
- 		if (run)
- 			carl9170_tx_ampdu(ar);
- 
+I'll post this and a few other small patches when I get a chance.
+
+Thanks,
+Ben
+
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
