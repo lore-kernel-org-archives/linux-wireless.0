@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:42124 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933962Ab3BNLHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 06:07:03 -0500
-Message-ID: <511CC40A.6080104@neratec.com> (sfid-20130214_120711_513782_2FB00F10)
-Date: Thu, 14 Feb 2013 12:01:30 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:43949 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757471Ab3BVUut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2013 15:50:49 -0500
+Date: Fri, 22 Feb 2013 14:50:44 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: carl9170 A-MPDU transmit problem
+Message-ID: <20130222205044.GD1418@thinkpad-t410> (sfid-20130222_215054_661659_32116D24)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: fix auth/assoc timeout handling
-References: <1360834178-11599-1-git-send-email-johannes@sipsolutions.net>  <511CC175.9080702@neratec.com> <1360839938.8210.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360839938.8210.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2013 12:05 PM, Johannes Berg wrote:
-> On Thu, 2013-02-14 at 11:50 +0100, Wojciech Dubowik wrote:
->> I am getting some disconnections becasue of failed
->> nullfunc in my ath9k ap+sta test setup. The auth/assoc
->> don't timeout but nullfunc does.
->>
->> I have checked in wireshark and all nullfunc were
->> properly acknowledged.
->> Attached syslog + iw event.
->>
->> Do you have any idea where it comes from or should
->> I start looking at it?
-> No idea right now, off the top of my head, sorry.
->
-> johannes
->
-So I will start digging.
-Wojtek
+Hi Christian,
+
+I was given a D-Link wireless dongle by a colleague who said he was
+having trouble with the connection stalling. One thing I noticed right
+away when running iperf is that the tx BA sessions seem to be getting
+stopped and restarted pretty frequently. I've been doing some debugging,
+and here's what I'm seeing.
+
+On the air everything seems to go smoothly for a while, but then the
+D-Link adapter stops transmitting data frames for a while. It still
+sends CTS and BA frames in response to the AP, just no data frames.
+Eventually it sends the action frame with the DELBA request, but
+immediately before sending the action frame it sends a single data
+frame. This pattern repeats each time this happens.
+
+That final data frame is a bit curious, so I added some tracing to
+carl9170. It looks like this frame gets passed down to the hardware as
+the last in a batch of A-MPDU frames, but for some reason the hardware
+stops transmitting without sending this frame. carl9170 doesn't pass any
+more A-MPDU frames to the hardware while tx for that frame is pending,
+and when the action frame for the DELBA request finally comes along it
+seems to get things moving again.
+
+Do you have any idea what might be causing the hardware to stop
+transmitting with one frame left? Any suggestions on how to fix it?
+
+Thanks,
+Seth
+
