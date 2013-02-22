@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab3B1WgV (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50632 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756615Ab3BVOuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 17:36:21 -0500
-Message-ID: <1362090974.8330.12.camel@jlt4.sipsolutions.net> (sfid-20130228_233625_695212_B9BF98D4)
-Subject: Re: [PATCHv3] cfg80211: Extend support for IEEE 802.11r Fast BSS
- Transition
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 28 Feb 2013 23:36:14 +0100
-In-Reply-To: <20130227151427.GA19980@jouni.qca.qualcomm.com>
-References: <20130221060843.GA24491@w1.fi>
-	 <1361565394.3420.17.camel@jlt4.sipsolutions.net>
-	 <20130226103819.GA5630@jouni.qca.qualcomm.com>
-	 <1361910682.8440.7.camel@jlt4.sipsolutions.net>
-	 <20130227151427.GA19980@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Feb 2013 09:50:44 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2 3/5] ath6kl: Return error from ath6kl_bmi_done()
+Date: Fri, 22 Feb 2013 20:20:21 +0530
+Message-ID: <1361544621-8971-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130222_155046_980920_F906A5A0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-27 at 17:14 +0200, Jouni Malinen wrote:
-> Add NL80211_CMD_UPDATE_FT_IES to support update of FT IEs to the WLAN
-> driver and NL80211_CMD_FT_EVENT to send FT events from the WLAN driver.
-> This will carry the target AP's MAC address along with the relevant
-> Information Elements. This event is used to report received FT IEs
-> (MDIE, FTIE, RSN IE, TIE, RICIE). These changes allow FT to be supported
-> with drivers that use an internal SME instead of user space option (like
-> FT implementation in wpa_supplicant with mac80211-based drivers).
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Applied.
+This addresses a FIXME in the driver.
 
-johannes
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    6 ++----
+ drivers/net/wireless/ath/ath6kl/sdio.c |    6 ++++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 5d434cf..072a229 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1569,11 +1569,9 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 		goto err_power_off;
+ 
+ 	/* Do we need to finish the BMI phase */
+-	/* FIXME: return error from ath6kl_bmi_done() */
+-	if (ath6kl_bmi_done(ar)) {
+-		ret = -EIO;
++	ret = ath6kl_bmi_done(ar);
++	if (ret)
+ 		goto err_power_off;
+-	}
+ 
+ 	/*
+ 	 * The reason we have to wait for the target here is that the
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index d111980..0bd8ff6 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1123,10 +1123,12 @@ static int ath6kl_sdio_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
+ 
+ 	ret = ath6kl_sdio_read_write_sync(ar, addr, buf, len,
+ 					  HIF_WR_SYNC_BYTE_INC);
+-	if (ret)
++	if (ret) {
+ 		ath6kl_err("unable to send the bmi data to the device\n");
++		return ret;
++	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int ath6kl_sdio_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+-- 
+1.7.9.5
 
