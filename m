@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47004 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752035Ab3B1DY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 22:24:58 -0500
-Message-ID: <512ECE01.8010102@openwrt.org> (sfid-20130228_042501_984760_39EEC6A5)
-Date: Thu, 28 Feb 2013 04:24:49 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from s72.web-hosting.com ([198.187.29.21]:50220 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753625Ab3BVEYo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Feb 2013 23:24:44 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org> <20757.1753.863278.858198@gargle.gargle.HOWL> <511508A6.8020104@openwrt.org> <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com> <51152D9E.1040106@openwrt.org> <20130227192030.GW12537@pogo> <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-In-Reply-To: <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20774.62135.517866.874519@gargle.gargle.HOWL> (sfid-20130222_052450_678271_EC338C7E)
+Date: Fri, 22 Feb 2013 09:53:19 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: 3.7.6+:  ath9k:  tx logic locks up after taking attenuation very
+ high.
+In-Reply-To: <5126A993.8060408@candelatech.com>
+References: <511935F2.8080103@candelatech.com>
+	<20761.34987.125000.908722@gargle.gargle.HOWL>
+	<511BC243.8010409@candelatech.com>
+	<20770.57339.20017.225929@gargle.gargle.HOWL>
+	<51255360.6060603@candelatech.com>
+	<51257304.10109@candelatech.com>
+	<20773.31380.740958.31338@gargle.gargle.HOWL>
+	<5125B39F.3010200@candelatech.com>
+	<51265AC3.5030304@candelatech.com>
+	<5126A993.8060408@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-02-28 3:21 AM, Adrian Chadd wrote:
-> Why don't we just move the ath9k rate control code to another mac80211
-> rate control module, so it's available to other devices?
+Ben Greear wrote:
+> Ok, I think I see the problem, or at least some of it.
 > 
-> It may not be a bad idea to keep it around as a reference and for
-> people to do comparisons against. It just seems silly to have a rate
-> control framework and then not use it..
-I don't see the point in keeping that algorithm around. It has known
-design flaws that make it perform poorly in several scenarios, and
-fixing some of the flaws require basically rewriting it.
+> When the attenuation goes very high (signal of -80 or lower),
+> all transmit basically stops, at least for a bit (possibly while
+> rate-control algorithms adjust).
+> 
+> During this time, the ath_tx_complete_poll_work logic can hit,
+> causing a reset of the NIC.
 
-- Felix
+Doing a chip reset because a station goes out of range doesn't seem correct.
+
+Sujith
