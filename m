@@ -1,70 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:39621 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756673Ab3BATCF (ORCPT
+Received: from ht2.myhostedexchange.com ([69.50.2.38]:62380 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757195Ab3BVQhr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 14:02:05 -0500
-Received: by mail-we0-f177.google.com with SMTP id d7so3257607wer.22
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Feb 2013 11:02:03 -0800 (PST)
+	Fri, 22 Feb 2013 11:37:47 -0500
+Date: Fri, 22 Feb 2013 17:36:44 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Marek Lindner <marek@open-mesh.com>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
+ stations
+Message-ID: <20130222163643.GB3757@open-mesh.com> (sfid-20130222_173750_344579_0C6D0BC3)
+References: <20130215171938.GA4140@pandem0nium>
+ <51279AFA.3000608@openwrt.org>
 MIME-Version: 1.0
-Date: Fri, 1 Feb 2013 11:02:00 -0800
-Message-ID: <CAJ-Vmom4nwFJK+zaPsrs5ZfoJiJKueUn2xV4vYVRYqJyP90_hA@mail.gmail.com> (sfid-20130201_200210_378076_668E6AE8)
-Subject: [ath9k] spectral scan update: HT40
-From: Adrian Chadd <adrian@freebsd.org>
-To: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="xHFwDpU9dbj6ez1V"
+In-Reply-To: <51279AFA.3000608@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+--xHFwDpU9dbj6ez1V
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I've been tinkering with the HT40 spectral scan data (in FreeBSD,
-obviously :-) and I can finally state that I have it working and
-working reliably.
+On Fri, Feb 22, 2013 at 08:21:14AM -0800, Felix Fietkau wrote:
+> Hi,
+>=20
+> Since this is a rare special case, I think it really does not belong
+> into the mac80211 data path. How about creating a monitor mode device
+> and claiming it from within the kernel in your own module via rx_handler
+> (the same mechanism that the bridge code uses to hook into the data path
+> of a normal net_device). You can extract relevant information from the
+> radiotap headers.
 
-The notes:
+I think this would increase the complexity given the fact that each and eve=
+ry
+packet needs to be encapsulated into the radiotap header..
+Then, most of the information that people wants to grab does not appear in
+such header.
 
-* The "MAC does silly things to the spectral scan payload" problem
-there is in HT40 too, so you need similar correction code for that.
-I've not yet committed that to FreeBSD, but I will soon.
-* The HT40 lower and upper FFT bins in the radar / spectral scan are
-just that - lower and upper halves of a 40MHz wide FFT.
-* .. but the RSSI in the RX descriptor is Primary and Extension
-channel RSSI, so you need to match them up correctly with what's
-"lower" and "upper" - ie, in HT40- mode, the primary RSSI is the
-upper, and the extension RSSI is lower.
-* .. and yes, this means you calculate the bin power separately for
-the lower and upper bins.
-* On AR928x chips, the spectral scan FFT is done on chain 0. I don't
-think that's changed in AR93xx series chips. So, use RSSI and NF from
-chain 0, don't use the combined RSSI figures.
-* RSSI can be below 0 dB, so make sure you factor that in.
-* IIRC, RSSI from the RX header is in half-dB increments, so make sure
-you factor that in.
-* Because of the MAC corruption bug, you can't disable "short report"
-- otherwise you don't know whether the spectral scan data results are
-corrupted or not. So yes, you have to enable short report and thus you
-get one result at a time in a PHY error.
+Other than that, by hooking into the mac80211 rx_path, in an early point, p=
+ackets can
+then be dropped as usual (all those packets not going to this device), while
+with this monitor-like solution all of them have to be carried up to the vi=
+rtual
+interface.
 
-I've mostly working code in FreeBSD's subversion tree -
-http://svn.freebsd.org/base/user/adrian/ath_radar_stuff/ - look in
-lib/libradarpkt and src/fft_eval .
+Imho this introduces a not negligible complexity that it is better to avoid.
 
-I've begun fleshing out some documentation about spectral scan -
-https://wiki.freebsd.org/dev/ath_hal%284%29/SpectralScan
+And what about 802.11s? I don't think this is a good solution for them..
 
-I'm going to work on the invalid packet length detection and
-correction, based on what our reference driver does and what Zefir has
-done. But once that's done, the basic data parsing and power
-calculation bits are done - I'll work on exporting it in a
-jquery-compatible fashion over a network socket so people (read: not
-me :-) can write some visualisation apps using HTML/javascript. That
-way both Linux and FreeBSD (and whoever else!) wifi hackers can
-leverage the same visualisation apps when hacking on this stuff.
+Cheers,
 
-HTH,
+--=20
+Antonio Quartulli
 
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
 
+--xHFwDpU9dbj6ez1V
+Content-Type: application/pgp-signature
 
-Adrian
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRJ56bAAoJEADl0hg6qKeOGAwP/2/Kv0YU6GrfjSymvQUE5STt
+6NUs80lYuDKFCLndZTZZVoX8shb/11FQM88+DIFOS/1w3vbegz9jXmfUtXN5oNlO
+RNogoK22ohWCdPsrJy6Fpn4VP8rsp0ocGu5mMhUjaxYc25vkuEP36bHv3lrm2mLj
+UJgXbVE+j3wCaeBwPXwjQWMZIynvvXTIE8qajAczuZhcUUVLBoR0BJe2d9+oALmW
+cOfVg70mvV/8W1TdmUQNxLQrVAmyHKdhMWp4SYUexRB06Sz71XmHmkSLwg/lPBpw
+qK0G3St1IjcpISM3wpvotfK3dRYDHkRyTJrlLzE4dbDeQEwoZyy6oydI5Fr42Kbd
+UFYwC3ol+KSg+Rq3c90cIP4SjTt4CAWAepg6NanYNrfpIF8bN1fW410JwXn6cE+k
+rojakWQsnUWdtwSbG9xzm+6oBUrpGnW/48Fvs4opy30MKsduNrBSEiesekRNmHv+
+dYsTMjiy9povnFnn/TzZ5M4PuwA1CFRiFQejMHxmMFpVZMrAjufCMCNS0PY9za6C
+53PNvJreQbeJl/pGQOyUx4RdfEI4mF1x/klC4yCD94Op1STLUe5toFFch0Iqp1eX
+9C0Z+8i/pmemM2BAqVlmXBLtCpEUIHikuyNLQ8cvKMfKa/kEDRgRUO7CNVASdR3O
+LmBlZYlz2/yxSwVac82n
+=PQMA
+-----END PGP SIGNATURE-----
+
+--xHFwDpU9dbj6ez1V--
