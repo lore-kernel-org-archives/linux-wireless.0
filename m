@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50102 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758703Ab3BTIkk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 03:40:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9 1/2] nl80211: remove radar information
-Date: Wed, 20 Feb 2013 09:40:33 +0100
-Message-Id: <1361349634-9669-2-git-send-email-johannes@sipsolutions.net> (sfid-20130220_094045_024267_39DE37B4)
-In-Reply-To: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
-References: <1361349634-9669-1-git-send-email-johannes@sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:1177 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755611Ab3BVNuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Feb 2013 08:50:20 -0500
+Message-ID: <5127778F.8070005@broadcom.com> (sfid-20130222_145023_451209_63806FA0)
+Date: Fri, 22 Feb 2013 14:50:07 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Wei Yongjun" <weiyj.lk@gmail.com>
+cc: brudley@broadcom.com, meuleman@broadcom.com,
+	linville@tuxdriver.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH -next] brcmfmac: fix missing unlock on error in
+ brcmf_notify_vif_event()
+References: <CAPgLHd8kCr1-vGNzpf5wb36bYaHYd3=x5oSC_xeBcRb7DANB1w@mail.gmail.com>
+In-Reply-To: <CAPgLHd8kCr1-vGNzpf5wb36bYaHYd3=x5oSC_xeBcRb7DANB1w@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/22/2013 02:32 PM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Add the missing unlock before return from function brcmf_notify_vif_event()
+> in the error handling case.
 
-The wiphy information is getting very close to being too
-much for a typical netlink dump message and adding the
-radar attributes to channels and interface combinations
-can push it over the limit, which means userspace gets no
-information whatsoever. Therefore, remove these again for
-now, no driver actually supports radar detection anyway
-and a modified userspace is required as well.
+We have a fix for this one, but not yet submitted. This issue was:
 
-We're working on a solution that will allow userspace to
-request splitting the information across multiple netlink
-messages, which will allow us to add this back.
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+If you add that to the commit message, you have my:
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>  drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1bfa144..f4785a0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -554,16 +554,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_IBSS))
- 		goto nla_put_failure;
--	if (chan->flags & IEEE80211_CHAN_RADAR) {
--		u32 time = elapsed_jiffies_msecs(chan->dfs_state_entered);
--		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
--			goto nla_put_failure;
--		if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_STATE,
--				chan->dfs_state))
--			goto nla_put_failure;
--		if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_DFS_TIME, time))
--			goto nla_put_failure;
--	}
-+	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
-+		goto nla_put_failure;
- 	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
- 		goto nla_put_failure;
-@@ -900,9 +893,6 @@ static int nl80211_put_iface_combinations(struct wiphy *wiphy,
- 		    nla_put_u32(msg, NL80211_IFACE_COMB_MAXNUM,
- 				c->max_interfaces))
- 			goto nla_put_failure;
--		if (nla_put_u32(msg, NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
--				c->radar_detect_widths))
--			goto nla_put_failure;
- 
- 		nla_nest_end(msg, nl_combi);
- 	}
--- 
-1.8.0
+Regards,
+Arend
 
