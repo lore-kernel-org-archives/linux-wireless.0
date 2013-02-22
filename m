@@ -1,681 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46785 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985Ab3BELFp (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55807 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753479Ab3BVCGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 06:05:45 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 21 Feb 2013 21:06:53 -0500
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC] cfg80211: configuration for WoWLAN over TCP
-Date: Tue,  5 Feb 2013 12:06:07 +0100
-Message-Id: <1360062367-15970-1-git-send-email-johannes@sipsolutions.net> (sfid-20130205_120550_522641_5234F940)
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [RFC] ath9k:  Detect and work-around tx-queue hang.
+Date: Thu, 21 Feb 2013 18:06:37 -0800
+Message-Id: <1361498797-14361-1-git-send-email-greearb@candelatech.com> (sfid-20130222_030703_997605_22BE6ABD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Intel Wireless devices are able to make a TCP connection
-after suspending, sending some data and waking up when
-the connection receives wakeup data (or breaks). Add the
-WoWLAN configuration and feature advertising API for it.
+We see TX lockups on ar9380 NICs when running 32 stations
+each with a 56kbps stream of MTU sized UDP packets.
+We see lockups on the AP and also on the station, seems
+random which hits first.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The test case further involves a programmable attenuator,
+and the attenuation is taken from -30 to -85 signal level
+in steps of 10db.  Each step runs for 1 minute before
+increasing the attenuation.  The problem normally
+shows up around signal level of -70 (noise is reported
+as around -95).
+
+When the lockup hits, it is typically on a single queue
+(BE).  The symptom is that there is no obvious transmit
+activity on that queue, the acq-depth and axq-ampdu-depth
+are zero, the queue is stopped, and the pending-frames is
+at or above the maximum allowed.  The VO queue continues
+to function, and RX logic functions fine.
+
+Just resetting the chip does not fix the problem:  The
+pending-frames usually stays at max.  So, this patch also
+adds hacks to force pending-frames to zero.  It also
+quietens some warnings about pending-frame underruns
+because sometimes, the tx status does appear many seconds
+later.
+
+Finally, the reset fixup code is logged at ath_err because
+I think everyone should be aware of events like this.
+
+We see the same problem with ath9k rate control and
+minstrel-ht.  We have not tested other ath9k chipsets
+in this manner.
+
+Small numbers of high-speed stations do not hit this
+problem, or at least not in our test cases.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- include/net/cfg80211.h       |  54 +++++++-
- include/uapi/linux/nl80211.h | 125 +++++++++++++++++++
- net/wireless/core.h          |   3 +
- net/wireless/nl80211.c       | 285 ++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 463 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath/ath9k/link.c  |   30 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
+ drivers/net/wireless/ath/ath9k/xmit.c  |   15 ++++++++++++++-
+ 4 files changed, 47 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c10d8b6..95181cc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -19,6 +19,7 @@
- #include <linux/nl80211.h>
- #include <linux/if_ether.h>
- #include <linux/ieee80211.h>
-+#include <linux/net.h>
- #include <net/regulatory.h>
- 
- /**
-@@ -1596,6 +1597,41 @@ struct cfg80211_wowlan_trig_pkt_pattern {
- };
- 
- /**
-+ * struct cfg80211_wowlan_tcp - TCP connection parameters
-+ *
-+ * @sock: (internal) socket for source port allocation (if needed)
-+ * @src: source IP address
-+ * @dst: destination IP address
-+ * @dst_mac: destination MAC address
-+ * @src_port: source port
-+ * @dst_port: destination port
-+ * @payload_len: data payload length
-+ * @payload: data payload buffer
-+ * @payload_seq: payload sequence stamping configuration
-+ * @data_interval: interval at which to send data packets
-+ * @wake_len: wakeup payload match length
-+ * @wake_data: wakeup payload match data
-+ * @wake_mask: wakeup payload match mask
-+ * @tokens_size: length of the tokens buffer
-+ * @payload_tok: payload token usage configuration
-+ */
-+struct cfg80211_wowlan_tcp {
-+	struct socket *sock;
-+	__be32 src, dst;
-+	u16 src_port, dst_port;
-+	u8 dst_mac[ETH_ALEN];
-+	int payload_len;
-+	const u8 *payload;
-+	struct nl80211_wowlan_tcp_data_seq payload_seq;
-+	u32 data_interval;
-+	u32 wake_len;
-+	const u8 *wake_data, *wake_mask;
-+	u32 tokens_size;
-+	/* must be last, variable member */
-+	struct nl80211_wowlan_tcp_data_token payload_tok;
-+};
-+
-+/**
-  * struct cfg80211_wowlan - Wake on Wireless-LAN support info
-  *
-  * This structure defines the enabled WoWLAN triggers for the device.
-@@ -1609,12 +1645,15 @@ struct cfg80211_wowlan_trig_pkt_pattern {
-  * @eap_identity_req: wake up on EAP identity request packet
-  * @four_way_handshake: wake up on 4-way handshake
-  * @rfkill_release: wake up when rfkill is released
-+ * @tcp: TCP connection establishment/wakeup parameters, see nl80211.h.
-+ *	NULL if not configured.
-  */
- struct cfg80211_wowlan {
- 	bool any, disconnect, magic_pkt, gtk_rekey_failure,
- 	     eap_identity_req, four_way_handshake,
- 	     rfkill_release;
- 	struct cfg80211_wowlan_trig_pkt_pattern *patterns;
-+	struct cfg80211_wowlan_tcp *tcp;
- 	int n_patterns;
- };
- 
-@@ -1634,11 +1673,15 @@ struct cfg80211_wowlan {
-  *	frame triggers an 802.3 frame should be reported, for
-  *	disconnect due to deauth 802.11 frame. This indicates which
-  *	it is.
-+ * @tcp_match: TCP wakeup packet received
-+ * @tcp_connlost: TCP connection lost or failed to establish
-+ * @tcp_nomoretokens: TCP data ran out of tokens
-  */
- struct cfg80211_wowlan_wakeup {
- 	bool disconnect, magic_pkt, gtk_rekey_failure,
- 	     eap_identity_req, four_way_handshake,
--	     rfkill_release, packet_80211;
-+	     rfkill_release, packet_80211,
-+	     tcp_match, tcp_connlost, tcp_nomoretokens;
- 	s32 pattern_idx;
- 	u32 packet_present_len, packet_len;
- 	const void *packet;
-@@ -2293,6 +2336,14 @@ enum wiphy_wowlan_support_flags {
- 	WIPHY_WOWLAN_RFKILL_RELEASE	= BIT(7),
- };
- 
-+struct wiphy_wowlan_tcp_support {
-+	const struct nl80211_wowlan_tcp_data_token_feature *tok;
-+	u32 data_payload_max;
-+	u32 data_interval_max;
-+	u32 wake_payload_max;
-+	bool seq;
-+};
-+
- /**
-  * struct wiphy_wowlan_support - WoWLAN support data
-  * @flags: see &enum wiphy_wowlan_support_flags
-@@ -2306,6 +2357,7 @@ struct wiphy_wowlan_support {
- 	int n_patterns;
- 	int pattern_max_len;
- 	int pattern_min_len;
-+	const struct wiphy_wowlan_tcp_support *tcp;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d8ed9f3..122e9fd 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3001,6 +3001,17 @@ struct nl80211_wowlan_pattern_support {
-  * @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023_LEN: Original length of the 802.3
-  *	packet, may be bigger than the @NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023
-  *	attribute if the packet was truncated somewhere.
-+ * @NL80211_WOWLAN_TRIG_TCP_CONNECTION: TCP connection wake, see DOC section
-+ *	"TCP connection wakeup" for more details. This is a nested attribute
-+ *	containing the exact information for establishing and keeping alive
-+ *	the TCP connection.
-+ * @NL80211_WOWLAN_TRIG_TCP_WAKEUP_MATCH: For wakeup reporting only, the
-+ *	wakeup packet was received on the TCP connection
-+ * @NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST: For wakeup reporting only, the
-+ *	TCP connection was lost or failed to be established
-+ * @NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS: For wakeup reporting only,
-+ *	the TCP connection ran out of tokens to use for data to send to the
-+ *	service
-  * @NUM_NL80211_WOWLAN_TRIG: number of wake on wireless triggers
-  * @MAX_NL80211_WOWLAN_TRIG: highest wowlan trigger attribute number
-  *
-@@ -3022,6 +3033,10 @@ enum nl80211_wowlan_triggers {
- 	NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211_LEN,
- 	NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023,
- 	NL80211_WOWLAN_TRIG_WAKEUP_PKT_8023_LEN,
-+	NL80211_WOWLAN_TRIG_TCP_CONNECTION,
-+	NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH,
-+	NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST,
-+	NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS,
- 
- 	/* keep last */
- 	NUM_NL80211_WOWLAN_TRIG,
-@@ -3029,6 +3044,116 @@ enum nl80211_wowlan_triggers {
- };
- 
- /**
-+ * DOC: TCP connection wakeup
-+ *
-+ * Some devices can establish a TCP connection in order to be woken up by a
-+ * packet coming in from outside their network segment, or behind NAT. If
-+ * configured, the device will establish a TCP connection to the given
-+ * service, and periodically send data to that service. The first data
-+ * packet is usually transmitted after SYN/ACK, also ACKing the SYN/ACK.
-+ * The data packets can optionally include a (little endian) sequence
-+ * number (in the TCP payload!) that is generated by the device, and, also
-+ * optionally, a token from a list of tokens. This serves as a keep-alive
-+ * with the service, and for NATed connections, etc.
-+ *
-+ * During this keep-alive period, the server doesn't send any data to the
-+ * client. When receiving data, it is compared against the wakeup pattern
-+ * (and mask) and if it matches, the host is woken up. Similarly, if the
-+ * connection breaks or cannot be established to start with, the host is
-+ * also woken up.
-+ *
-+ * Developer's note: ARP offload is required for this, otherwise TCP
-+ * response packets might not go through correctly.
-+ */
-+
-+/**
-+ * struct nl80211_wowlan_tcp_data_seq - WoWLAN TCP data sequence
-+ * @start: starting value
-+ * @offset: offset of sequence number in packet
-+ * @len: length of the sequence value to write, 1 through 4
-+ *
-+ * Note: don't confuse with the TCP sequence number(s), this is for the
-+ * keepalive packet payload. The actual value is written into the packet
-+ * in little endian.
-+ */
-+struct nl80211_wowlan_tcp_data_seq {
-+	__u32 start, offset, len;
-+};
-+
-+/**
-+ * struct nl80211_wowlan_tcp_data_token - WoWLAN TCP data token config
-+ * @offset: offset of token in packet
-+ * @len: length of each token
-+ * @token_stream: stream of data to be used for the tokens, the length must
-+ *	be a multiple of @len for this to make sense
-+ */
-+struct nl80211_wowlan_tcp_data_token {
-+	__u32 offset, len;
-+	__u8 token_stream[];
-+};
-+
-+/**
-+ * struct nl80211_wowlan_tcp_data_token_feature - data token features
-+ * @min_len: minimum token length
-+ * @max_len: maximum token length
-+ * @bufsize: total available token buffer size (max size of @token_stream)
-+ */
-+struct nl80211_wowlan_tcp_data_token_feature {
-+	__u32 min_len, max_len, bufsize;
-+};
-+
-+/**
-+ * enum nl80211_wowlan_tcp_attrs - WoWLAN TCP connection parameters
-+ * @__NL80211_WOWLAN_TCP_INVALID: invalid number for nested attributes
-+ * @NL80211_WOWLAN_TCP_SRC_IPV4: source IPv4 address (in network byte order)
-+ * @NL80211_WOWLAN_TCP_DST_IPV4: destination IPv4 address
-+ *	(in network byte order)
-+ * @NL80211_WOWLAN_TCP_DST_MAC: destination MAC address, this is given because
-+ *	route lookup when configured might be invalid by the time we suspend,
-+ *	and doing a route lookup when suspending is no longer possible as it
-+ *	might require ARP querying.
-+ * @NL80211_WOWLAN_TCP_SRC_PORT: source port (u16); optional, if not given a
-+ *	socket and port will be allocated
-+ * @NL80211_WOWLAN_TCP_DST_PORT: destination port (u16)
-+ * @NL80211_WOWLAN_TCP_DATA_PAYLOAD: data packet payload, at least one byte.
-+ *	For feature advertising, a u32 attribute holding the maximum length
-+ *	of the data payload.
-+ * @NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ: data packet sequence configuration
-+ *	(if desired), a &struct nl80211_wowlan_tcp_data_seq. For feature
-+ *	advertising it is just a flag
-+ * @NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN: data packet token configuration,
-+ *	see &struct nl80211_wowlan_tcp_data_token and for advertising see
-+ *	&struct nl80211_wowlan_tcp_data_token_feature.
-+ * @NL80211_WOWLAN_TCP_DATA_INTERVAL: data interval in seconds, maximum
-+ *	interval in feature advertising (u32)
-+ * @NL80211_WOWLAN_TCP_WAKE_PAYLOAD: wake packet payload, for advertising a
-+ *	u32 attribute holding the maximum length
-+ * @NL80211_WOWLAN_TCP_WAKE_MASK: Wake packet payload mask, not used for
-+ *	feature advertising. The mask works like @NL80211_WOWLAN_PKTPAT_MASK
-+ *	but on the TCP payload only.
-+ * @NUM_NL80211_WOWLAN_TCP: number of TCP attributes
-+ * @MAX_NL80211_WOWLAN_TCP: highest attribute number
-+ */
-+enum nl80211_wowlan_tcp_attrs {
-+	__NL80211_WOWLAN_TCP_INVALID,
-+	NL80211_WOWLAN_TCP_SRC_IPV4,
-+	NL80211_WOWLAN_TCP_DST_IPV4,
-+	NL80211_WOWLAN_TCP_DST_MAC,
-+	NL80211_WOWLAN_TCP_SRC_PORT,
-+	NL80211_WOWLAN_TCP_DST_PORT,
-+	NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+	NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ,
-+	NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
-+	NL80211_WOWLAN_TCP_DATA_INTERVAL,
-+	NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
-+	NL80211_WOWLAN_TCP_WAKE_MASK,
-+
-+	/* keep last */
-+	NUM_NL80211_WOWLAN_TCP,
-+	MAX_NL80211_WOWLAN_TCP = NUM_NL80211_WOWLAN_TCP - 1
-+};
-+
-+/**
-  * enum nl80211_iface_limit_attrs - limit attributes
-  * @NL80211_IFACE_LIMIT_UNSPEC: (reserved)
-  * @NL80211_IFACE_LIMIT_MAX: maximum number of interfaces that
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 37d70dc..949c957 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -108,6 +108,9 @@ cfg80211_rdev_free_wowlan(struct cfg80211_registered_device *rdev)
- 	for (i = 0; i < rdev->wowlan->n_patterns; i++)
- 		kfree(rdev->wowlan->patterns[i].mask);
- 	kfree(rdev->wowlan->patterns);
-+	if (rdev->wowlan->tcp && rdev->wowlan->tcp->sock)
-+		sock_release(rdev->wowlan->tcp->sock);
-+	kfree(rdev->wowlan->tcp);
- 	kfree(rdev->wowlan);
- }
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d66b056..1c89723 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -19,6 +19,7 @@
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
- #include <net/sock.h>
-+#include <net/inet_connection_sock.h>
- #include "core.h"
- #include "nl80211.h"
- #include "reg.h"
-@@ -399,6 +400,26 @@ nl80211_wowlan_policy[NUM_NL80211_WOWLAN_TRIG] = {
- 	[NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST] = { .type = NLA_FLAG },
- 	[NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE] = { .type = NLA_FLAG },
- 	[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
-+	[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
-+};
-+
-+static const struct nla_policy
-+nl80211_wowlan_tcp_policy[NUM_NL80211_WOWLAN_TCP] = {
-+	[NL80211_WOWLAN_TCP_SRC_IPV4] = { .type = NLA_U32 },
-+	[NL80211_WOWLAN_TCP_DST_IPV4] = { .type = NLA_U32 },
-+	[NL80211_WOWLAN_TCP_DST_MAC] = { .len = ETH_ALEN },
-+	[NL80211_WOWLAN_TCP_SRC_PORT] = { .type = NLA_U16 },
-+	[NL80211_WOWLAN_TCP_DST_PORT] = { .type = NLA_U16 },
-+	[NL80211_WOWLAN_TCP_DATA_PAYLOAD] = { .len = 1 },
-+	[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ] = {
-+		.len = sizeof(struct nl80211_wowlan_tcp_data_seq)
-+	},
-+	[NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN] = {
-+		.len = sizeof(struct nl80211_wowlan_tcp_data_token)
-+	},
-+	[NL80211_WOWLAN_TCP_DATA_INTERVAL] = { .type = NLA_U32 },
-+	[NL80211_WOWLAN_TCP_WAKE_PAYLOAD] = { .len = 1 },
-+	[NL80211_WOWLAN_TCP_WAKE_MASK] = { .len = 1 },
- };
- 
- /* policy for GTK rekey offload attributes */
-@@ -884,6 +905,48 @@ nla_put_failure:
- 	return -ENOBUFS;
- }
- 
-+#ifdef CONFIG_PM
-+static int nl80211_send_wowlan_tcp_caps(struct cfg80211_registered_device *rdev,
-+					struct sk_buff *msg)
-+{
-+	const struct wiphy_wowlan_tcp_support *tcp = rdev->wiphy.wowlan.tcp;
-+	struct nlattr *nl_tcp;
-+
-+	if (!tcp)
-+		return 0;
-+
-+	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
-+	if (!nl_tcp)
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+			tcp->data_payload_max))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+			tcp->data_payload_max))
-+		return -ENOBUFS;
-+
-+	if (tcp->seq && nla_put_flag(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ))
-+		return -ENOBUFS;
-+
-+	if (tcp->tok && nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
-+				sizeof(*tcp->tok), tcp->tok))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
-+			tcp->data_interval_max))
-+		return -ENOBUFS;
-+
-+	if (nla_put_u32(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
-+			tcp->wake_payload_max))
-+		return -ENOBUFS;
-+
-+	nla_nest_end(msg, nl_tcp);
-+	return 0;
-+}
-+#endif
-+
- static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flags,
- 			      struct cfg80211_registered_device *dev)
- {
-@@ -1256,6 +1319,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 				goto nla_put_failure;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d7897dcf..cc8d560 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -194,6 +194,7 @@ struct ath_txq {
+ 	u32 axq_ampdu_depth;
+ 	bool stopped;
+ 	bool axq_tx_inprogress;
++	bool clear_pending_frames_on_flush;
+ 	struct list_head axq_acq;
+ 	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
+ 	u8 txq_headidx;
+@@ -684,6 +685,7 @@ struct ath_softc {
+ 	u16 curtxpow;
+ 	bool ps_enabled;
+ 	bool ps_idle;
++	bool reset_force_noretry;
+ 	short nbcnvifs;
+ 	short nvifs;
+ 	unsigned long ps_usecount;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 7b88b9c..b59565c 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -38,18 +38,44 @@ void ath_tx_complete_poll_work(struct work_struct *work)
+ 			if (txq->axq_depth) {
+ 				if (txq->axq_tx_inprogress) {
+ 					needreset = true;
++					ath_err(ath9k_hw_common(sc->sc_ah),
++						"tx hung, queue: %i axq-depth: %i, ampdu-depth: %i resetting the chip\n",
++						i, txq->axq_depth,
++						txq->axq_ampdu_depth);
+ 					ath_txq_unlock(sc, txq);
+ 					break;
+ 				} else {
+ 					txq->axq_tx_inprogress = true;
+ 				}
++			} else {
++				/* Check for software TX hang.  It seems
++				 * sometimes pending-frames is not properly
++				 * decremented, and the tx queue hangs.
++				 * Considered hung if:  axq-depth is zero,
++				 *  ampdu-depth is zero, queue-is-stopped,
++				 *  and we have pending frames.
++				 */
++				if (txq->stopped &&
++				    (txq->axq_ampdu_depth == 0) &&
++				    (txq->pending_frames > 0)) {
++					if (txq->axq_tx_inprogress) {
++						ath_err(ath9k_hw_common(sc->sc_ah),
++							"soft tx hang: queue: %i pending-frames: %i, resetting chip\n",
++							i, txq->pending_frames);
++						needreset = true;
++						txq->clear_pending_frames_on_flush = true;
++						sc->reset_force_noretry = true;
++						ath_txq_unlock(sc, txq);
++						break;
++					} else {
++						txq->axq_tx_inprogress = true;
++					}
++				}
+ 			}
+ 			ath_txq_unlock_complete(sc, txq);
  		}
  
-+		if (nl80211_send_wowlan_tcp_caps(dev, msg))
-+			goto nla_put_failure;
-+
- 		nla_nest_end(msg, nl_wowlan);
+ 	if (needreset) {
+-		ath_dbg(ath9k_hw_common(sc->sc_ah), RESET,
+-			"tx hung, resetting the chip\n");
+ 		ath9k_queue_reset(sc, RESET_TYPE_TX_HANG);
+ 		return;
  	}
- #endif
-@@ -6902,16 +6968,67 @@ static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
- }
- 
- #ifdef CONFIG_PM
-+static int nl80211_send_wowlan_tcp(struct sk_buff *msg,
-+				   struct cfg80211_wowlan_tcp *tcp)
-+{
-+	struct nlattr *nl_tcp;
-+
-+	if (!tcp)
-+		return 0;
-+
-+	nl_tcp = nla_nest_start(msg, NL80211_WOWLAN_TRIG_TCP_CONNECTION);
-+	if (!nl_tcp)
-+		return -ENOBUFS;
-+
-+	if (nla_put_be32(msg, NL80211_WOWLAN_TCP_SRC_IPV4, tcp->src) ||
-+	    nla_put_be32(msg, NL80211_WOWLAN_TCP_DST_IPV4, tcp->dst) ||
-+	    nla_put(msg, NL80211_WOWLAN_TCP_DST_MAC, ETH_ALEN, tcp->dst_mac) ||
-+	    nla_put_u16(msg, NL80211_WOWLAN_TCP_SRC_PORT, tcp->src_port) ||
-+	    nla_put_u16(msg, NL80211_WOWLAN_TCP_DST_PORT, tcp->dst_port) ||
-+	    nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD,
-+		    tcp->payload_len, tcp->payload) ||
-+	    nla_put_u32(msg, NL80211_WOWLAN_TCP_DATA_INTERVAL,
-+			tcp->data_interval) ||
-+	    nla_put(msg, NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
-+		    tcp->wake_len, tcp->wake_data) ||
-+	    nla_put(msg, NL80211_WOWLAN_TCP_WAKE_MASK,
-+		    DIV_ROUND_UP(tcp->wake_len, 8), tcp->wake_mask))
-+		return -ENOBUFS;
-+
-+	if (tcp->payload_seq.len &&
-+	    nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ,
-+		    sizeof(tcp->payload_seq), &tcp->payload_seq))
-+		return -ENOBUFS;
-+
-+	if (tcp->payload_tok.len &&
-+	    nla_put(msg, NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN,
-+		    sizeof(tcp->payload_tok) + tcp->tokens_size,
-+		    &tcp->payload_tok))
-+		return -ENOBUFS;
-+
-+	return 0;
-+}
-+
- static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5c8758d..0de0e50 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -587,8 +587,9 @@ void ath9k_queue_reset(struct ath_softc *sc, enum ath_reset_type type)
+ void ath_reset_work(struct work_struct *work)
  {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct sk_buff *msg;
- 	void *hdr;
-+	u32 size = NLMSG_DEFAULT_SIZE;
- 
--	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns)
-+	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns &&
-+	    !rdev->wiphy.wowlan.tcp)
- 		return -EOPNOTSUPP;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (rdev->wowlan && rdev->wowlan->tcp) {
-+		/* adjust size to have room for all the data */
-+		size += rdev->wowlan->tcp->tokens_size +
-+			rdev->wowlan->tcp->payload_len +
-+			rdev->wowlan->tcp->wake_len +
-+			rdev->wowlan->tcp->wake_len / 8;
-+	}
-+
-+	msg = nlmsg_new(size, GFP_KERNEL);
- 	if (!msg)
- 		return -ENOMEM;
- 
-@@ -6968,6 +7085,9 @@ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
- 			nla_nest_end(msg, nl_pats);
- 		}
- 
-+		if (nl80211_send_wowlan_tcp(msg, rdev->wowlan->tcp))
-+			goto nla_put_failure;
-+
- 		nla_nest_end(msg, nl_wowlan);
- 	}
- 
-@@ -6979,6 +7099,142 @@ nla_put_failure:
- 	return -ENOBUFS;
+ 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
+-
+-	ath_reset(sc, true);
++	bool retry_tx = !sc->reset_force_noretry;
++	sc->reset_force_noretry = false;
++	ath_reset(sc, retry_tx);
  }
  
-+static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
-+				    struct nlattr *attr,
-+				    struct cfg80211_wowlan *trig)
-+{
-+	struct nlattr *tb[NUM_NL80211_WOWLAN_TCP];
-+	struct cfg80211_wowlan_tcp *cfg;
-+	struct nl80211_wowlan_tcp_data_token *tok = NULL;
-+	struct nl80211_wowlan_tcp_data_seq *seq = NULL;
-+	u32 size;
-+	u32 data_size, wake_size, tokens_size = 0, wake_mask_size;
-+	int err;
-+
-+	if (!rdev->wiphy.wowlan.tcp)
-+		return -EINVAL;
-+
-+	err = nla_parse(tb, MAX_NL80211_WOWLAN_TCP,
-+			nla_data(attr), nla_len(attr),
-+			nl80211_wowlan_tcp_policy);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_WOWLAN_TCP_SRC_IPV4] ||
-+	    !tb[NL80211_WOWLAN_TCP_DST_IPV4] ||
-+	    !tb[NL80211_WOWLAN_TCP_DST_MAC] ||
-+	    !tb[NL80211_WOWLAN_TCP_DST_PORT] ||
-+	    !tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD] ||
-+	    !tb[NL80211_WOWLAN_TCP_DATA_INTERVAL] ||
-+	    !tb[NL80211_WOWLAN_TCP_WAKE_PAYLOAD] ||
-+	    !tb[NL80211_WOWLAN_TCP_WAKE_MASK])
-+		return -EINVAL;
-+
-+	data_size = nla_len(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD]);
-+	if (data_size > rdev->wiphy.wowlan.tcp->data_payload_max)
-+		return -EINVAL;
-+
-+	if (nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]) >
-+			rdev->wiphy.wowlan.tcp->data_interval_max)
-+		return -EINVAL;
-+
-+	wake_size = nla_len(tb[NL80211_WOWLAN_TCP_WAKE_PAYLOAD]);
-+	if (wake_size > rdev->wiphy.wowlan.tcp->wake_payload_max)
-+		return -EINVAL;
-+
-+	wake_mask_size = nla_len(tb[NL80211_WOWLAN_TCP_WAKE_MASK]);
-+	if (wake_mask_size != DIV_ROUND_UP(wake_size, 8))
-+		return -EINVAL;
-+
-+	if (tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN]) {
-+		u32 tokln = nla_len(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN]);
-+
-+		tok = nla_data(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_TOKEN]);
-+		tokens_size = tokln - sizeof(*tok);
-+
-+		if (!tok->len || tokens_size % tok->len)
-+			return -EINVAL;
-+		if (!rdev->wiphy.wowlan.tcp->tok)
-+			return -EINVAL;
-+		if (tok->len > rdev->wiphy.wowlan.tcp->tok->max_len)
-+			return -EINVAL;
-+		if (tok->len < rdev->wiphy.wowlan.tcp->tok->min_len)
-+			return -EINVAL;
-+		if (tokens_size > rdev->wiphy.wowlan.tcp->tok->bufsize)
-+			return -EINVAL;
-+		if (tok->offset + tok->len > data_size)
-+			return -EINVAL;
+ /**********************/
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 741918a..093c77e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1543,6 +1543,15 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) && !retry_tx)
+ 		ath_txq_drain_pending_buffers(sc, txq);
+ 
++	if (txq->clear_pending_frames_on_flush && (txq->pending_frames != 0)) {
++		ath_err(ath9k_hw_common(sc->sc_ah),
++			"Pending frames still exist on txq: %i after drain: %i  axq-depth: %i  ampdu-depth: %i\n",
++			txq->mac80211_qnum, txq->pending_frames, txq->axq_depth,
++			txq->axq_ampdu_depth);
++		txq->pending_frames = 0;
 +	}
++	txq->clear_pending_frames_on_flush = false;
 +
-+	if (tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ]) {
-+		seq = nla_data(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD_SEQ]);
-+		if (!rdev->wiphy.wowlan.tcp->seq)
-+			return -EINVAL;
-+		if (seq->len == 0 || seq->len > 4)
-+			return -EINVAL;
-+		if (seq->len + seq->offset > data_size)
-+			return -EINVAL;
-+	}
-+
-+	size = sizeof(*cfg);
-+	size += data_size;
-+	size += wake_size + wake_mask_size;
-+	size += tokens_size;
-+
-+	cfg = kzalloc(size, GFP_KERNEL);
-+	if (!cfg)
-+		return -ENOMEM;
-+	cfg->src = nla_get_be32(tb[NL80211_WOWLAN_TCP_SRC_IPV4]);
-+	cfg->dst = nla_get_be32(tb[NL80211_WOWLAN_TCP_DST_IPV4]);
-+	memcpy(cfg->dst_mac, nla_data(tb[NL80211_WOWLAN_TCP_DST_MAC]),
-+	       ETH_ALEN);
-+	if (tb[NL80211_WOWLAN_TCP_SRC_PORT]) {
-+		cfg->src_port = nla_get_u16(tb[NL80211_WOWLAN_TCP_SRC_PORT]);
-+	} else {
-+		/* allocate a socket and port for it and use it */
-+		err = __sock_create(wiphy_net(&rdev->wiphy), PF_INET, SOCK_STREAM,
-+				    IPPROTO_TCP, &cfg->sock, 1);
-+		if (err) {
-+			kfree(cfg);
-+			return err;
+ 	ath_txq_unlock_complete(sc, txq);
+ }
+ 
+@@ -2066,8 +2075,12 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	q = skb_get_queue_mapping(skb);
+ 	if (txq == sc->tx.txq_map[q]) {
+-		if (WARN_ON(--txq->pending_frames < 0))
++		if (--txq->pending_frames < 0) {
++			if (net_ratelimit())
++				ath_err(common, "txq: %p had negative pending_frames, q: %i\n",
++					txq, q);
+ 			txq->pending_frames = 0;
 +		}
-+		if (inet_csk_get_port(cfg->sock->sk, 0)) {
-+			sock_release(cfg->sock);
-+			kfree(cfg);
-+			return -ENOSPC;
-+		}
-+		cfg->src_port = inet_sk(cfg->sock->sk)->inet_num;
-+		printk(KERN_DEBUG "allocated socket with port %d\n", cfg->src_port);
-+	}
-+	cfg->dst_port = nla_get_u16(tb[NL80211_WOWLAN_TCP_DST_PORT]);
-+	cfg->payload_len = data_size;
-+	cfg->payload = (u8 *)cfg + sizeof(*cfg) + tokens_size;
-+	memcpy((void *)cfg->payload,
-+	       nla_data(tb[NL80211_WOWLAN_TCP_DATA_PAYLOAD]),
-+	       data_size);
-+	if (seq)
-+		cfg->payload_seq = *seq;
-+	cfg->data_interval = nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]);
-+	cfg->wake_len = wake_size;
-+	cfg->wake_data = (u8 *)cfg + sizeof(*cfg) + tokens_size + data_size;
-+	memcpy((void *)cfg->wake_data,
-+	       nla_data(tb[NL80211_WOWLAN_TCP_WAKE_PAYLOAD]),
-+	       wake_size);
-+	cfg->wake_mask = (u8 *)cfg + sizeof(*cfg) + tokens_size +
-+			 data_size + wake_size;
-+	memcpy((void *)cfg->wake_mask,
-+	       nla_data(tb[NL80211_WOWLAN_TCP_WAKE_MASK]),
-+	       wake_mask_size);
-+	if (tok) {
-+		cfg->tokens_size = tokens_size;
-+		memcpy(&cfg->payload_tok, tok, sizeof(*tok) + tokens_size);
-+	}
-+
-+	trig->tcp = cfg;
-+
-+	return 0;
-+}
-+
- static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -6989,7 +7245,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 	int err, i;
- 	bool prev_enabled = rdev->wowlan;
  
--	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns)
-+	if (!rdev->wiphy.wowlan.flags && !rdev->wiphy.wowlan.n_patterns &&
-+	    !rdev->wiphy.wowlan.tcp)
- 		return -EOPNOTSUPP;
- 
- 	if (!info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]) {
-@@ -7107,6 +7364,14 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
-+	if (tb[NL80211_WOWLAN_TRIG_TCP_CONNECTION]) {
-+		err = nl80211_parse_wowlan_tcp(
-+			rdev, tb[NL80211_WOWLAN_TRIG_TCP_CONNECTION],
-+			&new_triggers);
-+		if (err)
-+			goto error;
-+	}
-+
- 	ntrig = kmemdup(&new_triggers, sizeof(new_triggers), GFP_KERNEL);
- 	if (!ntrig) {
- 		err = -ENOMEM;
-@@ -7124,6 +7389,9 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
- 	for (i = 0; i < new_triggers.n_patterns; i++)
- 		kfree(new_triggers.patterns[i].mask);
- 	kfree(new_triggers.patterns);
-+	if (new_triggers.tcp && new_triggers.tcp->sock)
-+		sock_release(new_triggers.tcp->sock);
-+	kfree(new_triggers.tcp);
- 	return err;
- }
- #endif
-@@ -9405,6 +9673,17 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
- 				wakeup->pattern_idx))
- 			goto free_msg;
- 
-+		if (wakeup->tcp_match)
-+			nla_put_flag(msg, NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH);
-+
-+		if (wakeup->tcp_connlost)
-+			nla_put_flag(msg,
-+				     NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST);
-+
-+		if (wakeup->tcp_nomoretokens)
-+			nla_put_flag(msg,
-+				NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS);
-+
- 		if (wakeup->packet) {
- 			u32 pkt_attr = NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211;
- 			u32 len_attr = NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211_LEN;
+ 		if (txq->stopped &&
+ 		    txq->pending_frames < sc->tx.txq_max_pending[q]) {
 -- 
-1.8.0
+1.7.3.4
 
