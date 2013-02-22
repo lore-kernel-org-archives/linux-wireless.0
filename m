@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52150 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934590Ab3BTUJy (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26456 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755306Ab3BVOul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 15:09:54 -0500
-Message-ID: <1361390977.8579.11.camel@jlt4.sipsolutions.net> (sfid-20130220_211006_641474_0A048A7C)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 20 Feb 2013 21:09:37 +0100
-In-Reply-To: <1361373064.19353.180.camel@edumazet-glaptop> (sfid-20130220_161110_395796_DBAC0744)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C) <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-	 <1361290909.19353.140.camel@edumazet-glaptop>
-	 (sfid-20130219_172155_748777_C3ED0F5E) <1361351538.8629.3.camel@jlt4.sipsolutions.net>
-	 (sfid-20130220_101252_930264_DBD3955C) <1361351703.8629.5.camel@jlt4.sipsolutions.net>
-	 <1361373064.19353.180.camel@edumazet-glaptop>
-	 (sfid-20130220_161110_395796_DBAC0744)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Feb 2013 09:50:41 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH v2 4/5] ath6kl: Remove NETDEV_REGISTERED flag
+Date: Fri, 22 Feb 2013 20:20:33 +0530
+Message-ID: <1361544633-9015-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130222_155044_627474_3C82CEE5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 07:11 -0800, Eric Dumazet wrote:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
-> index a4eed20..77a3ee3 100644
-> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-> @@ -750,7 +750,12 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
->  	/* Dont use dev_alloc_skb(), we'll have enough headroom once
->  	 * ieee80211_hdr pulled.
->  	 */
-> -	skb = alloc_skb(128, GFP_ATOMIC);
-> +	fraglen = 128;
-> +	/* if we use order-1 pages, copy to get better TCP performance */
-> +	if (rxb->truesize > PAGE_SIZE)
-> +		fraglen = max_t(unsigned, fraglen, len);
+Currently its no where used.
 
-Btw, shouldn't this rather be something like
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 -
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 -
+ 2 files changed, 2 deletions(-)
 
-if (rxb->truesize > PAGE_SIZE && len < SKB_WITH_OVERHEAD(PAGE_SIZE))
-
-to avoid allocating large SKBs in the case that this actually is a big
-8k A-MSDU? That wouldn't be given to the TCP RX path anyway because
-mac80211 will split the A-MSDU into MSDUs and memcpy along the way.
-
-Anyway we're preparing a patch for 4k A-MSDU (which is really just
-something like 3782 bytes or something).
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 227fc43..e065c24 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3667,7 +3667,6 @@ struct wireless_dev *ath6kl_interface_add(struct ath6kl *ar, const char *name,
+ 	vif->sme_state = SME_DISCONNECTED;
+ 	set_bit(WLAN_ENABLED, &vif->flags);
+ 	ar->wlan_pwr_state = WLAN_POWER_STATE_ON;
+-	set_bit(NETDEV_REGISTERED, &vif->flags);
+ 
+ 	if (type == NL80211_IFTYPE_ADHOC)
+ 		ar->ibss_if_active = true;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 61b2f98..1c9ed40 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -560,7 +560,6 @@ enum ath6kl_vif_state {
+ 	WMM_ENABLED,
+ 	NETQ_STOPPED,
+ 	DTIM_EXPIRED,
+-	NETDEV_REGISTERED,
+ 	CLEAR_BSSFILTER_ON_BEACON,
+ 	DTIM_PERIOD_AVAIL,
+ 	WLAN_ENABLED,
+-- 
+1.7.9.5
 
