@@ -1,101 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758813Ab3BKUpc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60389 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756329Ab3BVUgj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 15:45:32 -0500
-Date: Mon, 11 Feb 2013 15:33:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.9] NFC pull request
-Message-ID: <20130211203308.GE10986@tuxdriver.com> (sfid-20130211_214536_726643_AE5119D2)
-References: <20130208132335.GB20996@sortiz-mobl>
- <20130208194324.GI2116@tuxdriver.com>
- <20130211180159.GY20996@sortiz-mobl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130211180159.GY20996@sortiz-mobl>
+	Fri, 22 Feb 2013 15:36:39 -0500
+Message-ID: <1361565394.3420.17.camel@jlt4.sipsolutions.net> (sfid-20130222_213643_023037_9CD1475B)
+Subject: Re: [PATCH] cfg80211: Extend support for IEEE 802.11r Fast BSS
+ Transition
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 22 Feb 2013 21:36:34 +0100
+In-Reply-To: <20130221060843.GA24491@w1.fi>
+References: <20130221060843.GA24491@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 11, 2013 at 07:01:59PM +0100, Samuel Ortiz wrote:
-> Hi John,
-> 
-> On Fri, Feb 08, 2013 at 02:43:25PM -0500, John W. Linville wrote:
-> > On Fri, Feb 08, 2013 at 02:23:35PM +0100, Samuel Ortiz wrote:
-> > > Hi John,
-> > > 
-> > > This is the second NFC pull request for 3.9.
-> > > 
-> > > We have:
-> > > 
-> > > - A few pn533 fixes on top of Waldemar refactorization of the driver, one of
-> > >   them fixes target mode.
-> > > 
-> > > - A new driver for Inside Secure microread chipset. It supports two
-> > >   physical layers: i2c and MEI. The MEI one depends on a patchset that's
-> > >   been sent to Greg Kroah-Hartman for inclusion into the 3.9 kernel [1]. The
-> > >   dependency is a KConfig one which means this code is not buildable as long
-> > >   as the MEI API is not usptream.
-> > > 
-> > > Thanks in advance for pulling them in.
-> > > 
-> > > [1] https://lkml.org/lkml/2013/2/8/165
-> > > 
-> > > 
-> > > The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
-> > > 
-> > >   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
-> > > 
-> > > are available in the git repository at:
-> > > 
-> > > 
-> > >   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-2
-> > > 
-> > > for you to fetch changes up to 52f2eaeec11c16c219f0e99b8496fbba86889830:
-> > > 
-> > >   NFC: pn533: Fix target polling mode (2013-02-08 12:18:48 +0100)
-> > 
-> > Pulling now...
-> The MEI bus API got some more comments from Greg Kroah-Hartman and got
-> slightly changed. I fixed it up in my tree, and below is a pull request for
-> getting this single patch. Please let me know if you want me to send the patch
-> through email instead.
-> 
-> 
-> The following changes since commit 8708aac79e4572ba673d7a21e94ddca9f3abb7fc:
-> 
->   rtlwifi: rtl8192cu: Add new USB ID (2013-02-08 14:51:43 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-3
-> 
-> for you to fetch changes up to cd48d8ba149484c4723a2b75159deeb83f3d2273:
-> 
->   NFC: microread: Fix mei physical layer (2013-02-11 18:35:36 +0100)
-> 
-> ----------------------------------------------------------------
-> This 3rd NFC pull request for 3.9 contains a fix for the microread MEI
-> physical layer support, as the MEI bus API changed.
-> 
-> From the MEI code, we now pass the MEI id back to the driver probe routine,
-> and we also pass a name and a MEI id table through the mei_bus_driver
-> structure. A few renames as well like e.g. mei_bus_driver to mei_driver or
-> mei_bus_client to mei_device in order to be closer to the driver model
-> practices.
-> 
-> ----------------------------------------------------------------
-> Samuel Ortiz (1):
->       NFC: microread: Fix mei physical layer
-> 
->  drivers/nfc/microread/mei.c |   43 ++++++++++++++++++++++++-------------------
->  1 file changed, 24 insertions(+), 19 deletions(-)
+On Wed, 2013-02-20 at 22:08 -0800, Jouni Malinen wrote:
 
-Pulling now...
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> +int cfg80211_ft_event(struct net_device *dev,
+> +                     struct cfg80211_ft_event_params *ft_event);
+
+Is the return value really very useful?
+
+
+> +static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct cfg80211_update_ft_ies_params ft_params;
+> +	struct net_device *dev = info->user_ptr[1];
+> +
+> +	if (!rdev->ops->update_ft_ies)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (!info->attrs[NL80211_ATTR_MDID] || !info->attrs[NL80211_ATTR_IE])
+> +		return -EINVAL;
+> +
+> +	memset(&ft_params, 0, sizeof(ft_params));
+> +	ft_params.md = nla_get_u16(info->attrs[NL80211_ATTR_MDID]);
+> +	ft_params.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+> +	ft_params.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+
+Should this use is_valid_ie_attr()?
+
+> +int cfg80211_ft_event(struct net_device *dev,
+> +                     struct cfg80211_ft_event_params *ft_event)
+> +{
+> +       struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
+> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+> +
+> +       return nl80211_ft_event(rdev, dev, ft_event);
+> +}
+> +EXPORT_SYMBOL(cfg80211_ft_event);
+
+FWIW, I don't really see the need to have separate functions. I know we
+have a whole bunch like that, but I think I'm just going to remove them
+now. There's really no point, nl80211 and cfg80211 are two sides of the
+same thing, I'd just put the cfg80211_ function into nl80211.c
+
+
+> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_FT_EVENT);
+> +	if (!hdr) {
+> +		nlmsg_free(msg);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+> +	nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
+> +	if (ft_event->target_ap)
+> +		nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, ft_event->target_ap);
+
+Would that really be valid without a new BSSID? That seems a bit odd.
+
+johannes
+
