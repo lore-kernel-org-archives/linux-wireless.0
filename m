@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55040 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab3BGLHb (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:1214 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757099Ab3BVNcz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 06:07:31 -0500
-Message-ID: <1360235268.8038.8.camel@jlt4.sipsolutions.net> (sfid-20130207_120738_769676_56A181B9)
-Subject: Re: [PATCHv8 1/3] nl80211/cfg80211: add radar detection
- command/event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, victorg@ti.com,
-	linville@tuxdriver.com, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian@freebsd.org, j@w1.fi,
-	coelho@ti.com, igalc@ti.com, nbd@nbd.name,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 07 Feb 2013 12:07:48 +0100
-In-Reply-To: <20130207110047.GA26957@pandem0nium>
-References: <1359982200-2321-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1359982200-2321-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1360171448.7910.43.camel@jlt4.sipsolutions.net>
-	 <20130207110047.GA26957@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 22 Feb 2013 08:32:55 -0500
+From: "Piotr Haber" <phaber@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
+ coexistence mode
+Date: Fri, 22 Feb 2013 13:32:23 +0000
+Message-ID: <53E0CDA8188165468B8B837459C34CA901053EEA@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20130222_143302_006875_F3E66BB8)
+References: <1361524092-4814-1-git-send-email-phaber@broadcom.com>
+ <1361524092-4814-2-git-send-email-phaber@broadcom.com> (
+ sfid-20130222_100804_524805_03F665CB),<1361533924.8146.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1361533924.8146.5.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 12:00 +0100, Simon Wunderlich wrote:
+>> From: Johannes Berg [johannes@sipsolutions.net]
+>> Sent: Friday, February 22, 2013 12:52 PM
+>> To: Piotr Haber
+>> Cc: linux-wireless@vger.kernel.org
+>> Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth coexistence mode
 
-> > > + * @IEEE80211_DFS_USABLE: The channel can be used, but channel availability
-> > > + *	check (CAC) must be performed before using it for AP or IBSS.
-> > > + * @IEEE80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
-> > > + *	is therefore marked as not available.
-> > > + * @IEEE80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
-> > > + */
-> > > +
-> > > +enum nl80211_dfs_state {
-> > > +	NL80211_DFS_USABLE	= 0,
-> > 
-> > I don't really see a reason for explicit values?
-> > 
-> 
-> You've suggested explicit values yourself last time [1], or did I misunderstand?
-> 
-> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/103278
-> "Should UNAVAILABLE be = 0, so that's the default?" (usable should be the default, btw)
+>On Fri, 2013-02-22 at 10:08 +0100, Piotr Haber wrote:
+>> Some devices share antenna/analog front end between Wifi
+>> and Bluetooth. The hardware coexistence interface allows
+>> them to do so, but there are situations when it would
+>> be beneficial if software had a way to have influence on it
+>> as well. It can be used to protect time sensitive
+>> traffic in presence of Bluetooth voice stream,
+>> for an example EAPOL handshake or DHCP negotiation.
+>>
+>> This patch adds new attribute to SET_WIPHY command
+>> and a new field in struct wiphy to allow control of the
+>> coexistence behavior. Devices that do not share resources
+>> with Bluetooth can ignore this parameter.
 
-Ah, no that was a misunderstanding then. Maybe it would've been clearer
-if I'd said "Should UNAVAILABLE be first (=0), so that's the default?"
-But if usable should be the default, that should be first. Anyway I
-don't care much, we do rely on this enum behaviour a lot though so I
-don't think we need explicit values.
+> Apart from a few minor technical comments that I'll omit for now, I'm
+> not sure what value this really has? EAPOL can already be "protected" by
+> way of knowing when the station is marked authorized, and DHCP is pretty
+> tricky because it could take "forever", might not be there at all, etc.
+By "protect" I meant give Wifi a priority over BT so these time sensitive things 
+can finish quicker/on first try, limiting the possibility of dropping packets because of BT 
+using the medium.
+This is supposed to be temporary and time limited, so if say DHCP finishes in the window 
+we give it - great, if not the coexistence goes back to default behavior and Wifi traffic is
+treated as usual. 
 
-> I've just moved this magic function from scan.c to core.h because I need it too.
-> It appears another driver (drivers/net/wireless/ipw2x00) also implements this
-> privately. We can suggest this patch for include/linux/jiffies.h if you prefer.
+> What application would actually call this? I don't really see how it
+> could be integrated like that.
+For EAPOL wpa_supplicant might use it. For DHCP it could be used from enter/exit hooks
+via iw or some other utility able to send nl messages.
 
-Maybe better do it afterwards, unless you don't mind waiting another few
-months...? :)
+This feature is styled after Android one.
+There a Wifi state machine tries to "protect" DHCP traffic.
+It uses extra wpa_supplicant command (DRIVER) with linked driver specific library.
+Which means there can be only one wifi device and one needs to recompile wpa_supplicant 
+to use another.
+I wanted to make it more device independent.
 
-johannes
+Piotr
+
+
+
 
