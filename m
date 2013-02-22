@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:59797 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755915Ab3BEBBT (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:59558 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754997Ab3BVEut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 20:01:19 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Mon, 4 Feb 2013 16:58:49 -0800
-Subject: RE: [PATCH] cfg80211: pass wiphy to cfg80211_ref_bss/put_bss
-Message-ID: <477F20668A386D41ADCC57781B1F70430D1432F706@SC-VEXCH1.marvell.com> (sfid-20130205_020124_976259_378D8053)
-References: <1359992842-14660-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130204_164706_960708_BA11AF9A)
- <1359993002.10311.29.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1359993002.10311.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 21 Feb 2013 23:50:49 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20774.63702.208829.602903@gargle.gargle.HOWL> (sfid-20130222_055054_194283_04A8276C)
+Date: Fri, 22 Feb 2013 10:19:26 +0530
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [RFC] ath9k:  Detect and work-around tx-queue hang.
+In-Reply-To: <5126F732.6040007@candelatech.com>
+References: <1361498797-14361-1-git-send-email-greearb@candelatech.com>
+	<20774.62475.588131.344540@gargle.gargle.HOWL>
+	<5126F732.6040007@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gT24gTW9uLCAyMDEzLTAyLTA0IGF0IDE2OjQ3ICswMTAwLCBKb2hh
-bm5lcyBCZXJnIHdyb3RlOg0KPiA+IEZyb206IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdA
-aW50ZWwuY29tPg0KPiA+DQo+ID4gVGhpcyBwcmVwYXJlcyBmb3IgdXNpbmcgdGhlIHNwaW5sb2Nr
-IGluc3RlYWQgb2Yga3JlZnMNCj4gPiB3aGljaCBpcyBuZWVkZWQgaW4gdGhlIG5leHQgcGF0Y2gg
-dG8gdHJhY2sgdGhlIHJlZnMNCj4gPiBvZiBjb21iaW5lZCBCU1NlcyBjb3JyZWN0bHkuDQo+IA0K
-PiBUaGUgIm5leHQgcGF0Y2giIHdhcyAiY2ZnODAyMTE6IHRyYWNrIGhpZGRlbiBTU0lEIG5ldHdv
-cmtzIHByb3Blcmx5IiwgSQ0KPiBqdXN0IGZvcmdvdCB0byBzZW5kIG91dCB0aGlzIHBhdGNoLiBB
-bHNvIGNsZWFybHkgZm9yZ290IHRvIENjIGFsbCB0aGUNCj4gbWFpbnRhaW5lcnMsIGZpeGluZyAo
-YW5kIGtlZXBpbmcgdGhlIHBhdGNoIGJlbG93IGZvciB0aGVtKQ0KPiANCj4gam9oYW5uZXMNCj4g
-DQo+ID4gU2lnbmVkLW9mZi1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5j
-b20+DQoNCkFja2VkLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPiBbbXdpZmlleF0N
-Cg0KVGhhbmtzLA0KQmluZw0KDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aC9hdGg2a2wvY2ZnODAyMTEuYyAgICAgICAgICAgIHwgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25l
-dC93aXJlbGVzcy9hdGgvYXRoNmtsL3dtaS5jICAgICAgICAgICAgICAgICB8ICAyICstDQo+ID4g
-IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2MjEwL2NmZzgwMjExLmMgICAgICAgICAgIHwg
-IDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL3dpbDYyMTAvd21pLmMgICAgICAg
-ICAgICAgICAgfCAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJj
-bWZtYWMvd2xfY2ZnODAyMTEuYyB8ICA0ICsrLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bGliZXJ0YXMvY2ZnLmMgICAgICAgICAgICAgICAgICAgfCAgOCArKysrLS0tLQ0KPiA+ICBkcml2
-ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgICAgICAgICAgICAgICB8ICAyICst
-DQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jICAgICAgICAgICAgICAg
-ICAgIHwgIDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwu
-YyAgICAgICAgICAgICAgfCAgNCArKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL29yaW5v
-Y28vc2Nhbi5jICAgICAgICAgICAgICAgICAgIHwgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9ybmRpc193bGFuLmMgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAg
-ZHJpdmVycy9zdGFnaW5nL3dsYW4tbmcvY2ZnODAyMTEuYyAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQ0KPiA+ICBpbmNsdWRlL25ldC9jZmc4MDIxMS5oICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICB8ICA2ICsrKystLQ0KPiA+ICBuZXQvbWFjODAyMTEvaWJzcy5jICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAgbmV0L21hYzgwMjExL21sbWUu
-YyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNiArKystLS0NCj4gPiAgbmV0
-L21hYzgwMjExL3NjYW4uYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMyAr
-Ky0NCj4gPiAgbmV0L3dpcmVsZXNzL2NvcmUuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgfCAgMiArLQ0KPiA+ICBuZXQvd2lyZWxlc3MvaWJzcy5jICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICB8ICA0ICsrLS0NCj4gPiAgbmV0L3dpcmVsZXNzL21sbWUuYyAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxNCArKysrKysrLS0tLS0tLQ0KPiA+ICBu
-ZXQvd2lyZWxlc3Mvc2Nhbi5jICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0
-ICsrLS0NCj4gPiAgbmV0L3dpcmVsZXNzL3NtZS5jICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgfCAxNiArKysrKysrKy0tLS0tLS0tDQo+ID4gIDIxIGZpbGVzIGNoYW5nZWQsIDUx
-IGluc2VydGlvbnMoKyksIDQ4IGRlbGV0aW9ucygtKQ0KDQo=
+Ben Greear wrote:
+> I'll be happy to test patches, but I'm not sure how to go about
+> debugging the real problem on my own.  Maybe some stats could
+> be added to the xmit debugfs file to help diagnose the problem,
+> or maybe some other debugfs info will help?
+> 
+> I can't reproduce the problem with ath9k debugging set at the
+> previous suggested level, so it would have to be something
+> less invasive.
+> 
+> As for just stations going out of range, it remains locked up
+> even with signal level goes back to -20, so it's not just a simple
+> station-out-of range issues..
+
+Sure, but I think that filtered frames are not handled properly,
+especially with aggregation, since the debugfs stats from your earlier email
+showed a large counter (from a private patch ?):
+
+TXERR Filtered:            224          0         0         0
+
+Sujith
