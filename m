@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:47222 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755666Ab3BMEtq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 23:49:46 -0500
-Date: Wed, 13 Feb 2013 10:08:33 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Received: from nbd.name ([46.4.11.11]:51954 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751350Ab3BWRlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 12:41:01 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] iw: Add VHT info in link query
-Message-ID: <20130213043833.GA842@markyou.marvell.com> (sfid-20130213_054950_071209_98B0F769)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3.9] mac80211: fix idle handling in monitor mode
+Date: Sat, 23 Feb 2013 18:40:57 +0100
+Message-Id: <1361641257-26963-1-git-send-email-nbd@openwrt.org> (sfid-20130223_184115_288120_B09C30B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Show VHT mcs, nss and bw, if present, in
-iw dev link.
+When the driver does not want a monitor mode VIF, no channel context is
+allocated for it. This causes ieee80211_recalc_idle to put the hardware
+into idle mode if only a monitor mode is active, breaking injection.
 
-Eg.,
-Connected to 10:6f:3f:4d:94:b4 (on mlan0)
-        SSID: 122920
-        freq: 5180
-        RX: 0 bytes (0 packets)
-        TX: 88 bytes (1 packets)
-        signal: -51 dBm
-        tx bitrate: 650.0 MBit/s VHT-MCS 7 80Mhz short GI VHT-NSS 2
+Fix this by checking local->monitors in addition to active channel
+contexts.
 
-        bss flags:
-        dtim period:    1
-        beacon int:     100
-
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- link.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ net/mac80211/iface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/link.c b/link.c
-index 3470c4d..ef8f4d3 100644
---- a/link.c
-+++ b/link.c
-@@ -187,10 +187,20 @@ static int print_link_sta(struct nl_msg *msg, void *arg)
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2c059e5..640afab 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -107,7 +107,7 @@ void ieee80211_recalc_idle(struct ieee80211_local *local)
  
- 			if (rinfo[NL80211_RATE_INFO_MCS])
- 				printf(" MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_MCS]));
-+			if (rinfo[NL80211_RATE_INFO_VHT_MCS])
-+				printf(" VHT-MCS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_VHT_MCS]));
- 			if (rinfo[NL80211_RATE_INFO_40_MHZ_WIDTH])
- 				printf(" 40Mhz");
-+			if (rinfo[NL80211_RATE_INFO_80_MHZ_WIDTH])
-+				printf(" 80Mhz");
-+			if (rinfo[NL80211_RATE_INFO_80P80_MHZ_WIDTH])
-+				printf(" 80P80Mhz");
-+			if (rinfo[NL80211_RATE_INFO_160_MHZ_WIDTH])
-+				printf(" 160Mhz");
- 			if (rinfo[NL80211_RATE_INFO_SHORT_GI])
- 				printf(" short GI");
-+			if (rinfo[NL80211_RATE_INFO_VHT_NSS])
-+				printf(" VHT-NSS %d", nla_get_u8(rinfo[NL80211_RATE_INFO_VHT_NSS]));
- 			printf("\n");
- 		}
- 	}
+ 	lockdep_assert_held(&local->mtx);
+ 
+-	active = !list_empty(&local->chanctx_list);
++	active = !list_empty(&local->chanctx_list) || local->monitors;
+ 
+ 	if (!local->ops->remain_on_channel) {
+ 		list_for_each_entry(roc, &local->roc_list, list) {
 -- 
-1.8.0.3
+1.8.0.2
 
