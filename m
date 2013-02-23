@@ -1,101 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from intranet.asianux.com ([58.214.24.6]:16742 "EHLO
-	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754962Ab3B0I5Q (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:37898 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640Ab3BWLl4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 03:57:16 -0500
-Message-ID: <512DCA59.4040800@asianux.com> (sfid-20130227_095730_647023_40E3486D)
-Date: Wed, 27 Feb 2013 16:56:57 +0800
-From: Chen Gang <gang.chen@asianux.com>
+	Sat, 23 Feb 2013 06:41:56 -0500
+Received: by mail-we0-f180.google.com with SMTP id k14so1213189wer.11
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Feb 2013 03:41:54 -0800 (PST)
 MIME-Version: 1.0
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror
- when no -W* in EXTRA_CFLAGS
-References: <512DADCA.9040609@asianux.com> <1385870.TegBXpTM9i@lx-vladimir>
-In-Reply-To: <1385870.TegBXpTM9i@lx-vladimir>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <512891D5.80504@fisher-privat.net>
+References: <CAJ-Vmon-z50jmxz6hiAjk5kR47P3BcHHGsNqGHMgJaFtccV65g@mail.gmail.com>
+	<512891D5.80504@fisher-privat.net>
+Date: Sat, 23 Feb 2013 03:41:54 -0800
+Message-ID: <CAJ-Vmon=o7Zs8BDSH1_cKoob20+qbPN2FgAxxPdpUVCv9fLrUA@mail.gmail.com> (sfid-20130223_124205_333117_2D5A2BB5)
+Subject: Re: [ath9k-devel] [RFT] ath9k_htc - please test new images
+From: Adrian Chadd <adrian@freebsd.org>
+To: Oleksij Rempel <bug-track@fisher-privat.net>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-于 2013年02月27日 16:45, Vladimir Kondratiev 写道:
-> On Wednesday, February 27, 2013 02:55:06 PM Chen Gang wrote:
->>
->>   When make with EXTRA_CFLAGS=-W, it will report error.
->>   so give a check in Makefile.
->>
->> Signed-off-by: Chen Gang <gang.chen@asianux.com>
->> ---
->>  drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
->>  1 files changed, 3 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
->> index 9396dc9..d288eea 100644
->> --- a/drivers/net/wireless/ath/wil6210/Makefile
->> +++ b/drivers/net/wireless/ath/wil6210/Makefile
->> @@ -9,5 +9,7 @@ wil6210-objs += wmi.o
->>  wil6210-objs += interrupt.o
->>  wil6210-objs += txrx.o
->>  
->> -subdir-ccflags-y += -Werror
->> +ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
->> +	subdir-ccflags-y += -Werror
->> +endif
->>  subdir-ccflags-y += -D__CHECK_ENDIAN__
->>
-> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-> Well, agree; -W triggers lots of warnings, I suspect all other places that use
-> -Werror should be problematic. Worth fixing all others? Quick look for v3.8 raises:
-> 
+On 23 February 2013 01:54, Oleksij Rempel <bug-track@fisher-privat.net> wrote:
+>
+> Hi Adrian,
+>
+> current driver has this check:
+> htc_drv_init.c:     priv->fw_version_minor != MINOR_VERSION_REQ) {
+> htc_drv_init.c:                 MAJOR_VERSION_REQ, MINOR_VERSION_REQ);
+>
+> so it wont accept 1.4. Currently i compiling kernel without this
+> restriction. Then i'll be able to test it.
 
-  thank you for your suggestion.
-  after this patch applied, I will do for others (let you as signed-of-by, too).
+Oops! Guess I shouldn't have bumped the version numbers :-)
 
-  :-)
+Thanks,
 
 
-> linux$ find . -name Makefile | xargs grep -e -Werror
-> ./arch/sh/lib/Makefile:ccflags-y := -Werror
-> ./arch/sh/kernel/Makefile:ccflags-y := -Werror
-> ./arch/sh/mm/Makefile:ccflags-y := -Werror
-> ./arch/sh/cchips/hd6446x/Makefile:ccflags-y := -Werror
-> ./arch/sparc/prom/Makefile:ccflags := -Werror
-> ./arch/sparc/lib/Makefile:ccflags-y := -Werror
-> ./arch/sparc/kernel/Makefile:ccflags-y := -Werror
-> ./arch/sparc/mm/Makefile:ccflags-y := -Werror
-> ./arch/alpha/lib/Makefile:ccflags-y := -Werror
-> ./arch/alpha/oprofile/Makefile:ccflags-y := -Werror -Wno-sign-compare
-> ./arch/alpha/mm/Makefile:ccflags-y := -Werror
-> ./arch/powerpc/kvm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/lib/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/kernel/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/oprofile/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/xmon/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/mm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/sysdev/xics/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/platforms/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./arch/powerpc/perf/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
-> ./Makefile:                -Werror-implicit-function-declaration \
-> ./tools/perf/Makefile:  CFLAGS_WERROR := -Werror
-> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -fstack-protector-all,-fstack-protector-all),y)
-> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wstack-protector,-Wstack-protector),y)
-> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wvolatile-register-var,-Wvolatile-register-var),y)
-> ./drivers/scsi/lpfc/Makefile:ccflags-y += -Werror
-> ./drivers/scsi/aic7xxx/Makefile:ccflags-y += -Werror
-> ./drivers/staging/omapdrm/Makefile:ccflags-y := -Iinclude/drm -Werror
-> ./drivers/net/wireless/ath/wil6210/Makefile:subdir-ccflags-y += -Werror
-> 
-> 
-> 
 
-
--- 
-Chen Gang
-
-Asianux Corporation
+Adrian
