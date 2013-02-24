@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:50228 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865Ab3B0PG7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758333Ab3BXR2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 10:06:59 -0500
-Received: by mail-ie0-f180.google.com with SMTP id bn7so725757ieb.11
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 07:06:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1361968754.8172.6.camel@jlt4.sipsolutions.net>
-References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
-	<CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com>
-	<1361968754.8172.6.camel@jlt4.sipsolutions.net>
-Date: Wed, 27 Feb 2013 16:06:59 +0100
-Message-ID: <CAL1gcdM2a_7u+M+LZrUA+q2fO2Xo=ZYmpgSQEhJ0LebiwmkiwQ@mail.gmail.com> (sfid-20130227_160702_771272_C324B3DE)
-Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
+	Sun, 24 Feb 2013 12:28:11 -0500
+Message-ID: <1361726886.8129.9.camel@jlt4.sipsolutions.net> (sfid-20130224_182815_723328_D7114D01)
+Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
+ coexistence mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Piotr Haber <phaber@broadcom.com>
+Date: Sun, 24 Feb 2013 18:28:06 +0100
+In-Reply-To: <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com>
+References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com>
+	 <1361564916.3420.11.camel@jlt4.sipsolutions.net>
+	,<CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
+	 <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 27, 2013 at 1:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2013-02-27 at 13:37 +0100, Gertjan van Wingerde wrote:
->> Hi Felix,
->>
->> On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> > If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
->
-> typo: "will not allow"
->
->> > interface combinations with NL80211_IFTYPE_MESH_POINT present.
->> > Add appropriate ifdefs to avoid running into errors.
->>
->> I'm not sure if rt2x00 is the proper place to fix this. To me it
->> doesn't look good to have to sprinkle these kind of ifdefs throughout
->> the drivers to check if mac80211 has mesh enabled.
->> I would prefer a solution where drivers are still able to indicate
->> that they support mesh interfaces, but where mac80211/cfg80211 prevent
->> these kind of interfaces from being created.
->>
->> @Johannes: What is your view on this?
->
-> It would be nicer, but the data is const so mac80211 can't modify it,
-> and I don't see that we should add a lot of code/handshaking to
-> mac80211/cfg80211 just to avoid one ifdef here.
->
+On Sat, 2013-02-23 at 17:47 +0000, Arend Van Spriel wrote:
+> On Saturday, February 23, 2013 1:30 AM Adrian Chadd wrote:
+> >
+> > ... why not tag such traffic with a higher QOS priority and then have
+> > the BT coex module snoop thaT?
+> >
+> 
+> In the driver we could inspect each sk_buff and boost priority of any
+> BOOTP packets so that it will end up in the AC_VO fifo and have
+> hardware coexistence handle it further. I consider that more a
+> pragmatic fix, which is not always the worst thing to go for. 
 
-OK. No worries. Was just looking if there was an alternative.
+Well, I don't really think that's the best idea. Sniffing the protocol
+is clumsy at best.
 
-I'll ack Felix' patch then
+> However, I would prefer a solution is which user-space, ie. dhcp
+> client can control the priority and/or BT coexistence.
 
--- 
----
-Gertjan
+It's not just BT coex btw, with multi-channel support it might also be
+interesting to not switch channels while DHCP is going on, for example.
+
+johannes
+
