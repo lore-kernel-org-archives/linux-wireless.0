@@ -1,49 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a-keller-035.fem.tu-ilmenau.de ([141.24.40.99]:57256 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933729Ab3BLTCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 14:02:31 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-	Michael Braun <michael-dev@fami-braun.de>
-Subject: [RFCv4 1/2] mac80211: fix WPA with VLAN on AP side with ps-sta
-Date: Tue, 12 Feb 2013 19:51:45 +0100
-Message-Id: <1360695107-5721-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_200233_969527_F54FE387)
-In-Reply-To: <1360695107-5721-1-git-send-email-michael-dev@fami-braun.de>
-References: <1360695107-5721-1-git-send-email-michael-dev@fami-braun.de>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54854 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755715Ab3BXLin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2013 06:38:43 -0500
+Message-ID: <5129FBB8.1080505@hauke-m.de> (sfid-20130224_123852_665943_7C5D7E9A)
+Date: Sun, 24 Feb 2013 12:38:32 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend Van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Subject: Re: [RFC 00/13] brcmsmac: add AP mode
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de> <A47087626F2942499CF47E79803E771E0431BF4D@SJEXCHMB13.corp.ad.broadcom.com>
+In-Reply-To: <A47087626F2942499CF47E79803E771E0431BF4D@SJEXCHMB13.corp.ad.broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+On 02/24/2013 11:21 AM, Arend Van Spriel wrote:
+> On Sunday, February 24, 2013 2:05 AM, Hauke Mehrtens wrote:
+>> This patch series contains some cleanup patches for brcmsmac and then
+>> adds beacon and probe response template upload.
+>> With these features AP mode support is added in the last patch.
+> 
+> Someone was bound to start on this and we are lately too focussed on
+> brcmfmac. We will review the patches and found out whether our test
+> framework can cover AP mode.
 
-This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+Yes this needs some review and more testing, I hope this also works with
+power saving stations and so on.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
-V2: fix compile warning
-V3: simplify change
+>> When running AP mode in 5GHz band on my BCM43224 I get the following
+>> errors, and I do not see the network with my Intel IWL6300, the
+>> regulation restrictions in channel.c where changed before:
+> 
+> 5GHz is a bit tricky. I will need to find out whether AP mode can work with
+> the current ucode.
 
- net/mac80211/tx.c |    1 +
- 1 file changed, 1 insertion(+)
+Currently brcmsmac completely denies beaconing on 5GHz in channel.c, how
+could that be changed and still compatible with the interpretation of
+the regulation rules by your lawyers?
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2ef0e19..ee169b1 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2770,6 +2770,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
- 
-+		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
- 		if (!ieee80211_tx_prepare(sdata, &tx, skb))
- 			break;
- 		dev_kfree_skb_any(skb);
--- 
-1.7.10.4
+>> [  829.608000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait:
+>> waited 83000 uS and MI_MACSSPNDD is still not on.
+>> [  829.616000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff808d, phydebug
+>> 0x0000000d, psm_brc 0x0000
+> 
+> It generally indicates a hang in the ucode. Are you using the firmware from
+> the linux-firmware repository?
 
+Instead of these error messages I also got a complete system hang when
+compiling a kernel without lock debugging, the difference between this
+result with lock debugging and the hang without lock debugging is
+probably resulted from different timings.
+
+I used the ucode extracted from the proprietary driver, because only
+this ucode works with my BCM4716, this is ucode 666.2 from driver
+5.100.138. I will try the ucode from linux-firmware today.
+
+>> The probe responses are currently send by the ucode based on the
+>> template and by mac80211. I was searching for a switch so disable probe
+>> request forwarding from the ucode to the driver.
+> 
+> I am pretty sure there is. I will look into this and let you know.
+
+That would be nice.
+
+>> The structure of brcmsmac is pretty complicated, because it copies many
+>> addresses into its own structs and does not use mac80211 structs in
+>> main.c.
+> 
+> Yeah. Basically, a lot of conversions are done at mac80211 interface to keep
+> the low-level driver code similar to the code base it came from. That is the
+> path taken. I would like to see a replacement driver some day that shares more
+> structure definitions with the linux wireless subsystem, but for now that is just
+> me daydreaming ;-)
+
+I saw your code for beaconing and probe response templates, but I mostly
+replaced it with a new version because this architecture was not
+compatible with mac80211. For the Phy code it makes sense and it is
+probably not so hard to stay near your proprietary code base, but I do
+not think this works very well with the rest of the code mostly in main.c.
+
+Hauke
