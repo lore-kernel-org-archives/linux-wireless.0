@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47684 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754641Ab3BZUwe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 15:52:34 -0500
-Message-ID: <1361911935.8440.18.camel@jlt4.sipsolutions.net> (sfid-20130226_215237_339392_8E4156A0)
-Subject: Re: [PATCHv2 2/3] mac80211: mesh power save doze scheduling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	sleffler@google.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org
-Date: Tue, 26 Feb 2013 21:52:15 +0100
-In-Reply-To: <512B37BA.6060605@cozybit.com> (sfid-20130225_110654_178953_AA37B00E)
-References: <1361203709-16669-1-git-send-email-marco@cozybit.com>
-	  <1361203709-16669-2-git-send-email-marco@cozybit.com>
-	  (sfid-20130218_170842_350606_DE89DB9F) <1361372480.8629.33.camel@jlt4.sipsolutions.net>
-	 <512B37BA.6060605@cozybit.com> (sfid-20130225_110654_178953_AA37B00E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55184 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755890Ab3BXPlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2013 10:41:44 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] brcmsmac: export firmware version to ethtool
+Date: Sun, 24 Feb 2013 16:41:34 +0100
+Message-Id: <1361720494-27131-1-git-send-email-hauke@hauke-m.de> (sfid-20130224_164148_710520_9B733551)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-25 at 11:06 +0100, Marco Porsch wrote:
+This exports the firmware version in use to userspace through ethtool.
 
-> > This is strange, why bother with the else if there's a continue?
-> 
-> I don't quite get this comment. The current logic is like this:
-> 
-> if (unrelated cases) {
-> 	continue;
-> } else if (related and blocking) {
-> 	allow = false;
-> 	break;
-> } else if (related, non-blocking and new minimum) {
-> 	min = sta->nexttbtt;
-> }
+root@OpenWrt:/# ethtool -i wlan0
+firmware-version: 610.812
 
-Yeah I guess I don't see why it's not just
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-        if (unrelated cases)
-        	continue;
-        
-        if (related & blocking) {
-        	allow = false;
-        	break;
-        }
-        
-        if (...)
-        	min = ...
-        
-but it really doesn't matter much.
-
-> >> +               } else if (test_sta_flag(sta, WLAN_STA_MPS_WAIT_FOR_CAB) ||
-> >> +                          test_sta_flag(sta, WLAN_STA_MPSP_OWNER) ||
-> >> +                          test_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT) ||
-> >> +                          !timer_pending(&sta->nexttbtt_timer) ||
-> >> +                          time_after(jiffies, sta->nexttbtt_jiffies)) {
-> >
-> > Are you sure jiffies are good enough? Some systems have HZ=33 or so I
-> > think, which makes a jiffy like 30ms.
-> 
-> Hm, jiffies is what I have available easily. Using the TSF would be 
-> obvious but may suffer from delay when obtaining it. Umm... hrtimers again?
-
-I really don't care about your messed up timing stuff here, just
-saying :)
-
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index d723e15..abd6eab 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7957,9 +7957,14 @@ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
+ 
+ 	/* read the ucode version if we have not yet done so */
+ 	if (wlc->ucode_rev == 0) {
+-		wlc->ucode_rev =
+-		    brcms_b_read_shm(wlc->hw, M_BOM_REV_MAJOR) << NBITS(u16);
+-		wlc->ucode_rev |= brcms_b_read_shm(wlc->hw, M_BOM_REV_MINOR);
++		u16 rev;
++		u16 patch;
++
++		rev = brcms_b_read_shm(wlc->hw, M_BOM_REV_MAJOR);
++		patch = brcms_b_read_shm(wlc->hw, M_BOM_REV_MINOR);
++		wlc->ucode_rev = (rev << NBITS(u16)) | patch;
++		snprintf(wlc->wiphy->fw_version,
++			 sizeof(wlc->wiphy->fw_version), "%u.%u", rev, patch);
+ 	}
+ 
+ 	/* ..now really unleash hell (allow the MAC out of suspend) */
+-- 
+1.7.10.4
 
