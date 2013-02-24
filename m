@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:48606 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757844Ab3BVRmp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 12:42:45 -0500
-Received: by mail-wi0-f169.google.com with SMTP id l13so2447011wie.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Feb 2013 09:42:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5127A4E0.8080101@openwrt.org>
-References: <20130215171938.GA4140@pandem0nium>
-	<51279AFA.3000608@openwrt.org>
-	<20130222163643.GB3757@open-mesh.com>
-	<5127A4E0.8080101@openwrt.org>
-Date: Fri, 22 Feb 2013 09:42:43 -0800
-Message-ID: <CAJ-Vmo=zj19mxK7aK28NkGq_KWdQtn2SYPMvdvrsd9i4-H6GPw@mail.gmail.com> (sfid-20130222_184250_001930_DB7537BA)
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer) stations
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Antonio Quartulli <antonio@open-mesh.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Marek Lindner <marek@open-mesh.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bues.ch ([80.190.117.144]:41838 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755372Ab3BXTA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2013 14:00:26 -0500
+Date: Sun, 24 Feb 2013 19:32:39 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Lockdep splat when unloading b43
+Message-ID: <20130224193239.3517e6ac@milhouse> (sfid-20130224_200045_229216_9DB08908)
+In-Reply-To: <512A4E83.5090901@lwfinger.net>
+References: <512A4E83.5090901@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.. considering I do radiotap inspection in promiscuous mode all the
-time (on laptops and embedded MIPS boards alike), I'm kinda interested
-in why you're seeing such high CPU utilisation.
+On Sun, 24 Feb 2013 11:31:47 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Are you trying to capture the whole frame? Or are you only capturing
-the header? It sounds like you only need the header, right?
+> With the current wireless-testing tree, unloading b43 produces the lockdep log 
+> splat copied below. My understanding of locking is deficient, and I would like 
+> to learn. Any help on understanding this problem is appreciated.
 
-I agree with Felix - this is the kind of thing that it makes sense to
-define an API for so you can write in-kernel monitoring plugins. Then
-your monitoring plugin can decide how to aggregate and pass up the
-data.
+A few questions:
+Is there any reason for using the global workqueue and not mac80211's workqueue?
+Why is the workqueue cancelled in the core_stop callback? Wouldn't it make more
+sense to cancel it in bcma_remove/ssb_remove?
+This would probably fix the circular dependency. But I'm not entirely sure, because
+I'm not that familiar with the code anymore.
 
-
-
-Adrian
+-- 
+Michael
