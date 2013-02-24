@@ -1,35 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51291 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757299Ab3BVQVQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 11:21:16 -0500
-Message-ID: <51279AFA.3000608@openwrt.org> (sfid-20130222_172120_315765_3D3A5C9D)
-Date: Fri, 22 Feb 2013 17:21:14 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-References: <20130215171938.GA4140@pandem0nium>
-In-Reply-To: <20130215171938.GA4140@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53980 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758879Ab3BXBHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 20:07:05 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 11/13] brcmsmac: react on changing SSID
+Date: Sun, 24 Feb 2013 02:06:09 +0100
+Message-Id: <1361667972-22909-12-git-send-email-hauke@hauke-m.de> (sfid-20130224_020716_739152_42DB650F)
+In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+To send the correct probe response the hardware needs to know the SSID
+when it changed.
 
-Since this is a rare special case, I think it really does not belong
-into the mac80211 data path. How about creating a monitor mode device
-and claiming it from within the kernel in your own module via rx_handler
-(the same mechanism that the bridge code uses to hook into the data path
-of a normal net_device). You can extract relevant information from the
-radiotap headers.
-That way you can keep your code completely separate from mac80211 and
-don't have to dump the maintenance overhead of this on other people.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    6 ++++++
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |    9 +++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 ++
+ 3 files changed, 17 insertions(+)
 
-- Felix
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 7a76977..3bb0aec 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -520,6 +520,12 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET, info->bssid);
+ 		spin_unlock_bh(&wl->lock);
+ 	}
++	if (changed & BSS_CHANGED_SSID) {
++		/* BSSID changed, for whatever reason (IBSS and managed mode) */
++		spin_lock_bh(&wl->lock);
++		brcms_c_set_ssid(wl->wlc, info->ssid, info->ssid_len);
++		spin_unlock_bh(&wl->lock);
++	}
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		/* Beacon data changed, retrieve new beacon (beaconing modes) */
+ 		struct sk_buff *beacon;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 7ed4e8e..7c97de8 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3783,6 +3783,15 @@ static void brcms_c_set_bssid(struct brcms_bss_cfg *bsscfg)
+ 	brcms_c_set_addrmatch(bsscfg->wlc, RCM_BSSID_OFFSET, bsscfg->BSSID);
+ }
+ 
++void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid, size_t ssid_len)
++{
++	u8 len = min_t(u8, sizeof(wlc->bsscfg->SSID), ssid_len);
++	memset(wlc->bsscfg->SSID, 0, sizeof(wlc->bsscfg->SSID));
++
++	memcpy(wlc->bsscfg->SSID, ssid, len);
++	wlc->bsscfg->SSID_len = len;
++}
++
+ static void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
+ {
+ 	wlc_hw->shortslot = shortslot;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 8a3071f..6ed0a20 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -336,5 +336,7 @@ extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
+ extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
+ 				   struct sk_buff *beacon, u16 tim_offset,
+ 				   u16 dtim_period);
++extern void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid,
++			     size_t ssid_len);
+ 
+ #endif				/* _BRCM_PUB_H_ */
+-- 
+1.7.10.4
+
