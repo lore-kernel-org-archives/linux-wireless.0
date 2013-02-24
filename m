@@ -1,45 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45187 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757359Ab3BRUaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 15:30:12 -0500
-Date: Mon, 18 Feb 2013 15:28:32 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-02-18
-Message-ID: <20130218202831.GD12505@tuxdriver.com> (sfid-20130218_213018_585695_7D9B01C9)
-References: <1361215715.8555.45.camel@jlt4.sipsolutions.net>
- <1361215785.8555.46.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361215785.8555.46.camel@jlt4.sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53952 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759481Ab3BXBGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 20:06:52 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 04/13] brcmsmac: remove brcms_bss_cfg->associated
+Date: Sun, 24 Feb 2013 02:06:02 +0100
+Message-Id: <1361667972-22909-5-git-send-email-hauke@hauke-m.de> (sfid-20130224_020658_738317_4545E08D)
+In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 18, 2013 at 08:29:45PM +0100, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 20:28 +0100, Johannes Berg wrote:
-> 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git 
-> 
-> Hmm, I lost the branch there, let's try that again.
-> 
-> The following changes since commit 9e97d14b4923da524d202f2e005d5d30b70db9d6:
-> 
->   Merge branch 'for-linville' of git://github.com/kvalo/ath6kl (2013-02-15 14:06:32 -0500)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to cfe418287c61f4c4a3ccb94e8a286434d64e0236:
-> 
->   iwlwifi: dvm: improve (again) the prints in reclaim path (2013-02-18 20:19:25 +0100)
+Replaced the usage with pub->associated.
 
-Pulling now...
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   12 +++---------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
+ 2 files changed, 3 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 2242ec0..b5b7a8f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3049,8 +3049,6 @@ static void brcms_b_antsel_set(struct brcms_hardware *wlc_hw, u32 antsel_avail)
+  */
+ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ {
+-	struct brcms_bss_cfg *cfg = wlc->bsscfg;
+-
+ 	/* disallow PS when one of the following global conditions meets */
+ 	if (!wlc->pub->associated)
+ 		return false;
+@@ -3059,9 +3057,6 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
+ 		return false;
+ 
+-	if (cfg->associated)
+-		return false;
+-
+ 	return true;
+ }
+ 
+@@ -3819,7 +3814,7 @@ static void brcms_c_set_home_chanspec(struct brcms_c_info *wlc, u16 chanspec)
+ 	if (wlc->home_chanspec != chanspec) {
+ 		wlc->home_chanspec = chanspec;
+ 
+-		if (wlc->bsscfg->associated)
++		if (wlc->pub->associated)
+ 			wlc->bsscfg->current_bss->chanspec = chanspec;
+ 	}
+ }
+@@ -5433,7 +5428,7 @@ static void brcms_c_ofdm_rateset_war(struct brcms_c_info *wlc)
+ 	u8 r;
+ 	bool war = false;
+ 
+-	if (wlc->bsscfg->associated)
++	if (wlc->pub->associated)
+ 		r = wlc->bsscfg->current_bss->rateset.rates[0];
+ 	else
+ 		r = wlc->default_bss->rateset.rates[0];
+@@ -5527,7 +5522,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
+ 	/* merge rateset coming in with the current mcsset */
+ 	if (wlc->pub->_n_enab & SUPPORT_11N) {
+ 		struct brcms_bss_info *mcsset_bss;
+-		if (wlc->bsscfg->associated)
++		if (wlc->pub->associated)
+ 			mcsset_bss = wlc->bsscfg->current_bss;
+ 		else
+ 			mcsset_bss = wlc->default_bss;
+@@ -7494,7 +7489,6 @@ void brcms_c_scan_stop(struct brcms_c_info *wlc)
+ void brcms_c_associate_upd(struct brcms_c_info *wlc, bool state)
+ {
+ 	wlc->pub->associated = state;
+-	wlc->bsscfg->associated = state;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index 0cfe782..96dc2f4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -589,7 +589,6 @@ enum brcms_bss_type {
+  * type: interface type
+  * up: is this configuration up operational
+  * enable: is this configuration enabled
+- * associated: is BSS in ASSOCIATED state
+  * SSID_len: the length of SSID
+  * SSID: SSID string
+  *
+@@ -608,7 +607,6 @@ struct brcms_bss_cfg {
+ 	enum brcms_bss_type type;
+ 	bool up;
+ 	bool enable;
+-	bool associated;
+ 	u8 SSID_len;
+ 	u8 SSID[IEEE80211_MAX_SSID_LEN];
+ 	u8 BSSID[ETH_ALEN];
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
