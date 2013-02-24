@@ -1,62 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:39052 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886Ab3BNEp1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 23:45:27 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr12so1524234wgb.11
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Feb 2013 20:45:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <511C65F2.1080201@gnoutcheff.name>
-References: <5100BEF7.4000107@gnoutcheff.name> <CAGRGNgWg=4CgjXpdceNfsy6X0_q=SFY8CegJsTf60yGd_NBuLQ@mail.gmail.com>
- <511C65F2.1080201@gnoutcheff.name>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 14 Feb 2013 15:45:05 +1100
-Message-ID: <CAGRGNgWQqNXdN1ke2AaVM3eiRMupq1G22MCC=ZBZTXDKwPwbgw@mail.gmail.com> (sfid-20130214_054530_321151_03005BB8)
-Subject: Re: [ath5k] [bugreport] BIOS hang if wifi was connected before reboot
-To: Daniel Gnoutcheff <daniel@gnoutcheff.name>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53930 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759413Ab3BXBGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 20:06:42 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 00/13] brcmsmac: add AP mode
+Date: Sun, 24 Feb 2013 02:05:58 +0100
+Message-Id: <1361667972-22909-1-git-send-email-hauke@hauke-m.de> (sfid-20130224_020656_642276_577C7758)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+This patch series contains some cleanup patches for brcmsmac and then 
+adds beacon and probe response template upload.
+With these features AP mode support is added in the last patch.
 
-On Thu, Feb 14, 2013 at 3:20 PM, Daniel Gnoutcheff
-<daniel@gnoutcheff.name> wrote:
-> Hello Julian, thanks for your response and advice.  (Sorry for my very
-> slow reply.)
->
-> On 01/24/2013 01:45 AM, Julian Calaby wrote:
->> On Thu, Jan 24, 2013 at 3:56 PM, Daniel Gnoutcheff
->> <daniel@gnoutcheff.name> wrote:
->>> Up until recently, it seems that NetworkManager would always disconnect upon
->>> shutdown and thus avoided this bug, but this changed in Ubuntu 12.10.
-> <snip>
->>
->> Have you raised a bug with Ubuntu's Network Manager maintainers about this?
->
-> I have now.  Upon investigation, it appears that this is caused by a
-> combination of (upstream) bugs in wpa_supplicant and NetworkManager.
-> Fixing either of these bugs restores the intended behavior (and is an
-> effective workaround for the BIOS bug).  The NetworkManager bug has
-> already been fixed in upstream's git.  For the record, the relevant bug
-> reports are:
->
-> For NetworkManager:
->   https://bugs.launchpad.net/network-manager/+bug/1124803
->   https://bugzilla.gnome.org/show_bug.cgi?id=683932
-> For wpa_supplicant:
->   https://bugs.launchpad.net/ubuntu/+source/wpa/+bug/1124789
->   http://w1.fi/bugz/show_bug.cgi?id=474
+When running AP mode in 5GHz band on my BCM43224 I get the following 
+errors, and I do not see the network with my Intel IWL6300, the 
+regulation restrictions in channel.c where changed before:
 
-Good work, hopefully those fixes get pushed out soon.
+[  829.608000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait: waited 83000 uS and MI_MACSSPNDD is still not on.
+[  829.616000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff808d, phydebug 0x0000000d, psm_brc 0x0000
+[  829.624000] brcmsmac bcma1:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[  829.864000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait: waited 83000 uS and MI_MACSSPNDD is still not on.
+[  829.876000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff80d8, phydebug 0x0000000d, psm_brc 0x0000
+[  829.884000] brcmsmac bcma1:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[  830.108000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait: waited 83000 uS and MI_MACSSPNDD is still not on.
+[  830.120000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff8ae6, phydebug 0x0000000d, psm_brc 0x0000
+[  830.128000] brcmsmac bcma1:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[  830.240000] brcmsmac bcma1:0: wl0: wlc_suspend_mac_and_wait: waited 83000 uS and MI_MACSSPNDD is still not on.
+[  830.252000] brcmsmac bcma1:0: wl0: psmdebug 0x00ff800d, phydebug 0x0000000d, psm_brc 0x0000
+[  830.292000] brcmsmac bcma1:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
 
-Thanks,
+
+In the 2.4GHz band I get the following phy errors, but the station 
+still stays connected:
+
+[  152.196000] brcmsmac bcma0:0: phyerr 0x1, rate 0x37
+[  152.200000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x1)
+[  152.208000] brcmsmac bcma0:0: phyerr 0x1, rate 0x37
+[  152.216000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x1)
+[  152.228000] brcmsmac bcma0:0: phyerr 0x1, rate 0x37
+[  152.232000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x1)
+[  346.644000] brcmsmac bcma0:0: phyerr 0x10, rate 0x6e
+[  346.652000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x10)
+[  349.504000] brcmsmac bcma0:0: phyerr 0x8, rate 0x14
+[  349.508000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x8)
+[  493.524000] brcmsmac bcma0:0: phyerr 0x8, rate 0x37
+[  493.528000] brcmsmac bcma0:0: brcms_c_ampdu_dotxstatus_complete: ampdu tx phy error (0x8)
+
+This was successfully tested on a BCM4716 in 2.4GHz mode, my BCM43224 
+does not work in 2.4GHz mode, because the sprom is only configured for 
+5GHz.
+
+The probe responses are currently send by the ucode based on the 
+template and by mac80211. I was searching for a switch so disable probe 
+request forwarding from the ucode to the driver.
+
+The structure of brcmsmac is pretty complicated, because it copies many 
+addresses into its own structs and does not use mac80211 structs in 
+main.c.
+
+This is based on the current version of wireless-testing/master.
+
+
+Hauke Mehrtens (13):
+  brcmsmac: implement ieee80211_ops get_tsf and set_tsf
+  brcmsmac: add interface type to brcms_bss_cfg
+  brcmsmac: remove brcms_bss_cfg->BSS
+  brcmsmac: remove brcms_bss_cfg->associated
+  brcmsmac: remove brcms_bss_cfg->enable
+  brcmsmac: remove brcms_bss_cfg->up
+  brcmsmac: remove brcms_bss_cfg->cur_etheraddr
+  brcmsmac: remove brcms_pub->bcmerr
+  brcmsmac: write beacon period to hardware
+  brcmsmac: add beacon template support
+  brcmsmac: react on changing SSID
+  brcmsmac: add support for probe response template
+  brcmsmac: activate AP support
+
+ drivers/net/wireless/brcm80211/brcmsmac/d11.h      |    1 +
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   66 +++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |  340 ++++++++++++++------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h     |   25 +-
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |   15 +-
+ 5 files changed, 334 insertions(+), 113 deletions(-)
 
 -- 
-Julian Calaby
+1.7.10.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
