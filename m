@@ -1,46 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:55322 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754225Ab3BHNcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 08:32:11 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20756.65038.7020.514691@gargle.gargle.HOWL> (sfid-20130208_143216_295293_7EA9F90C)
-Date: Fri, 8 Feb 2013 19:00:54 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-In-Reply-To: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53942 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759413Ab3BXBGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 20:06:47 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 03/13] brcmsmac: remove brcms_bss_cfg->BSS
+Date: Sun, 24 Feb 2013 02:06:01 +0100
+Message-Id: <1361667972-22909-4-git-send-email-hauke@hauke-m.de> (sfid-20130224_020659_378967_A01CD3A9)
+In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> In many tests throughput with ath9k_rate_control has been shown to be
-> worse than with minstrel_ht (the mac8021 default RC).
-> 
-> This module also has some other problems, like starting to use the
-> highest possible rate early in the connection, causing problems with
-> reliability of connection/authentication attempts.
-> 
-> It also has a much more limited search space, ignoring many potentially
-> useful rates, caused by the design decision to operate on a sorted rate
-> set with the assumption that higher rates are always more unreliable
-> than lower rates. In some scenarios this assumption is not true, and
-> this can cause it to fall back to a really bad rate.
-> 
-> minstrel_ht has been tested extensively in AP and client mode by lots of
-> users (mostly in the OpenWrt project, where it has been the default for
-> years).
-> 
-> The only advantage that ath9k_rate_control previously had over minstrel_ht
-> was the support for using CCK rates as fall back in case MCS rates got
-> too bad, but this has now also been taken care of.
+This was a read only member. The checks using BSS are replaced by
+better fitting checks of the new type member.
 
-Various rates are marked as invalid in the ath9k rate control module. I don't
-know all the reasons, but the recommendation to disable certain rates came from
-the internal algorithms team. How will this be handled ?
+The change in brcms_c_tbtt() was based on code from b43, in
+brcms_c_ps_allowed() the same happens with BSS being true or false,
+beaconing and probe responses are just needed in ap mode.
 
-Sujith
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   21 +++++++--------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
+ 2 files changed, 7 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 5696257..2242ec0 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1069,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+ 
+ static void brcms_c_tbtt(struct brcms_c_info *wlc)
+ {
+-	if (!wlc->bsscfg->BSS)
++	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
+ 		/*
+ 		 * DirFrmQ is now valid...defer setting until end
+ 		 * of ATIM window
+@@ -3059,16 +3059,8 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
+ 		return false;
+ 
+-	if (cfg->associated) {
+-		/*
+-		 * disallow PS when one of the following
+-		 * bsscfg specific conditions meets
+-		 */
+-		if (!cfg->BSS)
+-			return false;
+-
++	if (cfg->associated)
+ 		return false;
+-	}
+ 
+ 	return true;
+ }
+@@ -5078,8 +5070,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 				struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 				mboolset(wlc->pub->radio_disabled,
+ 					 WL_RADIO_HW_DISABLE);
+-
+-				if (bsscfg->enable && bsscfg->BSS)
++				if (bsscfg->enable &&
++				    (bsscfg->type == BRCMS_TYPE_STATION ||
++				     bsscfg->type == BRCMS_TYPE_ADHOC))
+ 					brcms_err(wlc->hw->d11core,
+ 						  "wl%d: up: rfdisable -> "
+ 						  "bsscfg_disable()\n",
+@@ -7386,7 +7379,7 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
+ {
+ 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 
+-	if (bsscfg->up && !bsscfg->BSS)
++	if (bsscfg->up && bsscfg->type == BRCMS_TYPE_AP)
+ 		/* Clear the soft intmask */
+ 		wlc->defmacintmask &= ~MI_BCNTPL;
+ }
+@@ -7461,7 +7454,7 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
+ 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 
+ 	/* update AP or IBSS probe responses */
+-	if (bsscfg->up && !bsscfg->BSS)
++	if (bsscfg->up && bsscfg->type == BRCMS_TYPE_AP)
+ 		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index dbf027c..0cfe782 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -590,7 +590,6 @@ enum brcms_bss_type {
+  * up: is this configuration up operational
+  * enable: is this configuration enabled
+  * associated: is BSS in ASSOCIATED state
+- * BSS: infraustructure or adhoc
+  * SSID_len: the length of SSID
+  * SSID: SSID string
+  *
+@@ -610,7 +609,6 @@ struct brcms_bss_cfg {
+ 	bool up;
+ 	bool enable;
+ 	bool associated;
+-	bool BSS;
+ 	u8 SSID_len;
+ 	u8 SSID[IEEE80211_MAX_SSID_LEN];
+ 	u8 BSSID[ETH_ALEN];
+-- 
+1.7.10.4
+
