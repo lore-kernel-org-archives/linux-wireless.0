@@ -1,107 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.236.10]:38197 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751099Ab3BPEgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 23:36:10 -0500
-Date: Sat, 16 Feb 2013 08:18:56 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Adrian Chadd <adrian@freebsd.org>
-cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@lists.open80211s.org
-Subject: Re: improve operational ANI in Mesh mode
-In-Reply-To: <CAJ-Vmo=W5b_tsb1u-RXwzRqM=tA9=myvLSuZWyy3drSmSmda+g@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1302160815210.17887@icf.org.ru> (sfid-20130216_053619_336382_A014F142)
-References: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru> <CAJ-Vmo=W5b_tsb1u-RXwzRqM=tA9=myvLSuZWyy3drSmSmda+g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1051000339-1461825341-1360988336=:17887"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53975 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932241Ab3BXBHB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Feb 2013 20:07:01 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 09/13] brcmsmac: write beacon period to hardware
+Date: Sun, 24 Feb 2013 02:06:07 +0100
+Message-Id: <1361667972-22909-10-git-send-email-hauke@hauke-m.de> (sfid-20130224_020710_832564_E0D0C5A6)
+In-Reply-To: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Make brcms_c_set_beacon_period() write the beacon period to the
+hardware if a new one is set.
 
----1051000339-1461825341-1360988336=:17887
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-On 2013-02-15 20:08 -0800, Adrian Chadd wrote Georgiewskiy Yuriy:
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 44dc7ac..b993ddc 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -5551,10 +5551,20 @@ static void brcms_c_time_unlock(struct brcms_c_info *wlc)
+ 
+ int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
+ {
++	u32 bcnint_us;
++
+ 	if (period == 0)
+ 		return -EINVAL;
+ 
+ 	wlc->default_bss->beacon_period = period;
++
++	bcnint_us = period << 10;
++	brcms_c_time_lock(wlc);
++	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfprep),
++		     (bcnint_us << CFPREP_CBI_SHIFT));
++	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfpstart), bcnint_us);
++	brcms_c_time_unlock(wlc);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
-it seems there is another one place related to this:
-
-drivers/net/wireless/ath/ath9k/link.c in
-
-void ath_ani_calibrate(unsigned long data)
-
-short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ? 
-
-should be
-
-short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP || ah->opmode == NL80211_IFTYPE_MESH_POINT) ?
-
-AC>I think this is correct.
-AC>
-AC>
-AC>
-AC>adrian
-AC>
-AC>
-AC>On 15 February 2013 18:43, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
-AC>>
-AC>> Hi, in our setups we experience pure ANI operational in mesh mode
-AC>> VS AP mode, after debuffing and digging in ANI code i find what ANI
-AC>> in AP mode work in limited mode, i try this mode with mesh and seems
-AC>> getting same good operation as in AP mode, i am not familiar with ANI
-AC>> may be there is another better way to fix this issue?
-AC>>
-AC>> changes what i made:
-AC>>
-AC>> diff -ruN compat-drivers-3.7.6-1/drivers/net/wireless/ath/ath9k/ani.c
-AC>> compat-drivers-3.7.6-1-new/drivers/net/wireless/ath/ath9k/ani.c
-AC>> --- compat-drivers-3.7.6-1/drivers/net/wireless/ath/ath9k/ani.c 2013-02-11
-AC>> 04:23:53.000000000 +0400
-AC>> +++ compat-drivers-3.7.6-1-new/drivers/net/wireless/ath/ath9k/ani.c
-AC>> 2013-02-16 05:03:46.640746411 +0400
-AC>> @@ -303,7 +303,8 @@
-AC>>         ah->stats.ast_ani_reset++;
-AC>>
-AC>>         /* only allow a subset of functions in AP mode */
-AC>> -       if (ah->opmode == NL80211_IFTYPE_AP) {
-AC>> +       if (ah->opmode == NL80211_IFTYPE_AP || ah->opmode ==
-AC>> NL80211_IFTYPE_MESH_POINT) {
-AC>> +               ath_dbg(common, ANI, "only allow a subset of functions in AP
-AC>> or MESH mode");
-AC>>                 if (IS_CHAN_2GHZ(chan)) {
-AC>>                         ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
-AC>>                                             ATH9K_ANI_FIRSTEP_LEVEL);
-AC>> @@ -323,7 +324,8 @@
-AC>>
-AC>>         if (is_scanning ||
-AC>>             (ah->opmode != NL80211_IFTYPE_STATION &&
-AC>> -            ah->opmode != NL80211_IFTYPE_ADHOC)) {
-AC>> +            ah->opmode != NL80211_IFTYPE_ADHOC && +         ah->opmode !=
-AC>> NL80211_IFTYPE_MESH_POINT)) {
-AC>>                 /*
-AC>>                  * If we're scanning or in AP mode, the defaults (ini)
-AC>>                  * should be in place. For an AP we assume the historical
-AC>>
-AC>>
-AC>>
-AC>> C уважением                       With Best Regards
-AC>> Георгиевский Юрий.                Georgiewskiy Yuriy
-AC>> +7 4872 711666                    +7 4872 711666
-AC>> факс +7 4872 711143               fax +7 4872 711143
-AC>> Компания ООО "Ай Ти Сервис"       IT Service Ltd
-AC>> http://nkoort.ru                  http://nkoort.ru
-AC>> JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-AC>> YG129-RIPE                        YG129-RIPE
-AC>
-
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1051000339-1461825341-1360988336=:17887--
