@@ -1,110 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756962Ab3BKMiZ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47407 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759241Ab3BXEw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 07:38:25 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/14] wireless: define operating mode action frame
-Date: Mon, 11 Feb 2013 13:38:07 +0100
-Message-Id: <1360586298-15028-4-git-send-email-johannes@sipsolutions.net> (sfid-20130211_134332_424978_FB6F5DFA)
-In-Reply-To: <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
-References: <[PATCH 00/14] mac80211: HT/VHT handling>
- <1360586298-15028-1-git-send-email-johannes@sipsolutions.net>
+	Sat, 23 Feb 2013 23:52:29 -0500
+Date: Sat, 23 Feb 2013 22:52:23 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-usb@vger.kernel.org,
+	"Chen, Stephen" <scchen@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: carl9170 A-MPDU transmit problem
+Message-ID: <20130224045223.GA2285@thinkpad-t410> (sfid-20130224_055243_611662_BC6AE63E)
+References: <20130222205044.GD1418@thinkpad-t410>
+ <201302230048.52018.chunkeey@googlemail.com>
+ <20130223064600.GA27187@thinkpad-t410>
+ <201302231507.09051.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201302231507.09051.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Feb 23, 2013 at 03:07:08PM +0100, Christian Lamparter wrote:
+> usb_submit_urb() is async, so unless the URB data structure is
+> bogus, the device is in the middle of a reset/is removed or OOM
+> it won't return with an -ENUMBER.
+> 
+> Since neither of us has probably access to an USB analyzer, the
+> next best thing would be to enable ehci_hcd's debug facilities
+> and check if the stuck frame produced any DataBufferErr, XactErr
+> or something else.
 
-Define the action frame format, the VHT category
-and its action types and the field format and EID
-for operating mode notifications. The frame may
-be used outside of VHT context as well, so don't
-include "VHT" in the names.
+I've found a couple of things here. First, I wasn't sure if I had tested
+this on anything other than Ivy Bridge machines yet, so I tried it out
+on an Arrandale box and it worked perfectly. lspci on the Ivy Bridge
+boxes yields:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) (prog-if 30 [XHCI])
+00:1a.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 [8086:1e2d] (rev 04) (prog-if 20 [EHCI])
+00:1d.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 [8086:1e26] (rev 04) (prog-if 20 [EHCI])
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 8d74522..602c99f 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -726,6 +726,30 @@ enum ieee80211_ht_chanwidth_values {
- 	IEEE80211_HT_CHANWIDTH_ANY = 1,
- };
- 
-+/**
-+ * enum ieee80211_opmode_bits - VHT operating mode field bits
-+ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK: channel width mask
-+ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ: 20 MHz channel width
-+ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_40MHZ: 40 MHz channel width
-+ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_80MHZ: 80 MHz channel width
-+ * @IEEE80211_OPMODE_NOTIF_CHANWIDTH_160MHZ: 160 MHz or 80+80 MHz channel width
-+ * @IEEE80211_OPMODE_NOTIF_RX_NSS_MASK: number of spatial streams mask
-+ *	(the NSS value is the value of this field + 1)
-+ * @IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT: number of spatial streams shift
-+ * @IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF: indicates streams in SU-MIMO PPDU
-+ *	using a beamforming steering matrix
-+ */
-+enum ieee80211_vht_opmode_bits {
-+	IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK	= 3,
-+	IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ	= 0,
-+	IEEE80211_OPMODE_NOTIF_CHANWIDTH_40MHZ	= 1,
-+	IEEE80211_OPMODE_NOTIF_CHANWIDTH_80MHZ	= 2,
-+	IEEE80211_OPMODE_NOTIF_CHANWIDTH_160MHZ	= 3,
-+	IEEE80211_OPMODE_NOTIF_RX_NSS_MASK	= 0x70,
-+	IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT	= 4,
-+	IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF	= 0x80,
-+};
-+
- #define WLAN_SA_QUERY_TR_ID_LEN 2
- 
- struct ieee80211_mgmt {
-@@ -856,6 +880,10 @@ struct ieee80211_mgmt {
- 					__le16 capability;
- 					u8 variable[0];
- 				} __packed tdls_discover_resp;
-+				struct {
-+					u8 action_code;
-+					u8 operating_mode;
-+				} __packed vht_opmode_notif;
- 			} u;
- 		} __packed action;
- 	} u;
-@@ -1610,6 +1638,7 @@ enum ieee80211_eid {
- 
- 	WLAN_EID_VHT_CAPABILITY = 191,
- 	WLAN_EID_VHT_OPERATION = 192,
-+	WLAN_EID_OPMODE_NOTIF = 199,
- 
- 	/* 802.11ad */
- 	WLAN_EID_NON_TX_BSSID_CAP =  83,
-@@ -1664,6 +1693,7 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_WMM = 17,
- 	WLAN_CATEGORY_FST = 18,
- 	WLAN_CATEGORY_UNPROT_DMG = 20,
-+	WLAN_CATEGORY_VHT = 21,
- 	WLAN_CATEGORY_VENDOR_SPECIFIC_PROTECTED = 126,
- 	WLAN_CATEGORY_VENDOR_SPECIFIC = 127,
- };
-@@ -1689,6 +1719,13 @@ enum ieee80211_ht_actioncode {
- 	WLAN_HT_ACTION_ASEL_IDX_FEEDBACK = 7,
- };
- 
-+/* VHT action codes */
-+enum ieee80211_vht_actioncode {
-+	WLAN_VHT_ACTION_COMPRESSED_BF = 0,
-+	WLAN_VHT_ACTION_GROUPID_MGMT = 1,
-+	WLAN_VHT_ACTION_OPMODE_NOTIF = 2,
-+};
-+
- /* Self Protected Action codes */
- enum ieee80211_self_protected_actioncode {
- 	WLAN_SP_RESERVED = 0,
--- 
-1.8.0
+And on the Arrandale box:
+
+00:1a.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b3c] (rev 06) (prog-if 20 [EHCI])
+00:1d.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b34] (rev 06) (prog-if 20 [EHCI])
+
+Second, I collected the usbmon trace as suggested by Alan. I don't know
+enough about USB to really read it, but normally the time between
+submission and callback for a given urb is short. However, some are much
+longer, e.g.:
+
+ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 190f0100 23232303 42b53600 82b11a00 01c02e00 6a00e846 c2ad3e00
+...
+ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 >
+
+I checked the urb addresses for a couple of the stalled frames and in
+each case found a matching urb in the usbmon trace with a similarly long
+duration between submission and callback. I've uploaded the full trace
+to:
+
+  http://people.canonical.com/~sforshee/carl9170-usbmon.log
+
+> Also, we should check what the device is doing. The hardware has
+> an (Faraday Tech) FUSB200 PHY. It's initialized and partially 
+> controlled by the carl9170 firmware.
+> (fw source is available at <https://github.com/chunkeey/carl9170fw>).
+
+I probably won't get a chance to play with the firmware until Monday.
+
+Thanks,
+Seth
 
