@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2427 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946243Ab3BHLGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 06:06:45 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 3/5] brcmfmac: fix mmc host locking issue
-Date: Fri, 8 Feb 2013 12:06:33 +0100
-Message-ID: <1360321595-31722-4-git-send-email-arend@broadcom.com> (sfid-20130208_120650_596805_EF279777)
-In-Reply-To: <1360321595-31722-1-git-send-email-arend@broadcom.com>
-References: <1360321595-31722-1-git-send-email-arend@broadcom.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:64044 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754839Ab3BXSxO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2013 13:53:14 -0500
+Message-ID: <512A6197.2000908@lwfinger.net> (sfid-20130224_195346_289515_A4EE5B32)
+Date: Sun, 24 Feb 2013 12:53:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Lockdep splat when unloading b43
+References: <512A4E83.5090901@lwfinger.net> <20130224193239.3517e6ac@milhouse>
+In-Reply-To: <20130224193239.3517e6ac@milhouse>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
+On 02/24/2013 12:32 PM, Michael Büsch wrote:
+> On Sun, 24 Feb 2013 11:31:47 -0600
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+>> With the current wireless-testing tree, unloading b43 produces the lockdep log
+>> splat copied below. My understanding of locking is deficient, and I would like
+>> to learn. Any help on understanding this problem is appreciated.
+>
+> A few questions:
+> Is there any reason for using the global workqueue and not mac80211's workqueue?
 
-fix wrong locking in crash info processing
+My original thought was that we needed the firmware load queue before mac80211 
+was running for b43; however, I now realize that my thinking was wrong.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Why is the workqueue cancelled in the core_stop callback? Wouldn't it make more
+> sense to cancel it in bcma_remove/ssb_remove?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 04680c5..9a1f823 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2701,7 +2701,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 	sdio_claim_host(bus->sdiodev->func[1]);
- 	rv = brcmf_sdbrcm_membytes(bus, false, shaddr,
- 				   (u8 *)&addr_le, 4);
--	sdio_claim_host(bus->sdiodev->func[1]);
-+	sdio_release_host(bus->sdiodev->func[1]);
- 	if (rv < 0)
- 		return rv;
- 
--- 
-1.7.10.4
+It certainly would.
+
+> This would probably fix the circular dependency. But I'm not entirely sure, because
+> I'm not that familiar with the code anymore.
+
+I know that a lot has changed, but your instincts are still good.
+
+Thanks,
+
+Larry
+
 
 
