@@ -1,91 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:43746 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754288Ab3BYRYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 12:24:47 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UA1nU-0004My-Do
-	for linux-wireless@vger.kernel.org; Mon, 25 Feb 2013 18:25:04 +0100
-Received: from ip4.capo.montpellier-agglo.com ([91.213.82.4])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 18:25:04 +0100
-Received: from yvan.labadie by ip4.capo.montpellier-agglo.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 18:25:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Yvan <yvan.labadie@gmail.com>
-Subject: Re: ath6kl: AR6004 failed to start on computer boot
-Date: Mon, 25 Feb 2013 17:19:49 +0000 (UTC)
-Message-ID: <loom.20130225T175854-850@post.gmane.org> (sfid-20130225_182450_783156_BDEE3D25)
-References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> <87ehghanxe.fsf@kamboji.qca.qualcomm.com> <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com> <511E44B8.3000308@qca.qualcomm.com> <CADGp=QfOyyTpwEg1=XXiyvRE7ZOGsn6TfiPQHs3+Jc3C69RM6Q@mail.gmail.com> <51265413.9080609@lwfinger.net> <87mwuwqtgh.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36193 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015Ab3BXWbB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Feb 2013 17:31:01 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: carl9170 A-MPDU transmit problem
+Date: Sun, 24 Feb 2013 23:30:56 +0100
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	linux-usb@vger.kernel.org,
+	"Chen, Stephen" <scchen@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+References: <Pine.LNX.4.44L0.1302241048230.22522-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1302241048230.22522-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain; charset=US-ASCII
+Message-Id: <201302242330.56346.chunkeey@googlemail.com> (sfid-20130224_233109_491653_C810B2FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@...> writes:
+On Sunday, February 24, 2013 04:54:26 PM Alan Stern wrote:
+> On Sat, 23 Feb 2013, Seth Forshee wrote:
+> > On Sat, Feb 23, 2013 at 03:07:08PM +0100, Christian Lamparter wrote:
+> > > usb_submit_urb() is async, so unless the URB data structure is
+> > > bogus, the device is in the middle of a reset/is removed or OOM
+> > > it won't return with an -ENUMBER.
+> > > 
+> > > Since neither of us has probably access to an USB analyzer, the
+> > > next best thing would be to enable ehci_hcd's debug facilities
+> > > and check if the stuck frame produced any DataBufferErr, XactErr
+> > > or something else.
+> There aren't any occurrences of such errors in the usbmon trace.
 
-> 
-> Larry Finger <Larry.Finger@...> writes:
-> 
-> > On 02/21/2013 08:03 AM, Julien Massot wrote:
-> >> Hi,
-> >> I just find a quick and dirty patch to workaround this issue.
-> >> I just reset the device on initialization failure.
-> >>
-> >> I hope this helps to understand the real issue.
-> >>
-> 
-> [...]
-> 
-> > I am certain that the real problem here is that ath6kl is requesting
-> > firmware with a synchronous call using request_firmware() rather than
-> > with the asynchronous request_firmware_nowait(). That used to work,
-> > but updates to udev caused the firmware read operation to time out. It
-> > works after a reset because the file reading routines are now running;
-> > however, the correct fix is to rewrite the firmware reading section.
-> 
-> I haven't looked at all the details yet, but AFAIK this is about cold vs
-> warm booting the chip. When rebooting the host while maintaining the
-> power to ar6004 ("warm boot") ath6kl probe fails as the chip is in odd
-> state and needs to be reset. It's not about dowloading the firmware
-> image from user space, it's about starting the firmware inside the chip.
-> 
-> And besides, didn't udev finally fix that (after some "feedback" from
-> Linus) so that we don't need to change all the drivers?
-> 
+Yes, I see no -EPROTO, -EPIPE (no stalled endpoints), -ECOMM, -EIMPORTANT...
+either. Just the -EINPROGRESS, however this is perfectly OK!
+ 
+> > I've found a couple of things here. First, I wasn't sure if I had tested
+> > this on anything other than Ivy Bridge machines yet, so I tried it out
+> > on an Arrandale box and it worked perfectly. lspci on the Ivy Bridge
+> > boxes yields:
+> > 
+> > 00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) (prog-if 30 [XHCI])
+> > 00:1a.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 [8086:1e2d] (rev 04) (prog-if 20 [EHCI])
+> > 00:1d.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 [8086:1e26] (rev 04) (prog-if 20 [EHCI])
+> > 
+> > And on the Arrandale box:
+> > 
+> > 00:1a.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b3c] (rev 06) (prog-if 20 [EHCI])
+> > 00:1d.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b34] (rev 06) (prog-if 20 [EHCI])
+> > 
+> > Second, I collected the usbmon trace as suggested by Alan. I don't know
+> > enough about USB to really read it, but normally the time between
+> > submission and callback for a given urb is short. However, some are much
+> > longer, e.g.:
+> > 
+> > ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 190f0100 23232303 42b53600 82b11a00 01c02e00 6a00e846 c2ad3e00
+> > ...
+> > ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 >
+> > 
+> > I checked the urb addresses for a couple of the stalled frames and in
+> > each case found a matching urb in the usbmon trace with a similarly long
+> > duration between submission and callback. I've uploaded the full trace
+> > to:
+> > 
+> >   http://people.canonical.com/~sforshee/carl9170-usbmon.log
 
-Hi,
+Seth,
 
-I'm having the exact same problem than Julien, (my kernel log are _exactly_ the 
-same than his).
+Did you plug the DWA-160 device into a USB 3.0 port on your ivy bridge
+system or does it react in the same way on the 'legacy' USB 2.0 ports as
+well [so we are not comparing xhci (Ivy Bridge) to ehci (Arrandale)]?
 
-A difference on the behavior: the problem is not on reboot, it's always present 
-(normal boot and reboot...).
+> The usbmon trace indicates that the data gets delivered to the device
+> as it should, but the device doesn't accept it for several seconds.
 
-But the "quick fix" witch consist in adding "reset_device" doesn't work, it just 
-goes into a loop (hardware_init fail->reset device->hardware_init fail->...)
+Looking at the logs, I find myself wondering how the "ffff88012fe19500"
+urb-complete ninja'd right in between the ffff880146c8af00 xmit and
+complete.
 
-Main difference is the linux system:
-the architecture is ARM9 (armv4) with a buildroot system and kernel 3.6.7
-note: hardware USB port is usb_v1.1 only.
+ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 190f0100 23232303 42b53600 82b11a00 01c02e00 6a00e846 c2ad3e00
+...
+ffff880146c8af00 1522200650 S Bo:3:003:1 -115 62 = 3e000000 01000500 03000000 00000000 00000000 00000000 22000$
+ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 > 
+ffff880146c8af00 1522200756 C Bo:3:003:1 0 62 >
 
-I've tried ath6kl drivers from the kernel and the one from compat-
-driver_next(2013-02-20)
-=>same result.
+>From the device side, taking the data shouldn't be a problem. The
+rx is handled by hardware dma. The data from the host is put into
+packages of 320 bytes (The carl9170 firmware has about 180 to 190
+of these 320 byte packages reserved for this purpose. So at no 
+point there should be any long delay because of lack of resources
+or whatever). Also, it doesn't look the was any unusually high 
+load on the link. And the hardware can handle sustained wifi traffic
+up to 160mbit/s (udp peaks at about 180mbit/s) without choking.
 
-The wireless USB dongle is working properly on my linux computer with the same 
-compat-driver and same firmware files, so it shouldn't have hardware problem
+Alan,
 
-Another wireless dongle based on RALINK chipset is working properly on my ARM 
-system, so this shouldn't be an hardware problem from the board.
+Do you know if there a way to monitor whenever individual attempts
+from the ehci/xhci hcd? Or can you think of any other "interesting"
+bits that could help to explain why the "Arrandale box [...] worked
+perfectly" whereas (all his) Ivy Bridge ones have problems.
+(Of course, I assume that it is always the same device, the
+same firmware and the same kernel drivers in all tests, right)?
 
-Any clue?
+BTW: My sandy-bridge laptop has the following usb controllers:
+00:1a.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 [8086:1c2d] (rev 04)
+00:1d.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 [8086:1c26] (rev 04)
+19:00.0 USB controller [0c03]: NEC Corporation uPD720200 USB 3.0 Host Controller [1033:0194] (rev 04)
+And so far I haven't come across the described "gap-of-silence".
+[my kernel: 3.8.0-wl+. Tested devices: WNDA3100v1 and TL-WN821Nv2].
 
-KR,
-Yvan.
-
-
-
+Regards,
+	Christian
