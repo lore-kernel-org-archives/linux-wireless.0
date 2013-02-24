@@ -1,97 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55024 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849Ab3BGK7u (ORCPT
+Received: from mail-da0-f54.google.com ([209.85.210.54]:36409 "EHLO
+	mail-da0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015Ab3BXWF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 05:59:50 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: pass station to ieee80211_vht_cap_ie_to_sta_vht_cap
-Date: Thu,  7 Feb 2013 12:00:13 +0100
-Message-Id: <1360234813-24668-1-git-send-email-johannes@sipsolutions.net> (sfid-20130207_115953_545767_182CD7A7)
+	Sun, 24 Feb 2013 17:05:58 -0500
+From: Syam Sidhardhan <syamsidhardh@gmail.com>
+To: jussi.kivilinna@mbnet.fi, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: syamsidhardh@gmail.com
+Subject: [PATCH] rndis_wlan: Remove redundant NULL check before kfree
+Date: Mon, 25 Feb 2013 03:35:43 +0530
+Message-Id: <1361743543-27912-1-git-send-email-s.syam@samsung.com> (sfid-20130224_230610_716486_D6E1B700)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+kfree on a NULL pointer is a no-op.
 
-Like with HT, make things a bit simpler in future patches by
-passing the station to ieee80211_vht_cap_ie_to_sta_vht_cap()
-instead of the vht_cap pointer. Also disable VHT here if HT
-isn't supported.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
 ---
- net/mac80211/cfg.c         | 3 +--
- net/mac80211/ieee80211_i.h | 2 +-
- net/mac80211/mlme.c        | 3 +--
- net/mac80211/vht.c         | 8 +++++---
- 4 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rndis_wlan.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 221db8d..799e706 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1253,8 +1253,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 525fd75..5f66b4e 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2839,8 +2839,7 @@ static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
+ 	} else if (priv->infra_mode == NDIS_80211_INFRA_ADHOC)
+ 		cfg80211_ibss_joined(usbdev->net, bssid, GFP_KERNEL);
  
- 	if (params->vht_capa)
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
--						    params->vht_capa,
--						    &sta->sta.vht_cap);
-+						    params->vht_capa, sta);
+-	if (info != NULL)
+-		kfree(info);
++	kfree(info);
  
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 190915c..0583435 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1426,7 +1426,7 @@ u8 ieee80211_mcs_to_chains(const struct ieee80211_mcs_info *mcs);
- void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_supported_band *sband,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
--					 struct ieee80211_sta_vht_cap *vht_cap);
-+					 struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
- 
- /* Spectrum management */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4faf785..8176bf5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2197,8 +2197,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 
- 	if (elems.vht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
--						    elems.vht_cap_elem,
--						    &sta->sta.vht_cap);
-+						    elems.vht_cap_elem, sta);
- 
- 	rate_control_rate_init(sta);
- 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 7751867..234f408 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -15,13 +15,15 @@
- void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_supported_band *sband,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
--					 struct ieee80211_sta_vht_cap *vht_cap)
-+					 struct sta_info *sta)
- {
--	if (WARN_ON_ONCE(!vht_cap))
--		return;
-+	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
- 
- 	memset(vht_cap, 0, sizeof(*vht_cap));
- 
-+	if (!sta->sta.ht_cap.ht_supported)
-+		return;
-+
- 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
- 		return;
- 
+ 	priv->connected = true;
+ 	memcpy(priv->bssid, bssid, ETH_ALEN);
 -- 
-1.8.0
+1.7.9.5
 
