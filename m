@@ -1,235 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808Ab3BUTLy (ORCPT
+Received: from vms173001pub.verizon.net ([206.46.173.1]:57237 "EHLO
+	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757434Ab3BXPGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 14:11:54 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: support VHT capability overrides
-Date: Thu, 21 Feb 2013 20:11:45 +0100
-Message-Id: <1361473906-14941-3-git-send-email-johannes@sipsolutions.net> (sfid-20130221_201204_329642_5700A04E)
-In-Reply-To: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>
-References: <1361473906-14941-1-git-send-email-johannes@sipsolutions.net>
+	Sun, 24 Feb 2013 10:06:19 -0500
+Received: from odin.tremily.us ([unknown] [72.68.84.219])
+ by vms173001.mailsrvcs.net
+ (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
+ with ESMTPA id <0MIQ001BNCMGEM60@vms173001.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Sun, 24 Feb 2013 09:06:17 -0600 (CST)
+Date: Sun, 24 Feb 2013 10:06:15 -0500
+From: "W. Trevor King" <wking@tremily.us>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [RFC 12/13] brcmsmac: add support for probe response template
+Message-id: <20130224150615.GN1361@odin.tremily.us> (sfid-20130224_160624_446400_0BD9937E)
+References: <1361667972-22909-1-git-send-email-hauke@hauke-m.de>
+ <1361667972-22909-13-git-send-email-hauke@hauke-m.de>
+ <20130224023008.GG1361@odin.tremily.us> <5129DFCD.3020009@hauke-m.de>
+MIME-version: 1.0
+Content-type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature"; boundary=gWRamliw218YCZO9
+In-reply-to: <5129DFCD.3020009@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Support the cfg80211 API to override VHT capabilities
-on association.
+--gWRamliw218YCZO9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  4 +++
- net/mac80211/main.c        | 18 ++++++++++
- net/mac80211/mlme.c        | 12 ++++++-
- net/mac80211/vht.c         | 87 ++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 120 insertions(+), 1 deletion(-)
+On Sun, Feb 24, 2013 at 10:39:25AM +0100, Hauke Mehrtens wrote:
+> On 02/24/2013 03:30 AM, W. Trevor King wrote:
+> > On Sun, Feb 24, 2013 at 02:06:10AM +0100, Hauke Mehrtens wrote:
+> >> The ucode is able to answer probe response by itself. This writes
+> >> such a template into the specific memory. Currently the probe
+> >> requests are also send to mac80211 so there are more answers send
+> >> to a requesting client. We have to make the ucode stop sending
+> >> probe requests to the driver.
+> >=20
+> > Should this read "so there are more answers sent to"?
+> >=20
+> yes there are more answers then normal send out, but it is normal that
+> you send out more than one, at least I have seen it so it is probably
+> in the standard. The last part of this patch could applied again to
+> not receive probe requests any more:
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6d16906..939c97e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -479,6 +479,8 @@ struct ieee80211_if_managed {
- 
- 	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
- 	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
-+	struct ieee80211_vht_cap vht_capa; /* configured VHT overrides */
-+	struct ieee80211_vht_cap vht_capa_mask; /* Valid parts of vht_capa */
- };
- 
- struct ieee80211_if_ibss {
-@@ -1439,6 +1441,8 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-+void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_sta_vht_cap *vht_cap);
- 
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index c89f0bc..3548ec3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -501,6 +501,23 @@ static const struct ieee80211_ht_cap mac80211_ht_capa_mod_mask = {
- 	},
- };
- 
-+static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
-+	.vht_cap_info =
-+		cpu_to_le32(IEEE80211_VHT_CAP_RXLDPC |
-+			    IEEE80211_VHT_CAP_SHORT_GI_80 |
-+			    IEEE80211_VHT_CAP_SHORT_GI_160 |
-+			    IEEE80211_VHT_CAP_TXSTBC |
-+			    IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
-+			    IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+			    IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN |
-+			    IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
-+			    IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK),
-+	.supp_mcs = {
-+		.rx_mcs_map = cpu_to_le16(~0),
-+		.tx_mcs_map = cpu_to_le16(~0),
-+	},
-+};
-+
- static const u8 extended_capabilities[] = {
- 	0, 0, 0, 0, 0, 0, 0,
- 	WLAN_EXT_CAPA8_OPMODE_NOTIF,
-@@ -609,6 +626,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
- 	local->user_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
-+	wiphy->vht_capa_mod_mask = &mac80211_vht_capa_mod_mask;
- 
- 	INIT_LIST_HEAD(&local->interfaces);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6a7d19b..ef56e0a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -609,6 +609,7 @@ static void ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
- 	BUILD_BUG_ON(sizeof(vht_cap) != sizeof(sband->vht_cap));
- 
- 	memcpy(&vht_cap, &sband->vht_cap, sizeof(vht_cap));
-+	ieee80211_apply_vhtcap_overrides(sdata, &vht_cap);
- 
- 	/* determine capability flags */
- 	cap = vht_cap.cap;
-@@ -1801,9 +1802,11 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.bss_conf.p2p_ctwindow = 0;
- 	sdata->vif.bss_conf.p2p_oppps = false;
- 
--	/* on the next assoc, re-program HT parameters */
-+	/* on the next assoc, re-program HT/VHT parameters */
- 	memset(&ifmgd->ht_capa, 0, sizeof(ifmgd->ht_capa));
- 	memset(&ifmgd->ht_capa_mask, 0, sizeof(ifmgd->ht_capa_mask));
-+	memset(&ifmgd->vht_capa, 0, sizeof(ifmgd->vht_capa));
-+	memset(&ifmgd->vht_capa_mask, 0, sizeof(ifmgd->vht_capa_mask));
- 
- 	sdata->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 
-@@ -4094,6 +4097,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
- 	}
- 
-+	if (req->flags & ASSOC_REQ_DISABLE_VHT)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
-+
- 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
- 	sband = local->hw.wiphy->bands[req->bss->channel->band];
- 	if (!sband->ht_cap.ht_supported ||
-@@ -4117,6 +4123,10 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
- 	       sizeof(ifmgd->ht_capa_mask));
- 
-+	memcpy(&ifmgd->vht_capa, &req->vht_capa, sizeof(ifmgd->vht_capa));
-+	memcpy(&ifmgd->vht_capa_mask, &req->vht_capa_mask,
-+	       sizeof(ifmgd->vht_capa_mask));
-+
- 	if (req->ie && req->ie_len) {
- 		memcpy(assoc_data->ie, req->ie, req->ie_len);
- 		assoc_data->ie_len = req->ie_len;
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index a2c2258..9ba0f22 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -13,6 +13,93 @@
- #include "rate.h"
- 
- 
-+static void __check_vhtcap_disable(struct ieee80211_sub_if_data *sdata,
-+				   struct ieee80211_sta_vht_cap *vht_cap,
-+				   u32 flag)
-+{
-+	__le32 le_flag = cpu_to_le32(flag);
-+
-+	if (sdata->u.mgd.vht_capa_mask.vht_cap_info & le_flag &&
-+	    !(sdata->u.mgd.vht_capa.vht_cap_info & le_flag))
-+		vht_cap->cap &= ~flag;
-+}
-+
-+void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
-+				      struct ieee80211_sta_vht_cap *vht_cap)
-+{
-+	int i;
-+	u16 rxmcs_mask, rxmcs_cap, rxmcs_n, txmcs_mask, txmcs_cap, txmcs_n;
-+
-+	if (!vht_cap->vht_supported)
-+		return;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_RXLDPC);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_SHORT_GI_80);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_SHORT_GI_160);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_TXSTBC);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN);
-+	__check_vhtcap_disable(sdata, vht_cap,
-+			       IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN);
-+
-+	/* Allow user to decrease AMPDU length exponent */
-+	if (sdata->u.mgd.vht_capa_mask.vht_cap_info &
-+	    cpu_to_le32(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK)) {
-+		u32 cap, n;
-+
-+		n = le32_to_cpu(sdata->u.mgd.vht_capa.vht_cap_info) &
-+			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-+		n >>= IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+		cap = vht_cap->cap & IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-+		cap >>= IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+
-+		if (n < cap) {
-+			vht_cap->cap &=
-+				~IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-+			vht_cap->cap |=
-+				n << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+		}
-+	}
-+
-+	/* Allow the user to decrease MCSes */
-+	rxmcs_mask =
-+		le16_to_cpu(sdata->u.mgd.vht_capa_mask.supp_mcs.rx_mcs_map);
-+	rxmcs_n = le16_to_cpu(sdata->u.mgd.vht_capa.supp_mcs.rx_mcs_map);
-+	rxmcs_n &= rxmcs_mask;
-+	rxmcs_cap = le16_to_cpu(vht_cap->vht_mcs.rx_mcs_map);
-+
-+	txmcs_mask =
-+		le16_to_cpu(sdata->u.mgd.vht_capa_mask.supp_mcs.tx_mcs_map);
-+	txmcs_n = le16_to_cpu(sdata->u.mgd.vht_capa.supp_mcs.tx_mcs_map);
-+	txmcs_n &= txmcs_mask;
-+	txmcs_cap = le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map);
-+	for (i = 0; i < 8; i++) {
-+		if (rxmcs_mask & (3 << 2*i) &&
-+		    (rxmcs_n & (3 << 2*i)) < (rxmcs_cap & (3 << 2*i))) {
-+			rxmcs_cap &= ~(3 << 2*i);
-+			rxmcs_cap |= (rxmcs_n & (3 << 2*i));
-+		}
-+		if (txmcs_mask & (3 << 2*i) &&
-+		    (txmcs_n & (3 << 2*i)) < (txmcs_cap & (3 << 2*i))) {
-+			txmcs_cap &= ~(3 << 2*i);
-+			txmcs_cap |= (txmcs_n & (3 << 2*i));
-+		}
-+	}
-+	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(rxmcs_cap);
-+	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(txmcs_cap);
-+}
-+
- void
- ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_supported_band *sband,
--- 
-1.8.0
+I was just trying to correct the English ;), not make a deeper
+statement about the content.  Sorry for my initial ambiguity=E2=80=A6
 
+--=20
+This email may be signed or encrypted with GnuPG (http://www.gnupg.org).
+For more information, see http://en.wikipedia.org/wiki/Pretty_Good_Privacy
+
+--gWRamliw218YCZO9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRKixnAAoJEEUbTsx0l5OMjY0P/0tjlq6jWe5TBJdG2YVDRr2r
+b88bWqtGfImxnuLVP/nz/6fTellzJz9BsfJzbT5qT6cBPneeqEc53W+t/LT9Tl26
+r/MnV7vKYKjfrW930Uk7wkX+sjOsqG29VqJmgOhFU3S6Wz4urzHLQa0i9OKZceFA
+/9smp83Ir1uQW9r7JYO3iwDAhrZnGTrqjVsqoVgPgkONApLuaOFA03TdSOYguW3j
+P4VOX28IcjOguqKBi5OTEacPBzOFSuhganfKzsT9UfImNVsRz5CegssrI44olQio
+174t676uuCqjwldZzHuq+p71QyqVyyiaIV4vodEAygYWCyQcU9Hjg5A8VEtp+vmB
+sIq6zkOp5biIrwOpFf0mzxsYNBcpehZiUMNw1hLQ492GSzGc6ZLwGPT3Ueh/UTvE
+AazkKj6nIWxk46zhIleZUNGPcP8kkRjUkZ5aYtT5M+5mgAJUOaiMmX4PewTxwk5C
+3yJk51ln9jIdzmhXQ11B9wR8wgQJ2CvTEo4e1gVD2Cc4PlQydWc3uWalIRa/Lp8v
+4IxAdjwUsk7bkosW9kczCKwtm3wmboSW++wI2YGqYY1KeSfxIMYGNrp/cmwALuHZ
+QCUhWJCUdSKRdNWbXLzDjASZXnOv/Yy1NiZvNGW8SkH1n1lNzRIqrlWKpGlDbMD3
+znCaG4zLzwJYuaIeqi0Z
+=CiBy
+-----END PGP SIGNATURE-----
+
+--gWRamliw218YCZO9--
