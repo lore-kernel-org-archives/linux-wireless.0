@@ -1,132 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:43497 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933343Ab3BTAJl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 19:09:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 19 Feb 2013 16:09:35 -0800
-Subject: RE: [PATCH] mwifiex: don't drop carrier flag over suspend
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE5CF@SC-VEXCH1.marvell.com> (sfid-20130220_010945_756553_6382CD0A)
-References: <20130219200947.70319FA975@dev.laptop.org>
-In-Reply-To: <20130219200947.70319FA975@dev.laptop.org>
-Content-Type: text/plain; charset=US-ASCII
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49923 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535Ab3BYUaU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 15:30:20 -0500
+Date: Mon, 25 Feb 2013 15:17:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2013-02-25
+Message-ID: <20130225201748.GC6455@tuxdriver.com> (sfid-20130225_213046_938114_09FA90A0)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Dave,
 
-> If the system suspends with mwifiex wifi powered on, and is then woken
-> by an ICMP ping packet, the ping response is discarded by the kernel
-> because the kernel incorrectly thinks there is no carrier.
-> 
-> I can't see any valid reason to want to report loss of carrier here,
-> so remove the offending code.
-> 
-> Fixes http://dev.laptop.org/ticket/12554
+This is a batch of fixes intended for the 3.9 stream...
 
-Thanks for the patch.
+Avinash Patil gives us a mwifiex fix to prevent a system freeze when
+that driver is unloaded.
 
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+Daniel Drake brings a patch to avoid dropping the carrier flag across a
+suspend.  This prevents improper packet drops.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+Wei Yongjun delivers a brcmfmac for a lock leak on an error path.
+
+Please let me know if there are problems!
 
 Thanks,
-Bing
 
-> ---
->  drivers/net/wireless/mwifiex/pcie.c | 10 +---------
->  drivers/net/wireless/mwifiex/sdio.c |  9 ---------
->  2 files changed, 1 insertion(+), 18 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-> index b879e13..db29dea 100644
-> --- a/drivers/net/wireless/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/mwifiex/pcie.c
-> @@ -157,7 +157,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->  {
->  	struct mwifiex_adapter *adapter;
->  	struct pcie_service_card *card;
-> -	int hs_actived, i;
-> +	int hs_actived;
-> 
->  	if (pdev) {
->  		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-> @@ -177,9 +177,6 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
->  	/* Indicate device suspended */
->  	adapter->is_suspended = true;
-> 
-> -	for (i = 0; i < adapter->priv_num; i++)
-> -		netif_carrier_off(adapter->priv[i]->netdev);
-> -
->  	return 0;
->  }
-> 
-> @@ -195,7 +192,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
->  {
->  	struct mwifiex_adapter *adapter;
->  	struct pcie_service_card *card;
-> -	int i;
-> 
->  	if (pdev) {
->  		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-> @@ -217,10 +213,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
-> 
->  	adapter->is_suspended = false;
-> 
-> -	for (i = 0; i < adapter->priv_num; i++)
-> -		if (adapter->priv[i]->media_connected)
-> -			netif_carrier_on(adapter->priv[i]->netdev);
-> -
->  	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
->  			  MWIFIEX_ASYNC_CMD);
-> 
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index 5a1c1d0..133ecb5 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
-> @@ -161,7 +161,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
->  	struct sdio_mmc_card *card;
->  	struct mwifiex_adapter *adapter;
->  	mmc_pm_flag_t pm_flag = 0;
-> -	int i;
->  	int ret = 0;
-> 
->  	if (func) {
-> @@ -198,9 +197,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
->  	/* Indicate device suspended */
->  	adapter->is_suspended = true;
-> 
-> -	for (i = 0; i < adapter->priv_num; i++)
-> -		netif_carrier_off(adapter->priv[i]->netdev);
-> -
->  	return ret;
->  }
-> 
-> @@ -220,7 +216,6 @@ static int mwifiex_sdio_resume(struct device *dev)
->  	struct sdio_mmc_card *card;
->  	struct mwifiex_adapter *adapter;
->  	mmc_pm_flag_t pm_flag = 0;
-> -	int i;
-> 
->  	if (func) {
->  		pm_flag = sdio_get_host_pm_caps(func);
-> @@ -243,10 +238,6 @@ static int mwifiex_sdio_resume(struct device *dev)
-> 
->  	adapter->is_suspended = false;
-> 
-> -	for (i = 0; i < adapter->priv_num; i++)
-> -		if (adapter->priv[i]->media_connected)
-> -			netif_carrier_on(adapter->priv[i]->netdev);
-> -
->  	/* Disable Host Sleep */
->  	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
->  			  MWIFIEX_ASYNC_CMD);
-> --
-> 1.8.1.2
+John
 
+---
+
+The following changes since commit ea5cdccc46d392b73d941c723630d37094e8e8ea:
+
+  net/pasemi: Fix missing coding style (2013-02-24 21:22:47 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+
+for you to fetch changes up to 6d6436fbcbc43febe2481d3488f3bb5271ec2eb0:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless into for-davem (2013-02-25 14:50:31 -0500)
+
+----------------------------------------------------------------
+
+Avinash Patil (1):
+      mwifiex: fix system freeze while reloading driver
+
+Daniel Drake (1):
+      mwifiex: don't drop carrier flag over suspend
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
+
+Wei Yongjun (1):
+      brcmfmac: fix missing unlock on error in brcmf_notify_vif_event()
+
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c   |  4 +++-
+ drivers/net/wireless/mwifiex/pcie.c                 | 21 ++-------------------
+ drivers/net/wireless/mwifiex/sdio.c                 |  9 ---------
+ 3 files changed, 5 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index cecc3ef..2af9c0f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4615,8 +4615,10 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 	switch (ifevent->action) {
+ 	case BRCMF_E_IF_ADD:
+ 		/* waiting process may have timed out */
+-		if (!cfg->vif_event.vif)
++		if (!cfg->vif_event.vif) {
++			mutex_unlock(&event->vif_event_lock);
+ 			return -EBADF;
++		}
+ 
+ 		ifp->vif = vif;
+ 		vif->ifp = ifp;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 4b54bcf..35c7972 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -171,7 +171,7 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 	struct pcie_service_card *card;
+-	int hs_actived, i;
++	int hs_actived;
+ 
+ 	if (pdev) {
+ 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+@@ -191,9 +191,6 @@ static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	/* Indicate device suspended */
+ 	adapter->is_suspended = true;
+ 
+-	for (i = 0; i < adapter->priv_num; i++)
+-		netif_carrier_off(adapter->priv[i]->netdev);
+-
+ 	return 0;
+ }
+ 
+@@ -209,7 +206,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 	struct pcie_service_card *card;
+-	int i;
+ 
+ 	if (pdev) {
+ 		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+@@ -231,10 +227,6 @@ static int mwifiex_pcie_resume(struct pci_dev *pdev)
+ 
+ 	adapter->is_suspended = false;
+ 
+-	for (i = 0; i < adapter->priv_num; i++)
+-		if (adapter->priv[i]->media_connected)
+-			netif_carrier_on(adapter->priv[i]->netdev);
+-
+ 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+ 			  MWIFIEX_ASYNC_CMD);
+ 
+@@ -916,17 +908,8 @@ static int mwifiex_pcie_delete_sleep_cookie_buf(struct mwifiex_adapter *adapter)
+ static int mwifiex_clean_pcie_ring_buf(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	u32 rdptr;
+-
+-	/* Read the TX ring read pointer set by firmware */
+-	if (mwifiex_read_reg(adapter, reg->tx_rdptr, &rdptr)) {
+-		dev_err(adapter->dev,
+-			"Flush TXBD: failed to read reg->tx_rdptr\n");
+-		return -1;
+-	}
+ 
+-	if (!mwifiex_pcie_txbd_empty(card, rdptr)) {
++	if (!mwifiex_pcie_txbd_empty(card, card->txbd_rdptr)) {
+ 		card->txbd_flush = 1;
+ 		/* write pointer already set at last send
+ 		 * send dnld-rdy intr again, wait for completion.
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index e63f646..363ba31 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -161,7 +161,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+ 	mmc_pm_flag_t pm_flag = 0;
+-	int i;
+ 	int ret = 0;
+ 
+ 	if (func) {
+@@ -198,9 +197,6 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 	/* Indicate device suspended */
+ 	adapter->is_suspended = true;
+ 
+-	for (i = 0; i < adapter->priv_num; i++)
+-		netif_carrier_off(adapter->priv[i]->netdev);
+-
+ 	return ret;
+ }
+ 
+@@ -220,7 +216,6 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+ 	mmc_pm_flag_t pm_flag = 0;
+-	int i;
+ 
+ 	if (func) {
+ 		pm_flag = sdio_get_host_pm_caps(func);
+@@ -243,10 +238,6 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 
+ 	adapter->is_suspended = false;
+ 
+-	for (i = 0; i < adapter->priv_num; i++)
+-		if (adapter->priv[i]->media_connected)
+-			netif_carrier_on(adapter->priv[i]->netdev);
+-
+ 	/* Disable Host Sleep */
+ 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+ 			  MWIFIEX_ASYNC_CMD);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
