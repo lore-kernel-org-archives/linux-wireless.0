@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56341 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284Ab3BMTZb (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46794 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755801Ab3BYQz4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 14:25:31 -0500
-Date: Wed, 13 Feb 2013 13:25:19 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 1/4] mac80211: Convert PS configuration from a binary
- flag to a set of modes
-Message-ID: <20130213192519.GD22867@thinkpad-t410> (sfid-20130213_202535_654107_2B75F7D9)
-References: <1360184478-31481-1-git-send-email-seth.forshee@canonical.com>
- <1360184478-31481-2-git-send-email-seth.forshee@canonical.com>
- <1360767970.8868.24.camel@jlt4.sipsolutions.net>
- <20130213170445.GC22867@thinkpad-t410>
- <511BE15B.8090507@broadcom.com>
+	Mon, 25 Feb 2013 11:55:56 -0500
+Message-ID: <512B9799.6000708@candelatech.com> (sfid-20130225_175559_797742_8BD87F90)
+Date: Mon, 25 Feb 2013 08:55:53 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <511BE15B.8090507@broadcom.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
+References: <1361326267-16847-1-git-send-email-greearb@candelatech.com> <20130225102020.GA1735@redhat.com>
+In-Reply-To: <20130225102020.GA1735@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 13, 2013 at 07:54:19PM +0100, Arend van Spriel wrote:
-> On 02/13/2013 06:04 PM, Seth Forshee wrote:
-> >> Is all this really worth it? It seems a quick fix for brcmsmac might be
-> >> > to always set the powersave bit when IEEE80211_CONF_OFFCHANNEL is
-> >> > enabled in the config, and then go implement a real solution like I
-> >> > described earlier with powersave being separated out of the core
-> >> > mac80211 routines, and actually made possible for multiple interfaces?
-> > Using IEEE80211_CONF_OFFCHANNEL won't work. When the nullfunc to enable
-> > PS is sent the flag won't be set, as we're still on the operating
-> > channel. When we're actually off-channel the value of PM doesn't matter
-> > for the types of frames which are being sent. The only quick fix I've
-> > found is to watch out for frames with PM set and set the powersave bit
-> > while they're being transmitted.
-> 
-> I actually don't see that one fly. The frames are posted on a DMA fifo
-> towards the hardware so in the driver we have no clue when that frame is
-> being processes/transmitted hence no way of knowing when to write the
-> register(s).
+On 02/25/2013 02:20 AM, Stanislaw Gruszka wrote:
+> On Tue, Feb 19, 2013 at 06:11:07PM -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The monitor_work and beacon_connection_loss_work items were
+>> not being canceled on disassociation (and not on deletion
+>> either).  This leads to work-items trying to run after memory
+>> has been deleted.
+>>
+>> I could not find a cleaner way to do this because the
+>> cancel_work_sync for these items must be done outside
+>> of the ifmgd->mtx.
+>>
+>> In addition, re-order the quiesce code so that timers are
+>> always stopped before work-items are flushed.  This was
+>> not the problem I saw, but I think it may still be more
+>> correct.
+>
+> I think this patch is quite complicated and simpler solution
+> can be used. We stop timers on disassociate, and since
 
-There's a couple of ways of doing it. I had a working patch at one point
-but can't seem to find it now, so I'm not sure which way I used. You're
-right though that we can't tell when the hardware is actually processing
-or transmitting the frame, so in either case MCTL_HPS has to be set
-before you put the frame in the tx fifo.
+I think my second patch was closer to what you have...
 
-The first option is that for any frame with PM set, set MCTL_HPS when
-mac80211 hands off the frame and clear it once it has finished
-transmitting.
+> +	/*
+> +	 * We canceled timers during disassoc, but works still can be pending.
+> +	 * Even if we they do not perform action when unassociated, we should
+> +	 * assure we stop them, before freeing resources.
+> +	 */
 
-The second option is to look specifically for nullfunc frames and set or
-clear MCTL_HPS based on the value of PM.
+The comment is a bit misleading....as I saw in my testing, it could actually
+crash the system because the entire station could be deleted by the time
+the work-item tries to complete.
 
-Either of these should work fine with the current mac80211 code, but
-overall the second one is probably a little safer.
+Thanks,
+Ben
 
-Seth
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
