@@ -1,48 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:50477 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758719Ab3BZJCa (ORCPT
+Received: from mail.pripojeni.net ([178.22.112.14]:53352 "EHLO
+	smtp.pripojeni.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1757057Ab3BYOhB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 04:02:30 -0500
-Received: by mail-ea0-f171.google.com with SMTP id c13so13020eaa.16
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2013 01:02:29 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: implement disabling PLLs
-Date: Tue, 26 Feb 2013 10:02:23 +0100
-Message-Id: <1361869343-29862-1-git-send-email-zajec5@gmail.com> (sfid-20130226_100237_797672_D3C13CF9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Feb 2013 09:37:01 -0500
+From: Jiri Slaby <jslaby@suse.cz>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	mcgrof@qca.qualcomm.com, jirislaby@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] ath5k: cleanup channel to eprom_mode function
+Date: Mon, 25 Feb 2013 15:36:48 +0100
+Message-Id: <1361803008-18494-1-git-send-email-jslaby@suse.cz> (sfid-20130225_153720_896685_A31638B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Stop returning negative values from ath5k_eeprom_mode_from_channel.
+Yell loudly about that case in that function instead and return the
+default/zero/mode A. This cleans up the callers, but needs to pass ah
+down to ath5k_eeprom_mode_from_channel for ATH5K_WARN. For that
+purpose we also need the declaration to be moved to ath5k.h.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- drivers/bcma/core.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h  |  3 ++-
+ drivers/net/wireless/ath/ath5k/eeprom.c |  6 ++++--
+ drivers/net/wireless/ath/ath5k/eeprom.h |  3 ---
+ drivers/net/wireless/ath/ath5k/phy.c    | 20 +++-----------------
+ drivers/net/wireless/ath/ath5k/reset.c  |  4 +---
+ 5 files changed, 10 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 03bbe10..17b26ce 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -104,7 +104,13 @@ void bcma_core_pll_ctl(struct bcma_device *core, u32 req, u32 status, bool on)
- 		if (i)
- 			bcma_err(core->bus, "PLL enable timeout\n");
- 	} else {
--		bcma_warn(core->bus, "Disabling PLL not supported yet!\n");
-+		/*
-+		 * Mask the PLL but don't wait for it to be disabled. PLL may be
-+		 * shared between cores and will be still up if there is another
-+		 * core using it.
-+		 */
-+		bcma_mask32(core, BCMA_CLKCTLST, ~req);
-+		bcma_read32(core, BCMA_CLKCTLST);
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 3150def..2d691b8 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1523,7 +1523,8 @@ int ath5k_hw_dma_stop(struct ath5k_hw *ah);
+ /* EEPROM access functions */
+ int ath5k_eeprom_init(struct ath5k_hw *ah);
+ void ath5k_eeprom_detach(struct ath5k_hw *ah);
+-
++int ath5k_eeprom_mode_from_channel(struct ath5k_hw *ah,
++		struct ieee80211_channel *channel);
+ 
+ /* Protocol Control Unit Functions */
+ /* Helpers */
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index b7e0258..94d34ee 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1779,7 +1779,8 @@ ath5k_eeprom_detach(struct ath5k_hw *ah)
+ }
+ 
+ int
+-ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
++ath5k_eeprom_mode_from_channel(struct ath5k_hw *ah,
++		struct ieee80211_channel *channel)
+ {
+ 	switch (channel->hw_value) {
+ 	case AR5K_MODE_11A:
+@@ -1789,6 +1790,7 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+ 	case AR5K_MODE_11B:
+ 		return AR5K_EEPROM_MODE_11B;
+ 	default:
+-		return -1;
++		ATH5K_WARN(ah, "channel is not A/B/G!");
++		return AR5K_EEPROM_MODE_11A;
  	}
  }
- EXPORT_SYMBOL_GPL(bcma_core_pll_ctl);
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index 94a9bbe..693296e 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -493,6 +493,3 @@ struct ath5k_eeprom_info {
+ 	/* Antenna raw switch tables */
+ 	u32	ee_antenna[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
+ };
+-
+-int
+-ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel);
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index a78afa9..d6bc7cb 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1612,11 +1612,7 @@ ath5k_hw_update_noise_floor(struct ath5k_hw *ah)
+ 
+ 	ah->ah_cal_mask |= AR5K_CALIBRATION_NF;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(ah->ah_current_channel);
+-	if (WARN_ON(ee_mode < 0)) {
+-		ah->ah_cal_mask &= ~AR5K_CALIBRATION_NF;
+-		return;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, ah->ah_current_channel);
+ 
+ 	/* completed NF calibration, test threshold */
+ 	nf = ath5k_hw_read_measured_noise_floor(ah);
+@@ -2317,12 +2313,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
+ 
+ 	def_ant = ah->ah_def_ant;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (ee_mode < 0) {
+-		ATH5K_ERR(ah,
+-			"invalid channel: %d\n", channel->center_freq);
+-		return;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	switch (ant_mode) {
+ 	case AR5K_ANTMODE_DEFAULT:
+@@ -3622,12 +3613,7 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (ee_mode < 0) {
+-		ATH5K_ERR(ah,
+-			"invalid channel: %d\n", channel->center_freq);
+-		return -EINVAL;
+-	}
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	/* Initialize TX power table */
+ 	switch (ah->ah_radio) {
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index e2d8b2c..a3399c4 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -984,9 +984,7 @@ ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 	if (ah->ah_version == AR5K_AR5210)
+ 		return;
+ 
+-	ee_mode = ath5k_eeprom_mode_from_channel(channel);
+-	if (WARN_ON(ee_mode < 0))
+-		return;
++	ee_mode = ath5k_eeprom_mode_from_channel(ah, channel);
+ 
+ 	/* Adjust power delta for channel 14 */
+ 	if (channel->center_freq == 2484)
 -- 
-1.7.10.4
+1.8.1.4
+
 
