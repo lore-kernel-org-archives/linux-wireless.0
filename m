@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:37064 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758571Ab3BLQh3 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:34380 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758924Ab3BYWRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:37:29 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-	Michael Braun <michael-dev@fami-braun.de>
-Subject: [PATCHv2 1/1] mac80211: fix WPA with VLAN on AP side with ps-sta
-Date: Tue, 12 Feb 2013 17:37:18 +0100
-Message-Id: <1360687038-17610-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173731_351014_1564560C)
-In-Reply-To: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de>
-References: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de>
+	Mon, 25 Feb 2013 17:17:50 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr12so2796998wgb.11
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 14:17:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5129ABDB.5080800@list.ru>
+References: <5129ABDB.5080800@list.ru>
+Date: Mon, 25 Feb 2013 14:17:49 -0800
+Message-ID: <CAJ-Vmo=+gxHABq4cJhCn9Qo350Anr0ZhvJ7Nv1_r07FPXJyhWw@mail.gmail.com> (sfid-20130225_231754_773163_D36C31E3)
+Subject: Re: [ath9k-devel] [RFT] ath9k_htc - please test new images
+From: Adrian Chadd <adrian@freebsd.org>
+To: Roman Elshin <roxmail@list.ru>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+On 23 February 2013 21:57, Roman Elshin <roxmail@list.ru> wrote:
+> AP mode with kernel-3.0.66 and TL-WN821N,
+> htc_7010.fw works but data speed is very low ~100kb/s (version from
+> 20121128 works fine here).
 
-This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+Hi!
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+Please try this:
 
-V2: fix compile warning
----
- net/mac80211/tx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+http://developer.atheros.com/~adrian/htc/20130225/
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2ef0e19..583c025 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2728,6 +2728,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	struct ps_data *ps;
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct ieee80211_sub_if_data *frame_sdata;
- 
- 	sdata = vif_to_sdata(vif);
- 
-@@ -2770,7 +2771,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
- 
--		if (!ieee80211_tx_prepare(sdata, &tx, skb))
-+		frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
-+		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
- 			break;
- 		dev_kfree_skb_any(skb);
- 	}
--- 
-1.7.10.4
+* I've left the version number at 1.3, so you don't need to modify
+your firmware version in ath9k_htc;
+* Felix and I have fixed up the rate table handling again so it should
+be using the correct rate configuration (and thus performance should
+be back to normal)
+
+Please let me know if this works better.
+
+Thanks!
+
+
+
+Adrian
