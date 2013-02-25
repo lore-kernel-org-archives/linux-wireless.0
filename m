@@ -1,75 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51126 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933631Ab3BTO1v (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54150 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758190Ab3BYU6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 09:27:51 -0500
-Message-ID: <1361370467.8629.21.camel@jlt4.sipsolutions.net> (sfid-20130220_152759_341984_BE117470)
-Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Mon, 25 Feb 2013 15:58:10 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Fabio Rossi <rossi.f@inwind.it>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 20 Feb 2013 15:27:47 +0100
-In-Reply-To: <5124DCA0.6030106@candelatech.com>
-References: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
-	   (sfid-20130220_031220_995074_BF5628B4) <1361354394.8629.11.camel@jlt4.sipsolutions.net>
-	  <5124D90E.7070307@candelatech.com>
-	 <1361369637.8629.20.camel@jlt4.sipsolutions.net>
-	 <5124DCA0.6030106@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH] mac80211: Ensure off-channel frames don't get queued
+Date: Mon, 25 Feb 2013 14:58:05 -0600
+Message-Id: <1361825885-13520-1-git-send-email-seth.forshee@canonical.com> (sfid-20130225_215815_269165_8291A5F8)
+In-Reply-To: <20130225192629.GH13296@thinkpad-t410>
+References: <20130225192629.GH13296@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-20 at 06:24 -0800, Ben Greear wrote:
-> On 02/20/2013 06:13 AM, Johannes Berg wrote:
-> > On Wed, 2013-02-20 at 06:09 -0800, Ben Greear wrote:
-> >
-> >>>> @@ -2668,6 +2681,10 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
-> >>>>    			       false, frame_buf);
-> >>>>    	mutex_unlock(&ifmgd->mtx);
-> >>>>
-> >>>> +	/* Have to do this outside the ifmgd->mtx lock. */
-> >>>> +	cancel_work_sync(&ifmgd->monitor_work);
-> >>>> +	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
-> >>>
-> >>> OTOH, you do this many many times, and that doesn't seem necessary...
-> >>>
-> >>> If the work structs run when we disconnected, that's ok, they just
-> >>> musn't run after we destroy the interface, so I think it'd be much
-> >>> better to just put the two lines into ieee80211_mgd_stop() instead of
-> >>> all the other places.
-> >>
-> >> Ok, that sounds promising to me.  For that matter, could we just call the sta_quiesce
-> >> method in mgd_stop?  It would be nice to have all of the final timer and work-queue cleanup
-> >> in a single place.
-> >
-> > That might be interesting, but I think we'd have to clear the
-> > timer_pending thing afterwards?
-> 
-> Are you talking about this code?
-> 
-> 	if (del_timer_sync(&ifmgd->timer))
-> 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-> 
-> 	if (del_timer_sync(&ifmgd->chswitch_timer))
-> 		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
-> 
-> If so, maybe make a helper method that does all of the first part of the sta_quiesce()
-> logic, call that from both mgd_stop and the new sta_quiesce() method, and then have
-> sta_quiesce look like:
-> 
->          sta_cleanup_timers_and_work();
->          if (del_timer_sync(&ifmgd->timer))
-> 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-> 
-> 	if (del_timer_sync(&ifmgd->chswitch_timer))
-> 		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
+Commit 6c17b77b67587b9f9e3070fb89fe98cef3187131 (mac80211: Fix tx queue
+handling during scans) contains a bug that causes off-channel frames to
+get queued when they should be handed down to the driver for transmit.
+Prevent this from happening.
 
-What part of that would then be "cleanup_timers"?
+Reported-by: Fabio Rossi <rossi.f@inwind.it>
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
 
-No, I think you should just look at it and set timers_running = 0 after
-calling the function, or so.
+Fabio, this patch should fix the problem. Can you verify?
 
-johannes
+Johannes, this prevents the off-channel frames from getting queued
+without affecting the fast path. It does however make the indentation
+awfully deep ...
+
+ net/mac80211/tx.c |   56 +++++++++++++++++++++++++++++------------------------
+ 1 file changed, 31 insertions(+), 25 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5b9602b..b1296e7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1231,34 +1231,40 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		if (local->queue_stop_reasons[q] ||
+ 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
+ 			if (unlikely(info->flags &
+-					IEEE80211_TX_INTFL_OFFCHAN_TX_OK &&
+-				     local->queue_stop_reasons[q] &
+-					~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL))) {
++				     IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
++				if (local->queue_stop_reasons[q] &
++				    ~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL)) {
++					/*
++					 * Drop off-channel frames if queues
++					 * are stopped for any reason other
++					 * than off-channel operation. Never
++					 * queue them.
++					 */
++					spin_unlock_irqrestore(
++						&local->queue_stop_reason_lock,
++						flags);
++					ieee80211_purge_tx_queue(&local->hw,
++								 skbs);
++					return true;
++				}
++			} else {
++
+ 				/*
+-				 * Drop off-channel frames if queues are stopped
+-				 * for any reason other than off-channel
+-				 * operation. Never queue them.
++				 * Since queue is stopped, queue up frames for
++				 * later transmission from the tx-pending
++				 * tasklet when the queue is woken again.
+ 				 */
+-				spin_unlock_irqrestore(
+-					&local->queue_stop_reason_lock, flags);
+-				ieee80211_purge_tx_queue(&local->hw, skbs);
+-				return true;
++				if (txpending)
++					skb_queue_splice_init(skbs,
++							      &local->pending[q]);
++				else
++					skb_queue_splice_tail_init(skbs,
++								   &local->pending[q]);
++
++				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
++						       flags);
++				return false;
+ 			}
+-
+-			/*
+-			 * Since queue is stopped, queue up frames for later
+-			 * transmission from the tx-pending tasklet when the
+-			 * queue is woken again.
+-			 */
+-			if (txpending)
+-				skb_queue_splice_init(skbs, &local->pending[q]);
+-			else
+-				skb_queue_splice_tail_init(skbs,
+-							   &local->pending[q]);
+-
+-			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+-					       flags);
+-			return false;
+ 		}
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+-- 
+1.7.9.5
 
