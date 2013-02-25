@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:36267 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754448Ab3BDVnh (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52389 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab3BYOvp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Feb 2013 16:43:37 -0500
-From: Cong Ding <dinggnu@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Cong Ding <dinggnu@gmail.com>
-Subject: [PATCH] net: wireless/rtlwifi: fix uninitialized variable issue
-Date: Mon,  4 Feb 2013 22:43:22 +0100
-Message-Id: <1360014206-6138-1-git-send-email-dinggnu@gmail.com> (sfid-20130204_224410_186666_8E27696F)
+	Mon, 25 Feb 2013 09:51:45 -0500
+Date: Mon, 25 Feb 2013 08:51:42 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-usb@vger.kernel.org,
+	"Chen, Stephen" <scchen@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: carl9170 A-MPDU transmit problem
+Message-ID: <20130225145142.GC13296@thinkpad-t410> (sfid-20130225_155151_610373_CC58477F)
+References: <201302242330.56346.chunkeey@googlemail.com>
+ <Pine.LNX.4.44L0.1302241833580.29714-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1302241833580.29714-100000@netrider.rowland.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The use of variable packet_beacon might be uninitialized in the two files,
-which is same as this patch:
-https://patchwork.kernel.org/patch/2006711/
+On Sun, Feb 24, 2013 at 06:41:06PM -0500, Alan Stern wrote:
+> >  Or can you think of any other "interesting"
+> > bits that could help to explain why the "Arrandale box [...] worked
+> > perfectly" whereas (all his) Ivy Bridge ones have problems.
+> > (Of course, I assume that it is always the same device, the
+> > same firmware and the same kernel drivers in all tests, right)?
+> 
+> No, not really.  Unless one is using USB-2 and the other USB-3 -- the 
+> device might have a bug in its USB-3 firmware.
 
-Signed-off-by: Cong Ding <dinggnu@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+This appears to be a high-speed device; at least, dmesg says "new
+high-speed USB device ..." when I plug it in. So for the firmware isn't
+it USB 2.0 even when plugged in a SuperSpeed port?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index c31795e..da0e902 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -488,7 +488,7 @@ static void _rtl92ce_translate_rx_signal_stuff(struct ieee80211_hw *hw,
- 	u8 *praddr;
- 	__le16 fc;
- 	u16 type, c_fc;
--	bool packet_matchbssid, packet_toself, packet_beacon;
-+	bool packet_matchbssid, packet_toself, packet_beacon = false;
- 
- 	tmp_buf = skb->data + pstats->rx_drvinfo_size + pstats->rx_bufshift;
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-index 32ff959..85b6bdb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-@@ -1084,7 +1084,7 @@ void rtl92c_translate_rx_signal_stuff(struct ieee80211_hw *hw,
- 	u8 *praddr;
- 	__le16 fc;
- 	u16 type, cpu_fc;
--	bool packet_matchbssid, packet_toself, packet_beacon;
-+	bool packet_matchbssid, packet_toself, packet_beacon = false;
- 
- 	tmp_buf = skb->data + pstats->rx_drvinfo_size + pstats->rx_bufshift;
- 	hdr = (struct ieee80211_hdr *)tmp_buf;
--- 
-1.7.9.5
+> What happens if xhci-hcd is unloaded before the test?
+
+I'll test this, but I need to rebuild first. xhci-hcd is currently
+built-in to my kenel.
+
+Seth
 
