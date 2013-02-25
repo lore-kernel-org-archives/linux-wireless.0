@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:38297 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755164Ab3BMO3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 09:29:08 -0500
-Message-ID: <511BA1E5.40402@neratec.com> (sfid-20130213_152912_671445_E3A50048)
-Date: Wed, 13 Feb 2013 15:23:33 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60298 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757776Ab3BYUTF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 15:19:05 -0500
+Date: Mon, 25 Feb 2013 15:19:03 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Seth Forshee <seth.forshee@canonical.com>
+cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	<linux-wireless@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>
+Subject: Re: carl9170 A-MPDU transmit problem
+In-Reply-To: <20130225194623.GI13296@thinkpad-t410>
+Message-ID: <Pine.LNX.4.44L0.1302251516240.1184-100000@iolanthe.rowland.org> (sfid-20130225_211918_527028_4FE223F0)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: start auth/assoc timeout on frame status
-References: <1359638935-16613-1-git-send-email-johannes@sipsolutions.net>   (sfid-20130131_142837_609017_1B1D23D2) <1359992600.10311.25.camel@jlt4.sipsolutions.net>  <511B9807.6000200@neratec.com> <1360765274.8868.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1360765274.8868.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2013 03:21 PM, Johannes Berg wrote:
-> On Wed, 2013-02-13 at 14:41 +0100, Wojciech Dubowik wrote:
->> There is a regression introduced with this patch.
->> On my ath9k AP + ath9k STA I get timeout for
->> management frames even when they are acked.
->>
->> Attached syslog and iw event before and after
->> this patch.
->>
->> I have seen it before in my testing and it gets
->> a lot worse with system load.  Sometimes it can
->> retry auth/assoc frames for 10 seconds before
->> connecting.
->> Anyway it always looses the first authentication frame.
-> I think I see what's happening -- can you try this patch?
->
-> http://p.sipsolutions.net/61f4271fed0e446b.txt
->
-I have tried and it doesn't do timeout anymore. I will continue
-testing with more load.
+On Mon, 25 Feb 2013, Seth Forshee wrote:
 
-Thanks,
-Wojtek
+> > > >ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 ... <-- DATA
+> > > >
+> > > > [... long period where the device receives commands on EP4 and sends
+> > > > wifi data to the host via EP2 - so it is working!]
+> > > >
+> > > >ffff880146c8af00 1522200650 S Bo:3:003:1 -115 62 = 3e000000 ... <-- DELBA
+> > > >ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 > <-- DATA urb completion
+> > > >ffff880146c8af00 1522200756 C Bo:3:003:1 0 62 > <-- DELBA urb completion
+
+> > Which kernel version are you testing under?  Can you please recompile
+> > with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on, and
+> > send me dmesg?  I should be able to see if there's an unhandled pending
+> > event on the xHCI rings if the data URB stalls for longer than say, a
+> > minute.
+> 
+> I'll do this.
+
+Bear in mind that the usbmon trace shows the URB stalling for 2 - 3
+seconds.  There may have been other examples that went on for longer,
+but probably nothing anywhere near as long as a minute.
+
+Alan Stern
+
