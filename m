@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:41295 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753379Ab3BHSh7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 13:37:59 -0500
-Message-ID: <1360348677.2268.7.camel@joe-AO722> (sfid-20130208_193804_063264_48458FBD)
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new USB ID
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Date: Fri, 08 Feb 2013 10:37:57 -0800
-In-Reply-To: <1360348098-8687-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1360348098-8687-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:40142 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751714Ab3BYFyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 00:54:12 -0500
+Message-ID: <512AFC80.9030808@openwrt.org> (sfid-20130225_065415_873821_6D9EFFF2)
+Date: Mon, 25 Feb 2013 06:54:08 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>
+Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth coexistence
+ mode
+References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com> <1361564916.3420.11.camel@jlt4.sipsolutions.net> <CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com> <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com> <1361726886.8129.9.camel@jlt4.sipsolutions.net> <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-08 at 12:28 -0600, Larry Finger wrote:
-> A new model of the RTL8188CUS has appeared.
-[]
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 577c0dc..a73a17b 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -285,6 +285,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
->  	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
->  	/* RTL8188CUS-VL */
->  	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x818a, rtl92cu_hal_cfg)},
-> +	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x819a, rtl92cu_hal_cfg)},
->  	/* 8188 Combo for BC4 */
->  	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
+On 2013-02-25 6:08 AM, Adrian Chadd wrote:
+> On 24 February 2013 09:28, Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+>>> In the driver we could inspect each sk_buff and boost priority of any
+>>> BOOTP packets so that it will end up in the AC_VO fifo and have
+>>> hardware coexistence handle it further. I consider that more a
+>>> pragmatic fix, which is not always the worst thing to go for.
+>>
+>> Well, I don't really think that's the best idea. Sniffing the protocol
+>> is clumsy at best.
+> 
+> Sure, but it's the kind of thing that commercial devices do in order
+> to work around real world issues.
+Just because commercial devices do this crap to weasel out of fixing
+things properly doesn't mean we have to do the same.
 
-One day would you please do a s/_VENDOR_/_VENDOR_/g
- 
+> So it'd be nice to have a programmatic way to detect things (eg bootp
+> packets going out) and signal the driver via some side channel to do
+> things like btcoex weight changing.
+I disagree, that approach clumsy and fragile and it's trying to address
+the issue in the wrong place.
 
+Most devices have some kind of connection manager that has a high-level
+perspective of when it's fully connected (which includes DHCP/bootp).
+Why not just let that connection manager set a sane maximum network
+latency value via pm_qos network_latency and derive btcoex weight
+changing and multi-channel settings from that?
 
-
+- Felix
