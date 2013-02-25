@@ -1,38 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27878 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752340Ab3B1Itd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 03:49:33 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/2] ath5k: remove reference to napi_poll
-Date: Thu, 28 Feb 2013 09:49:12 +0100
-Message-Id: <1362041352-13110-2-git-send-email-sgruszka@redhat.com> (sfid-20130228_094935_367168_4E07AD12)
-In-Reply-To: <1362041352-13110-1-git-send-email-sgruszka@redhat.com>
-References: <1362041352-13110-1-git-send-email-sgruszka@redhat.com>
+Received: from outrelay03.libero.it ([212.52.84.103]:60577 "EHLO
+	outrelay03.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755801Ab3BYSSS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 13:18:18 -0500
+Message-ID: <11214452.15864921361816296422.JavaMail.defaultUser@defaultHost> (sfid-20130225_191824_960978_FB50A34D)
+Date: Mon, 25 Feb 2013 19:18:16 +0100 (CET)
+From: Fabio Rossi <rossi.f@inwind.it>
+Reply-To: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: regression with kernel 3.8
+MIME-Version: 1.0
+Content-Type: text/plain;charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath5k/mac80211-ops.c | 1 -
- 1 file changed, 1 deletion(-)
+I'm using the latest wireless-testing.git and I have found a regression with 
+kernel 3.8. I don't know if this is related to the driver I'm using (ath5k) but 
+I have bisected the problem to the commit 
+6c17b77b67587b9f9e3070fb89fe98cef3187131 (mac80211: Fix tx queue handling 
+during scans). Basically the authentication and association infos don't appear 
+anymore in the kernel logs during a connection to my access point.
 
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 4264341..7604d6d 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -821,7 +821,6 @@ const struct ieee80211_ops ath5k_hw_ops = {
- 	/* .rfkill_poll		= not implemented */
- 	/* .flush		= not implemented */
- 	/* .channel_switch	= not implemented */
--	/* .napi_poll		= not implemented */
- 	.set_antenna		= ath5k_set_antenna,
- 	.get_antenna		= ath5k_get_antenna,
- 	.set_ringparam		= ath5k_set_ringparam,
--- 
-1.7.11.7
+Tell me what you need to further debug the issue and solve the problem.
+
+Fabio
 
