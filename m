@@ -1,31 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54029 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758580Ab3BYUYC (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:47741 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759931Ab3BYQJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 15:24:02 -0500
-Date: Mon, 25 Feb 2013 14:23:57 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: carl9170 A-MPDU transmit problem
-Message-ID: <20130225202357.GJ13296@thinkpad-t410> (sfid-20130225_212413_774086_D49C1E8A)
-References: <Pine.LNX.4.44L0.1302251024200.1526-100000@iolanthe.rowland.org>
- <201302251703.40801.chunkeey@googlemail.com>
- <20130225191357.GE6605@xanatos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130225191357.GE6605@xanatos>
+	Mon, 25 Feb 2013 11:09:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH] b43: Fix lockdep splat on module unload
+Date: Mon, 25 Feb 2013 10:09:24 -0600
+Message-Id: <1361808564-22684-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130225_170953_613852_B1F14FFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 25, 2013 at 11:13:57AM -0800, Sarah Sharp wrote:
-> Which kernel version are you testing under?
+On unload, b43 produces a lockdep warning that can be summarized in the
+following way:
 
-Forgot to answer this. I'm running 3.8 on these machines.
+ ======================================================
+ [ INFO: possible circular locking dependency detected ]
+ 3.8.0-wl+ #117 Not tainted
+ -------------------------------------------------------
+ modprobe/5557 is trying to acquire lock:
+  ((&wl->firmware_load)){+.+.+.}, at: [<ffffffff81062160>] flush_work+0x0/0x2a0
 
-Seth
+ but task is already holding lock:
+  (rtnl_mutex){+.+.+.}, at: [<ffffffff813bd7d2>] rtnl_lock+0x12/0x20
+
+ which lock already depends on the new lock.
+ [ INFO: possible circular locking dependency detected ]
+ ======================================================
+
+The full output is available at http://lkml.indiana.edu/hypermail/linux/kernel/1302.3/00060.html.
+To summarize, commit 6b6fa58 added a 'cancel_work_sync(&wl->firmware_load)'
+call in the wrong place.
+
+The fix is to move the cancel_work_sync() call to b43_bcma_remove() and
+b43_ssb_remove(). Thanks to Johannes Berg and Michael Buesch for help in
+diagnosing the log output.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V3.5+]
+---
+ drivers/net/wireless/b43/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 806e34c..0568273 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4214,7 +4214,6 @@ redo:
+ 	mutex_unlock(&wl->mutex);
+ 	cancel_delayed_work_sync(&dev->periodic_work);
+ 	cancel_work_sync(&wl->tx_work);
+-	cancel_work_sync(&wl->firmware_load);
+ 	mutex_lock(&wl->mutex);
+ 	dev = wl->current_dev;
+ 	if (!dev || b43_status(dev) < B43_STAT_STARTED) {
+@@ -5434,6 +5433,7 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 	/* We must cancel any work here before unregistering from ieee80211,
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+ 	cancel_work_sync(&wldev->restart_work);
++	cancel_work_sync(&wl->firmware_load);
+ 
+ 	B43_WARN_ON(!wl);
+ 	if (!wldev->fw.ucode.data)
+@@ -5510,6 +5510,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 	/* We must cancel any work here before unregistering from ieee80211,
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+ 	cancel_work_sync(&wldev->restart_work);
++	cancel_work_sync(&wl->firmware_load);
+ 
+ 	B43_WARN_ON(!wl);
+ 	if (!wldev->fw.ucode.data)
+-- 
+1.8.1.4
 
