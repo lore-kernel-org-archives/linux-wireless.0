@@ -1,362 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:54759 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759894Ab3BZAOS (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:44096 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758721Ab3BYQBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 19:14:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz
-Subject: [RFC/RFT 10/27] rtlwifi: rtl8188ee: Add new driver - part 1
-Date: Mon, 25 Feb 2013 18:13:22 -0600
-Message-Id: <1361837619-2985-11-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011656_569394_9E0E9D8A)
-In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 25 Feb 2013 11:01:11 -0500
+Received: by mail-bk0-f43.google.com with SMTP id jm19so1382853bkc.30
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 08:01:10 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Cc: sleffler@google.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [PATCHv3 3/3] ath9k: mesh powersave support
+Date: Mon, 25 Feb 2013 17:00:57 +0100
+Message-Id: <1361808057-17899-3-git-send-email-marco@cozybit.com> (sfid-20130225_170119_345388_36AB0AB3)
+In-Reply-To: <1361808057-17899-1-git-send-email-marco@cozybit.com>
+References: <1361808057-17899-1-git-send-email-marco@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
----
- drivers/net/wireless/rtlwifi/rtl8188ee/def.h | 324 +++++++++++++++++++++++++++
- 1 file changed, 324 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/def.h
+Add ath9k_ops for .mesh_ps_doze and .mesh_ps_wakeup.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-new file mode 100644
-index 0000000..4f9ab29
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-@@ -0,0 +1,324 @@
-+/******************************************************************************
+React to doze/wakeup calls issued by mac80211.
+Add a PS status flag PS_MAC80211_CTL to store last mesh PS
+command from mac80211.
+
+Initialize HW beacon wakeup registers.
+On doze call configure the device to wakeup at the given TSF
+value.
+
+Signed-off-by: Marco Porsch <marco@cozybit.com>
+---
+
+v3:
+	use ieee80211_ops (Johannes)
+	use #ifdef around optional API callbacks (Johannes)
+
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    1 +
+ drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.c     |   17 +++++++--
+ drivers/net/wireless/ath/ath9k/main.c   |   62 ++++++++++++++++++++++++++++++-
+ 4 files changed, 94 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 97c90b2..b82727b 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -652,6 +652,7 @@ enum sc_op_flags {
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
+ #define PS_WAIT_FOR_ANI           BIT(5)
++#define PS_MAC80211_CTL           BIT(6)
+ 
+ struct ath_rate_table;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index dd37719..7ef698b 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -599,6 +599,23 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ }
+ 
++static void ath9k_beacon_config_mesh(struct ath_softc *sc,
++				     struct ath_beacon_config *conf)
++{
++	struct ath9k_beacon_state bs;
++
++	/*
++	 * when PS is enabled, ath9k_hw_setrxabort is set.
++	 * to wake up again to receive peers' beacons, we set an
++	 * arbitrary initial value for sleepduration here
++	 */
++	memset(&bs, 0, sizeof(bs));
++	bs.bs_sleepduration = IEEE80211_MS_TO_TU(100);
++	ath9k_hw_set_sta_beacon_timers(sc->sc_ah, &bs);
++
++	ath9k_beacon_config_adhoc(sc, conf);
++}
++
+ bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -707,9 +724,11 @@ void ath9k_set_beacon(struct ath_softc *sc)
+ 		ath9k_beacon_config_ap(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-	case NL80211_IFTYPE_MESH_POINT:
+ 		ath9k_beacon_config_adhoc(sc, cur_conf);
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		ath9k_beacon_config_mesh(sc, cur_conf);
++		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		ath9k_beacon_config_sta(sc, cur_conf);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 42cf3c7..0e0fe03 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2254,16 +2254,24 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ }
+ EXPORT_SYMBOL(ath9k_hw_beaconinit);
+ 
++/**
++ * ath9k_hw_set_sta_beacon_timers
 + *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL92C_DEF_H__
-+#define __RTL92C_DEF_H__
-+
-+#define HAL_RETRY_LIMIT_INFRA				48
-+#define HAL_RETRY_LIMIT_AP_ADHOC			7
-+
-+#define RESET_DELAY_8185				20
-+
-+#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
-+#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
-+
-+#define NUM_OF_FIRMWARE_QUEUE				10
-+#define NUM_OF_PAGES_IN_FW				0x100
-+#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
-+#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
-+#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
-+#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
-+#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
-+#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
-+#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
-+#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
-+#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
-+#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
-+
-+#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
-+#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
-+#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
-+#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
-+#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
-+
-+#define MAX_LINES_HWCONFIG_TXT				1000
-+#define MAX_BYTES_LINE_HWCONFIG_TXT			256
-+
-+#define SW_THREE_WIRE					0
-+#define HW_THREE_WIRE					2
-+
-+#define BT_DEMO_BOARD					0
-+#define BT_QA_BOARD					1
-+#define BT_FPGA						2
-+
-+#define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
-+#define HAL_PRIME_CHNL_OFFSET_LOWER			1
-+#define HAL_PRIME_CHNL_OFFSET_UPPER			2
-+
-+#define MAX_H2C_QUEUE_NUM				10
-+
-+#define RX_MPDU_QUEUE					0
-+#define RX_CMD_QUEUE					1
-+#define RX_MAX_QUEUE					2
-+#define AC2QUEUEID(_AC)					(_AC)
-+
-+#define	C2H_RX_CMD_HDR_LEN				8
-+#define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
-+	LE_BITS_TO_4BYTE((__prxhdr), 0, 16)
-+#define	GET_C2H_CMD_ELEMENT_ID(__prxhdr)		\
-+	LE_BITS_TO_4BYTE((__prxhdr), 16, 8)
-+#define	GET_C2H_CMD_CMD_SEQ(__prxhdr)			\
-+	LE_BITS_TO_4BYTE((__prxhdr), 24, 7)
-+#define	GET_C2H_CMD_CONTINUE(__prxhdr)			\
-+	LE_BITS_TO_4BYTE((__prxhdr), 31, 1)
-+#define	GET_C2H_CMD_CONTENT(__prxhdr)			\
-+	((u8 *)(__prxhdr) + C2H_RX_CMD_HDR_LEN)
-+
-+#define	GET_C2H_CMD_FEEDBACK_ELEMENT_ID(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE((__pcmdfbhdr), 0, 8)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_LEN(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE((__pcmdfbhdr), 8, 8)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_CMD_CNT(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE((__pcmdfbhdr), 16, 16)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_MAC_ID(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 0, 5)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_VALID(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 7, 1)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_RETRY_CNT(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 8, 5)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_TOK(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 15, 1)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_QSEL(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 16, 4)
-+#define	GET_C2H_CMD_FEEDBACK_CCX_SEQ(__pcmdfbhdr)	\
-+	LE_BITS_TO_4BYTE(((__pcmdfbhdr) + 4), 20, 12)
-+
-+#define CHIP_BONDING_IDENTIFIER(_value)	(((_value)>>22)&0x3)
-+
-+
-+/* [15:12] IC version(CUT): A-cut=0, B-cut=1, C-cut=2, D-cut=3
-+ * [7] Manufacturer: TSMC=0, UMC=1
-+ * [6:4] RF type: 1T1R=0, 1T2R=1, 2T2R=2
-+ * [3] Chip type: TEST=0, NORMAL=1
-+ * [2:0] IC type: 81xxC=0, 8723=1, 92D=2
++ * in mesh mode overwriting AR_NEXT_TBTT_TIMER and setting AR_TBTT_TIMER_EN
++ * would shift the own TBTT
 + */
-+#define CHIP_8723			BIT(0)
-+#define CHIP_92D			BIT(1)
-+#define NORMAL_CHIP			BIT(3)
-+#define RF_TYPE_1T1R			(~(BIT(4)|BIT(5)|BIT(6)))
-+#define RF_TYPE_1T2R			BIT(4)
-+#define RF_TYPE_2T2R			BIT(5)
-+#define CHIP_VENDOR_UMC			BIT(7)
-+#define B_CUT_VERSION			BIT(12)
-+#define C_CUT_VERSION			BIT(13)
-+#define D_CUT_VERSION			((BIT(12)|BIT(13)))
-+#define E_CUT_VERSION			BIT(14)
+ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 				    const struct ath9k_beacon_state *bs)
+ {
+ 	u32 nextTbtt, beaconintval, dtimperiod, beacontimeout;
++	u32 ar_timer_mode = AR_DTIM_TIMER_EN | AR_TIM_TIMER_EN;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
++	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
++		REG_WRITE(ah, AR_NEXT_TBTT_TIMER, TU_TO_USEC(bs->bs_nexttbtt));
+ 
+ 	REG_WRITE(ah, AR_BEACON_PERIOD,
+ 		  TU_TO_USEC(bs->bs_intval));
+@@ -2317,9 +2325,10 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ 
+-	REG_SET_BIT(ah, AR_TIMER_MODE,
+-		    AR_TBTT_TIMER_EN | AR_TIM_TIMER_EN |
+-		    AR_DTIM_TIMER_EN);
++	if (ah->opmode != NL80211_IFTYPE_MESH_POINT)
++		ar_timer_mode |= AR_TBTT_TIMER_EN;
 +
++	REG_SET_BIT(ah, AR_TIMER_MODE, ar_timer_mode);
+ 
+ 	/* TSF Out of Range Threshold */
+ 	REG_WRITE(ah, AR_TSFOOR_THRESHOLD, bs->bs_tsfoor_threshold);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5432f12..16b7e5d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -132,7 +132,8 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 				     PS_WAIT_FOR_CAB |
+ 				     PS_WAIT_FOR_PSPOLL_DATA |
+ 				     PS_WAIT_FOR_TX_ACK |
+-				     PS_WAIT_FOR_ANI))) {
++				     PS_WAIT_FOR_ANI |
++				     PS_MAC80211_CTL))) {
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+ 		if (ath9k_hw_btcoex_is_enabled(sc->sc_ah))
+ 			ath9k_btcoex_stop_gen_timer(sc);
+@@ -1164,7 +1165,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * We just prepare to enable PS. We have to wait until our AP has
+ 	 * ACK'd our null data frame to disable RX otherwise we'll ignore
+ 	 * those ACKs and end up retransmitting the same null data frames.
+-	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
++	 * IEEE80211_CONF_CHANGE_PS is passed by mac80211 for STA or mesh mode.
+ 	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+ 		unsigned long flags;
+@@ -2321,6 +2322,58 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	sc->scanning = 0;
+ }
+ 
++#ifdef CONFIG_MAC80211_MESH
 +
-+/* MASK */
-+#define IC_TYPE_MASK			(BIT(0)|BIT(1)|BIT(2))
-+#define CHIP_TYPE_MASK			BIT(3)
-+#define RF_TYPE_MASK			(BIT(4)|BIT(5)|BIT(6))
-+#define MANUFACTUER_MASK		BIT(7)
-+#define ROM_VERSION_MASK		(BIT(11)|BIT(10)|BIT(9)|BIT(8))
-+#define CUT_VERSION_MASK		(BIT(15)|BIT(14)|BIT(13)|BIT(12))
++static void ath9k_mesh_wakeup_set(struct ath_softc *sc, u64 nexttbtt)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_beacon_state bs;
++	u32 nexttbtttu = TSF_TO_TU(nexttbtt >> 32, nexttbtt);
 +
-+/* Get element */
-+#define GET_CVID_IC_TYPE(version)	((version) & IC_TYPE_MASK)
-+#define GET_CVID_CHIP_TYPE(version)	((version) & CHIP_TYPE_MASK)
-+#define GET_CVID_RF_TYPE(version)	((version) & RF_TYPE_MASK)
-+#define GET_CVID_MANUFACTUER(version)	((version) & MANUFACTUER_MASK)
-+#define GET_CVID_ROM_VERSION(version)	((version) & ROM_VERSION_MASK)
-+#define GET_CVID_CUT_VERSION(version)	((version) & CUT_VERSION_MASK)
++	memset(&bs, 0, sizeof(bs));
++	bs.bs_nexttbtt = nexttbtttu;
++	bs.bs_nextdtim = nexttbtttu;
++	/* arbitrary high values to avoid frequent wakeups */
++	bs.bs_intval = 1000;
++	bs.bs_dtimperiod = 4000;
++	bs.bs_sleepduration = 1000;
 +
++	ath9k_hw_set_sta_beacon_timers(ah, &bs);
++}
 +
-+#define IS_81XXC(version)						\
-+	((GET_CVID_IC_TYPE(version) == 0) ? true : false)
-+#define IS_8723_SERIES(version)						\
-+	((GET_CVID_IC_TYPE(version) == CHIP_8723) ? true : false)
-+#define IS_92D(version)							\
-+	((GET_CVID_IC_TYPE(version) == CHIP_92D) ? true : false)
++static void ath9k_mesh_ps_doze(struct ieee80211_hw *hw, u64 nexttbtt)
++{
++	struct ath_softc *sc = hw->priv;
++	unsigned long flags;
 +
-+#define IS_NORMAL_CHIP(version)						\
-+	((GET_CVID_CHIP_TYPE(version)) ? true : false)
-+#define IS_NORMAL_CHIP92D(version)					\
-+	((GET_CVID_CHIP_TYPE(version)) ? true : false)
++	ath9k_ps_wakeup(sc);
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	/* in mesh mode mac80211 checks beacons and CAB */
++	sc->ps_flags &= ~(PS_WAIT_FOR_BEACON |
++			  PS_WAIT_FOR_CAB |
++			  PS_MAC80211_CTL);
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
 +
-+#define IS_1T1R(version)						\
-+	((GET_CVID_RF_TYPE(version)) ? false : true)
-+#define IS_1T2R(version)						\
-+	((GET_CVID_RF_TYPE(version) == RF_TYPE_1T2R) ? true : false)
-+#define IS_2T2R(version)						\
-+	((GET_CVID_RF_TYPE(version) == RF_TYPE_2T2R) ? true : false)
-+#define IS_CHIP_VENDOR_UMC(version)					\
-+	((GET_CVID_MANUFACTUER(version)) ? true : false)
++	if (nexttbtt)
++		ath9k_mesh_wakeup_set(sc, nexttbtt);
 +
-+#define IS_92C_SERIAL(version)						\
-+	((IS_81XXC(version) && IS_2T2R(version)) ? true : false)
-+#define IS_81xxC_VENDOR_UMC_A_CUT(version)				\
-+	(IS_81XXC(version) ? ((IS_CHIP_VENDOR_UMC(version)) ?		\
-+	 ((GET_CVID_CUT_VERSION(version)) ? false : true) : false) : false)
-+#define IS_81xxC_VENDOR_UMC_B_CUT(version)				\
-+	(IS_81XXC(version) ? (IS_CHIP_VENDOR_UMC(version) ?		\
-+	((GET_CVID_CUT_VERSION(version) == B_CUT_VERSION) ? true	\
-+	: false) : false) : false)
++	ath9k_ps_restore(sc);
++}
 +
-+enum version_8188e {
-+	VERSION_TEST_CHIP_88E = 0x00,
-+	VERSION_NORMAL_CHIP_88E = 0x01,
-+	VERSION_UNKNOWN = 0xFF,
-+};
++static void ath9k_mesh_ps_wakeup(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++	unsigned long flags;
 +
-+enum rx_packet_type {
-+	NORMAL_RX,
-+	TX_REPORT1,
-+	TX_REPORT2,
-+	HIS_REPORT,
-+};
-+
-+enum rtl819x_loopback_e {
-+	RTL819X_NO_LOOPBACK = 0,
-+	RTL819X_MAC_LOOPBACK = 1,
-+	RTL819X_DMA_LOOPBACK = 2,
-+	RTL819X_CCK_LOOPBACK = 3,
-+};
-+
-+enum rf_optype {
-+	RF_OP_BY_SW_3WIRE = 0,
-+	RF_OP_BY_FW,
-+	RF_OP_MAX
-+};
-+
-+enum rf_power_state {
-+	RF_ON,
-+	RF_OFF,
-+	RF_SLEEP,
-+	RF_SHUT_DOWN,
-+};
-+
-+enum power_save_mode {
-+	POWER_SAVE_MODE_ACTIVE,
-+	POWER_SAVE_MODE_SAVE,
-+};
-+
-+enum power_polocy_config {
-+	POWERCFG_MAX_POWER_SAVINGS,
-+	POWERCFG_GLOBAL_POWER_SAVINGS,
-+	POWERCFG_LOCAL_POWER_SAVINGS,
-+	POWERCFG_LENOVO,
-+};
-+
-+enum interface_select_pci {
-+	INTF_SEL1_MINICARD,
-+	INTF_SEL0_PCIE,
-+	INTF_SEL2_RSV,
-+	INTF_SEL3_RSV,
-+};
-+
-+enum hal_fw_c2h_cmd_id {
-+	HAL_FW_C2H_CMD_Read_MACREG,
-+	HAL_FW_C2H_CMD_Read_BBREG,
-+	HAL_FW_C2H_CMD_Read_RFREG,
-+	HAL_FW_C2H_CMD_Read_EEPROM,
-+	HAL_FW_C2H_CMD_Read_EFUSE,
-+	HAL_FW_C2H_CMD_Read_CAM,
-+	HAL_FW_C2H_CMD_Get_BasicRate,
-+	HAL_FW_C2H_CMD_Get_DataRate,
-+	HAL_FW_C2H_CMD_Survey,
-+	HAL_FW_C2H_CMD_SurveyDone,
-+	HAL_FW_C2H_CMD_JoinBss,
-+	HAL_FW_C2H_CMD_AddSTA,
-+	HAL_FW_C2H_CMD_DelSTA,
-+	HAL_FW_C2H_CMD_AtimDone,
-+	HAL_FW_C2H_CMD_TX_Report,
-+	HAL_FW_C2H_CMD_CCX_Report,
-+	HAL_FW_C2H_CMD_DTM_Report,
-+	HAL_FW_C2H_CMD_TX_Rate_Statistics,
-+	HAL_FW_C2H_CMD_C2HLBK,
-+	HAL_FW_C2H_CMD_C2HDBG,
-+	HAL_FW_C2H_CMD_C2HFEEDBACK,
-+	HAL_FW_C2H_CMD_MAX
-+};
-+
-+enum wake_on_wlan_mode {
-+	ewowlandisable,
-+	ewakeonmagicpacketonly,
-+	ewakeonpatternmatchonly,
-+	ewakeonbothtypepacket
-+};
-+
-+enum rtl_desc_qsel {
-+	QSLT_BK = 0x2,
-+	QSLT_BE = 0x0,
-+	QSLT_VI = 0x5,
-+	QSLT_VO = 0x7,
-+	QSLT_BEACON = 0x10,
-+	QSLT_HIGH = 0x11,
-+	QSLT_MGNT = 0x12,
-+	QSLT_CMD = 0x13,
-+};
-+
-+enum rtl_desc92c_rate {
-+	DESC92C_RATE1M = 0x00,
-+	DESC92C_RATE2M = 0x01,
-+	DESC92C_RATE5_5M = 0x02,
-+	DESC92C_RATE11M = 0x03,
-+
-+	DESC92C_RATE6M = 0x04,
-+	DESC92C_RATE9M = 0x05,
-+	DESC92C_RATE12M = 0x06,
-+	DESC92C_RATE18M = 0x07,
-+	DESC92C_RATE24M = 0x08,
-+	DESC92C_RATE36M = 0x09,
-+	DESC92C_RATE48M = 0x0a,
-+	DESC92C_RATE54M = 0x0b,
-+
-+	DESC92C_RATEMCS0 = 0x0c,
-+	DESC92C_RATEMCS1 = 0x0d,
-+	DESC92C_RATEMCS2 = 0x0e,
-+	DESC92C_RATEMCS3 = 0x0f,
-+	DESC92C_RATEMCS4 = 0x10,
-+	DESC92C_RATEMCS5 = 0x11,
-+	DESC92C_RATEMCS6 = 0x12,
-+	DESC92C_RATEMCS7 = 0x13,
-+	DESC92C_RATEMCS8 = 0x14,
-+	DESC92C_RATEMCS9 = 0x15,
-+	DESC92C_RATEMCS10 = 0x16,
-+	DESC92C_RATEMCS11 = 0x17,
-+	DESC92C_RATEMCS12 = 0x18,
-+	DESC92C_RATEMCS13 = 0x19,
-+	DESC92C_RATEMCS14 = 0x1a,
-+	DESC92C_RATEMCS15 = 0x1b,
-+	DESC92C_RATEMCS15_SG = 0x1c,
-+	DESC92C_RATEMCS32 = 0x20,
-+};
-+
-+struct phy_sts_cck_8192s_t {
-+	u8 adc_pwdb_X[4];
-+	u8 sq_rpt;
-+	u8 cck_agc_rpt;
-+};
-+
-+struct h2c_cmd_8192c {
-+	u8 element_id;
-+	u32 cmd_len;
-+	u8 *p_cmdbuffer;
-+};
++	ath9k_ps_wakeup(sc);
++	spin_lock_irqsave(&sc->sc_pm_lock, flags);
++	sc->ps_flags |= PS_MAC80211_CTL;
++	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++	ath9k_ps_restore(sc);
++}
 +
 +#endif
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2368,4 +2421,9 @@ struct ieee80211_ops ath9k_ops = {
+ #endif
+ 	.sw_scan_start	    = ath9k_sw_scan_start,
+ 	.sw_scan_complete   = ath9k_sw_scan_complete,
++
++#ifdef CONFIG_MAC80211_MESH
++	.mesh_ps_doze	    = ath9k_mesh_ps_doze,
++	.mesh_ps_wakeup	    = ath9k_mesh_ps_wakeup,
++#endif
+ };
 -- 
-1.8.1.4
+1.7.9.5
 
