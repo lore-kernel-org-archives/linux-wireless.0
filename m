@@ -1,73 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52021 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754169Ab3BFPB3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 10:01:29 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 4/4] mac80211: Add flushes before going off-channel
-Date: Wed,  6 Feb 2013 09:01:13 -0600
-Message-Id: <1360162873-17240-5-git-send-email-seth.forshee@canonical.com> (sfid-20130206_160133_333988_096CB44E)
-In-Reply-To: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
-References: <1360162873-17240-1-git-send-email-seth.forshee@canonical.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30692 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759189Ab3BYLub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 06:50:31 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 5/6] mac80211: cleanup suspend/resume on ibss mode
+Date: Mon, 25 Feb 2013 12:50:07 +0100
+Message-Id: <1361793008-2857-5-git-send-email-sgruszka@redhat.com> (sfid-20130225_125035_075762_3C53B382)
+In-Reply-To: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
+References: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've got a couple of races when enabling powersave with an AP for
-off-channel operation. The first is fairly simple. If we go off-channel
-before the nullfunc frame to enable PS is transmitted then it may not be
-received by the AP. Add a flush after enabling off-channel PS to prevent
-this from happening.
+Remove not used any longer suspend/resume code.
 
-The second race is a bit more subtle. If the driver supports QoS and has
-frames queued when the nullfunc frame is queued, those frames may get
-transmitted after the nullfunc frame. If PM is not set then the AP is
-being told that we've exited PS before we go off-channel and may try to
-deliver frames. To prevent this, add a flush after stopping the queues
-but before passing the nullfunc frame to the driver.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/offchannel.c |    5 +++++
- net/mac80211/scan.c       |    3 +++
- 2 files changed, 8 insertions(+)
+ net/mac80211/ibss.c        | 29 +----------------------------
+ net/mac80211/ieee80211_i.h |  4 ----
+ 2 files changed, 1 insertion(+), 32 deletions(-)
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 650af94..28274f9 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -118,8 +118,13 @@ bool ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
- 	 * STA interfaces.
- 	 */
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 40b71df..539d4a1 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -985,36 +985,9 @@ static void ieee80211_ibss_timer(unsigned long data)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		(struct ieee80211_sub_if_data *) data;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_local *local = sdata->local;
+-
+-	if (local->quiescing) {
+-		ifibss->timer_running = true;
+-		return;
+-	}
+-
+-	ieee80211_queue_work(&local->hw, &sdata->work);
+-}
+-
+-#ifdef CONFIG_PM
+-void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
  
-+	/*
-+	 * Stop queues and transmit all frames queued by the driver
-+	 * before sending nullfunc to enable powersave at the AP.
-+	 */
- 	ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL);
-+	drv_flush(local, false);
+-	if (del_timer_sync(&ifibss->timer))
+-		ifibss->timer_running = true;
+-}
+-
+-void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-
+-	if (ifibss->timer_running) {
+-		add_timer(&ifibss->timer);
+-		ifibss->timer_running = false;
+-	}
++	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ }
+-#endif
  
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index beca4db..9ecd1660 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -343,6 +343,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 	if (!ieee80211_offchannel_stop_vifs(local))
- 		goto error;
+ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5230694..bd13db3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -489,8 +489,6 @@ struct ieee80211_if_ibss {
  
-+	/* ensure nullfunc is transmitted before leaving operating channel */
-+	drv_flush(local, false);
-+
- 	ieee80211_configure_filter(local);
+ 	u32 basic_rates;
  
- 	/* We need to set power level at maximum rate for scanning. */
+-	bool timer_running;
+-
+ 	bool fixed_bssid;
+ 	bool fixed_channel;
+ 	bool privacy;
+@@ -1295,8 +1293,6 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params);
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb);
 -- 
-1.7.9.5
+1.7.11.7
 
