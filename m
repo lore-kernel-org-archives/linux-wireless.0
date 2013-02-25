@@ -1,100 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:47315 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366Ab3BHAtT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 19:49:19 -0500
-Received: by mail-bk0-f41.google.com with SMTP id q16so1432668bkw.28
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Feb 2013 16:49:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAG6hwVOEdFoac=TO8AcZVSB4Y15usHRwNkrK3cVWerHTvArO9g@mail.gmail.com>
-References: <773DB8A82AB6A046AE0195C68612A319014B7731@sbs2003.acksys.local>
-	<CAG6hwVOEdFoac=TO8AcZVSB4Y15usHRwNkrK3cVWerHTvArO9g@mail.gmail.com>
-Date: Fri, 8 Feb 2013 08:49:17 +0800
-Message-ID: <CAEFj984iH-04wx_ndDwWz9afTPZNvuerh4GLz-fKSBXQpFkYwA@mail.gmail.com> (sfid-20130208_014923_216779_1280767B)
-Subject: Re: Mesh regression
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: Cedric VONCKEN <cedric.voncken@acksys.fr>,
-	linux-wireless@vger.kernel.org,
-	open11s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:22162 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752375Ab3BYLuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 06:50:18 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/6] cfg80211: disconnect on suspend
+Date: Mon, 25 Feb 2013 12:50:03 +0100
+Message-Id: <1361793008-2857-1-git-send-email-sgruszka@redhat.com> (sfid-20130225_125024_087298_34A63F22)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Thomas
+If possible that after suspend, cfg80211 will receive request to
+disconnect what require action on interface that was removed during
+suspend.
 
-Yes. I will take a look on this.
+Problem can manifest itself by various warnings similar to below one:
 
-Hi, Cedric
+WARNING: at net/mac80211/driver-ops.h:12 ieee80211_bss_info_change_notify+0x2f9/0x300 [mac80211]()
+wlan0:  Failed check-sdata-in-driver check, flags: 0x4
+Call Trace:
+ [<c043e0b3>] warn_slowpath_fmt+0x33/0x40
+ [<f83707c9>] ieee80211_bss_info_change_notify+0x2f9/0x300 [mac80211]
+ [<f83a660a>] ieee80211_recalc_ps_vif+0x2a/0x30 [mac80211]
+ [<f83a6706>] ieee80211_set_disassoc+0xf6/0x500 [mac80211]
+ [<f83a9441>] ieee80211_mgd_deauth+0x1f1/0x280 [mac80211]
+ [<f8381b36>] ieee80211_deauth+0x16/0x20 [mac80211]
+ [<f8261e70>] cfg80211_mlme_down+0x70/0xc0 [cfg80211]
+ [<f8264de1>] __cfg80211_disconnect+0x1b1/0x1d0 [cfg80211]
 
-Both the 2 mesh gates, only MeshGate1 has interface bridged to
-Ethernet and MeshGate2 has "no" interface bridged to Ethernet, am I
-right?
+To fix the problem disconnect from any associated network before
+suspend. User space is responsible to establish connection again
+after resume. This basically need to be done by user space anyway,
+because associated stations can go away during suspend (for example
+NetworkManager disconnects on suspend and connect on resume by default).
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-Chun-Yeow
+ net/wireless/core.c  | 73 +++++++++++++++++++++++++++++-----------------------
+ net/wireless/core.h  |  3 +++
+ net/wireless/sysfs.c | 15 ++++++++---
+ 3 files changed, 55 insertions(+), 36 deletions(-)
 
-On Fri, Feb 8, 2013 at 4:02 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> + o11s-devel, Chun-Yeow
->
-> For once I don't think this regression is my fault :)
->
-> $ git log master-2012-06-08...master-2012-09-07  --oneline
-> net/mac80211/mesh_hwmp.c
-> 4bd4c2d mac80211: clean up mpath_move_to_queue()
-> 2c53040 net: Fix (nearly-)kernel-doc comments for various functions
-> bdcbd8e mac80211: clean up debugging
-> 7ebfa46 mac80211: fix and improve mesh RANN processing
-> 728b19e {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
-> 3fbf4b7 mac80211: implement the proactive PREP generation
-> a69cc44 mac80211: implement the proactive PREQ generation
-> 35b3fe1 mac80211: Rename stainfo variable for the more common sta
-> e3f5d16 mac80211: Remove unused variable
->
-> Chun-Yeow, can you please take a look at the PREQ forwarding logic in
-> the context of Cedric's problem?
->
-> On Thu, Feb 7, 2013 at 8:29 AM, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
->> My test Platform is:
->>
->> LAPTOP_A ---------------- MeshGate 1 ---------------- MeshGate2
->> 192.168.3.1                  192.168.3.252               192.168.3.253
->> 08:00:27:c1:bf:06     Wistron_aa:41:ed              Wistron_aa:40:a8
->>                                                 Acksysco_00:2d:ef
->>
->> The meshgate2 have a mesh interface and a lan interface bridged
->> together, and IP address is set on the bridge.
->>
->> If I run a ping from LAPTOP_A to MeshGate2 and on the same time, I
->> launch the following mesh initialization script
->>         iw phy phy0 interface add wlan0 type mp
->>         iw wlan0 set channel 36
->>         ifconfig wlan0 up
->>         iw wlan0 mesh join cvtest
->>         brctl addif br-lan wlan0
->>
->> In this case, I get no response from the ping.
->> I spied the wireless with airpcap and wireshark:
->>         A PREQ frame is sent from the mesh gate but the "sta target"
->> field is not set with the other mesh gate. In this frame, the "sta
->> target" field is set to the destination mac address (Acksysco_00:2d:ef).
->>
->> I don't have this default with compat-2012-06-14.
->> I have this default with compat-2013-01-07 and compat-2012-09-07
->>
->> I attach a wireshark capture with the default. The frame #49 is PREQ
->> with field target sta address set to MAC address of LAPTOPB.
->>
->> Do not hesitate to request more information or new test, if necessary to
->> understand the default.
->>
->> Any help will appreciate.
->> Best regards.
->>
->> Voncken cedric
->
->
->
-> --
-> Thomas
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5ffff03..5a4dc09 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -815,6 +815,46 @@ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ }
+ 
++void cfg80211_leave(struct cfg80211_registered_device *rdev,
++		   struct wireless_dev *wdev)
++{
++	struct net_device *dev = wdev->netdev;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		cfg80211_leave_ibss(rdev, dev, true);
++		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_STATION:
++		mutex_lock(&rdev->sched_scan_mtx);
++		__cfg80211_stop_sched_scan(rdev, false);
++		mutex_unlock(&rdev->sched_scan_mtx);
++
++		wdev_lock(wdev);
++#ifdef CONFIG_CFG80211_WEXT
++		kfree(wdev->wext.ie);
++		wdev->wext.ie = NULL;
++		wdev->wext.ie_len = 0;
++		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
++#endif
++		__cfg80211_disconnect(rdev, dev,
++				      WLAN_REASON_DEAUTH_LEAVING, true);
++		cfg80211_mlme_down(rdev, dev);
++		wdev_unlock(wdev);
++		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		cfg80211_leave_mesh(rdev, dev);
++		break;
++	case NL80211_IFTYPE_AP:
++		cfg80211_stop_ap(rdev, dev);
++		break;
++	default:
++		break;
++	}
++
++	wdev->beacon_interval = 0;
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
+@@ -883,38 +923,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+-		switch (wdev->iftype) {
+-		case NL80211_IFTYPE_ADHOC:
+-			cfg80211_leave_ibss(rdev, dev, true);
+-			break;
+-		case NL80211_IFTYPE_P2P_CLIENT:
+-		case NL80211_IFTYPE_STATION:
+-			mutex_lock(&rdev->sched_scan_mtx);
+-			__cfg80211_stop_sched_scan(rdev, false);
+-			mutex_unlock(&rdev->sched_scan_mtx);
+-
+-			wdev_lock(wdev);
+-#ifdef CONFIG_CFG80211_WEXT
+-			kfree(wdev->wext.ie);
+-			wdev->wext.ie = NULL;
+-			wdev->wext.ie_len = 0;
+-			wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+-#endif
+-			__cfg80211_disconnect(rdev, dev,
+-					      WLAN_REASON_DEAUTH_LEAVING, true);
+-			cfg80211_mlme_down(rdev, dev);
+-			wdev_unlock(wdev);
+-			break;
+-		case NL80211_IFTYPE_MESH_POINT:
+-			cfg80211_leave_mesh(rdev, dev);
+-			break;
+-		case NL80211_IFTYPE_AP:
+-			cfg80211_stop_ap(rdev, dev);
+-			break;
+-		default:
+-			break;
+-		}
+-		wdev->beacon_interval = 0;
++		cfg80211_leave(rdev, wdev);
+ 		break;
+ 	case NETDEV_DOWN:
+ 		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 3aec0e4..878d204 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -503,6 +503,9 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 			       enum nl80211_iftype iftype, int num);
+ 
++void cfg80211_leave(struct cfg80211_registered_device *rdev,
++		   struct wireless_dev *wdev);
++
+ #define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
+ 
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 238ee49..cf58a91 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -86,16 +86,23 @@ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
+ static int wiphy_suspend(struct device *dev, pm_message_t state)
+ {
+ 	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
++	struct wireless_dev *wdev;
+ 	int ret = 0;
+ 
+ 	rdev->suspend_at = get_seconds();
+ 
+-	if (rdev->ops->suspend) {
+-		rtnl_lock();
+-		if (rdev->wiphy.registered)
++	rtnl_lock();
++	if (rdev->wiphy.registered) {
++		if (!rdev->wowlan) {
++			list_for_each_entry_rcu(wdev, &rdev->wdev_list, list)
++				cfg80211_leave(rdev, wdev);
++		}
++
++		if (rdev->ops->suspend)
+ 			ret = rdev_suspend(rdev);
+-		rtnl_unlock();
++
+ 	}
++	rtnl_unlock();
+ 
+ 	return ret;
+ }
+-- 
+1.7.11.7
+
