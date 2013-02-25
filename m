@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1214 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757099Ab3BVNcz convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:42495 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755004Ab3BYXZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 08:32:55 -0500
-From: "Piotr Haber" <phaber@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
- coexistence mode
-Date: Fri, 22 Feb 2013 13:32:23 +0000
-Message-ID: <53E0CDA8188165468B8B837459C34CA901053EEA@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20130222_143302_006875_F3E66BB8)
-References: <1361524092-4814-1-git-send-email-phaber@broadcom.com>
- <1361524092-4814-2-git-send-email-phaber@broadcom.com> (
- sfid-20130222_100804_524805_03F665CB),<1361533924.8146.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361533924.8146.5.camel@jlt4.sipsolutions.net>
+	Mon, 25 Feb 2013 18:25:40 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Lubomir Rintel <lkundrak@v3.sk>, Daniel Drake <dsd@laptop.org>
+CC: Harro Haan <hrhaan@gmail.com>, Dan Williams <dcbw@redhat.com>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 25 Feb 2013 15:21:23 -0800
+Subject: RE: [PATCH] libertas sdio: remove CMD_FUNC_INIT call
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D7F8FF0@SC-VEXCH1.marvell.com> (sfid-20130226_002556_567542_EBC5E13E)
+References: <1358493883-28433-1-git-send-email-lkundrak@v3.sk>
+	 <477F20668A386D41ADCC57781B1F70430D140B07DE@SC-VEXCH1.marvell.com>
+	 <1361249203.14137.27.camel@unicorn.kokotovo>
+	 <477F20668A386D41ADCC57781B1F70430D9D6CEA08@SC-VEXCH1.marvell.com>
+ <1361730693.31709.1.camel@unicorn.kokotovo>
+In-Reply-To: <1361730693.31709.1.camel@unicorn.kokotovo>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> From: Johannes Berg [johannes@sipsolutions.net]
->> Sent: Friday, February 22, 2013 12:52 PM
->> To: Piotr Haber
->> Cc: linux-wireless@vger.kernel.org
->> Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth coexistence mode
-
->On Fri, 2013-02-22 at 10:08 +0100, Piotr Haber wrote:
->> Some devices share antenna/analog front end between Wifi
->> and Bluetooth. The hardware coexistence interface allows
->> them to do so, but there are situations when it would
->> be beneficial if software had a way to have influence on it
->> as well. It can be used to protect time sensitive
->> traffic in presence of Bluetooth voice stream,
->> for an example EAPOL handshake or DHCP negotiation.
->>
->> This patch adds new attribute to SET_WIPHY command
->> and a new field in struct wiphy to allow control of the
->> coexistence behavior. Devices that do not share resources
->> with Bluetooth can ignore this parameter.
-
-> Apart from a few minor technical comments that I'll omit for now, I'm
-> not sure what value this really has? EAPOL can already be "protected" by
-> way of knowing when the station is marked authorized, and DHCP is pretty
-> tricky because it could take "forever", might not be there at all, etc.
-By "protect" I meant give Wifi a priority over BT so these time sensitive things 
-can finish quicker/on first try, limiting the possibility of dropping packets because of BT 
-using the medium.
-This is supposed to be temporary and time limited, so if say DHCP finishes in the window 
-we give it - great, if not the coexistence goes back to default behavior and Wifi traffic is
-treated as usual. 
-
-> What application would actually call this? I don't really see how it
-> could be integrated like that.
-For EAPOL wpa_supplicant might use it. For DHCP it could be used from enter/exit hooks
-via iw or some other utility able to send nl messages.
-
-This feature is styled after Android one.
-There a Wifi state machine tries to "protect" DHCP traffic.
-It uses extra wpa_supplicant command (DRIVER) with linked driver specific library.
-Which means there can be only one wifi device and one needs to recompile wpa_supplicant 
-to use another.
-I wanted to make it more device independent.
-
-Piotr
-
-
-
-
+SGkgRGFuaWVsLA0KDQo+ID4gVGhlcmUgc2VlbXMgdG8gYmUgYSByYWNlIGNvbmRpdGlvbiBpbiBs
+YnNfdGhyZWFkKCkuDQo+ID4NCj4gPiBBdCBsaW5lIDU4MjoNCj4gPiAgNTgyICAgICAgICAgICAg
+ICAgICBpZiAoIXByaXYtPmZ3X3JlYWR5KQ0KPiA+ICA1ODMgICAgICAgICAgICAgICAgICAgICAg
+ICAgY29udGludWU7DQo+ID4NCj4gPiBUaGUgZndfcmVhZHkgaXMgMCwgc28geW91IG5ldmVyIGdl
+dCB0aGUgY2hhbmNlIHRvIGV4ZWN1dGUgdGhlIEZVTkNfSU5JVCBjb21tYW5kLg0KPiA+DQo+ID4g
+IDYxNyAgICAgICAgICAgICAgICAgLyogRXhlY3V0ZSB0aGUgbmV4dCBjb21tYW5kICovDQo+ID4g
+IDYxOCAgICAgICAgICAgICAgICAgaWYgKCFwcml2LT5kbmxkX3NlbnQgJiYgIXByaXYtPmN1cl9j
+bWQpDQo+ID4gIDYxOSAgICAgICAgICAgICAgICAgICAgICAgICBsYnNfZXhlY3V0ZV9uZXh0X2Nv
+bW1hbmQocHJpdik7DQo+ID4NCj4gPg0KPiA+IENvdWxkIHlvdSB0cnkgdGhlIGZvbGxvd2luZyBj
+aGFuZ2U/DQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0
+YXMvaWZfc2Rpby5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZQ0KPiA+IGluZGV4IDczOTMw
+OWUuLjhmNWQ5NzcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0
+YXMvaWZfc2Rpby5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvaWZf
+c2Rpby5jDQo+ID4gQEAgLTgyNSw2ICs4MjUsOCBAQCBzdGF0aWMgdm9pZCBpZl9zZGlvX2Zpbmlz
+aF9wb3dlcl9vbihzdHJ1Y3QgaWZfc2Rpb19jYXJkICpjYXINCj4gPg0KPiA+ICAgICAgICAgc2Rp
+b19yZWxlYXNlX2hvc3QoZnVuYyk7DQo+ID4NCj4gPiArICAgICAgIHByaXYtPmZ3X3JlYWR5ID0g
+MTsNCj4gPiArDQo+ID4gICAgICAgICAvKg0KPiA+ICAgICAgICAgICogRlVOQ19JTklUIGlzIHJl
+cXVpcmVkIGZvciBTRDg2ODggV0xBTi9CVCBtdWx0aXBsZSBmdW5jdGlvbnMNCj4gPiAgICAgICAg
+ICAqLw0KPiA+IEBAIC04MzksNyArODQxLDYgQEAgc3RhdGljIHZvaWQgaWZfc2Rpb19maW5pc2hf
+cG93ZXJfb24oc3RydWN0IGlmX3NkaW9fY2FyZCAqY2FyDQo+ID4gICAgICAgICAgICAgICAgICAg
+ICAgICAgbmV0ZGV2X2FsZXJ0KHByaXYtPmRldiwgIkNNRF9GVU5DX0lOSVQgY21kIGZhaWxlZFxu
+Iik7DQo+ID4gICAgICAgICB9DQo+ID4NCj4gPiAtICAgICAgIHByaXYtPmZ3X3JlYWR5ID0gMTsN
+Cj4gPiAgICAgICAgIHdha2VfdXAoJmNhcmQtPnB3cm9uX3dhaXRxKTsNCj4gPg0KPiA+ICAgICAg
+ICAgaWYgKCFjYXJkLT5zdGFydGVkKSB7DQo+IA0KPiBUaGFuayB5b3UuDQo+IEV2ZXJ5dGhpbmcg
+c2VlbSB0byB3b3JrIGZpbmUgZm9yIG1lIHdpdGggdGhlIHBhdGNoIGFwcGxpZWQuDQoNCkRvIHlv
+dSBoYXZlIGFueSBjb25jZXJuIGZvciBPTFBDIHBsYXRmb3JtcyB3aXRoIGFib3ZlIGNoYW5nZT8g
+SWYgaXQgZG9lc24ndCBzZWVtIHRvIGJyZWFrIE9MUEMgSSB3aWxsIHNlbmQgYSBwYXRjaCB0byB0
+aGUgbGlzdC4NCg0KVGhhbmtzLA0KQmluZw0KDQo=
