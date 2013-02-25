@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811Ab3BROai (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52081 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755004Ab3BYXa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 09:30:38 -0500
-Message-ID: <1361197831.8555.23.camel@jlt4.sipsolutions.net> (sfid-20130218_153041_336693_8960F747)
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>, antonio@open-mesh.com,
-	marek@open-mesh.com,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Date: Mon, 18 Feb 2013 15:30:31 +0100
-In-Reply-To: <20130215171938.GA4140@pandem0nium>
-References: <20130215171938.GA4140@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Feb 2013 18:30:29 -0500
+Date: Mon, 25 Feb 2013 18:27:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>, Matt Chen <machen@suse.com>,
+	joeyli <jlee@suse.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Linux summit this year ?
+Message-ID: <20130225232728.GF6455@tuxdriver.com> (sfid-20130226_003032_652347_EBE953F5)
+References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
+ <20130225143201.GA6455@tuxdriver.com>
+ <1361809785.3902.19.camel@aeonflux>
+ <512BAED0.2000507@lwfinger.net>
+ <20130225211207.GE6455@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130225211207.GE6455@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 18:19 +0100, Simon Wunderlich wrote:
-
-> Commands we would like to propose are:
->  * start collecting - this feature should not run by default to avoid bloating memory for users who
->    don't even need this
->  * stop collecting
->  * read - dumps the data for all stations
->  * read + reset - dump the data and reset information for all stations. This should also clean up stations,
->    at least those which are not connected to the BSS, to not bloat the station table.
+On Mon, Feb 25, 2013 at 04:12:08PM -0500, John W. Linville wrote:
+> On Mon, Feb 25, 2013 at 12:34:56PM -0600, Larry Finger wrote:
+> > On 02/25/2013 10:29 AM, Marcel Holtmann wrote:
+> > >Hi John,
+> > >
+> > >>>Sorry to bother you this moment. I am wondering if you know where the Linux
+> > >>>Summit will be this year ? Will it be in NewOrleans ? Linux Plumber
+> > >>>conference or Linux Conference ?
+> > >>>
+> > >>>Thank you. :)
+> > >>
+> > >>Actually, I think that the LF folks may have already run out of space
+> > >>in New Orleans.  I was planning to enquire about Edinburgh soon...
+> > >
+> > >if we would be fair, then this year should be back in North America.
+> > >Switching between Europe and North America seems to be a good pattern.
+> > 
+> > I too would prefer New Orleans as I could attend that one and meet
+> > many of the fine people of linux-wireless face to face, but if space
+> > is gone, that does not appear to be an option.
 > 
-> I guess the right position to implement this is mac80211 receive path. Our intended platform
-> is ath9k/ath5k, but that feature should work with any mac80211 driver. We don't care if sta_info
-> structs are allocated or custom structures are used, as long as we can receive a list of stations
-> which includes peer and non-peer stations, along with their statistics.
-> 
-> We are looking forward to your thoughts. :)
+> I would still like to do New Orleans.  I'm just not sure if we can
+> fit it in.  I don't suppose that someone would like to propose it as
+> a mini-conference for LPC?  Do we know what we want to discuss?
 
-I would argue that since most of the sta_info struct is used for
-operational stuff, you shouldn't use it, but have a separate struct and
-maybe embed that separate struct in sta_info for its statistics.
+What about the weekend before LinuxCon?  Anyone opposed to that?
+It will make a long week for anyone staying for LPC, but it might
+be doable?  I would hate to spend extra time in New Orleans... :-)
 
-I'd also not use the existing nl80211 station APIs since this could be
-an optional feature for many things, and it will likely break existing
-expectations, e.g. that all stations listed by "iw wlan0 station dump"
-are clients connected to an AP interface.
-
-It could be argued that this API then should also not even include the
-connected stations when listing ones, i.e. explicitly be non-connected
-stations.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
