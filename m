@@ -1,94 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38717 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756032Ab3BMOrW (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:51023 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755556Ab3BZAOx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 09:47:22 -0500
-Date: Wed, 13 Feb 2013 15:47:16 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv7 1/3] nl80211/cfg80211: add radar detection
- command/event
-Message-ID: <20130213144716.GA24508@pandem0nium> (sfid-20130213_154725_605161_10732A00)
-References: <1359462120-22898-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1359462120-22898-2-git-send-email-siwu@hrz.tu-chemnitz.de>
- <5107D345.7010101@neratec.com>
- <20130129143652.GA23425@pandem0nium>
- <5109094C.8050703@neratec.com>
- <20130130162531.GA27532@pandem0nium>
- <510A30D1.2080604@neratec.com>
- <20130131175429.GD2018@pandem0nium>
- <510B942D.5000403@neratec.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="huq684BweRXVnRxX"
-In-Reply-To: <510B942D.5000403@neratec.com>
+	Mon, 25 Feb 2013 19:14:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz
+Subject: [RFC/RFT 26/27] rtlwifi: rtl8188e: Remove some CamelCase variable names
+Date: Mon, 25 Feb 2013 18:13:38 -0600
+Message-Id: <1361837619-2985-27-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011526_938441_6C8643E5)
+In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jcheung@suse.com
+Cc: machen@suse.com
+Cc: mmarek@suse.cz
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c | 18 +++++++++---------
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h | 20 ++++++++++----------
+ 2 files changed, 19 insertions(+), 19 deletions(-)
 
---huq684BweRXVnRxX
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
+index 39dfe31..fa46a42 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
+@@ -32,21 +32,21 @@
+ 
+ /* drivers should parse below arrays and do the corresponding actions */
+ /*3 Power on  Array*/
+-struct wlan_pwr_cfg rtl8188E_power_on_flow[RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS
++struct wlan_pwr_cfg rtl8188e_power_on_flow[RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	RTL8188E_TRANS_CARDEMU_TO_ACT
+ 	RTL8188E_TRANS_END
+ };
+ 
+ /*3Radio off GPIO Array */
+-struct wlan_pwr_cfg rtl8188E_radio_off_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
++struct wlan_pwr_cfg rtl8188e_radio_off_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	RTL8188E_TRANS_ACT_TO_CARDEMU
+ 	RTL8188E_TRANS_END
+ };
+ 
+ /*3Card Disable Array*/
+-struct wlan_pwr_cfg rtl8188E_card_disable_flow
++struct wlan_pwr_cfg rtl8188e_card_disable_flow
+ 	[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 	RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
+ 	RTL8188E_TRANS_END_STEPS] = {
+@@ -56,7 +56,7 @@ struct wlan_pwr_cfg rtl8188E_card_disable_flow
+ };
+ 
+ /*3 Card Enable Array*/
+-struct wlan_pwr_cfg rtl8188E_card_enable_flow
++struct wlan_pwr_cfg rtl8188e_card_enable_flow
+ 	[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 	RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
+ 	RTL8188E_TRANS_END_STEPS] = {
+@@ -66,7 +66,7 @@ struct wlan_pwr_cfg rtl8188E_card_enable_flow
+ };
+ 
+ /*3Suspend Array*/
+-struct wlan_pwr_cfg rtl8188E_suspend_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
++struct wlan_pwr_cfg rtl8188e_suspend_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ 					+ RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	RTL8188E_TRANS_ACT_TO_CARDEMU
+@@ -75,7 +75,7 @@ struct wlan_pwr_cfg rtl8188E_suspend_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ };
+ 
+ /*3 Resume Array*/
+-struct wlan_pwr_cfg rtl8188E_resume_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
++struct wlan_pwr_cfg rtl8188e_resume_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ 					+ RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	RTL8188E_TRANS_SUS_TO_CARDEMU
+@@ -84,7 +84,7 @@ struct wlan_pwr_cfg rtl8188E_resume_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ };
+ 
+ /*3HWPDN Array*/
+-struct wlan_pwr_cfg rtl8188E_hwpdn_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
++struct wlan_pwr_cfg rtl8188e_hwpdn_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ 				+ RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS
+ 				+ RTL8188E_TRANS_END_STEPS] = {
+ 	RTL8188E_TRANS_ACT_TO_CARDEMU
+@@ -93,7 +93,7 @@ struct wlan_pwr_cfg rtl8188E_hwpdn_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
+ };
+ 
+ /*3 Enter LPS */
+-struct wlan_pwr_cfg rtl8188E_enter_lps_flow[RTL8188E_TRANS_ACT_TO_LPS_STEPS
++struct wlan_pwr_cfg rtl8188e_enter_lps_flow[RTL8188E_TRANS_ACT_TO_LPS_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	/*FW behavior*/
+ 	RTL8188E_TRANS_ACT_TO_LPS
+@@ -101,7 +101,7 @@ struct wlan_pwr_cfg rtl8188E_enter_lps_flow[RTL8188E_TRANS_ACT_TO_LPS_STEPS
+ };
+ 
+ /*3 Leave LPS */
+-struct wlan_pwr_cfg rtl8188E_leave_lps_flow[RTL8188E_TRANS_LPS_TO_ACT_STEPS
++struct wlan_pwr_cfg rtl8188e_leave_lps_flow[RTL8188E_TRANS_LPS_TO_ACT_STEPS
+ 					+ RTL8188E_TRANS_END_STEPS] = {
+ 	/*FW behavior*/
+ 	RTL8188E_TRANS_LPS_TO_ACT
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
+index 310308e..028ec6d 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
+@@ -51,7 +51,7 @@
+ 	TRANS_LPS_TO_ACT
+ 
+ 	TRANS_END
+-	PWR SEQ Version: rtl8188E_PwrSeq_V09.h
++	PWR SEQ Version: rtl8188e_PwrSeq_V09.h
+ */
+ 
+ #define	RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS	10
+@@ -280,36 +280,36 @@
+ 	{0xFFFF, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,\
+ 	0, PWR_CMD_END, 0, 0}
+ 
+-extern struct wlan_pwr_cfg rtl8188E_power_on_flow
++extern struct wlan_pwr_cfg rtl8188e_power_on_flow
+ 		[RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_radio_off_flow
++extern struct wlan_pwr_cfg rtl8188e_radio_off_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_card_disable_flow
++extern struct wlan_pwr_cfg rtl8188e_card_disable_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_card_enable_flow
++extern struct wlan_pwr_cfg rtl8188e_card_enable_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_suspend_flow
++extern struct wlan_pwr_cfg rtl8188e_suspend_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_resume_flow
++extern struct wlan_pwr_cfg rtl8188e_resume_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_hwpdn_flow
++extern struct wlan_pwr_cfg rtl8188e_hwpdn_flow
+ 		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
+ 		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_enter_lps_flow
++extern struct wlan_pwr_cfg rtl8188e_enter_lps_flow
+ 		[RTL8188E_TRANS_ACT_TO_LPS_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+-extern struct wlan_pwr_cfg rtl8188E_leave_lps_flow
++extern struct wlan_pwr_cfg rtl8188e_leave_lps_flow
+ 		[RTL8188E_TRANS_LPS_TO_ACT_STEPS +
+ 		RTL8188E_TRANS_END_STEPS];
+ 
+-- 
+1.8.1.4
 
-Hey Zefir,
-
-On Fri, Feb 01, 2013 at 11:08:45AM +0100, Zefir Kurtisi wrote:
-> Note: removed folks from CC to reduce noise
-> On 01/31/2013 06:54 PM, Simon Wunderlich wrote:
-> > Hey Zefir,
-> > [...]
-> >=20
-> > Thanks a lot! I've got quite a few mails of people offering their help =
-to check
-> > and verify this implementation or test it in their country. :) If you w=
-ant to
-> > help in the integration for ath9k, I'd be glad ... the interface should=
- be
-> > rather simple so maybe we don't have too much hassle? I have a little p=
-atch for
-> > ath9k to add dummy radar support and simulate events etc as baseline, i=
-f you
-> > (or anyone else) is interested ...
-> >=20
-> I am currently bound to another project (interference detection based on
-> ath9k-spectral ;)), but since I started integration once long ago based on
-> Victor's initial interface proposal, I might take a look again (if noone =
-else
-> wants to try).
->=20
-> Do you have the updated driver interface ready?
-
-As the nl80211/mac80211 part is merged now, I've sent a implementation refe=
-rence
-patch for ath9k [1]. It just adds a debug file and claims that it can suppo=
-rt DFS,
-obviously you have to enable radar detection and hook in your dfs pattern d=
-etector. :)
-
-It would be very nice if you can give it a try. :)
-
-Cheers,
-	Simon
-
-[1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/104056
->=20
-
---huq684BweRXVnRxX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlEbp3MACgkQrzg/fFk7axaXhACfezm0S3yIM5SWEua+C0VPCjv0
-y84An101n/6l3qghcfGVdkY27r0xUUZF
-=p1r5
------END PGP SIGNATURE-----
-
---huq684BweRXVnRxX--
