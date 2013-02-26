@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:52299 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751002Ab3BUFO0 (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:54358 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759874Ab3BZAOy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Feb 2013 00:14:26 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.9] mwifiex: fix system freeze while reloading driver
-Date: Wed, 20 Feb 2013 21:12:58 -0800
-Message-Id: <1361423578-14967-1-git-send-email-bzhao@marvell.com> (sfid-20130221_061430_299995_DB072E47)
+	Mon, 25 Feb 2013 19:14:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz
+Subject: [RFC/RFT 27/27] rtlwifi: rtl8188ee: Enable build of new driver
+Date: Mon, 25 Feb 2013 18:13:39 -0600
+Message-Id: <1361837619-2985-28-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011507_820784_146C5EB6)
+In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+These changes enable building the new driver.
 
-Unload sequence for mwifiex PCIE driver is as follows:
-1. Invoking cleanup module from kernel results into
-   pci_unregister_driver
-2. Kernel invokes PCIE remove() handler which disconnects all
-   interfaces.
-3. One step during disconnect is to clean PCIE TX rings.
-   During this we read txbd_rdptr from FW.
-
-While loading driver next time, we see pci_enable_device()
-results into system freeze. This may have happened because we
-accessed PCI device after unregistering from bus driver.
-Removing this ioread() operation resolves this bug.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jcheung@suse.com
+Cc: machen@suse.com
+Cc: mmarek@suse.cz
 ---
- drivers/net/wireless/mwifiex/pcie.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rtlwifi/Kconfig            | 11 +++++++++++
+ drivers/net/wireless/rtlwifi/Makefile           |  1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/Makefile | 16 ++++++++++++++++
+ 3 files changed, 28 insertions(+)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 4b54bcf..c4627bc 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -916,17 +916,8 @@ static int mwifiex_pcie_delete_sleep_cookie_buf(struct mwifiex_adapter *adapter)
- static int mwifiex_clean_pcie_ring_buf(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
--	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
--	u32 rdptr;
--
--	/* Read the TX ring read pointer set by firmware */
--	if (mwifiex_read_reg(adapter, reg->tx_rdptr, &rdptr)) {
--		dev_err(adapter->dev,
--			"Flush TXBD: failed to read reg->tx_rdptr\n");
--		return -1;
--	}
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index b6aa0c4..e42b3a8 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -55,6 +55,17 @@ config RTL8723AE
  
--	if (!mwifiex_pcie_txbd_empty(card, rdptr)) {
-+	if (!mwifiex_pcie_txbd_empty(card, card->txbd_rdptr)) {
- 		card->txbd_flush = 1;
- 		/* write pointer already set at last send
- 		 * send dnld-rdy intr again, wait for completion.
+ 	If you choose to build it as a module, it will be called rtl8723ae
+ 
++config RTL8188EE
++	tristate "Realtek RTL8188EE Wireless Network Adapter"
++	depends on MAC80211 && PCI
++	select FW_LOADER
++	select RTLWIFI
++	---help---
++	This is the driver for Realtek RTL8188EE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8188ee
++
+ config RTL8192CU
+ 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
+ 	depends on RTLWIFI && USB
+diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+index 3b1cbac..ff02b87 100644
+--- a/drivers/net/wireless/rtlwifi/Makefile
++++ b/drivers/net/wireless/rtlwifi/Makefile
+@@ -26,5 +26,6 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
+ obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
+ obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
+ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
++obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+new file mode 100644
+index 0000000..f3772c9
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+@@ -0,0 +1,16 @@
++rtl8188ee-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		phy.o		\
++		pwrseq.o	\
++		pwrseqcmd.o	\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o
++
++obj-$(CONFIG_RTL8188EE) += rtl8188ee.o
++
++ccflags-y += -D__CHECK_ENDIAN__
 -- 
-1.7.0.2
+1.8.1.4
 
