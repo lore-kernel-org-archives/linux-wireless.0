@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:53733 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756133Ab3BRUMI (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:49678 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755387Ab3BZDEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 15:12:08 -0500
-Received: by mail-bk0-f44.google.com with SMTP id j4so2712967bkw.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Feb 2013 12:12:05 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Markus Ulfberg <jag@markusulfberg.se>
-Subject: Re: Prism54 issues after kernel upgrade
-Date: Mon, 18 Feb 2013 21:12:03 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <CACNBsWgOu3xFS+kV7-C5rWW0hvTtVgweCJpmacppKWwU7mpREQ@mail.gmail.com>
-In-Reply-To: <CACNBsWgOu3xFS+kV7-C5rWW0hvTtVgweCJpmacppKWwU7mpREQ@mail.gmail.com>
+	Mon, 25 Feb 2013 22:04:45 -0500
+Message-ID: <512C264A.3000104@lwfinger.net> (sfid-20130226_040458_728695_1645110B)
+Date: Mon, 25 Feb 2013 21:04:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302182112.03235.chunkeey@googlemail.com> (sfid-20130218_211212_218566_4CB8B10B)
+To: Joe Perches <joe@perches.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz
+Subject: Re: [RFC/RFT 00/27] Updates for the rtlwifi family of drivers
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net> <1361845357.2023.7.camel@joe-AO722>
+In-Reply-To: <1361845357.2023.7.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On Monday, February 18, 2013 08:33:59 PM Markus Ulfberg wrote:
-> I recently upgraded from Debian Lenny to Squeezy and noticed that the
-> prism54 driver started spitting out these messages in the syslog:
-> Feb  1 23:05:23 lappy586 kernel: [  789.291198] p54pci 0000:01:00.0:
-> rx'd frame size exceeds length threshold.
-> Feb  1 23:05:23 lappy586 kernel: [  789.292165] p54pci 0000:01:00.0:
-> rx'd frame size exceeds length threshold.
-> Feb  1 23:05:23 lappy586 kernel: [  789.297478] p54pci 0000:01:00.0:
-> rx'd frame size exceeds length threshold.
+On 02/25/2013 08:22 PM, Joe Perches wrote:
+> On Mon, 2013-02-25 at 18:13 -0600, Larry Finger wrote:
+>> This set of patches upgrades drivers rtlwifi, rtl8192c, rtl8192ce, rtl8192se,
+>> and rtl8723ae to the state of the vendor driver issued on 2013.02.07. In
+>> addition, a new driver for the RTL8188EE chip is added to the kernel.
+>>
+>> Note: These patches do not upgrade rtl8192de. Those changes will be sent
+>> later.
 >
-> Well actually I noticed because this is usually followed by a dropped
-> connection for all my wireless devices in the house.
-Is lappy586 your access point? Or do you think/know it
-causes unwanted interference with other devices on your
-wireless network? (Also, how regular is this DoS?)
-
-> I'm running kernel: 2.6.32-5-486 from the debian repositories.
-> My wireless device is the 3Com OfficeConnect Wireless 11g PC Card (3CRWE154G72)
+> rtl8188e isn't very kernel stylish.
+> Looking at it briefly, in fact it's kind of ugly.
 >
-> As far as I know this worked fine until I updated the kernel, if
-> memory serves me right I was running something like 2.6.24...
-The message "rx'd frame size exceeds length threshold" simply
-states that the driver has received "garbage" from the device.
-What firmware are you using? Because you said you upgraded from
-2.6.24?, so you are probably are still running 2.7.0.0, Or? 
-If you can you should go for 2.13.25.0
-<http://wireless.kernel.org/en/users/Drivers/p54#firmware>
- 
-> I'll be happy to provide more information if you require,
-It would be great if you could try a current p54pci driver.
-(You don't have to compile a new 3.8-rc7 kernel for that,
-you can get compat-drivers backports from:
-<https://backports.wiki.kernel.org/index.php/Main_Page>)
+> Could/should it go into staging?
 
-> Thanks for providing a driver for my card. I really appreciate
-> all the effort you have put into it!
-Let's see what we can do ;-)
+It is uglier than I had hoped. I was not quite ready to push it yet, but I got 
+some pressure from outside, non-Realtek, sources that a kernel version was 
+needed. They will, in fact, start their integration from the RFC/RFT version.
 
-Regards,
-	Christian
+The main problem with having it in staging is that we will either have to 
+include headers from drivers/net/wireless/rtlwifi/, or duplicate them in the 
+drivers/staging/rtl8188ee/ directory where keeping them compatible will be a 
+hassle. Neither solution sounds optimum to me.
+
+Larry
+
