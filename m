@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:38650 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932835Ab3BSSiz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 13:38:55 -0500
-Date: Tue, 19 Feb 2013 22:38:52 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Adrian Chadd <adrian@freebsd.org>
-cc: Sujith Manoharan <sujith@msujith.org>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] improve operational ANI in Mesh mode
-In-Reply-To: <CAJ-VmokAP6hSxjGDUu7Q5rSg3dvxfLapQBSLgYCvWc9b0YEPgA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1302192236090.9244@icf.org.ru> (sfid-20130219_193901_083323_889CE442)
-References: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru> <20130219134028.GA26332@pandem0nium> <alpine.DEB.2.02.1302191752110.31254@icf.org.ru> <CAJ-VmomPkPvABSJtdb6Y=fDNxyd_XtE6sk9yWQzw9qC7rjkwiA@mail.gmail.com> <alpine.DEB.2.02.1302192034420.7450@icf.org.ru>
- <CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com> <20771.50338.434076.484711@gargle.gargle.HOWL> <CAJ-VmokAP6hSxjGDUu7Q5rSg3dvxfLapQBSLgYCvWc9b0YEPgA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-493343660-1361299132=:9244"
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:39305 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932307Ab3BZAOr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 19:14:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz
+Subject: [RFC/RFT 23/27] rtlwifi: rtl8188ee: Add files for new driver - part 14
+Date: Mon, 25 Feb 2013 18:13:35 -0600
+Message-Id: <1361837619-2985-24-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130226_011542_645721_1B9AA5B1)
+In-Reply-To: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This patch includes some changes found in testing.
 
----1050998036-493343660-1361299132=:9244
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jcheung@suse.com
+Cc: machen@suse.com
+Cc: mmarek@suse.cz
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 14 +++++++++-----
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c |  2 +-
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
-On 2013-02-19 10:33 -0800, Adrian Chadd wrote Sujith Manoharan:
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index 9e099da..12912a1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -1810,8 +1810,12 @@ static void _rtl88ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 
+ 			rtlefuse->txpwrlevel_cck[rf_path][i] =
+ 				 pwrinfo24g.index_cck_base[rf_path][index];
+-			rtlefuse->txpwrlevel_ht40_1s[rf_path][i] =
+-				 pwrinfo24g.index_bw40_base[rf_path][index];
++			if (i == 13)
++				rtlefuse->txpwrlevel_ht40_1s[rf_path][i] =
++				     pwrinfo24g.index_bw40_base[rf_path][4];
++			else
++				rtlefuse->txpwrlevel_ht40_1s[rf_path][i] =
++				     pwrinfo24g.index_bw40_base[rf_path][index];
+ 			rtlefuse->txpwr_ht20diff[rf_path][i] =
+ 				 pwrinfo24g.bw20_diff[rf_path][0];
+ 			rtlefuse->txpwr_legacyhtdiff[rf_path][i] =
+@@ -1819,7 +1823,7 @@ static void _rtl88ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		for (i = 0; i < 14; i++) {
+-			RTPRINT(rtlpriv, FINIT, init_txpwr,
++			RTPRINT(rtlpriv, FINIT, INIT_TXPOWER,
+ 				"RF(%d)-Ch(%d) [CCK / HT40_1S ] = "
+ 				"[0x%x / 0x%x ]\n", rf_path, i,
+ 				rtlefuse->txpwrlevel_cck[rf_path][i],
+@@ -1838,7 +1842,7 @@ static void _rtl88ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	rtlefuse->thermalmeter[0] = rtlefuse->eeprom_thermalmeter;
+-	RTPRINT(rtlpriv, FINIT, init_txpwr,
++	RTPRINT(rtlpriv, FINIT, INIT_TXPOWER,
+ 		"thermalmeter = 0x%x\n", rtlefuse->eeprom_thermalmeter);
+ 
+ 	if (!autoload_fail) {
+@@ -1848,7 +1852,7 @@ static void _rtl88ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 	} else {
+ 		rtlefuse->eeprom_regulatory = 0;
+ 	}
+-	RTPRINT(rtlpriv, FINIT, init_txpwr,
++	RTPRINT(rtlpriv, FINIT, INIT_TXPOWER,
+ 		"eeprom_regulatory = 0x%x\n", rtlefuse->eeprom_regulatory);
+ }
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+index cff2dd6..690f8e2 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+@@ -181,7 +181,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	release_firmware(firmware);
+ 
+ 	/* for early mode */
+-	rtlpriv->rtlhal.earlymode_enable = true;
++	rtlpriv->rtlhal.earlymode_enable = false;
+ 	rtlpriv->rtlhal.max_earlymode_num = 10;
+ 	for (tid = 0; tid < 8; tid++)
+ 		skb_queue_head_init(&rtlpriv->mac80211.skb_waitq[tid]);
+-- 
+1.8.1.4
 
-AC>It's easy enough to diagnose - just enable NF cal logging. Look at
-AC>what's being read back from the initial NF cal and what's being
-AC>written into the time-series average.
-AC>
-AC>It may be that something dumb is happening, like there's no
-AC>per-channel history, or the history from the wrong channel is being
-AC>used on a new channel.
-AC>
-AC>I know the reference driver has a couple of options (per-channel NF
-AC>history or shared NF history with a "scan" not using the history
-AC>buffer..)
-
-i do this already, in my case i dont see anything strange on NF claibration.
-
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1050998036-493343660-1361299132=:9244--
