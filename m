@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sns.it ([192.167.206.31]:51331 "EHLO sns.it"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751997Ab3BRS1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 13:27:24 -0500
-Received: from [93.58.200.66] (account m.vietri@sns.it)
-  by sns.it (CommuniGate Pro WEBUSER 5.4.9)
-  with HTTP id 120409968 for linux-wireless@vger.kernel.org; Mon, 18 Feb 2013 19:03:01 +0100
-From: "Mario Vietri" <m.vietri@sns.it>
-Subject: Linksys AE3000
-To: linux-wireless@vger.kernel.org
-Date: Mon, 18 Feb 2013 19:03:01 +0100
-Message-ID: <web-120409979@sns.it> (sfid-20130218_192728_536299_6452093B)
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:61319 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757826Ab3BZRuA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 12:50:00 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j10so1966001bkw.40
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2013 09:49:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8; format="flowed"
+In-Reply-To: <alpine.DEB.2.02.1302232342380.15538@icf.org.ru>
+References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
+	<alpine.DEB.2.02.1302232342380.15538@icf.org.ru>
+Date: Tue, 26 Feb 2013 18:49:58 +0100
+Message-ID: <CABvG-CVVzBJ9M4VXq0HsNDyaDbcSWB-pmftXJYLKEg01zqHvDA@mail.gmail.com> (sfid-20130226_185006_550265_58026584)
+Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+To: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Sirs,
+On 23 February 2013 20:45, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+> hm, strange, i have this cards, and it's works fine, exactly not fine, but works,
+> and as i known it's EOS since 2012.
 
-I run an up-to-date ArchLinux system on a Toshiba Portege 
-R600. I own a Linksys AE3000 (0x13b1:0x003b) usb wifi adapter, 
-with driver downloaded from WikiDevi as per their AE3000 page, 
-with the usual modifications.
-The driver compiles, installs and runs correctly, until I 
-begin watching a Youtube video, when it causes a kernel panic. 
-I can easily reproduce this crash at will, and thus I could 
-submit a kernel panic picture.
+Apparently some of them have their EEPROM programmed incorrectly.
+Perhaps different revisions? Beats me.
 
-I have seen that this behaviour is hardly discussed on Google, 
-and, though not completely unknown, it seems to me to be 
-under-reported. I am thus wondering whether this has been done 
-already, or if you think might be useful
-to you (and to me, of course). Should it be of any interest to 
-you, could you please point me to a page where a list of all 
-required info for proper reporting is displayed?
-
-Cheers,
-
-Mario
-
-Prof. Mario Vietri
-Scuola Normale Superiore
-56100 Pisa
-Italia
-
-Tel.: 39-050-509096
-FAX:  39-050-509045
-Cell: 39-333-7877992
+The one in question has "F52N/F50N/F20N V7" printed on the board and
+"FCC ID:VKV-Ff52N" on a sticker. Is yours any different?
