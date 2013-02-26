@@ -1,32 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44348 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47814 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756771Ab3BRWQT (ORCPT
+	with ESMTP id S1759947Ab3BZV2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 17:16:19 -0500
-Message-ID: <1361225773.8555.50.camel@jlt4.sipsolutions.net> (sfid-20130218_231622_328182_D9254EFF)
-Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
+	Tue, 26 Feb 2013 16:28:02 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 18 Feb 2013 23:16:13 +0100
-In-Reply-To: <5122A7C7.3070508@candelatech.com> (sfid-20130218_231436_933191_3F8FE600)
-References: <5122A7C7.3070508@candelatech.com>
-	 (sfid-20130218_231436_933191_3F8FE600)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] iwlwifi: always copy first 16 bytes of commands
+Date: Tue, 26 Feb 2013 22:27:54 +0100
+Message-Id: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222807_868739_222A7527)
+In-Reply-To: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
+References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
-> We often see crashes in work-queue processing when deleting
-> lots of wifi station interfaces.  I'm guessing that there is probably
-> a work item that was not properly un-registered before deleting
-> memory.  I have backported some wifi fixes from upstream, so
-> maybe they are to blame, but in case anyone has any suggestions
-> for places to look, please let me know.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
+The FH hardware will always write back to the scratch field
+in commands, even host commands not just TX commands, which
+can overwrite parts of the command. This is problematic if
+the command is re-used (with IWL_HCMD_DFL_NOCOPY) and can
+cause calibration issues.
 
-johannes
+Address this problem by always putting at least the first
+16 bytes into the buffer we also use for the command header
+and therefore make the DMA engine write back into this.
+
+For commands that are smaller than 16 bytes also always map
+enough memory for the DMA engine to write back to.
+
+Cc: stable@vger.kernel.org
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h  | 10 ++--
+ drivers/net/wireless/iwlwifi/pcie/internal.h |  9 ++++
+ drivers/net/wireless/iwlwifi/pcie/tx.c       | 75 +++++++++++++++++++++-------
+ 3 files changed, 71 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+index 9a0f45e..10f0179 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+@@ -349,25 +349,23 @@ TRACE_EVENT(iwlwifi_dev_rx_data,
+ TRACE_EVENT(iwlwifi_dev_hcmd,
+ 	TP_PROTO(const struct device *dev,
+ 		 struct iwl_host_cmd *cmd, u16 total_size,
+-		 const void *hdr, size_t hdr_len),
+-	TP_ARGS(dev, cmd, total_size, hdr, hdr_len),
++		 struct iwl_cmd_header *hdr),
++	TP_ARGS(dev, cmd, total_size, hdr),
+ 	TP_STRUCT__entry(
+ 		DEV_ENTRY
+ 		__dynamic_array(u8, hcmd, total_size)
+ 		__field(u32, flags)
+ 	),
+ 	TP_fast_assign(
+-		int i, offset = hdr_len;
++		int i, offset = sizeof(*hdr);
+ 
+ 		DEV_ASSIGN;
+ 		__entry->flags = cmd->flags;
+-		memcpy(__get_dynamic_array(hcmd), hdr, hdr_len);
++		memcpy(__get_dynamic_array(hcmd), hdr, sizeof(*hdr));
+ 
+ 		for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
+ 			if (!cmd->len[i])
+ 				continue;
+-			if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
+-				continue;
+ 			memcpy((u8 *)__get_dynamic_array(hcmd) + offset,
+ 			       cmd->data[i], cmd->len[i]);
+ 			offset += cmd->len[i];
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index aa2a39a..3d62e80 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -182,6 +182,15 @@ struct iwl_queue {
+ #define TFD_TX_CMD_SLOTS 256
+ #define TFD_CMD_SLOTS 32
+ 
++/*
++ * The FH will write back to the first TB only, so we need
++ * to copy some data into the buffer regardless of whether
++ * it should be mapped or not. This indicates how much to
++ * copy, even for HCMDs it must be big enough to fit the
++ * DRAM scratch from the TX cmd, at least 16 bytes.
++ */
++#define IWL_HCMD_MIN_COPY_SIZE	16
++
+ struct iwl_pcie_txq_entry {
+ 	struct iwl_device_cmd *cmd;
+ 	struct iwl_device_cmd *copy_cmd;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 8e9e321..8b625a7 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1152,10 +1152,12 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	void *dup_buf = NULL;
+ 	dma_addr_t phys_addr;
+ 	int idx;
+-	u16 copy_size, cmd_size;
++	u16 copy_size, cmd_size, dma_size;
+ 	bool had_nocopy = false;
+ 	int i;
+ 	u32 cmd_pos;
++	const u8 *cmddata[IWL_MAX_CMD_TFDS];
++	u16 cmdlen[IWL_MAX_CMD_TFDS];
+ 
+ 	copy_size = sizeof(out_cmd->hdr);
+ 	cmd_size = sizeof(out_cmd->hdr);
+@@ -1164,8 +1166,23 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	BUILD_BUG_ON(IWL_MAX_CMD_TFDS > IWL_NUM_OF_TBS - 1);
+ 
+ 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++		cmddata[i] = cmd->data[i];
++		cmdlen[i] = cmd->len[i];
++
+ 		if (!cmd->len[i])
+ 			continue;
++
++		/* need at least IWL_HCMD_MIN_COPY_SIZE copied */
++		if (copy_size < IWL_HCMD_MIN_COPY_SIZE) {
++			int copy = IWL_HCMD_MIN_COPY_SIZE - copy_size;
++
++			if (copy > cmdlen[i])
++				copy = cmdlen[i];
++			cmdlen[i] -= copy;
++			cmddata[i] += copy;
++			copy_size += copy;
++		}
++
+ 		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
+ 			had_nocopy = true;
+ 			if (WARN_ON(cmd->dataflags[i] & IWL_HCMD_DFL_DUP)) {
+@@ -1185,7 +1202,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 				goto free_dup_buf;
+ 			}
+ 
+-			dup_buf = kmemdup(cmd->data[i], cmd->len[i],
++			dup_buf = kmemdup(cmddata[i], cmdlen[i],
+ 					  GFP_ATOMIC);
+ 			if (!dup_buf)
+ 				return -ENOMEM;
+@@ -1195,7 +1212,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 				idx = -EINVAL;
+ 				goto free_dup_buf;
+ 			}
+-			copy_size += cmd->len[i];
++			copy_size += cmdlen[i];
+ 		}
+ 		cmd_size += cmd->len[i];
+ 	}
+@@ -1242,14 +1259,31 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 
+ 	/* and copy the data that needs to be copied */
+ 	cmd_pos = offsetof(struct iwl_device_cmd, payload);
++	copy_size = sizeof(out_cmd->hdr);
+ 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
+-		if (!cmd->len[i])
++		int copy = 0;
++
++		if (!cmd->len)
+ 			continue;
+-		if (cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
+-					 IWL_HCMD_DFL_DUP))
+-			break;
+-		memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], cmd->len[i]);
+-		cmd_pos += cmd->len[i];
++
++		/* need at least IWL_HCMD_MIN_COPY_SIZE copied */
++		if (copy_size < IWL_HCMD_MIN_COPY_SIZE) {
++			copy = IWL_HCMD_MIN_COPY_SIZE - copy_size;
++
++			if (copy > cmd->len[i])
++				copy = cmd->len[i];
++		}
++
++		/* copy everything if not nocopy/dup */
++		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
++					   IWL_HCMD_DFL_DUP)))
++			copy = cmd->len[i];
++
++		if (copy) {
++			memcpy((u8 *)out_cmd + cmd_pos, cmd->data[i], copy);
++			cmd_pos += copy;
++			copy_size += copy;
++		}
+ 	}
+ 
+ 	WARN_ON_ONCE(txq->entries[idx].copy_cmd);
+@@ -1275,7 +1309,14 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 		     out_cmd->hdr.cmd, le16_to_cpu(out_cmd->hdr.sequence),
+ 		     cmd_size, q->write_ptr, idx, trans_pcie->cmd_queue);
+ 
+-	phys_addr = dma_map_single(trans->dev, &out_cmd->hdr, copy_size,
++	/*
++	 * If the entire command is smaller than IWL_HCMD_MIN_COPY_SIZE, we must
++	 * still map at least that many bytes for the hardware to write back to.
++	 * We have enough space, so that's not a problem.
++	 */
++	dma_size = max_t(u16, copy_size, IWL_HCMD_MIN_COPY_SIZE);
++
++	phys_addr = dma_map_single(trans->dev, &out_cmd->hdr, dma_size,
+ 				   DMA_BIDIRECTIONAL);
+ 	if (unlikely(dma_mapping_error(trans->dev, phys_addr))) {
+ 		idx = -ENOMEM;
+@@ -1283,14 +1324,15 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	}
+ 
+ 	dma_unmap_addr_set(out_meta, mapping, phys_addr);
+-	dma_unmap_len_set(out_meta, len, copy_size);
++	dma_unmap_len_set(out_meta, len, dma_size);
+ 
+ 	iwl_pcie_txq_build_tfd(trans, txq, phys_addr, copy_size, 1);
+ 
++	/* map the remaining (adjusted) nocopy/dup fragments */
+ 	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
+-		const void *data = cmd->data[i];
++		const void *data = cmddata[i];
+ 
+-		if (!cmd->len[i])
++		if (!cmdlen[i])
+ 			continue;
+ 		if (!(cmd->dataflags[i] & (IWL_HCMD_DFL_NOCOPY |
+ 					   IWL_HCMD_DFL_DUP)))
+@@ -1298,7 +1340,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 		if (cmd->dataflags[i] & IWL_HCMD_DFL_DUP)
+ 			data = dup_buf;
+ 		phys_addr = dma_map_single(trans->dev, (void *)data,
+-					   cmd->len[i], DMA_BIDIRECTIONAL);
++					   cmdlen[i], DMA_BIDIRECTIONAL);
+ 		if (dma_mapping_error(trans->dev, phys_addr)) {
+ 			iwl_pcie_tfd_unmap(trans, out_meta,
+ 					   &txq->tfds[q->write_ptr],
+@@ -1307,7 +1349,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 			goto out;
+ 		}
+ 
+-		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmd->len[i], 0);
++		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], 0);
+ 	}
+ 
+ 	out_meta->flags = cmd->flags;
+@@ -1317,8 +1359,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 
+ 	txq->need_update = 1;
+ 
+-	trace_iwlwifi_dev_hcmd(trans->dev, cmd, cmd_size,
+-			       &out_cmd->hdr, copy_size);
++	trace_iwlwifi_dev_hcmd(trans->dev, cmd, cmd_size, &out_cmd->hdr);
+ 
+ 	/* start timer if queue currently empty */
+ 	if (q->read_ptr == q->write_ptr && trans_pcie->wd_timeout)
+-- 
+1.8.0
 
