@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55184 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755890Ab3BXPlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 10:41:44 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] brcmsmac: export firmware version to ethtool
-Date: Sun, 24 Feb 2013 16:41:34 +0100
-Message-Id: <1361720494-27131-1-git-send-email-hauke@hauke-m.de> (sfid-20130224_164148_710520_9B733551)
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:62596 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163Ab3BZVcE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 16:32:04 -0500
+Received: by mail-bk0-f51.google.com with SMTP id ik5so2124158bkc.38
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2013 13:32:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1361808057-17899-1-git-send-email-marco@cozybit.com>
+References: <1361808057-17899-1-git-send-email-marco@cozybit.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 26 Feb 2013 13:31:41 -0800
+Message-ID: <CAG6hwVOrwGTceDKK9t0QAFH9LDGuhZtJDQhQh38Mh2C+YepAtw@mail.gmail.com> (sfid-20130226_223208_282175_4202A299)
+Subject: Re: [PATCHv3 1/3] mac80211: move mesh sync beacon handler into neighbour_update
+To: Marco Porsch <marco@cozybit.com>
+Cc: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, sleffler@google.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This exports the firmware version in use to userspace through ethtool.
+Hi Marco,
 
-root@OpenWrt:/# ethtool -i wlan0
-firmware-version: 610.812
+On Mon, Feb 25, 2013 at 8:00 AM, Marco Porsch <marco@cozybit.com> wrote:
+> Move the beacon handler into mesh_neighbour_update where the STA
+> pointer is already available. This avoids additional overhead
+> and simplifies the handler.
+> The repositioning will also benefit mesh PS which uses T_r and
+> the updated T_offset value.
+>
+> Check frame type before calling the handler. Rename it to better
+> reflect its purpose.
+>
+> Signed-off-by: Marco Porsch <marco@cozybit.com>
+> ---
+>
+> v3:
+>         check frame type before rx_bcn handler (Johannes)
+>
+>  net/mac80211/ieee80211_i.h |    9 ++++-----
+>  net/mac80211/mesh.c        |    7 +------
+>  net/mac80211/mesh.h        |    4 +++-
+>  net/mac80211/mesh_plink.c  |   38 ++++++++++++++++++++++++++++-------
+>  net/mac80211/mesh_sync.c   |   47 +++++++++-----------------------------------
+>  5 files changed, 48 insertions(+), 57 deletions(-)
+>
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 388580a..631760f 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -529,11 +529,10 @@ struct ieee80211_if_ibss {
+>   */
+>  struct ieee802_11_elems;
+>  struct ieee80211_mesh_sync_ops {
+> -       void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
+> -                            u16 stype,
+> -                            struct ieee80211_mgmt *mgmt,
+> -                            struct ieee802_11_elems *elems,
+> -                            struct ieee80211_rx_status *rx_status);
+> +       void (*rx_bcn)(struct sta_info *sta,
+> +                      struct ieee80211_mgmt *mgmt,
+> +                      struct ieee802_11_elems *elems,
+> +                      u64 t_r);
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+Why not continue to sync against probe responses?
+mesh_neighbour_update() gets these as well.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index d723e15..abd6eab 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7957,9 +7957,14 @@ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
- 
- 	/* read the ucode version if we have not yet done so */
- 	if (wlc->ucode_rev == 0) {
--		wlc->ucode_rev =
--		    brcms_b_read_shm(wlc->hw, M_BOM_REV_MAJOR) << NBITS(u16);
--		wlc->ucode_rev |= brcms_b_read_shm(wlc->hw, M_BOM_REV_MINOR);
-+		u16 rev;
-+		u16 patch;
-+
-+		rev = brcms_b_read_shm(wlc->hw, M_BOM_REV_MAJOR);
-+		patch = brcms_b_read_shm(wlc->hw, M_BOM_REV_MINOR);
-+		wlc->ucode_rev = (rev << NBITS(u16)) | patch;
-+		snprintf(wlc->wiphy->fw_version,
-+			 sizeof(wlc->wiphy->fw_version), "%u.%u", rev, patch);
- 	}
- 
- 	/* ..now really unleash hell (allow the MAC out of suspend) */
 -- 
-1.7.10.4
-
+Thomas
