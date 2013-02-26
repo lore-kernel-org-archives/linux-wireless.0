@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:55402 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933152Ab3BSSbW (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:22662 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759926Ab3BZKGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 13:31:22 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 26 Feb 2013 05:06:10 -0500
+Date: Tue, 26 Feb 2013 13:04:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] ray_cs: read past the end of the array
+Message-ID: <20130226100451.GA12364@longonot.mountain> (sfid-20130226_110615_720329_399DBC51)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <20771.50338.434076.484711@gargle.gargle.HOWL> (sfid-20130219_193126_375628_72143122)
-Date: Tue, 19 Feb 2013 23:59:54 +0530
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Georgiewskiy Yuriy <bottleman@icf.org.ru>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] improve operational ANI in Mesh mode
-In-Reply-To: <CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com>
-References: <alpine.DEB.2.02.1302160630580.4293@icf.org.ru>
-	<20130219134028.GA26332@pandem0nium>
-	<alpine.DEB.2.02.1302191752110.31254@icf.org.ru>
-	<CAJ-VmomPkPvABSJtdb6Y=fDNxyd_XtE6sk9yWQzw9qC7rjkwiA@mail.gmail.com>
-	<alpine.DEB.2.02.1302192034420.7450@icf.org.ru>
-	<CAJ-VmokUJtowcO0AWpyFLoLN0R0KowETb1BOyjN66rzPSDhjOQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd wrote:
-> What's _supposed_ to happen on channel change is this:
-> 
-> * There's supposed to be an initial set of calibrations done, including NF;
-> * the time-adjusted noise floor history for that channel is written out;
-> * The last set ANI parameters for that channel are written out.
-> 
-> The theory being that the NF and ANI results for a channel are channel
-> specific and not global.
-> 
-> _However_ this may or may not be correct or working correctly. ANI
-> doesn't run for long enough during a channel scan to properly figure
-> out channel conditions. But on a very noisy channel, you may need some
-> specifically detuned parameters in order to receive successfully.
+"translate" should either be set or disabled.  We also use it an
+offset into the framing[] array when we're generating the proc
+file.  Framing looks like this:
 
-I think there are bugs in the NF calibration code in ath9k. I see
-wild fluctuations in the signal level before and after nfcal happens, and
-this happens in all the chips I tested - AR9285, AR9485, AR9565. Since
-nfcal is triggered as part of the ANI calibration routine, this would cause
-issues.
+static const char *framing[] = { "Encapsulation", "Translation" }
 
-Sujith
+So when we're setting translate we need to restrict the values to
+either 1 or 0 or it can an out of bounds read.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Compile tested only.  This function currently doesn't have
+permission checks but maybe it should.
+
+There are a couple other overflow warnings in this file that look
+valid, but I don't know what was intended.
+
+drivers/net/wireless/ray_cs.c:602 init_startup_params() error: memcpy() 'b4_default_startup_parms' too small (85 vs 93)
+drivers/net/wireless/ray_cs.c:965 translate_frame() warn: buffer overflow '(ptx->var)->org' 3 <= 3
+
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index e7cf37f..6ee5055 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -144,7 +144,7 @@ static int psm;
+ static char *essid;
+ 
+ /* Default to encapsulation unless translation requested */
+-static int translate = 1;
++static bool translate = 1;
+ 
+ static int country = USA;
+ 
+@@ -178,7 +178,7 @@ module_param(hop_dwell, int, 0);
+ module_param(beacon_period, int, 0);
+ module_param(psm, int, 0);
+ module_param(essid, charp, 0);
+-module_param(translate, int, 0);
++module_param(translate, bool, 0);
+ module_param(country, int, 0);
+ module_param(sniffer, int, 0);
+ module_param(bc, int, 0);
+@@ -1353,7 +1353,7 @@ static int ray_get_range(struct net_device *dev, struct iw_request_info *info,
+ static int ray_set_framing(struct net_device *dev, struct iw_request_info *info,
+ 			   union iwreq_data *wrqu, char *extra)
+ {
+-	translate = *(extra);	/* Set framing mode */
++	translate = !!*(extra);	/* Set framing mode */
+ 
+ 	return 0;
+ }
