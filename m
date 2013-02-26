@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2969 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757096Ab3BHNv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 08:51:27 -0500
-Message-ID: <511502D2.3010800@broadcom.com> (sfid-20130208_145134_289611_25A60086)
-Date: Fri, 8 Feb 2013 14:51:14 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/5] brcmfmac: fix usb device reset and debugging
- functions
-References: <1360321595-31722-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1360321595-31722-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:47622 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758806Ab3BZUlQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 15:41:16 -0500
+Message-ID: <1361911267.8440.9.camel@jlt4.sipsolutions.net> (sfid-20130226_214119_639297_57C974C3)
+Subject: Re: [PATCH 1/6] cfg80211: disconnect on suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 26 Feb 2013 21:41:07 +0100
+In-Reply-To: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
+References: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2013 12:06 PM, Arend van Spriel wrote:
-> Fixing a problem found in usb device reset that could result in a null
-> pointer access. The debugging functions in sdio driver had a locking
-> issue and on some devices needed a backplane clock running to function
-> properly.
+On Mon, 2013-02-25 at 12:50 +0100, Stanislaw Gruszka wrote:
 
-Forgot to mention it, but this series is intended for v3.9 and depends
-on the patch series sent couple of days ago identified by:
+> +void cfg80211_leave(struct cfg80211_registered_device *rdev,
+> +		   struct wireless_dev *wdev);
 
-Message-ID: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+missing a space here for indentation :)
 
-Regards,
-Arend van Spriel
+> -		rtnl_unlock();
+> +
+>  	}
 
-> Hante Meuleman (2):
->   brcmfmac: use brcmf_if::bssidx as index in interface list
->   brcmfmac: Check null pointer on brcmf_dev_reset.
-> 
-> Piotr Haber (3):
->   brcmfmac: fix mmc host locking issue
->   brcmfmac: turn clocks on when reading shared info
->   brcmfmac: remove unnecessary locking in trap info processing
-> 
->  drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   10 +--
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    8 +++
->  .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   75 ++++++++++----------
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    7 +-
->  drivers/net/wireless/brcm80211/brcmfmac/fweh.c     |    9 ++-
->  drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |    5 +-
->  .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +
->  7 files changed, 61 insertions(+), 55 deletions(-)
-> 
+That added blank line is spurious.
 
+I was going to fix these but have more concerns on the second patch.
+
+johannes
 
