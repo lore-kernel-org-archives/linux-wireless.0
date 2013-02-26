@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55590 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47744 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757499Ab3BGORL (ORCPT
+	with ESMTP id S1753252Ab3BZVMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 09:17:11 -0500
-Message-ID: <1360246653.8038.9.camel@jlt4.sipsolutions.net> (sfid-20130207_151715_078692_C4305241)
-Subject: Re: [RFC] mac80211: Add support for Tx-AMSDU viz debugfs.
+	Tue, 26 Feb 2013 16:12:52 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	chaitanyatk@posedge.com, linux-wireless@vger.kernel.org,
-	maheshp@posedge.com
-Date: Thu, 07 Feb 2013 15:17:33 +0100
-In-Reply-To: <5113B42A.4020708@openwrt.org>
-References: <7384f4ddc838247a0f467708d66baa8c@posedge.com>
-	 <1360225230.8038.1.camel@jlt4.sipsolutions.net>
-	 <CABPxzYLnWjxtN_c1sFXpA3Ye9ZNvQgV1dU0z=59j0WqgM-rUpg@mail.gmail.com>
-	 <1360228991.8038.3.camel@jlt4.sipsolutions.net>
-	 <CABPxzYLwEfzwS9b8dAGjbqT2MLo9FdTKkRwWKDvzxp82ObB-9Q@mail.gmail.com>
-	 <5113B42A.4020708@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: prohibit zero keepalive interval
+Date: Tue, 26 Feb 2013 22:12:46 +0100
+Message-Id: <1361913166-17570-1-git-send-email-johannes@sipsolutions.net> (sfid-20130226_221256_413864_51CD2849)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 15:03 +0100, Felix Fietkau wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > But the problem is every time we have to test the Rx-AMSDU
-> > which is mandatory for WFA 802.11n cert, we need to procure a adapter
-> > which supports it, which is difficult. Thats the scenario we have faced
-> > which lead us to work on this.With this feature in place we can use
-> > any opensource adapter and driver for that purpose.
-> > 
-> > Again, Its a trade off between stability and usability :-)
-> How about injecting A-MSDU packets via cooked monitor mode or nl80211
-> frame tx and thus shifting the debug-only code into userspace?
+It's not useful to specify a 0 keepalive interval, this
+would send too much data. Prohibit this to also avoid
+device issues.
 
-nl80211 won't work -- no support for data frames (and I'd rather not add
-it), but monitor mode (why cooked?) seems fine.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2af3950..67bda6c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7603,7 +7603,8 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 
+ 	if (nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]) >
+-			rdev->wiphy.wowlan.tcp->data_interval_max)
++			rdev->wiphy.wowlan.tcp->data_interval_max ||
++	    nla_get_u32(tb[NL80211_WOWLAN_TCP_DATA_INTERVAL]) == 0)
+ 		return -EINVAL;
+ 
+ 	wake_size = nla_len(tb[NL80211_WOWLAN_TCP_WAKE_PAYLOAD]);
+-- 
+1.8.0
 
