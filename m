@@ -1,39 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:51896 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768Ab3BXNUJ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47693 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758026Ab3BZUyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 08:20:09 -0500
-Received: by mail-ob0-f180.google.com with SMTP id ef5so1991152obb.11
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Feb 2013 05:20:08 -0800 (PST)
-MIME-Version: 1.0
-Date: Sun, 24 Feb 2013 14:20:07 +0100
-Message-ID: <CACna6rx57gx7fLEq5Om7q2Pbn82vgRRhH5DpkKtsgyPjHKuEvA@mail.gmail.com> (sfid-20130224_142018_659905_D77FF1E9)
-Subject: Dead code in brcms_c_compute_rspec
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: brcm80211 development <brcm80211-dev-list@broadcom.com>
+	Tue, 26 Feb 2013 15:54:09 -0500
+Message-ID: <1361912044.8440.20.camel@jlt4.sipsolutions.net> (sfid-20130226_215412_927833_59E1468F)
+Subject: Re: [PATCH 3.9] mac80211: fix monitor mode channel reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 26 Feb 2013 21:54:04 +0100
+In-Reply-To: <1361642534-39566-1-git-send-email-nbd@openwrt.org>
+References: <1361642534-39566-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+On Sat, 2013-02-23 at 19:02 +0100, Felix Fietkau wrote:
+> When not using channel contexts with only monitor mode interfaces being
+> active, report local->monitor_chandef to userspace.
 
-I was looking for adding support for more devices in b43 and wanted to
-check how did you handled reading PHY type/id from rxchan/chanstat
-(it's a part of hardware-specific part of RX header).
+Makes sense, applied.
 
-In rate.c you have brcms_c_compute_rspec which does:
-phy_type = ((rxh->RxChan & RXS_CHAN_PHYTYPE_MASK) >> RXS_CHAN_PHYTYPE_SHIFT);
-(you duplicate BRCMS_CHAN_PHYTYPE by the way).
+johannes
 
-The problem is that:
-#define	RXS_CHAN_PHYTYPE_MASK	0x0007
-and you're comparing the result to the
-#define	PHY_TYPE_LCN		8
-which looks like a minor dead code for me.
-
-You may want to fix that.
-
--- 
-Rafał
