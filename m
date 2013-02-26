@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:59807 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758662Ab3BYSe7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47690 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757815Ab3BZUxX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 13:34:59 -0500
-Received: by mail-oa0-f53.google.com with SMTP id m1so3421349oag.26
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Feb 2013 10:34:58 -0800 (PST)
-Message-ID: <512BAED0.2000507@lwfinger.net> (sfid-20130225_193503_333629_873EB69B)
-Date: Mon, 25 Feb 2013 12:34:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux summit this year ?
-References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>  <20130225143201.GA6455@tuxdriver.com> <1361809785.3902.19.camel@aeonflux>
-In-Reply-To: <1361809785.3902.19.camel@aeonflux>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 26 Feb 2013 15:53:23 -0500
+Message-ID: <1361911998.8440.19.camel@jlt4.sipsolutions.net> (sfid-20130226_215326_611422_4EA71E16)
+Subject: Re: [PATCH 3.9] mac80211: fix idle handling in monitor mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 26 Feb 2013 21:53:18 +0100
+In-Reply-To: <1361641257-26963-1-git-send-email-nbd@openwrt.org>
+References: <1361641257-26963-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2013 10:29 AM, Marcel Holtmann wrote:
-> Hi John,
->
->>> Sorry to bother you this moment. I am wondering if you know where the Linux
->>> Summit will be this year ? Will it be in NewOrleans ? Linux Plumber
->>> conference or Linux Conference ?
->>>
->>> Thank you. :)
->>
->> Actually, I think that the LF folks may have already run out of space
->> in New Orleans.  I was planning to enquire about Edinburgh soon...
->
-> if we would be fair, then this year should be back in North America.
-> Switching between Europe and North America seems to be a good pattern.
+On Sat, 2013-02-23 at 18:40 +0100, Felix Fietkau wrote:
+> When the driver does not want a monitor mode VIF, no channel context is
+> allocated for it. This causes ieee80211_recalc_idle to put the hardware
+> into idle mode if only a monitor mode is active, breaking injection.
+> 
+> Fix this by checking local->monitors in addition to active channel
+> contexts.
 
-I too would prefer New Orleans as I could attend that one and meet many of the 
-fine people of linux-wireless face to face, but if space is gone, that does not 
-appear to be an option.
+Applied.
 
-Larry
-
+johannes
 
