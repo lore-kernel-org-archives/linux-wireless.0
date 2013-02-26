@@ -1,136 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54583 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758700Ab3BSXqv (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47296 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434Ab3BZKiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 18:46:51 -0500
-Message-ID: <51240EE6.9040201@candelatech.com> (sfid-20130220_004655_481576_59CEA093)
-Date: Tue, 19 Feb 2013 15:46:46 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Tue, 26 Feb 2013 05:38:25 -0500
+Date: Tue, 26 Feb 2013 12:38:19 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
-References: <5122A7C7.3070508@candelatech.com>  (sfid-20130218_231436_933191_3F8FE600) <1361225773.8555.50.camel@jlt4.sipsolutions.net> <51240249.6060801@candelatech.com> <512409B1.7090800@candelatech.com>
-In-Reply-To: <512409B1.7090800@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCHv2] cfg80211: Extend support for IEEE 802.11r Fast BSS
+ Transition
+Message-ID: <20130226103819.GA5630@jouni.qca.qualcomm.com> (sfid-20130226_113830_685187_38051A01)
+References: <20130221060843.GA24491@w1.fi>
+ <1361565394.3420.17.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1361565394.3420.17.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2013 03:24 PM, Ben Greear wrote:
-> On 02/19/2013 02:52 PM, Ben Greear wrote:
->> On 02/18/2013 02:16 PM, Johannes Berg wrote:
->>> On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
->>>> We often see crashes in work-queue processing when deleting
->>>> lots of wifi station interfaces.  I'm guessing that there is probably
->>>> a work item that was not properly un-registered before deleting
->>>> memory.  I have backported some wifi fixes from upstream, so
->>>> maybe they are to blame, but in case anyone has any suggestions
->>>> for places to look, please let me know.
->>>
->>> Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
->>
->> That did not catch anything.
+Add NL80211_CMD_UPDATE_FT_IES to support update of FT IEs to the WLAN
+driver and NL80211_CMD_FT_EVENT to send FT events from the WLAN driver.
+This will carry the target AP's MAC address along with the relevant
+Information Elements. This event is used to report received FT IEs
+(MDIE, FTIE, RSN IE, TIE, RICIE). These changes allow FT to be supported
+with drivers that use an internal SME instead of user space option (like
+FT implementation in wpa_supplicant with mac80211-based drivers).
 
-So, maybe the problem is in the sta_quiesce logic.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/net/cfg80211.h       |   41 +++++++++++++++++++++++
+ include/uapi/linux/nl80211.h |   19 +++++++++++
+ net/wireless/nl80211.c       |   74 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 134 insertions(+)
 
-It cancels the work items before it stops the timers, so
-I think it could re-add the work before the timers are
-stopped??
+v2 - Updates based on comments from Johannes:
+- Remove return value from cfg80211_ft_event()
+  (caller cannot do much with it)
+- add is_valid_ie_attr() validation
+- merge cfg80211_ft_event() into nl80211_ft_event()
+- require target_ap in ft_event
 
 
-
-void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
-{
-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-
-	/*
-	 * we need to use atomic bitops for the running bits
-	 * only because both timers might fire at the same
-	 * time -- the code here is properly synchronised.
-	 */
-
-	cancel_work_sync(&ifmgd->request_smps_work);
-
-	sdata_err(sdata, "Canceling monitor_work in sta_quiesce.\n");
-	cancel_work_sync(&ifmgd->monitor_work);
-	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
-	cancel_work_sync(&ifmgd->csa_connection_drop_work);
-	if (del_timer_sync(&ifmgd->timer))
-		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-
-	cancel_work_sync(&ifmgd->chswitch_work);
-	if (del_timer_sync(&ifmgd->chswitch_timer))
-		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
-
-	/* these will just be re-established on connection */
-	del_timer_sync(&ifmgd->conn_mon_timer);
-	del_timer_sync(&ifmgd->bcn_mon_timer);
-}
-
->
-> Ahh, enabled a bunch more debugging options, and got this:
->
-> sta40: deauthenticating from 00:88:aa:88:aa:88 by local choice (reason=3)
-> ------------[ cut here ]------------
-> WARNING: at /home/greearb/git/linux-3.7.dev.y/lib/debugobjects.c:261 debug_print_object+0x7c/0x8d()
-> Hardware name: To be filled by O.E.M.
-> ODEBUG: free active (active state 0) object type: work_struct hint: ieee80211_sta_monitor_work+0x0/0x14 [mac80211]
-> Modules linked in: nf_nat_ipv4 nf_nat 8021q garp stp llc macvlan pktgen lockd sunrpc f71882fg iTCO_wdt iTCO_vendor_support coretemp gpio_ich hwmon mperf kvm
-> cdc_acm snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep microcode snd_seq snd_seq_device serio_raw pcspkr snd_pcm ath9k ath9k_common ath9k_hw ath
-> i2c_i801 ppdev mac80211 lpc_ich cfg80211 snd_page_alloc e1000e snd_timer snd soundcore parport_pc parport uinput ipv6 i915 video i2c_algo_bit drm_kms_helper drm
-> i2c_core [last unloaded: iptable_nat]
-> Pid: 14743, comm: iw Tainted: G         C O 3.7.9+ #11
-> Call Trace:
->   [<ffffffff81087ef8>] warn_slowpath_common+0x80/0x98
->   [<ffffffff81087fa4>] warn_slowpath_fmt+0x41/0x43
->   [<ffffffff812a2608>] debug_print_object+0x7c/0x8d
->   [<ffffffffa025f5ad>] ? ieee80211_beacon_connection_loss_work+0x88/0x88 [mac80211]
->   [<ffffffff812a2b9a>] ? debug_check_no_obj_freed+0x65/0x1c3
->   [<ffffffff812a2bca>] debug_check_no_obj_freed+0x95/0x1c3
->   [<ffffffff8149f465>] ? netdev_release+0x39/0x3e
->   [<ffffffff8114cc69>] slab_free_hook+0x70/0x79
->   [<ffffffff8114ea3e>] kfree+0x62/0xb7
->   [<ffffffff8149f465>] netdev_release+0x39/0x3e
->   [<ffffffff8136ad67>] device_release+0x52/0x8a
->   [<ffffffff812937db>] kobject_release+0x121/0x158
->   [<ffffffff81293612>] kobject_put+0x4c/0x50
->   [<ffffffff8148f0d7>] netdev_run_todo+0x25c/0x27e
->   [<ffffffff8149b2a0>] rtnl_unlock+0x9/0xb
->   [<ffffffffa01d31a7>] nl80211_post_doit+0x49/0x4e [cfg80211]
->   [<ffffffff814b0928>] genl_rcv_msg+0x25b/0x288
->   [<ffffffff814b06a3>] ? genl_lock+0x12/0x14
->   [<ffffffff814b06cd>] ? genl_rcv+0x28/0x28
->   [<ffffffff814aef13>] netlink_rcv_skb+0x3e/0x8f
->   [<ffffffff814b06c6>] genl_rcv+0x21/0x28
->   [<ffffffff814aecd1>] netlink_unicast+0xe9/0x16f
->   [<ffffffff814af4b3>] netlink_sendmsg+0x264/0x282
->   [<ffffffff8147d785>] ? rcu_read_unlock+0x5b/0x5d
->   [<ffffffff814784ab>] __sock_sendmsg_nosec+0x58/0x61
->   [<ffffffff814798e6>] __sock_sendmsg+0x3d/0x48
->   [<ffffffff8147995a>] sock_sendmsg+0x69/0x82
->   [<ffffffff8112c835>] ? might_fault+0x84/0x8b
->   [<ffffffff814849ce>] ? copy_from_user+0x2a/0x2c
->   [<ffffffff81484da0>] ? verify_iovec+0x4f/0xa3
->   [<ffffffff8147b8e7>] __sys_sendmsg+0x1fe/0x280
->   [<ffffffff810a8058>] ? up_read+0x1e/0x36
->   [<ffffffff8116ea14>] ? fcheck_files+0xac/0xea
->   [<ffffffff8116efd3>] ? fget_light+0x35/0xae
->   [<ffffffff8147badb>] sys_sendmsg+0x3d/0x5b
->   [<ffffffff815595e9>] system_call_fastpath+0x16/0x1b
-> ---[ end trace 791ff0751a368327 ]---
->
->
-> Will go poke around in the code to see what I can see....
->
->
-> Thanks,
-> Ben
->
->
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fa26129..57aa540 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1722,6 +1722,21 @@ struct cfg80211_gtk_rekey_data {
+ };
+ 
+ /**
++ * struct cfg80211_update_ft_ies_params - FT IE Information
++ *
++ * This structure provides information needed to update the fast transition IE
++ *
++ * @md: The Mobility Domain ID, 2 Octet value
++ * @ie: Fast Transition IEs
++ * @ie_len: Length of ft_ie in octets
++ */
++struct cfg80211_update_ft_ies_params {
++	u16 md;
++	u8 *ie;
++	size_t ie_len;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -2168,6 +2183,8 @@ struct cfg80211_ops {
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+ 					 struct cfg80211_chan_def *chandef);
++	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
++				 struct cfg80211_update_ft_ies_params *ftie);
+ };
+ 
+ /*
+@@ -4002,6 +4019,30 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate);
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev);
+ 
+ /**
++ * struct cfg80211_ft_event - FT Information Elements
++ * @ies: FT IEs
++ * @ies_len: length of the FT IE in bytes
++ * @target_ap: target AP's MAC address
++ * @ric_ies: RIC IE
++ * @ric_ies_len: length of the RIC IE in bytes
++ */
++struct cfg80211_ft_event_params {
++	u8 *ies;
++	size_t ies_len;
++	u8 *target_ap;
++	u8 *ric_ies;
++	size_t ric_ies_len;
++};
++
++/**
++ * cfg80211_ft_event - notify userspace about FT IE and RIC IE
++ * @netdev: network device
++ * @ft_event: IE information
++ */
++void cfg80211_ft_event(struct net_device *netdev,
++		       struct cfg80211_ft_event_params *ft_event);
++
++/**
+  * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
+  * @ies: the input IE buffer
+  * @len: the input length
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c46bb01..9abb3df 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -611,6 +611,14 @@
+  *	%NL80211_ATTR_RADAR_EVENT is used to inform about the type of the
+  *	event.
+  *
++ * @NL80211_CMD_UPDATE_FT_IES: Pass down the most up-to-date Fast Transition
++ *	Information Element to the WLAN driver
++ *
++ * @NL80211_CMD_FT_EVENT: Send a Fast transition event from the WLAN driver
++ *	to the supplicant. This will carry the target AP's MAC address along
++ *	with the relevant Information Elements. This event is used to report
++ *	received FT IEs (MDIE, FTIE, RSN IE, TIE, RICIE).
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -765,6 +773,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_RADAR_DETECT,
+ 
++	NL80211_CMD_UPDATE_FT_IES,
++	NL80211_CMD_FT_EVENT,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1368,6 +1379,11 @@ enum nl80211_commands {
+  *	advertised to the driver, e.g., to enable TDLS off channel operations
+  *	and PU-APSD.
+  *
++ * @NL80211_ATTR_MDID: Mobility Domain Identifier
++ *
++ * @NL80211_ATTR_IE_RIC: Resource Information Container Information
++ *	Element
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1654,6 +1670,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_STA_CAPABILITY,
+ 	NL80211_ATTR_STA_EXT_CAPABILITY,
+ 
++	NL80211_ATTR_MDID,
++	NL80211_ATTR_IE_RIC,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 35545cc..4c61c5e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -370,6 +370,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MAC_ADDRS] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_STA_CAPABILITY] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_STA_EXT_CAPABILITY] = { .type = NLA_BINARY, },
++	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
++	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
++				  .len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+ /* policy for the key attributes */
+@@ -7823,6 +7826,27 @@ static int nl80211_stop_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	return 0;
+ }
+ 
++static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct cfg80211_update_ft_ies_params ft_params;
++	struct net_device *dev = info->user_ptr[1];
++
++	if (!rdev->ops->update_ft_ies)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_MDID] ||
++	    !is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
++		return -EINVAL;
++
++	memset(&ft_params, 0, sizeof(ft_params));
++	ft_params.md = nla_get_u16(info->attrs[NL80211_ATTR_MDID]);
++	ft_params.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
++	ft_params.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
++
++	return rdev->ops->update_ft_ies(&rdev->wiphy, dev, &ft_params);
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -8499,6 +8523,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_UPDATE_FT_IES,
++		.doit = nl80211_update_ft_ies,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -10075,6 +10107,48 @@ static struct notifier_block nl80211_netlink_notifier = {
+ 	.notifier_call = nl80211_netlink_notify,
+ };
+ 
++void cfg80211_ft_event(struct net_device *netdev,
++		       struct cfg80211_ft_event_params *ft_event)
++{
++	struct wiphy *wiphy = netdev->ieee80211_ptr->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++	int err;
++
++	if (!ft_event->target_ap)
++		return;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_FT_EVENT);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++	nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, ft_event->target_ap);
++	if (ft_event->ies)
++		nla_put(msg, NL80211_ATTR_IE, ft_event->ies_len, ft_event->ies);
++	if (ft_event->ric_ies)
++		nla_put(msg, NL80211_ATTR_IE_RIC, ft_event->ric_ies_len,
++			ft_event->ric_ies);
++
++	err = genlmsg_end(msg, hdr);
++	if (err < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, GFP_KERNEL);
++}
++EXPORT_SYMBOL(cfg80211_ft_event);
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+-- 
+1.7.9.5
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jouni Malinen                                            PGP id EFC895FA
