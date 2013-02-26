@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-008.fem.tu-ilmenau.de ([141.24.44.8]:49540 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758454Ab3BLPwn (ORCPT
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:55387 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948Ab3BZOJ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 10:52:43 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [konusllaptop] [PATCH 1/1] Fix WPA with VLAN on AP side with ps client
-Date: Tue, 12 Feb 2013 16:43:26 +0100
-Message-Id: <1360683806-15238-2-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_165247_002980_F5F59D43)
-In-Reply-To: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de>
-References: <1360683806-15238-1-git-send-email-michael-dev@fami-braun.de>
+	Tue, 26 Feb 2013 09:09:56 -0500
+Received: by mail-oa0-f42.google.com with SMTP id i18so5271123oag.29
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Feb 2013 06:09:55 -0800 (PST)
+Message-ID: <512CC231.6000205@lwfinger.net> (sfid-20130226_151005_279626_C66B5263)
+Date: Tue, 26 Feb 2013 08:09:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "yvan.labadie@soledge.fr" <yvan.labadie@soledge.fr>
+CC: Yvan <yvan.labadie@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath6kl: AR6004 failed to start on computer boot
+References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> <87ehghanxe.fsf@kamboji.qca.qualcomm.com> <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com> <511E44B8.3000308@qca.qualcomm.com> <CADGp=QfOyyTpwEg1=XXiyvRE7ZOGsn6TfiPQHs3+Jc3C69RM6Q@mail.gmail.com> <51265413.9080609@lwfinger.net> <87mwuwqtgh.fsf@kamboji.qca.qualcomm.com> <loom.20130225T175854-850@post.gmane.org> <512BBE05.9010006@lwfinger.net> <1448005898.305768.1361866657564.open-xchange@ox-webdesk.1and1.fr>
+In-Reply-To: <1448005898.305768.1361866657564.open-xchange@ox-webdesk.1and1.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+On 02/26/2013 02:17 AM, yvan.labadie@soledge.fr wrote:
+> Thank's for the quick answer!
+> I don't use modprobe, I use insmod/rmmod.
+> Loading/unloading the module doesn't change anything.
+> I tried multiple combination of physicaly connecting/disconnecting the dongle
+> and loading/unloading the modules, never got it working.
 
-This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
----
- net/mac80211/tx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+As modprobe uses insmod/rmmod for its heavy lifting, you are doing essentially 
+the same thing. It seems that the chip has some other problem. As I know nothing 
+about it, I cannot help.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2ef0e19..93681f5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2770,7 +2770,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
- 
--		if (!ieee80211_tx_prepare(sdata, &tx, skb))
-+		struct ieee80211_sub_if_data *frame_sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
-+		if (!ieee80211_tx_prepare(frame_sdata, &tx, skb))
- 			break;
- 		dev_kfree_skb_any(skb);
- 	}
--- 
-1.7.10.4
+Larry
+
 
