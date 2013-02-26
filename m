@@ -1,138 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57465 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935182Ab3BOAKk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 19:10:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC/RFT 2/4] cfg80211: clean up station WME attribute parsing
-Date: Fri, 15 Feb 2013 01:10:31 +0100
-Message-Id: <1360887033-21167-3-git-send-email-johannes@sipsolutions.net> (sfid-20130215_011046_928679_6508DC79)
-In-Reply-To: <1360887033-21167-1-git-send-email-johannes@sipsolutions.net>
-References: <1360887033-21167-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:6377 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757750Ab3BZQYE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 11:24:04 -0500
+Date: Tue, 26 Feb 2013 16:55:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
+Message-ID: <20130226155537.GA1486@redhat.com> (sfid-20130226_172411_555757_6CAF7B3D)
+References: <1361326267-16847-1-git-send-email-greearb@candelatech.com>
+ <20130225102020.GA1735@redhat.com>
+ <512B9799.6000708@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <512B9799.6000708@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Feb 25, 2013 at 08:55:53AM -0800, Ben Greear wrote:
+> On 02/25/2013 02:20 AM, Stanislaw Gruszka wrote:
+> >On Tue, Feb 19, 2013 at 06:11:07PM -0800, greearb@candelatech.com wrote:
+> >>From: Ben Greear <greearb@candelatech.com>
+> >>
+> >>The monitor_work and beacon_connection_loss_work items were
+> >>not being canceled on disassociation (and not on deletion
+> >>either).  This leads to work-items trying to run after memory
+> >>has been deleted.
+> >>
+> >>I could not find a cleaner way to do this because the
+> >>cancel_work_sync for these items must be done outside
+> >>of the ifmgd->mtx.
+> >>
+> >>In addition, re-order the quiesce code so that timers are
+> >>always stopped before work-items are flushed.  This was
+> >>not the problem I saw, but I think it may still be more
+> >>correct.
+> >
+> >I think this patch is quite complicated and simpler solution
+> >can be used. We stop timers on disassociate, and since
+> 
+> I think my second patch was closer to what you have...
 
-Parse the attributes first, and then disable the apply
-flag if needed.
+Yes, I see, I missed your second patch.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 68 +++++++++++++++++++++++++++-----------------------
- 1 file changed, 37 insertions(+), 31 deletions(-)
+> >+	/*
+> >+	 * We canceled timers during disassoc, but works still can be pending.
+> >+	 * Even if we they do not perform action when unassociated, we should
+> >+	 * assure we stop them, before freeing resources.
+> >+	 */
+> 
+> The comment is a bit misleading....as I saw in my testing, it could actually
+> crash the system because the entire station could be deleted by the time
+> the work-item tries to complete.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5523150..a8ae6419 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3839,6 +3839,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 
- 	memset(&params, 0, sizeof(params));
- 
-+	if (!rdev->ops->add_station)
-+		return -EOPNOTSUPP;
-+
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
- 
-@@ -3891,8 +3894,30 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
--	if (!rdev->ops->add_station)
--		return -EOPNOTSUPP;
-+	if (info->attrs[NL80211_ATTR_STA_WME]) {
-+		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
-+		struct nlattr *nla;
-+
-+		nla = info->attrs[NL80211_ATTR_STA_WME];
-+		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
-+				       nl80211_sta_wme_policy);
-+		if (err)
-+			return err;
-+
-+		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
-+			params.uapsd_queues =
-+			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
-+		if (params.uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
-+			return -EINVAL;
-+
-+		if (tb[NL80211_STA_WME_MAX_SP])
-+			params.max_sp = nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
-+
-+		if (params.max_sp & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
-+			return -EINVAL;
-+
-+		params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
-+	}
- 
- 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
- 		return -EINVAL;
-@@ -3901,36 +3926,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_P2P_GO:
--		/* parse WME attributes if sta is WME capable */
--		if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
--		    (params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)) &&
--		    info->attrs[NL80211_ATTR_STA_WME]) {
--			struct nlattr *tb[NL80211_STA_WME_MAX + 1];
--			struct nlattr *nla;
--
--			nla = info->attrs[NL80211_ATTR_STA_WME];
--			err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
--					       nl80211_sta_wme_policy);
--			if (err)
--				return err;
--
--			if (tb[NL80211_STA_WME_UAPSD_QUEUES])
--				params.uapsd_queues =
--				     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
--			if (params.uapsd_queues &
--					~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
--				return -EINVAL;
-+		/* ignore WME attributes if iface/sta is not capable */
-+		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
-+		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
-+			params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
- 
--			if (tb[NL80211_STA_WME_MAX_SP])
--				params.max_sp =
--				     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
--
--			if (params.max_sp &
--					~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
--				return -EINVAL;
--
--			params.sta_modify_mask |= STATION_PARAM_APPLY_UAPSD;
--		}
- 		/* TDLS peers cannot be added */
- 		if (params.sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
- 			return -EINVAL;
-@@ -3951,6 +3951,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(params.vlan);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
-+		/* ignore uAPSD data */
-+		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
-+
- 		/* associated is disallowed */
- 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
- 			return -EINVAL;
-@@ -3959,6 +3962,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+		/* ignore uAPSD data */
-+		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
-+
- 		/* associated is disallowed */
- 		if (params.sta_flags_mask & BIT(NL80211_STA_FLAG_ASSOCIATED))
- 			return -EINVAL;
--- 
-1.8.0
+Not sure if I understand. If I did not missed something, all works callbacks
+check ifmgd->associated pointer and quit instantly if it is null. So as long
+we do not free sdata, is fine to have them pending after disassociate.
+However we should use ifmgd->mtx to protect ifmgd->associated and
+ifmgd->bssid in ieee80211_beacon_connection_loss_work()
 
+Stanislaw
