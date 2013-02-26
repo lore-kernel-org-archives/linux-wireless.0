@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56288 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756752Ab3BNRbI (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:54191 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756097Ab3BZSaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 12:31:08 -0500
-Message-ID: <1360863065.8210.6.camel@jlt4.sipsolutions.net> (sfid-20130214_183112_787932_923C09C8)
-Subject: Re: [PATCH] mac80211: always unblock CSA queue stop when
- disconnecting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: jan.brummer@tabos.org
-Date: Thu, 14 Feb 2013 18:31:05 +0100
-In-Reply-To: <1360761966-32111-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_142616_988845_62AF5833)
-References: <1360761966-32111-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130213_142616_988845_62AF5833)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 26 Feb 2013 13:30:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
+References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Tue, 26 Feb 2013 10:29:43 -0800
+Message-ID: <CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com> (sfid-20130226_193030_818562_0768C99F)
+Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
+To: Michal Kazior <kazikcz@gmail.com>,
+	David Quan <dquan@qca.qualcomm.com>,
+	linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-13 at 14:26 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In some cases when disconnecting after (or during?) CSA
-> the queues might not recover, and then the only way to
-> recover is reloading the module.
-> 
-> Fix this by always unblocking the queue CSA reason when
-> disconnecting.
+On Sat, Feb 23, 2013 at 11:34 AM, Michal Kazior <kazikcz@gmail.com> wrote:
+> Dbii F52N-PRO mini pci device reports an invalid
+> regdomain. This card has been reported to work on
+> MikroTik's RouterOS but failed on Linux:
+>
+> [   14.320000] ath: EEPROM regdomain: 0xffff
+> [   14.320000] ath: EEPROM indicates we should expect a country code
+> [   14.320000] ath: invalid regulatory domain/country code 0xbfff
+> [   14.320000] ath: Invalid EEPROM contents
+> [   14.320000] ath9k 0000:00:12.0: Failed to initialize device
+> [   14.330000] ath9k: probe of 0000:00:12.0 failed with error -22
+>
+> With the patch the device works fine.
+>
+> Signed-off-by: Michal Kazior <kazikcz@gmail.com>
 
-Applied.
+NACK. This comes up every now and then and this is not a valid device
+ID, this is an issue with the card, so what you can do is adjust the
+device ID post bootup. Not sure if distros have an easy way to set
+this up, if not perhaps this should be considered as this has come up
+twice before.
 
-johannes
-
+  Luis
