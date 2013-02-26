@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:56831 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932531Ab3BKVSW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Feb 2013 16:18:22 -0500
-Received: by mail-wg0-f49.google.com with SMTP id 15so4995513wgd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Feb 2013 13:18:21 -0800 (PST)
-From: Catalin Iacob <iacobcatalin@gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:41368 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751577Ab3BZD0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Feb 2013 22:26:54 -0500
+Message-ID: <1361849213.2023.9.camel@joe-AO722> (sfid-20130226_042658_513923_06FCB11C)
+Subject: Re: [RFC/RFT 00/27] Updates for the rtlwifi family of drivers
+From: Joe Perches <joe@perches.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Catalin Iacob <iacobcatalin@gmail.com>
-Subject: [PATCH] rtlwifi: Initialize rate_init member of struct rate_control_ops
-Date: Mon, 11 Feb 2013 22:18:05 +0100
-Message-Id: <1360617485-6194-1-git-send-email-iacobcatalin@gmail.com> (sfid-20130211_221826_368182_FF033C33)
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz
+Date: Mon, 25 Feb 2013 19:26:53 -0800
+In-Reply-To: <512C264A.3000104@lwfinger.net>
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1361845357.2023.7.camel@joe-AO722> <512C264A.3000104@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This partially reverts commit 44ba973699b831414c3f8eef68ee5a7fe1208a05.
+On Mon, 2013-02-25 at 21:04 -0600, Larry Finger wrote:
+> On 02/25/2013 08:22 PM, Joe Perches wrote:
+> > On Mon, 2013-02-25 at 18:13 -0600, Larry Finger wrote:
+> >> This set of patches upgrades drivers rtlwifi, rtl8192c, rtl8192ce, rtl8192se,
+> >> and rtl8723ae to the state of the vendor driver issued on 2013.02.07. In
+> >> addition, a new driver for the RTL8188EE chip is added to the kernel.
+> >>
+> >> Note: These patches do not upgrade rtl8192de. Those changes will be sent
+> >> later.
+> >
+> > rtl8188e isn't very kernel stylish.
+> > Looking at it briefly, in fact it's kind of ugly.
+> >
+> > Could/should it go into staging?
+> 
+> It is uglier than I had hoped. I was not quite ready to push it yet, but I got 
+> some pressure from outside, non-Realtek, sources that a kernel version was 
+> needed. They will, in fact, start their integration from the RFC/RFT version.
+> 
+> The main problem with having it in staging is that we will either have to 
+> include headers from drivers/net/wireless/rtlwifi/, or duplicate them in the 
+> drivers/staging/rtl8188ee/ directory where keeping them compatible will be a 
+> hassle. Neither solution sounds optimum to me.
 
-rate_control_rate_init assumes the rate_init member of
-struct rate_control_ops is not NULL therefore not initializing it leads to
-an oops as soon the driver succesfully associates to an AP.
+Perhaps adding a CFLAGS -I include path to a staging Makefile
+would work instead.
 
-The removal of rate_update from 44ba973699b831414c3f8eef68ee5a7fe1208a05
-is ok because rate_update is checked for NULL before being
-called.
 
-Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
----
- drivers/net/wireless/rtlwifi/rc.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
-index 204f46c..6ad8bb7 100644
---- a/drivers/net/wireless/rtlwifi/rc.c
-+++ b/drivers/net/wireless/rtlwifi/rc.c
-@@ -217,6 +217,12 @@ static void rtl_tx_status(void *ppriv,
- 	}
- }
- 
-+static void rtl_rate_init(void *ppriv,
-+			  struct ieee80211_supported_band *sband,
-+			  struct ieee80211_sta *sta, void *priv_sta)
-+{
-+}
-+
- static void *rtl_rate_alloc(struct ieee80211_hw *hw,
- 		struct dentry *debugfsdir)
- {
-@@ -261,6 +267,7 @@ static struct rate_control_ops rtl_rate_ops = {
- 	.free = rtl_rate_free,
- 	.alloc_sta = rtl_rate_alloc_sta,
- 	.free_sta = rtl_rate_free_sta,
-+	.rate_init = rtl_rate_init,
- 	.tx_status = rtl_tx_status,
- 	.get_rate = rtl_get_rate,
- };
--- 
-1.8.1.1
 
