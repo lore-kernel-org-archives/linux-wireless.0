@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:41857 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756396Ab3BXPy1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 10:54:27 -0500
-Date: Sun, 24 Feb 2013 10:54:26 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Seth Forshee <seth.forshee@canonical.com>
-cc: Christian Lamparter <chunkeey@googlemail.com>,
-	<linux-usb@vger.kernel.org>,
-	"Chen, Stephen" <scchen@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: carl9170 A-MPDU transmit problem
-In-Reply-To: <20130224045223.GA2285@thinkpad-t410>
-Message-ID: <Pine.LNX.4.44L0.1302241048230.22522-100000@netrider.rowland.org> (sfid-20130224_165433_468634_593061F8)
+Received: from mx1.redhat.com ([209.132.183.28]:26842 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759705Ab3BZQCs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 11:02:48 -0500
+Date: Tue, 26 Feb 2013 17:02:59 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] mac80211:  Stop timers before canceling work
+ items.
+Message-ID: <20130226160258.GB5256@redhat.com> (sfid-20130226_170252_769794_41DE784C)
+References: <1361382069-31729-1-git-send-email-greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1361382069-31729-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Feb 2013, Seth Forshee wrote:
+On Wed, Feb 20, 2013 at 09:41:08AM -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Re-order the quiesce code so that timers are
+> always stopped before work-items are flushed.  This was
+> not the problem I saw, but I think it may still be more
+> correct.
 
-> On Sat, Feb 23, 2013 at 03:07:08PM +0100, Christian Lamparter wrote:
-> > usb_submit_urb() is async, so unless the URB data structure is
-> > bogus, the device is in the middle of a reset/is removed or OOM
-> > it won't return with an -ENUMBER.
-> > 
-> > Since neither of us has probably access to an USB analyzer, the
-> > next best thing would be to enable ehci_hcd's debug facilities
-> > and check if the stuck frame produced any DataBufferErr, XactErr
-> > or something else.
+I posted patch which remove quiesce functions, so this one
+can be skipped.
 
-There aren't any occurrences of such errors in the usbmon trace.
+http://marc.info/?l=linux-wireless&m=136179302820130&w=2
 
-> I've found a couple of things here. First, I wasn't sure if I had tested
-> this on anything other than Ivy Bridge machines yet, so I tried it out
-> on an Arrandale box and it worked perfectly. lspci on the Ivy Bridge
-> boxes yields:
-> 
-> 00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) (prog-if 30 [XHCI])
-> 00:1a.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2 [8086:1e2d] (rev 04) (prog-if 20 [EHCI])
-> 00:1d.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1 [8086:1e26] (rev 04) (prog-if 20 [EHCI])
-> 
-> And on the Arrandale box:
-> 
-> 00:1a.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b3c] (rev 06) (prog-if 20 [EHCI])
-> 00:1d.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b34] (rev 06) (prog-if 20 [EHCI])
-> 
-> Second, I collected the usbmon trace as suggested by Alan. I don't know
-> enough about USB to really read it, but normally the time between
-> submission and callback for a given urb is short. However, some are much
-> longer, e.g.:
-> 
-> ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 190f0100 23232303 42b53600 82b11a00 01c02e00 6a00e846 c2ad3e00
-> ...
-> ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 >
-> 
-> I checked the urb addresses for a couple of the stalled frames and in
-> each case found a matching urb in the usbmon trace with a similarly long
-> duration between submission and callback. I've uploaded the full trace
-> to:
-> 
->   http://people.canonical.com/~sforshee/carl9170-usbmon.log
+Stanislaw
 
-The usbmon trace indicates that the data gets delivered to the device
-as it should, but the device doesn't accept it for several seconds.
-
-Alan Stern
-
+> ---
+>  net/mac80211/mlme.c |   13 ++++++++-----
+>  1 files changed, 8 insertions(+), 5 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 164ecf0..4001d1c 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2946,6 +2946,13 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
+>  {
+>  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+>  
+> +	/* Stop timers before deleting work items, as timers could
+> +	 * race and re-add the work-items.
+> +	 * These will be re-established on connection.
+> +	 */
+> +	del_timer_sync(&ifmgd->conn_mon_timer);
+> +	del_timer_sync(&ifmgd->bcn_mon_timer);
+> +
+>  	/*
+>  	 * we need to use atomic bitops for the running bits
+>  	 * only because both timers might fire at the same
+> @@ -2960,13 +2967,9 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
+>  	if (del_timer_sync(&ifmgd->timer))
+>  		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
+>  
+> -	cancel_work_sync(&ifmgd->chswitch_work);
+>  	if (del_timer_sync(&ifmgd->chswitch_timer))
+>  		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
+> -
+> -	/* these will just be re-established on connection */
+> -	del_timer_sync(&ifmgd->conn_mon_timer);
+> -	del_timer_sync(&ifmgd->bcn_mon_timer);
+> +	cancel_work_sync(&ifmgd->chswitch_work);
+>  }
+>  
+>  void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+> -- 
+> 1.7.3.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
