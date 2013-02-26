@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17346 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab3B1ErE (ORCPT
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:62734 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757815Ab3BZT27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 23:47:04 -0500
-Date: Thu, 28 Feb 2013 07:45:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ath6kl: small cleanup in ath6kl_htc_pipe_rx_complete()
-Message-ID: <20130228044547.GC15239@longonot.mountain> (sfid-20130228_054711_079994_2D23B5B8)
+	Tue, 26 Feb 2013 14:28:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com>
+References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
+	<CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com>
+Date: Tue, 26 Feb 2013 20:28:58 +0100
+Message-ID: <CABvG-CW+ykoZMz49UNS11=rLViNQ3uyo-sHeJqOdp06Vwd628g@mail.gmail.com> (sfid-20130226_202923_361926_F3725329)
+Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: David Quan <dquan@qca.qualcomm.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's harmless, but Smatch complains if we use "htc_hdr->eid" before
-doing the bounds check.
+On 26 February 2013 19:29, Luis R. Rodriguez <mcgrof@qca.qualcomm.com> wrote:
+> NACK. This comes up every now and then and this is not a valid device
+> ID, this is an issue with the card, so what you can do is adjust the
+> device ID post bootup. Not sure if distros have an easy way to set
+> this up, if not perhaps this should be considered as this has come up
+> twice before.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+The erroneous 0xFFFF value comes from using one of eeprom_ops
+implementations. Do you suggest I should fool ath regd code to think
+this is a different card so it picks a different (perhaps correct, if
+at all) eeprom_ops variant? How do I do that?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index 2813901..9adb567 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -988,8 +988,6 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
- 
- 	htc_hdr = (struct htc_frame_hdr *) netdata;
- 
--	ep = &target->endpoint[htc_hdr->eid];
--
- 	if (htc_hdr->eid >= ENDPOINT_MAX) {
- 		ath6kl_dbg(ATH6KL_DBG_HTC,
- 			   "HTC Rx: invalid EndpointID=%d\n",
-@@ -997,6 +995,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
- 		status = -EINVAL;
- 		goto free_skb;
- 	}
-+	ep = &target->endpoint[htc_hdr->eid];
- 
- 	payload_len = le16_to_cpu(get_unaligned(&htc_hdr->payld_len));
- 
+>From what I can tell this is in the pci probing and I can't see any
+way to skip the regd initialisation. I don't see how current_rd can
+have a value other than 0xFFFF for this device in this code path.
+
+Or am I missing something?
+
+
+-- Michal.
