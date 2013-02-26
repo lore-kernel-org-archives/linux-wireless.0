@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42306 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760382Ab3BMUPe (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34631 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932242Ab3BZQzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 15:15:34 -0500
-Date: Wed, 13 Feb 2013 15:05:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Subject: [ANN] wireless-regdb: master-2013-02-13
-Message-ID: <20130213200557.GD2169@tuxdriver.com> (sfid-20130213_211542_853445_24A8D56B)
+	Tue, 26 Feb 2013 11:55:17 -0500
+Message-ID: <512CE8F1.7050601@candelatech.com> (sfid-20130226_175528_191863_62BAE365)
+Date: Tue, 26 Feb 2013 08:55:13 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mac80211:  Fix crash due to un-canceled work-items.
+References: <1361382069-31729-1-git-send-email-greearb@candelatech.com> <1361382069-31729-2-git-send-email-greearb@candelatech.com> <20130226160536.GC5256@redhat.com>
+In-Reply-To: <20130226160536.GC5256@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2013-02-13) is available at:
+On 02/26/2013 08:05 AM, Stanislaw Gruszka wrote:
+> On Wed, Feb 20, 2013 at 09:41:09AM -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> The monitor_work and beacon_connection_loss_work items were
+>> not being canceled on disassociation (and not on deletion
+>> either).  This leads to work-items trying to run after memory
+>> has been deleted.
+> [skip]
+>>
+>> +	/* Make sure some work items will not run after this.
+>> +	 * Have to do this outside the ifmgd->mtx lock.
+>> +	 */
+>> +	cancel_work_sync(&ifmgd->monitor_work);
+>> +	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
+>
+> Other works should be canceled as well. Ben, could you repost
+> this patch with proper comment?
 
-http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.02.13.tar.bz2
+At least in 3.7 kernel, this seems to be all that is needed.
 
-Here is the short log of the changes included since the 2013-02-13
-release:
+I don't have much time to work on this now...
 
-Johannes Berg (1):
-      regdb: allow 40 MHz on world roaming channels 12/13
+Thanks,
+Ben
 
-John W. Linville (4):
-      wireless-regdb: update regulatory.bin based on preceding changes.
-      Add specific data for Serbia for the 2 GHz and 5 GHz bands.
-      Clean-up some whitespace damage that had crept into db.txt...
-      wireless-regdb: update regulatory.bin based on preceding changes.
+>
+> Stanislaw
+>
 
-Xose Vazquez Perez (3):
-      wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
-      wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
-      wireless-regdb: Update regulatory rules for ES (Spain) on 5GHz and 2.4GHz
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
