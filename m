@@ -1,128 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1343 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296Ab3BFRmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:42:36 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/12] brcmfmac: Remove drvr_up from bus interface.
-Date: Wed, 6 Feb 2013 18:40:36 +0100
-Message-ID: <1360172447-2424-2-git-send-email-arend@broadcom.com> (sfid-20130206_184240_673562_40202627)
-In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:47031 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932180Ab3BZQvg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 11:51:36 -0500
+Message-ID: <512CE816.6090000@candelatech.com> (sfid-20130226_175139_774935_A1CF211B)
+Date: Tue, 26 Feb 2013 08:51:34 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Clean up work-queues on disassociation.
+References: <1361326267-16847-1-git-send-email-greearb@candelatech.com> <20130225102020.GA1735@redhat.com> <512B9799.6000708@candelatech.com> <20130226155537.GA1486@redhat.com>
+In-Reply-To: <20130226155537.GA1486@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 02/26/2013 07:55 AM, Stanislaw Gruszka wrote:
+> On Mon, Feb 25, 2013 at 08:55:53AM -0800, Ben Greear wrote:
+>> On 02/25/2013 02:20 AM, Stanislaw Gruszka wrote:
+>>> On Tue, Feb 19, 2013 at 06:11:07PM -0800, greearb@candelatech.com wrote:
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> The monitor_work and beacon_connection_loss_work items were
+>>>> not being canceled on disassociation (and not on deletion
+>>>> either).  This leads to work-items trying to run after memory
+>>>> has been deleted.
+>>>>
+>>>> I could not find a cleaner way to do this because the
+>>>> cancel_work_sync for these items must be done outside
+>>>> of the ifmgd->mtx.
+>>>>
+>>>> In addition, re-order the quiesce code so that timers are
+>>>> always stopped before work-items are flushed.  This was
+>>>> not the problem I saw, but I think it may still be more
+>>>> correct.
+>>>
+>>> I think this patch is quite complicated and simpler solution
+>>> can be used. We stop timers on disassociate, and since
+>>
+>> I think my second patch was closer to what you have...
+>
+> Yes, I see, I missed your second patch.
+>
+>>> +	/*
+>>> +	 * We canceled timers during disassoc, but works still can be pending.
+>>> +	 * Even if we they do not perform action when unassociated, we should
+>>> +	 * assure we stop them, before freeing resources.
+>>> +	 */
+>>
+>> The comment is a bit misleading....as I saw in my testing, it could actually
+>> crash the system because the entire station could be deleted by the time
+>> the work-item tries to complete.
+>
+> Not sure if I understand. If I did not missed something, all works callbacks
+> check ifmgd->associated pointer and quit instantly if it is null. So as long
+> we do not free sdata, is fine to have them pending after disassociate.
 
-The tracking of up/down status in bus interface is unnecessary.
+Right, but in the old code, there is nothing to keep you from
+freeing sdata with work still pending.  Thus the crash I saw.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h   |    2 --
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |   16 +---------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c  |    6 +-----
- 3 files changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index 64c38f4..57826dc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -72,7 +72,6 @@ struct brcmf_bus_ops {
-  * @drvr: public driver information.
-  * @state: operational state of the bus interface.
-  * @maxctl: maximum size for rxctl request message.
-- * @drvr_up: indicates driver up/down status.
-  * @tx_realloc: number of tx packets realloced for headroom.
-  * @dstats: dongle-based statistical data.
-  * @align: alignment requirement for the bus.
-@@ -87,7 +86,6 @@ struct brcmf_bus {
- 	struct brcmf_pub *drvr;
- 	enum brcmf_bus_state state;
- 	uint maxctl;
--	bool drvr_up;
- 	unsigned long tx_realloc;
- 	struct dngl_stats dstats;
- 	u8 align;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index e3326a5..2104a4f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -452,13 +452,7 @@ static int brcmf_ethtool(struct brcmf_if *ifp, void __user *uaddr)
- 			sprintf(info.driver, "dhd");
- 			strcpy(info.version, BRCMF_VERSION_STR);
- 		}
--
--		/* otherwise, require dongle to be up */
--		else if (!drvr->bus_if->drvr_up) {
--			brcmf_err("dongle is not up\n");
--			return -ENODEV;
--		}
--		/* finally, report dongle driver type */
-+		/* report dongle driver type */
- 		else
- 			sprintf(info.driver, "wl");
- 
-@@ -545,18 +539,11 @@ static int brcmf_netdev_ioctl_entry(struct net_device *ndev, struct ifreq *ifr,
- 
- static int brcmf_netdev_stop(struct net_device *ndev)
- {
--	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_pub *drvr = ifp->drvr;
--
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (drvr->bus_if->drvr_up == 0)
--		return 0;
--
- 	brcmf_cfg80211_down(ndev);
- 
- 	/* Set state and stop OS transmissions */
--	drvr->bus_if->drvr_up = false;
- 	netif_stop_queue(ndev);
- 
- 	return 0;
-@@ -591,7 +578,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 
- 	/* Allow transmit calls */
- 	netif_start_queue(ndev);
--	drvr->bus_if->drvr_up = true;
- 	if (brcmf_cfg80211_up(ndev)) {
- 		brcmf_err("failed to bring up cfg80211\n");
- 		return -1;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 7fef9b5..df8a185 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1962,8 +1962,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	}
- 
- 	/* Deflow-control stack if needed */
--	if (bus->sdiodev->bus_if->drvr_up &&
--	    (bus->sdiodev->bus_if->state == BRCMF_BUS_DATA) &&
-+	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DATA) &&
- 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
- 		bus->txoff = false;
- 		brcmf_txflowblock(bus->sdiodev->dev, false);
-@@ -3308,9 +3307,6 @@ static int brcmf_sdbrcm_download_nvram(struct brcmf_sdio *bus)
- {
- 	int ret;
- 
--	if (bus->sdiodev->bus_if->drvr_up)
--		return -EISCONN;
--
- 	ret = request_firmware(&bus->firmware, BRCMF_SDIO_NV_NAME,
- 			       &bus->sdiodev->func[2]->dev);
- 	if (ret) {
+> However we should use ifmgd->mtx to protect ifmgd->associated and
+> ifmgd->bssid in ieee80211_beacon_connection_loss_work()
+
+Maybe so...I haven't looked at that code in any detail.
+
+Thanks,
+Ben
+
+>
+> Stanislaw
+>
+
+
 -- 
-1.7.10.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
