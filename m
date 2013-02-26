@@ -1,87 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53217 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754446Ab3BFSCf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 13:02:35 -0500
-Date: Wed, 6 Feb 2013 12:02:27 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Arend van Spriel <arend@broadcom.com>,
-	Luciano Coelho <coelho@ti.com>, ath9k-devel@venema.h4ckr.net,
-	brcm80211-dev-list@broadcom.com, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 5/7] mac80211: Expand powersave configuration flag to be
- two bits
-Message-ID: <20130206180227.GB6280@thinkpad-t410> (sfid-20130206_190239_099183_62F73FA4)
-References: <1359503255-18270-6-git-send-email-seth.forshee@canonical.com>
- <1359645648.8415.77.camel@jlt4.sipsolutions.net>
- <20130131163355.GE28799@thinkpad-t410>
- <1359651229.8415.99.camel@jlt4.sipsolutions.net>
- <20130131171826.GG28799@thinkpad-t410>
- <1359654634.8415.101.camel@jlt4.sipsolutions.net>
- <20130205225101.GB29557@thinkpad-t410>
- <1360169290.7910.29.camel@jlt4.sipsolutions.net>
- <20130206170952.GA6280@thinkpad-t410>
- <1360172656.7910.60.camel@jlt4.sipsolutions.net>
+Received: from icf.org.ru ([91.193.236.10]:45388 "EHLO icf.org.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753124Ab3BZSMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Feb 2013 13:12:07 -0500
+Date: Tue, 26 Feb 2013 22:12:00 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: =?ISO-8859-2?Q?Micha=B3_Kazior?= <kazikcz@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
+In-Reply-To: <CABvG-CVVzBJ9M4VXq0HsNDyaDbcSWB-pmftXJYLKEg01zqHvDA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1302262208260.13622@icf.org.ru> (sfid-20130226_191211_553968_781816CC)
+References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com> <alpine.DEB.2.02.1302232342380.15538@icf.org.ru> <CABvG-CVVzBJ9M4VXq0HsNDyaDbcSWB-pmftXJYLKEg01zqHvDA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360172656.7910.60.camel@jlt4.sipsolutions.net>
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-690646527-1361902320=:13622"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 06:44:16PM +0100, Johannes Berg wrote:
-> > I haven't considered wl1251 specifically, only enough to update it so
-> > that it continues to build.
-> 
-> Ah, wl1251 is the weird thing that wants to be told when to wake up/go
-> to sleep, and then sends nulldata packets itself ... so when we send
-> nulldata packets *again* for off-channel, because it also uses software
-> scanning. Like I said before -- "stupidest powersave implementation on
-> the planet".
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Ah, I had wondered what hardware that code was there for :-)
+---1050998036-690646527-1361902320=:13622
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-So I think the approach I'm advocating could possibly make things better
-for wl1251. If it's told about going to off-channel powersave rather
-than being told it's leaving powersave, maybe it can do the right thing
-with the nullfunc frames without mac80211 generating the extra nullfunc.
-I don't know that for sure though because I don't understand how the
-hardware works.
+On 2013-02-26 18:49 +0100, Micha? Kazior wrote Georgiewskiy Yuriy:
 
-> > So using these definition powersave is already a mandatory feature for
-> > any hardware which uses software scanning. 
-> 
-> Even offloaded scanning, it's just not visible to mac80211 then.
+MK>On 23 February 2013 20:45, Georgiewskiy Yuriy <bottleman@icf.org.ru> wrote:
+MK>> hm, strange, i have this cards, and it's works fine, exactly not fine, but works,
+MK>> and as i known it's EOS since 2012.
+MK>
+MK>Apparently some of them have their EEPROM programmed incorrectly.
+MK>Perhaps different revisions? Beats me.
+MK>
+MK>The one in question has "F52N/F50N/F20N V7" printed on the board and
+MK>"FCC ID:VKV-Ff52N" on a sticker. Is yours any different?
 
-Okay, sure. I'm just thinking of things from the mac80211 perspective.
+hm, may be, have f52n/f50n/f20n next line 
+1132 v6 он the board, and have no any FCC on sticker, seems only serial 
+number or something like this on it.
 
-> > All I'm really doing is
-> > making this explicit, and drivers would now opt in to being placed into
-> > the doze state rather than opting into powersave in general. And of
-> > course drivers are now told about transitions to the non-doze powersave
-> > state (what I'm calling offchannel), so that drivers which need to do
-> > hardware configuration for this state can do so.
-> 
-> Ok, so maybe just calling it offchannel makes more sense, although that
-> really interacts only this way with powersave in managed mode, in P2P GO
-> mode .... oh well.
-
-I admit I've only been considering managed mode and know next to nothing
-about P2P GO mode. If I'm creating problems for any other modes I'd
-definitely like to know about it so I can take it into consideration.
-
-Seth
-
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1050998036-690646527-1361902320=:13622--
