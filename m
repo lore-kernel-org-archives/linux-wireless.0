@@ -1,110 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:17035 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753884Ab3BRPjc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47820 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163Ab3BZV2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Feb 2013 10:39:32 -0500
-Date: Mon, 18 Feb 2013 16:38:33 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	Marek Lindner <marek@open-mesh.com>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
- stations
-Message-ID: <20130218153833.GB4162@open-mesh.com> (sfid-20130218_163936_674123_8F150723)
-References: <20130215171938.GA4140@pandem0nium>
- <1361197831.8555.23.camel@jlt4.sipsolutions.net>
- <1361197982.8555.24.camel@jlt4.sipsolutions.net>
- <20130218144622.GA4162@open-mesh.com>
- <1361201387.8555.32.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="3uo+9/B/ebqu+fSQ"
-In-Reply-To: <1361201387.8555.32.camel@jlt4.sipsolutions.net>
+	Tue, 26 Feb 2013 16:28:08 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Dor Shaish <dor.shaish@intel.com>
+Subject: [PATCH 4/4] iwlwifi: mvm: Remove testing of static PIC in PhyDB
+Date: Tue, 26 Feb 2013 22:27:57 +0100
+Message-Id: <1361914077-18749-4-git-send-email-johannes@sipsolutions.net> (sfid-20130226_222815_092170_8E97DA0A)
+In-Reply-To: <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
+References: <1361914034.8440.27.camel@jlt4.sipsolutions.net>
+ <1361914077-18749-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---3uo+9/B/ebqu+fSQ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Dor Shaish <dor.shaish@intel.com>
 
-On Mon, Feb 18, 2013 at 07:29:47 -0800, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 15:46 +0100, Antonio Quartulli wrote:
->=20
-> > In my current implementation I created a "twin hash-table". It contains
-> > statistics for *all* the stations (peer and non-peer).
-> >=20
-> > I think that instead of embedding this new struct (let's call it sta_st=
-ats) into
-> > the sta_info one, it would be easier to let them be independent (this i=
-s why I
-> > created the twin hash) and then create
-> > a pointer from the sta_info to the related sta_stats.
->=20
-> I don't really see value in that, it would only make the implementation
-> less efficient, because either you follow another pointer (sta->stats)
-> or you have to look in the other hash table. That's why I prefer
-> embedding it, we have to do the station hash table lookup anyway.
+The PIC was supposed to be a small signature appended to the
+PhyDB data, but the signature isn't really static and thus
+attempting to check it just causes the warnings spuriously
+so remove them.
 
-I did not like this approach because the sta_info struct is so big that
-when we want to fill the stats substruct only we will waste a lot of bytes.
+Signed-off-by: Dor Shaish <dor.shaish@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-phy-db.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-I think this is the usual space vs. time tread-off :).
-However, since this struct is accessed on the critical path, it may be wort=
-h to
-save time and go for the "embed" approach. Let's see what the other thinks =
-about
-it....
+diff --git a/drivers/net/wireless/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
+index 14fc8d3..3392011 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-phy-db.c
++++ b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
+@@ -136,12 +136,6 @@ struct iwl_calib_res_notif_phy_db {
+ 	u8 data[];
+ } __packed;
+ 
+-#define IWL_PHY_DB_STATIC_PIC cpu_to_le32(0x21436587)
+-static inline void iwl_phy_db_test_pic(__le32 pic)
+-{
+-	WARN_ON(IWL_PHY_DB_STATIC_PIC != pic);
+-}
+-
+ struct iwl_phy_db *iwl_phy_db_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_phy_db *phy_db = kzalloc(sizeof(struct iwl_phy_db),
+@@ -260,11 +254,6 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db, struct iwl_rx_packet *pkt,
+ 			(size - CHANNEL_NUM_SIZE) / phy_db->channel_num;
+ 	}
+ 
+-	/* Test PIC */
+-	if (type != IWL_PHY_DB_CFG)
+-		iwl_phy_db_test_pic(*(((__le32 *)phy_db_notif->data) +
+-				      (size / sizeof(__le32)) - 1));
+-
+ 	IWL_DEBUG_INFO(phy_db->trans,
+ 		       "%s(%d): [PHYDB]SET: Type %d , Size: %d\n",
+ 		       __func__, __LINE__, type, size);
+@@ -372,11 +361,6 @@ int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
+ 		*size = entry->size;
+ 	}
+ 
+-	/* Test PIC */
+-	if (type != IWL_PHY_DB_CFG)
+-		iwl_phy_db_test_pic(*(((__le32 *)*data) +
+-				      (*size / sizeof(__le32)) - 1));
+-
+ 	IWL_DEBUG_INFO(phy_db->trans,
+ 		       "%s(%d): [PHYDB] GET: Type %d , Size: %d\n",
+ 		       __func__, __LINE__, type, *size);
+-- 
+1.8.0
 
->=20
-> > For the API I think we should create a new nl80211 command.
-> > If we simply add a
-> > flag to the normal "station dump" command, we would not have all the at=
-tributes
-> > to print (keep in mind station dump prints attributes that are in sta_i=
-nfo and
-> > that are not in sta_stats).
->=20
-> station dump can just print all attributes that exist, some stations
-> would have more/different attributes than other stations. But I don't
-> really think it makes a big difference either way, reusing it would be
-> fine if the default is to not include the stats-only entries.
-
-yeah, the default behaviour should remain the same (print peer stations
-only).
-
-
-Cheers,
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---3uo+9/B/ebqu+fSQ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRIkr5AAoJEADl0hg6qKeO6G4P/0xCaTJIQjD8/2/bSeEvCPNr
-x6vFTHpKulO963ykQAjp/9pLmuHtXhf4hub5MPMFLERf86oGfIcQqLxviJceDaIW
-VLvR1pTN6AkykuRI7C0e9VDBQ4myZ0t71BxzvR4Kyq9RrTUaAKwTZerx7MUZ6waJ
-m7rZ9yOE3i7yj80Dkg6tXrQiB15hQ9nVLIH/zhJyXRVWsHUqqPVgQ9iK0Vu0LRnt
-0vvR58QctPFBo8IMyLWwbF6B8lHOXEmdtrY693xOsceUjrH7woxa/RG3RGKjro4a
-9po/zwHy0qWsIh7KQb9OmkBoKfFIwCIENjjTMmDdNsmspaaC8Ga0sF4CM8lwuffw
-JpkZSeAh1CBGHFlYUMQ52cgMr91HMXB2CAHrZK6Ysdse8GWmLh4d55F5CXPy8Cpq
-te/iWjA+oxpV3A1YP2cbO6S6NLc3vRrpcrN67gnCpEIV97q3V/ORZLaFrEH756O2
-+rho9sItRduTmFxpofeh12m+Wv2jB82B3zpiKkP01CmXyGPwsnIOnqu9FzbjnSut
-QgMNP4ZAP14F5XjCGbXaD8h0FYhDuGN7iIZ53tpgBk7MvDkkFcwcb2mHsj45LvZQ
-qoaLgsHWFOOCVDnrwmJhfrPzWpkOnCoVOkZc+bDEeZPXf8f7c+yrdHcG/509Y/iH
-6fvDB12uCL1MPfms9CS7
-=omka
------END PGP SIGNATURE-----
-
---3uo+9/B/ebqu+fSQ--
