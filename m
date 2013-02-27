@@ -1,423 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51172 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933385Ab3BLTpg (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:35507 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab3B0TJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 14:45:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless-regdb Clean-up some whitespace damage that had crept into db.txt...
-Date: Tue, 12 Feb 2013 14:40:05 -0500
-Message-Id: <1360698005-18798-1-git-send-email-linville@tuxdriver.com> (sfid-20130212_204540_130393_F65FD1A7)
+	Wed, 27 Feb 2013 14:09:37 -0500
+Received: by mail-ea0-f174.google.com with SMTP id 1so76360eaa.33
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 11:09:35 -0800 (PST)
+From: Michal Kazior <kazikcz@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Michal Kazior <kazikcz@gmail.com>
+Subject: [PATCH v2] ath: sanitize 0xFFFF regdomain
+Date: Wed, 27 Feb 2013 20:09:32 +0100
+Message-Id: <1361992172-4590-1-git-send-email-kazikcz@gmail.com> (sfid-20130227_200941_339966_E7D23A59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
+Apparently some Dbii F52N-PRO mini pci devices
+have been intentionally programemd with a 0xFFFF
+regdomain. This is incorrect and unsupported by
+QCA.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+The patch sanitizes the 0xFFFF regdomain with 0x64
+which is the most restrictive custom world
+regulatory domain in the ath module.
+
+This card has been reported to work on MikroTik's
+RouterOS but failed on Linux with the following:
+
+[   14.320000] ath: EEPROM regdomain: 0xffff
+[   14.320000] ath: EEPROM indicates we should expect a country code
+[   14.320000] ath: invalid regulatory domain/country code 0xbfff
+[   14.320000] ath: Invalid EEPROM contents
+[   14.320000] ath9k 0000:00:12.0: Failed to initialize device
+[   14.330000] ath9k: probe of 0000:00:12.0 failed with error -22
+
+With the patch the device works fine.
+
+Signed-off-by: Michal Kazior <kazikcz@gmail.com>
 ---
- db.txt | 158 ++++++++++++++++++++++++++++++++---------------------------------
- 1 file changed, 79 insertions(+), 79 deletions(-)
+v2: updated commit message as suggested by Luis
 
-diff --git a/db.txt b/db.txt
-index 0270c2f..c5861b8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1,20 +1,20 @@
- # This is the world regulatory domain
- country 00:
- 	(2402 - 2472 @ 40), (3, 20)
--        # Channel 12 - 13.
--        (2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
--        # Channel 14. Only JP enables this and for 802.11b only
--        (2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
--        # Channel 36 - 48
--        (5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
--        # NB: 5260 MHz - 5700 MHz requies DFS
--        # Channel 149 - 165
--        (5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	# Channel 12 - 13.
-+	(2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	# Channel 14. Only JP enables this and for 802.11b only
-+	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
-+	# Channel 36 - 48
-+	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	# NB: 5260 MHz - 5700 MHz requies DFS
-+	# Channel 149 - 165
-+	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
- 
- 
- country AD:
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country AE:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -48,8 +48,8 @@ country AT: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country AU:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -73,8 +73,8 @@ country BA: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country BB:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -90,16 +90,16 @@ country BE: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country BG: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 23)
- 	(5250 - 5290 @ 40), (N/A, 23), DFS
- 	(5490 - 5710 @ 40), (N/A, 30), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country BH:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -151,8 +151,8 @@ country CH: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country CL:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -192,8 +192,8 @@ country CY: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- # Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
- # and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
-@@ -204,8 +204,8 @@ country CZ: DFS-ETSI
- 	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- # Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
- # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
-@@ -228,16 +228,16 @@ country DE: DFS-ETSI
- 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
- 	# entries 308002, 309001 and 310003
- 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country DK: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country DO:
- 	(2402 - 2472 @ 40), (3, 27)
-@@ -259,8 +259,8 @@ country EE: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country EG:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -272,39 +272,39 @@ country ES: DFS-ETSI
- 	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
- 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country FI: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country FR: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country GE:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 18)
- 	(5250 - 5330 @ 40), (N/A, 18), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country GB: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country GD:
- 	(2402 - 2472 @ 40), (3, 27)
-@@ -318,8 +318,8 @@ country GR: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country GL: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -358,8 +358,8 @@ country HR: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country HT:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -372,8 +372,8 @@ country HU: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country ID:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -383,8 +383,8 @@ country IE: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country IL:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -402,8 +402,8 @@ country IS: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country IR:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -414,8 +414,8 @@ country IT: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country JM:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -491,24 +491,24 @@ country LT: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country LU: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country LV: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country MC: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -529,16 +529,16 @@ country MK: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country MT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country MY:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -556,16 +556,16 @@ country NL: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
- 	(5250 - 5330 @ 40), (N/A, 20), NO-OUTDOOR, DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country NO: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country NP:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -613,16 +613,16 @@ country PL: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country PT: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country PR:
- 	(2402 - 2472 @ 40), (3, 27)
-@@ -639,8 +639,8 @@ country RO: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- 
- # Source:
-@@ -671,8 +671,8 @@ country SE: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country SG:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -685,16 +685,16 @@ country SI: DFS-ETSI
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country SK: DFS-ETSI
- 	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (N/A, 20)
- 	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
--        # 60 gHz band channels 1-4, ref: Etsi En 302 567
--        (57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
- 
- country SV:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ drivers/net/wireless/ath/regd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index ccc4c71..48fb1b9 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -533,10 +533,11 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
+  * but since we have more than one user with it we need
+  * a solution for them. We default to 0x64, which is the
+  * default Atheros world regulatory domain.
++ * There is also at least one report of 0xFFFF being set.
+  */
+ static void ath_regd_sanitize(struct ath_regulatory *reg)
+ {
+-	if (reg->current_rd != COUNTRY_ERD_FLAG)
++	if (reg->current_rd != COUNTRY_ERD_FLAG && reg->current_rd != 0xFFFF)
+ 		return;
+ 	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
+ 	reg->current_rd = 0x64;
 -- 
-1.7.11.7
+1.8.1.4
 
