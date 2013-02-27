@@ -1,175 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60073 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757261Ab3BASWr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Feb 2013 13:22:47 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix BSS list hidden SSID lookup
-Date: Fri,  1 Feb 2013 19:23:06 +0100
-Message-Id: <1359742986-12932-1-git-send-email-johannes@sipsolutions.net> (sfid-20130201_192315_970791_397EE812)
+Received: from mms1.broadcom.com ([216.31.210.17]:2044 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756565Ab3B0Mah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 07:30:37 -0500
+Message-ID: <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
+Date: Wed, 27 Feb 2013 13:30:12 +0100
+From: "Piotr Haber" <phaber@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes.berg@intel.com>
+Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
+ userspace
+References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/12/13 15:01, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In many cases, userspace may need to know which of the
+> 802.11 extended capabilities ("Extended Capabilities
+> element") are implemented in the driver or device, to
+> include them e.g. in beacons, assoc request/response
+> or other frames. Add a new nl80211 attribute to hold
+> the extended capabilities bitmap for this.
+> 
+Hi,
 
-When trying to find a hidden SSID, the lookup function
-is done wrong; the code is trying to combine the two
-lookups into one, and as a consequence doesn't always
-find the entry at all. To understand this, consider a
-case where multiple BSS entries with the same channel
-and BSSID exist but have different SSID length. Then
-comparing against the probe response SSID length is
-bound to cause problems since the hidden one might be
-either zeroed out or zero-length.
+seems like this patch pushed wiphy info length over the limit
+for dual band devices.
+So userspace cannot get any info about phy capabilities.
 
-To fix this we need to do two lookups for the two ways
-to hide SSIDs.
+I know there is a patch for nl80211 and iw to allow splitting of this info,
+but it is not in 3.8
+Should we not revert it for stable then?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/scan.c | 80 +++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 53 insertions(+), 27 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index cfc4e1a..d4fe065 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -424,9 +424,21 @@ static int cmp_bss_core(struct cfg80211_bss *a, struct cfg80211_bss *b)
- 	return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
- }
- 
-+/**
-+ * enum bss_compare_mode - BSS compare mode
-+ * @BSS_CMP_REGULAR: regular compare mode (for insertion and normal find)
-+ * @BSS_CMP_HIDE_ZLEN: find hidden SSID with zero-length mode
-+ * @BSS_CMP_HIDE_NUL: find hidden SSID with NUL-ed out mode
-+ */
-+enum bss_compare_mode {
-+	BSS_CMP_REGULAR,
-+	BSS_CMP_HIDE_ZLEN,
-+	BSS_CMP_HIDE_NUL,
-+};
-+
- static int cmp_bss(struct cfg80211_bss *a,
- 		   struct cfg80211_bss *b,
--		   bool hide_ssid)
-+		   enum bss_compare_mode mode)
- {
- 	const struct cfg80211_bss_ies *a_ies, *b_ies;
- 	const u8 *ie1;
-@@ -462,27 +474,36 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	if (!ie2)
- 		return 1;
- 
--	/* zero-length SSID is used as an indication of the hidden bss */
--	if (hide_ssid && !ie2[1])
--		return 0;
--
--	/* sort by length first, then by contents */
--	if (ie1[1] != ie2[1])
--		return ie2[1] - ie1[1];
--
--	if (!hide_ssid)
-+	switch (mode) {
-+	case BSS_CMP_HIDE_ZLEN:
-+		/*
-+		 * In ZLEN mode we assume the BSS entry we're
-+		 * looking for has a zero-length SSID. So if
-+		 * the one we're looking at right now has that,
-+		 * return 0. Otherwise, return the difference
-+		 * in length, but since we're looking for the
-+		 * 0-length it's really equivalent to returning
-+		 * the length of the one we're looking at.
-+		 *
-+		 * No content comparison is needed as we assume
-+		 * the content length is zero.
-+		 */
-+		return ie2[1];
-+	case BSS_CMP_REGULAR:
-+	default:
-+		/* sort by length first, then by contents */
-+		if (ie1[1] != ie2[1])
-+			return ie2[1] - ie1[1];
- 		return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
--
--	/*
--	 * zeroed SSID ie is another indication of a hidden bss;
--	 * if it isn't zeroed just return the regular sort value
--	 * to find the next candidate
--	 */
--	for (i = 0; i < ie2[1]; i++)
--		if (ie2[i + 2])
--			return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
--
--	return 0;
-+	case BSS_CMP_HIDE_NUL:
-+		if (ie1[1] != ie2[1])
-+			return ie2[1] - ie1[1];
-+		/* this is equivalent to memcmp(zeroes, ie2 + 2, len) */
-+		for (i = 0; i < ie2[1]; i++)
-+			if (ie2[i + 2])
-+				return -1;
-+		return 0;
-+	}
- }
- 
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
-@@ -564,7 +585,7 @@ static void rb_insert_bss(struct cfg80211_registered_device *dev,
- 		parent = *p;
- 		tbss = rb_entry(parent, struct cfg80211_internal_bss, rbn);
- 
--		cmp = cmp_bss(&bss->pub, &tbss->pub, false);
-+		cmp = cmp_bss(&bss->pub, &tbss->pub, BSS_CMP_REGULAR);
- 
- 		if (WARN_ON(!cmp)) {
- 			/* will sort of leak this BSS */
-@@ -584,7 +605,7 @@ static void rb_insert_bss(struct cfg80211_registered_device *dev,
- static struct cfg80211_internal_bss *
- rb_find_bss(struct cfg80211_registered_device *dev,
- 	    struct cfg80211_internal_bss *res,
--	    bool hidden)
-+	    enum bss_compare_mode mode)
- {
- 	struct rb_node *n = dev->bss_tree.rb_node;
- 	struct cfg80211_internal_bss *bss;
-@@ -592,7 +613,7 @@ rb_find_bss(struct cfg80211_registered_device *dev,
- 
- 	while (n) {
- 		bss = rb_entry(n, struct cfg80211_internal_bss, rbn);
--		r = cmp_bss(&res->pub, &bss->pub, hidden);
-+		r = cmp_bss(&res->pub, &bss->pub, mode);
- 
- 		if (r == 0)
- 			return bss;
-@@ -642,7 +663,7 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		return NULL;
- 	}
- 
--	found = rb_find_bss(dev, tmp, false);
-+	found = rb_find_bss(dev, tmp, BSS_CMP_REGULAR);
- 
- 	if (found) {
- 		found->pub.beacon_interval = tmp->pub.beacon_interval;
-@@ -697,9 +718,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		/* TODO: The code is not trying to update existing probe
- 		 * response bss entries when beacon ies are
- 		 * getting changed. */
--		hidden = rb_find_bss(dev, tmp, true);
--		if (hidden)
-+		hidden = rb_find_bss(dev, tmp, BSS_CMP_HIDE_ZLEN);
-+		if (hidden) {
- 			copy_hidden_ies(tmp, hidden);
-+		} else {
-+			hidden = rb_find_bss(dev, tmp, BSS_CMP_HIDE_NUL);
-+			if (hidden)
-+				copy_hidden_ies(tmp, hidden);
-+		}
- 
- 		/*
- 		 * create a copy -- the "res" variable that is passed in
--- 
-1.8.0
+Kind regards
+Piotr
 
