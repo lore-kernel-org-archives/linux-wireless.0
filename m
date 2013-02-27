@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:62613 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab3BFSyb (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53584 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818Ab3B0Jql convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 13:54:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH V2] rtlwifi: rtl8192cu: Fix NULL dereference BUG when using new_id
-Date: Wed,  6 Feb 2013 12:54:17 -0600
-Message-Id: <1360176857-852-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130206_195440_696878_0B3EC78B)
+	Wed, 27 Feb 2013 04:46:41 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Chen Gang <gang.chen@asianux.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror when no -W* in EXTRA_CFLAGS
+Date: Wed, 27 Feb 2013 11:46:37 +0200
+Message-ID: <1921426.IqHmmMU5eP@lx-vladimir> (sfid-20130227_104713_835092_AF644CF1)
+In-Reply-To: <512DCA59.4040800@asianux.com>
+References: <512DADCA.9040609@asianux.com> <1385870.TegBXpTM9i@lx-vladimir> <512DCA59.4040800@asianux.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the new_id entry in /sysfs is used for a foreign USB device, rtlwifi
-BUGS with a NULL pointer dereference because the per-driver configuration
-data is not available. The probe function has been restructured as
-suggested by Ben Hutchings <bhutchings@solarflare.com>.
+On Wednesday, February 27, 2013 04:56:57 PM Chen Gang wrote:
+> 于 2013年02月27日 16:45, Vladimir Kondratiev 写道:
+> > On Wednesday, February 27, 2013 02:55:06 PM Chen Gang wrote:
+> >>
+> >>   When make with EXTRA_CFLAGS=-W, it will report error.
+> >>   so give a check in Makefile.
+> >>
+> >> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+> >> ---
+> >>  drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
+> >>  1 files changed, 3 insertions(+), 1 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+> >> index 9396dc9..d288eea 100644
+> >> --- a/drivers/net/wireless/ath/wil6210/Makefile
+> >> +++ b/drivers/net/wireless/ath/wil6210/Makefile
+> >> @@ -9,5 +9,7 @@ wil6210-objs += wmi.o
+> >>  wil6210-objs += interrupt.o
+> >>  wil6210-objs += txrx.o
+> >>  
+> >> -subdir-ccflags-y += -Werror
+> >> +ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+> >> +	subdir-ccflags-y += -Werror
+> >> +endif
+> >>  subdir-ccflags-y += -D__CHECK_ENDIAN__
+> >>
+> > Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> > 
+> > Well, agree; -W triggers lots of warnings, I suspect all other places that use
+> > -Werror should be problematic. Worth fixing all others? Quick look for v3.8 raises:
+> > 
+> 
+>   thank you for your suggestion.
+>   after this patch applied, I will do for others (let you as signed-of-by, too).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 8 +++++++-
- drivers/net/wireless/rtlwifi/usb.c          | 5 +++--
- drivers/net/wireless/rtlwifi/usb.h          | 3 ++-
- 3 files changed, 12 insertions(+), 4 deletions(-)
+Perhaps, it would be good idea to fight the original problem.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index d9e659f..577c0dc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -363,9 +363,15 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+I mean, fix warnings where possible. Example: there are lots of
+"unused parameter" ones. Where it is false warning, add __maybe_unused
+attribute. Like this:
+
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index c566927..83e43b7 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -163,8 +163,9 @@ extern int _cond_resched(void);
+ # define might_sleep() \
+        do { __might_sleep(__FILE__, __LINE__, 0); might_resched(); } while (0)
+ #else
+-  static inline void __might_sleep(const char *file, int line,
+-                                  int preempt_offset) { }
++  static inline void __might_sleep(const char *file __maybe_unused,
++                                  int line __maybe_unused,
++                                  int preempt_offset __maybe_unused) { }
+ # define might_sleep() do { might_resched(); } while (0)
+ #endif
  
- MODULE_DEVICE_TABLE(usb, rtl8192c_usb_ids);
- 
-+static int rtl8192cu_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtl_usb_probe(intf, id, &rtl92cu_hal_cfg);
-+}
-+
- static struct usb_driver rtl8192cu_driver = {
- 	.name = "rtl8192cu",
--	.probe = rtl_usb_probe,
-+	.probe = rtl8192cu_probe,
- 	.disconnect = rtl_usb_disconnect,
- 	.id_table = rtl8192c_usb_ids,
- 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index d42bbe2..476eaef 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -937,7 +937,8 @@ static struct rtl_intf_ops rtl_usb_ops = {
- };
- 
- int rtl_usb_probe(struct usb_interface *intf,
--			const struct usb_device_id *id)
-+		  const struct usb_device_id *id,
-+		  struct rtl_hal_cfg *rtl_hal_cfg)
- {
- 	int err;
- 	struct ieee80211_hw *hw = NULL;
-@@ -972,7 +973,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	usb_set_intfdata(intf, hw);
- 	/* init cfg & intf_ops */
- 	rtlpriv->rtlhal.interface = INTF_USB;
--	rtlpriv->cfg = (struct rtl_hal_cfg *)(id->driver_info);
-+	rtlpriv->cfg = rtl_hal_cfg;
- 	rtlpriv->intf_ops = &rtl_usb_ops;
- 	rtl_dbgp_flag_init(hw);
- 	/* Init IO handler */
-diff --git a/drivers/net/wireless/rtlwifi/usb.h b/drivers/net/wireless/rtlwifi/usb.h
-index 5235136..fb986f9 100644
---- a/drivers/net/wireless/rtlwifi/usb.h
-+++ b/drivers/net/wireless/rtlwifi/usb.h
-@@ -157,7 +157,8 @@ struct rtl_usb_priv {
- 
- 
- int rtl_usb_probe(struct usb_interface *intf,
--			    const struct usb_device_id *id);
-+		  const struct usb_device_id *id,
-+		  struct rtl_hal_cfg *rtl92cu_hal_cfg);
- void rtl_usb_disconnect(struct usb_interface *intf);
- int rtl_usb_suspend(struct usb_interface *pusb_intf, pm_message_t message);
- int rtl_usb_resume(struct usb_interface *pusb_intf);
--- 
-1.8.1
 
