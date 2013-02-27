@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:28741 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384Ab3BBVzE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab3B0XWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Feb 2013 16:55:04 -0500
-Date: Sat, 02 Feb 2013 15:55:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix scheduling while atomic bug 
-Message-ID: <510d8b34.btxtBUP/XZ2kqLoh%Larry.Finger@lwfinger.net> (sfid-20130202_225509_179148_C13444A1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 27 Feb 2013 18:22:54 -0500
+Message-ID: <1362007368.8172.13.camel@jlt4.sipsolutions.net> (sfid-20130228_002258_317956_B6FB3E75)
+Subject: Re: Interesting behaviour when AP enables/disables HT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Feb 2013 00:22:48 +0100
+In-Reply-To: <512E92FD.2090106@candelatech.com> (sfid-20130228_001314_338433_42408E0E)
+References: <512E92FD.2090106@candelatech.com>
+	 (sfid-20130228_001314_338433_42408E0E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel commits 41affd5 and 6539306 changed the locking in rtl_lps_leave()
-from a spinlock to a mutex by doing the calls indirectly from a work queue
-to reduce the time that interrupts were disabled. This change was fine for
-most systems; however a scheduling while atomic bug was reported in
-https://bugzilla.redhat.com/show_bug.cgi?id=903881. The backtrace indicates
-that routine rtl_is_special(), which calls rtl_lps_leave() in three places
-was entered in atomic context. These direct calls are replaced by putting a
-request on the appropriate work queue.
+On Wed, 2013-02-27 at 15:13 -0800, Ben Greear wrote:
+> I was doing some tests where I change the AP's configuration
+> (enable/disable HT, enable/disable HT40, etc) on a somewhat
+> hacked 3.7.9+ kernel.
+> 
+> One thing I noticed is that if stations are associated using /a,
+> but I quickly reconfigure the AP to use /a/n mode (ie HT enabled),
+> the stations stay in 'no-ht' mode.
+> 
+> If I down/up the stations, they come up in HT mode.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-and-tested-by: Nathaniel Doherty <ntdoherty@gmail.com>
-Cc: Nathaniel Doherty <ntdoherty@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Stable <stable@vger.kernel.org>
----
+You probably didn't flush the scan cache on the stations before
+reconnecting after the reconfiguration.
 
-John,
+johannes
 
-If DaveM will still accept bug fixes for 3.8, please push this one. It
-is unlikely to have any side effects.
-
-Thanks,
-
-Larry
----
-
- base.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-@@ -1004,7 +1004,8 @@ u8 rtl_is_special_data(struct ieee80211_
- 					 is_tx ? "Tx" : "Rx");
- 
- 				if (is_tx) {
--					rtl_lps_leave(hw);
-+					schedule_work(&rtlpriv->
-+						      works.lps_leave_work);
- 					ppsc->last_delaylps_stamp_jiffies =
- 					    jiffies;
- 				}
-@@ -1014,7 +1015,7 @@ u8 rtl_is_special_data(struct ieee80211_
- 		}
- 	} else if (ETH_P_ARP == ether_type) {
- 		if (is_tx) {
--			rtl_lps_leave(hw);
-+			schedule_work(&rtlpriv->works.lps_leave_work);
- 			ppsc->last_delaylps_stamp_jiffies = jiffies;
- 		}
- 
-@@ -1024,7 +1025,7 @@ u8 rtl_is_special_data(struct ieee80211_
- 			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
- 
- 		if (is_tx) {
--			rtl_lps_leave(hw);
-+			schedule_work(&rtlpriv->works.lps_leave_work);
- 			ppsc->last_delaylps_stamp_jiffies = jiffies;
- 		}
- 
