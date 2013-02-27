@@ -1,71 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4755 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18354 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757110Ab3BVPAZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 10:00:25 -0500
-From: "Piotr Haber" <phaber@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
- coexistence mode
-Date: Fri, 22 Feb 2013 14:59:56 +0000
-Message-ID: <53E0CDA8188165468B8B837459C34CA901053F56@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20130222_160042_912774_2D27D3B5)
-References: <1361524092-4814-1-git-send-email-phaber@broadcom.com>
- <1361524092-4814-2-git-send-email-phaber@broadcom.com> (
- sfid-20130222_100804_524805_03F665CB),<1361533924.8146.5.camel@jlt4.sipsolutions.net>
- <53E0CDA8188165468B8B837459C34CA901053EEA@SJEXCHMB15.corp.ad.broadcom.com>,<1361542053.3420.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361542053.3420.2.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+	id S1758208Ab3B0PAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 10:00:51 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 3/8] mac80211: cleanup generic suspend/resume procedures
+Date: Wed, 27 Feb 2013 16:00:37 +0100
+Message-Id: <1361977242-17344-3-git-send-email-sgruszka@redhat.com> (sfid-20130227_160055_410875_5F503A02)
+In-Reply-To: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
+References: <1361977242-17344-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > This is supposed to be temporary and time limited, so if say DHCP finishes in the window
-> > we give it - great, if not the coexistence goes back to default behavior and Wifi traffic is
-> > treated as usual.
+Since now we disconnect before suspend, various code which save
+connection state can now be removed from suspend and resume
+procedure. Cleanup on resume side is smaller as ieee80211_reconfig()
+is also used for H/W restart.
 
-> That's not even documented/implemented, the way I read the patch you'd
-> have to set it back manually.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/ieee80211_i.h |  4 ---
+ net/mac80211/key.c         | 14 ----------
+ net/mac80211/key.h         |  1 -
+ net/mac80211/pm.c          | 68 ----------------------------------------------
+ net/mac80211/util.c        | 26 ------------------
+ 5 files changed, 113 deletions(-)
 
-You are right, we implement it this way in brcmfmac but it is not documented
-in nl80211 change. I thought of DISABLED as a trigger (for timed boost)
-and ENABLED as a way to notify that whoever requested it is done.
-The interface could be made to reflect this "design"
-
-> > > What application would actually call this? I don't really see how it
-> > > could be integrated like that.
-
-> > For EAPOL wpa_supplicant might use it. For DHCP it could be used from enter/exit hooks
-> > via iw or some other utility able to send nl messages.
-
-> See that's the thing, I don't really see the point for EAPOL: you could
-> just as well start protecting when the association is done, and end it
-> when the station is marked authorized. That will have protected any
-> EAPOL (or other protocols for that matter) traffic.
-
-That is true, this could be totally automatic.
-
-> Similarly, you could give it a certain timeout to protect DHCP traffic.
-> I guess the only thing that would seem necessary would be a notification
-> of "DHCP done" that would allow you to drop the protection right away.
-
-I guess that is the only reason we need this interface.
-Still if we set the "protection" timeout to be reasonable it can do without
-it...
-
-> > This feature is styled after Android one.
-
-> I know, I'm (vaguely) familiar with that.
-
-> > There a Wifi state machine tries to "protect" DHCP traffic.
-
-> Is there any *reason* for it though? Would it ever call it after the
-> connection is fully established?
-
-As for reason I can't tell, someone found one to implement it in Android :)
-It is not used after connection is established.
-
-Piotr 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 388580a..cc917a7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -765,10 +765,6 @@ struct ieee80211_sub_if_data {
+ 	} debugfs;
+ #endif
+ 
+-#ifdef CONFIG_PM
+-	struct ieee80211_bss_conf suspend_bss_conf;
+-#endif
+-
+ 	/* must be last, dynamically sized area in this! */
+ 	struct ieee80211_vif vif;
+ };
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ef252eb..df81b17 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -566,20 +566,6 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_iter_keys);
+ 
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_key *key;
+-
+-	ASSERT_RTNL();
+-
+-	mutex_lock(&sdata->local->key_mtx);
+-
+-	list_for_each_entry(key, &sdata->key_list, list)
+-		ieee80211_key_disable_hw_accel(key);
+-
+-	mutex_unlock(&sdata->local->key_mtx);
+-}
+-
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key, *tmp;
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 382dc44..8b03730 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -143,7 +143,6 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
+ 				    int idx);
+ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata);
+ 
+ #define key_mtx_dereference(local, ref) \
+ 	rcu_dereference_protected(ref, lockdep_is_held(&((local)->key_mtx)))
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 4d105c7..f69dc90 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -6,26 +6,6 @@
+ #include "driver-ops.h"
+ #include "led.h"
+ 
+-/* return value indicates whether the driver should be further notified */
+-static void ieee80211_quiesce(struct ieee80211_sub_if_data *sdata)
+-{
+-	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_STATION:
+-		ieee80211_sta_quiesce(sdata);
+-		break;
+-	case NL80211_IFTYPE_ADHOC:
+-		ieee80211_ibss_quiesce(sdata);
+-		break;
+-	case NL80211_IFTYPE_MESH_POINT:
+-		ieee80211_mesh_quiesce(sdata);
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	cancel_work_sync(&sdata->work);
+-}
+-
+ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -95,17 +75,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 			WARN_ON(err != 1);
+ 			return err;
+ 		} else {
+-			list_for_each_entry(sdata, &local->interfaces, list)
+-				if (ieee80211_sdata_running(sdata))
+-					ieee80211_quiesce(sdata);
+ 			goto suspend;
+ 		}
+ 	}
+ 
+-	/* disable keys */
+-	list_for_each_entry(sdata, &local->interfaces, list)
+-		ieee80211_disable_keys(sdata);
+-
+ 	/* tear down aggregation sessions and remove STAs */
+ 	mutex_lock(&local->sta_mtx);
+ 	list_for_each_entry(sta, &local->sta_list, list) {
+@@ -117,55 +90,14 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 				WARN_ON(drv_sta_state(local, sta->sdata, sta,
+ 						      state, state - 1));
+ 		}
+-
+-		mesh_plink_quiesce(sta);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	/* remove all interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		static u8 zero_addr[ETH_ALEN] = {};
+-		u32 changed = 0;
+-
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		switch (sdata->vif.type) {
+-		case NL80211_IFTYPE_AP_VLAN:
+-		case NL80211_IFTYPE_MONITOR:
+-			/* skip these */
+-			continue;
+-		case NL80211_IFTYPE_STATION:
+-			if (sdata->vif.bss_conf.assoc)
+-				changed = BSS_CHANGED_ASSOC |
+-					  BSS_CHANGED_BSSID |
+-					  BSS_CHANGED_IDLE;
+-			break;
+-		case NL80211_IFTYPE_AP:
+-		case NL80211_IFTYPE_ADHOC:
+-		case NL80211_IFTYPE_MESH_POINT:
+-			if (sdata->vif.bss_conf.enable_beacon)
+-				changed = BSS_CHANGED_BEACON_ENABLED;
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		ieee80211_quiesce(sdata);
+-
+-		sdata->suspend_bss_conf = sdata->vif.bss_conf;
+-		memset(&sdata->vif.bss_conf, 0, sizeof(sdata->vif.bss_conf));
+-		sdata->vif.bss_conf.idle = true;
+-		if (sdata->suspend_bss_conf.bssid)
+-			sdata->vif.bss_conf.bssid = zero_addr;
+-
+-		/* disable beaconing or remove association */
+-		ieee80211_bss_info_change_notify(sdata, changed);
+-
+-		if (sdata->vif.type == NL80211_IFTYPE_AP &&
+-		    rcu_access_pointer(sdata->u.ap.beacon))
+-			drv_stop_ap(local, sdata);
+-
+ 		if (local->use_chanctx) {
+ 			struct ieee80211_chanctx_conf *conf;
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0f38f43..f5d4e32 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1534,11 +1534,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 			  BSS_CHANGED_IDLE |
+ 			  BSS_CHANGED_TXPOWER;
+ 
+-#ifdef CONFIG_PM
+-		if (local->resuming && !reconfig_due_to_wowlan)
+-			sdata->vif.bss_conf = sdata->suspend_bss_conf;
+-#endif
+-
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			changed |= BSS_CHANGED_ASSOC |
+@@ -1678,28 +1673,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	mb();
+ 	local->resuming = false;
+ 
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		switch(sdata->vif.type) {
+-		case NL80211_IFTYPE_STATION:
+-			ieee80211_sta_restart(sdata);
+-			break;
+-		case NL80211_IFTYPE_ADHOC:
+-			ieee80211_ibss_restart(sdata);
+-			break;
+-		case NL80211_IFTYPE_MESH_POINT:
+-			ieee80211_mesh_restart(sdata);
+-			break;
+-		default:
+-			break;
+-		}
+-	}
+-
+ 	mod_timer(&local->sta_cleanup, jiffies + 1);
+-
+-	mutex_lock(&local->sta_mtx);
+-	list_for_each_entry(sta, &local->sta_list, list)
+-		mesh_plink_restart(sta);
+-	mutex_unlock(&local->sta_mtx);
+ #else
+ 	WARN_ON(1);
+ #endif
+-- 
+1.7.11.7
 
