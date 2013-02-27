@@ -1,113 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:56543 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753469Ab3BNBdc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 20:33:32 -0500
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] brcmsmac: Remove unnecessary memset casts
-Date: Wed, 13 Feb 2013 17:33:21 -0800
-Message-Id: <6b2fcef4f4983542d3fd08005cfe06d7cd82e97e.1360805256.git.joe@perches.com> (sfid-20130214_023334_865971_D437B097)
-In-Reply-To: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com>
-References: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com>
+Received: from mx1.redhat.com ([209.132.183.28]:27936 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751547Ab3B0K1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 05:27:16 -0500
+Message-ID: <1361960826.15573.8.camel@dcbw.foobar.com> (sfid-20130227_112720_508732_DB93DCCE)
+Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
+ coexistence mode
+From: Dan Williams <dcbw@redhat.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>
+Date: Wed, 27 Feb 2013 11:27:06 +0100
+In-Reply-To: <512B61F9.60802@openwrt.org>
+References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com>
+	  <1361564916.3420.11.camel@jlt4.sipsolutions.net>
+	  <CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
+	  <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com>
+	  <1361726886.8129.9.camel@jlt4.sipsolutions.net>
+	  <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
+	  <512AFC80.9030808@openwrt.org>
+	 <1361787911.8887.2.camel@jlt4.sipsolutions.net>
+	 <512B61F9.60802@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the casts of the first argument of memset.
+On Mon, 2013-02-25 at 14:07 +0100, Felix Fietkau wrote:
+> On 2013-02-25 11:25 AM, Johannes Berg wrote:
+> > On Mon, 2013-02-25 at 06:54 +0100, Felix Fietkau wrote:
+> > 
+> >> Most devices have some kind of connection manager that has a high-level
+> >> perspective of when it's fully connected (which includes DHCP/bootp).
+> >> Why not just let that connection manager set a sane maximum network
+> >> latency value via pm_qos network_latency and derive btcoex weight
+> >> changing and multi-channel settings from that?
+> > 
+> > Frankly, I don't think that's going to work well. We tried using the
+> > pm_qos framework once and nothing ever used it. Android isn't going to
+> > change to it, so we'd be stuck with hacks like setting pm_qos in
+> > wpa_supplicant which is just as awkward.
+> If only the connection manager gets changed to use it, that would
+> already be enough. It doesn't have to be pushed into dhcp clients and
+> other applications.
+> 
+> > Also, what you mostly want isn't really so much a weight but rather a
+> > time-based approach to give it high priority until the connection
+> > handshake completes (we already do for auth/assoc/... until authorized)
+> > so I think using the pm_qos framework to give priority wouldn't work
+> > very well since there'd also be no way to tell when it was "done"
+> Just release the latency requirement in the connection manager once the
+> handshake is done. It knows...
 
-Neaten the style by using the sizeof the actual variable
-being memset not the sizeof the type of variable.
+We also don't know what IP configuration method will get used; whether
+it will be IPv6 RA, DHCPv4 or DHCPv6, IPv4 autoconf, or static.  Only
+the connection manager knows that.  Only the connection manager/DHCP
+client know when they expect a lease renew operation to start too.
+wpa_supplicant doesn't know any of these things either since it doesn't
+do anything IP related.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c | 23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+I think the best approach here is to allow the higher layers to hint to
+the driver that some operations that are about to start must be "more
+reliable".  That includes EAPOL, DHCP, IP autoconfiguration, etc.  Then
+when the higher layers know the operation is finished, they can indicate
+the operations are done and the driver can go do whatever it wants.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index b3ea15e..8ef02dc 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3138,8 +3138,7 @@ void brcms_c_reset(struct brcms_c_info *wlc)
- 	brcms_c_statsupd(wlc);
- 
- 	/* reset our snapshot of macstat counters */
--	memset((char *)wlc->core->macstat_snapshot, 0,
--		sizeof(struct macstat));
-+	memset(wlc->core->macstat_snapshot, 0, sizeof(struct macstat));
- 
- 	brcms_b_reset(wlc->hw);
- }
-@@ -4052,7 +4051,7 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
- 		return;
- 	}
- 
--	memset((char *)&acp_shm, 0, sizeof(struct shm_acparams));
-+	memset(&acp_shm, 0, sizeof(struct shm_acparams));
- 	/* fill in shm ac params struct */
- 	acp_shm.txop = params->txop;
- 	/* convert from units of 32us to us for ucode */
-@@ -4768,7 +4767,7 @@ static void brcms_c_bss_default_init(struct brcms_c_info *wlc)
- 	struct brcms_bss_info *bi = wlc->default_bss;
- 
- 	/* init default and target BSS with some sane initial values */
--	memset((char *)(bi), 0, sizeof(struct brcms_bss_info));
-+	memset(bi, 0, sizeof(*bi));
- 	bi->beacon_period = BEACON_INTERVAL_DEFAULT;
- 
- 	/* fill the default channel as the first valid channel
-@@ -5297,7 +5296,7 @@ int brcms_c_set_gmode(struct brcms_c_info *wlc, u8 gmode, bool config)
- 		brcms_c_protection_upd(wlc, BRCMS_PROT_G_USER, gmode);
- 
- 	/* Clear rateset override */
--	memset(&rs, 0, sizeof(struct brcms_c_rateset));
-+	memset(&rs, 0, sizeof(rs));
- 
- 	switch (gmode) {
- 	case GMODE_LEGACY_B:
-@@ -5520,7 +5519,7 @@ int brcms_c_set_rateset(struct brcms_c_info *wlc, struct brcm_rateset *rs)
- 	if (rs->count > BRCMS_NUMRATES)
- 		return -ENOBUFS;
- 
--	memset(&internal_rs, 0, sizeof(struct brcms_c_rateset));
-+	memset(&internal_rs, 0, sizeof(internal_rs));
- 
- 	/* Copy only legacy rateset section */
- 	internal_rs.count = rs->count;
-@@ -5623,7 +5622,7 @@ int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
- 	for (i = 0; i < BRCMS_MAXMODULES; i++) {
- 		if (!strcmp(wlc->modulecb[i].name, name) &&
- 		    (wlc->modulecb[i].hdl == hdl)) {
--			memset(&wlc->modulecb[i], 0, sizeof(struct modulecb));
-+			memset(&wlc->modulecb[i], 0, sizeof(wlc->modulecb[i]));
- 			return 0;
- 		}
- 	}
-@@ -6678,11 +6677,9 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 					(struct ofdm_phy_hdr *) rts_plcp) :
- 				rts_plcp[0]) << 8;
- 	} else {
--		memset((char *)txh->RTSPhyHeader, 0, D11_PHY_HDR_LEN);
--		memset((char *)&txh->rts_frame, 0,
--			sizeof(struct ieee80211_rts));
--		memset((char *)txh->RTSPLCPFallback, 0,
--		      sizeof(txh->RTSPLCPFallback));
-+		memset(txh->RTSPhyHeader, 0, D11_PHY_HDR_LEN);
-+		memset(&txh->rts_frame, 0, sizeof(struct ieee80211_rts));
-+		memset(txh->RTSPLCPFallback, 0, sizeof(txh->RTSPLCPFallback));
- 		txh->RTSDurFallback = 0;
- 	}
- 
-@@ -7324,7 +7321,7 @@ brcms_c_bcn_prb_template(struct brcms_c_info *wlc, u16 type,
- 	*len = hdr_len + body_len;
- 
- 	/* format PHY and MAC headers */
--	memset((char *)buf, 0, hdr_len);
-+	memset(buf, 0, hdr_len);
- 
- 	plcp = (struct cck_phy_hdr *) buf;
- 
--- 
-1.8.1.2.459.gbcd45b4.dirty
+The driver/stack may wish to do any of [set 1Mb rate, block rate
+control, change BT coex, turn on microwave protection, whatever] and
+that's great, the upper layers don't care about what the driver does,
+just that the reliability of the operation is preserved.
+
+Dan
 
