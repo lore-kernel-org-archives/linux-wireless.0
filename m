@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pikachu.3ti.be ([188.40.111.73]:40892 "EHLO pikachu.3ti.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759777Ab3BHBGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 20:06:52 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by pikachu.3ti.be (Postfix) with ESMTP id 71D8621263
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2013 02:06:50 +0100 (CET)
-Received: from pikachu.3ti.be ([127.0.0.1])
-	by localhost (pikachu.3ti.be [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id 1faKcuR19n1H for <linux-wireless@vger.kernel.org>;
-	Fri,  8 Feb 2013 02:06:50 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by pikachu.3ti.be (Postfix) with ESMTP id 0EEF921263
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Feb 2013 02:06:50 +0100 (CET)
-Date: Fri, 8 Feb 2013 02:06:50 +0100 (CET)
-From: Dag Wieers <dag@wieers.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: BCM4321 (b43) on AppleTV (1st gen)
-In-Reply-To: <alpine.LRH.2.02.1302072238200.2736@pikachu.3ti.be>
-Message-ID: <alpine.LRH.2.02.1302080206020.2736@pikachu.3ti.be> (sfid-20130208_020657_458315_636A1575)
-References: <alpine.LRH.2.02.1302072238200.2736@pikachu.3ti.be>
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:35915 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab3B0IGU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 03:06:20 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j10so122921bkw.12
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 00:06:18 -0800 (PST)
+Message-ID: <512DBE77.9040902@cozybit.com> (sfid-20130227_090627_312893_72F322A5)
+Date: Wed, 27 Feb 2013 09:06:15 +0100
+From: Marco Porsch <marco@cozybit.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: Thomas Pedersen <thomas@cozybit.com>
+CC: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, sleffler@google.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCHv3 1/3] mac80211: move mesh sync beacon handler into neighbour_update
+References: <1361808057-17899-1-git-send-email-marco@cozybit.com> <CAG6hwVOrwGTceDKK9t0QAFH9LDGuhZtJDQhQh38Mh2C+YepAtw@mail.gmail.com>
+In-Reply-To: <CAG6hwVOrwGTceDKK9t0QAFH9LDGuhZtJDQhQh38Mh2C+YepAtw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 8 Feb 2013, Dag Wieers wrote:
+Am 26.02.2013 22:31, schrieb Thomas Pedersen:
+> Hi Marco,
+>
+> On Mon, Feb 25, 2013 at 8:00 AM, Marco Porsch<marco@cozybit.com>  wrote:
+>> Move the beacon handler into mesh_neighbour_update where the STA
+>> pointer is already available. This avoids additional overhead
+>> and simplifies the handler.
+>> The repositioning will also benefit mesh PS which uses T_r and
+>> the updated T_offset value.
+>>
+>> Check frame type before calling the handler. Rename it to better
+>> reflect its purpose.
+>>
+>> Signed-off-by: Marco Porsch<marco@cozybit.com>
+>> ---
+>>
+>> v3:
+>>          check frame type before rx_bcn handler (Johannes)
+>>
+>>   net/mac80211/ieee80211_i.h |    9 ++++-----
+>>   net/mac80211/mesh.c        |    7 +------
+>>   net/mac80211/mesh.h        |    4 +++-
+>>   net/mac80211/mesh_plink.c  |   38 ++++++++++++++++++++++++++++-------
+>>   net/mac80211/mesh_sync.c   |   47 +++++++++-----------------------------------
+>>   5 files changed, 48 insertions(+), 57 deletions(-)
+>>
+>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+>> index 388580a..631760f 100644
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -529,11 +529,10 @@ struct ieee80211_if_ibss {
+>>    */
+>>   struct ieee802_11_elems;
+>>   struct ieee80211_mesh_sync_ops {
+>> -       void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
+>> -                            u16 stype,
+>> -                            struct ieee80211_mgmt *mgmt,
+>> -                            struct ieee802_11_elems *elems,
+>> -                            struct ieee80211_rx_status *rx_status);
+>> +       void (*rx_bcn)(struct sta_info *sta,
+>> +                      struct ieee80211_mgmt *mgmt,
+>> +                      struct ieee802_11_elems *elems,
+>> +                      u64 t_r);
+>
+> Why not continue to sync against probe responses?
+> mesh_neighbour_update() gets these as well.
 
-> For the OpenELEC project I am looking into getting better performance out of 
-> the b43 driver on the AppleTV (1st gen) device . The website reports the 
-> driver can do 802.11n (albeit on 2.4Ghz only), however using kernel 3.7.5 
-> (and earlier) I cannot get more than 3 MB/sec out of it (usually much less).
+Because there was a comment about the standard mentioning only beacon 
+frames. Fooled me here =/
+Now I see that the standard explicitly mentions probe responses as well.
+Is the sync code currently ready to handle probe responses? I am not 
+perfectly sure about the sta->t_offset_setpoint stuff.
 
-I wanted to add the kernel boot messages:
-
-----
-root ~ # dmesg | grep b43
-[    2.902696] b43-phy0: Broadcom 4321 WLAN found (core revision 12)
-[    2.976740] b43-phy0: Found PHY: Analog 5, Type 4 (N), Revision 2
-[    2.976772] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2055, Revision 4
-[    3.038609] Registered led device: b43-phy0::tx
-[    3.040268] Registered led device: b43-phy0::rx
-[    3.040433] Registered led device: b43-phy0::radio
-[    4.736728] b43-phy0: Loading firmware version 508.1084 (2009-01-14 01:32:01)
-[    4.807784] b43-phy0 debug: Chip initialized
-[    4.808074] b43-phy0 debug: 64-bit DMA initialized
-[    4.808142] b43-phy0 debug: QoS enabled
-[    4.833456] b43-phy0 debug: Wireless interface started
-[    4.833526] b43-phy0 debug: Adding Interface type 2
-[    7.837659] b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac: 74:44:01:8d:90:5e
-[    7.838009] b43-phy0 debug: Using hardware based encryption for keyidx: 1, mac: ff:ff:ff:ff:ff:ff
-----
-
-Kind regards,
--- 
--- dag wieers, dag@wieers.com, http://dag.wieers.com/
--- dagit linux solutions, info@dagit.net, http://dagit.net/
-
-[Any errors in spelling, tact or fact are transmission errors]
+--Marco
