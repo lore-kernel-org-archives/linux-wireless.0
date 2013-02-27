@@ -1,57 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58967 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932964Ab3BOJVM (ORCPT
+Received: from intranet.asianux.com ([58.214.24.6]:16742 "EHLO
+	intranet.asianux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754962Ab3B0I5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Feb 2013 04:21:12 -0500
-Message-ID: <1360920070.15040.6.camel@jlt4.sipsolutions.net> (sfid-20130215_102117_194558_F6AC1B29)
-Subject: Re: [RFC] iw: support split wiphy dump
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dennis H Jensen <dennis.h.jensen@siemens.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Feb 2013 10:21:10 +0100
-In-Reply-To: <1360918601.12484.6.camel@djensen-laptop>
-References: <1360855759-2377-1-git-send-email-johannes@sipsolutions.net>
-	 <1360856049-2546-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130214_163418_636491_ECBFFDA6) <1360856422.8210.2.camel@jlt4.sipsolutions.net>
-	 <1360918601.12484.6.camel@djensen-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Feb 2013 03:57:16 -0500
+Message-ID: <512DCA59.4040800@asianux.com> (sfid-20130227_095730_647023_40E3486D)
+Date: Wed, 27 Feb 2013 16:56:57 +0800
+From: Chen Gang <gang.chen@asianux.com>
+MIME-Version: 1.0
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror
+ when no -W* in EXTRA_CFLAGS
+References: <512DADCA.9040609@asianux.com> <1385870.TegBXpTM9i@lx-vladimir>
+In-Reply-To: <1385870.TegBXpTM9i@lx-vladimir>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-02-15 at 09:56 +0100, Dennis H Jensen wrote:
-> On Thu, 2013-02-14 at 16:40 +0100, Johannes Berg wrote:
-> > On Thu, 2013-02-14 at 16:34 +0100, Johannes Berg wrote:
-> > > From: Johannes Berg <johannes.berg@intel.com>
-> > > 
-> > > This adds support for the new split wiphy dump,
-> > > it only uses it for "iw list", not for "info"
-> > > though, so far. Using it for "info" would mean
-> > > querying the kernel capability first and then
-> > > using get/dump (with filter) depending on that.
-> > 
-> > Dennis, are you up for implementing this in wpa_supplicant?
+于 2013年02月27日 16:45, Vladimir Kondratiev 写道:
+> On Wednesday, February 27, 2013 02:55:06 PM Chen Gang wrote:
+>>
+>>   When make with EXTRA_CFLAGS=-W, it will report error.
+>>   so give a check in Makefile.
+>>
+>> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+>> ---
+>>  drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
+>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+>> index 9396dc9..d288eea 100644
+>> --- a/drivers/net/wireless/ath/wil6210/Makefile
+>> +++ b/drivers/net/wireless/ath/wil6210/Makefile
+>> @@ -9,5 +9,7 @@ wil6210-objs += wmi.o
+>>  wil6210-objs += interrupt.o
+>>  wil6210-objs += txrx.o
+>>  
+>> -subdir-ccflags-y += -Werror
+>> +ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+>> +	subdir-ccflags-y += -Werror
+>> +endif
+>>  subdir-ccflags-y += -D__CHECK_ENDIAN__
+>>
+> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 > 
-> Great, this will solve it. I can handle the wpa_supplicant; give me a
-> couple of days to get it sorted.
+> Well, agree; -W triggers lots of warnings, I suspect all other places that use
+> -Werror should be problematic. Worth fixing all others? Quick look for v3.8 raises:
+> 
 
-FWIW, I think for wpa_s there are two possibilities:
- 1) simply always use NL_F_DUMP with NL80211_CMD_GET_WIPHY, and include
-    the filter & split attributes; this will mean on old kernels it will
-    retrieve information for all devices so you have to filter it
- 2) query the nl80211 global features first when initialising the
-    nl80211 sockets, and then use NL_F_DUMP with the filter only if the
-    feature is supported in the kernel
+  thank you for your suggestion.
+  after this patch applied, I will do for others (let you as signed-of-by, too).
 
-Both are about the same difficulty because for 2) you need the extra
-feature command (once at init) while for 1) you need an extra command to
-get the wiphy index for the device you care about for filtering. For 1)
-that command would be NL80211_CMD_GET_INTERFACE.
+  :-)
 
-> What's the procedure, do I post to both lists or just the hostap?
 
-Just hostap is fine.
+> linux$ find . -name Makefile | xargs grep -e -Werror
+> ./arch/sh/lib/Makefile:ccflags-y := -Werror
+> ./arch/sh/kernel/Makefile:ccflags-y := -Werror
+> ./arch/sh/mm/Makefile:ccflags-y := -Werror
+> ./arch/sh/cchips/hd6446x/Makefile:ccflags-y := -Werror
+> ./arch/sparc/prom/Makefile:ccflags := -Werror
+> ./arch/sparc/lib/Makefile:ccflags-y := -Werror
+> ./arch/sparc/kernel/Makefile:ccflags-y := -Werror
+> ./arch/sparc/mm/Makefile:ccflags-y := -Werror
+> ./arch/alpha/lib/Makefile:ccflags-y := -Werror
+> ./arch/alpha/oprofile/Makefile:ccflags-y := -Werror -Wno-sign-compare
+> ./arch/alpha/mm/Makefile:ccflags-y := -Werror
+> ./arch/powerpc/kvm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/lib/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/kernel/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/oprofile/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/xmon/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/mm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/sysdev/xics/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/platforms/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./arch/powerpc/perf/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+> ./Makefile:                -Werror-implicit-function-declaration \
+> ./tools/perf/Makefile:  CFLAGS_WERROR := -Werror
+> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -fstack-protector-all,-fstack-protector-all),y)
+> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wstack-protector,-Wstack-protector),y)
+> ./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wvolatile-register-var,-Wvolatile-register-var),y)
+> ./drivers/scsi/lpfc/Makefile:ccflags-y += -Werror
+> ./drivers/scsi/aic7xxx/Makefile:ccflags-y += -Werror
+> ./drivers/staging/omapdrm/Makefile:ccflags-y := -Iinclude/drm -Werror
+> ./drivers/net/wireless/ath/wil6210/Makefile:subdir-ccflags-y += -Werror
+> 
+> 
+> 
 
-johannes
 
+-- 
+Chen Gang
+
+Asianux Corporation
