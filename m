@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47700 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760313Ab3BLQCQ (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:50228 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865Ab3B0PG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:02:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/15] iwlwifi: mvm: fix the keyidx assignment
-Date: Tue, 12 Feb 2013 17:01:57 +0100
-Message-Id: <1360684927-1367-5-git-send-email-johannes@sipsolutions.net> (sfid-20130212_170231_174143_FB6BE8AB)
-In-Reply-To: <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
- <1360684927-1367-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 27 Feb 2013 10:06:59 -0500
+Received: by mail-ie0-f180.google.com with SMTP id bn7so725757ieb.11
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 07:06:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1361968754.8172.6.camel@jlt4.sipsolutions.net>
+References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+	<CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com>
+	<1361968754.8172.6.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Feb 2013 16:06:59 +0100
+Message-ID: <CAL1gcdM2a_7u+M+LZrUA+q2fO2Xo=ZYmpgSQEhJ0LebiwmkiwQ@mail.gmail.com> (sfid-20130227_160702_771272_C324B3DE)
+Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, Feb 27, 2013 at 1:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2013-02-27 at 13:37 +0100, Gertjan van Wingerde wrote:
+>> Hi Felix,
+>>
+>> On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> > If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
+>
+> typo: "will not allow"
+>
+>> > interface combinations with NL80211_IFTYPE_MESH_POINT present.
+>> > Add appropriate ifdefs to avoid running into errors.
+>>
+>> I'm not sure if rt2x00 is the proper place to fix this. To me it
+>> doesn't look good to have to sprinkle these kind of ifdefs throughout
+>> the drivers to check if mac80211 has mesh enabled.
+>> I would prefer a solution where drivers are still able to indicate
+>> that they support mesh interfaces, but where mac80211/cfg80211 prevent
+>> these kind of interfaces from being created.
+>>
+>> @Johannes: What is your view on this?
+>
+> It would be nicer, but the data is const so mac80211 can't modify it,
+> and I don't see that we should add a lot of code/handshaking to
+> mac80211/cfg80211 just to avoid one ifdef here.
+>
 
-Fixes an issue that smatch pointed out:
+OK. No worries. Was just looking if there was an alternative.
 
-  1118
-  1119          key_flags = cpu_to_le16(keyconf->keyidx &  STA_KEY_FLG_KEYID_MSK);
-                                        ^^^^^^^^^^^^^^^
-This is s8.
-                                                          ^^^^^^^^^^^^^^^^^^^^^
-STA_KEY_FLG_KEYID_MSK is 0x300.
+I'll ack Felix' patch then
 
-The result after the bitwise AND is always zero because 0xff & 0x300.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/sta.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 69603c3..8f8b66e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -1116,7 +1116,8 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 	if (WARN_ON_ONCE(mvm_sta->vif != vif))
- 		return -EINVAL;
- 
--	key_flags = cpu_to_le16(keyconf->keyidx & STA_KEY_FLG_KEYID_MSK);
-+	key_flags = cpu_to_le16((keyconf->keyidx << STA_KEY_FLG_KEYID_POS) &
-+				 STA_KEY_FLG_KEYID_MSK);
- 	key_flags |= cpu_to_le16(STA_KEY_FLG_NO_ENC | STA_KEY_FLG_WEP_KEY_MAP);
- 	key_flags |= cpu_to_le16(STA_KEY_NOT_VALID);
- 
 -- 
-1.8.0
-
+---
+Gertjan
