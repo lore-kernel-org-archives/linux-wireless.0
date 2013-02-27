@@ -1,133 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60248 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946798Ab3BHRZv (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62951 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755697Ab3B0Ipk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 12:25:51 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 03/14] mac80211: track number of spatial streams
-Date: Fri,  8 Feb 2013 18:25:33 +0100
-Message-Id: <1360344344-15742-4-git-send-email-johannes@sipsolutions.net> (sfid-20130208_183342_165732_5C637B87)
-In-Reply-To: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
-References: <1360344344-15742-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 27 Feb 2013 03:45:40 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Chen Gang <gang.chen@asianux.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+	"netdev@vger.kernel.org >> netdev" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] drivers/net/wireless/ath/wil6210: Makefile, only -Werror when no -W* in EXTRA_CFLAGS
+Date: Wed, 27 Feb 2013 10:45:26 +0200
+Message-ID: <1385870.TegBXpTM9i@lx-vladimir> (sfid-20130227_094550_211822_3C1CE54E)
+In-Reply-To: <512DADCA.9040609@asianux.com>
+References: <512DADCA.9040609@asianux.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wednesday, February 27, 2013 02:55:06 PM Chen Gang wrote:
+> 
+>   When make with EXTRA_CFLAGS=-W, it will report error.
+>   so give a check in Makefile.
+> 
+> Signed-off-by: Chen Gang <gang.chen@asianux.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/Makefile |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+> index 9396dc9..d288eea 100644
+> --- a/drivers/net/wireless/ath/wil6210/Makefile
+> +++ b/drivers/net/wireless/ath/wil6210/Makefile
+> @@ -9,5 +9,7 @@ wil6210-objs += wmi.o
+>  wil6210-objs += interrupt.o
+>  wil6210-objs += txrx.o
+>  
+> -subdir-ccflags-y += -Werror
+> +ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
+> +	subdir-ccflags-y += -Werror
+> +endif
+>  subdir-ccflags-y += -D__CHECK_ENDIAN__
+> 
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-With VHT, a station can change the number of spatial
-streams it can receive on the fly, not unlike spatial
-multiplexing in HT. Prepare for that by tracking the
-maximum number of spatial streams it can receive when
-the connection is established.
+Well, agree; -W triggers lots of warnings, I suspect all other places that use
+-Werror should be problematic. Worth fixing all others? Quick look for v3.8 raises:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |  5 +++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/rate.h        |  2 ++
- net/mac80211/vht.c         | 41 +++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 49 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6a2290b..972253a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1226,6 +1226,10 @@ enum ieee80211_sta_rx_bandwidth {
-  *	if wme is supported.
-  * @max_sp: max Service Period. Only valid if wme is supported.
-  * @bandwidth: current bandwidth the station can receive with
-+ * @rx_nss: in HT/VHT, the maximum number of spatial streams the
-+ *	station can receive at the moment, changed by operating mode
-+ *	notifications and capabilities. The value is only valid after
-+ *	the station moves to associated state.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[IEEE80211_NUM_BANDS];
-@@ -1236,6 +1240,7 @@ struct ieee80211_sta {
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-+	u8 rx_nss;
- 	enum ieee80211_sta_rx_bandwidth bandwidth;
- 
- 	/* must be last */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2a081b0..2a8f651 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1428,6 +1428,7 @@ void ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_vht_cap *vht_cap_ie,
- 					 struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
-+void ieee80211_sta_set_rx_nss(struct sta_info *sta);
- 
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 301386d..d35a5dd 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -68,6 +68,8 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	sband = local->hw.wiphy->bands[chanctx_conf->def.chan->band];
- 	rcu_read_unlock();
- 
-+	ieee80211_sta_set_rx_nss(sta);
-+
- 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
- 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
- }
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 0fc9a2f..67436e3 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -74,3 +74,44 @@ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta)
- 		return IEEE80211_STA_RX_BW_80;
- 	}
- }
-+
-+void ieee80211_sta_set_rx_nss(struct sta_info *sta)
-+{
-+	u8 ht_rx_nss = 0, vht_rx_nss = 0;
-+
-+	/* if we received a notification already don't overwrite it */
-+	if (sta->sta.rx_nss)
-+		return;
-+
-+	if (sta->sta.ht_cap.ht_supported) {
-+		if (sta->sta.ht_cap.mcs.rx_mask[0])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[1])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[2])
-+			ht_rx_nss++;
-+		if (sta->sta.ht_cap.mcs.rx_mask[3])
-+			ht_rx_nss++;
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	if (sta->sta.vht_cap.vht_supported) {
-+		int i;
-+		u16 rx_mcs_map;
-+
-+		rx_mcs_map = le16_to_cpu(sta->sta.vht_cap.vht_mcs.rx_mcs_map);
-+
-+		for (i = 7; i >= 0; i--) {
-+			u8 mcs = (rx_mcs_map >> (2 * i)) & 3;
-+
-+			if (mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED) {
-+				vht_rx_nss = i + 1;
-+				break;
-+			}
-+		}
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	ht_rx_nss = max(ht_rx_nss, vht_rx_nss);
-+	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
-+}
--- 
-1.8.0
+linux$ find . -name Makefile | xargs grep -e -Werror
+./arch/sh/lib/Makefile:ccflags-y := -Werror
+./arch/sh/kernel/Makefile:ccflags-y := -Werror
+./arch/sh/mm/Makefile:ccflags-y := -Werror
+./arch/sh/cchips/hd6446x/Makefile:ccflags-y := -Werror
+./arch/sparc/prom/Makefile:ccflags := -Werror
+./arch/sparc/lib/Makefile:ccflags-y := -Werror
+./arch/sparc/kernel/Makefile:ccflags-y := -Werror
+./arch/sparc/mm/Makefile:ccflags-y := -Werror
+./arch/alpha/lib/Makefile:ccflags-y := -Werror
+./arch/alpha/oprofile/Makefile:ccflags-y := -Werror -Wno-sign-compare
+./arch/alpha/mm/Makefile:ccflags-y := -Werror
+./arch/powerpc/kvm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/lib/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/kernel/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/oprofile/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/xmon/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/mm/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/sysdev/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/sysdev/xics/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/platforms/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./arch/powerpc/perf/Makefile:subdir-ccflags-$(CONFIG_PPC_WERROR) := -Werror
+./Makefile:                -Werror-implicit-function-declaration \
+./tools/perf/Makefile:  CFLAGS_WERROR := -Werror
+./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -fstack-protector-all,-fstack-protector-all),y)
+./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wstack-protector,-Wstack-protector),y)
+./tools/perf/Makefile:ifeq ($(call try-cc,$(SOURCE_HELLO),$(CFLAGS) -Werror -Wvolatile-register-var,-Wvolatile-register-var),y)
+./drivers/scsi/lpfc/Makefile:ccflags-y += -Werror
+./drivers/scsi/aic7xxx/Makefile:ccflags-y += -Werror
+./drivers/staging/omapdrm/Makefile:ccflags-y := -Iinclude/drm -Werror
+./drivers/net/wireless/ath/wil6210/Makefile:subdir-ccflags-y += -Werror
 
