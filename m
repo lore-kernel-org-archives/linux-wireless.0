@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:43144 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932846Ab3BSXRP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 18:17:15 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 19 Feb 2013 15:17:06 -0800
-Subject: RE: [PATCH 1/2] mwifiex: coding style cleanup in bss parameter
- update
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D6CE58A@SC-VEXCH1.marvell.com> (sfid-20130220_001719_920241_5895F3F7)
-References: <1360993470-4828-1-git-send-email-bzhao@marvell.com>
-	 <1360993470-4828-2-git-send-email-bzhao@marvell.com>
- <1361003317.3444.4.camel@joe-AO722>
-In-Reply-To: <1361003317.3444.4.camel@joe-AO722>
-Content-Type: text/plain; charset=US-ASCII
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:54815 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758245Ab3B0TBG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 14:01:06 -0500
+Cc: Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Wed, 27 Feb 2013 11:20:30 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+Message-ID: <20130227192030.GW12537@pogo> (sfid-20130227_200120_788185_C6345147)
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+ <20757.1753.863278.858198@gargle.gargle.HOWL>
+ <511508A6.8020104@openwrt.org>
+ <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+ <51152D9E.1040106@openwrt.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <51152D9E.1040106@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
-
-Thanks for your comment.
-
-> On Fri, 2013-02-15 at 21:44 -0800, Bing Zhao wrote:
-> > From: Yogesh Ashok Powar <yogeshp@marvell.com>
-> > They all can make one line.
-> []
-> > diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> []
-> > @@ -1485,20 +1485,15 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
-> >  	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
-> >  	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
-> >  	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
-> > -	priv->curr_bss_params.bss_descriptor.ht_cap_offset =
-> > -		0;
-> > +	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
+On Fri, Feb 08, 2013 at 05:53:50PM +0100, Felix Fietkau wrote:
+> On 2013-02-08 5:38 PM, Paul Stewart wrote:
+> > Could you share some of the test results?  I know with ChromeOS when
+> > we switched to 3.4, the first thing that tipped us off to the fact
+> > that we had inadvertently switch to minstrel was that our RvR
+> > throughput values had dropped significantly.  Has anyone done an RvR
+> > comparison between minstrel and the ath9k internal rate control
+> > lately?
+> Are you sure it was minstrel_ht, or could it also have been minstrel
+> (the legacy version)? I don't have any recent RvR test results, however
+> on every single link that I tested both rate control modules on (leaving
+> everything else unchanged), minstrel_ht got slightly better results.
+> Additionally, I occasionally get asked for help on debugging low
+> throughput issues, and many of the people asking me have reported that
+> simply switching to minstrel_ht fixed these issues in their tests.
 > 
-> Another way to do this to reduce the visual noise it to
-> create a temporary
-> 	struct mwifiex_bssdescriptor *t = &priv->curr_bss_params.bss_descriptor;
-> and use
-> 	s/priv->curr_bss_params.bss_descriptor./t->/
+> I would also like to see some real RvR tests comparing both, preferably
+> before this gets merged, which is why I sent it as RFC.
 
-This does look better.
+Paul, curious if you've run any tests?
 
-As the patch is in wireless-next now I can make the change later.
-
-Thanks,
-Bing
+  Luis
