@@ -1,78 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:45462 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753469Ab3BNBdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 20:33:24 -0500
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] brcmsmac: Downgrade d11hdrs_mac80211 error messages to warnings.
-Date: Wed, 13 Feb 2013 17:33:20 -0800
-Message-Id: <d9d111bab5b3186e858c9e85849a2ec61a7451f3.1360805256.git.joe@perches.com> (sfid-20130214_023328_153062_503D6B6E)
+Received: from he.sipsolutions.net ([78.46.109.217]:50180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758987Ab3B0Mcp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 07:32:45 -0500
+Message-ID: <1361968360.8172.5.camel@jlt4.sipsolutions.net> (sfid-20130227_133248_939108_65E9D6FC)
+Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
+ userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Piotr Haber <phaber@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 27 Feb 2013 13:32:40 +0100
+In-Reply-To: <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
+References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+	 <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages don't seem to be errors but notifications
-that some attribute isn't quite right.
+On Wed, 2013-02-27 at 13:30 +0100, Piotr Haber wrote:
 
-Don't mark them as errors.
+> seems like this patch pushed wiphy info length over the limit
+> for dual band devices.
+> So userspace cannot get any info about phy capabilities.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c | 29 ++++++++++++--------------
- 1 file changed, 13 insertions(+), 16 deletions(-)
+Yeah ... was it this patch? I did revert some others, but I guess it
+depends.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index e80825e..b3ea15e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -6443,10 +6443,9 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 
- 			if ((txrate[k]->flags & IEEE80211_TX_RC_MCS)
- 			    && (!is_mcs_rate(rspec[k]))) {
--				brcms_err(wlc->hw->d11core,
--					  "wl%d: %s: IEEE80211_TX_"
--					  "RC_MCS != is_mcs_rate(rspec)\n",
--					  wlc->pub->unit, __func__);
-+				brcms_warn(wlc->hw->d11core,
-+					   "wl%d: %s: IEEE80211_TX_RC_MCS != is_mcs_rate(rspec)\n",
-+					   wlc->pub->unit, __func__);
- 			}
- 
- 			if (is_mcs_rate(rspec[k])) {
-@@ -6838,21 +6837,19 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 					wlc->fragthresh[queue] =
- 					    (u16) newfragthresh;
- 			} else {
--				brcms_err(wlc->hw->d11core,
--					  "wl%d: %s txop invalid "
--					  "for rate %d\n",
--					  wlc->pub->unit, fifo_names[queue],
--					  rspec2rate(rspec[0]));
-+				brcms_warn(wlc->hw->d11core,
-+					   "wl%d: %s txop invalid for rate %d\n",
-+					   wlc->pub->unit, fifo_names[queue],
-+					   rspec2rate(rspec[0]));
- 			}
- 
- 			if (dur > wlc->edcf_txop[ac])
--				brcms_err(wlc->hw->d11core,
--					  "wl%d: %s: %s txop "
--					  "exceeded phylen %d/%d dur %d/%d\n",
--					  wlc->pub->unit, __func__,
--					  fifo_names[queue],
--					  phylen, wlc->fragthresh[queue],
--					  dur, wlc->edcf_txop[ac]);
-+				brcms_warn(wlc->hw->d11core,
-+					   "wl%d: %s: %s txop exceeded phylen %d/%d dur %d/%d\n",
-+					   wlc->pub->unit, __func__,
-+					   fifo_names[queue],
-+					   phylen, wlc->fragthresh[queue],
-+					   dur, wlc->edcf_txop[ac]);
- 		}
- 	}
- 
--- 
-1.8.1.2.459.gbcd45b4.dirty
+> I know there is a patch for nl80211 and iw to allow splitting of this info,
+> but it is not in 3.8
+> Should we not revert it for stable then?
+
+Yeah we can revert this too, a la the patches already in to remove TCP
+wakeup and radar info. What kernel are you testing?
+
+johannes
 
