@@ -1,76 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:37059 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758571Ab3BLQhT (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:54379 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab3B0MhV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 11:37:19 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [PATCHv2 0/1] mac80211: fix VLAN support on AP with ps-sta
-Date: Tue, 12 Feb 2013 17:37:17 +0100
-Message-Id: <1360687038-17610-1-git-send-email-michael-dev@fami-braun.de> (sfid-20130212_173722_904967_36A32732)
+	Wed, 27 Feb 2013 07:37:21 -0500
+Received: by mail-ie0-f182.google.com with SMTP id k14so515904iea.41
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 04:37:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+Date: Wed, 27 Feb 2013 13:37:20 +0100
+Message-ID: <CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com> (sfid-20130227_133725_662731_7731F824)
+Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+Hi Felix,
 
-Users are affected by not receiving the broadcasts indended for them, which for
-example breaks ipv6 autoconf and therefore ipv6 connectivity. Further, they
-might be affected as packets might be disclosed to non-intended stas, though
-mixing vlan and non-vlan stas might be rare.
-This problem is triggered more often by smartphones (which enabled me to track
-it down) as they power sleep more often (I guess), but a single sleeping sta on
-the ap stops the packet for all connected stas of the ap.
-The problem exists in older kernels (at least 3.3.7) as well.
+On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
+> interface combinations with NL80211_IFTYPE_MESH_POINT present.
+> Add appropriate ifdefs to avoid running into errors.
 
-The following patch fixes this by restoring the per-vlan sdata using the
-skb->dev entry.
+I'm not sure if rt2x00 is the proper place to fix this. To me it
+doesn't look good to have to sprinkle these kind of ifdefs throughout
+the drivers to check if mac80211 has mesh enabled.
+I would prefer a solution where drivers are still able to indicate
+that they support mesh interfaces, but where mac80211/cfg80211 prevent
+these kind of interfaces from being created.
 
-Is it safe to assume that skb->dev is always set correctly there?
-This patch works for me with the vlan-interface within a bridge.
+@Johannes: What is your view on this?
 
-Would it be better to maintain the power sleeping state of the stas on a
-per-interface basis, as this would permit one group of non-sleeping stas to
-receive while another group has sleeping stas? Of course this would not
-prevent non-targetted groups of stas to be waked up, but implementing the
-latter sounds difficult to me.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 1031db6..189744d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1236,8 +1236,10 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
+>          */
+>         if_limit = &rt2x00dev->if_limits_ap;
+>         if_limit->max = rt2x00dev->ops->max_ap_intf;
+> -       if_limit->types = BIT(NL80211_IFTYPE_AP) |
+> -                       BIT(NL80211_IFTYPE_MESH_POINT);
+> +       if_limit->types = BIT(NL80211_IFTYPE_AP);
+> +#ifdef CONFIG_MAC80211_MESH
+> +       if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
+> +#endif
+>
+>         /*
+>          * Build up AP interface combinations structure.
+> @@ -1309,7 +1311,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+>                 rt2x00dev->hw->wiphy->interface_modes |=
+>                     BIT(NL80211_IFTYPE_ADHOC) |
+>                     BIT(NL80211_IFTYPE_AP) |
+> +#ifdef CONFIG_MAC80211_MESH
+>                     BIT(NL80211_IFTYPE_MESH_POINT) |
+> +#endif
+>                     BIT(NL80211_IFTYPE_WDS);
+>
+>         rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+> --
+> 1.8.0.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Example old backtrace:
 
-Using good key:
-[ 301.020467] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.029146] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.037249] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 301.044688] wlan0_2.501: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data de 46 7b 31 4f a3 13 8b 88 0b 4e fb 3f 77 d0 18
-
-Using wrong key:
-[ 305.000447] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.009136] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.017238] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:01
-[ 305.171713] ieee80211_tx_prepare:1174 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.179314] ieee80211_get_buffered_bc:2797 wlan0: multicast packet to 33:33:00:00:00:01
-[ 305.187359] wlan0: packet to 33:33:00:00:00:01 using key type CCMP idx 1 len 16 data ca 85 0f 27 80 78 83 09 49 7a fb c8 c4 dc 45 aa
-
-Example new backtrace:
-[ 3157.866478] ieee80211_subif_start_xmit:2000 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.875129] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.883227] ieee80211_tx:1442 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.916991] ieee80211_tx_prepare:1174 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.925111] ieee80211_get_buffered_bc:2798 wlan0_2.501: multicast packet to 33:33:00:00:00:16
-[ 3157.933667] wlan0_2.501: packet to 33:33:00:00:00:16 using key type CCMP idx 1 len 16 data  2d 06 89 89 27 74 3e e6 53 22 4b d4 5e 50 c0 39
-
-
-Michael Braun (1):
-  mac80211: Fix WPA with VLAN on AP side with ps client
-
- net/mac80211/tx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
 -- 
-1.7.10.4
-
+---
+Gertjan
