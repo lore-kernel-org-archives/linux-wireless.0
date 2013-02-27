@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:62734 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757815Ab3BZT27 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34003 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756493Ab3B0MYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Feb 2013 14:28:59 -0500
+	Wed, 27 Feb 2013 07:24:15 -0500
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+CC: "John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RFC] P2P find offload
+Date: Wed, 27 Feb 2013 14:24:11 +0200
+Message-ID: <3408094.SIuA27EmQ5@lx-vladimir> (sfid-20130227_132419_778216_5846EB15)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com>
-References: <1361648055-15871-1-git-send-email-kazikcz@gmail.com>
-	<CAB=NE6WAKjktv8G1eikkfkbB7KAa_XefJj-udfH8b_vvgLbznQ@mail.gmail.com>
-Date: Tue, 26 Feb 2013 20:28:58 +0100
-Message-ID: <CABvG-CW+ykoZMz49UNS11=rLViNQ3uyo-sHeJqOdp06Vwd628g@mail.gmail.com> (sfid-20130226_202923_361926_F3725329)
-Subject: Re: [PATCH] ath: sanitize 0xFFFF regdomain
-From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: David Quan <dquan@qca.qualcomm.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 February 2013 19:29, Luis R. Rodriguez <mcgrof@qca.qualcomm.com> wrote:
-> NACK. This comes up every now and then and this is not a valid device
-> ID, this is an issue with the card, so what you can do is adjust the
-> device ID post bootup. Not sure if distros have an easy way to set
-> this up, if not perhaps this should be considered as this has come up
-> twice before.
+Intro:
 
-The erroneous 0xFFFF value comes from using one of eeprom_ops
-implementations. Do you suggest I should fool ath regd code to think
-this is a different card so it picks a different (perhaps correct, if
-at all) eeprom_ops variant? How do I do that?
+P2P scan consists of scan and find phases.
+Scan is just usual scan.
+Find phase consists of search and listen states.
+Currently, 'search' state implemented as 'scan'
+and 'listen' state implemented as 'remain on channel'
 
->From what I can tell this is in the pci probing and I can't see any
-way to skip the regd initialisation. I don't see how current_rd can
-have a value other than 0xFFFF for this device in this code path.
+Recently spec for 60GHz band added, defining new procedures.
+For 60GHz devices, spec defined search state in the way that can't be
+simulated by the scan. On the 60GHz band, device in the 'search' state
+transmits specially crafted DMG beacon frames, while in scan state it does
+not transmit DMG beacon frames.
 
-Or am I missing something?
+GO resolution for 60GHz devices performed based on 'PCP factor' calculated
+by certain bits of probe request/response frames. GO negotiation frames are
+sent, but used to negotiate the rest of parameters like operational channel.
 
+Proposal:
 
--- Michal.
+Enable p2p find phase offload to the driver.
+Add methods for the struct cfg80211_ops, like
+
+	int	(*start_p2p_find)(struct wiphy *wiphy,
+				  struct cfg80211_p2p_find_params *params);
+	void	(*stop_p2p_find)(struct wiphy *wiphy);
+
+where struct cfg80211_p2p_find_params includes info elements
+to be added for probe request and probe response frames;
+social channels etc.
+
+wpa_supplicant will call these methods through nl80211.
+
+Driver responsible for toggling between search and listen states,
+reporting probe request/response frames to the user space.
+
+Driver/firmware may answer to the probe request frames on itself,
+in this case probe requests are still reported.
+
+To satisfy requirements for 60GHz band, additional attribute 'pcp_resolution'
+shall be added to the reported frames, indicating result of the PCP resolution.
+This attribute carries result of PCP factor comparison between probe request
+and response, as defined in the spec for 60GHz. It is enum having values
+'undefined', 'win' and 'lose'.
+For the 2.4GHz band devices, PCP resolution is not used and pcp_resolution
+attribute set to 'undefined'
+
+Rationale:
+
+- For all devices, this allows for better time utilization since
+there is no need to 'close' each phase and return back to the idle state.
+
+- Option to answer probe request in the driver/firmware allows to use firmware
+capabilities.
+
+- Enabler for 60GHz devices.
+
+Comments?
+
+Thanks, Vladimir.
+
