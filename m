@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50632 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756615Ab3BVOuo (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:54831 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756626Ab3B0Nk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Feb 2013 09:50:44 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH v2 3/5] ath6kl: Return error from ath6kl_bmi_done()
-Date: Fri, 22 Feb 2013 20:20:21 +0530
-Message-ID: <1361544621-8971-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130222_155046_980920_F906A5A0)
+	Wed, 27 Feb 2013 08:40:27 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ez12so664092wid.0
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 05:40:25 -0800 (PST)
+Date: Wed, 27 Feb 2013 14:38:02 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH 2/2] mac80211: fix the check for mcs rates masking
+Message-ID: <20130227133802.GA28291@magnum.frso.rivierawaves.com> (sfid-20130227_144031_404768_364227C2)
+References: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
+ <1361966434-28343-2-git-send-email-karl.beldan@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1361966434-28343-2-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Feb 27, 2013 at 01:00:34PM +0100, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> Currently the mcs bitrates mask rate_idx_mcs_mask is only applied when
+> the pre-ht bitrates mask rate_idx_mask of the same band differs from the
+> default mask.
+> Fix it by comparing the rate_idx_mcs_mask with the ht_cap.mcs.rx_mask, the
+> copy of the rate_idx_mcs_mask is now done if the check succeeds.
+> This results, when no pre-ht bitrates is disabled && an mcs idx is, to
+> one more memcmp, otherwise the cost remains identical.
+> 
+> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> ---
+>  net/mac80211/rate.c |    7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+> index cfbd7d5..4c0a14d 100644
+> --- a/net/mac80211/rate.c
+> +++ b/net/mac80211/rate.c
+> @@ -460,8 +460,11 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+>  	 * the common case.
+>  	 */
+>  	mask = txrc->rate_idx_mask;
+> -	memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+> -	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
+> +	if (mask != (1 << txrc->sband->n_bitrates) - 1 ||
+> +		memcmp(txrc->sband->ht_cap.mcs.rx_mask, txrc->rate_idx_mcs_mask,
+> +		       sizeof(txrc->rate_idx_mcs_mask))) {
+> +		memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+> +
+>  		if (sta) {
+> 
 
-This addresses a FIXME in the driver.
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    6 ++----
- drivers/net/wireless/ath/ath6kl/sdio.c |    6 ++++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 5d434cf..072a229 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1569,11 +1569,9 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
- 		goto err_power_off;
- 
- 	/* Do we need to finish the BMI phase */
--	/* FIXME: return error from ath6kl_bmi_done() */
--	if (ath6kl_bmi_done(ar)) {
--		ret = -EIO;
-+	ret = ath6kl_bmi_done(ar);
-+	if (ret)
- 		goto err_power_off;
--	}
- 
- 	/*
- 	 * The reason we have to wait for the target here is that the
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index d111980..0bd8ff6 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1123,10 +1123,12 @@ static int ath6kl_sdio_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
- 
- 	ret = ath6kl_sdio_read_write_sync(ar, addr, buf, len,
- 					  HIF_WR_SYNC_BYTE_INC);
--	if (ret)
-+	if (ret) {
- 		ath6kl_err("unable to send the bmi data to the device\n");
-+		return ret;
-+	}
- 
--	return ret;
-+	return 0;
- }
- 
- static int ath6kl_sdio_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
--- 
-1.7.9.5
-
+I don't know why I refrained myself from getting rid of the copies of
+the masks altogether.
