@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60858 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946915Ab3BHTp3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Feb 2013 14:45:29 -0500
-Date: Fri, 8 Feb 2013 14:43:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [GIT] [3.9] NFC pull request
-Message-ID: <20130208194324.GI2116@tuxdriver.com> (sfid-20130208_204535_002201_105F70A0)
-References: <20130208132335.GB20996@sortiz-mobl>
+Received: from mms3.broadcom.com ([216.31.210.19]:2754 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753583Ab3B0MsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 07:48:17 -0500
+Message-ID: <512E0087.4070006@broadcom.com> (sfid-20130227_134821_749316_FED26147)
+Date: Wed, 27 Feb 2013 13:48:07 +0100
+From: "Piotr Haber" <phaber@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130208132335.GB20996@sortiz-mobl>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
+ userspace
+References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
+ <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
+ <1361968360.8172.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1361968360.8172.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 08, 2013 at 02:23:35PM +0100, Samuel Ortiz wrote:
-> Hi John,
+On 02/27/13 13:32, Johannes Berg wrote:
+> On Wed, 2013-02-27 at 13:30 +0100, Piotr Haber wrote:
 > 
-> This is the second NFC pull request for 3.9.
+>> seems like this patch pushed wiphy info length over the limit
+>> for dual band devices.
+>> So userspace cannot get any info about phy capabilities.
 > 
-> We have:
-> 
-> - A few pn533 fixes on top of Waldemar refactorization of the driver, one of
->   them fixes target mode.
-> 
-> - A new driver for Inside Secure microread chipset. It supports two
->   physical layers: i2c and MEI. The MEI one depends on a patchset that's
->   been sent to Greg Kroah-Hartman for inclusion into the 3.9 kernel [1]. The
->   dependency is a KConfig one which means this code is not buildable as long
->   as the MEI API is not usptream.
-> 
-> Thanks in advance for pulling them in.
-> 
-> [1] https://lkml.org/lkml/2013/2/8/165
-> 
-> 
-> The following changes since commit 9ebea3829fac7505e0cd2642fbd13cfa9c038831:
-> 
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-01-28 13:54:03 -0500)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.9-2
-> 
-> for you to fetch changes up to 52f2eaeec11c16c219f0e99b8496fbba86889830:
-> 
->   NFC: pn533: Fix target polling mode (2013-02-08 12:18:48 +0100)
+> Yeah ... was it this patch? I did revert some others, but I guess it
+> depends.
+did not bisect, but that was the last big thing added there
 
-Pulling now...
+>> I know there is a patch for nl80211 and iw to allow splitting of this info,
+>> but it is not in 3.8
+>> Should we not revert it for stable then?
+> 
+> Yeah we can revert this too, a la the patches already in to remove TCP
+> wakeup and radar info. What kernel are you testing?
+> 
+i have one built from wireless-testing master-2013-02-19
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
