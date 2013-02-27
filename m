@@ -1,28 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outrelay03.libero.it ([212.52.84.103]:60577 "EHLO
-	outrelay03.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755801Ab3BYSSS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 13:18:18 -0500
-Message-ID: <11214452.15864921361816296422.JavaMail.defaultUser@defaultHost> (sfid-20130225_191824_960978_FB50A34D)
-Date: Mon, 25 Feb 2013 19:18:16 +0100 (CET)
-From: Fabio Rossi <rossi.f@inwind.it>
-Reply-To: Fabio Rossi <rossi.f@inwind.it>
-To: linux-wireless@vger.kernel.org
-Subject: regression with kernel 3.8
+Received: from mx1.redhat.com ([209.132.183.28]:34846 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751937Ab3B0Kmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 05:42:38 -0500
+Date: Wed, 27 Feb 2013 11:42:48 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: Re: [PATCH 2/6] mac80211: sync suspend and stop interface
+Message-ID: <20130227104247.GA3016@redhat.com> (sfid-20130227_114241_816588_28ABA445)
+References: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
+ <1361793008-2857-2-git-send-email-sgruszka@redhat.com>
+ <1361911440.8440.12.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1361911440.8440.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm using the latest wireless-testing.git and I have found a regression with 
-kernel 3.8. I don't know if this is related to the driver I'm using (ath5k) but 
-I have bisected the problem to the commit 
-6c17b77b67587b9f9e3070fb89fe98cef3187131 (mac80211: Fix tx queue handling 
-during scans). Basically the authentication and association infos don't appear 
-anymore in the kernel logs during a connection to my access point.
+On Tue, Feb 26, 2013 at 09:44:00PM +0100, Johannes Berg wrote:
+> More generally, does this really make much sense? There are other things
+> here, e.g. ieee80211_configure_filter(), ieee80211_recalc_ps(),
+> ieee80211_hw_config() and probably more that can be executed in this
+> function -- I don't think protecting these two calls is really
+> sufficient?
 
-Tell me what you need to further debug the issue and solve the problem.
+Seems all other drv calls like those on ieee80211_confgure_fitler() do
+not require sdata. So this is most likely sufficient. I'm able to
+reporduce warnings on rt2x00 usb with commit 
+761ce8c41ed20ee3af77f2df527edc3f92e6f3bf reverted. This patch make
+them gone.
 
-Fabio
+Stanislaw
 
