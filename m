@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:21924 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755216Ab3BYQrT (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28888 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003Ab3B0FgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Feb 2013 11:47:19 -0500
-Message-ID: <dd086e962ac49f0cd3f1a255ca849de2.squirrel@www.infidigm.net> (sfid-20130225_174725_098237_17037CF9)
-Date: Mon, 25 Feb 2013 12:48:27 -0500
-Subject: RE: AR9374 Rev 1.3/RevB USB Linux drivers?
-From: drwho@infidigm.net
-To: tcc@innovelec.co.uk
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com
+	Wed, 27 Feb 2013 00:36:08 -0500
+Message-ID: <512D9B41.40608@qca.qualcomm.com> (sfid-20130227_063612_777879_BFD0BDD1)
+Date: Wed, 27 Feb 2013 11:06:01 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Myoungje Kim <mjei78@gmail.com>
+CC: <vthiagar@qca.qualcomm.com>, <sumathi@qca.qualcomm.com>,
+	<kvalo@qca.qualcomm.com>,
+	ath6kl-devel <ath6kl-devel@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ATH6KL: "Fix the byte alignment rule to avoid loss of
+ bytes in a TCP segment"
+References: <CABzs15B0TN=AgF+j9ZZL0yrfXwO31BJktRbXMwcwC5X2ricrkQ@mail.gmail.com>
+In-Reply-To: <CABzs15B0TN=AgF+j9ZZL0yrfXwO31BJktRbXMwcwC5X2ricrkQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trevor,
+Hi Kim,
 
-I am moving data on the AR9374-4L3E (hw1.3) in 2.6.35 on an arm using
-compat-wireless 3.8-1 up to MCS 7 rate, 40Mhz.  (I haven't figured out how
-to get the MIMO to work yet - I think the AR9374 goes to MCS 15?)
+On 02/27/2013 10:47 AM, Myoungje Kim wrote:
+> Hello
+> I am Steven Kim.
+>
+> I found the driver bug which occur loss of some bytes on the TCP/IP stack.
+> Please check this patch and pull-request on github.com.
+> https://github.com/torvalds/linux/pull/27
 
-Jon
+please cc ath6kl-devel, Linux-wireless and send the patches
+in git-send email. thanks!
 
->Hello Kalle
 >
->We're using Ubuntu 10.04 with Kernel 2.6.32
+> Best Regards
 >
->We got the open source driver from QCA via their support portal -
->ath6kl_usb_3.2.1_RC
+> Steven
 >
->Rev B is the correct chip designation for the AR9374 silicon (that is the
->same as hw1.3) - so AR9374-BL3D is the full chip number
->
->We're getting mixed messages about support for this version in the open
->community.
->
->Thanks
->
->Trevor
 
+
+-- 
+thanks,
+shafi
