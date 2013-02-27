@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56286 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932434Ab3BNRaU (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:59310 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759790Ab3B0MDC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 12:30:20 -0500
-Message-ID: <1360863015.8210.5.camel@jlt4.sipsolutions.net> (sfid-20130214_183031_204039_B82CDBD3)
-Subject: Re: [PATCH] mac80211: don't call bss_info_changed on
- p2p-device/monitor
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: chaitanya.mgit@gmail.com
-Date: Thu, 14 Feb 2013 18:30:15 +0100
-In-Reply-To: <1360760572-28364-1-git-send-email-johannes@sipsolutions.net> (sfid-20130213_140303_577453_12828F58)
-References: <1360760572-28364-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130213_140303_577453_12828F58)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Feb 2013 07:03:02 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hm6so539575wib.14
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 04:03:00 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH 2/2] mac80211: fix the check for mcs rates masking
+Date: Wed, 27 Feb 2013 13:00:34 +0100
+Message-Id: <1361966434-28343-2-git-send-email-karl.beldan@gmail.com> (sfid-20130227_130306_989968_06E5A2D1)
+In-Reply-To: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
+References: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-13 at 14:02 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Since the idle decision rework, mac80211 started calling
-> bss_info_changed() for the driver's monitor interface,
-> which causes a crash for iwlwifi, but drivers generally
-> don't expect this to happen. Therefore, avoid it.
-> 
-> While at it, also prevent calling it in such cases and
-> only print a warning. For the P2P Device interface the
-> idle will no longer be called (no channel context), so
-> also prevent that and warn on it.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Applied.
+Currently the mcs bitrates mask rate_idx_mcs_mask is only applied when
+the pre-ht bitrates mask rate_idx_mask of the same band differs from the
+default mask.
+Fix it by comparing the rate_idx_mcs_mask with the ht_cap.mcs.rx_mask, the
+copy of the rate_idx_mcs_mask is now done if the check succeeds.
+This results, when no pre-ht bitrates is disabled && an mcs idx is, to
+one more memcmp, otherwise the cost remains identical.
 
-johannes
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rate.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index cfbd7d5..4c0a14d 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -460,8 +460,11 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	 * the common case.
+ 	 */
+ 	mask = txrc->rate_idx_mask;
+-	memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+-	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
++	if (mask != (1 << txrc->sband->n_bitrates) - 1 ||
++		memcmp(txrc->sband->ht_cap.mcs.rx_mask, txrc->rate_idx_mcs_mask,
++		       sizeof(txrc->rate_idx_mcs_mask))) {
++		memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
++
+ 		if (sta) {
+ 			/* Filter out rates that the STA does not support */
+ 			mask &= sta->sta.supp_rates[info->band];
+-- 
+1.7.10.GIT
 
