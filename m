@@ -1,65 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:37227 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754562Ab3BXTip (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50515 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760061Ab3B0Obm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Feb 2013 14:38:45 -0500
-Message-ID: <512A6C42.8080508@lwfinger.net> (sfid-20130224_203910_117233_48145188)
-Date: Sun, 24 Feb 2013 13:38:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	=?UTF-8?B?TWljaGE=?= =?UTF-8?B?ZWwgQsO8c2No?= <m@bues.ch>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Lockdep splat when unloading b43
-References: <512A4E83.5090901@lwfinger.net>  (sfid-20130224_183218_530192_A4B69F12) <1361729697.8129.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361729697.8129.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 27 Feb 2013 09:31:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: phaber@broadcom.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9] nl80211: remove channel width and extended capa advertising
+Date: Wed, 27 Feb 2013 15:31:36 +0100
+Message-Id: <1361975496-5862-1-git-send-email-johannes@sipsolutions.net> (sfid-20130227_153146_957263_5EE9E83F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2013 12:14 PM, Johannes Berg wrote:
-> On Sun, 2013-02-24 at 11:31 -0600, Larry Finger wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for the detailed analysis. It was very helpful.
+This is another case of data increasing the size of the
+wiphy information significantly with a new feature, for
+now remove this as well.
 
-> Here request_firmware calls wiphy_register which locks the RTNL, and
-> it's running from the work struct. This was newly introduced by commit
-> ecb4433550f0620f3d1471ae7099037ede30a91e
-> Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date:   Fri Aug 12 14:00:59 2011 +0200
->
->      mac80211: fix suspend/resume races with unregister hw
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c    |  3 +--
+ net/wireless/nl80211.c | 21 ---------------------
+ 2 files changed, 1 insertion(+), 23 deletions(-)
 
-That commit may bear some responsibility, but commit 
-6b6fa5868eec26bdc6a83543cebb8cf832a2645a
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Thu Mar 8 22:27:46 2012 -0600
-
-     b43: Load firmware from a work queue and not from the probe routine
-
-is also at fault.
-
-> Anyway, the solution probably is to move the cancel_work_sync into
-> something like the ssb deregister.
-
-This fix was also suggested by Michael - it works.
-
-The change to load the firmware from a work queue failed when b43 was built into 
-the kernel, which required commit 5e20a4b53094651d80f856ff55a916b999dbb57a
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Thu Dec 20 15:55:01 2012 -0600
-
-     b43: Fix firmware loading when driver is built into the kernel
-
-I probably should do a rewrite of firmware loading, but that is unlikely to 
-happen. Fortunately, moving the cancel work call is a small enough change that 
-it can be backported to stable.
-
-Thanks,
-
-Larry
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 33b75b9..9220021 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -367,8 +367,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 	rdev->wiphy.rts_threshold = (u32) -1;
+ 	rdev->wiphy.coverage_class = 0;
+ 
+-	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH |
+-			       NL80211_FEATURE_ADVERTISE_CHAN_LIMITS;
++	rdev->wiphy.features = NL80211_FEATURE_SCAN_FLUSH;
+ 
+ 	return &rdev->wiphy;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e652d05..7a7b621 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -557,18 +557,6 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
+ 	if ((chan->flags & IEEE80211_CHAN_RADAR) &&
+ 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
+ 		goto nla_put_failure;
+-	if ((chan->flags & IEEE80211_CHAN_NO_HT40MINUS) &&
+-	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_MINUS))
+-		goto nla_put_failure;
+-	if ((chan->flags & IEEE80211_CHAN_NO_HT40PLUS) &&
+-	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HT40_PLUS))
+-		goto nla_put_failure;
+-	if ((chan->flags & IEEE80211_CHAN_NO_80MHZ) &&
+-	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_80MHZ))
+-		goto nla_put_failure;
+-	if ((chan->flags & IEEE80211_CHAN_NO_160MHZ) &&
+-	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_160MHZ))
+-		goto nla_put_failure;
+ 
+ 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 			DBM_TO_MBM(chan->max_power)))
+@@ -1310,15 +1298,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 			dev->wiphy.max_acl_mac_addrs))
+ 		goto nla_put_failure;
+ 
+-	if (dev->wiphy.extended_capabilities &&
+-	    (nla_put(msg, NL80211_ATTR_EXT_CAPA,
+-		     dev->wiphy.extended_capabilities_len,
+-		     dev->wiphy.extended_capabilities) ||
+-	     nla_put(msg, NL80211_ATTR_EXT_CAPA_MASK,
+-		     dev->wiphy.extended_capabilities_len,
+-		     dev->wiphy.extended_capabilities_mask)))
+-		goto nla_put_failure;
+-
+ 	return genlmsg_end(msg, hdr);
+ 
+  nla_put_failure:
+-- 
+1.8.0
 
