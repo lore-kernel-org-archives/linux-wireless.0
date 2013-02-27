@@ -1,80 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48055 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151Ab3BLRvs (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54118 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760176Ab3B0RpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 12:51:48 -0500
-Message-ID: <1360691503.29913.10.camel@jlt4.sipsolutions.net> (sfid-20130212_185153_245404_75537EBA)
-Subject: Re: pull-request: iwlwifi-next 2012-02-12
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 12 Feb 2013 18:51:43 +0100
-In-Reply-To: <20130212174131.GD2086@tuxdriver.com>
-References: <1360684891.29913.4.camel@jlt4.sipsolutions.net>
-	 <20130212173750.GC2086@tuxdriver.com> <20130212174131.GD2086@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Feb 2013 12:45:20 -0500
+Date: Wed, 27 Feb 2013 12:42:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	Myoungje Kim <mjei78@gmail.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Fwd: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to
+ avoid loss of bytes in a TCP segment" (#27)
+Message-ID: <20130227174207.GB2082@tuxdriver.com> (sfid-20130227_184531_158017_0EF0CB7B)
+References: <torvalds/linux/pull/27@github.com>
+ <CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-12 at 12:41 -0500, John W. Linville wrote:
-> On Tue, Feb 12, 2013 at 12:37:50PM -0500, John W. Linville wrote:
-> > On Tue, Feb 12, 2013 at 05:01:31PM +0100, Johannes Berg wrote:
-> > > John,
-> > > 
-> > > We continue work on our new driver, but I also have a WoWLAN and AP mode
-> > > improvement for the previous driver and a change to use threaded
-> > > interrupts to prepare us for working with non-PCIe devices.
-> > > 
-> > > Please pull.
-> > > 
-> > > Thanks,
-> > > johannes
-> > > 
-> > > 
-> > > 
-> > > The following changes since commit 8457703f1e86aaf0f134402dd1e09e1f13e65222:
-> > > 
-> > >   ath6kl: provide 64-bit per-station byte counters (2013-02-11 15:34:58 -0500)
-> > > 
-> > > are available in the git repository at:
-> > > 
-> > >   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> > > 
-> > > for you to fetch changes up to 36eed56a8f7e1bd7fb5014ea0e702708e1702f30:
-> > > 
-> > >   iwlwifi: mvm: beautify code in rx_handlers (2013-02-12 16:52:26 +0100)
-> > 
-> > Pulling now...
+Thanks!  I'll ask Kalle to take a look, since ath6kl is his baby...
+
+On Wed, Feb 27, 2013 at 09:19:09AM -0800, Linus Torvalds wrote:
+> "How do I hate GitHub pull requests? Let me count the ways...."
 > 
-> Hmmm...
+> That said, the bug description alone makes this worth forwarding,
+> despite the cluelessness of GitHub pull requests. Myoungje Kim spent
+> some time explaining the issue, so while I despise the github pull
+> request format, I'm not faulting the effort spent on describing the
+> patch.
 > 
->   CC [M]  drivers/net/wireless/iwlwifi/mvm/mac80211.o
-> drivers/net/wireless/iwlwifi/mvm/mac80211.c: In function ‘iwl_mvm_mac_setup_register’:
-> drivers/net/wireless/iwlwifi/mvm/mac80211.c:116:1: error: expected expression before ‘<<’ token
-> drivers/net/wireless/iwlwifi/mvm/mac80211.c:120:9: error: exponent has no digits
+>                   Linus
+> 
+> ---------- Forwarded message ----------
+> From: Steven Kim <notifications@github.com>
+> Date: Tue, Feb 26, 2013 at 9:17 PM
+> Subject: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to avoid
+> loss of bytes in a TCP segment" (#27)
+> To: torvalds/linux <linux@noreply.github.com>
+> 
+> 
+> I found the driver bug which occur loss of some bytes on the TCP/IP stack.
+> 
+> Either first 3 bytes of the first received tcp segment or last one
+> over MTU size file can be loss due to the byte alignment problem.
+> Although ATH6KL_HTC_ALIGN_BYTES was defined
+> for 'extra bytes for htc header alignment'
+> in the patch "Fix buffer alignment for scatter-gather I/O"(1df94a8),
+> there exists the bytes loss issue which means that it will be truncated
+> 3 bytes in the transmitted file contents if a file which
+> has over MTU size is transferred through TCP/IP stack.
+> It doesn't look like TCP/IP stack bug of 3.5 or the latest version of
+> kernel but the byte alignment issue.
+> This patch is to use the roundup() function for the byte alignment
+> rather than the predefined ATH6KL_HTC_ALIGN_BYTES.
+> 
+> Signed-off-by: Myoungje Kim mjei78@gmail.com
+> 
+> ________________________________
+> 
+> You can merge this Pull Request by running
+> 
+>   git pull https://github.com/kingpotato/linux master
+> 
+> Or view, comment on, or merge it at:
+> 
+>   https://github.com/torvalds/linux/pull/27
+> 
+> Commit Summary
+> 
+> ath6kl: Fix the byte alignment rule to avoid loss of bytes in a TCP segment
+> 
+> File Changes
+> 
+> M drivers/net/wireless/ath/ath6kl/init.c (4)
+> M drivers/net/wireless/ath/ath6kl/main.c (4)
+> 
+> Patch Links:
+> 
+> https://github.com/torvalds/linux/pull/27.patch
+> https://github.com/torvalds/linux/pull/27.diff
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I think you didn't resolve the merge conflict:
-
-        hw->flags = IEEE80211_HW_SIGNAL_DBM |
-                    IEEE80211_HW_SPECTRUM_MGMT |
-                    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-                    IEEE80211_HW_QUEUE_CONTROL |
-                    IEEE80211_HW_WANT_MONITOR_VIF |
-<<<<<<< HEAD
-                    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC |
-=======
-                    IEEE80211_HW_SCAN_WHILE_IDLE |
->>>>>>> iwlwifi-next/for-john
-                    IEEE80211_HW_SUPPORTS_PS |
-                    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-                    IEEE80211_HW_AMPDU_AGGREGATION;
-
-My mac80211-next tree removed HW_SCAN_WHILE_IDLE, iwlwifi-next removes
-NEED_DTIM_BEFORE_ASSOC.
-
-Sorry about that!
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
