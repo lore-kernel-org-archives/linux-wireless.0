@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:36201 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758688Ab3BNTyB (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40710 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758678Ab3B0XND (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 14:54:01 -0500
-Received: by mail-bk0-f50.google.com with SMTP id jg9so1232293bkc.23
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Feb 2013 11:54:00 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Beat Meier <mbe_ml@swiss-wireless.com.ar>
-Subject: Re: How can I find out the ssid of an inteface in AP mode?
-Date: Thu, 14 Feb 2013 20:53:57 +0100
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <511D3AA4.7000209@swiss-wireless.com.ar>
-In-Reply-To: <511D3AA4.7000209@swiss-wireless.com.ar>
+	Wed, 27 Feb 2013 18:13:03 -0500
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r1RND1Ik012036
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 15:13:02 -0800
+Message-ID: <512E92FD.2090106@candelatech.com> (sfid-20130228_001314_338433_42408E0E)
+Date: Wed, 27 Feb 2013 15:13:01 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302142053.57519.chunkeey@googlemail.com> (sfid-20130214_205406_357154_F1A802A7)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Interesting behaviour when AP enables/disables HT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 14, 2013 08:27:32 PM Beat Meier wrote:
-> Hello
-> 
-> How can I find out the ssid of an inteface in AP mode (using hostapd)?
-start up hostapd_cli 
+I was doing some tests where I change the AP's configuration
+(enable/disable HT, enable/disable HT40, etc) on a somewhat
+hacked 3.7.9+ kernel.
 
-(usually it connects to the right wlanX interface, otherwise
-execute interface wlanX)
+One thing I noticed is that if stations are associated using /a,
+but I quickly reconfigure the AP to use /a/n mode (ie HT enabled),
+the stations stay in 'no-ht' mode.
 
-get_config
+If I down/up the stations, they come up in HT mode.
 
-(And then look for ssid=xyz)
+Just a curiosity at this point...
 
-> I have several hostapd files and dependend on several stuff I start 
-> hostap with different config files. One difference is the ssid and
-> at runtime I need to know which is active  with some scripts.
->
-> I have still not found how to get this information if the interface is 
-> in AP mode because
->    iw dev wlan0 link
-> does not work in AP mode...
-> In my opinion this could be implemented in
->    iw dev wlan0 survey dump
-> which also prints the frecuency IF REALY not already implemented...
-> 
-> No one does need this feature?
-No, the kernel does not manage AP interfaces. Everything 
-is done by hostapd (the userspace daemon).
+Thanks,
+Ben
 
-Regards,
-	Christian 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
