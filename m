@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:52960 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764Ab3BSQSj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51253 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753508Ab3B0SpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 11:18:39 -0500
-Date: Tue, 19 Feb 2013 08:18:30 -0800
-From: Marc MERLIN <marc@merlins.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs copies out
-Message-ID: <20130219161830.GD21764@merlins.org> (sfid-20130219_171848_051483_06E9AD49)
-References: <20120410051127.GA32048@merlins.org> <1334038263.2907.1.camel@edumazet-glaptop> <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org> <1342419529.3265.12217.camel@edumazet-glaptop> <20120716151826.GA10586@merlins.org> <1342455717.2830.14.camel@edumazet-glaptop> <20130219040557.GB4778@merlins.org> <1361251033.19353.120.camel@edumazet-glaptop> <1361268221.8553.1.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361268221.8553.1.camel@jlt4.sipsolutions.net>
+	Wed, 27 Feb 2013 13:45:19 -0500
+Message-ID: <1361990705.8172.12.camel@jlt4.sipsolutions.net> (sfid-20130227_194525_266025_C7D59EDF)
+Subject: Re: [PATCH 1/2] [RFC] cfg80211: configuration of Bluetooth
+ coexistence mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, Adrian Chadd <adrian@freebsd.org>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Piotr Haber <phaber@broadcom.com>
+Date: Wed, 27 Feb 2013 19:45:05 +0100
+In-Reply-To: <1361960826.15573.8.camel@dcbw.foobar.com>
+References: <A47087626F2942499CF47E79803E771E0431B792@SJEXCHMB13.corp.ad.broadcom.com>
+	 <1361564916.3420.11.camel@jlt4.sipsolutions.net>
+	 <CAJ-VmokSn-jo9oFm4Udhf=T+HXM2N4g=Ckc-=NQEOKL=j=w5NA@mail.gmail.com>
+	 <A47087626F2942499CF47E79803E771E0431BD3C@SJEXCHMB13.corp.ad.broadcom.com>
+	 <1361726886.8129.9.camel@jlt4.sipsolutions.net>
+	 <CAJ-Vmo=z+zbCfjMPXT4edyrB9Ukz0-ChE_Q1sqU_=6m_btx_Hg@mail.gmail.com>
+	 <512AFC80.9030808@openwrt.org>
+	 <1361787911.8887.2.camel@jlt4.sipsolutions.net>
+	 <512B61F9.60802@openwrt.org> <1361960826.15573.8.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 11:03:41AM +0100, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
+On Wed, 2013-02-27 at 11:27 +0100, Dan Williams wrote:
 > 
-> > > chrome: page allocation failure: order:1, mode:0x4020
-> > > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > > Call Trace:
-> > >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
-> 
-> > You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> > 
-> > It should hopefully use order-0 pages
-> 
-> It will, do that then, unfortunately it can't switch at runtime because
-> it advertised this support to the access point or clients.
+> We also don't know what IP configuration method will get used; whether
+> it will be IPv6 RA, DHCPv4 or DHCPv6, IPv4 autoconf, or static.  Only
+> the connection manager knows that.  Only the connection manager/DHCP
+> client know when they expect a lease renew operation to start too.
+> wpa_supplicant doesn't know any of these things either since it doesn't
+> do anything IP related.
 
-Forgive the newbie question: would the inability to get pages cause
-interrupts to be disabled or at least something that would stop the mouse
-cursor and the keyboard from working?
+Right, and if it's static you don't want any of this. I don't think
+network latency stuff is a good method, even though on the face of it
+the idea here is to reduce the initial connection latency.
 
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+> I think the best approach here is to allow the higher layers to hint to
+> the driver that some operations that are about to start must be "more
+> reliable".  That includes EAPOL, DHCP, IP autoconfiguration, etc.  Then
+> when the higher layers know the operation is finished, they can indicate
+> the operations are done and the driver can go do whatever it wants.
+
+Yeah, I agree.
+
+Note that it's less about being "more reliable" and more about being
+"fast" (for some definition of that), in particular in the multi-channel
+scenario you'd want to attempt to not switch away from the channel (if
+possible) until DHCP finishes, or at least give it a chance to finish
+quickly. But for example for static IP configuration you don't need to
+and don't necessarily want to block being on that channel just in case
+DHCP happens. Similarly with BT Coex of course, though there I guess
+it's more about priority.
+
+In any case it's about completing the connection to the network quickly
+before being forced to go to powersave. In particular IPv6 might also
+require multicast so doing powersave there really hurts (DTIM beacon.)
+
+> The driver/stack may wish to do any of [set 1Mb rate, block rate
+> control, change BT coex, turn on microwave protection, whatever] and
+> that's great, the upper layers don't care about what the driver does,
+> just that the reliability of the operation is preserved.
+
+I'd say "reliability of the operation is _increased_" I guess :-) But
+yeah.
+
+johannes
+
