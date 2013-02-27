@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548Ab3B1JBf (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:37716 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865Ab3B0PIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 04:01:35 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: sujith@msujith.org, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9] mac80211: really fix monitor mode channel reporting
-Date: Thu, 28 Feb 2013 10:01:24 +0100
-Message-Id: <1362042084-26920-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_100138_531258_899933FC)
+	Wed, 27 Feb 2013 10:08:37 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k10so714948iea.33
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 07:08:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+Date: Wed, 27 Feb 2013 16:08:36 +0100
+Message-ID: <CAL1gcdPbmPZ=v4TVJYWiFqC1fxh9fzdXiGK3M6-HJqU_tAHdVQ@mail.gmail.com> (sfid-20130227_160840_631761_A5FD3A31)
+Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support disabled
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
+> interface combinations with NL80211_IFTYPE_MESH_POINT present.
+> Add appropriate ifdefs to avoid running into errors.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-After Felix's patch it was still broken in case you
-used more than just a single monitor interface. Fix
-it better now.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Reported-by: Sujith Manoharan <sujith@msujith.org>
-Tested-by: Sujith Manoharan <sujith@msujith.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 1031db6..189744d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1236,8 +1236,10 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
+>          */
+>         if_limit = &rt2x00dev->if_limits_ap;
+>         if_limit->max = rt2x00dev->ops->max_ap_intf;
+> -       if_limit->types = BIT(NL80211_IFTYPE_AP) |
+> -                       BIT(NL80211_IFTYPE_MESH_POINT);
+> +       if_limit->types = BIT(NL80211_IFTYPE_AP);
+> +#ifdef CONFIG_MAC80211_MESH
+> +       if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
+> +#endif
+>
+>         /*
+>          * Build up AP interface combinations structure.
+> @@ -1309,7 +1311,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+>                 rt2x00dev->hw->wiphy->interface_modes |=
+>                     BIT(NL80211_IFTYPE_ADHOC) |
+>                     BIT(NL80211_IFTYPE_AP) |
+> +#ifdef CONFIG_MAC80211_MESH
+>                     BIT(NL80211_IFTYPE_MESH_POINT) |
+> +#endif
+>                     BIT(NL80211_IFTYPE_WDS);
+>
+>         rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+> --
+> 1.8.0.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 808f5fc..fb30681 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3290,14 +3290,19 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
- 	int ret = -ENODATA;
- 
- 	rcu_read_lock();
--	if (local->use_chanctx) {
--		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--		if (chanctx_conf) {
--			*chandef = chanctx_conf->def;
--			ret = 0;
--		}
--	} else if (local->open_count == local->monitors) {
--		*chandef = local->monitor_chandef;
-+	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+	if (chanctx_conf) {
-+		*chandef = chanctx_conf->def;
-+		ret = 0;
-+	} else if (local->open_count > 0 &&
-+		   local->open_count == local->monitors &&
-+		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-+		if (local->use_chanctx)
-+			*chandef = local->monitor_chandef;
-+		else
-+			cfg80211_chandef_create(chandef,
-+						local->_oper_channel,
-+						local->_oper_channel_type);
- 		ret = 0;
- 	}
- 	rcu_read_unlock();
+
+
 -- 
-1.8.0
-
+---
+Gertjan
