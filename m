@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:55094 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756701Ab3BFPWs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50193 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757414Ab3B0Mj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 10:22:48 -0500
-Date: Wed, 6 Feb 2013 20:43:13 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH 5/5] mwl8k: bump firmware API to 3
-Message-ID: <20130206151313.GB373@markyou.marvell.com> (sfid-20130206_162253_315994_D6B8E6C2)
-References: <20130103075440.GA20523@markyou.marvell.com>
- <CAOiHx=kpV8TScc4gQRZUBwUDAEL-j+uoNg3eodKi8WwmAHYg=w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOiHx=kpV8TScc4gQRZUBwUDAEL-j+uoNg3eodKi8WwmAHYg=w@mail.gmail.com>
+	Wed, 27 Feb 2013 07:39:29 -0500
+Message-ID: <1361968754.8172.6.camel@jlt4.sipsolutions.net> (sfid-20130227_133932_768868_C98F4834)
+Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support
+ disabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Date: Wed, 27 Feb 2013 13:39:14 +0100
+In-Reply-To: <CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com> (sfid-20130227_133725_662731_7731F824)
+References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
+	 <CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com>
+	 (sfid-20130227_133725_662731_7731F824)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 06:31:12AM -0800, Jonas Gorski wrote:
-> On 3 January 2013 08:54, Yogesh Ashok Powar <yogeshp@marvell.com> wrote:
-> > New firmware is required to support
-> > a) Add support for additional ampdu streams
-> > b) Handle corresponding watchdog events to destroy ampdu streams
-> >
-> > Bumping firmware API version by one.
+On Wed, 2013-02-27 at 13:37 +0100, Gertjan van Wingerde wrote:
+> Hi Felix,
 > 
-> Soo ... where does one get this new firmware version? I don't see it
-> anywhere (especially not in linux-firmware.git). AFAICT mwl8k in
-> ap-mode is currently broken since this patch got in.
+> On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
 
-Hi Jonas,
+typo: "will not allow"
 
-We have already mailed the API-3 firmware to Ben Hutching for adding
-it to linux-firmware.git.
+> > interface combinations with NL80211_IFTYPE_MESH_POINT present.
+> > Add appropriate ifdefs to avoid running into errors.
+> 
+> I'm not sure if rt2x00 is the proper place to fix this. To me it
+> doesn't look good to have to sprinkle these kind of ifdefs throughout
+> the drivers to check if mac80211 has mesh enabled.
+> I would prefer a solution where drivers are still able to indicate
+> that they support mesh interfaces, but where mac80211/cfg80211 prevent
+> these kind of interfaces from being created.
+> 
+> @Johannes: What is your view on this?
 
-Meanwhile please get the new AP firmware from
-https://github.com/yogeshpowar/mwl8k_ap_firmware
+It would be nicer, but the data is const so mac80211 can't modify it,
+and I don't see that we should add a lot of code/handshaking to
+mac80211/cfg80211 just to avoid one ifdef here.
 
+johannes
 
-Thanks
-Yogesh
