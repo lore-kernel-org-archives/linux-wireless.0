@@ -1,49 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46363 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758567Ab3BSKEL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 05:04:11 -0500
-Message-ID: <1361268221.8553.1.camel@jlt4.sipsolutions.net> (sfid-20130219_110420_526142_64364C6C)
-Subject: Re: 3.7.8/amd64 full interrupt hangs due to iwlwifi under big nfs
- copies out
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Marc MERLIN <marc@merlins.org>, David Miller <davem@davemloft.net>,
-	Larry.Finger@lwfinger.net, bhutchings@solarflare.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 19 Feb 2013 11:03:41 +0100
-In-Reply-To: <1361251033.19353.120.camel@edumazet-glaptop> (sfid-20130219_061917_530878_1ED7A14C)
-References: <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org> <20120715215935.GF24420@merlins.org>
-	 <1342419529.3265.12217.camel@edumazet-glaptop>
-	 <20120716151826.GA10586@merlins.org>
-	 <1342455717.2830.14.camel@edumazet-glaptop>
-	 <20130219040557.GB4778@merlins.org>
-	 <1361251033.19353.120.camel@edumazet-glaptop>
-	 (sfid-20130219_061917_530878_1ED7A14C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:45873 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751968Ab3B1JzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2013 04:55:23 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v3 3/6] mac80211: cleanup suspend/resume on managed mode
+Date: Thu, 28 Feb 2013 10:55:27 +0100
+Message-Id: <1362045330-2018-3-git-send-email-sgruszka@redhat.com> (sfid-20130228_105529_136406_F1AF69D7)
+In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
+References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-02-18 at 21:17 -0800, Eric Dumazet wrote:
+Remove not used any longer suspend/resume code.
 
-> > chrome: page allocation failure: order:1, mode:0x4020
-> > Pid: 8730, comm: chrome Tainted: G           O 3.7.8-amd64-preempt-20121226-fixwd #1
-> > Call Trace:
-> >  <IRQ>  [<ffffffff810d5f38>] warn_alloc_failed+0x117/0x12c
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/ieee80211_i.h |  3 --
+ net/mac80211/mlme.c        | 84 ++--------------------------------------------
+ 2 files changed, 2 insertions(+), 85 deletions(-)
 
-> You could try to load iwlwifi with amsdu_size_8K set to 0 (disable)
-> 
-> It should hopefully use order-0 pages
-
-It will, do that then, unfortunately it can't switch at runtime because
-it advertised this support to the access point or clients.
-
-johannes
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 606d1ed..42ddf0a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -400,7 +400,6 @@ struct ieee80211_if_managed {
+ 
+ 	u16 aid;
+ 
+-	unsigned long timers_running; /* used for quiesce/restart */
+ 	bool powersave; /* powersave requested for this iface */
+ 	bool broken_ap; /* AP is broken -- turn off powersave */
+ 	u8 dtim_period;
+@@ -1274,8 +1273,6 @@ void
+ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				 const struct ieee80211_channel_sw_ie *sw_elem,
+ 				 struct ieee80211_bss *bss, u64 timestamp);
+-void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9f6464f..410470f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -87,9 +87,6 @@ MODULE_PARM_DESC(probe_wait_ms,
+  */
+ #define IEEE80211_SIGNAL_AVE_MIN_COUNT	4
+ 
+-#define TMR_RUNNING_TIMER	0
+-#define TMR_RUNNING_CHANSW	1
+-
+ /*
+  * All cfg80211 functions have to be called outside a locked
+  * section so that they can acquire a lock themselves... This
+@@ -1035,14 +1032,8 @@ static void ieee80211_chswitch_timer(unsigned long data)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		(struct ieee80211_sub_if_data *) data;
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-
+-	if (sdata->local->quiescing) {
+-		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
+-		return;
+-	}
+ 
+-	ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
++	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
+ }
+ 
+ void
+@@ -1827,8 +1818,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	del_timer_sync(&sdata->u.mgd.timer);
+ 	del_timer_sync(&sdata->u.mgd.chswitch_timer);
+ 
+-	sdata->u.mgd.timers_running = 0;
+-
+ 	sdata->vif.bss_conf.dtim_period = 0;
+ 
+ 	ifmgd->flags = 0;
+@@ -3137,15 +3126,8 @@ static void ieee80211_sta_timer(unsigned long data)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		(struct ieee80211_sub_if_data *) data;
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	struct ieee80211_local *local = sdata->local;
+-
+-	if (local->quiescing) {
+-		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
+-		return;
+-	}
+ 
+-	ieee80211_queue_work(&local->hw, &sdata->work);
++	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ }
+ 
+ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+@@ -3497,68 +3479,6 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-#ifdef CONFIG_PM
+-void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-
+-	/*
+-	 * we need to use atomic bitops for the running bits
+-	 * only because both timers might fire at the same
+-	 * time -- the code here is properly synchronised.
+-	 */
+-
+-	cancel_work_sync(&ifmgd->request_smps_work);
+-
+-	cancel_work_sync(&ifmgd->monitor_work);
+-	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
+-	cancel_work_sync(&ifmgd->csa_connection_drop_work);
+-	if (del_timer_sync(&ifmgd->timer))
+-		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
+-
+-	cancel_work_sync(&ifmgd->chswitch_work);
+-	if (del_timer_sync(&ifmgd->chswitch_timer))
+-		set_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running);
+-
+-	/* these will just be re-established on connection */
+-	del_timer_sync(&ifmgd->conn_mon_timer);
+-	del_timer_sync(&ifmgd->bcn_mon_timer);
+-}
+-
+-void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+-{
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-
+-	mutex_lock(&ifmgd->mtx);
+-	if (!ifmgd->associated) {
+-		mutex_unlock(&ifmgd->mtx);
+-		return;
+-	}
+-
+-	if (sdata->flags & IEEE80211_SDATA_DISCONNECT_RESUME) {
+-		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_RESUME;
+-		mlme_dbg(sdata, "driver requested disconnect after resume\n");
+-		ieee80211_sta_connection_lost(sdata,
+-					      ifmgd->associated->bssid,
+-					      WLAN_REASON_UNSPECIFIED,
+-					      true);
+-		mutex_unlock(&ifmgd->mtx);
+-		return;
+-	}
+-	mutex_unlock(&ifmgd->mtx);
+-
+-	if (test_and_clear_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running))
+-		add_timer(&ifmgd->timer);
+-	if (test_and_clear_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running))
+-		add_timer(&ifmgd->chswitch_timer);
+-	ieee80211_sta_reset_beacon_monitor(sdata);
+-
+-	mutex_lock(&sdata->local->mtx);
+-	ieee80211_restart_sta_timer(sdata);
+-	mutex_unlock(&sdata->local->mtx);
+-}
+-#endif
+-
+ /* interface setup */
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+-- 
+1.7.11.7
 
