@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:35507 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916Ab3B0TJh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55773 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752765Ab3B1WSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 14:09:37 -0500
-Received: by mail-ea0-f174.google.com with SMTP id 1so76360eaa.33
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 11:09:35 -0800 (PST)
-From: Michal Kazior <kazikcz@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Michal Kazior <kazikcz@gmail.com>
-Subject: [PATCH v2] ath: sanitize 0xFFFF regdomain
-Date: Wed, 27 Feb 2013 20:09:32 +0100
-Message-Id: <1361992172-4590-1-git-send-email-kazikcz@gmail.com> (sfid-20130227_200941_339966_E7D23A59)
+	Thu, 28 Feb 2013 17:18:41 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove IEEE80211_KEY_FLAG_WMM_STA
+Date: Thu, 28 Feb 2013 23:18:35 +0100
+Message-Id: <1362089915-12075-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_231848_325408_1F97A262)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently some Dbii F52N-PRO mini pci devices
-have been intentionally programemd with a 0xFFFF
-regdomain. This is incorrect and unsupported by
-QCA.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The patch sanitizes the 0xFFFF regdomain with 0x64
-which is the most restrictive custom world
-regulatory domain in the ath module.
+There's no driver using this flag, so it seems
+that all drivers support HW crypto with WMM or
+don't support it at all. Remove the flag and
+code setting it.
 
-This card has been reported to work on MikroTik's
-RouterOS but failed on Linux with the following:
-
-[   14.320000] ath: EEPROM regdomain: 0xffff
-[   14.320000] ath: EEPROM indicates we should expect a country code
-[   14.320000] ath: invalid regulatory domain/country code 0xbfff
-[   14.320000] ath: Invalid EEPROM contents
-[   14.320000] ath9k 0000:00:12.0: Failed to initialize device
-[   14.330000] ath9k: probe of 0000:00:12.0 failed with error -22
-
-With the patch the device works fine.
-
-Signed-off-by: Michal Kazior <kazikcz@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2: updated commit message as suggested by Luis
+ include/net/mac80211.h |  3 ---
+ net/mac80211/key.c     | 26 --------------------------
+ 2 files changed, 29 deletions(-)
 
- drivers/net/wireless/ath/regd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index ccc4c71..48fb1b9 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -533,10 +533,11 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
-  * but since we have more than one user with it we need
-  * a solution for them. We default to 0x64, which is the
-  * default Atheros world regulatory domain.
-+ * There is also at least one report of 0xFFFF being set.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1568cc6..ac0272f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1103,8 +1103,6 @@ static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
+  * These flags are used for communication about keys between the driver
+  * and mac80211, with the @flags parameter of &struct ieee80211_key_conf.
+  *
+- * @IEEE80211_KEY_FLAG_WMM_STA: Set by mac80211, this flag indicates
+- *	that the STA this key will be used with could be using QoS.
+  * @IEEE80211_KEY_FLAG_GENERATE_IV: This flag should be set by the
+  *	driver to indicate that it requires IV generation for this
+  *	particular key.
+@@ -1129,7 +1127,6 @@ static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
+  *	%IEEE80211_KEY_FLAG_SW_MGMT_TX flag to encrypt such frames in SW.
   */
- static void ath_regd_sanitize(struct ath_regulatory *reg)
- {
--	if (reg->current_rd != COUNTRY_ERD_FLAG)
-+	if (reg->current_rd != COUNTRY_ERD_FLAG && reg->current_rd != 0xFFFF)
- 		return;
- 	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
- 	reg->current_rd = 0x64;
+ enum ieee80211_key_flags {
+-	IEEE80211_KEY_FLAG_WMM_STA	= 1<<0,
+ 	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
+ 	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
+ 	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ef252eb..c4bc3bd 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -440,32 +440,6 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	key->sdata = sdata;
+ 	key->sta = sta;
+ 
+-	if (sta) {
+-		/*
+-		 * some hardware cannot handle TKIP with QoS, so
+-		 * we indicate whether QoS could be in use.
+-		 */
+-		if (test_sta_flag(sta, WLAN_STA_WME))
+-			key->conf.flags |= IEEE80211_KEY_FLAG_WMM_STA;
+-	} else {
+-		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+-			struct sta_info *ap;
+-
+-			/*
+-			 * We're getting a sta pointer in, so must be under
+-			 * appropriate locking for sta_info_get().
+-			 */
+-
+-			/* same here, the AP could be using QoS */
+-			ap = sta_info_get(key->sdata, key->sdata->u.mgd.bssid);
+-			if (ap) {
+-				if (test_sta_flag(ap, WLAN_STA_WME))
+-					key->conf.flags |=
+-						IEEE80211_KEY_FLAG_WMM_STA;
+-			}
+-		}
+-	}
+-
+ 	mutex_lock(&sdata->local->key_mtx);
+ 
+ 	if (sta && pairwise)
 -- 
-1.8.1.4
+1.8.0
 
