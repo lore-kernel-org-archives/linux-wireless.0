@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757414Ab3B0Mj3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 07:39:29 -0500
-Message-ID: <1361968754.8172.6.camel@jlt4.sipsolutions.net> (sfid-20130227_133932_768868_C98F4834)
-Subject: Re: [PATCH 3.9] rt2x00: error in configurations with mesh support
- disabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Date: Wed, 27 Feb 2013 13:39:14 +0100
-In-Reply-To: <CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com> (sfid-20130227_133725_662731_7731F824)
-References: <1361891395-59990-1-git-send-email-nbd@openwrt.org>
-	 <CAL1gcdO-SYTeXQhaGQgwE8=ZpK=S9YOnSuizR9WGCHA-X+7kyw@mail.gmail.com>
-	 (sfid-20130227_133725_662731_7731F824)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:10288 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752264Ab3B1Jz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2013 04:55:27 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v3 6/6] mac80211: merge reconfig assign chanctx code
+Date: Thu, 28 Feb 2013 10:55:30 +0100
+Message-Id: <1362045330-2018-6-git-send-email-sgruszka@redhat.com> (sfid-20130228_105534_343657_0293C721)
+In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
+References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-27 at 13:37 +0100, Gertjan van Wingerde wrote:
-> Hi Felix,
-> 
-> On Tue, Feb 26, 2013 at 4:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> > If CONFIG_MAC80211_MESH is not set, cfg80211 will now allow advertising
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/util.c | 47 ++++++++++++++++++++++-------------------------
+ 1 file changed, 22 insertions(+), 25 deletions(-)
 
-typo: "will not allow"
-
-> > interface combinations with NL80211_IFTYPE_MESH_POINT present.
-> > Add appropriate ifdefs to avoid running into errors.
-> 
-> I'm not sure if rt2x00 is the proper place to fix this. To me it
-> doesn't look good to have to sprinkle these kind of ifdefs throughout
-> the drivers to check if mac80211 has mesh enabled.
-> I would prefer a solution where drivers are still able to indicate
-> that they support mesh interfaces, but where mac80211/cfg80211 prevent
-> these kind of interfaces from being created.
-> 
-> @Johannes: What is your view on this?
-
-It would be nicer, but the data is const so mac80211 can't modify it,
-and I don't see that we should add a lot of code/handshaking to
-mac80211/cfg80211 just to avoid one ifdef here.
-
-johannes
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f5d4e32..b7a856e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1357,6 +1357,25 @@ void ieee80211_stop_device(struct ieee80211_local *local)
+ 	drv_stop(local);
+ }
+ 
++static void ieee80211_assign_chanctx(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_chanctx_conf *conf;
++	struct ieee80211_chanctx *ctx;
++
++	if (!local->use_chanctx)
++		return;
++
++	mutex_lock(&local->chanctx_mtx);
++	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
++					 lockdep_is_held(&local->chanctx_mtx));
++	if (conf) {
++		ctx = container_of(conf, struct ieee80211_chanctx, conf);
++		drv_assign_vif_chanctx(local, sdata, ctx);
++	}
++	mutex_unlock(&local->chanctx_mtx);
++}
++
+ int ieee80211_reconfig(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+@@ -1445,36 +1464,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		struct ieee80211_chanctx_conf *ctx_conf;
+-
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+-
+-		mutex_lock(&local->chanctx_mtx);
+-		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-				lockdep_is_held(&local->chanctx_mtx));
+-		if (ctx_conf) {
+-			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
+-					   conf);
+-			drv_assign_vif_chanctx(local, sdata, ctx);
+-		}
+-		mutex_unlock(&local->chanctx_mtx);
++		ieee80211_assign_chanctx(local, sdata);
+ 	}
+ 
+ 	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata && local->use_chanctx && ieee80211_sdata_running(sdata)) {
+-		struct ieee80211_chanctx_conf *ctx_conf;
+-
+-		mutex_lock(&local->chanctx_mtx);
+-		ctx_conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+-				lockdep_is_held(&local->chanctx_mtx));
+-		if (ctx_conf) {
+-			ctx = container_of(ctx_conf, struct ieee80211_chanctx,
+-					   conf);
+-			drv_assign_vif_chanctx(local, sdata, ctx);
+-		}
+-		mutex_unlock(&local->chanctx_mtx);
+-	}
++	if (sdata && ieee80211_sdata_running(sdata))
++		ieee80211_assign_chanctx(local, sdata);
+ 
+ 	/* add STAs back */
+ 	mutex_lock(&local->sta_mtx);
+-- 
+1.7.11.7
 
