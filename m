@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758987Ab3B0Mcp (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:45096 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497Ab3B1FKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 07:32:45 -0500
-Message-ID: <1361968360.8172.5.camel@jlt4.sipsolutions.net> (sfid-20130227_133248_939108_65E9D6FC)
-Subject: Re: [PATCH 1/2] cfg80211: advertise extended capabilities to
- userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Piotr Haber <phaber@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 27 Feb 2013 13:32:40 +0100
-In-Reply-To: <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
-References: <1360677682-3694-1-git-send-email-johannes@sipsolutions.net>
-	 <512DFC54.60602@broadcom.com> (sfid-20130227_133040_714989_9A702E8E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Feb 2013 00:10:20 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20782.58980.730523.353167@gargle.gargle.HOWL> (sfid-20130228_061033_174650_236D6DF0)
+Date: Thu, 28 Feb 2013 10:38:52 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+In-Reply-To: <512EDDC5.7020901@openwrt.org>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+	<512ECE01.8010102@openwrt.org>
+	<20782.54505.239733.82364@gargle.gargle.HOWL>
+	<512EDDC5.7020901@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-02-27 at 13:30 +0100, Piotr Haber wrote:
+Felix Fietkau wrote:
+> What was the distance and what was the rate used?
 
-> seems like this patch pushed wiphy info length over the limit
-> for dual band devices.
-> So userspace cannot get any info about phy capabilities.
+The station was about a meter away from the AP. I don't have the rcstats,
+debugfs was compiled out. I'll rerun the test and post the results.
 
-Yeah ... was it this patch? I did revert some others, but I guess it
-depends.
-
-> I know there is a patch for nl80211 and iw to allow splitting of this info,
-> but it is not in 3.8
-> Should we not revert it for stable then?
-
-Yeah we can revert this too, a la the patches already in to remove TCP
-wakeup and radar info. What kernel are you testing?
-
-johannes
-
+Sujith
