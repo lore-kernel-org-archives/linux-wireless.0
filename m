@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34846 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751937Ab3B0Kmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Feb 2013 05:42:38 -0500
-Date: Wed, 27 Feb 2013 11:42:48 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: Re: [PATCH 2/6] mac80211: sync suspend and stop interface
-Message-ID: <20130227104247.GA3016@redhat.com> (sfid-20130227_114241_816588_28ABA445)
-References: <1361793008-2857-1-git-send-email-sgruszka@redhat.com>
- <1361793008-2857-2-git-send-email-sgruszka@redhat.com>
- <1361911440.8440.12.camel@jlt4.sipsolutions.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17346 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab3B1ErE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 23:47:04 -0500
+Date: Thu, 28 Feb 2013 07:45:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] ath6kl: small cleanup in ath6kl_htc_pipe_rx_complete()
+Message-ID: <20130228044547.GC15239@longonot.mountain> (sfid-20130228_054711_079994_2D23B5B8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1361911440.8440.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2013 at 09:44:00PM +0100, Johannes Berg wrote:
-> More generally, does this really make much sense? There are other things
-> here, e.g. ieee80211_configure_filter(), ieee80211_recalc_ps(),
-> ieee80211_hw_config() and probably more that can be executed in this
-> function -- I don't think protecting these two calls is really
-> sufficient?
+It's harmless, but Smatch complains if we use "htc_hdr->eid" before
+doing the bounds check.
 
-Seems all other drv calls like those on ieee80211_confgure_fitler() do
-not require sdata. So this is most likely sufficient. I'm able to
-reporduce warnings on rt2x00 usb with commit 
-761ce8c41ed20ee3af77f2df527edc3f92e6f3bf reverted. This patch make
-them gone.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Stanislaw
-
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 2813901..9adb567 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -988,8 +988,6 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 
+ 	htc_hdr = (struct htc_frame_hdr *) netdata;
+ 
+-	ep = &target->endpoint[htc_hdr->eid];
+-
+ 	if (htc_hdr->eid >= ENDPOINT_MAX) {
+ 		ath6kl_dbg(ATH6KL_DBG_HTC,
+ 			   "HTC Rx: invalid EndpointID=%d\n",
+@@ -997,6 +995,7 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 		status = -EINVAL;
+ 		goto free_skb;
+ 	}
++	ep = &target->endpoint[htc_hdr->eid];
+ 
+ 	payload_len = le16_to_cpu(get_unaligned(&htc_hdr->payld_len));
+ 
