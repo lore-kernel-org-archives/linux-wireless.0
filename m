@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:34367 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933300Ab3BSSPz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760130Ab3B1WMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 13:15:55 -0500
-Date: Tue, 19 Feb 2013 13:15:53 -0500 (EST)
-Message-Id: <20130219.131553.787630407148880340.davem@davemloft.net> (sfid-20130219_191604_151610_E4C5F81C)
-To: Larry.Finger@lwfinger.net
-Cc: David.Laight@ACULAB.COM, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	bittorf@bluebottle.com, stable@vger.kernel.org
-Subject: Re: [PATCH] b43: Increase number of RX DMA slots
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <5123BCFF.5090408@lwfinger.net>
-References: <20130219.005206.397289032011003833.davem@davemloft.net>
-	<AE90C24D6B3A694183C094C60CF0A2F6026B7152@saturn3.aculab.com>
-	<5123BCFF.5090408@lwfinger.net>
+	Thu, 28 Feb 2013 17:12:33 -0500
+Message-ID: <1362089546.8330.4.camel@jlt4.sipsolutions.net> (sfid-20130228_231252_893414_91DDAA9E)
+Subject: Re: [PATCH 3.9] nl80211: remove channel width and extended capa
+ advertising
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: phaber@broadcom.com
+Date: Thu, 28 Feb 2013 23:12:26 +0100
+In-Reply-To: <1361975496-5862-1-git-send-email-johannes@sipsolutions.net> (sfid-20130227_153146_957263_5EE9E83F)
+References: <1361975496-5862-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130227_153146_957263_5EE9E83F)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Tue, 19 Feb 2013 11:57:19 -0600
+On Wed, 2013-02-27 at 15:31 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> This is another case of data increasing the size of the
+> wiphy information significantly with a new feature, for
+> now remove this as well.
 
-> The real problem is that some (perhaps all) versions of the firmware,
-> which manages the 'in' pointer of the FIFO ring, appears to fail to
-> detect the ring full condition. That is the real cause of the freeze;
-> however, we do not have access to the firmware source. We don't even
-> have the right to redistribute it, which is why we have the
-> b43-fwcutter work around.
+Applied.
 
-I understand your constraints, but this is a trivially remotely
-DoS'able condition even on slow CPU atom laptops.
+johannes
 
-Send an "expansive" full sized frame followed by 300 or so 64-byte UDP
-packets --> instant hang.
