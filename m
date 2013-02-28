@@ -1,205 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:51610 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751194Ab3CHFAy (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:49606 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308Ab3B1XKm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 00:00:54 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 7 Mar 2013 21:00:51 -0800
-Subject: RE: mwifiex crash when removing interface while scanning
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D9C1608@SC-VEXCH1.marvell.com> (sfid-20130308_060133_149715_4E77C63A)
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
-	<CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com>
- <CAMLZHHR+OCQd_2J8NkmK0CND9vo6VaT73L+rJKJRk7bUknh7Qw@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
-Content-Type: multipart/mixed;
-	boundary="_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_"
+	Thu, 28 Feb 2013 18:10:42 -0500
+Received: by mail-lb0-f182.google.com with SMTP id gg6so1817278lbb.27
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2013 15:10:41 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CABvG-CWsvuJzMp06BitK1RGF55WJjZ8O4H58=VRpMcX27362RA@mail.gmail.com>
+References: <1361992172-4590-1-git-send-email-kazikcz@gmail.com>
+ <CAJ-Vmo=2==jGr-xWL8As7qvJs0YDWe2DekVCwEY2sQSsXtrL0w@mail.gmail.com> <CABvG-CWsvuJzMp06BitK1RGF55WJjZ8O4H58=VRpMcX27362RA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 28 Feb 2013 15:10:21 -0800
+Message-ID: <CAB=NE6VBLQTtcT6rAQ===GFxSai6-+O=Ms7mMRhG4mB0pAc3Qw@mail.gmail.com> (sfid-20130301_001045_987397_F0DCCE87)
+Subject: Re: [PATCH v2] ath: sanitize 0xFFFF regdomain
+To: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Wed, Feb 27, 2013 at 10:52 PM, Michał Kazior <kazikcz@gmail.com> wrote:
+> On 28 February 2013 03:43, Adrian Chadd <adrian@freebsd.org> wrote:
+>> Have you verified that the rest of the EEPROM contents are vailid?
+>
+> I have not. How can I do that?
 
-Hi Daniel,
+The module would have done this upon initialization, this is done
+during hw init, prior to reg init. The EEPROM callback fill_eeprom()
+does this for the different families. To be clear ath9k_hw_init() gets
+called prior to ath_regd_init().
 
-> > If you have any suggestions for where to add debug messages, that
-> > would be appreciated. Otherwise I will look into sprinkling a few
-> > throughout the probe sequences to see if any communication succeeds
-> > before the first error is printed.
->=20
-> For now, let's use dynamic_debug to collect some logs.
->=20
-> CONFIG_DYNAMIC_DEBUG=3Dy
->=20
-> # run these commands before running the test script:
-> echo "module mwifiex +p" > /sys/kernel/debug/dynamic_debug/control
-> echo "module mwifiex_sdio +p" > /sys/kernel/debug/dynamic_debug/control
+I'll note for the record that regardless of what is decided if the
+card came from a device designed as an AP the AP manufacturer intended
+for that card to stay with that AP, and as per our support team the AP
+design / manufacturer could end up programming whatever into the
+EEPROM / OTP, and their support for that device would be intended with
+their own solution.
 
-Running your test script on my XO-4 with 3.8 kernel does reproduce command =
-timeout.
-Although the timeout happens at different path than yours they could have t=
-he same cause.
+Supporting 0x64 for this regdomain that some random AP manufacturer
+used should be OK though but note that we can't support it.
 
-Attached please find two patches that seems fix the FUNC_SHUTDOWN timeout o=
-n my XO-4.
-Hope it helps.
-
-Thanks,
-Bing
-
-
---_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0002-mwifiex-skip-pending-commands-after-function-shutdow.patch"
-Content-Description: 0002-mwifiex-skip-pending-commands-after-function-shutdow.patch
-Content-Disposition: attachment;
-	filename="0002-mwifiex-skip-pending-commands-after-function-shutdow.patch";
-	size=1829; creation-date="Fri, 08 Mar 2013 04:29:04 GMT";
-	modification-date="Fri, 08 Mar 2013 04:29:04 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBlOTJjZDU0MmFjNzU3NDkzZGIxMTgyYmQ4MTE2MGUxOWMxMTE2MDUyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPgpEYXRlOiBU
-aHUsIDcgTWFyIDIwMTMgMjA6MTY6MDMgLTA4MDAKU3ViamVjdDogW1BBVENIIDIvMl0gbXdpZmll
-eDogc2tpcCBwZW5kaW5nIGNvbW1hbmRzIGFmdGVyIGZ1bmN0aW9uIHNodXRkb3duCgpEdXJpbmcg
-cm1tb2QgbXdpZmlleF9zZGlvIHByb2Nlc3NpbmcgRlVOQ19TSFVURE9XTiBjb21tYW5kIGlzCnNl
-bnQgdG8gZmlybXdhcmUuIEZpcm13YXJlIGV4cGNldHMgb25seSBGVU5DX0lOSVQgb25jZSBXTEFO
-CmZ1bmN0aW9uIGlzIHNodXQgZG93bi4KCkFueSBjb21tYW5kIHBlbmRpbmcgaW4gdGhlIGNvbW1h
-bmQgcXVldWUgc2hvdWxkIGJlIGlnbm9yZWQgYW5kCmZyZWVkLgoKU2lnbmVkLW9mZi1ieTogQmlu
-ZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
-aWV4L2NtZGV2dC5jIHwgMTcgKysrKysrKysrKysrKystLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNCBp
-bnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvY21kZXZ0LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2Nt
-ZGV2dC5jCmluZGV4IGY0N2FkM2EuLjlhMTMwMmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvY21kZXZ0LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
-eC9jbWRldnQuYwpAQCAtMTU3LDYgKzE1NywyMCBAQCBzdGF0aWMgaW50IG13aWZpZXhfZG5sZF9j
-bWRfdG9fZncoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwKIAkJcmV0dXJuIC0xOwogCX0K
-IAorCWNtZF9jb2RlID0gbGUxNl90b19jcHUoaG9zdF9jbWQtPmNvbW1hbmQpOworCWNtZF9zaXpl
-ID0gbGUxNl90b19jcHUoaG9zdF9jbWQtPnNpemUpOworCisJaWYgKGFkYXB0ZXItPmh3X3N0YXR1
-cyA9PSBNV0lGSUVYX0hXX1NUQVRVU19SRVNFVCAmJgorCSAgICBjbWRfY29kZSAhPSBIb3N0Q21k
-X0NNRF9GVU5DX1NIVVRET1dOICYmCisJICAgIGNtZF9jb2RlICE9IEhvc3RDbWRfQ01EX0ZVTkNf
-SU5JVCkgeworCQlkZXZfZXJyKGFkYXB0ZXItPmRldiwKKwkJCSJETkxEX0NNRDogRlcgaW4gcmVz
-ZXQgc3RhdGUsIGlnbm9yZSBjbWQgJSN4XG4iLAorCQkJY21kX2NvZGUpOworCQltd2lmaWV4X2Nv
-bXBsZXRlX2NtZChhZGFwdGVyLCBjbWRfbm9kZSk7CisJCW13aWZpZXhfaW5zZXJ0X2NtZF90b19m
-cmVlX3EoYWRhcHRlciwgY21kX25vZGUpOworCQlyZXR1cm4gLTE7CisJfQorCiAJLyogU2V0IGNv
-bW1hbmQgc2VxdWVuY2UgbnVtYmVyICovCiAJYWRhcHRlci0+c2VxX251bSsrOwogCWhvc3RfY21k
-LT5zZXFfbnVtID0gY3B1X3RvX2xlMTYoSG9zdENtZF9TRVRfU0VRX05PX0JTU19JTkZPCkBAIC0x
-NjgsOSArMTgyLDYgQEAgc3RhdGljIGludCBtd2lmaWV4X2RubGRfY21kX3RvX2Z3KHN0cnVjdCBt
-d2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJYWRhcHRlci0+Y3Vycl9jbWQgPSBjbWRfbm9kZTsKIAlz
-cGluX3VubG9ja19pcnFyZXN0b3JlKCZhZGFwdGVyLT5td2lmaWV4X2NtZF9sb2NrLCBmbGFncyk7
-CiAKLQljbWRfY29kZSA9IGxlMTZfdG9fY3B1KGhvc3RfY21kLT5jb21tYW5kKTsKLQljbWRfc2l6
-ZSA9IGxlMTZfdG9fY3B1KGhvc3RfY21kLT5zaXplKTsKLQogCS8qIEFkanVzdCBza2IgbGVuZ3Ro
-ICovCiAJaWYgKGNtZF9ub2RlLT5jbWRfc2tiLT5sZW4gPiBjbWRfc2l6ZSkKIAkJLyoKLS0gCjEu
-OC4wCgo=
-
---_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-fix-race-when-queuing-commands.patch"
-Content-Description: 0001-mwifiex-fix-race-when-queuing-commands.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-fix-race-when-queuing-commands.patch"; size=5052;
-	creation-date="Fri, 08 Mar 2013 04:29:04 GMT";
-	modification-date="Fri, 08 Mar 2013 04:29:04 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBmZWRiZjE2MGE3MzJiMDE3ZGEzODY2MTNiNTA4YTgzMDZmNWZlNGNhIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
-PgpEYXRlOiBXZWQsIDI3IEZlYiAyMDEzIDE4OjI2OjMyIC0wODAwClN1YmplY3Q6IFtQQVRDSCAx
-LzJdIG13aWZpZXg6IGZpeCByYWNlIHdoZW4gcXVldWluZyBjb21tYW5kcwoKbXdpZmlleF9zZW5k
-X2NtZF9hc3luYygpIGlzIGNhbGxlZCBmb3Igc3luYyBhcyB3ZWxsIGFzIGFzeW5jCmNvbW1hbmRz
-LiAobXdpZmlleF9zZW5kX2NtZF9zeW5jKCkgaW50ZXJuYWxseSBjYWxscyBpdCBmb3IKc3luYyBj
-b21tYW5kLikKCiJhZGFwdGVyLT5jbWRfcXVldWVkIiBnZXRzIGZpbGxlZCBpbnNpZGUgbXdpZmll
-eF9zZW5kX2NtZF9hc3luYygpCnJvdXRpbmUgZm9yIGJvdGggdHlwZXMgb2YgY29tbWFuZHMuIEJ1
-dCBpdCBpcyB1c2VkIG9ubHkgZm9yIHN5bmMKY29tbWFuZHMgaW4gbXdpZmlleF93YWl0X3F1ZXVl
-X2NvbXBsZXRlKCkuIFRoaXMgY291bGQgbGVhZCB0byBhCnJhY2Ugd2hlbiB0d28gdGhyZWFkcyB0
-cnkgdG8gcXVldWUgYSBzeW5jIGNvbW1hbmQgd2l0aCBhbm90aGVyCnN5bmMvYXN5bmMgY29tbWFu
-ZCBzaW11bHRhbmVvdXNseS4KCkdldCByaWQgb2YgZ2xvYmFsIHZhcmlhYmxlIGFuZCBwYXNzIGNv
-bW1hbmQgbm9kZSBhcyBhIHBhcmFtZXRlcgp0byBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUo
-KSB0byBmaXggdGhlIHByb2JsZW0uCgpTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxh
-a2Fyd2FyQG1hcnZlbGwuY29tPgpTaWduZWQtb2ZmLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZl
-bGwuY29tPgotLS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgICAgfCAg
-NSArKy0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmggICAgICB8ICA0ICsr
-LS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jICAgICAgfCAgOCArKysrLS0t
-LQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYyB8IDEwICsrLS0tLS0t
-LS0KIDQgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25zKC0pCgpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMKaW5kZXggZDE5YTg4Yy4uZjQ3YWQzYSAx
-MDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYworKysgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCkBAIC00ODQsOCArNDg0LDYgQEAg
-aW50IG13aWZpZXhfc2VuZF9jbWRfc3luYyhzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1
-aW50MTZfdCBjbWRfbm8sCiAKIAlyZXQgPSBtd2lmaWV4X3NlbmRfY21kX2FzeW5jKHByaXYsIGNt
-ZF9ubywgY21kX2FjdGlvbiwgY21kX29pZCwKIAkJCQkgICAgIGRhdGFfYnVmKTsKLQlpZiAoIXJl
-dCkKLQkJcmV0ID0gbXdpZmlleF93YWl0X3F1ZXVlX2NvbXBsZXRlKGFkYXB0ZXIpOwogCiAJcmV0
-dXJuIHJldDsKIH0KQEAgLTU4OCw5ICs1ODYsMTAgQEAgaW50IG13aWZpZXhfc2VuZF9jbWRfYXN5
-bmMoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdWludDE2X3QgY21kX25vLAogCWlmIChj
-bWRfbm8gPT0gSG9zdENtZF9DTURfODAyXzExX1NDQU4pIHsKIAkJbXdpZmlleF9xdWV1ZV9zY2Fu
-X2NtZChwcml2LCBjbWRfbm9kZSk7CiAJfSBlbHNlIHsKLQkJYWRhcHRlci0+Y21kX3F1ZXVlZCA9
-IGNtZF9ub2RlOwogCQltd2lmaWV4X2luc2VydF9jbWRfdG9fcGVuZGluZ19xKGFkYXB0ZXIsIGNt
-ZF9ub2RlLCB0cnVlKTsKIAkJcXVldWVfd29yayhhZGFwdGVyLT53b3JrcXVldWUsICZhZGFwdGVy
-LT5tYWluX3dvcmspOworCQlpZiAoY21kX25vZGUtPndhaXRfcV9lbmFibGVkKQorCQkJcmV0ID0g
-bXdpZmlleF93YWl0X3F1ZXVlX2NvbXBsZXRlKGFkYXB0ZXIsIGNtZF9ub2RlKTsKIAl9CiAKIAly
-ZXR1cm4gcmV0OwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWlu
-LmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaAppbmRleCA5MjA2NTc1Li43
-MjU1Mjg5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaAor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaApAQCAtNzI4LDcgKzcyOCw2
-IEBAIHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgewogCXUxNiBjbWRfd2FpdF9xX3JlcXVpcmVkOwog
-CXN0cnVjdCBtd2lmaWV4X3dhaXRfcXVldWUgY21kX3dhaXRfcTsKIAl1OCBzY2FuX3dhaXRfcV93
-b2tlbjsKLQlzdHJ1Y3QgY21kX2N0cmxfbm9kZSAqY21kX3F1ZXVlZDsKIAlzcGlubG9ja190IHF1
-ZXVlX2xvY2s7CQkvKiBsb2NrIGZvciB0eCBxdWV1ZXMgKi8KIAlzdHJ1Y3QgY29tcGxldGlvbiBm
-d19sb2FkOwogCXU4IGNvdW50cnlfY29kZVtJRUVFODAyMTFfQ09VTlRSWV9TVFJJTkdfTEVOXTsK
-QEAgLTEwMjMsNyArMTAyMiw4IEBAIGludCBtd2lmaWV4X3JlcXVlc3Rfc2V0X211bHRpY2FzdF9s
-aXN0KHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJCQlzdHJ1Y3QgbXdpZmlleF9tdWx0
-aWNhc3RfbGlzdCAqbWNhc3RfbGlzdCk7CiBpbnQgbXdpZmlleF9jb3B5X21jYXN0X2FkZHIoc3Ry
-dWN0IG13aWZpZXhfbXVsdGljYXN0X2xpc3QgKm1saXN0LAogCQkJICAgIHN0cnVjdCBuZXRfZGV2
-aWNlICpkZXYpOwotaW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3QgbXdpZmll
-eF9hZGFwdGVyICphZGFwdGVyKTsKK2ludCBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUoc3Ry
-dWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwKKwkJCQlzdHJ1Y3QgY21kX2N0cmxfbm9kZSAq
-Y21kX3F1ZXVlZCk7CiBpbnQgbXdpZmlleF9ic3Nfc3RhcnQoc3RydWN0IG13aWZpZXhfcHJpdmF0
-ZSAqcHJpdiwgc3RydWN0IGNmZzgwMjExX2JzcyAqYnNzLAogCQkgICAgICBzdHJ1Y3QgY2ZnODAy
-MTFfc3NpZCAqcmVxX3NzaWQpOwogaW50IG13aWZpZXhfY2FuY2VsX2hzKHN0cnVjdCBtd2lmaWV4
-X3ByaXZhdGUgKnByaXYsIGludCBjbWRfdHlwZSk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9td2lmaWV4L3NjYW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nh
-bi5jCmluZGV4IGJiNjBjMjcuLmQyMTViNGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL213aWZpZXgvc2Nhbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nh
-bi5jCkBAIC0xMzg4LDEwICsxMzg4LDEzIEBAIGludCBtd2lmaWV4X3NjYW5fbmV0d29ya3Moc3Ry
-dWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwKIAkJCWxpc3RfZGVsKCZjbWRfbm9kZS0+bGlzdCk7
-CiAJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhZGFwdGVyLT5zY2FuX3BlbmRpbmdfcV9sb2Nr
-LAogCQkJCQkgICAgICAgZmxhZ3MpOwotCQkJYWRhcHRlci0+Y21kX3F1ZXVlZCA9IGNtZF9ub2Rl
-OwogCQkJbXdpZmlleF9pbnNlcnRfY21kX3RvX3BlbmRpbmdfcShhZGFwdGVyLCBjbWRfbm9kZSwK
-IAkJCQkJCQl0cnVlKTsKIAkJCXF1ZXVlX3dvcmsoYWRhcHRlci0+d29ya3F1ZXVlLCAmYWRhcHRl
-ci0+bWFpbl93b3JrKTsKKworCQkJLyogUGVyZm9ybSBpbnRlcm5hbCBzY2FuIHN5bmNocm9ub3Vz
-bHkgKi8KKwkJCWlmICghcHJpdi0+c2Nhbl9yZXF1ZXN0KQorCQkJCW13aWZpZXhfd2FpdF9xdWV1
-ZV9jb21wbGV0ZShhZGFwdGVyLCBjbWRfbm9kZSk7CiAJCX0gZWxzZSB7CiAJCQlzcGluX3VubG9j
-a19pcnFyZXN0b3JlKCZhZGFwdGVyLT5zY2FuX3BlbmRpbmdfcV9sb2NrLAogCQkJCQkgICAgICAg
-ZmxhZ3MpOwpAQCAtMTk0Niw5ICsxOTQ5LDYgQEAgaW50IG13aWZpZXhfcmVxdWVzdF9zY2FuKHN0
-cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJCS8qIE5vcm1hbCBzY2FuICovCiAJCXJldCA9
-IG13aWZpZXhfc2Nhbl9uZXR3b3Jrcyhwcml2LCBOVUxMKTsKIAotCWlmICghcmV0KQotCQlyZXQg
-PSBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUocHJpdi0+YWRhcHRlcik7Ci0KIAl1cCgmcHJp
-di0+YXN5bmNfc2VtKTsKIAogCXJldHVybiByZXQ7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
-eC9zdGFfaW9jdGwuYwppbmRleCA3NmQzMWRlLi44Yzk0M2I2IDEwMDY0NAotLS0gYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL213aWZpZXgvc3RhX2lvY3RsLmMKQEAgLTU0LDE2ICs1NCwxMCBAQCBpbnQgbXdpZmlleF9j
-b3B5X21jYXN0X2FkZHIoc3RydWN0IG13aWZpZXhfbXVsdGljYXN0X2xpc3QgKm1saXN0LAogICog
-VGhpcyBmdW5jdGlvbiB3YWl0cyBvbiBhIGNtZCB3YWl0IHF1ZXVlLiBJdCBhbHNvIGNhbmNlbHMg
-dGhlIHBlbmRpbmcKICAqIHJlcXVlc3QgYWZ0ZXIgd2FraW5nIHVwLCBpbiBjYXNlIG9mIGVycm9y
-cy4KICAqLwotaW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3QgbXdpZmlleF9h
-ZGFwdGVyICphZGFwdGVyKQoraW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3Qg
-bXdpZmlleF9hZGFwdGVyICphZGFwdGVyLAorCQkJCXN0cnVjdCBjbWRfY3RybF9ub2RlICpjbWRf
-cXVldWVkKQogewogCWludCBzdGF0dXM7Ci0Jc3RydWN0IGNtZF9jdHJsX25vZGUgKmNtZF9xdWV1
-ZWQ7Ci0KLQlpZiAoIWFkYXB0ZXItPmNtZF9xdWV1ZWQpCi0JCXJldHVybiAwOwotCi0JY21kX3F1
-ZXVlZCA9IGFkYXB0ZXItPmNtZF9xdWV1ZWQ7Ci0JYWRhcHRlci0+Y21kX3F1ZXVlZCA9IE5VTEw7
-CiAKIAlkZXZfZGJnKGFkYXB0ZXItPmRldiwgImNtZCBwZW5kaW5nXG4iKTsKIAlhdG9taWNfaW5j
-KCZhZGFwdGVyLT5jbWRfcGVuZGluZyk7Ci0tIAoxLjguMAoK
-
---_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_--
+  Luis
