@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47414 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55824 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755595Ab3BEOiW (ORCPT
+	with ESMTP id S1751903Ab3B1WlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Feb 2013 09:38:22 -0500
-Message-ID: <1360075125.8376.11.camel@jlt4.sipsolutions.net> (sfid-20130205_153836_328192_D9E8D5D8)
-Subject: Re: [RFC] cfg80211: configuration for WoWLAN over TCP
+	Thu, 28 Feb 2013 17:41:20 -0500
+Message-ID: <1362091275.8330.13.camel@jlt4.sipsolutions.net> (sfid-20130228_234123_393639_0036F219)
+Subject: Re: [PATCHv3] cfg80211: Extend support for IEEE 802.11r Fast BSS
+ Transition
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 05 Feb 2013 15:38:45 +0100
-In-Reply-To: <1360073836.8376.10.camel@jlt4.sipsolutions.net> (sfid-20130205_151706_344715_2E47E8AD)
-References: <1360062367-15970-1-git-send-email-johannes@sipsolutions.net>
-	 <51110D86.8030500@gmail.com>
-	 (sfid-20130205_144759_494055_8E3FC786) <1360072210.8376.9.camel@jlt4.sipsolutions.net>
-	 (sfid-20130205_144950_996774_14518D3F) <1360073836.8376.10.camel@jlt4.sipsolutions.net>
-	 (sfid-20130205_151706_344715_2E47E8AD)
+Date: Thu, 28 Feb 2013 23:41:15 +0100
+In-Reply-To: <20130227151427.GA19980@jouni.qca.qualcomm.com>
+References: <20130221060843.GA24491@w1.fi>
+	 <1361565394.3420.17.camel@jlt4.sipsolutions.net>
+	 <20130226103819.GA5630@jouni.qca.qualcomm.com>
+	 <1361910682.8440.7.camel@jlt4.sipsolutions.net>
+	 <20130227151427.GA19980@jouni.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-05 at 15:17 +0100, Johannes Berg wrote:
-> On Tue, 2013-02-05 at 14:50 +0100, Johannes Berg wrote:
-> > On Tue, 2013-02-05 at 14:47 +0100, Pontus Fuchs wrote:
-> > > On 2013-02-05 12:06, Johannes Berg wrote:
-> > > >
-> > > > Intel Wireless devices are able to make a TCP connection
-> > > > after suspending, sending some data and waking up when
-> > > > the connection receives wakeup data (or breaks). Add the
-> > > > WoWLAN configuration and feature advertising API for it.
-> > > >
-> > > 
-> > > What's protecting this feature from stomping on an existing connection 
-> > > when specifying the source port?
-> > 
-> > Nothing. Presumably if you specify it you know what you're doing, and
-> > don't also create a connection to the same IP from the same port?
-> > 
-> > Hmm. Maybe we could allocate the socket anyway and make it allocate the
-> > chosen port, failing if it isn't available? I guess I need to check the
-> > APIs.
-> 
-> I guess this might work: http://p.sipsolutions.net/e5bc789d26b5e34a.txt
+On Wed, 2013-02-27 at 17:14 +0200, Jouni Malinen wrote:
+> Add NL80211_CMD_UPDATE_FT_IES to support update of FT IEs to the WLAN
+> driver and NL80211_CMD_FT_EVENT to send FT events from the WLAN driver.
+> This will carry the target AP's MAC address along with the relevant
+> Information Elements. This event is used to report received FT IEs
+> (MDIE, FTIE, RSN IE, TIE, RICIE). These changes allow FT to be supported
+> with drivers that use an internal SME instead of user space option (like
+> FT implementation in wpa_supplicant with mac80211-based drivers).
 
-Yep, seems to work, I'll fold that in. (Tested by having a TCP
-connection open and requesting the same port to be used)
+Applied.
 
 johannes
 
