@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1353 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753869Ab3BFRmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:42:36 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/12] brcmfmac: add chip information to the bus
- interface
-Date: Wed, 6 Feb 2013 18:40:45 +0100
-Message-ID: <1360172447-2424-11-git-send-email-arend@broadcom.com> (sfid-20130206_184248_413202_A7D810D9)
-In-Reply-To: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-References: <1360172447-2424-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:53508 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548Ab3B1JBf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2013 04:01:35 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: sujith@msujith.org, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9] mac80211: really fix monitor mode channel reporting
+Date: Thu, 28 Feb 2013 10:01:24 +0100
+Message-Id: <1362042084-26920-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_100138_531258_899933FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend the bus interface with chip identifier and revision. This
-will be used when certain devices need special handling in the
-driver.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+After Felix's patch it was still broken in case you
+used more than just a single monitor interface. Fix
+it better now.
+
+Reported-by: Sujith Manoharan <sujith@msujith.org>
+Tested-by: Sujith Manoharan <sujith@msujith.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    4 ++++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 ++
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    2 ++
- 3 files changed, 8 insertions(+)
+ net/mac80211/cfg.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index 6af7c9d..ad25c34 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -64,6 +64,8 @@ struct brcmf_bus_ops {
-  * @dstats: dongle-based statistical data.
-  * @align: alignment requirement for the bus.
-  * @dcmd_list: bus/device specific dongle initialization commands.
-+ * @chip: device identifier of the dongle chip.
-+ * @chiprev: revision of the dongle chip.
-  */
- struct brcmf_bus {
- 	union {
-@@ -76,6 +78,8 @@ struct brcmf_bus {
- 	uint maxctl;
- 	unsigned long tx_realloc;
- 	u8 align;
-+	u32 chip;
-+	u32 chiprev;
- 	struct list_head dcmd_list;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 808f5fc..fb30681 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3290,14 +3290,19 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
+ 	int ret = -ENODATA;
  
- 	struct brcmf_bus_ops *ops;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index d424dd6..04680c5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3927,6 +3927,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	/* Assign bus interface call back */
- 	bus->sdiodev->bus_if->dev = bus->sdiodev->dev;
- 	bus->sdiodev->bus_if->ops = &brcmf_sdio_bus_ops;
-+	bus->sdiodev->bus_if->chip = bus->ci->chip;
-+	bus->sdiodev->bus_if->chiprev = bus->ci->chiprev;
- 
- 	/* Attach to the brcmf/OS/network interface */
- 	ret = brcmf_attach(SDPCM_RESERVE, bus->sdiodev->dev);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 06f7339..a55994d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1250,6 +1250,8 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->bus_priv.usb = bus_pub;
- 	dev_set_drvdata(dev, bus);
- 	bus->ops = &brcmf_usb_bus_ops;
-+	bus->chip = bus_pub->devid;
-+	bus->chiprev = bus_pub->chiprev;
- 
- 	/* Attach to the common driver interface */
- 	ret = brcmf_attach(0, dev);
+ 	rcu_read_lock();
+-	if (local->use_chanctx) {
+-		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-		if (chanctx_conf) {
+-			*chandef = chanctx_conf->def;
+-			ret = 0;
+-		}
+-	} else if (local->open_count == local->monitors) {
+-		*chandef = local->monitor_chandef;
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	if (chanctx_conf) {
++		*chandef = chanctx_conf->def;
++		ret = 0;
++	} else if (local->open_count > 0 &&
++		   local->open_count == local->monitors &&
++		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++		if (local->use_chanctx)
++			*chandef = local->monitor_chandef;
++		else
++			cfg80211_chandef_create(chandef,
++						local->_oper_channel,
++						local->_oper_channel_type);
+ 		ret = 0;
+ 	}
+ 	rcu_read_unlock();
 -- 
-1.7.10.4
-
+1.8.0
 
