@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:35892 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757858Ab3BFX42 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Feb 2013 18:56:28 -0500
-Message-ID: <5112EDAA.9050002@lwfinger.net> (sfid-20130207_005636_018450_D2651CC8)
-Date: Wed, 06 Feb 2013 17:56:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:47004 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752035Ab3B1DY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Feb 2013 22:24:58 -0500
+Message-ID: <512ECE01.8010102@openwrt.org> (sfid-20130228_042501_984760_39EEC6A5)
+Date: Thu, 28 Feb 2013 04:24:49 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Thomas Rosenkranz <tom.rosary@googlemail.com>
-CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-usb@vger.kernel.org,
+To: Adrian Chadd <adrian@freebsd.org>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bugreport upstream: 0bda:819a RTL8188CUS WLAN doesn't work out
- of the box
-References: <51045387.2040607@gmail.com> <5112A972.3060109@lwfinger.net> <CAOAX8-np_cY85=qL4TQCS9_d3tvggZTww7Maq1RWcasJsQxngw@mail.gmail.com>
-In-Reply-To: <CAOAX8-np_cY85=qL4TQCS9_d3tvggZTww7Maq1RWcasJsQxngw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org> <20757.1753.863278.858198@gargle.gargle.HOWL> <511508A6.8020104@openwrt.org> <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com> <51152D9E.1040106@openwrt.org> <20130227192030.GW12537@pogo> <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+In-Reply-To: <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2013 02:03 PM, Thomas Rosenkranz wrote:
-> Sorry for aksing back.
-> 1. You mean I should get the kernel clean of the realtek driver first
-> to prevent a crash during patching? Cause unplugging is no option for
-> a onboard device.
-> 2. I have no idea what to do with the patching file and couldn't find
-> any good instructions with google. "man patch" doesn't make me smarter
-> at all
+On 2013-02-28 3:21 AM, Adrian Chadd wrote:
+> Why don't we just move the ath9k rate control code to another mac80211
+> rate control module, so it's available to other devices?
+> 
+> It may not be a bad idea to keep it around as a reference and for
+> people to do comparisons against. It just seems silly to have a rate
+> control framework and then not use it..
+I don't see the point in keeping that algorithm around. It has known
+design flaws that make it perform poorly in several scenarios, and
+fixing some of the flaws require basically rewriting it.
 
-Put the patch in the directory where the arch, block, crypto, drivers, and so 
-forth directories are located. Then run the command
-
-patch -p1 < 0001-......patch
-
-After that, run "make" followed by "sudo make modules_install install". If your 
-distro is reasonable, that will give you a new entry in your boot menu.
-
-Larry
-
-
+- Felix
