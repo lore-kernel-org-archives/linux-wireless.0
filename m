@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:53652 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759860Ab3BLOkY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Feb 2013 09:40:24 -0500
-Message-ID: <1360680021.5128.37.camel@joe-AO722> (sfid-20130212_154027_274520_4253473C)
-Subject: Re: [PATCH 01/14] cw1200: v4: low-level hardware I/O functions
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Solomon Peachy <pizza@shaftnet.org>, linux-wireless@vger.kernel.org
-Date: Tue, 12 Feb 2013 06:40:21 -0800
-In-Reply-To: <87vc9xac42.fsf@purkki.adurom.net>
-References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
-	 <1360355527-12159-2-git-send-email-pizza@shaftnet.org>
-	 <1360372559.13487.14.camel@joe-AO722> <20130211185322.GB3123@shaftnet.org>
-	 <1360609295.2028.44.camel@joe-AO722> <87vc9xac42.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13196 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548Ab3B1Huw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2013 02:50:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Myoungje Kim <mjei78@gmail.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	David Miller <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<ath6kl-devel@qca.qualcomm.com>
+Subject: Re: Fwd: [linux] [PATCH] ATH6KL: "Fix the byte alignment rule to avoid loss of bytes in a TCP segment" (#27)
+References: <torvalds/linux/pull/27@github.com>
+	<CA+55aFxmE+hEm53f2gjFetNREW6J8X1GfpzeVxhHnECC-h6D7Q@mail.gmail.com>
+	<20130227174207.GB2082@tuxdriver.com>
+	<CABzs15BFOUWH=fMnerKW9-84PZKy5+2eN8XDhiCHTEHHjYf31w@mail.gmail.com>
+Date: Thu, 28 Feb 2013 09:50:45 +0200
+In-Reply-To: <CABzs15BFOUWH=fMnerKW9-84PZKy5+2eN8XDhiCHTEHHjYf31w@mail.gmail.com>
+	(Myoungje Kim's message of "Thu, 28 Feb 2013 12:11:56 +0900")
+Message-ID: <87ehg0j2qy.fsf@kamboji.qca.qualcomm.com> (sfid-20130228_085104_043729_01364875)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-02-12 at 15:35 +0200, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> 
-> >> Question -- as a matter of policy, is the goal to have a completely 
-> >> clean checkpatch run?  I get that there should be no ERRORs, but 
-> >> WARNINGs/CHECKs are not considered fatal for a reason, right?
-> >
-> > No.  It's just a guideline.  As far as I'm concerned,
-> > ignore every checkpatch message you don't agree with.
-> 
-> BTW, I think this is becoming a major problem. I have had discussions
-> with various people who consider checkpatch as some sort of automatic
-> upstream compliance system. I'm a bit worried about that. People should
-> consider just as a tool next to other tools, not as the holy bible.
+Hi Myoungje,
 
-Hi Kalle.
+(adding ath6kl-devel)
 
-As you probably know, I am not an upstream maintainer.
+Myoungje Kim <mjei78@gmail.com> writes:
 
-For drivers/net and drivers/staging, the two primary
-upstream maintainers do seem to prefer that most all
-checkpatch messages be addressed before acceptance.
+> How I appreciate your e-mail about my trivial patch.
+> I am very happy due to receiving your reply(even though 'CC' ^^;)
+>
+> You don't need to count the ways you hate GitHub pull requests, 
+> now I knew that enough ^^.
+> It was the only easy way I've thought to commit to the main tree.
+> You already know that I am very beginner.
+>
+>
+> I'm ashamed to say that I spent about 3 weeks to find and debug this issue.
+> My patch looks so simple,
+> but I don't want anyone to trouble spending or wasting their time like me
+> due to this issue makes me suspect all of linux kernel TCP/IP stack and curl,
+> wget, ftp client, user HTTP client, library, everything of my system.
+> So it made me to make pull request through github I`ve ever known as the way to
+> commit.
+>
+> One more, now I knew that how to commit and how much I want to commit ^^.
+> Thanks and have a good day~
 
-Those two paths are ~20% of all patches.
+No worries, it always takes some time to learn the process. And I hope
+you send more ath6kl patches in the future :)
 
-Most other maintainers don't seem to care so much.
+I'm on vacation right, but I will take a look at your patch next week.
 
-> Joe, when working with checkpatch documentation you could try to
-> emphasise that part (or it might be that you have already done that).
+BTW, I have documented the process of sending patches to ath6kl here:
 
-Patches welcome.
+http://wireless.kernel.org/en/users/Drivers/ath6kl#Hacking_on_ath6kl
 
-cheers, Joe
+Hopefully that helps. Please let me know if I need to improve it.
 
+-- 
+Kalle Valo
