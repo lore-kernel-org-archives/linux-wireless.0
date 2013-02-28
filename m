@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759095Ab3BGUDB (ORCPT
+Received: from mail-ia0-f175.google.com ([209.85.210.175]:57599 "EHLO
+	mail-ia0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab3B1Lr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Feb 2013 15:03:01 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U3XgS-00080e-A9
-	for linux-wireless@vger.kernel.org; Thu, 07 Feb 2013 21:03:00 +0100
-Message-ID: <1360267405.8038.15.camel@jlt4.sipsolutions.net> (sfid-20130207_210306_191961_BDBA424B)
-Subject: Re: [PATCH] mac80211: fix HT/VHT disable flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 07 Feb 2013 21:03:25 +0100
-In-Reply-To: <1360266149-23352-1-git-send-email-johannes@sipsolutions.net> (sfid-20130207_204227_108467_61008154)
-References: <1360266149-23352-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130207_204227_108467_61008154)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 28 Feb 2013 06:47:27 -0500
+Received: by mail-ia0-f175.google.com with SMTP id r4so1397585iaj.20
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2013 03:47:27 -0800 (PST)
+Date: Thu, 28 Feb 2013 06:47:24 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+Message-ID: <20130228114724.GB16369@localhost> (sfid-20130228_124731_811500_02A5A386)
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+ <20757.1753.863278.858198@gargle.gargle.HOWL>
+ <511508A6.8020104@openwrt.org>
+ <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+ <51152D9E.1040106@openwrt.org>
+ <20130227192030.GW12537@pogo>
+ <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+ <512ECE01.8010102@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <512ECE01.8010102@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-07 at 20:42 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The code to disable HT and VHT if VHT was advertised
-> without VHT is wrong -- it accidentally uses the wrong
-> flags. Fix that.
+On Thu, Feb 28, 2013 at 04:24:49AM +0100, Felix Fietkau wrote:
+> On 2013-02-28 3:21 AM, Adrian Chadd wrote:
+> > It may not be a bad idea to keep it around as a reference and for
+> > people to do comparisons against. It just seems silly to have a rate
+> > control framework and then not use it..
+> I don't see the point in keeping that algorithm around. It has known
+> design flaws that make it perform poorly in several scenarios, and
+> fixing some of the flaws require basically rewriting it.
 
-FWIW, even though this is broken in 3.8 now, it doesn't matter because
-there's no driver in there that has VHT, so I'm not going to apply it to
-mac80211.git.
+The same could be said of PID...
 
-johannes
-
+-- 
+Bob Copeland %% www.bobcopeland.com
