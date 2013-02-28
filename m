@@ -1,24 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758617Ab3BTKgb (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:63335 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459Ab3B1Gwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Feb 2013 05:36:31 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1U872L-0007Ux-TC
-	for linux-wireless@vger.kernel.org; Wed, 20 Feb 2013 11:36:30 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] nl80211: large wiphy information
-Date: Wed, 20 Feb 2013 11:36:23 +0100
-Message-Id: <1361356586-11496-1-git-send-email-johannes@sipsolutions.net> (sfid-20130220_113636_394783_3A90D952)
+	Thu, 28 Feb 2013 01:52:44 -0500
+Received: by mail-bk0-f47.google.com with SMTP id jc3so645403bkc.20
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 22:52:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmo=2==jGr-xWL8As7qvJs0YDWe2DekVCwEY2sQSsXtrL0w@mail.gmail.com>
+References: <1361992172-4590-1-git-send-email-kazikcz@gmail.com>
+	<CAJ-Vmo=2==jGr-xWL8As7qvJs0YDWe2DekVCwEY2sQSsXtrL0w@mail.gmail.com>
+Date: Thu, 28 Feb 2013 07:52:43 +0100
+Message-ID: <CABvG-CWsvuJzMp06BitK1RGF55WJjZ8O4H58=VRpMcX27362RA@mail.gmail.com> (sfid-20130228_075248_347349_CBAEF387)
+Subject: Re: [PATCH v2] ath: sanitize 0xFFFF regdomain
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are the patches to support large wiphy information and add
-back the information that previously pushed it over the limit.
+On 28 February 2013 03:43, Adrian Chadd <adrian@freebsd.org> wrote:
+> Have you verified that the rest of the EEPROM contents are vailid?
 
-johannes
+I have not. How can I do that?
 
+
+-- Michal
