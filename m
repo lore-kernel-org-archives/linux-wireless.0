@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56911 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56036 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755593Ab3CPM44 (ORCPT
+	with ESMTP id S1751513Ab3B1X4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 08:56:56 -0400
-Message-ID: <1363361148.8656.9.camel@jlt4.sipsolutions.net> (sfid-20130316_135700_207716_664E5A65)
-Subject: Re: [PATCH] mac80211: Enable sw scan with chan context
+	Thu, 28 Feb 2013 18:56:24 -0500
+Message-ID: <1362095777.8330.15.camel@jlt4.sipsolutions.net> (sfid-20130301_005628_380667_9BBDCA3C)
+Subject: Re: [PATCH 1/3] regulatory: allow VHT channels in world roaming
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1363057766.778.8.camel@WLAN-SW-TEST-03>
-References: <513DE4BB.9010104@posedge.com>
-	 <1363012784.5284.5.camel@jlt4.sipsolutions.net>
-	 <513DF675.3000800@posedge.com>
-	 <1363015558.5284.11.camel@jlt4.sipsolutions.net>
-	 <1363057766.778.8.camel@WLAN-SW-TEST-03>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org, green@qca.qualcomm.com
+Date: Fri, 01 Mar 2013 00:56:17 +0100
+In-Reply-To: <CAB=NE6VonnZDQwat3PeCvnVJnuj-vKciK8WYCmbLzre+4zoLyw@mail.gmail.com> (sfid-20130301_003411_417728_43BAD6F7)
+References: <1360797364-9430-1-git-send-email-johannes@sipsolutions.net>
+	 <1360797364-9430-2-git-send-email-johannes@sipsolutions.net>
+	 <CAB=NE6VonnZDQwat3PeCvnVJnuj-vKciK8WYCmbLzre+4zoLyw@mail.gmail.com>
+	 (sfid-20130301_003411_417728_43BAD6F7)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Mar 2013 16:25:48 +0100
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-12 at 08:39 +0530, Mahesh Palivela wrote:
-> On Mon, 2013-03-11 at 17:25 +0200, Johannes Berg wrote:
-> > On Mon, 2013-03-11 at 20:51 +0530, Mahesh Palivela wrote:
-> > 
-> > > I tested this patch. scan works. 
-> > 
-> > Works how? It never tells the driver to go to a different channel ...
-> 
-> sorry. I missed this. But my patch takes care of crash in mac80211 once
-> we remove 'use_chanctx' check in sw_scan function.
+On Thu, 2013-02-28 at 15:33 -0800, Luis R. Rodriguez wrote:
 
-Yes, but it doesn't make it *do* anything, so the patch is completely
-pointless. I don't see how chanctx and SW scan/roc can ever possibly
-work together.
+> > For VHT, the wider bandwidths (up to 160 MHz) need
+> > to be allowed. Since world roaming only covers the
+> > case of connecting to an AP, it can be opened up
+> > there, we will rely on the AP to know the local
+> > regulations.
 
-> > > Anyways chan context is a WIP.
-> > 
-> > It pretty much works.
-> 
-> For AP mode yes it works. But for STA mode, we have work I guess.
+> This seems reasonable to me but in your patch you only allow 80, not
+> 160, any reason for that?
 
-You may have, but in mac80211 it should work just as designed.
-
-> VHT assoc. To enable VHT on both AP and STA. For VHT to work we need
-> chan_ctx. Isn't it?
-
-Right now, yes, you do.
-
-However, I would argue that if you really want only VHT support, you
-should remove the channel/channel_type fields from struct ieee80211_conf
-and instead add a cfg80211_chan_def. This means a lot of changes in all
-the drivers, but I'd hate to see the data all duplicated, and the
-changes are trivial anyway.
+160 doesn't fit here yet -- I think it should be enabled when/if those
+DFS channels are added, I don't see a reason they're missing there.
 
 johannes
 
