@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gast-001.fem.tu-ilmenau.de ([141.24.44.1]:60161 "EHLO
-	a251.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759524Ab3BMOuq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855Ab3B1WTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Feb 2013 09:50:46 -0500
-From: Michael Braun <michael-dev@fami-braun.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-	Michael Braun <michael-dev@fami-braun.de>
-Subject: [RFCv5 2/2] mac80211: fix WPA with VLAN on AP side with ps-sta
-Date: Wed, 13 Feb 2013 13:51:20 +0100
-Message-Id: <1360759880-5669-3-git-send-email-michael-dev@fami-braun.de> (sfid-20130213_155054_893757_130A17D9)
-In-Reply-To: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
-References: <1360759880-5669-1-git-send-email-michael-dev@fami-braun.de>
+	Thu, 28 Feb 2013 17:19:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] mac80211: flush keys when stopping AP
+Date: Thu, 28 Feb 2013 23:19:30 +0100
+Message-Id: <1362089971-12182-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_231938_867224_2603DCF9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending a broadcast while at least on of the connected stations is
-sleeping, it gets queued and send after a DTIM beacon is sent.
-If the packet was to be sent on a vlan interface, the vif used for dequeing
-from the per-bss queue does not hold the per-vlan sdata. The correct sdata is
-required to use the correct per-vlan broadcast/multicast key.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch fixes this by restoring the per-vlan sdata using the skb->dev entry.
+Since hostapd will remove keys this isn't usually
+an issue, but we shouldn't leak keys to the next
+BSS started on the same interface. For VLANs this
+also fixes a bug, keys that aren't removed would
+otherwise be leaked.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-V2: fix compile warning
-V3: simplify change
- net/mac80211/tx.c |    1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/cfg.c   | 5 ++++-
+ net/mac80211/iface.c | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index f476aa6..71385bf 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2785,6 +2785,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 		}
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 64da5a4..3ba614d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1035,9 +1035,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		sta_info_flush_defer(vlan);
+ 	sta_info_flush_defer(sdata);
+ 	rcu_barrier();
+-	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
+ 		sta_info_flush_cleanup(vlan);
++		ieee80211_free_keys(vlan);
++	}
+ 	sta_info_flush_cleanup(sdata);
++	ieee80211_free_keys(sdata);
  
-+		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
- 		if (!ieee80211_tx_prepare(sdata, &tx, skb))
- 			break;
- 		dev_kfree_skb_any(skb);
+ 	sdata->vif.bss_conf.enable_beacon = false;
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index feda9fb..74228d9 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -836,7 +836,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 		/*
+ 		 * Free all remaining keys, there shouldn't be any,
+-		 * except maybe group keys in AP more or WDS?
++		 * except maybe in WDS mode?
+ 		 */
+ 		ieee80211_free_keys(sdata);
+ 
 -- 
-1.7.10.4
+1.8.0
 
