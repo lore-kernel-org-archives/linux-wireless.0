@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50626 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933020Ab3BSWxF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55781 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab3B1WTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Feb 2013 17:53:05 -0500
-Message-ID: <51240249.6060801@candelatech.com> (sfid-20130219_235310_043517_BFB97404)
-Date: Tue, 19 Feb 2013 14:52:57 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash on removal of 400 interfaces (3.7.6+)
-References: <5122A7C7.3070508@candelatech.com>  (sfid-20130218_231436_933191_3F8FE600) <1361225773.8555.50.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1361225773.8555.50.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 28 Feb 2013 17:19:36 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: simplify AP interface stop
+Date: Thu, 28 Feb 2013 23:19:31 +0100
+Message-Id: <1362089971-12182-2-git-send-email-johannes@sipsolutions.net> (sfid-20130228_231940_319630_88DD054B)
+In-Reply-To: <1362089971-12182-1-git-send-email-johannes@sipsolutions.net>
+References: <1362089971-12182-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/18/2013 02:16 PM, Johannes Berg wrote:
-> On Mon, 2013-02-18 at 14:14 -0800, Ben Greear wrote:
->> We often see crashes in work-queue processing when deleting
->> lots of wifi station interfaces.  I'm guessing that there is probably
->> a work item that was not properly un-registered before deleting
->> memory.  I have backported some wifi fixes from upstream, so
->> maybe they are to blame, but in case anyone has any suggestions
->> for places to look, please let me know.
->
-> Enable CONFIG_DEBUG_OBJECTS and CONFIG_DEBUG_OBJECTS_WORK :)
+From: Johannes Berg <johannes.berg@intel.com>
 
-That did not catch anything.
+For AP interfaces, there's no need to flush stations
+or keys again when the interface is stopped as already
+happened when the BSS was stopped on the interface.
 
-I have another data point that may shed some light:  The test
-case actually deletes the AP (on another machine) at the same
-time it starts tearing down 200 stations on the first machine.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-So, we are manually tearing down stations at the same time they
-start timing out due to the AP disappearing, and any un-registering
-that the stations might try are probably going to hit some failure cases
-because the AP is of course not answering.
-
-
-I could not reproduce this on a system that continually created
-and tore down 400 stations against APs that remained stable and
-active....
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 74228d9..6c60711 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -832,14 +832,16 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		rcu_barrier();
+ 		sta_info_flush_cleanup(sdata);
+ 
+-		skb_queue_purge(&sdata->skb_queue);
+-
+ 		/*
+ 		 * Free all remaining keys, there shouldn't be any,
+ 		 * except maybe in WDS mode?
+ 		 */
+ 		ieee80211_free_keys(sdata);
+ 
++		/* fall through */
++	case NL80211_IFTYPE_AP:
++		skb_queue_purge(&sdata->skb_queue);
++
+ 		drv_remove_interface_debugfs(local, sdata);
+ 
+ 		if (going_down)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0
 
