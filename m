@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55206 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756870Ab3BNLUa (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:54478 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab3B1CVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Feb 2013 06:20:30 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: prevent spurious HT/VHT downgrade message
-Date: Thu, 14 Feb 2013 12:20:26 +0100
-Message-Id: <1360840826-23188-1-git-send-email-johannes@sipsolutions.net> (sfid-20130214_122034_394749_8A612C00)
+	Wed, 27 Feb 2013 21:21:47 -0500
+Received: by mail-wg0-f45.google.com with SMTP id dq12so1070628wgb.24
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Feb 2013 18:21:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20130227192030.GW12537@pogo>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+Date: Wed, 27 Feb 2013 18:21:46 -0800
+Message-ID: <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com> (sfid-20130228_032151_304606_6F8A08EF)
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Why don't we just move the ath9k rate control code to another mac80211
+rate control module, so it's available to other devices?
 
-Even when connecting to an AP that doesn't support VHT,
-and even when the local device doesn't support it either,
-the downgrade message gets printed. Suppress the message
-if HT and/or VHT is disabled.
+It may not be a bad idea to keep it around as a reference and for
+people to do comparisons against. It just seems silly to have a rate
+control framework and then not use it..
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7d6a863..1087538 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -357,6 +357,10 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	ret = 0;
- 
- out:
-+	/* don't print the message below for VHT mismatch if VHT is disabled */
-+	if (ret & IEEE80211_STA_DISABLE_VHT)
-+		vht_chandef = *chandef;
-+
- 	while (!cfg80211_chandef_usable(sdata->local->hw.wiphy, chandef,
- 					IEEE80211_CHAN_DISABLED)) {
- 		if (WARN_ON(chandef->width == NL80211_CHAN_WIDTH_20_NOHT)) {
--- 
-1.8.0
-
+Adrian
