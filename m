@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:53858 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754112Ab3CXQQ2 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:31102 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab3CAFWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 12:16:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130322150847.GH32416@pogo>
-References: <CAOULuOb0_40EX+6A_HM8eJN7kj9J4WhO9UhZbUUqng1Sfy_SQg@mail.gmail.com>
-	<20130318191340.GA28919@tuxdriver.com>
-	<20130318210308.GD32416@pogo>
-	<20130321114219.GB1459@redhat.com>
-	<20130321193331.GB32416@pogo>
-	<20130322091342.GB1496@redhat.com>
-	<20130322150847.GH32416@pogo>
-Date: Sun, 24 Mar 2013 12:16:27 -0400
-Message-ID: <CAOULuOYfwEAwBWbWAUYX2FaPtufTUqkCndcfA1ntiMPGkPi5qA@mail.gmail.com> (sfid-20130324_171648_252227_2CE94875)
-Subject: Re: [PATCH] ath9k : Fix ieee80211 work while going to suspend
-From: Parag Warudkar <parag.lkml@gmail.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Fri, 1 Mar 2013 00:22:12 -0500
+Date: Fri, 1 Mar 2013 08:20:21 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	senthilb@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thierry Escande <thierry.escande@linux.intel.com>,
+	Szymon Janc <szymon.janc@tieto.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
+	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] NFC: llcp: cleanup underflow check
+Message-ID: <20130301052021.GB2669@longonot.mountain> (sfid-20130301_062222_833559_2C8A1301)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2148581.S8tzak9aE2@uw000953>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 22, 2013 at 11:08 AM, Luis R. Rodriguez
-<rodrigue@qca.qualcomm.com> wrote:
-> On Fri, Mar 22, 2013 at 10:13:42AM +0100, Stanislaw Gruszka wrote:
->> On Thu, Mar 21, 2013 at 12:33:31PM -0700, Luis R. Rodriguez wrote:
->> > OK how about this for stable for now:
->> >
->> > diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
->> > index 39c84ec..7fdac6c 100644
->> > --- a/drivers/net/wireless/ath/ath9k/link.c
->> > +++ b/drivers/net/wireless/ath/ath9k/link.c
->> > @@ -170,7 +170,8 @@ void ath_rx_poll(unsigned long data)
->> >  {
->> >     struct ath_softc *sc = (struct ath_softc *)data;
->> >
->> > -   ieee80211_queue_work(sc->hw, &sc->hw_check_work);
->> > +   if (!test_bit(SC_OP_INVALID, &sc->sc_flags))
->> > +           ieee80211_queue_work(sc->hw, &sc->hw_check_work);
->> >  }
->>
->> That looks ok for me as -stable fix
->>
->> Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
->
-> Parag, can you test the above to ensure it fixes your issue ?
+Szymon Janc suggested I should move the lower bound check into the
+caller and make it match the check for NFC_MAX_GT_LEN.
 
-Seems to be working ok so far.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Reported-and-tested-by: Parag Warudkar <parag.lkml@gmail.com>
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index 87a6417..e50dd2c 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -74,6 +74,7 @@ struct nfc_ops {
+ 
+ #define NFC_TARGET_IDX_ANY -1
+ #define NFC_MAX_GT_LEN 48
++#define NFC_MIN_GT_LEN 3
+ #define NFC_ATR_RES_GT_OFFSET 15
+ 
+ struct nfc_target {
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 6ceee8e..e2c3b6e 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -450,7 +450,7 @@ int nfc_set_remote_general_bytes(struct nfc_dev *dev, u8 *gb, u8 gb_len)
+ {
+ 	pr_debug("dev_name=%s gb_len=%d\n", dev_name(&dev->dev), gb_len);
+ 
+-	if (gb_len > NFC_MAX_GT_LEN)
++	if (gb_len < NFC_MIN_GT_LEN || gb_len > NFC_MAX_GT_LEN)
+ 		return -EINVAL;
+ 
+ 	return nfc_llcp_set_remote_gb(dev, gb, gb_len);
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 7f8266d..7be27fb 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -547,8 +547,6 @@ int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len)
+ 		pr_err("No LLCP device\n");
+ 		return -ENODEV;
+ 	}
+-	if (gb_len < 3)
+-		return -EINVAL;
+ 
+ 	memset(local->remote_gb, 0, NFC_MAX_GT_LEN);
+ 	memcpy(local->remote_gb, gb, gb_len);
