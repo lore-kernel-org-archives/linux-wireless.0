@@ -1,56 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45021 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234Ab3CKVpK (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36842 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751475Ab3CARhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 17:45:10 -0400
-Message-ID: <513E5057.4030601@candelatech.com> (sfid-20130311_224529_027668_60893F4B)
-Date: Mon, 11 Mar 2013 14:44:55 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
-References: <1363020306-924-1-git-send-email-greearb@candelatech.com> <20130311190537.GB32171@tuxdriver.com> <513E35CD.3010006@candelatech.com> <513E3BE8.1000909@openwrt.org> <513E4617.2020906@candelatech.com> <513E4E76.2000000@openwrt.org>
-In-Reply-To: <513E4E76.2000000@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 1 Mar 2013 12:37:45 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
+Date: Fri,  1 Mar 2013 18:37:34 +0100
+Message-Id: <1362159456-39448-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183759_243326_268F8618)
+In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2013 02:36 PM, Felix Fietkau wrote:
-> On 2013-03-11 10:01 PM, Ben Greear wrote:
->> On 03/11/2013 01:17 PM, Felix Fietkau wrote:
+While minstrel bootstraps and fills the success probabilities of each
+rate the lowest rate has typically a very high success probability
+(often 100% in our tests).
+Its statistics are never updated but considered to setup the mrr chain.
+In our tests we see that especially the 3rd mrr stage (which is that
+rate providing highest success probability) is filled with the lowest rate
+because its initial high sucess probability is never updated. By design
+the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
+mrr stage are equal.
 
->> I am not sure what you are suggesting.  I enabled this override
->> only when ONUS is selected because I wanted it clear that users
->> were taking their regulatory compliance into their own hands.
-> And as far as I understand, CONFIG_CFG80211_CERTIFICATION_ONUS already
-> enables some code in cfg80211 that allows a special type of regulatory
-> change request from user space that bypasses intersection.
->
->> I always want the module option at least visible so that
->> you don't have to muck with modprobe.conf just to get ath9k.ko
->> to load when it's compiled differently.
->>
->> For the second part, you want the ability to set the regdomain
->> be a compile-time option like CONFIG_ATH9K_OVERRIDE_REGDOMAIN
->> or something like that?
-> Something like that, yes. It should depend on
-> CONFIG_CFG80211_CERTIFICATION_ONUS and should contain a help text that
-> strongly discourages any distribution from enabling it in their kernel
-> builds.
+This patch follows minstrels general approach of assuming as little
+as possible about rate dependencies. Consequently we include the
+lowest rate into the random sampling table to get balanced up-to-date
+statistics of all rates and therefore balanced decisions.
 
-It seems to me that this doesn't gain much.  The ONUS configuration is already
-strongly discouraged from vendor kernels.  If you are already compiling
-with ONUS set, is there any reason you'd care to disable the override
-module option?  When you don't set the module option, nothing happens
-anyway...
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel.c    | 22 ++++++++--------------
+ net/mac80211/rc80211_minstrel.h    |  6 ++++--
+ net/mac80211/rc80211_minstrel_ht.c |  1 -
+ 3 files changed, 12 insertions(+), 17 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index aa59f29..c28e60a 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -55,7 +55,6 @@
+ #include "rate.h"
+ #include "rc80211_minstrel.h"
+ 
+-#define SAMPLE_COLUMNS	10
+ #define SAMPLE_TBL(_mi, _idx, _col) \
+ 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
+ 
+@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
+ 	unsigned int sample_ndx;
+ 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
+ 	mi->sample_row++;
+-	if ((int) mi->sample_row > (mi->n_rates - 2)) {
++	if ((int) mi->sample_row >= mi->n_rates) {
+ 		mi->sample_row = 0;
+ 		mi->sample_column++;
+ 		if (mi->sample_column >= SAMPLE_COLUMNS)
+@@ -370,26 +369,21 @@ static void
+ init_sample_table(struct minstrel_sta_info *mi)
+ {
+ 	unsigned int i, col, new_idx;
+-	unsigned int n_srates = mi->n_rates - 1;
+-	u8 rnd[8];
++	u8 rnd[mi->n_rates];
+ 
+ 	mi->sample_column = 0;
+ 	mi->sample_row = 0;
+-	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
++	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
+ 
+ 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
+-		for (i = 0; i < n_srates; i++) {
++		for (i = 0; i < mi->n_rates; i++) {
+ 			get_random_bytes(rnd, sizeof(rnd));
+-			new_idx = (i + rnd[i & 7]) % n_srates;
++			new_idx = (i + rnd[i]) % mi->n_rates;
+ 
+-			while (SAMPLE_TBL(mi, new_idx, col) != 0)
+-				new_idx = (new_idx + 1) % n_srates;
++			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
++				new_idx = (new_idx + 1) % mi->n_rates;
+ 
+-			/* Don't sample the slowest rate (i.e. slowest base
+-			 * rate). We must presume that the slowest rate works
+-			 * fine, or else other management frames will also be
+-			 * failing and the link will break */
+-			SAMPLE_TBL(mi, new_idx, col) = i + 1;
++			SAMPLE_TBL(mi, new_idx, col) = i;
+ 		}
+ 	}
+ }
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 200b7e3..49a770b 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -9,7 +9,9 @@
+ #ifndef __RC_MINSTREL_H
+ #define __RC_MINSTREL_H
+ 
+-#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
++#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
++#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
++
+ 
+ /* scaled fraction values */
+ #define MINSTREL_SCALE  16
+@@ -78,7 +80,7 @@ struct minstrel_sta_info {
+ 	bool prev_sample;
+ 
+ 	/* sampling table */
+-	u8 *sample_table;
++	void *sample_table;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *dbg_stats;
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a3081e5..8f88108 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -17,7 +17,6 @@
+ #include "rc80211_minstrel_ht.h"
+ 
+ #define AVG_PKT_SIZE	1200
+-#define SAMPLE_COLUMNS	10
+ 
+ /* Number of bits for an average sized packet */
+ #define MCS_NBITS (AVG_PKT_SIZE << 3)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.1.1
 
