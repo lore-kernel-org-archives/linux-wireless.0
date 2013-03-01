@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32932 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754572Ab3C2Mcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 08:32:39 -0400
-Date: Fri, 29 Mar 2013 13:33:22 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 0/3] mac80211: fixes for do_stop while suspended
-Message-ID: <20130329123321.GA22165@redhat.com> (sfid-20130329_133243_386340_4800DCA9)
-References: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:50024 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab3CADx4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Feb 2013 22:53:56 -0500
+Received: by mail-wg0-f47.google.com with SMTP id dr13so2092845wgb.14
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2013 19:53:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <512FAB01.2050104@openwrt.org>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+	<512ECE01.8010102@openwrt.org>
+	<20130228114724.GB16369@localhost>
+	<512F5709.60907@openwrt.org>
+	<CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com>
+	<512FAB01.2050104@openwrt.org>
+Date: Thu, 28 Feb 2013 19:53:54 -0800
+Message-ID: <CAJ-Vmokr4_k5QKrvVGU-1pG0Y07iW9evyRkj_U4-zQ5TH1ZHBQ@mail.gmail.com> (sfid-20130301_045401_691891_421ECFBF)
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 11:33:19PM +0100, Johannes Berg wrote:
-> I looked at this and I think we should do a bit more restructuring.
-> The virtual monitor is unsafe no matter how you look at it, even
-> with your second patch, due to channel contexts. I therefore opted
-> to just destroy it unconditionally on suspend, and restore it when
-> resuming, which has pretty much the same effect to the driver but
-> handles channel contexts differently. As we disconnect etc. in all
-> other interface types (*), channel contexts should thus be fully
-> destroyed on suspend. I should probably add a WARN_ON() for that
-> somewhere ...
-> 
-> I've also restructured the do_stop() function itself so it doesn't
-> get "if (local->suspended)" checks all over but has it at just a
-> single point at the end of the function before doing all driver
-> updates.
-> 
-> I think this is a good compromise as it makes it obvious that the
-> driver updates happen last, and only conditionally. It remains a
-> tricky proposition to make sure all other state (like chanctx) is
-> actually destroyed correctly, but right now that should indeed be
-> the case.
-> 
-> No doubt I've made some mistakes here, but as I don't own any USB
-> devices any more (they all broke) I'd appreciate some testing.
+On 28 February 2013 11:07, Felix Fietkau <nbd@openwrt.org> wrote:
 
-Just tested (with 3/3 v2 patch) and it fixes the test case I have,
-that I used to create my patches. Test case is doing suspend with
-reverted commit 761ce8c41ed20ee3af77f2df527edc3f92e6f3bf. This make
-device is automatically removed/added during suspend, because lack 
-of .reset_resume callback.
+>> Personally, I'd like to see more examples of rate control modules in
+>> LInux/FreeBSD, especially ones that start demanding more 802.11 state
+>> (ie, air-time QoS.)
 
-Than I tested with physical remove device from USB slot while machine
-is suspend. This gives warnings in ieee80211_reconfig() and
-ieee80211_stop(). I'm not sure why, I'm going to look at that, but
-I think this patch set should be applied and some more fixes provided
-on top of it.
+> Do you have any good ideas on what state information would be useful for
+> a rate control to demand?
 
-Stanislaw
+Well, there are already hooks to fake the TX time spent, right? Having
+both TX and RX busy times available to rate control so it can better
+schedule TX loads based on current RX workloads would be nice.
+
+Having access to schedule which peer and how much to send to each peer
+would be nice. Stuff like "peer X only can have up to x ms in this WME
+class this round", so you don't have a busy, close peer monopolising
+the air. It also means you can start doing smart things with far away
+peers who retransmit a lot - they're likely tying up a lot of airtime.
+
+None of this is new. It's just, you know, new to open source. :-)
+
+
+
+Adrian
