@@ -1,137 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56231 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932442Ab3COVN1 (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36834 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751320Ab3CARho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 17:13:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 2/2] mac80211:  Optimize sta lookup for many VIFs
-Date: Fri, 15 Mar 2013 14:13:13 -0700
-Message-Id: <1363381993-31496-2-git-send-email-greearb@candelatech.com> (sfid-20130315_221333_293041_95169062)
-In-Reply-To: <1363381993-31496-1-git-send-email-greearb@candelatech.com>
-References: <1363381993-31496-1-git-send-email-greearb@candelatech.com>
+	Fri, 1 Mar 2013 12:37:44 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 2/7] mac80211: merge value scaling macros of minstrel_ht and minstrel
+Date: Fri,  1 Mar 2013 18:37:31 +0100
+Message-Id: <1362159456-39448-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183754_616805_A113D7F2)
+In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Both minstrel versions use individual ways to scale up integer values
+to perform calculations. Merge minstrel_ht's scaling macros into
+minstrels header file and use them in both minstrel versions.
 
-The sta_info hash is designed to deal with an AP
-with lots of stations associated, or a station interface
-connected to a single AP.
-
-However, when you have lots of station VIFs connected
-to the same AP, the sta_info hash becomes worthless
-as there is a single hash bucket that contains all the
-entries in a linked list.
-
-So, have the sdata object cache one of it's station
-interfaces.  If we are a station VIF with a single
-sta_info, then this means we can ignore the sta_info
-hash entirely.
-
-On a test case with 128 stations and 50 TCP streams,
-tx performance went from around 80Mbps to 124Mbps.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
-:100644 100644 a618bda... 5288a4f... M	net/mac80211/cfg.c
-:100644 100644 493e2e8... fe5d35b... M	net/mac80211/ieee80211_i.h
-:100644 100644 415f9c6... 74d58f4... M	net/mac80211/sta_info.c
- net/mac80211/cfg.c         |    5 +++++
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/sta_info.c    |   18 +++++++++++++++++-
- 3 files changed, 28 insertions(+), 1 deletions(-)
+ net/mac80211/rc80211_minstrel.c         | 9 ++++-----
+ net/mac80211/rc80211_minstrel.h         | 5 +++++
+ net/mac80211/rc80211_minstrel_debugfs.c | 6 +++---
+ net/mac80211/rc80211_minstrel_ht.h      | 5 -----
+ 4 files changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a618bda..5288a4f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	if (params->vlan && params->vlan != sta->sdata->dev) {
- 		bool prev_4addr = false;
- 		bool new_4addr = false;
-+		struct sta_info *some_sta;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index d78f629..c9b9902 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -86,10 +86,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		if (!usecs)
+ 			usecs = 1000000;
  
- 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+-		/* To avoid rounding issues, probabilities scale from 0 (0%)
+-		 * to 18000 (100%) */
+ 		if (mr->attempts) {
+-			mr->cur_prob = (mr->success * 18000) / mr->attempts;
++			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
+ 			mr->succ_hist += mr->success;
+ 			mr->att_hist += mr->attempts;
+ 			mr->probability = minstrel_ewma(mr->probability,
+@@ -105,7 +103,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
  
-@@ -1312,7 +1313,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 			prev_4addr = true;
- 		}
+ 		/* Sample less often below the 10% chance of success.
+ 		 * Sample less often above the 95% chance of success. */
+-		if ((mr->probability > 17100) || (mr->probability < 1800)) {
++		if (mr->probability > MINSTREL_FRAC(95, 100) ||
++		    mr->probability < MINSTREL_FRAC(10, 100)) {
+ 			mr->adjusted_retry_count = mr->retry_count >> 1;
+ 			if (mr->adjusted_retry_count > 2)
+ 				mr->adjusted_retry_count = 2;
+@@ -300,7 +299,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	/* If we're not using MRR and the sampling rate already
+ 	 * has a probability of >95%, we shouldn't be attempting
+ 	 * to use it, as this only wastes precious airtime */
+-	if (!mrr && sample && (mi->r[ndx].probability > 17100))
++	if (!mrr && sample && (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
+ 		ndx = mi->max_tp_rate;
  
-+		some_sta = rcu_dereference(sta->sdata->some_sta);
-+		if (some_sta == sta)
-+			rcu_assign_pointer(sta->sdata->some_sta, NULL);
- 		sta->sdata = vlansdata;
-+		rcu_assign_pointer(sta->sdata->some_sta, sta);
+ 	ar[0].idx = mi->r[ndx].rix;
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 98db93f..fda4a61 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -11,6 +11,11 @@
  
- 		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
- 		    prev_4addr != new_4addr) {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 493e2e8..fe5d35b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -669,6 +669,12 @@ struct ieee80211_sub_if_data {
- 	/* count for keys needing tailroom space allocation */
- 	int crypto_tx_tailroom_needed_cnt;
+ #define EWMA_LEVEL 75	/* ewma weighting factor [%] */
  
-+	/* A pointer to some station associated with this interface, or
-+	 * NULL.  This aids oportunistic lookup for sta_info objects when
-+	 * sdata is a station with a single sta_info.
-+	 */
-+	struct sta_info __rcu *some_sta;
++/* scaled fraction values */
++#define MINSTREL_SCALE  16
++#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
++#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
 +
- 	struct net_device *dev;
- 	struct ieee80211_local *local;
+ /*
+  * Perform EWMA (Exponentially Weighted Moving Average) calculation
+   */
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index d5a5622..c0ebfac 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -79,9 +79,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
  
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 415f9c6..74d58f4 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -193,7 +193,17 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
-+	struct sta_info *sta, *some_sta;
-+
-+	/* Shortcut for finding station entries when sdata is a station */
-+	some_sta = rcu_dereference(sdata->some_sta);
-+	if (some_sta) {
-+		if (WARN_ON(some_sta->sdata != sdata))
-+			rcu_assign_pointer(sdata->some_sta, NULL);
-+		else
-+			if (ether_addr_equal(some_sta->sta.addr, addr))
-+				return some_sta;
-+	}
+-		tp = mr->cur_tp / ((18000 << 10) / 96);
+-		prob = mr->cur_prob / 18;
+-		eprob = mr->probability / 18;
++		tp = MINSTREL_TRUNC(mr->cur_tp / 10);
++		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
++		eprob = MINSTREL_TRUNC(mr->probability * 1000);
  
- 	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
- 				    lockdep_is_held(&local->sta_mtx));
-@@ -263,10 +273,14 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
-  */
- void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
- {
-+	struct sta_info* some_sta;
- 	if (sta->rate_ctrl)
- 		rate_control_free_sta(sta);
+ 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
+ 				"%3u(%3u)   %8llu    %8llu\n",
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index 302dbd5..4ee5999 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -16,11 +16,6 @@
+ #define MINSTREL_MAX_STREAMS	3
+ #define MINSTREL_STREAM_GROUPS	4
  
- 	sta_dbg(sta->sdata, "Destroyed STA %pM\n", sta->sta.addr);
-+	some_sta = rcu_dereference(sta->sdata->some_sta);
-+	if (some_sta == sta)
-+		rcu_assign_pointer(sta->sdata->some_sta, NULL);
+-/* scaled fraction values */
+-#define MINSTREL_SCALE	16
+-#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
+-#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
+-
+ #define MCS_GROUP_RATES	8
  
- 	kfree(sta);
- }
-@@ -373,6 +387,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
- 		sta->last_seq_ctrl[i] = cpu_to_le16(USHRT_MAX);
- 
-+	rcu_assign_pointer(sta->sdata->some_sta, sta);
-+
- 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
- 
- #ifdef CONFIG_MAC80211_MESH
+ struct mcs_group {
 -- 
-1.7.3.4
+1.8.1.1
 
