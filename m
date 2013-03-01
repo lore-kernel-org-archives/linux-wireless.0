@@ -1,112 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:44845 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932197Ab3CINFj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59615 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab3CAWMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 08:05:39 -0500
-Subject: [PATCH v2 5/7] ath6kl: convert ath6kl_info/err/warn macros to real
- functions
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Sat, 09 Mar 2013 15:05:36 +0200
-Message-ID: <20130309130536.13371.10441.stgit@localhost6.localdomain6> (sfid-20130309_140541_193474_59BBD67C)
-In-Reply-To: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
-References: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 1 Mar 2013 17:12:25 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: add VHT capabilities station debugfs file
+Date: Fri,  1 Mar 2013 23:12:15 +0100
+Message-Id: <1362175935-11828-1-git-send-email-johannes@sipsolutions.net> (sfid-20130301_231229_956773_D9D04F05)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After this it's cleaner to add trace calls.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Add a new debugfs file to view a station's VHT capabilities.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/debug.c |   51 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/debug.h |   10 ++----
- 2 files changed, 54 insertions(+), 7 deletions(-)
+ net/mac80211/debugfs_sta.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index c557367..494ecfd 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -56,6 +56,57 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index c7591f7..942df95 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -325,6 +325,36 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
  }
- EXPORT_SYMBOL(ath6kl_printk);
+ STA_OPS(ht_capa);
  
-+int ath6kl_info(const char *fmt, ...)
++static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
++				 size_t count, loff_t *ppos)
 +{
-+	struct va_format vaf = {
-+		.fmt = fmt,
-+	};
-+	va_list args;
-+	int ret;
++	char buf[512], *p = buf;
++	struct sta_info *sta = file->private_data;
++	struct ieee80211_sta_vht_cap *vhtc = &sta->sta.vht_cap;
 +
-+	va_start(args, fmt);
-+	vaf.va = &args;
-+	ret = ath6kl_printk(KERN_INFO, "%pV", &vaf);
-+	va_end(args);
++	p += scnprintf(p, sizeof(buf) + buf - p, "VHT %ssupported\n",
++			vhtc->vht_supported ? "" : "not ");
++	if (vhtc->vht_supported) {
++		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.8x\n", vhtc->cap);
 +
-+	return ret;
++		p += scnprintf(p, sizeof(buf)+buf-p, "RX MCS: %.4x\n",
++			       le16_to_cpu(vhtc->vht_mcs.rx_mcs_map));
++		if (vhtc->vht_mcs.rx_highest)
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "MCS RX highest: %d Mbps\n",
++				       le16_to_cpu(vhtc->vht_mcs.rx_highest));
++		p += scnprintf(p, sizeof(buf)+buf-p, "TX MCS: %.4x\n",
++			       le16_to_cpu(vhtc->vht_mcs.tx_mcs_map));
++		if (vhtc->vht_mcs.tx_highest)
++			p += scnprintf(p, sizeof(buf)+buf-p,
++				       "MCS TX highest: %d Mbps\n",
++				       le16_to_cpu(vhtc->vht_mcs.tx_highest));
++	}
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
 +}
-+EXPORT_SYMBOL(ath6kl_info);
++STA_OPS(vht_capa);
 +
-+int ath6kl_err(const char *fmt, ...)
-+{
-+	struct va_format vaf = {
-+		.fmt = fmt,
-+	};
-+	va_list args;
-+	int ret;
-+
-+	va_start(args, fmt);
-+	vaf.va = &args;
-+	ret = ath6kl_printk(KERN_ERR, "%pV", &vaf);
-+	va_end(args);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ath6kl_err);
-+
-+int ath6kl_warn(const char *fmt, ...)
-+{
-+	struct va_format vaf = {
-+		.fmt = fmt,
-+	};
-+	va_list args;
-+	int ret;
-+
-+	va_start(args, fmt);
-+	vaf.va = &args;
-+	ret = ath6kl_printk(KERN_WARNING, "%pV", &vaf);
-+	va_end(args);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ath6kl_warn);
-+
- #ifdef CONFIG_ATH6KL_DEBUG
- 
- void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index f97cd4e..653f2e9 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -51,13 +51,9 @@ enum ATH6K_DEBUG_MASK {
- extern unsigned int debug_mask;
- extern __printf(2, 3)
- int ath6kl_printk(const char *level, const char *fmt, ...);
--
--#define ath6kl_info(fmt, ...)				\
--	ath6kl_printk(KERN_INFO, fmt, ##__VA_ARGS__)
--#define ath6kl_err(fmt, ...)					\
--	ath6kl_printk(KERN_ERR, fmt, ##__VA_ARGS__)
--#define ath6kl_warn(fmt, ...)					\
--	ath6kl_printk(KERN_WARNING, fmt, ##__VA_ARGS__)
-+extern __printf(1,2) int ath6kl_info(const char *fmt, ...);
-+extern __printf(1,2) int ath6kl_err(const char *fmt, ...);
-+extern __printf(1,2) int ath6kl_warn(const char *fmt, ...);
- 
- enum ath6kl_war {
- 	ATH6KL_WAR_INVALID_RATE,
+ static ssize_t sta_current_tx_rate_read(struct file *file, char __user *userbuf,
+ 					size_t count, loff_t *ppos)
+ {
+@@ -405,6 +435,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(dev);
+ 	DEBUGFS_ADD(last_signal);
+ 	DEBUGFS_ADD(ht_capa);
++	DEBUGFS_ADD(vht_capa);
+ 	DEBUGFS_ADD(last_ack_signal);
+ 	DEBUGFS_ADD(current_tx_rate);
+ 	DEBUGFS_ADD(last_rx_rate);
+-- 
+1.8.0
 
