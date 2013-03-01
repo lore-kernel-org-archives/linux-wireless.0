@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:41254 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754218Ab3CKSLv (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:62925 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367Ab3CAKWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 14:11:51 -0400
-Received: by mail-oa0-f41.google.com with SMTP id i10so4814449oag.28
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 11:11:50 -0700 (PDT)
-Message-ID: <513E1E63.8040107@lwfinger.net> (sfid-20130311_191200_405857_818F0946)
-Date: Mon, 11 Mar 2013 13:11:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 1 Mar 2013 05:22:30 -0500
+Received: by mail-we0-f171.google.com with SMTP id u54so2405104wey.30
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 02:22:29 -0800 (PST)
 MIME-Version: 1.0
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: qca_vkondrat@qca.qualcomm.com, linville@tuxdriver.com,
-	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com
-Subject: Re: [PATCH -next] wireless: remove unused including <linux/version.h>
-References: <CAPgLHd-Pn9c_FL7v1FYCb8NCP4GdJPuEB-eMSWXiWK5bd8dwVQ@mail.gmail.com>
-In-Reply-To: <CAPgLHd-Pn9c_FL7v1FYCb8NCP4GdJPuEB-eMSWXiWK5bd8dwVQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <51307F80.4010202@openwrt.org>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+	<512ECE01.8010102@openwrt.org>
+	<20130228114724.GB16369@localhost>
+	<512F5709.60907@openwrt.org>
+	<CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com>
+	<512FAB01.2050104@openwrt.org>
+	<CAJ-Vmokr4_k5QKrvVGU-1pG0Y07iW9evyRkj_U4-zQ5TH1ZHBQ@mail.gmail.com>
+	<51307F80.4010202@openwrt.org>
+Date: Fri, 1 Mar 2013 02:22:29 -0800
+Message-ID: <CAJ-Vmok9-dmC5-vhHA1DE_KW6mp7P3tijrSz-3D45jjQthbcCA@mail.gmail.com> (sfid-20130301_112234_794702_A990E66F)
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2013 09:46 AM, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> Remove including <linux/version.h> that don't need it.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->   drivers/net/wireless/ath/wil6210/cfg80211.c | 1 -
->   1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-> index 116f4e8..58ce52c 100644
-> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-> +++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-> @@ -21,7 +21,6 @@
->   #include <linux/wireless.h>
->   #include <linux/ieee80211.h>
->   #include <linux/slab.h>
-> -#include <linux/version.h>
->   #include <net/cfg80211.h>
->
->   #include "wil6210.h"
+On 1 March 2013 02:14, Felix Fietkau <nbd@openwrt.org> wrote:
 
-Your patch should be OK. No built-in driver ever needs to check the kernel version.
+>> Having access to schedule which peer and how much to send to each peer
+>> would be nice. Stuff like "peer X only can have up to x ms in this WME
+>> class this round", so you don't have a busy, close peer monopolising
+>> the air. It also means you can start doing smart things with far away
+>> peers who retransmit a lot - they're likely tying up a lot of airtime.
+>>
+>> None of this is new. It's just, you know, new to open source. :-)
 
-Your subject is not very good. Usually, the subject starts with the driver name, 
-not the subsystem. Thus if should have been "[PATCH ...] wil6210: ...." or 
-"[PATCH ...] ath: wil6210: ....". With this change, a search using 'git log' 
-will find that wil6210 was modified here. In your version, that info is missing.
+> In my opinion this doesn't really belong into a rate control module.
+> There should be a tx scheduling API to take care of this. Before I
+> implement something like this, I plan on exposing all per-station driver
+> queues to mac80211. This is necessary for a few other things anyway,
+> e.g. unifying software aggregation logic and fixing its buffer management.
 
-Larry
+Sure, but then some more clever tricks end up being difficult to
+implement. For example, knowing if a client is tying up too much
+airtime at the given rate and whether to back them off for a bit. Or
+to use smaller aggregation limits for certain clients because your'e
+trying to be "fairer" when trying to keep latency low. That kind of
+thing.
+
+I think "rate control" should likely be expanded to "tx scheduling" as
+a whole, rather than sitting as a separate thing that just selects the
+rate for a node who has already been chosen to transmit.
 
 
+
+Adrian
