@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753713Ab3CRTOj (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51710 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778Ab3CAPf0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 15:14:39 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UHfW2-00031x-FK
-	for linux-wireless@vger.kernel.org; Mon, 18 Mar 2013 20:14:38 +0100
-Message-ID: <1363634075.8260.7.camel@jlt4.sipsolutions.net> (sfid-20130318_201442_533140_D6DF16A1)
-Subject: Re: [PATCH 1/2] mac80211: pass queue bitmap to flush operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 18 Mar 2013 20:14:35 +0100
-In-Reply-To: <1362415437-25564-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_174408_967733_EF5F37D7)
-References: <1362415437-25564-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130304_174408_967733_EF5F37D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Mar 2013 10:35:26 -0500
+Message-ID: <5130CAAE.8070807@candelatech.com> (sfid-20130301_163530_168379_B440C1D9)
+Date: Fri, 01 Mar 2013 07:35:10 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Felix Fietkau <nbd@openwrt.org>, Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org> <20757.1753.863278.858198@gargle.gargle.HOWL> <511508A6.8020104@openwrt.org> <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com> <51152D9E.1040106@openwrt.org> <20130227192030.GW12537@pogo> <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com> <512ECE01.8010102@openwrt.org> <20782.54505.239733.82364@gargle.gargle.HOWL> <512EDDC5.7020901@openwrt.org> <20784.48093.263373.125536@gargle.gargle.HOWL>
+In-Reply-To: <20784.48093.263373.125536@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-04 at 17:43 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There are a number of situations in which mac80211 only
-> really needs to flush queues for one virtual interface,
-> and in fact during this frames might be transmitted on
-> other virtual interfaces. Calculate and pass a queue
-> bitmap to the driver so it knows which queues to flush.
+On 03/01/2013 06:31 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> What was the distance and what was the rate used?
+>
+> A distance of about a meter between the AP and STA.
+>
+> AP:  DB120 - running an internal build.
+> STA: WB222 - wireless-testing HEAD.
+> Signal is about -43 dBm.
+> Channel 40, HT40-
+>
+> I've attached sample runs with minstrel_ht and ath9k-rc. With minstrel_ht,
+> the numbers fluctuate between 180 and 190 Mbps and the average throughput
+> varies each time (185, 186 etc.). With ath9k-rc, it's 195+ always.
 
-Applied both.
+We can run some tests through attenuators today.
 
-johannes
+I assume UDP would be good, or is TCP traffic preferred?
+(In our tests, we see significantly more throughput with
+UDP than TCP, even when we hacked on TCP ack delay).
+
+Is wireless-testing the preferred tree to test against?
+
+Thanks,
+Ben
+
+>
+> Sujith
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
