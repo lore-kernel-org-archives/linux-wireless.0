@@ -1,250 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:45057 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758173Ab3CDRyq (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:62152 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab3CAV2M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 12:54:46 -0500
-Received: by mail-bk0-f51.google.com with SMTP id ik5so2523557bkc.24
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 09:54:45 -0800 (PST)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	ath9k-devel@lists.ath9k.org, Marco Porsch <marco@cozybit.com>
-Subject: [PATCHv4 1/3] mac80211: move mesh sync beacon handler into neighbour_update
-Date: Mon,  4 Mar 2013 18:54:33 +0100
-Message-Id: <1362419675-27127-1-git-send-email-marco@cozybit.com> (sfid-20130304_185451_821319_97C4130A)
+	Fri, 1 Mar 2013 16:28:12 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hi8so15915wib.7
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 13:28:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20784.48093.263373.125536@gargle.gargle.HOWL>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+	<512ECE01.8010102@openwrt.org>
+	<20782.54505.239733.82364@gargle.gargle.HOWL>
+	<512EDDC5.7020901@openwrt.org>
+	<20784.48093.263373.125536@gargle.gargle.HOWL>
+Date: Fri, 1 Mar 2013 13:28:11 -0800
+Message-ID: <CAJ-Vmon8B=wUkSd5tq=e-2FoUZykv28TD+tR71+-1R0W9_hYew@mail.gmail.com> (sfid-20130301_222816_196634_7AE32D34)
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+From: Adrian Chadd <adrian@freebsd.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the beacon handler into mesh_neighbour_update where the STA
-pointer is already available. This avoids additional overhead
-and simplifies the handler.
-The repositioning will also benefit mesh PS which uses T_r and
-the updated T_offset value.
-Allow calculating T_offset from probe response frames as
-mandated in IEEE 802.11-2012.
+On 1 March 2013 06:31, Sujith Manoharan <sujith@msujith.org> wrote:
+> Felix Fietkau wrote:
+>> What was the distance and what was the rate used?
+>
+> A distance of about a meter between the AP and STA.
+>
+> AP:  DB120 - running an internal build.
+> STA: WB222 - wireless-testing HEAD.
+> Signal is about -43 dBm.
+> Channel 40, HT40-
+>
+> I've attached sample runs with minstrel_ht and ath9k-rc. With minstrel_ht,
+> the numbers fluctuate between 180 and 190 Mbps and the average throughput
+> varies each time (185, 186 etc.). With ath9k-rc, it's 195+ always.
 
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
+Right. And the reason that it fluctuates is quite likely because at
+the higher MCS rates (6,7/14,15/22,23) the channel behaviour is not
+consistent and there's varying levels of packet loss, so things
+oscillate between a bunch of MCS rates there.
 
-v4:
-	calculate T_offset from probe response frames (Thomas)
+IIRC, the ath9k_rc algorithm is a lot more aggressive at sticking to a
+fixed, working MCS rate.
 
- net/mac80211/ieee80211_i.h |    5 ++---
- net/mac80211/mesh.c        |    7 +------
- net/mac80211/mesh.h        |    4 +++-
- net/mac80211/mesh_plink.c  |   30 +++++++++++++++++++++++------
- net/mac80211/mesh_sync.c   |   45 ++++++++------------------------------------
- 5 files changed, 38 insertions(+), 53 deletions(-)
+(190mbit TCP on 2-stream? Damn. Looks like I have a little more
+optimisation to do in FreeBSD. I'm only hitting 160/170mbit TCP on
+AR9280<->AR9280 and AR9280<->AR9287. But I hit 220-240mbit UDP.)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 54d09ec..5284ffa 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -529,11 +529,10 @@ struct ieee80211_if_ibss {
-  */
- struct ieee802_11_elems;
- struct ieee80211_mesh_sync_ops {
--	void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
--			     u16 stype,
-+	void (*rx_bcn_presp)(struct sta_info *sta,
- 			     struct ieee80211_mgmt *mgmt,
- 			     struct ieee802_11_elems *elems,
--			     struct ieee80211_rx_status *rx_status);
-+			     u64 t_r);
- 	void (*adjust_tbtt)(struct ieee80211_sub_if_data *sdata);
- 	/* add other framework functions here */
- };
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index f5d1afa..bfc5ee6 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -885,7 +885,6 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 					struct ieee80211_rx_status *rx_status)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_channel *channel;
- 	size_t baselen;
-@@ -921,11 +920,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	if (mesh_matches_local(sdata, &elems))
--		mesh_neighbour_update(sdata, mgmt->sa, &elems);
--
--	if (ifmsh->sync_ops)
--		ifmsh->sync_ops->rx_bcn_presp(sdata,
--			stype, mgmt, &elems, rx_status);
-+		mesh_neighbour_update(sdata, mgmt, &elems, rx_status);
- }
- 
- static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 6ffabbe..594c43a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -283,7 +283,9 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
- 
- /* Mesh plinks */
- void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
--			   u8 *hw_addr, struct ieee802_11_elems *ie);
-+			   struct ieee80211_mgmt *mgmt,
-+			   struct ieee802_11_elems *ie,
-+			   struct ieee80211_rx_status *rx_status);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
- void mesh_plink_broken(struct sta_info *sta);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 08df966..91dea29 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -12,6 +12,7 @@
- #include "ieee80211_i.h"
- #include "rate.h"
- #include "mesh.h"
-+#include "driver-ops.h"
- 
- #define PLINK_GET_LLID(p) (p + 2)
- #define PLINK_GET_PLID(p) (p + 4)
-@@ -492,28 +493,45 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
-  *
-  * @sdata: local meshif
-  * @addr: peer's address
-- * @elems: IEs from beacon or mesh peering frame
-+ * @elems: IEs from beacon or mesh probe response
-  *
-  * Initiates peering if appropriate.
-  */
- void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
--			   u8 *hw_addr,
--			   struct ieee802_11_elems *elems)
-+			   struct ieee80211_mgmt *mgmt,
-+			   struct ieee802_11_elems *elems,
-+			   struct ieee80211_rx_status *rx_status)
- {
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct sta_info *sta;
- 	u32 changed = 0;
-+	u64 t_r;
-+
-+	/*
-+	 * If available, calculate the time the beacon timestamp field was
-+	 * received from the rx_status->mactime field. Otherwise get the
-+	 * current TSF as approximation before entering rcu-read section.
-+	 */
-+	if (ieee80211_have_rx_timestamp(rx_status))
-+		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
-+				24 + 12 + elems->total_len + FCS_LEN, 24);
-+	else
-+		t_r = drv_get_tsf(local, sdata);
- 
--	sta = mesh_sta_info_get(sdata, hw_addr, elems);
-+	sta = mesh_sta_info_get(sdata, mgmt->sa, elems);
- 	if (!sta)
- 		goto out;
- 
- 	if (mesh_peer_accepts_plinks(elems) &&
- 	    sta->plink_state == NL80211_PLINK_LISTEN &&
--	    sdata->u.mesh.accepting_plinks &&
--	    sdata->u.mesh.mshcfg.auto_open_plinks &&
-+	    ifmsh->accepting_plinks && ifmsh->mshcfg.auto_open_plinks &&
- 	    rssi_threshold_check(sta, sdata))
- 		changed = mesh_plink_open(sta);
- 
-+	if (ifmsh->sync_ops)
-+		ifmsh->sync_ops->rx_bcn_presp(sta, mgmt, elems, t_r);
-+
- 	ieee80211_mps_frame_release(sta, elems);
- out:
- 	rcu_read_unlock();
-diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
-index 05a256b..07bc63c 100644
---- a/net/mac80211/mesh_sync.c
-+++ b/net/mac80211/mesh_sync.c
-@@ -75,35 +75,17 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
- 		drv_set_tsf(local, sdata, tsf + tsfdelta);
- }
- 
--static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
--				   u16 stype,
--				   struct ieee80211_mgmt *mgmt,
--				   struct ieee802_11_elems *elems,
--				   struct ieee80211_rx_status *rx_status)
-+static void mesh_sync_offset_rx_bcn_presp(struct sta_info *sta,
-+					  struct ieee80211_mgmt *mgmt,
-+					  struct ieee802_11_elems *elems,
-+					  u64 t_r)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	u64 t_t, t_r;
-+	u64 t_t;
- 
- 	WARN_ON(ifmsh->mesh_sp_id != IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET);
- 
--	/* standard mentions only beacons */
--	if (stype != IEEE80211_STYPE_BEACON)
--		return;
--
--	/* The current tsf is a first approximation for the timestamp
--	 * for the received beacon.  Further down we try to get a
--	 * better value from the rx_status->mactime field if
--	 * available. Also we have to call drv_get_tsf() before
--	 * entering the rcu-read section.*/
--	t_r = drv_get_tsf(local, sdata);
--
--	rcu_read_lock();
--	sta = sta_info_get(sdata, mgmt->sa);
--	if (!sta)
--		goto no_sync;
--
- 	/* check offset sync conditions (13.13.2.2.1)
- 	 *
- 	 * TODO also sync to
-@@ -114,17 +96,9 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 		clear_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
- 		msync_dbg(sdata, "STA %pM : is adjusting TBTT\n",
- 			  sta->sta.addr);
--		goto no_sync;
-+		return;
- 	}
- 
--	if (ieee80211_have_rx_timestamp(rx_status))
--		/* time when timestamp field was received */
--		t_r = ieee80211_calculate_rx_timestamp(local, rx_status,
--						       24 + 12 +
--						       elems->total_len +
--						       FCS_LEN,
--						       24);
--
- 	/* Timing offset calculation (see 13.13.2.2.2) */
- 	t_t = le64_to_cpu(mgmt->u.beacon.timestamp);
- 	sta->t_offset = t_t - t_r;
-@@ -144,7 +118,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 				  sta->sta.addr,
- 				  (long long) t_clockdrift);
- 			clear_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
--			goto no_sync;
-+			return;
- 		}
- 
- 		spin_lock_bh(&ifmsh->sync_offset_lock);
-@@ -159,9 +133,6 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 			  sta->sta.addr,
- 			  (long long) sta->t_offset);
- 	}
--
--no_sync:
--	rcu_read_unlock();
- }
- 
- static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
--- 
-1.7.9.5
+Thanks,
 
+
+Adrian
