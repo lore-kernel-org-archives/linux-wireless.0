@@ -1,55 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:43657 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756164Ab3C2SYx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58313 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779Ab3CAOHC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 14:24:53 -0400
-Received: by mail-ob0-f178.google.com with SMTP id wd20so551838obb.23
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2013 11:24:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
- <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
- <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 29 Mar 2013 12:24:32 -0600
-Message-ID: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com> (sfid-20130329_192458_539527_4767A40E)
-Subject: Re: is L1 really disabled in iwlwifi
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Mar 2013 09:07:02 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9 v2] nl80211: increase wiphy dump size dynamically
+Date: Fri,  1 Mar 2013 15:06:56 +0100
+Message-Id: <1362146816-16502-1-git-send-email-johannes@sipsolutions.net> (sfid-20130301_150708_455948_BAB4717E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 4, 2013 at 10:58 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Mon, Mar 4, 2013 at 5:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
->>
->>> This is what I did. On 3.7, lspci tells me that ASPM is enabled before
->>> I load the module. And same after I load the module.
->>
->> CONFIG_PCIEASPM disabled ?
->>
->
-> nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
-> CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
-> pci_disable_link_state do anything....
-> Also, I remember so issues Mathew Garret debugged and he ended up
-> disabling ASPM on older kernel because some BIOS issue (don't remember
-> really). Apparently, ASPM is enabled again in newer kernels.
->
-> Anyway - I think I will just remove this pci_disable_link_state call
-> and hopefully, it will stay long enough in linux-next so that people
-> will report issues before it get into linux.
-> I don't like leaving that code if it doesn't do anything.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I think we broke at least some cases of pci_disable_link_state() a
-while back.  I'd like to fix it rather than just removing calls to it.
+Given a device with many channels capabilities the wiphy
+information can still overflow even though its size in
+3.9 was reduced to 3.8 levels. For new userspace and
+kernel 3.10 we're going to implement a new "split dump"
+protocol that can use multiple messages per wiphy.
 
-Can someone collect a complete dmesg log and "lspci -vv" output?
+For now though, add a workaround to be able to send more
+information to userspace. Since generic netlink doesn't
+have a way to set the minimum dump size globally, and we
+wouldn't really want to set it globally anyway, increase
+the size only when needed, as described in the comments.
+As userspace might not be prepared for large buffers, we
+can only use 4k.
 
-Bjorn
+Also increase the size for the get_wiphy command.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7a7b621..d44ab21 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1307,7 +1307,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 
+ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+ {
+-	int idx = 0;
++	int idx = 0, ret;
+ 	int start = cb->args[0];
+ 	struct cfg80211_registered_device *dev;
+ 
+@@ -1317,9 +1317,29 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+ 			continue;
+ 		if (++idx <= start)
+ 			continue;
+-		if (nl80211_send_wiphy(skb, NETLINK_CB(cb->skb).portid,
+-				       cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				       dev) < 0) {
++		ret = nl80211_send_wiphy(skb, NETLINK_CB(cb->skb).portid,
++					 cb->nlh->nlmsg_seq, NLM_F_MULTI,
++					 dev);
++		if (ret < 0) {
++			/*
++			 * If sending the wiphy data didn't fit (ENOBUFS or
++			 * EMSGSIZE returned), this SKB is still empty (so
++			 * it's not too big because another wiphy dataset is
++			 * already in the skb) and we've not tried to adjust
++			 * the dump allocation yet ... then adjust the alloc
++			 * size to be bigger, and return 1 but with the empty
++			 * skb. This results in an empty message being RX'ed
++			 * in userspace, but that is ignored.
++			 *
++			 * We can then retry with the larger buffer.
++			 */
++			if ((ret == -ENOBUFS || ret == -EMSGSIZE) &&
++			    !skb->len &&
++			    cb->min_dump_alloc < 4096) {
++				cb->min_dump_alloc = 4096;
++				mutex_unlock(&cfg80211_mutex);
++				return 1;
++			}
+ 			idx--;
+ 			break;
+ 		}
+@@ -1336,7 +1356,7 @@ static int nl80211_get_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	struct sk_buff *msg;
+ 	struct cfg80211_registered_device *dev = info->user_ptr[0];
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	msg = nlmsg_new(4096, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
+-- 
+1.8.0
+
