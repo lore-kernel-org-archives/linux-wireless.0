@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f49.google.com ([209.85.128.49]:54791 "EHLO
-	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932184Ab3CYQVp (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:49060 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696Ab3CAPB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 12:21:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <1363625321.1597.28.camel@dcbw.foobar.com>
-References: <1363625321.1597.28.camel@dcbw.foobar.com>
-Date: Mon, 25 Mar 2013 10:21:43 -0600
-Message-ID: <CAMLZHHSF_=ZMOtX5ZDpnS4JN6B-x6Z=LEHUmx1KRNP9jKPzqaA@mail.gmail.com> (sfid-20130325_172151_189679_16C1B7F3)
-Subject: Re: [PATCH] libertas: drop maintainership
-From: Daniel Drake <dsd@laptop.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bing Zhao <bzhao@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Mar 2013 10:01:27 -0500
+Received: by mail-bk0-f53.google.com with SMTP id j10so1377536bkw.26
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 07:01:26 -0800 (PST)
+From: Marco Porsch <marco@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Marco Porsch <marco@cozybit.com>
+Subject: [PATCH] mac80211: fix oops on mesh PS broadcast forwarding
+Date: Fri,  1 Mar 2013 16:01:18 +0100
+Message-Id: <1362150078-10802-1-git-send-email-marco@cozybit.com> (sfid-20130301_160131_812108_98587C53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 10:48 AM, Dan Williams <dcbw@redhat.com> wrote:
-> Would be better maintained by somebody who actualy has time for it.
->
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
-> ---
-> Daniel?  Bing? :)
->
-> I'm quite happy to ACK somebody else picking libertas up, and I'm also
-> happy to investigate how to send my hardware cache to the new
-> maintainer.  (usb8388 dev modules, some CF8385s, some sd8686s, etc).
-> Also happy to forward along the libertas-dev moderator password.
+Introduced with de74a1d9032f4d37ea453ad2a647e1aff4cd2591
+"mac80211: fix WPA with VLAN on AP side with ps-sta".
+Apparently overwrites the sdata pointer with non-valid data in
+the case of mesh.
+Fix this by checking for IFTYPE_AP_VLAN.
 
-Thanks for all your work on libertas over the years.
+Signed-off-by: Marco Porsch <marco@cozybit.com>
+---
+ net/mac80211/tx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I imagine I will continue to send small numbers of libertas patches as
-and when new issues are found on OLPC XO, but I wouldn't be able to
-make any other form of commitment, certainly not with other hardware.
-I am already overstretched with my roles. So I don't really see myself
-as a maintainer candidate.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c79860f..cb4b9ab 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2749,7 +2749,8 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 				cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+ 		}
+ 
+-		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
++		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+ 		if (!ieee80211_tx_prepare(sdata, &tx, skb))
+ 			break;
+ 		dev_kfree_skb_any(skb);
+-- 
+1.7.9.5
 
-Daniel
