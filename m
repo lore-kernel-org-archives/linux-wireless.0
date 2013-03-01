@@ -1,12 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:50024 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab3CADx4 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:45884 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab3CABYk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 22:53:56 -0500
-Received: by mail-wg0-f47.google.com with SMTP id dr13so2092845wgb.14
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Feb 2013 19:53:55 -0800 (PST)
+	Thu, 28 Feb 2013 20:24:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20784.764.675035.560161@gargle.gargle.HOWL> (sfid-20130301_022444_150769_D4BF0D6B)
+Date: Fri, 1 Mar 2013 06:53:08 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
 In-Reply-To: <512FAB01.2050104@openwrt.org>
 References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
 	<20757.1753.863278.858198@gargle.gargle.HOWL>
@@ -20,41 +29,22 @@ References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
 	<512F5709.60907@openwrt.org>
 	<CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com>
 	<512FAB01.2050104@openwrt.org>
-Date: Thu, 28 Feb 2013 19:53:54 -0800
-Message-ID: <CAJ-Vmokr4_k5QKrvVGU-1pG0Y07iW9evyRkj_U4-zQ5TH1ZHBQ@mail.gmail.com> (sfid-20130301_045401_691891_421ECFBF)
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2013 11:07, Felix Fietkau <nbd@openwrt.org> wrote:
+Felix Fietkau wrote:
+> In that case I'd rather keep PID than the ath9k rate control. The ath9k
+> rate control is a horrible example of how to use the rate control API,
+> and fixing that is a waste of time in my opinion.
 
->> Personally, I'd like to see more examples of rate control modules in
->> LInux/FreeBSD, especially ones that start demanding more 802.11 state
->> (ie, air-time QoS.)
+I acked the earlier RFC patch to remove the ath9k RC as I assumed that minstrel_ht
+would perform adequately, if not better. But, there appear to be areas in which
+the numbers given by minstrel_ht are sub-optimal and which can be improved if we
+have something to compare it with. The ath9k RC code is crap, no doubt, but I'd
+prefer to have it for some time in the tree - we can switch the default RC to minstrel_ht
+by default.
 
-> Do you have any good ideas on what state information would be useful for
-> a rate control to demand?
+Can you also explain how the ath9k RC uses the mac80211 API horribly ? The algorithm might be
+terribly implemented and the internal code nasty, but how does it violate the API ?
 
-Well, there are already hooks to fake the TX time spent, right? Having
-both TX and RX busy times available to rate control so it can better
-schedule TX loads based on current RX workloads would be nice.
-
-Having access to schedule which peer and how much to send to each peer
-would be nice. Stuff like "peer X only can have up to x ms in this WME
-class this round", so you don't have a busy, close peer monopolising
-the air. It also means you can start doing smart things with far away
-peers who retransmit a lot - they're likely tying up a lot of airtime.
-
-None of this is new. It's just, you know, new to open source. :-)
-
-
-
-Adrian
+Sujith
