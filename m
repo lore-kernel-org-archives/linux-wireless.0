@@ -1,61 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37146 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753744Ab3C0QXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:23:36 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36838 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751448Ab3CARho (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Mar 2013 12:37:44 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/4] bcma: export bcma_chipco_get_alp_clock()
-Date: Wed, 27 Mar 2013 17:23:11 +0100
-Message-Id: <1364401392-30360-4-git-send-email-hauke@hauke-m.de> (sfid-20130327_172352_438795_4E31A6E5)
-In-Reply-To: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
-References: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 4/7] mac80211: extend minstrel's rate sampling to avoid unsampled rates
+Date: Fri,  1 Mar 2013 18:37:33 +0100
+Message-Id: <1362159456-39448-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183753_539837_20BACA0E)
+In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function will be used by brcmsmac.
+Minstrel's decision which rate should be directly sampled within the
+1st mrr stage is limited to such rates faster than the current max
+throughput rate. All rates below the current max. throughput rate
+are indirectly sampled via the 2nd mrr stage.
+This approach leads to deprecated per rate statistics and therfore
+a deprecated mrr chain setup.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This patch uses the sampling approach from minstrel_ht. A counter is
+added to sum all indirect sample attempts per rate. After 20 indirect
+sampling attempts the rate is directly sampled within the 1st mrr stage.
+Therefore more up-to-date statistics for all rates are maintained and
+used to setup the mrr chain.
+
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/bcma/driver_chipcommon.c            |    3 ++-
- include/linux/bcma/bcma_driver_chipcommon.h |    2 ++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel.c | 13 +++++++++----
+ net/mac80211/rc80211_minstrel.h |  1 +
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 28fa50a..88db0cb 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -25,13 +25,14 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
- 	return value;
- }
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 152bb0e..aa59f29 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -85,7 +85,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		if (!usecs)
+ 			usecs = 1000000;
  
--static u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc)
-+u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc)
- {
- 	if (cc->capabilities & BCMA_CC_CAP_PMU)
- 		return bcma_pmu_get_alp_clock(cc);
+-		if (mr->attempts) {
++		if (unlikely(mr->attempts > 0)) {
++			mr->sample_skipped = 0;
+ 			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
+ 			mr->succ_hist += mr->success;
+ 			mr->att_hist += mr->attempts;
+@@ -93,7 +94,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 							mr->cur_prob,
+ 							EWMA_LEVEL);
+ 			mr->cur_tp = mr->probability * (1000000 / usecs);
+-		}
++		} else
++			mr->sample_skipped++;
  
- 	return 20000000;
- }
-+EXPORT_SYMBOL_GPL(bcma_chipco_get_alp_clock);
+ 		mr->last_success = mr->success;
+ 		mr->last_attempts = mr->attempts;
+@@ -282,9 +284,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		rate_sampling = true;
  
- static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
- {
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 1db4c6d..453fcc9 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -608,6 +608,8 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
+ 		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
+-		 * rate sampling method should be used */
++		 * rate sampling method should be used.
++		 * Respect such rates that are not sampled for 20 interations.
++		 */
+ 		if (mrr_capable &&
+-		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time)
++		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
++		    msr->sample_skipped < 20)
+ 				indirect_rate_sampling = true;
  
- extern u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks);
+ 		if (!indirect_rate_sampling) {
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 5fb5cb8..200b7e3 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -43,6 +43,7 @@ struct minstrel_rate {
+ 	u32 attempts;
+ 	u32 last_attempts;
+ 	u32 last_success;
++	u8 sample_skipped;
  
-+extern u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc);
-+
- void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value);
- 
- u32 bcma_chipco_irq_status(struct bcma_drv_cc *cc, u32 mask);
+ 	/* parts per thousand */
+ 	u32 cur_prob;
 -- 
-1.7.10.4
+1.8.1.1
 
