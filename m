@@ -1,76 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:40327 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932391Ab3CMPLi convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:44860 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752112Ab3CALvc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 11:11:38 -0400
-Received: by mail-we0-f175.google.com with SMTP id x8so1106738wey.20
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 08:11:37 -0700 (PDT)
-From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
-To: "'Jussi Kivilinna'" <jussi.kivilinna@iki.fi>,
-	"'Larry Finger'" <Larry.Finger@lwfinger.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"'George0505'" <george0505@realtek.com>
-Subject: Re: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
-Date: Wed, 13 Mar 2013 16:11:36 +0100
-Message-ID: <000001ce1ffd$0ecd5e10$2c681a30$@gmail.com> (sfid-20130313_161141_264045_130AB650)
+	Fri, 1 Mar 2013 06:51:32 -0500
+Date: Fri, 1 Mar 2013 17:12:45 +0530
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>
+Subject: [PATCH 1/2] mwl8k: Adding support for 8764 4x4 AP
+Message-ID: <20130301114245.GA11071@markyou.marvell.com> (sfid-20130301_125135_297312_6D22A302)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, some months ago I reported some bugs about this chipset; now I tried latest stable compat-drivers (3.9-rc2-2-su) with the modified patch by Jussi Kivilinna, and I'm happy to report that it works  with my alfa AWUS036NHR on ubuntu 12.10 with kernel 3.5; The card now sustains multiple connection/disconnection cicles, and doesn't go mute, even after changing mac address.
+The patch does the following:-
 
-Some problems still remains: 
+a Add entry in the PCIe table
+b Add firmware support with API versioning
+c Reuse most of the 8366 code
+d Make 8764 specific changes where 8764 differs
+  from 8366 e.g. structure definitions.
 
--led is always solid, no blinking whatsoever.
--in monitor mode, every client appears as not associated, even when it really is.
--power/signal strength readings (in networkmanager) seem to be fuzzy, almost inverse; nearest APs have lowest signal representation, while farest ones get strongest signal (this could very well be a networkmanager bug/misrepresentation); signal appears normal when the card is connected (only the reading relative to the connected AP)
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c | 78 +++++++++++++++++++++++++-------------------
+ 1 file changed, 45 insertions(+), 33 deletions(-)
 
-I know you're probably understaffed and have a lot of work to do, however if you're willing to have a look at this secondary problems (Mr. Finger perhaps), I'm willing to recompile, test and report back to help squash these bugs.
-
-I'm attaching a debug=5 log to show my tests.
-
-As of now, this chipset/card is usable (signal reading is annoying btw)
-
-Thank you all for your work.
-
-Alessandro Lannocca
-
------Messaggio originale-----
-Da: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] Per conto di Jussi Kivilinna
-Inviato: martedì 12 marzo 2013 20.49
-A: Larry Finger
-Cc: linux-wireless@vger.kernel.org; 'George0505'
-Oggetto: Re: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
-
-On 12.03.2013 18:51, Larry Finger wrote:
-> On 03/12/2013 04:10 AM, Jussi Kivilinna wrote:
->>
->> That patch alone did not help.. however replacing
->> _rtl92cu_set_check_bssid()
->> with that new rtl92cu_set_check_bssid() does fix the issue (patch 
->> attached).
->>
->> But I think _rtl92cu_set_check_bssid() needs to be rechecked since it 
->> has '(IS_NORMAL_CHIP(rtlhal->version))' conditional etc.
-> 
-> I doubt that that IS_NORMAL_CHIP business affects us - the test chips 
-> are not supposed to be in the wild, but I modified your patch to 
-> include that test.
-> 
-
-Modified patch works here.
-
-> With that patch I am getting watchdog_wq callbacks that force a 
-> reconnection every 6 seconds, but that is due to other changes in my 
-> code. The result is a 34% loss of pings, but the connection stays up.
-> 
-
-No problems here.. <1% loss and can do large transfers, rtl8192cu being able to reconnect is connection is dropped.
-
--Jussi
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 091d9a6..e86a31b 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -908,9 +908,9 @@ static void mwl8k_encapsulate_tx_frame(struct mwl8k_priv *priv,
+ }
+ 
+ /*
+- * Packet reception for 88w8366 AP firmware.
++ * Packet reception for 88w8366/88w8764 AP firmware.
+  */
+-struct mwl8k_rxd_8366_ap {
++struct mwl8k_rxd_ap {
+ 	__le16 pkt_len;
+ 	__u8 sq2;
+ 	__u8 rate;
+@@ -928,30 +928,30 @@ struct mwl8k_rxd_8366_ap {
+ 	__u8 rx_ctrl;
+ } __packed;
+ 
+-#define MWL8K_8366_AP_RATE_INFO_MCS_FORMAT	0x80
+-#define MWL8K_8366_AP_RATE_INFO_40MHZ		0x40
+-#define MWL8K_8366_AP_RATE_INFO_RATEID(x)	((x) & 0x3f)
++#define MWL8K_AP_RATE_INFO_MCS_FORMAT		0x80
++#define MWL8K_AP_RATE_INFO_40MHZ		0x40
++#define MWL8K_AP_RATE_INFO_RATEID(x)		((x) & 0x3f)
+ 
+-#define MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST	0x80
++#define MWL8K_AP_RX_CTRL_OWNED_BY_HOST		0x80
+ 
+-/* 8366 AP rx_status bits */
+-#define MWL8K_8366_AP_RXSTAT_DECRYPT_ERR_MASK		0x80
+-#define MWL8K_8366_AP_RXSTAT_GENERAL_DECRYPT_ERR	0xFF
+-#define MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR	0x02
+-#define MWL8K_8366_AP_RXSTAT_WEP_DECRYPT_ICV_ERR	0x04
+-#define MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_ICV_ERR	0x08
++/* 8366/8764 AP rx_status bits */
++#define MWL8K_AP_RXSTAT_DECRYPT_ERR_MASK		0x80
++#define MWL8K_AP_RXSTAT_GENERAL_DECRYPT_ERR		0xFF
++#define MWL8K_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR		0x02
++#define MWL8K_AP_RXSTAT_WEP_DECRYPT_ICV_ERR		0x04
++#define MWL8K_AP_RXSTAT_TKIP_DECRYPT_ICV_ERR		0x08
+ 
+-static void mwl8k_rxd_8366_ap_init(void *_rxd, dma_addr_t next_dma_addr)
++static void mwl8k_rxd_ap_init(void *_rxd, dma_addr_t next_dma_addr)
+ {
+-	struct mwl8k_rxd_8366_ap *rxd = _rxd;
++	struct mwl8k_rxd_ap *rxd = _rxd;
+ 
+ 	rxd->next_rxd_phys_addr = cpu_to_le32(next_dma_addr);
+-	rxd->rx_ctrl = MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST;
++	rxd->rx_ctrl = MWL8K_AP_RX_CTRL_OWNED_BY_HOST;
+ }
+ 
+-static void mwl8k_rxd_8366_ap_refill(void *_rxd, dma_addr_t addr, int len)
++static void mwl8k_rxd_ap_refill(void *_rxd, dma_addr_t addr, int len)
+ {
+-	struct mwl8k_rxd_8366_ap *rxd = _rxd;
++	struct mwl8k_rxd_ap *rxd = _rxd;
+ 
+ 	rxd->pkt_len = cpu_to_le16(len);
+ 	rxd->pkt_phys_addr = cpu_to_le32(addr);
+@@ -960,12 +960,12 @@ static void mwl8k_rxd_8366_ap_refill(void *_rxd, dma_addr_t addr, int len)
+ }
+ 
+ static int
+-mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
+-			  __le16 *qos, s8 *noise)
++mwl8k_rxd_ap_process(void *_rxd, struct ieee80211_rx_status *status,
++		     __le16 *qos, s8 *noise)
+ {
+-	struct mwl8k_rxd_8366_ap *rxd = _rxd;
++	struct mwl8k_rxd_ap *rxd = _rxd;
+ 
+-	if (!(rxd->rx_ctrl & MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST))
++	if (!(rxd->rx_ctrl & MWL8K_AP_RX_CTRL_OWNED_BY_HOST))
+ 		return -1;
+ 	rmb();
+ 
+@@ -974,11 +974,11 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
+ 	status->signal = -rxd->rssi;
+ 	*noise = -rxd->noise_floor;
+ 
+-	if (rxd->rate & MWL8K_8366_AP_RATE_INFO_MCS_FORMAT) {
++	if (rxd->rate & MWL8K_AP_RATE_INFO_MCS_FORMAT) {
+ 		status->flag |= RX_FLAG_HT;
+-		if (rxd->rate & MWL8K_8366_AP_RATE_INFO_40MHZ)
++		if (rxd->rate & MWL8K_AP_RATE_INFO_40MHZ)
+ 			status->flag |= RX_FLAG_40MHZ;
+-		status->rate_idx = MWL8K_8366_AP_RATE_INFO_RATEID(rxd->rate);
++		status->rate_idx = MWL8K_AP_RATE_INFO_RATEID(rxd->rate);
+ 	} else {
+ 		int i;
+ 
+@@ -1002,19 +1002,19 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
+ 
+ 	*qos = rxd->qos_control;
+ 
+-	if ((rxd->rx_status != MWL8K_8366_AP_RXSTAT_GENERAL_DECRYPT_ERR) &&
+-	    (rxd->rx_status & MWL8K_8366_AP_RXSTAT_DECRYPT_ERR_MASK) &&
+-	    (rxd->rx_status & MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR))
++	if ((rxd->rx_status != MWL8K_AP_RXSTAT_GENERAL_DECRYPT_ERR) &&
++	    (rxd->rx_status & MWL8K_AP_RXSTAT_DECRYPT_ERR_MASK) &&
++	    (rxd->rx_status & MWL8K_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR))
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
+ 	return le16_to_cpu(rxd->pkt_len);
+ }
+ 
+-static struct rxd_ops rxd_8366_ap_ops = {
+-	.rxd_size	= sizeof(struct mwl8k_rxd_8366_ap),
+-	.rxd_init	= mwl8k_rxd_8366_ap_init,
+-	.rxd_refill	= mwl8k_rxd_8366_ap_refill,
+-	.rxd_process	= mwl8k_rxd_8366_ap_process,
++static struct rxd_ops rxd_ap_ops = {
++	.rxd_size	= sizeof(struct mwl8k_rxd_ap),
++	.rxd_init	= mwl8k_rxd_ap_init,
++	.rxd_refill	= mwl8k_rxd_ap_refill,
++	.rxd_process	= mwl8k_rxd_ap_process,
+ };
+ 
+ /*
+@@ -5429,12 +5429,17 @@ enum {
+ 	MWL8363 = 0,
+ 	MWL8687,
+ 	MWL8366,
++	MWL8764,
+ };
+ 
+ #define MWL8K_8366_AP_FW_API 3
+ #define _MWL8K_8366_AP_FW(api) "mwl8k/fmimage_8366_ap-" #api ".fw"
+ #define MWL8K_8366_AP_FW(api) _MWL8K_8366_AP_FW(api)
+ 
++#define MWL8K_8764_AP_FW_API 1
++#define _MWL8K_8764_AP_FW(api) "mwl8k/fmimage_8764_ap-" #api ".fw"
++#define MWL8K_8764_AP_FW(api) _MWL8K_8764_AP_FW(api)
++
+ static struct mwl8k_device_info mwl8k_info_tbl[] = {
+ 	[MWL8363] = {
+ 		.part_name	= "88w8363",
+@@ -5452,7 +5457,13 @@ static struct mwl8k_device_info mwl8k_info_tbl[] = {
+ 		.fw_image_sta	= "mwl8k/fmimage_8366.fw",
+ 		.fw_image_ap	= MWL8K_8366_AP_FW(MWL8K_8366_AP_FW_API),
+ 		.fw_api_ap	= MWL8K_8366_AP_FW_API,
+-		.ap_rxd_ops	= &rxd_8366_ap_ops,
++		.ap_rxd_ops	= &rxd_ap_ops,
++	},
++	[MWL8764] = {
++		.part_name	= "88w8764",
++		.fw_image_ap	= MWL8K_8764_AP_FW(MWL8K_8764_AP_FW_API),
++		.fw_api_ap	= MWL8K_8764_AP_FW_API,
++		.ap_rxd_ops	= &rxd_ap_ops,
+ 	},
+ };
+ 
+@@ -5474,6 +5485,7 @@ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
+ 	{ PCI_VDEVICE(MARVELL, 0x2a41), .driver_data = MWL8366, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a42), .driver_data = MWL8366, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a43), .driver_data = MWL8366, },
++	{ PCI_VDEVICE(MARVELL, 0x2b36), .driver_data = MWL8764, },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
+-- 
+1.8.0.3
 
