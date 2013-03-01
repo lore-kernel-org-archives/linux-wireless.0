@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:45064 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383Ab3C3V0t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Mar 2013 17:26:49 -0400
-Received: by mail-oa0-f51.google.com with SMTP id g12so1170722oah.10
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Mar 2013 14:26:48 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:45260 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751121Ab3CAKJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Mar 2013 05:09:34 -0500
+Message-ID: <51307E50.5080206@openwrt.org> (sfid-20130301_111436_682577_5955ED27)
+Date: Fri, 01 Mar 2013 11:09:20 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
- <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
- <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
- <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com> <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 30 Mar 2013 15:26:28 -0600
-Message-ID: <CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com> (sfid-20130330_222704_186151_3045CAFE)
-Subject: Re: is L1 really disabled in iwlwifi
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org> <20757.1753.863278.858198@gargle.gargle.HOWL> <511508A6.8020104@openwrt.org> <CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com> <51152D9E.1040106@openwrt.org> <20130227192030.GW12537@pogo> <CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com> <512ECE01.8010102@openwrt.org> <20130228114724.GB16369@localhost> <512F5709.60907@openwrt.org> <CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com> <512FAB01.2050104@openwrt.org> <20784.764.675035.560161@gargle.gargle.HOWL>
+In-Reply-To: <20784.764.675035.560161@gargle.gargle.HOWL>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 30, 2013 at 12:38 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>
->>> Anyway - I think I will just remove this pci_disable_link_state call
->>> and hopefully, it will stay long enough in linux-next so that people
->>> will report issues before it get into linux.
->>> I don't like leaving that code if it doesn't do anything.
->>
->> I think we broke at least some cases of pci_disable_link_state() a
->> while back.  I'd like to fix it rather than just removing calls to it.
->>
->> Can someone collect a complete dmesg log and "lspci -vv" output?
->>
->
-> I will. But I am on vacation right now and my linux box is not
-> accessible right now...
-> In any case, what you'll see is that ASPM is enabled (L1 enabled with
-> or without driver).
-> We are also seeing some really weird stuff (which I can't reproduce of
-> course) like HW becoming not accessible, I guess it would be worth
-> trying to *really* disable L1. I can tweak that in the code of the
-> driver and tell the NIC that L1 is disabled.
->
->         /* Disable L1-Active */
->         iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
->                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
->
-> Do you have an idea about *when* did pci_disable_link_state() break?
+On 2013-03-01 2:23 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> In that case I'd rather keep PID than the ath9k rate control. The ath9k
+>> rate control is a horrible example of how to use the rate control API,
+>> and fixing that is a waste of time in my opinion.
+> 
+> I acked the earlier RFC patch to remove the ath9k RC as I assumed that minstrel_ht
+> would perform adequately, if not better. But, there appear to be areas in which
+> the numbers given by minstrel_ht are sub-optimal and which can be improved if we
+> have something to compare it with. The ath9k RC code is crap, no doubt, but I'd
+> prefer to have it for some time in the tree - we can switch the default RC to minstrel_ht
+> by default.
+Right, I will only submit this patch again once more performance tests
+have been run. My own tests and tests of other people that I know of so
+far have shown minstrel_ht to perform better than ath9k_rate_control,
+whereas in your tests ath9k_rate_control seems to perform better. I'd
+like to get some more details on your tests, e.g. raw numbers, rate
+control stats, info on how much the throughput fluctuates, etc.
 
-No, not yet.  After we figure out exactly what the problem is, we
-should be able to determine when it broke.
+> Can you also explain how the ath9k RC uses the mac80211 API horribly ? The algorithm might be
+> terribly implemented and the internal code nasty, but how does it violate the API ?
+When I called it a horrible example, I was referring to the bad code
+quality, not API violations. The API violations are only minor, there
+are a few places left where the rate control code accesses struct ath_softc.
 
-If I understand correctly, you have CONFIG_PCIEASPM=y, the iwlwifi
-driver uses pci_disable_link_state() to disable L1, but the link state
-stays in L0 all the time.  So I think we should look at the dmesg log,
-"lspci -vv" output before loading iwlwifi, and "lspci -vv" output
-after loading iwlwifi.
-
-Bjorn
+- Felix
