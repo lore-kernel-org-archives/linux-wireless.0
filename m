@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45537 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932167Ab3CLNpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 09:45:43 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH 08/13] wlcore: don't attempt to roam in case of p2p
-Date: Tue, 12 Mar 2013 15:44:19 +0200
-Message-ID: <1363095864-24422-9-git-send-email-coelho@ti.com> (sfid-20130312_144553_316505_9963AA88)
-In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
-References: <1363095864-24422-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:61776 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992Ab3CBGEN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Mar 2013 01:04:13 -0500
+Received: by mail-pb0-f44.google.com with SMTP id wz12so2143622pbc.31
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 22:04:13 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 5/6] mac80211: disallow changing auto_open_plinks
+Date: Fri,  1 Mar 2013 22:02:51 -0800
+Message-Id: <1362204172-28307-5-git-send-email-thomas@cozybit.com> (sfid-20130302_070422_162214_9EFED872)
+In-Reply-To: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+while user MPM is running.
 
-For STA we report beacon loss to higher levels so that wpa_s
-can attempt to roam without disconnecting. In case of P2P CLI
-we don't want to attempt roaming and instead disconnect immediately
-upon beacon loss.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/ti/wlcore/event.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ net/mac80211/cfg.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 70f289a..67f6168 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -237,6 +237,14 @@ void wlcore_event_beacon_loss(struct wl1271 *wl, unsigned long roles_bitmap)
- 		    !test_bit(wlvif->role_id , &roles_bitmap))
- 			continue;
- 
-+		vif = wl12xx_wlvif_to_vif(wlvif);
-+
-+		/* don't attempt roaming in case of p2p */
-+		if (wlvif->p2p) {
-+			ieee80211_connection_loss(vif);
-+			continue;
-+		}
-+
- 		/*
- 		 * if the work is already queued, it should take place.
- 		 * We don't want to delay the connection loss
-@@ -246,7 +254,6 @@ void wlcore_event_beacon_loss(struct wl1271 *wl, unsigned long roles_bitmap)
- 					     &wlvif->connection_loss_work,
- 					     msecs_to_jiffies(delay));
- 
--		vif = wl12xx_wlvif_to_vif(wlvif);
- 		ieee80211_cqm_rssi_notify(
- 				vif,
- 				NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index cd9c222..f27eac5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1770,8 +1770,11 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		conf->dot11MeshTTL = nconf->dot11MeshTTL;
+ 	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
+ 		conf->element_ttl = nconf->element_ttl;
+-	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
++	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask)) {
++		if (ifmsh->user_mpm)
++			return -EBUSY;
+ 		conf->auto_open_plinks = nconf->auto_open_plinks;
++	}
+ 	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
+ 		conf->dot11MeshNbrOffsetMaxNeighbor =
+ 			nconf->dot11MeshNbrOffsetMaxNeighbor;
 -- 
 1.7.10.4
 
