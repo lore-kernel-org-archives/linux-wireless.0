@@ -1,89 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754526Ab3C1P3l (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:56824 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998Ab3CBMwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 11:29:41 -0400
-Message-ID: <1364484573.10397.4.camel@jlt4.sipsolutions.net> (sfid-20130328_162945_299070_B0DB5C45)
-Subject: pull-request: mac80211 2013-03-28
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Sat, 2 Mar 2013 07:52:47 -0500
+Received: by mail-wg0-f41.google.com with SMTP id ds1so434679wgb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Mar 2013 04:52:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5131D2D1.7020709@erley.org>
+References: <CABFmVg5sPub5Q4n+7PnkUn7weQLEUabONeJQZY6aFS2yFZAf2Q@mail.gmail.com>
+	<CABFmVg5AaTG-F_myEA=WGdYpnwN9X=QfLcjKvwJ1-SUX0quaOg@mail.gmail.com>
+	<CABFmVg5J6nWfBFL1VAsD+V3X_xPD6v4wLz0X5Wv4p082Trdshw@mail.gmail.com>
+	<5131D2D1.7020709@erley.org>
+Date: Sat, 2 Mar 2013 14:52:45 +0200
+Message-ID: <CABFmVg7t2ZtvHNetSyJXoUmtakO49PBYX0nzbscHdsxANKj0-w@mail.gmail.com> (sfid-20130302_135257_659506_C226EAEA)
+Subject: Re: Fwd: Intel Wifilink 5100 AGN - Does it support Access Point
+ Infrastructure Mode ?
+From: Abdelmuhaimen Seaudi <aseaudi@gmail.com>
+To: Pat Erley <pat-lkml@erley.org>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 28 Mar 2013 16:29:33 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-RJMGWY2HAtpcEin+EJXg"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Pat,
+I have tried this, and I get the following error.
+Is there another way to enable AP master mode for the Intel WifiLink 5100 AGN ?
+Is there a driver or firmware that I can use to enable AP mode ?
+Thanks,
 
---=-RJMGWY2HAtpcEin+EJXg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+aseaudi@Home:~$ sudo hostapd hostapd.conf
+Configuration file: hostapd.conf
+Failed to update rate sets in kernel module
+Could not connect to kernel driver.
+Using interface wlan0 with hwaddr 00:24:d6:5b:71:d2 and ssid 'test'
+Failed to set beacon parameters
+wlan0: STA 00:22:57:1f:c4:2b IEEE 802.11: disassociated
+^CCould not connect to kernel driver.
 
-John,
-
-Before I disappear for Easter vacation, I decided to send you two more
-mac80211 fixes.
-
-I had changed the idle handling to simplify it, but broken the
-sequencing of commands, at least for ath9k-htc, one patch restores the
-sequence. The other patch fixes a crash Jouni found while stress-testing
-the remain-on-channel code, when an item is deleted the work struct can
-run twice and crash the second time.
-
-Please pull. Thanks,
-johannes
-
-
-The following changes since commit 370bd005937c0e00f9104a602f9fe1dd6b21b54b=
-:
-
-  mac80211: Don't restart sta-timer if not associated. (2013-03-24 11:15:59=
- +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 382a103b2b528a3085cde4ac56fc69d92a828b72:
-
-  mac80211: fix idle handling sequence (2013-03-25 16:50:18 +0100)
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      mac80211: fix remain-on-channel cancel crash
-      mac80211: fix idle handling sequence
-
- net/mac80211/cfg.c         |  6 ++++--
- net/mac80211/chan.c        | 17 ++++++++++++++---
- net/mac80211/ieee80211_i.h |  4 +++-
- net/mac80211/iface.c       |  2 +-
- net/mac80211/offchannel.c  | 23 +++++++++++++++++------
- 5 files changed, 39 insertions(+), 13 deletions(-)
+aseaudi@Home:~$ cat hostapd.conf
+#change wlan0 to your wireless device
+interface=wlan0
+driver=nl80211
+ssid=test
+channel=1
 
 
---=-RJMGWY2HAtpcEin+EJXg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+On 3/2/13, Pat Erley <pat-lkml@erley.org> wrote:
+> On 03/02/2013 04:51 AM, Abdelmuhaimen Seaudi wrote:
+>> Hello iwlwifi support,
+>> I want to run my Wifi Intel WifiLink 5100 AGN in Access Point
+>> Infrstructure Mode, so that I can connect via WiFi with other devices
+>> to my workstation.
+>> This is under Ubuntu Linux 12.10.
+>> I have tried setting the wlan0 to run in master mode, but it gives me
+>> error, as shown below.
+>> Is it possible to run this WiFi radio in AP Infrstrucutre mode ? How ?
+>> Thanks,
+>>
+>> aseaudi@Home:~$ iwconfig
+>> wlan0     IEEE 802.11abgn  ESSID:"3Com"
+>>            Mode:Managed  Frequency:2.462 GHz  Access Point:
+>> 00:22:57:1F:C4:2B
+>>            Bit Rate=48 Mb/s   Tx-Power=15 dBm
+>>            Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>            Power Management:off
+>>            Link Quality=51/70  Signal level=-59 dBm
+>>            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>            Tx excessive retries:0  Invalid misc:468   Missed beacon:0
+>> lo        no wireless extensions.
+>> eth0      no wireless extensions.
+>>
+>> aseaudi@Home:~$ sudo iwconfig wlan0 mode master
+>> Error for wireless request "Set Mode" (8B06) :
+>>      SET failed on device wlan0 ; Invalid argument.
+>
+> http://linuxwireless.org/en/users/Documentation/hostapd
+>
+> Master mode requires userspace to handle setup and control.  That page
+> should cover most/all of what you need.
+>
+> Pat Erley
+>
+>
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABCAAGBQJRVGHdAAoJEDBSmw7B7bqryIEP/3YG2u4qwPynGLXBah1LMKIP
-MSWNsURnugG0E9FZQo/odpoPNsn3HOnkA02j3k0xzgg/NXuBTLojXDb6FWXbbnS5
-dGDnlf46teQO0dn8r8Au9ZNZBa3HVeyNGQYjKJ28d2aF6iQpCKB9YvAvSRytFwV/
-Fjk8BjLnwLiJ1O3fapHJl8FwP1WEJRztLx8CmuOOPlnY2KqY+tBuij2dLr0W4Bc8
-V0JLgCYvu5r+wZsg5CAtewc2E2mO2V3EWVQ06TkPzcM4OkNEitxjEw7NTHxkPSfF
-E/YxFyjRAN5tk+/5mKOMQ2FZNP6rBSo3eEOGjpdPaeA3wHFfQb4I/s0v9J/Ixr95
-ND5Ai7/+sHi/PhZ0WPyGd/TYVjXZcAOuLbeucP5527msfPKcFbcWhY7tXDLDEat5
-1Nn5NIy9DIgcdB/5XJI6enGL1njzaGqax0Tn5TYSMnqpGmvcqH/GVhX16iP3b5EA
-7k8bshamM8+OyM60RrSSCkn2DsRvNu3OrUCEySB+dFAr7Jw0OFGTBLBsvav9pmcH
-4e24qGX6A5iVx2650nDUgnqrYEm9CEwt2j8QiFw4WryZ0E3sSSCUMaEBMYL1MWtO
-j9xX1ws5MdTxDLxYIt6P+uXpJ4FxIjOi2RL+/pwRinN0k59yT3MdXBqMa+A75c0u
-L2inrAWDyarNc5DXuTdh
-=JCT6
------END PGP SIGNATURE-----
+-- 
+Thanks and best regards
 
---=-RJMGWY2HAtpcEin+EJXg--
-
+Abdel-Muhaimen Seaudi
+CCIE # 25265
+aseaudi@gmail.com
+Tel.: +2010-0538-7426
