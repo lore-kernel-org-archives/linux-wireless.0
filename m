@@ -1,71 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39693 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868Ab3CKQp0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 12:45:26 -0400
-From: greearb@candelatech.com
+Received: from nbd.name ([46.4.11.11]:59399 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752277Ab3CBUUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Mar 2013 15:20:19 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k: Allow over-riding reg-domain.
-Date: Mon, 11 Mar 2013 09:45:06 -0700
-Message-Id: <1363020306-924-1-git-send-email-greearb@candelatech.com> (sfid-20130311_174530_308273_3D70EC12)
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/3] mac80211/minstrel_ht: improve max_prob_rate selection
+Date: Sat,  2 Mar 2013 21:20:13 +0100
+Message-Id: <1362255614-30859-2-git-send-email-nbd@openwrt.org> (sfid-20130302_212024_786403_D1C88073)
+In-Reply-To: <1362255614-30859-1-git-send-email-nbd@openwrt.org>
+References: <1362255614-30859-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+max_prob_rate should be selected to be very reliable, however limiting
+it to single-stream on 3-stream devices is a bit much.
+Allow max_prob_rate to use one stream less than the max_tp_rate.
 
-Otherwise, can't get the Sparklan AR9380 NICs to be
-5Ghz APs, since they are in world-roaming domain by
-default.  Add this to /etc/modprobe.d/ath9k.conf:
-
-options ath9k override_eeprom_regdomain=0
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-:100644 100644 af932c9... dee91a2... M	drivers/net/wireless/ath/ath9k/init.c
- drivers/net/wireless/ath/ath9k/init.c |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index af932c9..dee91a2 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -56,6 +56,12 @@ static int ath9k_enable_diversity;
- module_param_named(enable_diversity, ath9k_enable_diversity, int, 0444);
- MODULE_PARM_DESC(enable_diversity, "Enable Antenna diversity for AR9565");
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 0b5cdd9..6c735e0 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -246,6 +246,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	struct minstrel_rate_stats *mr;
+ 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
+ 	int group, i, index;
++	int prob_max_streams = 1;
  
-+static int modparam_override_eeprom_regdomain = -1;
-+module_param_named(override_eeprom_regdomain,
-+		   modparam_override_eeprom_regdomain, int, 0444);
-+MODULE_PARM_DESC(override_eeprom_regdomain, "Override regdomain hardcoded in EEPROM with this value (DANGEROUS).");
+ 	if (mi->ampdu_packets > 0) {
+ 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
+@@ -323,20 +324,13 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		if (!mg->supported)
+ 			continue;
+ 
+-		mr = minstrel_get_ratestats(mi, mg->max_prob_rate);
+-		if (cur_prob_tp < mr->cur_tp &&
+-		    minstrel_mcs_groups[group].streams == 1) {
+-			mi->max_prob_rate = mg->max_prob_rate;
+-			cur_prob = mr->cur_prob;
+-			cur_prob_tp = mr->cur_tp;
+-		}
+-
+ 		mr = minstrel_get_ratestats(mi, mg->max_tp_rate);
+ 		if (cur_tp < mr->cur_tp) {
+ 			mi->max_tp_rate2 = mi->max_tp_rate;
+ 			cur_tp2 = cur_tp;
+ 			mi->max_tp_rate = mg->max_tp_rate;
+ 			cur_tp = mr->cur_tp;
++			prob_max_streams = minstrel_mcs_groups[group].streams - 1;
+ 		}
+ 
+ 		mr = minstrel_get_ratestats(mi, mg->max_tp_rate2);
+@@ -346,6 +340,23 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		}
+ 	}
+ 
++	if (prob_max_streams < 1)
++		prob_max_streams = 1;
 +
-+
- bool is_ath9k_unloaded;
- /* We use the hw_value as an index into our private channel structure */
- 
-@@ -740,6 +746,21 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
-+	if (modparam_override_eeprom_regdomain != -1) {
-+#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
-+		struct ath_regulatory *regulatory = ath9k_hw_regulatory(sc->sc_ah);
-+		printk(KERN_ERR "ath9k: DANGER! You're overriding EEPROM-defined regulatory domain,"
-+		       "\nfrom: 0x%x to 0x%x\n",
-+		       regulatory->current_rd, modparam_override_eeprom_regdomain);
-+		printk(KERN_ERR "ath9k: Your card was not certified to operate in the domain you chose.\n");
-+		printk(KERN_ERR "ath9k: This might result in a violation of your local regulatory rules.\n");
-+		printk(KERN_ERR "ath9k: Do not ever do this unless you really know what you are doing!\n");
-+		regulatory->current_rd = modparam_override_eeprom_regdomain;
-+#else
-+		printk(KERN_ERR "ath9k: ERROR:  override_eeprom_regdomain request will be ignored because CF80211_CERTIFICATION_ONUS was not selected when compiling the kernel.\n");
-+#endif
++	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
++		mg = &mi->groups[group];
++		if (!mg->supported)
++			continue;
++		mr = minstrel_get_ratestats(mi, mg->max_prob_rate);
++		if (cur_prob_tp < mr->cur_tp &&
++		    minstrel_mcs_groups[group].streams <= prob_max_streams) {
++			mi->max_prob_rate = mg->max_prob_rate;
++			cur_prob = mr->cur_prob;
++			cur_prob_tp = mr->cur_tp;
++		}
 +	}
 +
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		IEEE80211_HW_SIGNAL_DBM |
++
+ 	mi->stats_update = jiffies;
+ }
+ 
 -- 
-1.7.3.4
+1.8.0.2
 
