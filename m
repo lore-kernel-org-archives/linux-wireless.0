@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3786 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757801Ab3CZMBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 08:01:34 -0400
-Message-ID: <51518E14.3050500@broadcom.com> (sfid-20130326_130138_734255_0B0809A6)
-Date: Tue, 26 Mar 2013 13:01:24 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:54468 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751528Ab3CBCUr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Mar 2013 21:20:47 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: "John Talbut" <jt@dpets.co.uk>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-References: <51514F1B.1080207@dpets.co.uk>
- <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk>
- <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk>
- <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk>
- <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk>
-In-Reply-To: <515189C6.7070003@dpets.co.uk>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20785.24998.602035.570736@gargle.gargle.HOWL> (sfid-20130302_032100_306206_707E0D9D)
+Date: Sat, 2 Mar 2013 07:49:18 +0530
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: remove ath9k_rate_control
+In-Reply-To: <CAJ-Vmon8B=wUkSd5tq=e-2FoUZykv28TD+tR71+-1R0W9_hYew@mail.gmail.com>
+References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
+	<20757.1753.863278.858198@gargle.gargle.HOWL>
+	<511508A6.8020104@openwrt.org>
+	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
+	<51152D9E.1040106@openwrt.org>
+	<20130227192030.GW12537@pogo>
+	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
+	<512ECE01.8010102@openwrt.org>
+	<20782.54505.239733.82364@gargle.gargle.HOWL>
+	<512EDDC5.7020901@openwrt.org>
+	<20784.48093.263373.125536@gargle.gargle.HOWL>
+	<CAJ-Vmon8B=wUkSd5tq=e-2FoUZykv28TD+tR71+-1R0W9_hYew@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2013 12:43 PM, John Talbut wrote:
-> On 26/03/13 11:29, Arend van Spriel wrote:
->> On 03/26/2013 12:13 PM, John Talbut wrote:
->>>
->>> On 26/03/13 10:53, Arend van Spriel wrote:
->>>> On 03/26/2013 11:34 AM, John Talbut wrote:
->>>>> Kernel log attached.
->>>>>
->>>>
->>>> Now this is weird. I do not see any BCMA log messages. Can you give
->>>> output of following command:
->>>>
->>>> $ lspci -n -s 1:0.0
->>>
->>> 01:00.0 0280: 14e4:4357 (rev 01)
->>
->> Ok, no problem there.
->>
->> digging further in sysfs. Can you execute the following commands:
->>
->> if it exists:
->> $ ls /sys/bus/bcma
->> $ ls /sys/bus/bcma/devices
->> $ ls /sys/bus/bcma/drivers
->>
->> if it exists also following:
->> $ ls -l /sys/bus/bcma/drivers/brcmsmac
-> 
-> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
-> devices  drivers  drivers_autoprobe  drivers_probe  uevent
-> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
+Adrian Chadd wrote:
+> (190mbit TCP on 2-stream? Damn. Looks like I have a little more
+> optimisation to do in FreeBSD. I'm only hitting 160/170mbit TCP on
+> AR9280<->AR9280 and AR9280<->AR9287. But I hit 220-240mbit UDP.)
 
-The fact that there are no devices detected under bcma is suspicious.
-Adding bcma developer to the list. Maybe he knows about issues when
-having bcma compiled in kernel image.
+I used a AR9462 card for this test. With AR9280/AR9287 I get abysmal
+numbers with both rate control algorithms. Maybe something has regressed
+in ath9k for the AR9002 family...
 
-Regards,
-Arend
-
-
+Sujith
