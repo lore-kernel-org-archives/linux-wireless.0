@@ -1,106 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:39359 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328Ab3CDVH4 (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:65314 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab3CBGEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 16:07:56 -0500
-Received: by mail-pb0-f53.google.com with SMTP id un1so3422470pbc.12
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:07:55 -0800 (PST)
+	Sat, 2 Mar 2013 01:04:12 -0500
+Received: by mail-pb0-f45.google.com with SMTP id ro8so2158468pbb.4
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 22:04:12 -0800 (PST)
 From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolution.net
-Cc: linux-wireless@vger.kernel.org,
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
 	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 2/5] cfg80211: rename mesh station types
-Date: Mon,  4 Mar 2013 13:06:11 -0800
-Message-Id: <1362431174-4747-2-git-send-email-thomas@cozybit.com> (sfid-20130304_220801_241820_3D66856C)
-In-Reply-To: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
-References: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
+Subject: [PATCH 4/6] nl80211: user_mpm overrides auto_open_plinks
+Date: Fri,  1 Mar 2013 22:02:50 -0800
+Message-Id: <1362204172-28307-4-git-send-email-thomas@cozybit.com> (sfid-20130302_070421_095057_08EA1DDC)
+In-Reply-To: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh station types used to refer to whether the
-station was secure or nonsecure. Really the salient
-information is whether it is managed by the kernel or
-userspace
+If the user requested a userspace MPM, automatically
+disable auto_open_plinks to fully disable the kernel MPM.
 
 Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- include/net/cfg80211.h |    8 ++++----
- net/mac80211/cfg.c     |    4 ++--
- net/wireless/nl80211.c |    8 ++++----
- 3 files changed, 10 insertions(+), 10 deletions(-)
+ include/uapi/linux/nl80211.h |    6 ++++--
+ net/wireless/nl80211.c       |    3 +++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b6be55e..6a61237 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -690,8 +690,8 @@ struct station_parameters {
-  *	supported/used)
-  * @CFG80211_STA_TDLS_PEER_ACTIVE: TDLS peer on managed interface (active
-  *	entry that is operating, has been marked authorized by userspace)
-- * @CFG80211_STA_MESH_PEER_NONSEC: peer on mesh interface (non-secured)
-- * @CFG80211_STA_MESH_PEER_SECURE: peer on mesh interface (secured)
-+ * @CFG80211_STA_MESH_PEER_KERNEL: peer on mesh interface (kernel managed)
-+ * @CFG80211_STA_MESH_PEER_USER: peer on mesh interface (user managed)
-  */
- enum cfg80211_station_type {
- 	CFG80211_STA_AP_CLIENT,
-@@ -700,8 +700,8 @@ enum cfg80211_station_type {
- 	CFG80211_STA_IBSS,
- 	CFG80211_STA_TDLS_PEER_SETUP,
- 	CFG80211_STA_TDLS_PEER_ACTIVE,
--	CFG80211_STA_MESH_PEER_NONSEC,
--	CFG80211_STA_MESH_PEER_SECURE,
-+	CFG80211_STA_MESH_PEER_KERNEL,
-+	CFG80211_STA_MESH_PEER_USER,
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8259a5b..b5f0a93 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1436,9 +1436,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MESH_POINT:
- 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
--			statype = CFG80211_STA_MESH_PEER_SECURE;
-+			statype = CFG80211_STA_MESH_PEER_USER;
- 		else
--			statype = CFG80211_STA_MESH_PEER_NONSEC;
-+			statype = CFG80211_STA_MESH_PEER_KERNEL;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		statype = CFG80211_STA_IBSS;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 8134c6a..79da871 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2467,8 +2467,10 @@ enum nl80211_mesh_power_mode {
+  * @NL80211_MESHCONF_TTL: specifies the value of TTL field set at a source mesh
+  *	point.
+  *
+- * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically
+- *	open peer links when we detect compatible mesh peers.
++ * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically open
++ *	peer links when we detect compatible mesh peers. Disabled if
++ *	@NL80211_MESH_SETUP_USERSPACE_MPM or @NL80211_MESH_SETUP_USERSPACE_AMPE are
++ *	set.
+  *
+  * @NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES: the number of action frames
+  *	containing a PREQ that an MP can send to a particular destination (path
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 167fd83..eca897a 100644
+index e3f2489..bd73231 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3595,8 +3595,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+@@ -7422,6 +7422,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
  
- 	switch (statype) {
--	case CFG80211_STA_MESH_PEER_NONSEC:
--	case CFG80211_STA_MESH_PEER_SECURE:
-+	case CFG80211_STA_MESH_PEER_KERNEL:
-+	case CFG80211_STA_MESH_PEER_USER:
- 		/*
- 		 * No ignoring the TDLS flag here -- the userspace mesh
- 		 * code doesn't have the bug of including TDLS in the
-@@ -3698,11 +3698,11 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 	case CFG80211_STA_TDLS_PEER_ACTIVE:
- 		/* reject any changes */
- 		return -EINVAL;
--	case CFG80211_STA_MESH_PEER_NONSEC:
-+	case CFG80211_STA_MESH_PEER_KERNEL:
- 		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
- 			return -EINVAL;
- 		break;
--	case CFG80211_STA_MESH_PEER_SECURE:
-+	case CFG80211_STA_MESH_PEER_USER:
- 		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
- 			return -EINVAL;
- 		break;
++	if (setup.user_mpm)
++		cfg.auto_open_plinks = false;
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
+ 		err = nl80211_parse_chandef(rdev, info, &setup.chandef);
+ 		if (err)
 -- 
 1.7.10.4
 
