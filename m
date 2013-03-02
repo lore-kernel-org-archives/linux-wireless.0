@@ -1,140 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37027 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44721 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751753Ab3C0QQJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:16:09 -0400
+	id S1751222Ab3CBJ0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Mar 2013 04:26:54 -0500
+Message-ID: <5131C5CF.2090306@hauke-m.de> (sfid-20130302_102707_304695_34E1D859)
+Date: Sat, 02 Mar 2013 10:26:39 +0100
 From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] b43: mark some functions and structs static
-Date: Wed, 27 Mar 2013 17:15:50 +0100
-Message-Id: <1364400951-25488-1-git-send-email-hauke@hauke-m.de> (sfid-20130327_171747_663651_D1231364)
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: HT-PHY: make it BCMA-only
+References: <1362186865-20539-1-git-send-email-zajec5@gmail.com> <20130302050900.6e768a3e@milhouse> <CACna6rw1HLX8oP_mepfikpuKZ9zQ8j8+1=mOi_iCLQ49jUq-PA@mail.gmail.com>
+In-Reply-To: <CACna6rw1HLX8oP_mepfikpuKZ9zQ8j8+1=mOi_iCLQ49jUq-PA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some sparse warnings.
+On 03/02/2013 10:19 AM, Rafał Miłecki wrote:
+> 2013/3/2 Michael Büsch <m@bues.ch>:
+>> On Sat,  2 Mar 2013 02:14:25 +0100
+>> Rafał Miłecki <zajec5@gmail.com> wrote:
+>>
+>>> HT-PHY was found only on BCM4331 which is a BCMA-based chipset. This is
+>>> reallly unlikely we will ever see HT-PHY on SSB thus make the whole code
+>>> BCMA specific. This will allow us to call various BCMA-specific
+>>> functions directly (without extra checks).
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/Kconfig  |    2 +-
+>>>  drivers/net/wireless/b43/phy_ht.c |    5 +++++
+>>>  2 files changed, 6 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+>>> index 7a28d21..09d315d 100644
+>>> --- a/drivers/net/wireless/b43/Kconfig
+>>> +++ b/drivers/net/wireless/b43/Kconfig
+>>> @@ -131,7 +131,7 @@ config B43_PHY_LP
+>>>
+>>>  config B43_PHY_HT
+>>>       bool "Support for HT-PHY (high throughput) devices (EXPERIMENTAL)"
+>>> -     depends on B43 && EXPERIMENTAL
+>>> +     depends on B43 && B43_BCMA && EXPERIMENTAL
+>>
+>> Makes sense.
+>> What about removing EXPERIMENTAL? This flag is mostly useless these days.
+> 
+> A little later, I've plan for some minor improvement :)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/phy_n.c          |    6 ++++--
- drivers/net/wireless/b43/radio_2056.c     |    2 +-
- drivers/net/wireless/b43/sdio.h           |    4 ++--
- drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
- drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
- 5 files changed, 12 insertions(+), 10 deletions(-)
+There is already a patch [0] in Linus tree removing EXPERIMENTAL.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 1ec0d69..8d15878 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -2789,9 +2789,11 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
-  * Tx and Rx
-  **************************************************/
- 
--void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
-+#if 0
-+static void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
- {//TODO
- }
-+#endif
- 
- static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
- {//TODO
-@@ -4892,7 +4894,7 @@ static void b43_nphy_superswitch_init(struct b43_wldev *dev, bool init)
- }
- 
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N */
--int b43_phy_initn(struct b43_wldev *dev)
-+static int b43_phy_initn(struct b43_wldev *dev)
- {
- 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
- 	struct b43_phy *phy = &dev->phy;
-diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
-index ce037fb..ab1f55f 100644
---- a/drivers/net/wireless/b43/radio_2056.c
-+++ b/drivers/net/wireless/b43/radio_2056.c
-@@ -2980,7 +2980,7 @@ static const struct b2056_inittab_entry b2056_inittab_rev8_rx[] = {
- 	.rx		= prefix##_rx,			\
- 	.rx_length	= ARRAY_SIZE(prefix##_rx)
- 
--struct b2056_inittabs_pts b2056_inittabs[] = {
-+static struct b2056_inittabs_pts b2056_inittabs[] = {
- 	[3] = { INITTABSPTS(b2056_inittab_rev3) },
- 	[4] = { INITTABSPTS(b2056_inittab_rev4) },
- 	[5] = { INITTABSPTS(b2056_inittab_rev5) },
-diff --git a/drivers/net/wireless/b43/sdio.h b/drivers/net/wireless/b43/sdio.h
-index fb63309..1e93926 100644
---- a/drivers/net/wireless/b43/sdio.h
-+++ b/drivers/net/wireless/b43/sdio.h
-@@ -25,12 +25,12 @@ void b43_sdio_exit(void);
- #else /* CONFIG_B43_SDIO */
- 
- 
--int b43_sdio_request_irq(struct b43_wldev *dev,
-+static inline int b43_sdio_request_irq(struct b43_wldev *dev,
- 			 void (*handler)(struct b43_wldev *dev))
- {
- 	return -ENODEV;
- }
--void b43_sdio_free_irq(struct b43_wldev *dev)
-+static inline void b43_sdio_free_irq(struct b43_wldev *dev)
- {
- }
- static inline int b43_sdio_init(void)
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index aaca60c..110510d 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2800,7 +2800,7 @@ static const struct nphy_rf_control_override_rev7
- 	{ 0x0010, 0x344, 0x345, 0x0010, 4 },
- };
- 
--struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
-+static struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
- 	{ 10, 14, 19, 27 },
- 	{ -5, 6, 10, 15 },
- 	{ 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA },
-@@ -2811,7 +2811,7 @@ struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
- 	0x18, 0x18, 0x18,
- 	0x01D0, 0x5,
- };
--struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_workaround[2][4] = {
-+static struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_workaround[2][4] = {
- 	{ /* 2GHz */
- 		{ /* PHY rev 3 */
- 			{ 7, 11, 16, 23 },
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index 5176363..e347b8d 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -313,7 +313,7 @@ static const u32 b43_lcntab_0x18[] = {
-  * TX gain.
-  **************************************************/
- 
--const struct b43_lcntab_tx_gain_tbl_entry
-+static const struct b43_lcntab_tx_gain_tbl_entry
- 	b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[B43_LCNTAB_TX_GAIN_SIZE] = {
- 	{ 0x03, 0x00, 0x1f, 0x0, 0x48 },
- 	{ 0x03, 0x00, 0x1f, 0x0, 0x46 },
-@@ -449,7 +449,7 @@ const struct b43_lcntab_tx_gain_tbl_entry
-  * SW control.
-  **************************************************/
- 
--const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
-+static const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
- 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
- 	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
- 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
-@@ -631,7 +631,7 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
- 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
- }
- 
--void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
-+static void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
- 			const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
- {
- 	u32 i;
--- 
-1.7.10.4
+Hauke
 
+[0]:
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=afd19ef0b1a98f420ddcfc619182fd589034577f
