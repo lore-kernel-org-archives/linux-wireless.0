@@ -1,91 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40845 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932814Ab3CDWaM (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:60530 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab3CBGEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 17:30:12 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v4 4/7] mac80211: extend minstrel's rate sampling to avoid unsampled rates
-Date: Mon,  4 Mar 2013 23:30:04 +0100
-Message-Id: <1362436208-75786-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_233031_561704_F30BDCE5)
-In-Reply-To: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Sat, 2 Mar 2013 01:04:10 -0500
+Received: by mail-pb0-f49.google.com with SMTP id xa12so2131545pbc.22
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 22:04:09 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/6] cfg80211: rename mesh station types
+Date: Fri,  1 Mar 2013 22:02:48 -0800
+Message-Id: <1362204172-28307-2-git-send-email-thomas@cozybit.com> (sfid-20130302_070420_447421_A9BBCEAC)
+In-Reply-To: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minstrel's decision which rate should be directly sampled within the
-1st mrr stage is limited to such rates faster than the current max
-throughput rate. All rates below the current max. throughput rate
-are indirectly sampled via the 2nd mrr stage.
-This approach leads to deprecated per rate statistics and therfore
-a deprecated mrr chain setup.
+The mesh station types used to refer to whether the
+station was secure or nonsecure. Really the salient
+information is whether it is managed by the kernel or
+userspace
 
-This patch uses the sampling approach from minstrel_ht. A counter is
-added to sum all indirect sample attempts per rate. After 20 indirect
-sampling attempts the rate is directly sampled within the 1st mrr stage.
-Therefore more up-to-date statistics for all rates are maintained and
-used to setup the mrr chain.
-
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- net/mac80211/rc80211_minstrel.c | 13 +++++++++----
- net/mac80211/rc80211_minstrel.h |  1 +
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h |    8 ++++----
+ net/mac80211/cfg.c     |    4 ++--
+ net/wireless/nl80211.c |    8 ++++----
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 152bb0e..aa59f29 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -85,7 +85,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		if (!usecs)
- 			usecs = 1000000;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b6be55e..6a61237 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -690,8 +690,8 @@ struct station_parameters {
+  *	supported/used)
+  * @CFG80211_STA_TDLS_PEER_ACTIVE: TDLS peer on managed interface (active
+  *	entry that is operating, has been marked authorized by userspace)
+- * @CFG80211_STA_MESH_PEER_NONSEC: peer on mesh interface (non-secured)
+- * @CFG80211_STA_MESH_PEER_SECURE: peer on mesh interface (secured)
++ * @CFG80211_STA_MESH_PEER_KERNEL: peer on mesh interface (kernel managed)
++ * @CFG80211_STA_MESH_PEER_USER: peer on mesh interface (user managed)
+  */
+ enum cfg80211_station_type {
+ 	CFG80211_STA_AP_CLIENT,
+@@ -700,8 +700,8 @@ enum cfg80211_station_type {
+ 	CFG80211_STA_IBSS,
+ 	CFG80211_STA_TDLS_PEER_SETUP,
+ 	CFG80211_STA_TDLS_PEER_ACTIVE,
+-	CFG80211_STA_MESH_PEER_NONSEC,
+-	CFG80211_STA_MESH_PEER_SECURE,
++	CFG80211_STA_MESH_PEER_KERNEL,
++	CFG80211_STA_MESH_PEER_USER,
+ };
  
--		if (mr->attempts) {
-+		if (unlikely(mr->attempts > 0)) {
-+			mr->sample_skipped = 0;
- 			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
-@@ -93,7 +94,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 							mr->cur_prob,
- 							EWMA_LEVEL);
- 			mr->cur_tp = mr->probability * (1000000 / usecs);
--		}
-+		} else
-+			mr->sample_skipped++;
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 986556d..18e9dfe 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1433,9 +1433,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_SECURED)
+-			statype = CFG80211_STA_MESH_PEER_SECURE;
++			statype = CFG80211_STA_MESH_PEER_USER;
+ 		else
+-			statype = CFG80211_STA_MESH_PEER_NONSEC;
++			statype = CFG80211_STA_MESH_PEER_KERNEL;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		statype = CFG80211_STA_IBSS;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 67c96cd..e3f2489 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3595,8 +3595,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
  
- 		mr->last_success = mr->success;
- 		mr->last_attempts = mr->attempts;
-@@ -282,9 +284,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		rate_sampling = true;
- 
- 		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
--		 * rate sampling method should be used */
-+		 * rate sampling method should be used.
-+		 * Respect such rates that are not sampled for 20 interations.
-+		 */
- 		if (mrr_capable &&
--		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time)
-+		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
-+		    msr->sample_skipped < 20)
- 				indirect_rate_sampling = true;
- 
- 		if (!indirect_rate_sampling) {
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 5fb5cb8..200b7e3 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -43,6 +43,7 @@ struct minstrel_rate {
- 	u32 attempts;
- 	u32 last_attempts;
- 	u32 last_success;
-+	u8 sample_skipped;
- 
- 	/* parts per thousand */
- 	u32 cur_prob;
+ 	switch (statype) {
+-	case CFG80211_STA_MESH_PEER_NONSEC:
+-	case CFG80211_STA_MESH_PEER_SECURE:
++	case CFG80211_STA_MESH_PEER_KERNEL:
++	case CFG80211_STA_MESH_PEER_USER:
+ 		/*
+ 		 * No ignoring the TDLS flag here -- the userspace mesh
+ 		 * code doesn't have the bug of including TDLS in the
+@@ -3698,11 +3698,11 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+ 	case CFG80211_STA_TDLS_PEER_ACTIVE:
+ 		/* reject any changes */
+ 		return -EINVAL;
+-	case CFG80211_STA_MESH_PEER_NONSEC:
++	case CFG80211_STA_MESH_PEER_KERNEL:
+ 		if (params->sta_modify_mask & STATION_PARAM_APPLY_PLINK_STATE)
+ 			return -EINVAL;
+ 		break;
+-	case CFG80211_STA_MESH_PEER_SECURE:
++	case CFG80211_STA_MESH_PEER_USER:
+ 		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
+ 			return -EINVAL;
+ 		break;
 -- 
-1.8.1.1
+1.7.10.4
 
