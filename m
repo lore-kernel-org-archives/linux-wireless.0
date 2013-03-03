@@ -1,82 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1785 "EHLO mms3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1548 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757107Ab3CFLHL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 06:07:11 -0500
-Message-ID: <51372354.50901@broadcom.com> (sfid-20130306_120717_938525_B2463B92)
-Date: Wed, 6 Mar 2013 12:07:00 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+	id S1753217Ab3CCLqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Mar 2013 06:46:14 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/13] brcmfmac: cleanup module information macros
+Date: Sun, 3 Mar 2013 12:45:23 +0100
+Message-ID: <1362311132-29561-5-git-send-email-arend@broadcom.com> (sfid-20130303_131304_306396_BDB0ED58)
+In-Reply-To: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "Alexander Mezin" <mezin.alexander@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4313 problems connecting to AP since 3.8
-References: <CA+K+NcR9tExM9y-yjH_MB=ZpjeeakMW2GozECg4Pejp54nkCjA@mail.gmail.com>
- <513624B7.8010109@broadcom.com>
- <loom.20130306T000201-626@post.gmane.org>
- <5137188A.4070007@broadcom.com>
- <CADnvcf+Mub7DhGWNqSuRF9u2A5HMfqUv5GuYrYcrkGjbXx470A@mail.gmail.com>
-In-Reply-To: <CADnvcf+Mub7DhGWNqSuRF9u2A5HMfqUv5GuYrYcrkGjbXx470A@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/13 11:24, Alexander Mezin wrote:
-> 2013/3/6 Piotr Haber <phaber@broadcom.com>:
->> On 03/06/13 00:06, Alexander Mezin wrote:
->>> Arend van Spriel <arend@...> writes:
->>>
->>>>
->>>> On 03/04/13 22:47, Ján Veselý wrote:
->>>>> Hi,
->>>>>
->>>>> after upgrading to 3.8 I started running into a timeout problem on
->>>>> BCM4313 wifi using brcmsmac driver (compiled as module, x86_64).
->>>>> the card is unable to connect to ap after startup of resume.
->>>>> Although it eventually connects it takes a long time (several minutes)
->>>>> and dmesg log is spammed with:
->>>>>
->>>>> [  144.725431] wlan0: authenticate with 00:23:f8:8f:29:14
->>>>> [  144.727786] wlan0: capabilities/regulatory prevented using AP
->>>>> HT/VHT configuration, downgraded
->>>>> [  144.727820] wlan0: direct probe to 00:23:f8:8f:29:14 (try 1/3)
->>>>> [  144.930780] wlan0: direct probe to 00:23:f8:8f:29:14 (try 2/3)
->>>>> [  145.133855] wlan0: direct probe to 00:23:f8:8f:29:14 (try 3/3)
->>>>> [  145.336931] wlan0: authentication with 00:23:f8:8f:29:14 timed out
->>>>> [  151.217245] wlan0: authenticate with 00:23:f8:8f:29:14
->>>>>
->>>>> (30+ times in some cases)
->>>
->>> Had the same problem.
->>> It seems that this commit introduces the bug:
->>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?
->>> id=b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
->>> I reverted it and now I have successful connection on first attempt. Linux
->>> 3.8.2, BCM4313 802.11b/g/n Wireless LAN Controller.
->>>
->> Hi,
->> that's disturbing.
->> I wonder what hardware version you have.
->> Could you share the contents of this debugfs file:
->> <debugfs_mount>/brcmsmac/bcma0:0/hardware
->>
->> Piotr
->>
->>
->>
-> 
-> board vendor: 103c
-> board type: 1483
-> board revision: 2410
-> board flags: 8402a01
-> board flags2: 880
-> firmware revision: 262032c
-> 
-Thanks,
-we had reports of poor performance of 4313/BT combo boards, but did not connect it to 4313iPA
-support added by that problematic patch.
-Will investigate.
+The output of modinfo shows a bit of strangeness because module
+information macros are used in multiple source files:
 
-Piotr
+license:        Dual BSD/GPL
+description:    Broadcom 802.11 wireless LAN fullmac driver.
+author:         Broadcom Corporation
+firmware:       brcm/brcmfmac-sdio.txt
+firmware:       brcm/brcmfmac-sdio.bin
+firmware:       brcm/brcmfmac43236b.bin
+license:        Dual BSD/GPL
+description:    Broadcom 802.11n wireless LAN fullmac usb driver.
+author:         Broadcom Corporation
+
+This patch cleans it up.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    1 -
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    6 +-----
+ 2 files changed, 1 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index a4d01f3..5b92341 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -33,7 +33,6 @@
+ 
+ MODULE_AUTHOR("Broadcom Corporation");
+ MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
+-MODULE_SUPPORTED_DEVICE("Broadcom 802.11 WLAN fullmac cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+ #define MAX_WAIT_FOR_8021X_TX		50	/* msecs */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index a55994d..2e8f938 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -112,11 +112,6 @@ struct brcmf_usbdev_info {
+ static void brcmf_usb_rx_refill(struct brcmf_usbdev_info *devinfo,
+ 				struct brcmf_usbreq  *req);
+ 
+-MODULE_AUTHOR("Broadcom Corporation");
+-MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac usb driver.");
+-MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac usb cards");
+-MODULE_LICENSE("Dual BSD/GPL");
+-
+ static struct brcmf_usbdev *brcmf_usb_get_buspub(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -1486,6 +1481,7 @@ static struct usb_device_id brcmf_usb_devid_table[] = {
+ 	{ USB_DEVICE(BRCMF_USB_VENDOR_ID_BROADCOM, BRCMF_USB_DEVICE_ID_BCMFW) },
+ 	{ }
+ };
++
+ MODULE_DEVICE_TABLE(usb, brcmf_usb_devid_table);
+ MODULE_FIRMWARE(BRCMF_USB_43143_FW_NAME);
+ MODULE_FIRMWARE(BRCMF_USB_43236_FW_NAME);
+-- 
+1.7.6
+
 
