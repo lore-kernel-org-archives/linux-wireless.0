@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:44900 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757125Ab3CSAXg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38957 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346Ab3CCUfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 20:23:36 -0400
-Received: by mail-wi0-f179.google.com with SMTP id ez12so3265646wid.6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 17:23:35 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [RFC V2 2/2] mac80211: Let drivers not supporting channel contexts use VHT
-Date: Tue, 19 Mar 2013 01:23:20 +0100
-Message-Id: <1363652600-23223-3-git-send-email-karl.beldan@gmail.com> (sfid-20130319_012340_380296_88D2EECF)
-In-Reply-To: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
-References: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
+	Sun, 3 Mar 2013 15:35:52 -0500
+Message-ID: <1362342943.8226.3.camel@jlt4.sipsolutions.net> (sfid-20130303_213603_969256_9121AFFF)
+Subject: Re: [PATCH 05/13] brcmfmac: only do auth_type workaround when no
+ WPA or RSN IE is provided
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 03 Mar 2013 21:35:43 +0100
+In-Reply-To: <5133A8D2.9090100@broadcom.com>
+References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+	 <1362311132-29561-6-git-send-email-arend@broadcom.com>
+	 ( sfid-20130303_124611_530276_DB95CBBF) <1362331252.8226.2.camel@jlt4.sipsolutions.net>
+	 <5133A8D2.9090100@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Sun, 2013-03-03 at 20:47 +0100, Arend van Spriel wrote:
+> On 03/03/13 18:20, Johannes Berg wrote:
+> > On Sun, 2013-03-03 at 12:45 +0100, Arend van Spriel wrote:
+> >> The workaround is only needed when auth_type is automatic AND there is
+> >> no WPA or RSN information element provided by cfg80211.
+> >
+> > Does this really actually happen? Why would wpa_s select automatic when
+> > it knows it's going to be open?
+> >
 
-It is possible since the global hw config and local switched to
-cfg80211_chan_def.
+> You are right and it does not happen with wpa_s. However, it does 
+> 'actually really happen' :-) 
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/main.c |   14 +-------------
- 1 files changed, 1 insertions(+), 13 deletions(-)
+:-)
+Just curious.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 1da8ce0..e97f85a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -838,22 +838,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (supp_ht)
- 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
- 
--	if (supp_vht) {
-+	if (supp_vht)
- 		local->scan_ies_len +=
- 			2 + sizeof(struct ieee80211_vht_cap);
- 
--		/*
--		 * (for now at least), drivers wanting to use VHT must
--		 * support channel contexts, as they contain all the
--		 * necessary VHT information and the global hw config
--		 * doesn't (yet)
--		 */
--		if (WARN_ON(!local->use_chanctx)) {
--			result = -EINVAL;
--			goto fail_wiphy_register;
--		}
--	}
--
- 	if (!local->ops->hw_scan) {
- 		/* For hw_scan, driver needs to set these up. */
- 		local->hw.wiphy->max_scan_ssids = 4;
--- 
-1.7.9.dirty
+> when using iw to connect to an unsecure AP.
+
+Right but then checking for RSN/WPA won't make a difference? I guess I
+don't really understand the code, so you better ignore me ;-)
+
+johannes
 
