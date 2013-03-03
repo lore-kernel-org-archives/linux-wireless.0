@@ -1,124 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40608 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758416Ab3CDSsh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 13:48:37 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v3 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
-Date: Mon,  4 Mar 2013 19:48:22 +0100
-Message-Id: <1362422905-78079-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_194845_914547_AD5336E3)
-In-Reply-To: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:2021 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753070Ab3CCLpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Mar 2013 06:45:52 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/13] brcmfmac: remove null-pointer check in
+ .sched_scan_start() callback
+Date: Sun, 3 Mar 2013 12:45:25 +0100
+Message-ID: <1362311132-29561-7-git-send-email-arend@broadcom.com> (sfid-20130303_124614_507438_745E0AB2)
+In-Reply-To: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While minstrel bootstraps and fills the success probabilities of each
-rate the lowest rate has typically a very high success probability
-(often 100% in our tests).
-Its statistics are never updated but considered to setup the mrr chain.
-In our tests we see that especially the 3rd mrr stage (which is that
-rate providing highest success probability) is filled with the lowest rate
-because its initial high sucess probability is never updated. By design
-the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
-mrr stage are equal.
+In brcmf_cfg80211_sched_scan_start() the request parameter was checked
+for being non-null. However, it never is so remove the check which gets
+rid of following smatch warning:
 
-This patch follows minstrels general approach of assuming as little
-as possible about rate dependencies. Consequently we include the
-lowest rate into the random sampling table to get balanced up-to-date
-statistics of all rates and therefore balanced decisions.
+drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c:2904
+brcmf_cfg80211_sched_scan_start()
+warn: variable dereferenced before check 'request' (see line 2897)
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/rc80211_minstrel.c    | 20 +++++++-------------
- net/mac80211/rc80211_minstrel.h    |  4 +++-
- net/mac80211/rc80211_minstrel_ht.c |  1 -
- 3 files changed, 10 insertions(+), 15 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index aa59f29..aa1e81a 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -55,7 +55,6 @@
- #include "rate.h"
- #include "rc80211_minstrel.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 73f5528..d6f8c1a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3054,16 +3054,16 @@ brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
+ 	int i;
+ 	int ret = 0;
  
--#define SAMPLE_COLUMNS	10
- #define SAMPLE_TBL(_mi, _idx, _col) \
- 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
- 
-@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
- 	unsigned int sample_ndx;
- 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
- 	mi->sample_row++;
--	if ((int) mi->sample_row > (mi->n_rates - 2)) {
-+	if ((int) mi->sample_row >= mi->n_rates) {
- 		mi->sample_row = 0;
- 		mi->sample_column++;
- 		if (mi->sample_column >= SAMPLE_COLUMNS)
-@@ -370,26 +369,21 @@ static void
- init_sample_table(struct minstrel_sta_info *mi)
- {
- 	unsigned int i, col, new_idx;
--	unsigned int n_srates = mi->n_rates - 1;
- 	u8 rnd[8];
- 
- 	mi->sample_column = 0;
- 	mi->sample_row = 0;
--	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
-+	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
- 
- 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
--		for (i = 0; i < n_srates; i++) {
-+		for (i = 0; i < mi->n_rates; i++) {
- 			get_random_bytes(rnd, sizeof(rnd));
--			new_idx = (i + rnd[i & 7]) % n_srates;
-+			new_idx = (i + rnd[i]) % mi->n_rates;
- 
--			while (SAMPLE_TBL(mi, new_idx, col) != 0)
--				new_idx = (new_idx + 1) % n_srates;
-+			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
-+				new_idx = (new_idx + 1) % mi->n_rates;
- 
--			/* Don't sample the slowest rate (i.e. slowest base
--			 * rate). We must presume that the slowest rate works
--			 * fine, or else other management frames will also be
--			 * failing and the link will break */
--			SAMPLE_TBL(mi, new_idx, col) = i + 1;
-+			SAMPLE_TBL(mi, new_idx, col) = i;
- 		}
+-	brcmf_dbg(SCAN, "Enter n_match_sets:%d   n_ssids:%d\n",
++	brcmf_dbg(SCAN, "Enter n_match_sets:%d n_ssids:%d\n",
+ 		  request->n_match_sets, request->n_ssids);
+ 	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+ 		brcmf_err("Scanning already: status (%lu)\n", cfg->scan_status);
+ 		return -EAGAIN;
  	}
- }
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 200b7e3..a0ccc57 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -9,7 +9,9 @@
- #ifndef __RC_MINSTREL_H
- #define __RC_MINSTREL_H
  
--#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
-+#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
-+#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
-+
+-	if (!request || !request->n_ssids || !request->n_match_sets) {
++	if (!request->n_ssids || !request->n_match_sets) {
+ 		brcmf_err("Invalid sched scan req!! n_ssids:%d\n",
+-			  request ? request->n_ssids : 0);
++			  request->n_ssids);
+ 		return -EINVAL;
+ 	}
  
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a3081e5..8f88108 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -17,7 +17,6 @@
- #include "rc80211_minstrel_ht.h"
- 
- #define AVG_PKT_SIZE	1200
--#define SAMPLE_COLUMNS	10
- 
- /* Number of bits for an average sized packet */
- #define MCS_NBITS (AVG_PKT_SIZE << 3)
 -- 
-1.8.1.1
+1.7.6
+
 
