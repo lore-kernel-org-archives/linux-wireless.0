@@ -1,66 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:49560 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755364Ab3C1La6 (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40284 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757698Ab3CDOWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 07:30:58 -0400
-Received: by mail-qa0-f46.google.com with SMTP id k4so1457595qaq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 04:30:57 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUXZpYA8MVRk6++T5ykEEcTKL=gf4CqBMkexEr6N+GAd8A@mail.gmail.com>
-References: <1364461894-30555-1-git-send-email-vincent.stehle@laposte.net>
-	<1364462493.8312.8.camel@jlt4.sipsolutions.net>
-	<CA+icZUXZpYA8MVRk6++T5ykEEcTKL=gf4CqBMkexEr6N+GAd8A@mail.gmail.com>
-Date: Thu, 28 Mar 2013 12:30:57 +0100
-Message-ID: <CA+icZUUHrtKX_BUYzZQugmwwP9UG3Dyw7S4jwbs5japJS3ZGbw@mail.gmail.com> (sfid-20130328_123101_102213_CB4C64E3)
-Subject: Re: [PATCH] mac80211: fix uninitialized variable
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vincent <vincent.stehle@laposte.net>,
-	linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Mar 2013 09:22:30 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 4/7] mac80211: extend minstrel's rate sampling to avoid unsampled rates
+Date: Mon,  4 Mar 2013 15:22:14 +0100
+Message-Id: <1362406937-69969-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152235_242776_4FD18917)
+In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 12:28 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Thu, Mar 28, 2013 at 10:21 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2013-03-28 at 10:11 +0100, Vincent wrote:
->>> Fix one code path where chanctx_conf is tested as being non-NULL while it may
->>> be uninitialized.
->>
->> No, you're wrong, presumably misled by the compiler.
->>
->
-> Hi,
->
-> especially, when you use gcc >=4.7.x compiler with "-Os"
-> optimize-level you and your binaries/libs get confused.
-> Arnd Bergmann sent a patch for these "false-positives" (use
-> "-Wmaybe-uninitialized" as a CFLAGS).
-> I think this is a good idea.
-> If more kernel-developers ACK it, it might get mainline :-)?
-> Gogogo johill (but don't runaway) :-)...
->
-> For more details see also gcc-docs on how to suppress errors and treat
-> them as warnings [1].
->
-> Regards,
-> - Sedat -
->
-> [1] http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#Warning-Options
->
+Minstrel's decision which rate should be directly sampled within the
+1st mrr stage is limited to such rates faster than the current max
+throughput rate. All rates below the current max. throughput rate
+are indirectly sampled via the 2nd mrr stage.
+This approach leads to deprecated per rate statistics and therfore
+a deprecated mrr chain setup.
 
-Uuurgh, forgot to add the link for Arnd's patch....
+This patch uses the sampling approach from minstrel_ht. A counter is
+added to sum all indirect sample attempts per rate. After 20 indirect
+sampling attempts the rate is directly sampled within the 1st mrr stage.
+Therefore more up-to-date statistics for all rates are maintained and
+used to setup the mrr chain.
 
-- Sedat -
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel.c | 13 +++++++++----
+ net/mac80211/rc80211_minstrel.h |  1 +
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
-[2] https://patchwork.kernel.org/patch/2274041/
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 152bb0e..aa59f29 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -85,7 +85,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		if (!usecs)
+ 			usecs = 1000000;
+ 
+-		if (mr->attempts) {
++		if (unlikely(mr->attempts > 0)) {
++			mr->sample_skipped = 0;
+ 			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
+ 			mr->succ_hist += mr->success;
+ 			mr->att_hist += mr->attempts;
+@@ -93,7 +94,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 							mr->cur_prob,
+ 							EWMA_LEVEL);
+ 			mr->cur_tp = mr->probability * (1000000 / usecs);
+-		}
++		} else
++			mr->sample_skipped++;
+ 
+ 		mr->last_success = mr->success;
+ 		mr->last_attempts = mr->attempts;
+@@ -282,9 +284,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		rate_sampling = true;
+ 
+ 		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
+-		 * rate sampling method should be used */
++		 * rate sampling method should be used.
++		 * Respect such rates that are not sampled for 20 interations.
++		 */
+ 		if (mrr_capable &&
+-		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time)
++		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
++		    msr->sample_skipped < 20)
+ 				indirect_rate_sampling = true;
+ 
+ 		if (!indirect_rate_sampling) {
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 5fb5cb8..200b7e3 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -43,6 +43,7 @@ struct minstrel_rate {
+ 	u32 attempts;
+ 	u32 last_attempts;
+ 	u32 last_success;
++	u8 sample_skipped;
+ 
+ 	/* parts per thousand */
+ 	u32 cur_prob;
+-- 
+1.8.1.1
 
->> johannes
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
