@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:59631 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab3C1Aph (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43109 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932255Ab3CDUZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 20:45:37 -0400
-Received: by mail-ve0-f175.google.com with SMTP id pb11so4409025veb.20
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2013 17:45:36 -0700 (PDT)
-Message-ID: <515392AF.8070809@lwfinger.net> (sfid-20130328_014541_330129_8CE0C8A8)
-Date: Wed, 27 Mar 2013 19:45:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ali Ustek <aliustek@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Ralink RT3290 card not supported
-References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com> <CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com> <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
-In-Reply-To: <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 4 Mar 2013 15:25:39 -0500
+Message-ID: <1362428733.21028.53.camel@jlt4.sipsolutions.net> (sfid-20130304_212544_272012_09136D73)
+Subject: Re: [PATCHv4 2/3] mac80211: mesh power save doze scheduling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Marco Porsch <marco@cozybit.com>, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org
+Date: Mon, 04 Mar 2013 21:25:33 +0100
+In-Reply-To: <20130304192320.GB20505@thinkpad-t410>
+References: <1362419675-27127-1-git-send-email-marco@cozybit.com>
+	 <1362419675-27127-2-git-send-email-marco@cozybit.com>
+	 <20130304192320.GB20505@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2013 06:13 PM, Ali Ustek wrote:
-> Hi,
->
-> The wi-fi chip Ralink RT3290 is common in notebooks but is not
-> supported by linux-kernel
->
-> A bug is raised on Ubuntu launchpad
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1156363
->
-> Some information about my system is attached
->
-> Tested on 3.6, 3.8, 3.9rc3 and 3.9rc4
->
-> Keywords: wifi, networking, kernel
+On Mon, 2013-03-04 at 13:23 -0600, Seth Forshee wrote:
 
-Nearly everything that you posted tells us nothing. One critical piece of 
-information is given by "lspci -nn".
+> I've been looking at power save in mac80211 over the past few days with
+> an eye towards allowing multiple interface to be supported, as a result
+> of comments Johannes made at [1]. It seems like adding driver callbacks
+> for PS which are specific to the interface type is contrary to this
+> goal.
 
+Yeah, this is a concern. I didn't really stand in the way of doing mesh
+powersave though, and it seemed that the new interface here would
+actually be somewhat suitable, since for mesh any kind of powersave code
+needs to know when to wake up/sleep. I would've liked to see less
+reliance on host timers directly in core mac80211 even for the going to
+sleep part though... basically I'm not sure for mesh just having PS
+state will cut it. For managed mode this is easy because it only needs
+to sync with a single AP, but for mesh that's a bit more complicated and
+I think the whole sync should stay in mac80211. In the general case,
+just having the TSF might not be enough, but that can be solved as
+needed.
 
+> The basic idea that's been forming on my mind is add PS states to vifs
+> and make the managed, mesh, etc. code manipulate vif PS states rather
+> than hw states. Then a PS module would manage the hw state based on the
+> aggregate of the vif states.
+
+Yeah, that about matches what I was thinking. But like I said above,
+while this is fairly simple for managed mode, at least as required
+today, it's clearly not as simple for mesh.
+
+For managed mode, we also assume that we can send packets while the
+device is sleeping, and the device will do the right thing to wake up
+for beacons from the AP etc. For mesh, there are many more wakeup
+sources, from what I can tell.
+
+> I don't have a lot of the details worked out yet, and my knowledge of PS
+> in mesh networks (and of mesh network operation in general) is pretty
+> rudimentary at this point. But afaict any modes which support PS define
+> the same two hw states, awake and doze. I wonder whether we should
+> instead aim for a single interface into the driver for PS that's capable
+> of supporting all interface types.
+
+Such an interface would probably have to be the interface now defined
+for mesh, telling the device when to wake up and go to sleep? But this
+interface is rather inefficient for most chipsets...
+
+johannes
 
