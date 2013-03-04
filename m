@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49939 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754213Ab3CGJIy (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42294 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758488Ab3CDPyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 04:08:54 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless: fix inconsistency in trace for rdev_set_mac_acl
-Date: Thu, 7 Mar 2013 11:08:29 +0200
-Message-ID: <1362647309-20389-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130307_100902_644078_C6585E9C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 4 Mar 2013 10:54:00 -0500
+Message-ID: <1362412431.21028.38.camel@jlt4.sipsolutions.net> (sfid-20130304_165406_639169_D18BBEAF)
+Subject: Re: Linux summit this year ?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 04 Mar 2013 16:53:51 +0100
+In-Reply-To: <20130225211207.GE6455@tuxdriver.com> (sfid-20130225_221525_165018_E30D3F09)
+References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
+	 <20130225143201.GA6455@tuxdriver.com> <1361809785.3902.19.camel@aeonflux>
+	 <512BAED0.2000507@lwfinger.net> <20130225211207.GE6455@tuxdriver.com>
+	 (sfid-20130225_221525_165018_E30D3F09)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is NETDEV_ENTRY that was incorrectly assigned as WIPHY_ASSIGN
-fix it
+On Mon, 2013-02-25 at 16:12 -0500, John W. Linville wrote:
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- net/wireless/trace.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I would still like to do New Orleans.  I'm just not sure if we can
+> fit it in.  I don't suppose that someone would like to propose it as
+> a mini-conference for LPC?  Do we know what we want to discuss?
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 20ba224..89bd2f1 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1778,7 +1778,7 @@ TRACE_EVENT(rdev_set_mac_acl,
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
--		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
- 		__entry->acl_policy = params->acl_policy;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", acl policy: %d",
--- 
-1.7.10.4
+I think there's a large topic of discussion around multi-channel
+management, i.e. how in particular wpa_supplicant should behave. We have
+the low-level feature implemented, but no real strategy for its use
+across the stack. We have some thoughts, use-cases etc. so this will
+probably have to be done before the summit though.
+
+johannes
 
