@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:33901 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758498Ab3CDSbR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 13:31:17 -0500
-Received: by mail-we0-f179.google.com with SMTP id p43so4837402wea.24
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 10:31:16 -0800 (PST)
-Date: Mon, 4 Mar 2013 19:28:41 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH 2/2] mac80211: fix the check for mcs rates masking
-Message-ID: <20130304182841.GA27905@magnum.frso.rivierawaves.com> (sfid-20130304_193131_862809_F35DC309)
-References: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
- <1361966434-28343-2-git-send-email-karl.beldan@gmail.com>
- <20130227133802.GA28291@magnum.frso.rivierawaves.com>
- <1362412228.21028.36.camel@jlt4.sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:36456 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932366Ab3CDWeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 17:34:12 -0500
+Message-ID: <5135215F.80707@openwrt.org> (sfid-20130304_233415_444473_9DE910AD)
+Date: Mon, 04 Mar 2013 23:34:07 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1362412228.21028.36.camel@jlt4.sipsolutions.net>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH v4 0/7] mac80211: improve and consolidate minstrel rate
+ control
+References: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 04, 2013 at 04:50:28PM +0100, Johannes Berg wrote:
-> On Wed, 2013-02-27 at 14:38 +0100, Karl Beldan wrote:
+On 2013-03-04 11:30 PM, Thomas Huehn wrote:
+> This patch series merges functions, macros and sampling improvements from
+> minstrel_ht into minstrel. It adds several improvements to the rate control.
 > 
-> > >  	mask = txrc->rate_idx_mask;
-> > > -	memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
-> > > -	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
-> > > +	if (mask != (1 << txrc->sband->n_bitrates) - 1 ||
-> > > +		memcmp(txrc->sband->ht_cap.mcs.rx_mask, txrc->rate_idx_mcs_mask,
-> > > +		       sizeof(txrc->rate_idx_mcs_mask))) {
-> > > +		memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
-> > > +
-> > >  		if (sta) {
-> > > 
-> > 
-> > I don't know why I refrained myself from getting rid of the copies of
-> > the masks altogether.
+> Thomas
 > 
-> Are you going to resend?
-> 
-Just did.
+> v2: remove debugging output (thx to Bob Copeland)
+> v3: fix array initialization in init_sample_table (thx to Johannes Berg)
+> v4: fix missing bitmask to access rnd[8] properly (thx to Felix Fietkau)
+For the whole series:
+Acked-by: Felix Fietkau <nbd@openwrt.org>
 
