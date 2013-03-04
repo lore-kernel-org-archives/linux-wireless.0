@@ -1,63 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:61253 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757575Ab3CTLxi (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40608 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758416Ab3CDSsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 07:53:38 -0400
-Date: Wed, 20 Mar 2013 07:53:35 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Bartosz Markowski <markowski.bartosz@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: RFCv4: ST-E CW1100/1200 WLAN driver
-Message-ID: <20130320115334.GA816@shaftnet.org> (sfid-20130320_125342_297349_8E1AB8DF)
-References: <1360355527-12159-1-git-send-email-pizza@shaftnet.org>
- <1360355765.29851.29.camel@jlt4.sipsolutions.net>
- <20130214155840.GA3232@shaftnet.org>
- <CAM8CFPibkQRrKtekdduZ_eA7rRoqbFp6UR6vr0a8QkgkXi4RxA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2fHTh5uZTiUOsy+g"
-In-Reply-To: <CAM8CFPibkQRrKtekdduZ_eA7rRoqbFp6UR6vr0a8QkgkXi4RxA@mail.gmail.com>
+	Mon, 4 Mar 2013 13:48:37 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v3 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
+Date: Mon,  4 Mar 2013 19:48:22 +0100
+Message-Id: <1362422905-78079-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_194845_914547_AD5336E3)
+In-Reply-To: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+While minstrel bootstraps and fills the success probabilities of each
+rate the lowest rate has typically a very high success probability
+(often 100% in our tests).
+Its statistics are never updated but considered to setup the mrr chain.
+In our tests we see that especially the 3rd mrr stage (which is that
+rate providing highest success probability) is filled with the lowest rate
+because its initial high sucess probability is never updated. By design
+the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
+mrr stage are equal.
 
---2fHTh5uZTiUOsy+g
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch follows minstrels general approach of assuming as little
+as possible about rate dependencies. Consequently we include the
+lowest rate into the random sampling table to get balanced up-to-date
+statistics of all rates and therefore balanced decisions.
 
-On Wed, Mar 20, 2013 at 09:10:14AM +0100, Bartosz Markowski wrote:
-> Is the upstream process dropped or you plan to continue in the near futur=
-e?
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel.c    | 20 +++++++-------------
+ net/mac80211/rc80211_minstrel.h    |  4 +++-
+ net/mac80211/rc80211_minstrel_ht.c |  1 -
+ 3 files changed, 10 insertions(+), 15 deletions(-)
 
-At least as far as I'm concerned, the upstreaming process is still=20
-ongoing.  The last major holdup from that perspective was the=20
-voluminious pile of checkpatch warnings.
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index aa59f29..aa1e81a 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -55,7 +55,6 @@
+ #include "rate.h"
+ #include "rc80211_minstrel.h"
+ 
+-#define SAMPLE_COLUMNS	10
+ #define SAMPLE_TBL(_mi, _idx, _col) \
+ 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
+ 
+@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
+ 	unsigned int sample_ndx;
+ 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
+ 	mi->sample_row++;
+-	if ((int) mi->sample_row > (mi->n_rates - 2)) {
++	if ((int) mi->sample_row >= mi->n_rates) {
+ 		mi->sample_row = 0;
+ 		mi->sample_column++;
+ 		if (mi->sample_column >= SAMPLE_COLUMNS)
+@@ -370,26 +369,21 @@ static void
+ init_sample_table(struct minstrel_sta_info *mi)
+ {
+ 	unsigned int i, col, new_idx;
+-	unsigned int n_srates = mi->n_rates - 1;
+ 	u8 rnd[8];
+ 
+ 	mi->sample_column = 0;
+ 	mi->sample_row = 0;
+-	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
++	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
+ 
+ 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
+-		for (i = 0; i < n_srates; i++) {
++		for (i = 0; i < mi->n_rates; i++) {
+ 			get_random_bytes(rnd, sizeof(rnd));
+-			new_idx = (i + rnd[i & 7]) % n_srates;
++			new_idx = (i + rnd[i]) % mi->n_rates;
+ 
+-			while (SAMPLE_TBL(mi, new_idx, col) != 0)
+-				new_idx = (new_idx + 1) % n_srates;
++			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
++				new_idx = (new_idx + 1) % mi->n_rates;
+ 
+-			/* Don't sample the slowest rate (i.e. slowest base
+-			 * rate). We must presume that the slowest rate works
+-			 * fine, or else other management frames will also be
+-			 * failing and the link will break */
+-			SAMPLE_TBL(mi, new_idx, col) = i + 1;
++			SAMPLE_TBL(mi, new_idx, col) = i;
+ 		}
+ 	}
+ }
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 200b7e3..a0ccc57 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -9,7 +9,9 @@
+ #ifndef __RC_MINSTREL_H
+ #define __RC_MINSTREL_H
+ 
+-#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
++#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
++#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
++
+ 
+ /* scaled fraction values */
+ #define MINSTREL_SCALE  16
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a3081e5..8f88108 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -17,7 +17,6 @@
+ #include "rc80211_minstrel_ht.h"
+ 
+ #define AVG_PKT_SIZE	1200
+-#define SAMPLE_COLUMNS	10
+ 
+ /* Number of bits for an average sized packet */
+ #define MCS_NBITS (AVG_PKT_SIZE << 3)
+-- 
+1.8.1.1
 
-There's also been a surprising amount of non-trivial development going=20
-on too, and I wanted to take the time to let the testing shake loose bugs.
-
-Over the past two weeks I've been distracted with other goings-on, but=20
-that's all sorted now and I expect to be able to submit another patch set=
-=20
-by Friday.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---2fHTh5uZTiUOsy+g
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRSaM+PuLgii2759ARAmpjAKC4m7HoeBM+3DJVPjB2fGsObeekJQCeP36i
-hk30Q+UapE/8bFogqkkHnL0=
-=1yMC
------END PGP SIGNATURE-----
-
---2fHTh5uZTiUOsy+g--
