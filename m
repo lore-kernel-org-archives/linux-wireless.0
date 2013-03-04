@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39402 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777Ab3C0NkF (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:43405 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758577Ab3CDVLJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 09:40:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/4] mac80211: check ERP info IE length in parser
-Date: Wed, 27 Mar 2013 14:39:56 +0100
-Message-Id: <1364391597-3977-4-git-send-email-johannes@sipsolutions.net> (sfid-20130327_144010_065451_09BA7F34)
-In-Reply-To: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
-References: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 4 Mar 2013 16:11:09 -0500
+Received: by mail-we0-f172.google.com with SMTP id d46so783136wer.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:11:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAG6hwVMAdR4KCMq0x5NvvLUAegLpuYreEn8wuFkZStg+J9JvoA@mail.gmail.com>
+References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+ <1362204172-28307-6-git-send-email-thomas@cozybit.com> <1362409909.21028.17.camel@jlt4.sipsolutions.net>
+ <CAG6hwVMAdR4KCMq0x5NvvLUAegLpuYreEn8wuFkZStg+J9JvoA@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 4 Mar 2013 13:10:47 -0800
+Message-ID: <CAG6hwVNshckALR04DtN2-0Vxzijn1b0DF_C-VUNY2RDQZUE=4A@mail.gmail.com> (sfid-20130304_221113_757603_B8CB87BC)
+Subject: Re: [PATCH 6/6] mac80211: init mesh timer for user authed STAs
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Mar 4, 2013 at 12:05 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> On Mon, Mar 4, 2013 at 7:11 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Fri, 2013-03-01 at 22:02 -0800, Thomas Pedersen wrote:
+>>> There is a corner case which wasn't being covered:
+>>> userspace may authenticate and allocate stations,
+>>> but still leave the peering up to the kernel.
+>>>
+>>> Initialize the peering timer if the MPM is not in
+>>> userspace, in a path which is taken by both the kernel and
+>>> userspace when allocating stations.
+>>
+>> Shouldn't this patch go to 3.9, instead of being based on userspace MPM?
+>
+> I doubt anyone is even exercising the above scenario, but sure, I can
+> resubmit for 3.9.
 
-It's always just one byte, so check for that and
-remove the length field from the parser struct.
+Uh instead of submitting one patch for 3.9 then another for
+mac80211-next, will you just take this one for mac80211-next? AFAIK no
+one is hitting this anyway.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h | 1 -
- net/mac80211/mlme.c        | 2 +-
- net/mac80211/scan.c        | 5 ++---
- net/mac80211/util.c        | 6 ++++--
- 4 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bf020d0..eb364f3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1192,7 +1192,6 @@ struct ieee802_11_elems {
- 	u8 tim_len;
- 	u8 challenge_len;
- 	u8 rsn_len;
--	u8 erp_info_len;
- 	u8 ext_supp_rates_len;
- 	u8 wmm_info_len;
- 	u8 wmm_param_len;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7208612..c6d87bc4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3106,7 +3106,7 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		changed |= BSS_CHANGED_DTIM_PERIOD;
- 	}
- 
--	if (elems.erp_info && elems.erp_info_len >= 1) {
-+	if (elems.erp_info) {
- 		erp_valid = true;
- 		erp_value = elems.erp_info[0];
- 	} else {
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 581764f..33fbf10 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -98,9 +98,8 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 	}
- 
- 	/* save the ERP value so that it is available at association time */
--	if (elems->erp_info && elems->erp_info_len >= 1 &&
--			(!elems->parse_error ||
--			 !(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
-+	if (elems->erp_info && (!elems->parse_error ||
-+				!(bss->valid_data & IEEE80211_BSS_VALID_ERP))) {
- 		bss->erp_value = elems->erp_info[0];
- 		bss->has_erp_value = true;
- 		if (!elems->parse_error)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9d7664f..739ae33 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -782,8 +782,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			elems->rsn_len = elen;
- 			break;
- 		case WLAN_EID_ERP_INFO:
--			elems->erp_info = pos;
--			elems->erp_info_len = elen;
-+			if (elen >= 1)
-+				elems->erp_info = pos;
-+			else
-+				elem_parse_failed = true;
- 			break;
- 		case WLAN_EID_EXT_SUPP_RATES:
- 			elems->ext_supp_rates = pos;
 -- 
-1.8.0
-
+Thomas
