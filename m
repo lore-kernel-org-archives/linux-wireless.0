@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:40330 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751417Ab3C0RsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 13:48:10 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
-References: <87li993mug.fsf@sycorax.lbl.gov>
-	<1364406146.8388.12.camel@jlt4.sipsolutions.net>
-Date: Wed, 27 Mar 2013 10:48:06 -0700
-In-Reply-To: <1364406146.8388.12.camel@jlt4.sipsolutions.net> (message from
-	Johannes Berg on Wed, 27 Mar 2013 18:42:26 +0100)
-Message-ID: <87mwto20q1.fsf@sycorax.lbl.gov> (sfid-20130327_184816_932221_A28A96E0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42148 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758298Ab3CDPVu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 10:21:50 -0500
+Message-ID: <1362410501.21028.21.camel@jlt4.sipsolutions.net> (sfid-20130304_162153_836651_3E204E2B)
+Subject: Re: [PATCH v3 1/6] cfg80211/mac80211: disconnect on suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 04 Mar 2013 16:21:41 +0100
+In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
+References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Thu, 2013-02-28 at 10:55 +0100, Stanislaw Gruszka wrote:
 
-> On Tue, 2013-03-26 at 13:52 -0700, Alex Romosan wrote:
->> since v3.9-rc1 i have been unable to reconnect to my access point. the
->> access point is a netgear n600 and the my card is a Centrino Advanced-N
->> 6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
->> boot up the laptop the connection is established but if i bring down the
->> network with ifdown then i cannot reconnect. this is what i see in the
->> logs:
->> 
->>  iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
->>  iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
->>  wlan0: authenticate with xx:xx:xx:xx:xx:xx
->>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
->>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
->>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
->>  wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
->
-> Btw, since we're looking at the timeout handling -- do you have a
-> version of this log with timestamps on each line?
+> +static void cfg80211_leave_all(struct cfg80211_registered_device *rdev)
+> +{
+> +	struct wireless_dev *wdev;
+> +
+> +	list_for_each_entry_rcu(wdev, &rdev->wdev_list, list)
+> +		cfg80211_leave(rdev, wdev);
 
-i do but the timestamp is the same on all the lines:
+That should not be the _rcu variant, I'll fix it.
 
-Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
-Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
-Mar 27 09:43:16 trinculo kernel: wlan0: authenticate with xx:xx:xx:xx:xx:xx
-Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
-Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
-Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
-Mar 27 09:43:16 trinculo kernel: wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
+johannes
 
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
