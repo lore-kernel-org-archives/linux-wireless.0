@@ -1,25 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43375 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756698Ab3C1Pqm (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:33901 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758498Ab3CDSbR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 11:46:42 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ULF2G-0004WK-JM
-	for linux-wireless@vger.kernel.org; Thu, 28 Mar 2013 16:46:40 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] mac80211: some queue management fixes
-Date: Thu, 28 Mar 2013 16:46:33 +0100
-Message-Id: <1364485596-30425-1-git-send-email-johannes@sipsolutions.net> (sfid-20130328_164648_885369_AA2F3975)
+	Mon, 4 Mar 2013 13:31:17 -0500
+Received: by mail-we0-f179.google.com with SMTP id p43so4837402wea.24
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 10:31:16 -0800 (PST)
+Date: Mon, 4 Mar 2013 19:28:41 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH 2/2] mac80211: fix the check for mcs rates masking
+Message-ID: <20130304182841.GA27905@magnum.frso.rivierawaves.com> (sfid-20130304_193131_862809_F35DC309)
+References: <1361966434-28343-1-git-send-email-karl.beldan@gmail.com>
+ <1361966434-28343-2-git-send-email-karl.beldan@gmail.com>
+ <20130227133802.GA28291@magnum.frso.rivierawaves.com>
+ <1362412228.21028.36.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1362412228.21028.36.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I let these run through some testing, and it seems fine. The actual
-error conditions are hard to test though -- particularly for the last
-patch, most likely nobody ever saw that.
-
-johannes
+On Mon, Mar 04, 2013 at 04:50:28PM +0100, Johannes Berg wrote:
+> On Wed, 2013-02-27 at 14:38 +0100, Karl Beldan wrote:
+> 
+> > >  	mask = txrc->rate_idx_mask;
+> > > -	memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+> > > -	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
+> > > +	if (mask != (1 << txrc->sband->n_bitrates) - 1 ||
+> > > +		memcmp(txrc->sband->ht_cap.mcs.rx_mask, txrc->rate_idx_mcs_mask,
+> > > +		       sizeof(txrc->rate_idx_mcs_mask))) {
+> > > +		memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+> > > +
+> > >  		if (sta) {
+> > > 
+> > 
+> > I don't know why I refrained myself from getting rid of the copies of
+> > the masks altogether.
+> 
+> Are you going to resend?
+> 
+Just did.
 
