@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38943 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:55273 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933535Ab3CMOS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 10:18:28 -0400
-Message-ID: <51408AB0.7000600@openwrt.org> (sfid-20130313_151842_978549_DF73685A)
-Date: Wed, 13 Mar 2013 15:18:24 +0100
+	id S1758118Ab3CDTCj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 14:02:39 -0500
+Message-ID: <5134EFC8.20207@openwrt.org> (sfid-20130304_200242_921517_47D90044)
+Date: Mon, 04 Mar 2013 20:02:32 +0100
 From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
-References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL> <51270186.6070003@candelatech.com> <51275837.4020708@openwrt.org> <20775.25545.671357.512930@gargle.gargle.HOWL> <512766B8.3030008@openwrt.org> <51276AA6.4000805@candelatech.com> <513F70E5.2050004@candelatech.com>
-In-Reply-To: <513F70E5.2050004@candelatech.com>
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH v3 5/7] mac80211: add lowest rate into minstrel's randmon
+ rate sampling table
+References: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1362422905-78079-6-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1362422905-78079-6-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-12 7:16 PM, Ben Greear wrote:
-> On 02/22/2013 04:55 AM, Ben Greear wrote:
->> On 02/22/2013 04:38 AM, Felix Fietkau wrote:
->>> On 2013-02-22 1:25 PM, Sujith Manoharan wrote:
->>>> Felix Fietkau wrote:
->>>>> Please also check if the station(s) that the frames are queued for are
->>>>> in powersave state for some reason. That would prevent the tx path from
->>>>> throwing them in the hw queue, yet they'd still take up pending-frame
->>>>> slots. I was planning on fixing this eventually by expiring frames that
->>>>> stay in the queue for too long, but haven't decided on the exact
->>>>> approach yet.
->>>>
->>>> PS is disabled for multi-VIF.
->>> What about off-channel PS due to scans, etc.
->>
->> Scan is always locked to the same channel in this setup (once
->> a single station is associated).
->>
->> The stations stay associated while this problem happens (the
->> high-priority queue seems to work just fine, which may be
->> the reason they stay associated just fine.)
->>
->> In some cases, I see packets delivered around 30 seconds late...
->> aside from PS and off-channel..any idea what could make a packet
->> stick around that long in the tx queues?
+On 2013-03-04 7:48 PM, Thomas Huehn wrote:
+> While minstrel bootstraps and fills the success probabilities of each
+> rate the lowest rate has typically a very high success probability
+> (often 100% in our tests).
+> Its statistics are never updated but considered to setup the mrr chain.
+> In our tests we see that especially the 3rd mrr stage (which is that
+> rate providing highest success probability) is filled with the lowest rate
+> because its initial high sucess probability is never updated. By design
+> the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
+> mrr stage are equal.
 > 
-> One of our customers on a 3.5.7+ kernel hit the problem without
-> using any RF attenuator...just over-the-air communication to
-> their AP.  It happened on both 2.4 and 5Ghz bands.  Seems rx
-> signal is around 40 in their environment. It took them around
-> 24 hours to hit the problem on average.
+> This patch follows minstrels general approach of assuming as little
+> as possible about rate dependencies. Consequently we include the
+> lowest rate into the random sampling table to get balanced up-to-date
+> statistics of all rates and therefore balanced decisions.
 > 
-> Last we checked, we could fairly easily reproduce this in
-> our lab using an attenuator and a certain setup, so if there
-> is any debugging we could add to help narrow down what
-> might be causing this, we can give that a try.
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> ---
+>  net/mac80211/rc80211_minstrel.c    | 20 +++++++-------------
+>  net/mac80211/rc80211_minstrel.h    |  4 +++-
+>  net/mac80211/rc80211_minstrel_ht.c |  1 -
+>  3 files changed, 10 insertions(+), 15 deletions(-)
 > 
-> For instance, is there any good way to know for certain
-> if packets in the queue are in power-save or not?  I know
-> we at least attempt to disable power-save, but possibly
-> it gets re-enabled somehow?
-The ath_node struct tracks if a node is sleeping or not. If a node is
-sleeping, its tid queues can still hold some frames but will not be
-serviced by ath_txq_schedule.
+> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+> index aa59f29..aa1e81a 100644
+> --- a/net/mac80211/rc80211_minstrel.c
+> +++ b/net/mac80211/rc80211_minstrel.c
+> @@ -370,26 +369,21 @@ static void
+>  init_sample_table(struct minstrel_sta_info *mi)
+>  {
+>  	unsigned int i, col, new_idx;
+> -	unsigned int n_srates = mi->n_rates - 1;
+>  	u8 rnd[8];
+>  
+>  	mi->sample_column = 0;
+>  	mi->sample_row = 0;
+> -	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
+> +	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
+>  
+>  	for (col = 0; col < SAMPLE_COLUMNS; col++) {
+> -		for (i = 0; i < n_srates; i++) {
+> +		for (i = 0; i < mi->n_rates; i++) {
+>  			get_random_bytes(rnd, sizeof(rnd));
+> -			new_idx = (i + rnd[i & 7]) % n_srates;
+> +			new_idx = (i + rnd[i]) % mi->n_rates;
+Don't remove the '& 7' part, otherwise the rnd array will overflow.
+There's no need for it to be as big as the number of rates though.
+Also, there's a typo in the subject line: 'randmon'.
 
 - Felix
