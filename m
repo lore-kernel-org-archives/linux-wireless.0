@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:38815 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640Ab3C1KAK convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:37307 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932328Ab3CDVIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 06:00:10 -0400
-Received: by mail-oa0-f54.google.com with SMTP id n12so9765057oag.13
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 03:00:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5153321B.5010206@hauke-m.de>
-References: <1364400951-25488-1-git-send-email-hauke@hauke-m.de>
-	<20130327172740.GE1868@tuxdriver.com>
-	<CACna6ryua5Bok2w1B4g1C6_tyqkAbBT6B+7GjBARH02s70ua+A@mail.gmail.com>
-	<5153321B.5010206@hauke-m.de>
-Date: Thu, 28 Mar 2013 11:00:09 +0100
-Message-ID: <CACna6rzhTg-L+p5Sz7zTEgP4PJvVvXuhVtgSCcr3g3FhAmCSww@mail.gmail.com> (sfid-20130328_110015_770632_E74CC54E)
-Subject: Re: [PATCH 1/2] b43: mark some functions and structs static
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Mar 2013 16:08:00 -0500
+Received: by mail-pb0-f48.google.com with SMTP id wy12so3404999pbc.7
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:07:59 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolution.net
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 4/5] nl80211: user_mpm overrides auto_open_plinks
+Date: Mon,  4 Mar 2013 13:06:13 -0800
+Message-Id: <1362431174-4747-4-git-send-email-thomas@cozybit.com> (sfid-20130304_220804_067715_233D7A00)
+In-Reply-To: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
+References: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/27 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 03/27/2013 06:43 PM, Rafał Miłecki wrote:
->> 2013/3/27 John W. Linville <linville@tuxdriver.com>:
->>> On Wed, Mar 27, 2013 at 05:15:50PM +0100, Hauke Mehrtens wrote:
->>>> This fixes some sparse warnings.
->>>>
->>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>> ---
->>>>  drivers/net/wireless/b43/phy_n.c          |    6 ++++--
->>>>  drivers/net/wireless/b43/radio_2056.c     |    2 +-
->>>>  drivers/net/wireless/b43/sdio.h           |    4 ++--
->>>>  drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
->>>>  drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
->>>>  5 files changed, 12 insertions(+), 10 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
->>>> index 1ec0d69..8d15878 100644
->>>> --- a/drivers/net/wireless/b43/phy_n.c
->>>> +++ b/drivers/net/wireless/b43/phy_n.c
->>>> @@ -2789,9 +2789,11 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
->>>>   * Tx and Rx
->>>>   **************************************************/
->>>>
->>>> -void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
->>>> +#if 0
->>>> +static void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
->>>>  {//TODO
->>>>  }
->>>> +#endif
->>>>
->>>>  static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
->>>>  {//TODO
->>>
->>> If this isn't necessary, why not just remove it?
->>
->> They are used for pointers that AFAIR can't be null.
->
-> The set_rx_antenna is not set for the n-phy and it is checked for null
-> before calling it and b43_nphy_set_rxantenna() is not referenced, so it
-> could be removed. The others are probably needed.
+If the user requested a userspace MPM, automatically
+disable auto_open_plinks to fully disable the kernel MPM.
 
-Whoops, I didn't know that fact about b43_nphy_set_rxantenna. Yeah, it
-should be removed.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/uapi/linux/nl80211.h |    6 ++++--
+ net/wireless/nl80211.c       |    3 +++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 8134c6a..79da871 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2467,8 +2467,10 @@ enum nl80211_mesh_power_mode {
+  * @NL80211_MESHCONF_TTL: specifies the value of TTL field set at a source mesh
+  *	point.
+  *
+- * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically
+- *	open peer links when we detect compatible mesh peers.
++ * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically open
++ *	peer links when we detect compatible mesh peers. Disabled if
++ *	@NL80211_MESH_SETUP_USERSPACE_MPM or @NL80211_MESH_SETUP_USERSPACE_AMPE are
++ *	set.
+  *
+  * @NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES: the number of action frames
+  *	containing a PREQ that an MP can send to a particular destination (path
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index eca897a..ddd251b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7427,6 +7427,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
++	if (setup.user_mpm)
++		cfg.auto_open_plinks = false;
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
+ 		err = nl80211_parse_chandef(rdev, info, &setup.chandef);
+ 		if (err)
 -- 
-Rafał
+1.7.10.4
+
