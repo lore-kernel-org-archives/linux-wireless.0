@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:35016 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754359Ab3C2ArG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758150Ab3CDPh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 20:47:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130328225300.GA20285@kroah.com>
-References: <CAB=NE6WLuz7-QD3v4BwZkLLNUed=X7jgvZtZX8cDEh3HiD51oQ@mail.gmail.com>
- <20130328225300.GA20285@kroah.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 28 Mar 2013 17:46:44 -0700
-Message-ID: <CAB=NE6UF97ETqXXyNFCRRhv=d=AgA=nq3d830uG+pvykAmB2xA@mail.gmail.com> (sfid-20130329_014724_913263_5B4DB052)
-Subject: Re: Possibility for an external staging tree - bring up quality code
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Kathy Giori <Kathy.Giori@qca.qualcomm.com>,
-	Yanbo Li <dreamfly281@gmail.com>,
-	Mathieu Olivari <mathieu@qca.qualcomm.com>,
-	"k.eugene.e" <k.eugene.e@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Mar 2013 10:37:57 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1UCXSe-0004fV-46
+	for linux-wireless@vger.kernel.org; Mon, 04 Mar 2013 16:37:56 +0100
+Message-ID: <1362411473.21028.29.camel@jlt4.sipsolutions.net> (sfid-20130304_163800_012159_B3DEA6C9)
+Subject: Re: [PATCH] mac80211: add VHT capabilities station debugfs file
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 04 Mar 2013 16:37:53 +0100
+In-Reply-To: <1362175935-11828-1-git-send-email-johannes@sipsolutions.net> (sfid-20130301_231229_956773_D9D04F05)
+References: <1362175935-11828-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130301_231229_956773_D9D04F05)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 3:53 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Thu, Mar 28, 2013 at 01:13:23PM -0700, Luis R. Rodriguez wrote:
->
-> <huge snip>
->
->> This has me thinking if it makes sense to have an external driver tree
->> for staging drivers but lead by engineers who already know the rules
->> of upstream, they just want to get things done faster.
->
-> That's called a "fork" or "tree" or whatever you want to call it, and
-> all of us have them, and end up merging stuff to mainline through them
-> eventually.
->
-> There is no need to "codify" something that we all have been doing for
-> years.  If someone thinks they can "work faster" in their own tree,
-> great for them, have them do it.  I don't see what I need to agree or
-> disagree with here to keep anyone from doing such a thing.
->
-> Or am I just totally missing something here?
+On Fri, 2013-03-01 at 23:12 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Add a new debugfs file to view a station's VHT capabilities.
 
-OK, yes I think we can work better if we had an external trees for
-each driver to cherry pick them as they get sanitized, prior to
-upstream for *some* drivers. Very well. I'll simply let vendors /
-developers get their 802.11 driver as part of compat-drivers so long
-as they maintain their poo.
+Applied, with Joe's suggested change.
 
-  Luis
+johannes
+
