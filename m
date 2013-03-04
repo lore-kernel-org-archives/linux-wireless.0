@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:52200 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755866Ab3CEW0x (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42271 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758273Ab3CDPtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 17:26:53 -0500
-Received: by mail-wg0-f47.google.com with SMTP id dr13so6692826wgb.14
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 14:26:51 -0800 (PST)
-Date: Tue, 5 Mar 2013 23:27:48 +0100
-From: john <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Karl Beldan <karl.beldan@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
- rate_control_get_rate
-Message-ID: <20130305222748.GA31280@gobelin> (sfid-20130305_232659_055706_119C9AEB)
-References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
- <1362427924.21028.42.camel@jlt4.sipsolutions.net>
- <20130304204541.GA8819@gobelin>
- <5135F327.4000408@openwrt.org>
- <20130305161003.GA30419@magnum.frso.rivierawaves.com>
- <1362509619.8224.5.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1362509619.8224.5.camel@jlt4.sipsolutions.net>
+	Mon, 4 Mar 2013 10:49:21 -0500
+Message-ID: <1362412153.21028.35.camel@jlt4.sipsolutions.net> (sfid-20130304_164924_098231_6930E414)
+Subject: Re: [PATCHv3 1/3] mac80211: move mesh sync beacon handler into
+ neighbour_update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco@cozybit.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, sleffler@google.com,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	ath9k-devel@lists.ath9k.org
+Date: Mon, 04 Mar 2013 16:49:13 +0100
+In-Reply-To: <512DBE77.9040902@cozybit.com> (sfid-20130227_090620_764902_9D1627C6)
+References: <1361808057-17899-1-git-send-email-marco@cozybit.com>
+	 <CAG6hwVOrwGTceDKK9t0QAFH9LDGuhZtJDQhQh38Mh2C+YepAtw@mail.gmail.com>
+	 <512DBE77.9040902@cozybit.com> (sfid-20130227_090620_764902_9D1627C6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 05, 2013 at 07:53:39PM +0100, Johannes Berg wrote:
-> On Tue, 2013-03-05 at 17:10 +0100, Karl Beldan wrote:
+On Wed, 2013-02-27 at 09:06 +0100, Marco Porsch wrote:
+
+> >>   struct ieee802_11_elems;
+> >>   struct ieee80211_mesh_sync_ops {
+> >> -       void (*rx_bcn_presp)(struct ieee80211_sub_if_data *sdata,
+> >> -                            u16 stype,
+> >> -                            struct ieee80211_mgmt *mgmt,
+> >> -                            struct ieee802_11_elems *elems,
+> >> -                            struct ieee80211_rx_status *rx_status);
+> >> +       void (*rx_bcn)(struct sta_info *sta,
+> >> +                      struct ieee80211_mgmt *mgmt,
+> >> +                      struct ieee802_11_elems *elems,
+> >> +                      u64 t_r);
+> >
+> > Why not continue to sync against probe responses?
+> > mesh_neighbour_update() gets these as well.
 > 
-> > > It seems to me that all of this could be made more efficient by default
-> > > if a mcs mask pointer is only passed to rate control if the user
-> > > actually configured a MCS mask. Also, filtering out rates from the mask
-> > > that the sta does not support seems a bit unnecessary, since the rate
-> > > control usually looks at the HT capabilities and the sta's mcs rx mask
-> > > anyway.
-> > > 
-> > Yes, some things look a bit overkill in the masks logic.
-> 
-> Are you planning to send new patches to improve this?
-> 
-I'll see what I can come up with.
- 
-Karl
+> Because there was a comment about the standard mentioning only beacon 
+> frames. Fooled me here =/
+> Now I see that the standard explicitly mentions probe responses as well.
+> Is the sync code currently ready to handle probe responses? I am not 
+> perfectly sure about the sta->t_offset_setpoint stuff.
+
+I'm going to drop these patches until you figure this out and tell me
+otherwise.
+
+johannes
+
