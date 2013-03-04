@@ -1,254 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:48177 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966Ab3CQJ7Q (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:33029 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932328Ab3CDVHx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 05:59:16 -0400
-Subject: [PATCH 1/4] rtlwifi: usb: use usb_alloc_coherent for RX buffers
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sun, 17 Mar 2013 11:59:13 +0200
-Message-ID: <20130317095913.24983.60974.stgit@localhost6.localdomain6> (sfid-20130317_105925_020713_A4D930D5)
-In-Reply-To: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
-References: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 4 Mar 2013 16:07:53 -0500
+Received: by mail-pb0-f44.google.com with SMTP id wz12so3444894pbc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:07:53 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: johannes@sipsolution.net
+Cc: linux-wireless@vger.kernel.org,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2 1/5] nl80211: explicit userspace MPM
+Date: Mon,  4 Mar 2013 13:06:10 -0800
+Message-Id: <1362431174-4747-1-git-send-email-thomas@cozybit.com> (sfid-20130304_220800_377626_F451D656)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use dedicated DMA coherent buffers for RX urbs, to avoid allocation of large
-skbuffs in hard-irq context and improve performance.
+Secure mesh had the implicit requirement that the Mesh
+Peering Management entity be in userspace.  However
+userspace might want to implement an open MPM as well, so
+specify a mesh setup parameter to indicate this.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+
 ---
- drivers/net/wireless/rtlwifi/usb.c |  114 +++++++++++++++++++++---------------
- drivers/net/wireless/rtlwifi/usb.h |    1 
- 2 files changed, 68 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 41dce83..146d2b4 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -324,6 +324,7 @@ static int _rtl_usb_init_rx(struct ieee80211_hw *hw)
- 	pr_info("rx_max_size %d, rx_urb_num %d, in_ep %d\n",
- 		rtlusb->rx_max_size, rtlusb->rx_urb_num, rtlusb->in_ep);
- 	init_usb_anchor(&rtlusb->rx_submitted);
-+	init_usb_anchor(&rtlusb->rx_cleanup_urbs);
+v2:
+	reject setting userspace MPM if feature not
+	supported (Johannes)
+
+ include/net/cfg80211.h       |    2 ++
+ include/uapi/linux/nl80211.h |   25 ++++++++++++++++++-------
+ net/wireless/mesh.c          |    1 +
+ net/wireless/nl80211.c       |    8 ++++++++
+ 4 files changed, 29 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9b34c76..b6be55e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1151,6 +1151,7 @@ struct mesh_config {
+  * @ie_len: length of vendor information elements
+  * @is_authenticated: this mesh requires authentication
+  * @is_secure: this mesh uses security
++ * @user_mpm: userspace handles all MPM functions
+  * @dtim_period: DTIM period to use
+  * @beacon_interval: beacon interval to use
+  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
+@@ -1168,6 +1169,7 @@ struct mesh_setup {
+ 	u8 ie_len;
+ 	bool is_authenticated;
+ 	bool is_secure;
++	bool user_mpm;
+ 	u8 dtim_period;
+ 	u16 beacon_interval;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 2d0cff5..8134c6a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -513,9 +513,11 @@
+  * @NL80211_CMD_NEW_PEER_CANDIDATE: Notification on the reception of a
+  *      beacon or probe response from a compatible mesh peer.  This is only
+  *      sent while no station information (sta_info) exists for the new peer
+- *      candidate and when @NL80211_MESH_SETUP_USERSPACE_AUTH is set.  On
+- *      reception of this notification, userspace may decide to create a new
+- *      station (@NL80211_CMD_NEW_STATION).  To stop this notification from
++ *      candidate and when @NL80211_MESH_SETUP_USERSPACE_AUTH,
++ *      @NL80211_MESH_SETUP_USERSPACE_AMPE, or
++ *      @NL80211_MESH_SETUP_USERSPACE_MPM is set.  On reception of this
++ *      notification, userspace may decide to create a new station
++ *      (@NL80211_CMD_NEW_STATION).  To stop this notification from
+  *      reoccurring, the userspace authentication daemon may want to create the
+  *      new station with the AUTHENTICATED flag unset and maybe change it later
+  *      depending on the authentication result.
+@@ -1199,10 +1201,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SUPPORT_MESH_AUTH: Currently, this means the underlying driver
+  *	allows auth frames in a mesh to be passed to userspace for processing via
+  *	the @NL80211_MESH_SETUP_USERSPACE_AUTH flag.
+- * @NL80211_ATTR_STA_PLINK_STATE: The state of a mesh peer link as
+- *	defined in &enum nl80211_plink_state. Used when userspace is
+- *	driving the peer link management state machine.
+- *	@NL80211_MESH_SETUP_USERSPACE_AMPE must be enabled.
++ * @NL80211_ATTR_STA_PLINK_STATE: The state of a mesh peer link as defined in
++ *	&enum nl80211_plink_state. Used when userspace is driving the peer link
++ *	management state machine.  @NL80211_MESH_SETUP_USERSPACE_AMPE or
++ *	@NL80211_MESH_SETUP_USERSPACE_MPM must be enabled.
+  *
+  * @NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED: indicates, as part of the wiphy
+  *	capabilities, the supported WoWLAN triggers
+@@ -2612,6 +2614,9 @@ enum nl80211_meshconf_params {
+  *	vendor specific synchronization method or disable it to use the default
+  *	neighbor offset synchronization
+  *
++ * @NL80211_MESH_SETUP_USERSPACE_MPM: Enable this option if userspace will
++ *	implement an MPM which handles peer allocation and state.
++ *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  *
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+@@ -2624,6 +2629,7 @@ enum nl80211_mesh_setup_params {
+ 	NL80211_MESH_SETUP_USERSPACE_AUTH,
+ 	NL80211_MESH_SETUP_USERSPACE_AMPE,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_SYNC,
++	NL80211_MESH_SETUP_USERSPACE_MPM,
+ 
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+@@ -3526,6 +3532,10 @@ enum nl80211_ap_sme_features {
+  *	stations the authenticated/associated bits have to be set in the mask.
+  * @NL80211_FEATURE_ADVERTISE_CHAN_LIMITS: cfg80211 advertises channel limits
+  *	(HT40, VHT 80/160 MHz) if this flag is set
++ * @NL80211_FEATURE_USERSPACE_MPM: This driver supports a userspace Mesh
++ *	Peering Management entity which may be implemented by registering for
++ *	beacons or NL80211_CMD_NEW_PEER_CANDIDATE events. The mesh beacon is
++ *	still generated by the driver.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3544,6 +3554,7 @@ enum nl80211_feature_flags {
+ 	/* bit 13 is reserved */
+ 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
+ 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
++	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
+ };
+ 
+ /**
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 9688b24..0bb93f3 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -85,6 +85,7 @@ const struct mesh_setup default_mesh_setup = {
+ 	.ie = NULL,
+ 	.ie_len = 0,
+ 	.is_secure = false,
++	.user_mpm = false,
+ 	.beacon_interval = MESH_DEFAULT_BEACON_INTERVAL,
+ 	.dtim_period = MESH_DEFAULT_DTIM_PERIOD,
+ };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c85a4b8..167fd83 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4596,6 +4596,7 @@ static const struct nla_policy
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
++	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
+ 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 				    .len = IEEE80211_MAX_DATA_LEN },
+ 	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
+@@ -4734,6 +4735,7 @@ do {									    \
+ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 				     struct mesh_setup *setup)
+ {
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct nlattr *tb[NL80211_MESH_SETUP_ATTR_MAX + 1];
+ 
+ 	if (!info->attrs[NL80211_ATTR_MESH_SETUP])
+@@ -4770,8 +4772,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 		setup->ie = nla_data(ieattr);
+ 		setup->ie_len = nla_len(ieattr);
+ 	}
++	if (tb[NL80211_MESH_SETUP_USERSPACE_MPM] &&
++	    !(rdev->wiphy.features & NL80211_FEATURE_USERSPACE_MPM))
++		return -EINVAL;
++	setup->user_mpm = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_MPM]);
+ 	setup->is_authenticated = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
+ 	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AMPE]);
++	if (setup->is_secure)
++		setup->user_mpm = true;
+ 
  	return 0;
  }
- 
-@@ -405,40 +406,30 @@ static void rtl_usb_init_sw(struct ieee80211_hw *hw)
- 	rtlusb->disableHWSM =  true;
- }
- 
--#define __RADIO_TAP_SIZE_RSV	32
--
- static void _rtl_rx_completed(struct urb *urb);
- 
--static struct sk_buff *_rtl_prep_rx_urb(struct ieee80211_hw *hw,
--					struct rtl_usb *rtlusb,
--					struct urb *urb,
--					gfp_t gfp_mask)
-+static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
-+			      struct urb *urb, gfp_t gfp_mask)
- {
--	struct sk_buff *skb;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	void *buf;
- 
--	skb = __dev_alloc_skb((rtlusb->rx_max_size + __RADIO_TAP_SIZE_RSV),
--			       gfp_mask);
--	if (!skb) {
-+	buf = usb_alloc_coherent(rtlusb->udev, rtlusb->rx_max_size, gfp_mask,
-+				 &urb->transfer_dma);
-+	if (!buf) {
- 		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Failed to __dev_alloc_skb!!\n");
--		return ERR_PTR(-ENOMEM);
-+			 "Failed to usb_alloc_coherent!!\n");
-+		return -ENOMEM;
- 	}
- 
--	/* reserve some space for mac80211's radiotap */
--	skb_reserve(skb, __RADIO_TAP_SIZE_RSV);
- 	usb_fill_bulk_urb(urb, rtlusb->udev,
- 			  usb_rcvbulkpipe(rtlusb->udev, rtlusb->in_ep),
--			  skb->data, min(skb_tailroom(skb),
--			  (int)rtlusb->rx_max_size),
--			  _rtl_rx_completed, skb);
-+			  buf, rtlusb->rx_max_size, _rtl_rx_completed, rtlusb);
-+	urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
- 
--	_rtl_install_trx_info(rtlusb, skb, rtlusb->in_ep);
--	return skb;
-+	return 0;
- }
- 
--#undef __RADIO_TAP_SIZE_RSV
--
- static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
- 				    struct sk_buff *skb)
- {
-@@ -558,11 +549,11 @@ static void _rtl_rx_pre_process(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- }
- 
-+#define __RADIO_TAP_SIZE_RSV	32
-+
- static void _rtl_rx_completed(struct urb *_urb)
- {
--	struct sk_buff *skb = (struct sk_buff *)_urb->context;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct rtl_usb *rtlusb = (struct rtl_usb *)info->rate_driver_data[0];
-+	struct rtl_usb *rtlusb = (struct rtl_usb *)_urb->context;
- 	struct ieee80211_hw *hw = usb_get_intfdata(rtlusb->intf);
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err = 0;
-@@ -571,28 +562,42 @@ static void _rtl_rx_completed(struct urb *_urb)
- 		goto free;
- 
- 	if (likely(0 == _urb->status)) {
--		/* If this code were moved to work queue, would CPU
--		 * utilization be improved?  NOTE: We shall allocate another skb
--		 * and reuse the original one.
-+		struct sk_buff *skb;
-+		unsigned int size = _urb->actual_length;
-+
-+		if (size < RTL_RX_DESC_SIZE + sizeof(struct ieee80211_hdr)) {
-+			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-+				 "Too short packet from bulk IN! (len: %d)\n",
-+				 size);
-+			goto resubmit;
-+		}
-+
-+		skb = dev_alloc_skb(size + __RADIO_TAP_SIZE_RSV);
-+		if (!skb) {
-+			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-+				 "Can't allocate skb for bulk IN!\n");
-+			goto resubmit;
-+		}
-+
-+		_rtl_install_trx_info(rtlusb, skb, rtlusb->in_ep);
-+
-+		/* reserve some space for mac80211's radiotap */
-+		skb_reserve(skb, __RADIO_TAP_SIZE_RSV);
-+
-+		memcpy(skb_put(skb, size), _urb->transfer_buffer, size);
-+
-+		/* TODO: Do further processing in tasklet (queue skbs,
-+		 * schedule tasklet)
- 		 */
--		skb_put(skb, _urb->actual_length);
- 
- 		if (likely(!rtlusb->usb_rx_segregate_hdl)) {
--			struct sk_buff *_skb;
- 			_rtl_usb_rx_process_noagg(hw, skb);
--			_skb = _rtl_prep_rx_urb(hw, rtlusb, _urb, GFP_ATOMIC);
--			if (IS_ERR(_skb)) {
--				err = PTR_ERR(_skb);
--				RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--					 "Can't allocate skb for bulk IN!\n");
--				return;
--			}
--			skb = _skb;
--		} else{
-+		} else {
- 			/* TO DO */
- 			_rtl_rx_pre_process(hw, skb);
- 			pr_err("rx agg not supported\n");
- 		}
-+
- 		goto resubmit;
- 	}
- 
-@@ -608,9 +613,6 @@ static void _rtl_rx_completed(struct urb *_urb)
- 	}
- 
- resubmit:
--	skb_reset_tail_pointer(skb);
--	skb_trim(skb, 0);
--
- 	usb_anchor_urb(_urb, &rtlusb->rx_submitted);
- 	err = usb_submit_urb(_urb, GFP_ATOMIC);
- 	if (unlikely(err)) {
-@@ -620,13 +622,31 @@ resubmit:
- 	return;
- 
- free:
--	dev_kfree_skb_irq(skb);
-+	/* On some architectures, usb_free_coherent must not be called from
-+	 * hardirq context. Queue urb to cleanup list.
-+	 */
-+	usb_anchor_urb(_urb, &rtlusb->rx_cleanup_urbs);
-+}
-+
-+#undef __RADIO_TAP_SIZE_RSV
-+
-+static void _rtl_usb_cleanup_rx(struct ieee80211_hw *hw)
-+{
-+	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
-+	struct urb *urb;
-+
-+	usb_kill_anchored_urbs(&rtlusb->rx_submitted);
-+
-+	while ((urb = usb_get_from_anchor(&rtlusb->rx_cleanup_urbs))) {
-+		usb_free_coherent(urb->dev, urb->transfer_buffer_length,
-+				urb->transfer_buffer, urb->transfer_dma);
-+		usb_free_urb(urb);
-+	}
- }
- 
- static int _rtl_usb_receive(struct ieee80211_hw *hw)
- {
- 	struct urb *urb;
--	struct sk_buff *skb;
- 	int err;
- 	int i;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -645,11 +665,10 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 			goto err_out;
- 		}
- 
--		skb = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
--		if (IS_ERR(skb)) {
-+		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
-+		if (err < 0) {
- 			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
- 				 "Failed to prep_rx_urb!!\n");
--			err = PTR_ERR(skb);
- 			usb_free_urb(urb);
- 			goto err_out;
- 		}
-@@ -664,6 +683,7 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 
- err_out:
- 	usb_kill_anchored_urbs(&rtlusb->rx_submitted);
-+	_rtl_usb_cleanup_rx(hw);
- 	return err;
- }
- 
-@@ -705,7 +725,7 @@ static void rtl_usb_cleanup(struct ieee80211_hw *hw)
- 	SET_USB_STOP(rtlusb);
- 
- 	/* clean up rx stuff. */
--	usb_kill_anchored_urbs(&rtlusb->rx_submitted);
-+	_rtl_usb_cleanup_rx(hw);
- 
- 	/* clean up tx stuff */
- 	for (i = 0; i < RTL_USB_MAX_EP_NUM; i++) {
-diff --git a/drivers/net/wireless/rtlwifi/usb.h b/drivers/net/wireless/rtlwifi/usb.h
-index fb986f9..22d7c68 100644
---- a/drivers/net/wireless/rtlwifi/usb.h
-+++ b/drivers/net/wireless/rtlwifi/usb.h
-@@ -141,6 +141,7 @@ struct rtl_usb {
- 	u32 rx_max_size;	/* Bulk IN max buffer size */
- 	u32 rx_urb_num;		/* How many Bulk INs are submitted to host. */
- 	struct usb_anchor	rx_submitted;
-+	struct usb_anchor	rx_cleanup_urbs;
- 	void (*usb_rx_segregate_hdl)(struct ieee80211_hw *, struct sk_buff *,
- 				     struct sk_buff_head *);
- 	void (*usb_rx_hdl)(struct ieee80211_hw *, struct sk_buff *);
+-- 
+1.7.10.4
 
