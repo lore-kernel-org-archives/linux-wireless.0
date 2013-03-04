@@ -1,86 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56915 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43114 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755709Ab3CPM5A (ORCPT
+	with ESMTP id S932198Ab3CDU0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 08:57:00 -0400
-Message-ID: <1363361717.8656.18.camel@jlt4.sipsolutions.net> (sfid-20130316_135703_463587_8DBA7D11)
-Subject: Re: [RFC 3/3] mac80211: P2P add NOA settings
+	Mon, 4 Mar 2013 15:26:40 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz.Dziedzic@tieto.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <3078A9B976EF864C8DDD0C499FFD07912FA1693F2A@EXMB01.eu.tieto.com>
-References: <3078A9B976EF864C8DDD0C499FFD07912FA1693F2A@EXMB01.eu.tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Mar 2013 16:35:17 +0100
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, bzhao@marvell.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] regulatory: enable channels 52-144 for world roaming
+Date: Mon,  4 Mar 2013 21:26:35 +0100
+Message-Id: <1362428795-7457-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_212643_730443_5FAF26DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-03-14 at 09:33 +0200, Janusz.Dziedzic@tieto.com wrote:
-> Add P2P NOA settings for STA mode.
+From: Johannes Berg <johannes.berg@intel.com>
 
-First two patches are fine, here I have some concerns.
+If allowed in a country, these channels typically require
+DFS so mark them as such. Channel 144 is a bit special,
+it's coming in use now to allow more VHT 80 channels, but
+world roaming/passive scanning is acceptable anyway. It
+seems fairly unlikely that it'll be used as the control
+channel for a VHT AP, but it needs to be present to allow
+a full VHT connection to an AP that uses it as one of the
+secondary channels.
 
-> +/* struct p2p_noa_desc - holds Notice of Absence parameters
-> + *
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-This isn't valid kernel-doc.
-
-> +struct p2p_noa_desc {
-
-However, in any case, I'd rather you remove this struct.
-
-> +	struct p2p_noa_desc p2p_noa_desc[IEEE80211_P2P_NOA_DESC_MAX];
-
-and use ieee80211_p2p_noa_desc here
-
-> +static u8 ieee80211_setup_noa_attr(struct ieee80211_bss_conf *bss_conf,
-> +				   struct ieee80211_p2p_noa_attr *noa)
-
-indentation is wrong, but you'll get rid of the function anyway :-)
-
-> +		bss_conf->p2p_noa_desc[i].duration =
-> +				le32_to_cpu(noa->desc[i].duration);
-
-I don't see any need to do endian conversion here in mac80211 -- the
-driver can do it. Most drivers won't need it anyway, so this is just
-extra code/time spent.
-
-> -			struct ieee80211_p2p_noa_attr noa;
-> +			struct ieee80211_p2p_noa_attr noa = {0};
-
-Please just use = {}. Although ... see below
-
-> @@ -2953,18 +2976,17 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->  	}
->  
->  	if (sdata->vif.p2p) {
-> -		struct ieee80211_p2p_noa_attr noa;
-> +		struct ieee80211_p2p_noa_attr noa = {0};
->  		int ret;
->  
->  		ret = cfg80211_get_p2p_attr(mgmt->u.beacon.variable,
->  					    len - baselen,
->  					    IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
->  					    (u8 *) &noa, sizeof(noa));
-> -		if (ret >= 2 && sdata->u.mgd.p2p_noa_index != noa.index) {
-> -			bss_conf->p2p_oppps = noa.oppps_ctwindow & 0x80;
-> -			bss_conf->p2p_ctwindow = noa.oppps_ctwindow & 0x7f;
-> +		if (sdata->u.mgd.p2p_noa_index != noa.index) {
-> +			sdata->u.mgd.p2p_noa_index =
-> +					ieee80211_setup_noa_attr(bss_conf, &noa);
->  			changed |= BSS_CHANGED_P2P_PS;
-> -			sdata->u.mgd.p2p_noa_index = noa.index;
-
-Now that we pretty much have *all* fields of the NoA attribute in
-bss_conf (except the index), why not just put the full struct there, and
-have cfg80211 read into that buffer directly? That way, we save all the
-copying. Yes, it would mean changing all the drivers (just one I guess)
-using it, but maybe that'd be better?
-
-Or do we expect broken GOs that change the contents w/o updating the
-index, and then things break or something?
-
-johanes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dee9ab4..706cfa7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -188,7 +188,11 @@ static const struct ieee80211_regdomain world_regdom = {
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
+ 
+-		/* NB: 5260 MHz - 5700 MHz requires DFS */
++		/* IEEE 802.11a, channel 52..144 - DFS required */
++		REG_RULE(5260-10, 5720+10, 80, 6, 20,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS |
++			NL80211_RRF_DFS),
+ 
+ 		/* IEEE 802.11a, channel 149..165 */
+ 		REG_RULE(5745-10, 5825+10, 80, 6, 20,
+-- 
+1.8.0
 
