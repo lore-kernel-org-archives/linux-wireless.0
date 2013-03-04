@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms.dension.com ([195.56.193.33]:46764 "EHLO ms.dension.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932391Ab3CMPLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 11:11:25 -0400
-Date: Wed, 13 Mar 2013 16:11:21 +0100
-From: "Patrik, Kluba" <pkluba@dension.com>
-To: "Patrik, Kluba" <pkluba@dension.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from s72.web-hosting.com ([198.187.29.21]:60837 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab3CDKCc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 05:02:32 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20788.28891.721850.133032@gargle.gargle.HOWL> (sfid-20130304_110235_968175_8E1A1A09)
+Date: Mon, 4 Mar 2013 15:30:59 +0530
+To: Schrober <franzschrober@yahoo.de>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: bug: deadlock in rtl8192cu
-Message-ID: <20130313161121.210ff4fd.pkluba@dension.com> (sfid-20130313_161128_887623_DD588C22)
-In-Reply-To: <20130313152505.7dc3466c.pkluba@dension.com>
-References: <20130312163020.67f9532b.pkluba@dension.com>
-	<513F5931.6040509@lwfinger.net>
-	<20130313152505.7dc3466c.pkluba@dension.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH 2/2] initvals: Update AR9462 initvals
+In-Reply-To: <1907650.rOdA2c4Utl@bentobox>
+References: <1362381201-9704-1-git-send-email-sujith@msujith.org>
+	<1362381201-9704-2-git-send-email-sujith@msujith.org>
+	<1907650.rOdA2c4Utl@bentobox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 13 Mar 2013 15:25:05 +0100
-"Patrik, Kluba" <pkluba@dension.com> wrote:
+Schrober wrote:
+> Why? How it is helping? What it is doing? Does it require changes to the 
+> driver? I cite
+>  http://linuxwireless.org/en/users/Drivers/ath9k_hw/initvals-tool
+> 
+> "Note that initval changes are expected to have a respective equivalent *good* 
+> commit log entry, so please don't simply send initval changes without some 
+> sort of explanation, unless you just cannot find one."
 
-> According to http://lwn.net/Articles/37889/ no sleeping functions
-> should be called inside an rcu_read_lock() region. No sleeping can
-> not be guaranteed for USB transfers.
+Unfortunately, this particular initvals update has no detailed information.
+This is the latest INI values for AR9462 which has been given to us by
+the internal systems team.
 
-To correct myself: for synchronous USB transfers. usb_submit_urb() and
-friends are safe. Rewriting things in rtlwifi to do async transfers is
-a tremendous job, and might not help at all as the termination of the
-callback has still be waited under RCU. 
-
-But how about something like this?
-
-
-rcu_read_lock();
-sta = ...
-increase_reference_count();
-rcu_read_unlock();
-
-... do all the might-sleeping things here ...
-
-decrease_reference_count_and_call_callback_if_necessary();
-
-
-
-I have found an example for rcu_read_lock() + kref_get() here:
-https://lists.open-mesh.org/pipermail/b.a.t.m.a.n/2011-February/004234.html
-
-Regards,
-Patrik
-
--- 
-Patrik KLUBA
-Software Developer at
-
-DENSION Audio Systems Ltd.
-H-1116 Budapest, Sztregova u. 1
-Phone: +36 1 463 0470
-Fax:   +36 1 463 0479
-Web:   www.dension.com
+Sujith
