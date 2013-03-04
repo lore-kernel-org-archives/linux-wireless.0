@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42872 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849Ab3CHVAW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41871 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756992Ab3CDOA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 16:00:22 -0500
-Date: Fri, 8 Mar 2013 15:53:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-03-07
-Message-ID: <20130308205322.GB402@tuxdriver.com> (sfid-20130308_220029_045660_03A98D4F)
-References: <1362649836.8694.9.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1362649836.8694.9.camel@jlt4.sipsolutions.net>
+	Mon, 4 Mar 2013 09:00:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/11] iwlwifi: mvm: ignore STOP_AGG when restarting
+Date: Mon,  4 Mar 2013 15:00:49 +0100
+Message-Id: <1362405651-26456-9-git-send-email-johannes@sipsolutions.net> (sfid-20130304_150107_126938_23DF5803)
+In-Reply-To: <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
+References: <1362405609.21028.12.camel@jlt4.sipsolutions.net>
+ <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 07, 2013 at 10:50:36AM +0100, Johannes Berg wrote:
-> Hi John,
-> 
-> First mac80211-next pull request, and I already have quite a bit of work
-> in there ...
-> 
-> First, I merged mac80211/master to avoid some conflicts. This brings in
-> a bunch of fixes you're already familiar with. For real -next material,
-> I have a whole bunch of minstrel work, minstrel_ht from Felix and legacy
-> minstrel from Thomas (Huehn). The other Thomas (Pedersen) did a number
-> of changes in mesh to allow userspace peering management even when the
-> mesh isn't secured. Stanislaw changes suspend/resume to always
-> disconnect the networks. This is typically already done by
-> network-manager so won't make a huge difference for most users, but
-> fixes a number problems, particularly with USB drivers that can easily
-> disconnect while suspended. Ilan has a small change to allow mac80211
-> drivers to differentiate remain-on-channel reasons, and Jouni extends
-> nl80211 to allow fast roaming with full-MAC devices. I have a fairly
-> large number of patches as well, many of them fairly simple cleanups,
-> but also allowing split wiphy dumps and adding back the full wiphy
-> information in nl80211, station entry change checking and more VHT work
-> including VHT capability overrides (mostly for testing purposes).
-> 
-> Let me know if there are any issues.
-> 
-> johannes
-> 
-> The following changes since commit 6dbe51c251a327e012439c4772097a13df43c5b8:
-> 
->   Linux 3.9-rc1 (2013-03-03 15:11:05 -0800)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 87f59c70ce6d1abeaaf97594835be29f746b81a0:
-> 
->   mac80211: init mesh timer for user authed STAs (2013-03-06 16:36:14 +0100)
- 
-Pulling now...
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+Since the device is being restarted, all the Rx / Tx Block
+Ack sessions are been wiped out by the driver. So ignore
+the requests from mac80211 that stops Tx agg while
+reconfiguring the device.
+
+Note that stopping a non-existing Rx BA session is harmless,
+so just honor mac80211's request.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 861a7f9..274f44e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -770,6 +770,16 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	u16 txq_id;
+ 	int err;
+ 
++
++	/*
++	 * If mac80211 is cleaning its state, then say that we finished since
++	 * our state has been cleared anyway.
++	 */
++	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
++		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		return 0;
++	}
++
+ 	spin_lock_bh(&mvmsta->lock);
+ 
+ 	txq_id = tid_data->txq_id;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
