@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43805 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43009 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983Ab3CTVCm (ORCPT
+	with ESMTP id S1758118Ab3CDT4y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 17:02:42 -0400
-Message-ID: <1363813359.9284.7.camel@jlt4.sipsolutions.net> (sfid-20130320_220246_629702_618F637C)
-Subject: Re: [PATCH 3/4] mac80211: P2P add NOA settings
+	Mon, 4 Mar 2013 14:56:54 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Mar 2013 22:02:39 +0100
-In-Reply-To: <CAFED-j=tNHkbwt9R6qSBNtZ2pTFvtt5pzOaLOOPTf8Sxg5nvVQ@mail.gmail.com> (sfid-20130320_201407_184740_25A8644E)
-References: <CAFED-j=tNHkbwt9R6qSBNtZ2pTFvtt5pzOaLOOPTf8Sxg5nvVQ@mail.gmail.com>
-	 (sfid-20130320_201407_184740_25A8644E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] regulatory: enable channels 52-144 for world roaming
+Date: Mon,  4 Mar 2013 20:56:47 +0100
+Message-Id: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_205705_623334_8D5CCF4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +++ b/net/mac80211/cfg.c
-> @@ -960,8 +960,11 @@ static int ieee80211_start_ap(struct wiphy
-> *wiphy, struct net_device *dev,
+If allowed in a country, these channels typically require
+DFS so mark them as such. Channel 144 is a bit special,
+it's coming in use now to allow more VHT 80 channels, but
+world roaming/passive scanning is acceptable anyway. It
+seems fairly unlikely that it'll be used as the control
+channel for a VHT AP, but it needs to be present to allow
+a full VHT connection to an AP that uses it as one of the
+secondary channels.
 
-same here.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/reg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Also, patch 3/4 need to be squashed since otherwise 3 doesn't compile.
-
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dee9ab4..69cb4cb 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -188,7 +188,11 @@ static const struct ieee80211_regdomain world_regdom = {
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
+ 
+-		/* NB: 5260 MHz - 5700 MHz requires DFS */
++		/* IEEE 802.11a, channel 52..144 - DFS required */
++		REG_RULE(5760-10, 5720+10, 80, 6, 20,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS |
++			NL80211_RRF_DFS),
+ 
+ 		/* IEEE 802.11a, channel 149..165 */
+ 		REG_RULE(5745-10, 5825+10, 80, 6, 20,
+-- 
+1.8.0
 
