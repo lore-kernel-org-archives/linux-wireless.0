@@ -1,34 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:35783 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752078Ab3CSNHH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:60370 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab3CDHOj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 09:07:07 -0400
-Received: by mail-qe0-f43.google.com with SMTP id 1so236606qee.16
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 06:07:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DAD431B@SC-VEXCH1.marvell.com>
-References: <CAMLZHHRpPghm0tWTksFiD-zxUUM1dSbgPbj6doMck1jqv-yokw@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9DAD431B@SC-VEXCH1.marvell.com>
-Date: Tue, 19 Mar 2013 07:07:05 -0600
-Message-ID: <CAMLZHHTL40H7F2GBGn9F9EhuH4OhcptOBK0ocYXQi8GYQB=P6g@mail.gmail.com> (sfid-20130319_140711_845001_EF272A6A)
-Subject: Re: mwifiex frequent "not allowed while suspended" crash on resume
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Rhodes <jrhodes@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 4 Mar 2013 02:14:39 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] ath9k_hw: Fix fixed antenna for AR9462
+Date: Mon,  4 Mar 2013 12:42:55 +0530
+Message-Id: <1362381175-9634-4-git-send-email-sujith@msujith.org> (sfid-20130304_081445_454022_5804F750)
+In-Reply-To: <1362381175-9634-1-git-send-email-sujith@msujith.org>
+References: <1362381175-9634-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 19, 2013 at 12:43 AM, Bing Zhao <bzhao@marvell.com> wrote:
-> Hi Daniel,
->> mwifiex_sdio mmc0:0001:1: mwifiex_write_data_sync: not allowed while suspended
->> mwifiex_sdio mmc0:0001:1: host_to_card, write iomem (1) failed: -1
->
-> This looks like the same issue with old XO platform where mmc gets timeout.
-> Do you see "mmc0: Timeout waiting for hardware interrupt" message before mwifiex errors?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-No. The messages I pasted are the first mwifiex messages produced on resume.
+When the RX chainmask is set to 0x2 for AR9462, certain values
+from chain1 have to be programmed for chain0 also.
 
-Daniel
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 881e989..e6b92ff 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3606,6 +3606,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
+ 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM_2, AR_SWITCH_TABLE_COM2_ALL, value);
+ 
++	if ((AR_SREV_9462(ah)) && (ah->rxchainmask == 0x2)) {
++		value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
++		REG_RMW_FIELD(ah, switch_chain_reg[0],
++			      AR_SWITCH_TABLE_ALL, value);
++	}
++
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if ((ah->rxchainmask & BIT(chain)) ||
+ 		    (ah->txchainmask & BIT(chain))) {
+@@ -3772,6 +3778,17 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
+ 					  AR_PHY_EXT_ATTEN_CTL_2,
+ 					 };
+ 
++	if ((AR_SREV_9462(ah)) && (ah->rxchainmask == 0x2)) {
++		value = ar9003_hw_atten_chain_get(ah, 1, chan);
++		REG_RMW_FIELD(ah, ext_atten_reg[0],
++			      AR_PHY_EXT_ATTEN_CTL_XATTEN1_DB, value);
++
++		value = ar9003_hw_atten_chain_get_margin(ah, 1, chan);
++		REG_RMW_FIELD(ah, ext_atten_reg[0],
++			      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
++			      value);
++	}
++
+ 	/* Test value. if 0 then attenuation is unused. Don't load anything. */
+ 	for (i = 0; i < 3; i++) {
+ 		if (ah->txchainmask & BIT(i)) {
+-- 
+1.8.1.5
+
