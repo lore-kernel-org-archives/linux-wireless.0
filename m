@@ -1,54 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17329 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab3CMMNP (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40287 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757756Ab3CDOWc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:15 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/14] wil6210: do not set IE's for beacon
-Date: Wed, 13 Mar 2013 14:12:41 +0200
-Message-ID: <1363176771-10082-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131320_074572_ED51F5D3)
-In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 4 Mar 2013 09:22:32 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 7/7] mac80211: improve minstrels rate sorting by means of throughput & probability
+Date: Mon,  4 Mar 2013 15:22:17 +0100
+Message-Id: <1362406937-69969-8-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152237_618049_41C2640C)
+In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the DMG band, there is no 'normal' beacon frame.
-Instead, transmitted is short 'DMG beacon' frame, that do not include IE's
-So, beacon IE's are not relevant for the DMG band.
+This patch improves the way minstrel sorts rates according to throughput
+and success probability. 3 FOR-loops across the entire rate set in function
+minstrel_update_stats() which where used to determine the fastest, second
+fastest and most robust rate are reduced to 1 FOR-loop.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+The sorted list of rates according throughput is extended to the best four
+rates as we need them in upcoming joint rate and power control. The sorting
+is done via the new function minstrel_sort_best_tp_rates().
+
+The most robust rate selection is aligned with minstrel_ht's approach.
+Once any success probability is above 95% the one with the highest
+throughput is chosen as most robust rate. If success probabilities of all
+rates are below 95%, the rate with the highest succ. prob. is elected as
+most robust one
+
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ net/mac80211/rc80211_minstrel.c         | 71 +++++++++++++++++++--------------
+ net/mac80211/rc80211_minstrel.h         |  8 ++--
+ net/mac80211/rc80211_minstrel_debugfs.c |  6 ++-
+ 3 files changed, 49 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 9ecc196..19d8d14 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -446,8 +446,13 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 8af71f6..502561d 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -69,14 +69,31 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+ 	return i;
+ }
  
- 	/* IE's */
- 	/* bcon 'head IE's are not relevant for 60g band */
--	wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
--		   bcon->beacon_ies);
-+	/*
-+	 * FW do not form regular beacon, so bcon IE's are not set
-+	 * For the DMG bcon, when it will be supported, bcon IE's will
-+	 * be reused; add something like:
-+	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
-+	 * bcon->beacon_ies);
-+	 */
- 	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
- 		   bcon->proberesp_ies);
- 	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
++/* find & sort topmost throughput rates */
++static inline void
++minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
++{
++	int j = MAX_THR_RATES;
++
++	while (j > 0 && mi->r[i].cur_tp > mi->r[tp_list[j - 1]].cur_tp)
++		j--;
++	if (j < MAX_THR_RATES - 1)
++		memmove(&tp_list[j + 1], &tp_list[j], MAX_THR_RATES - (j + 1));
++	if (j < MAX_THR_RATES)
++		tp_list[j] = i;
++}
++
+ static void
+ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ {
+-	u32 max_tp = 0, index_max_tp = 0, index_max_tp2 = 0;
+-	u32 max_prob = 0, index_max_prob = 0;
++	u8 tmp_tp_rate[MAX_THR_RATES];
++	u8 tmp_prob_rate = 0;
+ 	u32 usecs;
+ 	int i;
+ 
++	for (i=0; i < MAX_THR_RATES; i++)
++	    tmp_tp_rate[i] = 0;
++
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 
+@@ -120,35 +137,27 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		}
+ 		if (!mr->adjusted_retry_count)
+ 			mr->adjusted_retry_count = 2;
+-	}
+ 
+-	for (i = 0; i < mi->n_rates; i++) {
+-		struct minstrel_rate *mr = &mi->r[i];
+-		if (max_tp < mr->cur_tp) {
+-			index_max_tp = i;
+-			max_tp = mr->cur_tp;
+-		}
+-		if (max_prob < mr->probability) {
+-			index_max_prob = i;
+-			max_prob = mr->probability;
++		minstrel_sort_best_tp_rates(mi, i, tmp_tp_rate);
++
++		/* To determine the most robust rate (max_prob_rate) used at
++		 * 3rd mmr stage we distinct between two cases:
++		 * (1) if any success probabilitiy >= 95%, out of those rates
++		 * choose the maximum throughput rate as max_prob_rate
++		 * (2) if all success probabilities < 95%, the rate with
++		 * highest success probability is choosen as max_prob_rate */
++		if (mr->probability >= MINSTREL_FRAC(95,100)) {
++			if (mr->cur_tp >= mi->r[tmp_prob_rate].cur_tp)
++				tmp_prob_rate = i;
++		} else {
++			if (mr->probability >= mi->r[tmp_prob_rate].probability)
++				tmp_prob_rate = i;
+ 		}
+ 	}
+ 
+-	max_tp = 0;
+-	for (i = 0; i < mi->n_rates; i++) {
+-		struct minstrel_rate *mr = &mi->r[i];
+-
+-		if (i == index_max_tp)
+-			continue;
+-
+-		if (max_tp < mr->cur_tp) {
+-			index_max_tp2 = i;
+-			max_tp = mr->cur_tp;
+-		}
+-	}
+-	mi->max_tp_rate = index_max_tp;
+-	mi->max_tp_rate2 = index_max_tp2;
+-	mi->max_prob_rate = index_max_prob;
++	/* Assign the new rate set */
++	memcpy(mi->max_tp_rate, tmp_tp_rate, sizeof(mi->max_tp_rate));
++	mi->max_prob_rate = tmp_prob_rate;
+ 
+ 	/* Reset update timer */
+ 	mi->stats_update = jiffies;
+@@ -254,7 +263,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		sampling_ratio = mp->lookaround_rate;
+ 
+ 	/* init rateindex [ndx] with max throughput rate */
+-	ndx = mi->max_tp_rate;
++	ndx = mi->max_tp_rate[0];
+ 
+ 	/* increase sum packet counter */
+ 	mi->packet_count++;
+@@ -322,7 +331,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	 * to use it, as this only wastes precious airtime */
+ 	if (!mrr_capable && rate_sampling &&
+ 	   (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
+-		ndx = mi->max_tp_rate;
++		ndx = mi->max_tp_rate[0];
+ 
+ 	/* mrr setup for 1st stage */
+ 	ar[0].idx = mi->r[ndx].rix;
+@@ -342,9 +351,9 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		if (indirect_rate_sampling)
+ 			mrr_ndx[0] = sample_ndx;
+ 		else
+-			mrr_ndx[0] = mi->max_tp_rate;
++			mrr_ndx[0] = mi->max_tp_rate[0];
+ 	} else {
+-		mrr_ndx[0] = mi->max_tp_rate2;
++		mrr_ndx[0] = mi->max_tp_rate[1];
+ 	}
+ 
+ 	/* mrr setup for 3rd & 4th stage */
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index a0ccc57..85ebf42 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -18,6 +18,9 @@
+ #define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
+ #define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
+ 
++/* number of highest throughput rates to consider*/
++#define MAX_THR_RATES 4
++
+ /*
+  * Perform EWMA (Exponentially Weighted Moving Average) calculation
+   */
+@@ -65,9 +68,8 @@ struct minstrel_sta_info {
+ 
+ 	unsigned int lowest_rix;
+ 
+-	unsigned int max_tp_rate;
+-	unsigned int max_tp_rate2;
+-	unsigned int max_prob_rate;
++	u8 max_tp_rate[MAX_THR_RATES];
++	u8 max_prob_rate;
+ 	unsigned int packet_count;
+ 	unsigned int sample_count;
+ 	int sample_deferred;
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index c0ebfac..d104834 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -73,8 +73,10 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 
+-		*(p++) = (i == mi->max_tp_rate) ? 'T' : ' ';
+-		*(p++) = (i == mi->max_tp_rate2) ? 't' : ' ';
++		*(p++) = (i == mi->max_tp_rate[0]) ? 'A' : ' ';
++		*(p++) = (i == mi->max_tp_rate[1]) ? 'B' : ' ';
++		*(p++) = (i == mi->max_tp_rate[2]) ? 'C' : ' ';
++		*(p++) = (i == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (i == mi->max_prob_rate) ? 'P' : ' ';
+ 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
 -- 
-1.7.10.4
+1.8.1.1
 
