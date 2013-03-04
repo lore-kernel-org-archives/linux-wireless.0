@@ -1,67 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47898 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755658Ab3COPSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 11:18:54 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.9] ath9k: limit tx path hang check to normal data queues
-Date: Fri, 15 Mar 2013 16:18:44 +0100
-Message-Id: <1363360724-44435-1-git-send-email-nbd@openwrt.org> (sfid-20130315_161910_659900_0E1AAE20)
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40286 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757447Ab3CDOWc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 09:22:32 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
+Date: Mon,  4 Mar 2013 15:22:15 +0100
+Message-Id: <1362406937-69969-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152239_903548_C8E1F901)
+In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon and multicast-buffer queues are managed by the beacon
-tasklet, and the generic tx path hang check does not help in any way
-here. Running it on those queues anyway can introduce some race
-conditions leading to unnecessary chip resets.
+While minstrel bootstraps and fills the success probabilities of each
+rate the lowest rate has typically a very high success probability
+(often 100% in our tests).
+Its statistics are never updated but considered to setup the mrr chain.
+In our tests we see that especially the 3rd mrr stage (which is that
+rate providing highest success probability) is filled with the lowest rate
+because its initial high sucess probability is never updated. By design
+the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
+mrr stage are equal.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This patch follows minstrels general approach of assuming as little
+as possible about rate dependencies. Consequently we include the
+lowest rate into the random sampling table to get balanced up-to-date
+statistics of all rates and therefore balanced decisions.
+
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/ath9k/link.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ net/mac80211/rc80211_minstrel.c    | 22 ++++++++--------------
+ net/mac80211/rc80211_minstrel.h    |  4 +++-
+ net/mac80211/rc80211_minstrel_ht.c |  1 -
+ 3 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index ade3afb..39c84ec 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -28,21 +28,21 @@ void ath_tx_complete_poll_work(struct work_struct *work)
- 	int i;
- 	bool needreset = false;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index aa59f29..c28e60a 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -55,7 +55,6 @@
+ #include "rate.h"
+ #include "rc80211_minstrel.h"
  
--	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
--		if (ATH_TXQ_SETUP(sc, i)) {
--			txq = &sc->tx.txq[i];
--			ath_txq_lock(sc, txq);
--			if (txq->axq_depth) {
--				if (txq->axq_tx_inprogress) {
--					needreset = true;
--					ath_txq_unlock(sc, txq);
--					break;
--				} else {
--					txq->axq_tx_inprogress = true;
--				}
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		txq = sc->tx.txq_map[i];
-+
-+		ath_txq_lock(sc, txq);
-+		if (txq->axq_depth) {
-+			if (txq->axq_tx_inprogress) {
-+				needreset = true;
-+				ath_txq_unlock(sc, txq);
-+				break;
-+			} else {
-+				txq->axq_tx_inprogress = true;
- 			}
--			ath_txq_unlock_complete(sc, txq);
+-#define SAMPLE_COLUMNS	10
+ #define SAMPLE_TBL(_mi, _idx, _col) \
+ 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
+ 
+@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
+ 	unsigned int sample_ndx;
+ 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
+ 	mi->sample_row++;
+-	if ((int) mi->sample_row > (mi->n_rates - 2)) {
++	if ((int) mi->sample_row >= mi->n_rates) {
+ 		mi->sample_row = 0;
+ 		mi->sample_column++;
+ 		if (mi->sample_column >= SAMPLE_COLUMNS)
+@@ -370,26 +369,21 @@ static void
+ init_sample_table(struct minstrel_sta_info *mi)
+ {
+ 	unsigned int i, col, new_idx;
+-	unsigned int n_srates = mi->n_rates - 1;
+-	u8 rnd[8];
++	u8 rnd[mi->n_rates];
+ 
+ 	mi->sample_column = 0;
+ 	mi->sample_row = 0;
+-	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
++	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
+ 
+ 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
+-		for (i = 0; i < n_srates; i++) {
++		for (i = 0; i < mi->n_rates; i++) {
+ 			get_random_bytes(rnd, sizeof(rnd));
+-			new_idx = (i + rnd[i & 7]) % n_srates;
++			new_idx = (i + rnd[i]) % mi->n_rates;
+ 
+-			while (SAMPLE_TBL(mi, new_idx, col) != 0)
+-				new_idx = (new_idx + 1) % n_srates;
++			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
++				new_idx = (new_idx + 1) % mi->n_rates;
+ 
+-			/* Don't sample the slowest rate (i.e. slowest base
+-			 * rate). We must presume that the slowest rate works
+-			 * fine, or else other management frames will also be
+-			 * failing and the link will break */
+-			SAMPLE_TBL(mi, new_idx, col) = i + 1;
++			SAMPLE_TBL(mi, new_idx, col) = i;
  		}
-+		ath_txq_unlock_complete(sc, txq);
-+	}
+ 	}
+ }
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 200b7e3..a0ccc57 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -9,7 +9,9 @@
+ #ifndef __RC_MINSTREL_H
+ #define __RC_MINSTREL_H
  
- 	if (needreset) {
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), RESET,
+-#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
++#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
++#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
++
+ 
+ /* scaled fraction values */
+ #define MINSTREL_SCALE  16
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a3081e5..8f88108 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -17,7 +17,6 @@
+ #include "rc80211_minstrel_ht.h"
+ 
+ #define AVG_PKT_SIZE	1200
+-#define SAMPLE_COLUMNS	10
+ 
+ /* Number of bits for an average sized packet */
+ #define MCS_NBITS (AVG_PKT_SIZE << 3)
 -- 
-1.8.0.2
+1.8.1.1
 
