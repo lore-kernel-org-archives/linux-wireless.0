@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:33575 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834Ab3CWR0w convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:48635 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757835Ab3CDO5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 13:26:52 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n1so2413923oag.37
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2013 10:26:51 -0700 (PDT)
+	Mon, 4 Mar 2013 09:57:48 -0500
 MIME-Version: 1.0
-In-Reply-To: <20130323155355.0a1752f5@laptop.homenet>
-References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
-	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
-	<20130323113517.01906b0b@milhouse>
-	<20130323155355.0a1752f5@laptop.homenet>
-Date: Sat, 23 Mar 2013 18:26:51 +0100
-Message-ID: <CACna6rx+sCrg1fB-6XfYcSWczu6Mtuvz75FOHbbx3YdPe+U5sw@mail.gmail.com> (sfid-20130323_182657_203770_012DAC08)
-Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>, isedev@gmail.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20130304134949.GB3021@redhat.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+Date: Mon, 4 Mar 2013 16:57:46 +0200
+Message-ID: <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com> (sfid-20130304_155753_042777_39EBEB7A)
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/23 Chris Vine <chris@cvine.freeserve.co.uk>:
-> On Sat, 23 Mar 2013 11:35:17 +0100
-> Michael Büsch <m@bues.ch> wrote:
->> On Sat, 23 Mar 2013 00:27:30 +0100
->> Rafał Miłecki <zajec5@gmail.com> wrote:
 >>
->> > Today I've plugged my 14e4:4315 and (unfortunately?) it's working
->> > pretty well. I hoped to reproduce some problems but failed to do
->> > so. I was transmitting for an hour with average speed 11MiB/s and
->> > didn't notice any DMA issues.
->> >
->> > I was using iperf with interval of 60 seconds and only 3 results
->> > showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No
->> > disconnections however and no DMA errors. I just got "Group
->> > rekeying completed..." in wpa_supplicant.
->> >
->> > So as I can't reproduce this, I can't find any other fix for this
->> > issue, and there's no reason to stop this workaround. I'll just
->> > apply it and test over weekend to check for any regressions, but
->> > they are highly unlikely.
+>>       /* W/A - seems to solve weird behavior. We need to remove this if we
+>>        * don't want to stay in L1 all the time. This wastes a lot of power */
+>>       pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
+>>                              PCIE_LINK_STATE_CLKPM);
 >>
->> I don't really believe in this being a firmware bug.
->>
->> Some b43 DMA engines (all?) have some alignment and
->> page-boundary-crossing constraints. I would rather guess that on some
->> kernels with some options turned on, alignment and/or boundary
->> constraints are violated every now and then. (and thus the packet
->> never reaches the firmware).
->>
->> I don't remember the details, though. Too long since I worked on that.
->> But a few sanity checks could probably be added to the code to check
->> this hypothesis.
->>
->> Does the failing kernel/machine have any special things w.r.t. memory?
->> Like iommu, hugepages, whetever...
+>> Now, I took a laptop with 3.7.9 (that supports L1) and measured power.
+>> I would expect to see that as long as the driver isn't loaded, the
+>> power consumption is low (L1 enabled), and when I load the driver, the
+>> power consumption rises because L1 gets disabled.
+>> But this is not what I see. I see more the less the same numbers
+>> before and after driver load.
+>> I don't remember exactly the numbers, but I do remember they were low
+>> (around 1mA or so) - but I really need to check.
+>> I also removed the code above, and it didn't change anything.
+>> Can it be that this code doesn't have any effect?
 >
-> For what it is worth, this happens to me on both home compiled and
-> distributor kernels (ubuntu and slackware): in fact, any 32-bit kernel
-> that I have tried it on.
+> Depend on BIOS settings ASPM can be enabled or disabled on the whole
+> system. I think kernel can change settings globally as well.
+
+Obviously kernel can change things here. I have 3.1 (!) and 3.7 on the
+same machines, on the first, ASPM is disabled, on the latter it is
+enabled.
+
+> Reloading driver can not be enough to check that, try to reboot the
+> system with iwlwifi module blacklisted and check lspci -vvv to see
+> LnkCtl ASPM settings.
 >
-> And it does not happen with the wl driver on the same kernels.  So if
-> this is right, the wl driver must be doing something that the b43 driver
-> does not with respect to alignment: and you might well be right about
-> that.
 
-Could you try changing
-B43_DMA32_RINGMEMSIZE
-from 4096 to 8192 in dma.h?
+This is what I did. On 3.7, lspci tells me that ASPM is enabled before
+I load the module. And same after I load the module.
 
--- 
-Rafał
+> Additionally despite above code, iwlwifi try to enable L0S in
+> iwl_pcie_apm_config(), what is basically wrong.
+>
+
+Right, good point. The thing is that the device doesn't know how to do
+both L0S and L1. This is the origin of this code. But obviously, we
+first need to make sure that L0S is supported in the LnkCtl. Will
+check.
+Thanks!
+
+So - what about just removing this code?
