@@ -1,116 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56821 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753277Ab3CCLtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 06:49:55 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/2] mac80211/minstrel_ht: increase sampling frequency of some slower rates
-Date: Sun,  3 Mar 2013 12:49:51 +0100
-Message-Id: <1362311392-83648-1-git-send-email-nbd@openwrt.org> (sfid-20130303_125004_774796_2DABCAF2)
+Received: from mail.candelatech.com ([208.74.158.172]:49978 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252Ab3CDXbm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 18:31:42 -0500
+From: greearb@candelatech.com
+To: ath9k-devel@venema.h4ckr.net
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath9k: Report txerr-filtered errors in debugfs.
+Date: Mon,  4 Mar 2013 15:31:16 -0800
+Message-Id: <1362439877-12345-1-git-send-email-greearb@candelatech.com> (sfid-20130305_003148_074242_373D4142)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a rate is below the max_tp_rate, sample it frequently if:
-- it is above max_tp_rate2, or
-- it is above max_prob_rate and is a candidate for max_prob_rate
-  (has fewer streams than max_tp_rate).
-This helps the retry chain recover more quickly from bad statistics
-caused by collisions or interference, and slightly reduces throughput
-fluctuations with higher rates.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 20 ++++++++++++--------
- net/mac80211/rc80211_minstrel_ht.h |  1 +
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |    3 +++
+ drivers/net/wireless/ath/ath9k/debug.h |    2 ++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 4d35bc5..1b69924 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -246,7 +246,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_rate_stats *mr;
- 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
- 	int group, i, index;
--	int prob_max_streams = 1;
- 
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -330,7 +329,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 			cur_tp2 = cur_tp;
- 			mi->max_tp_rate = mg->max_tp_rate;
- 			cur_tp = mr->cur_tp;
--			prob_max_streams = minstrel_mcs_groups[group].streams - 1;
-+			mi->max_prob_streams = minstrel_mcs_groups[group].streams - 1;
- 		}
- 
- 		mr = minstrel_get_ratestats(mi, mg->max_tp_rate2);
-@@ -340,8 +339,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 3714b97..daae4d0 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -537,6 +537,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("AMPDUs Completed:", a_completed);
+ 	PR("AMPDUs Retried:  ", a_retries);
+ 	PR("AMPDUs XRetried: ", a_xretries);
++	PR("TXERR Filtered:  ", txerr_filtered);
+ 	PR("FIFO Underrun:   ", fifo_underrun);
+ 	PR("TXOP Exceeded:   ", xtxop);
+ 	PR("TXTIMER Expiry:  ", timer_exp);
+@@ -756,6 +757,8 @@ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 			TX_STAT_INC(qnum, completed);
  	}
  
--	if (prob_max_streams < 1)
--		prob_max_streams = 1;
-+	if (mi->max_prob_streams < 1)
-+		mi->max_prob_streams = 1;
- 
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
- 		mg = &mi->groups[group];
-@@ -349,7 +348,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 			continue;
- 		mr = minstrel_get_ratestats(mi, mg->max_prob_rate);
- 		if (cur_prob_tp < mr->cur_tp &&
--		    minstrel_mcs_groups[group].streams <= prob_max_streams) {
-+		    minstrel_mcs_groups[group].streams <= mi->max_prob_streams) {
- 			mi->max_prob_rate = mg->max_prob_rate;
- 			cur_prob = mr->cur_prob;
- 			cur_prob_tp = mr->cur_tp;
-@@ -630,6 +629,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- {
- 	struct minstrel_rate_stats *mr;
- 	struct minstrel_mcs_group_data *mg;
-+	unsigned int sample_dur, sample_group;
- 	int sample_idx = 0;
- 
- 	if (mi->sample_wait > 0) {
-@@ -644,7 +644,8 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	mg = &mi->groups[mi->sample_group];
- 	sample_idx = sample_table[mg->column][mg->index];
- 	mr = &mg->rates[sample_idx];
--	sample_idx += mi->sample_group * MCS_GROUP_RATES;
-+	sample_group = mi->sample_group;
-+	sample_idx += sample_group * MCS_GROUP_RATES;
- 	minstrel_next_sample_idx(mi);
- 
- 	/*
-@@ -665,8 +666,11 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	 * Make sure that lower rates get sampled only occasionally,
- 	 * if the link is working perfectly.
- 	 */
--	if (minstrel_get_duration(sample_idx) >
--	    minstrel_get_duration(mi->max_tp_rate)) {
-+	sample_dur = minstrel_get_duration(sample_idx);
-+	if (sample_dur >= minstrel_get_duration(mi->max_tp_rate2) &&
-+	    (mi->max_prob_streams <
-+	     minstrel_mcs_groups[sample_group].streams ||
-+	     sample_dur >= minstrel_get_duration(mi->max_prob_rate))) {
- 		if (mr->sample_skipped < 20)
- 			return -1;
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 302dbd5..c6d6a0d 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -85,6 +85,7 @@ struct minstrel_ht_sta {
- 
- 	/* best probability rate */
- 	unsigned int max_prob_rate;
-+	unsigned int max_prob_streams;
- 
- 	/* time of last status update */
- 	unsigned long stats_update;
++	if (ts->ts_status & ATH9K_TXERR_FILT)
++		TX_STAT_INC(qnum, txerr_filtered);
+ 	if (ts->ts_status & ATH9K_TXERR_FIFO)
+ 		TX_STAT_INC(qnum, fifo_underrun);
+ 	if (ts->ts_status & ATH9K_TXERR_XTXOP)
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 410d6d8..794a7ec 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -142,6 +142,7 @@ struct ath_interrupt_stats {
+  * @a_completed: Total AMPDUs completed
+  * @a_retries: No. of AMPDUs retried (SW)
+  * @a_xretries: No. of AMPDUs dropped due to xretries
++ * @txerr_filtered: No. of frames with TXERR_FILT flag set.
+  * @fifo_underrun: FIFO underrun occurrences
+ 	Valid only for:
+ 		- non-aggregate condition.
+@@ -168,6 +169,7 @@ struct ath_tx_stats {
+ 	u32 a_completed;
+ 	u32 a_retries;
+ 	u32 a_xretries;
++	u32 txerr_filtered;
+ 	u32 fifo_underrun;
+ 	u32 xtxop;
+ 	u32 timer_exp;
 -- 
-1.8.0.2
+1.7.3.4
 
