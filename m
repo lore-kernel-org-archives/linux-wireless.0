@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:50493 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932391Ab3CMPZm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43085 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932201Ab3CDUPb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 11:25:42 -0400
-Received: by mail-ob0-f179.google.com with SMTP id un3so1152487obb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 08:25:42 -0700 (PDT)
-Message-ID: <51409A73.9050107@lwfinger.net> (sfid-20130313_162546_406867_AB923FC6)
-Date: Wed, 13 Mar 2013 10:25:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Alessandro Lannocca <alessandro.lannocca@gmail.com>
-CC: 'Jussi Kivilinna' <jussi.kivilinna@iki.fi>,
-	linux-wireless@vger.kernel.org,
-	'George0505' <george0505@realtek.com>
-Subject: Re: rtl8192cu gets confused when scan is aborted by bringing interface
- down (Re: rtl8192cu goes silent/dead after some time...)
-References: <000001ce1ffd$0ecd5e10$2c681a30$@gmail.com>
-In-Reply-To: <000001ce1ffd$0ecd5e10$2c681a30$@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 4 Mar 2013 15:15:31 -0500
+Message-ID: <1362428118.21028.45.camel@jlt4.sipsolutions.net> (sfid-20130304_211535_033397_8BEC9EB6)
+Subject: Re: [PATCH] mac80211: provide race-free 64-bit traffic counters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 04 Mar 2013 21:15:18 +0100
+In-Reply-To: <5134D604.3060608@candelatech.com>
+References: <1362416578-1672-1-git-send-email-johannes@sipsolutions.net>
+	 <5134D604.3060608@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/13/2013 10:11 AM, Alessandro Lannocca wrote:
-> Hi, some months ago I reported some bugs about this chipset; now I tried latest stable compat-drivers (3.9-rc2-2-su) with the modified patch by Jussi Kivilinna, and I'm happy to report that it works  with my alfa AWUS036NHR on ubuntu 12.10 with kernel 3.5; The card now sustains multiple connection/disconnection cicles, and doesn't go mute, even after changing mac address.
->
-> Some problems still remains:
->
-> -led is always solid, no blinking whatsoever.
-> -in monitor mode, every client appears as not associated, even when it really is.
-> -power/signal strength readings (in networkmanager) seem to be fuzzy, almost inverse; nearest APs have lowest signal representation, while farest ones get strongest signal (this could very well be a networkmanager bug/misrepresentation); signal appears normal when the card is connected (only the reading relative to the connected AP)
->
-> I know you're probably understaffed and have a lot of work to do, however if you're willing to have a look at this secondary problems (Mr. Finger perhaps), I'm willing to recompile, test and report back to help squash these bugs.
->
-> I'm attaching a debug=5 log to show my tests.
->
-> As of now, this chipset/card is usable (signal reading is annoying btw)
+On Mon, 2013-03-04 at 09:12 -0800, Ben Greear wrote:
 
-Thanks for the report. That patch will be pushed upstream in a few minutes and 
-will be backported to stable withing a few weeks. I am happy to hear that the 
-patch works with your Alfa AWUS036NHR. In my limited testing with that device, 
-it failed to connect. I feared that the RTL8192RU differed from the RTL8192CU.
+[please trim quotes before and after the part you're replying to]
 
-I know that improper operation of the LEDs and screwy signal levels are 
-annoying, and I will get to them when I can. At the moment, however, I have more 
-important problems to solve.
+> >   	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+> > +	sinfo->tx_bytes = 0;
+> > +	sinfo->tx_packets = 0;
+> > +	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+> > +		sinfo->tx_bytes += sta->tx_bytes[ac];
+> > +		sinfo->tx_packets += sta->tx_packets[ac];
+> > +	}
+> 
+> I think you'll need tx_packets to be u64 as well, as otherwise
+> if a queue wraps it's going to be quite hard to figure out?
 
-Thanks,
+Hmm, that's a good question. I guess I figured it'd never overflow
+anyway, but it seems that it is actually possible. I'll change it.
 
-Larry
-
+johannes
 
