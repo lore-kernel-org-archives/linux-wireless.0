@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f47.google.com ([209.85.210.47]:46945 "EHLO
-	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149Ab3CRIiC convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757090Ab3CDOA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 04:38:02 -0400
-Received: by mail-da0-f47.google.com with SMTP id s35so1205303dak.20
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 01:38:01 -0700 (PDT)
-Date: Mon, 18 Mar 2013 01:37:52 -0700
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
-Cc: 664767@bugs.debian.org, Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Brcmsmac driver woes, possible regression?
-Message-ID: <20130318083752.GA6570@elie.Belkin> (sfid-20130318_093808_109214_B44DDFF7)
-References: <20130317144603.GA4850@stt008.linux.site>
- <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
- <20130317152428.GA4940@stt008.linux.site>
- <20130317175658.GA8181@elie.Belkin>
- <20130317182725.GA5811@stt008.linux.site>
- <20130317183344.GA8786@elie.Belkin>
- <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
+	Mon, 4 Mar 2013 09:00:56 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/11] iwlwifi: disable 8K A-MSDU by default
+Date: Mon,  4 Mar 2013 15:00:43 +0100
+Message-Id: <1362405651-26456-3-git-send-email-johannes@sipsolutions.net> (sfid-20130304_150100_299993_2BEC24A2)
+In-Reply-To: <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
+References: <1362405609.21028.12.camel@jlt4.sipsolutions.net>
+ <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camaleón wrote[1]:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> vermagic:       3.9.0-rc2 SMP mod_unload modversions 686
->
-> As soon as I load the brcmsmac module, N-M pop-ups and asks for the
-> secrets... constantly until it quits, that is, I cannot even connect
-> to the wifi AP with the Broadcom card, it's a bit frustrating :-(
->
-> (attaching full dmesg and syslog files)
+Supporting 8K A-MSDU means that we need to allocate order 1
+pages for every Rx packet. Even when there is no traffic.
+This adds stress on the memory manager. The handling of
+compound pages is also less trivial for the memory manager
+and not using them will make the allocation code run faster
+although I didn't really measure.
+Eric also pointed out that having huge buffers with little
+data in them is not very nice towards the TCP stack since
+the truesize of the skb is huge. This doesn't allow TCP
+to have a big Rx window.
+See https://patchwork.kernel.org/patch/2167711/ for details.
 
-Thanks.
+Note that very few vendors will actually send A-MSDU.
+Disable this feature by default.
 
-> I also downloaded Debian experimental kernel sources (3.8.2), do you
-> want me to compile and test this?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c       | 3 +--
+ drivers/net/wireless/iwlwifi/iwl-modparams.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-I see no reason to do that.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 6f228bb..fbfd2d1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1102,7 +1102,6 @@ void iwl_drv_stop(struct iwl_drv *drv)
+ 
+ /* shared module parameters */
+ struct iwl_mod_params iwlwifi_mod_params = {
+-	.amsdu_size_8K = 1,
+ 	.restart_fw = 1,
+ 	.plcp_check = true,
+ 	.bt_coex_active = true,
+@@ -1207,7 +1206,7 @@ MODULE_PARM_DESC(11n_disable,
+ 	"disable 11n functionality, bitmap: 1: full, 2: agg TX, 4: agg RX");
+ module_param_named(amsdu_size_8K, iwlwifi_mod_params.amsdu_size_8K,
+ 		   int, S_IRUGO);
+-MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
++MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size (default 0)");
+ module_param_named(fw_restart, iwlwifi_mod_params.restart_fw, int, S_IRUGO);
+ MODULE_PARM_DESC(fw_restart, "restart firmware in case of error");
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index e5e3a79..2c2a729 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -91,7 +91,7 @@ enum iwl_power_level {
+  * @sw_crypto: using hardware encryption, default = 0
+  * @disable_11n: disable 11n capabilities, default = 0,
+  *	use IWL_DISABLE_HT_* constants
+- * @amsdu_size_8K: enable 8K amsdu size, default = 1
++ * @amsdu_size_8K: enable 8K amsdu size, default = 0
+  * @restart_fw: restart firmware, default = 1
+  * @plcp_check: enable plcp health check, default = true
+  * @wd_disable: enable stuck queue check, default = 0
+-- 
+1.8.0
 
-Hm.
-Jonathan
-
-[1] http://bugs.debian.org/664767
