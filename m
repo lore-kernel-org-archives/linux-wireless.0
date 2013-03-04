@@ -1,84 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3433 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752312Ab3C0Oys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 10:54:48 -0400
-Message-ID: <5153082B.6080000@broadcom.com> (sfid-20130327_155452_311792_3536A4AA)
-Date: Wed, 27 Mar 2013 15:54:35 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"John W. Linville" <linville@redhat.com>,
-	"David Spinadel" <david.spinadel@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: P2P support in brcmfmac
-References: <5152DD47.2080501@broadcom.com>
- <20130327122216.GA2146@tuxdriver.com>
- <1364387698.8388.1.camel@jlt4.sipsolutions.net>
- <20130327124422.GB2146@tuxdriver.com>
- <1364388675.8388.5.camel@jlt4.sipsolutions.net>
- <51530267.5020705@broadcom.com>
- <1364395136.8388.9.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1364395136.8388.9.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:41855 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756992Ab3CDOA4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 09:00:56 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/11] iwlwifi: rename IWL_MAX_CMD_TFDS to IWL_MAX_CMD_TBS_PER_TFD
+Date: Mon,  4 Mar 2013 15:00:42 +0100
+Message-Id: <1362405651-26456-2-git-send-email-johannes@sipsolutions.net> (sfid-20130304_150059_039277_723E79FE)
+In-Reply-To: <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
+References: <1362405609.21028.12.camel@jlt4.sipsolutions.net>
+ <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2013 03:38 PM, Johannes Berg wrote:
-> On Wed, 2013-03-27 at 15:29 +0100, Arend van Spriel wrote:
-> 
->>> As I understand it, brcmfmac currently supports having a P2P device
->>> *netdev*, which is of (wireless) type STATION (presumably), which isn't
->>> something we want to support (well, I don't anyway, it's difficult to
->>> discover for applications).
->>
->> It is a bit more subtle. After the merge window since 3.9-rc1 brcmfmac
->> supports to have a P2P device *wireless dev* WITH a netdev associated as
->> the old wpa_supplicant needed a network interface. 
-> 
-> Oh, funky, I had no idea.
-> 
->> However, this
->> interface is only created when the driver is loaded with a module
->> parameter p2pon set to 1.
-> 
-> You could just remove the module parameter then?
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-It kind of depends what mix of kernel and wpa_supplicant an OEM or
-distro would select. There may be use-cases where they would need p2pon
-parameter to have P2P functionality.
+The IWL_MAX_CMD_TFDS name for this constant is wrong, the
+constant really indicates how many TBs we can use in the
+driver for a single command TFD, rename the constant and
+also add a comment explaining it.
 
->> So brcmfmac announces P2P_DEVICE support in wiphy information. This will
->> cause wpa_supplicant (with P2P device patches) to create a
->> *wireless_dev* interface of P2P_DEVICE type.
-> 
-> Right, but this wouldn't work because you don't support the interface
-> creation, so it would really just be an attempt to create it?
-> 
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h    | 12 ++++++++----
+ drivers/net/wireless/iwlwifi/pcie/tx.c      | 12 ++++++------
+ 3 files changed, 15 insertions(+), 11 deletions(-)
 
-Sure. Just thought it would be better to avoid the attempt.
-
->> The interim patches went in 3.9-rc1 so they end up in 3.9 without
->> nl80211 user-space support. I am now suggesting to add that nl80211
->> user-space support for 3.9 as well. As you indicated you do not consider
->> this as an exception to the bugfix rule, I will have to look what
->> happens when the new wpa_supplicant (with P2P device patches) tries to
->> use the 3.9-rc1 brcmfmac.
-> 
-> Or you could just remove the module parameter *and* advertisting the
-> P2P_DEVICE interface type, that would be a very small patch to "fix" the
-> API by disabling it for that kernel version. OTOH, I'm not sure if
-> that's a concern for you. For me, it wouldn't be a concern because we
-> mostly use compat-wireless anyway, but your situation might be
-> different.
-
-That is indeed what I guessed the patch should look like, which would
-make P2P unavailable for 3.9 regardless the wpa_supplicant version used.
-But indeed there is always compat-drivers aka. compat-wireless so I am
-not that concerned.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+index 10f0179..81aa91f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+@@ -363,7 +363,7 @@ TRACE_EVENT(iwlwifi_dev_hcmd,
+ 		__entry->flags = cmd->flags;
+ 		memcpy(__get_dynamic_array(hcmd), hdr, sizeof(*hdr));
+ 
+-		for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++		for (i = 0; i < IWL_MAX_CMD_TBS_PER_TFD; i++) {
+ 			if (!cmd->len[i])
+ 				continue;
+ 			memcpy((u8 *)__get_dynamic_array(hcmd) + offset,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 8c7bec6..058947f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -217,7 +217,11 @@ struct iwl_device_cmd {
+ 
+ #define TFD_MAX_PAYLOAD_SIZE (sizeof(struct iwl_device_cmd))
+ 
+-#define IWL_MAX_CMD_TFDS	2
++/*
++ * number of transfer buffers (fragments) per transmit frame descriptor;
++ * this is just the driver's idea, the hardware supports 20
++ */
++#define IWL_MAX_CMD_TBS_PER_TFD	2
+ 
+ /**
+  * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
+@@ -254,15 +258,15 @@ enum iwl_hcmd_dataflag {
+  * @id: id of the host command
+  */
+ struct iwl_host_cmd {
+-	const void *data[IWL_MAX_CMD_TFDS];
++	const void *data[IWL_MAX_CMD_TBS_PER_TFD];
+ 	struct iwl_rx_packet *resp_pkt;
+ 	unsigned long _rx_page_addr;
+ 	u32 _rx_page_order;
+ 	int handler_status;
+ 
+ 	u32 flags;
+-	u16 len[IWL_MAX_CMD_TFDS];
+-	u8 dataflags[IWL_MAX_CMD_TFDS];
++	u16 len[IWL_MAX_CMD_TBS_PER_TFD];
++	u8 dataflags[IWL_MAX_CMD_TBS_PER_TFD];
+ 	u8 id;
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 975492f..ff80a7e 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1146,16 +1146,16 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	bool had_nocopy = false;
+ 	int i;
+ 	u32 cmd_pos;
+-	const u8 *cmddata[IWL_MAX_CMD_TFDS];
+-	u16 cmdlen[IWL_MAX_CMD_TFDS];
++	const u8 *cmddata[IWL_MAX_CMD_TBS_PER_TFD];
++	u16 cmdlen[IWL_MAX_CMD_TBS_PER_TFD];
+ 
+ 	copy_size = sizeof(out_cmd->hdr);
+ 	cmd_size = sizeof(out_cmd->hdr);
+ 
+ 	/* need one for the header if the first is NOCOPY */
+-	BUILD_BUG_ON(IWL_MAX_CMD_TFDS > IWL_NUM_OF_TBS - 1);
++	BUILD_BUG_ON(IWL_MAX_CMD_TBS_PER_TFD > IWL_NUM_OF_TBS - 1);
+ 
+-	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++	for (i = 0; i < IWL_MAX_CMD_TBS_PER_TFD; i++) {
+ 		cmddata[i] = cmd->data[i];
+ 		cmdlen[i] = cmd->len[i];
+ 
+@@ -1250,7 +1250,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	/* and copy the data that needs to be copied */
+ 	cmd_pos = offsetof(struct iwl_device_cmd, payload);
+ 	copy_size = sizeof(out_cmd->hdr);
+-	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++	for (i = 0; i < IWL_MAX_CMD_TBS_PER_TFD; i++) {
+ 		int copy = 0;
+ 
+ 		if (!cmd->len)
+@@ -1319,7 +1319,7 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ 	iwl_pcie_txq_build_tfd(trans, txq, phys_addr, copy_size, 1);
+ 
+ 	/* map the remaining (adjusted) nocopy/dup fragments */
+-	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
++	for (i = 0; i < IWL_MAX_CMD_TBS_PER_TFD; i++) {
+ 		const void *data = cmddata[i];
+ 
+ 		if (!cmdlen[i])
+-- 
+1.8.0
 
