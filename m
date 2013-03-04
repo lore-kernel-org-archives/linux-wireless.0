@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:49004 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377Ab3CGRCC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 12:02:02 -0500
-Message-ID: <5138C806.5010309@lwfinger.net> (sfid-20130307_180210_122346_1374853D)
-Date: Thu, 07 Mar 2013 11:01:58 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:35527 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932198Ab3CDUWb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 15:22:31 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "mcgrof@do-not-panic.com" <mcgrof@do-not-panic.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 4 Mar 2013 12:19:05 -0800
+Subject: RE: [PATCH] regulatory: enable channels 52-144 for world roaming
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D8DA3D2@SC-VEXCH1.marvell.com> (sfid-20130304_212242_250662_0F451A0A)
+References: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Matt Chen <machen@suse.com>
-CC: Joe Perches <joe@perches.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, Jeffrey Cheung <jcheung@suse.com>,
-	Michal Marek <mmarek@suse.cz>
-Subject: Re: [RFC/RFT 00/27] Updates for the rtlwifi family of drivers
-References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net> <1361845357.2023.7.camel@joe-AO722> <512C264A.3000104@lwfinger.net> <CALx5=V_Y2=bZWXzc9uQkmTBAECeMLbnPU0VA56Wp2tNeBB3Dqw@mail.gmail.com>
-In-Reply-To: <CALx5=V_Y2=bZWXzc9uQkmTBAECeMLbnPU0VA56Wp2tNeBB3Dqw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2013 10:49 PM, Matt Chen wrote:
-> I tried and test the patches for rtl8188ee and rtl8192ce, so far are working
-> fine to me. :)
->
-> Acked-by: Chen, Chien-Chia <machen@suse.com <mailto:machen@suse.com>>
+Hi Johannes,
 
-Thanks for the update. I am still chasing system crashes related to CPU lockups 
-caused by spinlock contention. I take it that you have not seen these.
+[...]
 
-Larry
+> @@ -188,7 +188,11 @@ static const struct ieee80211_regdomain world_regdom = {
+>                          NL80211_RRF_PASSIVE_SCAN |
+>                          NL80211_RRF_NO_IBSS),
+> 
+> -		/* NB: 5260 MHz - 5700 MHz requires DFS */
+> +		/* IEEE 802.11a, channel 52..144 - DFS required */
+> +		REG_RULE(5760-10, 5720+10, 80, 6, 20,
 
+5260-10
+
+> +			NL80211_RRF_PASSIVE_SCAN |
+> +			NL80211_RRF_NO_IBSS |
+> +			NL80211_RRF_DFS),
+> 
+>  		/* IEEE 802.11a, channel 149..165 */
+>  		REG_RULE(5745-10, 5825+10, 80, 6, 20,
+
+Regards,
+Bing
 
