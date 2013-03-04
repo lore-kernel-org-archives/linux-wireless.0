@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1546 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752970Ab3CCLpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 06:45:52 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/13] brcmfmac: assure brcmf_txcomplete() is called in
- failure paths
-Date: Sun, 3 Mar 2013 12:45:30 +0100
-Message-ID: <1362311132-29561-12-git-send-email-arend@broadcom.com> (sfid-20130303_124556_390738_4E37F15B)
-In-Reply-To: <1362311132-29561-1-git-send-email-arend@broadcom.com>
-References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:43181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932198Ab3CDUoR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 15:44:17 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@do-not-panic.com, bzhao@marvell.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3] regulatory: enable channels 52-64 and 100-144 for world roaming
+Date: Mon,  4 Mar 2013 21:44:12 +0100
+Message-Id: <1362429852-9712-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_214421_363300_0F1EB626)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For transmit packets the function brcmf_txcomplete() must be
-called. This should be done as well when for some reason the
-transmit fails to assure proper tx post processing. This patch
-fixes the code paths in brcmf_usb_tx() that forgot to do so.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+If allowed in a country, these channels typically require DFS
+so mark them as such. Channel 144 is a bit special, it's coming
+into use now to allow more VHT 80 channels, but world roaming
+with passive scanning is acceptable anyway. It seems fairly
+unlikely that it'll be used as the control channel for a VHT
+AP, but it needs to be present to allow a full VHT connection
+to an AP that uses it as one of the secondary channels.
+
+Also enable VHT 160 on these channels, and also for channels
+36-48 to be able to use VHT 160 there.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |   29 ++++++++++++++----------
- 1 files changed, 17 insertions(+), 12 deletions(-)
+ net/wireless/reg.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 28f7764..a14e12f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -571,15 +571,17 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
- 	int ret;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index dee9ab4..618da84 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -184,11 +184,21 @@ static const struct ieee80211_regdomain world_regdom = {
+ 			NL80211_RRF_NO_IBSS |
+ 			NL80211_RRF_NO_OFDM),
+ 		/* IEEE 802.11a, channel 36..48 */
+-		REG_RULE(5180-10, 5240+10, 80, 6, 20,
++		REG_RULE(5180-10, 5240+10, 160, 6, 20,
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
  
- 	brcmf_dbg(USB, "Enter, skb=%p\n", skb);
--	if (devinfo->bus_pub.state != BRCMFMAC_USB_STATE_UP)
--		return -EIO;
-+	if (devinfo->bus_pub.state != BRCMFMAC_USB_STATE_UP) {
-+		ret = -EIO;
-+		goto fail;
-+	}
- 
- 	req = brcmf_usb_deq(devinfo, &devinfo->tx_freeq,
- 					&devinfo->tx_freecount);
- 	if (!req) {
--		brcmu_pkt_buf_free_skb(skb);
- 		brcmf_err("no req to send\n");
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto fail;
- 	}
- 
- 	req->skb = skb;
-@@ -592,18 +594,21 @@ static int brcmf_usb_tx(struct device *dev, struct sk_buff *skb)
- 	if (ret) {
- 		brcmf_err("brcmf_usb_tx usb_submit_urb FAILED\n");
- 		brcmf_usb_del_fromq(devinfo, req);
--		brcmu_pkt_buf_free_skb(req->skb);
- 		req->skb = NULL;
- 		brcmf_usb_enq(devinfo, &devinfo->tx_freeq, req,
--						&devinfo->tx_freecount);
--	} else {
--		if (devinfo->tx_freecount < devinfo->tx_low_watermark &&
--			!devinfo->tx_flowblock) {
--			brcmf_txflowblock(dev, true);
--			devinfo->tx_flowblock = true;
--		}
-+			      &devinfo->tx_freecount);
-+		goto fail;
- 	}
- 
-+	if (devinfo->tx_freecount < devinfo->tx_low_watermark &&
-+	    !devinfo->tx_flowblock) {
-+		brcmf_txflowblock(dev, true);
-+		devinfo->tx_flowblock = true;
-+	}
-+	return 0;
+-		/* NB: 5260 MHz - 5700 MHz requires DFS */
++		/* IEEE 802.11a, channel 52..64 - DFS required */
++		REG_RULE(5260-10, 5320+10, 160, 6, 20,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS |
++			NL80211_RRF_DFS),
 +
-+fail:
-+	brcmf_txcomplete(dev, skb, false);
- 	return ret;
- }
++		/* IEEE 802.11a, channel 100..144 - DFS required */
++		REG_RULE(5500-10, 5320+10, 160, 6, 20,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS |
++			NL80211_RRF_DFS),
  
+ 		/* IEEE 802.11a, channel 149..165 */
+ 		REG_RULE(5745-10, 5825+10, 80, 6, 20,
 -- 
-1.7.6
-
+1.8.0
 
