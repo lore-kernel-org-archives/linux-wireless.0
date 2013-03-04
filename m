@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49492 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932453Ab3CUPTx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 11:19:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] b43: use bcma_chipco_gpio_control()
-Date: Thu, 21 Mar 2013 16:19:45 +0100
-Message-Id: <1363879185-23809-1-git-send-email-hauke@hauke-m.de> (sfid-20130321_161956_758347_F5E4F524)
+Received: from he.sipsolutions.net ([78.46.109.217]:42265 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757546Ab3CDPsN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 10:48:13 -0500
+Message-ID: <1362412079.21028.34.camel@jlt4.sipsolutions.net> (sfid-20130304_164817_570620_EC082B02)
+Subject: Re: [RFC] P2P find offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 04 Mar 2013 16:47:59 +0100
+In-Reply-To: <3408094.SIuA27EmQ5@lx-vladimir>
+References: <3408094.SIuA27EmQ5@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this patch the same registers are written, but this access is now
-protected by a lock.
+On Wed, 2013-02-27 at 14:24 +0200, Vladimir Kondratiev wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/main.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+> Enable p2p find phase offload to the driver.
+> Add methods for the struct cfg80211_ops, like
+> 
+> 	int	(*start_p2p_find)(struct wiphy *wiphy,
+> 				  struct cfg80211_p2p_find_params *params);
+> 	void	(*stop_p2p_find)(struct wiphy *wiphy);
+> 
+> where struct cfg80211_p2p_find_params includes info elements
+> to be added for probe request and probe response frames;
+> social channels etc.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index c4d0cc5..ae4eeb3 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2780,9 +2780,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
- 	case B43_BUS_BCMA:
--		bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
--				(bcma_cc_read32(&dev->dev->bdev->bus->drv_cc,
--					BCMA_CC_GPIOCTL) & ~mask) | set);
-+		bcma_chipco_gpio_control(&dev->dev->bdev->bus->drv_cc, mask, set);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
-@@ -2807,8 +2805,7 @@ static void b43_gpio_cleanup(struct b43_wldev *dev)
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
- 	case B43_BUS_BCMA:
--		bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
--				0);
-+		bcma_chipco_gpio_control(&dev->dev->bdev->bus->drv_cc, ~0, 0);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
--- 
-1.7.10.4
+We had something like this before. I think you need to specify not the
+wiphy but a netdev though, to know what MAC address to use. In fact, not
+a netdev but a wdev, so it can work on P2P_Device type wdevs.
+
+Also, timings? Or is that left to the driver?
+
+> wpa_supplicant will call these methods through nl80211.
+> 
+> Driver responsible for toggling between search and listen states,
+> reporting probe request/response frames to the user space.
+> 
+> Driver/firmware may answer to the probe request frames on itself,
+> in this case probe requests are still reported.
+
+wpa_s will need to know whether or not it responded, unless you mandate
+that it must respond by itself -- not sure if you should do that though?
+
+> To satisfy requirements for 60GHz band, additional attribute 'pcp_resolution'
+> shall be added to the reported frames, indicating result of the PCP resolution.
+> This attribute carries result of PCP factor comparison between probe request
+> and response, as defined in the spec for 60GHz. It is enum having values
+> 'undefined', 'win' and 'lose'.
+
+?
+
+> For the 2.4GHz band devices, PCP resolution is not used and pcp_resolution
+> attribute set to 'undefined'
+
+No ... you'd just leave out the attribute instead of having a special
+undefined value.
+
+johannes
 
