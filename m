@@ -1,76 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout1.wanadoo.co.uk ([80.12.242.29]:37703 "EHLO
-	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932396Ab3CUNe7 (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40840 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932654Ab3CDWaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 09:34:59 -0400
-Date: Thu, 21 Mar 2013 14:34:56 +0100 (CET)
-From: nick@nhthomas.freeserve.co.uk
-Reply-To: nick@nhthomas.freeserve.co.uk
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <3255301.1161363872896882.JavaMail.www@wwinf3715> (sfid-20130321_143519_131720_9A8AFE27)
-In-Reply-To: <CAD2nsn1ep2HOZx55rGmbpgof-HWkMMeiEHSGBEqpe0gZzubbWg@mail.gmail.com>
-Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Mar 2013 17:30:11 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v4 2/7] mac80211: merge value scaling macros of minstrel_ht and minstrel
+Date: Mon,  4 Mar 2013 23:30:02 +0100
+Message-Id: <1362436208-75786-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_233032_668685_A593AB3E)
+In-Reply-To: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+Both minstrel versions use individual ways to scale up integer values
+to perform calculations. Merge minstrel_ht's scaling macros into
+minstrels header file and use them in both minstrel versions.
 
-What do you need to me to do on this?
-I see that function in the wmi.c file.
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel.c         | 9 ++++-----
+ net/mac80211/rc80211_minstrel.h         | 5 +++++
+ net/mac80211/rc80211_minstrel_debugfs.c | 6 +++---
+ net/mac80211/rc80211_minstrel_ht.h      | 5 -----
+ 4 files changed, 12 insertions(+), 13 deletions(-)
 
-Do you want me to add some debug printk's in there somewhere?
-
-Regards
-
-Nick
-
-> Message Received: Mar 21 2013, 11:42 AM
-> From: "Mohammed Shafi"
-> To: nick@nhthomas.freeserve.co.uk
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
->
-> On Wed, Mar 20, 2013 at 10:33 PM, wrote:
-> >
-> > Here is another example, taken from Wireshark.
-> > It's an ARP response, effectively saying IP address 192.168.0.107 is at 00:03:7f:20:50:59
-> >
-> > This is a message coming out of the wifi adaptor, and the above numbers are the IP address, and MAC address of the wifi device.
-> >
-> > 7f 20 50 59 00 24 00 03 7f 20 50 59 08 06 00 01
-> > 08 00 06 04 00 02 00 03 7f 20 50 59 c0 a8 00 07
-> > 20 cf 30 94 83 7b c0 a8 00 65
-> >
-> > What we see here is the Destination MAC address is 7f:20:50:59:00:24 (first 6 bytes).
-> > But that's wrong. It should be 20:cf:30:94:83:7b .
-> >
-> > The other parts look right though:
-> > 00:03:7f:20:50:59 is the MAC of the wifi device.
-> > c0 a8 00 65 is 192.168.0.101 which is the IP address of the destination.
-> > c0 a8 00 07 is the IP address of the wifi adaptor itself.
->
-> let us check in ath6kl_wmi_dix_2_dot3, that should give us some clue.
->
-> >
-> > So, where in the code is the first 6 bytes generated ?
-> >
-> >
-> > Regards
-> >
-> > Nick
->
->
->
-> --
-> thanks,
-> shafi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index d78f629..c9b9902 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -86,10 +86,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		if (!usecs)
+ 			usecs = 1000000;
+ 
+-		/* To avoid rounding issues, probabilities scale from 0 (0%)
+-		 * to 18000 (100%) */
+ 		if (mr->attempts) {
+-			mr->cur_prob = (mr->success * 18000) / mr->attempts;
++			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
+ 			mr->succ_hist += mr->success;
+ 			mr->att_hist += mr->attempts;
+ 			mr->probability = minstrel_ewma(mr->probability,
+@@ -105,7 +103,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 
+ 		/* Sample less often below the 10% chance of success.
+ 		 * Sample less often above the 95% chance of success. */
+-		if ((mr->probability > 17100) || (mr->probability < 1800)) {
++		if (mr->probability > MINSTREL_FRAC(95, 100) ||
++		    mr->probability < MINSTREL_FRAC(10, 100)) {
+ 			mr->adjusted_retry_count = mr->retry_count >> 1;
+ 			if (mr->adjusted_retry_count > 2)
+ 				mr->adjusted_retry_count = 2;
+@@ -300,7 +299,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	/* If we're not using MRR and the sampling rate already
+ 	 * has a probability of >95%, we shouldn't be attempting
+ 	 * to use it, as this only wastes precious airtime */
+-	if (!mrr && sample && (mi->r[ndx].probability > 17100))
++	if (!mrr && sample && (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
+ 		ndx = mi->max_tp_rate;
+ 
+ 	ar[0].idx = mi->r[ndx].rix;
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 98db93f..fda4a61 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -11,6 +11,11 @@
+ 
+ #define EWMA_LEVEL 75	/* ewma weighting factor [%] */
+ 
++/* scaled fraction values */
++#define MINSTREL_SCALE  16
++#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
++#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
++
+ /*
+  * Perform EWMA (Exponentially Weighted Moving Average) calculation
+   */
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index d5a5622..c0ebfac 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -79,9 +79,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
+ 
+-		tp = mr->cur_tp / ((18000 << 10) / 96);
+-		prob = mr->cur_prob / 18;
+-		eprob = mr->probability / 18;
++		tp = MINSTREL_TRUNC(mr->cur_tp / 10);
++		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
++		eprob = MINSTREL_TRUNC(mr->probability * 1000);
+ 
+ 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
+ 				"%3u(%3u)   %8llu    %8llu\n",
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index 302dbd5..4ee5999 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -16,11 +16,6 @@
+ #define MINSTREL_MAX_STREAMS	3
+ #define MINSTREL_STREAM_GROUPS	4
+ 
+-/* scaled fraction values */
+-#define MINSTREL_SCALE	16
+-#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
+-#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
+-
+ #define MCS_GROUP_RATES	8
+ 
+ struct mcs_group {
+-- 
+1.8.1.1
 
