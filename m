@@ -1,103 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:46271 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518Ab3CBEJO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 23:09:14 -0500
-Date: Sat, 2 Mar 2013 05:09:00 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: HT-PHY: make it BCMA-only
-Message-ID: <20130302050900.6e768a3e@milhouse> (sfid-20130302_050919_454580_4A07E83D)
-In-Reply-To: <1362186865-20539-1-git-send-email-zajec5@gmail.com>
-References: <1362186865-20539-1-git-send-email-zajec5@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RW_TeJah/zgwbHK13UZwOSs"; protocol="application/pgp-signature"
+Received: from s72.web-hosting.com ([198.187.29.21]:48591 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754728Ab3CDHOd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 02:14:33 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] ath9k_hw: Use helper functions to simplify HW reset
+Date: Mon,  4 Mar 2013 12:42:53 +0530
+Message-Id: <1362381175-9634-2-git-send-email-sujith@msujith.org> (sfid-20130304_081443_103764_FC038EDD)
+In-Reply-To: <1362381175-9634-1-git-send-email-sujith@msujith.org>
+References: <1362381175-9634-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/RW_TeJah/zgwbHK13UZwOSs
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On Sat,  2 Mar 2013 02:14:25 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 182 ++++++++++++++++++++----------------
+ 1 file changed, 103 insertions(+), 79 deletions(-)
 
-> HT-PHY was found only on BCM4331 which is a BCMA-based chipset. This is
-> reallly unlikely we will ever see HT-PHY on SSB thus make the whole code
-> BCMA specific. This will allow us to call various BCMA-specific
-> functions directly (without extra checks).
->=20
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
-> ---
->  drivers/net/wireless/b43/Kconfig  |    2 +-
->  drivers/net/wireless/b43/phy_ht.c |    5 +++++
->  2 files changed, 6 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/=
-Kconfig
-> index 7a28d21..09d315d 100644
-> --- a/drivers/net/wireless/b43/Kconfig
-> +++ b/drivers/net/wireless/b43/Kconfig
-> @@ -131,7 +131,7 @@ config B43_PHY_LP
-> =20
->  config B43_PHY_HT
->  	bool "Support for HT-PHY (high throughput) devices (EXPERIMENTAL)"
-> -	depends on B43 && EXPERIMENTAL
-> +	depends on B43 && B43_BCMA && EXPERIMENTAL
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index fd4b7c5..47c073c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1669,6 +1669,104 @@ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_check_alive);
+ 
++static void ath9k_hw_init_mfp(struct ath_hw *ah)
++{
++	/* Setup MFP options for CCMP */
++	if (AR_SREV_9280_20_OR_LATER(ah)) {
++		/* Mask Retry(b11), PwrMgt(b12), MoreData(b13) to 0 in mgmt
++		 * frames when constructing CCMP AAD. */
++		REG_RMW_FIELD(ah, AR_AES_MUTE_MASK1, AR_AES_MUTE_MASK1_FC_MGMT,
++			      0xc7ff);
++		ah->sw_mgmt_crypto = false;
++	} else if (AR_SREV_9160_10_OR_LATER(ah)) {
++		/* Disable hardware crypto for management frames */
++		REG_CLR_BIT(ah, AR_PCU_MISC_MODE2,
++			    AR_PCU_MISC_MODE2_MGMT_CRYPTO_ENABLE);
++		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
++			    AR_PCU_MISC_MODE2_NO_CRYPTO_FOR_NON_DATA_PKT);
++		ah->sw_mgmt_crypto = true;
++	} else {
++		ah->sw_mgmt_crypto = true;
++	}
++}
++
++static void ath9k_hw_reset_opmode(struct ath_hw *ah,
++				  u32 macStaId1, u32 saveDefAntenna)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	ENABLE_REGWRITE_BUFFER(ah);
++
++	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
++	REG_WRITE(ah, AR_STA_ID1, get_unaligned_le16(common->macaddr + 4)
++		  | macStaId1
++		  | AR_STA_ID1_RTS_USE_DEF
++		  | (ah->config.ack_6mb ? AR_STA_ID1_ACKCTS_6MB : 0)
++		  | ah->sta_id1_defaults);
++	ath_hw_setbssidmask(common);
++	REG_WRITE(ah, AR_DEF_ANTENNA, saveDefAntenna);
++	ath9k_hw_write_associd(ah);
++	REG_WRITE(ah, AR_ISR, ~0);
++	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
++
++	REGWRITE_BUFFER_FLUSH(ah);
++
++	ath9k_hw_set_operating_mode(ah, ah->opmode);
++}
++
++static void ath9k_hw_init_queues(struct ath_hw *ah)
++{
++	int i;
++
++	ENABLE_REGWRITE_BUFFER(ah);
++
++	for (i = 0; i < AR_NUM_DCU; i++)
++		REG_WRITE(ah, AR_DQCUMASK(i), 1 << i);
++
++	REGWRITE_BUFFER_FLUSH(ah);
++
++	ah->intr_txqs = 0;
++	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
++		ath9k_hw_resettxqueue(ah, i);
++}
++
++/*
++ * For big endian systems turn on swapping for descriptors
++ */
++static void ath9k_hw_init_desc(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (AR_SREV_9100(ah)) {
++		u32 mask;
++		mask = REG_READ(ah, AR_CFG);
++		if (mask & (AR_CFG_SWRB | AR_CFG_SWTB | AR_CFG_SWRG)) {
++			ath_dbg(common, RESET, "CFG Byte Swap Set 0x%x\n",
++				mask);
++		} else {
++			mask = INIT_CONFIG_STATUS | AR_CFG_SWRB | AR_CFG_SWTB;
++			REG_WRITE(ah, AR_CFG, mask);
++			ath_dbg(common, RESET, "Setting CFG 0x%x\n",
++				REG_READ(ah, AR_CFG));
++		}
++	} else {
++		if (common->bus_ops->ath_bus_type == ATH_USB) {
++			/* Configure AR9271 target WLAN */
++			if (AR_SREV_9271(ah))
++				REG_WRITE(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB);
++			else
++				REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
++		}
++#ifdef __BIG_ENDIAN
++		else if (AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
++			 AR_SREV_9550(ah))
++			REG_RMW(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB, 0);
++		else
++			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
++#endif
++	}
++}
++
+ /*
+  * Fast channel change:
+  * (Change synthesizer based on channel freq without resetting chip)
+@@ -1746,7 +1844,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
+ 	u64 tsf = 0;
+-	int i, r;
++	int r;
+ 	bool start_mci_reset = false;
+ 	bool save_fullsleep = ah->chip_fullsleep;
+ 
+@@ -1851,22 +1949,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		ath9k_hw_settsf64(ah, tsf);
+ 	}
+ 
+-	/* Setup MFP options for CCMP */
+-	if (AR_SREV_9280_20_OR_LATER(ah)) {
+-		/* Mask Retry(b11), PwrMgt(b12), MoreData(b13) to 0 in mgmt
+-		 * frames when constructing CCMP AAD. */
+-		REG_RMW_FIELD(ah, AR_AES_MUTE_MASK1, AR_AES_MUTE_MASK1_FC_MGMT,
+-			      0xc7ff);
+-		ah->sw_mgmt_crypto = false;
+-	} else if (AR_SREV_9160_10_OR_LATER(ah)) {
+-		/* Disable hardware crypto for management frames */
+-		REG_CLR_BIT(ah, AR_PCU_MISC_MODE2,
+-			    AR_PCU_MISC_MODE2_MGMT_CRYPTO_ENABLE);
+-		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
+-			    AR_PCU_MISC_MODE2_NO_CRYPTO_FOR_NON_DATA_PKT);
+-		ah->sw_mgmt_crypto = true;
+-	} else
+-		ah->sw_mgmt_crypto = true;
++	ath9k_hw_init_mfp(ah);
+ 
+ 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
+ 		ath9k_hw_set_delta_slope(ah, chan);
+@@ -1874,24 +1957,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_spur_mitigate_freq(ah, chan);
+ 	ah->eep_ops->set_board_values(ah, chan);
+ 
+-	ENABLE_REGWRITE_BUFFER(ah);
+-
+-	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
+-	REG_WRITE(ah, AR_STA_ID1, get_unaligned_le16(common->macaddr + 4)
+-		  | macStaId1
+-		  | AR_STA_ID1_RTS_USE_DEF
+-		  | (ah->config.
+-		     ack_6mb ? AR_STA_ID1_ACKCTS_6MB : 0)
+-		  | ah->sta_id1_defaults);
+-	ath_hw_setbssidmask(common);
+-	REG_WRITE(ah, AR_DEF_ANTENNA, saveDefAntenna);
+-	ath9k_hw_write_associd(ah);
+-	REG_WRITE(ah, AR_ISR, ~0);
+-	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
+-
+-	REGWRITE_BUFFER_FLUSH(ah);
+-
+-	ath9k_hw_set_operating_mode(ah, ah->opmode);
++	ath9k_hw_reset_opmode(ah, macStaId1, saveDefAntenna);
+ 
+ 	r = ath9k_hw_rf_set_freq(ah, chan);
+ 	if (r)
+@@ -1899,17 +1965,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_set_clockrate(ah);
+ 
+-	ENABLE_REGWRITE_BUFFER(ah);
+-
+-	for (i = 0; i < AR_NUM_DCU; i++)
+-		REG_WRITE(ah, AR_DQCUMASK(i), 1 << i);
+-
+-	REGWRITE_BUFFER_FLUSH(ah);
+-
+-	ah->intr_txqs = 0;
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
+-		ath9k_hw_resettxqueue(ah, i);
+-
++	ath9k_hw_init_queues(ah);
+ 	ath9k_hw_init_interrupt_masks(ah, ah->opmode);
+ 	ath9k_hw_ani_cache_ini_regs(ah);
+ 	ath9k_hw_init_qos(ah);
+@@ -1964,38 +2020,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ 
+-	/*
+-	 * For big endian systems turn on swapping for descriptors
+-	 */
+-	if (AR_SREV_9100(ah)) {
+-		u32 mask;
+-		mask = REG_READ(ah, AR_CFG);
+-		if (mask & (AR_CFG_SWRB | AR_CFG_SWTB | AR_CFG_SWRG)) {
+-			ath_dbg(common, RESET, "CFG Byte Swap Set 0x%x\n",
+-				mask);
+-		} else {
+-			mask =
+-				INIT_CONFIG_STATUS | AR_CFG_SWRB | AR_CFG_SWTB;
+-			REG_WRITE(ah, AR_CFG, mask);
+-			ath_dbg(common, RESET, "Setting CFG 0x%x\n",
+-				REG_READ(ah, AR_CFG));
+-		}
+-	} else {
+-		if (common->bus_ops->ath_bus_type == ATH_USB) {
+-			/* Configure AR9271 target WLAN */
+-			if (AR_SREV_9271(ah))
+-				REG_WRITE(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB);
+-			else
+-				REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
+-		}
+-#ifdef __BIG_ENDIAN
+-		else if (AR_SREV_9330(ah) || AR_SREV_9340(ah) ||
+-			 AR_SREV_9550(ah))
+-			REG_RMW(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB, 0);
+-		else
+-			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
+-#endif
+-	}
++	ath9k_hw_init_desc(ah);
+ 
+ 	if (ath9k_hw_btcoex_is_enabled(ah))
+ 		ath9k_hw_btcoex_enable(ah);
+@@ -2008,7 +2033,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ar9003_hw_bb_watchdog_config(ah);
+-
+ 		ar9003_hw_disable_phy_restart(ah);
+ 	}
+ 
+-- 
+1.8.1.5
 
-Makes sense.
-What about removing EXPERIMENTAL? This flag is mostly useless these days.
-
->  	---help---
->  	  Support for the HT-PHY.
-> =20
-> diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43=
-/phy_ht.c
-> index 7416c5e..3719a88 100644
-> --- a/drivers/net/wireless/b43/phy_ht.c
-> +++ b/drivers/net/wireless/b43/phy_ht.c
-> @@ -346,6 +346,11 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
->  	u16 tmp;
->  	u16 clip_state[3];
-> =20
-> +	if (dev->dev->bus_type !=3D B43_BUS_BCMA) {
-> +		b43err(dev->wl, "HT-PHY is supported only on BCMA bus!\n");
-> +		return -EOPNOTSUPP;
-> +	}
-> +
->  	b43_phy_ht_tables_init(dev);
-> =20
->  	b43_phy_mask(dev, 0x0be, ~0x2);
-
-
-
---=20
-Michael
-
---Sig_/RW_TeJah/zgwbHK13UZwOSs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRMXtcAAoJEPUyvh2QjYsOd7MQAIuNhRVD3tmQXzWTEARgC7ZG
-WTB4MDSYMAbNVUHH763znojGaXYrzBDUxybXHm6xcSEaFvw7nBvjADHesE6aq3Ve
-vJvV58aIAfi6rTwEPnKiuyKSBnMmYhedGJWK1jRM048jkiumHc1C74btY3anmrwy
-/jS2vL5/BsFa4QgJckdiTNvhxB5G3s2g2lXp7rN3asJlxOSI54iJw0zCoN3MAd+A
-IlIIk69+GKjXrBFiAqhugZntnNI++ODoF8bo6KHl+VZy+GKdu8Ex/1TwPDrrX/LF
-5uMJr9tMdhjuNg0/UPZpiiMisAB4+M8GLkbmq0NZE8D8JaZV//Os0HhGUm6SMBmq
-KtOeoMCz4M0DFx1Yi6jQhHIZXO8cQ5OPJa1WiDGK1OEyXXe1uKURt2W/dAzbtxxm
-T1Lu9Qom34TpYliihnN2fGkbfcKTsfR6CQqV/iIQ8tb+DTqzEdJYStgKdVNMbrys
-QGLb8nvsqkV8G6eTYHqIEkTjatDigUBt/BBw1UtiiCRnEmpC+YQod15vh/na+xiA
-Q+lLYZoORCShqj/kYjJ4o1lzlT1LMtH7dskaVcz1wwWq3y8ae0/5vFhsIpiMFf8x
-xRoUGCVRmM3k16ur/JkAC/CfE/ZnBrVfp4I/GKRnFMSpk0Zf5yCeyXGV128tUIVm
-QTb3jOKijCtGwjH1skjP
-=VbtD
------END PGP SIGNATURE-----
-
---Sig_/RW_TeJah/zgwbHK13UZwOSs--
