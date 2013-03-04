@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55609 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab3CXAsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:48:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40854 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932818Ab3CDWaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 17:30:13 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 09/15] brcmsmac: write beacon period to hardware
-Date: Sun, 24 Mar 2013 01:45:57 +0100
-Message-Id: <1364085963-25940-10-git-send-email-hauke@hauke-m.de> (sfid-20130324_014823_762569_FD586531)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v4 6/7] mac80211: treat minstrel success probabilities below 10% as implausible
+Date: Mon,  4 Mar 2013 23:30:06 +0100
+Message-Id: <1362436208-75786-7-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_233025_093884_D48DFEAF)
+In-Reply-To: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make brcms_c_set_beacon_period() write the beacon period to the
-hardware if a new one is set.
+Based on minstrel_ht this patch treats success probabilities below 10% as
+implausible values for throughput calculation in minstrel's statistics.
+Current throughput per rate with such a low success probability is reset
+to 0 MBit/s.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ net/mac80211/rc80211_minstrel.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 7e19295..4ffb0c6 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -5551,10 +5551,20 @@ static void brcms_c_time_unlock(struct brcms_c_info *wlc)
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 5c0f532..f8d99a5 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -92,7 +92,6 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 			mr->probability = minstrel_ewma(mr->probability,
+ 							mr->cur_prob,
+ 							EWMA_LEVEL);
+-			mr->cur_tp = mr->probability * (1000000 / usecs);
+ 		} else
+ 			mr->sample_skipped++;
  
- int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
- {
-+	u32 bcnint_us;
-+
- 	if (period == 0)
- 		return -EINVAL;
+@@ -101,6 +100,12 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		mr->success = 0;
+ 		mr->attempts = 0;
  
- 	wlc->default_bss->beacon_period = period;
++		/* Update throughput per rate, reset thr. below 10% success */
++		if (mr->probability < MINSTREL_FRAC(10, 100))
++			mr->cur_tp = 0;
++		else
++			mr->cur_tp = mr->probability * (1000000 / usecs);
 +
-+	bcnint_us = period << 10;
-+	brcms_c_time_lock(wlc);
-+	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfprep),
-+		     (bcnint_us << CFPREP_CBI_SHIFT));
-+	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfpstart), bcnint_us);
-+	brcms_c_time_unlock(wlc);
-+
- 	return 0;
- }
- 
+ 		/* Sample less often below the 10% chance of success.
+ 		 * Sample less often above the 95% chance of success. */
+ 		if (mr->probability > MINSTREL_FRAC(95, 100) ||
 -- 
-1.7.10.4
+1.8.1.1
 
