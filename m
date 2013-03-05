@@ -1,205 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:39646 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755845Ab3CYDHT (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:47589 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753742Ab3CEA2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 23:07:19 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz, zhiyuan_yang@realsil.com.cn, page_he@realsil.com.cn
-Subject: [PATCH 01/25] rtlwifi: Modify the master header for for updates to vendor version 2013.02.07
-Date: Sun, 24 Mar 2013 22:06:33 -0500
-Message-Id: <1364180817-8028-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130325_041006_997371_49BDE574)
-In-Reply-To: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 4 Mar 2013 19:28:36 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 6/7] mwifiex: add "ethtool wol" command support
+Date: Mon,  4 Mar 2013 16:27:58 -0800
+Message-Id: <1362443279-6064-7-git-send-email-bzhao@marvell.com> (sfid-20130305_012839_059636_F0D35006)
+In-Reply-To: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
+References: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These changes add the new variables for P2P and modify the various struct
-definitions for other new features.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
-Cc: zhiyuan_yang@realsil.com.cn
-Cc: page_he@realsil.com.cn
+Host sleep wakeup condition is configured using this command.
+
+Supports Wake-on: pumb
+
+For examples:
+
+wake-on any unicast packets:
+ethtool -s mlan0 wol u
+
+wake-on multicast/broadcast packet:
+ethtool -s mlan0 wol mb
+
+wake-on unicast packets and MAC events:
+ethtool -s mlan0 wol pu
+
+wake-on unicast/multicast/broadcast packets and MAC events:
+ethtool -s mlan0 wol pmbu
+
+disable all wake-on options:
+ethtool -s mlan0 wol d
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/wifi.h | 80 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 79 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/Makefile   |    1 +
+ drivers/net/wireless/mwifiex/cfg80211.c |    1 +
+ drivers/net/wireless/mwifiex/ethtool.c  |   70 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/fw.h       |    4 ++
+ drivers/net/wireless/mwifiex/main.h     |    2 +
+ 5 files changed, 78 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/mwifiex/ethtool.c
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index c3eff32..8098038 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -278,7 +278,10 @@ enum hw_variables {
- 	HW_VAR_SET_RPWM,
- 	HW_VAR_H2C_FW_PWRMODE,
- 	HW_VAR_H2C_FW_JOINBSSRPT,
-+	HW_VAR_H2C_FW_P2P_PS_OFFLOAD,
- 	HW_VAR_FW_PSMODE_STATUS,
-+	HW_VAR_RESUME_CLK_ON,
-+	HW_VAR_FW_LPS_ACTION,
- 	HW_VAR_1X1_RECV_COMBINE,
- 	HW_VAR_STOP_SEND_BEACON,
- 	HW_VAR_TSF_TIMER,
-@@ -461,6 +464,7 @@ enum rtl_var_map {
- 	EFUSE_MAX_SECTION_MAP,
- 	EFUSE_REAL_CONTENT_SIZE,
- 	EFUSE_OOB_PROTECT_BYTES_LEN,
-+	EFUSE_ACCESS,
+diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
+index 97b245c..ecf2846 100644
+--- a/drivers/net/wireless/mwifiex/Makefile
++++ b/drivers/net/wireless/mwifiex/Makefile
+@@ -39,6 +39,7 @@ mwifiex-y += sta_tx.o
+ mwifiex-y += sta_rx.o
+ mwifiex-y += uap_txrx.o
+ mwifiex-y += cfg80211.o
++mwifiex-y += ethtool.o
+ mwifiex-$(CONFIG_DEBUG_FS) += debugfs.o
+ obj-$(CONFIG_MWIFIEX) += mwifiex.o
  
- 	/*CAM map */
- 	RWCAM,
-@@ -826,7 +830,64 @@ struct rtl_rfkill {
- 	bool rfkill_state;	/*0 is off, 1 is on */
- };
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index a44023a..45790fa 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2235,6 +2235,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
+ 	dev->watchdog_timeo = MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT;
+ 	dev->hard_header_len += MWIFIEX_MIN_DATA_HEADER_LEN;
++	dev->ethtool_ops = &mwifiex_ethtool_ops;
  
--#define IQK_MATRIX_REG_NUM	8
-+/*for P2P PS**/
-+#define	P2P_MAX_NOA_NUM		2
+ 	mdev_priv = netdev_priv(dev);
+ 	*((unsigned long *) mdev_priv) = (unsigned long) priv;
+diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
+new file mode 100644
+index 0000000..bfb3990
+--- /dev/null
++++ b/drivers/net/wireless/mwifiex/ethtool.c
+@@ -0,0 +1,70 @@
++/*
++ * Marvell Wireless LAN device driver: ethtool
++ *
++ * Copyright (C) 2013, Marvell International Ltd.
++ *
++ * This software file (the "File") is distributed by Marvell International
++ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
++ * (the "License").  You may use, redistribute and/or modify this File in
++ * accordance with the terms and conditions of the License, a copy of which
++ * is available by writing to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA or on the
++ * worldwide web at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
++ *
++ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
++ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
++ * this warranty disclaimer.
++ */
 +
-+enum p2p_role {
-+	P2P_ROLE_DISABLE = 0,
-+	P2P_ROLE_DEVICE = 1,
-+	P2P_ROLE_CLIENT = 2,
-+	P2P_ROLE_GO = 3
++#include "main.h"
++
++static void mwifiex_ethtool_get_wol(struct net_device *dev,
++				    struct ethtool_wolinfo *wol)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	u32 conditions = le32_to_cpu(priv->adapter->hs_cfg.conditions);
++
++	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
++
++	if (conditions == HS_CFG_COND_DEF)
++		return;
++
++	if (conditions & HS_CFG_COND_UNICAST_DATA)
++		wol->wolopts |= WAKE_UCAST;
++	if (conditions & HS_CFG_COND_MULTICAST_DATA)
++		wol->wolopts |= WAKE_MCAST;
++	if (conditions & HS_CFG_COND_BROADCAST_DATA)
++		wol->wolopts |= WAKE_BCAST;
++	if (conditions & HS_CFG_COND_MAC_EVENT)
++		wol->wolopts |= WAKE_PHY;
++}
++
++static int mwifiex_ethtool_set_wol(struct net_device *dev,
++				   struct ethtool_wolinfo *wol)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	u32 conditions = 0;
++
++	if (wol->wolopts & ~(WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY))
++		return -EOPNOTSUPP;
++
++	if (wol->wolopts & WAKE_UCAST)
++		conditions |= HS_CFG_COND_UNICAST_DATA;
++	if (wol->wolopts & WAKE_MCAST)
++		conditions |= HS_CFG_COND_MULTICAST_DATA;
++	if (wol->wolopts & WAKE_BCAST)
++		conditions |= HS_CFG_COND_BROADCAST_DATA;
++	if (wol->wolopts & WAKE_PHY)
++		conditions |= HS_CFG_COND_MAC_EVENT;
++	if (wol->wolopts == 0)
++		conditions |= HS_CFG_COND_DEF;
++	priv->adapter->hs_cfg.conditions = cpu_to_le32(conditions);
++
++	return 0;
++}
++
++const struct ethtool_ops mwifiex_ethtool_ops = {
++	.get_wol = mwifiex_ethtool_get_wol,
++	.set_wol = mwifiex_ethtool_set_wol,
 +};
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 270685e..5a5d066 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -380,6 +380,10 @@ enum P2P_MODES {
+ #define HS_CFG_COND_DEF			0x00000000
+ #define HS_CFG_GPIO_DEF			0xff
+ #define HS_CFG_GAP_DEF			0
++#define HS_CFG_COND_BROADCAST_DATA	0x00000001
++#define HS_CFG_COND_UNICAST_DATA	0x00000002
++#define HS_CFG_COND_MAC_EVENT		0x00000004
++#define HS_CFG_COND_MULTICAST_DATA	0x00000008
+ 
+ #define MWIFIEX_TIMEOUT_FOR_AP_RESP		0xfffc
+ #define MWIFIEX_STATUS_CODE_AUTH_TIMEOUT	2
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 553adfb..989e05e 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1103,6 +1103,8 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
+ u8 *mwifiex_11d_code_2_region(u8 code);
+ 
++extern const struct ethtool_ops mwifiex_ethtool_ops;
 +
-+enum p2p_ps_state {
-+	P2P_PS_DISABLE = 0,
-+	P2P_PS_ENABLE = 1,
-+	P2P_PS_SCAN = 2,
-+	P2P_PS_SCAN_DONE = 3,
-+	P2P_PS_ALLSTASLEEP = 4, /* for P2P GO */
-+};
-+
-+enum p2p_ps_mode {
-+	P2P_PS_NONE = 0,
-+	P2P_PS_CTWINDOW = 1,
-+	P2P_PS_NOA	 = 2,
-+	P2P_PS_MIX = 3, /* CTWindow and NoA */
-+};
-+
-+struct rtl_p2p_ps_info {
-+	enum p2p_ps_mode p2p_ps_mode; /* indicate p2p ps mode */
-+	enum p2p_ps_state p2p_ps_state; /*  indicate p2p ps state */
-+	u8 noa_index; /*  Identifies instance of Notice of Absence timing. */
-+	/*  Client traffic window. A period of time in TU after TBTT. */
-+	u8 ctwindow;
-+	u8 opp_ps; /*  opportunistic power save. */
-+	u8 noa_num; /*  number of NoA descriptor in P2P IE. */
-+	/*  Count for owner, Type of client. */
-+	u8 noa_count_type[P2P_MAX_NOA_NUM];
-+	/*  Max duration for owner, preferred or min acceptable duration
-+	 * for client.
-+	 */
-+	u32 noa_duration[P2P_MAX_NOA_NUM];
-+	/*  Length of interval for owner, preferred or max acceptable intervali
-+	 * of client.
-+	 */
-+	u32 noa_interval[P2P_MAX_NOA_NUM];
-+	/*  schedule in terms of the lower 4 bytes of the TSF timer. */
-+	u32 noa_start_time[P2P_MAX_NOA_NUM];
-+};
-+
-+struct p2p_ps_offload_t {
-+	u8 offload_en:1;
-+	u8 role:1; /* 1: Owner, 0: Client */
-+	u8 ctwindow_en:1;
-+	u8 noa0_en:1;
-+	u8 noa1_en:1;
-+	u8 allstasleep:1;
-+	u8 discovery:1;
-+	u8 reserved:1;
-+};
-+ #define IQK_MATRIX_REG_NUM	8
- #define IQK_MATRIX_SETTINGS_NUM	(1 + 24 + 21)
- struct iqk_matrix_regs {
- 	bool iqk_done;
-@@ -954,6 +1015,7 @@ struct rtl_sta_info {
- 	u8 ratr_index;
- 	u8 wireless_mode;
- 	u8 mimo_ps;
-+	u8 mac_addr[ETH_ALEN];
- 	struct rtl_tid_data tids[MAX_TID_COUNT];
- 
- 	/* just used for ap adhoc or mesh*/
-@@ -1005,6 +1067,8 @@ struct rtl_mac {
- 	int n_bitrates;
- 
- 	bool offchan_delay;
-+	u8 p2p;	/*using p2p role*/
-+	bool p2p_in_use;
- 
- 	/*filters */
- 	u32 rx_conf;
-@@ -1014,6 +1078,7 @@ struct rtl_mac {
- 
- 	bool act_scanning;
- 	u8 cnt_after_linked;
-+	bool skip_scan;
- 
- 	/* early mode */
- 	/* skb wait queue */
-@@ -1341,6 +1406,7 @@ struct rtl_ps_ctl {
- 	bool fw_current_inpsmode;
- 	u8 reg_max_lps_awakeintvl;
- 	bool report_linked;
-+	bool low_power_enable;/*for 32k*/
- 
- 	/*for IPS */
- 	bool inactiveps;
-@@ -1373,6 +1439,11 @@ struct rtl_ps_ctl {
- 	unsigned long last_beacon;
- 	unsigned long last_action;
- 	unsigned long last_slept;
-+
-+	/*For P2P PS */
-+	struct rtl_p2p_ps_info p2p_ps_info;
-+	u8 pwr_mode;
-+	u8 smart_ps;
- };
- 
- struct rtl_stats {
-@@ -1670,6 +1741,9 @@ struct rtl_locks {
- 	spinlock_t entry_list_lock;
- 	spinlock_t usb_lock;
- 
-+	/*FW clock change */
-+	spinlock_t fw_ps_lock;
-+
- 	/*Dual mac*/
- 	spinlock_t cck_and_rw_pagea_lock;
- 
-@@ -1683,6 +1757,8 @@ struct rtl_works {
- 	/*timer */
- 	struct timer_list watchdog_timer;
- 	struct timer_list dualmac_easyconcurrent_retrytimer;
-+	struct timer_list fw_clockoff_timer;
-+	struct timer_list fast_antenna_training_timer;
- 
- 	/*task */
- 	struct tasklet_struct irq_tasklet;
-@@ -1696,6 +1772,7 @@ struct rtl_works {
- 	/* For SW LPS */
- 	struct delayed_work ps_work;
- 	struct delayed_work ps_rfon_wq;
-+	struct delayed_work fwevt_wq;
- 
- 	struct work_struct lps_leave_work;
- };
-@@ -1802,6 +1879,7 @@ struct rtl_global_var {
- };
- 
- struct rtl_priv {
-+	struct ieee80211_hw *hw;
- 	struct completion firmware_loading_complete;
- 	struct list_head list;
- 	struct rtl_priv *buddy_priv;
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
 -- 
-1.8.1.4
+1.7.0.2
 
