@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:55260 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755186Ab3CMKEF (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:54417 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758759Ab3CEENJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 06:04:05 -0400
-Message-ID: <1363169039.3137.186.camel@x61.thuisdomein> (sfid-20130313_110409_418081_4BF045CE)
-Subject: Re: rt2x00: Kconfig symbols RALINK_RT288X and RALINK_RT305X
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	John Crispin <blogic@openwrt.org>
-Date: Wed, 13 Mar 2013 11:03:59 +0100
-In-Reply-To: <CAOiHx=n4a26z=PS02E2KjD2Y3Pp0P0x-5Ns6WRc-WScNF=EO_Q@mail.gmail.com>
-References: <1363165170.3137.182.camel@x61.thuisdomein>
-	 <CAOiHx=n4a26z=PS02E2KjD2Y3Pp0P0x-5Ns6WRc-WScNF=EO_Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Mar 2013 23:13:09 -0500
+Received: by mail-ob0-f178.google.com with SMTP id wd20so2375880obb.37
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 20:13:07 -0800 (PST)
+Message-ID: <513570D0.4070302@lwfinger.net> (sfid-20130305_051313_561214_7DA3237F)
+Date: Mon, 04 Mar 2013 22:13:04 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+Subject: WARNING from net/wireless/mlme.c
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-13 at 10:51 +0100, Jonas Gorski wrote:
-> On 13 March 2013 09:59, Paul Bolle <pebolle@tiscali.nl> wrote:
-> > 3) What is the current status of the (out of tree) code that adds
-> > RALINK_RT288X and RALINK_RT305X?
-> 
-> They are now present in 3.9-rc1, see a0b0197c (more specifically
-> 85639910..d3d2b420) :)
+With 3.9-rc1 from wireless-testing, I get a warning from the line
+         if (WARN(!wdev->current_bss, "sme_state=%d\n", wdev->sme_state))
 
-Great.
+[ 4250.226882] ------------[ cut here ]------------
+[ 4250.226929] WARNING: at net/wireless/mlme.c:517 
+cfg80211_mlme_disassoc+0x192/0x3a0 [cfg80211]()
+[ 4250.226933] Hardware name: HP Pavilion dv2700 Notebook PC
+[ 4250.226936] sme_state=2
+[ 4250.226938] Modules linked in: fuse af_packet rfcomm bnep rtl8723ae b43 
+rtlwifi mac80211 cfg80211 btusb bluetooth ipv6 snd_hda_codec_conexant 
+snd_hda_intel snd_hda_codec snd_pcm snd_seq kvm_amd bcma rng_core kvm snd_timer 
+ssb mmc_core snd_seq_device snd sg pcmcia sr_mod cdrom k8temp soundcore 
+snd_page_alloc pcmcia_core i2c_nforce2 hwmon forcedeth i2c_core serio_raw joydev 
+video battery ac wmi button autofs4 ext4 mbcache jbd2 crc16 thermal processor 
+scsi_dh_alua scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh ata_generic 
+pata_acpi pata_amd
+[ 4250.227022] Pid: 3018, comm: wpa_supplicant Tainted: G        W 
+3.9.0-rc1-wl+ #122
+[ 4250.227025] Call Trace:
+[ 4250.227047]  [<ffffffffa0545200>] ? cfg80211_mlme_disassoc+0x180/0x3a0 [cfg80211]
+[ 4250.227055]  [<ffffffff810408fa>] warn_slowpath_common+0x7a/0xc0
+[ 4250.227060]  [<ffffffff810409e1>] warn_slowpath_fmt+0x41/0x50
+[ 4250.227082]  [<ffffffffa0545212>] cfg80211_mlme_disassoc+0x192/0x3a0 [cfg80211]
+[ 4250.227101]  [<ffffffffa053a87c>] ? nl80211_pre_doit+0x2ec/0x3e0 [cfg80211]
+[ 4250.227120]  [<ffffffffa052d542>] nl80211_disassociate+0xb2/0xf0 [cfg80211]
+[ 4250.227131]  [<ffffffff813e1dd4>] genl_rcv_msg+0x274/0x2b0
+[ 4250.227136]  [<ffffffff813e1b60>] ? genl_rcv+0x30/0x30
+[ 4250.227141]  [<ffffffff813e1069>] netlink_rcv_skb+0xa9/0xc0
+[ 4250.227146]  [<ffffffff813e1b50>] genl_rcv+0x20/0x30
+[ 4250.227150]  [<ffffffff813e09bb>] netlink_unicast+0x19b/0x220
+[ 4250.227155]  [<ffffffff813e0e26>] netlink_sendmsg+0x336/0x3b0
+[ 4250.227162]  [<ffffffff8139b397>] sock_sendmsg+0x87/0xa0
+[ 4250.227168]  [<ffffffff81128317>] ? might_fault+0x57/0xb0
+[ 4250.227175]  [<ffffffff8139b84c>] __sys_sendmsg+0x37c/0x390
+[ 4250.227180]  [<ffffffff81197f37>] ? fsnotify+0x87/0x5f0
+[ 4250.227185]  [<ffffffff8119814c>] ? fsnotify+0x29c/0x5f0
+[ 4250.227188]  [<ffffffff81197f37>] ? fsnotify+0x87/0x5f0
+[ 4250.227195]  [<ffffffff8116ff6a>] ? fget_light+0x3da/0x4d0
+[ 4250.227200]  [<ffffffff8139e9e4>] sys_sendmsg+0x44/0x80
+[ 4250.227207]  [<ffffffff8146cfa9>] system_call_fastpath+0x16/0x1b
+[ 4250.227211] ---[ end trace 7082b359b3f3e7d2 ]---
 
-> The actual accepted Kconfig symbol names are different though, so they
-> should be changed in rt2x00 to match them (SOC_RT288X and SOC_RT305X).
-
-Thanks. Note that I could not find an actual Kconfig symbol SOC_RT288X! 
-
-Anyhow, I guess somebody has the (trivial) patch to convert
-RALINK_RT...X and CONFIG_RALINK_RT...X to their SOC_* equivalents queued
-for inclusion in v3.9-rcX. Is that correct?
-
-
-Paul Bolle
-
+Larry
