@@ -1,27 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:38968 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753754Ab3CUWmQ (ORCPT
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:52165 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753742Ab3CEA2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 18:42:16 -0400
-Received: by mail-we0-f181.google.com with SMTP id p43so2788687wea.40
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 15:42:14 -0700 (PDT)
-Message-ID: <514B8CC3.6030606@gmail.com> (sfid-20130321_234220_364777_BCF5459C)
-Date: Thu, 21 Mar 2013 23:42:11 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>, dcbw@redhat.com
-Subject: Re: Support for Realtek USB PID 0bda:1724 (rtl8723a?)
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Mar 2013 19:28:13 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 0/7] mwifiex: patches for 3.10
+Date: Mon,  4 Mar 2013 16:27:52 -0800
+Message-Id: <1362443279-6064-1-git-send-email-bzhao@marvell.com> (sfid-20130305_012817_434934_A9692C33)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
+Amitkumar Karwar's patches add configurations for wakeup on wlan.
+Other patches are random updates, including fixing the warnings
+reported by kbuild test robot.
 
-> I was sort of hoping for a detachable device. I have sent a message to Realtek 
-> asking them about any drivers and devices with this chip.
+Amitkumar Karwar (3):
+  mwifiex: shorten the host sleep configuration macro names
+  mwifiex: add "ethtool wol" command support
+  mwifiex: add WOWLAN support
 
-os_dep/linux/usb_intf.c:        {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDER_ID_REALTEK, 0x1724,0xff,0xff,0xff)}, //8723AU 1*1
+Avinash Patil (1):
+  mwifiex: modify skb->truesize for PCIE Rx
 
-https://github.com/liwei/rpi-rtl8188eu
+Bing Zhao (3):
+  mwifiex: remove static forward declarations in pcie.c
+  mwifiex: fix [-Wunused-function] warnings on pcie suspend/resume
+  mwifiex: avoid [-Wmaybe-uninitialized] warnings in pcie.c
+
+ drivers/net/wireless/mwifiex/Makefile      |    1 +
+ drivers/net/wireless/mwifiex/cfg80211.c    |  157 ++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/cmdevt.c      |    2 +-
+ drivers/net/wireless/mwifiex/ethtool.c     |   70 ++++++++++++
+ drivers/net/wireless/mwifiex/fw.h          |   44 +++++++-
+ drivers/net/wireless/mwifiex/init.c        |    6 +-
+ drivers/net/wireless/mwifiex/ioctl.h       |   23 ++++
+ drivers/net/wireless/mwifiex/main.h        |    4 +
+ drivers/net/wireless/mwifiex/pcie.c        |  156 ++++++++++++++--------------
+ drivers/net/wireless/mwifiex/sta_cmd.c     |   79 ++++++++++++++-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |   10 +-
+ drivers/net/wireless/mwifiex/util.c        |    5 +-
+ 13 files changed, 465 insertions(+), 94 deletions(-)
+ create mode 100644 drivers/net/wireless/mwifiex/ethtool.c
+
