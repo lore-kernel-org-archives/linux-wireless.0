@@ -1,308 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55623 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab3CXAsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:48:32 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 10/15] brcmsmac: add beacon template support
-Date: Sun, 24 Mar 2013 01:45:58 +0100
-Message-Id: <1364085963-25940-11-git-send-email-hauke@hauke-m.de> (sfid-20130324_014835_118212_E76D6B35)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:44400 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932570Ab3CEEIT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 23:08:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <51354A28.3040607@lwfinger.net>
+References: <1362445374.4591.28.camel@lorien2>
+	<51354A28.3040607@lwfinger.net>
+Date: Mon, 4 Mar 2013 21:08:16 -0700
+Message-ID: <CAKocOOOJRpaq-e=XX584e1JQDYq_N4q8rka0otZBWbdvzdLyuA@mail.gmail.com> (sfid-20130305_050840_765759_9C65C70B)
+Subject: Re: [PATCH] net/wireless/brcm80211: remove PCI_BUS define from defs.h
+ to fix warnings
+From: Shuah Khan <shuahkhan@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: shuah.khan@hp.com, brudley@broadcom.com, arend@broadcom.com,
+	frankyl@broadcom.com, linville@tuxdriver.com,
+	seth.forshee@canonical.com, pieterpg@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible that a beacon template provided by mac80211 is
-written to the hardware for constant beaconing.
+On Mon, Mar 4, 2013 at 6:28 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 03/04/2013 07:02 PM, Shuah Khan wrote:
+>>
+>> PCI_BUS defined in defs.h results in warnings from all brcm80211 source
+>> files
+>> including defs.h. This define is not used in brcm80211. Removing this
+>> define
+>> fixes the warning.
+>>
+>> In file included from
+>> drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:35:0:
+>> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS"
+>> redefined [enabled by default]
+>> include/uapi/linux/pci.h:36:0: note: this is the location of the previous
+>> definition
+>>    CC [M]  drivers/net/wireless/b43legacy/dma.o
+>>    CC [M]  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
+>>    CC [M]  drivers/net/wireless/b43legacy/pio.o
+>> In file included from
+>> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
+>> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS"
+>> redefined [enabled by default]
+>> include/uapi/linux/pci.h:36:0: note: this is the location of the previous
+>> definition
+>> In file included from
+>> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
+>> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS"
+>> redefined [enabled by default]
+>> include/uapi/linux/pci.h:36:0: note: this is the location of the previous
+>> definition
+>
+>
+> Strange, I do not see PCI_BUS defined anywhere in the include/ branch in
+> either 3.8 or 3.9. In addition, I don't get these warnings. What is
+> different in your system?
+>
+> Larry
 
-This is based on an old version of brcmsmac, on b43 and the spec b43 is
-based on.
+I am sorry. Please ignore this patch. I had a old commit for a change
+I was working on
+and I thought I undid the changes. My apologies for the noise.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   13 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  141 +++++++++++++++++++-
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    7 +-
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    4 +
- 4 files changed, 159 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 5bfaefb..591e262 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2010 Broadcom Corporation
-+ * Copyright (c) 2013 Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -520,9 +521,17 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET, info->bssid);
- 		spin_unlock_bh(&wl->lock);
- 	}
--	if (changed & BSS_CHANGED_BEACON)
-+	if (changed & BSS_CHANGED_BEACON) {
- 		/* Beacon data changed, retrieve new beacon (beaconing modes) */
--		brcms_err(core, "%s: beacon changed\n", __func__);
-+		struct sk_buff *beacon;
-+		u16 tim_offset = 0;
-+
-+		spin_lock_bh(&wl->lock);
-+		beacon = ieee80211_beacon_get_tim(hw, vif, &tim_offset, NULL);
-+		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
-+				       info->dtim_period);
-+		spin_unlock_bh(&wl->lock);
-+	}
- 
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
- 		/* Beaconing should be enabled/disabled (beaconing modes) */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 4ffb0c6..60dc2c4 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2010 Broadcom Corporation
-+ * Copyright (c) 2013 Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -448,6 +449,8 @@ static void brcms_c_detach_mfree(struct brcms_c_info *wlc)
- 	kfree(wlc->corestate);
- 	kfree(wlc->hw->bandstate[0]);
- 	kfree(wlc->hw);
-+	if (wlc->beacon)
-+		dev_kfree_skb_any(wlc->beacon);
- 
- 	/* free the wlc */
- 	kfree(wlc);
-@@ -4084,10 +4087,14 @@ void brcms_c_wme_setparams(struct brcms_c_info *wlc, u16 aci,
- 					  *shm_entry++);
- 	}
- 
--	if (suspend) {
-+	if (suspend)
- 		brcms_c_suspend_mac_and_wait(wlc);
-+
-+	brcms_c_update_beacon(wlc);
-+	brcms_c_update_probe_resp(wlc, false);
-+
-+	if (suspend)
- 		brcms_c_enable_mac(wlc);
--	}
- }
- 
- static void brcms_c_edcf_setparams(struct brcms_c_info *wlc, bool suspend)
-@@ -7375,6 +7382,107 @@ int brcms_c_get_header_len(void)
- 	return TXOFF;
- }
- 
-+static void brcms_c_beacon_write(struct brcms_c_info *wlc,
-+				 struct sk_buff *beacon, u16 tim_offset,
-+				 u16 dtim_period, bool bcn0, bool bcn1)
-+{
-+	size_t len;
-+	struct ieee80211_tx_info *tx_info;
-+	struct brcms_hardware *wlc_hw = wlc->hw;
-+	struct ieee80211_hw *ieee_hw = brcms_c_pub(wlc)->ieee_hw;
-+
-+	/* Get tx_info */
-+	tx_info = IEEE80211_SKB_CB(beacon);
-+
-+	len = min_t(size_t, beacon->len, BCN_TMPL_LEN);
-+	wlc->bcn_rspec = ieee80211_get_tx_rate(ieee_hw, tx_info)->hw_value;
-+
-+	brcms_c_compute_plcp(wlc, wlc->bcn_rspec,
-+			     len + FCS_LEN - D11_PHY_HDR_LEN, beacon->data);
-+
-+	/* "Regular" and 16 MBSS but not for 4 MBSS */
-+	/* Update the phytxctl for the beacon based on the rspec */
-+	brcms_c_beacon_phytxctl_txant_upd(wlc, wlc->bcn_rspec);
-+
-+	if (bcn0) {
-+		/* write the probe response into the template region */
-+		brcms_b_write_template_ram(wlc_hw, T_BCN0_TPL_BASE,
-+					    (len + 3) & ~3, beacon->data);
-+
-+		/* write beacon length to SCR */
-+		brcms_b_write_shm(wlc_hw, M_BCN0_FRM_BYTESZ, (u16) len);
-+	}
-+	if (bcn1) {
-+		/* write the probe response into the template region */
-+		brcms_b_write_template_ram(wlc_hw, T_BCN1_TPL_BASE,
-+					    (len + 3) & ~3, beacon->data);
-+
-+		/* write beacon length to SCR */
-+		brcms_b_write_shm(wlc_hw, M_BCN1_FRM_BYTESZ, (u16) len);
-+	}
-+
-+	if (tim_offset != 0) {
-+		brcms_b_write_shm(wlc_hw, M_TIMBPOS_INBEACON,
-+				  tim_offset + D11B_PHY_HDR_LEN);
-+		brcms_b_write_shm(wlc_hw, M_DOT11_DTIMPERIOD, dtim_period);
-+	} else {
-+		brcms_b_write_shm(wlc_hw, M_TIMBPOS_INBEACON,
-+				  len + D11B_PHY_HDR_LEN);
-+		brcms_b_write_shm(wlc_hw, M_DOT11_DTIMPERIOD, 0);
-+	}
-+}
-+
-+static void brcms_c_update_beacon_hw(struct brcms_c_info *wlc,
-+				     struct sk_buff *beacon, u16 tim_offset,
-+				     u16 dtim_period)
-+{
-+	struct brcms_hardware *wlc_hw = wlc->hw;
-+	struct bcma_device *core = wlc_hw->d11core;
-+
-+	/* Hardware beaconing for this config */
-+	u32 both_valid = MCMD_BCN0VLD | MCMD_BCN1VLD;
-+
-+	/* Check if both templates are in use, if so sched. an interrupt
-+	 *      that will call back into this routine
-+	 */
-+	if ((bcma_read32(core, D11REGOFFS(maccommand)) & both_valid) == both_valid)
-+		/* clear any previous status */
-+		bcma_write32(core, D11REGOFFS(macintstatus), MI_BCNTPL);
-+
-+	if (wlc->beacon_template_virgin) {
-+		wlc->beacon_template_virgin = false;
-+		brcms_c_beacon_write(wlc, beacon, tim_offset, dtim_period, true,
-+				     true);
-+		/* mark beacon0 valid */
-+		bcma_set32(core, D11REGOFFS(maccommand), MCMD_BCN0VLD);
-+		return;
-+	}
-+
-+	/* Check that after scheduling the interrupt both of the
-+	 *      templates are still busy. if not clear the int. & remask
-+	 */
-+	if ((bcma_read32(core, D11REGOFFS(maccommand)) & both_valid) == both_valid) {
-+		wlc->defmacintmask |= MI_BCNTPL;
-+		return;
-+	}
-+
-+	if (!(bcma_read32(core, D11REGOFFS(maccommand)) & MCMD_BCN0VLD)) {
-+		brcms_c_beacon_write(wlc, beacon, tim_offset, dtim_period, true,
-+				     false);
-+		/* mark beacon0 valid */
-+		bcma_set32(core, D11REGOFFS(maccommand), MCMD_BCN0VLD);
-+		return;
-+	}
-+	if (!(bcma_read32(core, D11REGOFFS(maccommand)) & MCMD_BCN1VLD)) {
-+		brcms_c_beacon_write(wlc, beacon, tim_offset, dtim_period,
-+				     false, true);
-+		/* mark beacon0 valid */
-+		bcma_set32(core, D11REGOFFS(maccommand), MCMD_BCN1VLD);
-+		return;
-+	}
-+	return;
-+}
-+
- /*
-  * Update all beacons for the system.
-  */
-@@ -7383,9 +7491,31 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
- 	if (wlc->pub->up && (bsscfg->type == BRCMS_TYPE_AP ||
--			     bsscfg->type == BRCMS_TYPE_ADHOC))
-+			     bsscfg->type == BRCMS_TYPE_ADHOC)) {
- 		/* Clear the soft intmask */
- 		wlc->defmacintmask &= ~MI_BCNTPL;
-+		if (!wlc->beacon)
-+			return;
-+		brcms_c_update_beacon_hw(wlc, wlc->beacon,
-+					 wlc->beacon_tim_offset,
-+					 wlc->beacon_dtim_period);
-+	}
-+}
-+
-+void brcms_c_set_new_beacon(struct brcms_c_info *wlc, struct sk_buff *beacon,
-+			    u16 tim_offset, u16 dtim_period)
-+{
-+	if (!beacon)
-+		return;
-+	if (wlc->beacon)
-+		dev_kfree_skb_any(wlc->beacon);
-+	wlc->beacon = beacon;
-+
-+	/* add PLCP */
-+	skb_push(wlc->beacon, D11_PHY_HDR_LEN);
-+	wlc->beacon_tim_offset = tim_offset;
-+	wlc->beacon_dtim_period = dtim_period;
-+	brcms_c_update_beacon(wlc);
- }
- 
- /* Write ssid into shared memory */
-@@ -7784,6 +7914,10 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
- 		brcms_rfkill_set_hw_state(wlc->wl);
- 	}
- 
-+	/* BCN template is available */
-+	if (macintstatus & MI_BCNTPL)
-+		brcms_c_update_beacon(wlc);
-+
- 	/* it isn't done and needs to be resched if macintstatus is non-zero */
- 	return wlc->macintstatus != 0;
- 
-@@ -7920,6 +8054,7 @@ brcms_c_attach(struct brcms_info *wl, struct bcma_device *core, uint unit,
- 	pub->unit = unit;
- 	pub->_piomode = piomode;
- 	wlc->bandinit_pending = false;
-+	wlc->beacon_template_virgin = true;
- 
- 	/* populate struct brcms_c_info with default values  */
- 	brcms_c_info_init(wlc, unit);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index 397cff3..82382da 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -492,6 +492,8 @@ struct brcms_c_info {
- 	bool radio_monitor;
- 	bool going_down;
- 
-+	bool beacon_template_virgin;
-+
- 	struct brcms_timer *wdtimer;
- 	struct brcms_timer *radio_timer;
- 
-@@ -561,6 +563,10 @@ struct brcms_c_info {
- 
- 	struct wiphy *wiphy;
- 	struct scb pri_scb;
-+
-+	struct sk_buff *beacon;
-+	u16 beacon_tim_offset;
-+	u16 beacon_dtim_period;
- };
- 
- /* antsel module specific state */
-@@ -630,7 +636,6 @@ extern u16 brcms_c_compute_rtscts_dur(struct brcms_c_info *wlc, bool cts_only,
- extern void brcms_c_inval_dma_pkts(struct brcms_hardware *hw,
- 			       struct ieee80211_sta *sta,
- 			       void (*dma_callback_fn));
--extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
- extern void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend);
- extern int brcms_c_set_nmode(struct brcms_c_info *wlc);
- extern void brcms_c_beacon_phytxctl_txant_upd(struct brcms_c_info *wlc,
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 9dae59c..8a3071f 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -332,5 +332,9 @@ extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
- extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
- extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
- extern void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr);
-+extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
-+extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
-+				   struct sk_buff *beacon, u16 tim_offset,
-+				   u16 dtim_period);
- 
- #endif				/* _BRCM_PUB_H_ */
--- 
-1.7.10.4
-
+-- Shuah
