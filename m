@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49316 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754494Ab3CVKXY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 06:23:24 -0400
-Message-ID: <1363947798.8238.7.camel@jlt4.sipsolutions.net> (sfid-20130322_112328_248354_BF5EBF19)
-Subject: Re: [PATCH v2] mac80211:  Optimize sta lookup for many VIFs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 22 Mar 2013 11:23:18 +0100
-In-Reply-To: <1363740764-1679-1-git-send-email-greearb@candelatech.com> (sfid-20130320_015255_058611_041FEECF)
-References: <1363740764-1679-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130320_015255_058611_041FEECF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:59499 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754753Ab3CENUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Mar 2013 08:20:21 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211/minstrel_ht: disable multiple consecutive sample attempts
+Date: Tue,  5 Mar 2013 14:20:19 +0100
+Message-Id: <1362489619-75636-1-git-send-email-nbd@openwrt.org> (sfid-20130305_142025_483996_1FCC124F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RCU logic isn't quite right yet:
+The last minstrel_ht changes increased the sampling frequency for
+potentially useful rates to decrease the response time to rate
+fluctuations. This caused an increase in sampling frequency that can
+slightly reduce throughput, so this patch limits the sampling attempts
+to one per rate instead of two.
 
-> @@ -1312,7 +1313,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->  			prev_4addr = true;
->  		}
->  
-> +		some_sta = rcu_dereference(sta->sdata->some_sta);
-> +		if (some_sta == sta)
-> +			rcu_assign_pointer(sta->sdata->some_sta, NULL);
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That must be under mutex since you also assign below, therefore you
-should use rcu_dereference_protected()
-
->  		sta->sdata = vlansdata;
-> +		rcu_assign_pointer(sta->sdata->some_sta, sta);
-
-> +++ b/net/mac80211/sta_info.c
-> @@ -67,7 +67,11 @@
->  static int sta_info_hash_del(struct ieee80211_local *local,
->  			     struct sta_info *sta)
->  {
-> -	struct sta_info *s;
-> +	struct sta_info *s, *some_sta;
-> +
-> +	some_sta = rcu_dereference(sta->sdata->some_sta);
-> +	if (some_sta == sta)
-> +		rcu_assign_pointer(sta->sdata->some_sta, NULL);
-
-same here.
-
-johannes
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index da4ec73..aa59539 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -480,7 +480,7 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 	if (!mi->sample_wait && !mi->sample_tries && mi->sample_count > 0) {
+ 		mi->sample_wait = 16 + 2 * MINSTREL_TRUNC(mi->avg_ampdu_len);
+-		mi->sample_tries = 2;
++		mi->sample_tries = 1;
+ 		mi->sample_count--;
+ 	}
+ 
+-- 
+1.8.0.2
 
