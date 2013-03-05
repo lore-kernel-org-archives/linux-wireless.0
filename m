@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:53437 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328Ab3CDVIC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 16:08:02 -0500
-Received: by mail-pb0-f51.google.com with SMTP id un15so3423910pbc.10
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:08:01 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolution.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 5/5] mac80211: disallow changing auto_open_plinks
-Date: Mon,  4 Mar 2013 13:06:14 -0800
-Message-Id: <1362431174-4747-5-git-send-email-thomas@cozybit.com> (sfid-20130304_220807_122680_9E3B622F)
-In-Reply-To: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
-References: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:45657 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752883Ab3CEIwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Mar 2013 03:52:43 -0500
+Message-ID: <1362473477.23194.209.camel@cumari.coelho.fi> (sfid-20130305_095301_586119_3186C7AA)
+Subject: Re: [PATCH 3/5] wl1251: call pm_runtime_put_sync in
+ pm_runtime_get_sync failed case
+From: Luciano Coelho <coelho@ti.com>
+To: Li Fei <fei.li@intel.com>
+CC: <linville@tuxdriver.com>, <wfp5p@virginia.edu>,
+	<gregkh@linuxfoundation.org>, <notasas@gmail.com>, <rjw@sisk.pl>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <chuansheng.liu@intel.com>
+Date: Tue, 5 Mar 2013 10:51:17 +0200
+In-Reply-To: <1362037892.6212.13.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
+References: <1362037031.6212.3.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
+	 <1362037455.6212.8.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
+	 <1362037892.6212.13.camel@fli24-HP-Compaq-8100-Elite-CMT-PC>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-while user MPM is running.
+On Thu, 2013-02-28 at 15:51 +0800, Li Fei wrote:
+> Even in failed case of pm_runtime_get_sync, the usage_count
+> is incremented. In order to keep the usage_count with correct
+> value and runtime power management to behave correctly, call
+> pm_runtime_put(_sync) in such case.
+> 
+> Signed-off-by Liu Chuansheng <chuansheng.liu@intel.com>
+> Signed-off-by: Li Fei <fei.li@intel.com>
+> ---
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/cfg.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Applied, thanks!
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 89c7b00..ebfb060 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1773,8 +1773,11 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshTTL = nconf->dot11MeshTTL;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
- 		conf->element_ttl = nconf->element_ttl;
--	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
-+	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask)) {
-+		if (ifmsh->user_mpm)
-+			return -EBUSY;
- 		conf->auto_open_plinks = nconf->auto_open_plinks;
-+	}
- 	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
- 		conf->dot11MeshNbrOffsetMaxNeighbor =
- 			nconf->dot11MeshNbrOffsetMaxNeighbor;
 -- 
-1.7.10.4
+Luca.
 
