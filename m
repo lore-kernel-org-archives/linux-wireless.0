@@ -1,201 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754914Ab3CGK1w (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56564 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523Ab3CEQpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 05:27:52 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] mac80211: batch key free synchronize_net()
-Date: Thu,  7 Mar 2013 11:27:47 +0100
-Message-Id: <1362652067-14903-3-git-send-email-johannes@sipsolutions.net> (sfid-20130307_112756_625579_02BAA0CA)
-In-Reply-To: <1362652067-14903-1-git-send-email-johannes@sipsolutions.net>
-References: <1362652067-14903-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 5 Mar 2013 11:45:41 -0500
+Subject: [PATCH] ath6kl: print firmware capabilities
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 05 Mar 2013 18:38:42 +0200
+Message-ID: <20130305163842.32118.84598.stgit@localhost6.localdomain6> (sfid-20130305_174545_828613_2A194FAA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Printin the  firmware capabilities during the first firmware boot makes it easier to find out what
+features firmware supports.
 
-Instead of calling synchronize_net() for every key
-on an interface or when a station is removed, do it
-only once for all keys in both of these cases.
+Obligatory screenshot:
 
-As a side-effect, removing station keys now always
-calls synchronize_net() even if there are no keys,
-which fixes an issue with station removal happening
-in the driver while the station could still be used
-for TX.
+[21025.678481] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144 api 3
+[21025.678667] ath6kl: firmware supports: sched-scan,sta-p2pdev-duplex,rsn-cap-override
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/key.c      | 77 ++++++++++++++++++++++++++++++++++++++++---------
- net/mac80211/key.h      |  2 ++
- net/mac80211/sta_info.c | 12 ++------
- 3 files changed, 69 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c |   68 ++++++++++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 953887b..989f773 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -406,18 +406,9 @@ static void ieee80211_key_free_common(struct ieee80211_key *key)
- 	kfree(key);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 072a229..fd06332 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1549,10 +1549,76 @@ static const char *ath6kl_init_get_hif_name(enum ath6kl_hif_type type)
+ 	return NULL;
  }
  
--static void ieee80211_key_destroy(struct ieee80211_key *key,
--				  bool delay_tailroom)
-+static void __ieee80211_key_destroy(struct ieee80211_key *key,
-+				    bool delay_tailroom)
- {
--	if (!key)
--		return;
--
--	/*
--	 * Synchronize so the TX path can no longer be using
--	 * this key before we free/remove it.
--	 */
--	synchronize_net();
--
- 	if (key->local)
- 		ieee80211_key_disable_hw_accel(key);
- 
-@@ -439,6 +430,21 @@ static void ieee80211_key_destroy(struct ieee80211_key *key,
- 	ieee80211_key_free_common(key);
- }
- 
-+static void ieee80211_key_destroy(struct ieee80211_key *key,
-+				  bool delay_tailroom)
++
++static const struct fw_capa_str_map {
++	int id;
++	const char *name;
++} fw_capa_map[] = {
++	{ ATH6KL_FW_CAPABILITY_HOST_P2P, "host-p2p" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN, "sched-scan" },
++	{ ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX, "sta-p2pdev-duplex" },
++	{ ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT, "inactivity-timeout" },
++	{ ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE, "rsn-cap-override" },
++	{ ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER, "wow-mc-filter" },
++	{ ATH6KL_FW_CAPABILITY_BMISS_ENHANCE, "bmiss-enhance" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST, "sscan-math-list" },
++	{ ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD, "rssi-scan-thold" },
++	{ ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR, "custom-mac-addr" },
++	{ ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY, "tx-err-notify" },
++	{ ATH6KL_FW_CAPABILITY_REGDOMAIN, "regdomain" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_V2, "sched-scan-v2" },
++	{ ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL, "hb-poll" },
++};
++
++static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
 +{
-+	if (!key)
-+		return;
-+
-+	/*
-+	 * Synchronize so the TX path can no longer be using
-+	 * this key before we free/remove it.
-+	 */
-+	synchronize_net();
-+
-+	__ieee80211_key_destroy(key, delay_tailroom);
-+}
-+
- void ieee80211_key_free_unused(struct ieee80211_key *key)
- {
- 	WARN_ON(key->sdata || key->local);
-@@ -560,6 +566,7 @@ EXPORT_SYMBOL(ieee80211_iter_keys);
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_key *key, *tmp;
-+	LIST_HEAD(keys);
- 
- 	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
- 
-@@ -571,17 +578,61 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- 
- 	ieee80211_debugfs_key_remove_mgmt_default(sdata);
- 
--	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
--		ieee80211_key_free(key, false);
-+	list_for_each_entry_safe(key, tmp, &sdata->key_list, list) {
-+		ieee80211_key_replace(key->sdata, key->sta,
-+				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
-+				key, NULL);
-+		list_add_tail(&key->list, &keys);
-+	}
- 
- 	ieee80211_debugfs_key_update_default(sdata);
- 
-+	synchronize_net();
-+	list_for_each_entry_safe(key, tmp, &keys, list)
-+		__ieee80211_key_destroy(key, false);
-+
- 	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
- 		     sdata->crypto_tx_tailroom_pending_dec);
- 
- 	mutex_unlock(&sdata->local->key_mtx);
- }
- 
-+void ieee80211_free_sta_keys(struct ieee80211_local *local,
-+			     struct sta_info *sta)
-+{
-+	struct ieee80211_key *key, *tmp;
-+	LIST_HEAD(keys);
 +	int i;
 +
-+	mutex_lock(&local->key_mtx);
-+	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-+		key = key_mtx_dereference(local, sta->gtk[i]);
-+		ieee80211_key_replace(key->sdata, key->sta,
-+				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
-+				key, NULL);
-+		list_add(&key->list, &keys);
++	for (i = 0; i < ARRAY_SIZE(fw_capa_map); i++) {
++		if (fw_capa_map[i].id == id)
++			return fw_capa_map[i].name;
 +	}
 +
-+	key = key_mtx_dereference(local, sta->ptk);
-+	if (key) {
-+		ieee80211_key_replace(key->sdata, key->sta,
-+				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
-+				key, NULL);
-+		list_add(&key->list, &keys);
-+	}
-+
-+	/*
-+	 * NB: the station code relies on this being
-+	 * done even if there aren't any keys
-+	 */
-+	synchronize_net();
-+
-+	list_for_each_entry_safe(key, tmp, &keys, list)
-+		__ieee80211_key_destroy(key, true);
-+
-+	mutex_unlock(&local->key_mtx);
++	return "<unknown>";
 +}
 +
- void ieee80211_delayed_tailroom_dec(struct work_struct *wk)
++static void ath6kl_init_fw_capas(struct ath6kl *ar, char *buf, size_t buf_len)
++{
++	u8 *data = (u8 *) ar->fw_capabilities;
++	size_t len = 0;
++	int i, index, bit;
++
++	for (i = 0; i < ATH6KL_FW_CAPABILITY_MAX; i++) {
++		index = i / 8;
++		bit = i % 8;
++
++		if (index >= sizeof(ar->fw_capabilities) * 4)
++			break;
++
++		if (buf_len - len < 4) {
++			ath6kl_warn("firmware capability buffer too small!\n");
++			strncpy(buf, "<error>", buf_len);
++			return;
++		}
++
++		if (data[index] & (1 << bit)) {
++			len += scnprintf(buf + len, buf_len - len, "%s,",
++					    ath6kl_init_get_fw_capa_name(i));
++		}
++	}
++
++	/* overwrite the last comma */
++	if (len > 0)
++		len --;
++
++	buf[len] = '\0';
++}
++
+ static int __ath6kl_init_hw_start(struct ath6kl *ar)
  {
- 	struct ieee80211_sub_if_data *sdata;
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index a353ddd6..e8de3e6 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -141,6 +141,8 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx);
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_free_sta_keys(struct ieee80211_local *local,
-+			     struct sta_info *sta);
- void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
+ 	long timeleft;
+ 	int ret, i;
++	char buf[200];
  
- #define key_mtx_dereference(local, ref) \
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 2961f3d..11216bc 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -783,7 +783,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
--	int ret, i;
-+	int ret;
+ 	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw start\n");
  
- 	might_sleep();
+@@ -1615,6 +1681,8 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 			    ar->wiphy->fw_version,
+ 			    ar->fw_api,
+ 			    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
++		ath6kl_init_fw_capas(ar, buf, sizeof(buf));
++		ath6kl_info("firmware supports: %s\n", buf);
+ 	}
  
-@@ -810,14 +810,8 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 
- 	list_del_rcu(&sta->list);
- 
--	mutex_lock(&local->key_mtx);
--	for (i = 0; i < NUM_DEFAULT_KEYS; i++)
--		ieee80211_key_free(key_mtx_dereference(local, sta->gtk[i]),
--				   true);
--	if (sta->ptk)
--		ieee80211_key_free(key_mtx_dereference(local, sta->ptk),
--				   true);
--	mutex_unlock(&local->key_mtx);
-+	/* this always calls synchronize_net() */
-+	ieee80211_free_sta_keys(local, sta);
- 
- 	sta->dead = true;
- 
--- 
-1.8.0
+ 	if (ar->version.abi_ver != ATH6KL_ABI_VERSION) {
 
