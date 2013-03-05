@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:41200 "EHLO
-	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751089Ab3CTU5A (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46832 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759065Ab3CESxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 16:57:00 -0400
-Received: from [24.144.95.9] (helo=192.168.1.10)
-	by elasmtp-dupuy.atl.sa.earthlink.net with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.67)
-	(envelope-from <marco@tampabay.rr.com>)
-	id 1UIPxe-0008OP-3X
-	for linux-wireless@vger.kernel.org; Wed, 20 Mar 2013 16:50:14 -0400
-Date: Wed, 20 Mar 2013 16:50:13 -0400
-From: Marco Fonseca <marco@tampabay.rr.com>
-To: linux-wireless@vger.kernel.org
-Subject: carl9170: monitor mode hangs due to channel changes
-Message-ID: <20130320205013.GA3462@192.168.1.10> (sfid-20130320_215705_177494_276305BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 5 Mar 2013 13:53:45 -0500
+Message-ID: <1362509619.8224.5.camel@jlt4.sipsolutions.net> (sfid-20130305_195348_252961_D11E5D44)
+Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
+ rate_control_get_rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Tue, 05 Mar 2013 19:53:39 +0100
+In-Reply-To: <20130305161003.GA30419@magnum.frso.rivierawaves.com> (sfid-20130305_171303_214356_26AB9ADD)
+References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
+	 <1362427924.21028.42.camel@jlt4.sipsolutions.net>
+	 <20130304204541.GA8819@gobelin> <5135F327.4000408@openwrt.org>
+	 <20130305161003.GA30419@magnum.frso.rivierawaves.com>
+	 (sfid-20130305_171303_214356_26AB9ADD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2013-03-05 at 17:10 +0100, Karl Beldan wrote:
 
-I'm seeing a problem with the carl driver.  If I change channels
-repeatedly on the 2.4ghz band, monitoring (e.g. tcpdump) will
-eventually halt.  I've seen this on various versions of the carl
-driver/firmware (both from 1.9.4 to 1.9.7)
+> > It seems to me that all of this could be made more efficient by default
+> > if a mcs mask pointer is only passed to rate control if the user
+> > actually configured a MCS mask. Also, filtering out rates from the mask
+> > that the sta does not support seems a bit unnecessary, since the rate
+> > control usually looks at the HT capabilities and the sta's mcs rx mask
+> > anyway.
+> > 
+> Yes, some things look a bit overkill in the masks logic.
 
-After monitoring has hung, changing to a 5ghz channel, causes
-monitoring to resume.  Bouncing the interface (ip link set mon0
-down/up) also fixes it.
+Are you planning to send new patches to improve this?
 
+johannes
 
-Here are some steps to reproduce:
-
-    # setup interface
-    iw wlan0 interface add mon0 type monitor
-    ip link set mon0 up
-
-
-    # start channging channels
-    while true ; do for i in 1 6 11 ; do iw mon0 set channel $i ; \
-    sleep .250 ; done ; done
-
-
-In a second terminal:
-    tcpdump -i mon0
-
-
-Wait until tcpdump stops printing.  I've seen the failure rate vary
-greatly, sometime minutes, sometime hours, but usually less then an
-hour.
-
-Regards,
-
-Marco Fonseca
