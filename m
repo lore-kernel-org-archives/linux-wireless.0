@@ -1,29 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46828 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759064Ab3CESxK (ORCPT
+Received: from g6t0186.atlanta.hp.com ([15.193.32.63]:39759 "EHLO
+	g6t0186.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932432Ab3CEBDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 13:53:10 -0500
-Message-ID: <1362509573.8224.4.camel@jlt4.sipsolutions.net> (sfid-20130305_195315_024878_402B9F7F)
-Subject: Re: [PATCH v4 0/7] mac80211: improve and consolidate minstrel rate
- control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Date: Tue, 05 Mar 2013 19:52:53 +0100
-In-Reply-To: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362436208-75786-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Mon, 4 Mar 2013 20:03:08 -0500
+Message-ID: <1362445374.4591.28.camel@lorien2> (sfid-20130305_020331_035679_18D893D1)
+Subject: [PATCH] net/wireless/brcm80211: remove PCI_BUS define from defs.h
+ to fix warnings
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	linville@tuxdriver.com, seth.forshee@canonical.com,
+	pieterpg@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	shuahkhan@gmail.com
+Date: Mon, 04 Mar 2013 18:02:54 -0700
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-04 at 23:30 +0100, Thomas Huehn wrote:
-> This patch series merges functions, macros and sampling improvements from
-> minstrel_ht into minstrel. It adds several improvements to the rate control.
+PCI_BUS defined in defs.h results in warnings from all brcm80211 source files
+including defs.h. This define is not used in brcm80211. Removing this define
+fixes the warning.
 
-Applied all.
+In file included from drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:35:0:
+drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
+include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
+  CC [M]  drivers/net/wireless/b43legacy/dma.o
+  CC [M]  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
+  CC [M]  drivers/net/wireless/b43legacy/pio.o
+In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
+drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
+include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
+In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
+drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
+include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
 
-johannes
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+---
+ drivers/net/wireless/brcm80211/include/defs.h |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
+index fb7cbcf..3608436 100644
+--- a/drivers/net/wireless/brcm80211/include/defs.h
++++ b/drivers/net/wireless/brcm80211/include/defs.h
+@@ -20,7 +20,6 @@
+ #include <linux/types.h>
+ 
+ #define	SI_BUS			0
+-#define	PCI_BUS			1
+ #define	PCMCIA_BUS		2
+ #define SDIO_BUS		3
+ #define JTAG_BUS		4
+-- 
+1.7.9.5
+
+
 
