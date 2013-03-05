@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:52535 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab3C3Sie (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:43102 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab3CEQMn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Mar 2013 14:38:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	<20130304134949.GB3021@redhat.com>
-	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-	<20130304154832.GD3021@redhat.com>
-	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-Date: Sat, 30 Mar 2013 21:38:32 +0300
-Message-ID: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com> (sfid-20130330_193839_551413_699AC9D0)
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tue, 5 Mar 2013 11:12:43 -0500
+Received: by mail-wg0-f52.google.com with SMTP id 12so6004081wgh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 08:12:42 -0800 (PST)
+Date: Tue, 5 Mar 2013 17:10:03 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
+ rate_control_get_rate
+Message-ID: <20130305161003.GA30419@magnum.frso.rivierawaves.com> (sfid-20130305_171248_862405_E133C07C)
+References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
+ <1362427924.21028.42.camel@jlt4.sipsolutions.net>
+ <20130304204541.GA8819@gobelin>
+ <5135F327.4000408@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5135F327.4000408@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> Anyway - I think I will just remove this pci_disable_link_state call
->> and hopefully, it will stay long enough in linux-next so that people
->> will report issues before it get into linux.
->> I don't like leaving that code if it doesn't do anything.
->
-> I think we broke at least some cases of pci_disable_link_state() a
-> while back.  I'd like to fix it rather than just removing calls to it.
->
-> Can someone collect a complete dmesg log and "lspci -vv" output?
->
-
-I will. But I am on vacation right now and my linux box is not
-accessible right now...
-In any case, what you'll see is that ASPM is enabled (L1 enabled with
-or without driver).
-We are also seeing some really weird stuff (which I can't reproduce of
-course) like HW becoming not accessible, I guess it would be worth
-trying to *really* disable L1. I can tweak that in the code of the
-driver and tell the NIC that L1 is disabled.
-
-	/* Disable L1-Active */
-	iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
-			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
-
-Do you have an idea about *when* did pci_disable_link_state() break?
+On Tue, Mar 05, 2013 at 02:29:11PM +0100, Felix Fietkau wrote:
+> On 2013-03-04 9:45 PM, john wrote:
+> > On Mon, Mar 04, 2013 at 09:12:04PM +0100, Johannes Berg wrote:
+> >> On Mon, 2013-03-04 at 19:27 +0100, Karl Beldan wrote:
+> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> > 
+> >> > Currently it gets it from the sdata. This uses and updates the ad-hoc
+> >> > masks of the ieee80211_tx_rate_control instead of copying them.
+> >> 
+> >> Is there any need to update them?
+> >> 
+> >> The change for "mask" seems to make it less efficient since it could
+> >> otherwise be put into a register.
+> >> 
+> > Totally, this commit spares the 10bytes copy of mcs_mask but adds a less
+> > efficient indirection to mask.
+> > I thought of it but kept the symmetry with mcs_mask.
+> > Apparently you wouldn't mind the dissymmetry so I will re-send using mask
+> > by value, plus I wrote "updates .." where it is more like "lets the
+> > ad-hoc masks get overwritten".
+> It seems to me that all of this could be made more efficient by default
+> if a mcs mask pointer is only passed to rate control if the user
+> actually configured a MCS mask. Also, filtering out rates from the mask
+> that the sta does not support seems a bit unnecessary, since the rate
+> control usually looks at the HT capabilities and the sta's mcs rx mask
+> anyway.
+> 
+Yes, some things look a bit overkill in the masks logic.
+ 
+Karl
