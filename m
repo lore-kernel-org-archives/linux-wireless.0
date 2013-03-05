@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33569 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271Ab3CRTaj (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:52200 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755866Ab3CEW0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 15:30:39 -0400
-Date: Mon, 18 Mar 2013 15:18:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-03-18
-Message-ID: <20130318191846.GB28919@tuxdriver.com> (sfid-20130318_203059_077756_A6A4A4AB)
-References: <20130318181601.GB3072@joana>
+	Tue, 5 Mar 2013 17:26:53 -0500
+Received: by mail-wg0-f47.google.com with SMTP id dr13so6692826wgb.14
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 14:26:51 -0800 (PST)
+Date: Tue, 5 Mar 2013 23:27:48 +0100
+From: john <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Karl Beldan <karl.beldan@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
+ rate_control_get_rate
+Message-ID: <20130305222748.GA31280@gobelin> (sfid-20130305_232659_055706_119C9AEB)
+References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
+ <1362427924.21028.42.camel@jlt4.sipsolutions.net>
+ <20130304204541.GA8819@gobelin>
+ <5135F327.4000408@openwrt.org>
+ <20130305161003.GA30419@magnum.frso.rivierawaves.com>
+ <1362509619.8224.5.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130318181601.GB3072@joana>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1362509619.8224.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 03:16:01PM -0300, Gustavo Padovan wrote:
-> Hi John,
+On Tue, Mar 05, 2013 at 07:53:39PM +0100, Johannes Berg wrote:
+> On Tue, 2013-03-05 at 17:10 +0100, Karl Beldan wrote:
 > 
-> I put together 3 fixes intended for 3.9, there are support for two new devices
-> and a NULL dereference fix in the SCO code.
+> > > It seems to me that all of this could be made more efficient by default
+> > > if a mcs mask pointer is only passed to rate control if the user
+> > > actually configured a MCS mask. Also, filtering out rates from the mask
+> > > that the sta does not support seems a bit unnecessary, since the rate
+> > > control usually looks at the HT capabilities and the sta's mcs rx mask
+> > > anyway.
+> > > 
+> > Yes, some things look a bit overkill in the masks logic.
 > 
-> Please pull or let me know of any problem. Thanks!
+> Are you planning to send new patches to improve this?
 > 
->         Gustavo
-> 
-> ---
-> The following changes since commit 94a32d10f47b637ae24b78b1ddc7ef0e8396fda4:
-> 
->   Bluetooth: Device 0cf3:3008 should map AR 3012 (2013-03-11 18:04:54 -0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> 
-> for you to fetch changes up to ebaf5795ef57a70a042ea259448a465024e2821d:
-> 
->   Bluetooth: Add support for Dell[QCA 0cf3:817a] (2013-03-18 14:14:37 -0300)
-
-Pulling now...
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I'll see what I can come up with.
+ 
+Karl
