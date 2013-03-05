@@ -1,138 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16615 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755057Ab3CLKcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 06:32:15 -0400
-Date: Tue, 12 Mar 2013 11:32:44 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2 v2] mac80211: fixes for virtual monitor add/remove on
- suspend
-Message-ID: <20130312103244.GC1383@redhat.com> (sfid-20130312_113219_006599_D3EE1341)
-References: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
- <1363021279-9809-2-git-send-email-sgruszka@redhat.com>
- <20130311170712.GB1430@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130311170712.GB1430@redhat.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:47828 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758341Ab3CEA2M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Mar 2013 19:28:12 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/7] mwifiex: remove static forward declarations in pcie.c
+Date: Mon,  4 Mar 2013 16:27:53 -0800
+Message-Id: <1362443279-6064-2-git-send-email-bzhao@marvell.com> (sfid-20130305_012816_648489_6BD9B1E6)
+In-Reply-To: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
+References: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change suspend/resume and add/remove virtual monitor code (called at
-ieee80211_do_stop) to avoid calling drv callback while we are suspended.
+move functions up just to avoid static forward declaration for
+mwifiex_pcie_resume.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-v1->v2: on HW reset just assign chanctx to monitor sdata
+ drivers/net/wireless/mwifiex/pcie.c |  150 +++++++++++++++++------------------
+ 1 files changed, 74 insertions(+), 76 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c136050..7893913 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -373,28 +373,30 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 5c395e2..c3270e8 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -36,8 +36,6 @@ static u8 user_rmmod;
+ static struct mwifiex_if_ops pcie_ops;
  
- 	ieee80211_set_default_queues(sdata);
+ static struct semaphore add_remove_card_sem;
+-static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter);
+-static int mwifiex_pcie_resume(struct pci_dev *pdev);
  
--	ret = drv_add_interface(local, sdata);
--	if (WARN_ON(ret)) {
--		/* ok .. stupid driver, it asked for this! */
--		kfree(sdata);
--		goto out_unlock;
--	}
-+	if (!local->suspended) {
-+		ret = drv_add_interface(local, sdata);
-+		if (WARN_ON(ret)) {
-+			/* ok .. stupid driver, it asked for this! */
-+			goto out_free;
-+		}
+ static int
+ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+@@ -79,6 +77,80 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+ }
  
--	ret = ieee80211_check_queues(sdata);
--	if (ret) {
--		kfree(sdata);
--		goto out_unlock;
--	}
-+			ret = ieee80211_check_queues(sdata);
-+		if (ret)
-+			goto out_remove;
- 
--	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
--					IEEE80211_CHANCTX_EXCLUSIVE);
--	if (ret) {
--		drv_remove_interface(local, sdata);
--		kfree(sdata);
--		goto out_unlock;
-+		ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
-+						IEEE80211_CHANCTX_EXCLUSIVE);
-+		if (ret)
-+			goto out_remove;
- 	}
- 
- 	rcu_assign_pointer(local->monitor_sdata, sdata);
-+	goto out_unlock;
+ /*
++ * Kernel needs to suspend all functions separately. Therefore all
++ * registered functions must have drivers with suspend and resume
++ * methods. Failing that the kernel simply removes the whole card.
++ *
++ * If already not suspended, this function allocates and sends a host
++ * sleep activate request to the firmware and turns off the traffic.
++ */
++static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct mwifiex_adapter *adapter;
++	struct pcie_service_card *card;
++	int hs_actived;
 +
-+ out_remove:
-+	drv_remove_interface(local, sdata);
-+ out_free:
-+	kfree(sdata);
-  out_unlock:
- 	mutex_unlock(&local->iflist_mtx);
- 	return ret;
-@@ -417,9 +419,10 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- 	rcu_assign_pointer(local->monitor_sdata, NULL);
- 	synchronize_net();
- 
--	ieee80211_vif_release_channel(sdata);
--
--	drv_remove_interface(local, sdata);
-+	if (!local->suspended) {
-+		ieee80211_vif_release_channel(sdata);
-+		drv_remove_interface(local, sdata);
-+	}
- 
- 	kfree(sdata);
-  out_unlock:
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index b471a67..dbe42ea 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -100,8 +100,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	}
- 
- 	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata)
-+	if (sdata) {
-+		ieee80211_vif_release_channel(sdata);
- 		drv_remove_interface(local, sdata);
-+	}
- 
- 	/*
- 	 * We disconnected on all interfaces before suspend, all channel
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index b7a856e..20e0d0e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1470,8 +1470,21 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	}
- 
- 	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata && ieee80211_sdata_running(sdata))
--		ieee80211_assign_chanctx(local, sdata);
-+	if (sdata) {
-+		if (local->suspended) {
-+			res = ieee80211_vif_use_channel(sdata,
-+						&local->monitor_chandef,
-+						IEEE80211_CHANCTX_EXCLUSIVE);
-+			if (WARN_ON(res)) {
-+				drv_remove_interface(local, sdata);
-+				rcu_assign_pointer(local->monitor_sdata, NULL);
-+				synchronize_net();
-+				kfree(sdata);
-+			}
-+		} else {
-+			ieee80211_assign_chanctx(local, sdata);
++	if (pdev) {
++		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
++		if (!card || !card->adapter) {
++			pr_err("Card or adapter structure is not valid\n");
++			return 0;
 +		}
++	} else {
++		pr_err("PCIE device is not specified\n");
++		return 0;
 +	}
++
++	adapter = card->adapter;
++
++	hs_actived = mwifiex_enable_hs(adapter);
++
++	/* Indicate device suspended */
++	adapter->is_suspended = true;
++
++	return 0;
++}
++
++/*
++ * Kernel needs to suspend all functions separately. Therefore all
++ * registered functions must have drivers with suspend and resume
++ * methods. Failing that the kernel simply removes the whole card.
++ *
++ * If already not resumed, this function turns on the traffic and
++ * sends a host sleep cancel request to the firmware.
++ */
++static int mwifiex_pcie_resume(struct pci_dev *pdev)
++{
++	struct mwifiex_adapter *adapter;
++	struct pcie_service_card *card;
++
++	if (pdev) {
++		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
++		if (!card || !card->adapter) {
++			pr_err("Card or adapter structure is not valid\n");
++			return 0;
++		}
++	} else {
++		pr_err("PCIE device is not specified\n");
++		return 0;
++	}
++
++	adapter = card->adapter;
++
++	if (!adapter->is_suspended) {
++		dev_warn(adapter->dev, "Device already resumed\n");
++		return 0;
++	}
++
++	adapter->is_suspended = false;
++
++	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
++			  MWIFIEX_ASYNC_CMD);
++
++	return 0;
++}
++
++/*
+  * This function probes an mwifiex device and registers it. It allocates
+  * the card structure, enables PCIE function number and initiates the
+  * device registration and initialization procedure by adding a logical
+@@ -159,80 +231,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	kfree(card);
+ }
  
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
+-/*
+- * Kernel needs to suspend all functions separately. Therefore all
+- * registered functions must have drivers with suspend and resume
+- * methods. Failing that the kernel simply removes the whole card.
+- *
+- * If already not suspended, this function allocates and sends a host
+- * sleep activate request to the firmware and turns off the traffic.
+- */
+-static int mwifiex_pcie_suspend(struct pci_dev *pdev, pm_message_t state)
+-{
+-	struct mwifiex_adapter *adapter;
+-	struct pcie_service_card *card;
+-	int hs_actived;
+-
+-	if (pdev) {
+-		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
+-		return 0;
+-	}
+-
+-	adapter = card->adapter;
+-
+-	hs_actived = mwifiex_enable_hs(adapter);
+-
+-	/* Indicate device suspended */
+-	adapter->is_suspended = true;
+-
+-	return 0;
+-}
+-
+-/*
+- * Kernel needs to suspend all functions separately. Therefore all
+- * registered functions must have drivers with suspend and resume
+- * methods. Failing that the kernel simply removes the whole card.
+- *
+- * If already not resumed, this function turns on the traffic and
+- * sends a host sleep cancel request to the firmware.
+- */
+-static int mwifiex_pcie_resume(struct pci_dev *pdev)
+-{
+-	struct mwifiex_adapter *adapter;
+-	struct pcie_service_card *card;
+-
+-	if (pdev) {
+-		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
+-		return 0;
+-	}
+-
+-	adapter = card->adapter;
+-
+-	if (!adapter->is_suspended) {
+-		dev_warn(adapter->dev, "Device already resumed\n");
+-		return 0;
+-	}
+-
+-	adapter->is_suspended = false;
+-
+-	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+-			  MWIFIEX_ASYNC_CMD);
+-
+-	return 0;
+-}
+-
+ static DEFINE_PCI_DEVICE_TABLE(mwifiex_ids) = {
+ 	{
+ 		PCIE_VENDOR_ID_MARVELL, PCIE_DEVICE_ID_MARVELL_88W8766P,
+-- 
+1.7.0.2
+
