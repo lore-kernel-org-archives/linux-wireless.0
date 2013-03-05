@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53340 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab3CORuU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46960 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364Ab3CETcm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 13:50:20 -0400
-Message-ID: <51435F59.7050403@candelatech.com> (sfid-20130315_185024_528645_1BF3260C)
-Date: Fri, 15 Mar 2013 10:50:17 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Optimizing performance for lots of virtual stations.
-References: <5142074C.1060708@candelatech.com> <51425963.2000904@openwrt.org> <51425AB1.9090603@candelatech.com> <51427CFF.1020105@openwrt.org> <514294ED.7040909@candelatech.com> <514356F3.4030408@candelatech.com>
-In-Reply-To: <514356F3.4030408@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 5 Mar 2013 14:32:42 -0500
+Message-ID: <1362511955.638.3.camel@jlt4.sipsolutions.net> (sfid-20130305_203246_919933_A421D4DE)
+Subject: Re: WARNING from net/wireless/mlme.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+Date: Tue, 05 Mar 2013 20:32:35 +0100
+In-Reply-To: <513570D0.4070302@lwfinger.net> (sfid-20130305_051310_497727_E0519ADC)
+References: <513570D0.4070302@lwfinger.net>
+	 (sfid-20130305_051310_497727_E0519ADC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2013 10:14 AM, Ben Greear wrote:
-> I probably should have done this first of course..but here is a 'perf top' on
-> the station machine (50 TCP streams transmitting on each of 50 stations,
-> and 78 associated-but-mostly-idle stations:
->
-> Looks like sta_info_get would be a good place to start :)
->
->
-> ---------------------------------------------------------------------------------------------------------------------------
->     PerfTop:    1890 irqs/sec  kernel:87.9%  exact:  0.0% [1000Hz cycles],  (all, 2 CPUs)
-> ---------------------------------------------------------------------------------------------------------------------------
->
->               samples  pcnt function                        DSO
->               _______ _____ _______________________________ ______________
->
->               2261.00 20.8% sta_info_get                    [mac80211]
+Hi Larry,
 
-Ahh, crap...I see the problem.  The 'sta->addr' is the MAC of the VAP,
-so if I have 100 stations all connected to the same AP, then the hashing
-is worthless and just ends up being a linear search.
+> With 3.9-rc1 from wireless-testing, I get a warning from the line
+>          if (WARN(!wdev->current_bss, "sme_state=%d\n", wdev->sme_state))
+> 
+> [ 4250.226882] ------------[ cut here ]------------
+> [ 4250.226929] WARNING: at net/wireless/mlme.c:517 
+> cfg80211_mlme_disassoc+0x192/0x3a0 [cfg80211]()
+> [ 4250.226933] Hardware name: HP Pavilion dv2700 Notebook PC
+> [ 4250.226936] sme_state=2
 
-Probably not going to be fun to fix that!
+Heh, adding the sme_state=2 there was stupid of me ... there's an if
+right in front. Oh well.
 
-Ben
+Anyway, can you reproduce this? I looked at the code for the umpteenth
+time and can't really find it. Capturing cfg80211 tracing might be
+helpful.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
