@@ -1,126 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:37267 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932197Ab3CINFx (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:40538 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab3CFGFG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 08:05:53 -0500
-Subject: [PATCH v2 7/7] ath6kl: add tracing support to debug message macros
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Sat, 09 Mar 2013 15:05:50 +0200
-Message-ID: <20130309130550.13371.77829.stgit@localhost6.localdomain6> (sfid-20130309_140555_935050_256B8D8E)
-In-Reply-To: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
-References: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
+	Wed, 6 Mar 2013 01:05:06 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20790.56369.998911.884240@gargle.gargle.HOWL> (sfid-20130306_070510_026815_489EABDC)
+Date: Wed, 6 Mar 2013 11:33:29 +0530
+To: Nick Thomas <nhomas@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] Recent driver versions break compatibility with AR9285 for me
+In-Reply-To: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
+References: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now all log messages are sent through the tracing infrastruture as well.
-Tracing point doesn't follow debug_mask module parameter, instead it sends
-all debug messages, so once you enable ath6kl_log_dbg tracing point you will
-get a lot of messages. Needs to be discussed if this is sensible or not.
-The overhead should be small enough and we anyway include debug level as
-well so it's easy to filter in user space.
+Nick Thomas wrote:
+> When I run the 3.7.10 kernel with the ath9k module loaded, the
+> wireless does not work, and iwconfig wlan0 reports:
+> 
+> wlan0:          no wireless extensions.
+> 
+> When I run the 3.2.39 kernel, the wireless works, and iwconfig wlan0 reports:
+> 
+> wlan0     IEEE 802.11bgn  ESSID:"HardFatCox"
+>           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:22:75:49:42:F7
+>           Bit Rate=48 Mb/s   Tx-Power=15 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:on
+>           Link Quality=50/70  Signal level=-60 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:23  Invalid misc:11577   Missed beacon:0
+> 
+> My best guess is that recent driver revisions broke compatibility with
+> my wireless card.
 
-I wasn't really sure what to do with ath6kl_dbg_dump() and for now decided
-that it also sends the buffer to user space. But most likely in the future
-ath6kl_dbg_dump() should go away in favor of using proper tracing points, but
-we will see.
+The card is recognized properly by ath9k, since it is shown in the interface
+list and it's even associated with HardFatCox :)
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |   12 ++++++---
- drivers/net/wireless/ath/ath6kl/trace.h |   42 +++++++++++++++++++++++++++++++
- 2 files changed, 50 insertions(+), 4 deletions(-)
+What doesn't work ?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index d032e95..35ec431 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -117,15 +117,15 @@ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
- 	struct va_format vaf;
- 	va_list args;
- 
--	if (!(debug_mask & mask))
--		return;
--
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
-+	if (debug_mask & mask)
-+		ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
-+
-+	trace_ath6kl_log_dbg(mask, &vaf);
- 
- 	va_end(args);
- }
-@@ -141,6 +141,10 @@ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
- 
- 		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
- 	}
-+
-+	/* tracing code doesn't like null strings :/ */
-+	trace_ath6kl_log_dbg_dump(msg ? msg : "", prefix ? prefix : "",
-+				  buf, len);
- }
- EXPORT_SYMBOL(ath6kl_dbg_dump);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
-index ea55b2a..6af6fa0 100644
---- a/drivers/net/wireless/ath/ath6kl/trace.h
-+++ b/drivers/net/wireless/ath/ath6kl/trace.h
-@@ -278,6 +278,48 @@ DEFINE_EVENT(ath6kl_log_event, ath6kl_log_info,
- 	     TP_ARGS(vaf)
- );
- 
-+TRACE_EVENT(ath6kl_log_dbg,
-+	TP_PROTO(unsigned int level, struct va_format *vaf),
-+	TP_ARGS(level, vaf),
-+	TP_STRUCT__entry(
-+		__field(unsigned int, level)
-+		__dynamic_array(char, msg, ATH6KL_MSG_MAX)
-+	),
-+	TP_fast_assign(
-+		__entry->level = level;
-+		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
-+				       ATH6KL_MSG_MAX,
-+				       vaf->fmt,
-+				       *vaf->va) >= ATH6KL_MSG_MAX);
-+	),
-+	TP_printk("%s", __get_str(msg))
-+);
-+
-+TRACE_EVENT(ath6kl_log_dbg_dump,
-+	TP_PROTO(const char *msg, const char *prefix,
-+		 const void *buf, size_t buf_len),
-+
-+	TP_ARGS(msg, prefix, buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__string(msg, msg)
-+		__string(prefix, prefix)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(msg, msg);
-+		__assign_str(prefix, prefix);
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"%s/%s\n", __get_str(prefix), __get_str(msg)
-+	)
-+);
-+
- #endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
-
+Sujith
