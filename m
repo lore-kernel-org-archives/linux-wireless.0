@@ -1,122 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:59397 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752897Ab3CGPrl (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:48703 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752353Ab3CFHAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:47:41 -0500
-Received: by mail-ee0-f50.google.com with SMTP id e51so459260eek.9
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:40 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 01/13] b43: HT-PHY: rename AFE defines
-Date: Thu,  7 Mar 2013 16:47:15 +0100
-Message-Id: <1362671247-10766-2-git-send-email-zajec5@gmail.com> (sfid-20130307_164744_181960_C648F8B0)
-In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	Wed, 6 Mar 2013 02:00:15 -0500
+Received: by mail-we0-f176.google.com with SMTP id s43so7600202wey.35
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 23:00:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20790.56369.998911.884240@gargle.gargle.HOWL>
+References: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
+	<20790.56369.998911.884240@gargle.gargle.HOWL>
+Date: Wed, 6 Mar 2013 00:00:13 -0700
+Message-ID: <CAEk6VBHTWn8CX7SKNVQz+T+Wqwe9Na=32Lz=+xOdqncNZFhhkQ@mail.gmail.com> (sfid-20130306_080019_139002_76B577B8)
+Subject: Re: [ath9k] Recent driver versions break compatibility with AR9285
+ for me
+From: Nick Thomas <nhomas@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It you take a look at N-PHY analog switch function it touches every core
-on the chipset. It seems HT-PHY does they same, it just has 3 cores
-instead of 2 (which make sense since BCM4331 is 3x3). Rename AFE defines
-to include core id.
+Sujith,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   36 ++++++++++++++++++------------------
- drivers/net/wireless/b43/phy_ht.h |   12 ++++++------
- 2 files changed, 24 insertions(+), 24 deletions(-)
+Thanks for the reply!
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 3719a88..20c4cb7f 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -177,9 +177,9 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
- 	u8 i;
- 
- 	const u16 ctl_regs[3][2] = {
--		{ B43_PHY_HT_AFE_CTL1, B43_PHY_HT_AFE_CTL2 },
--		{ B43_PHY_HT_AFE_CTL3, B43_PHY_HT_AFE_CTL4 },
--		{ B43_PHY_HT_AFE_CTL5, B43_PHY_HT_AFE_CTL6},
-+		{ B43_PHY_HT_AFE_C1_OVER, B43_PHY_HT_AFE_C1 },
-+		{ B43_PHY_HT_AFE_C2_OVER, B43_PHY_HT_AFE_C2 },
-+		{ B43_PHY_HT_AFE_C3_OVER, B43_PHY_HT_AFE_C3},
- 	};
- 
- 	for (i = 0; i < 3; i++) {
-@@ -362,9 +362,9 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	b43_phy_mask(dev, B43_PHY_EXTG(0), ~0x3);
- 
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0);
- 
- 	b43_phy_write(dev, B43_PHY_EXTG(0x103), 0x20);
- 	b43_phy_write(dev, B43_PHY_EXTG(0x101), 0x20);
-@@ -511,19 +511,19 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- static void b43_phy_ht_op_switch_analog(struct b43_wldev *dev, bool on)
- {
- 	if (on) {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x0000);
- 	} else {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00fd);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
-index 6544c42..60824fa 100644
---- a/drivers/net/wireless/b43/phy_ht.h
-+++ b/drivers/net/wireless/b43/phy_ht.h
-@@ -36,12 +36,12 @@
- 
- #define B43_PHY_HT_RF_CTL1			B43_PHY_EXTG(0x010)
- 
--#define B43_PHY_HT_AFE_CTL1			B43_PHY_EXTG(0x110)
--#define B43_PHY_HT_AFE_CTL2			B43_PHY_EXTG(0x111)
--#define B43_PHY_HT_AFE_CTL3			B43_PHY_EXTG(0x114)
--#define B43_PHY_HT_AFE_CTL4			B43_PHY_EXTG(0x115)
--#define B43_PHY_HT_AFE_CTL5			B43_PHY_EXTG(0x118)
--#define B43_PHY_HT_AFE_CTL6			B43_PHY_EXTG(0x119)
-+#define B43_PHY_HT_AFE_C1_OVER			B43_PHY_EXTG(0x110)
-+#define B43_PHY_HT_AFE_C1			B43_PHY_EXTG(0x111)
-+#define B43_PHY_HT_AFE_C2_OVER			B43_PHY_EXTG(0x114)
-+#define B43_PHY_HT_AFE_C2			B43_PHY_EXTG(0x115)
-+#define B43_PHY_HT_AFE_C3_OVER			B43_PHY_EXTG(0x118)
-+#define B43_PHY_HT_AFE_C3			B43_PHY_EXTG(0x119)
- 
- 
- /* Values for PHY registers used on channel switching */
--- 
-1.7.10.4
+The latter iwconfig readout is from an old kernel version (3.2.39),
+where the card does indeed work. What I wish to report is that in a
+more recent kernel version (3.7.10), the card doesn't work (iwconfig
+says "no wireless extensions"). It's not a problem for me (I'm happily
+using the old kernel), but I thought it was worth reporting.
 
+Some Googling tells me that a number of people have run into similar
+problems (kernel versions >=3.3 breaking their AR928X cards). Maybe
+you guys have been made aware of this?
+
+https://bbs.archlinux.org/viewtopic.php?pid=1085309
+
+Nick
+
+On Tue, Mar 5, 2013 at 11:03 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+> Nick Thomas wrote:
+>> When I run the 3.7.10 kernel with the ath9k module loaded, the
+>> wireless does not work, and iwconfig wlan0 reports:
+>>
+>> wlan0:          no wireless extensions.
+>>
+>> When I run the 3.2.39 kernel, the wireless works, and iwconfig wlan0 reports:
+>>
+>> wlan0     IEEE 802.11bgn  ESSID:"HardFatCox"
+>>           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:22:75:49:42:F7
+>>           Bit Rate=48 Mb/s   Tx-Power=15 dBm
+>>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>           Encryption key:off
+>>           Power Management:on
+>>           Link Quality=50/70  Signal level=-60 dBm
+>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>           Tx excessive retries:23  Invalid misc:11577   Missed beacon:0
+>>
+>> My best guess is that recent driver revisions broke compatibility with
+>> my wireless card.
+>
+> The card is recognized properly by ath9k, since it is shown in the interface
+> list and it's even associated with HardFatCox :)
+>
+> What doesn't work ?
+>
+> Sujith
