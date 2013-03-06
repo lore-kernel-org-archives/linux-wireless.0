@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:37765 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207Ab3CYS1x (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51334 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222Ab3CFWTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 14:27:53 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, parag.lkml@gmail.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] ath9k: avoid queueing hw check work when suspended
-Date: Mon, 25 Mar 2013 11:27:46 -0700
-Message-Id: <1364236066-11811-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130325_192758_968284_B40DC160)
+	Wed, 6 Mar 2013 17:19:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: emmanuel.grumbach@intel.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9] mac80211: always synchronize_net() during station removal
+Date: Wed,  6 Mar 2013 23:19:26 +0100
+Message-Id: <1362608366-10771-1-git-send-email-johannes@sipsolutions.net> (sfid-20130306_231940_133902_988CCAB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The following issue was reported.
+If there are keys left during station removal, then a
+synchronize_net() will be done (for each key, I have a
+patch to address this for 3.10), otherwise it won't be
+done at all which causes issues because the station
+could be used for TX while it's being removed from the
+driver -- that might confuse the driver.
 
-WARNING: at net/mac80211/util.c:599 ieee80211_can_queue_work.isra.7+0x32/0x40 [mac80211]()
-Hardware name: iMac12,1
-queueing ieee80211 work while going to suspend
-Pid: 0, comm: swapper/0 Tainted: PF          O 3.8.2-206.fc18.x86_64 #1
-Call Trace: Mar 16 09:39:17 Parags-iMac kernel: [ 3993.642992]  <IRQ>
-[<ffffffff8105e61f>] warn_slowpath_common+0x7f/0xc0
-[<ffffffffa0581420>] ? ath_start_rx_poll+0x70/0x70 [ath9k]
-<ffffffff8105e716>] warn_slowpath_fmt+0x46/0x50
-[<ffffffffa045b542>] ieee80211_can_queue_work.isra.7+0x32/0x40
+Fix this by always doing synchronize_net() if no key
+was present any more.
 
-Fix this by avoiding to queue the work if our device has
-already been marked as suspended or stopped.
-
-Reported-by: Parag Warudkar <parag.lkml@gmail.com>
-Tested-by: Parag Warudkar <parag.lkml@gmail.com>
 Cc: stable@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/link.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/sta_info.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
-index 39c84ec..7fdac6c 100644
---- a/drivers/net/wireless/ath/ath9k/link.c
-+++ b/drivers/net/wireless/ath/ath9k/link.c
-@@ -170,7 +170,8 @@ void ath_rx_poll(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index a79ce82..238a0cc 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -766,6 +766,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret, i;
++	bool have_key = false;
  
--	ieee80211_queue_work(sc->hw, &sc->hw_check_work);
-+	if (!test_bit(SC_OP_INVALID, &sc->sc_flags))
-+		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
- }
+ 	might_sleep();
  
- /*
+@@ -793,12 +794,19 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	list_del_rcu(&sta->list);
+ 
+ 	mutex_lock(&local->key_mtx);
+-	for (i = 0; i < NUM_DEFAULT_KEYS; i++)
++	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+ 		__ieee80211_key_free(key_mtx_dereference(local, sta->gtk[i]));
+-	if (sta->ptk)
++		have_key = true;
++	}
++	if (sta->ptk) {
+ 		__ieee80211_key_free(key_mtx_dereference(local, sta->ptk));
++		have_key = true;
++	}
+ 	mutex_unlock(&local->key_mtx);
+ 
++	if (!have_key)
++		synchronize_net();
++
+ 	sta->dead = true;
+ 
+ 	local->num_sta--;
 -- 
-1.7.10.4
+1.8.0
 
