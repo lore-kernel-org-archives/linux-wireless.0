@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513Ab3B1X4Y (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40752 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754088Ab3CFWpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Feb 2013 18:56:24 -0500
-Message-ID: <1362095777.8330.15.camel@jlt4.sipsolutions.net> (sfid-20130301_005628_380667_9BBDCA3C)
-Subject: Re: [PATCH 1/3] regulatory: allow VHT channels in world roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org, green@qca.qualcomm.com
-Date: Fri, 01 Mar 2013 00:56:17 +0100
-In-Reply-To: <CAB=NE6VonnZDQwat3PeCvnVJnuj-vKciK8WYCmbLzre+4zoLyw@mail.gmail.com> (sfid-20130301_003411_417728_43BAD6F7)
-References: <1360797364-9430-1-git-send-email-johannes@sipsolutions.net>
-	 <1360797364-9430-2-git-send-email-johannes@sipsolutions.net>
-	 <CAB=NE6VonnZDQwat3PeCvnVJnuj-vKciK8WYCmbLzre+4zoLyw@mail.gmail.com>
-	 (sfid-20130301_003411_417728_43BAD6F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Mar 2013 17:45:25 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1UDN5O-0002uX-RJ
+	for linux-wireless@vger.kernel.org; Wed, 06 Mar 2013 17:45:22 -0500
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.5/8.14.4) with ESMTP id r26Mi246013894
+	for <linux-wireless@vger.kernel.org>; Wed, 6 Mar 2013 17:44:03 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.5/8.14.5/Submit) id r26Mi2cL013893
+	for linux-wireless@vger.kernel.org; Wed, 6 Mar 2013 17:44:02 -0500
+Date: Wed, 6 Mar 2013 17:44:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing rebased on 3.9-rc1
+Message-ID: <20130306224401.GA20300@tuxdriver.com> (sfid-20130306_234530_359274_257C42DB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-28 at 15:33 -0800, Luis R. Rodriguez wrote:
+Now that the merge window is closed and things are progressing towards
+3.9, I have rebased the wireless-testing tree upon 3.9-rc1.  It won't
+stay clean for long, of course -- it will pull from the wireless and
+wireless-next trees continually and will pull from the linux tree
+after each -rc release, as usual.
 
-> > For VHT, the wider bandwidths (up to 160 MHz) need
-> > to be allowed. Since world roaming only covers the
-> > case of connecting to an AP, it can be opened up
-> > there, we will rely on the AP to know the local
-> > regulations.
+The current head of the tree is commit 12c18c7a3d8f20366424834b20be40f7f3a9e2c2.
+Please adjust your development trees accordingly.
 
-> This seems reasonable to me but in your patch you only allow 80, not
-> 160, any reason for that?
+John
 
-160 doesn't fit here yet -- I think it should be enabled when/if those
-DFS channels are added, I don't see a reason they're missing there.
-
-johannes
-
+P.S.  Note that this has no effect on trees used to push changes
+through me towards Dave and Linus.  The wireless and wireless-next
+trees have merely been fast-forwarded.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
