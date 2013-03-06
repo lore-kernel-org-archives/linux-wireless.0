@@ -1,97 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:51931 "EHLO
-	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750923Ab3CKOQj (ORCPT
+Received: from mail-qe0-f46.google.com ([209.85.128.46]:47765 "EHLO
+	mail-qe0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab3CFXgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 10:16:39 -0400
-Date: Mon, 11 Mar 2013 09:44:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	ath9k_htc_fw@lists.infradead.org, Chris Zankel <chris@zankel.net>,
-	linux-kernel@vger.kernel.org, Marc Gauthier <marc@tensilica.com>,
-	lwn@lwn.net
-Subject: Re: [Announce] open ath9k_htc firmware
-Message-ID: <20130311134414.GA13275@tuxdriver.com> (sfid-20130311_151657_865666_9A7014BE)
-References: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com>
+	Wed, 6 Mar 2013 18:36:54 -0500
+Received: by mail-qe0-f46.google.com with SMTP id a11so5690239qen.5
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 15:36:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com>
+In-Reply-To: <1362571344.8457.9.camel@jlt4.sipsolutions.net>
+References: <CA++BO6QA9cFmM2kU4u8ASxWqJeGwUB1385awKfXLP=O0fA87NA@mail.gmail.com>
+	<1362571344.8457.9.camel@jlt4.sipsolutions.net>
+Date: Wed, 6 Mar 2013 18:36:53 -0500
+Message-ID: <CA++BO6TciosdjiFaSAPvyCYsTU-J8UKCefPtxc8bcc04fnh9mQ@mail.gmail.com> (sfid-20130307_003708_463382_6CDB4404)
+Subject: Re: mac80211: regression: fd0f979 no long authenticates w/ath9k_htc
+From: Corey Richardson <corey@octayn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Awesome news!  Many thanks to Adrian, Luis, and all the others they
-have credited with helping this along!
+On Wed, Mar 6, 2013 at 7:02 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Do you think you could run trace-cmd to capture what's going on before
+> and after?
+>
 
-John
-
-On Fri, Mar 08, 2013 at 03:46:38PM -0800, Luis R. Rodriguez wrote:
-> Many thanks to Adrian for his hard work on all this and to everyone
-> else who volunteered to help make this happen, including the
-> understanding by our management at QCA and even Tensilica requires
-> some handsome applause for their commitment, understanding on letting
-> us get this out. We now have a public mailing list for development:
-> 
-> http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
-> 
-> Full steam ahead!
-> 
->   Luis
-> 
-> On Fri, Mar 8, 2013 at 3:32 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> > Hi,
-> >
-> > I hate fanfare.
-> >
-> > You can all thank Luis Rodriguez for his ridiculously long and hard
-> > fighting to get this stuff pushed through the grinder to make this
-> > happen.
-> >
-> > There's also been a hard working team of developers behind the scene -
-> > Felix Fietkau, Eugene Krasnikov, Sujith Manoharan, and the team from
-> > Cozybit. They've been working hard to get the codebase converted over
-> > to using the open source tensilica toolchain and finding/fixing up any
-> > silly issues that may creep up from that.
-> >
-> > I've just been involved in shepharding this stuff into a sensible
-> > shape and pushing it through the final stage (legal review) before
-> > publication.
-> >
-> > You can find it here:
-> >
-> > https://github.com/qca/open-ath9k-htc-firmware
-> >
-> > There's a bunch of sorely needed work to do in the short term:
-> >
-> > * felix has a replacement cmake build system that I'd like to now integrate;
-> > * there's lots of build warnings which need to be removed (and then
-> > build this thing using -Wall -Werror);
-> > * some general code cleanup and documentation wouldn't be rejected -
-> > but I don't really want any sweeping code changes to go in until we've
-> > tidied up the build warnings and validated that the image(s) work
-> > right.
-> >
-> > I plan on doing some test builds shortly. I plan on bumping the
-> > firmware to 1.4 once felix's cmake system is in place and people have
-> > validated that this work.s
-> >
-> > Thanks,
-> >
-> >
-> >
-> > Adrian
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+What should I be recording? The NetworkManager process? I'm unfamiliar
+with ftrace.
