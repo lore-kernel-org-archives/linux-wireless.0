@@ -1,113 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:60952 "EHLO
-	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750968Ab3C0PnW (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:56937 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809Ab3CFUAZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 11:43:22 -0400
-Date: Wed, 27 Mar 2013 11:43:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Herrmann <dh.herrmann@gmail.com>
-Cc: Piotr Haber <phaber@broadcom.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
-Message-ID: <20130327154312.GE2146@tuxdriver.com> (sfid-20130327_164340_767106_12FFC6CC)
-References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
- <51471B85.5060404@broadcom.com>
- <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
- <20130325185821.GB17454@tuxdriver.com>
- <51516AD4.8080306@broadcom.com>
- <20130327145654.GA1868@tuxdriver.com>
- <CANq1E4TCyhpBS3XspW53jp1WxjU+i8iQwLpyy0OCL=DaHqQF+w@mail.gmail.com>
+	Wed, 6 Mar 2013 15:00:25 -0500
+Received: by mail-oa0-f45.google.com with SMTP id o6so13296579oag.18
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 12:00:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANq1E4TCyhpBS3XspW53jp1WxjU+i8iQwLpyy0OCL=DaHqQF+w@mail.gmail.com>
+In-Reply-To: <5137188A.4070007@broadcom.com>
+References: <CA+K+NcR9tExM9y-yjH_MB=ZpjeeakMW2GozECg4Pejp54nkCjA@mail.gmail.com>
+	<513624B7.8010109@broadcom.com>
+	<loom.20130306T000201-626@post.gmane.org>
+	<5137188A.4070007@broadcom.com>
+Date: Wed, 6 Mar 2013 21:00:24 +0100
+Message-ID: <CA+K+NcRUeC2Y-4n828gtMCUeoOb9JVOj5c6zGjKG8iWnvJFnOg@mail.gmail.com> (sfid-20130306_210029_612621_CBF49636)
+Subject: Re: BCM4313 problems connecting to AP since 3.8
+From: =?UTF-8?B?SsOhbiBWZXNlbMO9?= <jano.vesely@gmail.com>
+To: Piotr Haber <phaber@broadcom.com>
+Cc: Alexander Mezin <mezin.alexander@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 04:32:28PM +0100, David Herrmann wrote:
-> Hi John
-> 
-> On Wed, Mar 27, 2013 at 3:56 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Tue, Mar 26, 2013 at 10:31:00AM +0100, Piotr Haber wrote:
-> >> On 03/25/13 19:58, John W. Linville wrote:
-> >> > On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
-> >> >> Hi Piotr
-> >> >>
-> >> >> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
-> >> >>> On 03/18/13 11:45, David Herrmann wrote:
-> >> >>>> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
-> >> >>>> wireless AP reconnection on: (14e4:4727)
-> >> >>>>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
-> >> >>>>
-> >> >>>> Any attempt to reconnect to an AP results in timeouts no matter how near to the
-> >> >>>> AP I am:
-> >> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
-> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
-> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
-> >> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
-> >> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> >> >>>> ---
-> >> >>>> Hi
-> >> >>>>
-> >> >>>> I tried coming up with a fix instead of reverting this commit, but the commit is
-> >> >>>> way to big for me to understand what's going on. Sorry.
-> >> >>>>
-> >> >>>> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
-> >> >>>> one time, but any further attempt resulted in:
-> >> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
-> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
-> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
-> >> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
-> >> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> >> >>>>
-> >> >>>> Even sitting right next to the AP didn't help so I started bisecting and it
-> >> >>>> turned out to be:
-> >> >>>>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
-> >> >>>> Please revert it.
-> >> >>>>
-> >> >>>> Thanks
-> >> >>>> David
-> >> >>>>
-> >> >>> Hi,
-> >> >>> unfortunately this is not a first report of this patch breaking 4313 for some users.
-> >> >>> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
-> >> >>> successfully in our test setup.
-> >> >>> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
-> >> >>> <debugfs_mount>/brcmsmac/bcma0:0/hardware
-> >> >>
-> >> >> Hi
-> >> >>
-> >> >> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-> >> >> board vendor: 185f
-> >> >> board type: 51a
-> >> >> board revision: 1408
-> >> >> board flags: 8402a01
-> >> >> board flags2: 880
-> >> >> firmware revision: 262032b
-> >> >>
-> >> >> I can also try partial reverts of that commit, but I really don't know
-> >> >> which parts might be important.
-> >> >
-> >> > Are we going to see a fix for this (very) soon?  Or should I just go
-> >> > ahead and revert this patch?
-> >> >
-> >> I cannot reproduce the issue on a set of devices we have here (3 different 4313 ePA models).
-> >> Some of the devices that are reported to be broken are being shipped to us.
-> >> So I would say we need around 2 weeks at least to resolve this (if we reproduce the problem and find
-> >> a fix).
-> >> Not sure this is soon enough.
-> >> If not please go ahead an revert the patch.
-> >
-> > I am reverting the patch.
-> 
-> Can you CC stable? Otherwise I will try to sent it to them after you applied it.
+hi,
+this is what my card says:
 
-Sorry, I already pushed it out to kernel.org.  I would prefer not to modify my repository now.
+# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+board vendor: 1028
+board type: 10
+board revision: 2400
+board flags: 8002a00
+board flags2: 0
+firmware revision: 262032b
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I'll try to verify that reverting that commit fixes my problem as well.
+
+Jan
+
+On Wed, Mar 6, 2013 at 11:20 AM, Piotr Haber <phaber@broadcom.com> wrote:
+> On 03/06/13 00:06, Alexander Mezin wrote:
+>> Arend van Spriel <arend@...> writes:
+>>
+>>>
+>>> On 03/04/13 22:47, Ján Veselý wrote:
+>>>> Hi,
+>>>>
+>>>> after upgrading to 3.8 I started running into a timeout problem on
+>>>> BCM4313 wifi using brcmsmac driver (compiled as module, x86_64).
+>>>> the card is unable to connect to ap after startup of resume.
+>>>> Although it eventually connects it takes a long time (several minutes)
+>>>> and dmesg log is spammed with:
+>>>>
+>>>> [  144.725431] wlan0: authenticate with 00:23:f8:8f:29:14
+>>>> [  144.727786] wlan0: capabilities/regulatory prevented using AP
+>>>> HT/VHT configuration, downgraded
+>>>> [  144.727820] wlan0: direct probe to 00:23:f8:8f:29:14 (try 1/3)
+>>>> [  144.930780] wlan0: direct probe to 00:23:f8:8f:29:14 (try 2/3)
+>>>> [  145.133855] wlan0: direct probe to 00:23:f8:8f:29:14 (try 3/3)
+>>>> [  145.336931] wlan0: authentication with 00:23:f8:8f:29:14 timed out
+>>>> [  151.217245] wlan0: authenticate with 00:23:f8:8f:29:14
+>>>>
+>>>> (30+ times in some cases)
+>>
+>> Had the same problem.
+>> It seems that this commit introduces the bug:
+>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?
+>> id=b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+>> I reverted it and now I have successful connection on first attempt. Linux
+>> 3.8.2, BCM4313 802.11b/g/n Wireless LAN Controller.
+>>
+> Hi,
+> that's disturbing.
+> I wonder what hardware version you have.
+> Could you share the contents of this debugfs file:
+> <debugfs_mount>/brcmsmac/bcma0:0/hardware
+>
+> Piotr
+>
+>
+>
