@@ -1,32 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38642 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756143Ab3C3Nwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Mar 2013 09:52:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 0/3] rt2x00: probe RT chipset before EEPROM validation
-Date: Sat, 30 Mar 2013 14:53:07 +0100
-Message-Id: <1364651590-29710-1-git-send-email-juhosg@openwrt.org> (sfid-20130330_145249_833666_78CF1AAA)
+Received: from he.sipsolutions.net ([78.46.109.217]:49793 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752345Ab3CFMoS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Mar 2013 07:44:18 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH] mac80211: Call drv_set_tim only if there is a change
+Date: Wed,  6 Mar 2013 13:44:10 +0100
+Message-Id: <1362573850-1460-1-git-send-email-johannes@sipsolutions.net> (sfid-20130306_134421_977530_69EF968F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch-set ensures that the RT chipset is probed before
-validating the EEPROM content.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Gabor Juhos (3):
-  rt2x00: introduce rt2x00_set_{rt,rf} helpers
-  rt2x00: rt2800lib: separate RT and RF chipset detection
-  rt2x00: rt2800lib: probe RT chipset earlier
+It is possible that sta_info_recalc_tim() is called consecutively
+without changing the station's tim bit. In such cases there is no
+need to call the driver's set_tim() callback.
 
- drivers/net/wireless/rt2x00/rt2800lib.c |   92 ++++++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2x00.h    |   17 ++++++
- 2 files changed, 72 insertions(+), 37 deletions(-)
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 852bf45..a36ceed 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -556,6 +556,15 @@ static inline void __bss_tim_clear(u8 *tim, u16 id)
+ 	tim[id / 8] &= ~(1 << (id % 8));
+ }
+ 
++static inline bool __bss_tim_get(u8 *tim, u16 id)
++{
++	/*
++	 * This format has been mandated by the IEEE specifications,
++	 * so this line may not be changed to use the test_bit() format.
++	 */
++	return tim[id / 8] & (1 << (id % 8));
++}
++
+ static unsigned long ieee80211_tids_for_ac(int ac)
+ {
+ 	/* If we ever support TIDs > 7, this obviously needs to be adjusted */
+@@ -636,6 +645,9 @@ void sta_info_recalc_tim(struct sta_info *sta)
+  done:
+ 	spin_lock_bh(&local->tim_lock);
+ 
++	if (indicate_tim == __bss_tim_get(ps->tim, id))
++		goto out_unlock;
++
+ 	if (indicate_tim)
+ 		__bss_tim_set(ps->tim, id);
+ 	else
+@@ -647,6 +659,7 @@ void sta_info_recalc_tim(struct sta_info *sta)
+ 		local->tim_in_locked_section = false;
+ 	}
+ 
++out_unlock:
+ 	spin_unlock_bh(&local->tim_lock);
+ }
+ 
 -- 
-1.7.10
+1.8.0
 
