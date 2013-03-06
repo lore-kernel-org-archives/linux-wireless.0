@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:40173 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755252Ab3C1L2v (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50938 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354Ab3CFWD2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 07:28:51 -0400
-Received: by mail-qc0-f174.google.com with SMTP id z24so4101295qcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 04:28:50 -0700 (PDT)
+	Wed, 6 Mar 2013 17:03:28 -0500
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r26M3OcL004879
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 6 Mar 2013 14:03:25 -0800
+Message-ID: <5137BD2C.5010208@candelatech.com> (sfid-20130306_230334_510297_40E90087)
+Date: Wed, 06 Mar 2013 14:03:24 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1364462493.8312.8.camel@jlt4.sipsolutions.net>
-References: <1364461894-30555-1-git-send-email-vincent.stehle@laposte.net>
-	<1364462493.8312.8.camel@jlt4.sipsolutions.net>
-Date: Thu, 28 Mar 2013 12:28:50 +0100
-Message-ID: <CA+icZUXZpYA8MVRk6++T5ykEEcTKL=gf4CqBMkexEr6N+GAd8A@mail.gmail.com> (sfid-20130328_122855_494724_F8915601)
-Subject: Re: [PATCH] mac80211: fix uninitialized variable
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vincent <vincent.stehle@laposte.net>,
-	linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Asymmetric ath9k upload v/s download throughput, sometimes.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 10:21 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2013-03-28 at 10:11 +0100, Vincent wrote:
->> Fix one code path where chanctx_conf is tested as being non-NULL while it may
->> be uninitialized.
->
-> No, you're wrong, presumably misled by the compiler.
->
+While trying to get a reliable system to do throughput testing, I
+hit something interesting.  I have two systems, same hardware, one
+running AP the other STA.  They are cabled through attenuator, which is
+set to 25dB of attenuation in this case.
 
-Hi,
+Most of the time, I can run one-way UDP traffic at about 330Mbps either
+upload or download direction.
 
-especially, when you use gcc >=4.7.x compiler with "-Os"
-optimize-level you and your binaries/libs get confused.
-Arnd Bergmann sent a patch for these "false-positives" (use
-"-Wmaybe-uninitialized" as a CFLAGS).
-I think this is a good idea.
-If more kernel-developers ACK it, it might get mainline :-)?
-Gogogo johill (but don't runaway) :-)...
+But, sometimes, the AP can only transmit at about 220Mbps while the STA can
+still upload at 330Mbps or so.
 
-For more details see also gcc-docs on how to suppress errors and treat
-them as warnings [1].
+I just hit this problem, and while mucking around with it, I started/stopped
+all processes on the two NICs (hostapd, wpa_supplicant), causing NICs to
+go idle and back up...  And what do you know..that 'fixed' it.
 
-Regards,
-- Sedat -
+Kernel is slightly patched 3.9-rc1+ from 2 days ago, but I've seen similar
+issues on 3.7 and earlier kernels for some time now.
 
-[1] http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#Warning-Options
+I am curious if there are any suggestions for what might could cause this
+sort of behaviour.  I've looked through various debugfs files and so forth,
+and cannot find any obvious reason for the observed behaviour.
 
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
