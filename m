@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:45241 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab3CGPrd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:47:33 -0500
-Received: by mail-ee0-f41.google.com with SMTP id c13so441701eek.14
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:32 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 00/13] b43: implement basic TX power mgmt
-Date: Thu,  7 Mar 2013 16:47:14 +0100
-Message-Id: <1362671247-10766-1-git-send-email-zajec5@gmail.com> (sfid-20130307_164737_089163_9FCB91D1)
+Received: from purkki.adurom.net ([80.68.90.206]:38782 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757175Ab3CFODV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Mar 2013 09:03:21 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Nick Thomas <nhomas@gmail.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k] Recent driver versions break compatibility with AR9285 for me
+References: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
+	<20790.56369.998911.884240@gargle.gargle.HOWL>
+	<CAEk6VBHTWn8CX7SKNVQz+T+Wqwe9Na=32Lz=+xOdqncNZFhhkQ@mail.gmail.com>
+Date: Wed, 06 Mar 2013 16:03:19 +0200
+In-Reply-To: <CAEk6VBHTWn8CX7SKNVQz+T+Wqwe9Na=32Lz=+xOdqncNZFhhkQ@mail.gmail.com>
+	(Nick Thomas's message of "Wed, 6 Mar 2013 00:00:13 -0700")
+Message-ID: <87boawaamw.fsf@purkki.adurom.net> (sfid-20130306_150324_849535_68A73298)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After spotting a lot of N-PHY-similar functions in
-BCM4331 dump of MMIO ops - split into names parts
-I was able to finally improve HT-PHY code.
+Nick Thomas <nhomas@gmail.com> writes:
 
-It now sets TX basically, I can finally talk with devices that are few
-meters away, not just few centimetres. It's a little patch bomb, sorry
-for that, but I wasn't sure if my code is correct until it was complete
-and started working.
+> The latter iwconfig readout is from an old kernel version (3.2.39),
+> where the card does indeed work. What I wish to report is that in a
+> more recent kernel version (3.7.10), the card doesn't work (iwconfig
+> says "no wireless extensions"). It's not a problem for me (I'm happily
+> using the old kernel), but I thought it was worth reporting.
 
-Rafał Miłecki (13):
-  b43: HT-PHY: rename AFE defines
-  b43: HT-PHY: add classifier control function
-  b43: HT-PHY: move TX fix to the separated function
-  b43: HT-PHY: implement spurious tone avoidance
-  b43: HT-PHY: implement MAC reclocking
-  b43: HT-PHY: implement CCA reset
-  b43: HT-PHY: implement PA override
-  b43: HT-PHY: implement controlling TX power control
-  b43: HT-PHY: implement stopping sample tone playback
-  b43: HT-PHY: implement playing sample tone
-  b43: HT-PHY: implement RSSI polling
-  b43: HT-PHY: setup TX power control
-  b43: HT-PHY: enable basic TX power setup
+What if 3.7.10 kernel just doesn't have the old wireless extensions
+(CONFIG_CFG80211_WEXT) enabled? Did you try iw which uses nl80211?
 
- drivers/net/wireless/b43/phy_ht.c |  603 +++++++++++++++++++++++++++++++++----
- drivers/net/wireless/b43/phy_ht.h |   77 ++++-
- 2 files changed, 613 insertions(+), 67 deletions(-)
+http://wireless.kernel.org/en/users/Documentation/iw
 
 -- 
-1.7.10.4
-
+Kalle Valo
