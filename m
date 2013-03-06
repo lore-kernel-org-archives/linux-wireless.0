@@ -1,141 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45541 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468Ab3CLNpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 09:45:47 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 11/13] wlcore: AP-mode - recover security seq num for stations
-Date: Tue, 12 Mar 2013 15:44:22 +0200
-Message-ID: <1363095864-24422-12-git-send-email-coelho@ti.com> (sfid-20130312_151303_842615_18207944)
-In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
-References: <1363095864-24422-1-git-send-email-coelho@ti.com>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:41232 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364Ab3CFG4N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Mar 2013 01:56:13 -0500
+Subject: [PATCH] ath6kl: print firmware capabilities
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 06 Mar 2013 08:56:06 +0200
+Message-ID: <20130306065606.23473.77631.stgit@localhost6.localdomain6> (sfid-20130306_075616_728178_4F50CEA1)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Printin the  firmware capabilities during the first firmware boot makes it easier to find out what
+features firmware supports.
 
-Save the sequence number of the broadcast AP link in the wlvif. For each
-connected station, save the sequence number in the drv_priv part of
-ieee80211_sta. Use the saved numbers on recovery/resume, with the
-obligatory increment on recovery.
+Obligatory screenshot:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+[21025.678481] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144 api 3
+[21025.678667] ath6kl: firmware supports: sched-scan,sta-p2pdev-duplex,rsn-cap-override
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/cmd.c      |    8 +++++++-
- drivers/net/wireless/ti/wlcore/main.c     |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    9 +++++++++
- 3 files changed, 44 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/init.c |   73 ++++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 56d248a..c9e0607 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -366,7 +366,9 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	wl1271_tx_reset_link_queues(wl, *hlid);
- 	wl->links[*hlid].wlvif = NULL;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 072a229..3e45adc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1549,10 +1549,81 @@ static const char *ath6kl_init_get_hif_name(enum ath6kl_hif_type type)
+ 	return NULL;
+ }
  
--	if (wlvif->bss_type != BSS_TYPE_AP_BSS) {
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
-+	    (wlvif->bss_type == BSS_TYPE_AP_BSS &&
-+	     *hlid == wlvif->ap.bcast_hlid)) {
- 		/*
- 		 * save the total freed packets in the wlvif, in case this is
- 		 * recovery or suspend
-@@ -635,6 +637,10 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	if (ret < 0)
- 		goto out_free_global;
- 
-+	/* use the previous security seq, if this is a recovery/resume */
-+	wl->links[wlvif->ap.bcast_hlid].total_freed_pkts =
-+						wlvif->total_freed_pkts;
 +
- 	cmd->role_id = wlvif->role_id;
- 	cmd->ap.aging_period = cpu_to_le16(wl->conf.tx.ap_aging_period);
- 	cmd->ap.bss_index = WL1271_AP_BSS_INDEX;
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4da5584..43865d1 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4505,6 +4505,9 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
- 		return -EBUSY;
++static const struct fw_capa_str_map {
++	int id;
++	const char *name;
++} fw_capa_map[] = {
++	{ ATH6KL_FW_CAPABILITY_HOST_P2P, "host-p2p" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN, "sched-scan" },
++	{ ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX, "sta-p2pdev-duplex" },
++	{ ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT, "inactivity-timeout" },
++	{ ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE, "rsn-cap-override" },
++	{ ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER, "wow-mc-filter" },
++	{ ATH6KL_FW_CAPABILITY_BMISS_ENHANCE, "bmiss-enhance" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST, "sscan-match-list" },
++	{ ATH6KL_FW_CAPABILITY_RSSI_SCAN_THOLD, "rssi-scan-thold" },
++	{ ATH6KL_FW_CAPABILITY_CUSTOM_MAC_ADDR, "custom-mac-addr" },
++	{ ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY, "tx-err-notify" },
++	{ ATH6KL_FW_CAPABILITY_REGDOMAIN, "regdomain" },
++	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_V2, "sched-scan-v2" },
++	{ ATH6KL_FW_CAPABILITY_HEART_BEAT_POLL, "hb-poll" },
++};
++
++static const char *ath6kl_init_get_fw_capa_name(unsigned int id)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(fw_capa_map); i++) {
++		if (fw_capa_map[i].id == id)
++			return fw_capa_map[i].name;
++	}
++
++	return "<unknown>";
++}
++
++static void ath6kl_init_get_fwcaps(struct ath6kl *ar, char *buf, size_t buf_len)
++{
++	u8 *data = (u8 *) ar->fw_capabilities;
++	size_t trunc_len, len = 0;
++	int i, index, bit;
++	char *trunc = "...";
++
++	for (i = 0; i < ATH6KL_FW_CAPABILITY_MAX; i++) {
++		index = i / 8;
++		bit = i % 8;
++
++		if (index >= sizeof(ar->fw_capabilities) * 4)
++			break;
++
++		if (buf_len - len < 4) {
++			ath6kl_warn("firmware capability buffer too small!\n");
++
++			/* add "..." to the end of string */
++			trunc_len = strlen(trunc) + 1;
++			strncpy(buf + buf_len - trunc_len, trunc, trunc_len);
++
++			return;
++		}
++
++		if (data[index] & (1 << bit)) {
++			len += scnprintf(buf + len, buf_len - len, "%s,",
++					    ath6kl_init_get_fw_capa_name(i));
++		}
++	}
++
++	/* overwrite the last comma */
++	if (len > 0)
++		len--;
++
++	buf[len] = '\0';
++}
++
+ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ {
+ 	long timeleft;
+ 	int ret, i;
++	char buf[200];
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_BOOT, "hw start\n");
+ 
+@@ -1615,6 +1686,8 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 			    ar->wiphy->fw_version,
+ 			    ar->fw_api,
+ 			    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
++		ath6kl_init_get_fwcaps(ar, buf, sizeof(buf));
++		ath6kl_info("firmware supports: %s\n", buf);
  	}
  
-+	/* use the previous security seq, if this is a recovery/resume */
-+	wl->links[wl_sta->hlid].total_freed_pkts = wl_sta->total_freed_pkts;
-+
- 	set_bit(wl_sta->hlid, wlvif->ap.sta_hlid_map);
- 	memcpy(wl->links[wl_sta->hlid].addr, sta->addr, ETH_ALEN);
- 	wl->active_sta_count++;
-@@ -4513,12 +4516,37 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
- 
- void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- {
-+	struct wl1271_station *wl_sta;
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
-+
- 	if (!test_bit(hlid, wlvif->ap.sta_hlid_map))
- 		return;
- 
- 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
- 	__clear_bit(hlid, &wl->ap_ps_map);
- 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
-+
-+	/*
-+	 * save the last used PN in the private part of iee80211_sta,
-+	 * in case of recovery/suspend
-+	 */
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, wl->links[hlid].addr);
-+	if (sta) {
-+		wl_sta = (void *)sta->drv_priv;
-+		wl_sta->total_freed_pkts = wl->links[hlid].total_freed_pkts;
-+
-+		/*
-+		 * increment the initial seq number on recovery to account for
-+		 * transmitted packets that we haven't yet got in the FW status
-+		 */
-+		if (test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags))
-+			wl_sta->total_freed_pkts +=
-+					WL1271_TX_SQN_POST_RECOVERY_PADDING;
-+	}
-+	rcu_read_unlock();
-+
- 	wl12xx_free_link(wl, wlvif, &hlid);
- 	wl->active_sta_count--;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 1ae26ff..ea3c2bb 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -325,6 +325,13 @@ struct wl12xx_rx_filter {
- struct wl1271_station {
- 	u8 hlid;
- 	bool in_connection;
-+
-+	/*
-+	 * total freed FW packets on the link to the STA - used for tracking the
-+	 * AES/TKIP PN across recoveries. Re-initialized each time from the
-+	 * wl1271_station structure.
-+	 */
-+	u64 total_freed_pkts;
- };
- 
- struct wl12xx_vif {
-@@ -460,6 +467,8 @@ struct wl12xx_vif {
- 		/*
- 		 * total freed FW packets on the link - used for storing the AES/TKIP
- 		 * PN during recovery, as this structure is not zeroed out.
-+		 * For STA this holds the PN of the link to the AP.
-+		 * For AP this holds the PN of the broadcast link.
- 		 */
- 		u64 total_freed_pkts;
- 	};
--- 
-1.7.10.4
+ 	if (ar->version.abi_ver != ATH6KL_ABI_VERSION) {
 
