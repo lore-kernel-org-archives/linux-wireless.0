@@ -1,107 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:39359 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932801Ab3CYUFh (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:53381 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756060Ab3CGSGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 16:05:37 -0400
-Received: by mail-ob0-f172.google.com with SMTP id tb18so6393166obb.17
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 13:05:37 -0700 (PDT)
-Message-ID: <5150AE0F.2040306@lwfinger.net> (sfid-20130325_210543_017536_74B56428)
-Date: Mon, 25 Mar 2013 15:05:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 7 Mar 2013 13:06:43 -0500
+Date: Thu, 7 Mar 2013 19:06:35 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
+	johannes@sipsolutions.net,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: Question regarding minstrel(_ht) and retry limits
+Message-ID: <20130307180635.GA31210@pandem0nium> (sfid-20130307_190647_928136_9E22F729)
+References: <20130307153100.GA30608@pandem0nium>
+ <5138B69C.4000102@openwrt.org>
 MIME-Version: 1.0
-To: Vincent Brillault <gentoo@lerya.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
-References: <20130307192920.GB8668@Fea.lerya.net> <20130308215833.GA2829@Fea.lerya.net> <513A960B.2020304@lwfinger.net> <20130309113222.GA3009@Fea.lerya.net> <513B7E58.9000505@lwfinger.net> <20130311183825.GG3009@Fea.lerya.net> <20130313080048.GB3484@Fea.lerya.net> <20130317141201.GA2557@Fea.lerya.net> <20130325182910.GA10274@Fea.lerya.net> <5150A15F.20600@lwfinger.net> <20130325195104.GA11212@Fea.lerya.net>
-In-Reply-To: <20130325195104.GA11212@Fea.lerya.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
+In-Reply-To: <5138B69C.4000102@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/2013 02:51 PM, Vincent Brillault wrote:
-> Thanks for your quick response, comments inline.
->
-> On Mon 25.Mar'13 at 14:11:27 -0500, Larry Finger wrote:
->> I think the difference in our two systems is in the use of NetworkManager and
->> the associated applet. With it, rtl_op_bss_info_changed() does not seem to be
->> called before sta is ready.
->>
->> Attached is a patch that will force mac->mode when sta has not been established.
->> Perhaps that will be enough.
-> I does work. I don't have any warning when loading the module and
-> establishing the connection. What will happen if the network is not
-> really a WIRELESS_MODE_G but a WIRELESS_MODE_B ?
 
-It should not matter, but I will make it B instead of G. Once the connection is 
-established, then the handshaking with the AP will set sta and the mode to 
-whatever the AP supports.
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> It not, I will need to set up your distro and run the wireless exactly the way
->> you do to duplicate your results. Please provide the distro name and version,
->> the architecture, the sequence of commands, and the contents of any special
->> scripts you run.
-> If you want to duplicate my system, here are those information:
-> Distribution: Gentoo Linux (profile hardened/linux/x86)
-> Architecture: i686
-> Current Kernel: manually installed wireless-testing 3.9.0-rc3+ with your
-> patches
->
-> I've attached my kernel .config, a emerge --info (contains
-> information about my system configuration). It's a stable gentoo system,
-> with the following unstables packages:
-> '''
-> =sys-kernel/linux-firmware-99999999 **
-> =net-wireless/wpa_supplicant-2.0 ~x86
-> =dev-libs/libnl-3.2.21 ~x86
-> '''
->
-> wpa_supplicant is using the following USE flags:
-> '''
-> net-wireless/wpa_supplicant -ssl fasteap wps ap wimax p2p eap-sim
-> '''
->
-> I did not modified the standard init scripts from Gentoo, my
-> configuration of the interface (/etc/conf.d/net) is:
-> '''
-> config_wlan0="dhcp"
-> wpa_supplicant_wlan0="-f /var/log/wpa_supplicant.log -W nl80211 -t"
-> '''
->
-> The uncommented part of my wpa_supplicant configuration file only
-> contains the following:
-> '''
-> ctrl_interface=/var/run/wpa_supplicant
-> eapol_version=1
-> ap_scan=1
-> fast_reauth=1
-> country=FR
-> network={
->    ssid="${myssid}"
->    scan_ssid=1
->    proto=WPA RSN
->    key_mgmt=WPA-PSK
->    pairwise=CCMP
->    group=TKIP
->    psk=${mypsk}
-> }
-> '''
->
-> In order to have the errors I mention, I run the following:
-> (inside a compat-drivers pull, just for unloading the module)
-> '''
-> /etc/init.d/net.wlan0 stop && make wlunload; dmesg -c > /dev/null;
-> modprobe rtl8192ce; /etc/init.d/net.wlan0 start;
-> '''
->
->
-> I know this is not a standard distribution and that's why, if you have
-> any idea of things I can do to help you, please tell me.
+Hey Felix,
 
-I will let you change that G to a B and test some more. If all goes well, then I 
-will not need to set up that test bed, but at least I have the necessary details 
-if ever required.
+On Thu, Mar 07, 2013 at 04:47:40PM +0100, Felix Fietkau wrote:
+> On 2013-03-07 4:31 PM, Simon Wunderlich wrote:
+> > Hello list,
+> >=20
+> > as you might be aware, it is possible to set short and long retry limits
+> > to specify how often a frame should be retransmitted before getting dro=
+pped.
+> >=20
+> > However, it appears that minstrel completely ignores any retry limit, a=
+nd it is
+> > also not applied later in the code path. I've hacked minstrel_ht a litt=
+le bit
+> > to apply the retry limits in minstrel_get_rate() before returning the r=
+ates
+> > (i.e. just cutting retries at the end from the struct ieee80211_tx_rate=
+ array).
+> >=20
+> > This worked for me, but is probably not clean either and might disturb =
+minstrel
+> > operation. Also minstrel uses much more retries than default retry limi=
+ts
+> > (short: 7, long: 4), so this patch might introduce behaviour changes.
+> >=20
+> > What is your opinion on this? Can we get it properly supported? Does it=
+ hurt
+> > to just use the first $retry_limit retries, and cut the rest at other r=
+ates
+> > at the end?
+> I think simply cutting off from the end of the retry chain is a bad idea
+> - if there are too many scheduled retries in the max throughput rate, it
+> will not make it to the fallback to a reliable rate if that fails. A
+> better approach is to make minstrel use fewer retries per rate.
+>=20
+> - Felix
+>=20
 
-Larry
+Are there any theoritical constraints to consider? I don't know too much
+about minstrel theory, but from what I understand:
 
+The ieee80211_tx_rate array has 4 entries with rate + count number, where
+the last entries may be empty (count =3D 0).
 
+Would you suggest to decrease the count numbers of each array entry uniform=
+ly
+to meet the limit requirement? From what I've seen, minstrel assigns more t=
+han
+7 tries in total quite often - will it be problematic if we decrease the co=
+unt
+number uniformally? And finally, is there any more elegant way than adjusti=
+ng
+to the limits just before returning and after minstrel made all its choices?
+This is how I've implemented the cutting as described above, but it appears
+that there are some limits in minstrel too ... not sure if they can be used
+to enforce the total count limit though. :)
+
+Thanks,
+	Simon
+
+--C7zPtVaVf+AK4Oqc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlE41ysACgkQrzg/fFk7axYhJwCfWYnw//0d/ap9JBsewHYJCiUY
+dyYAoJXxyBrRwoKk4e9zbAIOqk8U1Nmf
+=5lyX
+-----END PGP SIGNATURE-----
+
+--C7zPtVaVf+AK4Oqc--
