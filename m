@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40386 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907Ab3C0To6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 15:44:58 -0400
-Message-ID: <1364413484.8388.23.camel@jlt4.sipsolutions.net> (sfid-20130327_204504_474452_529BD52E)
-Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 27 Mar 2013 20:44:44 +0100
-In-Reply-To: <871ub0zlgp.fsf@sycorax.lbl.gov>
-References: <87li993mug.fsf@sycorax.lbl.gov>
-	 <1364390086.8388.7.camel@jlt4.sipsolutions.net>
-	 <87r4j021ac.fsf@sycorax.lbl.gov>
-	 <1364406085.8388.11.camel@jlt4.sipsolutions.net>
-	 <87ip4cg1qg.fsf@sycorax.lbl.gov>
-	 <1364410962.8388.19.camel@jlt4.sipsolutions.net>
-	 <87txnwacdw.fsf@sycorax.lbl.gov>
-	 <1364411696.8388.21.camel@jlt4.sipsolutions.net>
-	 <871ub0zlgp.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.neratec.com ([80.75.119.105]:33625 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932384Ab3CGOhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Mar 2013 09:37:21 -0500
+Message-ID: <5138A4C8.7040500@neratec.com> (sfid-20130307_153726_629804_0BA8646D)
+Date: Thu, 07 Mar 2013 15:31:36 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, stable@vger.kernel.org
+Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
+ that don't include chain 0
+References: <1358715322-46447-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1358715322-46447-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-27 at 12:33 -0700, Alex Romosan wrote:
+There is a regression introduced by this patch when power save is off on
+the station for idle checks.
+I have AR9590 station with rx and tx chain set to 0x1 connected
+to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
 
-> [   18.377276] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
-> [   18.395294] iwlwifi 0000:03:00.0: I iwl_trans_pcie_reclaim [Q 0] 0 -> 1 (1)
-> [   18.395309] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx TXQ 0 status SUCCESS (0x00000201)
-> [   18.395317] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx                               initial_rate 0x800d retries 0, idx=0 ssn=1 seq_ctl=0xc0
-> [   18.395349] wlan0: authenticated
+Before this patch in connection polling the station was properly sending
+null function to check whether AP is still there. After this patch it sends
+broadcast probe request which is anyway wrong or some 16 or so packets
+of random data (rarely). It manifests itself in lost connection because 
+there
+is no ack from AP which is expected for null function.
+
+I have been following skb's up to the descriptor setting in ath9k and it was
+all ok i.e. proper null function with valid addresses.
+
+I have been bisecting it twice because it doesn't make much sense but maybe
+it's a HW issue?
 
 
-> [  110.182503] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
-> [  110.185173] iwlwifi 0000:03:00.0: I iwl_trans_pcie_reclaim [Q 0] 0 -> 1 (1)
-> [  110.185191] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx TXQ 0 status PASSIVE_NO_RX (0x00000090)
-> [  110.185200] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx                               initial_rate 0x800d retries 0, idx=0 ssn=1 seq_ctl=0x60
-> [  110.187879] iwlwifi 0000:03:00.0: I iwl_trans_pcie_reclaim [Q 0] 1 -> 2 (2)
-> [  110.187890] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx TXQ 0 status PASSIVE_NO_RX (0x00000090)
-> [  110.187899] iwlwifi 0000:03:00.0: I iwlagn_rx_reply_tx                               initial_rate 0x400d retries 0, idx=1 ssn=2 seq_ctl=0x60
-
-As I had expected. Not sure why it's two frames every time?
-
-Unfortunately I can't reproduce it, I suspect my environment isn't clean
-enough any more (somebody else bought a 5 GHz AP recently ...)
-
-Could you try this patch?
-
-http://p.sipsolutions.net/617a8667db243e11.txt
-
-johannes
-
+Wojtek
