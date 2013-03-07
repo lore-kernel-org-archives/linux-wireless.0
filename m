@@ -1,49 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:47463 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698Ab3CVN4x (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:56620 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932407Ab3CGPrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 09:56:53 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr12so479705wgb.23
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2013 06:56:52 -0700 (PDT)
-Date: Fri, 22 Mar 2013 14:53:42 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sam Leffler <sleffler@chromium.org>
-Subject: Re: Radiotap injected rates
-Message-ID: <20130322135342.GD29340@magnum.frso.rivierawaves.com> (sfid-20130322_145658_821916_9A672735)
-References: <20130317215544.GA7031@gobelin>
- <1363634768.8260.16.camel@jlt4.sipsolutions.net>
- <20130318195406.GB17878@gobelin>
- <1363955094.8238.32.camel@jlt4.sipsolutions.net>
- <20130322132716.GB29340@magnum.frso.rivierawaves.com>
- <1363959125.8238.49.camel@jlt4.sipsolutions.net>
+	Thu, 7 Mar 2013 10:47:53 -0500
+Received: by mail-ea0-f169.google.com with SMTP id d13so1650410eaa.28
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:52 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 06/13] b43: HT-PHY: implement CCA reset
+Date: Thu,  7 Mar 2013 16:47:20 +0100
+Message-Id: <1362671247-10766-7-git-send-email-zajec5@gmail.com> (sfid-20130307_164756_918916_4F66C51E)
+In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1363959125.8238.49.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 22, 2013 at 02:32:05PM +0100, Johannes Berg wrote:
-> On Fri, 2013-03-22 at 14:27 +0100, Karl Beldan wrote:
-> 
-> > > > And, oops typo, I meant :
-> > > > 
-> > > > +	    !(info->flags & IEEE80211_TX_CTL_INJECTED && info->control.rates[0] != -1))
-> > > > 
-> > > Well actually this won't work anyway because control.rates[] isn't
-> > > initialized to -1.
-> > > 
-> > Of course we would set info->control.rates[0] to -1 by default in
-> > ieee80211_parse_tx_radiotap and set it to something else if we parse a
-> > IEEE80211_RADIOTAP_{RATE,MCS} (i.e what I was referring to in 1b).
-> 
-> That still wouldn't work though, there are other paths leading to point
-> you're looking at. You'd have to set it always, which would probably
-> work but is tricky to ensure at the right points.
-> 
-The only path I could see setting IEEE80211_TX_CTL_INJECTED seems
-ieee80211_monitor_start_xmit, am I missing another one ?
+It was just another similar-to-N-PHY and easy-to-track routine:
+write32 0xb0601408 <- 0x00002057
+ phy_read(0x0001) -> 0x0000
+phy_write(0x0001) <- 0x4000
+phy_write(0x0001) <- 0x0000
+write32 0xb0601408 <- 0x00002055
+(b43_phy_ht_force_rf_sequence was moved up unmodified)
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+P.S.
+There is a "msleep" usage warning, but it's in the code I just move. Will fix
+sleeps/waits later globally.
+---
+ drivers/net/wireless/b43/phy_ht.c |   68 +++++++++++++++++++++++++------------
+ 1 file changed, 47 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 4b24816..aedbae7 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -154,6 +154,31 @@ static void b43_radio_2059_init(struct b43_wldev *dev)
+ }
  
-Karl
+ /**************************************************
++ * RF
++ **************************************************/
++
++static void b43_phy_ht_force_rf_sequence(struct b43_wldev *dev, u16 rf_seq)
++{
++	u8 i;
++
++	u16 save_seq_mode = b43_phy_read(dev, B43_PHY_HT_RF_SEQ_MODE);
++	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_MODE, 0x3);
++
++	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_TRIG, rf_seq);
++	for (i = 0; i < 200; i++) {
++		if (!(b43_phy_read(dev, B43_PHY_HT_RF_SEQ_STATUS) & rf_seq)) {
++			i = 0;
++			break;
++		}
++		msleep(1);
++	}
++	if (i)
++		b43err(dev->wl, "Forcing RF sequence timeout\n");
++
++	b43_phy_write(dev, B43_PHY_HT_RF_SEQ_MODE, save_seq_mode);
++}
++
++/**************************************************
+  * Various PHY ops
+  **************************************************/
+ 
+@@ -173,6 +198,20 @@ static u16 b43_phy_ht_classifier(struct b43_wldev *dev, u16 mask, u16 val)
+ 	return tmp;
+ }
+ 
++static void b43_phy_ht_reset_cca(struct b43_wldev *dev)
++{
++	u16 bbcfg;
++
++	b43_phy_force_clock(dev, true);
++	bbcfg = b43_phy_read(dev, B43_PHY_HT_BBCFG);
++	b43_phy_write(dev, B43_PHY_HT_BBCFG, bbcfg | B43_PHY_HT_BBCFG_RSTCCA);
++	udelay(1);
++	b43_phy_write(dev, B43_PHY_HT_BBCFG, bbcfg & ~B43_PHY_HT_BBCFG_RSTCCA);
++	b43_phy_force_clock(dev, false);
++
++	b43_phy_ht_force_rf_sequence(dev, B43_PHY_HT_RF_SEQ_TRIG_RST2RX);
++}
++
+ static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
+ {
+ 	u8 i, j;
+@@ -209,27 +248,6 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
+ 	}
+ }
+ 
+-static void b43_phy_ht_force_rf_sequence(struct b43_wldev *dev, u16 rf_seq)
+-{
+-	u8 i;
+-
+-	u16 save_seq_mode = b43_phy_read(dev, B43_PHY_HT_RF_SEQ_MODE);
+-	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_MODE, 0x3);
+-
+-	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_TRIG, rf_seq);
+-	for (i = 0; i < 200; i++) {
+-		if (!(b43_phy_read(dev, B43_PHY_HT_RF_SEQ_STATUS) & rf_seq)) {
+-			i = 0;
+-			break;
+-		}
+-		msleep(1);
+-	}
+-	if (i)
+-		b43err(dev->wl, "Forcing RF sequence timeout\n");
+-
+-	b43_phy_write(dev, B43_PHY_HT_RF_SEQ_MODE, save_seq_mode);
+-}
+-
+ static void b43_phy_ht_read_clip_detection(struct b43_wldev *dev, u16 *clip_st)
+ {
+ 	clip_st[0] = b43_phy_read(dev, B43_PHY_HT_C1_CLIP1THRES);
+@@ -319,6 +337,14 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
+ 	b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
+ 
+ 	/* TODO: reset PLL */
++
++	if (spuravoid)
++		b43_phy_set(dev, B43_PHY_HT_BBCFG, B43_PHY_HT_BBCFG_RSTRX);
++	else
++		b43_phy_mask(dev, B43_PHY_HT_BBCFG,
++				~B43_PHY_HT_BBCFG_RSTRX & 0xFFFF);
++
++	b43_phy_ht_reset_cca(dev);
+ }
+ 
+ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
+-- 
+1.7.10.4
+
