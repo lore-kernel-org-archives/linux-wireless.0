@@ -1,92 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:60136 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933880Ab3CSWOH (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:49004 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754377Ab3CGRCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:14:07 -0400
+	Thu, 7 Mar 2013 12:02:02 -0500
+Message-ID: <5138C806.5010309@lwfinger.net> (sfid-20130307_180210_122346_1374853D)
+Date: Thu, 07 Mar 2013 11:01:58 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20130319.145258.1891905092469394685.davem@davemloft.net>
-References: <20130319.145258.1891905092469394685.davem@davemloft.net>
-Date: Wed, 20 Mar 2013 00:14:05 +0200
-Message-ID: <CAEnQRZDOwE592qXK0h-u1B7R-9oWP1CZ2rbt197QTn4oagdwgw@mail.gmail.com> (sfid-20130319_231416_756473_A2E5DAB3)
-Subject: Re: [PATCH] net: Add socket() system call self test.
-From: Daniel Baluta <daniel.baluta@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Matt Chen <machen@suse.com>
+CC: Joe Perches <joe@perches.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, Jeffrey Cheung <jcheung@suse.com>,
+	Michal Marek <mmarek@suse.cz>
+Subject: Re: [RFC/RFT 00/27] Updates for the rtlwifi family of drivers
+References: <1361837619-2985-1-git-send-email-Larry.Finger@lwfinger.net> <1361845357.2023.7.camel@joe-AO722> <512C264A.3000104@lwfinger.net> <CALx5=V_Y2=bZWXzc9uQkmTBAECeMLbnPU0VA56Wp2tNeBB3Dqw@mail.gmail.com>
+In-Reply-To: <CALx5=V_Y2=bZWXzc9uQkmTBAECeMLbnPU0VA56Wp2tNeBB3Dqw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+On 03/06/2013 10:49 PM, Matt Chen wrote:
+> I tried and test the patches for rtl8188ee and rtl8192ce, so far are working
+> fine to me. :)
+>
+> Acked-by: Chen, Chien-Chia <machen@suse.com <mailto:machen@suse.com>>
 
-On Tue, Mar 19, 2013 at 8:52 PM, David Miller <davem@davemloft.net> wrote:
->
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
->
-> As mentioned during the netfilter workshop, we will be adding
-> all sorts of networking tests now that 3.9.x has a selftest
-> framework in place.
->
-> The first test I'm adding to net-next does some very simple
-> testing of the socket() system call.
->
-> Feel free to send patches for more tests, making the run
-> script more powerful (perhaps by taking a whitespace
-> seperated list of tests to run on the command line), and
-> adding more checks to the socket.c test.
->
-> Thanks.
->
->  tools/testing/selftests/Makefile                   |  1 +
->  tools/testing/selftests/net-socket/Makefile        | 16 ++++
->  .../testing/selftests/net-socket/run_netsocktests  | 12 +++
->  tools/testing/selftests/net-socket/socket.c        | 92 ++++++++++++++++++++++
->  4 files changed, 121 insertions(+)
->  create mode 100644 tools/testing/selftests/net-socket/Makefile
->  create mode 100644 tools/testing/selftests/net-socket/run_netsocktests
->  create mode 100644 tools/testing/selftests/net-socket/socket.c
->
-> diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-> index 3cc0ad7..7c6280f 100644
-> --- a/tools/testing/selftests/Makefile
-> +++ b/tools/testing/selftests/Makefile
-> @@ -5,6 +5,7 @@ TARGETS += vm
->  TARGETS += cpu-hotplug
->  TARGETS += memory-hotplug
->  TARGETS += efivarfs
-> +TARGETS += net-socket
->
->  all:
->         for TARGET in $(TARGETS); do \
-> diff --git a/tools/testing/selftests/net-socket/Makefile b/tools/testing/selftests/net-socket/Makefile
-> new file mode 100644
-> index 0000000..f27ee10
-> --- /dev/null
-> +++ b/tools/testing/selftests/net-socket/Makefile
-> @@ -0,0 +1,16 @@
-> +# Makefile for net-socket selftests
-> +
-> +CC = $(CROSS_COMPILE)gcc
-> +CFLAGS = -Wall
-> +
-> +NET_SOCK_PROGS = socket
-> +
-> +all: $(NET_SOCK_PROGS)
-> +%: %.c
-> +       $(CC) $(CFLAGS) -o $@ $^
-> +
-> +run_tests: all
-> +       @/bin/sh ./run_netsocktests || echo "vmtests: [FAIL]"
-> +
-> +clean:
-> +       $(RM) $(NET_SOCK_PROGS)
-> diff --git a/tools/testing/selftests/net-socket/run_netsocktests b/tools/testing/selftests/net-socket/run_netsocktests
+Thanks for the update. I am still chasing system crashes related to CPU lockups 
+caused by spinlock contention. I take it that you have not seen these.
 
-I think it's better to have a selftests/net directory dedicated for
-networking tests. Over time
-the number of net-{x} directories may become very large.
+Larry
 
 
-Daniel.
