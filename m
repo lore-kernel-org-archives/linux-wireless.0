@@ -1,147 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42494 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53087 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757586Ab3CDRDE (ORCPT
+	with ESMTP id S1754358Ab3CGK1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 12:03:04 -0500
+	Thu, 7 Mar 2013 05:27:51 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: greearb@candelatech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: provide race-free 64-bit traffic counters
-Date: Mon,  4 Mar 2013 18:02:58 +0100
-Message-Id: <1362416578-1672-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_180309_300167_9633E6E6)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] mac80211: clean up key freeing a bit
+Date: Thu,  7 Mar 2013 11:27:45 +0100
+Message-Id: <1362652067-14903-1-git-send-email-johannes@sipsolutions.net> (sfid-20130307_112754_901060_C0007A11)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Make the TX bytes/packets counters race-free by keeping
-them per AC so concurrent TX on queues can't cause lost
-or wrong updates. This works since each station belongs
-to a single interface. While at it also make the bytes
-counters 64-bit.
+When a key is allocated but not really added, there's no
+need to go through the entire teardown process. Also, if
+adding a key fails, ieee80211_key_link() can take care of
+freeing it instead of the (only) caller.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c      | 22 ++++++++++++++--------
- net/mac80211/sta_info.h |  9 +++++----
- net/mac80211/tx.c       |  5 +++--
- 3 files changed, 22 insertions(+), 14 deletions(-)
+ net/mac80211/cfg.c |  4 +---
+ net/mac80211/key.c | 32 +++++++++++++++++++-------------
+ net/mac80211/key.h | 11 +++++------
+ 3 files changed, 25 insertions(+), 22 deletions(-)
 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8259a5b..1ff629a 100644
+index 61fc911..c2d4bf2 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -445,12 +445,13 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct timespec uptime;
-+	int ac;
- 
- 	sinfo->generation = sdata->local->sta_generation;
- 
- 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
--			STATION_INFO_RX_BYTES |
--			STATION_INFO_TX_BYTES |
-+			STATION_INFO_RX_BYTES64 |
-+			STATION_INFO_TX_BYTES64 |
- 			STATION_INFO_RX_PACKETS |
- 			STATION_INFO_TX_PACKETS |
- 			STATION_INFO_TX_RETRIES |
-@@ -467,10 +468,14 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	sinfo->connected_time = uptime.tv_sec - sta->last_connected;
- 
- 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-+	sinfo->tx_bytes = 0;
-+	sinfo->tx_packets = 0;
-+	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		sinfo->tx_bytes += sta->tx_bytes[ac];
-+		sinfo->tx_packets += sta->tx_packets[ac];
-+	}
- 	sinfo->rx_bytes = sta->rx_bytes;
--	sinfo->tx_bytes = sta->tx_bytes;
- 	sinfo->rx_packets = sta->rx_packets;
--	sinfo->tx_packets = sta->tx_packets;
- 	sinfo->tx_retries = sta->tx_retry_count;
- 	sinfo->tx_failed = sta->tx_retry_failed;
- 	sinfo->rx_dropped_misc = sta->rx_dropped;
-@@ -598,8 +603,8 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 		data[i++] += sta->rx_fragments;		\
- 		data[i++] += sta->rx_dropped;		\
- 							\
--		data[i++] += sta->tx_packets;		\
--		data[i++] += sta->tx_bytes;		\
-+		data[i++] += sinfo.tx_packets;		\
-+		data[i++] += sinfo.tx_bytes;		\
- 		data[i++] += sta->tx_fragments;		\
- 		data[i++] += sta->tx_filtered_count;	\
- 		data[i++] += sta->tx_retry_failed;	\
-@@ -621,13 +626,14 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 		if (!(sta && !WARN_ON(sta->sdata->dev != dev)))
- 			goto do_survey;
- 
-+		sinfo.filled = 0;
-+		sta_set_sinfo(sta, &sinfo);
-+
- 		i = 0;
- 		ADD_STA_STATS(sta);
- 
- 		data[i++] = sta->sta_state;
- 
--		sinfo.filled = 0;
--		sta_set_sinfo(sta, &sinfo);
- 
- 		if (sinfo.filled & STATION_INFO_TX_BITRATE)
- 			data[i] = 100000 *
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index e5868c3..0d4fec3 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -333,7 +333,8 @@ struct sta_info {
- 	unsigned long driver_buffered_tids;
- 
- 	/* Updated from RX path only, no locking requirements */
--	unsigned long rx_packets, rx_bytes;
-+	unsigned long rx_packets;
-+	u64 rx_bytes;
- 	unsigned long wep_weak_iv_count;
- 	unsigned long last_rx;
- 	long last_connected;
-@@ -353,9 +354,9 @@ struct sta_info {
- 	unsigned int fail_avg;
- 
- 	/* Updated from TX path only, no locking requirements */
--	unsigned long tx_packets;
--	unsigned long tx_bytes;
--	unsigned long tx_fragments;
-+	u32 tx_packets[IEEE80211_NUM_ACS];
-+	u32 tx_fragments;
-+	u64 tx_bytes[IEEE80211_NUM_ACS];
- 	struct ieee80211_tx_rate last_tx_rate;
- 	int last_rx_rate_idx;
- 	u32 last_rx_rate_flag;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c79860f..6af7f60 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -991,14 +991,15 @@ static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
- {
- 	struct sk_buff *skb;
-+	int ac = skb_get_queue_mapping(tx->skb);
- 
- 	if (!tx->sta)
- 		return TX_CONTINUE;
- 
--	tx->sta->tx_packets++;
-+	tx->sta->tx_packets[ac]++;
- 	skb_queue_walk(&tx->skbs, skb) {
- 		tx->sta->tx_fragments++;
--		tx->sta->tx_bytes += skb->len;
-+		tx->sta->tx_bytes[ac] += skb->len;
+@@ -175,7 +175,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 		 *       add it to the device after the station.
+ 		 */
+ 		if (!sta || !test_sta_flag(sta, WLAN_STA_ASSOC)) {
+-			ieee80211_key_free(sdata->local, key);
++			ieee80211_key_free_unused(key);
+ 			err = -ENOENT;
+ 			goto out_unlock;
+ 		}
+@@ -214,8 +214,6 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
  	}
  
- 	return TX_CONTINUE;
+ 	err = ieee80211_key_link(key, sdata, sta);
+-	if (err)
+-		ieee80211_key_free(sdata->local, key);
+ 
+  out_unlock:
+ 	mutex_unlock(&sdata->local->sta_mtx);
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 99e9f6a..d86be64 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -397,6 +397,15 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+ 	return key;
+ }
+ 
++static void ieee80211_key_free_common(struct ieee80211_key *key)
++{
++	if (key->conf.cipher == WLAN_CIPHER_SUITE_CCMP)
++		ieee80211_aes_key_free(key->u.ccmp.tfm);
++	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
++		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
++	kfree(key);
++}
++
+ static void __ieee80211_key_destroy(struct ieee80211_key *key,
+ 				    bool delay_tailroom)
+ {
+@@ -412,10 +421,6 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
+ 	if (key->local)
+ 		ieee80211_key_disable_hw_accel(key);
+ 
+-	if (key->conf.cipher == WLAN_CIPHER_SUITE_CCMP)
+-		ieee80211_aes_key_free(key->u.ccmp.tfm);
+-	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
+-		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
+ 	if (key->local) {
+ 		struct ieee80211_sub_if_data *sdata = key->sdata;
+ 
+@@ -431,7 +436,13 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key,
+ 		}
+ 	}
+ 
+-	kfree(key);
++	ieee80211_key_free_common(key);
++}
++
++void ieee80211_key_free_unused(struct ieee80211_key *key)
++{
++	WARN_ON(key->sdata || key->local);
++	ieee80211_key_free_common(key);
+ }
+ 
+ int ieee80211_key_link(struct ieee80211_key *key,
+@@ -469,6 +480,9 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	ret = ieee80211_key_enable_hw_accel(key);
+ 
++	if (ret)
++		__ieee80211_key_free(key, true);
++
+ 	mutex_unlock(&sdata->local->key_mtx);
+ 
+ 	return ret;
+@@ -489,14 +503,6 @@ void __ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom)
+ 	__ieee80211_key_destroy(key, delay_tailroom);
+ }
+ 
+-void ieee80211_key_free(struct ieee80211_local *local,
+-			struct ieee80211_key *key)
+-{
+-	mutex_lock(&local->key_mtx);
+-	__ieee80211_key_free(key, true);
+-	mutex_unlock(&local->key_mtx);
+-}
+-
+ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key;
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 2a682d8..8ef56cd 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -129,14 +129,13 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+ 					  size_t seq_len, const u8 *seq);
+ /*
+  * Insert a key into data structures (sdata, sta if necessary)
+- * to make it used, free old key.
++ * to make it used, free old key. On failure, also free the new key.
+  */
+-int __must_check ieee80211_key_link(struct ieee80211_key *key,
+-				    struct ieee80211_sub_if_data *sdata,
+-				    struct sta_info *sta);
++int ieee80211_key_link(struct ieee80211_key *key,
++		       struct ieee80211_sub_if_data *sdata,
++		       struct sta_info *sta);
+ void __ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom);
+-void ieee80211_key_free(struct ieee80211_local *local,
+-			struct ieee80211_key *key);
++void ieee80211_key_free_unused(struct ieee80211_key *key);
+ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+ 			       bool uni, bool multi);
+ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
 -- 
 1.8.0
 
