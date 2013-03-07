@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34381 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215Ab3CRPMT (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34461 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756463Ab3CGNDX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 11:12:19 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 7 Mar 2013 08:03:23 -0500
+Received: by mail-ob0-f171.google.com with SMTP id x4so313423obh.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 05:03:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20807.11884.89884.717497@gargle.gargle.HOWL> (sfid-20130318_161223_881427_7881242B)
-Date: Mon, 18 Mar 2013 20:40:36 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 1/3] mac80211/minstrel_ht: improve rate selection stability
-In-Reply-To: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
-References: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
+Date: Thu, 7 Mar 2013 14:03:21 +0100
+Message-ID: <CACna6rzrtAu4z4tAYWhd-W=-2CRjWVzKY7USe13x2kcZhm8LjA@mail.gmail.com> (sfid-20130307_140326_877394_CF6D1A06)
+Subject: BCM4331 dump of MMIO ops - split into names parts
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Under load, otherwise stable rates can easily fluctuate because of
-> collisions. In my tests on a clean channel, the success probability of
-> the max throughput rate often stays somewhere between 90% and 100% under
-> load. This can cause some unnecessary switching to lower rates.
-> This patch improves stability by treating success probability values
-> between 90% and 100% the same.
-> In my tests on a 3x3 HT20 link with lots of TCP traffic, it improves the
-> average throughput by a few mbit/s.
+I've managed to notice many interesting parts in the BCM4331 MMIO dump
+(mostly by comparing it to the N-PHY code and looking for similar
+operations). I believe it's possible to improve b43 now a lot. We have
+PHY ops and logic (conditions, etc.) can probably be taken from
+existing N-PHY.
 
-Some test results:
+I'm posting it in case someone is interested in taking a look at this.
 
-Sta: WB222 (2x2)
-AP : DB120, AR9380 (3x3) (Channel 36, HT40+)
-Distance: About a meter.
+I don't want to spam everyone at linux-wireless@ with 50KiB, so I'll
+send the log to the b43-dev only.
 
-With ath9k RC:
-[SUM]  0.0-60.0 sec  1.42 GBytes   203 Mbits/sec
-
-With minstrel_ht, current HEAD:
-[SUM]  0.0-60.0 sec  1.35 GBytes   193 Mbits/sec
-
-with minstrel_ht, HEAD + these 3 patches:
-[SUM]  0.0-60.1 sec  1.41 GBytes   202 Mbits/sec
-
-Sujith
+-- 
+Rafał
