@@ -1,58 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760108Ab3CZSiy (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:38766 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932407Ab3CGPsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 14:38:54 -0400
-Message-ID: <1364323118.8319.13.camel@jlt4.sipsolutions.net> (sfid-20130326_193903_336333_E6353AD0)
-Subject: Re: Scanning regression since "cfg80211: use DS or HT operation IEs
- to determine BSS channel"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Date: Tue, 26 Mar 2013 19:38:38 +0100
-In-Reply-To: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com> (sfid-20130326_181054_958567_0E045FFC)
-References: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com>
-	 (sfid-20130326_181054_958567_0E045FFC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 7 Mar 2013 10:48:06 -0500
+Received: by mail-ea0-f179.google.com with SMTP id d12so1581832eaa.24
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:48:05 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 11/13] b43: HT-PHY: implement RSSI polling
+Date: Thu,  7 Mar 2013 16:47:25 +0100
+Message-Id: <1362671247-10766-12-git-send-email-zajec5@gmail.com> (sfid-20130307_164835_566165_EE00FA0D)
+In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-26 at 18:10 +0100, Rafał Miłecki wrote:
 
-> I've just finished bisecting wireless scanning regression I'm
-> experiencing with my 14e4:432b (BCM4322) and b43 driver.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_ht.c |   96 ++++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/b43/phy_ht.h |    5 ++
+ 2 files changed, 100 insertions(+), 1 deletion(-)
 
-Hmmm.
-
-> The problem is getting my network visible in scanning results (iw dev
-> wlan0 scan). I've to repeat scanning dozens of time to notice my AP.
-> It's also well visible when using wpa_supplicant. It takes from 20s to
-> 100s before I get the "Trying to authenticate with".
-
-That's strange.
-
-> After going back to the kernel before that commit it takes
-> wpa_supplicant less than 2 seconds to connect to my WiFi network.
-
-> My network is at channel 13, I still have to verify if it matters.
-> 
-> Any thought about that?
-> 
-> 
-> The first bad commit (I've verified manually after bisecting) appears to be:
-
-"verified manually" how? By reverting the commit? But anyway the commit
-is clearly scanning related, so ...
-
-Can you check your channel list? (iw list or iw phy0 info)
-
-Also can you show the full data including beacon data from the AP (iw
-wlan0 scan dump -b) please?
-
-Does reverting just the mac80211 change fix it?
-
-johannes
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 363c64c..831dca4 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -388,6 +388,92 @@ static void b43_phy_ht_tx_tone(struct b43_wldev *dev)
+ #endif
+ 
+ /**************************************************
++ * RSSI
++ **************************************************/
++
++#if 0
++static void b43_phy_ht_rssi_select(struct b43_wldev *dev, u8 core_sel,
++				   u8 rssi_type)
++{
++	const u16 ctl_regs[3][2] = {
++		{ B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER, },
++		{ B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER, },
++		{ B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER, },
++	};
++	const u16 radio_r[] = { R2059_SYN, R2059_TXRX0, R2059_RXRX1, };
++	int core;
++
++	if (core_sel == 0) {
++		b43err(dev->wl, "RSSI selection for core off not implemented yet\n");
++	} else {
++		for (core = 0; core < 3; core++) {
++			/* Check if caller requested a one specific core */
++			if ((core_sel == 1 && core != 0) ||
++			    (core_sel == 2 && core != 1) ||
++			    (core_sel == 3 && core != 2))
++				continue;
++
++			switch (rssi_type) {
++			case 4:
++				b43_phy_set(dev, ctl_regs[core][0], 0x3 << 8);
++				b43_phy_set(dev, ctl_regs[core][0], 0x3 << 10);
++				b43_phy_set(dev, ctl_regs[core][1], 0x1 << 9);
++				b43_phy_set(dev, ctl_regs[core][1], 0x1 << 10);
++
++				b43_radio_set(dev, R2059_RXRX1 | 0xbf, 0x1);
++				b43_radio_write(dev, radio_r[core] | 0x159,
++						0x11);
++				break;
++			default:
++				b43err(dev->wl, "RSSI selection for type %d not implemented yet\n",
++				       rssi_type);
++			}
++		}
++	}
++}
++
++static void b43_phy_ht_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
++				 u8 nsamp)
++{
++	u16 phy_regs_values[12];
++	u16 phy_regs_to_save[] = {
++		B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER,
++		0x848, 0x841,
++		B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER,
++		0x868, 0x861,
++		B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER,
++		0x888, 0x881,
++	};
++	u16 tmp[3];
++	int i;
++
++	for (i = 0; i < 12; i++)
++		phy_regs_values[i] = b43_phy_read(dev, phy_regs_to_save[i]);
++
++	b43_phy_ht_rssi_select(dev, 5, type);
++
++	for (i = 0; i < 6; i++)
++		buf[i] = 0;
++
++	for (i = 0; i < nsamp; i++) {
++		tmp[0] = b43_phy_read(dev, B43_PHY_HT_RSSI_C1);
++		tmp[1] = b43_phy_read(dev, B43_PHY_HT_RSSI_C2);
++		tmp[2] = b43_phy_read(dev, B43_PHY_HT_RSSI_C3);
++
++		buf[0] += ((s8)((tmp[0] & 0x3F) << 2)) >> 2;
++		buf[1] += ((s8)(((tmp[0] >> 8) & 0x3F) << 2)) >> 2;
++		buf[2] += ((s8)((tmp[1] & 0x3F) << 2)) >> 2;
++		buf[3] += ((s8)(((tmp[1] >> 8) & 0x3F) << 2)) >> 2;
++		buf[4] += ((s8)((tmp[2] & 0x3F) << 2)) >> 2;
++		buf[5] += ((s8)(((tmp[2] >> 8) & 0x3F) << 2)) >> 2;
++	}
++
++	for (i = 0; i < 12; i++)
++		b43_phy_write(dev, phy_regs_to_save[i], phy_regs_values[i]);
++}
++#endif
++
++/**************************************************
+  * Tx/Rx
+  **************************************************/
+ 
+@@ -454,12 +540,20 @@ static void b43_phy_ht_tx_power_ctl(struct b43_wldev *dev, bool enable)
+ 
+ static void b43_phy_ht_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
+ {
++	struct b43_phy_ht *phy_ht = dev->phy.ht;
++	s32 rssi_buf[6];
++
+ 	/* TODO */
+ 
+ 	b43_phy_ht_tx_tone(dev);
+ 	udelay(20);
+-	/* TODO: poll RSSI */
++	b43_phy_ht_poll_rssi(dev, 4, rssi_buf, 1);
+ 	b43_phy_ht_stop_playback(dev);
++	b43_phy_ht_reset_cca(dev);
++
++	phy_ht->idle_tssi[0] = rssi_buf[0] & 0xff;
++	phy_ht->idle_tssi[1] = rssi_buf[2] & 0xff;
++	phy_ht->idle_tssi[2] = rssi_buf[4] & 0xff;
+ 
+ 	/* TODO */
+ }
+diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
+index c517958..165c501 100644
+--- a/drivers/net/wireless/b43/phy_ht.h
++++ b/drivers/net/wireless/b43/phy_ht.h
+@@ -36,6 +36,9 @@
+ #define  B43_PHY_HT_TXPCTL_CMD_C1_PCTLEN	0x8000	/* TX power control enable */
+ #define B43_PHY_HT_TXPCTL_CMD_C2		0x222
+ #define  B43_PHY_HT_TXPCTL_CMD_C2_INIT		0x007F
++#define B43_PHY_HT_RSSI_C1			0x219
++#define B43_PHY_HT_RSSI_C2			0x21A
++#define B43_PHY_HT_RSSI_C3			0x21B
+ 
+ #define B43_PHY_HT_C1_CLIP1THRES		B43_PHY_OFDM(0x00E)
+ #define B43_PHY_HT_C2_CLIP1THRES		B43_PHY_OFDM(0x04E)
+@@ -91,6 +94,8 @@ struct b43_phy_ht {
+ 	u8 tx_pwr_idx[3];
+ 
+ 	s32 bb_mult_save[3];
++
++	u8 idle_tssi[3];
+ };
+ 
+ 
+-- 
+1.7.10.4
 
