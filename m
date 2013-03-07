@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:43102 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126Ab3CEQMn (ORCPT
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:42531 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755874Ab3CGQy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 11:12:43 -0500
-Received: by mail-wg0-f52.google.com with SMTP id 12so6004081wgh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 08:12:42 -0800 (PST)
-Date: Tue, 5 Mar 2013 17:10:03 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
- rate_control_get_rate
-Message-ID: <20130305161003.GA30419@magnum.frso.rivierawaves.com> (sfid-20130305_171248_862405_E133C07C)
-References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
- <1362427924.21028.42.camel@jlt4.sipsolutions.net>
- <20130304204541.GA8819@gobelin>
- <5135F327.4000408@openwrt.org>
+	Thu, 7 Mar 2013 11:54:29 -0500
+Received: by mail-oa0-f43.google.com with SMTP id l10so849097oag.30
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 08:54:28 -0800 (PST)
+Message-ID: <5138C641.5030004@lwfinger.net> (sfid-20130307_175434_884089_F1BDD0EE)
+Date: Thu, 07 Mar 2013 10:54:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5135F327.4000408@openwrt.org>
+To: =?UTF-8?B?S8OpdmluIFRISUVSUlk=?= <kevinthierry@myopera.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: Unable to activate WiFi p2p / WiFi Direct
+References: <1362663176.11919.140661201212753.170BABA0@webmail.messagingengine.com> <1362666346.22280.140661201248433.42E3B535@webmail.messagingengine.com>
+In-Reply-To: <1362666346.22280.140661201248433.42E3B535@webmail.messagingengine.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 05, 2013 at 02:29:11PM +0100, Felix Fietkau wrote:
-> On 2013-03-04 9:45 PM, john wrote:
-> > On Mon, Mar 04, 2013 at 09:12:04PM +0100, Johannes Berg wrote:
-> >> On Mon, 2013-03-04 at 19:27 +0100, Karl Beldan wrote:
-> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> >> > 
-> >> > Currently it gets it from the sdata. This uses and updates the ad-hoc
-> >> > masks of the ieee80211_tx_rate_control instead of copying them.
-> >> 
-> >> Is there any need to update them?
-> >> 
-> >> The change for "mask" seems to make it less efficient since it could
-> >> otherwise be put into a register.
-> >> 
-> > Totally, this commit spares the 10bytes copy of mcs_mask but adds a less
-> > efficient indirection to mask.
-> > I thought of it but kept the symmetry with mcs_mask.
-> > Apparently you wouldn't mind the dissymmetry so I will re-send using mask
-> > by value, plus I wrote "updates .." where it is more like "lets the
-> > ad-hoc masks get overwritten".
-> It seems to me that all of this could be made more efficient by default
-> if a mcs mask pointer is only passed to rate control if the user
-> actually configured a MCS mask. Also, filtering out rates from the mask
-> that the sta does not support seems a bit unnecessary, since the rate
-> control usually looks at the HT capabilities and the sta's mcs rx mask
-> anyway.
-> 
-Yes, some things look a bit overkill in the masks logic.
- 
-Karl
+On 03/07/2013 08:25 AM, Kévin THIERRY wrote:
+> Hi,
+> I've been unable to activate the p2p feature on my WiFi dongle (which
+> otherwise works fine).
+> iwpriv command returns "wlan1 no private ioctls."
+> I'm running Ubuntu 12.04 with kernel 3.5.0-25 and the WiFi dongle is a
+> Netgear model wna1000m (driver rtl8192cu).
+> I've also tried with kernel 3.8.2 with the same result.
+> Thanks,
+
+P2P is not yet implemented in rtl8192cu. The method is being added to rtlwifi 
+and the PCI-based drivers in patches that are now undergoing tests. They will 
+likely be in kernel 3.10. Once that is done, I will be able to consider P2P for 
+the USB-based driver.
+
+FWIW, the use of iwpriv for things like this has been discontinued. Check the 
+use of iw.
+
+Larry
+
+
