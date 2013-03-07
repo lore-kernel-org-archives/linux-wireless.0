@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2316 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652Ab3CRWJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 18:09:52 -0400
-Message-ID: <514790A5.90004@broadcom.com> (sfid-20130318_230956_678758_4C3D9405)
-Date: Mon, 18 Mar 2013 23:09:41 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org,
-	"David Spinadel" <dvdspndl@gmail.com>
-Subject: Re: BUG: problem while tracing cfg80211
-References: <51476F35.9040909@broadcom.com>
- <1363636984.8260.17.camel@jlt4.sipsolutions.net>
- <51478F06.9000506@broadcom.com>
-In-Reply-To: <51478F06.9000506@broadcom.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:59533 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753397Ab3CGAp0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Mar 2013 19:45:26 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix potential null dereference 'mef_entry'
+Date: Wed,  6 Mar 2013 16:44:26 -0800
+Message-Id: <1362617066-10703-1-git-send-email-bzhao@marvell.com> (sfid-20130307_014529_895221_A52332CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2013 11:02 PM, Arend van Spriel wrote:
-> On 03/18/2013 09:03 PM, Johannes Berg wrote:
->> On Mon, 2013-03-18 at 20:47 +0100, Arend van Spriel wrote:
->>> Hi Johannes,
->>>
->>> While testing David Spinadel's P2P device support functionality I got
->>> the following blurb, which is probably caused by cfg80211 tracing given
->>> the instruction pointer address.
->>>
->>> brcmfmac returns ERR_PTR(-ENOENT) and I think the trace code/macros do
->>> not take this into account.
->>
->> I guess this should fix it?
->>
->> http://p.sipsolutions.net/fdea39f2a56aff67.txt
->
-> Did not test it, but that would be my guess to. Just another
-> observation: Is the wdev identifier not defined as u64?
+drivers/net/wireless/mwifiex/cfg80211.c:2357 mwifiex_cfg80211_suspend()
+  error: potential null dereference 'mef_entry'
+  (kzalloc returns null)
 
-Found the answer. In nl80211 API the wdev identifier is 64 bits, which 
-got me confused.
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Gr. AvS
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index df30107..c9bc5f5 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2350,9 +2350,12 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ 		return 0;
+ 	}
+ 
++	mef_entry = kzalloc(sizeof(*mef_entry), GFP_KERNEL);
++	if (!mef_entry)
++		return -ENOMEM;
++
+ 	memset(&mef_cfg, 0, sizeof(mef_cfg));
+ 	mef_cfg.num_entries = 1;
+-	mef_entry = kzalloc(sizeof(*mef_entry), GFP_KERNEL);
+ 	mef_cfg.mef_entry = mef_entry;
+ 	mef_entry->mode = MEF_MODE_HOST_SLEEP;
+ 	mef_entry->action = MEF_ACTION_ALLOW_AND_WAKEUP_HOST;
+-- 
+1.7.0.2
 
