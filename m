@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:37612 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574Ab3COCHg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53081 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab3CGKZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 22:07:36 -0400
-Received: by mail-qe0-f43.google.com with SMTP id 1so1661513qee.30
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 19:07:36 -0700 (PDT)
-Message-ID: <51428265.1090202@lwfinger.net> (sfid-20130315_030740_647210_93FEDF43)
-Date: Thu, 14 Mar 2013 21:07:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: isedev@gmail.com
-CC: Michael Buesch <mb@bu3sch.de>, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] b43: A fix for DMA transmission sequence errors
-References: <51421afb.xUa3KbaBuvmUk4RG%Larry.Finger@lwfinger.net> <2065763.l9B10YbWFg@wks001.ise.net>
-In-Reply-To: <2065763.l9B10YbWFg@wks001.ise.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 7 Mar 2013 05:25:17 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1UDY0i-0006Iz-3T
+	for linux-wireless@vger.kernel.org; Thu, 07 Mar 2013 11:25:16 +0100
+Message-ID: <1362651913.8694.27.camel@jlt4.sipsolutions.net> (sfid-20130307_112521_813407_D8E1FF41)
+Subject: Re: [PATCH] mac80211: provide ieee80211_sta_eosp()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 07 Mar 2013 11:25:13 +0100
+In-Reply-To: <1362415374-25460-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_174314_786594_53C4E86E)
+References: <1362415374-25460-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130304_174314_786594_53C4E86E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/14/2013 07:09 PM, ISE Development wrote:
-> On Thursday 14 Mar 2013 13:46:19 Larry Finger wrote:
->> +                       if (unlikely(!skip))
->> +                               txstat = status;
->> +                       else
->> +                               txstat = &fake;
->
-> The logic should probably be reversed. It's more unlikely to skip than not to
-> do so (hopefully!)...
+On Mon, 2013-03-04 at 17:42 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The irqsafe version ieee80211_sta_eosp_irqsafe() exists, but
+> drivers must not mix calls to any irqsafe/non-irqsafe function.
+> Both ath9k and iwlwifi, the likely first users of this interface,
+> use non-irqsafe RX/TX/TX status so must also use a non-irqsafe
+> version of this function. Since no driver uses the _irqsafe()
+> version, remove that.
 
-Yes, you are correct.
+Applied.
 
-Larry
-
+johannes
 
