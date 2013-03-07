@@ -1,172 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:39374 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932417Ab3CRVO1 (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:61543 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933034Ab3CGPsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 17:14:27 -0400
-Received: by mail-wi0-f176.google.com with SMTP id hm14so3209113wib.9
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 14:14:26 -0700 (PDT)
-Date: Mon, 18 Mar 2013 22:14:19 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [RFC 1/2] mac80211: Use a cfg80211_chan_def in
- ieee80211_hw_conf_chan
-Message-ID: <20130318211419.GC17878@gobelin> (sfid-20130318_221443_410775_4C41009F)
-References: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
- <1363552234-6752-2-git-send-email-karl.beldan@gmail.com>
- <1363634710.8260.15.camel@jlt4.sipsolutions.net>
+	Thu, 7 Mar 2013 10:48:04 -0500
+Received: by mail-ee0-f52.google.com with SMTP id b15so442183eek.11
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:48:03 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 10/13] b43: HT-PHY: implement playing sample tone
+Date: Thu,  7 Mar 2013 16:47:24 +0100
+Message-Id: <1362671247-10766-11-git-send-email-zajec5@gmail.com> (sfid-20130307_171304_325691_302187C2)
+In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1363634710.8260.15.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 08:25:10PM +0100, Johannes Berg wrote:
-> On Sun, 2013-03-17 at 21:30 +0100, Karl Beldan wrote:
-> 
-> > +	if (conf->chandef.chan)
-> 
-> > +	else
-> > +		wiphy_debug(hw->wiphy,
-> > +			    "%s (freq=0/%s idle=%d ps=%d smps=%s)\n",
-> 
-> I don't think the else should be allowed to happen.
-> 
 
-Although I saw the hw config got an initial channel right from the start
-in ieee80211_register_hw, the original checks in the code confused since
-it tested for it in the tracing of drv_config.
-I'll get rid of it (in trace.h too).
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_ht.c |   69 +++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/phy_ht.h |    5 +++
+ 2 files changed, 74 insertions(+)
 
-> > --- a/net/mac80211/cfg.c
-> > +++ b/net/mac80211/cfg.c
-> > @@ -805,8 +805,7 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
-> >  					IEEE80211_CHANCTX_EXCLUSIVE);
-> >  		}
-> >  	} else if (local->open_count == local->monitors) {
-> > -		local->_oper_channel = chandef->chan;
-> > -		local->_oper_channel_type = cfg80211_get_chandef_type(chandef);
-> > +		memcpy(&local->oper_chandef, chandef, sizeof(local->oper_chandef));
-> 
-> Somehow I'd prefer an assignment:
-> 
-> local->oper_chandef = *chandef;
-> 
-> I know it'll just be a memcpy() again, but ... reads nicer, imho.
-> 
-> > +			memcpy(chandef, &local->oper_chandef, sizeof(chandef));
-> 
-> ditto
-> 
-> > @@ -22,7 +22,9 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
-> >  	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_WIDTH);
-> >  
-> >  	if (!local->use_chanctx) {
-> > -		local->_oper_channel_type = cfg80211_get_chandef_type(chandef);
-> > +		local->oper_chandef.width = chandef->width;
-> > +		local->oper_chandef.center_freq1 = chandef->center_freq1;
-> > +		local->oper_chandef.center_freq2 = chandef->center_freq2;
-> 
-> Why not assign all here as well? Is the channel pointer itself special?
-> 
-I thought it would be more explicit to highlight we are keeping the same
-channel, but you are right, better assign the whole thing.
-
-> > -	/* For backward compatibility only -- do not use */
-> > -	struct ieee80211_channel *_oper_channel;
-> > -	enum nl80211_channel_type _oper_channel_type;
-> > +	struct cfg80211_chan_def oper_chandef;
-> 
-> You shouldn't remove the comment, and I think you should also keep the
-> leading underscore -- this is still for backward compatibility with
-> non-chanctx drivers only, and mac80211 internally must use chanctxes all
-> the way except in SW scan and SW roc code.
->  
-Yes.
-
-> > +static int ieee80211_chandef_cmp(const struct cfg80211_chan_def *def1,
-> > +				 const struct cfg80211_chan_def *def2)
-> 
-> indentation
-> 
-This one is good, it's just the side effect of the addition of the
-leading '+'.
-
-> However this already exists in cfg80211.h --
-> cfg80211_chandef_identical().
-> 
-> >  static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
-> >  {
-> >  	struct ieee80211_sub_if_data *sdata;
-> > +	struct cfg80211_chan_def chandef;
-> 
-
-> better initialize this: struct ... chandef = {};
-> 
-> > +	if (offchannel_flag ||
-> > +	    ieee80211_chandef_cmp(&local->hw.conf.chandef,
-> > +				  &local->oper_chandef)) {
-> 
-> indentation
-> 
-Yes ieee80211_chandef_cmp fits on the 1st line.
-
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -994,18 +994,18 @@ static void ieee80211_chswitch_work(struct work_struct *work)
-> >  	if (!ifmgd->associated)
-> >  		goto out;
-> >  
-> > -	sdata->local->_oper_channel = sdata->local->csa_channel;
-> > +	sdata->local->oper_chandef.chan = sdata->local->csa_channel;
-> >  	if (!sdata->local->ops->channel_switch) {
-> >  		/* call "hw_config" only if doing sw channel switch */
-> >  		ieee80211_hw_config(sdata->local,
-> >  			IEEE80211_CONF_CHANGE_CHANNEL);
-> >  	} else {
-> >  		/* update the device channel directly */
-> > -		sdata->local->hw.conf.channel = sdata->local->_oper_channel;
-> > +		sdata->local->hw.conf.chandef.chan = sdata->local->oper_chandef.chan;
-> >  	}
-> 
-> All of this is now even more obviously wrong. If it's an HT40 channel,
-> it previously would try to switch to the same HT40 channel, but now it'd
-> result in an invalid chandef, the center_freq1 would now be wrong.
-> 
-Yes, thanks ! I was careless here.
-We should replace the csa_channel with a csa_chandef and get the freqs
-with the vif processed in ieee80211_sta_process_chanswitch, or is it
-utterly wrong ?
-
-> > --- a/net/mac80211/trace.h
-> > +++ b/net/mac80211/trace.h
-> > @@ -269,7 +269,6 @@ DEFINE_EVENT(local_sdata_addr_evt, drv_remove_interface,
-> >  		 struct ieee80211_sub_if_data *sdata),
-> >  	TP_ARGS(local, sdata)
-> >  );
-> > -
-> >  TRACE_EVENT(drv_config,
-> 
-> please don't remove that line :)
-> 
-> > @@ -287,7 +286,7 @@ TRACE_EVENT(drv_config,
-> >  		__field(u8, long_frame_max_tx_count)
-> >  		__field(u8, short_frame_max_tx_count)
-> >  		__field(int, center_freq)
-> > -		__field(int, channel_type)
-> > +		__field(int, channel_width)
-> 
-> I think you should add center_freq1/2 ... there are also macros for
-> chandef tracing, so you could use those.
-> 
-Yep, will do.
-I hadn't spotted the CHANDEF_*, but even then I would have remained
-confused by the "local->hw.conf.channel ?" tests (as in mac80211_hwsim),
-- I will drop these "channel == NULL" tests.
-
-Annnd I think I'll make another round right now.
-
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 8e5d5bd..363c64c 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -321,6 +321,70 @@ static void b43_phy_ht_stop_playback(struct b43_wldev *dev)
+ 		}
+ 	}
+ }
++
++static u16 b43_phy_ht_load_samples(struct b43_wldev *dev)
++{
++	int i;
++	u16 len = 20 << 3;
++
++	b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, 0x4400);
++
++	for (i = 0; i < len; i++) {
++		b43_phy_write(dev, B43_PHY_HT_TABLE_DATAHI, 0);
++		b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, 0);
++	}
++
++	return len;
++}
++
++static void b43_phy_ht_run_samples(struct b43_wldev *dev, u16 samps, u16 loops,
++				   u16 wait)
++{
++	struct b43_phy_ht *phy_ht = dev->phy.ht;
++	u16 save_seq_mode;
++	int i;
++
++	for (i = 0; i < 3; i++) {
++		if (phy_ht->bb_mult_save[i] < 0)
++			phy_ht->bb_mult_save[i] = b43_httab_read(dev, B43_HTTAB16(13, 0x63 + i * 4));
++	}
++
++	b43_phy_write(dev, B43_PHY_HT_SAMP_DEP_CNT, samps - 1);
++	if (loops != 0xFFFF)
++		loops--;
++	b43_phy_write(dev, B43_PHY_HT_SAMP_LOOP_CNT, loops);
++	b43_phy_write(dev, B43_PHY_HT_SAMP_WAIT_CNT, wait);
++
++	save_seq_mode = b43_phy_read(dev, B43_PHY_HT_RF_SEQ_MODE);
++	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_MODE,
++		    B43_PHY_HT_RF_SEQ_MODE_CA_OVER);
++
++	/* TODO: find out mask bits! Do we need more function arguments? */
++	b43_phy_mask(dev, B43_PHY_HT_SAMP_CMD, ~0);
++	b43_phy_mask(dev, B43_PHY_HT_SAMP_CMD, ~0);
++	b43_phy_mask(dev, B43_PHY_HT_IQLOCAL_CMDGCTL, ~0);
++	b43_phy_set(dev, B43_PHY_HT_SAMP_CMD, 0x1);
++
++	for (i = 0; i < 100; i++) {
++		if (!(b43_phy_read(dev, B43_PHY_HT_RF_SEQ_STATUS) & 1)) {
++			i = 0;
++			break;
++		}
++		udelay(10);
++	}
++	if (i)
++		b43err(dev->wl, "run samples timeout\n");
++
++	b43_phy_write(dev, B43_PHY_HT_RF_SEQ_MODE, save_seq_mode);
++}
++
++static void b43_phy_ht_tx_tone(struct b43_wldev *dev)
++{
++	u16 samp;
++
++	samp = b43_phy_ht_load_samples(dev);
++	b43_phy_ht_run_samples(dev, samp, 0xFFFF, 0);
++}
+ #endif
  
-Karl
+ /**************************************************
+@@ -391,7 +455,12 @@ static void b43_phy_ht_tx_power_ctl(struct b43_wldev *dev, bool enable)
+ static void b43_phy_ht_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
+ {
+ 	/* TODO */
++
++	b43_phy_ht_tx_tone(dev);
++	udelay(20);
++	/* TODO: poll RSSI */
+ 	b43_phy_ht_stop_playback(dev);
++
+ 	/* TODO */
+ }
+ #endif
+diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
+index 7ec794b..c517958 100644
+--- a/drivers/net/wireless/b43/phy_ht.h
++++ b/drivers/net/wireless/b43/phy_ht.h
+@@ -19,6 +19,9 @@
+ #define B43_PHY_HT_IQLOCAL_CMDGCTL		0x0C2	/* I/Q LO cal command G control */
+ #define B43_PHY_HT_SAMP_CMD			0x0C3	/* Sample command */
+ #define  B43_PHY_HT_SAMP_CMD_STOP		0x0002	/* Stop */
++#define B43_PHY_HT_SAMP_LOOP_CNT		0x0C4	/* Sample loop count */
++#define B43_PHY_HT_SAMP_WAIT_CNT		0x0C5	/* Sample wait count */
++#define B43_PHY_HT_SAMP_DEP_CNT			0x0C6	/* Sample depth count */
+ #define B43_PHY_HT_SAMP_STAT			0x0C7	/* Sample status */
+ #define B43_PHY_HT_BW1				0x1CE
+ #define B43_PHY_HT_BW2				0x1CF
+@@ -39,6 +42,8 @@
+ #define B43_PHY_HT_C3_CLIP1THRES		B43_PHY_OFDM(0x08E)
+ 
+ #define B43_PHY_HT_RF_SEQ_MODE			B43_PHY_EXTG(0x000)
++#define  B43_PHY_HT_RF_SEQ_MODE_CA_OVER		0x0001	/* Core active override */
++#define  B43_PHY_HT_RF_SEQ_MODE_TR_OVER		0x0002	/* Trigger override */
+ #define B43_PHY_HT_RF_SEQ_TRIG			B43_PHY_EXTG(0x003)
+ #define  B43_PHY_HT_RF_SEQ_TRIG_RX2TX		0x0001 /* RX2TX */
+ #define  B43_PHY_HT_RF_SEQ_TRIG_TX2RX		0x0002 /* TX2RX */
+-- 
+1.7.10.4
+
