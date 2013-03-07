@@ -1,40 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:50158 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757892Ab3CTJpw (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:54486 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932541Ab3CGSOM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 05:45:52 -0400
-Received: by mail-wg0-f42.google.com with SMTP id 12so144425wgh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 02:45:51 -0700 (PDT)
+	Thu, 7 Mar 2013 13:14:12 -0500
+Date: Thu, 7 Mar 2013 19:14:05 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	thomas@net.t-labs.tu-berlin.de, johannes@sipsolutions.net,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: Question regarding minstrel(_ht) and retry limits
+Message-ID: <20130307181405.GB31210@pandem0nium> (sfid-20130307_191416_729381_882B6102)
+References: <20130307153100.GA30608@pandem0nium>
+ <20130307154045.GB29428@magnum.frso.rivierawaves.com>
 MIME-Version: 1.0
-In-Reply-To: <1363725845.8336.33.camel@jlt4.sipsolutions.net>
-References: <1363691302-11947-1-git-send-email-mcgrof@do-not-panic.com> <1363725845.8336.33.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 20 Mar 2013 02:45:31 -0700
-Message-ID: <CAB=NE6XgEjWG6j+J+1ycf+HkhDM_6dRn+dvzC81HPvq+MLRq1Q@mail.gmail.com> (sfid-20130320_104555_879282_05C01531)
-Subject: Re: [RFC] mac80211: avoid rearming BA session timers unnecessarily
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4bRzO86E/ozDv8r1"
+In-Reply-To: <20130307154045.GB29428@magnum.frso.rivierawaves.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 19, 2013 at 1:44 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2013-03-19 at 04:08 -0700, Luis R. Rodriguez wrote:
->> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->>
->> If mac80211 tears down the BA sessions with del_timer_sync()
->> technically mod_timer() can still rearm them. If mac80211
->> tears the BA sessions down we don't want to rearm the timers
->> at a later time so avoid this possibility.
->
-> Hmm, you may be onto something, but I'm not sure I want to apply this.
-> You don't seem to actually understand what you're doing -- two of the
-> three changes you're making don't really seem to be needed and the third
-> one should probably be fixed differently?
 
-If I get to review it further to the point I don't disappoint, sure,
-otherwise at least you now know of my suspicions.
+--4bRzO86E/ozDv8r1
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Thu, Mar 07, 2013 at 04:40:45PM +0100, Karl Beldan wrote:
+> On Thu, Mar 07, 2013 at 04:31:00PM +0100, Simon Wunderlich wrote:
+> > Hello list,
+> >=20
+> > as you might be aware, it is possible to set short and long retry limits
+> > to specify how often a frame should be retransmitted before getting dro=
+pped.
+> >=20
+> > However, it appears that minstrel completely ignores any retry limit, a=
+nd it is
+> > also not applied later in the code path. I've hacked minstrel_ht a litt=
+le bit
+> > to apply the retry limits in minstrel_get_rate() before returning the r=
+ates
+> > (i.e. just cutting retries at the end from the struct ieee80211_tx_rate=
+ array).
+> >=20
+> > This worked for me, but is probably not clean either and might disturb =
+minstrel
+> > operation. Also minstrel uses much more retries than default retry limi=
+ts
+> > (short: 7, long: 4), so this patch might introduce behaviour changes.
+> >=20
+> > What is your opinion on this? Can we get it properly supported? Does it=
+ hurt
+> > to just use the first $retry_limit retries, and cut the rest at other r=
+ates
+> > at the end?
+> >=20
+> BTW, it also ignores max_rate_tries < 3 and rts thresholds.
+
+Yup, regarding RTS we had a long discussion some time ago:
+
+ * http://thread.gmane.org/gmane.linux.kernel.wireless.general/84459
+
+regarding max_rate_tries, I guess this comes from the hardware? Does it hurt
+to ignore it (as drivers will cut it anyway)?
+
+Cheers,
+	Simon
+
+--4bRzO86E/ozDv8r1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlE42O0ACgkQrzg/fFk7axaTrQCg36d4Gr3mRXmwats/4p8smZSt
+5KYAn3U/jPexIyoZIYX7Gs71wnUWEMUt
+=D6MA
+-----END PGP SIGNATURE-----
+
+--4bRzO86E/ozDv8r1--
