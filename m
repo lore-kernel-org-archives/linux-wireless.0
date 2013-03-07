@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56356 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754704Ab3CLPFI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53009 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753979Ab3CGKBr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 11:05:08 -0400
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <coelho@ti.com>, <arik@wizery.com>
-Subject: [PATCH] wlcore: use print_hex_dump_debug()
-Date: Tue, 12 Mar 2013 17:04:01 +0200
-Message-ID: <1363100641-24815-1-git-send-email-coelho@ti.com> (sfid-20130312_160513_657139_DD5F98F8)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 7 Mar 2013 05:01:47 -0500
+Message-ID: <1362650499.8694.15.camel@jlt4.sipsolutions.net> (sfid-20130307_110151_202606_5902B983)
+Subject: Re: [RFC] P2P find offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Mar 2013 11:01:39 +0100
+In-Reply-To: <1686131.738LDv7O6j@lx-vladimir>
+References: <3408094.SIuA27EmQ5@lx-vladimir>
+	 <1362412079.21028.34.camel@jlt4.sipsolutions.net>
+	 <1686131.738LDv7O6j@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were printing out all the hex dumps regardless of whether dynamic
-debugging was enabled or not.  Now that print_hex_dump_debug() has
-been implemented, we can use that instead.
+On Thu, 2013-03-07 at 09:10 +0200, Vladimir Kondratiev wrote:
 
-Reported-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/debug.h |   33 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
+> > We had something like this before. I think you need to specify not the
+> > wiphy but a netdev though, to know what MAC address to use. In fact, not
+> > a netdev but a wdev, so it can work on P2P_Device type wdevs.
 
-diff --git a/drivers/net/wireless/ti/wlcore/debug.h b/drivers/net/wireless/ti/wlcore/debug.h
-index db4bf5a..0420bd4 100644
---- a/drivers/net/wireless/ti/wlcore/debug.h
-+++ b/drivers/net/wireless/ti/wlcore/debug.h
-@@ -89,25 +89,24 @@ extern u32 wl12xx_debug_level;
- 	} while (0)
- #endif
- 
--/* TODO: use pr_debug_hex_dump when it becomes available */
--#define wl1271_dump(level, prefix, buf, len)	\
--	do { \
--		if (level & wl12xx_debug_level) \
--			print_hex_dump(KERN_DEBUG, DRIVER_PREFIX prefix, \
--				       DUMP_PREFIX_OFFSET, 16, 1,	\
--				       buf,				\
--				       min_t(size_t, len, DEBUG_DUMP_LIMIT), \
--				       0);				\
-+#define wl1271_dump(level, prefix, buf, len)				      \
-+	do {								      \
-+		if (level & wl12xx_debug_level)				      \
-+			print_hex_dump_debug(DRIVER_PREFIX prefix,	      \
-+					DUMP_PREFIX_OFFSET, 16, 1,	      \
-+					buf,				      \
-+					min_t(size_t, len, DEBUG_DUMP_LIMIT), \
-+					0);				      \
- 	} while (0)
- 
--#define wl1271_dump_ascii(level, prefix, buf, len)	\
--	do { \
--		if (level & wl12xx_debug_level) \
--			print_hex_dump(KERN_DEBUG, DRIVER_PREFIX prefix, \
--				       DUMP_PREFIX_OFFSET, 16, 1,	\
--				       buf,				\
--				       min_t(size_t, len, DEBUG_DUMP_LIMIT), \
--				       true);				\
-+#define wl1271_dump_ascii(level, prefix, buf, len)			      \
-+	do {								      \
-+		if (level & wl12xx_debug_level)				      \
-+			print_hex_dump_debug(DRIVER_PREFIX prefix,	      \
-+					DUMP_PREFIX_OFFSET, 16, 1,	      \
-+					buf,				      \
-+					min_t(size_t, len, DEBUG_DUMP_LIMIT), \
-+					true);				      \
- 	} while (0)
- 
- #endif /* __DEBUG_H__ */
--- 
-1.7.10.4
+> Why do we need wdev here? It should be similar to scan, as p2p scan composed
+> of legacy scan and p2p find. Scan have only wiphy.
+> It's no problem to add wdev as well, of course. I'll add it.
+
+No, scan also has the device? It is needed for the MAC address, of
+course.
+
+> > Also, timings? Or is that left to the driver?
+
+> Yes, timing is up to the driver. Point is, firmware may have its reasons
+> when switch search/listen phases.
+
+Some hints from userspace might be helpful though?
+
+> > wpa_s will need to know whether or not it responded, unless you mandate
+> > that it must respond by itself -- not sure if you should do that though?
+
+> Same way as today wpa_s know whether driver/firmware answer probes - 
+> WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD. Or, should I add one more flag, like
+> WIPHY_FLAG_P2P_PROBE_RESP_OFFLOAD?
+
+AP_PROBE_RESP_OFFLOAD doesn't seem appropriate? just read out the name
+aloud, it starts with "AP" ;-)
+
+johannes
 
