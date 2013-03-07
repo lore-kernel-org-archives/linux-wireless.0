@@ -1,68 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:49613 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759947Ab3CICLE (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:36222 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756288Ab3CGSnn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 21:11:04 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hq4so76423wib.11
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2013 18:11:02 -0800 (PST)
-Message-ID: <513A9A34.8090701@gmail.com> (sfid-20130309_031109_554020_155EE050)
-Date: Sat, 09 Mar 2013 03:11:00 +0100
-From: Jenya Y <jy.gerstmaier@gmail.com>
+	Thu, 7 Mar 2013 13:43:43 -0500
+Received: by mail-ob0-f171.google.com with SMTP id x4so618248obh.30
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 10:43:41 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <5138D7D7.5020204@lwfinger.net>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	<5138D7D7.5020204@lwfinger.net>
+Date: Thu, 7 Mar 2013 19:43:41 +0100
+Message-ID: <CACna6rySpJnu4-GVkey7CUSScO8yV3u1V4+az+qnvQy4iz2=Lw@mail.gmail.com> (sfid-20130307_194347_965961_D31DDBFD)
+Subject: Re: [PATCH 00/13] b43: implement basic TX power mgmt
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: PROBLEM: linux kernel 3.9 rc1 and rtl8187 wireless, unable to
- connect to any available hotspots.
-References: <51380336.6030007@live.com> <BLU0-SMTP15357D4D2469B872AE4355CF1E50@phx.gbl> <5138109D.1040605@lwfinger.net> <BLU0-SMTP18556F96AB7DC8FE9D76DA3F1E50@phx.gbl> <513936C8.5060908@lwfinger.net> <513A04BD.3020002@gmail.com> <513A0D9D.8020600@lwfinger.net> <513A1F5F.3080209@gmail.com> <513A2824.30603@lwfinger.net> <513A4154.3040000@gmail.com> <513A51E6.9090704@lwfinger.net> <513A56B8.7050900@gmail.com> <513A91F5.9030007@lwfinger.net>
-In-Reply-To: <513A91F5.9030007@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> I see that had no effect. You need to bisect between HEAD and v3.8.
+2013/3/7 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/07/2013 09:47 AM, Rafał Miłecki wrote:
+>>
+>> After spotting a lot of N-PHY-similar functions in
+>> BCM4331 dump of MMIO ops - split into names parts
+>> I was able to finally improve HT-PHY code.
+>>
+>> It now sets TX basically, I can finally talk with devices that are few
+>> meters away, not just few centimetres. It's a little patch bomb, sorry
+>> for that, but I wasn't sure if my code is correct until it was complete
+>> and started working.
+>>
+>> Rafał Miłecki (13):
+>>    b43: HT-PHY: rename AFE defines
+>>    b43: HT-PHY: add classifier control function
+>>    b43: HT-PHY: move TX fix to the separated function
+>>    b43: HT-PHY: implement spurious tone avoidance
+>>    b43: HT-PHY: implement MAC reclocking
+>>    b43: HT-PHY: implement CCA reset
+>>    b43: HT-PHY: implement PA override
+>>    b43: HT-PHY: implement controlling TX power control
+>>    b43: HT-PHY: implement stopping sample tone playback
+>>    b43: HT-PHY: implement playing sample tone
+>>    b43: HT-PHY: implement RSSI polling
+>>    b43: HT-PHY: setup TX power control
+>>    b43: HT-PHY: enable basic TX power setup
+>>
+>>   drivers/net/wireless/b43/phy_ht.c |  603
+>> +++++++++++++++++++++++++++++++++----
+>>   drivers/net/wireless/b43/phy_ht.h |   77 ++++-
+>>   2 files changed, 613 insertions(+), 67 deletions(-)
 >
-> Larry
+>
+> What tree is used for these patches? Numbers 1-7 applied with offsets, and
+> some fuzz. Number 8 failed, and I quit trying there. I am using
+> wireless-testing that was a fresh pull yesterday after John rebased it.
 
-Larry, I'm very happy to report that after recompiling the kernel from 
-git master just a few minutes ago all is working again! Thank you very 
-much for your patience with my ignorance. (and all kudos to you, friend, 
-comrade, sister or brother....whoever you are on other end of the wire 
-who managed to fix this :)
+Whoops? It should apply just fine on re-based wireless-testing. I
+think I've refreshed my tree today.
 
-So I'm off bothering Mighty Alan again until the other problem with my 
-usb hub in the display is solved :) Have to brace myself for another 
-round of awkward comments, I guess.
+git log drivers/net/wireless/
 
-Thank you again! I will familiar with bisecting soon enough.
+commit 7f6231751ef492c38dbef61d14881bff6f1de165
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Sun Feb 24 17:41:56 2013 +0100
 
-// Jenya
+    b43: HT-PHY: rename AFE defines
 
+commit 7c2332b8061b7d4d7cd539ced1277e78d976f3da
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Mon Mar 4 16:39:10 2013 +0100
 
+    b43: HT-PHY: make it BCMA-only
 
-[    0.000000] Linux version 3.9.0-1-jy-alpha (jy@Y8) (gcc version 4.7.2 
-(GCC) ) #1 SMP PREEMPT Sat Mar 9 02:33:53 CET 2013
-.....
-[   18.412863] ieee80211 phy0: hwaddr 00:15:af:03:b1:88, RTL8187vB 
-(default) V1 + rtl8225z2, rfkill mask 2
-[   18.423761] rtl8187: Customer ID is 0x00
-[   18.424413] rtl8187: wireless switch is on
-[   18.424799] usbcore: registered new interface driver rtl8187
-[   18.466185] systemd-udevd[294]: renamed network interface wlan0 to 
-wlp0s29f7u7u3
-[   20.361794] IPv6: ADDRCONF(NETDEV_UP): wlp0s29f7u7u3: link is not ready
-[   23.724490] wlp0s29f7u7u3: authenticate with 00:13:49:df:22:72
-[   23.868638] wlp0s29f7u7u3: send auth to 00:13:49:df:22:72 (try 1/3)
-[   23.871268] wlp0s29f7u7u3: authenticated
-[   23.871402] rtl8187 5-7.3:1.0 wlp0s29f7u7u3: disabling HT as WMM/QoS 
-is not supported by the AP
-[   23.871407] rtl8187 5-7.3:1.0 wlp0s29f7u7u3: disabling VHT as WMM/QoS 
-is not supported by the AP
-[   23.872038] wlp0s29f7u7u3: associate with 00:13:49:df:22:72 (try 1/3)
-[   23.874879] wlp0s29f7u7u3: RX AssocResp from 00:13:49:df:22:72 
-(capab=0x411 status=0 aid=1)
-[   23.875634] wlp0s29f7u7u3: associated
-[   23.875662] IPv6: ADDRCONF(NETDEV_CHANGE): wlp0s29f7u7u3: link 
-becomes ready
+So the newest b43 patch my patchset applies on top of is
+7c2332b8061b7d4d7cd539ced1277e78d976f3da
 
+-- 
+Rafał
