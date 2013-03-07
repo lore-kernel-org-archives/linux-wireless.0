@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:47456 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278Ab3COHMm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 03:12:42 -0400
-Message-ID: <5142C890.6020900@neratec.com> (sfid-20130315_081246_702606_4CDA556F)
-Date: Fri, 15 Mar 2013 08:06:56 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:39094 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720Ab3CGPbH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Mar 2013 10:31:07 -0500
+Date: Thu, 7 Mar 2013 16:31:00 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de,
+	johannes@sipsolutions.net,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Question regarding minstrel(_ht) and retry limits
+Message-ID: <20130307153100.GA30608@pandem0nium> (sfid-20130307_163118_201511_3D8D53D5)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
- that don't include chain 0
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org> <5138B656.5090408@neratec.com> <513996DE.6030500@neratec.com> <5139B35D.9060803@neratec.com> <5139DCAA.8050003@openwrt.org> <513D78C8.5020708@neratec.com> <513DA74B.7000205@neratec.com> <514264C6.2080204@openwrt.org> <51427A2D.9090900@openwrt.org>
-In-Reply-To: <51427A2D.9090900@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2013 02:32 AM, Felix Fietkau wrote:
-> On 2013-03-15 1:01 AM, Felix Fietkau wrote:
->> On 2013-03-11 10:43 AM, Wojciech Dubowik wrote:
->>> This could be the solution if you are ok with it.
->>> Wojtek
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
->>> b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
->>> index 4cc1394..58c6256 100644
->>> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
->>> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
->>> @@ -1023,7 +1023,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
->>> AR_PHY_AGC_CONTROL_FLTR_CAL   |
->>> AR_PHY_AGC_CONTROL_PKDET_CAL;
->>>
->>> -       ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask,
->>> ah->caps.tx_chainmask);
->>> +       ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
->> I will do some testing, but I think this will probably be equivalent to
->> a revert of the patch.
-> Please try this patch instead:
-> ---
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> @@ -1023,6 +1023,7 @@ static bool ar9003_hw_init_cal(struct at
->   					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
->   					  AR_PHY_AGC_CONTROL_PKDET_CAL;
->   
-> +	/* Use chip chainmask only for calibration */
->   	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
->   
->   	if (rtt) {
-> @@ -1150,6 +1151,9 @@ skip_tx_iqcal:
->   		ar9003_hw_rtt_disable(ah);
->   	}
->   
-> +	/* Revert chainmask to runtime parameters */
-> +	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
-> +
->   	/* Initialize list pointers */
->   	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
->   
-It works. Thanks for looking at it.
 
-Wojtek
+--OXfL5xGRrasGEqWY
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+
+Hello list,
+
+as you might be aware, it is possible to set short and long retry limits
+to specify how often a frame should be retransmitted before getting dropped.
+
+However, it appears that minstrel completely ignores any retry limit, and it is
+also not applied later in the code path. I've hacked minstrel_ht a little bit
+to apply the retry limits in minstrel_get_rate() before returning the rates
+(i.e. just cutting retries at the end from the struct ieee80211_tx_rate array).
+
+This worked for me, but is probably not clean either and might disturb minstrel
+operation. Also minstrel uses much more retries than default retry limits
+(short: 7, long: 4), so this patch might introduce behaviour changes.
+
+What is your opinion on this? Can we get it properly supported? Does it hurt
+to just use the first $retry_limit retries, and cut the rest at other rates
+at the end?
+
+Cheers,
+	Simon
+
+--OXfL5xGRrasGEqWY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlE4srQACgkQrzg/fFk7axYGbwCeP67dEnjIBesWcNGeiYDEscmT
+LsAAniH2517p4lgGd5VKt4bKp4PF2G+L
+=Ok0J
+-----END PGP SIGNATURE-----
+
+--OXfL5xGRrasGEqWY--
