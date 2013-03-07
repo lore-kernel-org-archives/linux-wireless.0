@@ -1,35 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:53972 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618Ab3CRKlh (ORCPT
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:40384 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754374Ab3CGKB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 06:41:37 -0400
-Received: by mail-qc0-f177.google.com with SMTP id u28so2678092qcs.36
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 03:41:37 -0700 (PDT)
+	Thu, 7 Mar 2013 05:01:58 -0500
 MIME-Version: 1.0
-Date: Mon, 18 Mar 2013 11:41:36 +0100
-Message-ID: <CANMvdA8A4Q90f5wHHg4kLYKMJYJR-jgk=WsZDJF=5TxMTYg6wg@mail.gmail.com> (sfid-20130318_114141_245728_1EFCA030)
-Subject: Question concerning to iw list channels list
-From: Francisco Cuesta <ndarkness@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 07 Mar 2013 15:31:58 +0530
+From: vivekanandah@posedge.com
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes.berg@intel.com>
+Subject: question on AMPDU TX/RX
+Message-ID: <e5938d476a5bd58c8fa81fd5cafe785e@posedge.com> (sfid-20130307_110200_758583_166C7379)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello iw developers,
+hi,
+
+is there a method to completely stop AMPDU TX/RX or independently stop 
+TX or RX for mac80211 presently. would it be a good to have an ability 
+to do the same via ebugFS?
+
+thanks in advance
+best regards
+Vivek
 
 
-I would like to ask a question related to the command iw list. The
-channels shown with this command where are they taken from? I mean,
-does iw call the drivers' API to see which frequencies it can provide?
-
-I ask this in that if I change the regulatory domain to Japan for
-instance, I cannot see the 4.9GHz channels with iw list, does it mean
-that the driver doesn't support such a channels or that I maybe have
-to modify iw list source in order to make them show up?
-
-Thanks in advance,
-
-REgards,
-
-Francisco
