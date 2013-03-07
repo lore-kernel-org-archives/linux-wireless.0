@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40858 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755350Ab3CDIcG (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:50945 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278Ab3CGQlQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 03:32:06 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: enable TDLS on P2P client interfaces
-Date: Mon,  4 Mar 2013 09:31:59 +0100
-Message-Id: <1362385919-8260-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_093209_680610_698BC8BF)
+	Thu, 7 Mar 2013 11:41:16 -0500
+Received: by mail-oa0-f46.google.com with SMTP id k1so829628oag.33
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 08:41:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20130307173507.64a55ba3@milhouse>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	<1362671247-10766-12-git-send-email-zajec5@gmail.com>
+	<20130307173507.64a55ba3@milhouse>
+Date: Thu, 7 Mar 2013 17:41:14 +0100
+Message-ID: <CACna6rxpDhUzQTmb5pUkEJWo6zuXTopmk81-+w1gW67ip-4TTw@mail.gmail.com> (sfid-20130307_174120_583966_49342CCB)
+Subject: Re: [PATCH 11/13] b43: HT-PHY: implement RSSI polling
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2013/3/7 Michael Büsch <m@bues.ch>:
+> On Thu,  7 Mar 2013 16:47:25 +0100
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> +     const u16 ctl_regs[3][2] = {
+>> +             { B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER, },
+>> +             { B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER, },
+>> +             { B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER, },
+>> +     };
+>> +     const u16 radio_r[] = { R2059_SYN, R2059_TXRX0, R2059_RXRX1, };
+>
+>> +     u16 phy_regs_to_save[] = {
+>> +             B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER,
+>> +             0x848, 0x841,
+>> +             B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER,
+>> +             0x868, 0x861,
+>> +             B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER,
+>> +             0x888, 0x881,
+>> +     };
+>
+> It usually is better to define tables that are constant as "static const",
+> so that they are not put on the kernel stack.
 
-There's no reason TDLS should be prevented on P2P client
-interfaces, and most of the code already handles it, so
-allow adding stations for it.
+Thanks, I'll fix that, will just wait a little longer for more
+comments (if any appear)
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 39d8437..c85a4b8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4029,6 +4029,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
- 		/* ignore uAPSD data */
- 		params.sta_modify_mask &= ~STATION_PARAM_APPLY_UAPSD;
- 
 -- 
-1.8.0
-
+Rafał
