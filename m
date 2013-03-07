@@ -1,126 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:45149 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755770Ab3CIMlv (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:45241 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029Ab3CGPrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 07:41:51 -0500
-Received: by mail-we0-f177.google.com with SMTP id d7so2021024wer.22
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 04:41:50 -0800 (PST)
+	Thu, 7 Mar 2013 10:47:33 -0500
+Received: by mail-ee0-f41.google.com with SMTP id c13so441701eek.14
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:32 -0800 (PST)
 From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
 Cc: b43-dev@lists.infradead.org,
 	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 01/13] b43: HT-PHY: rename AFE defines
-Date: Sat,  9 Mar 2013 13:41:31 +0100
-Message-Id: <1362832891-8403-1-git-send-email-zajec5@gmail.com> (sfid-20130309_134156_327705_BA4F1307)
-In-Reply-To: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
+Subject: [PATCH 00/13] b43: implement basic TX power mgmt
+Date: Thu,  7 Mar 2013 16:47:14 +0100
+Message-Id: <1362671247-10766-1-git-send-email-zajec5@gmail.com> (sfid-20130307_164737_089163_9FCB91D1)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It you take a look at N-PHY analog switch function it touches every core
-on the chipset. It seems HT-PHY does they same, it just has 3 cores
-instead of 2 (which make sense since BCM4331 is 3x3). Rename AFE defines
-to include core id.
+After spotting a lot of N-PHY-similar functions in
+BCM4331 dump of MMIO ops - split into names parts
+I was able to finally improve HT-PHY code.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: make ctl_regs array static btw
----
- drivers/net/wireless/b43/phy_ht.c |   38 ++++++++++++++++++-------------------
- drivers/net/wireless/b43/phy_ht.h |   12 ++++++------
- 2 files changed, 25 insertions(+), 25 deletions(-)
+It now sets TX basically, I can finally talk with devices that are few
+meters away, not just few centimetres. It's a little patch bomb, sorry
+for that, but I wasn't sure if my code is correct until it was complete
+and started working.
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 3719a88..df07c83 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -176,10 +176,10 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
- {
- 	u8 i;
- 
--	const u16 ctl_regs[3][2] = {
--		{ B43_PHY_HT_AFE_CTL1, B43_PHY_HT_AFE_CTL2 },
--		{ B43_PHY_HT_AFE_CTL3, B43_PHY_HT_AFE_CTL4 },
--		{ B43_PHY_HT_AFE_CTL5, B43_PHY_HT_AFE_CTL6},
-+	static const u16 ctl_regs[3][2] = {
-+		{ B43_PHY_HT_AFE_C1_OVER, B43_PHY_HT_AFE_C1 },
-+		{ B43_PHY_HT_AFE_C2_OVER, B43_PHY_HT_AFE_C2 },
-+		{ B43_PHY_HT_AFE_C3_OVER, B43_PHY_HT_AFE_C3},
- 	};
- 
- 	for (i = 0; i < 3; i++) {
-@@ -362,9 +362,9 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	b43_phy_mask(dev, B43_PHY_EXTG(0), ~0x3);
- 
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0);
- 
- 	b43_phy_write(dev, B43_PHY_EXTG(0x103), 0x20);
- 	b43_phy_write(dev, B43_PHY_EXTG(0x101), 0x20);
-@@ -511,19 +511,19 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- static void b43_phy_ht_op_switch_analog(struct b43_wldev *dev, bool on)
- {
- 	if (on) {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x0000);
- 	} else {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00fd);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
-index 6544c42..60824fa 100644
---- a/drivers/net/wireless/b43/phy_ht.h
-+++ b/drivers/net/wireless/b43/phy_ht.h
-@@ -36,12 +36,12 @@
- 
- #define B43_PHY_HT_RF_CTL1			B43_PHY_EXTG(0x010)
- 
--#define B43_PHY_HT_AFE_CTL1			B43_PHY_EXTG(0x110)
--#define B43_PHY_HT_AFE_CTL2			B43_PHY_EXTG(0x111)
--#define B43_PHY_HT_AFE_CTL3			B43_PHY_EXTG(0x114)
--#define B43_PHY_HT_AFE_CTL4			B43_PHY_EXTG(0x115)
--#define B43_PHY_HT_AFE_CTL5			B43_PHY_EXTG(0x118)
--#define B43_PHY_HT_AFE_CTL6			B43_PHY_EXTG(0x119)
-+#define B43_PHY_HT_AFE_C1_OVER			B43_PHY_EXTG(0x110)
-+#define B43_PHY_HT_AFE_C1			B43_PHY_EXTG(0x111)
-+#define B43_PHY_HT_AFE_C2_OVER			B43_PHY_EXTG(0x114)
-+#define B43_PHY_HT_AFE_C2			B43_PHY_EXTG(0x115)
-+#define B43_PHY_HT_AFE_C3_OVER			B43_PHY_EXTG(0x118)
-+#define B43_PHY_HT_AFE_C3			B43_PHY_EXTG(0x119)
- 
- 
- /* Values for PHY registers used on channel switching */
+Rafał Miłecki (13):
+  b43: HT-PHY: rename AFE defines
+  b43: HT-PHY: add classifier control function
+  b43: HT-PHY: move TX fix to the separated function
+  b43: HT-PHY: implement spurious tone avoidance
+  b43: HT-PHY: implement MAC reclocking
+  b43: HT-PHY: implement CCA reset
+  b43: HT-PHY: implement PA override
+  b43: HT-PHY: implement controlling TX power control
+  b43: HT-PHY: implement stopping sample tone playback
+  b43: HT-PHY: implement playing sample tone
+  b43: HT-PHY: implement RSSI polling
+  b43: HT-PHY: setup TX power control
+  b43: HT-PHY: enable basic TX power setup
+
+ drivers/net/wireless/b43/phy_ht.c |  603 +++++++++++++++++++++++++++++++++----
+ drivers/net/wireless/b43/phy_ht.h |   77 ++++-
+ 2 files changed, 613 insertions(+), 67 deletions(-)
+
 -- 
 1.7.10.4
 
