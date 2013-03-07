@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38484 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53308 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753784Ab3CCRVB (ORCPT
+	with ESMTP id S932726Ab3CGLuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 12:21:01 -0500
-Message-ID: <1362331252.8226.2.camel@jlt4.sipsolutions.net> (sfid-20130303_182106_515283_F6B432AE)
-Subject: Re: [PATCH 05/13] brcmfmac: only do auth_type workaround when no
- WPA or RSN IE is provided
+	Thu, 7 Mar 2013 06:50:23 -0500
+Message-ID: <1362657018.8694.31.camel@jlt4.sipsolutions.net> (sfid-20130307_125033_390350_6C6AE876)
+Subject: Re: Memory leaks in cfg80211 and mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Sun, 03 Mar 2013 18:20:52 +0100
-In-Reply-To: <1362311132-29561-6-git-send-email-arend@broadcom.com> (sfid-20130303_124611_530276_DB95CBBF)
-References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
-	 <1362311132-29561-6-git-send-email-arend@broadcom.com>
-	 (sfid-20130303_124611_530276_DB95CBBF)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 07 Mar 2013 12:50:18 +0100
+In-Reply-To: <5137D6F8.4050007@lwfinger.net> (sfid-20130307_005334_931364_1B9BDD2F)
+References: <51365EBC.9080602@lwfinger.net>
+	  (sfid-20130305_220821_742055_EAAAA72D) <1362562265.8457.7.camel@jlt4.sipsolutions.net>
+	 <5137D6F8.4050007@lwfinger.net> (sfid-20130307_005334_931364_1B9BDD2F)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-03-03 at 12:45 +0100, Arend van Spriel wrote:
-> The workaround is only needed when auth_type is automatic AND there is
-> no WPA or RSN information element provided by cfg80211.
+On Wed, 2013-03-06 at 17:53 -0600, Larry Finger wrote:
 
-Does this really actually happen? Why would wpa_s select automatic when
-it knows it's going to be open?
+> > However, that's a corner case, I don't think you ran into it. Since you
+> > also didn't note any warnings, we can also discount a few cases that
+> > would be code bugs and would leak.
+> >
+> > I wonder if this is related to the first warning? The "new" object in
+> > the first block would typically take ownership of the "ies" object.
+> 
+> Although I do not get any warnings, your patch and mine have made the kmemleak 
+> scan now come up clean. I will continue testing and let you know.
+
+Ok. I guess I'll apply my patch, and we can see about yours later (since
+it's only a false positive, while mine actually fixes a potential leak).
+
+Were you reconfiguring your AP's SSID by any chance?
 
 johannes
 
