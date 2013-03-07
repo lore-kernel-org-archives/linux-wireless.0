@@ -1,126 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:60080 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755001Ab3CSGTr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758658Ab3CGNYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 02:19:47 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 18 Mar 2013 23:19:25 -0700
-Subject: RE: mwifiex crash when removing interface while scanning
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9DAD430D@SC-VEXCH1.marvell.com> (sfid-20130319_071952_840806_362BC5DD)
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
-	<CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com>
-	<CAMLZHHR+OCQd_2J8NkmK0CND9vo6VaT73L+rJKJRk7bUknh7Qw@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D9C1608@SC-VEXCH1.marvell.com>
-	<CAMLZHHQyTDHD8q=Q-edSew+KnpaGWOaVwxiK_fjABG9ZC9g-Qg@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D9C2199@SC-VEXCH1.marvell.com>
- <CAMLZHHQYB8wYEq1gppNEMiV0BPfM3qKtujR4=4u1jVww-N6z5w@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F70430D9DAD3AE4@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DAD3AE4@SC-VEXCH1.marvell.com>
-Content-Type: multipart/mixed;
-	boundary="_002_477F20668A386D41ADCC57781B1F70430D9DAD430DSCVEXCH1marve_"
-MIME-Version: 1.0
+	Thu, 7 Mar 2013 08:24:49 -0500
+Message-ID: <1362662683.8694.34.camel@jlt4.sipsolutions.net> (sfid-20130307_142453_290184_89F3E436)
+Subject: Re: pull-request: mac80211-next 2013-03-07
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 07 Mar 2013 14:24:43 +0100
+In-Reply-To: <1362649836.8694.9.camel@jlt4.sipsolutions.net> (sfid-20130307_105057_869184_9F02D98F)
+References: <1362649836.8694.9.camel@jlt4.sipsolutions.net>
+	 (sfid-20130307_105057_869184_9F02D98F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_477F20668A386D41ADCC57781B1F70430D9DAD430DSCVEXCH1marve_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2013-03-07 at 10:50 +0100, Johannes Berg wrote:
+> Hi John,
+> 
+> First mac80211-next pull request, and I already have quite a bit of work
+> in there ...
 
-Hi Daniel,
+Humm, Karl Beldan found a bug, will resend.
 
-> > That seems to avoid the issue. I'm worried that it suggests some more
-> > significant lower-level bug, but I guess for now it would make sense
-> > to finish off those 2 patches you already posted, and investigate the
-> > possible cmd_pending leak, before revisiting this.
->=20
-> Thanks for testing. I will fine tune the 2 patches and resend the updated=
- version to the list.
-> The cmd_pending leak will be investigated too.
+johannes
 
-Please try attached patch on top of the 3 patches I sent last Friday.
-
-Thanks,
-Bing
-
-
---_002_477F20668A386D41ADCC57781B1F70430D9DAD430DSCVEXCH1marve_
-Content-Type: application/octet-stream;
-	name="0001-mwifiex-fix-negative-cmd_pending-count.patch"
-Content-Description: 0001-mwifiex-fix-negative-cmd_pending-count.patch
-Content-Disposition: attachment;
-	filename="0001-mwifiex-fix-negative-cmd_pending-count.patch"; size=3417;
-	creation-date="Tue, 19 Mar 2013 06:08:53 GMT";
-	modification-date="Tue, 19 Mar 2013 06:08:53 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbSBkNDUxNDQ3MGExODk3YjlhNmZmZGE1M2NlY2Q4ZmMyMjgwY2ViZDFlIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPgpEYXRlOiBN
-b24sIDE4IE1hciAyMDEzIDIwOjMyOjM4IC0wNzAwClN1YmplY3Q6IFtQQVRDSF0gbXdpZmlleDog
-Zml4IG5lZ2F0aXZlIGNtZF9wZW5kaW5nIGNvdW50CgpjbWRfcGVuZGluZyBpcyBpbmNyZWFzZWQg
-aW4gbXdpZmlleF93YWl0X3F1ZXVlX2NvbXBsZXRlKCkgYW5kCmRlY3JlYXNlZCBpbiBtd2lmaWV4
-X2NvbXBsZXRlX2NtZCgpIGN1cnJlbnRseS4KSWYgdGhlcmUgYXJlIHR3byBvciBtb3JlIGNvbW1h
-bmRzIGluIHRoZSBjbWRfcGVuZGluZ19xIHRoZSBtYWluCndvcmtlciB0aHJlYWQgd2lsbCBwaWNr
-IHVwIG5leHQgY29tbWFuZCBmcm9tIGNtZF9wZW5kaW5nX3EKYXV0b21hdGljYWxseSBhZnRlciBm
-aW5pc2hpbmcgY3VycmVudCBjb21tYW5kLiBBcyBhIHJlc3VsdAptd2lmaWV4X3dhaXRfcXVldWVf
-Y29tcGxldGUoKSB3aWxsIG5vdCBiZSBjYWxsZWQgYmVjYXVzZQp0aGUgY29tbWFuZCBpcyBhbHJl
-YXkgY29tcGxldGVkLiBUaGlzIGxlYWRzIHRvIGEgbmVnYXRpdmUKbnVtYmVyIGluIGNtZF9wZW5k
-aW5nIGNvdW50LgoKRml4IGl0IGJ5IGluY3JlYXNpbmcgY21kX3BlbmRpbmcgd2hlbiBhIGNtZCBp
-cyBxdWV1ZWQgYW5kCmRlY3JlYXNpbmcgd2hlbiB0aGF0IGNtZCBpcyBmcmVlZC4gVGhpcyBjb3Zl
-cnMgYm90aCBzeW5jaHJvbm91cwphbmQgYXN5bmNocm9ub3VzIGNvbW1hbmRzLgoKQ2M6IDxzdGFi
-bGVAdmdlci5rZXJuZWwub3JnPiAjIDMuOApSZXBvcnRlZC1ieTogRGFuaWVsIERyYWtlIDxkc2RA
-bGFwdG9wLm9yZz4KU2lnbmVkLW9mZi1ieTogQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4K
-LS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jICAgIHwgICAxNSArKysr
-KysrKysrKysrKy0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc3RhX2lvY3RsLmMgfCAg
-ICAzIC0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC91dGlsLmMgICAgICB8ICAgIDEg
-LQogMyBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgYi9kcml2ZXJz
-L25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCmluZGV4IDlhMTMwMmIuLmI2NDU0ZGUgMTAw
-NjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMKKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYwpAQCAtNjMwLDYgKzYzMCwxNyBAQCBt
-d2lmaWV4X2luc2VydF9jbWRfdG9fZnJlZV9xKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
-ZXIsCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmFkYXB0ZXItPmNtZF9mcmVlX3FfbG9jaywgZmxhZ3Mp
-OwogCWxpc3RfYWRkX3RhaWwoJmNtZF9ub2RlLT5saXN0LCAmYWRhcHRlci0+Y21kX2ZyZWVfcSk7
-CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYWRhcHRlci0+Y21kX2ZyZWVfcV9sb2NrLCBmbGFn
-cyk7CisKKwlpZiAoY21kX25vZGUtPmNtZF9za2IpIHsKKwkJc3RydWN0IGhvc3RfY21kX2RzX2Nv
-bW1hbmQgKmhvc3RfY21kID0KKwkJCQkJKHZvaWQgKiljbWRfbm9kZS0+Y21kX3NrYi0+ZGF0YTsK
-KworCQlhdG9taWNfZGVjKCZhZGFwdGVyLT5jbWRfcGVuZGluZyk7CisJCWRldl9kYmcoYWRhcHRl
-ci0+ZGV2LAorCQkJImNtZDogRlJFRV9DTUQ6IGNtZD0lI3gsIGNtZF9wZW5kaW5nPSVkXG4iLAor
-CQkJbGUxNl90b19jcHUoaG9zdF9jbWQtPmNvbW1hbmQpLAorCQkJYXRvbWljX3JlYWQoJmFkYXB0
-ZXItPmNtZF9wZW5kaW5nKSk7CisJfQogfQogCiAvKgpAQCAtNjczLDcgKzY4NCw5IEBAIG13aWZp
-ZXhfaW5zZXJ0X2NtZF90b19wZW5kaW5nX3Eoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRl
-ciwKIAkJbGlzdF9hZGQoJmNtZF9ub2RlLT5saXN0LCAmYWRhcHRlci0+Y21kX3BlbmRpbmdfcSk7
-CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYWRhcHRlci0+Y21kX3BlbmRpbmdfcV9sb2NrLCBm
-bGFncyk7CiAKLQlkZXZfZGJnKGFkYXB0ZXItPmRldiwgImNtZDogUVVFVUVfQ01EOiBjbWQ9JSN4
-IGlzIHF1ZXVlZFxuIiwgY29tbWFuZCk7CisJYXRvbWljX2luYygmYWRhcHRlci0+Y21kX3BlbmRp
-bmcpOworCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAiY21kOiBRVUVVRV9DTUQ6IGNtZD0lI3gsIGNt
-ZF9wZW5kaW5nPSVkXG4iLAorCQljb21tYW5kLCBhdG9taWNfcmVhZCgmYWRhcHRlci0+Y21kX3Bl
-bmRpbmcpKTsKIH0KIAogLyoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
-ZXgvc3RhX2lvY3RsLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5j
-CmluZGV4IDhjOTQzYjYuLmU2YzliMmEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L213aWZpZXgvc3RhX2lvY3RsLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9z
-dGFfaW9jdGwuYwpAQCAtNTksOSArNTksNiBAQCBpbnQgbXdpZmlleF93YWl0X3F1ZXVlX2NvbXBs
-ZXRlKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIsCiB7CiAJaW50IHN0YXR1czsKIAot
-CWRldl9kYmcoYWRhcHRlci0+ZGV2LCAiY21kIHBlbmRpbmdcbiIpOwotCWF0b21pY19pbmMoJmFk
-YXB0ZXItPmNtZF9wZW5kaW5nKTsKLQogCS8qIFdhaXQgZm9yIGNvbXBsZXRpb24gKi8KIAlzdGF0
-dXMgPSB3YWl0X2V2ZW50X2ludGVycnVwdGlibGUoYWRhcHRlci0+Y21kX3dhaXRfcS53YWl0LAog
-CQkJCQkgICooY21kX3F1ZXVlZC0+Y29uZGl0aW9uKSk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9td2lmaWV4L3V0aWwuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
-dXRpbC5jCmluZGV4IDU0NjY3ZTYuLmU1N2FjMGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvdXRpbC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgv
-dXRpbC5jCkBAIC0yMzksNyArMjM5LDYgQEAgaW50IG13aWZpZXhfcmVjdl9wYWNrZXQoc3RydWN0
-IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgc3RydWN0IHNrX2J1ZmYgKnNrYikKIGludCBtd2lmaWV4
-X2NvbXBsZXRlX2NtZChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyLAogCQkJIHN0cnVj
-dCBjbWRfY3RybF9ub2RlICpjbWRfbm9kZSkKIHsKLQlhdG9taWNfZGVjKCZhZGFwdGVyLT5jbWRf
-cGVuZGluZyk7CiAJZGV2X2RiZyhhZGFwdGVyLT5kZXYsICJjbWQgY29tcGxldGVkOiBzdGF0dXM9
-JWRcbiIsCiAJCWFkYXB0ZXItPmNtZF93YWl0X3Euc3RhdHVzKTsKIAotLSAKMS43LjAuMgoK
-
---_002_477F20668A386D41ADCC57781B1F70430D9DAD430DSCVEXCH1marve_--
