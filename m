@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2019 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753000Ab3CCLpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 06:45:52 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/13] brcmutil: add macros for setting bitfields using
- mask/shift operations
-Date: Sun, 3 Mar 2013 12:45:27 +0100
-Message-ID: <1362311132-29561-9-git-send-email-arend@broadcom.com> (sfid-20130303_124600_927400_7325F729)
-In-Reply-To: <1362311132-29561-1-git-send-email-arend@broadcom.com>
-References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:41704 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933244Ab3CGSzG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Mar 2013 13:55:06 -0500
+Received: by mail-oa0-f50.google.com with SMTP id l20so1033770oag.9
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 10:55:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5138D7D7.5020204@lwfinger.net>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	<5138D7D7.5020204@lwfinger.net>
+Date: Thu, 7 Mar 2013 19:55:05 +0100
+Message-ID: <CACna6rxofcrBiUGCt6yRMWYK7hQzop0iKeSrBxXwutCQDZ9T2g@mail.gmail.com> (sfid-20130307_195513_056402_B20FA142)
+Subject: Re: [PATCH 00/13] b43: implement basic TX power mgmt
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added inline functions to set bitfields in an unsigned integer variable.
+2013/3/7 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/07/2013 09:47 AM, Rafał Miłecki wrote:
+>>
+>> After spotting a lot of N-PHY-similar functions in
+>> BCM4331 dump of MMIO ops - split into names parts
+>> I was able to finally improve HT-PHY code.
+>>
+>> It now sets TX basically, I can finally talk with devices that are few
+>> meters away, not just few centimetres. It's a little patch bomb, sorry
+>> for that, but I wasn't sure if my code is correct until it was complete
+>> and started working.
+>>
+>> Rafał Miłecki (13):
+>>    b43: HT-PHY: rename AFE defines
+>>    b43: HT-PHY: add classifier control function
+>>    b43: HT-PHY: move TX fix to the separated function
+>>    b43: HT-PHY: implement spurious tone avoidance
+>>    b43: HT-PHY: implement MAC reclocking
+>>    b43: HT-PHY: implement CCA reset
+>>    b43: HT-PHY: implement PA override
+>>    b43: HT-PHY: implement controlling TX power control
+>>    b43: HT-PHY: implement stopping sample tone playback
+>>    b43: HT-PHY: implement playing sample tone
+>>    b43: HT-PHY: implement RSSI polling
+>>    b43: HT-PHY: setup TX power control
+>>    b43: HT-PHY: enable basic TX power setup
+>>
+>>   drivers/net/wireless/b43/phy_ht.c |  603
+>> +++++++++++++++++++++++++++++++++----
+>>   drivers/net/wireless/b43/phy_ht.h |   77 ++++-
+>>   2 files changed, 613 insertions(+), 67 deletions(-)
+>
+>
+> What tree is used for these patches? Numbers 1-7 applied with offsets, and
+> some fuzz. Number 8 failed, and I quit trying there. I am using
+> wireless-testing that was a fresh pull yesterday after John rebased it.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/include/brcmu_utils.h   |   23 ++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+I've just checkouted origin/master again, to make sure everything is
+clean, and patches applied fine. Please make sure you're using latest
+wireless-testing like a
+http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/commit/?id=12c18c7a3d8f20366424834b20be40f7f3a9e2c2
 
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index 477b92a..82fcfe8 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -173,6 +173,29 @@ extern void brcmu_pktq_flush(struct pktq *pq, bool dir,
- /* ip address */
- struct ipv4_addr;
- 
-+/*
-+ * bitfield macros using masking and shift
-+ *
-+ * remark: the mask parameter should be a shifted mask.
-+ */
-+static inline void brcmu_maskset32(u32 *var, u32 mask, u8 shift, u32 value)
-+{
-+	value = (value << shift) & mask;
-+	*var = (*var & ~mask) | value;
-+}
-+static inline u32 brcmu_maskget32(u32 var, u32 mask, u8 shift)
-+{
-+	return (var & mask) >> shift;
-+}
-+static inline void brcmu_maskset16(u16 *var, u16 mask, u8 shift, u16 value)
-+{
-+	value = (value << shift) & mask;
-+	*var = (*var & ~mask) | value;
-+}
-+static inline u16 brcmu_maskget16(u16 var, u16 mask, u8 shift)
-+{
-+	return (var & mask) >> shift;
-+}
- 
- /* externs */
- /* format/print */
 -- 
-1.7.6
-
-
+Rafał
