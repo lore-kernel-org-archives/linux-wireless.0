@@ -1,59 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:38010 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933133Ab3CSWIU (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:43921 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505Ab3CHK1I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:08:20 -0400
-Received: by mail-wg0-f54.google.com with SMTP id fm10so825434wgb.9
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 15:08:19 -0700 (PDT)
+	Fri, 8 Mar 2013 05:27:08 -0500
+Subject: [PATCH 2/3] ath6kl: fix usb related error handling and warnings
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Fri, 08 Mar 2013 12:27:02 +0200
+Message-ID: <20130308102702.23245.66309.stgit@localhost6.localdomain6> (sfid-20130308_112711_738756_9CE1F093)
+In-Reply-To: <20130308102539.23245.55176.stgit@localhost6.localdomain6>
+References: <20130308102539.23245.55176.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <CANMvdA_JKwdnnmHJ36GpT4ARtfda5Ybra77ted=CEmGRr-Eeqw@mail.gmail.com>
-References: <CANMvdA-YEzYM5PCEC=6bwoiFFejLFYuLYPZHhJLctEUOGHBokA@mail.gmail.com>
- <CAGRGNgWyp47qYv4uHUVdJ+sVRnJxHgPc45meUqB7p4mdc3Xr6g@mail.gmail.com> <CANMvdA_JKwdnnmHJ36GpT4ARtfda5Ybra77ted=CEmGRr-Eeqw@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 20 Mar 2013 09:07:59 +1100
-Message-ID: <CAGRGNgVOQqwk8QJJVk3XMLzuo-r9hhCHMz=jj+XdEga-aRRhzw@mail.gmail.com> (sfid-20130319_230824_479373_D54DB901)
-Subject: Re: IW channels list question
-To: Francisco Cuesta <ndarkness@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Francisco,
+It was annoying to debug usb warm reboot initialisation problems as many usb related functions
+just ignored errors and it wasn't obvious from the kernel logs what was failing. Fix all that
+so that error messages are printed and errors are handled properly.
 
-Firstly, don't drop the mailing list CC, I do _not_ do private support.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   10 ++++----
+ drivers/net/wireless/ath/ath6kl/init.c     |   10 +++++---
+ drivers/net/wireless/ath/ath6kl/usb.c      |   34 ++++++++++++++++++----------
+ 3 files changed, 33 insertions(+), 21 deletions(-)
 
-Secondly, don't top post.
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 9adb567..c02d9d3 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -1167,7 +1167,7 @@ static int htc_wait_recv_ctrl_message(struct htc_target *target)
+ 	}
+ 
+ 	if (count <= 0) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "%s: Timeout!\n", __func__);
++		ath6kl_warn("htc pipe control receive timeout!\n");
+ 		return -ECOMM;
+ 	}
+ 
+@@ -1581,16 +1581,16 @@ static int ath6kl_htc_pipe_wait_target(struct htc_target *target)
+ 		return status;
+ 
+ 	if (target->pipe.ctrl_response_len < sizeof(*ready_msg)) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "invalid htc ready msg len:%d!\n",
+-			   target->pipe.ctrl_response_len);
++		ath6kl_warn("invalid htc pipe ready msg len: %d\n",
++			    target->pipe.ctrl_response_len);
+ 		return -ECOMM;
+ 	}
+ 
+ 	ready_msg = (struct htc_ready_ext_msg *) target->pipe.ctrl_response_buf;
+ 
+ 	if (ready_msg->ver2_0_info.msg_id != cpu_to_le16(HTC_MSG_READY_ID)) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "invalid htc ready msg : 0x%X !\n",
+-			   ready_msg->ver2_0_info.msg_id);
++		ath6kl_warn("invalid htc pipe ready msg: 0x%x\n",
++			    ready_msg->ver2_0_info.msg_id);
+ 		return -ECOMM;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index ae1e477..8b01ec3 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1657,13 +1657,15 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 	 * driver layer has to init BMI in order to set the host block
+ 	 * size.
+ 	 */
+-	if (ath6kl_htc_wait_target(ar->htc_target)) {
+-		ret = -EIO;
++	ret = ath6kl_htc_wait_target(ar->htc_target);
++	if (ret) {
++		ath6kl_err("htc wait target failed: %d\n", ret);
+ 		goto err_power_off;
+ 	}
+ 
+-	if (ath6kl_init_service_ep(ar)) {
+-		ret = -EIO;
++	ret = ath6kl_init_service_ep(ar);
++	if (ret) {
++		ath6kl_err("Endpoint service initilisation failed: %d\n", ret);
+ 		goto err_cleanup_scatter;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 5fcd342..63948f6 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -872,8 +872,9 @@ static int ath6kl_usb_submit_ctrl_out(struct ath6kl_usb *ar_usb,
+ 			      size, 1000);
+ 
+ 	if (ret < 0) {
+-		ath6kl_dbg(ATH6KL_DBG_USB, "%s failed,result = %d\n",
+-			   __func__, ret);
++		ath6kl_warn("Failed to submit usb control message: %d\n", ret);
++		kfree(buf);
++		return ret;
+ 	}
+ 
+ 	kfree(buf);
+@@ -903,8 +904,9 @@ static int ath6kl_usb_submit_ctrl_in(struct ath6kl_usb *ar_usb,
+ 				 size, 2 * HZ);
+ 
+ 	if (ret < 0) {
+-		ath6kl_dbg(ATH6KL_DBG_USB, "%s failed,result = %d\n",
+-			   __func__, ret);
++		ath6kl_warn("Failed to read usb control message: %d\n", ret);
++		kfree(buf);
++		return ret;
+ 	}
+ 
+ 	memcpy((u8 *) data, buf, size);
+@@ -961,8 +963,10 @@ static int ath6kl_usb_diag_read32(struct ath6kl *ar, u32 address, u32 *data)
+ 				ATH6KL_USB_CONTROL_REQ_DIAG_RESP,
+ 				ar_usb->diag_resp_buffer, &resp_len);
+ 
+-	if (ret)
++	if (ret) {
++		ath6kl_warn("diag read32 failed: %d\n", ret);
+ 		return ret;
++	}
+ 
+ 	resp = (struct ath6kl_usb_ctrl_diag_resp_read *)
+ 		ar_usb->diag_resp_buffer;
+@@ -976,6 +980,7 @@ static int ath6kl_usb_diag_write32(struct ath6kl *ar, u32 address, __le32 data)
+ {
+ 	struct ath6kl_usb *ar_usb = ar->hif_priv;
+ 	struct ath6kl_usb_ctrl_diag_cmd_write *cmd;
++	int ret;
+ 
+ 	cmd = (struct ath6kl_usb_ctrl_diag_cmd_write *) ar_usb->diag_cmd_buffer;
+ 
+@@ -984,12 +989,17 @@ static int ath6kl_usb_diag_write32(struct ath6kl *ar, u32 address, __le32 data)
+ 	cmd->address = cpu_to_le32(address);
+ 	cmd->value = data;
+ 
+-	return ath6kl_usb_ctrl_msg_exchange(ar_usb,
+-					    ATH6KL_USB_CONTROL_REQ_DIAG_CMD,
+-					    (u8 *) cmd,
+-					    sizeof(*cmd),
+-					    0, NULL, NULL);
++	ret = ath6kl_usb_ctrl_msg_exchange(ar_usb,
++					   ATH6KL_USB_CONTROL_REQ_DIAG_CMD,
++					   (u8 *) cmd,
++					   sizeof(*cmd),
++					   0, NULL, NULL);
++	if (ret) {
++		ath6kl_warn("diag_write32 failed: %d\n", ret);
++		return ret;
++	}
+ 
++	return 0;
+ }
+ 
+ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+@@ -1001,7 +1011,7 @@ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+ 	ret = ath6kl_usb_submit_ctrl_in(ar_usb,
+ 					ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
+ 					0, 0, buf, len);
+-	if (ret != 0) {
++	if (ret) {
+ 		ath6kl_err("Unable to read the bmi data from the device: %d\n",
+ 			   ret);
+ 		return ret;
+@@ -1019,7 +1029,7 @@ static int ath6kl_usb_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
+ 	ret = ath6kl_usb_submit_ctrl_out(ar_usb,
+ 					 ATH6KL_USB_CONTROL_REQ_SEND_BMI_CMD,
+ 					 0, 0, buf, len);
+-	if (ret != 0) {
++	if (ret) {
+ 		ath6kl_err("unable to send the bmi data to the device: %d\n",
+ 			   ret);
+ 		return ret;
 
-On Tue, Mar 19, 2013 at 10:59 PM, Francisco Cuesta <ndarkness@gmail.com> wrote:
-> Hi Julian,
->
-> First of all thanks for replying.
->
-> Concerning to the call of iw to the API in an openwrt system do you
-> know if this is the same? I mean, I have tried to find some file
-> called nl80211  but without succeeding.
-
-nl80211 is an interface with the kernel, it's not a file. It's
-essentially commands to control Wifi (802.11) interfaces over NetLink.
-
-All 'iw' commands, regardless of the Linux distribution or whatever use nl80211.
-
-> On the other hand, I'm working with openwrt and I was aware about the
-> eemprom stuff, indeed, I have enabled an openwrt feature that allows
-> you to force the atheros eemprom to take into account the regulatory
-> domain set by the user, but event though if I set Japan I don't see an
-> update on iw list channels. Is that due to the fact that my card
-> doesn't support such a frequency?
-
-That is most likely the case.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
