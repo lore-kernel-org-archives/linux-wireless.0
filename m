@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:60632 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457Ab3CDIlQ (ORCPT
+Received: from smtpout5.wanadoo.co.uk ([80.12.242.80]:45082 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab3CHLZb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 03:41:16 -0500
+	Fri, 8 Mar 2013 06:25:31 -0500
+Date: Fri, 8 Mar 2013 12:25:29 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: linux-wireless@vger.kernel.org
+Message-ID: <19954030.22961362741929700.JavaMail.www@wwinf3707> (sfid-20130308_122535_665924_2E5DC31D)
+Subject: ath6kl build error.
 MIME-Version: 1.0
-Date: Mon, 4 Mar 2013 10:41:14 +0200
-Message-ID: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com> (sfid-20130304_094126_049828_E8F6E738)
-Subject: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-pci@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+
 Hi,
 
-In 1a7123cdd9f49cf1c908fb2c16d26f279c88d8c9, John Linville disabled
-ASPM for iwlwifi:
+I'm getting a build error when building ath6kl modules.
 
-	/* W/A - seems to solve weird behavior. We need to remove this if we
-	 * don't want to stay in L1 all the time. This wastes a lot of power */
-	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
-			       PCIE_LINK_STATE_CLKPM);
+include/linux/mmc/sdio_func.h:162:12: error: expected identifier or '(' before numeric constant
 
-Now, I took a laptop with 3.7.9 (that supports L1) and measured power.
-I would expect to see that as long as the driver isn't loaded, the
-power consumption is low (L1 enabled), and when I load the driver, the
-power consumption rises because L1 gets disabled.
-But this is not what I see. I see more the less the same numbers
-before and after driver load.
-I don't remember exactly the numbers, but I do remember they were low
-(around 1mA or so) - but I really need to check.
-I also removed the code above, and it didn't change anything.
-Can it be that this code doesn't have any effect?
+the line it's complaining about is like this:
 
-And as you can see, I am not an expert at this...
+extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
 
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+A bit of googling has shown that others have seen the same problem too.
+But, I've not seen a fix for it.
+
+Any ideas appreciated.
+
+
+Regards
+
+Nick Thomas
