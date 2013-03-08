@@ -1,79 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:59072 "EHLO mout.gmx.net"
+Received: from mga11.intel.com ([192.55.52.93]:58327 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758034Ab3CSJwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 05:52:43 -0400
-Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LobVE-1Uty8A0mmw-00gZe2 for
- <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 10:52:40 +0100
-Date: Tue, 19 Mar 2013 10:52:35 +0100
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-To: linux-wireless@vger.kernel.org
-Cc: Daniel Mack <daniel@zonque.org>
-Subject: mwifiex: infinite loop in mwifiex_main_process
-Message-ID: <20130319095235.GA22962@blumentopf> (sfid-20130319_105403_800348_5CDDF0A1)
+	id S1752330Ab3CHLoU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 06:44:20 -0500
+Date: Fri, 8 Mar 2013 12:44:06 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@lists.01.org>
+Subject: [GIT] [3.10] NFC pull request
+Message-ID: <20130308114406.GB27873@sortiz-mobl> (sfid-20130308_124424_010162_0254CAAF)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi John,
 
-I'm working on this, currently testing it
-http://www.mail-archive.com/linux-mmc@vger.kernel.org/msg17726.html
+This is the first NFC pull request for 3.10.
 
-Within less than 3 days, the module always crashes. I observe
-that mwifiex is looping in mwifiex_main_process, not exiting. The
-loop is always entered from the sdio_irq_thread.
+The 2 features we have with this one are:
 
-I put printk statement to find cause for why it's not exiting:
+- An LLCP Service Name Lookup (SNL) netlink interface for querying LLCP
+  service availability from user space.
+  Along the way, Thierry also improved the existing SNL interface for
+  aggregating SNL responses.
 
-[18017.211513] scan processing 0
-[18017.214686] data sent 0
-[18017.217269] ps state 0
-[18017.219765] cmd sent 0 / curr cmd   (null)
-[18017.224134] is_command_pending 0
-[18017.227548] wmm list empty 0
-[18017.230592] tx_lock_flag 0
+- An initial LLCP socket options implementation, for setting the Receive
+  Window (RW) and the Maximum Information Unit Extension (MIUX) per socket.
+  This is need for the LLCP validation tests.
 
-So it seems the wmm list has packets queued, but they are never
-sent out. Adding a few more statements, it seems the problem is
-in mwifiex_wmm_get_highest_priolist_ptr:
+We also have a microread MEI build failure here: I am not sending this one to
+3.9 because the MEI bus code is not there yet, so it won't break for anyone
+else than me.
 
-	for (j = adapter->priv_num - 1; j >= 0; --j) {
+Thanks in advance for pulling those changes in.
 
-		spin_lock_irqsave(&adapter->bss_prio_tbl[j].bss_prio_lock,
-				flags);
-		is_list_empty = list_empty(&adapter->bss_prio_tbl[j]
-				.bss_prio_head);
-		spin_unlock_irqrestore(&adapter->bss_prio_tbl[j].bss_prio_lock,
-				flags);
-		if (is_list_empty)
-			continue;
+The following changes since commit cd48d8ba149484c4723a2b75159deeb83f3d2273:
 
-		.... <snip> ...
+  NFC: microread: Fix mei physical layer (2013-02-11 18:35:36 +0100)
 
-		do {                                                                               
-			priv_tmp = bssprio_node->priv;
-			hqp = &priv_tmp->wmm.highest_queued_prio;
+are available in the git repository at:
 
-			for (i = atomic_read(hqp); i >= LOW_PRIO_TID;
-					--i) {                     
-			...
-			... NEVER REACHED ...
-			...
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.10-1
 
+for you to fetch changes up to ec97c981a6760f85543520fef40bfde32fe82b4a:
 
-So there are packets queued, but the highest_queued_prio is too
-low, so they are never sent out.
+  NFC: llcp: Add cleanup support for unreplied SNL requests (2013-03-07 20:11:12 +0100)
 
-I was never able to crash it without my patches, though trying
-harder now. But maybe my patches only trigger the issue more
-often.
+----------------------------------------------------------------
+Samuel Ortiz (5):
+      NFC: microread: Fix MEI build failure
+      NFC: llcp: Rename socket rw and miu fields
+      NFC: llcp: Implement socket options
+      NFC: llcp: Use socket specific link parameters before the local ones
+      NFC: llcp: Remove redundant printk
 
-Is there a known issue, with highest_queued_prio getting out of
-sync with the number of packets queued?
+Thierry Escande (4):
+      NFC: Add missing type policies for netlink attributes
+      NFC: llcp: Service Name Lookup SDRES aggregation
+      NFC: llcp: Service Name Lookup netlink interface
+      NFC: llcp: Add cleanup support for unreplied SNL requests
 
-rgds,
-Andi
-
+ drivers/nfc/microread/mei.c |    2 +-
+ include/linux/socket.h      |    1 +
+ include/uapi/linux/nfc.h    |   16 ++++
+ net/nfc/llcp/commands.c     |  205 +++++++++++++++++++++++++++++++++++--------
+ net/nfc/llcp/llcp.c         |  114 +++++++++++++++++++++---
+ net/nfc/llcp/llcp.h         |   36 +++++++-
+ net/nfc/llcp/sock.c         |  130 +++++++++++++++++++++++++--
+ net/nfc/netlink.c           |  172 ++++++++++++++++++++++++++++++++++++
+ net/nfc/nfc.h               |   14 +++
+ 9 files changed, 636 insertions(+), 54 deletions(-)
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
