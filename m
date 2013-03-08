@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:59436 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab3CXW6W (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42698 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486Ab3CHUp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 18:58:22 -0400
-Received: by mail-ea0-f182.google.com with SMTP id q15so2139897ead.13
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 15:58:21 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Robert Shade <robert.shade@gmail.com>
-Subject: Re: Auth Packet TX Delay
-Date: Sun, 24 Mar 2013 23:58:16 +0100
-Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Marco Fonseca <marco@tampabay.rr.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com> <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com> <CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com>
-In-Reply-To: <CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com>
+	Fri, 8 Mar 2013 15:45:28 -0500
+Date: Fri, 8 Mar 2013 15:34:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
+ that don't include chain 0
+Message-ID: <20130308203451.GA402@tuxdriver.com> (sfid-20130308_214536_724878_ED367BEB)
+References: <1358715322-46447-1-git-send-email-nbd@openwrt.org>
+ <5138A4C8.7040500@neratec.com>
+ <5138AB4A.7000405@openwrt.org>
+ <5138B656.5090408@neratec.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303242358.17133.chunkeey@googlemail.com> (sfid-20130324_235826_314745_80BFEAF2)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5138B656.5090408@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Added Marco and me in the CC - please keep it)
+On Thu, Mar 07, 2013 at 04:46:30PM +0100, Wojciech Dubowik wrote:
+> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
+> >On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
+> >>There is a regression introduced by this patch when power save is off on
+> >>the station for idle checks.
+> >>I have AR9590 station with rx and tx chain set to 0x1 connected
+> >>to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
+> >>
+> >>Before this patch in connection polling the station was properly sending
+> >>null function to check whether AP is still there. After this patch it sends
+> >>broadcast probe request which is anyway wrong or some 16 or so packets
+> >>of random data (rarely). It manifests itself in lost connection because
+> >>there
+> >>is no ack from AP which is expected for null function.
+> >>
+> >>I have been following skb's up to the descriptor setting in ath9k and it was
+> >>all ok i.e. proper null function with valid addresses.
+> >>
+> >>I have been bisecting it twice because it doesn't make much sense but maybe
+> >>it's a HW issue?
+> >You're right, it does not make much sense. I can't figure out how this
+> >patch could possibly change the runtime behavior with tx chainmask set
+> >to 0x1. Have you tried reverting this patch in a current build to see if
+> >that fixes the issue?
+> It does fix it. I will check tomorrow whether it's only AR9590 or also
+> previous revisions. I will also try with different chainmasks. I will have
+> to rescrew my setup...
 
-On Sunday, March 24, 2013 11:40:27 PM Robert Shade wrote:
-> > Hm, so it's doing some fast channel changes?
-> 
-> Yes, the fastcc does seem to work, it's just that sometimes the chip
-> can get in a bad state when it's not cold reset.
-> > Just disable fast channel change entirely and re-test? And why not
-> > just force a cold reset always? Why bother checking for the queue to
-> > be stopped?
-> 
-> Just disabling fastcc was not enough, the cold resets are what seemed
-> to have made the difference.  I was actually thinking about
-> re-enabling fastcc and testing again.
-> 
-> The TXE/RXE checking path is from felix's "ath9k_hw: improve reset
-> reliability after errors" patch.  I've just got the exception in there
-> for 9160, since I don't have other hardware to test with.  What do the
-> hardware engineers say about warm vs. cold reset?  I did notice that
-> your latest ar9300 HAL has a note stating that "Warm reset is
-> optimistic."
+Do I need to revert this one?  Or is there a new fix coming?
 
-Marco reported in "carl9170: monitor mode hangs due to channel changes"
-<http://www.spinics.net/lists/linux-wireless/msg105100.html> that
-carl9170 would stop receiving frames after some time.
-I looked a bit closer look and it seems that the fast channel change
-for AR9170 also seems to be the culprit in this case.
-
-(It seems that the AGC_CONTROL register is suddenly (re-)set by
-something to "0x20" (default is 0x0004dd20) and then everything
-stops.)
-
-Regards,
-	Christian
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
