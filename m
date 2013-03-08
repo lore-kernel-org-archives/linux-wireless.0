@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560Ab3C0NOw (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54330 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753522Ab3CHH1H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 09:14:52 -0400
-Message-ID: <1364390086.8388.7.camel@jlt4.sipsolutions.net> (sfid-20130327_141510_198051_190FE596)
-Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 27 Mar 2013 14:14:46 +0100
-In-Reply-To: <87li993mug.fsf@sycorax.lbl.gov> (sfid-20130326_215912_863066_7A8A33F1)
-References: <87li993mug.fsf@sycorax.lbl.gov>
-	 (sfid-20130326_215912_863066_7A8A33F1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Mar 2013 02:27:07 -0500
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: =?utf-8?Q?Ale=C5=A1?= Voda <AVoda@descartes.com>
+Subject: Re: AR6103G Linux kernel 3.4.5 problems
+References: <62813611608FC749AC8F3F91AEAF5F89417512DD@CPEXM03.corp.dsg.local>
+Date: Fri, 8 Mar 2013 09:27:00 +0200
+In-Reply-To: <62813611608FC749AC8F3F91AEAF5F89417512DD@CPEXM03.corp.dsg.local>
+	(=?utf-8?Q?=22Ale=C5=A1?= Voda"'s message of "Fri, 28 Dec 2012 11:35:34
+ +0000")
+Message-ID: <87ppzas663.fsf@kamboji.qca.qualcomm.com> (sfid-20130308_082711_997426_CDF74EF9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-26 at 13:52 -0700, Alex Romosan wrote:
-> since v3.9-rc1 i have been unable to reconnect to my access point. the
-> access point is a netgear n600 and the my card is a Centrino Advanced-N
-> 6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
-> boot up the laptop the connection is established but if i bring down the
-> network with ifdown then i cannot reconnect. this is what i see in the
-> logs:
-> 
->  iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
->  iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
->  wlan0: authenticate with xx:xx:xx:xx:xx:xx
->  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
->  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
->  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
->  wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
+Hi,
 
-That sounds like it stopped the queues. Can you check debugfs:
+Aleš Voda <AVoda@descartes.com> writes:
 
-cat /sys/kernel/debug/ieee80211/phy0/queues
+> We have some custom board equipped with AR6103G using SDIO as hif and
+> are having problems with AR6103 not starting after downloading the
+> firmware. Linux kernel being used is 3.4.5. As it is apparent from the
+> console output attached, the fw related files are downloaded and a
+> timeout occurs after uploading data patch file to the chip. After
+> removing ath6kl_sdio driver and renaming fw-2 and fw-3
 
-when this happens?
+Why do you need to rename the firmware files? What version of ath6kl are
+you using? Where did you get it? 
 
-> today i discovered that this happens only if i connect to the 5GHz.
-> connecting to 2.4GHz works on resume. i tried to do a 'git bisect start
-> -- drivers/net/wireless' and i ended up with
-> 
-> Bisecting: 0 revisions left to test after this (roughly 0 steps)
-> [e1a0c6b3a4b27ed5f21291d0bbee2167ec201ef5] mac80211: stop toggling IEEE80211_HT_CAP_SUP_WIDTH_20_40
-> 
-> but i haven't been able to revert it cleanly so i don't know if that's
-> the problem or not?
+> are so they can not be found and loaded, timeout during fw uploads
+> doesn't occur anymore after insertion of the ath6kl_sdio module, but
+> there is a HW startup failure while awaiting CTRL message from the
+> chip (err = -EIO). The firmware for the chip has been downloaded from
+> the kernel firmware git repository.
+>
+> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=tree;f=
+> ath6k/AR6003/hw2.1.1;hb=HEAD
 
-I don't think it can be the problem since this should only affect things
-after the association succeeded, but you restricted the bisect to the
-drivers which was probably too much.
+You should be using fw-3.bin. Better to remove athwlan.bin and fw-2.bin
+altogether from your platform.
 
-git bisect start -- drivers/net/wireless net/wireless net/mac80211
+> What could be the problem? If you need any additional info please do
+> not hesitate to contact me.
 
-would probably have been more successful.
+I think I don't have AR6103 myself. I'm not sure if it has some
+differences compared to AR6003, that's one possibility as well.
 
-johannes
-
+-- 
+Kalle Valo
