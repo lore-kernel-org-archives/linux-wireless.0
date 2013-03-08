@@ -1,36 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757938Ab3CYNmd (ORCPT
+Received: from smtpout3.wanadoo.co.uk ([80.12.242.59]:42126 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab3CHPMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 09:42:33 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UK7fT-00050H-V0
-	for linux-wireless@vger.kernel.org; Mon, 25 Mar 2013 14:42:32 +0100
-Message-ID: <1364218948.17540.0.camel@jlt4.sipsolutions.net> (sfid-20130325_144240_391791_476A92FE)
-Subject: Re: [PATCH 1/2] mac80211: ibss: disable beaconing before freeing
- beacon
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 8 Mar 2013 10:12:44 -0500
+Date: Fri, 8 Mar 2013 16:12:42 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
 To: linux-wireless@vger.kernel.org
-Date: Mon, 25 Mar 2013 14:42:28 +0100
-In-Reply-To: <1363785131-909-1-git-send-email-johannes@sipsolutions.net> (sfid-20130320_141218_695715_2F47CFC8)
-References: <1363785131-909-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130320_141218_695715_2F47CFC8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Message-ID: <8215941.3511362755562919.JavaMail.www@wwinf3723> (sfid-20130308_161248_252772_91EF008B)
+In-Reply-To: <7009019.981362755325047.JavaMail.www@wwinf3702>
+Subject: RE: ath6kl build error.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-20 at 14:12 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If we don't disable beaconing, the driver might attempt
-> to continue, but would fail to request a beacon. That's
-> strange, so disable beaconing first.
+In fact, it is !
+In drivers/include_local/linux/compat-2.6.34.h .
 
-Applied both.
+I see this:
 
-johannes
+#define sdio_set_host_pm_flags(a, b) 0
+
+That's causing my compiler problem.
+
+
+Regards
+
+Nick
+
+
+
+
+> Message Received: Mar 08 2013, 03:08 PM
+> From: nick@nhthomas.freeserve.co.uk
+> To: nick@nhthomas.freeserve.co.uk
+> Cc:
+> Subject: RE: ath6kl build error.
+>
+> The problem appears to be that sdio_set_host_pm_flags is already defined somewhere else.
+
+Regards
+
+Nick
+> Message Received: Mar 08 2013, 11:25 AM
+> From: nick@nhthomas.freeserve.co.uk
+> To: linux-wireless@vger.kernel.org
+> Cc:
+> Subject: ath6kl build error.
+>
+>
+> Hi,
+>
+> I'm getting a build error when building ath6kl modules.
+>
+> include/linux/mmc/sdio_func.h:162:12: error: expected identifier or '(' before numeric constant
+>
+> the line it's complaining about is like this:
+>
+> extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
+>
+>
+> A bit of googling has shown that others have seen the same problem too.
+> But, I've not seen a fix for it.
+>
+> Any ideas appreciated.
+>
+>
+> Regards
+>
+> Nick Thomas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+
 
