@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42178 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758172Ab3CDPbG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 10:31:06 -0500
-Message-ID: <1362411061.21028.22.camel@jlt4.sipsolutions.net> (sfid-20130304_163112_583538_D2449BD9)
-Subject: Re: [PATCH v3 1/6] cfg80211/mac80211: disconnect on suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 04 Mar 2013 16:31:01 +0100
-In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
-References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from lerya.net ([213.251.186.118]:37257 "EHLO mx.lerya.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752670Ab3CHV6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 16:58:37 -0500
+Received: from fea.lerya.net (fea.lerya.net [10.9.0.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx.lerya.net (Postfix) with ESMTPS id ED613804B9
+	for <linux-wireless@vger.kernel.org>; Fri,  8 Mar 2013 22:58:34 +0100 (CET)
+Date: Fri, 8 Mar 2013 22:58:33 +0100
+From: Vincent Brillault <gentoo@lerya.net>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
+Message-ID: <20130308215833.GA2829@Fea.lerya.net> (sfid-20130308_225841_187782_2847D4B9)
+References: <20130307192920.GB8668@Fea.lerya.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130307192920.GB8668@Fea.lerya.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-28 at 10:55 +0100, Stanislaw Gruszka wrote:
-> If possible that after suspend, cfg80211 will receive request to
-> disconnect what require action on interface that was removed during
-> suspend.
+Hi again,
 
-Applied all.
+I forgot to mention that those warning from mac80211 (the associated
+comments in the code are 'RC is busted' or 'uh huh?') seems to somehow
+disable completely the rate control: 'iw wlan0 link' gives 'tx bitrate:'
+with nothing after. Furthermore, I loose the network from time to time
+on reason 7. I went back to kernel 3.8.0: if there is enough traffic
+continuously, the link is stable but I loose it randomly when there is
+no traffic.
 
-johannes
+I made more debug on the 3.8.0 kernel, the first warning correspond to
+the following test:
+(info->control.rates[i].idx) 15 >= (sband->n_bitrates) 12
 
+Please tell me what test I can make to find the source of this problem.
+
+Thanks in advance,
+Vincent Brillault
