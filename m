@@ -1,55 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.nanl.de ([217.115.11.12]:40421 "EHLO mail.nanl.de"
+Received: from mail.neratec.com ([80.75.119.105]:55972 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758558Ab3CYQPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 12:15:36 -0400
-Received: from mail-ie0-f173.google.com (mail-ie0-f173.google.com [209.85.223.173])
-	by mail.nanl.de (Postfix) with ESMTPSA id 531F94040C
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 16:15:26 +0000 (UTC)
-Received: by mail-ie0-f173.google.com with SMTP id 9so7644714iec.32
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 09:15:28 -0700 (PDT)
+	id S932941Ab3CHJvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 04:51:51 -0500
+Message-ID: <5139B35D.9060803@neratec.com> (sfid-20130308_105155_943166_3F0842C9)
+Date: Fri, 08 Mar 2013 10:46:05 +0100
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <1364226597.17540.2.camel@jlt4.sipsolutions.net>
-References: <1364225994-19375-1-git-send-email-jogo@openwrt.org> <1364226597.17540.2.camel@jlt4.sipsolutions.net>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Mon, 25 Mar 2013 17:15:08 +0100
-Message-ID: <CAOiHx=kwzdSvD33vMOEbpRAG_cdy50eFEUQb77qhOKHJxi4ruQ@mail.gmail.com> (sfid-20130325_171539_533051_4938C09F)
-Subject: Re: [PATCH] mwl8k: always apply configuration even when device is idle
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
+ that don't include chain 0
+References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org> <5138B656.5090408@neratec.com> <513996DE.6030500@neratec.com>
+In-Reply-To: <513996DE.6030500@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2013 16:49, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2013-03-25 at 16:39 +0100, Jonas Gorski wrote:
->> Fix settings not being applied when the device is idle and the firmware
->> gets reloaded (because of changing from STA to AP mode). This caused
->> the device using the wrong channel (and likely band), e.g. a 5 GHz only
->> card still defaulted to channel 6 in the 2.4 GHz band when left
->> unconfigured.
+On 03/08/2013 08:44 AM, Wojciech Dubowik wrote:
+> On 03/07/2013 04:46 PM, Wojciech Dubowik wrote:
+>> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
+>>> On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
+>>>> There is a regression introduced by this patch when power save is 
+>>>> off on
+>>>> the station for idle checks.
+>>>> I have AR9590 station with rx and tx chain set to 0x1 connected
+>>>> to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
+>>>>
+>>>> Before this patch in connection polling the station was properly 
+>>>> sending
+>>>> null function to check whether AP is still there. After this patch 
+>>>> it sends
+>>>> broadcast probe request which is anyway wrong or some 16 or so packets
+>>>> of random data (rarely). It manifests itself in lost connection 
+>>>> because
+>>>> there
+>>>> is no ack from AP which is expected for null function.
+>>>>
+>>>> I have been following skb's up to the descriptor setting in ath9k 
+>>>> and it was
+>>>> all ok i.e. proper null function with valid addresses.
+>>>>
+>>>> I have been bisecting it twice because it doesn't make much sense 
+>>>> but maybe
+>>>> it's a HW issue?
+>>> You're right, it does not make much sense. I can't figure out how this
+>>> patch could possibly change the runtime behavior with tx chainmask set
+>>> to 0x1. Have you tried reverting this patch in a current build to 
+>>> see if
+>>> that fixes the issue?
+>> It does fix it. I will check tomorrow whether it's only AR9590 or also
+>> previous revisions. I will also try with different chainmasks. I will 
+>> have
+>> to rescrew my setup...
 >>
->> This issue was always present, but only made visible with "mwl8k: Do not
->> call mwl8k_cmd_set_rf_channel unconditionally" (0f4316b9), since before
->> that the channel was (re-)configured at the next _config call even when
->> it did not change from the mac80211 perspective.
+> I have been doing some tests and it seems to affect both AR9390 and 
+> AR9590.
+> To summarize: sta doesn't send null function but broadcast probe 
+> request or
+> corrupted frames in idle checking routine when power save is off and 
+> only some
+> antennas are selected for transmission.
+> So for example when I set antenna mask 7 i.e. all available it works 
+> ok but with
+> mask 1, 3 or 6 not. When I swith power save it's all ok no matter what 
+> mask I use.
 >
-> I'm changing mac80211 back to unset idle first and then set the channel,
-> if that helps ... ath9k_htc was also broken by the change.
+> Thing with power save on is that before it goes to idle check it will 
+> go to sleep since
+> there is no traffic anyway, then we get beacon miss, it wakes up and 
+> it sends null
+> function. I guess waking up is reinitializing sth in a chip which 
+> doesn't occur in my
+> scenario.
+> HW issue?
+It will also work if I set user specified antenna masks instead of hw 
+capabilities.
+Shouldn't it be the case anyway?
 
-I think it only helps partially - the main issue is that a firmware
-reload seems to require reapplying any settings, but this wasn't done
-the if the device was currently in idle.
+Wojtek
 
-Also setting the channel when the device is in idle has the advantage
-for mwl8k that it does not start rx'ing packets from the wrong channel
-- which did confuse mac80211 in case of my 5 GHz "only" card that
-happily received frames while being left unconfigured in 2.4 GHz, with
-->bands[2GHZ] == NULL. Produced several pages worth of WARN_ON()s with
-stack traces, and the reason why I caught this.
-
-
-Jonas
