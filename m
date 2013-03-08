@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:34329 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754785Ab3CPBri (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:57690 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556Ab3CHXrA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 21:47:38 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Marco Cesarano <marco@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.9 3/3] mwifiex: cancel cmd timer and free curr_cmd in shutdown process
-Date: Fri, 15 Mar 2013 18:47:07 -0700
-Message-ID: <1363398427-30392-4-git-send-email-bzhao@marvell.com> (sfid-20130316_024745_429458_E58C3BE6)
-In-Reply-To: <1363398427-30392-1-git-send-email-bzhao@marvell.com>
-References: <1363398427-30392-1-git-send-email-bzhao@marvell.com>
+	Fri, 8 Mar 2013 18:47:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 8 Mar 2013 15:46:38 -0800
+Message-ID: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com> (sfid-20130309_004723_734901_268EC978)
+Subject: Re: [Announce] open ath9k_htc firmware
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath9k_htc_fw@lists.infradead.org, Chris Zankel <chris@zankel.net>,
+	linux-kernel@vger.kernel.org, Marc Gauthier <marc@tensilica.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-curr_cmd points to the command that is in processing or waiting
-for its command response from firmware. If the function shutdown
-happens to occur at this time we should cancel the cmd timer and
-put the command back to free queue.
+Many thanks to Adrian for his hard work on all this and to everyone
+else who volunteered to help make this happen, including the
+understanding by our management at QCA and even Tensilica requires
+some handsome applause for their commitment, understanding on letting
+us get this out. We now have a public mailing list for development:
 
-Cc: <stable@vger.kernel.org> # 3.8
-Tested-by: Marco Cesarano <marco@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index cab3434..daf8801 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -709,6 +709,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 		return ret;
- 	}
- 
-+	/* cancel current command */
-+	if (adapter->curr_cmd) {
-+		dev_warn(adapter->dev, "curr_cmd is still in processing\n");
-+		del_timer(&adapter->cmd_timer);
-+		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		adapter->curr_cmd = NULL;
-+	}
-+
- 	/* shut down mwifiex */
- 	dev_dbg(adapter->dev, "info: shutdown mwifiex...\n");
- 
--- 
-1.7.0.2
+Full steam ahead!
 
+  Luis
+
+On Fri, Mar 8, 2013 at 3:32 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> Hi,
+>
+> I hate fanfare.
+>
+> You can all thank Luis Rodriguez for his ridiculously long and hard
+> fighting to get this stuff pushed through the grinder to make this
+> happen.
+>
+> There's also been a hard working team of developers behind the scene -
+> Felix Fietkau, Eugene Krasnikov, Sujith Manoharan, and the team from
+> Cozybit. They've been working hard to get the codebase converted over
+> to using the open source tensilica toolchain and finding/fixing up any
+> silly issues that may creep up from that.
+>
+> I've just been involved in shepharding this stuff into a sensible
+> shape and pushing it through the final stage (legal review) before
+> publication.
+>
+> You can find it here:
+>
+> https://github.com/qca/open-ath9k-htc-firmware
+>
+> There's a bunch of sorely needed work to do in the short term:
+>
+> * felix has a replacement cmake build system that I'd like to now integrate;
+> * there's lots of build warnings which need to be removed (and then
+> build this thing using -Wall -Werror);
+> * some general code cleanup and documentation wouldn't be rejected -
+> but I don't really want any sweeping code changes to go in until we've
+> tidied up the build warnings and validated that the image(s) work
+> right.
+>
+> I plan on doing some test builds shortly. I plan on bumping the
+> firmware to 1.4 once felix's cmake system is in place and people have
+> validated that this work.s
+>
+> Thanks,
+>
+>
+>
+> Adrian
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
