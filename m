@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1303 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755343Ab3CRWC7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 18:02:59 -0400
-Message-ID: <51478F06.9000506@broadcom.com> (sfid-20130318_230307_458639_52ABF7F8)
-Date: Mon, 18 Mar 2013 23:02:46 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:43864 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505Ab3CHK0w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 05:26:52 -0500
+Subject: [PATCH 0/3] ath6kl: fix usb warm reboot and cleanups
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Fri, 08 Mar 2013 12:26:46 +0200
+Message-ID: <20130308102539.23245.55176.stgit@localhost6.localdomain6> (sfid-20130308_112655_973965_F6201CE8)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org,
-	"David Spinadel" <dvdspndl@gmail.com>
-Subject: Re: BUG: problem while tracing cfg80211
-References: <51476F35.9040909@broadcom.com>
- <1363636984.8260.17.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1363636984.8260.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2013 09:03 PM, Johannes Berg wrote:
-> On Mon, 2013-03-18 at 20:47 +0100, Arend van Spriel wrote:
->> Hi Johannes,
->>
->> While testing David Spinadel's P2P device support functionality I got
->> the following blurb, which is probably caused by cfg80211 tracing given
->> the instruction pointer address.
->>
->> brcmfmac returns ERR_PTR(-ENOENT) and I think the trace code/macros do
->> not take this into account.
->
-> I guess this should fix it?
->
-> http://p.sipsolutions.net/fdea39f2a56aff67.txt
+While looking at the usb warm reboot I had to some cleanup, especially with error
+handling.
 
-Did not test it, but that would be my guess to. Just another 
-observation: Is the wdev identifier not defined as u64?
+---
 
-> johannes
+Kalle Valo (3):
+      ath6kl: cleanup ath6kl_reset_device()
+      ath6kl: fix usb related error handling and warnings
+      ath6kl: cold reset target after host warm boot
 
-Regards,
-Arend
 
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 --
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   12 +++++----
+ drivers/net/wireless/ath/ath6kl/init.c     |   37 +++++++++++++++++++---------
+ drivers/net/wireless/ath/ath6kl/main.c     |   33 -------------------------
+ drivers/net/wireless/ath/ath6kl/target.h   |    2 +-
+ drivers/net/wireless/ath/ath6kl/usb.c      |   34 +++++++++++++++++---------
+ 6 files changed, 54 insertions(+), 66 deletions(-)
 
