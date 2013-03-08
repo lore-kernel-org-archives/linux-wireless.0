@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2713 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34887 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770Ab3CXKKY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 06:10:24 -0400
-Message-ID: <514ED101.9010006@broadcom.com> (sfid-20130324_111029_915695_6DE1A0E1)
-Date: Sun, 24 Mar 2013 11:10:09 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752764Ab3CHKbC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 05:31:02 -0500
+Date: Fri, 8 Mar 2013 11:31:28 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Zdenek Kabelac <zkabelac@redhat.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 prints warning
+Message-ID: <20130308103127.GA1427@redhat.com> (sfid-20130308_113122_427010_64AD7565)
+References: <5106867F.80309@redhat.com>
+ <20130129130850.GC2306@redhat.com>
+ <5139123D.8040901@redhat.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "Jonathan Nieder" <jrnieder@gmail.com>, 664767@bugs.debian.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Brcmsmac driver woes, possible regression?
-References: <20130317144603.GA4850@stt008.linux.site>
- <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
- <20130317152428.GA4940@stt008.linux.site>
- <20130317175658.GA8181@elie.Belkin>
- <20130317182725.GA5811@stt008.linux.site>
- <20130317183344.GA8786@elie.Belkin>
- <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
- <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
- <20130318211428.GA9136@stt008.linux.site>
- <20130318212544.GB5062@elie.Belkin>
- <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
- <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
- <CAKprTDHHt76EYGKYH-FW6qPY6b=Cfe_Q_6HxxGOExbs=_TAkrQ@mail.gmail.com>
-In-Reply-To: <CAKprTDHHt76EYGKYH-FW6qPY6b=Cfe_Q_6HxxGOExbs=_TAkrQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5139123D.8040901@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/2013 04:28 PM, Camaleón wrote:
-> 2013/3/19 Camaleón <noelamac@gmail.com>:
+On Thu, Mar 07, 2013 at 11:18:37PM +0100, Zdenek Kabelac wrote:
+> I've now tested  3.9-rc1  and it seems to be getting even worse.
+> (and 3.8 is not really good either)
 > 
->>> Now let's see how reverting the patch makes any difference as soon as
->>> I can compile the module. I will keep you updated
->>
->> Update: applied the patch to revert the "other" patch but I still
->> cannot get the driver to work (see attached syslog). N-M still asks
->> for password until desists :-(
+> iwl3945 0000:03:00.0: Error sending C_RXON: time out after 500ms.
+> iwl3945 0000:03:00.0: Error setting new configuration (-110).
+This looks like firmware crash.
+
+> ------------[ cut here ]------------
+> WARNING: at lib/dma-debug.c:883 check_unmap+0xfb/0x9a0()
+[snip]
+> Pid: 50, comm: kworker/u:3 Not tainted 3.9.0-rc1-00114-gd356175 #144
+Does this version include commit bdb084b22d8aee66c87af5e9c36bd6cf7f3bccfd
+"iwlegacy: more checks for dma mapping errors" ?
+
+>  iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+>  iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
+>  iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+>  iwl3945 0000:03:00.0: Status: 0x000202E4, count: 1
+>  iwl3945 0000:03:00.0: Desc       Time       asrtPC  blink2 ilink1  nmiPC   Line
+>  iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0000201255 0x008B6
+> 0x00274 0x00320 0x04CA6 116
 > 
-> More verbose logs, just in case someone finds something of interest.
+>  iwl3945 0000:03:00.0: Error Reply type 0x00000005 cmd C_TX (0x1C)
+> seq 0x0000 ser 0x00740000
+>  iwl3945 0000:03:00.0: Error: Response NULL in 'C_ADD_STA'
+>  iwl3945 0000:03:00.0: Adding station ff:ff:ff:ff:ff:ff failed.
+>  iwl3945 0000:03:00.0: Error setting Tx power (-5).
+>  iwl3945 0000:03:00.0: Can't stop Rx DMA.
+>  ieee80211 phy0: Hardware restart was requested
 > 
-> Greetings,
 > 
+> And driver is effectively unusable - since it's just restarting....
+>
+> Also 'state' of iwl3945 in  3.8 is quite 'far' from stable as well.
+> quite often I can see, that I'm disconnected from AP, and while
+> network manager shows other 'visible' AP available for connection,
+> my home AP is not listed anymore - and to see it again I'd to switch
+> wifi support on/off - just after this I'd reattach to my home AP -
+> so quite annoying - and major reason to stay with 3.7 kernel for
+> stable wifi.
 
-What I see in this log is that your AP keeps sending EAPOL message 1 and
-you keep sending EAPOL message 2 until one gives up the attempts. This
-behaviour would suggest the psk is wrong as indicated in the log, but
-you said you could connect using another card, right? So using the same
-configured N-M connection?
+We do not have much changes in iwlegacy driver between 3.7 and 3.8 (and
+between 3.8 and 3.9). Most likely mac80211 changes are causing iwl3945
+driver or firmware problems. Let's try to debug that on 3.8.
 
-Regards,
-Arend
+Please provide verbose debug messages, to do this you have to configure
+syslog daemon to log kernel debug messages into some file, let say
+/var/log/kernel. For rsyslogd this mean adding:
 
+kern.*    /var/log/kernel
 
+to /etc/rsyslog.conf
+
+Then restart rsyslog service and grab debug messages:
+
+modprobe -r iwl3945
+echo > /var/log/kernel
+modprobe iwl3945 debug=0x47ffffff
+
+# Reproduce the problem
+
+modprobe -r iwl3945
+
+Then send me privately /var/log/kernel file (compressed if needed). 
+
+Stanislaw
+ 
