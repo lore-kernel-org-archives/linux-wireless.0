@@ -1,57 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20103 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932348Ab3CMMNV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56845 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab3CHLOd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:21 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/14] wil6210: use cfg80211_inform_bss_frame()
-Date: Wed, 13 Mar 2013 14:12:44 +0200
-Message-ID: <1363176771-10082-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131355_018720_C303C4A0)
-In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 8 Mar 2013 06:14:33 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH] mac80211: add driver callback for per-interface multicast filter
+Date: Fri,  8 Mar 2013 12:14:27 +0100
+Message-Id: <1362741267-19387-1-git-send-email-johannes@sipsolutions.net> (sfid-20130308_121443_550811_F496A6E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid unnecessary frame parsing
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Some devices have multicast filter capability for each individual
+virtual interface rather than just a global one. Add an interface
+specific driver callback allowing such drivers to configure this.
+
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ include/net/mac80211.h    |  7 +++++++
+ net/mac80211/driver-ops.h | 16 ++++++++++++++++
+ net/mac80211/iface.c      |  3 +++
+ net/mac80211/trace.h      | 24 ++++++++++++++++++++++++
+ 4 files changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index dd3b7b1..9c06942 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -324,17 +324,9 @@ static void wmi_evt_rx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
- 
- 	if (ieee80211_is_beacon(fc) || ieee80211_is_probe_resp(fc)) {
- 		struct cfg80211_bss *bss;
--		u64 tsf = le64_to_cpu(rx_mgmt_frame->u.beacon.timestamp);
--		u16 cap = le16_to_cpu(rx_mgmt_frame->u.beacon.capab_info);
--		u16 bi = le16_to_cpu(rx_mgmt_frame->u.beacon.beacon_int);
--		const u8 *ie_buf = rx_mgmt_frame->u.beacon.variable;
--		size_t ie_len = d_len - offsetof(struct ieee80211_mgmt,
--						 u.beacon.variable);
--		wil_dbg_wmi(wil, "Capability info : 0x%04x\n", cap);
--
--		bss = cfg80211_inform_bss(wiphy, channel, rx_mgmt_frame->bssid,
--					  tsf, cap, bi, ie_buf, ie_len,
--					  signal, GFP_KERNEL);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f940296..d5bc60c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2261,6 +2261,9 @@ enum ieee80211_roc_type {
+  *	See the section "Frame filtering" for more information.
+  *	This callback must be implemented and can sleep.
+  *
++ * @set_multicast_list: Configure the device's interface specific RX multicast
++ *	filter. This callback is optional. This callback must be atomic.
++ *
+  * @set_tim: Set TIM bit. mac80211 calls this function when a TIM bit
+  * 	must be set or cleared for a given STA. Must be atomic.
+  *
+@@ -2610,6 +2613,10 @@ struct ieee80211_ops {
+ 				 unsigned int changed_flags,
+ 				 unsigned int *total_flags,
+ 				 u64 multicast);
++	void (*set_multicast_list)(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, bool allmulti,
++				   struct netdev_hw_addr_list *mc_list);
 +
-+		bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
-+						d_len, signal, GFP_KERNEL);
- 		if (bss) {
- 			wil_dbg_wmi(wil, "Added BSS %pM\n",
- 				    rx_mgmt_frame->bssid);
+ 	int (*set_tim)(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+ 		       bool set);
+ 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 33f99b9..a8b8cf1 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -241,6 +241,22 @@ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline void drv_set_multicast_list(struct ieee80211_local *local,
++					  struct ieee80211_sub_if_data *sdata,
++					  struct netdev_hw_addr_list *mc_list)
++{
++	bool allmulti = sdata->flags & IEEE80211_SDATA_ALLMULTI;
++
++	trace_drv_set_multicast_list(local, sdata, mc_list->count);
++
++	check_sdata_in_driver(sdata);
++
++	if (local->ops->set_multicast_list)
++		local->ops->set_multicast_list(&local->hw, &sdata->vif,
++					       allmulti, mc_list);
++	trace_drv_return_void(local);
++}
++
+ static inline void drv_configure_filter(struct ieee80211_local *local,
+ 					unsigned int changed_flags,
+ 					unsigned int *total_flags,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b22ee2f..3afa831 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -919,6 +919,9 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
+ 			atomic_dec(&local->iff_promiscs);
+ 		sdata->flags ^= IEEE80211_SDATA_PROMISC;
+ 	}
++
++	drv_set_multicast_list(local, sdata, &dev->mc);
++
+ 	spin_lock_bh(&local->filter_lock);
+ 	__hw_addr_sync(&local->mc_list, &dev->mc, dev->addr_len);
+ 	spin_unlock_bh(&local->filter_lock);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index f18f32b..c589979 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -431,6 +431,30 @@ TRACE_EVENT(drv_prepare_multicast,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_set_multicast_list,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata, int mc_count),
++
++	TP_ARGS(local, sdata, mc_count),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(bool, allmulti)
++		__field(int, mc_count)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->allmulti = sdata->flags & IEEE80211_SDATA_ALLMULTI;
++		__entry->mc_count = mc_count;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " configure mc filter, count=%d, allmulti=%d",
++		LOCAL_PR_ARG, __entry->mc_count, __entry->allmulti
++	)
++);
++
+ TRACE_EVENT(drv_configure_filter,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 unsigned int changed_flags,
 -- 
-1.7.10.4
+1.8.0
 
