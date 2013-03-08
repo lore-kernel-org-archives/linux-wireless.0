@@ -1,235 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:58677 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932143Ab3CINFK (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:51610 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751194Ab3CHFAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 08:05:10 -0500
-Subject: [PATCH v2 1/7] ath6kl: add tracing support and tracing points for wmi
- packets
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Sat, 09 Mar 2013 15:05:06 +0200
-Message-ID: <20130309130506.13371.70928.stgit@localhost6.localdomain6> (sfid-20130309_140522_150952_F3EA73C9)
-In-Reply-To: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
-References: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
+	Fri, 8 Mar 2013 00:00:54 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Thu, 7 Mar 2013 21:00:51 -0800
+Subject: RE: mwifiex crash when removing interface while scanning
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9D9C1608@SC-VEXCH1.marvell.com> (sfid-20130308_060133_149715_4E77C63A)
+References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
+	<CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com>
+ <CAMLZHHR+OCQd_2J8NkmK0CND9vo6VaT73L+rJKJRk7bUknh7Qw@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
+Content-Type: multipart/mixed;
+	boundary="_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add basic tracing infrastructure support to ath6kl and which can be
-enabled with CONFIG_ATH6KL_TRACING.
+--_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/Kconfig  |    9 +++
- drivers/net/wireless/ath/ath6kl/Makefile |    5 ++
- drivers/net/wireless/ath/ath6kl/trace.c  |   18 ++++++
- drivers/net/wireless/ath/ath6kl/trace.h  |   87 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/txrx.c   |    3 +
- drivers/net/wireless/ath/ath6kl/wmi.c    |    3 +
- 6 files changed, 125 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath6kl/trace.c
- create mode 100644 drivers/net/wireless/ath/ath6kl/trace.h
+Hi Daniel,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index 630c83d..e39e586 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -30,6 +30,15 @@ config ATH6KL_DEBUG
- 	---help---
- 	  Enables debug support
- 
-+config ATH6KL_TRACING
-+	bool "Atheros ath6kl tracing support"
-+	depends on ATH6KL
-+	depends on EVENT_TRACING
-+	---help---
-+	  Select this to ath6kl use tracing infrastructure.
-+
-+	  If unsure, say Y to make it easier to debug problems.
-+
- config ATH6KL_REGDOMAIN
- 	bool "Atheros ath6kl regdomain support"
- 	depends on ATH6KL
-diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
-index cab0ec0..dc2b3b4 100644
---- a/drivers/net/wireless/ath/ath6kl/Makefile
-+++ b/drivers/net/wireless/ath/ath6kl/Makefile
-@@ -35,10 +35,15 @@ ath6kl_core-y += txrx.o
- ath6kl_core-y += wmi.o
- ath6kl_core-y += core.o
- ath6kl_core-y += recovery.o
-+
- ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
-+ath6kl_core-$(CONFIG_ATH6KL_TRACING) += trace.o
- 
- obj-$(CONFIG_ATH6KL_SDIO) += ath6kl_sdio.o
- ath6kl_sdio-y += sdio.o
- 
- obj-$(CONFIG_ATH6KL_USB) += ath6kl_usb.o
- ath6kl_usb-y += usb.o
-+
-+# for tracing framework to find trace.h
-+CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.c b/drivers/net/wireless/ath/ath6kl/trace.c
-new file mode 100644
-index 0000000..4118a29
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/trace.c
-@@ -0,0 +1,18 @@
-+/*
-+ * Copyright (c) 2012 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define CREATE_TRACE_POINTS
-+#include "trace.h"
-diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
-new file mode 100644
-index 0000000..0787619
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/trace.h
-@@ -0,0 +1,87 @@
-+#if !defined(_ATH6KL_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
-+
-+#include <net/cfg80211.h>
-+#include <linux/skbuff.h>
-+#include <linux/tracepoint.h>
-+#include "wmi.h"
-+
-+#if !defined(_ATH6KL_TRACE_H)
-+static inline unsigned int ath6kl_get_wmi_id(void *buf, size_t buf_len)
-+{
-+	struct wmi_cmd_hdr *hdr = buf;
-+
-+	if (buf_len < sizeof(*hdr))
-+		return 0;
-+
-+	return le16_to_cpu(hdr->cmd_id);
-+}
-+#endif /* __ATH6KL_TRACE_H */
-+
-+#define _ATH6KL_TRACE_H
-+
-+/* create empty functions when tracing is disabled */
-+#if !defined(CONFIG_ATH6KL_TRACING)
-+#undef TRACE_EVENT
-+#define TRACE_EVENT(name, proto, ...) \
-+static inline void trace_ ## name(proto) {}
-+#endif /* !CONFIG_ATH6KL_TRACING || __CHECKER__ */
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ath6kl
-+
-+TRACE_EVENT(ath6kl_wmi_cmd,
-+	TP_PROTO(void *buf, size_t buf_len),
-+
-+	TP_ARGS(buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int, id)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"id %d len %d",
-+		__entry->id, __entry->buf_len
-+	)
-+);
-+
-+TRACE_EVENT(ath6kl_wmi_event,
-+	TP_PROTO(void *buf, size_t buf_len),
-+
-+	TP_ARGS(buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int, id)
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"id %d len %d",
-+		__entry->id, __entry->buf_len
-+	)
-+);
-+
-+#endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
-+
-+/* we don't want to use include/trace/events */
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH .
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 78b3692..43dbdaa 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -20,6 +20,7 @@
- #include "core.h"
- #include "debug.h"
- #include "htc-ops.h"
-+#include "trace.h"
- 
- /*
-  * tid - tid_mux0..tid_mux3
-@@ -288,6 +289,8 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 	int status = 0;
- 	struct ath6kl_cookie *cookie = NULL;
- 
-+	trace_ath6kl_wmi_cmd(skb->data, skb->len);
-+
- 	if (WARN_ON_ONCE(ar->state == ATH6KL_STATE_WOW)) {
- 		dev_kfree_skb(skb);
- 		return -EACCES;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index d76b5bd..31a3081 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -20,6 +20,7 @@
- #include "core.h"
- #include "debug.h"
- #include "testmode.h"
-+#include "trace.h"
- #include "../regd.h"
- #include "../regd_common.h"
- 
-@@ -4086,6 +4087,8 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		return -EINVAL;
- 	}
- 
-+	trace_ath6kl_wmi_event(skb->data, skb->len);
-+
- 	return ath6kl_wmi_proc_events(wmi, skb);
- }
- 
+> > If you have any suggestions for where to add debug messages, that
+> > would be appreciated. Otherwise I will look into sprinkling a few
+> > throughout the probe sequences to see if any communication succeeds
+> > before the first error is printed.
+>=20
+> For now, let's use dynamic_debug to collect some logs.
+>=20
+> CONFIG_DYNAMIC_DEBUG=3Dy
+>=20
+> # run these commands before running the test script:
+> echo "module mwifiex +p" > /sys/kernel/debug/dynamic_debug/control
+> echo "module mwifiex_sdio +p" > /sys/kernel/debug/dynamic_debug/control
 
+Running your test script on my XO-4 with 3.8 kernel does reproduce command =
+timeout.
+Although the timeout happens at different path than yours they could have t=
+he same cause.
+
+Attached please find two patches that seems fix the FUNC_SHUTDOWN timeout o=
+n my XO-4.
+Hope it helps.
+
+Thanks,
+Bing
+
+
+--_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0002-mwifiex-skip-pending-commands-after-function-shutdow.patch"
+Content-Description: 0002-mwifiex-skip-pending-commands-after-function-shutdow.patch
+Content-Disposition: attachment;
+	filename="0002-mwifiex-skip-pending-commands-after-function-shutdow.patch";
+	size=1829; creation-date="Fri, 08 Mar 2013 04:29:04 GMT";
+	modification-date="Fri, 08 Mar 2013 04:29:04 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSBlOTJjZDU0MmFjNzU3NDkzZGIxMTgyYmQ4MTE2MGUxOWMxMTE2MDUyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZlbGwuY29tPgpEYXRlOiBU
+aHUsIDcgTWFyIDIwMTMgMjA6MTY6MDMgLTA4MDAKU3ViamVjdDogW1BBVENIIDIvMl0gbXdpZmll
+eDogc2tpcCBwZW5kaW5nIGNvbW1hbmRzIGFmdGVyIGZ1bmN0aW9uIHNodXRkb3duCgpEdXJpbmcg
+cm1tb2QgbXdpZmlleF9zZGlvIHByb2Nlc3NpbmcgRlVOQ19TSFVURE9XTiBjb21tYW5kIGlzCnNl
+bnQgdG8gZmlybXdhcmUuIEZpcm13YXJlIGV4cGNldHMgb25seSBGVU5DX0lOSVQgb25jZSBXTEFO
+CmZ1bmN0aW9uIGlzIHNodXQgZG93bi4KCkFueSBjb21tYW5kIHBlbmRpbmcgaW4gdGhlIGNvbW1h
+bmQgcXVldWUgc2hvdWxkIGJlIGlnbm9yZWQgYW5kCmZyZWVkLgoKU2lnbmVkLW9mZi1ieTogQmlu
+ZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
+aWV4L2NtZGV2dC5jIHwgMTcgKysrKysrKysrKysrKystLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNCBp
+bnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL213aWZpZXgvY21kZXZ0LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2Nt
+ZGV2dC5jCmluZGV4IGY0N2FkM2EuLjlhMTMwMmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL213aWZpZXgvY21kZXZ0LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9jbWRldnQuYwpAQCAtMTU3LDYgKzE1NywyMCBAQCBzdGF0aWMgaW50IG13aWZpZXhfZG5sZF9j
+bWRfdG9fZncoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwKIAkJcmV0dXJuIC0xOwogCX0K
+IAorCWNtZF9jb2RlID0gbGUxNl90b19jcHUoaG9zdF9jbWQtPmNvbW1hbmQpOworCWNtZF9zaXpl
+ID0gbGUxNl90b19jcHUoaG9zdF9jbWQtPnNpemUpOworCisJaWYgKGFkYXB0ZXItPmh3X3N0YXR1
+cyA9PSBNV0lGSUVYX0hXX1NUQVRVU19SRVNFVCAmJgorCSAgICBjbWRfY29kZSAhPSBIb3N0Q21k
+X0NNRF9GVU5DX1NIVVRET1dOICYmCisJICAgIGNtZF9jb2RlICE9IEhvc3RDbWRfQ01EX0ZVTkNf
+SU5JVCkgeworCQlkZXZfZXJyKGFkYXB0ZXItPmRldiwKKwkJCSJETkxEX0NNRDogRlcgaW4gcmVz
+ZXQgc3RhdGUsIGlnbm9yZSBjbWQgJSN4XG4iLAorCQkJY21kX2NvZGUpOworCQltd2lmaWV4X2Nv
+bXBsZXRlX2NtZChhZGFwdGVyLCBjbWRfbm9kZSk7CisJCW13aWZpZXhfaW5zZXJ0X2NtZF90b19m
+cmVlX3EoYWRhcHRlciwgY21kX25vZGUpOworCQlyZXR1cm4gLTE7CisJfQorCiAJLyogU2V0IGNv
+bW1hbmQgc2VxdWVuY2UgbnVtYmVyICovCiAJYWRhcHRlci0+c2VxX251bSsrOwogCWhvc3RfY21k
+LT5zZXFfbnVtID0gY3B1X3RvX2xlMTYoSG9zdENtZF9TRVRfU0VRX05PX0JTU19JTkZPCkBAIC0x
+NjgsOSArMTgyLDYgQEAgc3RhdGljIGludCBtd2lmaWV4X2RubGRfY21kX3RvX2Z3KHN0cnVjdCBt
+d2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJYWRhcHRlci0+Y3Vycl9jbWQgPSBjbWRfbm9kZTsKIAlz
+cGluX3VubG9ja19pcnFyZXN0b3JlKCZhZGFwdGVyLT5td2lmaWV4X2NtZF9sb2NrLCBmbGFncyk7
+CiAKLQljbWRfY29kZSA9IGxlMTZfdG9fY3B1KGhvc3RfY21kLT5jb21tYW5kKTsKLQljbWRfc2l6
+ZSA9IGxlMTZfdG9fY3B1KGhvc3RfY21kLT5zaXplKTsKLQogCS8qIEFkanVzdCBza2IgbGVuZ3Ro
+ICovCiAJaWYgKGNtZF9ub2RlLT5jbWRfc2tiLT5sZW4gPiBjbWRfc2l6ZSkKIAkJLyoKLS0gCjEu
+OC4wCgo=
+
+--_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0001-mwifiex-fix-race-when-queuing-commands.patch"
+Content-Description: 0001-mwifiex-fix-race-when-queuing-commands.patch
+Content-Disposition: attachment;
+	filename="0001-mwifiex-fix-race-when-queuing-commands.patch"; size=5052;
+	creation-date="Fri, 08 Mar 2013 04:29:04 GMT";
+	modification-date="Fri, 08 Mar 2013 04:29:04 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSBmZWRiZjE2MGE3MzJiMDE3ZGEzODY2MTNiNTA4YTgzMDZmNWZlNGNhIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBXZWQsIDI3IEZlYiAyMDEzIDE4OjI2OjMyIC0wODAwClN1YmplY3Q6IFtQQVRDSCAx
+LzJdIG13aWZpZXg6IGZpeCByYWNlIHdoZW4gcXVldWluZyBjb21tYW5kcwoKbXdpZmlleF9zZW5k
+X2NtZF9hc3luYygpIGlzIGNhbGxlZCBmb3Igc3luYyBhcyB3ZWxsIGFzIGFzeW5jCmNvbW1hbmRz
+LiAobXdpZmlleF9zZW5kX2NtZF9zeW5jKCkgaW50ZXJuYWxseSBjYWxscyBpdCBmb3IKc3luYyBj
+b21tYW5kLikKCiJhZGFwdGVyLT5jbWRfcXVldWVkIiBnZXRzIGZpbGxlZCBpbnNpZGUgbXdpZmll
+eF9zZW5kX2NtZF9hc3luYygpCnJvdXRpbmUgZm9yIGJvdGggdHlwZXMgb2YgY29tbWFuZHMuIEJ1
+dCBpdCBpcyB1c2VkIG9ubHkgZm9yIHN5bmMKY29tbWFuZHMgaW4gbXdpZmlleF93YWl0X3F1ZXVl
+X2NvbXBsZXRlKCkuIFRoaXMgY291bGQgbGVhZCB0byBhCnJhY2Ugd2hlbiB0d28gdGhyZWFkcyB0
+cnkgdG8gcXVldWUgYSBzeW5jIGNvbW1hbmQgd2l0aCBhbm90aGVyCnN5bmMvYXN5bmMgY29tbWFu
+ZCBzaW11bHRhbmVvdXNseS4KCkdldCByaWQgb2YgZ2xvYmFsIHZhcmlhYmxlIGFuZCBwYXNzIGNv
+bW1hbmQgbm9kZSBhcyBhIHBhcmFtZXRlcgp0byBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUo
+KSB0byBmaXggdGhlIHByb2JsZW0uCgpTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxh
+a2Fyd2FyQG1hcnZlbGwuY29tPgpTaWduZWQtb2ZmLWJ5OiBCaW5nIFpoYW8gPGJ6aGFvQG1hcnZl
+bGwuY29tPgotLS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgICAgfCAg
+NSArKy0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmggICAgICB8ICA0ICsr
+LS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jICAgICAgfCAgOCArKysrLS0t
+LQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zdGFfaW9jdGwuYyB8IDEwICsrLS0tLS0t
+LS0KIDQgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25zKC0pCgpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYyBiL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMKaW5kZXggZDE5YTg4Yy4uZjQ3YWQzYSAx
+MDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9jbWRldnQuYworKysgYi9k
+cml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCkBAIC00ODQsOCArNDg0LDYgQEAg
+aW50IG13aWZpZXhfc2VuZF9jbWRfc3luYyhzdHJ1Y3QgbXdpZmlleF9wcml2YXRlICpwcml2LCB1
+aW50MTZfdCBjbWRfbm8sCiAKIAlyZXQgPSBtd2lmaWV4X3NlbmRfY21kX2FzeW5jKHByaXYsIGNt
+ZF9ubywgY21kX2FjdGlvbiwgY21kX29pZCwKIAkJCQkgICAgIGRhdGFfYnVmKTsKLQlpZiAoIXJl
+dCkKLQkJcmV0ID0gbXdpZmlleF93YWl0X3F1ZXVlX2NvbXBsZXRlKGFkYXB0ZXIpOwogCiAJcmV0
+dXJuIHJldDsKIH0KQEAgLTU4OCw5ICs1ODYsMTAgQEAgaW50IG13aWZpZXhfc2VuZF9jbWRfYXN5
+bmMoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwgdWludDE2X3QgY21kX25vLAogCWlmIChj
+bWRfbm8gPT0gSG9zdENtZF9DTURfODAyXzExX1NDQU4pIHsKIAkJbXdpZmlleF9xdWV1ZV9zY2Fu
+X2NtZChwcml2LCBjbWRfbm9kZSk7CiAJfSBlbHNlIHsKLQkJYWRhcHRlci0+Y21kX3F1ZXVlZCA9
+IGNtZF9ub2RlOwogCQltd2lmaWV4X2luc2VydF9jbWRfdG9fcGVuZGluZ19xKGFkYXB0ZXIsIGNt
+ZF9ub2RlLCB0cnVlKTsKIAkJcXVldWVfd29yayhhZGFwdGVyLT53b3JrcXVldWUsICZhZGFwdGVy
+LT5tYWluX3dvcmspOworCQlpZiAoY21kX25vZGUtPndhaXRfcV9lbmFibGVkKQorCQkJcmV0ID0g
+bXdpZmlleF93YWl0X3F1ZXVlX2NvbXBsZXRlKGFkYXB0ZXIsIGNtZF9ub2RlKTsKIAl9CiAKIAly
+ZXR1cm4gcmV0OwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWlu
+LmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaAppbmRleCA5MjA2NTc1Li43
+MjU1Mjg5IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaAor
+KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaApAQCAtNzI4LDcgKzcyOCw2
+IEBAIHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgewogCXUxNiBjbWRfd2FpdF9xX3JlcXVpcmVkOwog
+CXN0cnVjdCBtd2lmaWV4X3dhaXRfcXVldWUgY21kX3dhaXRfcTsKIAl1OCBzY2FuX3dhaXRfcV93
+b2tlbjsKLQlzdHJ1Y3QgY21kX2N0cmxfbm9kZSAqY21kX3F1ZXVlZDsKIAlzcGlubG9ja190IHF1
+ZXVlX2xvY2s7CQkvKiBsb2NrIGZvciB0eCBxdWV1ZXMgKi8KIAlzdHJ1Y3QgY29tcGxldGlvbiBm
+d19sb2FkOwogCXU4IGNvdW50cnlfY29kZVtJRUVFODAyMTFfQ09VTlRSWV9TVFJJTkdfTEVOXTsK
+QEAgLTEwMjMsNyArMTAyMiw4IEBAIGludCBtd2lmaWV4X3JlcXVlc3Rfc2V0X211bHRpY2FzdF9s
+aXN0KHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJCQlzdHJ1Y3QgbXdpZmlleF9tdWx0
+aWNhc3RfbGlzdCAqbWNhc3RfbGlzdCk7CiBpbnQgbXdpZmlleF9jb3B5X21jYXN0X2FkZHIoc3Ry
+dWN0IG13aWZpZXhfbXVsdGljYXN0X2xpc3QgKm1saXN0LAogCQkJICAgIHN0cnVjdCBuZXRfZGV2
+aWNlICpkZXYpOwotaW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3QgbXdpZmll
+eF9hZGFwdGVyICphZGFwdGVyKTsKK2ludCBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUoc3Ry
+dWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwKKwkJCQlzdHJ1Y3QgY21kX2N0cmxfbm9kZSAq
+Y21kX3F1ZXVlZCk7CiBpbnQgbXdpZmlleF9ic3Nfc3RhcnQoc3RydWN0IG13aWZpZXhfcHJpdmF0
+ZSAqcHJpdiwgc3RydWN0IGNmZzgwMjExX2JzcyAqYnNzLAogCQkgICAgICBzdHJ1Y3QgY2ZnODAy
+MTFfc3NpZCAqcmVxX3NzaWQpOwogaW50IG13aWZpZXhfY2FuY2VsX2hzKHN0cnVjdCBtd2lmaWV4
+X3ByaXZhdGUgKnByaXYsIGludCBjbWRfdHlwZSk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9td2lmaWV4L3NjYW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nh
+bi5jCmluZGV4IGJiNjBjMjcuLmQyMTViNGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL213aWZpZXgvc2Nhbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nh
+bi5jCkBAIC0xMzg4LDEwICsxMzg4LDEzIEBAIGludCBtd2lmaWV4X3NjYW5fbmV0d29ya3Moc3Ry
+dWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwKIAkJCWxpc3RfZGVsKCZjbWRfbm9kZS0+bGlzdCk7
+CiAJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhZGFwdGVyLT5zY2FuX3BlbmRpbmdfcV9sb2Nr
+LAogCQkJCQkgICAgICAgZmxhZ3MpOwotCQkJYWRhcHRlci0+Y21kX3F1ZXVlZCA9IGNtZF9ub2Rl
+OwogCQkJbXdpZmlleF9pbnNlcnRfY21kX3RvX3BlbmRpbmdfcShhZGFwdGVyLCBjbWRfbm9kZSwK
+IAkJCQkJCQl0cnVlKTsKIAkJCXF1ZXVlX3dvcmsoYWRhcHRlci0+d29ya3F1ZXVlLCAmYWRhcHRl
+ci0+bWFpbl93b3JrKTsKKworCQkJLyogUGVyZm9ybSBpbnRlcm5hbCBzY2FuIHN5bmNocm9ub3Vz
+bHkgKi8KKwkJCWlmICghcHJpdi0+c2Nhbl9yZXF1ZXN0KQorCQkJCW13aWZpZXhfd2FpdF9xdWV1
+ZV9jb21wbGV0ZShhZGFwdGVyLCBjbWRfbm9kZSk7CiAJCX0gZWxzZSB7CiAJCQlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZhZGFwdGVyLT5zY2FuX3BlbmRpbmdfcV9sb2NrLAogCQkJCQkgICAgICAg
+ZmxhZ3MpOwpAQCAtMTk0Niw5ICsxOTQ5LDYgQEAgaW50IG13aWZpZXhfcmVxdWVzdF9zY2FuKHN0
+cnVjdCBtd2lmaWV4X3ByaXZhdGUgKnByaXYsCiAJCS8qIE5vcm1hbCBzY2FuICovCiAJCXJldCA9
+IG13aWZpZXhfc2Nhbl9uZXR3b3Jrcyhwcml2LCBOVUxMKTsKIAotCWlmICghcmV0KQotCQlyZXQg
+PSBtd2lmaWV4X3dhaXRfcXVldWVfY29tcGxldGUocHJpdi0+YWRhcHRlcik7Ci0KIAl1cCgmcHJp
+di0+YXN5bmNfc2VtKTsKIAogCXJldHVybiByZXQ7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93
+aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9zdGFfaW9jdGwuYwppbmRleCA3NmQzMWRlLi44Yzk0M2I2IDEwMDY0NAotLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L3N0YV9pb2N0bC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL213aWZpZXgvc3RhX2lvY3RsLmMKQEAgLTU0LDE2ICs1NCwxMCBAQCBpbnQgbXdpZmlleF9j
+b3B5X21jYXN0X2FkZHIoc3RydWN0IG13aWZpZXhfbXVsdGljYXN0X2xpc3QgKm1saXN0LAogICog
+VGhpcyBmdW5jdGlvbiB3YWl0cyBvbiBhIGNtZCB3YWl0IHF1ZXVlLiBJdCBhbHNvIGNhbmNlbHMg
+dGhlIHBlbmRpbmcKICAqIHJlcXVlc3QgYWZ0ZXIgd2FraW5nIHVwLCBpbiBjYXNlIG9mIGVycm9y
+cy4KICAqLwotaW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3QgbXdpZmlleF9h
+ZGFwdGVyICphZGFwdGVyKQoraW50IG13aWZpZXhfd2FpdF9xdWV1ZV9jb21wbGV0ZShzdHJ1Y3Qg
+bXdpZmlleF9hZGFwdGVyICphZGFwdGVyLAorCQkJCXN0cnVjdCBjbWRfY3RybF9ub2RlICpjbWRf
+cXVldWVkKQogewogCWludCBzdGF0dXM7Ci0Jc3RydWN0IGNtZF9jdHJsX25vZGUgKmNtZF9xdWV1
+ZWQ7Ci0KLQlpZiAoIWFkYXB0ZXItPmNtZF9xdWV1ZWQpCi0JCXJldHVybiAwOwotCi0JY21kX3F1
+ZXVlZCA9IGFkYXB0ZXItPmNtZF9xdWV1ZWQ7Ci0JYWRhcHRlci0+Y21kX3F1ZXVlZCA9IE5VTEw7
+CiAKIAlkZXZfZGJnKGFkYXB0ZXItPmRldiwgImNtZCBwZW5kaW5nXG4iKTsKIAlhdG9taWNfaW5j
+KCZhZGFwdGVyLT5jbWRfcGVuZGluZyk7Ci0tIAoxLjguMAoK
+
+--_003_477F20668A386D41ADCC57781B1F70430D9D9C1608SCVEXCH1marve_--
