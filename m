@@ -1,80 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12986 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754766Ab3CIHie (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34999 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933304Ab3CHInF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 02:38:34 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Ryan Hsu <ryanhsu@qca.qualcomm.com>,
-	<ath6kl-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v2 5/5] ath6kl: Fix a debugfs crash for USB devices
-References: <1361544646-9059-1-git-send-email-mohammed@qca.qualcomm.com>
-	<CAD2nsn2sQhF2B-gAWpVoG7U4ijyS3TO=buhe0yiJk12T3g-kMA@mail.gmail.com>
-Date: Sat, 9 Mar 2013 09:38:28 +0200
-In-Reply-To: <CAD2nsn2sQhF2B-gAWpVoG7U4ijyS3TO=buhe0yiJk12T3g-kMA@mail.gmail.com>
-	(Mohammed Shafi's message of "Fri, 8 Mar 2013 20:59:20 +0530")
-Message-ID: <876211m39n.fsf@kamboji.qca.qualcomm.com> (sfid-20130309_083846_234019_1387E3E0)
+	Fri, 8 Mar 2013 03:43:05 -0500
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>,
+	Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Add rx workqueue for SDIO
+Date: Fri, 8 Mar 2013 14:12:28 +0530
+Message-ID: <1362732148-26384-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20130308_094311_369203_AF3EBC4A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi <shafi.wireless@gmail.com> writes:
+In the current implementation, all RX packets (data and control)
+are fetched from the chip and processed in ISR handler context.
+ISR handler has to process fetched packets first before it goes
+ahead and fetch further packets from the chip. In high throughput
+scenario, doing everything (read and process) in one context is
+time consuming and it's not quicker way of reading RX packets from
+the chip.
 
-> On Fri, Feb 22, 2013 at 8:20 PM, Mohammed Shafi Shajakhan
-> <mohammed@qca.qualcomm.com> wrote:
->> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->>
->> Credit distribution stats is currently implemented
->> only for SDIO. This fixes a crash in debugfs for
->> USB interface.
->>
->> BUG: unable to handle kernel NULL pointer dereference at   (null)
->> IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
->> *pde = b62bd067
->> Oops: 0000 [#1] SMP
->>
->> EIP: 0060:[<f91c2048>] EFLAGS: 00210246 CPU: 0
->> EIP is at read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
->> EAX: 00000000 EBX: e6f7a9c0 ECX: e7b148b8 EDX: 00000000
->> ESI: 000000c8 EDI: e7b14000 EBP: e6e09f64 ESP: e6e09f30
->> DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
->> Process cat (pid: 4058, ti=e6e08000 task=e50cf230 task.ti=e6e08000)
->> Stack:
->> 00008000 00000000 e6e09f64 c1132d3c 00004e71 e50cf230 00008000 089e4000
->> e7b148b8 00000000 e6f7a9c0 00008000 089e4000 e6e09f8c c11331fc e6e09f98
->> 00000001 e6e09f7c f91c2010 e6e09fac e6f7a9c0 089e4877 089e4000 e6e09fac
->>
->>         Call Trace:
->>         [<c1132d3c>] ? rw_verify_area+0x6c/0x120
->>         [<c11331fc>] vfs_read+0x8c/0x160
->>         [<f91c2010>] ? read_file_war_stats+0x130/0x130 [ath6kl_core]
->>         [<c113330d>] sys_read+0x3d/0x70
->>         [<c15755b4>] syscall_call+0x7/0xb
->>         [<c1570000>] ? fill_powernow_table_pstate+0x127/0x127
->>
->> Cc: Ryan Hsu <ryanhsu@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+This patch lets ISR to read packets (data and control) from the chip
+and process control packets alone (EP0 pkts). All data packets are
+moved to another queue which is separately processed by another worker
+thread. So that, ISR doesn't have to wait to read further packets until
+fetched data packets are processed. With this change, significant
+improvement is seen both in TCP (around 10 Mpbs) and UDP (around 5 Mpbs)
+down-link case.
 
-[...]
+Signed-off-by: Pandiyarajan Pitchaimuthu <c_ppitch@qca.qualcomm.com>
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.h      |    7 ++++
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |   50 ++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 0 deletions(-)
 
->> @@ -1752,8 +1752,10 @@ int ath6kl_debug_init_fs(struct ath6kl *ar)
->>         debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
->>                             &fops_tgt_stats);
->>
->> -       debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
->> -                           &fops_credit_dist_stats);
->> +       if (ar->hif_type != ATH6KL_HIF_TYPE_SDIO)
->
-> made a mistake,
-> should be > +       if (ar->hif_type == ATH6KL_HIF_TYPE_SDIO)
-> will send another patch
-
-Oh, I missed as well. I rebased ath6kl-next branch and dropped patch 5
-(but kept patches 1-4). Please resend patch 5.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index a2c8ff8..485cd89 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -620,6 +620,13 @@ struct htc_target {
+ 	/* counts the number of Tx without bundling continously per AC */
+ 	u32 ac_tx_count[WMM_NUM_AC];
+ 
++	/* protects rx_bufq */
++	spinlock_t rx_comp_lock;
++
++	struct workqueue_struct *rx_wq;
++	struct work_struct rx_work;
++	struct list_head rx_bufq;
++
+ 	struct {
+ 		struct htc_packet *htc_packet_pool;
+ 		u8 ctrl_response_buf[HTC_MAX_CTRL_MSG_LEN];
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index fbb78df..6cd8213 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -1897,13 +1897,50 @@ fail_rx:
+ 	return status;
+ }
+ 
++static void ath6kl_htc_rx_work(struct work_struct *work)
++{
++	struct htc_target *target;
++	struct htc_packet *packet, *tmp_pkt;
++	struct htc_endpoint *endpoint;
++
++	target = container_of(work, struct htc_target, rx_work);
++
++	spin_lock_bh(&target->rx_comp_lock);
++	list_for_each_entry_safe(packet, tmp_pkt, &target->rx_bufq, list) {
++		list_del(&packet->list);
++
++		spin_unlock_bh(&target->rx_comp_lock);
++		endpoint = &target->endpoint[packet->endpoint];
++
++		ath6kl_dbg(ATH6KL_DBG_HTC,
++			   "htc rx complete ep %d packet 0x%p\n",
++			   endpoint->eid, packet);
++
++		endpoint->ep_cb.rx(endpoint->target, packet);
++		spin_lock_bh(&target->rx_comp_lock);
++	}
++	spin_unlock_bh(&target->rx_comp_lock);
++}
++
+ static void ath6kl_htc_rx_complete(struct htc_endpoint *endpoint,
+ 				   struct htc_packet *packet)
+ {
++	struct htc_target *target;
++
++	if (endpoint->eid == ENDPOINT_0) {
+ 		ath6kl_dbg(ATH6KL_DBG_HTC,
+ 			   "htc rx complete ep %d packet 0x%p\n",
+ 			   endpoint->eid, packet);
+ 		endpoint->ep_cb.rx(endpoint->target, packet);
++	} else {
++		target = endpoint->target;
++
++		spin_lock_bh(&target->rx_comp_lock);
++		list_add_tail(&packet->list, &target->rx_bufq);
++		spin_unlock_bh(&target->rx_comp_lock);
++
++		queue_work(target->rx_wq, &target->rx_work);
++	}
+ }
+ 
+ static int ath6kl_htc_rx_bundle(struct htc_target *target,
+@@ -2852,13 +2889,24 @@ static void *ath6kl_htc_mbox_create(struct ath6kl *ar)
+ 		goto err_htc_cleanup;
+ 	}
+ 
++	target->rx_wq = create_singlethread_workqueue("htc_rx");
++	if (!target->rx_wq) {
++		ath6kl_err("unable to create rx_wq workqueue\n");
++		status = -ENOMEM;
++		goto err_htc_cleanup;
++	}
++
+ 	spin_lock_init(&target->htc_lock);
+ 	spin_lock_init(&target->rx_lock);
+ 	spin_lock_init(&target->tx_lock);
++	spin_lock_init(&target->rx_comp_lock);
+ 
+ 	INIT_LIST_HEAD(&target->free_ctrl_txbuf);
+ 	INIT_LIST_HEAD(&target->free_ctrl_rxbuf);
+ 	INIT_LIST_HEAD(&target->cred_dist_list);
++	INIT_LIST_HEAD(&target->rx_bufq);
++
++	INIT_WORK(&target->rx_work, ath6kl_htc_rx_work);
+ 
+ 	target->dev->ar = ar;
+ 	target->dev->htc_cnxt = target;
+@@ -2885,6 +2933,8 @@ static void ath6kl_htc_mbox_cleanup(struct htc_target *target)
+ {
+ 	struct htc_packet *packet, *tmp_packet;
+ 
++	destroy_workqueue(target->rx_wq);
++
+ 	ath6kl_hif_cleanup_scatter(target->dev->ar);
+ 
+ 	list_for_each_entry_safe(packet, tmp_packet,
 -- 
-Kalle Valo
+1.7.1
+
