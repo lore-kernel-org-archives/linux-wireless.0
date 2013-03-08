@@ -1,32 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34739 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755136Ab3COWVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 18:21:54 -0400
-Message-ID: <51439F00.9050001@openwrt.org> (sfid-20130315_232158_895714_8B2AFEC8)
-Date: Fri, 15 Mar 2013 23:21:52 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14907 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172Ab3CHK2m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 05:28:42 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Julien Massot <jmassot@aldebaran-robotics.com>,
+	<linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: ath6kl: AR6004 failed to start on computer boot
+References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com>
+	<87ehghanxe.fsf@kamboji.qca.qualcomm.com>
+	<CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com>
+	<511E44B8.3000308@qca.qualcomm.com>
+	<CADGp=QfOyyTpwEg1=XXiyvRE7ZOGsn6TfiPQHs3+Jc3C69RM6Q@mail.gmail.com>
+	<51262CB2.6070208@qca.qualcomm.com>
+Date: Fri, 8 Mar 2013 12:28:36 +0200
+In-Reply-To: <51262CB2.6070208@qca.qualcomm.com> (Mohammed Shafi Shajakhan's
+	message of "Thu, 21 Feb 2013 19:48:26 +0530")
+Message-ID: <87sj46mbhn.fsf@kamboji.qca.qualcomm.com> (sfid-20130308_112845_858077_AA71F877)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.9] ath9k: limit tx path hang check to normal data queues
-References: <1363360724-44435-1-git-send-email-nbd@openwrt.org> <20130315183457.GB2676@bombadil.infradead.org>
-In-Reply-To: <20130315183457.GB2676@bombadil.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-15 7:34 PM, Luis R. Rodriguez wrote:
-> On Fri, Mar 15, 2013 at 04:18:44PM +0100, Felix Fietkau wrote:
->> The beacon and multicast-buffer queues are managed by the beacon
->> tasklet, and the generic tx path hang check does not help in any way
->> here. Running it on those queues anyway can introduce some race
->> conditions leading to unnecessary chip resets.
->> 
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> 
-> This applies to v3.8 as well, do you want it there as well?
-Yes
+Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
 
+> Hi Julien,
+>
+> On 02/21/2013 07:33 PM, Julien Massot wrote:
+>> Hi,
+>> I just find a quick and dirty patch to workaround this issue.
+>> I just reset the device on initialization failure.
+>>
+>> I hope this helps to understand the real issue.
+>>
+>> [    7.012514] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/bdata.bin
+>> [    7.035276] cfg80211: World regulatory domain updated:
+>> [    7.035287] cfg80211:   (start_freq - end_freq @ bandwidth),
+>> (max_antenna_gain, max_eirp)
+>> [    7.035299] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [    7.037916] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/fw-3.bin
+>> [    9.378940] ath6kl: f59afe4c
+>> [    9.379054] ath6kl: f59afe6c
+>> [    9.379391] ath6kl_usb: probe of 1-7:1.0 failed with error -5
+>> Here I reset the device.
+>
+> that was the suggestion gave by Wei. The failure it seems
+> check hostapp area to check target status and reset the device
+> if needed.
+>
+> Great that you figured it out yourself!
+
+The power of Open Source in action :)
+
+But thanks a lot Julien, it was really great that you could solve it
+yourself.
+
+> We will send a proper patch for this.
+
+I now sent a patch (plus few cleanups) to fix this.
+
+-- 
+Kalle Valo
