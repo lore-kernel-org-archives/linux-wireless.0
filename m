@@ -1,55 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:36703 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989Ab3CNURT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 16:17:19 -0400
-Received: by mail-oa0-f46.google.com with SMTP id k1so2705589oag.5
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 13:17:18 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:36011 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753105Ab3CHMmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Mar 2013 07:42:25 -0500
+Message-ID: <5139DCAA.8050003@openwrt.org> (sfid-20130308_134228_378581_3FF150E3)
+Date: Fri, 08 Mar 2013 13:42:18 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <51421afb.xUa3KbaBuvmUk4RG%Larry.Finger@lwfinger.net>
-References: <51421afb.xUa3KbaBuvmUk4RG%Larry.Finger@lwfinger.net>
-Date: Thu, 14 Mar 2013 21:17:18 +0100
-Message-ID: <CACna6rzvqo-CdrwkSH0p9=b=Qn+L78jQQSuGcGbgT865_uKvSw@mail.gmail.com> (sfid-20130314_211729_637144_644B46F6)
-Subject: Re: [RFC/RFT] b43: A fix for DMA transmission sequence errors
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, isedev@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
+ that don't include chain 0
+References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org> <5138B656.5090408@neratec.com> <513996DE.6030500@neratec.com> <5139B35D.9060803@neratec.com>
+In-Reply-To: <5139B35D.9060803@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/14 Larry Finger <Larry.Finger@lwfinger.net>:
-> From: Iestyn C. Elfick <isedev@gmail.com>
->
-> Intermittently, b43 will report "Out of order TX status report on DMA ring".
-> When this happens, the driver must be reset before communication can resume.
-> The cause of the problem is believed to be an error in the closed-source
-> firmware; however, all versions of the firmware are affected.
->
-> This change uses the observation that the expected status is always 2 less
-> than the observed value, and supplies a fake status report to skip one
-> header/data pair.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-> ---
->
-> Although this is a hack, it seems to work for the OP. It should not cause any
-> ill effects on any device that does not have the problem.
->
-> It does need a lot more testing, particularly on systems prone to the out-of-order
-> status report problem.
->
-> If anyone can think of a cleaner, less intrusive solution, please let us know.
+On 2013-03-08 10:46 AM, Wojciech Dubowik wrote:
+> On 03/08/2013 08:44 AM, Wojciech Dubowik wrote:
+>> On 03/07/2013 04:46 PM, Wojciech Dubowik wrote:
+>>> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
+>>>> On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
+>>>>> There is a regression introduced by this patch when power save is 
+>>>>> off on
+>>>>> the station for idle checks.
+>>>>> I have AR9590 station with rx and tx chain set to 0x1 connected
+>>>>> to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
+>>>>>
+>>>>> Before this patch in connection polling the station was properly 
+>>>>> sending
+>>>>> null function to check whether AP is still there. After this patch 
+>>>>> it sends
+>>>>> broadcast probe request which is anyway wrong or some 16 or so packets
+>>>>> of random data (rarely). It manifests itself in lost connection 
+>>>>> because
+>>>>> there
+>>>>> is no ack from AP which is expected for null function.
+>>>>>
+>>>>> I have been following skb's up to the descriptor setting in ath9k 
+>>>>> and it was
+>>>>> all ok i.e. proper null function with valid addresses.
+>>>>>
+>>>>> I have been bisecting it twice because it doesn't make much sense 
+>>>>> but maybe
+>>>>> it's a HW issue?
+>>>> You're right, it does not make much sense. I can't figure out how this
+>>>> patch could possibly change the runtime behavior with tx chainmask set
+>>>> to 0x1. Have you tried reverting this patch in a current build to 
+>>>> see if
+>>>> that fixes the issue?
+>>> It does fix it. I will check tomorrow whether it's only AR9590 or also
+>>> previous revisions. I will also try with different chainmasks. I will 
+>>> have
+>>> to rescrew my setup...
+>>>
+>> I have been doing some tests and it seems to affect both AR9390 and 
+>> AR9590.
+>> To summarize: sta doesn't send null function but broadcast probe 
+>> request or
+>> corrupted frames in idle checking routine when power save is off and 
+>> only some
+>> antennas are selected for transmission.
+>> So for example when I set antenna mask 7 i.e. all available it works 
+>> ok but with
+>> mask 1, 3 or 6 not. When I swith power save it's all ok no matter what 
+>> mask I use.
+>>
+>> Thing with power save on is that before it goes to idle check it will 
+>> go to sleep since
+>> there is no traffic anyway, then we get beacon miss, it wakes up and 
+>> it sends null
+>> function. I guess waking up is reinitializing sth in a chip which 
+>> doesn't occur in my
+>> scenario.
+>> HW issue?
+> It will also work if I set user specified antenna masks instead of hw 
+> capabilities.
+What do you mean with that? How do you set the rx and tx chainmasks if
+not via antenna masks? debugfs?
 
-I wonder if this is hardware supporting unaligned access with
-full-addressing for DMA engine. Maybe it support index-based indexes
-for backward compatibility only, and it's somehow broken?
+- Felix
 
-Can we test full-addressing first? I'll try to prepare a patch for
-this during the weekend.
-
--- 
-Rafał
