@@ -1,83 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:54679 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab3CRN6L (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:58677 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143Ab3CINFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 09:58:11 -0400
+	Sat, 9 Mar 2013 08:05:10 -0500
+Subject: [PATCH v2 1/7] ath6kl: add tracing support and tracing points for wmi
+ packets
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Sat, 09 Mar 2013 15:05:06 +0200
+Message-ID: <20130309130506.13371.70928.stgit@localhost6.localdomain6> (sfid-20130309_140522_150952_F3EA73C9)
+In-Reply-To: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
+References: <20130309130223.13371.75809.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <51471B85.5060404@broadcom.com>
-References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
-	<51471B85.5060404@broadcom.com>
-Date: Mon, 18 Mar 2013 14:58:08 +0100
-Message-ID: <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com> (sfid-20130318_145830_108722_C90715DD)
-Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Piotr Haber <phaber@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Piotr
+Add basic tracing infrastructure support to ath6kl and which can be
+enabled with CONFIG_ATH6KL_TRACING.
 
-On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
-> On 03/18/13 11:45, David Herrmann wrote:
->> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
->> wireless AP reconnection on: (14e4:4727)
->>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
->>
->> Any attempt to reconnect to an AP results in timeouts no matter how near to the
->> AP I am:
->>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
->> ---
->> Hi
->>
->> I tried coming up with a fix instead of reverting this commit, but the commit is
->> way to big for me to understand what's going on. Sorry.
->>
->> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
->> one time, but any further attempt resulted in:
->>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
->>
->> Even sitting right next to the AP didn't help so I started bisecting and it
->> turned out to be:
->>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
->> Please revert it.
->>
->> Thanks
->> David
->>
-> Hi,
-> unfortunately this is not a first report of this patch breaking 4313 for some users.
-> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
-> successfully in our test setup.
-> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
-> <debugfs_mount>/brcmsmac/bcma0:0/hardware
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/Kconfig  |    9 +++
+ drivers/net/wireless/ath/ath6kl/Makefile |    5 ++
+ drivers/net/wireless/ath/ath6kl/trace.c  |   18 ++++++
+ drivers/net/wireless/ath/ath6kl/trace.h  |   87 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/txrx.c   |    3 +
+ drivers/net/wireless/ath/ath6kl/wmi.c    |    3 +
+ 6 files changed, 125 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/trace.c
+ create mode 100644 drivers/net/wireless/ath/ath6kl/trace.h
 
-Hi
+diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
+index 630c83d..e39e586 100644
+--- a/drivers/net/wireless/ath/ath6kl/Kconfig
++++ b/drivers/net/wireless/ath/ath6kl/Kconfig
+@@ -30,6 +30,15 @@ config ATH6KL_DEBUG
+ 	---help---
+ 	  Enables debug support
+ 
++config ATH6KL_TRACING
++	bool "Atheros ath6kl tracing support"
++	depends on ATH6KL
++	depends on EVENT_TRACING
++	---help---
++	  Select this to ath6kl use tracing infrastructure.
++
++	  If unsure, say Y to make it easier to debug problems.
++
+ config ATH6KL_REGDOMAIN
+ 	bool "Atheros ath6kl regdomain support"
+ 	depends on ATH6KL
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index cab0ec0..dc2b3b4 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -35,10 +35,15 @@ ath6kl_core-y += txrx.o
+ ath6kl_core-y += wmi.o
+ ath6kl_core-y += core.o
+ ath6kl_core-y += recovery.o
++
+ ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
++ath6kl_core-$(CONFIG_ATH6KL_TRACING) += trace.o
+ 
+ obj-$(CONFIG_ATH6KL_SDIO) += ath6kl_sdio.o
+ ath6kl_sdio-y += sdio.o
+ 
+ obj-$(CONFIG_ATH6KL_USB) += ath6kl_usb.o
+ ath6kl_usb-y += usb.o
++
++# for tracing framework to find trace.h
++CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.c b/drivers/net/wireless/ath/ath6kl/trace.c
+new file mode 100644
+index 0000000..4118a29
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/trace.c
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2012 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define CREATE_TRACE_POINTS
++#include "trace.h"
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+new file mode 100644
+index 0000000..0787619
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -0,0 +1,87 @@
++#if !defined(_ATH6KL_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
++
++#include <net/cfg80211.h>
++#include <linux/skbuff.h>
++#include <linux/tracepoint.h>
++#include "wmi.h"
++
++#if !defined(_ATH6KL_TRACE_H)
++static inline unsigned int ath6kl_get_wmi_id(void *buf, size_t buf_len)
++{
++	struct wmi_cmd_hdr *hdr = buf;
++
++	if (buf_len < sizeof(*hdr))
++		return 0;
++
++	return le16_to_cpu(hdr->cmd_id);
++}
++#endif /* __ATH6KL_TRACE_H */
++
++#define _ATH6KL_TRACE_H
++
++/* create empty functions when tracing is disabled */
++#if !defined(CONFIG_ATH6KL_TRACING)
++#undef TRACE_EVENT
++#define TRACE_EVENT(name, proto, ...) \
++static inline void trace_ ## name(proto) {}
++#endif /* !CONFIG_ATH6KL_TRACING || __CHECKER__ */
++
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ath6kl
++
++TRACE_EVENT(ath6kl_wmi_cmd,
++	TP_PROTO(void *buf, size_t buf_len),
++
++	TP_ARGS(buf, buf_len),
++
++	TP_STRUCT__entry(
++		__field(unsigned int, id)
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"id %d len %d",
++		__entry->id, __entry->buf_len
++	)
++);
++
++TRACE_EVENT(ath6kl_wmi_event,
++	TP_PROTO(void *buf, size_t buf_len),
++
++	TP_ARGS(buf, buf_len),
++
++	TP_STRUCT__entry(
++		__field(unsigned int, id)
++		__field(size_t, buf_len)
++		__dynamic_array(u8, buf, buf_len)
++	),
++
++	TP_fast_assign(
++		__entry->id = ath6kl_get_wmi_id(buf, buf_len);
++		__entry->buf_len = buf_len;
++		memcpy(__get_dynamic_array(buf), buf, buf_len);
++	),
++
++	TP_printk(
++		"id %d len %d",
++		__entry->id, __entry->buf_len
++	)
++);
++
++#endif /* _ ATH6KL_TRACE_H || TRACE_HEADER_MULTI_READ*/
++
++/* we don't want to use include/trace/events */
++#undef TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_PATH .
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_FILE trace
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 78b3692..43dbdaa 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -20,6 +20,7 @@
+ #include "core.h"
+ #include "debug.h"
+ #include "htc-ops.h"
++#include "trace.h"
+ 
+ /*
+  * tid - tid_mux0..tid_mux3
+@@ -288,6 +289,8 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+ 	int status = 0;
+ 	struct ath6kl_cookie *cookie = NULL;
+ 
++	trace_ath6kl_wmi_cmd(skb->data, skb->len);
++
+ 	if (WARN_ON_ONCE(ar->state == ATH6KL_STATE_WOW)) {
+ 		dev_kfree_skb(skb);
+ 		return -EACCES;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index d76b5bd..31a3081 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -20,6 +20,7 @@
+ #include "core.h"
+ #include "debug.h"
+ #include "testmode.h"
++#include "trace.h"
+ #include "../regd.h"
+ #include "../regd_common.h"
+ 
+@@ -4086,6 +4087,8 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		return -EINVAL;
+ 	}
+ 
++	trace_ath6kl_wmi_event(skb->data, skb->len);
++
+ 	return ath6kl_wmi_proc_events(wmi, skb);
+ }
+ 
 
-$ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-board vendor: 185f
-board type: 51a
-board revision: 1408
-board flags: 8402a01
-board flags2: 880
-firmware revision: 262032b
-
-I can also try partial reverts of that commit, but I really don't know
-which parts might be important.
-
-Thanks
-David
