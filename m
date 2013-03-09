@@ -1,45 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43379 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756703Ab3C1Pqo (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:45149 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755770Ab3CIMlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 11:46:44 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: replace some dead code by a warning
-Date: Thu, 28 Mar 2013 16:46:35 +0100
-Message-Id: <1364485596-30425-3-git-send-email-johannes@sipsolutions.net> (sfid-20130328_164654_315396_254B0680)
-In-Reply-To: <1364485596-30425-1-git-send-email-johannes@sipsolutions.net>
-References: <1364485596-30425-1-git-send-email-johannes@sipsolutions.net>
+	Sat, 9 Mar 2013 07:41:51 -0500
+Received: by mail-we0-f177.google.com with SMTP id d7so2021024wer.22
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 04:41:50 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2 01/13] b43: HT-PHY: rename AFE defines
+Date: Sat,  9 Mar 2013 13:41:31 +0100
+Message-Id: <1362832891-8403-1-git-send-email-zajec5@gmail.com> (sfid-20130309_134156_327705_BA4F1307)
+In-Reply-To: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
+References: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+It you take a look at N-PHY analog switch function it touches every core
+on the chipset. It seems HT-PHY does they same, it just has 3 cores
+instead of 2 (which make sense since BCM4331 is 3x3). Rename AFE defines
+to include core id.
 
-Given the (nested) switch statements, this code can't
-be reached, so make it warn instead of manipulating
-the carrier state which seems purposeful.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/iface.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+V2: make ctl_regs array static btw
+---
+ drivers/net/wireless/b43/phy_ht.c |   38 ++++++++++++++++++-------------------
+ drivers/net/wireless/b43/phy_ht.h |   12 ++++++------
+ 2 files changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2bdbf14..273d851 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -581,7 +581,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		case NL80211_IFTYPE_P2P_DEVICE:
- 			break;
- 		default:
--			netif_carrier_on(dev);
-+			/* not reached */
-+			WARN_ON(1);
- 		}
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 3719a88..df07c83 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -176,10 +176,10 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
+ {
+ 	u8 i;
  
- 		/*
+-	const u16 ctl_regs[3][2] = {
+-		{ B43_PHY_HT_AFE_CTL1, B43_PHY_HT_AFE_CTL2 },
+-		{ B43_PHY_HT_AFE_CTL3, B43_PHY_HT_AFE_CTL4 },
+-		{ B43_PHY_HT_AFE_CTL5, B43_PHY_HT_AFE_CTL6},
++	static const u16 ctl_regs[3][2] = {
++		{ B43_PHY_HT_AFE_C1_OVER, B43_PHY_HT_AFE_C1 },
++		{ B43_PHY_HT_AFE_C2_OVER, B43_PHY_HT_AFE_C2 },
++		{ B43_PHY_HT_AFE_C3_OVER, B43_PHY_HT_AFE_C3},
+ 	};
+ 
+ 	for (i = 0; i < 3; i++) {
+@@ -362,9 +362,9 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
+ 
+ 	b43_phy_mask(dev, B43_PHY_EXTG(0), ~0x3);
+ 
+-	b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0);
+-	b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0);
+-	b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0);
++	b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0);
++	b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0);
++	b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0);
+ 
+ 	b43_phy_write(dev, B43_PHY_EXTG(0x103), 0x20);
+ 	b43_phy_write(dev, B43_PHY_EXTG(0x101), 0x20);
+@@ -511,19 +511,19 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
+ static void b43_phy_ht_op_switch_analog(struct b43_wldev *dev, bool on)
+ {
+ 	if (on) {
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00cd);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x0000);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00cd);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x0000);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00cd);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x0000);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00cd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x0000);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00cd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x0000);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00cd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x0000);
+ 	} else {
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x07ff);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00fd);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x07ff);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00fd);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x07ff);
+-		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00fd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x07ff);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00fd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x07ff);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00fd);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x07ff);
++		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00fd);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
+index 6544c42..60824fa 100644
+--- a/drivers/net/wireless/b43/phy_ht.h
++++ b/drivers/net/wireless/b43/phy_ht.h
+@@ -36,12 +36,12 @@
+ 
+ #define B43_PHY_HT_RF_CTL1			B43_PHY_EXTG(0x010)
+ 
+-#define B43_PHY_HT_AFE_CTL1			B43_PHY_EXTG(0x110)
+-#define B43_PHY_HT_AFE_CTL2			B43_PHY_EXTG(0x111)
+-#define B43_PHY_HT_AFE_CTL3			B43_PHY_EXTG(0x114)
+-#define B43_PHY_HT_AFE_CTL4			B43_PHY_EXTG(0x115)
+-#define B43_PHY_HT_AFE_CTL5			B43_PHY_EXTG(0x118)
+-#define B43_PHY_HT_AFE_CTL6			B43_PHY_EXTG(0x119)
++#define B43_PHY_HT_AFE_C1_OVER			B43_PHY_EXTG(0x110)
++#define B43_PHY_HT_AFE_C1			B43_PHY_EXTG(0x111)
++#define B43_PHY_HT_AFE_C2_OVER			B43_PHY_EXTG(0x114)
++#define B43_PHY_HT_AFE_C2			B43_PHY_EXTG(0x115)
++#define B43_PHY_HT_AFE_C3_OVER			B43_PHY_EXTG(0x118)
++#define B43_PHY_HT_AFE_C3			B43_PHY_EXTG(0x119)
+ 
+ 
+ /* Values for PHY registers used on channel switching */
 -- 
-1.8.0
+1.7.10.4
 
