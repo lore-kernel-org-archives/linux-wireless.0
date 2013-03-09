@@ -1,135 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40281 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756110Ab3CDOWa (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:52849 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754898Ab3CIBxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 09:22:30 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 1/7] mac80211: merge EWMA calculation of minstrel_ht and minstrel
-Date: Mon,  4 Mar 2013 15:22:11 +0100
-Message-Id: <1362406937-69969-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152238_917489_85F00526)
-In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Fri, 8 Mar 2013 20:53:18 -0500
+Received: by mail-ob0-f169.google.com with SMTP id ta14so1834544obb.28
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2013 17:53:18 -0800 (PST)
+Message-ID: <513A960B.2020304@lwfinger.net> (sfid-20130309_025330_764993_9856353B)
+Date: Fri, 08 Mar 2013 19:53:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Vincent Brillault <gentoo@lerya.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
+References: <20130307192920.GB8668@Fea.lerya.net> <20130308215833.GA2829@Fea.lerya.net>
+In-Reply-To: <20130308215833.GA2829@Fea.lerya.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both rate control algorithms (minstrel and minstrel_ht) calculate
-averages based on EWMA. Shift function minstrel_ewma() into
-rc80211_minstrel.h and make use of it in both minstrel version.
-Also shift the default EWMA level (75%) definition to the header file
-and clean up variable usage.
+On 03/08/2013 03:58 PM, Vincent Brillault wrote:
+> Hi again,
+>
+> I forgot to mention that those warning from mac80211 (the associated
+> comments in the code are 'RC is busted' or 'uh huh?') seems to somehow
+> disable completely the rate control: 'iw wlan0 link' gives 'tx bitrate:'
+> with nothing after. Furthermore, I loose the network from time to time
+> on reason 7. I went back to kernel 3.8.0: if there is enough traffic
+> continuously, the link is stable but I loose it randomly when there is
+> no traffic.
+>
+> I made more debug on the 3.8.0 kernel, the first warning correspond to
+> the following test:
+> (info->control.rates[i].idx) 15 >= (sband->n_bitrates) 12
+>
+> Please tell me what test I can make to find the source of this problem.
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c    | 15 +++++----------
- net/mac80211/rc80211_minstrel.h    | 13 ++++++++++++-
- net/mac80211/rc80211_minstrel_ht.c | 10 ----------
- 3 files changed, 17 insertions(+), 21 deletions(-)
+ From what I remember, that problem has been fixed. The correct code should be 
+in 3.8.2 and in 3.9-rc1.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index eea45a2..d78f629 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -76,7 +76,6 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 	u32 max_tp = 0, index_max_tp = 0, index_max_tp2 = 0;
- 	u32 max_prob = 0, index_max_prob = 0;
- 	u32 usecs;
--	u32 p;
- 	int i;
- 
- 	mi->stats_update = jiffies;
-@@ -90,14 +89,13 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		/* To avoid rounding issues, probabilities scale from 0 (0%)
- 		 * to 18000 (100%) */
- 		if (mr->attempts) {
--			p = (mr->success * 18000) / mr->attempts;
-+			mr->cur_prob = (mr->success * 18000) / mr->attempts;
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
--			mr->cur_prob = p;
--			p = ((p * (100 - mp->ewma_level)) + (mr->probability *
--				mp->ewma_level)) / 100;
--			mr->probability = p;
--			mr->cur_tp = p * (1000000 / usecs);
-+			mr->probability = minstrel_ewma(mr->probability,
-+							mr->cur_prob,
-+							EWMA_LEVEL);
-+			mr->cur_tp = mr->probability * (1000000 / usecs);
- 		}
- 
- 		mr->last_success = mr->success;
-@@ -542,9 +540,6 @@ minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
- 	mp->lookaround_rate = 5;
- 	mp->lookaround_rate_mrr = 10;
- 
--	/* moving average weight for EWMA */
--	mp->ewma_level = 75;
--
- 	/* maximum time that the hw is allowed to stay in one MRR segment */
- 	mp->segment_size = 6000;
- 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 5ecf757..98db93f 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -9,6 +9,18 @@
- #ifndef __RC_MINSTREL_H
- #define __RC_MINSTREL_H
- 
-+#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
-+
-+/*
-+ * Perform EWMA (Exponentially Weighted Moving Average) calculation
-+  */
-+static inline int
-+minstrel_ewma(int old, int new, int weight)
-+{
-+	return (new * (100 - weight) + old * weight) / 100;
-+}
-+
-+
- struct minstrel_rate {
- 	int bitrate;
- 	int rix;
-@@ -73,7 +85,6 @@ struct minstrel_priv {
- 	unsigned int cw_min;
- 	unsigned int cw_max;
- 	unsigned int max_retry;
--	unsigned int ewma_level;
- 	unsigned int segment_size;
- 	unsigned int update_interval;
- 	unsigned int lookaround_rate;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3af141c..a3081e5 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -18,7 +18,6 @@
- 
- #define AVG_PKT_SIZE	1200
- #define SAMPLE_COLUMNS	10
--#define EWMA_LEVEL		75
- 
- /* Number of bits for an average sized packet */
- #define MCS_NBITS (AVG_PKT_SIZE << 3)
-@@ -129,15 +128,6 @@ const struct mcs_group minstrel_mcs_groups[] = {
- static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES];
- 
- /*
-- * Perform EWMA (Exponentially Weighted Moving Average) calculation
-- */
--static int
--minstrel_ewma(int old, int new, int weight)
--{
--	return (new * (100 - weight) + old * weight) / 100;
--}
--
--/*
-  * Look up an MCS group index based on mac80211 rate information
-  */
- static int
--- 
-1.8.1.1
+The firmware in all the cards that use the rtlwifi family of drivers its own 
+rate control. The drivers do not pay any attention to any rate-setting calls 
+from user space.
+
+I also see reason 7 disconnects; however, with NetworkManager, the network is 
+reconnects. If you are using ifup or similar method, it probably does not reconnect.
+
+Larry
 
