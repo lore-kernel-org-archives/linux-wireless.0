@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:42612 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753525Ab3CZLKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 07:10:03 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] iw: don't print DFS states of disabled frequencies
-Date: Tue, 26 Mar 2013 12:09:49 +0100
-Message-Id: <1364296189-10386-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130326_121014_344806_3043DD76)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64451 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754766Ab3CIGVw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Mar 2013 01:21:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: <nick@nhthomas.freeserve.co.uk>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qca.qualcomm.com>
+Subject: Re: ath6kl build error.
+References: <19954030.22961362741929700.JavaMail.www@wwinf3707>
+	<513A3075.5040100@lwfinger.net>
+Date: Sat, 9 Mar 2013 08:21:45 +0200
+In-Reply-To: <513A3075.5040100@lwfinger.net> (Larry Finger's message of "Fri,
+	08 Mar 2013 12:39:49 -0600")
+Message-ID: <87a9qdm6ti.fsf@kamboji.qca.qualcomm.com> (sfid-20130309_072205_813566_51FDBDB0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, fix indentation.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- info.c |   21 +++++++++++----------
- 1 files changed, 11 insertions(+), 10 deletions(-)
+> On 03/08/2013 05:25 AM, nick@nhthomas.freeserve.co.uk wrote:
+>>
+>> I'm getting a build error when building ath6kl modules.
+>>
+>> include/linux/mmc/sdio_func.h:162:12: error: expected identifier or '(' before numeric constant
+>>
+>> the line it's complaining about is like this:
+>>
+>> extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
+>>
+>>
+>> A bit of googling has shown that others have seen the same problem too.
+>> But, I've not seen a fix for it.
+>>
+>> Any ideas appreciated.
+>
+> The complete gcc error output would be helpful.
+>
+> What kernel are you using?
 
-diff --git a/info.c b/info.c
-index 3d4eaeb..209e882 100644
---- a/info.c
-+++ b/info.c
-@@ -183,17 +183,18 @@ next:
- 						printf(")");
- 					printf("\n");
- 
--				if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
--					enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
--					unsigned long time;
--
--					printf("\t\t\t  DFS state: %s", dfs_state_name(state));
--					if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
--						time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
--						printf(" (for %lu sec)", time/1000);
-+					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
-+						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
-+						unsigned long time;
-+
-+						printf("\t\t\t  DFS state: %s", dfs_state_name(state));
-+						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
-+							time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
-+							printf(" (for %lu sec)", time/1000);
-+						}
-+						printf("\n");
- 					}
--					printf("\n");
--				}
-+
- 				}
- 			}
- 
+I think he's using compat-driver and compiling against some old vendor
+kernel.
+
 -- 
-1.7.4.1
-
+Kalle Valo
