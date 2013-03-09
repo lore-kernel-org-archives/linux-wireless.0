@@ -1,75 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4667 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753080Ab3CUME7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 08:04:59 -0400
-Message-ID: <514AF761.7070607@broadcom.com> (sfid-20130321_130503_262419_D30D870A)
-Date: Thu, 21 Mar 2013 13:04:49 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57815 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753156Ab3CIGFt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Mar 2013 01:05:49 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k10so2960778iea.33
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2013 22:05:49 -0800 (PST)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
-	"David Spinadel" <dvdspndl@gmail.com>
-Subject: Re: rcutree tree warning during P2P device support testing
-References: <5149CD81.40301@broadcom.com>
- <1363792139.8224.10.camel@jlt4.sipsolutions.net>
- <514A274F.5030303@broadcom.com>
- <1363814947.9284.10.camel@jlt4.sipsolutions.net>
- <514A2E47.7080108@broadcom.com>
-In-Reply-To: <514A2E47.7080108@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <20130308162126.GC1409@redhat.com>
+References: <CALK7Yahs2=2UkN9uXGbuoWXhvcC1u4-R4xak5cx0ZqKm7OfK+A@mail.gmail.com>
+	<20130308162126.GC1409@redhat.com>
+Date: Sat, 9 Mar 2013 10:05:48 +0400
+Message-ID: <CALK7YajjwBPahgT0Vzz45O8EVc6q7myo2bBgE6u8kbi5s_nN_g@mail.gmail.com> (sfid-20130309_070553_020521_91D5949C)
+Subject: Re: RFC: RT3070 TX Power troubles
+From: "Alex A. Mihaylov" <minimumlaw@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2013 10:46 PM, Arend van Spriel wrote:
-> On 03/20/2013 10:29 PM, Johannes Berg wrote:
->> On Wed, 2013-03-20 at 22:17 +0100, Arend van Spriel wrote:
->>>> Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
->>>> you saying you first stop the supplicant, which gets you that warning,
->>>> and then unload fails?
->>>
->>> Indeed, upon stopping wpa_supplicant I get the warning. And doing a
->>> rmmod from the command line after that fails in the hang.
->>
->> Right, ok.
->>
->>>>> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
->>>>> rcu_process_callbacks+0x469/0x560()
->>>>
->>>>> [ 1634.133917] Call Trace:
->>>>> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
->>>>> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
->>>>> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
->>>>> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
->>>>> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
->>>>
->>>> Can't say I understand this warning ...
->>>>
->>>
->>> At least we are on the same page then ;-)
->>
->> It looks like some rcu head list corruption ... no idea really.
->>
-> 
-> I have now (I think). I did a kfree of the driver's vif structure, which
-> is container of the wireless_dev and that is still on the rcu head list.
-> 
->>> The p2p device is already removed upon stopping wpa_supplicant through
->>> .del_virtual_intf() callback. Took a quick peek in
->>> net/mac80211/iface.c:ieee80211_if_remove() and wonder whether I should
->>> do cfg80211_unregister_wdev() in that code path as well. Guess so, right?
->>
->> I think so, yes. Does the warning go away if you do? :)
-> 
-> Not tested yet.
+2013/3/8 Stanislaw Gruszka <sgruszka@redhat.com>:
+>> +     /*
+>> +      * FixMe: Why POWER_BOUND and FREQ_OFFSET_BOUND not init here?
+>> +      */
+> ???
 
-That did the trick. Apparently, wpa_s/driver_nl80211 does not do a
-stop_p2p_device. That is triggered by cfg80211_unregister_wdev(). Should
-wpa_s do the stop_p2p_device before deleting it or is the current
-behaviour fine.
+Sorry! Patch created only for discussion. I not sure in my my
+code.Final patch some later.
 
-Regards,
-Arend
+> Do we also need to init RF_R17 ? Does vendor driver do this ?
 
+Yes. Function  NICInitRT3070RFRegisters in vendor rt3070.c content next code:
+if (IS_RT3071(pAd))
+{
+    /* RF power sequence setup, load RF normal operation-mode setup */
+    RT30xxLoadRFNormalModeSetup(pAd);
+}
+else if (IS_RT3070(pAd))
+{
+    /* TX_LO1_en, RF R17 register Bit 3 to 0 */
+    RT30xxReadRFRegister(pAd, RF_R17, &RFValue);
+    RFValue &= (~0x08);
+    /* to fix rx long range issue */
+    if (pAd->NicConfig2.field.ExternalLNAForG == 0)
+    {
+        if ((IS_RT3071(pAd) && ((pAd->MACVersion & 0xffff) >= 0x0211))
+|| IS_RT3070(pAd))
+        {
+            RFValue |= 0x20;
+        }
+    }
+    /* set RF_R17_bit[2:0] equal to EEPROM setting at 0x48h */
+    if (pAd->TxMixerGain24G >= 1)
+    {
+        RFValue &= (~0x7);  /* clean bit [2:0] */
+        RFValue |= pAd->TxMixerGain24G;
+    }
+    RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
 
+and function VOID RT30xxLoadRFNormalModeSetup in vendor rt30xx.c
+
+/* TX_LO1_en, RF R17 register Bit 3 to 0*/
+RT30xxReadRFRegister(pAd, RF_R17, &RFValue);
+RFValue &= (~0x08);
+/* to fix rx long range issue*/
+if (((pAd->MACVersion & 0xffff) >= 0x0211) &&
+(pAd->NicConfig2.field.ExternalLNAForG == 0))
+{
+    RFValue |= 0x20;
+}
+    /* set RF_R17_bit[2:0] equal to EEPROM setting at 0x48h*/
+    if (pAd->TxMixerGain24G >= 2)
+    {
+        RFValue &= (~0x7);  /* clean bit [2:0]*/
+        RFValue |= pAd->TxMixerGain24G;
+    }
+RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
+
+But 0x5f for RF_R17... I'm insure.
+
+>> I also found function rt2800_config_channel_rf2xxx without
+>> initialisation POWER_BOUND and FREQ_OFFSET_BOUND. May be this also
+>> incorrect?
+> Not sure, need to check on old vendor driver.
+
+OK. In final patch i don't touch rt2xxx code. I don't have cards with
+RT2xxx chips and can't check this in hardwae.
+
+-- 
+Alex A. Mihaylov
+AKA MinimumLaw
