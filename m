@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46818 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754843Ab3CEStI (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63211 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850Ab3CIF7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 13:49:08 -0500
-Message-ID: <1362509338.8224.3.camel@jlt4.sipsolutions.net> (sfid-20130305_194913_681733_66D7198F)
-Subject: Re: [PATCH] mac80211/minstrel_ht: disable multiple consecutive
- sample attempts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 05 Mar 2013 19:48:58 +0100
-In-Reply-To: <1362489619-75636-1-git-send-email-nbd@openwrt.org>
-References: <1362489619-75636-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 9 Mar 2013 00:59:06 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath6kl-devel@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath6kl: cold reset target after host warm boot
+References: <20130308102539.23245.55176.stgit@localhost6.localdomain6>
+	<20130308102711.23245.98569.stgit@localhost6.localdomain6>
+Date: Sat, 9 Mar 2013 07:58:47 +0200
+In-Reply-To: <20130308102711.23245.98569.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Fri, 8 Mar 2013 12:27:11 +0200")
+Message-ID: <87ehfpm7vs.fsf@kamboji.qca.qualcomm.com> (sfid-20130309_065920_657247_02832F6E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-05 at 14:20 +0100, Felix Fietkau wrote:
-> The last minstrel_ht changes increased the sampling frequency for
-> potentially useful rates to decrease the response time to rate
-> fluctuations. This caused an increase in sampling frequency that can
-> slightly reduce throughput, so this patch limits the sampling attempts
-> to one per rate instead of two.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Applied.
+> Julien reported that ar6004 usb device fails to initialise after host has been rebooted and
+> power is still on for the ar6004 device. He found out that doing a cold reset fixes the issue.
+>
+> I wasn't sure what would be the best way to detect if target needs a reset so I settled on
+> checking a timeout from htc_wait_recv_ctrl_message().
+>
+> Reported-by: Julien Massot <jmassot@aldebaran-robotics.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-johannes
+I need to fix my line wrapping, the lines are too long now.
 
+> @@ -1842,12 +1853,6 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+>  		ath6kl_htc_stop(ar->htc_target);
+>  	}
+>  
+> -	/*
+> -	 * Try to reset the device if we can. The driver may have been
+> -	 * configure NOT to reset the target during a debug session.
+> -	 */
+> -	ath6kl_init_hw_reset(ar);
+> -
+
+This shouldn't be there and most likely causes an regression. I'll send
+v2 later.
+
+-- 
+Kalle Valo
