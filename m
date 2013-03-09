@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:41854 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932506Ab3CPSUA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 14:20:00 -0400
-From: stf_xl@wp.pl
-To: "John W. Linville\"" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 14/25] rt2800: 5592: setup LDO_CFG0 when configuring channel
-Date: Sat, 16 Mar 2013 19:19:42 +0100
-Message-Id: <1363457993-15541-15-git-send-email-stf_xl@wp.pl> (sfid-20130316_192007_298375_B85D8432)
-In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
-References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:34964 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753741Ab3CILU1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Mar 2013 06:20:27 -0500
+Received: by mail-oa0-f42.google.com with SMTP id i18so3050151oag.15
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 03:20:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5138D7D7.5020204@lwfinger.net>
+References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	<5138D7D7.5020204@lwfinger.net>
+Date: Sat, 9 Mar 2013 12:20:26 +0100
+Message-ID: <CACna6ryxn7+HqRkLJPA-k0dfR-FjVHDfZ+_uUAY_HxQrp3ODew@mail.gmail.com> (sfid-20130309_122039_911092_2E8B983E)
+Subject: Re: [PATCH 00/13] b43: implement basic TX power mgmt
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+2013/3/7 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/07/2013 09:47 AM, Rafał Miłecki wrote:
+>>
+>> After spotting a lot of N-PHY-similar functions in
+>> BCM4331 dump of MMIO ops - split into names parts
+>> I was able to finally improve HT-PHY code.
+>>
+>> It now sets TX basically, I can finally talk with devices that are few
+>> meters away, not just few centimetres. It's a little patch bomb, sorry
+>> for that, but I wasn't sure if my code is correct until it was complete
+>> and started working.
+>>
+>> Rafał Miłecki (13):
+>>    b43: HT-PHY: rename AFE defines
+>>    b43: HT-PHY: add classifier control function
+>>    b43: HT-PHY: move TX fix to the separated function
+>>    b43: HT-PHY: implement spurious tone avoidance
+>>    b43: HT-PHY: implement MAC reclocking
+>>    b43: HT-PHY: implement CCA reset
+>>    b43: HT-PHY: implement PA override
+>>    b43: HT-PHY: implement controlling TX power control
+>>    b43: HT-PHY: implement stopping sample tone playback
+>>    b43: HT-PHY: implement playing sample tone
+>>    b43: HT-PHY: implement RSSI polling
+>>    b43: HT-PHY: setup TX power control
+>>    b43: HT-PHY: enable basic TX power setup
+>>
+>>   drivers/net/wireless/b43/phy_ht.c |  603
+>> +++++++++++++++++++++++++++++++++----
+>>   drivers/net/wireless/b43/phy_ht.h |   77 ++++-
+>>   2 files changed, 613 insertions(+), 67 deletions(-)
+>
+>
+> What tree is used for these patches? Numbers 1-7 applied with offsets, and
+> some fuzz. Number 8 failed, and I quit trying there. I am using
+> wireless-testing that was a fresh pull yesterday after John rebased it.
 
-Based on:
-RT5592_ChipSwitchChannel()
+Has anyone else tried to apply this patchset?
 
-from:
-DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5592.c
-
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 93b9def..189c880 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2187,12 +2187,17 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 					 struct channel_info *info)
- {
- 	u8 rfcsr, ep_reg;
-+	u32 reg;
- 	int power_bound;
- 
- 	/* TODO */
- 	const bool is_11b = false;
- 	const bool is_type_ep = false;
- 
-+	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
-+	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL,
-+			   (rf->channel > 14 || conf_is_ht40(conf)) ? 5 : 0);
-+	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
- 
- 	/* Order of values on rf_channel entry: N, K, mod, R */
- 	rt2800_rfcsr_write(rt2x00dev, 8, rf->rf1 & 0xff);
 -- 
-1.7.4.4
-
+Rafał
