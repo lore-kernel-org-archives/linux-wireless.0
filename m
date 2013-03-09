@@ -1,64 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42895 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757344Ab3CTPJI (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:38198 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756397Ab3CIKBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 11:09:08 -0400
-Message-ID: <1363792139.8224.10.camel@jlt4.sipsolutions.net> (sfid-20130320_160934_773672_8262B976)
-Subject: Re: rcutree tree warning during P2P device support testing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: David Spinadel <dvdspndl@gmail.com>,
-	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Date: Wed, 20 Mar 2013 16:08:59 +0100
-In-Reply-To: <5149CD81.40301@broadcom.com>
-References: <5149CD81.40301@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 9 Mar 2013 05:01:46 -0500
+Subject: [PATCH v2 2/3] ath6kl: fix usb related error handling and warnings
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Sat, 09 Mar 2013 12:01:43 +0200
+Message-ID: <20130309100143.432.69714.stgit@localhost6.localdomain6> (sfid-20130309_110149_081561_858FF987)
+In-Reply-To: <20130309100031.432.94974.stgit@localhost6.localdomain6>
+References: <20130309100031.432.94974.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It was annoying to debug usb warm reboot initialisation problems as many usb
+related functions just ignored errors and it wasn't obvious from the kernel
+logs what was failing. Fix all that so that error messages are printed and
+errors are handled properly.
 
-> I am testing the P2P device support patches. Upon stopping the
-> wpa_supplicant I get the following warning and when I unload brcmfmac it
-> hangs resulting in hung_task_timeout message. The whole rcu stuff still
-> needs to settle in my brain. I suspect the warning is related to
-> brcmfmac unload failure, but maybe you have some ideas where I should look.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   10 ++++----
+ drivers/net/wireless/ath/ath6kl/init.c     |   10 +++++---
+ drivers/net/wireless/ath/ath6kl/usb.c      |   34 ++++++++++++++++++----------
+ 3 files changed, 33 insertions(+), 21 deletions(-)
 
-Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
-you saying you first stop the supplicant, which gets you that warning,
-and then unload fails?
-
-> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
-> rcu_process_callbacks+0x469/0x560()
-
-> [ 1634.133917] Call Trace:
-> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
-> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
-> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
-> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
-> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
-
-Can't say I understand this warning ...
-
-> [ 3606.381631] INFO: task khubd:30 blocked for more than 120 seconds.
-> [ 3606.388366] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 3606.396931] khubd           D f4f01cd8     0    30      2 0x00000000
-> [ 3606.403609]  f4f01d10 00000092 00000000 f4f01cd8 00000246 c1748000
-> c183fb40 c183fb40
-> [ 3606.411731]  d46b6273 0000031c f53e7b40 f4d323c0 c1748000 00000246
-> 00000000 f0820090
-> [ 3606.419807]  00000246 f4f01cd8 00000046 00000001 00000046 00000000
-> 00000002 f0820090
-> [ 3606.427881] Call Trace:
-> [ 3606.430518]  [<c1097aeb>] ? trace_hardirqs_on+0xb/0x10
-> [ 3606.435907]  [<c1525ff3>] schedule+0x23/0x60
-> [ 3606.440402]  [<f8230c65>] wiphy_unregister+0xa5/0x2e0 [cfg80211]
-
-This seems to be because you don't remove the p2p device if it's still
-present when you unload the driver. Call cfg80211_unregister_wdev() at
-some appropriate place.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 9adb567..c02d9d3 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -1167,7 +1167,7 @@ static int htc_wait_recv_ctrl_message(struct htc_target *target)
+ 	}
+ 
+ 	if (count <= 0) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "%s: Timeout!\n", __func__);
++		ath6kl_warn("htc pipe control receive timeout!\n");
+ 		return -ECOMM;
+ 	}
+ 
+@@ -1581,16 +1581,16 @@ static int ath6kl_htc_pipe_wait_target(struct htc_target *target)
+ 		return status;
+ 
+ 	if (target->pipe.ctrl_response_len < sizeof(*ready_msg)) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "invalid htc ready msg len:%d!\n",
+-			   target->pipe.ctrl_response_len);
++		ath6kl_warn("invalid htc pipe ready msg len: %d\n",
++			    target->pipe.ctrl_response_len);
+ 		return -ECOMM;
+ 	}
+ 
+ 	ready_msg = (struct htc_ready_ext_msg *) target->pipe.ctrl_response_buf;
+ 
+ 	if (ready_msg->ver2_0_info.msg_id != cpu_to_le16(HTC_MSG_READY_ID)) {
+-		ath6kl_dbg(ATH6KL_DBG_HTC, "invalid htc ready msg : 0x%X !\n",
+-			   ready_msg->ver2_0_info.msg_id);
++		ath6kl_warn("invalid htc pipe ready msg: 0x%x\n",
++			    ready_msg->ver2_0_info.msg_id);
+ 		return -ECOMM;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index ae1e477..8b01ec3 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1657,13 +1657,15 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 	 * driver layer has to init BMI in order to set the host block
+ 	 * size.
+ 	 */
+-	if (ath6kl_htc_wait_target(ar->htc_target)) {
+-		ret = -EIO;
++	ret = ath6kl_htc_wait_target(ar->htc_target);
++	if (ret) {
++		ath6kl_err("htc wait target failed: %d\n", ret);
+ 		goto err_power_off;
+ 	}
+ 
+-	if (ath6kl_init_service_ep(ar)) {
+-		ret = -EIO;
++	ret = ath6kl_init_service_ep(ar);
++	if (ret) {
++		ath6kl_err("Endpoint service initilisation failed: %d\n", ret);
+ 		goto err_cleanup_scatter;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 5fcd342..63948f6 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -872,8 +872,9 @@ static int ath6kl_usb_submit_ctrl_out(struct ath6kl_usb *ar_usb,
+ 			      size, 1000);
+ 
+ 	if (ret < 0) {
+-		ath6kl_dbg(ATH6KL_DBG_USB, "%s failed,result = %d\n",
+-			   __func__, ret);
++		ath6kl_warn("Failed to submit usb control message: %d\n", ret);
++		kfree(buf);
++		return ret;
+ 	}
+ 
+ 	kfree(buf);
+@@ -903,8 +904,9 @@ static int ath6kl_usb_submit_ctrl_in(struct ath6kl_usb *ar_usb,
+ 				 size, 2 * HZ);
+ 
+ 	if (ret < 0) {
+-		ath6kl_dbg(ATH6KL_DBG_USB, "%s failed,result = %d\n",
+-			   __func__, ret);
++		ath6kl_warn("Failed to read usb control message: %d\n", ret);
++		kfree(buf);
++		return ret;
+ 	}
+ 
+ 	memcpy((u8 *) data, buf, size);
+@@ -961,8 +963,10 @@ static int ath6kl_usb_diag_read32(struct ath6kl *ar, u32 address, u32 *data)
+ 				ATH6KL_USB_CONTROL_REQ_DIAG_RESP,
+ 				ar_usb->diag_resp_buffer, &resp_len);
+ 
+-	if (ret)
++	if (ret) {
++		ath6kl_warn("diag read32 failed: %d\n", ret);
+ 		return ret;
++	}
+ 
+ 	resp = (struct ath6kl_usb_ctrl_diag_resp_read *)
+ 		ar_usb->diag_resp_buffer;
+@@ -976,6 +980,7 @@ static int ath6kl_usb_diag_write32(struct ath6kl *ar, u32 address, __le32 data)
+ {
+ 	struct ath6kl_usb *ar_usb = ar->hif_priv;
+ 	struct ath6kl_usb_ctrl_diag_cmd_write *cmd;
++	int ret;
+ 
+ 	cmd = (struct ath6kl_usb_ctrl_diag_cmd_write *) ar_usb->diag_cmd_buffer;
+ 
+@@ -984,12 +989,17 @@ static int ath6kl_usb_diag_write32(struct ath6kl *ar, u32 address, __le32 data)
+ 	cmd->address = cpu_to_le32(address);
+ 	cmd->value = data;
+ 
+-	return ath6kl_usb_ctrl_msg_exchange(ar_usb,
+-					    ATH6KL_USB_CONTROL_REQ_DIAG_CMD,
+-					    (u8 *) cmd,
+-					    sizeof(*cmd),
+-					    0, NULL, NULL);
++	ret = ath6kl_usb_ctrl_msg_exchange(ar_usb,
++					   ATH6KL_USB_CONTROL_REQ_DIAG_CMD,
++					   (u8 *) cmd,
++					   sizeof(*cmd),
++					   0, NULL, NULL);
++	if (ret) {
++		ath6kl_warn("diag_write32 failed: %d\n", ret);
++		return ret;
++	}
+ 
++	return 0;
+ }
+ 
+ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+@@ -1001,7 +1011,7 @@ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+ 	ret = ath6kl_usb_submit_ctrl_in(ar_usb,
+ 					ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
+ 					0, 0, buf, len);
+-	if (ret != 0) {
++	if (ret) {
+ 		ath6kl_err("Unable to read the bmi data from the device: %d\n",
+ 			   ret);
+ 		return ret;
+@@ -1019,7 +1029,7 @@ static int ath6kl_usb_bmi_write(struct ath6kl *ar, u8 *buf, u32 len)
+ 	ret = ath6kl_usb_submit_ctrl_out(ar_usb,
+ 					 ATH6KL_USB_CONTROL_REQ_SEND_BMI_CMD,
+ 					 0, 0, buf, len);
+-	if (ret != 0) {
++	if (ret) {
+ 		ath6kl_err("unable to send the bmi data to the device: %d\n",
+ 			   ret);
+ 		return ret;
 
