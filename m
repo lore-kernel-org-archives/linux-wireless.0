@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20103 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755535Ab3CMMNR (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:37467 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948Ab3CJGQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:17 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/14] wil6210: Fix garbage sent to the FW with wmi_set_ie()
-Date: Wed, 13 Mar 2013 14:12:42 +0200
-Message-ID: <1363176771-10082-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131323_501247_DF8EA7BA)
-In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sun, 10 Mar 2013 01:16:11 -0500
+Subject: [PATCH] ath6kl: Fix the byte alignment rule to avoid loss of bytes in
+ a TCP segment
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	mjei78@gmail.com
+Date: Sun, 10 Mar 2013 08:16:05 +0200
+Message-ID: <20130310061605.27321.89150.stgit@localhost6.localdomain6> (sfid-20130310_071614_974779_FA5BB45A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extra reference was taken by mistake.
+From: Myoungje Kim <mjei78@gmail.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Either first 3 bytes of the first received tcp segment or last one
+over MTU size file can be loss due to the byte alignment problem.
+Although ATH6KL_HTC_ALIGN_BYTES was defined for 'extra bytes for htc header
+alignment' in the patch "Fix buffer alignment for scatter-gather
+I/O"(1df94a857), there exists the bytes loss issue which means that it will be
+truncated 3 bytes in the transmitted file contents if a file which has over MTU
+size is transferred through TCP/IP stack.  It doesn't look like TCP/IP stack
+bug of 3.5 or the latest version of kernel but the byte alignment issue.  This
+patch is to use the roundup() function for the byte alignment rather than the
+predefined ATH6KL_HTC_ALIGN_BYTES.
+
+kvalo: fixed indentation
+
+Signed-off-by: Myoungje Kim <mjei78@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/init.c |    4 ++--
+ drivers/net/wireless/ath/ath6kl/main.c |    8 +++++---
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index d636ff4..aa642df 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -877,7 +877,7 @@ int wmi_set_ie(struct wil6210_priv *wil, u8 type, u16 ie_len, const void *ie)
- 	/* BUG: FW API define ieLen as u8. Will fix FW */
- 	cmd->ie_len = cpu_to_le16(ie_len);
- 	memcpy(cmd->ie_info, ie, ie_len);
--	rc = wmi_send(wil, WMI_SET_APPIE_CMDID, &cmd, len);
-+	rc = wmi_send(wil, WMI_SET_APPIE_CMDID, cmd, len);
- 	kfree(cmd);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 4ad45bb..40ffee6 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -201,8 +201,8 @@ struct sk_buff *ath6kl_buf_alloc(int size)
+ 	u16 reserved;
  
- 	return rc;
--- 
-1.7.10.4
+ 	/* Add chacheline space at front and back of buffer */
+-	reserved = (2 * L1_CACHE_BYTES) + ATH6KL_DATA_OFFSET +
+-		   sizeof(struct htc_packet) + ATH6KL_HTC_ALIGN_BYTES;
++	reserved = roundup((2 * L1_CACHE_BYTES) + ATH6KL_DATA_OFFSET +
++		   sizeof(struct htc_packet) + ATH6KL_HTC_ALIGN_BYTES, 4);
+ 	skb = dev_alloc_skb(size + reserved);
+ 
+ 	if (skb)
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index bad62b3..d4fcfca 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1294,9 +1294,11 @@ void init_netdev(struct net_device *dev)
+ 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
+ 
+ 	dev->needed_headroom = ETH_HLEN;
+-	dev->needed_headroom += sizeof(struct ath6kl_llc_snap_hdr) +
+-				sizeof(struct wmi_data_hdr) + HTC_HDR_LENGTH
+-				+ WMI_MAX_TX_META_SZ + ATH6KL_HTC_ALIGN_BYTES;
++	dev->needed_headroom += roundup(sizeof(struct ath6kl_llc_snap_hdr) +
++					sizeof(struct wmi_data_hdr) +
++					HTC_HDR_LENGTH +
++					WMI_MAX_TX_META_SZ +
++					ATH6KL_HTC_ALIGN_BYTES, 4);
+ 
+ 	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
+ 
 
