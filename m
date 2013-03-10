@@ -1,65 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:45105 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932346Ab3CMTP2 (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:58693 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751338Ab3CJLg6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 15:15:28 -0400
-Received: by mail-ob0-f171.google.com with SMTP id x4so1400532obh.16
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 12:15:27 -0700 (PDT)
-Message-ID: <5140D04A.4070708@lwfinger.net> (sfid-20130313_201533_520489_72FDB1A9)
-Date: Wed, 13 Mar 2013 14:15:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 10 Mar 2013 07:36:58 -0400
+Received: by mail-oa0-f41.google.com with SMTP id i10so3665837oag.14
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Mar 2013 04:36:57 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-	alessandro.lannocca@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for 3.9] rtlwifi: rtl8192cu: Fix problem that prevents
- reassociation
-References: <51409b0d.AKkQggbo18xQwrFd%Larry.Finger@lwfinger.net> <5140ACCB.4050408@iki.fi> <20130313184656.GD19917@tuxdriver.com>
-In-Reply-To: <20130313184656.GD19917@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <513BCC20.70900@lwfinger.net>
+References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de>
+	<CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com>
+	<1361381489.3065.1.camel@joe-AO722>
+	<51250E6B.3030308@lwfinger.net>
+	<1361384969.2219.4.camel@joe-AO722>
+	<51252132.3050603@hauke-m.de>
+	<1361391065.2223.5.camel@joe-AO722>
+	<512595BC.5030607@lwfinger.net>
+	<CACna6rzQNo9CBrg08y6y+bf3009_EuL5f2UqOXVLKSoE_q7BRQ@mail.gmail.com>
+	<513BCC20.70900@lwfinger.net>
+Date: Sun, 10 Mar 2013 12:36:57 +0100
+Message-ID: <CACna6rzNTfcuDOdpQrvbeWa4YhgDm_j6nkJ0OwbrLqCjh+qWJQ@mail.gmail.com> (sfid-20130310_123702_283493_62062FFF)
+Subject: Re: [PATCH] ssb: fix unaligned access to mac address
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Joe Perches <joe@perches.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/13/2013 01:46 PM, John W. Linville wrote:
-> On Wed, Mar 13, 2013 at 06:43:55PM +0200, Jussi Kivilinna wrote:
->> On 13.03.2013 17:28, Larry Finger wrote:
->>> The driver was failing to clear the BSSID when a disconnect happened. That
->>> prevented a reconnection. This problem is reported at
->>> https://bugzilla.redhat.com/show_bug.cgi?id=789605,
->>> https://bugzilla.redhat.com/show_bug.cgi?id=866786,
->>> https://bugzilla.redhat.com/show_bug.cgi?id=906734, and
->>> https://bugzilla.kernel.org/show_bug.cgi?id=46171.
->>>
->>> Thanks to Jussi Kivilinna for making the critical observation
->>> that led to the solution.
->>>
->>> Reported-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->>> Tested-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->>> Tested-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Cc: Stable <stable@vger.kernel.org>
->>> ---
->>>
->>> John,
->>>
->>> As you can see by the number of bug reports, this patch should be
->>> pushed as soon as possible.
->>>
->>> Thanks,
->>>
->>> Larry
->>> ---
->>>
->>>   base.h         |    3 +
->>>   pci.c          |    2 -
+2013/3/10 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/09/2013 05:02 PM, Rafał Miłecki wrote:
 >>
->> Seems like leak from another patch/change?
+>> 2013/2/21 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>
+>>> On 02/20/2013 02:11 PM, Joe Perches wrote:
+>>>>
+>>>>
+>>>> On Wed, 2013-02-20 at 20:17 +0100, Hauke Mehrtens wrote:
+>>>>>
+>>>>>
+>>>>> On 02/20/2013 07:29 PM, Joe Perches wrote:
+>>>>>>
+>>>>>>
+>>>>>> On Wed, 2013-02-20 at 11:56 -0600, Larry Finger wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>> On 02/20/2013 11:31 AM, Joe Perches wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> On Mon, 2013-02-18 at 17:09 +0100, Rafał Miłecki wrote:
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> 2013/2/16 Hauke Mehrtens <hauke@hauke-m.de>:
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> The mac address should be aligned to u16 to prevent an unaligned
+>>>>>>>>>> access
+>>>>>>>>>> in drivers/ssb/pci.c where it is casted to __be16.
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> []
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> []
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> @@ -26,6 +26,7 @@ struct ssb_sprom_core_pwr_info {
+>>>>>>>>>>
+>>>>>>>>>>     struct ssb_sprom {
+>>>>>>>>>>            u8 revision;
+>>>>>>>>>> +       u8 country_code;        /* Country Code */
+>>>>>>>>>>            u8 il0mac[6];           /* MAC address for 802.11b/g */
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> It looks a little hacky to me too, it's easy to forget about that
+>>>>>>>>> requirement and break that again in the future.
+>>>>>>>>>
+>>>>>>>>> What about not casting il0mac to u16 at all? Maybe we should just
+>>>>>>>>> fill
+>>>>>>>>> it as u8 (which it is)?
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> Perhaps this?
+>>>>>>>>
+>>>>>>>> From: Joe Perches <joe@perches.com>
+>>>>>>>> Subject: [PATCH] ssb: pci: Standardize a function to get mac address
+>>>>>>>>
+>>>>>>>> Don't require alignment of mac addresses to u16.
+>>>>>
+>>>>>
+>>>>>
+>>>>> ...
+>>>>>
+>>>>>>> I like the looks of sprom_get_mac() over that ugly *(((__be16
+>>>>>>> *)out->il0mac)
+>>>>>>> construct, but this patch breaks ssb. The resulting MAC address is
+>>>>>>> all
+>>>>>>> ones. I
+>>>>>>> have not yet figured out the problem.
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> Dunno, I must have done something stupid.
+>>>>>>
+>>>>>> I don't have one of these but the transform
+>>>>>> looked correct when I did  it.
+>>>>>>
+>>>>>> I'm not sure it's the best solution anyway
+>>>>>> because some of the other ether address
+>>>>>> functions like compare_ether_addr also
+>>>>>> require 2 byte alignment and cast to u16.
+>>>>>
+>>>>>
+>>>>>
+>>>>> Your patch looks good (haven't tested it), but as you said we should
+>>>>> still align the mac addresses to u16 so functions like
+>>>>> compare_ether_addr work with them.
+>>>>>
+>>>>> There is also a v2 of my patch:
+>>>>> http://www.spinics.net/lists/linux-wireless/msg103628.html
+>>>>
+>>>>
+>>>>
+>>>> Seems OK to me, though I suggest using ETH_ALEN
+>>>> instead of 6.
+>>>>
+>>>> Maybe using both patches would be better still.
+>>>>
+>>>> And as long as I'm futzing with ssb, there's another
+>>>> logging cleanup to go with it.
+>>>>
+>>>> Here's a V2 with the missing SPOFF fixed.
+>>>>
+>>>> Subject: [PATCH 1/2] ssb: pci: Standardize a function to get mac address
+>>>> From: Joe Perches <joe@perches.com>
+>>>>
+>>>> Don't require alignment of mac addresses to u16.
+>>>>
+>>>> Signed-off-by: Joe Perches <joe@perches.com>
+>>>> ---
+>>>>
+>>>> V2: Add missing SPOFF
+>>>
+>>>
+>>>
+>>> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>
+>>
+>> I didn't confirm my issue to be related to this patch, but with recent
+>> kernels my MAC has changed from
+>> 00:11:22:33:44:55
+>> to
+>> 11:00:33:22:55:44
+>>
+>> Larry: did you verify MAC didn't change for you?
 >
-> I edited-out those bits...
+>
+> I just checked on x86_64, and the bytes are swapped here too. Do you want to
+> push the patch, or should I do it?
 
-Thanks,
+Feel free to fix. I've another 3 regressions to track...
 
-Larry
-
-
+-- 
+Rafał
