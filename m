@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:64007 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109Ab3CSMS4 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12489 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948Ab3CJGTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 08:18:56 -0400
-Received: by mail-ee0-f41.google.com with SMTP id c13so197853eek.14
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 05:18:55 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: extract board_type from SPROM
-Date: Tue, 19 Mar 2013 13:18:43 +0100
-Message-Id: <1363695524-22064-1-git-send-email-zajec5@gmail.com> (sfid-20130319_131900_357048_B814569F)
+	Sun, 10 Mar 2013 01:19:15 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Myoungje Kim <mjei78@gmail.com>, <vthiagar@qca.qualcomm.com>,
+	<sumathi@qca.qualcomm.com>,
+	ath6kl-devel <ath6kl-devel@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ATH6KL: "Fix the byte alignment rule to avoid loss of bytes in a TCP segment"
+References: <CABzs15B0TN=AgF+j9ZZL0yrfXwO31BJktRbXMwcwC5X2ricrkQ@mail.gmail.com>
+	<512D9B41.40608@qca.qualcomm.com>
+Date: Sun, 10 Mar 2013 08:19:08 +0200
+In-Reply-To: <512D9B41.40608@qca.qualcomm.com> (Mohammed Shafi Shajakhan's
+	message of "Wed, 27 Feb 2013 11:06:01 +0530")
+Message-ID: <871ubnlqub.fsf@kamboji.qca.qualcomm.com> (sfid-20130310_071918_611746_9695EA36)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Steven,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/pci.c |    3 +++
- 1 file changed, 3 insertions(+)
+Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 63ff69f..99bd5ad 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -369,6 +369,7 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	SPEX(et0mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0M, 14);
- 	SPEX(et1mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1M, 15);
- 	SPEX(board_rev, SSB_SPROM1_BINF, SSB_SPROM1_BINF_BREV, 0);
-+	SPEX(board_type, SSB_SPROM1_SPID, 0xFFFF, 0);
- 	if (out->revision == 1)
- 		SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
- 		     SSB_SPROM1_BINF_CCODE_SHIFT);
-@@ -464,6 +465,7 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
- 	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
- 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
- 	SPEX(board_rev, SSB_SPROM4_BOARDREV, 0xFFFF, 0);
-+	SPEX(board_type, SSB_SPROM1_SPID, 0xFFFF, 0);
- 	if (out->revision == 4) {
- 		SPEX(alpha2[0], SSB_SPROM4_CCODE, 0xff00, 8);
- 		SPEX(alpha2[1], SSB_SPROM4_CCODE, 0x00ff, 0);
-@@ -535,6 +537,7 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 	sprom_get_mac(out->il0mac, &in[SPOFF(SSB_SPROM8_IL0MAC)]);
- 
- 	SPEX(board_rev, SSB_SPROM8_BOARDREV, 0xFFFF, 0);
-+	SPEX(board_type, SSB_SPROM1_SPID, 0xFFFF, 0);
- 	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
- 	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
- 	SPEX(boardflags_lo, SSB_SPROM8_BFLLO, 0xFFFF, 0);
+> On 02/27/2013 10:47 AM, Myoungje Kim wrote:
+>> Hello
+>> I am Steven Kim.
+>>
+>> I found the driver bug which occur loss of some bytes on the TCP/IP stack.
+>> Please check this patch and pull-request on github.com.
+>> https://github.com/torvalds/linux/pull/27
+>
+> please cc ath6kl-devel, Linux-wireless and send the patches
+> in git-send email. thanks!
+
+I now sent the patch for review. The alignment in ath6kl is a mess, I
+wish somebody would fix it properly. But if this patch helps for you,
+I'll apply it. At least I don't see any harm from it.
+
 -- 
-1.7.10.4
-
+Kalle Valo
