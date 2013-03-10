@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13056 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab3CRLeQ (ORCPT
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:64150 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850Ab3CJRfb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 07:34:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath6kl-devel@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: print firmware capabilities
-References: <20130306065606.23473.77631.stgit@localhost6.localdomain6>
-Date: Mon, 18 Mar 2013 13:34:10 +0200
-In-Reply-To: <20130306065606.23473.77631.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Wed, 6 Mar 2013 08:56:06 +0200")
-Message-ID: <87txo97xhp.fsf@kamboji.qca.qualcomm.com> (sfid-20130318_123419_561580_D5AC4E0D)
+	Sun, 10 Mar 2013 13:35:31 -0400
+Received: by mail-ob0-f179.google.com with SMTP id un3so2669989obb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Mar 2013 10:35:30 -0700 (PDT)
+Message-ID: <513CC45E.7090402@lwfinger.net> (sfid-20130310_183535_582941_DCD95824)
+Date: Sun, 10 Mar 2013 12:35:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Joe Perches <joe@perches.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: fix unaligned access to mac address
+References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de> <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com> <1361381489.3065.1.camel@joe-AO722> <51250E6B.3030308@lwfinger.net> <1361384969.2219.4.camel@joe-AO722> <51252132.3050603@hauke-m.de> <1361391065.2223.5.camel@joe-AO722> <512595BC.5030607@lwfinger.net> <CACna6rzQNo9CBrg08y6y+bf3009_EuL5f2UqOXVLKSoE_q7BRQ@mail.gmail.com> <513BCC20.70900@lwfinger.net> <CACna6rzNTfcuDOdpQrvbeWa4YhgDm_j6nkJ0OwbrLqCjh+qWJQ@mail.gmail.com>
+In-Reply-To: <CACna6rzNTfcuDOdpQrvbeWa4YhgDm_j6nkJ0OwbrLqCjh+qWJQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> Printin the  firmware capabilities during the first firmware boot makes it easier to find out what
-> features firmware supports.
+On 03/10/2013 06:36 AM, Rafał Miłecki wrote:
 >
-> Obligatory screenshot:
->
-> [21025.678481] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144 api 3
-> [21025.678667] ath6kl: firmware supports: sched-scan,sta-p2pdev-duplex,rsn-cap-override
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Feel free to fix. I've another 3 regressions to track...
 
-Applied with cosmetic fixes to the commit log.
+Upon further investigation, the flipping of the MAC bytes was not due to "ssb: 
+pci: Standardize a function to get mac address", or "ssb: fix unaligned access 
+to mac address". For other reasons, I had to run 3.8 today and found the 
+flipping, even though neither patch was installed. Joe and Hauke are blameless - 
+they merely reproduced the existing bug. I have no real desire to find out when 
+that error was introduced as I am not an archeologist. Note that b43legacy does 
+not have the problem, thus it was introduced after the split of those two variants.
 
--- 
-Kalle Valo
+I will submit the fix.
+
+Larry
+
+
+
