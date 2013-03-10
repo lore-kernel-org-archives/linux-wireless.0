@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:41704 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933244Ab3CGSzG convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:55233 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614Ab3CJWPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 13:55:06 -0500
-Received: by mail-oa0-f50.google.com with SMTP id l20so1033770oag.9
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 10:55:05 -0800 (PST)
+	Sun, 10 Mar 2013 18:15:38 -0400
+Received: by mail-wg0-f47.google.com with SMTP id dr13so4421006wgb.14
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Mar 2013 15:15:37 -0700 (PDT)
+Date: Sun, 10 Mar 2013 23:16:27 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
+ rate_control_get_rate
+Message-ID: <20130310221627.GA3824@gobelin> (sfid-20130310_231542_971337_10423E54)
+References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com>
+ <1362427924.21028.42.camel@jlt4.sipsolutions.net>
+ <20130304204541.GA8819@gobelin>
+ <5135F327.4000408@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <5138D7D7.5020204@lwfinger.net>
-References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
-	<5138D7D7.5020204@lwfinger.net>
-Date: Thu, 7 Mar 2013 19:55:05 +0100
-Message-ID: <CACna6rxofcrBiUGCt6yRMWYK7hQzop0iKeSrBxXwutCQDZ9T2g@mail.gmail.com> (sfid-20130307_195513_056402_B20FA142)
-Subject: Re: [PATCH 00/13] b43: implement basic TX power mgmt
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5135F327.4000408@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/7 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 03/07/2013 09:47 AM, Rafał Miłecki wrote:
->>
->> After spotting a lot of N-PHY-similar functions in
->> BCM4331 dump of MMIO ops - split into names parts
->> I was able to finally improve HT-PHY code.
->>
->> It now sets TX basically, I can finally talk with devices that are few
->> meters away, not just few centimetres. It's a little patch bomb, sorry
->> for that, but I wasn't sure if my code is correct until it was complete
->> and started working.
->>
->> Rafał Miłecki (13):
->>    b43: HT-PHY: rename AFE defines
->>    b43: HT-PHY: add classifier control function
->>    b43: HT-PHY: move TX fix to the separated function
->>    b43: HT-PHY: implement spurious tone avoidance
->>    b43: HT-PHY: implement MAC reclocking
->>    b43: HT-PHY: implement CCA reset
->>    b43: HT-PHY: implement PA override
->>    b43: HT-PHY: implement controlling TX power control
->>    b43: HT-PHY: implement stopping sample tone playback
->>    b43: HT-PHY: implement playing sample tone
->>    b43: HT-PHY: implement RSSI polling
->>    b43: HT-PHY: setup TX power control
->>    b43: HT-PHY: enable basic TX power setup
->>
->>   drivers/net/wireless/b43/phy_ht.c |  603
->> +++++++++++++++++++++++++++++++++----
->>   drivers/net/wireless/b43/phy_ht.h |   77 ++++-
->>   2 files changed, 613 insertions(+), 67 deletions(-)
->
->
-> What tree is used for these patches? Numbers 1-7 applied with offsets, and
-> some fuzz. Number 8 failed, and I quit trying there. I am using
-> wireless-testing that was a fresh pull yesterday after John rebased it.
-
-I've just checkouted origin/master again, to make sure everything is
-clean, and patches applied fine. Please make sure you're using latest
-wireless-testing like a
-http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-testing.git/commit/?id=12c18c7a3d8f20366424834b20be40f7f3a9e2c2
-
--- 
-Rafał
+On Tue, Mar 05, 2013 at 02:29:11PM +0100, Felix Fietkau wrote:
+> On 2013-03-04 9:45 PM, john wrote:
+> > On Mon, Mar 04, 2013 at 09:12:04PM +0100, Johannes Berg wrote:
+> >> On Mon, 2013-03-04 at 19:27 +0100, Karl Beldan wrote:
+> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> > 
+> >> > Currently it gets it from the sdata. This uses and updates the ad-hoc
+> >> > masks of the ieee80211_tx_rate_control instead of copying them.
+> >> 
+> >> Is there any need to update them?
+> >> 
+> >> The change for "mask" seems to make it less efficient since it could
+> >> otherwise be put into a register.
+> >> 
+> > Totally, this commit spares the 10bytes copy of mcs_mask but adds a less
+> > efficient indirection to mask.
+> > I thought of it but kept the symmetry with mcs_mask.
+> > Apparently you wouldn't mind the dissymmetry so I will re-send using mask
+> > by value, plus I wrote "updates .." where it is more like "lets the
+> > ad-hoc masks get overwritten".
+> It seems to me that all of this could be made more efficient by default
+> if a mcs mask pointer is only passed to rate control if the user
+> actually configured a MCS mask. Also, filtering out rates from the mask
+> that the sta does not support seems a bit unnecessary, since the rate
+> control usually looks at the HT capabilities and the sta's mcs rx mask
+> anyway.
+> 
+Filtering is necessary to lookup alternative downgrade/upgrade rates.
+ 
+Karl
