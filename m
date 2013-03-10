@@ -1,98 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46993 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757419Ab3CYLL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 07:11:27 -0400
-Date: Mon, 25 Mar 2013 13:11:01 +0200
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <ido@wizery.com>, <balbi@ti.com>,
-	<gregoire@alwaysinnovating.com>
-Subject: Re: [PATCH] wlcore: move handling from hardirq to the irq thread
- function
-Message-ID: <20130325111101.GD25656@arwen.pp.htv.fi> (sfid-20130325_121132_158002_D931BFBD)
-Reply-To: <balbi@ti.com>
-References: <1364208824-18751-1-git-send-email-coelho@ti.com>
+Received: from smtpout4.wanadoo.co.uk ([80.12.242.68]:38861 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab3CJONu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Mar 2013 10:13:50 -0400
+Date: Sun, 10 Mar 2013 15:13:49 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Message-ID: <32193647.103921362924829149.JavaMail.www@wwinf3714> (sfid-20130310_151354_899141_042A5249)
+In-Reply-To: <87a9qdm6ti.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: ath6kl build error.
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Xm/fll+QQv+hsKip"
-In-Reply-To: <1364208824-18751-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Xm/fll+QQv+hsKip
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Mon, Mar 25, 2013 at 12:53:44PM +0200, Luciano Coelho wrote:
-> Spin locks and completions are expensive in hard IRQ context and cause
-> problems with RT kernels.  In RT kernels, both spin locks and
-> completions can schedule(), so we can't use them in hard irq context.
->=20
-> Move handling code into the irq thread function to avoid that.
->=20
-> Reported-by: Gregoire Gentil <gregoire@alwaysinnovating.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c |   53 +++++++++++++--------------=
-------
->  1 file changed, 21 insertions(+), 32 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless=
-/ti/wlcore/main.c
-> index 248daa9..c2730a7 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -651,6 +651,25 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
->  	unsigned long flags;
->  	struct wl1271 *wl =3D cookie;
-> =20
-> +	/* complete the ELP completion */
-> +	spin_lock_irqsave(&wl->wl_lock, flags);
-> +	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
-> +	if (wl->elp_compl) {
-> +		complete(wl->elp_compl);
-> +		wl->elp_compl =3D NULL;
-> +	}
-> +
-> +	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
-> +		/* don't enqueue a work right now. mark it as pending */
-> +		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
-> +		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
-> +		disable_irq_nosync(wl->irq);
-> +		pm_wakeup_event(wl->dev, 0);
-> +		spin_unlock_irqrestore(&wl->wl_lock, flags);
-> +		return IRQ_HANDLED;
-> +	}
-> +	spin_unlock_irqrestore(&wl->wl_lock, flags);
+My compilation problem comes down to this:
 
-I still think _irqrestore() here is wrong, since it will reenable the
-IRQ line... other than that, it looks alright.
+In drivers/include_local/linux/compat-2.6.34.h .
 
---=20
-balbi
+I see this:
 
---Xm/fll+QQv+hsKip
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+#define sdio_set_host_pm_flags(a, b) 0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+That's causing my compiler problem.
 
-iQIcBAEBAgAGBQJRUDDFAAoJEIaOsuA1yqREVBMP/AkoX8vkdM9ZevGFNdDRvCyX
-fYedLUwqSNySXYtKGhagitDnc9tAfQ/nfL5pvzTVh7+O+jxZ+z4rnPe5H9Bt7eS3
-BOvBJXJz+8YsR0/J74spJUA68KiC6OeVBR1nDUEFTwwgeBb1aycP5sAKhYh7xrH9
-D8EnSBH7oeJW9fHNAPksLaVyW1bFZc3ihHioGBLIY2Wtq1Anys2/h7WfdtYBODS8
-L0+tQXAytjxNtUVvopGePIlYiQCckuW1raDfjETZ3MXXpC4k84adWswRrb/UB445
-ln3bjWhaHVtJTOPfxAY8Dd0YqEyCsSS2XuLodneXpZQTG7ctayf+Re/Mm2xoha1E
-qs3na1m5n059YB1zzyPExmrq93OvRxYRUhCcru2zSKp8AJZ/bhGliTSNmjqLYO6V
-FG5vokqNGsZbmYR/e/Ljy3dGIYfEEVLbo2KUlfJ5nI9absyUIv9XtUiNT0Zh8vrU
-Mn2JdcGfpv7vlEHQON+fsRJPA8RBBnQqLGYr67GbSepk1PSo1EZCSc2g4izjrTLn
-yXpA+J2ChvgDa1TylcpGMiMH5lZ7pmOAKna2WbGjg8G1ful41Ay1RdQXIWLHjZXK
-/f/qdQq9mBUDli9NI8j8iTUaZrQTcll+ZvlLqgfRvc02Eb3AtVkBEUDelnZ+T4GM
-6fY1cWGhKSSbvD4v10Bo
-=+sl4
------END PGP SIGNATURE-----
+I'm going to have to locally patch the tree to fix this.
 
---Xm/fll+QQv+hsKip--
+
+
+Regards
+
+Nick
+
+
+
+
+> Message Received: Mar 09 2013, 06:22 AM
+> From: "Kalle Valo"
+> To: "Larry Finger"
+> Cc: nick@nhthomas.freeserve.co.uk, linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
+> Subject: Re: ath6kl build error.
+>
+> Larry Finger writes:
+>
+> > On 03/08/2013 05:25 AM, nick@nhthomas.freeserve.co.uk wrote:
+> >>
+> >> I'm getting a build error when building ath6kl modules.
+> >>
+> >> include/linux/mmc/sdio_func.h:162:12: error: expected identifier or '(' before numeric constant
+> >>
+> >> the line it's complaining about is like this:
+> >>
+> >> extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
+> >>
+> >>
+> >> A bit of googling has shown that others have seen the same problem too.
+> >> But, I've not seen a fix for it.
+> >>
+> >> Any ideas appreciated.
+> >
+> > The complete gcc error output would be helpful.
+> >
+> > What kernel are you using?
+>
+> I think he's using compat-driver and compiling against some old vendor
+> kernel.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+
