@@ -1,124 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:39689 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754864Ab3CFXxc (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:56150 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab3CJMk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 18:53:32 -0500
-Received: by mail-oa0-f48.google.com with SMTP id j1so13183304oag.7
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 15:53:31 -0800 (PST)
-Message-ID: <5137D6F8.4050007@lwfinger.net> (sfid-20130307_005336_367394_84810A62)
-Date: Wed, 06 Mar 2013 17:53:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 10 Mar 2013 08:40:29 -0400
+Message-ID: <20130310142919.4375603d5escwu4g@www.dalek.fi> (sfid-20130310_134035_544360_9547B4D1)
+Date: Sun, 10 Mar 2013 14:29:19 +0200
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless@vger.kernel.org,
+	'George0505' <george0505@realtek.com>
+Subject: Re: rtl8192cu goes silent/dead after some time...
+References: <20130225185141.14193yyf1vunany8@www.dalek.fi>
+ <512E58DF.4050001@lwfinger.net>
+In-Reply-To: <512E58DF.4050001@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Memory leaks in cfg80211 and mac80211
-References: <51365EBC.9080602@lwfinger.net>  (sfid-20130305_220821_742055_EAAAA72D) <1362562265.8457.7.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1362562265.8457.7.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2013 03:31 AM, Johannes Berg wrote:
-> Larry,
->
->> While monitoring the latest rtlwifi drivers for memory leaks, I found the
->> following two in cfg80211 and mac80211:
->
-> Thanks.
->
->> unreferenced object 0xffff8800b2479100 (size 256):
->>     comm "softirq", pid 0, jiffies 4295010840 (age 324.612s)
->>     hex dump (first 32 bytes):
->>       00 91 47 b2 00 88 ff ff 00 91 47 b2 00 88 ff ff  ..G.......G.....
->>       10 91 47 b2 00 88 ff ff 10 91 47 b2 00 88 ff ff  ..G.......G.....
->>     backtrace:
->>       [<ffffffff81455f41>] kmemleak_alloc+0x21/0x50
->>       [<ffffffff811485c0>] __kmalloc+0x130/0x2c0
->>       [<ffffffffa04ee6e8>] cfg80211_bss_update+0x148/0x870 [cfg80211]
->>       [<ffffffffa04eef62>] cfg80211_inform_bss_frame+0x152/0x410 [cfg80211]
->>       [<ffffffffa0658d65>] ieee80211_bss_info_update+0x55/0x300 [mac80211]
->>       [<ffffffffa065912d>] ieee80211_scan_rx+0x11d/0x280 [mac80211]
->>       [<ffffffffa067b8ed>] ieee80211_rx+0xcdd/0xda0 [mac80211]
->>       [<ffffffffa064d4e3>] ieee80211_tasklet_handler+0xc3/0x320 [mac80211]
->
->> The first one is cleared when the module is unloaded, and is false. It is fixed
->> with the following patch:
->
->> @@ -782,6 +783,7 @@ cfg80211_bss_update(struct cfg80211_regi
->>                                   kfree_rcu(ies, rcu_head);
->>                           goto drop;
->>                   }
->> +               kmemleak_not_leak(new);
->
-> Hmm, not sure I understand. What part is kmemleak() having issues with?
-> This seems like it would hide genuine issues? This is typically stored
-> in a list and/or hash-table, so there should be references? Or does
-> kmemleak have issues with pointers to the "middle" of blocks?
->
->
->> and
->>
->> unreferenced object 0xffff880079a33e00 (size 512):
->>     comm "softirq", pid 0, jiffies 4295010891 (age 324.412s)
->>     hex dump (first 32 bytes):
->>       83 41 93 fe 49 02 00 00 00 00 3e 00 00 00 00 00  .A..I.....>.....
->>       00 00 00 00 00 00 00 00 e4 00 00 00 00 08 6c 77  ..............lw
->>     backtrace:
->>       [<ffffffff81455f41>] kmemleak_alloc+0x21/0x50
->>       [<ffffffff811485c0>] __kmalloc+0x130/0x2c0
->>       [<ffffffffa04eeed2>] cfg80211_inform_bss_frame+0xc2/0x410 [cfg80211]
->>       [<ffffffffa0658d65>] ieee80211_bss_info_update+0x55/0x300 [mac80211]
->>       [<ffffffffa065912d>] ieee80211_scan_rx+0x11d/0x280 [mac80211]
->>       [<ffffffffa067b8ed>] ieee80211_rx+0xcdd/0xda0 [mac80211]
->>       [<ffffffffa064d4e3>] ieee80211_tasklet_handler+0xc3/0x320 [mac80211]
->>       [<ffffffff8104aa58>] tasklet_action+0x78/0x100
->>
->
->> The second leak is real and happens at line 954 of net/wireless/scan.c:
->>
->>           ies = kmalloc(sizeof(*ies) + ielen, gfp);
->>           if (!ies)
->>                   return NULL;
->>
->> As the memory allocated to ies is still used when the routine exits, I'm not
->> sure where to look for the missing free. Any suggestions?
->
-> Hmm. I looked and found one possible leak, which this should fix:
->
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -723,6 +721,8 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->
->   			if (found->pub.hidden_beacon_bss &&
->   			    !list_empty(&found->hidden_list)) {
-> +				const struct cfg80211_bss_ies *f;
-> +
->   				/*
->   				 * The found BSS struct is one of the probe
->   				 * response members of a group, but we're
-> @@ -732,6 +732,10 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->   				 * SSID to showing it, which is confusing so
->   				 * drop this information.
->   				 */
-> +
-> +				f = rcu_access_pointer(tmp->pub.beacon_ies);
-> +				kfree_rcu((struct cfg80211_bss_ies *)f,
-> +					  rcu_head);
->   				goto drop;
->   			}
->
->
-> However, that's a corner case, I don't think you ran into it. Since you
-> also didn't note any warnings, we can also discount a few cases that
-> would be code bugs and would leak.
->
-> I wonder if this is related to the first warning? The "new" object in
-> the first block would typically take ownership of the "ies" object.
+Hello,
 
-Although I do not get any warnings, your patch and mine have made the kmemleak 
-scan now come up clean. I will continue testing and let you know.
+I've made some more testing, and noticed that device does not go  
+completely silent...
 
-Larry
+After device stops working in managed mode, I added monitor interface  
+and it receives beacons and other broadcast packets. However if I turn  
+on any monitor interface for device, managed interface is silent and  
+monitor interface only receives probe requests.
+
+Before this condition appears, there is "wlan0: deauthenticated from  
+xx:xx:xx:xx:xx:xx (Reason: 2)" with reconnect to AP:
+
+[   22.910000] wlan0: authenticate with xx:xx:xx:xx:xx:xx
+[   22.940000] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+[   22.980000] wlan0: authenticated
+[   23.000000] wlan0: associate with xx:xx:xx:xx:xx:xx (try 1/3)
+[   23.030000] wlan0: RX AssocResp from xx:xx:xx:xx:xx:xx (capab=0x411  
+status=0 aid=2)
+[   23.040000] wlan0: associated
+[   23.050000] cfg80211: Calling CRDA for country: FI
+[   23.080000] cfg80211: Updating information on frequency 2412 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.090000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.100000] cfg80211: Updating information on frequency 2417 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.110000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.120000] cfg80211: Updating information on frequency 2422 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.130000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.140000] cfg80211: Updating information on frequency 2427 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.150000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.160000] cfg80211: Updating information on frequency 2432 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.170000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.180000] cfg80211: Updating information on frequency 2437 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.190000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.200000] cfg80211: Updating information on frequency 2442 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.210000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.220000] cfg80211: Updating information on frequency 2447 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.230000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.240000] cfg80211: Updating information on frequency 2452 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.250000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.260000] cfg80211: Updating information on frequency 2457 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.270000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.280000] cfg80211: Updating information on frequency 2462 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.290000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.300000] cfg80211: Updating information on frequency 2467 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.310000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.320000] cfg80211: Updating information on frequency 2472 MHz  
+for a 20 MHz width channel with regulatory rule:
+[   23.330000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
+mBi, 2000 mBm)
+[   23.340000] cfg80211: Disabling freq 2484 MHz
+[   23.350000] cfg80211: Regulatory domain changed to country: FI
+[   23.360000] cfg80211:   (start_freq - end_freq @ bandwidth),  
+(max_antenna_gain, max_eirp)
+[   23.370000] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz),  
+(N/A, 2000 mBm)
+[   23.380000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),  
+(N/A, 2000 mBm)
+[   23.390000] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz),  
+(N/A, 2000 mBm)
+[   23.400000] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz),  
+(N/A, 2700 mBm)
+
+After which silence strikes. So maybe that signal average bug is not  
+related to this connection issue, but driver/device goes in to some  
+mixed up state because of disconnect/reconnect?
+
+-Jussi
+
+Quoting Larry Finger <Larry.Finger@lwfinger.net>:
+
+>
+> Thanks for the log and the signal average data. All of the BUGs come  
+> from a single debug statement in the source. I will delete that  
+> trace call.
+>
+> Realtek has apparently stopped development on the mac80211-based  
+> driver. The latest version is dated 2011.02.10. The latest driver  
+> with Realtek's softmac stack is 2012.06.22. As the two drivers are  
+> totally different, porting the fixes from one to the other are quite  
+> difficult.
+>
+> My plan is to try to improve rtl8192cu; however, if that does not  
+> work, I will pull it in favor of the version with Realtek's stack.  
+> It will, of course, need to be placed in staging. The downside is  
+> that a number of distros do not install drivers from staging, and  
+> all the mac80211 features will be lost. That is the worst case  
+> outcome.
+>
+> Larry
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
 
 
