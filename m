@@ -1,172 +1,589 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57286 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976Ab3CDHOg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19318 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921Ab3CJPn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 02:14:36 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] ath9k_hw: Update initvals for AR9462
-Date: Mon,  4 Mar 2013 12:42:54 +0530
-Message-Id: <1362381175-9634-3-git-send-email-sujith@msujith.org> (sfid-20130304_081443_762633_B6633C7B)
-In-Reply-To: <1362381175-9634-1-git-send-email-sujith@msujith.org>
-References: <1362381175-9634-1-git-send-email-sujith@msujith.org>
+	Sun, 10 Mar 2013 11:43:59 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] P2P find offload
+Date: Sun, 10 Mar 2013 17:43:55 +0200
+Message-ID: <2799886.P5v870j3h2@lx-vladimir> (sfid-20130310_164405_726113_E5588312)
+In-Reply-To: <1628850.y8u4o7KRXH@lx-vladimir>
+References: <3408094.SIuA27EmQ5@lx-vladimir> <1362650938.8694.21.camel@jlt4.sipsolutions.net> <1628850.y8u4o7KRXH@lx-vladimir>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thursday, March 07, 2013 04:10:37 PM Vladimir Kondratiev wrote:
+> On Thursday, March 07, 2013 11:08:58 AM Johannes Berg wrote:
+> > > +	int n_channels;
+> > > +	/* Up to 4 social channels: 3 in 2.4GHz band + 1 in 60GHz band */
+> > > +	struct ieee80211_channel *channels[4];
+> > 
+> > Hmm, is 4 really a good limit?
+Allocated dynamically
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> > > + * start_p2p_find: start P2P find phase
+> > > + *	Parameters include IEs for probe/probe resp and channels to operate on
+> > 
+> > The parameters?
+Documented
+
+> > > +	i = 0;
+> > > +	if (attr_freq) {
+> > 
+> > i can be inside the if()?
+Moved to initializer
+> 
+> > 
+> > > +		/* user specified, bail out if channel not found */
+> > > +		nla_for_each_nested(attr, attr_freq, tmp) {
+> > > +			struct ieee80211_channel *chan;
+> > > +
+> > > +			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
+> > > +
+> > > +			if (!chan)
+> > > +				return -EINVAL;
+> > > +
+> > > +			/* ignore disabled channels */
+> > > +			if (chan->flags & IEEE80211_CHAN_DISABLED)
+> > > +				continue;
+> > 
+> > I think you should reject them, also if they have passive scan or
+> > various other flags set, I think?
+> Passive channel may be used as social for the listening; and may be
+> actively scanned if beacon found on the channel. Scan do not filter
+> based on these flags, I suppose same reason apply here.
+> 
+> > 
+> > > +			params.channels[i] = chan;
+> > > +			i++;
+> > > +		}
+> > > +		if (!i)
+> > > +			return -EINVAL;
+> > > +	}
+> > > +
+> > > +	params.n_channels = i;
+> > 
+> > if you also move that assignment
+> > 
+> > > +	i = 0;
+> > 
+> > Not needed.
+Sure, done
+> > 
+> > > +	attr = info->attrs[NL80211_ATTR_IE];
+> > > +	if (attr) {
+> > 
+> > This is not typically done in nl80211, I'd prefer not having the
+> > variable I think.
+> It is to reasonable fit code into 80 columns. Let me know if this
+> argument don't play for you, I'll revert to variables.
+> 
+> > 
+> > > +	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+> > > +	if (!msg)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
+> > > +			     NL80211_CMD_START_P2P_FIND);
+> > 
+> > Err? What's the value of sending a reply back here? It would seem maybe
+> > appropriate to send one when it *actually* started, but you haven't
+> > implemented that.
+> > 
+> > > +	hdr = nl80211hdr_put(msg, info->snd_portid, info->snd_seq, 0,
+> > > +			     NL80211_CMD_STOP_P2P_FIND);
+> > 
+> > same here ...
+Removed; notification function added
+> 
+> > 
+> > You're also entirely missing feature advertising, so userspace can only
+> > guess whether it's supported or not ...
+Done
+> 
+> >Also ...
+> >
+> > I really don't think this should be supported on IBSS/AP/... netdevs.
+> > Seems like the only reasonable ones are P2P_DEVICE and STATION, although
+> > it would probably be good to have feature advertising for both, or
+> > document that if P2P_DEVICE is supported at all then this doesn't have
+> > to be supported on STATION interfaces, or so.
+Done
+> > 
+> > And then ... should this really be allowed to be concurrent with
+> > scanning/remain-on-channel? You haven't done any checking or
+> > documentation, so users and driver authors are left to guess.
+Documented
+
+I added relevant parameters for the find phase timing, accordingly to the spec.
+
+And finally, rebased to recent wireless-testing.
+
+>From c7e67726b042f6ed490858b02a6d1961be22bfa4 Mon Sep 17 00:00:00 2001
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Sun, 10 Mar 2013 15:52:37 +0200
+Subject: [PATCH v2] cfg80211: P2P find phase offload
+
+Allow to implement P2P find phase in the driver/firmware.
+
+Offload scheme designed as follows:
+
+- Driver provide methods start_p2p_find and stop_p2p_find in the cfg80211_ops;
+  indicates support for p2p find offload by setting feature
+  NL80211_FEATURE_P2P_FIND_OFFLOAD
+- Driver indicate firmware or driver responds to the probe requests by setting
+  feature NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD
+- wpa_supplicant analyses feature flags to discover p2p find offload support;
+  to perform p2p scan, wpa_supplicant:
+- perform legacy scan, through driver's cfg80211_ops 'scan' method
+- configure rx management filter to get probe-request and probe-response frames
+- start p2p find via driver's cfg80211_ops start_p2p_find method
+- driver start p2p find with hardware and notify wpa_supplicant with
+  cfg80211_p2p_find_notify(NL80211_CMD_START_P2P_FIND)
+- driver/firmware toggle search/listen states. Received probe-request and
+  probe-response frames passed to the wpa_supplicant via cfg80211_rx_mgmt
+- when wpa_supplicant wants to stop p2p find, it calls driver's cfg80211_ops stop_p2p_find
+  method. Alternatively, driver/firmware may decide to stop p2p find. In all cases,
+  driver notifies wpa_supplicant using
+  cfg80211_p2p_find_notify(NL80211_CMD_STOP_P2P_FIND)
+
+All driver to user space communication done through nl80211 layer.
+
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   | 49 +++++++++++-----------
- 1 file changed, 24 insertions(+), 25 deletions(-)
+ include/net/cfg80211.h       |   53 ++++++++++++++
+ include/uapi/linux/nl80211.h |   16 +++++
+ net/wireless/nl80211.c       |  157 ++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |   19 +++++
+ net/wireless/trace.h         |   35 ++++++++++
+ 5 files changed, 280 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index ccc42a7..999ab08 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -37,28 +37,28 @@ static const u32 ar9462_pciephy_clkreq_enable_L1_2p0[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00018c00, 0x18253ede},
- 	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0003580c},
-+	{0x00018c08, 0x0003780c},
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bdba9b6..ef276f6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1780,6 +1780,30 @@ struct cfg80211_update_ft_ies_params {
  };
  
- static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a800d},
- 	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a01ae},
--	{0x00009824, 0x5ac640de, 0x5ac640d0, 0x5ac640d0, 0x63c640da},
-+	{0x00009824, 0x63c640de, 0x5ac640d0, 0x5ac640d0, 0x63c640da},
- 	{0x00009828, 0x0796be89, 0x0696b081, 0x0696b881, 0x09143e81},
- 	{0x0000982c, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4},
- 	{0x00009830, 0x0000059c, 0x0000059c, 0x0000119c, 0x0000119c},
- 	{0x00009c00, 0x000000c4, 0x000000c4, 0x000000c4, 0x000000c4},
--	{0x00009e00, 0x0372111a, 0x0372111a, 0x037216a0, 0x037216a0},
-+	{0x00009e00, 0x0372111a, 0x0372111a, 0x037216a0, 0x037216a2},
- 	{0x00009e04, 0x001c2020, 0x001c2020, 0x001c2020, 0x001c2020},
- 	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000d8},
- 	{0x00009e10, 0x92c88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec86d2e},
--	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3376605e, 0x32395d5e},
-+	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3236605e, 0x32365a5e},
- 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcfd5c782, 0xcfd5c282},
-+	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
- 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -82,9 +82,9 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a3a4, 0x00000010, 0x00000010, 0x00000000, 0x00000000},
-+	{0x0000a3a4, 0x00000050, 0x00000050, 0x00000000, 0x00000000},
- 	{0x0000a3a8, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa},
--	{0x0000a3ac, 0xaaaaaa00, 0xaaaaaa30, 0xaaaaaa00, 0xaaaaaa00},
-+	{0x0000a3ac, 0xaaaaaa00, 0xaa30aa30, 0xaaaaaa00, 0xaaaaaa00},
- 	{0x0000a41c, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce},
- 	{0x0000a420, 0x000001ce, 0x000001ce, 0x000001ce, 0x000001ce},
- 	{0x0000a424, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce, 0x1ce739ce},
-@@ -363,14 +363,14 @@ static const u32 ar9462_pciephy_clkreq_disable_L1_2p0[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00018c00, 0x18213ede},
- 	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0003580c},
-+	{0x00018c08, 0x0003780c},
+ /**
++ * struct cfg80211_p2p_find_params - parameters for P2P find
++ * @probe_ie: IE's for probe frames
++ * @probe_ie_len: length, bytes, of @probe_ie
++ * @probe_resp_ie: IE's for probe response frames
++ * @probe_resp_ie_len: length, bytes, of @probe_resp_ie
++ * @min_discoverable_interval and
++ * @max_discoverable_interval: min/max for random multiplier of 100TU's
++ *	for the listen state duration
++ * @n_channels: number of channels to operate on
++ * @channels: channels to operate on
++ */
++struct cfg80211_p2p_find_params {
++	const u8 *probe_ie;
++	size_t probe_ie_len;
++	const u8 *probe_resp_ie;
++	size_t probe_resp_ie_len;
++	u32 min_discoverable_interval;
++	u32 max_discoverable_interval;
++
++	int n_channels;
++	struct ieee80211_channel **channels;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -1998,6 +2022,15 @@ struct cfg80211_update_ft_ies_params {
+  *	advertise the support for MAC based ACL have to implement this callback.
+  *
+  * @start_radar_detection: Start radar detection in the driver.
++ *
++ * start_p2p_find: start P2P find phase
++ *	Parameters include IEs for probe/probe-resp frames;
++ *	and channels to operate on.
++ *	Parameters are not retained after call, driver need to copy data if
++ *	it need it later.
++ *	P2P find can't run concurrently with ROC or scan, and driver should
++ *	check this.
++ * stop_p2p_find: stop P2P find phase
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2227,6 +2260,12 @@ struct cfg80211_ops {
+ 					 struct cfg80211_chan_def *chandef);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
++
++	int	(*start_p2p_find)(struct wiphy *wiphy,
++				  struct wireless_dev *wdev,
++				  struct cfg80211_p2p_find_params *params);
++	void	(*stop_p2p_find)(struct wiphy *wiphy,
++				 struct wireless_dev *wdev);
  };
  
- static const u32 ar9462_pciephy_pll_on_clkreq_disable_L1_2p0[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00018c00, 0x18212ede},
- 	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0003580c},
-+	{0x00018c08, 0x0003780c},
+ /*
+@@ -4122,6 +4161,20 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+ 				   struct cfg80211_wowlan_wakeup *wakeup,
+ 				   gfp_t gfp);
+ 
++/**
++ * cfg80211_p2p_find_notify - report p2p find state change
++ * @wdev: the wireless device reporting the event
++ * @cmd: the event, NL80211_CMD_START_P2P_FIND or NL80211_CMD_STOP_P2P_FIND
++ * @gfp: allocation flags
++ *
++ * This function reports p2p find state chenge for the given device
++ * When hardware actually starts p2p find, NL80211_CMD_START_P2P_FIND
++ * should be reported
++ * When p2p find finished, either unsolicited or in response to
++ * @ops->p2p_stop_find, NL80211_CMD_STOP_P2P_FIND should be reported
++ */
++void cfg80211_p2p_find_notify(struct wireless_dev *wdev, int cmd, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 79da871..8c87815 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -798,6 +798,9 @@ enum nl80211_commands {
+ 	NL80211_CMD_UPDATE_FT_IES,
+ 	NL80211_CMD_FT_EVENT,
+ 
++	NL80211_CMD_START_P2P_FIND,
++	NL80211_CMD_STOP_P2P_FIND,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1414,6 +1417,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_IE_RIC: Resource Information Container Information
+  *	Element
+  *
++ * @NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
++ * @NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL: min/max discoverable interval
++ *	for the p2p find, represented as u32
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1709,6 +1716,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_MDID,
+ 	NL80211_ATTR_IE_RIC,
+ 
++	NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
++	NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3538,6 +3548,10 @@ enum nl80211_ap_sme_features {
+  *	Peering Management entity which may be implemented by registering for
+  *	beacons or NL80211_CMD_NEW_PEER_CANDIDATE events. The mesh beacon is
+  *	still generated by the driver.
++ * @NL80211_FEATURE_P2P_FIND_OFFLOAD: The driver supports P2P find phase
++ *	offload.
++ * @NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD: When in P2P find phase,
++ *	the device responds to probe-requests in hardware.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
+@@ -3557,6 +3571,8 @@ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
+ 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
+ 	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
++	NL80211_FEATURE_P2P_FIND_OFFLOAD		= 1 << 17,
++	NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD		= 1 << 18,
  };
  
- static const u32 ar9462_2p0_radio_postamble_sys2ant[][5] = {
-@@ -775,7 +775,7 @@ static const u32 ar9462_2p0_baseband_core[][2] = {
- 	{0x00009fc0, 0x803e4788},
- 	{0x00009fc4, 0x0001efb5},
- 	{0x00009fcc, 0x40000014},
--	{0x00009fd0, 0x01193b93},
-+	{0x00009fd0, 0x0a193b93},
- 	{0x0000a20c, 0x00000000},
- 	{0x0000a220, 0x00000000},
- 	{0x0000a224, 0x00000000},
-@@ -850,7 +850,7 @@ static const u32 ar9462_2p0_baseband_core[][2] = {
- 	{0x0000a7cc, 0x00000000},
- 	{0x0000a7d0, 0x00000000},
- 	{0x0000a7d4, 0x00000004},
--	{0x0000a7dc, 0x00000001},
-+	{0x0000a7dc, 0x00000000},
- 	{0x0000a7f0, 0x80000000},
- 	{0x0000a8d0, 0x004b6a8e},
- 	{0x0000a8d4, 0x00000820},
-@@ -886,7 +886,7 @@ static const u32 ar9462_modes_high_ob_db_tx_gain_table_2p0[][5] = {
- 	{0x0000a2e0, 0x0000f000, 0x0000f000, 0x03ccc584, 0x03ccc584},
- 	{0x0000a2e4, 0x01ff0000, 0x01ff0000, 0x03f0f800, 0x03f0f800},
- 	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
--	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
-+	{0x0000a410, 0x000050da, 0x000050da, 0x000050de, 0x000050de},
- 	{0x0000a458, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x06002223, 0x06002223, 0x04000002, 0x04000002},
-@@ -906,20 +906,20 @@ static const u32 ar9462_modes_high_ob_db_tx_gain_table_2p0[][5] = {
- 	{0x0000a53c, 0x41025e4a, 0x41025e4a, 0x34001640, 0x34001640},
- 	{0x0000a540, 0x48025e6c, 0x48025e6c, 0x38001660, 0x38001660},
- 	{0x0000a544, 0x4e025e8e, 0x4e025e8e, 0x3b001861, 0x3b001861},
--	{0x0000a548, 0x53025eb2, 0x53025eb2, 0x3e001a81, 0x3e001a81},
--	{0x0000a54c, 0x59025eb6, 0x59025eb6, 0x42001a83, 0x42001a83},
--	{0x0000a550, 0x5d025ef6, 0x5d025ef6, 0x44001c84, 0x44001c84},
-+	{0x0000a548, 0x55025eb3, 0x55025eb3, 0x3e001a81, 0x3e001a81},
-+	{0x0000a54c, 0x58025ef3, 0x58025ef3, 0x42001a83, 0x42001a83},
-+	{0x0000a550, 0x5d025ef6, 0x5d025ef6, 0x44001a84, 0x44001a84},
- 	{0x0000a554, 0x62025f56, 0x62025f56, 0x48001ce3, 0x48001ce3},
- 	{0x0000a558, 0x66027f56, 0x66027f56, 0x4c001ce5, 0x4c001ce5},
- 	{0x0000a55c, 0x6a029f56, 0x6a029f56, 0x50001ce9, 0x50001ce9},
- 	{0x0000a560, 0x70049f56, 0x70049f56, 0x54001ceb, 0x54001ceb},
--	{0x0000a564, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a568, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a56c, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a570, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a574, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a578, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
--	{0x0000a57c, 0x7504ff56, 0x7504ff56, 0x56001eec, 0x56001eec},
-+	{0x0000a564, 0x751ffff6, 0x751ffff6, 0x56001eec, 0x56001eec},
-+	{0x0000a568, 0x751ffff6, 0x751ffff6, 0x58001ef0, 0x58001ef0},
-+	{0x0000a56c, 0x751ffff6, 0x751ffff6, 0x5a001ef4, 0x5a001ef4},
-+	{0x0000a570, 0x751ffff6, 0x751ffff6, 0x5c001ff6, 0x5c001ff6},
-+	{0x0000a574, 0x751ffff6, 0x751ffff6, 0x5c001ff6, 0x5c001ff6},
-+	{0x0000a578, 0x751ffff6, 0x751ffff6, 0x5c001ff6, 0x5c001ff6},
-+	{0x0000a57c, 0x751ffff6, 0x751ffff6, 0x5c001ff6, 0x5c001ff6},
- 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-@@ -1053,7 +1053,6 @@ static const u32 ar9462_2p0_mac_core[][2] = {
- 	{0x00008044, 0x00000000},
- 	{0x00008048, 0x00000000},
- 	{0x0000804c, 0xffffffff},
--	{0x00008050, 0xffffffff},
- 	{0x00008054, 0x00000000},
- 	{0x00008058, 0x00000000},
- 	{0x0000805c, 0x000fc78f},
-@@ -1117,9 +1116,9 @@ static const u32 ar9462_2p0_mac_core[][2] = {
- 	{0x000081f8, 0x00000000},
- 	{0x000081fc, 0x00000000},
- 	{0x00008240, 0x00100000},
--	{0x00008244, 0x0010f424},
-+	{0x00008244, 0x0010f400},
- 	{0x00008248, 0x00000800},
--	{0x0000824c, 0x0001e848},
-+	{0x0000824c, 0x0001e800},
- 	{0x00008250, 0x00000000},
- 	{0x00008254, 0x00000000},
- 	{0x00008258, 0x00000000},
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f924d45..d51aa2c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -378,6 +378,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MDID] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_IE_RIC] = { .type = NLA_BINARY,
+ 				  .len = IEEE80211_MAX_DATA_LEN },
++	[NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1417,6 +1419,8 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 		}
+ 		CMD(start_p2p_device, START_P2P_DEVICE);
+ 		CMD(set_mcast_rate, SET_MCAST_RATE);
++	CMD(start_p2p_find, START_P2P_FIND);
++	CMD(stop_p2p_find, STOP_P2P_FIND);
+ 
+ #ifdef CONFIG_NL80211_TESTMODE
+ 		CMD(testmode_cmd, TESTMODE);
+@@ -8196,6 +8200,115 @@ static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev_update_ft_ies(rdev, dev, &ft_params);
+ }
+ 
++static int nl80211_start_p2p_find(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct wiphy *wiphy = &rdev->wiphy;
++	struct cfg80211_p2p_find_params params = {};
++	struct nlattr *attr_freq = info->attrs[NL80211_ATTR_SCAN_FREQUENCIES];
++	struct nlattr *attr;
++	int err, tmp, n_channels, i = 0;
++	struct ieee80211_channel **channels = NULL;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_STATION:
++		break;
++	default:
++		return -EOPNOTSUPP;
++
++	}
++
++	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
++		return -EINVAL;
++
++	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE_PROBE_RESP]))
++		return -EINVAL;
++
++	if (!(wiphy->features & NL80211_FEATURE_P2P_FIND_OFFLOAD) ||
++	    !rdev->ops->start_p2p_find || !rdev->ops->stop_p2p_find)
++		return -EOPNOTSUPP;
++
++	if (rdev->scan_req)
++		return -EBUSY;
++
++	if (attr_freq) {
++		n_channels = validate_scan_freqs(attr_freq);
++		if (!n_channels)
++			return -EINVAL;
++
++		channels = kzalloc(n_channels * sizeof(*channels), GFP_KERNEL);
++		if (!channels)
++			return -ENOMEM;
++
++		/* user specified, bail out if channel not found */
++		nla_for_each_nested(attr, attr_freq, tmp) {
++			struct ieee80211_channel *chan;
++
++			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
++
++			if (!chan)
++				return -EINVAL;
++
++			/* ignore disabled channels */
++			if (chan->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			params.channels[i] = chan;
++			i++;
++		}
++		if (!i) {
++			err = -EINVAL;
++			goto out_free;
++		}
++
++		params.n_channels = i;
++		params.channels = channels;
++	}
++
++
++	attr = info->attrs[NL80211_ATTR_IE];
++	if (attr) {
++		params.probe_ie_len = nla_len(attr);
++		params.probe_ie = nla_data(attr);
++	}
++
++	attr = info->attrs[NL80211_ATTR_IE_PROBE_RESP];
++	if (attr) {
++		params.probe_resp_ie_len = nla_len(attr);
++		params.probe_resp_ie = nla_data(attr);
++	}
++
++	attr = info->attrs[NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL];
++	if (attr)
++		params.min_discoverable_interval = nla_get_u32(attr);
++
++	attr = info->attrs[NL80211_ATTR_MAX_DISCOVERABLE_INTERVAL];
++	if (attr)
++		params.max_discoverable_interval = nla_get_u32(attr);
++
++	err = rdev_start_p2p_find(rdev, wdev, &params);
++
++out_free:
++	kfree(channels);
++
++	return err;
++}
++
++static int nl80211_stop_p2p_find(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++
++	if (!rdev->ops->start_p2p_find || !rdev->ops->stop_p2p_find)
++		return -EOPNOTSUPP;
++
++	rdev_stop_p2p_find(rdev, wdev);
++
++	return 0;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -8873,6 +8986,22 @@ static struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_START_P2P_FIND,
++		.doit = nl80211_start_p2p_find,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_STOP_P2P_FIND,
++		.doit = nl80211_stop_p2p_find,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_GET_PROTOCOL_FEATURES,
+ 		.doit = nl80211_get_protocol_features,
+ 		.policy = nl80211_policy,
+@@ -10547,6 +10676,34 @@ void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
+ }
+ EXPORT_SYMBOL(cfg80211_tdls_oper_request);
+ 
++void cfg80211_p2p_find_notify(struct wireless_dev *wdev, int cmd, gfp_t gfp)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct sk_buff *msg;
++	void *hdr;
++
++	trace_cfg80211_p2p_find_notify(wdev, cmd);
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, cmd);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_scan_mcgrp.id, GFP_KERNEL);
++}
++EXPORT_SYMBOL(cfg80211_p2p_find_notify);
++
+ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index d77e1c1..5e43d50 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -901,4 +901,23 @@ static inline int rdev_update_ft_ies(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int rdev_start_p2p_find(struct cfg80211_registered_device *rdev,
++				      struct wireless_dev *wdev,
++				      struct cfg80211_p2p_find_params *params)
++{
++	int ret;
++	trace_rdev_start_p2p_find(&rdev->wiphy, wdev, params);
++	ret = rdev->ops->start_p2p_find(&rdev->wiphy, wdev, params);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline void rdev_stop_p2p_find(struct cfg80211_registered_device *rdev,
++				      struct wireless_dev *wdev)
++{
++	trace_rdev_stop_p2p_find(&rdev->wiphy, wdev);
++	rdev->ops->stop_p2p_find(&rdev->wiphy, wdev);
++	trace_rdev_return_void(&rdev->wiphy);
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 23e063b..850dd3b 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1805,6 +1805,26 @@ TRACE_EVENT(rdev_update_ft_ies,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->md)
+ );
+ 
++TRACE_EVENT(rdev_start_p2p_find,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 struct cfg80211_p2p_find_params *params),
++	TP_ARGS(wiphy, wdev, params),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT, WIPHY_PR_ARG, WDEV_PR_ARG)
++);
++
++DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_p2p_find,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev)
++);
++
+ /*************************************************************
+  *	     cfg80211 exported functions traces		     *
+  *************************************************************/
+@@ -2459,6 +2479,21 @@ TRACE_EVENT(cfg80211_ft_event,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(target_ap))
+ );
+ 
++TRACE_EVENT(cfg80211_p2p_find_notify,
++	TP_PROTO(struct wireless_dev *wdev, int cmd),
++	TP_ARGS(wdev, cmd),
++	TP_STRUCT__entry(
++		WDEV_ENTRY
++		__field(int, cmd)
++	),
++	TP_fast_assign(
++		WDEV_ASSIGN;
++		__entry->cmd = cmd;
++	),
++	TP_printk(WDEV_PR_FMT ", cmd: %d", WDEV_PR_ARG,
++		  __entry->cmd)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
-1.8.1.5
+1.7.10.4
 
+ 
