@@ -1,78 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36790 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933126Ab3CRVZb (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:53080 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319Ab3CJNWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 17:25:31 -0400
-Message-ID: <1363641919.8260.37.camel@jlt4.sipsolutions.net> (sfid-20130318_222539_075810_D6386E11)
-Subject: Re: [RFC 1/2] mac80211: Use a cfg80211_chan_def in
- ieee80211_hw_conf_chan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Mon, 18 Mar 2013 22:25:19 +0100
-In-Reply-To: <20130318211419.GC17878@gobelin> (sfid-20130318_221427_461504_67334B5A)
-References: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
-	 <1363552234-6752-2-git-send-email-karl.beldan@gmail.com>
-	 <1363634710.8260.15.camel@jlt4.sipsolutions.net>
-	 <20130318211419.GC17878@gobelin> (sfid-20130318_221427_461504_67334B5A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 10 Mar 2013 09:22:42 -0400
+From: Andrei Epure <epure.andrei@gmail.com>
+To: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Andrei Epure <epure.andrei@gmail.com>
+Subject: [PATCH] wireless:iwlwifi: changed kmalloc+memcpy with kmemdup
+Date: Sun, 10 Mar 2013 15:22:33 +0200
+Message-Id: <1362921753-9554-1-git-send-email-epure.andrei@gmail.com> (sfid-20130310_142246_401145_E714EAA6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-18 at 22:14 +0100, Karl Beldan wrote:
-> On Mon, Mar 18, 2013 at 08:25:10PM +0100, Johannes Berg wrote:
-> > On Sun, 2013-03-17 at 21:30 +0100, Karl Beldan wrote:
-> > 
-> > > +	if (conf->chandef.chan)
-> > 
-> > > +	else
-> > > +		wiphy_debug(hw->wiphy,
-> > > +			    "%s (freq=0/%s idle=%d ps=%d smps=%s)\n",
-> > 
-> > I don't think the else should be allowed to happen.
-> > 
-> 
-> Although I saw the hw config got an initial channel right from the start
-> in ieee80211_register_hw, the original checks in the code confused since
-> it tested for it in the tracing of drv_config.
-> I'll get rid of it (in trace.h too).
+Signed-off-by: Andrei Epure <epure.andrei@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-test.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-It has to check in tracing because tracing can be invoked when the
-driver uses chanctx, in which case it will be NULL. And indeed, that's
-also the reason for hwsim -- it can operate in both chanctx and
-non-chanctx modes. Sorry about the confusion!
-
-> > > +static int ieee80211_chandef_cmp(const struct cfg80211_chan_def *def1,
-> > > +				 const struct cfg80211_chan_def *def2)
-> > 
-> > indentation
-> > 
-> This one is good, it's just the side effect of the addition of the
-> leading '+'.
-
-Ahrg, yeah, I can't trust my email client any more. It used to get this
-right :-(
-
-> > >  		/* update the device channel directly */
-> > > -		sdata->local->hw.conf.channel = sdata->local->_oper_channel;
-> > > +		sdata->local->hw.conf.chandef.chan = sdata->local->oper_chandef.chan;
-> > >  	}
-> > 
-> > All of this is now even more obviously wrong. If it's an HT40 channel,
-> > it previously would try to switch to the same HT40 channel, but now it'd
-> > result in an invalid chandef, the center_freq1 would now be wrong.
-> > 
-> Yes, thanks ! I was careless here.
-> We should replace the csa_channel with a csa_chandef and get the freqs
-> with the vif processed in ieee80211_sta_process_chanswitch, or is it
-> utterly wrong ?
-
-It's all kinda bad. We really have to implement extended CSA that tells
-us what channel width to switch to, I have some patches but it's tricky
-and I can't really test it :-(
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-test.c b/drivers/net/wireless/iwlwifi/iwl-test.c
+index ce0c67b..9bc402c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-test.c
++++ b/drivers/net/wireless/iwlwifi/iwl-test.c
+@@ -271,7 +271,7 @@ static int iwl_test_fw_cmd(struct iwl_test *tst, struct nlattr **tb)
+ 
+ 	reply_len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
+ 	skb = iwl_test_alloc_reply(tst, reply_len + 20);
+-	reply_buf = kmalloc(reply_len, GFP_KERNEL);
++	reply_buf = kmemdup(&(pkt->hdr), reply_len, GFP_KERNEL);
+ 	if (!skb || !reply_buf) {
+ 		kfree_skb(skb);
+ 		kfree(reply_buf);
+@@ -279,7 +279,6 @@ static int iwl_test_fw_cmd(struct iwl_test *tst, struct nlattr **tb)
+ 	}
+ 
+ 	/* The reply is in a page, that we cannot send to user space. */
+-	memcpy(reply_buf, &(pkt->hdr), reply_len);
+ 	iwl_free_resp(&cmd);
+ 
+ 	if (nla_put_u32(skb, IWL_TM_ATTR_COMMAND,
+-- 
+1.7.10.4
 
