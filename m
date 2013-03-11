@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:50335 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932407Ab3CGPrt (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:41254 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754218Ab3CKSLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:47:49 -0500
-Received: by mail-ee0-f41.google.com with SMTP id c13so458398eek.28
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:48 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 04/13] b43: HT-PHY: implement spurious tone avoidance
-Date: Thu,  7 Mar 2013 16:47:18 +0100
-Message-Id: <1362671247-10766-5-git-send-email-zajec5@gmail.com> (sfid-20130307_164752_586467_99A450F2)
-In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+	Mon, 11 Mar 2013 14:11:51 -0400
+Received: by mail-oa0-f41.google.com with SMTP id i10so4814449oag.28
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 11:11:50 -0700 (PDT)
+Message-ID: <513E1E63.8040107@lwfinger.net> (sfid-20130311_191200_405857_818F0946)
+Date: Mon, 11 Mar 2013 13:11:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: qca_vkondrat@qca.qualcomm.com, linville@tuxdriver.com,
+	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com
+Subject: Re: [PATCH -next] wireless: remove unused including <linux/version.h>
+References: <CAPgLHd-Pn9c_FL7v1FYCb8NCP4GdJPuEB-eMSWXiWK5bd8dwVQ@mail.gmail.com>
+In-Reply-To: <CAPgLHd-Pn9c_FL7v1FYCb8NCP4GdJPuEB-eMSWXiWK5bd8dwVQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On N-PHY it's also done after TX power fix, so it was easy to spot.
-Unfortunately the MMIO logs I have from ndsiwrapper include channels
-1-12 only, so enabling code for 13 and 14 is just a N-PHY-based guess.
+On 03/11/2013 09:46 AM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> Remove including <linux/version.h> that don't need it.
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>   drivers/net/wireless/ath/wil6210/cfg80211.c | 1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+> index 116f4e8..58ce52c 100644
+> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
+> +++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+> @@ -21,7 +21,6 @@
+>   #include <linux/wireless.h>
+>   #include <linux/ieee80211.h>
+>   #include <linux/slab.h>
+> -#include <linux/version.h>
+>   #include <net/cfg80211.h>
+>
+>   #include "wil6210.h"
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Your patch should be OK. No built-in driver ever needs to check the kernel version.
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index f7463aa..4ccd371 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -285,6 +285,24 @@ static void b43_phy_ht_tx_power_fix(struct b43_wldev *dev)
-  * Channel switching ops.
-  **************************************************/
- 
-+static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
-+				  struct ieee80211_channel *new_channel)
-+{
-+	struct bcma_device *core = dev->dev->bdev;
-+	int spuravoid = 0;
-+
-+	/* Check for 13 and 14 is just a guess, we don't have enough logs. */
-+	if (new_channel->hw_value == 13 || new_channel->hw_value == 14)
-+		spuravoid = 1;
-+	bcma_core_pll_ctl(core, B43_BCMA_CLKCTLST_PHY_PLL_REQ, 0, false);
-+	bcma_pmu_spuravoid_pllupdate(&core->bus->drv_cc, spuravoid);
-+	bcma_core_pll_ctl(core,
-+			  B43_BCMA_CLKCTLST_80211_PLL_REQ |
-+			  B43_BCMA_CLKCTLST_PHY_PLL_REQ,
-+			  B43_BCMA_CLKCTLST_80211_PLL_ST |
-+			  B43_BCMA_CLKCTLST_PHY_PLL_ST, false);
-+}
-+
- static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 				const struct b43_phy_ht_channeltab_e_phy *e,
- 				struct ieee80211_channel *new_channel)
-@@ -318,6 +336,8 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 	if (1) /* TODO: On N it's for early devices only, what about HT? */
- 		b43_phy_ht_tx_power_fix(dev);
- 
-+	b43_phy_ht_spur_avoid(dev, new_channel);
-+
- 	b43_phy_write(dev, 0x017e, 0x3830);
- }
- 
--- 
-1.7.10.4
+Your subject is not very good. Usually, the subject starts with the driver name, 
+not the subsystem. Thus if should have been "[PATCH ...] wil6210: ...." or 
+"[PATCH ...] ath: wil6210: ....". With this change, a search using 'git log' 
+will find that wil6210 was modified here. In your version, that info is missing.
+
+Larry
+
 
