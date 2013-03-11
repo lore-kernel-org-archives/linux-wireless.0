@@ -1,42 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:48183 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3CQJ7K (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:43198 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754082Ab3CKVbK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 05:59:10 -0400
-Subject: [PATCH 0/4] rtlwifi: usb: improve RX performance and lower CPU usage
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sun, 17 Mar 2013 11:59:08 +0200
-Message-ID: <20130317095831.24983.97107.stgit@localhost6.localdomain6> (sfid-20130317_105922_441165_79D8868E)
+	Mon, 11 Mar 2013 17:31:10 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k14so4954182oag.39
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 14:31:09 -0700 (PDT)
+Message-ID: <513E4D1B.5000902@lwfinger.net> (sfid-20130311_223114_629434_AF280A65)
+Date: Mon, 11 Mar 2013 16:31:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+CC: linux-wireless@vger.kernel.org,
+	'George0505' <george0505@realtek.com>
+Subject: Re: rtl8192cu gets confused when scan is aborted by bringing interface
+ down (Re: rtl8192cu goes silent/dead after some time...)
+References: <20130225185141.14193yyf1vunany8@www.dalek.fi> <512E58DF.4050001@lwfinger.net> <20130310142919.4375603d5escwu4g@www.dalek.fi> <20130311211709.17775i5d1zo9c8co@www.dalek.fi> <513E3DCD.5040507@lwfinger.net> <20130311230656.949364zqs1dt100s@www.dalek.fi>
+In-Reply-To: <20130311230656.949364zqs1dt100s@www.dalek.fi>
+Content-Type: multipart/mixed;
+ boundary="------------010209090605020700050605"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patchset improves RX path handling in rtlwifi/usb.c by:
- - change to use preallocated DMA coherent URB buffers.
- - kill unnessasary skbuff copies.
- - defer RX processing to tasklet.
- - add proper alignment of skbuff early on.
+This is a multi-part message in MIME format.
+--------------010209090605020700050605
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-With this patchset IRQ CPU usage drops from 37% to 25% on ARM system with
-1Ghz Cortex-A8, when doing large transfer with rtl8192cu. Tranfer speed
-appears to be slightly improved too, from 29Mbit to 31Mbit.
+On 03/11/2013 04:06 PM, Jussi Kivilinna wrote:
+>
+> Scan appearently is not necessary, 'ifconfig wlan0 up & sleep 0.02; ifconfig
+> wlan0 down' is enough. Just doing 'ifconfig wlan0 up; ifconfig wlan0 down' is
+> enough.
+>
+> I also tested with monitor interface opened for tcpdump while doing 'ifconfig
+> up&down' on wlan0 and still triggered the issue. Then turning wlan0 up resulted
+> monitor interface only receiving probe requests from nearby devices.
 
----
+I am in the middle of a long-term test of rtl8192ce, which keeps me from running 
+tests of rtl8192cu, but I noticed something strange. Does the attached patch 
+help? It is compile tested.
 
-Jussi Kivilinna (4):
-      rtlwifi: usb: use usb_alloc_coherent for RX buffers
-      rtlwifi: usb: remove extra skb copy on RX path
-      rtlwifi: usb: defer rx processing to tasklet
-      rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
+Larry
 
 
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2
- drivers/net/wireless/rtlwifi/usb.c           |  220 ++++++++++++++++++--------
- drivers/net/wireless/rtlwifi/usb.h           |    5 -
- 3 files changed, 156 insertions(+), 71 deletions(-)
+--------------010209090605020700050605
+Content-Type: text/plain; charset=UTF-8;
+ name="rtl8192cu_modify_check_bssid"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rtl8192cu_modify_check_bssid"
+
+Index: linux-2.6/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ linux-2.6/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1377,7 +1377,23 @@ void rtl92cu_card_disable(struct ieee802
+ 
+ void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
+ {
+-	/* dummy routine needed for callback from rtl_op_configure_filter() */
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
++
++	if (rtlpriv->psc.rfpwr_state != ERFON)
++		return;
++
++	if (check_bssid) {
++		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
++					      (u8 *) (&reg_rcr));
++		_rtl92cu_set_bcn_ctrl_reg(hw, 0, BIT(4));
++	} else if (!check_bssid) {
++		reg_rcr &= (~(RCR_CBSSID_DATA | RCR_CBSSID_BCN));
++		_rtl92cu_set_bcn_ctrl_reg(hw, BIT(4), 0);
++		rtlpriv->cfg->ops->set_hw_reg(hw,
++					      HW_VAR_RCR, (u8 *) (&reg_rcr));
++	}
+ }
+ 
+ /*========================================================================== */
+
+--------------010209090605020700050605--
