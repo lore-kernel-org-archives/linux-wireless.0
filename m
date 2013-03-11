@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:51823 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756568Ab3CTMW4 (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:45746 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753212Ab3CKK0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 08:22:56 -0400
-Received: by mail-bk0-f43.google.com with SMTP id jm19so796829bkc.16
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 05:22:55 -0700 (PDT)
+	Mon, 11 Mar 2013 06:26:09 -0400
+Received: by mail-wg0-f54.google.com with SMTP id fm10so4623882wgb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 03:26:07 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 20 Mar 2013 20:22:54 +0800
-Message-ID: <CAPgLHd_Aepo=sLocJqVawRO_G7ifFLhQaYUxxF9HHXB0gcGbBA@mail.gmail.com> (sfid-20130320_132301_941396_F4F6A96A)
-Subject: [PATCH -next] cfg80211: fix error return code in cfg80211_init()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+In-Reply-To: <20130309100150.432.50619.stgit@localhost6.localdomain6>
+References: <20130309100031.432.94974.stgit@localhost6.localdomain6>
+	<20130309100150.432.50619.stgit@localhost6.localdomain6>
+Date: Mon, 11 Mar 2013 11:26:07 +0100
+Message-ID: <CADGp=QeRNuJLeDBWPH=z89R18-sEMy6qYsfaseyLG9qR+M4AbQ@mail.gmail.com> (sfid-20130311_112613_761177_6F020D0A)
+Subject: Re: [PATCH v2 3/3] ath6kl: cold reset target after host warm boot
+From: Julien Massot <jmassot@aldebaran-robotics.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hi Kalle,
 
-Fix to return a negative error code from the error handling
-case instead of 0, as returned elsewhere in this function.
+> Julien reported that ar6004 usb device fails to initialise
+> after host has been rebooted and power is still on for the ar6004 device. He
+> found out that doing a cold reset fixes the issue.
+>
+> I wasn't sure what would be the best way to detect if target needs a reset so I
+> settled on checking a timeout from htc_wait_recv_ctrl_message().
+>
+> Reported-by: Julien Massot <jmassot@aldebaran-robotics.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- net/wireless/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+This patch fix the issue, now my adapter works after a soft reboot.
+The log are also better: (here is what happen on soft reboot)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f382cae..92e3fd4 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1096,8 +1096,10 @@ static int __init cfg80211_init(void)
- 		goto out_fail_reg;
- 
- 	cfg80211_wq = create_singlethread_workqueue("cfg80211");
--	if (!cfg80211_wq)
-+	if (!cfg80211_wq) {
-+		err = -ENOMEM;
- 		goto out_fail_wq;
-+	}
- 
- 	return 0;
- 
+[   17.328029] ath6kl: htc pipe control receive timeout!
+[   17.328033] ath6kl: htc wait target timed out, resetting device
+[   17.332178] ath6kl: Failed to start hardware: -110
+[   17.332208] ath6kl: Failed to init ath6kl core: -110
+[   17.332270] ath6kl_usb: probe of 2-1:1.0 failed with error -110
+[   17.332306] usbcore: registered new interface driver ath6kl_usb
+[   19.040315] ath6kl: ar6004 hw 1.3 usb fw 3.5.0.2356\x01 api 3
 
+Thanks!
+
+Tested-by: Julien Massot <jmassot@aldebaran-robotics.com>
+
+Julien
