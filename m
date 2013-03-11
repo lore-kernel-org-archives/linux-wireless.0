@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:55134 "EHLO
-	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757381Ab3C3CV0 (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:54493 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750948Ab3CKUIq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 22:21:26 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.9] mwifiex: limit channel number not to overflow memory
-Date: Fri, 29 Mar 2013 19:21:21 -0700
-Message-ID: <1364610081-29210-1-git-send-email-bzhao@marvell.com> (sfid-20130330_032139_724162_4AD58C7B)
+	Mon, 11 Mar 2013 16:08:46 -0400
+Date: Mon, 11 Mar 2013 16:08:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
+Message-ID: <20130311200831.GB13275@tuxdriver.com> (sfid-20130311_210848_802595_C03794C7)
+References: <1363020306-924-1-git-send-email-greearb@candelatech.com>
+ <20130311190537.GB32171@tuxdriver.com>
+ <513E35CD.3010006@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <513E35CD.3010006@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stone Piao <piaoyun@marvell.com>
+On Mon, Mar 11, 2013 at 12:51:41PM -0700, Ben Greear wrote:
+> On 03/11/2013 12:05 PM, John W. Linville wrote:
+> >On Mon, Mar 11, 2013 at 09:45:06AM -0700, greearb@candelatech.com wrote:
+> >>From: Ben Greear <greearb@candelatech.com>
+> >>
+> >>Otherwise, can't get the Sparklan AR9380 NICs to be
+> >>5Ghz APs, since they are in world-roaming domain by
+> >>default.  Add this to /etc/modprobe.d/ath9k.conf:
+> >>
+> >>options ath9k override_eeprom_regdomain=0
+> >>
+> >>Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >
+> >Why "=0" to enable it?  Just to make it more confusing?
+> 
+> You are just setting the country code...and country-code 0 seems
+> to at least open up the US regulatory domain so we use it
+> by default.
+> 
+> You can use any country code you wish here.
 
-Limit the channel number in scan request, or the driver scan
-config structure memory will be overflowed.
+Ah, sorry -- I brain-locked on it being a logic value...
 
-Cc: <stable@vger.kernel.org> # 3.5+
-Signed-off-by: Stone Piao <piaoyun@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 8f161e1..4701294 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1904,7 +1904,8 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
- 		}
- 	}
- 
--	for (i = 0; i < request->n_channels; i++) {
-+	for (i = 0; i < min_t(u32, request->n_channels,
-+			      MWIFIEX_USER_SCAN_CHAN_MAX); i++) {
- 		chan = request->channels[i];
- 		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
- 		priv->user_scan_cfg->chan_list[i].radio_type = chan->band;
 -- 
-1.7.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
