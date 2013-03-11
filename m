@@ -1,78 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3785 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758Ab3CTVRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 17:17:14 -0400
-Message-ID: <514A274F.5030303@broadcom.com> (sfid-20130320_221718_169332_52605D2E)
-Date: Wed, 20 Mar 2013 22:17:03 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ia0-f173.google.com ([209.85.210.173]:40982 "EHLO
+	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167Ab3CKHg5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 03:36:57 -0400
+Received: by mail-ia0-f173.google.com with SMTP id h37so3365147iak.4
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 00:36:57 -0700 (PDT)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "David Spinadel" <dvdspndl@gmail.com>,
-	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Subject: Re: rcutree tree warning during P2P device support testing
-References: <5149CD81.40301@broadcom.com>
- <1363792139.8224.10.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1363792139.8224.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <87txoms6hs.fsf@kamboji.qca.qualcomm.com>
+References: <CADwvPCsGtzDyY4=yjMuX0qha-cdZHdZ-BTAhuwD7jb8pVXYPdw@mail.gmail.com>
+	<87txoms6hs.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 11 Mar 2013 08:36:56 +0100
+Message-ID: <CADwvPCvuTWbJ3sHgrzc-dJ+Sc5gdZ26XyAnzT6y92DAyCw161g@mail.gmail.com> (sfid-20130311_083659_958909_02057B8D)
+Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35 platform
+From: Johannes Braun <jjo.braun@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2013 04:08 PM, Johannes Berg wrote:
-> 
->> I am testing the P2P device support patches. Upon stopping the
->> wpa_supplicant I get the following warning and when I unload brcmfmac it
->> hangs resulting in hung_task_timeout message. The whole rcu stuff still
->> needs to settle in my brain. I suspect the warning is related to
->> brcmfmac unload failure, but maybe you have some ideas where I should look.
-> 
-> Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
-> you saying you first stop the supplicant, which gets you that warning,
-> and then unload fails?
+Hello,
 
-Indeed, upon stopping wpa_supplicant I get the warning. And doing a
-rmmod from the command line after that fails in the hang.
+> Is your platform big endian or little endian? I haven't tested ath6kl on
+> a big endian platform so there might be issues.
 
->> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
->> rcu_process_callbacks+0x469/0x560()
-> 
->> [ 1634.133917] Call Trace:
->> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
->> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
->> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
->> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
->> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
-> 
-> Can't say I understand this warning ...
+The arm works in little endian mode. CPU_BIG_ENDIAN is not set in the
+kernel config.
+
+
+> The last two messages make me suspect a hardware problem, but it's
+> difficult to know really.
 >
+> Can you please enable debug messages and send them? Especially these
+> levels are important:
+>
+>         ATH6KL_DBG_SDIO         = BIT(16),
+>         ATH6KL_DBG_SDIO_DUMP    = BIT(17),
+>         ATH6KL_DBG_BOOT         = BIT(18),    /* driver init and fw boot */
+>
+> Or you could just enable everything with debug_mask=0xffffffff.
 
-At least we are on the same page then ;-)
-
->> [ 3606.381631] INFO: task khubd:30 blocked for more than 120 seconds.
->> [ 3606.388366] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->> disables this message.
->> [ 3606.396931] khubd           D f4f01cd8     0    30      2 0x00000000
->> [ 3606.403609]  f4f01d10 00000092 00000000 f4f01cd8 00000246 c1748000
->> c183fb40 c183fb40
->> [ 3606.411731]  d46b6273 0000031c f53e7b40 f4d323c0 c1748000 00000246
->> 00000000 f0820090
->> [ 3606.419807]  00000246 f4f01cd8 00000046 00000001 00000046 00000000
->> 00000002 f0820090
->> [ 3606.427881] Call Trace:
->> [ 3606.430518]  [<c1097aeb>] ? trace_hardirqs_on+0xb/0x10
->> [ 3606.435907]  [<c1525ff3>] schedule+0x23/0x60
->> [ 3606.440402]  [<f8230c65>] wiphy_unregister+0xa5/0x2e0 [cfg80211]
-> 
-> This seems to be because you don't remove the p2p device if it's still
-> present when you unload the driver. Call cfg80211_unregister_wdev() at
-> some appropriate place.
-
-The p2p device is already removed upon stopping wpa_supplicant through
-.del_virtual_intf() callback. Took a quick peek in
-net/mac80211/iface.c:ieee80211_if_remove() and wonder whether I should
-do cfg80211_unregister_wdev() in that code path as well. Guess so, right?
-
-Gr. AvS
+I am a litte bit confused. The module ath6kl_core and ath6kl_sdio.
+ath6kl_sdio depends on ath6kl_core. When I check the parameters of
+ath6kl_sdio I can`t see the parameter debug_mask. But the core module
+has this parameter. First I loaded ath6kl_core via "modprobe
+ath6kl_core debug_mask=0xffffffff " and afterwards the ath6kl_sdio via
+"modprobe ath6kl_sdio". But it seems to have no effect. I can`t see
+more debug messages as before. I have also enabled all debug
+parameters in the "Atheros Wireless Cards" menu in the kernel config,
+CONFIG_ATH_DEBUG and CONFIG_ATH6KL_DEBUG. Am i doing something wrong?
 
 
+> Also try various quirks in the SDIO controller, if it supports those.
+
+I googled for quirks in combination with my sdio controller. The
+controller is a freescale controller and the driver is implemented in
+/drivers/mmc/host/sdhci-esdhc-imx.c. Currently there are some quirks
+enabled.
+
+389 static struct sdhci_pltfm_data sdhci_esdhc_imx_pdata = {
+390         .quirks = ESDHC_DEFAULT_QUIRKS | SDHCI_QUIRK_NO_HISPD_BIT
+391                         | SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC
+392                         | SDHCI_QUIRK_BROKEN_ADMA_ZEROLEN_DESC
+393                         | SDHCI_QUIRK_BROKEN_CARD_DETECTION,
+394         .ops = &sdhci_esdhc_ops,
+395 };
+
+I will have a looks at the available quirks in
+include/linux/mmc/sdhci.h and try to test various combinations. I have
+to say that I`m not a SDIO expert, and I hope that I have properly
+understood your hint.
+
+
+> For example in some platforms using sdhci people have had to disable DMA
+> etc to get SDIO bus reliable.
+
+DMA is completly disabled in the kernel.
+
+Best regards
+Johannes
+
+2013/3/8 Kalle Valo <kvalo@qca.qualcomm.com>:
+> Hi,
+>
+> Johannes Braun <jjo.braun@gmail.com> writes:
+>
+>> in my company we are using a Freescale imx35 based platform with a
+>> 3.7.6 Kernel. Currently I am trying to get the Silex SX-SDCAN (AR6003)
+>> module up and running on this platform. But I have some trouble. The
+>> module is connected via sdio.
+>
+> Is your platform big endian or little endian? I haven't tested ath6kl on
+> a big endian platform so there might be issues.
+>
+>> My first try was with the ath6kl_sdio driver module of our kernel
+>> (vanilla 3.7.6) which ends in the following error:
+>> root@generic-armv6:~# modprobe ath6kl_sdio
+>> cfg80211: Calling CRDA to update world regulatory domain
+>> cfg80211: World regulatory domain updated:
+>> cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>> cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> cfg80211: Calling CRDA for country: DE
+>> cfg80211: Regulatory domain changed to country: DE
+>> cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>> cfg80211:   (2400000 KHz - 2483000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>> cfg80211:   (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>> cfg80211:   (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>> cfg80211:   (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2700 mBm)
+>> ath6kl: temporary war to avoid sdio crc error
+>> ath6kl: host only supports scatter of :1 entries, need: 16
+>> ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144 api 3
+>> ath6kl: abi version mismatch: host(0x1), target(0x0)
+>> mmc0: Timeout waiting for hardware interrupt.
+>
+> The last two messages make me suspect a hardware problem, but it's
+> difficult to know really.
+>
+> Can you please enable debug messages and send them? Especially these
+> levels are important:
+>
+>         ATH6KL_DBG_SDIO         = BIT(16),
+>         ATH6KL_DBG_SDIO_DUMP    = BIT(17),
+>         ATH6KL_DBG_BOOT         = BIT(18),    /* driver init and fw boot */
+>
+> Or you could just enable everything with debug_mask=0xffffffff. More
+> info here:
+>
+> http://wireless.kernel.org/en/users/Drivers/ath6kl/Debug
+>
+> Also try various quirks in the SDIO controller, if it supports those.
+> For example in some platforms using sdhci people have had to disable DMA
+> etc to get SDIO bus reliable.
+>
+> --
+> Kalle Valo
