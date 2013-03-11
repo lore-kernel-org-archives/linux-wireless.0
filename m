@@ -1,107 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41666 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756760Ab3CDMzE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 07:55:04 -0500
-Message-ID: <1362401694.21028.6.camel@jlt4.sipsolutions.net> (sfid-20130304_135511_332981_C1CF0D11)
-Subject: pull-request: mac80211 2013-03-04
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Mar 2013 13:54:54 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-d5VziB83ZgMKo75PV9HP"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:1619 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751302Ab3CKRA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 13:00:59 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] mac80211: some fixes for ieee80211_do_stop while suspend
+Date: Mon, 11 Mar 2013 18:01:18 +0100
+Message-Id: <1363021279-9809-1-git-send-email-sgruszka@redhat.com> (sfid-20130311_180104_016641_842A6B8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Is possible that we close interface while we are suspended, that
+can result warning like below (and some others similar):
 
---=-d5VziB83ZgMKo75PV9HP
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+WARNING: at net/mac80211/driver-ops.h:12 ieee80211_do_stop+0x62e/0x670 [mac80211]()
+wlan0:  Failed check-sdata-in-driver check, flags: 0x4
+Call Trace:
+ [<ffffffff8105c9d6>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffffa045d46e>] ieee80211_do_stop+0x62e/0x670 [mac80211]
+ [<ffffffffa045d4ca>] ieee80211_stop+0x1a/0x20 [mac80211]
+ [<ffffffff815122ed>] __dev_close_many+0x7d/0xc0
+ [<ffffffff81513af8>] dev_close_many+0x88/0x100
+ [<ffffffff81513f2a>] dev_close+0x3a/0x50
+ [<ffffffffa03c90ae>] cfg80211_rfkill_set_block+0x6e/0xa0 [cfg80211]
+ [<ffffffffa03c9106>] cfg80211_rfkill_sync_work+0x26/0x30 [cfg80211]
 
-Hi John
+Patch try to avoid calling most of drv callbacks when stopping interface
+while suspended.
 
-I've accumulated a number of fixes for the 3.9 stream again. We're still
-looking for a few more bugs though, but for now this.
+Some further work is probably needed to handle ROC, DFS, WDS and
+ieee80211_{add,del}_virtual_monitor . However patch should fix issues
+in most common scenario, i.e. managed mode without any new futures.
+ 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+Patch is on top of my two pending patches:
+ - [PATCH 1/2] mac80211: move sdata debugfs dir to vif
+ - [PATCH 2/2] mac80211: remove vif debugfs driver callbacks
 
-Here I have fixes from Ben Greear for stray work items when deleting
-interfaces, another idle handling fix from Felix, a fix from Marco ro a
-mesh PS buffering crash and I have a fix for the VHT MCS calculation in
-association request frames and more nl80211 feature advertising removal
-as well as a workaround to increase the dump size if the SKB overhead is
-too large. For 3.10 I already have a complete fix queued, but that also
-requires (simple) userspace changes.
+ net/mac80211/iface.c |   33 ++++++++++++++++-----------------
+ 1 files changed, 16 insertions(+), 17 deletions(-)
 
-
-Let me know if there are any issues!
-
-johannes
-
-
-The following changes since commit cb601ffa326bc5c74a6ecd8e72ae9631e5f12f75=
-:
-
-  mac80211: fix monitor mode channel reporting (2013-02-26 21:53:38 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 801d929ca7d935ee199fd61d8ef914f51e892270:
-
-  mac80211: another fix for idle handling in monitor mode (2013-03-02 21:24=
-:42 +0100)
-
-----------------------------------------------------------------
-Ben Greear (2):
-      mac80211: stop timers before canceling work items
-      mac80211: Fix crash due to un-canceled work-items
-
-Felix Fietkau (1):
-      mac80211: another fix for idle handling in monitor mode
-
-Johannes Berg (4):
-      nl80211: remove channel width and extended capa advertising
-      mac80211: really fix monitor mode channel reporting
-      nl80211: increase wiphy dump size dynamically
-      mac80211: fix VHT MCS calculation
-
-Marco Porsch (1):
-      mac80211: fix oops on mesh PS broadcast forwarding
-
- net/mac80211/cfg.c     | 21 +++++++++++++--------
- net/mac80211/iface.c   |  6 ++++++
- net/mac80211/mlme.c    | 28 ++++++++++++++++++++++-----
- net/mac80211/tx.c      |  3 ++-
- net/wireless/core.c    |  3 +--
- net/wireless/nl80211.c | 51 +++++++++++++++++++++++++---------------------=
-----
- 6 files changed, 70 insertions(+), 42 deletions(-)
-
-
---=-d5VziB83ZgMKo75PV9HP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRNJmeAAoJEDBSmw7B7bqrD/QQAK7dwWYh3CfQ10qERfZ5tr+2
-m6dn2uMnNla9enR6iuS0qVtBoT58JHozK0wbMrfnLz96/Ah+0WEgu82zZB7LavLn
-TBlZFHJMHiItEDdDvoKXatXkOzyGkJn1P3l6DSV2/ZsB3eoB3/JuGtxLd1T/tMmI
-ZhJrpa5mgv2Gby0vC/fcI/P6xJdtSEnG0uiOwiLDtxQ/ockv5tU+g4cx2/AlnLWK
-OSUrDs3Hs1pv7YEA52MgGVPR2vM8Pmb6hUglHXZQCIR0j7Eizjl1dHmoqWTq/9FE
-z8MPEloMkkA87uOYpnGk45mfSJxfGPjVMVdSB90z0UczI5cD0UzQy0l8oeHFA1Sv
-eYft3GsfLw7oSZEKLwuATWGavlVLYkOYgI3SbslxNqdMcTQH05cgDxD6SUOwlr6b
-0X2sSF7obOChn6RpMgc8UZCj1dL1Ccw3DfsEYrIvyxKE+Z0KJN9Rlx26ASertSJN
-KhyS66UsewB/SaRfnPcr5TTiFyiFWcXEH7p1yAeJaM0lj0lorfkYjFOrGsS7WznM
-FS5aJdZhHA/J9rwWVyWShH820IpoLeWE9za/3rMScrc5zFoHYQ47JjUOcnkaSJdN
-jEpalMgwkofoE1/7/saPLjX2kMSh32P3MfUjz69qWCWiccQmmnTPuq9UDK2spJAg
-VMz3dm5Q3sy/sHVuy+XV
-=aqLW
------END PGP SIGNATURE-----
-
---=-d5VziB83ZgMKo75PV9HP--
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index dfe9cb9..c136050 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -744,8 +744,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 				 sdata->dev->addr_len);
+ 		spin_unlock_bh(&local->filter_lock);
+ 		netif_addr_unlock_bh(sdata->dev);
+-
+-		ieee80211_configure_filter(local);
++		/* configure filter latter (if not suspended) */
+ 	}
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
+@@ -810,10 +809,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+-		ieee80211_configure_filter(local);
+-		mutex_lock(&local->mtx);
+-		ieee80211_recalc_idle(local);
+-		mutex_unlock(&local->mtx);
++		/* tell driver latter (if not suspended) */
+ 		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		/* relies on synchronize_rcu() below */
+@@ -844,26 +840,29 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_AP:
+ 		skb_queue_purge(&sdata->skb_queue);
+ 
+-		if (going_down)
++		if (going_down && !local->suspended)
+ 			drv_remove_interface(local, sdata);
+ 	}
+ 
+ 	sdata->bss = NULL;
+ 
+-	ieee80211_recalc_ps(local, -1);
++	if (!local->suspended) {
++		if (local->open_count == 0) {
++			ieee80211_clear_tx_pending(local);
++			ieee80211_stop_device(local);
++		} else {
++			ieee80211_configure_filter(local);
++			ieee80211_recalc_ps(local, -1);
+ 
+-	if (local->open_count == 0) {
+-		ieee80211_clear_tx_pending(local);
+-		ieee80211_stop_device(local);
++			mutex_lock(&local->mtx);
++			ieee80211_recalc_idle(local);
++			mutex_unlock(&local->mtx);
+ 
+-		/* no reconfiguring after stop! */
+-		hw_reconf_flags = 0;
++			if (hw_reconf_flags)
++				ieee80211_hw_config(local, hw_reconf_flags);
++		}
+ 	}
+ 
+-	/* do after stop to avoid reconfiguring when we stop anyway */
+-	if (hw_reconf_flags)
+-		ieee80211_hw_config(local, hw_reconf_flags);
+-
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
+-- 
+1.7.1
 
