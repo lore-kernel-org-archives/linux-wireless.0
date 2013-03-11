@@ -1,91 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36838 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751448Ab3CARho (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 12:37:44 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 4/7] mac80211: extend minstrel's rate sampling to avoid unsampled rates
-Date: Fri,  1 Mar 2013 18:37:33 +0100
-Message-Id: <1362159456-39448-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183753_539837_20BACA0E)
-In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from nbd.name ([46.4.11.11]:35120 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754537Ab3CKWHq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 18:07:46 -0400
+Message-ID: <513E55A7.4050004@openwrt.org> (sfid-20130311_230757_900620_8D892D13)
+Date: Mon, 11 Mar 2013 23:07:35 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
+References: <1363020306-924-1-git-send-email-greearb@candelatech.com> <20130311190537.GB32171@tuxdriver.com> <513E35CD.3010006@candelatech.com> <513E3BE8.1000909@openwrt.org> <513E4617.2020906@candelatech.com> <513E4E76.2000000@openwrt.org> <513E5057.4030601@candelatech.com> <513E51F5.6080005@openwrt.org> <513E5401.8030607@candelatech.com>
+In-Reply-To: <513E5401.8030607@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minstrel's decision which rate should be directly sampled within the
-1st mrr stage is limited to such rates faster than the current max
-throughput rate. All rates below the current max. throughput rate
-are indirectly sampled via the 2nd mrr stage.
-This approach leads to deprecated per rate statistics and therfore
-a deprecated mrr chain setup.
+On 2013-03-11 11:00 PM, Ben Greear wrote:
+> On 03/11/2013 02:51 PM, Felix Fietkau wrote:
+>> On 2013-03-11 10:44 PM, Ben Greear wrote:
+>>> On 03/11/2013 02:36 PM, Felix Fietkau wrote:
+>>>> On 2013-03-11 10:01 PM, Ben Greear wrote:
+>>>>> On 03/11/2013 01:17 PM, Felix Fietkau wrote:
+>>>
+>>>>> I am not sure what you are suggesting.  I enabled this override
+>>>>> only when ONUS is selected because I wanted it clear that users
+>>>>> were taking their regulatory compliance into their own hands.
+>>>> And as far as I understand, CONFIG_CFG80211_CERTIFICATION_ONUS already
+>>>> enables some code in cfg80211 that allows a special type of regulatory
+>>>> change request from user space that bypasses intersection.
+>>>>
+>>>>> I always want the module option at least visible so that
+>>>>> you don't have to muck with modprobe.conf just to get ath9k.ko
+>>>>> to load when it's compiled differently.
+>>>>>
+>>>>> For the second part, you want the ability to set the regdomain
+>>>>> be a compile-time option like CONFIG_ATH9K_OVERRIDE_REGDOMAIN
+>>>>> or something like that?
+>>>> Something like that, yes. It should depend on
+>>>> CONFIG_CFG80211_CERTIFICATION_ONUS and should contain a help text that
+>>>> strongly discourages any distribution from enabling it in their kernel
+>>>> builds.
+>>>
+>>> It seems to me that this doesn't gain much.  The ONUS configuration is already
+>>> strongly discouraged from vendor kernels.  If you are already compiling
+>>> with ONUS set, is there any reason you'd care to disable the override
+>>> module option?  When you don't set the module option, nothing happens
+>>> anyway...
+>> I'd like to avoid accumulating more hackish driver specific module
+>> options for working around a generic issue.
+> 
+> I don't think I'm up for any significant re-write of the
+> regdomain logic, and I'm not sure it's worth the effort
+> of anyone doing this for code that will be compiled out
+> of all vendor kernels anyway...
+Who said anything about rewriting the regdomain logic? The code is
+already there. If you make it a compile time option that gets rid of the
+code in ath_regd_init_wiphy, it doesn't need a module parameter - iw reg
+set will do the job, and the default still comes from EEPROM.
 
-This patch uses the sampling approach from minstrel_ht. A counter is
-added to sum all indirect sample attempts per rate. After 20 indirect
-sampling attempts the rate is directly sampled within the 1st mrr stage.
-Therefore more up-to-date statistics for all rates are maintained and
-used to setup the mrr chain.
-
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c | 13 +++++++++----
- net/mac80211/rc80211_minstrel.h |  1 +
- 2 files changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 152bb0e..aa59f29 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -85,7 +85,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		if (!usecs)
- 			usecs = 1000000;
- 
--		if (mr->attempts) {
-+		if (unlikely(mr->attempts > 0)) {
-+			mr->sample_skipped = 0;
- 			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
-@@ -93,7 +94,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 							mr->cur_prob,
- 							EWMA_LEVEL);
- 			mr->cur_tp = mr->probability * (1000000 / usecs);
--		}
-+		} else
-+			mr->sample_skipped++;
- 
- 		mr->last_success = mr->success;
- 		mr->last_attempts = mr->attempts;
-@@ -282,9 +284,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		rate_sampling = true;
- 
- 		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
--		 * rate sampling method should be used */
-+		 * rate sampling method should be used.
-+		 * Respect such rates that are not sampled for 20 interations.
-+		 */
- 		if (mrr_capable &&
--		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time)
-+		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
-+		    msr->sample_skipped < 20)
- 				indirect_rate_sampling = true;
- 
- 		if (!indirect_rate_sampling) {
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 5fb5cb8..200b7e3 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -43,6 +43,7 @@ struct minstrel_rate {
- 	u32 attempts;
- 	u32 last_attempts;
- 	u32 last_success;
-+	u8 sample_skipped;
- 
- 	/* parts per thousand */
- 	u32 cur_prob;
--- 
-1.8.1.1
-
+- Felix
