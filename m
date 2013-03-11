@@ -1,66 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:53419 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753742Ab3CEA3Q (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:51931 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750923Ab3CKOQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 19:29:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/7] mwifiex: modify skb->truesize for PCIE Rx
-Date: Mon,  4 Mar 2013 16:27:56 -0800
-Message-Id: <1362443279-6064-5-git-send-email-bzhao@marvell.com> (sfid-20130305_012922_099035_05960ECF)
-In-Reply-To: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
-References: <1362443279-6064-1-git-send-email-bzhao@marvell.com>
+	Mon, 11 Mar 2013 10:16:39 -0400
+Date: Mon, 11 Mar 2013 09:44:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
+	ath9k_htc_fw@lists.infradead.org, Chris Zankel <chris@zankel.net>,
+	linux-kernel@vger.kernel.org, Marc Gauthier <marc@tensilica.com>,
+	lwn@lwn.net
+Subject: Re: [Announce] open ath9k_htc firmware
+Message-ID: <20130311134414.GA13275@tuxdriver.com> (sfid-20130311_151657_865666_9A7014BE)
+References: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Awesome news!  Many thanks to Adrian, Luis, and all the others they
+have credited with helping this along!
 
-We allocate SKB buffers of 4K size to make sure that we process
-RX AMSDU of 4K. So when skb->len is lesser than 4K; we should
-modify skb->truesize. This resolves an issue where kernel has
-allocated packets with 2K assumption and starts dropping packets
-for large size data transfer.
+John
 
-This fix is already present for USB; extend it to PCIE.
+On Fri, Mar 08, 2013 at 03:46:38PM -0800, Luis R. Rodriguez wrote:
+> Many thanks to Adrian for his hard work on all this and to everyone
+> else who volunteered to help make this happen, including the
+> understanding by our management at QCA and even Tensilica requires
+> some handsome applause for their commitment, understanding on letting
+> us get this out. We now have a public mailing list for development:
+> 
+> http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
+> 
+> Full steam ahead!
+> 
+>   Luis
+> 
+> On Fri, Mar 8, 2013 at 3:32 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> > Hi,
+> >
+> > I hate fanfare.
+> >
+> > You can all thank Luis Rodriguez for his ridiculously long and hard
+> > fighting to get this stuff pushed through the grinder to make this
+> > happen.
+> >
+> > There's also been a hard working team of developers behind the scene -
+> > Felix Fietkau, Eugene Krasnikov, Sujith Manoharan, and the team from
+> > Cozybit. They've been working hard to get the codebase converted over
+> > to using the open source tensilica toolchain and finding/fixing up any
+> > silly issues that may creep up from that.
+> >
+> > I've just been involved in shepharding this stuff into a sensible
+> > shape and pushing it through the final stage (legal review) before
+> > publication.
+> >
+> > You can find it here:
+> >
+> > https://github.com/qca/open-ath9k-htc-firmware
+> >
+> > There's a bunch of sorely needed work to do in the short term:
+> >
+> > * felix has a replacement cmake build system that I'd like to now integrate;
+> > * there's lots of build warnings which need to be removed (and then
+> > build this thing using -Wall -Werror);
+> > * some general code cleanup and documentation wouldn't be rejected -
+> > but I don't really want any sweeping code changes to go in until we've
+> > tidied up the build warnings and validated that the image(s) work
+> > right.
+> >
+> > I plan on doing some test builds shortly. I plan on bumping the
+> > firmware to 1.4 once felix's cmake system is in place and people have
+> > validated that this work.s
+> >
+> > Thanks,
+> >
+> >
+> >
+> > Adrian
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/util.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 2155397..54667e6 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -195,7 +195,7 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
- 	skb->protocol = eth_type_trans(skb, priv->netdev);
- 	skb->ip_summed = CHECKSUM_NONE;
- 
--	/* This is required only in case of 11n and USB as we alloc
-+	/* This is required only in case of 11n and USB/PCIE as we alloc
- 	 * a buffer of 4K only if its 11N (to be able to receive 4K
- 	 * AMSDU packets). In case of SD we allocate buffers based
- 	 * on the size of packet and hence this is not needed.
-@@ -212,7 +212,8 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
- 	 * fragments. Currently we fail the Filesndl-ht.scr script
- 	 * for UDP, hence this fix
- 	 */
--	if ((priv->adapter->iface_type == MWIFIEX_USB) &&
-+	if ((priv->adapter->iface_type == MWIFIEX_USB ||
-+	     priv->adapter->iface_type == MWIFIEX_PCIE) &&
- 	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
- 		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
- 
 -- 
-1.7.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
