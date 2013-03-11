@@ -1,63 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:37307 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328Ab3CDVIA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 16:08:00 -0500
-Received: by mail-pb0-f48.google.com with SMTP id wy12so3404999pbc.7
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:07:59 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolution.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 4/5] nl80211: user_mpm overrides auto_open_plinks
-Date: Mon,  4 Mar 2013 13:06:13 -0800
-Message-Id: <1362431174-4747-4-git-send-email-thomas@cozybit.com> (sfid-20130304_220804_067715_233D7A00)
-In-Reply-To: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
-References: <1362431174-4747-1-git-send-email-thomas@cozybit.com>
+Received: from mail.nanl.de ([217.115.11.12]:52701 "EHLO mail.nanl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868Ab3CKQpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 12:45:00 -0400
+From: Jonas Gorski <jogo@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>
+Subject: [PATCH] mwl8k: don't overwrite regulatory settings on fw reload
+Date: Mon, 11 Mar 2013 17:44:21 +0100
+Message-Id: <1363020261-27559-1-git-send-email-jogo@openwrt.org> (sfid-20130311_174506_135185_46B73EAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user requested a userspace MPM, automatically
-disable auto_open_plinks to fully disable the kernel MPM.
+Currently the caps are parsed on every firmware reload, causing any
+channel flags to be cleared.
+When there is a firmware to interface mode mismatch, the triggered
+firmware reload causes a reset of the regulatory settings, causing all
+channels to become available:
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+root@openrouter:/# iw phy phy0 info
+Wiphy phy0
+        Band 1:
+		(...)
+                Frequencies:
+                        * 2412 MHz [1] (0.0 dBm)
+                        * 2417 MHz [2] (0.0 dBm)
+                        * 2422 MHz [3] (0.0 dBm)
+                        * 2427 MHz [4] (0.0 dBm)
+                        * 2432 MHz [5] (0.0 dBm)
+                        * 2437 MHz [6] (0.0 dBm)
+                        * 2442 MHz [7] (0.0 dBm)
+                        * 2447 MHz [8] (0.0 dBm)
+                        * 2452 MHz [9] (0.0 dBm)
+                        * 2457 MHz [10] (0.0 dBm)
+                        * 2462 MHz [11] (0.0 dBm)
+                        * 2467 MHz [12] (0.0 dBm)
+                        * 2472 MHz [13] (0.0 dBm)
+                        * 2484 MHz [14] (0.0 dBm)
+		(...)
+
+To prevent this, only parse the caps on the first firmware load during
+hardware probe, and store them locally to know we have already parsed
+them.
+
+Signed-off-by: Jonas Gorski <jogo@openwrt.org>
 ---
- include/uapi/linux/nl80211.h |    6 ++++--
- net/wireless/nl80211.c       |    3 +++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwl8k.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 8134c6a..79da871 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2467,8 +2467,10 @@ enum nl80211_mesh_power_mode {
-  * @NL80211_MESHCONF_TTL: specifies the value of TTL field set at a source mesh
-  *	point.
-  *
-- * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically
-- *	open peer links when we detect compatible mesh peers.
-+ * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically open
-+ *	peer links when we detect compatible mesh peers. Disabled if
-+ *	@NL80211_MESH_SETUP_USERSPACE_MPM or @NL80211_MESH_SETUP_USERSPACE_AMPE are
-+ *	set.
-  *
-  * @NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES: the number of action frames
-  *	containing a PREQ that an MP can send to a particular destination (path
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index eca897a..ddd251b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7427,6 +7427,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index aaaf10d..0640e7d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -232,6 +232,7 @@ struct mwl8k_priv {
+ 	u16 num_mcaddrs;
+ 	u8 hw_rev;
+ 	u32 fw_rev;
++	u32 caps;
  
-+	if (setup.user_mpm)
-+		cfg.auto_open_plinks = false;
+ 	/*
+ 	 * Running count of TX packets in flight, to avoid
+@@ -2410,6 +2411,9 @@ mwl8k_set_caps(struct ieee80211_hw *hw, u32 caps)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 
++	if (priv->caps)
++		return;
 +
- 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
- 		err = nl80211_parse_chandef(rdev, info, &setup.chandef);
- 		if (err)
+ 	if ((caps & MWL8K_CAP_2GHZ4) || !(caps & MWL8K_CAP_BAND_MASK)) {
+ 		mwl8k_setup_2ghz_band(hw);
+ 		if (caps & MWL8K_CAP_MIMO)
+@@ -2421,6 +2425,8 @@ mwl8k_set_caps(struct ieee80211_hw *hw, u32 caps)
+ 		if (caps & MWL8K_CAP_MIMO)
+ 			mwl8k_set_ht_caps(hw, &priv->band_50, caps);
+ 	}
++
++	priv->caps = caps;
+ }
+ 
+ static int mwl8k_cmd_get_hw_spec_sta(struct ieee80211_hw *hw)
 -- 
 1.7.10.4
 
