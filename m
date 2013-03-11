@@ -1,33 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42148 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758298Ab3CDPVu (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:44712 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738Ab3CKVHA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 10:21:50 -0500
-Message-ID: <1362410501.21028.21.camel@jlt4.sipsolutions.net> (sfid-20130304_162153_836651_3E204E2B)
-Subject: Re: [PATCH v3 1/6] cfg80211/mac80211: disconnect on suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+	Mon, 11 Mar 2013 17:07:00 -0400
+Message-ID: <20130311230656.949364zqs1dt100s@www.dalek.fi> (sfid-20130311_220705_386840_3EA62622)
+Date: Mon, 11 Mar 2013 23:06:56 +0200
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 04 Mar 2013 16:21:41 +0100
-In-Reply-To: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
-References: <1362045330-2018-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	'George0505' <george0505@realtek.com>
+Subject: Re: rtl8192cu gets confused when scan is aborted by bringing
+ interface down (Re: rtl8192cu goes silent/dead after some time...)
+References: <20130225185141.14193yyf1vunany8@www.dalek.fi>
+ <512E58DF.4050001@lwfinger.net>
+ <20130310142919.4375603d5escwu4g@www.dalek.fi>
+ <20130311211709.17775i5d1zo9c8co@www.dalek.fi>
+ <513E3DCD.5040507@lwfinger.net>
+In-Reply-To: <513E3DCD.5040507@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-28 at 10:55 +0100, Stanislaw Gruszka wrote:
+Quoting Larry Finger <Larry.Finger@lwfinger.net>:
 
-> +static void cfg80211_leave_all(struct cfg80211_registered_device *rdev)
-> +{
-> +	struct wireless_dev *wdev;
-> +
-> +	list_for_each_entry_rcu(wdev, &rdev->wdev_list, list)
-> +		cfg80211_leave(rdev, wdev);
+> On 03/11/2013 02:17 PM, Jussi Kivilinna wrote:
+>> Quoting Jussi Kivilinna <jussi.kivilinna@iki.fi>:
+>>
+>>> Hello,
+>>>
+>>> I've made some more testing, and noticed that device does not go completely
+>>> silent...
+>>
+>> I can now reproduce this hang without large transfers with  
+>> 'ifconfig wlan0 up;
+>> iw dev wlan0 scan & sleep 0.02; ifconfig wlan0 down'.
+>>
+>> The large tranfers caused connection to fail sometimes, leading  
+>> wpa_supplicant
+>> to issue scan that is aborted. Manually aborting scan causes  
+>> device/driver go
+>> into this partial silence state too (with beacons/probe requests received).
+>>
+>> So maybe driver does not do all the required clean-ups for aborted scans?
+>
+> Have you tested 'ifconfig wlan0 up & sleep 0.02; ifconfig wlan0  
+> down'? Is the scan part absolutely necessary?
 
-That should not be the _rcu variant, I'll fix it.
+Scan appearently is not necessary, 'ifconfig wlan0 up & sleep 0.02;  
+ifconfig wlan0 down' is enough. Just doing 'ifconfig wlan0 up;  
+ifconfig wlan0 down' is enough.
 
-johannes
+I also tested with monitor interface opened for tcpdump while doing  
+'ifconfig up&down' on wlan0 and still triggered the issue. Then  
+turning wlan0 up resulted monitor interface only receiving probe  
+requests from nearby devices.
+
+-Jussi
+
 
