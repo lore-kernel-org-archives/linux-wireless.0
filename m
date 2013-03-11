@@ -1,28 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42448 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756679Ab3C1JtL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:49:11 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UL9SH-0007c9-B1
-	for linux-wireless@vger.kernel.org; Thu, 28 Mar 2013 10:49:09 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/9] mac80211: channel switch handling
-Date: Thu, 28 Mar 2013 10:48:56 +0100
-Message-Id: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104914_858576_1EA2BA53)
+Received: from mx1.redhat.com ([209.132.183.28]:21530 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751319Ab3CKRA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 13:00:59 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2] mac80211: fixes for virtual monitor add/remove on suspend
+Date: Mon, 11 Mar 2013 18:01:19 +0100
+Message-Id: <1363021279-9809-2-git-send-email-sgruszka@redhat.com> (sfid-20130311_180105_570204_52BED0AC)
+In-Reply-To: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
+References: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix HT channel switch handling by parsing the secondary channel
-offset properly. Also react to all the different action frames
-that are defined now. Finally, implement VHT channel switch in
-mac80211.
+Change suspend/resume and add/remove virtual monitor code (called at
+ieee80211_do_stop) to avoid calling drv callback while we are suspended.
 
-Haven't been able to test this at all yet though ...
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/iface.c |   43 +++++++++++++++++++++++--------------------
+ net/mac80211/pm.c    |    4 +++-
+ net/mac80211/util.c  |   12 ++++++++++--
+ 3 files changed, 36 insertions(+), 23 deletions(-)
 
-johannes
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c136050..7893913 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -373,28 +373,30 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 
+ 	ieee80211_set_default_queues(sdata);
+ 
+-	ret = drv_add_interface(local, sdata);
+-	if (WARN_ON(ret)) {
+-		/* ok .. stupid driver, it asked for this! */
+-		kfree(sdata);
+-		goto out_unlock;
+-	}
++	if (!local->suspended) {
++		ret = drv_add_interface(local, sdata);
++		if (WARN_ON(ret)) {
++			/* ok .. stupid driver, it asked for this! */
++			goto out_free;
++		}
+ 
+-	ret = ieee80211_check_queues(sdata);
+-	if (ret) {
+-		kfree(sdata);
+-		goto out_unlock;
+-	}
++			ret = ieee80211_check_queues(sdata);
++		if (ret)
++			goto out_remove;
+ 
+-	ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
+-					IEEE80211_CHANCTX_EXCLUSIVE);
+-	if (ret) {
+-		drv_remove_interface(local, sdata);
+-		kfree(sdata);
+-		goto out_unlock;
++		ret = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
++						IEEE80211_CHANCTX_EXCLUSIVE);
++		if (ret)
++			goto out_remove;
+ 	}
+ 
+ 	rcu_assign_pointer(local->monitor_sdata, sdata);
++	goto out_unlock;
++
++ out_remove:
++	drv_remove_interface(local, sdata);
++ out_free:
++	kfree(sdata);
+  out_unlock:
+ 	mutex_unlock(&local->iflist_mtx);
+ 	return ret;
+@@ -417,9 +419,10 @@ static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ 	rcu_assign_pointer(local->monitor_sdata, NULL);
+ 	synchronize_net();
+ 
+-	ieee80211_vif_release_channel(sdata);
+-
+-	drv_remove_interface(local, sdata);
++	if (!local->suspended) {
++		ieee80211_vif_release_channel(sdata);
++		drv_remove_interface(local, sdata);
++	}
+ 
+ 	kfree(sdata);
+  out_unlock:
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index b471a67..dbe42ea 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -100,8 +100,10 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	}
+ 
+ 	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata)
++	if (sdata) {
++		ieee80211_vif_release_channel(sdata);
+ 		drv_remove_interface(local, sdata);
++	}
+ 
+ 	/*
+ 	 * We disconnected on all interfaces before suspend, all channel
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b7a856e..8f30275 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1470,8 +1470,16 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	}
+ 
+ 	sdata = rtnl_dereference(local->monitor_sdata);
+-	if (sdata && ieee80211_sdata_running(sdata))
+-		ieee80211_assign_chanctx(local, sdata);
++	if (sdata) {
++		res = ieee80211_vif_use_channel(sdata, &local->monitor_chandef,
++						IEEE80211_CHANCTX_EXCLUSIVE);
++		if (WARN_ON(res)) {
++			drv_remove_interface(local, sdata);
++			rcu_assign_pointer(local->monitor_sdata, NULL);
++			synchronize_net();
++			kfree(sdata);
++		}
++	}
+ 
+ 	/* add STAs back */
+ 	mutex_lock(&local->sta_mtx);
+-- 
+1.7.1
 
