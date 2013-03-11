@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37134 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753777Ab3C0QXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:23:34 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] bcma: handle more devices in bcma_pmu_get_alp_clock()
-Date: Wed, 27 Mar 2013 17:23:10 +0100
-Message-Id: <1364401392-30360-3-git-send-email-hauke@hauke-m.de> (sfid-20130327_172355_974261_8985840E)
-In-Reply-To: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
-References: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:37624 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3CKWAn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 18:00:43 -0400
+Message-ID: <513E5401.8030607@candelatech.com> (sfid-20130311_230047_916309_E54CE551)
+Date: Mon, 11 Mar 2013 15:00:33 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
+References: <1363020306-924-1-git-send-email-greearb@candelatech.com> <20130311190537.GB32171@tuxdriver.com> <513E35CD.3010006@candelatech.com> <513E3BE8.1000909@openwrt.org> <513E4617.2020906@candelatech.com> <513E4E76.2000000@openwrt.org> <513E5057.4030601@candelatech.com> <513E51F5.6080005@openwrt.org>
+In-Reply-To: <513E51F5.6080005@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some more chip IDs to bcma_pmu_get_alp_clock()
+On 03/11/2013 02:51 PM, Felix Fietkau wrote:
+> On 2013-03-11 10:44 PM, Ben Greear wrote:
+>> On 03/11/2013 02:36 PM, Felix Fietkau wrote:
+>>> On 2013-03-11 10:01 PM, Ben Greear wrote:
+>>>> On 03/11/2013 01:17 PM, Felix Fietkau wrote:
+>>
+>>>> I am not sure what you are suggesting.  I enabled this override
+>>>> only when ONUS is selected because I wanted it clear that users
+>>>> were taking their regulatory compliance into their own hands.
+>>> And as far as I understand, CONFIG_CFG80211_CERTIFICATION_ONUS already
+>>> enables some code in cfg80211 that allows a special type of regulatory
+>>> change request from user space that bypasses intersection.
+>>>
+>>>> I always want the module option at least visible so that
+>>>> you don't have to muck with modprobe.conf just to get ath9k.ko
+>>>> to load when it's compiled differently.
+>>>>
+>>>> For the second part, you want the ability to set the regdomain
+>>>> be a compile-time option like CONFIG_ATH9K_OVERRIDE_REGDOMAIN
+>>>> or something like that?
+>>> Something like that, yes. It should depend on
+>>> CONFIG_CFG80211_CERTIFICATION_ONUS and should contain a help text that
+>>> strongly discourages any distribution from enabling it in their kernel
+>>> builds.
+>>
+>> It seems to me that this doesn't gain much.  The ONUS configuration is already
+>> strongly discouraged from vendor kernels.  If you are already compiling
+>> with ONUS set, is there any reason you'd care to disable the override
+>> module option?  When you don't set the module option, nothing happens
+>> anyway...
+> I'd like to avoid accumulating more hackish driver specific module
+> options for working around a generic issue.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon_pmu.c        |   24 ++++++++++++++++++++----
- include/linux/bcma/bcma_driver_chipcommon.h |    1 +
- 2 files changed, 21 insertions(+), 4 deletions(-)
+I don't think I'm up for any significant re-write of the
+regdomain logic, and I'm not sure it's worth the effort
+of anyone doing this for code that will be compiled out
+of all vendor kernels anyway...
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 7e88fff..edca73a 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -174,19 +174,35 @@ u32 bcma_pmu_get_alp_clock(struct bcma_drv_cc *cc)
- 	struct bcma_bus *bus = cc->core->bus;
- 
- 	switch (bus->chipinfo.id) {
-+	case BCMA_CHIP_ID_BCM4313:
-+	case BCMA_CHIP_ID_BCM43224:
-+	case BCMA_CHIP_ID_BCM43225:
-+	case BCMA_CHIP_ID_BCM43227:
-+	case BCMA_CHIP_ID_BCM43228:
-+	case BCMA_CHIP_ID_BCM4331:
-+	case BCMA_CHIP_ID_BCM43421:
-+	case BCMA_CHIP_ID_BCM43428:
-+	case BCMA_CHIP_ID_BCM43431:
- 	case BCMA_CHIP_ID_BCM4716:
--	case BCMA_CHIP_ID_BCM4748:
- 	case BCMA_CHIP_ID_BCM47162:
--	case BCMA_CHIP_ID_BCM4313:
--	case BCMA_CHIP_ID_BCM5357:
-+	case BCMA_CHIP_ID_BCM4748:
- 	case BCMA_CHIP_ID_BCM4749:
-+	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
-+	case BCMA_CHIP_ID_BCM6362:
- 		/* always 20Mhz */
- 		return 20000 * 1000;
--	case BCMA_CHIP_ID_BCM5356:
- 	case BCMA_CHIP_ID_BCM4706:
-+	case BCMA_CHIP_ID_BCM5356:
- 		/* always 25Mhz */
- 		return 25000 * 1000;
-+	case BCMA_CHIP_ID_BCM43460:
-+	case BCMA_CHIP_ID_BCM4352:
-+	case BCMA_CHIP_ID_BCM4360:
-+		if (cc->status & BCMA_CC_CHIPST_4360_XTAL_40MZ)
-+			return 40000 * 1000;
-+		else
-+			return 20000 * 1000;
- 	default:
- 		bcma_warn(bus, "No ALP clock specified for %04X device, pmu rev. %d, using default %d Hz\n",
- 			  bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 8390c47..1db4c6d 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -104,6 +104,7 @@
- #define  BCMA_CC_CHIPST_4706_MIPS_BENDIAN	BIT(3) /* 0: little, 1: big endian */
- #define  BCMA_CC_CHIPST_4706_PCIE1_DISABLE	BIT(5) /* PCIE1 enable strap pin */
- #define  BCMA_CC_CHIPST_5357_NAND_BOOT		BIT(4) /* NAND boot, valid for CC rev 38 and/or BCM5357 */
-+#define  BCMA_CC_CHIPST_4360_XTAL_40MZ		0x00000001
- #define BCMA_CC_JCMD			0x0030		/* Rev >= 10 only */
- #define  BCMA_CC_JCMD_START		0x80000000
- #define  BCMA_CC_JCMD_BUSY		0x80000000
+Thanks,
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
