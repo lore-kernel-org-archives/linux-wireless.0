@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:63759 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758086Ab3CYQpt (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50039 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932465Ab3CLSQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 12:45:49 -0400
-Received: by mail-wg0-f50.google.com with SMTP id es5so2936781wgb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 09:45:48 -0700 (PDT)
+	Tue, 12 Mar 2013 14:16:17 -0400
+Message-ID: <513F70E5.2050004@candelatech.com> (sfid-20130312_191622_477521_01718479)
+Date: Tue, 12 Mar 2013 11:16:05 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201303251712.19808.chunkeey@googlemail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
-	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
-	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
-	<201303251712.19808.chunkeey@googlemail.com>
-Date: Mon, 25 Mar 2013 09:45:48 -0700
-Message-ID: <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com> (sfid-20130325_174553_703675_3F615186)
-Subject: Re: Auth Packet TX Delay
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Robert Shade <robert.shade@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Marco Fonseca <marco@tampabay.rr.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [RFC] ath9k: Detect and work-around tx-queue hang.
+References: <1361498797-14361-1-git-send-email-greearb@candelatech.com> <20774.62475.588131.344540@gargle.gargle.HOWL> <5126F732.6040007@candelatech.com> <20774.63702.208829.602903@gargle.gargle.HOWL> <51270186.6070003@candelatech.com> <51275837.4020708@openwrt.org> <20775.25545.671357.512930@gargle.gargle.HOWL> <512766B8.3030008@openwrt.org> <51276AA6.4000805@candelatech.com>
+In-Reply-To: <51276AA6.4000805@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One for each please.
-
-
-
-
-Adrian
-
-
-On 25 March 2013 09:12, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> On Monday, March 25, 2013 03:23:53 AM Adrian Chadd wrote:
->> Also, would you please make sure you file a bugzilla.kernel.org ticket
->> so this gets tracked?
->>
->> It's good to know that some combination of fast channel change and
->> warm versus cold reset is making things better/worse.
->>
->> And although a cold reset is likely a good thing to _fix_ the problem,
->> it still leaves the underlying DMA/PHY hangs unresolved.
->>
->> But yes, please file a bugzilla ticket so this gets tracked right!
-> Um, do you want a bugreport for ath9k or carl9170 or for both?
+On 02/22/2013 04:55 AM, Ben Greear wrote:
+> On 02/22/2013 04:38 AM, Felix Fietkau wrote:
+>> On 2013-02-22 1:25 PM, Sujith Manoharan wrote:
+>>> Felix Fietkau wrote:
+>>>> Please also check if the station(s) that the frames are queued for are
+>>>> in powersave state for some reason. That would prevent the tx path from
+>>>> throwing them in the hw queue, yet they'd still take up pending-frame
+>>>> slots. I was planning on fixing this eventually by expiring frames that
+>>>> stay in the queue for too long, but haven't decided on the exact
+>>>> approach yet.
+>>>
+>>> PS is disabled for multi-VIF.
+>> What about off-channel PS due to scans, etc.
 >
-> Regards,
->         Christian
+> Scan is always locked to the same channel in this setup (once
+> a single station is associated).
+>
+> The stations stay associated while this problem happens (the
+> high-priority queue seems to work just fine, which may be
+> the reason they stay associated just fine.)
+>
+> In some cases, I see packets delivered around 30 seconds late...
+> aside from PS and off-channel..any idea what could make a packet
+> stick around that long in the tx queues?
+
+One of our customers on a 3.5.7+ kernel hit the problem without
+using any RF attenuator...just over-the-air communication to
+their AP.  It happened on both 2.4 and 5Ghz bands.  Seems rx
+signal is around 40 in their environment. It took them around
+24 hours to hit the problem on average.
+
+Last we checked, we could fairly easily reproduce this in
+our lab using an attenuator and a certain setup, so if there
+is any debugging we could add to help narrow down what
+might be causing this, we can give that a try.
+
+For instance, is there any good way to know for certain
+if packets in the queue are in power-save or not?  I know
+we at least attempt to disable power-save, but possibly
+it gets re-enabled somehow?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
