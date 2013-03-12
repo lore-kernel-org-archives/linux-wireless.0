@@ -1,88 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f169.google.com ([209.85.210.169]:58000 "EHLO
-	mail-ia0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204Ab3CLQra (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 12:47:30 -0400
-Received: by mail-ia0-f169.google.com with SMTP id j5so42738iaf.14
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 09:47:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53840 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754027Ab3CLJlx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 05:41:53 -0400
+Date: Tue, 12 Mar 2013 10:42:19 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Alex A. Mihaylov" <minimumlaw@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: RFC: RT3070 TX Power troubles
+Message-ID: <20130312094218.GA1383@redhat.com> (sfid-20130312_104157_168170_A831A35D)
+References: <CALK7Yahs2=2UkN9uXGbuoWXhvcC1u4-R4xak5cx0ZqKm7OfK+A@mail.gmail.com>
+ <20130308162126.GC1409@redhat.com>
+ <CALK7YajjwBPahgT0Vzz45O8EVc6q7myo2bBgE6u8kbi5s_nN_g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <ccfc79b224366f1bf963e81b78413b2d.squirrel@www.infidigm.net>
-References: <ccfc79b224366f1bf963e81b78413b2d.squirrel@www.infidigm.net>
-Date: Tue, 12 Mar 2013 17:47:30 +0100
-Message-ID: <CADwvPCsk2is8doPmbMuSTNC0CB6Zi_t0Z-D9FUFchiC9e0BZpg@mail.gmail.com> (sfid-20130312_174735_062232_4EE19E2E)
-Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35 platform
-From: Johannes Braun <jjo.braun@gmail.com>
-To: drwho@infidigm.net, Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALK7YajjwBPahgT0Vzz45O8EVc6q7myo2bBgE6u8kbi5s_nN_g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm using an AR6103 (AR6003) on the imx51 platform connected via sdio on
-> mmc1.  Seems to work good.  I'm using Freescale's patched 2.6.35 kernel
-> which comes from their ltib L2.6.35_11.05.01 and compat v3.8.  Here are
-> the QUIRKs from drivers/mmc/host/sdhci-of-esdhc.c
->
-> struct sdhci_of_data sdhci_esdhc = {
->         .quirks = SDHCI_QUIRK_FORCE_BLK_SZ_2048 |
->                   SDHCI_QUIRK_BROKEN_CARD_DETECTION |
->                   SDHCI_QUIRK_NO_BUSY_IRQ |
->                   SDHCI_QUIRK_NONSTANDARD_CLOCK |
->                   SDHCI_QUIRK_DATA_TIMEOUT_USES_SDCLK |
->                   SDHCI_QUIRK_PIO_NEEDS_DELAY |
->                   SDHCI_QUIRK_RESTORE_IRQS_AFTER_RESET |
->                   SDHCI_QUIRK_NO_CARD_NO_RESET,
->         .ops = {
->
-> Jon
+On Sat, Mar 09, 2013 at 10:05:48AM +0400, Alex A. Mihaylov wrote:
+> 2013/3/8 Stanislaw Gruszka <sgruszka@redhat.com>:
+> >> +     /*
+> >> +      * FixMe: Why POWER_BOUND and FREQ_OFFSET_BOUND not init here?
+> >> +      */
+> > ???
+> 
+> Sorry! Patch created only for discussion. I not sure in my my
+> code.Final patch some later.
 
-I made a test with these quirks enabled. But the result was the same.
-Loading the module also ends in the known error "mmc0: Timeout waiting
-for hardware interrupt".
-I am a little bit confuced. Seems your freescale kernel uses another
-mmc driver for your imx51? My kernel config, the one for imx35
-processors, includes "/drivers/mmc/host/sdhci-esdhc-imx.c" =>
-CONFIG_MMC_SDHCI_ESDHC_IMX and not "drivers/mmc/host/sdhci-of-esdhc.c"
-=> CONFIG_MMC_SDHCI_OF_ESDHC. CONFIG_MMC_SDHCI_OF_ESDHC cant`t be
-enabled because CONFIG_PPC_OF is not defined. And I think
-CONFIG_PPC_OF is power pc stuff.
+No worries.
 
-"/drivers/mmc/host/Kconfig" file:
-[...]
-132 config MMC_SDHCI_ESDHC_IMX
-133     tristate "SDHCI support for the Freescale eSDHC/uSDHC i.MX controller"
-134     depends on ARCH_MXC
-135     depends on MMC_SDHCI_PLTFM
-136     select MMC_SDHCI_IO_ACCESSORS
-137     help
-138         This selects the Freescale eSDHC/uSDHC controller support
-139          found on i.MX25, i.MX35 i.MX5x and i.MX6x.
-140
-141         If you have a controller with this interface, say Y or M here.
-142
-143         If unsure, say N.
-[...]
-95 config MMC_SDHCI_OF_ESDHC
-96     tristate "SDHCI OF support for the Freescale eSDHC controller"
-97     depends on MMC_SDHCI_PLTFM
-98     depends on PPC_OF
-99     select MMC_SDHCI_BIG_ENDIAN_32BIT_BYTE_SWAPPER
-100    help
-101         This selects the Freescale eSDHC controller support.
-102
-103         If you have a controller with this interface, say Y or M here.
-104
-105         If unsure, say N.
-[...]
+However I just realized that we probably do not set RF_R49 on vendor
+driver for chips other than 5392. I thought we set RF_R49 in function
+AsicGetAutoAgcOffset() for all chipsets handled by driver, but seems
+I missed IS_RT5392(pAd) branch.
 
-"/drivers/mmc/host/Makefile":
-[...]
-  obj-$(CONFIG_MMC_SDHCI_ESDHC_IMX)       += sdhci-esdhc-imx.o
-  obj-$(CONFIG_MMC_SDHCI_DOVE)            += sdhci-dove.o
-  obj-$(CONFIG_MMC_SDHCI_TEGRA)           += sdhci-tegra.o
-  obj-$(CONFIG_MMC_SDHCI_OF_ESDHC)        += sdhci-of-esdhc.o
-[...]
+I'm using 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
+as source, are you using some other vendor driver sources ?
 
----
-Johannes
+Also could you please elaborate how did you measure TX power?
+
+> and function VOID RT30xxLoadRFNormalModeSetup in vendor rt30xx.c
+> 
+> /* TX_LO1_en, RF R17 register Bit 3 to 0*/
+> RT30xxReadRFRegister(pAd, RF_R17, &RFValue);
+> RFValue &= (~0x08);
+> /* to fix rx long range issue*/
+> if (((pAd->MACVersion & 0xffff) >= 0x0211) &&
+> (pAd->NicConfig2.field.ExternalLNAForG == 0))
+> {
+>     RFValue |= 0x20;
+> }
+>     /* set RF_R17_bit[2:0] equal to EEPROM setting at 0x48h*/
+>     if (pAd->TxMixerGain24G >= 2)
+>     {
+>         RFValue &= (~0x7);  /* clean bit [2:0]*/
+>         RFValue |= pAd->TxMixerGain24G;
+>     }
+> RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
+> 
+> But 0x5f for RF_R17... I'm insure.
+
+I think we already do this in rt2800_init_rfcsr():
+
+        if (!rt2x00_rt(rt2x00dev, RT5390) &&
+            !rt2x00_rt(rt2x00dev, RT5392)) {
+                rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+                rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
+                if (rt2x00_rt(rt2x00dev, RT3070) ||
+                    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
+                    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E) ||
+                    rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E)) {
+                        if (!test_bit(CAPABILITY_EXTERNAL_LNA_BG,
+                                      &rt2x00dev->cap_flags))
+                                rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
+                }
+                rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+                                  drv_data->txmixer_gain_24g);
+                rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+
+
+BTW: please cc rt2x00 related patches/emails to users@rt2x00.serialmonkey.com
+(I already do this for this email). List is moderated to non-subscribers,
+so would be good if you subscribe there.
+
+Stanislaw
