@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755324Ab3C1Prc (ORCPT
+Received: from hub022-nj-2.exch022.serverdata.net ([206.225.164.185]:63967
+	"EHLO HUB022-nj-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754153Ab3CLDJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 11:47:32 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ULF34-0004Xs-JT
-	for linux-wireless@vger.kernel.org; Thu, 28 Mar 2013 16:47:30 +0100
-Message-ID: <1364485647.10397.8.camel@jlt4.sipsolutions.net> (sfid-20130328_164738_829495_DD2172F0)
-Subject: Re: [PATCH 0/4] mac80211: IE parsing cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 28 Mar 2013 16:47:27 +0100
-In-Reply-To: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net> (sfid-20130327_144008_758972_0F378272)
-References: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130327_144008_758972_0F378272)
+	Mon, 11 Mar 2013 23:09:32 -0400
+Message-ID: <1363057766.778.8.camel@WLAN-SW-TEST-03> (sfid-20130312_040936_874478_C55302D7)
+Subject: Re: [PATCH] mac80211: Enable sw scan with chan context
+From: Mahesh Palivela <maheshp@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 12 Mar 2013 08:39:26 +0530
+In-Reply-To: <1363015558.5284.11.camel@jlt4.sipsolutions.net>
+References: <513DE4BB.9010104@posedge.com>
+	 <1363012784.5284.5.camel@jlt4.sipsolutions.net>
+	 <513DF675.3000800@posedge.com>
+	 <1363015558.5284.11.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-27 at 14:39 +0100, Johannes Berg wrote:
-> Remove some unused but parsed IEs, move length checks to make
-> the parser struct smaller and use a struct for the TIE.
+On Mon, 2013-03-11 at 17:25 +0200, Johannes Berg wrote:
+> On Mon, 2013-03-11 at 20:51 +0530, Mahesh Palivela wrote:
+> 
+> > I tested this patch. scan works. 
+> 
+> Works how? It never tells the driver to go to a different channel ...
 
-Applied.
+sorry. I missed this. But my patch takes care of crash in mac80211 once
+we remove 'use_chanctx' check in sw_scan function.
 
-johannes
+> 
+> Besides, telling the driver to go to one channel via the hw_config call,
+> and using chanctx for vif configuration seems like a really bad idea.
+> 
+
+Agree.
+
+> > Anyways chan context is a WIP.
+> 
+> It pretty much works.
+
+For AP mode yes it works. But for STA mode, we have work I guess.
+
+> 
+> > There is no driver which is using the chan ctx work yet.
+> 
+> There is, our mvm driver uses it.
+> 
+
+Thanks for the info. I will take a look.
+
+> > I will continue adding code for chan ctx.
+> 
+> What are you trying to achieve anyway?
+> 
+
+VHT assoc. To enable VHT on both AP and STA. For VHT to work we need
+chan_ctx. Isn't it?
+
+
+> johannes
+> 
 
