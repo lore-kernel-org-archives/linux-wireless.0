@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45707 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755744Ab3CTQcj (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:50593 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755433Ab3CLNpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 12:32:39 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4] mac80211:  Don't restart sta-timer if not running.
-Date: Wed, 20 Mar 2013 09:32:34 -0700
-Message-Id: <1363797154-16312-1-git-send-email-greearb@candelatech.com> (sfid-20130320_173244_438568_C0316AC8)
+	Tue, 12 Mar 2013 09:45:32 -0400
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id r2CDjW4j003586
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 08:45:32 -0500
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r2CDjWG0017320
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 08:45:32 -0500
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Igal Chernobelsky <igalc@ti.com>
+Subject: [PATCH 01/13] wlcore: enter elp in force ps mode in 5ms
+Date: Tue, 12 Mar 2013 15:44:12 +0200
+Message-ID: <1363095864-24422-2-git-send-email-coelho@ti.com> (sfid-20130312_144549_332476_1EF8C97C)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Igal Chernobelsky <igalc@ti.com>
 
-I found another crash when deleting lots of virtual stations
-in a congested environment.  I think the problem is that
-the ieee80211_mlme_notify_scan_completed could call
-ieee80211_restart_sta_timer for a stopped interface
-that was about to be deleted.  Fix similar problem for
-mesh interfaces as well.
+It is requiered to enter sleep mode with smaller delay in forced PS mode.
+This fixes issue of testing force PS mode during VoIP traffic where packets
+are sent every 20ms. Chip never enters ps mode with default 30 ms delay
+in such test.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
-v4:  Fix up mesh as well, add check in calling code instead of
-    in the methods that mucks iwth the timers.
+ drivers/net/wireless/ti/wlcore/ps.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-:100644 100644 67fcfdf... 02e3d75... M	net/mac80211/mesh.c
-:100644 100644 aec786d... 1d237e9... M	net/mac80211/mlme.c
- net/mac80211/mesh.c |    3 ++-
- net/mac80211/mlme.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 67fcfdf..02e3d75 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -779,7 +779,8 @@ void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local)
+diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
+index 9b7b6e2..9654577 100644
+--- a/drivers/net/wireless/ti/wlcore/ps.c
++++ b/drivers/net/wireless/ti/wlcore/ps.c
+@@ -29,6 +29,7 @@
+ #define WL1271_WAKEUP_TIMEOUT 500
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		if (ieee80211_vif_is_mesh(&sdata->vif))
-+		if (ieee80211_sdata_running(sdata)
-+		    && ieee80211_vif_is_mesh(&sdata->vif))
- 			ieee80211_queue_work(&local->hw, &sdata->work);
- 	rcu_read_unlock();
- }
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index aec786d..1d237e9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3054,7 +3054,8 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
- 	/* Restart STA timers */
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		ieee80211_restart_sta_timer(sdata);
-+		if (ieee80211_sdata_running(sdata))
-+			ieee80211_restart_sta_timer(sdata);
- 	rcu_read_unlock();
- }
+ #define ELP_ENTRY_DELAY  30
++#define ELP_ENTRY_DELAY_FORCE_PS  5
  
+ void wl1271_elp_work(struct work_struct *work)
+ {
+@@ -98,7 +99,8 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 			return;
+ 	}
+ 
+-	timeout = ELP_ENTRY_DELAY;
++	timeout = wl->conf.conn.forced_ps ?
++			ELP_ENTRY_DELAY_FORCE_PS : ELP_ENTRY_DELAY;
+ 	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
+ 				     msecs_to_jiffies(timeout));
+ }
 -- 
-1.7.3.4
+1.7.10.4
 
