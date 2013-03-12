@@ -1,59 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40681 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab3COAYd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 20:24:33 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211:  Don't restart sta-timer if not associated.
-Date: Thu, 14 Mar 2013 17:24:03 -0700
-Message-Id: <1363307043-23771-1-git-send-email-greearb@candelatech.com> (sfid-20130315_012436_532333_DCDE8CD4)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:45528 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755450Ab3CLNpf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 09:45:35 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 03/13] wlcore: fix link count in single-link-PSM optimization
+Date: Tue, 12 Mar 2013 15:44:14 +0200
+Message-ID: <1363095864-24422-4-git-send-email-coelho@ti.com> (sfid-20130312_144550_089011_6612A675)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-I found another crash when deleting lots of virtual stations
-in a congested environment.  I think the problem is that
-the ieee80211_mlme_notify_scan_completed could call
-ieee80211_restart_sta_timer for a non-associated interface
-that was about to be deleted.
+commit 144614f3eebd7d only allowed a single active link when
+turning on the optimization, ignoring the fact that an AP has two
+additional global links.
+Use 3 links as an indication for a single active link. Use the
+FW PSM bits to verify the extra active link belongs to the AP role.
 
-With the following patch I am unable to reproduce the
-crash.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
-v2:  Be more selective:  Still need to do sdata->work even
-  if not associated so that we *can* associate.
+ drivers/net/wireless/ti/wlcore/main.c |   10 +++++++---
+ drivers/net/wireless/ti/wlcore/tx.c   |   10 +++++++---
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-:100644 100644 81e0619... da805e2... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 81e0619..da805e2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2935,11 +2935,14 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 3fc86c4..389ae1a 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -332,10 +332,9 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
+ 					struct wl12xx_vif *wlvif,
+ 					u8 hlid, u8 tx_pkts)
+ {
+-	bool fw_ps, single_link;
++	bool fw_ps;
  
- 		/* let's probe the connection once */
- 		flags = sdata->local->hw.flags;
--		if (!(flags & IEEE80211_HW_CONNECTION_MONITOR))
-+		if ((!(flags & IEEE80211_HW_CONNECTION_MONITOR)) &&
-+		    sdata->u.mgd.associated)
- 			ieee80211_queue_work(&sdata->local->hw,
- 					     &sdata->u.mgd.monitor_work);
-+
- 		/* and do all the other regular work too */
--		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+		if (ieee80211_sdata_running(sdata))
-+			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 	}
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+-	single_link = (wl->active_link_count == 1);
+ 
+ 	/*
+ 	 * Wake up from high level PS if the STA is asleep with too little
+@@ -348,8 +347,13 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl,
+ 	 * Start high-level PS if the STA is asleep with enough blocks in FW.
+ 	 * Make an exception if this is the only connected link. In this
+ 	 * case FW-memory congestion is less of a problem.
++	 * Note that a single connected STA means 3 active links, since we must
++	 * account for the global and broadcast AP links. The "fw_ps" check
++	 * assures us the third link is a STA connected to the AP. Otherwise
++	 * the FW would not set the PSM bit.
+ 	 */
+-	else if (!single_link && fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
++	else if (wl->active_link_count > 3 && fw_ps &&
++		 tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl12xx_ps_link_start(wl, wlvif, hlid, true);
+ }
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index ece392c..07a3e42 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -104,7 +104,7 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif,
+ 				    u8 hlid)
+ {
+-	bool fw_ps, single_link;
++	bool fw_ps;
+ 	u8 tx_pkts;
+ 
+ 	if (WARN_ON(!test_bit(hlid, wlvif->links_map)))
+@@ -112,15 +112,19 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl,
+ 
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ 	tx_pkts = wl->links[hlid].allocated_pkts;
+-	single_link = (wl->active_link_count == 1);
+ 
+ 	/*
+ 	 * if in FW PS and there is enough data in FW we can put the link
+ 	 * into high-level PS and clean out its TX queues.
+ 	 * Make an exception if this is the only connected link. In this
+ 	 * case FW-memory congestion is less of a problem.
++	 * Note that a single connected STA means 3 active links, since we must
++	 * account for the global and broadcast AP links. The "fw_ps" check
++	 * assures us the third link is a STA connected to the AP. Otherwise
++	 * the FW would not set the PSM bit.
+ 	 */
+-	if (!single_link && fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
++	if (wl->active_link_count > 3 && fw_ps &&
++	    tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl12xx_ps_link_start(wl, wlvif, hlid, true);
  }
  
 -- 
-1.7.3.4
+1.7.10.4
 
