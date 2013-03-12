@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50216 "EHLO ebb05.tieto.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:59621 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932084Ab3CULhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 07:37:18 -0400
-Message-ID: <514AF0EA.9020504@tieto.com> (sfid-20130321_123727_467053_88A7C3E2)
-Date: Thu, 21 Mar 2013 12:37:14 +0100
-From: Rymarkiewicz Waldemar <waldemar.rymarkiewicz@tieto.com>
+	id S1755468Ab3CLNpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 09:45:50 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 13/13] wlcore: consider dummy packets when tx queues are empty
+Date: Tue, 12 Mar 2013 15:44:24 +0200
+Message-ID: <1363095864-24422-14-git-send-email-coelho@ti.com> (sfid-20130312_151303_384996_6B32B9F3)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"sameo@linux.intel.com" <sameo@linux.intel.com>,
-	"yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>
-Subject: Re: [linux-nfc] [PATCH] NFC: microread: use kfree_skb() instead of
- kfree()
-References: <CAPgLHd-BKoizHok9hDdAz9yBY1YqfpTov6s3CoefPTtbacQW3g@mail.gmail.com>
-In-Reply-To: <CAPgLHd-BKoizHok9hDdAz9yBY1YqfpTov6s3CoefPTtbacQW3g@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Arik Nemtsov <arik@wizery.com>
 
-> Use kfree_skb() instead of kfree() to free sk_buff.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->   drivers/nfc/microread/mei.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-> index eef38cf..da8264c 100644
-> --- a/drivers/nfc/microread/mei.c
-> +++ b/drivers/nfc/microread/mei.c
-> @@ -130,7 +130,7 @@ static void microread_event_cb(struct mei_device *device, u32 events,
->
->   		reply_size = mei_recv(device, skb->data, MEI_NFC_MAX_READ);
->   		if (reply_size < MEI_NFC_HEADER_SIZE) {
-> -			kfree(skb);
-> +			kfree_skb(skb);
->   			return;
->   		}
+Don't ignore dummy packets when our queues are empty. This causes dummy
+packets never to be sent when traffic is not suspended by FW thresholds,
+which happens only in high Tx throughput situations. This may hurt Rx
+performance.
 
-kfree_skb call is used internally by the kernel. A driver should use 
-dev_kfree_skb instead, I guess.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-/Waldek
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 85003c0..004d02e 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -644,6 +644,7 @@ next:
+ 
+ 	}
+ 
++out:
+ 	if (!skb &&
+ 	    test_and_clear_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags)) {
+ 		int q;
+@@ -657,7 +658,6 @@ next:
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 	}
+ 
+-out:
+ 	return skb;
+ }
+ 
+-- 
+1.7.10.4
+
