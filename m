@@ -1,105 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:33051 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646Ab3CKTRO (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:50605 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755468Ab3CLNpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 15:17:14 -0400
-Message-ID: <20130311211709.17775i5d1zo9c8co@www.dalek.fi> (sfid-20130311_201719_991953_50165346)
-Date: Mon, 11 Mar 2013 21:17:09 +0200
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless@vger.kernel.org,
-	'George0505' <george0505@realtek.com>
-Subject: rtl8192cu gets confused when scan is aborted by bringing interface
- down (Re: rtl8192cu goes silent/dead after some time...)
-References: <20130225185141.14193yyf1vunany8@www.dalek.fi>
- <512E58DF.4050001@lwfinger.net>
- <20130310142919.4375603d5escwu4g@www.dalek.fi>
-In-Reply-To: <20130310142919.4375603d5escwu4g@www.dalek.fi>
+	Tue, 12 Mar 2013 09:45:49 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 12/13] wlcore: correctly check state before regdomain conf
+Date: Tue, 12 Mar 2013 15:44:23 +0200
+Message-ID: <1363095864-24422-13-git-send-email-coelho@ti.com> (sfid-20130312_144556_592032_CE895084)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Jussi Kivilinna <jussi.kivilinna@iki.fi>:
+From: Arik Nemtsov <arik@wizery.com>
 
-> Hello,
->
-> I've made some more testing, and noticed that device does not go  
-> completely silent...
+The wlcore state was checked without the mutex being taken. This leads
+to WARN_ONs sometimes if a notification arrives when the driver
+is on, but the mutex is only taken after it is off. This usually
+happens if stopping the driver while connected to a network.
 
-I can now reproduce this hang without large transfers with 'ifconfig  
-wlan0 up; iw dev wlan0 scan & sleep 0.02; ifconfig wlan0 down'.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-The large tranfers caused connection to fail sometimes, leading  
-wpa_supplicant to issue scan that is aborted. Manually aborting scan  
-causes device/driver go into this partial silence state too (with  
-beacons/probe requests received).
-
-So maybe driver does not do all the required clean-ups for aborted scans?
-
--Jussi
-
->
-> After device stops working in managed mode, I added monitor  
-> interface and it receives beacons and other broadcast packets.  
-> However if I turn on any monitor interface for device, managed  
-> interface is silent and monitor interface only receives probe  
-> requests.
->
-> Before this condition appears, there is "wlan0: deauthenticated from  
-> xx:xx:xx:xx:xx:xx (Reason: 2)" with reconnect to AP:
->
-<snip>
->
-> After which silence strikes. So maybe that signal average bug is not  
-> related to this connection issue, but driver/device goes in to some  
-> mixed up state because of disconnect/reconnect?
->
-> -Jussi
->
-> Quoting Larry Finger <Larry.Finger@lwfinger.net>:
->
->>
->> Thanks for the log and the signal average data. All of the BUGs  
->> come from a single debug statement in the source. I will delete  
->> that trace call.
->>
->> Realtek has apparently stopped development on the mac80211-based  
->> driver. The latest version is dated 2011.02.10. The latest driver  
->> with Realtek's softmac stack is 2012.06.22. As the two drivers are  
->> totally different, porting the fixes from one to the other are  
->> quite difficult.
->>
->> My plan is to try to improve rtl8192cu; however, if that does not  
->> work, I will pull it in favor of the version with Realtek's stack.  
->> It will, of course, need to be placed in staging. The downside is  
->> that a number of distros do not install drivers from staging, and  
->> all the mac80211 features will be lost. That is the worst case  
->> outcome.
->>
->> Larry
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 43865d1..248daa9 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -108,8 +108,7 @@ static void wl1271_reg_notify(struct wiphy *wiphy,
+ 
+ 	}
+ 
+-	if (likely(wl->state == WLCORE_STATE_ON))
+-		wlcore_regdomain_config(wl);
++	wlcore_regdomain_config(wl);
+ }
+ 
+ static int wl1271_set_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+@@ -3364,6 +3363,10 @@ void wlcore_regdomain_config(struct wl1271 *wl)
+ 		return;
+ 
+ 	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state != WLCORE_STATE_ON))
++		goto out;
++
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+-- 
+1.7.10.4
 
