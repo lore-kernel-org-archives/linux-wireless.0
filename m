@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42698 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486Ab3CHUp2 (ORCPT
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:4738 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932465Ab3CLSkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 15:45:28 -0500
-Date: Fri, 8 Mar 2013 15:34:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
- that don't include chain 0
-Message-ID: <20130308203451.GA402@tuxdriver.com> (sfid-20130308_214536_724878_ED367BEB)
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org>
- <5138A4C8.7040500@neratec.com>
- <5138AB4A.7000405@openwrt.org>
- <5138B656.5090408@neratec.com>
+	Tue, 12 Mar 2013 14:40:22 -0400
+Message-ID: <e96eef3b43e416010faf699295f0e2dc.squirrel@www.infidigm.net> (sfid-20130312_194044_708906_65873EF7)
+In-Reply-To: <CADwvPCsk2is8doPmbMuSTNC0CB6Zi_t0Z-D9FUFchiC9e0BZpg@mail.gmail.com>
+References: <ccfc79b224366f1bf963e81b78413b2d.squirrel@www.infidigm.net>
+    <CADwvPCsk2is8doPmbMuSTNC0CB6Zi_t0Z-D9FUFchiC9e0BZpg@mail.gmail.com>
+Date: Tue, 12 Mar 2013 15:42:58 -0400
+Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35
+ platform
+From: drwho@infidigm.net
+To: "Johannes Braun" <jjo.braun@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5138B656.5090408@neratec.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 07, 2013 at 04:46:30PM +0100, Wojciech Dubowik wrote:
-> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
-> >On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
-> >>There is a regression introduced by this patch when power save is off on
-> >>the station for idle checks.
-> >>I have AR9590 station with rx and tx chain set to 0x1 connected
-> >>to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
-> >>
-> >>Before this patch in connection polling the station was properly sending
-> >>null function to check whether AP is still there. After this patch it sends
-> >>broadcast probe request which is anyway wrong or some 16 or so packets
-> >>of random data (rarely). It manifests itself in lost connection because
-> >>there
-> >>is no ack from AP which is expected for null function.
-> >>
-> >>I have been following skb's up to the descriptor setting in ath9k and it was
-> >>all ok i.e. proper null function with valid addresses.
-> >>
-> >>I have been bisecting it twice because it doesn't make much sense but maybe
-> >>it's a HW issue?
-> >You're right, it does not make much sense. I can't figure out how this
-> >patch could possibly change the runtime behavior with tx chainmask set
-> >to 0x1. Have you tried reverting this patch in a current build to see if
-> >that fixes the issue?
-> It does fix it. I will check tomorrow whether it's only AR9590 or also
-> previous revisions. I will also try with different chainmasks. I will have
-> to rescrew my setup...
+>> struct sdhci_of_data sdhci_esdhc = {
+>>         .quirks = SDHCI_QUIRK_FORCE_BLK_SZ_2048 |
+>>                   SDHCI_QUIRK_BROKEN_CARD_DETECTION |
+>>                   SDHCI_QUIRK_NO_BUSY_IRQ |
+>>                   SDHCI_QUIRK_NONSTANDARD_CLOCK |
+>>                   SDHCI_QUIRK_DATA_TIMEOUT_USES_SDCLK |
+>>                   SDHCI_QUIRK_PIO_NEEDS_DELAY |
+>>                   SDHCI_QUIRK_RESTORE_IRQS_AFTER_RESET |
+>>                   SDHCI_QUIRK_NO_CARD_NO_RESET,
+>>         .ops = {
+>>
+>> Jon
+>
+> I made a test with these quirks enabled. But the result was the same.
+> Loading the module also ends in the known error "mmc0: Timeout waiting
+> for hardware interrupt".
+> I am a little bit confuced. Seems your freescale kernel uses another
+> mmc driver for your imx51? My kernel config, the one for imx35
+> processors, includes "/drivers/mmc/host/sdhci-esdhc-imx.c" =>
+> CONFIG_MMC_SDHCI_ESDHC_IMX and not "drivers/mmc/host/sdhci-of-esdhc.c"
 
-Do I need to revert this one?  Or is there a new fix coming?
+My bad.  Still my driver is different.  The kernel config defines
+CONFIG_MMC_IMX_ESDHCI=y which adds
+/drivers/mmc/host/mx_sdhci.c
+and has a bunch of quirks that are only defined locally.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Are you using a freescale kernel or mainline kernel?  freescale kernels
+change from one ltib to the next.  My ltib that supports imx51 may have
+had the sdhci driver rewritten since the ltib that first supported imx35.
+
+Jon
+
