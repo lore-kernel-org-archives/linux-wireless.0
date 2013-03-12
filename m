@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s25.blu0.hotmail.com ([65.55.111.100]:59819 "EHLO
-	blu0-omc2-s25.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751757Ab3CGDOc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 22:14:32 -0500
-Message-ID: <BLU0-SMTP15357D4D2469B872AE4355CF1E50@phx.gbl> (sfid-20130307_041435_937927_00DD054E)
-Date: Thu, 7 Mar 2013 04:14:29 +0100
-From: Jenya Y <jenya.gerstmaier@live.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:52468 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755197Ab3CLP21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 11:28:27 -0400
+Received: from dlelxv30.itg.ti.com ([172.17.2.17])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id r2CFSQLw002857
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 10:28:26 -0500
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r2CFSC5m009081
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 10:28:25 -0500
+Received: from [172.24.79.11] (h79-11.vpn.ti.com [172.24.79.11])	by
+ dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r2CFMpBg031067	for
+ <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 10:22:52 -0500
+Message-ID: <1363101708.5453.47.camel@cumari.coelho.fi> (sfid-20130312_162830_849890_526E7FD6)
+Subject: Re: [PATCH 00/13] wlcore/wl18xx: some patches for 3.10
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Date: Tue, 12 Mar 2013 17:21:48 +0200
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: PROBLEM: linux kernel 3.9 rc1 and rtl8187 wireless, unable to connect
- to any available hotspots.
-References: <51380336.6030007@live.com>
-In-Reply-To: <51380336.6030007@live.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-03-12 at 15:44 +0200, Luciano Coelho wrote:
+> Hi,
+> 
+> These are some of the TI wireless drivers patches that are intended
+> for 3.10.
+> 
+> A bunch of fixes and small improvements here and there.
+> 
+> Please review.
 
-Even though I am presented with a list of available networks, my system 
-with the rc1 kernel is not able to connect to any of them.
-It stops at the point where it tries to obtain an IP address.
+There were a couple of checkpatch >80 chars warnings in this series.
+I'll fix them before applying.
 
-I tried to delete the Profile of my WiFi and recreate it but no luck.
-
-This issue is only with 3.9rc1, it worked fine with 3.6 to 3.8.2.
-
+--
+Luca.
 
