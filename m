@@ -1,254 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:41471 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754835Ab3CUCUT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 22:20:19 -0400
-Received: by mail-ie0-f177.google.com with SMTP id 16so2988897iea.36
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 19:20:18 -0700 (PDT)
-Date: Wed, 20 Mar 2013 22:20:33 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: thomas@cozybit.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: return new mpath from mesh_path_add()
-Message-ID: <20130321022033.GA17491@localhost> (sfid-20130321_032034_650524_366DB58D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from ms.dension.com ([195.56.193.33]:48790 "EHLO ms.dension.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932101Ab3CLPmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 11:42:03 -0400
+Date: Tue, 12 Mar 2013 16:30:20 +0100
+From: "Patrik, Kluba" <pkluba@dension.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: bug: deadlock in rtl8192cu
+Message-ID: <20130312163020.67f9532b.pkluba@dension.com> (sfid-20130312_164210_439606_AB296090)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most times that mesh_path_add() is called, it is followed by
-a lookup to get the just-added mpath.  We can instead just
-return the new mpath in the case that we allocated one (or the
-existing one if already there), so do that.  Also, reorder the
-code in mesh_path_add a bit so that we don't need to allocate
-in the pre-existing case.
 
-Signed-off-by: Bob Copeland <bob@cozybit.com>
----
- net/mac80211/cfg.c          |   12 +++-------
- net/mac80211/mesh.h         |    3 ++-
- net/mac80211/mesh_hwmp.c    |   22 +++++++----------
- net/mac80211/mesh_pathtbl.c |   56 +++++++++++++++++++++----------------------
- 4 files changed, 42 insertions(+), 51 deletions(-)
+Hi!
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 986556d..9c25afcb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1528,7 +1528,6 @@ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
- 	struct sta_info *sta;
--	int err;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -1539,17 +1538,12 @@ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
- 		return -ENOENT;
- 	}
- 
--	err = mesh_path_add(sdata, dst);
--	if (err) {
-+	mpath = mesh_path_add(sdata, dst);
-+	if (IS_ERR(mpath)) {
- 		rcu_read_unlock();
--		return err;
-+		return PTR_ERR(mpath);
- 	}
- 
--	mpath = mesh_path_lookup(sdata, dst);
--	if (!mpath) {
--		rcu_read_unlock();
--		return -ENXIO;
--	}
- 	mesh_path_fix_nexthop(mpath, sta);
- 
- 	rcu_read_unlock();
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 336c88a..b5df334 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -275,7 +275,8 @@ void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
- void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
- void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 			    struct ieee80211_mgmt *mgmt, size_t len);
--int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst);
-+struct mesh_path *
-+mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst);
- 
- int mesh_path_add_gate(struct mesh_path *mpath);
- int mesh_path_send_to_gates(struct mesh_path *mpath);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index bdb8d3b..ab9c65a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -445,9 +445,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 				}
- 			}
- 		} else {
--			mesh_path_add(sdata, orig_addr);
--			mpath = mesh_path_lookup(sdata, orig_addr);
--			if (!mpath) {
-+			mpath = mesh_path_add(sdata, orig_addr);
-+			if (IS_ERR(mpath)) {
- 				rcu_read_unlock();
- 				return 0;
- 			}
-@@ -486,9 +485,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 					(last_hop_metric > mpath->metric)))
- 				fresh_info = false;
- 		} else {
--			mesh_path_add(sdata, ta);
--			mpath = mesh_path_lookup(sdata, ta);
--			if (!mpath) {
-+			mpath = mesh_path_add(sdata, ta);
-+			if (IS_ERR(mpath)) {
- 				rcu_read_unlock();
- 				return 0;
- 			}
-@@ -804,9 +802,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 
- 	mpath = mesh_path_lookup(sdata, orig_addr);
- 	if (!mpath) {
--		mesh_path_add(sdata, orig_addr);
--		mpath = mesh_path_lookup(sdata, orig_addr);
--		if (!mpath) {
-+		mpath = mesh_path_add(sdata, orig_addr);
-+		if (IS_ERR(mpath)) {
- 			rcu_read_unlock();
- 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
- 			return;
-@@ -1098,11 +1095,10 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
- 	/* no nexthop found, start resolving */
- 	mpath = mesh_path_lookup(sdata, target_addr);
- 	if (!mpath) {
--		mesh_path_add(sdata, target_addr);
--		mpath = mesh_path_lookup(sdata, target_addr);
--		if (!mpath) {
-+		mpath = mesh_path_add(sdata, target_addr);
-+		if (IS_ERR(mpath)) {
- 			mesh_path_discard_frame(sdata, skb);
--			err = -ENOSPC;
-+			err = PTR_ERR(mpath);
- 			goto endlookup;
- 		}
- 	}
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 6b3c4e1..01305a6 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -496,7 +496,8 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata)
-  *
-  * State: the initial state of the new path is set to 0
-  */
--int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
-+struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
-+				const u8 *dst)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
-@@ -506,18 +507,33 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
- 	struct hlist_head *bucket;
- 	struct hlist_node *n;
- 	int grow = 0;
--	int err = 0;
-+	int err;
- 	u32 hash_idx;
- 
- 	if (ether_addr_equal(dst, sdata->vif.addr))
- 		/* never add ourselves as neighbours */
--		return -ENOTSUPP;
-+		return ERR_PTR(-ENOTSUPP);
- 
- 	if (is_multicast_ether_addr(dst))
--		return -ENOTSUPP;
-+		return ERR_PTR(-ENOTSUPP);
- 
- 	if (atomic_add_unless(&sdata->u.mesh.mpaths, 1, MESH_MAX_MPATHS) == 0)
--		return -ENOSPC;
-+		return ERR_PTR(-ENOSPC);
-+
-+	read_lock_bh(&pathtbl_resize_lock);
-+	tbl = resize_dereference_mesh_paths();
-+
-+	hash_idx = mesh_table_hash(dst, sdata, tbl);
-+	bucket = &tbl->hash_buckets[hash_idx];
-+
-+	spin_lock(&tbl->hashwlock[hash_idx]);
-+
-+	hlist_for_each_entry(node, n, bucket, list) {
-+		mpath = node->mpath;
-+		if (mpath->sdata == sdata &&
-+		    ether_addr_equal(dst, mpath->dst))
-+			goto found;
-+	}
- 
- 	err = -ENOMEM;
- 	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
-@@ -528,7 +544,6 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
- 	if (!new_node)
- 		goto err_node_alloc;
- 
--	read_lock_bh(&pathtbl_resize_lock);
- 	memcpy(new_mpath->dst, dst, ETH_ALEN);
- 	eth_broadcast_addr(new_mpath->rann_snd_addr);
- 	new_mpath->is_root = false;
-@@ -542,21 +557,6 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
- 	spin_lock_init(&new_mpath->state_lock);
- 	init_timer(&new_mpath->timer);
- 
--	tbl = resize_dereference_mesh_paths();
--
--	hash_idx = mesh_table_hash(dst, sdata, tbl);
--	bucket = &tbl->hash_buckets[hash_idx];
--
--	spin_lock(&tbl->hashwlock[hash_idx]);
--
--	err = -EEXIST;
--	hlist_for_each_entry(node, n, bucket, list) {
--		mpath = node->mpath;
--		if (mpath->sdata == sdata &&
--		    ether_addr_equal(dst, mpath->dst))
--			goto err_exists;
--	}
--
- 	hlist_add_head_rcu(&new_node->list, bucket);
- 	if (atomic_inc_return(&tbl->entries) >=
- 	    tbl->mean_chain_len * (tbl->hash_mask + 1))
-@@ -564,23 +564,23 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
- 
- 	mesh_paths_generation++;
- 
--	spin_unlock(&tbl->hashwlock[hash_idx]);
--	read_unlock_bh(&pathtbl_resize_lock);
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
- 		ieee80211_queue_work(&local->hw, &sdata->work);
- 	}
--	return 0;
--
--err_exists:
-+	mpath = new_mpath;
-+found:
- 	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
--	kfree(new_node);
-+	return mpath;
-+
- err_node_alloc:
- 	kfree(new_mpath);
- err_path_alloc:
- 	atomic_dec(&sdata->u.mesh.mpaths);
--	return err;
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
-+	read_unlock_bh(&pathtbl_resize_lock);
-+	return ERR_PTR(err);
- }
- 
- static void mesh_table_free_rcu(struct rcu_head *rcu)
--- 
-1.7.10.4
+After killing a wpa_supplicant which was set up to connect to an
+invalid (non-existent) SSID, it goes to 'D' state, and brings down
+every process trying to do low-level network operations (anything
+involving an rtnl_lock) to their knees. The same happens when instead
+of killing wpa_supplicant, I do 'ifconfig wlan0 down'.
+
+See the task state dump at the end. Unfortunately it's not very helpful
+as there are a plenty of static functions called, and due to this a
+couple of addresses are resolved to incorrect symbol names, which
+makes the dump confusing. BTW this is on an ARM system.
+
+The blocking usb_control_msg was actually called from
+_usbctrl_vendorreq_sync_read(). See the following fragment:
+
+
+        do {
+                status = usb_control_msg(udev, pipe, request, reqtype, value,
+                                         index, pdata, len, 0); /*max. timeout*/
+                if (status < 0) {
+
+
+Seems like the blocking is intentional (max timeout specified in the
+comment), but I don't know why the transfer cannot finish.
+
+The caller of _usbctrl_vendorreq_sync_read() is _DisableGPIO().
+
+
+        /* 1. Disable GPIO[7:0] */
+        rtl_write_word(rtlpriv, REG_GPIO_PIN_CTRL+2, 0x0000);
+        value32 = rtl_read_dword(rtlpriv, REG_GPIO_PIN_CTRL) & 0xFFFF00FF;
+
+
+rtl_write_word() completes, and rtl_read_dword() is being blocked.
+
+The caller of _DisableGPIO() is _CardDisableHWSM(), which was called 
+from rtl92cu_card_disable(), which was called from rtl_usb_stop().
+rtl_usb_stop was called with rtnl_lock held.
+
+This was first observed on a 3.2.34 kernel. Today I have tried
+compat-wireless-02-22 on the same kernel, with the patches from OpenWrt,
+but nothing changed. I have checked the wireless-next git tree, and
+_usbctrl_vendorreq_sync_read() is the same.
+
+I have no idea what can be the actual problem, but can do a bit of debugging and
+information gathering if you need more, just tell me what should I do.
+usb_control_msg() has not completed for at least 30 minutes now. As a quick
+workaround, is it enough to set a timeout of say, 5 seconds in
+usbctrl_vendorreq_sync_read() ? Could this cause problems at different places?
+
+Regards,
+Patrik
+
+/ # cat /sys/class/net/wlan0/device/modalias 
+usb:v0BDAp8176d0200dc00dsc00dp00icFFiscFFipFF
+
+T:  Bus=02 Lev=02 Prnt=02 Port=02 Cnt=02 Dev#=  4 Spd=12   MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=0bda ProdID=8176 Rev= 2.00
+S:  Manufacturer=Realtek
+S:  Product=802.11n WLAN Adapter
+S:  SerialNumber=00e04c000001
+C:* #Ifs= 1 Cfg#= 1 Atr=a0 MxPwr=500mA
+I:* If#= 0 Alt= 0 #EPs= 4 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8192cu
+E:  Ad=81(I) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=02(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=03(O) Atr=02(Bulk) MxPS=  64 Ivl=0ms
+E:  Ad=84(I) Atr=03(Int.) MxPS=  64 Ivl=1ms
+
+[  707.022567] SysRq : Show Blocked State
+[  707.026155]   task                PC stack   pid father
+[  707.026218] heartbeat       D c040d5a4     0  1523      1 0x00000000
+[  707.026255] Backtrace: 
+[  707.026339] [<c040d390>] (__schedule+0x0/0x350) from [<c040d7fc>] (schedule+0x50/0x68)
+[  707.026388] [<c040d7ac>] (schedule+0x0/0x68) from [<c040df64>] (__mutex_lock_slowpath+0x88/0xc8)
+[  707.026429] [<c040dedc>] (__mutex_lock_slowpath+0x0/0xc8) from [<c040dfec>] (mutex_lock+0x48/0x4c)
+[  707.026455]  r8:c64fa900 r7:c78c682c r6:00000014 r5:00000014 r4:c64fa900
+[  707.026514] [<c040dfa4>] (mutex_lock+0x0/0x4c) from [<c03af49c>] (rtnetlink_rcv+0x18/0x34)
+[  707.026571] [<c03af484>] (rtnetlink_rcv+0x0/0x34) from [<c03b9d00>] (netlink_unicast+0x2c0/0x2d8)
+[  707.026595]  r5:00000014 r4:c78c6800
+[  707.026632] [<c03b9a40>] (netlink_unicast+0x0/0x2d8) from [<c03ba610>] (netlink_sendmsg+0x2c4/0x314)
+[  707.026673] [<c03ba34c>] (netlink_sendmsg+0x0/0x314) from [<c038ecd4>] (sock_sendmsg+0x98/0xb8)
+[  707.026712] [<c038ec3c>] (sock_sendmsg+0x0/0xb8) from [<c038f49c>] (sys_sendto+0xc4/0x100)
+[  707.026732]  r7:00000000 r6:41dff194 r5:c7115840 r4:00000014
+[  707.026807] [<c038f3d8>] (sys_sendto+0x0/0x100) from [<c010c820>] (ret_fast_syscall+0x0/0x30)
+
+[  707.026833] ifplugd         D c040d5a4     0   755      1 0x00000000
+[  707.026860] Backtrace: 
+[  707.026907] [<c040d390>] (__schedule+0x0/0x350) from [<c040d7fc>] (schedule+0x50/0x68)
+[  707.026946] [<c040d7ac>] (schedule+0x0/0x68) from [<c040df64>] (__mutex_lock_slowpath+0x88/0xc8)
+[  707.026986] [<c040dedc>] (__mutex_lock_slowpath+0x0/0xc8) from [<c040dfec>] (mutex_lock+0x48/0x4c)
+[  707.027008]  r8:c0528008 r7:c05410cc r6:be9c3bc8 r5:c0f70000 r4:00008946
+[  707.027061] [<c040dfa4>] (mutex_lock+0x0/0x4c) from [<c03af47c>] (rtnl_lock+0x14/0x1c)
+[  707.027119] [<c03af468>] (rtnl_lock+0x0/0x1c) from [<c03a3c08>] (dev_ioctl+0x520/0x600)
+[  707.027158] [<c03a36e8>] (dev_ioctl+0x0/0x600) from [<c038e608>] (sock_ioctl+0x94/0x258)
+[  707.027190] [<c038e574>] (sock_ioctl+0x0/0x258) from [<c0195bac>] (do_vfs_ioctl+0x8c/0x36c)
+[  707.027210]  r7:be9c3bc8 r6:00000003 r5:c6a6d500 r4:00008946
+[  707.027251] [<c0195b20>] (do_vfs_ioctl+0x0/0x36c) from [<c0195ecc>] (sys_ioctl+0x40/0x68)
+[  707.027270]  r7:c6a6d500 r6:00008946 r5:be9c3bc8 r4:00000003
+[  707.027328] [<c0195e8c>] (sys_ioctl+0x0/0x68) from [<c010c820>] (ret_fast_syscall+0x0/0x30)
+[  707.027350]  r7:00000036 r6:00000001 r5:0006a677 r4:00000001
+
+[  707.027387] wpa_supplicant  D c040d5a4     0   901      1 0x00000000
+[  707.027412] Backtrace: 
+[  707.027449] [<c040d390>] (__schedule+0x0/0x350) from [<c040d7fc>] (schedule+0x50/0x68)
+[  707.027484] [<c040d7ac>] (schedule+0x0/0x68) from [<c040daf8>] (schedule_timeout+0x154/0x1a0)
+[  707.027523] [<c040d9a4>] (schedule_timeout+0x0/0x1a0) from [<c040d214>] (wait_for_common+0x104/0x13c)
+[  707.027546]  r7:c65b2000 r6:c65b3c70 r5:7fffffff r4:c65b3c74
+[  707.027589] [<c040d110>] (wait_for_common+0x0/0x13c) from [<c040d2d8>] (wait_for_completion_timeout+0x14/0x18)
+[  707.027630] [<c040d2c4>] (wait_for_completion_timeout+0x0/0x18) from [<c031f84c>] (usb_start_wait_urb+0x64/0xcc)
+[  707.027668] [<c031f7e8>] (usb_start_wait_urb+0x0/0xcc) from [<c031fab0>] (usb_control_msg+0xd4/0xf8)
+[  707.027689]  r8:000000c0 r7:00000000 r6:00000044 r5:00000004 r4:c0f9dae0
+[  707.027782] [<c031f9dc>] (usb_control_msg+0x0/0xf8) from [<bf14f240>] (_usb_writeN_sync+0x140/0x1bc [rtlwifi])
+[  707.027849] [<bf14f190>] (_usb_writeN_sync+0x90/0x1bc [rtlwifi]) from [<bf14f2d0>] (_usb_read32_sync+0x14/0x18 [rtlwifi])
+[  707.027923] [<bf14f2bc>] (_usb_read32_sync+0x0/0x18 [rtlwifi]) from [<bf166e70>] (rtl92cu_enable_hw_security_config+0x444/0xbdc [rtl8192cu])
+[  707.027983] [<bf166e28>] (rtl92cu_enable_hw_security_config+0x3fc/0xbdc [rtl8192cu]) from [<bf169abc>] (rtl92cu_card_disable+0x8c/0xa44 [rtl8192cu])
+[  707.028013]  r5:c0ed8aa0 r4:c0ed9760
+[  707.028070] [<bf169a30>] (rtl92cu_card_disable+0x0/0xa44 [rtl8192cu]) from [<bf14db9c>] (rtl_usb_stop+0x44/0x4c [rtlwifi])
+[  707.028096]  r7:c0ed8aa0 r6:c0ed9760 r5:c0ed8aa0 r4:c0ed9760
+[  707.028154] [<bf14db58>] (rtl_usb_stop+0x0/0x4c [rtlwifi]) from [<bf149960>] (rtl_op_stop+0x7c/0xa4 [rtlwifi])
+[  707.028178]  r5:c0ed9794 r4:00000000
+[  707.028321] [<bf1498e4>] (rtl_op_stop+0x0/0xa4 [rtlwifi]) from [<bf0c5a50>] (ieee80211_stop_device+0x48/0x80 [mac80211])
+[  707.028348]  r7:c78e5340 r6:c78e5968 r5:00000000 r4:c0ed8aa0
+[  707.028479] [<bf0c5a08>] (ieee80211_stop_device+0x0/0x80 [mac80211]) from [<bf0b364c>] (ieee80211_recalc_idle+0x448/0x838 [mac80211])
+[  707.028507]  r5:00000000 r4:00000060
+[  707.028598] [<bf0b333c>] (ieee80211_recalc_idle+0x138/0x838 [mac80211]) from [<bf0b3ab8>] (ieee80211_stop+0x18/0x20 [mac80211])
+[  707.028687] [<bf0b3aa0>] (ieee80211_stop+0x0/0x20 [mac80211]) from [<c03a1730>] (__dev_close_many+0x90/0xd8)
+[  707.028733] [<c03a16a0>] (__dev_close_many+0x0/0xd8) from [<c03a17a8>] (__dev_close+0x30/0x48)
+[  707.028755]  r5:c78e5000 r4:00000001
+[  707.028795] [<c03a1778>] (__dev_close+0x0/0x48) from [<c039f3e0>] (__dev_change_flags+0x84/0x148)
+[  707.028837] [<c039f35c>] (__dev_change_flags+0x0/0x148) from [<c03a2184>] (dev_change_flags+0x18/0x50)
+[  707.028859]  r7:c05410cc r6:bec2abf0 r5:00001003 r4:c78e5000
+[  707.028928] [<c03a216c>] (dev_change_flags+0x0/0x50) from [<c03ee03c>] (devinet_ioctl+0x758/0x790)
+[  707.028952]  r7:c05410cc r6:bec2abf0 r5:00000000 r4:c65b2000
+[  707.029000] [<c03ed8e4>] (devinet_ioctl+0x0/0x790) from [<c03ef0ec>] (inet_ioctl+0x1ac/0x1c4)
+[  707.029041] [<c03eef40>] (inet_ioctl+0x0/0x1c4) from [<c038e5e8>] (sock_ioctl+0x74/0x258)
+[  707.029078] [<c038e574>] (sock_ioctl+0x0/0x258) from [<c0195bac>] (do_vfs_ioctl+0x8c/0x36c)
+[  707.029097]  r7:bec2abf0 r6:00000004 r5:c783d180 r4:00008914
+[  707.029136] [<c0195b20>] (do_vfs_ioctl+0x0/0x36c) from [<c0195ecc>] (sys_ioctl+0x40/0x68)
+[  707.029155]  r7:c783d180 r6:00008914 r5:bec2abf0 r4:00000004
+[  707.029224] [<c0195e8c>] (sys_ioctl+0x0/0x68) from [<c010c820>] (ret_fast_syscall+0x0/0x30)
+[  707.029246]  r7:00000036 r6:00000000 r5:018655c8 r4:018655b8
+
+[  707.029277] ifconfig        D c040d5a4     0  1522   1521 0x00000000
+[  707.029303] Backtrace: 
+[  707.029352] [<c040d390>] (__schedule+0x0/0x350) from [<c040d7fc>] (schedule+0x50/0x68)
+[  707.029392] [<c040d7ac>] (schedule+0x0/0x68) from [<c040df64>] (__mutex_lock_slowpath+0x88/0xc8)
+[  707.029432] [<c040dedc>] (__mutex_lock_slowpath+0x0/0xc8) from [<c040dfec>] (mutex_lock+0x48/0x4c)
+[  707.029455]  r8:00008916 r7:c05410cc r6:bedbbb50 r5:00000000 r4:c78d4000
+[  707.029516] [<c040dfa4>] (mutex_lock+0x0/0x4c) from [<c03af47c>] (rtnl_lock+0x14/0x1c)
+[  707.029572] [<c03af468>] (rtnl_lock+0x0/0x1c) from [<c03eda08>] (devinet_ioctl+0x124/0x790)
+[  707.029616] [<c03ed8e4>] (devinet_ioctl+0x0/0x790) from [<c03ef0ec>] (inet_ioctl+0x1ac/0x1c4)
+[  707.029651] [<c03eef40>] (inet_ioctl+0x0/0x1c4) from [<c038e5e8>] (sock_ioctl+0x74/0x258)
+[  707.029684] [<c038e574>] (sock_ioctl+0x0/0x258) from [<c0195bac>] (do_vfs_ioctl+0x8c/0x36c)
+[  707.029707]  r7:bedbbb50 r6:00000004 r5:c64b0c80 r4:00008916
+[  707.029747] [<c0195b20>] (do_vfs_ioctl+0x0/0x36c) from [<c0195ecc>] (sys_ioctl+0x40/0x68)
+[  707.029768]  r7:c64b0c80 r6:00008916 r5:bedbbb50 r4:00000004
+[  707.029823] [<c0195e8c>] (sys_ioctl+0x0/0x68) from [<c010c820>] (ret_fast_syscall+0x0/0x30)
+[  707.029843]  r7:00000036 r6:000001c3 r5:00000015 r4:bedbbb50
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Patrik KLUBA
+Software Developer at
+
+DENSION Audio Systems Ltd.
+H-1116 Budapest, Sztregova u. 1
+Phone: +36 1 463 0470
+Fax:   +36 1 463 0479
+Web:   www.dension.com
