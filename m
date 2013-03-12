@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20103 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755361Ab3CMMNO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:14 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/14] wil6210: handle WMI_BA_STATUS_EVENTID
-Date: Wed, 13 Mar 2013 14:12:40 +0200
-Message-ID: <1363176771-10082-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131321_530133_06F5D6B4)
-In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:60200 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755455Ab3CLNph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 09:45:37 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 04/13] wlcore: don't risk using stale HLID during .sta_state callback
+Date: Tue, 12 Mar 2013 15:44:15 +0200
+Message-ID: <1363095864-24422-5-git-send-email-coelho@ti.com> (sfid-20130312_144551_974287_18960DA0)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware indicated block ack agreement status change.
-For now, just log it.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+The HLID of a STA can change, particularly during recovery. Don't cache
+the HLID before it was potentially allocated.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/ti/wlcore/main.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 895ae9d..d636ff4 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -549,6 +549,16 @@ static void wmi_evt_linkdown(struct wil6210_priv *wil, int id, void *d, int len)
- 	netif_carrier_off(ndev);
- }
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 389ae1a..c3e2471 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4620,13 +4620,11 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 				   enum ieee80211_sta_state new_state)
+ {
+ 	struct wl1271_station *wl_sta;
+-	u8 hlid;
+ 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
+ 	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
+ 	int ret;
  
-+static void wmi_evt_ba_status(struct wil6210_priv *wil, int id, void *d,
-+			      int len)
-+{
-+	struct wmi_vring_ba_status_event *evt = d;
-+
-+	wil_dbg_wmi(wil, "BACK[%d] %s {%d} timeout %d\n",
-+		    evt->ringid, evt->status ? "N/A" : "OK", evt->agg_wsize,
-+		    __le16_to_cpu(evt->ba_timeout));
-+}
-+
- static const struct {
- 	int eventid;
- 	void (*handler)(struct wil6210_priv *wil, int eventid,
-@@ -564,6 +574,7 @@ static const struct {
- 	{WMI_EAPOL_RX_EVENTID,		wmi_evt_eapol_rx},
- 	{WMI_DATA_PORT_OPEN_EVENTID,	wmi_evt_linkup},
- 	{WMI_WBE_LINKDOWN_EVENTID,	wmi_evt_linkdown},
-+	{WMI_BA_STATUS_EVENTID,		wmi_evt_ba_status},
- };
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
+-	hlid = wl_sta->hlid;
  
- /*
+ 	/* Add station (AP mode) */
+ 	if (is_ap &&
+@@ -4652,12 +4650,12 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 	/* Authorize station (AP mode) */
+ 	if (is_ap &&
+ 	    new_state == IEEE80211_STA_AUTHORIZED) {
+-		ret = wl12xx_cmd_set_peer_state(wl, wlvif, hlid);
++		ret = wl12xx_cmd_set_peer_state(wl, wlvif, wl_sta->hlid);
+ 		if (ret < 0)
+ 			return ret;
+ 
+ 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
+-						     hlid);
++						     wl_sta->hlid);
+ 		if (ret)
+ 			return ret;
+ 
 -- 
 1.7.10.4
 
