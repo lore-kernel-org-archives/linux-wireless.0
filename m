@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59675 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752046Ab3CAWaI (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:37035 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab3CLTtb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 17:30:08 -0500
-Message-ID: <1362177004.24973.12.camel@jlt4.sipsolutions.net> (sfid-20130301_233012_232570_455B324F)
-Subject: Re: [PATCH] mac80211: add VHT capabilities station debugfs file
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 01 Mar 2013 23:30:04 +0100
-In-Reply-To: <1362176856.2116.27.camel@joe-AO722>
-References: <1362175935-11828-1-git-send-email-johannes@sipsolutions.net>
-	 <1362176856.2116.27.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Mar 2013 15:49:31 -0400
+Message-ID: <513F86C8.1010407@iki.fi> (sfid-20130312_204936_153901_AC0B2330)
+Date: Tue, 12 Mar 2013 21:49:28 +0200
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org,
+	'George0505' <george0505@realtek.com>
+Subject: Re: rtl8192cu gets confused when scan is aborted by bringing interface
+ down (Re: rtl8192cu goes silent/dead after some time...)
+References: <20130225185141.14193yyf1vunany8@www.dalek.fi> <512E58DF.4050001@lwfinger.net> <20130310142919.4375603d5escwu4g@www.dalek.fi> <20130311211709.17775i5d1zo9c8co@www.dalek.fi> <513E3DCD.5040507@lwfinger.net> <20130311230656.949364zqs1dt100s@www.dalek.fi> <513E4D1B.5000902@lwfinger.net> <20130312111035.96082dc0scui0tu8@www.dalek.fi> <513F5D14.3060409@lwfinger.net>
+In-Reply-To: <513F5D14.3060409@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-03-01 at 14:27 -0800, Joe Perches wrote:
-> On Fri, 2013-03-01 at 23:12 +0100, Johannes Berg wrote:
-> > Add a new debugfs file to view a station's VHT capabilities.
-> []
-> > diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-> []
-> > @@ -325,6 +325,36 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
-> >  }
-> >  STA_OPS(ht_capa);
-> >  
-> > +static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
-> > +				 size_t count, loff_t *ppos)
-> > +{
-> > +	char buf[512], *p = buf;
+On 12.03.2013 18:51, Larry Finger wrote:
+> On 03/12/2013 04:10 AM, Jussi Kivilinna wrote:
+>>
+>> That patch alone did not help.. however replacing
+>> _rtl92cu_set_check_bssid()
+>> with that new rtl92cu_set_check_bssid() does fix the issue (patch
+>> attached).
+>>
+>> But I think _rtl92cu_set_check_bssid() needs to be rechecked since it has
+>> '(IS_NORMAL_CHIP(rtlhal->version))' conditional etc.
 > 
-> 512?  Kinda large don't you think?
-> You use maybe 128.
+> I doubt that that IS_NORMAL_CHIP business affects us - the test chips
+> are not supposed to be in the wild, but I modified your patch to include
+> that test.
+> 
 
-Ah, well, copy/paste from HT, and then I removed the printing of flags
-because I was too lazy to write a bunch of code for it ... I guess I'll
-shrink it.
+Modified patch works here.
 
-johannes
+> With that patch I am getting watchdog_wq callbacks that force a
+> reconnection every 6 seconds, but that is due to other changes in my
+> code. The result is a 34% loss of pings, but the connection stays up.
+> 
 
+No problems here.. <1% loss and can do large transfers, rtl8192cu being
+able to reconnect is connection is dropped.
+
+-Jussi
