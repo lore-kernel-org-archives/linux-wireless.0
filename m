@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45269 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756446Ab3CYKgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 06:36:49 -0400
-Received: from dlelxv30.itg.ti.com ([172.17.2.17])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id r2PAam5d001788
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 05:36:48 -0500
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-	by dlelxv30.itg.ti.com (8.13.8/8.13.8) with ESMTP id r2PAam4g008741
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 05:36:48 -0500
-Received: from [172.24.79.16] (h79-16.vpn.ti.com [172.24.79.16])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id r2PAakfm009035	for
- <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 05:36:47 -0500
-Message-ID: <1364207739.23210.15.camel@cumari.coelho.fi> (sfid-20130325_113652_428981_7DB20416)
-Subject: Re: [PATCH 00/13] wlcore/wl18xx: some patches for 3.10
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Mon, 25 Mar 2013 12:35:39 +0200
-In-Reply-To: <1363101708.5453.47.camel@cumari.coelho.fi>
-References: <1363095864-24422-1-git-send-email-coelho@ti.com>
-	 <1363101708.5453.47.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:54018 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754595Ab3CLDJg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Mar 2013 23:09:36 -0400
+Received: by mail-bk0-f50.google.com with SMTP id jg9so1972636bkc.23
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 20:09:34 -0700 (PDT)
 MIME-Version: 1.0
+Date: Tue, 12 Mar 2013 11:09:34 +0800
+Message-ID: <CAPgLHd-2Xp9e4WfhaxDdj5JDW48bKgpu_6nHsJ-iNepNJuzJzg@mail.gmail.com> (sfid-20130312_040938_563671_8801D0EA)
+Subject: [PATCH -next v2] wil6210: remove unused including <linux/version.h>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: qca_vkondrat@qca.qualcomm.com, linville@tuxdriver.com,
+	Larry.Finger@lwfinger.net
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-12 at 17:21 +0200, Luciano Coelho wrote:
-> On Tue, 2013-03-12 at 15:44 +0200, Luciano Coelho wrote:
-> > Hi,
-> > 
-> > These are some of the TI wireless drivers patches that are intended
-> > for 3.10.
-> > 
-> > A bunch of fixes and small improvements here and there.
-> > 
-> > Please review.
-> 
-> There were a couple of checkpatch >80 chars warnings in this series.
-> I'll fix them before applying.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Applied.
+Remove including <linux/version.h> that don't need it.
 
--- 
-Luca.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+v1 -> v2: fix subject
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 116f4e8..58ce52c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -21,7 +21,6 @@
+ #include <linux/wireless.h>
+ #include <linux/ieee80211.h>
+ #include <linux/slab.h>
+-#include <linux/version.h>
+ #include <net/cfg80211.h>
+ 
+ #include "wil6210.h"
+
 
