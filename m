@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:57598 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478Ab3CEVta (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41727 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932206Ab3CLQeb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 16:49:30 -0500
-Received: by mail-qc0-f180.google.com with SMTP id v28so1275317qcm.11
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 13:49:29 -0800 (PST)
+	Tue, 12 Mar 2013 12:34:31 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH v3] ath6kl: Fix a debugfs crash for USB devices
+Date: Tue, 12 Mar 2013 22:03:03 +0530
+Message-ID: <1363105983-10527-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20130312_173435_650722_9D2C1F42)
 MIME-Version: 1.0
-Date: Tue, 5 Mar 2013 16:49:29 -0500
-Message-ID: <CA++BO6QA9cFmM2kU4u8ASxWqJeGwUB1385awKfXLP=O0fA87NA@mail.gmail.com> (sfid-20130305_224949_946467_3B24EA9B)
-Subject: Re: mac80211: regression: fd0f979 no long authenticates w/ath9k_htc
-From: Corey Richardson <corey@octayn.net>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 4, 2013 at 3:42 AM, Corey Richardson <corey@octayn.net> wrote:
-> ath9k_htc driver , AR9271 (at least according to lsusb)
->
-> commit fd0f979a1b67f0889aea24a7c7d2a54d6706a1cf
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Thu Feb 7 00:14:51 2013 +0100
->
->     mac80211: simplify idle handling
->
->     Now that we have channel contexts, idle is (pretty
->     much) equivalent to not having a channel context.
->     Change the code to use this relation so that there
->     no longer is a need for a lot of idle recalculate
->     calls everywhere.
->
->     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->
-> :040000 040000 85b3d4d114efb012773b4c7e1728b5bcae2e6b37
-> 3ff33170763520b03e84e067f91cc0a8334e4d36 M    net
->
-> any more info needed?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I noticed the mail didn't get through to all lists, perhaps the
-attachments were too large? (~135K)
+Credit distribution stats is currently implemented
+only for SDIO. This fixes a crash in debugfs for
+USB interface.
 
-Files are at https://gist.github.com/cmr/a5ace41e765fca073201
+BUG: unable to handle kernel NULL pointer dereference at   (null)
+IP: [<f91c2048>] read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+*pde = b62bd067
+Oops: 0000 [#1] SMP
+
+EIP: 0060:[<f91c2048>] EFLAGS: 00210246 CPU: 0
+EIP is at read_file_credit_dist_stats+0x38/0x330 [ath6kl_core]
+EAX: 00000000 EBX: e6f7a9c0 ECX: e7b148b8 EDX: 00000000
+ESI: 000000c8 EDI: e7b14000 EBP: e6e09f64 ESP: e6e09f30
+DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process cat (pid: 4058, ti=e6e08000 task=e50cf230 task.ti=e6e08000)
+Stack:
+00008000 00000000 e6e09f64 c1132d3c 00004e71 e50cf230 00008000 089e4000
+e7b148b8 00000000 e6f7a9c0 00008000 089e4000 e6e09f8c c11331fc e6e09f98
+00000001 e6e09f7c f91c2010 e6e09fac e6f7a9c0 089e4877 089e4000 e6e09fac
+
+	Call Trace:
+	[<c1132d3c>] ? rw_verify_area+0x6c/0x120
+	[<c11331fc>] vfs_read+0x8c/0x160
+	[<f91c2010>] ? read_file_war_stats+0x130/0x130 [ath6kl_core]
+	[<c113330d>] sys_read+0x3d/0x70
+	[<c15755b4>] syscall_call+0x7/0xb
+	[<c1570000>] ? fill_powernow_table_pstate+0x127/0x127
+
+Cc: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 15cfe30..6d992fc 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1752,8 +1752,10 @@ int ath6kl_debug_init_fs(struct ath6kl *ar)
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
+ 
+-	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
+-			    &fops_credit_dist_stats);
++	if (ar->hif_type == ATH6KL_HIF_TYPE_SDIO)
++		debugfs_create_file("credit_dist_stats", S_IRUSR,
++				    ar->debugfs_phy, ar,
++				    &fops_credit_dist_stats);
+ 
+ 	debugfs_create_file("endpoint_stats", S_IRUSR | S_IWUSR,
+ 			    ar->debugfs_phy, ar, &fops_endpoint_stats);
+-- 
+1.7.9.5
+
