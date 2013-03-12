@@ -1,81 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout4.wanadoo.co.uk ([80.12.242.68]:38861 "EHLO
-	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352Ab3CJONu (ORCPT
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:61342 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753125Ab3CLIbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 10:13:50 -0400
-Date: Sun, 10 Mar 2013 15:13:49 +0100 (CET)
-From: nick@nhthomas.freeserve.co.uk
-Reply-To: nick@nhthomas.freeserve.co.uk
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Message-ID: <32193647.103921362924829149.JavaMail.www@wwinf3714> (sfid-20130310_151354_899141_042A5249)
-In-Reply-To: <87a9qdm6ti.fsf@kamboji.qca.qualcomm.com>
-Subject: Re: ath6kl build error.
+	Tue, 12 Mar 2013 04:31:08 -0400
+Received: by mail-ie0-f181.google.com with SMTP id 17so6042789iea.12
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 01:31:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <513E34FD.8090606@winsoft.pl>
+References: <513E34FD.8090606@winsoft.pl>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Tue, 12 Mar 2013 08:30:47 +0000
+Message-ID: <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com> (sfid-20130312_093115_435152_4E8A70D2)
+Subject: Re: iwlegacy iwl3945 unable to connect to any hotspots on 3.9.0-rc1/rc2
+To: Krzysztof Kolasa <kkolasa@winsoft.pl>
+Cc: ML linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-My compilation problem comes down to this:
-
-In drivers/include_local/linux/compat-2.6.34.h .
-
-I see this:
-
-#define sdio_set_host_pm_flags(a, b) 0
-
-That's causing my compiler problem.
-
-I'm going to have to locally patch the tree to fix this.
-
-
-
-Regards
-
-Nick
-
-
-
-
-> Message Received: Mar 09 2013, 06:22 AM
-> From: "Kalle Valo"
-> To: "Larry Finger"
-> Cc: nick@nhthomas.freeserve.co.uk, linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com
-> Subject: Re: ath6kl build error.
->
-> Larry Finger writes:
->
-> > On 03/08/2013 05:25 AM, nick@nhthomas.freeserve.co.uk wrote:
-> >>
-> >> I'm getting a build error when building ath6kl modules.
-> >>
-> >> include/linux/mmc/sdio_func.h:162:12: error: expected identifier or '(' before numeric constant
-> >>
-> >> the line it's complaining about is like this:
-> >>
-> >> extern int sdio_set_host_pm_flags(struct sdio_func *func, mmc_pm_flag_t flags);
-> >>
-> >>
-> >> A bit of googling has shown that others have seen the same problem too.
-> >> But, I've not seen a fix for it.
-> >>
-> >> Any ideas appreciated.
-> >
-> > The complete gcc error output would be helpful.
-> >
-> > What kernel are you using?
->
-> I think he's using compat-driver and compiling against some old vendor
-> kernel.
->
-> --
-> Kalle Valo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+On Mon, Mar 11, 2013 at 7:48 PM, Krzysztof Kolasa <kkolasa@winsoft.pl> wrote:
+> Hotspots are visible and are working OK but wifi card can't connect.
 >
 
+Hit this bug also, on the GNOME-3.7.90.iso (based on FC19 testing
+ISO), "Can't stop Rx DMA." and friends.
+
+iwl3945 was/is working fine on 3.8.
+
+Krzysztof Kolasa, you may want to see
+http://www.spinics.net/lists/linux-wireless/msg104564.html on
+requested debugging procedure for the problem.
