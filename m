@@ -1,91 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40607 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758582Ab3CDSsg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 13:48:36 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v3 4/7] mac80211: extend minstrel's rate sampling to avoid unsampled rates
-Date: Mon,  4 Mar 2013 19:48:21 +0100
-Message-Id: <1362422905-78079-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_194848_907718_6C7D5142)
-In-Reply-To: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362422905-78079-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from mx1.redhat.com ([209.132.183.28]:20650 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932065Ab3CLQfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 12:35:32 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlwifi: remove 5ghz_disable option
+Date: Tue, 12 Mar 2013 17:35:58 +0100
+Message-Id: <1363106158-31904-1-git-send-email-sgruszka@redhat.com> (sfid-20130312_173535_577986_9F870BB6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minstrel's decision which rate should be directly sampled within the
-1st mrr stage is limited to such rates faster than the current max
-throughput rate. All rates below the current max. throughput rate
-are indirectly sampled via the 2nd mrr stage.
-This approach leads to deprecated per rate statistics and therfore
-a deprecated mrr chain setup.
+5ghz_disable has no effect any longer, that was changed during
+refactoring of EEPROM reading/parsing. Remove it, wpa_supplicant
+allow now to specify frequencies, on which device will operate.
 
-This patch uses the sampling approach from minstrel_ht. A counter is
-added to sum all indirect sample attempts per rate. After 20 indirect
-sampling attempts the rate is directly sampled within the 1st mrr stage.
-Therefore more up-to-date statistics for all rates are maintained and
-used to setup the mrr chain.
-
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/rc80211_minstrel.c | 13 +++++++++----
- net/mac80211/rc80211_minstrel.h |  1 +
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c       | 4 ----
+ drivers/net/wireless/iwlwifi/iwl-modparams.h | 2 --
+ 2 files changed, 6 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 152bb0e..aa59f29 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -85,7 +85,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		if (!usecs)
- 			usecs = 1000000;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 3ce4e9d..4983005 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1266,7 +1266,3 @@ module_param_named(auto_agg, iwlwifi_mod_params.auto_agg,
+ 		bool, S_IRUGO);
+ MODULE_PARM_DESC(auto_agg,
+ 		 "enable agg w/o check traffic load (default: enable)");
+-
+-module_param_named(5ghz_disable, iwlwifi_mod_params.disable_5ghz,
+-		bool, S_IRUGO);
+-MODULE_PARM_DESC(5ghz_disable, "disable 5GHz band (default: 0 [enabled])");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index 3cc39ff..d6f6c37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -103,7 +103,6 @@ enum iwl_power_level {
+  * @ant_coupling: antenna coupling in dB, default = 0
+  * @bt_ch_announce: BT channel inhibition, default = enable
+  * @auto_agg: enable agg. without check, default = true
+- * @disable_5ghz: disable 5GHz capability, default = false
+  */
+ struct iwl_mod_params {
+ 	int sw_crypto;
+@@ -120,7 +119,6 @@ struct iwl_mod_params {
+ 	int ant_coupling;
+ 	bool bt_ch_announce;
+ 	bool auto_agg;
+-	bool disable_5ghz;
+ };
  
--		if (mr->attempts) {
-+		if (unlikely(mr->attempts > 0)) {
-+			mr->sample_skipped = 0;
- 			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
-@@ -93,7 +94,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 							mr->cur_prob,
- 							EWMA_LEVEL);
- 			mr->cur_tp = mr->probability * (1000000 / usecs);
--		}
-+		} else
-+			mr->sample_skipped++;
- 
- 		mr->last_success = mr->success;
- 		mr->last_attempts = mr->attempts;
-@@ -282,9 +284,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		rate_sampling = true;
- 
- 		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
--		 * rate sampling method should be used */
-+		 * rate sampling method should be used.
-+		 * Respect such rates that are not sampled for 20 interations.
-+		 */
- 		if (mrr_capable &&
--		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time)
-+		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
-+		    msr->sample_skipped < 20)
- 				indirect_rate_sampling = true;
- 
- 		if (!indirect_rate_sampling) {
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 5fb5cb8..200b7e3 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -43,6 +43,7 @@ struct minstrel_rate {
- 	u32 attempts;
- 	u32 last_attempts;
- 	u32 last_success;
-+	u8 sample_skipped;
- 
- 	/* parts per thousand */
- 	u32 cur_prob;
+ #endif /* #__iwl_modparams_h__ */
 -- 
-1.8.1.1
+1.7.11.7
 
