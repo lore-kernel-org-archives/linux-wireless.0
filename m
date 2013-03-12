@@ -1,101 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:51598 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752023Ab3CALvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 06:51:10 -0500
-Date: Fri, 1 Mar 2013 17:13:01 +0530
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>
-Subject: [PATCH 2/2] mwl8k: Load 8764 firmware image
-Message-ID: <20130301114301.GA11074@markyou.marvell.com> (sfid-20130301_125114_148821_962ED3E6)
+Received: from comal.ext.ti.com ([198.47.26.152]:59611 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755433Ab3CLNpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Mar 2013 09:45:41 -0400
+From: Luciano Coelho <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 07/13] wlcore: change warn on missing lock in wlcore_queue_xx funcs
+Date: Tue, 12 Mar 2013 15:44:18 +0200
+Message-ID: <1363095864-24422-8-git-send-email-coelho@ti.com> (sfid-20130312_144552_657816_9F740142)
+In-Reply-To: <1363095864-24422-1-git-send-email-coelho@ti.com>
+References: <1363095864-24422-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This differs from legacy chips i.e.
-a 8764 loads firmware image without a helper image
-b Check interrupt status register for download
-  complete indication.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+On !CONFIG_SMP builds spin_is_locked always returns 0. Assert the
+locking using assert_spin_locked, which is written to behave correctly
+in all cases.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/mwl8k.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ti/wlcore/tx.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index e86a31b..aaaf10d 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -284,6 +284,7 @@ struct mwl8k_priv {
- 	unsigned fw_state;
- 	char *fw_pref;
- 	char *fw_alt;
-+	bool is_8764;
- 	struct completion firmware_loading_complete;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 8599556..e0d9504 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -24,6 +24,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/etherdevice.h>
++#include <linux/spinlock.h>
  
- 	/* bitmap of running BSSes */
-@@ -600,13 +601,18 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
- 	loops = 1000;
- 	do {
- 		u32 int_code;
--
--		int_code = ioread32(regs + MWL8K_HIU_INT_CODE);
--		if (int_code == MWL8K_INT_CODE_CMD_FINISHED) {
--			iowrite32(0, regs + MWL8K_HIU_INT_CODE);
--			break;
-+		if (priv->is_8764) {
-+			int_code = ioread32(regs +
-+					    MWL8K_HIU_H2A_INTERRUPT_STATUS);
-+			if (int_code == 0)
-+				break;
-+		} else {
-+			int_code = ioread32(regs + MWL8K_HIU_INT_CODE);
-+			if (int_code == MWL8K_INT_CODE_CMD_FINISHED) {
-+				iowrite32(0, regs + MWL8K_HIU_INT_CODE);
-+				break;
-+			}
- 		}
--
- 		cond_resched();
- 		udelay(1);
- 	} while (--loops);
-@@ -724,7 +730,7 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
- 	int rc;
- 	int loops;
+ #include "wlcore.h"
+ #include "debug.h"
+@@ -1289,7 +1290,7 @@ bool wlcore_is_queue_stopped_by_reason_locked(struct wl1271 *wl,
+ {
+ 	int hwq = wlcore_tx_get_mac80211_queue(wlvif, queue);
  
--	if (!memcmp(fw->data, "\x01\x00\x00\x00", 4)) {
-+	if (!memcmp(fw->data, "\x01\x00\x00\x00", 4) && !priv->is_8764) {
- 		const struct firmware *helper = priv->fw_helper;
+-	WARN_ON_ONCE(!spin_is_locked(&wl->wl_lock));
++	assert_spin_locked(&wl->wl_lock);
+ 	return test_bit(reason, &wl->queue_stop_reasons[hwq]);
+ }
  
- 		if (helper == NULL) {
-@@ -743,7 +749,10 @@ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
+@@ -1298,6 +1299,6 @@ bool wlcore_is_queue_stopped_locked(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ {
+ 	int hwq = wlcore_tx_get_mac80211_queue(wlvif, queue);
  
- 		rc = mwl8k_feed_fw_image(priv, fw->data, fw->size);
- 	} else {
--		rc = mwl8k_load_fw_image(priv, fw->data, fw->size);
-+		if (priv->is_8764)
-+			rc = mwl8k_feed_fw_image(priv, fw->data, fw->size);
-+		else
-+			rc = mwl8k_load_fw_image(priv, fw->data, fw->size);
- 	}
- 
- 	if (rc) {
-@@ -6007,6 +6016,8 @@ static int mwl8k_probe(struct pci_dev *pdev,
- 	priv->pdev = pdev;
- 	priv->device_info = &mwl8k_info_tbl[id->driver_data];
- 
-+	if (id->driver_data == MWL8764)
-+		priv->is_8764 = true;
- 
- 	priv->sram = pci_iomap(pdev, 0, 0x10000);
- 	if (priv->sram == NULL) {
+-	WARN_ON_ONCE(!spin_is_locked(&wl->wl_lock));
++	assert_spin_locked(&wl->wl_lock);
+ 	return !!wl->queue_stop_reasons[hwq];
+ }
 -- 
-1.8.0.3
+1.7.10.4
 
