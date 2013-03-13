@@ -1,143 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38637 "EHLO arrakis.dune.hu"
+Received: from nbd.name ([46.4.11.11]:34328 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756101Ab3C3Nwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Mar 2013 09:52:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 3/3] rt2x00: rt2800lib: probe RT chipset earlier
-Date: Sat, 30 Mar 2013 14:53:10 +0100
-Message-Id: <1364651590-29710-4-git-send-email-juhosg@openwrt.org> (sfid-20130330_145248_384840_77149B88)
-In-Reply-To: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
-References: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
+	id S1751901Ab3CMMXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Mar 2013 08:23:48 -0400
+From: John Crispin <blogic@openwrt.org>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, John Crispin <blogic@openwrt.org>
+Subject: [PATCH] rt2x00: fix rt2x00 to work with the new ralink SoC config symbols
+Date: Wed, 13 Mar 2013 13:20:15 +0100
+Message-Id: <1363177215-12685-1-git-send-email-blogic@openwrt.org> (sfid-20130313_132351_457121_42262C19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'rt2800_validate_eeprom' function uses the type of
-the RT chipset for verifying the number of RX streams
-on RT28x0 devices. However the type of the RT chipset
-is not yet detected when the 'rt2800_validate_eeprom'
-function is called.
+Since v3.9-rc1 the kernel has basic support for Ralink WiSoC. The config symbols
+are named slightly different than before. Fix the rt2x00 to match the new
+symbols.
 
-Move the RT chipset detection code into a separate helper
-function, and call it before rt2800_validate_eeprom.
+The commit causing this breakage is:
+commit ae2b5bb6570481b50a7175c64176b82da0a81836
+Author: John Crispin <blogic@openwrt.org>
+Date:   Sun Jan 20 22:05:30 2013 +0100
+MIPS: ralink: adds Kbuild files
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: John Crispin <blogic@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   80 +++++++++++++++++--------------
- 1 file changed, 45 insertions(+), 35 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig     |    4 ++--
+ drivers/net/wireless/rt2x00/rt2800pci.c |   14 +++++++-------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c4cc624..7deac4d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5431,45 +5431,10 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 44d6ead..2bf4efa 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -55,10 +55,10 @@ config RT61PCI
  
- static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- {
--	u32 reg;
- 	u16 value;
- 	u16 eeprom;
--	u32 rt;
--	u32 rev;
- 	u16 rf;
- 
--	if (rt2x00_rt(rt2x00dev, RT3290))
--		rt2800_register_read(rt2x00dev, MAC_CSR0_3290, &reg);
--	else
--		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
--
--	rt = rt2x00_get_field32(reg, MAC_CSR0_CHIPSET);
--	rev = rt2x00_get_field32(reg, MAC_CSR0_REVISION);
--
--	switch (rt) {
--	case RT2860:
--	case RT2872:
--	case RT2883:
--	case RT3070:
--	case RT3071:
--	case RT3090:
--	case RT3290:
--	case RT3352:
--	case RT3390:
--	case RT3572:
--	case RT5390:
--	case RT5392:
--	case RT5592:
--		break;
--	default:
--		ERROR(rt2x00dev,
--		      "Invalid RT chipset 0x%04x, rev %04x detected.\n",
--		      rt, rev);
--		return -ENODEV;
--	}
--
--	rt2x00_set_rt(rt2x00dev, rt, rev);
--
- 	/*
- 	 * Read EEPROM word for configuration.
- 	 */
-@@ -6067,11 +6032,56 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	return 0;
+ config RT2800PCI
+ 	tristate "Ralink rt27xx/rt28xx/rt30xx (PCI/PCIe/PCMCIA) support"
+-	depends on PCI || RALINK_RT288X || RALINK_RT305X
++	depends on PCI || SOC_RT288X || SOC_RT305X
+ 	select RT2800_LIB
+ 	select RT2X00_LIB_PCI if PCI
+-	select RT2X00_LIB_SOC if RALINK_RT288X || RALINK_RT305X
++	select RT2X00_LIB_SOC if SOC_RT288X || SOC_RT305X
+ 	select RT2X00_LIB_FIRMWARE
+ 	select RT2X00_LIB_CRYPTO
+ 	select CRC_CCITT
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 48a01aa..ded73da 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -89,7 +89,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 	rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
  }
  
-+static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
-+{
-+	u32 reg;
-+	u32 rt;
-+	u32 rev;
-+
-+	if (rt2x00_rt(rt2x00dev, RT3290))
-+		rt2800_register_read(rt2x00dev, MAC_CSR0_3290, &reg);
-+	else
-+		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
-+
-+	rt = rt2x00_get_field32(reg, MAC_CSR0_CHIPSET);
-+	rev = rt2x00_get_field32(reg, MAC_CSR0_REVISION);
-+
-+	switch (rt) {
-+	case RT2860:
-+	case RT2872:
-+	case RT2883:
-+	case RT3070:
-+	case RT3071:
-+	case RT3090:
-+	case RT3290:
-+	case RT3352:
-+	case RT3390:
-+	case RT3572:
-+	case RT5390:
-+	case RT5392:
-+	case RT5592:
-+		break;
-+	default:
-+		ERROR(rt2x00dev,
-+		      "Invalid RT chipset 0x%04x, rev %04x detected.\n",
-+		      rt, rev);
-+		return -ENODEV;
-+	}
-+
-+	rt2x00_set_rt(rt2x00dev, rt, rev);
-+
-+	return 0;
-+}
-+
- int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+-#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
++#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+ static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
  {
- 	int retval;
- 	u32 reg;
+ 	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
+@@ -107,7 +107,7 @@ static inline int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	return -ENOMEM;
+ }
+-#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
++#endif /* CONFIG_SOC_RT288X || CONFIG_SOC_RT305X */
  
-+	retval = rt2800_probe_rt(rt2x00dev);
-+	if (retval)
-+		return retval;
-+
- 	/*
- 	 * Allocate eeprom data.
- 	 */
+ #ifdef CONFIG_PCI
+ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+@@ -1177,7 +1177,7 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
+ #endif /* CONFIG_PCI */
+ MODULE_LICENSE("GPL");
+ 
+-#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
++#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+ static int rt2800soc_probe(struct platform_device *pdev)
+ {
+ 	return rt2x00soc_probe(pdev, &rt2800pci_ops);
+@@ -1194,7 +1194,7 @@ static struct platform_driver rt2800soc_driver = {
+ 	.suspend	= rt2x00soc_suspend,
+ 	.resume		= rt2x00soc_resume,
+ };
+-#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
++#endif /* CONFIG_SOC_RT288X || CONFIG_SOC_RT305X */
+ 
+ #ifdef CONFIG_PCI
+ static int rt2800pci_probe(struct pci_dev *pci_dev,
+@@ -1217,7 +1217,7 @@ static int __init rt2800pci_init(void)
+ {
+ 	int ret = 0;
+ 
+-#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
++#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+ 	ret = platform_driver_register(&rt2800soc_driver);
+ 	if (ret)
+ 		return ret;
+@@ -1225,7 +1225,7 @@ static int __init rt2800pci_init(void)
+ #ifdef CONFIG_PCI
+ 	ret = pci_register_driver(&rt2800pci_driver);
+ 	if (ret) {
+-#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
++#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+ 		platform_driver_unregister(&rt2800soc_driver);
+ #endif
+ 		return ret;
+@@ -1240,7 +1240,7 @@ static void __exit rt2800pci_exit(void)
+ #ifdef CONFIG_PCI
+ 	pci_unregister_driver(&rt2800pci_driver);
+ #endif
+-#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
++#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+ 	platform_driver_unregister(&rt2800soc_driver);
+ #endif
+ }
 -- 
-1.7.10
+1.7.10.4
 
