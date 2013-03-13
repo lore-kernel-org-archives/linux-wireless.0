@@ -1,197 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:47078 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755440Ab3CSSxD (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:60253 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756481Ab3CMNzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 14:53:03 -0400
-Date: Tue, 19 Mar 2013 14:52:58 -0400 (EDT)
-Message-Id: <20130319.145258.1891905092469394685.davem@davemloft.net> (sfid-20130319_195311_764502_94D8E0EB)
-To: netdev@vger.kernel.org
-CC: netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] net: Add socket() system call self test.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 13 Mar 2013 09:55:47 -0400
+Received: by mail-ie0-f171.google.com with SMTP id 10so1446937ied.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 06:55:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <e96eef3b43e416010faf699295f0e2dc.squirrel@www.infidigm.net>
+References: <ccfc79b224366f1bf963e81b78413b2d.squirrel@www.infidigm.net>
+	<CADwvPCsk2is8doPmbMuSTNC0CB6Zi_t0Z-D9FUFchiC9e0BZpg@mail.gmail.com>
+	<e96eef3b43e416010faf699295f0e2dc.squirrel@www.infidigm.net>
+Date: Wed, 13 Mar 2013 14:55:46 +0100
+Message-ID: <CADwvPCtse3oQFXA6pun6udK2r62sAwCGncWfSMCiF9MF0YYTzg@mail.gmail.com> (sfid-20130313_145555_623962_91C89537)
+Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35 platform
+From: Johannes Braun <jjo.braun@gmail.com>
+To: drwho@infidigm.net
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013/3/12  <drwho@infidigm.net>:
+>>> struct sdhci_of_data sdhci_esdhc = {
+>>>         .quirks = SDHCI_QUIRK_FORCE_BLK_SZ_2048 |
+>>>                   SDHCI_QUIRK_BROKEN_CARD_DETECTION |
+>>>                   SDHCI_QUIRK_NO_BUSY_IRQ |
+>>>                   SDHCI_QUIRK_NONSTANDARD_CLOCK |
+>>>                   SDHCI_QUIRK_DATA_TIMEOUT_USES_SDCLK |
+>>>                   SDHCI_QUIRK_PIO_NEEDS_DELAY |
+>>>                   SDHCI_QUIRK_RESTORE_IRQS_AFTER_RESET |
+>>>                   SDHCI_QUIRK_NO_CARD_NO_RESET,
+>>>         .ops = {
+>>>
+>>> Jon
+>>
+>> I made a test with these quirks enabled. But the result was the same.
+>> Loading the module also ends in the known error "mmc0: Timeout waiting
+>> for hardware interrupt".
+>> I am a little bit confuced. Seems your freescale kernel uses another
+>> mmc driver for your imx51? My kernel config, the one for imx35
+>> processors, includes "/drivers/mmc/host/sdhci-esdhc-imx.c" =>
+>> CONFIG_MMC_SDHCI_ESDHC_IMX and not "drivers/mmc/host/sdhci-of-esdhc.c"
+>
+> My bad.  Still my driver is different.  The kernel config defines
+> CONFIG_MMC_IMX_ESDHCI=y which adds
+> /drivers/mmc/host/mx_sdhci.c
+> and has a bunch of quirks that are only defined locally.
+>
+> Are you using a freescale kernel or mainline kernel?  freescale kernels
+> change from one ltib to the next.  My ltib that supports imx51 may have
+> had the sdhci driver rewritten since the ltib that first supported imx35.
+>
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
+I am using a mainline kernel. I don`t want to use freescale`s ltip,
+because the kernel version is very old.
 
-As mentioned during the netfilter workshop, we will be adding
-all sorts of networking tests now that 3.9.x has a selftest
-framework in place.
-
-The first test I'm adding to net-next does some very simple
-testing of the socket() system call.
-
-Feel free to send patches for more tests, making the run
-script more powerful (perhaps by taking a whitespace
-seperated list of tests to run on the command line), and
-adding more checks to the socket.c test.
-
-Thanks.
-
- tools/testing/selftests/Makefile                   |  1 +
- tools/testing/selftests/net-socket/Makefile        | 16 ++++
- .../testing/selftests/net-socket/run_netsocktests  | 12 +++
- tools/testing/selftests/net-socket/socket.c        | 92 ++++++++++++++++++++++
- 4 files changed, 121 insertions(+)
- create mode 100644 tools/testing/selftests/net-socket/Makefile
- create mode 100644 tools/testing/selftests/net-socket/run_netsocktests
- create mode 100644 tools/testing/selftests/net-socket/socket.c
-
-diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index 3cc0ad7..7c6280f 100644
---- a/tools/testing/selftests/Makefile
-+++ b/tools/testing/selftests/Makefile
-@@ -5,6 +5,7 @@ TARGETS += vm
- TARGETS += cpu-hotplug
- TARGETS += memory-hotplug
- TARGETS += efivarfs
-+TARGETS += net-socket
- 
- all:
- 	for TARGET in $(TARGETS); do \
-diff --git a/tools/testing/selftests/net-socket/Makefile b/tools/testing/selftests/net-socket/Makefile
-new file mode 100644
-index 0000000..f27ee10
---- /dev/null
-+++ b/tools/testing/selftests/net-socket/Makefile
-@@ -0,0 +1,16 @@
-+# Makefile for net-socket selftests
-+
-+CC = $(CROSS_COMPILE)gcc
-+CFLAGS = -Wall
-+
-+NET_SOCK_PROGS = socket
-+
-+all: $(NET_SOCK_PROGS)
-+%: %.c
-+	$(CC) $(CFLAGS) -o $@ $^
-+
-+run_tests: all
-+	@/bin/sh ./run_netsocktests || echo "vmtests: [FAIL]"
-+
-+clean:
-+	$(RM) $(NET_SOCK_PROGS)
-diff --git a/tools/testing/selftests/net-socket/run_netsocktests b/tools/testing/selftests/net-socket/run_netsocktests
-new file mode 100644
-index 0000000..c09a682
---- /dev/null
-+++ b/tools/testing/selftests/net-socket/run_netsocktests
-@@ -0,0 +1,12 @@
-+#!/bin/bash
-+
-+echo "--------------------"
-+echo "running socket test"
-+echo "--------------------"
-+./socket
-+if [ $? -ne 0 ]; then
-+	echo "[FAIL]"
-+else
-+	echo "[PASS]"
-+fi
-+
-diff --git a/tools/testing/selftests/net-socket/socket.c b/tools/testing/selftests/net-socket/socket.c
-new file mode 100644
-index 0000000..0f227f2
---- /dev/null
-+++ b/tools/testing/selftests/net-socket/socket.c
-@@ -0,0 +1,92 @@
-+#include <stdio.h>
-+#include <errno.h>
-+#include <unistd.h>
-+#include <string.h>
-+#include <sys/types.h>
-+#include <sys/socket.h>
-+#include <netinet/in.h>
-+
-+struct socket_testcase {
-+	int	domain;
-+	int	type;
-+	int	protocol;
-+
-+	/* 0    = valid file descriptor
-+	 * -foo = error foo
-+	 */
-+	int	expect;
-+
-+	/* If non-zero, accept EAFNOSUPPORT to handle the case
-+	 * of the protocol not being configured into the kernel.
-+	 */
-+	int	nosupport_ok;
-+};
-+
-+static struct socket_testcase tests[] = {
-+	{ AF_MAX,  0,           0,           -EAFNOSUPPORT,    0 },
-+	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, 0,                1  },
-+	{ AF_INET, SOCK_DGRAM,  IPPROTO_TCP, -EPROTONOSUPPORT, 1  },
-+	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP, 0,                1  },
-+	{ AF_INET, SOCK_STREAM, IPPROTO_UDP, -EPROTONOSUPPORT, 1  },
-+};
-+
-+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-+#define ERR_STRING_SZ	64
-+
-+static int run_tests(void)
-+{
-+	char err_string1[ERR_STRING_SZ];
-+	char err_string2[ERR_STRING_SZ];
-+	int i, err;
-+
-+	err = 0;
-+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
-+		struct socket_testcase *s = &tests[i];
-+		int fd;
-+
-+		fd = socket(s->domain, s->type, s->protocol);
-+		if (fd < 0) {
-+			if (s->nosupport_ok &&
-+			    errno == EAFNOSUPPORT)
-+				continue;
-+
-+			if (s->expect < 0 &&
-+			    errno == -s->expect)
-+				continue;
-+
-+			strerror_r(-s->expect, err_string1, ERR_STRING_SZ);
-+			strerror_r(errno, err_string2, ERR_STRING_SZ);
-+
-+			fprintf(stderr, "socket(%d, %d, %d) expected "
-+				"err (%s) got (%s)\n",
-+				s->domain, s->type, s->protocol,
-+				err_string1, err_string2);
-+
-+			err = -1;
-+			break;
-+		} else {
-+			close(fd);
-+
-+			if (s->expect < 0) {
-+				strerror_r(errno, err_string1, ERR_STRING_SZ);
-+
-+				fprintf(stderr, "socket(%d, %d, %d) expected "
-+					"success got err (%s)\n",
-+					s->domain, s->type, s->protocol,
-+					err_string1);
-+
-+				err = -1;
-+				break;
-+			}
-+		}
-+	}
-+
-+	return err;
-+}
-+
-+int main(void)
-+{
-+	int err = run_tests();
-+
-+	return err;
-+}
--- 
-1.7.11.7
-
+--
+Johannes
