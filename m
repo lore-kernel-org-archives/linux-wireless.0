@@ -1,36 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42182 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757041Ab3CDPdV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51882 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932346Ab3CMSae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 10:33:21 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UCXOC-0004Wh-02
-	for linux-wireless@vger.kernel.org; Mon, 04 Mar 2013 16:33:20 +0100
-Message-ID: <1362411197.21028.23.camel@jlt4.sipsolutions.net> (sfid-20130304_163324_430478_FEF1E0CB)
-Subject: Re: [PATCH] mac80211: remove IEEE80211_KEY_FLAG_WMM_STA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 04 Mar 2013 16:33:17 +0100
-In-Reply-To: <1362089915-12075-1-git-send-email-johannes@sipsolutions.net> (sfid-20130228_231848_325408_1F97A262)
-References: <1362089915-12075-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130228_231848_325408_1F97A262)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Mar 2013 14:30:34 -0400
+Date: Wed, 13 Mar 2013 14:18:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com
+Subject: Re: [PATCH] ssb: pci: Fix flipping of MAC address
+Message-ID: <20130313181817.GB19917@tuxdriver.com> (sfid-20130313_193048_897557_4D6514E6)
+References: <513e40c2.MDaC+Q82iTl9PpIZ%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <513e40c2.MDaC+Q82iTl9PpIZ%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-02-28 at 23:18 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Mar 11, 2013 at 03:38:26PM -0500, Larry Finger wrote:
+> Since commit e565275 entitled "ssb: pci: Standardize a function to get mac
+> address", the SPROM readout of the MAC has had the values flipped so that
+> 00:11:22:33:44:55 became 11:00:33:22:55:44. The fix has been tested on both
+> little- and big-endian architectures.
 > 
-> There's no driver using this flag, so it seems
-> that all drivers support HW crypto with WMM or
-> don't support it at all. Remove the flag and
-> code setting it.
+> Reported-by: Rafał Miłecki <zajec5@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> This bug was introduced in 3.9, and should be fixed there.
+> 
+> Thanks,
+> 
+> Larry
+> ---
+> 
+> Index: wireless-testing-new/drivers/ssb/pci.c
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/ssb/pci.c
+> +++ wireless-testing-new/drivers/ssb/pci.c
+> @@ -234,8 +234,8 @@ static void sprom_get_mac(char *mac, con
+>  {
+>  	int i;
+>  	for (i = 0; i < 3; i++) {
+> -		*mac++ = in[i];
+>  		*mac++ = in[i] >> 8;
+> +		*mac++ = in[i];
+>  	}
+>  }
 
-Applied.
+Actually, FWIW it seems to have been introduced in commit
+e5652756ff36ed9e1283121f788e6a17117efcab, which is slated for 3.10.
+I'm happy to merge it in wireless-next.
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
