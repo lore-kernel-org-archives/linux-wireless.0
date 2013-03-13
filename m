@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34224 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751067Ab3C0KGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 06:06:30 -0400
-Date: Wed, 27 Mar 2013 11:07:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Colin King <colin.king@canonical.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlegacy: 4965-rs: avoid null pointer dereference error
-Message-ID: <20130327100712.GA1595@redhat.com> (sfid-20130327_110634_528975_69C69402)
-References: <1364319323-14272-1-git-send-email-colin.king@canonical.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:6911 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755526Ab3CMOet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Mar 2013 10:34:49 -0400
+Message-ID: <ab0c8890a5b689123ba8a42591073461.squirrel@www.infidigm.net> (sfid-20130313_153453_270396_DF50AB1B)
+In-Reply-To: <CADwvPCtse3oQFXA6pun6udK2r62sAwCGncWfSMCiF9MF0YYTzg@mail.gmail.com>
+References: <ccfc79b224366f1bf963e81b78413b2d.squirrel@www.infidigm.net>
+    <CADwvPCsk2is8doPmbMuSTNC0CB6Zi_t0Z-D9FUFchiC9e0BZpg@mail.gmail.com>
+    <e96eef3b43e416010faf699295f0e2dc.squirrel@www.infidigm.net>
+    <CADwvPCtse3oQFXA6pun6udK2r62sAwCGncWfSMCiF9MF0YYTzg@mail.gmail.com>
+Date: Wed, 13 Mar 2013 11:37:29 -0400
+Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35
+ platform
+From: drwho@infidigm.net
+To: "Johannes Braun" <jjo.braun@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1364319323-14272-1-git-send-email-colin.king@canonical.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 05:35:23PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> il4965_rs_initialize_lq checks to see if sta is null, however, before that
-> check il4965_rs_use_green dereferences sta when intializing use_green.
-> Avoid a potential null pointer dereference error by only calling
-> il4965_rs_use_green after we are sure sta is not null.
-> 
-> Smatch analysis:
-> 
-> drivers/net/wireless/iwlegacy/4965-rs.c:2160 il4965_rs_initialize_lq() warn:
->   variable dereferenced before check 'sta' (see line 2155)
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> Are you using a freescale kernel or mainline kernel?  freescale kernels
+>> change from one ltib to the next.  My ltib that supports imx51 may have
+>> had the sdhci driver rewritten since the ltib that first supported
+>> imx35.
+>>
+>
+> I am using a mainline kernel. I don`t want to use freescale`s ltip,
+> because the kernel version is very old.
 
-ACK
+If you have an imx35 dev board from freescale that you can attach the
+AR6003 to, I would try that with ltib L2.6.31_09.12.01 and compat 3.8.  I
+can show you how to get compat 3.8 to build in ltib.
+
+Jon
 
