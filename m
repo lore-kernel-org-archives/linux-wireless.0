@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4138 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708Ab3CWMOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 08:14:19 -0400
-Message-ID: <514D9C8D.20302@broadcom.com> (sfid-20130323_131444_354480_9494A11A)
-Date: Sat, 23 Mar 2013 13:14:05 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8145 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932993Ab3CMMNZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Mar 2013 08:13:25 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 09/14] wil6210: fix FW error notification
+Date: Wed, 13 Mar 2013 14:12:46 +0200
+Message-ID: <1363176771-10082-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131347_137819_37153A63)
+In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmsmac: Remove unused macro SI_MSG
-References: <25a69b0ba20a54e5c1c0165e68a1ef2c69c84255.1363982285.git.joe@perches.com>
-In-Reply-To: <25a69b0ba20a54e5c1c0165e68a1ef2c69c84255.1363982285.git.joe@perches.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/22/2013 09:00 PM, Joe Perches wrote:
-> commit 6236dc2e2 ("brcmsmac: remove some redundant chip common workarounds")
-> removed the last uses.
+user space get notified through kobject_uevent_env(), that might sleep and thus
+should run in thread context.
 
-Good riddance.
+Move user space notification to the thread handler, while mark FW is non-functional
+right in the hard IRQ.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/aiutils.c | 6 ------
->  1 file changed, 6 deletions(-)
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c |   14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index dc97e7b..de9b971 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -257,10 +257,13 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ 	wil6210_mask_irq_misc(wil);
+ 
+ 	if (isr & ISR_MISC_FW_ERROR) {
+-		wil_dbg_irq(wil, "IRQ: Firmware error\n");
++		wil_err(wil, "Firmware error detected\n");
+ 		clear_bit(wil_status_fwready, &wil->status);
+-		wil_notify_fw_error(wil);
+-		isr &= ~ISR_MISC_FW_ERROR;
++		/*
++		 * do not clear @isr here - we do 2-nd part in thread
++		 * there, user space get notified, and it should be done
++		 * in non-atomic context
++		 */
+ 	}
+ 
+ 	if (isr & ISR_MISC_FW_READY) {
+@@ -289,6 +292,11 @@ static irqreturn_t wil6210_irq_misc_thread(int irq, void *cookie)
+ 
+ 	wil_dbg_irq(wil, "Thread ISR MISC 0x%08x\n", isr);
+ 
++	if (isr & ISR_MISC_FW_ERROR) {
++		wil_notify_fw_error(wil);
++		isr &= ~ISR_MISC_FW_ERROR;
++	}
++
+ 	if (isr & ISR_MISC_MBOX_EVT) {
+ 		wil_dbg_irq(wil, "MBOX event\n");
+ 		wmi_recv_cmd(wil);
+-- 
+1.7.10.4
 
