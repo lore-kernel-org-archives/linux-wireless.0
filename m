@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:35273 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab3C0PxK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51209 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933096Ab3CMRpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 11:53:10 -0400
-Date: Wed, 27 Mar 2013 11:53:07 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 12/15] cw1200: v5: Platform definitions, plus SDIO and
- SPI bus glue code
-Message-ID: <20130327155306.GA20103@shaftnet.org> (sfid-20130327_165314_812207_3923853F)
-References: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
- <1363905589-8350-13-git-send-email-pizza@shaftnet.org>
- <CACRpkdabdiA=bQX3nCyB2jP2hDQq0SEqVXqF1myN1jswXT2e6w@mail.gmail.com>
+	Wed, 13 Mar 2013 13:45:33 -0400
+Date: Wed, 13 Mar 2013 13:30:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-03-11
+Message-ID: <20130313173035.GA19917@tuxdriver.com> (sfid-20130313_184703_011828_E21B898F)
+References: <20130311212033.GA17372@joana>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
-In-Reply-To: <CACRpkdabdiA=bQX3nCyB2jP2hDQq0SEqVXqF1myN1jswXT2e6w@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130311212033.GA17372@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 11, 2013 at 06:20:33PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> I have these two patches for 3.9, these add support for two more devices to
+> the bluetooth drivers. Please pull. Thanks.
+> 
+> 	Gustavo
+> --
+> The following changes since commit d786f67e5c587a4de8245336cb64cf4dd06871a7:
+> 
+>   mwl8k: fix band for supported channels (2013-02-11 14:31:36 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream 
+> 
+> for you to fetch changes up to 94a32d10f47b637ae24b78b1ddc7ef0e8396fda4:
+> 
+>   Bluetooth: Device 0cf3:3008 should map AR 3012 (2013-03-11 18:04:54 -0300)
 
---3MwIy2ne0vdjdPXF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Pulling now...
 
-On Wed, Mar 27, 2013 at 02:05:27PM +0100, Linus Walleij wrote:
-> >  drivers/net/wireless/cw1200/cw1200_sdio.c | 415 ++++++++++++++++++++++=
-++++
-> >  drivers/net/wireless/cw1200/cw1200_spi.c  | 470 ++++++++++++++++++++++=
-++++++++
-> >  include/linux/cw1200_platform.h           |  46 +++
->=20
-> I think platform data shall be in
-> include/linux/platform_data/wireless-cw1200.h these
-> days.
-
-Hmm.  I'll fix this for the next submission. =20
-
-FWIW there are still a handful of platform files under include/linux,=20
-and the compat-driver tree I'm developing against doesn't even have a=20
-include/linux/platform-data directory.  :)
-=20
-> Apart from that I do not understand WLAN drivers, sorry :-)
-
-Thanks for the comments all the same, every bit of review helps.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
-Quidquid latine dictum sit, altum viditur.
-
---3MwIy2ne0vdjdPXF
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRUxXiPuLgii2759ARArQMAKDSGLNc7kd61yLGIO50gqdg2SLCmACeN1G+
-gJ9uZzUwKIZYY9lW6O1nYt8=
-=UlLl
------END PGP SIGNATURE-----
-
---3MwIy2ne0vdjdPXF--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
