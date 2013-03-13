@@ -1,62 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g6t0186.atlanta.hp.com ([15.193.32.63]:39759 "EHLO
-	g6t0186.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932432Ab3CEBDI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10757 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932330Ab3CMMNT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 20:03:08 -0500
-Message-ID: <1362445374.4591.28.camel@lorien2> (sfid-20130305_020331_035679_18D893D1)
-Subject: [PATCH] net/wireless/brcm80211: remove PCI_BUS define from defs.h
- to fix warnings
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	linville@tuxdriver.com, seth.forshee@canonical.com,
-	pieterpg@broadcom.com
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	shuahkhan@gmail.com
-Date: Mon, 04 Mar 2013 18:02:54 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Mar 2013 08:13:19 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/14] wil6210: refactor connect_worker
+Date: Wed, 13 Mar 2013 14:12:43 +0200
+Message-ID: <1363176771-10082-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131352_642025_8922E998)
+In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCI_BUS defined in defs.h results in warnings from all brcm80211 source files
-including defs.h. This define is not used in brcm80211. Removing this define
-fixes the warning.
+Move wmi_connect_worker() to the main.c and change names for consistency.
 
-In file included from drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:35:0:
-drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
-  CC [M]  drivers/net/wireless/b43legacy/dma.o
-  CC [M]  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
-  CC [M]  drivers/net/wireless/b43legacy/pio.o
-In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
-drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
-In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
-drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
-
-Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/include/defs.h |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/main.c    |   22 +++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h |    3 +--
+ drivers/net/wireless/ath/wil6210/wmi.c     |   23 +----------------------
+ 3 files changed, 23 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
-index fb7cbcf..3608436 100644
---- a/drivers/net/wireless/brcm80211/include/defs.h
-+++ b/drivers/net/wireless/brcm80211/include/defs.h
-@@ -20,7 +20,6 @@
- #include <linux/types.h>
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 761c389..11b6960 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -118,6 +118,26 @@ static void wil_cache_mbox_regs(struct wil6210_priv *wil)
+ 	wil_mbox_ring_le2cpus(&wil->mbox_ctl.tx);
+ }
  
- #define	SI_BUS			0
--#define	PCI_BUS			1
- #define	PCMCIA_BUS		2
- #define SDIO_BUS		3
- #define JTAG_BUS		4
++static void wil_connect_worker(struct work_struct *work)
++{
++	int rc;
++	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
++						connect_worker);
++	int cid = wil->pending_connect_cid;
++
++	if (cid < 0) {
++		wil_err(wil, "No connection pending\n");
++		return;
++	}
++
++	wil_dbg_wmi(wil, "Configure for connection CID %d\n", cid);
++
++	rc = wil_vring_init_tx(wil, 0, WIL6210_TX_RING_SIZE, cid, 0);
++	wil->pending_connect_cid = -1;
++	if (rc == 0)
++		wil_link_on(wil);
++}
++
+ int wil_priv_init(struct wil6210_priv *wil)
+ {
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+@@ -130,7 +150,7 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	wil->pending_connect_cid = -1;
+ 	setup_timer(&wil->connect_timer, wil_connect_timer_fn, (ulong)wil);
+ 
+-	INIT_WORK(&wil->wmi_connect_worker, wmi_connect_worker);
++	INIT_WORK(&wil->connect_worker, wil_connect_worker);
+ 	INIT_WORK(&wil->disconnect_worker, wil_disconnect_worker);
+ 	INIT_WORK(&wil->wmi_event_worker, wmi_event_worker);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index bdab0e2..5f500de 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -225,7 +225,7 @@ struct wil6210_priv {
+ 	struct workqueue_struct *wmi_wq; /* for deferred calls */
+ 	struct work_struct wmi_event_worker;
+ 	struct workqueue_struct *wmi_wq_conn; /* for connect worker */
+-	struct work_struct wmi_connect_worker;
++	struct work_struct connect_worker;
+ 	struct work_struct disconnect_worker;
+ 	struct timer_list connect_timer;
+ 	int pending_connect_cid;
+@@ -311,7 +311,6 @@ int wmi_send(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len);
+ void wmi_recv_cmd(struct wil6210_priv *wil);
+ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ 	     u16 reply_id, void *reply, u8 reply_size, int to_msec);
+-void wmi_connect_worker(struct work_struct *work);
+ void wmi_event_worker(struct work_struct *work);
+ void wmi_event_flush(struct wil6210_priv *wil);
+ int wmi_set_ssid(struct wil6210_priv *wil, u8 ssid_len, const void *ssid);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index aa642df..dd3b7b1 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -443,7 +443,7 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 	memcpy(wil->dst_addr[0], evt->bssid, ETH_ALEN);
+ 
+ 	wil->pending_connect_cid = evt->cid;
+-	queue_work(wil->wmi_wq_conn, &wil->wmi_connect_worker);
++	queue_work(wil->wmi_wq_conn, &wil->connect_worker);
+ }
+ 
+ static void wmi_evt_disconnect(struct wil6210_priv *wil, int id,
+@@ -1031,24 +1031,3 @@ void wmi_event_worker(struct work_struct *work)
+ 		kfree(evt);
+ 	}
+ }
+-
+-void wmi_connect_worker(struct work_struct *work)
+-{
+-	int rc;
+-	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+-						wmi_connect_worker);
+-
+-	if (wil->pending_connect_cid < 0) {
+-		wil_err(wil, "No connection pending\n");
+-		return;
+-	}
+-
+-	wil_dbg_wmi(wil, "Configure for connection CID %d\n",
+-		    wil->pending_connect_cid);
+-
+-	rc = wil_vring_init_tx(wil, 0, WIL6210_TX_RING_SIZE,
+-			       wil->pending_connect_cid, 0);
+-	wil->pending_connect_cid = -1;
+-	if (rc == 0)
+-		wil_link_on(wil);
+-}
 -- 
-1.7.9.5
-
-
+1.7.10.4
 
