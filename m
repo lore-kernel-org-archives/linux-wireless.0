@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40158 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315Ab3CSUdu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17329 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab3CMMNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 16:33:50 -0400
-Message-ID: <1363725222.8336.27.camel@jlt4.sipsolutions.net> (sfid-20130319_213354_223107_B9AD0D9B)
-Subject: Re: [RFC 3/3] mac80211: P2P add NOA settings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Janusz.Dziedzic@tieto.com, linux-wireless@vger.kernel.org
-Date: Tue, 19 Mar 2013 21:33:42 +0100
-In-Reply-To: <CAFED-jndqjMFjNLBadFV1W9+5QZJF649BhFKy5zSjw3pnSQh1w@mail.gmail.com> (sfid-20130319_163844_201066_D1B1CD5A)
-References: <3078A9B976EF864C8DDD0C499FFD07912FA1693F2A@EXMB01.eu.tieto.com>
-	 <1363361717.8656.18.camel@jlt4.sipsolutions.net>
-	 <CAFED-jmGRNFDHBvZQV=t7ETQa=yk4bZMjt1N8KckKweDLZE3uA@mail.gmail.com>
-	 <1363638107.8260.24.camel@jlt4.sipsolutions.net>
-	 <CAFED-jndqjMFjNLBadFV1W9+5QZJF649BhFKy5zSjw3pnSQh1w@mail.gmail.com>
-	 (sfid-20130319_163844_201066_D1B1CD5A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Mar 2013 08:13:15 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/14] wil6210: do not set IE's for beacon
+Date: Wed, 13 Mar 2013 14:12:41 +0200
+Message-ID: <1363176771-10082-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131320_074572_ED51F5D3)
+In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-19 at 16:38 +0100, Janusz Dziedzic wrote:
+On the DMG band, there is no 'normal' beacon frame.
+Instead, transmitted is short 'DMG beacon' frame, that do not include IE's
+So, beacon IE's are not relevant for the DMG band.
 
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -960,8 +960,12 @@ static int ieee80211_start_ap(struct wiphy
-> *wiphy, struct net_device *dev,
->  	sdata->vif.bss_conf.hidden_ssid =
->  		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
-> 
-> -	sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
-> -	sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
-> +	sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow =
-> +						params->p2p_ctwindow & 0x7F;
-> +	if (params->p2p_opp_ps)
-> +		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |= BIT(7);
-> +	else
-> +		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &= ~BIT(7);
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-That else branch isn't really needed.
-
-> @@ -1956,12 +1960,17 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
->  	}
-> 
->  	if (params->p2p_ctwindow >= 0) {
-> -		sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
-> +		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &= ~0x7f;
-> +		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
-> +						params->p2p_ctwindow & 0x7f;
-
-You have this BIT(7) and 0x7f a lot now, I think you should add
-constants next to the struct definition and use them everywhere.
-
-Otherwise looks fine, thanks for fixing my bugs too :-)
-
-One more thing -- you need to update the iwlwifi/mvm driver that uses
-this already. I'd prefer to also use the constants I asked for above
-there.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 9ecc196..19d8d14 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -446,8 +446,13 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	/* IE's */
+ 	/* bcon 'head IE's are not relevant for 60g band */
+-	wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
+-		   bcon->beacon_ies);
++	/*
++	 * FW do not form regular beacon, so bcon IE's are not set
++	 * For the DMG bcon, when it will be supported, bcon IE's will
++	 * be reused; add something like:
++	 * wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->beacon_ies_len,
++	 * bcon->beacon_ies);
++	 */
+ 	wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
+ 		   bcon->proberesp_ies);
+ 	wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+-- 
+1.7.10.4
 
