@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756222Ab3CFWTc (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:40327 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932391Ab3CMPLi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 17:19:32 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: emmanuel.grumbach@intel.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9] mac80211: always synchronize_net() during station removal
-Date: Wed,  6 Mar 2013 23:19:26 +0100
-Message-Id: <1362608366-10771-1-git-send-email-johannes@sipsolutions.net> (sfid-20130306_231940_133902_988CCAB9)
+	Wed, 13 Mar 2013 11:11:38 -0400
+Received: by mail-we0-f175.google.com with SMTP id x8so1106738wey.20
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 08:11:37 -0700 (PDT)
+From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
+To: "'Jussi Kivilinna'" <jussi.kivilinna@iki.fi>,
+	"'Larry Finger'" <Larry.Finger@lwfinger.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	"'George0505'" <george0505@realtek.com>
+Subject: Re: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
+Date: Wed, 13 Mar 2013 16:11:36 +0100
+Message-ID: <000001ce1ffd$0ecd5e10$2c681a30$@gmail.com> (sfid-20130313_161141_264045_130AB650)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi, some months ago I reported some bugs about this chipset; now I tried latest stable compat-drivers (3.9-rc2-2-su) with the modified patch by Jussi Kivilinna, and I'm happy to report that it works  with my alfa AWUS036NHR on ubuntu 12.10 with kernel 3.5; The card now sustains multiple connection/disconnection cicles, and doesn't go mute, even after changing mac address.
 
-If there are keys left during station removal, then a
-synchronize_net() will be done (for each key, I have a
-patch to address this for 3.10), otherwise it won't be
-done at all which causes issues because the station
-could be used for TX while it's being removed from the
-driver -- that might confuse the driver.
+Some problems still remains: 
 
-Fix this by always doing synchronize_net() if no key
-was present any more.
+-led is always solid, no blinking whatsoever.
+-in monitor mode, every client appears as not associated, even when it really is.
+-power/signal strength readings (in networkmanager) seem to be fuzzy, almost inverse; nearest APs have lowest signal representation, while farest ones get strongest signal (this could very well be a networkmanager bug/misrepresentation); signal appears normal when the card is connected (only the reading relative to the connected AP)
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+I know you're probably understaffed and have a lot of work to do, however if you're willing to have a look at this secondary problems (Mr. Finger perhaps), I'm willing to recompile, test and report back to help squash these bugs.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index a79ce82..238a0cc 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -766,6 +766,7 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret, i;
-+	bool have_key = false;
- 
- 	might_sleep();
- 
-@@ -793,12 +794,19 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	list_del_rcu(&sta->list);
- 
- 	mutex_lock(&local->key_mtx);
--	for (i = 0; i < NUM_DEFAULT_KEYS; i++)
-+	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
- 		__ieee80211_key_free(key_mtx_dereference(local, sta->gtk[i]));
--	if (sta->ptk)
-+		have_key = true;
-+	}
-+	if (sta->ptk) {
- 		__ieee80211_key_free(key_mtx_dereference(local, sta->ptk));
-+		have_key = true;
-+	}
- 	mutex_unlock(&local->key_mtx);
- 
-+	if (!have_key)
-+		synchronize_net();
-+
- 	sta->dead = true;
- 
- 	local->num_sta--;
--- 
-1.8.0
+I'm attaching a debug=5 log to show my tests.
+
+As of now, this chipset/card is usable (signal reading is annoying btw)
+
+Thank you all for your work.
+
+Alessandro Lannocca
+
+-----Messaggio originale-----
+Da: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] Per conto di Jussi Kivilinna
+Inviato: martedì 12 marzo 2013 20.49
+A: Larry Finger
+Cc: linux-wireless@vger.kernel.org; 'George0505'
+Oggetto: Re: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
+
+On 12.03.2013 18:51, Larry Finger wrote:
+> On 03/12/2013 04:10 AM, Jussi Kivilinna wrote:
+>>
+>> That patch alone did not help.. however replacing
+>> _rtl92cu_set_check_bssid()
+>> with that new rtl92cu_set_check_bssid() does fix the issue (patch 
+>> attached).
+>>
+>> But I think _rtl92cu_set_check_bssid() needs to be rechecked since it 
+>> has '(IS_NORMAL_CHIP(rtlhal->version))' conditional etc.
+> 
+> I doubt that that IS_NORMAL_CHIP business affects us - the test chips 
+> are not supposed to be in the wild, but I modified your patch to 
+> include that test.
+> 
+
+Modified patch works here.
+
+> With that patch I am getting watchdog_wq callbacks that force a 
+> reconnection every 6 seconds, but that is due to other changes in my 
+> code. The result is a 34% loss of pings, but the connection stays up.
+> 
+
+No problems here.. <1% loss and can do large transfers, rtl8192cu being able to reconnect is connection is dropped.
+
+-Jussi
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
