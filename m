@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:44384 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755134Ab3CYAEB (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:40800 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933095Ab3CMSBW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 20:04:01 -0400
-Received: by mail-wg0-f45.google.com with SMTP id dq12so709056wgb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 17:03:59 -0700 (PDT)
+	Wed, 13 Mar 2013 14:01:22 -0400
+Received: by mail-ob0-f177.google.com with SMTP id eh20so1340368obb.36
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 11:01:21 -0700 (PDT)
+Message-ID: <5140BEE8.5010703@lwfinger.net> (sfid-20130313_190134_137538_3EB82646)
+Date: Wed, 13 Mar 2013 13:01:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <201303242358.17133.chunkeey@googlemail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
-	<CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
-	<CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com>
-	<201303242358.17133.chunkeey@googlemail.com>
-Date: Sun, 24 Mar 2013 17:03:59 -0700
-Message-ID: <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com> (sfid-20130325_010406_435883_A9ADC702)
-Subject: Re: Auth Packet TX Delay
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Robert Shade <robert.shade@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Marco Fonseca <marco@tampabay.rr.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+CC: John W Linville <linville@tuxdriver.com>,
+	alessandro.lannocca@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH for 3.9] rtlwifi: rtl8192cu: Fix problem that prevents
+ reassociation
+References: <51409b0d.AKkQggbo18xQwrFd%Larry.Finger@lwfinger.net> <5140ACCB.4050408@iki.fi>
+In-Reply-To: <5140ACCB.4050408@iki.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let me just be really clear.
+On 03/13/2013 11:43 AM, Jussi Kivilinna wrote:
+> On 13.03.2013 17:28, Larry Finger wrote:
+>> The driver was failing to clear the BSSID when a disconnect happened. That
+>> prevented a reconnection. This problem is reported at
+>> https://bugzilla.redhat.com/show_bug.cgi?id=789605,
+>> https://bugzilla.redhat.com/show_bug.cgi?id=866786,
+>> https://bugzilla.redhat.com/show_bug.cgi?id=906734, and
+>> https://bugzilla.kernel.org/show_bug.cgi?id=46171.
+>>
+>> Thanks to Jussi Kivilinna for making the critical observation
+>> that led to the solution.
+>>
+>> Reported-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+>> Tested-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+>> Tested-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org>
+>> ---
+>>
+>> John,
+>>
+>> As you can see by the number of bug reports, this patch should be
+>> pushed as soon as possible.
+>>
+>> Thanks,
+>>
+>> Larry
+>> ---
+>>
+>>   base.h         |    3 +
+>>   pci.c          |    2 -
+>
+> Seems like leak from another patch/change?
+>
+>>   rtl8192cu/hw.c |   87 ++++++++++++++++++++++-----------------------------------
+>>   3 files changed, 39 insertions(+), 53 deletions(-)
 
-Fast channel change is notoriously unreliable and really only fully
-debugged on some very later chips.
+Yes, there were some differences between having the patch at the end of the 
+line. I'll fix and send V2.
 
-The correct thing to do is something like this:
-
-* if you meet the fast cc requirements (same channel width, same
-frequency band, etc) then change channel;
-* if you fail the initial cal, or you hit some traffic stop condition,
-or you start failing NF cals - do a cold reset.
-
-Now, unless you're doing some kind of very latency sensitive
-applications (eg doing channel scans whilst in hostap mode) and you
-debug this very very thoroughly, fast-cc is not guaranteed to work. So
-I'd just ignore fast channel change in its entirety.
-
-Now, warm versus cold reset. Cold reset resets everything. Warm reset
-apparently doesn't fully reset everything in the MAC/PHY. Although I
--thought- the initval arrays would initialise things, apparently there
-are some things that don't get fully cleared. Hence why I suggest
-doing a cold reset if things are going a bit awry.
-
-Felix's catch was good - if the queues weren't fully stopped, just do
-a cold reset. But I'd just give up on fast-cc for now.
+Larry
 
 
-
-Adrian
