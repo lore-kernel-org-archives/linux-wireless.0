@@ -1,111 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39405 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032Ab3C0NkH (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:51367 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932910Ab3CMPp0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 09:40:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: parse Timeout Interval Element using a struct
-Date: Wed, 27 Mar 2013 14:39:57 +0100
-Message-Id: <1364391597-3977-5-git-send-email-johannes@sipsolutions.net> (sfid-20130327_144019_626778_F27AFF7F)
-In-Reply-To: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
-References: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 13 Mar 2013 11:45:26 -0400
+Received: by mail-wg0-f52.google.com with SMTP id 15so86113wgd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 08:45:25 -0700 (PDT)
+From: "Alessandro Lannocca" <alessandro.lannocca@gmail.com>
+To: "'Larry Finger'" <Larry.Finger@lwfinger.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <000001ce1ffd$0ecd5e10$2c681a30$@gmail.com> <51409A73.9050107@lwfinger.net>
+In-Reply-To: <51409A73.9050107@lwfinger.net>
+Subject: R: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
+Date: Wed, 13 Mar 2013 16:45:23 +0100
+Message-ID: <000001ce2001$c7252700$556f7500$@gmail.com> (sfid-20130313_164531_864500_9A195138)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I understand this bugs are lower priority, It's just a huge step forward to have this card in a working state, we'll wait for the rest to get sorted whenever possible.
 
-Instead of open-coding the accesses and length check do
-the length check in the IE parser and assign a struct
-pointer for use in the remaining code.
+Thanks
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h  | 10 ++++++++++
- net/mac80211/ieee80211_i.h |  3 +--
- net/mac80211/mlme.c        |  6 +++---
- net/mac80211/util.c        |  6 ++++--
- 4 files changed, 18 insertions(+), 7 deletions(-)
+Alessandro Lannocca
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index db1b3a6..b25c987 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1991,6 +1991,16 @@ enum ieee80211_timeout_interval_type {
- 	WLAN_TIMEOUT_ASSOC_COMEBACK = 3 /* 802.11w */,
- };
- 
-+/**
-+ * struct ieee80211_timeout_interval_ie - Timeout Interval element
-+ * @type: type, see &enum ieee80211_timeout_interval_type
-+ * @value: timeout interval value
-+ */
-+struct ieee80211_timeout_interval_ie {
-+	u8 type;
-+	__le32 value;
-+} __packed;
-+
- /* BACK action code */
- enum ieee80211_back_actioncode {
- 	WLAN_ACTION_ADDBA_REQ = 0,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index eb364f3..71fb97d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1182,7 +1182,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
--	const u8 *timeout_int;
-+	const struct ieee80211_timeout_interval_ie *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
- 
-@@ -1201,7 +1201,6 @@ struct ieee802_11_elems {
- 	u8 prep_len;
- 	u8 perr_len;
- 	u8 country_elem_len;
--	u8 timeout_int_len;
- 
- 	/* whether a parse error occurred while retrieving these elements */
- 	bool parse_error;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c6d87bc4..00cee31 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2696,10 +2696,10 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
- 
- 	if (status_code == WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY &&
--	    elems.timeout_int && elems.timeout_int_len == 5 &&
--	    elems.timeout_int[0] == WLAN_TIMEOUT_ASSOC_COMEBACK) {
-+	    elems.timeout_int &&
-+	    elems.timeout_int->type == WLAN_TIMEOUT_ASSOC_COMEBACK) {
- 		u32 tu, ms;
--		tu = get_unaligned_le32(elems.timeout_int + 1);
-+		tu = le32_to_cpu(elems.timeout_int->value);
- 		ms = tu * 1024 / 1000;
- 		sdata_info(sdata,
- 			   "%pM rejected association temporarily; comeback duration %u TU (%u ms)\n",
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 739ae33..e9107d9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -897,8 +897,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			elems->pwr_constr_elem = pos;
- 			break;
- 		case WLAN_EID_TIMEOUT_INTERVAL:
--			elems->timeout_int = pos;
--			elems->timeout_int_len = elen;
-+			if (elen >= sizeof(struct ieee80211_timeout_interval_ie))
-+				elems->timeout_int = (void *)pos;
-+			else
-+				elem_parse_failed = true;
- 			break;
- 		default:
- 			break;
--- 
-1.8.0
+-----Messaggio originale-----
+Da: Larry Finger [mailto:larry.finger@gmail.com] Per conto di Larry Finger
+Inviato: mercoledì 13 marzo 2013 16.26
+A: Alessandro Lannocca
+Cc: 'Jussi Kivilinna'; linux-wireless@vger.kernel.org; 'George0505'
+Oggetto: Re: rtl8192cu gets confused when scan is aborted by bringing interface down (Re: rtl8192cu goes silent/dead after some time...)
+
+On 03/13/2013 10:11 AM, Alessandro Lannocca wrote:
+> Hi, some months ago I reported some bugs about this chipset; now I tried latest stable compat-drivers (3.9-rc2-2-su) with the modified patch by Jussi Kivilinna, and I'm happy to report that it works  with my alfa AWUS036NHR on ubuntu 12.10 with kernel 3.5; The card now sustains multiple connection/disconnection cicles, and doesn't go mute, even after changing mac address.
+>
+> Some problems still remains:
+>
+> -led is always solid, no blinking whatsoever.
+> -in monitor mode, every client appears as not associated, even when it really is.
+> -power/signal strength readings (in networkmanager) seem to be fuzzy, 
+> almost inverse; nearest APs have lowest signal representation, while 
+> farest ones get strongest signal (this could very well be a 
+> networkmanager bug/misrepresentation); signal appears normal when the 
+> card is connected (only the reading relative to the connected AP)
+>
+> I know you're probably understaffed and have a lot of work to do, however if you're willing to have a look at this secondary problems (Mr. Finger perhaps), I'm willing to recompile, test and report back to help squash these bugs.
+>
+> I'm attaching a debug=5 log to show my tests.
+>
+> As of now, this chipset/card is usable (signal reading is annoying 
+> btw)
+
+Thanks for the report. That patch will be pushed upstream in a few minutes and will be backported to stable withing a few weeks. I am happy to hear that the patch works with your Alfa AWUS036NHR. In my limited testing with that device, it failed to connect. I feared that the RTL8192RU differed from the RTL8192CU.
+
+I know that improper operation of the LEDs and screwy signal levels are annoying, and I will get to them when I can. At the moment, however, I have more important problems to solve.
+
+Thanks,
+
+Larry
+
+
 
