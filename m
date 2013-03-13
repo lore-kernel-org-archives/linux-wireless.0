@@ -1,140 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57631 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757759Ab3CHNp6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 08:45:58 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Alexander Bondar <alexander.bondar@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/2] mac80211: remove vif debugfs driver callbacks
-Date: Fri,  8 Mar 2013 14:46:15 +0100
-Message-Id: <1362750375-3759-2-git-send-email-sgruszka@redhat.com> (sfid-20130308_144603_229400_36765C8D)
-In-Reply-To: <1362750375-3759-1-git-send-email-sgruszka@redhat.com>
-References: <1362750375-3759-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:45105 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932346Ab3CMTP2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Mar 2013 15:15:28 -0400
+Received: by mail-ob0-f171.google.com with SMTP id x4so1400532obh.16
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 12:15:27 -0700 (PDT)
+Message-ID: <5140D04A.4070708@lwfinger.net> (sfid-20130313_201533_520489_72FDB1A9)
+Date: Wed, 13 Mar 2013 14:15:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+	alessandro.lannocca@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH for 3.9] rtlwifi: rtl8192cu: Fix problem that prevents
+ reassociation
+References: <51409b0d.AKkQggbo18xQwrFd%Larry.Finger@lwfinger.net> <5140ACCB.4050408@iki.fi> <20130313184656.GD19917@tuxdriver.com>
+In-Reply-To: <20130313184656.GD19917@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This basically reverts commit b207cdb07f3f01ec1adaac62e9d0cc918c60a81a.
+On 03/13/2013 01:46 PM, John W. Linville wrote:
+> On Wed, Mar 13, 2013 at 06:43:55PM +0200, Jussi Kivilinna wrote:
+>> On 13.03.2013 17:28, Larry Finger wrote:
+>>> The driver was failing to clear the BSSID when a disconnect happened. That
+>>> prevented a reconnection. This problem is reported at
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=789605,
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=866786,
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=906734, and
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=46171.
+>>>
+>>> Thanks to Jussi Kivilinna for making the critical observation
+>>> that led to the solution.
+>>>
+>>> Reported-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+>>> Tested-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+>>> Tested-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Stable <stable@vger.kernel.org>
+>>> ---
+>>>
+>>> John,
+>>>
+>>> As you can see by the number of bug reports, this patch should be
+>>> pushed as soon as possible.
+>>>
+>>> Thanks,
+>>>
+>>> Larry
+>>> ---
+>>>
+>>>   base.h         |    3 +
+>>>   pci.c          |    2 -
+>>
+>> Seems like leak from another patch/change?
+>
+> I edited-out those bits...
 
-Now is possible to use drv_{add,remove}_interface() and vif->debugfs_dir
-to create/remove per interface debugfs files. Remove redundant
-callbacks.
+Thanks,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/mac80211.h    | 18 ------------------
- net/mac80211/driver-ops.h | 37 -------------------------------------
- net/mac80211/iface.c      |  4 ----
- 3 files changed, 59 deletions(-)
+Larry
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 97da981..81d6733 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2218,18 +2218,6 @@ enum ieee80211_rate_control_changed {
-  *	MAC address of the device going away.
-  *	Hence, this callback must be implemented. It can sleep.
-  *
-- * @add_interface_debugfs: Drivers can use this callback to add debugfs files
-- *	when a vif is added to mac80211. This callback and
-- *	@remove_interface_debugfs should be within a CONFIG_MAC80211_DEBUGFS
-- *	conditional. @remove_interface_debugfs must be provided for cleanup.
-- *	This callback can sleep.
-- *
-- * @remove_interface_debugfs: Remove the debugfs files which were added using
-- *	@add_interface_debugfs. This callback must remove all debugfs entries
-- *	that were added because mac80211 only removes interface debugfs when the
-- *	interface is destroyed, not when it is removed from the driver.
-- *	This callback can sleep.
-- *
-  * @config: Handler for configuration requests. IEEE 802.11 code calls this
-  *	function to change hardware configuration, e.g., channel.
-  *	This function should never fail but returns a negative error code
-@@ -2643,12 +2631,6 @@ struct ieee80211_ops {
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_sta *sta,
- 				   struct dentry *dir);
--	void (*add_interface_debugfs)(struct ieee80211_hw *hw,
--				      struct ieee80211_vif *vif,
--				      struct dentry *dir);
--	void (*remove_interface_debugfs)(struct ieee80211_hw *hw,
--					 struct ieee80211_vif *vif,
--					 struct dentry *dir);
- #endif
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 2f3dfbf..ccbfb55 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -531,43 +531,6 @@ static inline void drv_sta_remove_debugfs(struct ieee80211_local *local,
- 		local->ops->sta_remove_debugfs(&local->hw, &sdata->vif,
- 					       sta, dir);
- }
--
--static inline
--void drv_add_interface_debugfs(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata)
--{
--	might_sleep();
--
--	check_sdata_in_driver(sdata);
--
--	if (!local->ops->add_interface_debugfs)
--		return;
--
--	local->ops->add_interface_debugfs(&local->hw, &sdata->vif,
--					  sdata->vif.debugfs_dir);
--}
--
--static inline
--void drv_remove_interface_debugfs(struct ieee80211_local *local,
--				  struct ieee80211_sub_if_data *sdata)
--{
--	might_sleep();
--
--	check_sdata_in_driver(sdata);
--
--	if (!local->ops->remove_interface_debugfs)
--		return;
--
--	local->ops->remove_interface_debugfs(&local->hw, &sdata->vif,
--					     sdata->vif.debugfs_dir);
--}
--#else
--static inline
--void drv_add_interface_debugfs(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata) {}
--static inline
--void drv_remove_interface_debugfs(struct ieee80211_local *local,
--				  struct ieee80211_sub_if_data *sdata) {}
- #endif
- 
- static inline __must_check
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index baaa860..ea0e4791 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -559,8 +559,6 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 				goto err_del_interface;
- 		}
- 
--		drv_add_interface_debugfs(local, sdata);
--
- 		if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 			local->fif_pspoll++;
- 			local->fif_probe_req++;
-@@ -846,8 +844,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		 */
- 		ieee80211_free_keys(sdata);
- 
--		drv_remove_interface_debugfs(local, sdata);
--
- 		if (going_down)
- 			drv_remove_interface(local, sdata);
- 	}
--- 
-1.7.11.7
 
