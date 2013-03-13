@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38323 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932203Ab3CSIS1 (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:44534 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932391Ab3CMP3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 04:18:27 -0400
-Message-ID: <1363681103.8336.0.camel@jlt4.sipsolutions.net> (sfid-20130319_091832_410963_92DA7005)
-Subject: Re: BUG: problem while tracing cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, David Spinadel <dvdspndl@gmail.com>
-Date: Tue, 19 Mar 2013 09:18:23 +0100
-In-Reply-To: <514790A5.90004@broadcom.com>
-References: <51476F35.9040909@broadcom.com>
-	 <1363636984.8260.17.camel@jlt4.sipsolutions.net>
-	 <51478F06.9000506@broadcom.com> <514790A5.90004@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Mar 2013 11:29:07 -0400
+Date: Wed, 13 Mar 2013 11:28:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jussi.kivilinna@iki.fi, alessandro.lannocca@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH for 3.9] rtlwifi: rtl8192cu: Fix problem that prevents
+ reassociation
+Message-ID: <20130313152853.GB10077@tuxdriver.com> (sfid-20130313_162910_932501_908DEEEC)
+References: <51409b0d.AKkQggbo18xQwrFd%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51409b0d.AKkQggbo18xQwrFd%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-18 at 23:09 +0100, Arend van Spriel wrote:
-> On 03/18/2013 11:02 PM, Arend van Spriel wrote:
-> > On 03/18/2013 09:03 PM, Johannes Berg wrote:
-> >> On Mon, 2013-03-18 at 20:47 +0100, Arend van Spriel wrote:
-> >>> Hi Johannes,
-> >>>
-> >>> While testing David Spinadel's P2P device support functionality I got
-> >>> the following blurb, which is probably caused by cfg80211 tracing given
-> >>> the instruction pointer address.
-> >>>
-> >>> brcmfmac returns ERR_PTR(-ENOENT) and I think the trace code/macros do
-> >>> not take this into account.
-> >>
-> >> I guess this should fix it?
-> >>
-> >> http://p.sipsolutions.net/fdea39f2a56aff67.txt
-> >
-> > Did not test it, but that would be my guess to. Just another
-> > observation: Is the wdev identifier not defined as u64?
+On Wed, Mar 13, 2013 at 10:28:13AM -0500, Larry Finger wrote:
+> The driver was failing to clear the BSSID when a disconnect happened. That
+> prevented a reconnection. This problem is reported at
+> https://bugzilla.redhat.com/show_bug.cgi?id=789605,
+> https://bugzilla.redhat.com/show_bug.cgi?id=866786,
+> https://bugzilla.redhat.com/show_bug.cgi?id=906734, and
+> https://bugzilla.kernel.org/show_bug.cgi?id=46171.
+> 
+> Thanks to Jussi Kivilinna for making the critical observation
+> that led to the solution.
+> 
+> Reported-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+> Tested-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+> Tested-by: Alessandro Lannocca <alessandro.lannocca@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+> 
+> John,
+> 
+> As you can see by the number of bug reports, this patch should be
+> pushed as soon as possible.
+> 
+> Thanks,
+> 
+> Larry
 
-Mind testing it? :-)
+Got it -- disregard my earlier query... :-)
 
-> Found the answer. In nl80211 API the wdev identifier is 64 bits, which 
-> got me confused.
-
-Yes, externally it's a u64 but the high 32 bits are just the wiphy ID.
-Makes it easier to look things up based on the wdev index :-)
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
