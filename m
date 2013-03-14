@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:61776 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751992Ab3CBGEN (ORCPT
+Received: from mail-gh0-f169.google.com ([209.85.160.169]:65488 "EHLO
+	mail-gh0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755652Ab3CNAWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Mar 2013 01:04:13 -0500
-Received: by mail-pb0-f44.google.com with SMTP id wz12so2143622pbc.31
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 22:04:13 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 5/6] mac80211: disallow changing auto_open_plinks
-Date: Fri,  1 Mar 2013 22:02:51 -0800
-Message-Id: <1362204172-28307-5-git-send-email-thomas@cozybit.com> (sfid-20130302_070422_162214_9EFED872)
-In-Reply-To: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
-References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+	Wed, 13 Mar 2013 20:22:20 -0400
+Received: by mail-gh0-f169.google.com with SMTP id r18so301765ghr.14
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 17:22:20 -0700 (PDT)
+Message-ID: <51411838.6070402@lwfinger.net> (sfid-20130314_012224_934111_27D6DB4E)
+Date: Wed, 13 Mar 2013 19:22:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: isedev@gmail.com
+CC: b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: BCM4312 / b43 DMA transmission sequence errors
+References: <1695808.c7XUjJpf0R@wks001.ise.net>
+In-Reply-To: <1695808.c7XUjJpf0R@wks001.ise.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-while user MPM is running.
+On 03/13/2013 05:31 PM, ISE Development wrote:
+> Hi,
+>
+> The wireless connection keeps failing shortly after being established. Up to now, I've tracked it down to a DMA transmission sequence error in ring 3. Beyond that, I cannot say...
+>
+> Happy to provide further information and to test any potential fixes.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/cfg.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Have you applied the patch that increases the number of RX ring slots? It is 
+commit ccae0e50c16a7f and was committed on Feb 17, 2013. That fixed a lot of 
+problems on the BCM4312. It seems that the firmware fails to check for overflow 
+of the RX ring and blindly corrupts things.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cd9c222..f27eac5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1770,8 +1770,11 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshTTL = nconf->dot11MeshTTL;
- 	if (_chg_mesh_attr(NL80211_MESHCONF_ELEMENT_TTL, mask))
- 		conf->element_ttl = nconf->element_ttl;
--	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask))
-+	if (_chg_mesh_attr(NL80211_MESHCONF_AUTO_OPEN_PLINKS, mask)) {
-+		if (ifmsh->user_mpm)
-+			return -EBUSY;
- 		conf->auto_open_plinks = nconf->auto_open_plinks;
-+	}
- 	if (_chg_mesh_attr(NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR, mask))
- 		conf->dot11MeshNbrOffsetMaxNeighbor =
- 			nconf->dot11MeshNbrOffsetMaxNeighbor;
--- 
-1.7.10.4
+Larry
+
 
