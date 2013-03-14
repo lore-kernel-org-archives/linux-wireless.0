@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:64374 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab3CISYa (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:32785 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753188Ab3CNWjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 13:24:30 -0500
-Received: by mail-ob0-f171.google.com with SMTP id x4so2201942obh.16
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 10:24:27 -0800 (PST)
-Message-ID: <513B7E58.9000505@lwfinger.net> (sfid-20130309_192438_305249_E6F7C4B8)
-Date: Sat, 09 Mar 2013 12:24:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 14 Mar 2013 18:39:17 -0400
+Received: by mail-ea0-f176.google.com with SMTP id h10so1232294eaj.7
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 15:39:16 -0700 (PDT)
+From: ISE Development <isedev@gmail.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Reply-To: isedev@gmail.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: BCM4312 / b43 DMA transmission sequence errors
+Date: Thu, 14 Mar 2013 23:39:13 +0100
+Message-ID: <2297787.zcqzRcyLh6@wks001.ise.net> (sfid-20130314_233921_840042_E3486614)
+In-Reply-To: <20130314213956.05aa6dee@bother.homenet>
+References: <1695808.c7XUjJpf0R@wks001.ise.net> <4530943.RJ7WpUJOSz@wks001.ise.net> <20130314213956.05aa6dee@bother.homenet>
 MIME-Version: 1.0
-To: Vincent Brillault <gentoo@lerya.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
-References: <20130307192920.GB8668@Fea.lerya.net> <20130308215833.GA2829@Fea.lerya.net> <513A960B.2020304@lwfinger.net> <20130309113222.GA3009@Fea.lerya.net>
-In-Reply-To: <20130309113222.GA3009@Fea.lerya.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/09/2013 05:32 AM, Vincent Brillault wrote:
-> Thanks for your email, please find my comments inline
->
-> On Fri  8.Mar'13 at 19:53:15 -0600, Larry Finger wrote:
->> The firmware in all the cards that use the rtlwifi family of drivers its own
->> rate control. The drivers do not pay any attention to any rate-setting calls
->> from user space.
-> Do you mean that those warnings are only cosmetic and I should not care
-> about those ?
+On Thursday 14 Mar 2013 21:39:56 Chris Vine wrote:
+> On Thu, 14 Mar 2013 14:08:33 +0100
+> 
+> ISE Development <isedev@gmail.com> wrote:
+> > On Wednesday 13 Mar 2013 21:37:52 Larry Finger wrote:
+> > > On 03/13/2013 08:06 PM, ISE Development wrote:
+> > > > I've hacked the driver to 'skip' one header and data frame if
+> > > > receiving an interrupt for the first slot + 2. It's not pretty
+> > > > and I have literally no idea if it will causes other problems,
+> > > > but it has allowed me to keep the Wifi connection up for a little
+> > > > over 3 hours now (as compared to the 45 seconds previously). It
+> > > > does not appear to be corrupting the data stream (checked by
+> > > > download large signed binaries and verifying the signature) and
+> > > > as far as my limited knowledge can tell, it should not be causing
+> > > > a memory leak.
+> > > > 
+> > > > The patch is listed below, for reference. However, I do not claim
+> > > > that it is valid, safe or even reasonsable. It does provide me
+> > > > with much needed relief though.
+> > > > 
+> > > > The diff is against the current head of
+> > > > linville/wireless-testing.git
+> > > > (d41d9c7419e3ac9c81841f43bbd7639dd0a5819e).
+> > > 
+> > > I am testing the patch on BCM4312 and other cards.
+> > > 
+> > > Larry
+> > 
+> > Here's a slighted cleaner version, with comments, in case you are
+> > considering integrating it.
+> 
+> [snip]
+> 
+> It might look like a bit of a hack (probably one that broadcom have
+> hidden away in their own wl driver if it is a firmware issue) but it is
+> certainly effective.
+> 
+> I have applied this patch to the 3.8.2 kernel and for the first time I
+> get reliable performance from the bcm4312 card in my netbook using the
+> b43 driver.  I have banged about 5 GB through it and I am continuing to
+> do so, but it is still up.  I get I would say on average about one TX
+> ring error (on ring 1 in the case of my card) per 500 MB of
+> throughput and the frame skip resolves the problem for me.
+> 
+> As this patch also avoid spamming the debug log with shed loads of
+> error reports once an inconsistency arises, it also reveals that the
+> inconsistency always begins with an expected status report of 138 and a
+> report of 140 being received.  Yours, however, may well be different,
+> and this may be meaningless anyway.
+> 
+> Chris
 
-You can safely ignore them, but I wonder why I have not seen them. What is the 
-configuration of your AP? Is it g or n?
+Same symptom here: starts with a miss on 138 (or less frequently on 208).
 
->> I also see reason 7 disconnects; however, with NetworkManager, the network is
->> reconnects. If you are using ifup or similar method, it probably does not reconnect.
-> It does reconnect, but some higher level daemon (e.g. openvpn) suffer
-> from those disconnect/reconnect.
-
-I have been doing tests on rtl8723ae for the past week, and I do not get those 
-disconnects. Obviously, I need to find what differs between the two drivers in 
-that respect. I suspect something in the rekeying part of TKIP.
-
-Larry
-
-
+-- 
+-- isedev
