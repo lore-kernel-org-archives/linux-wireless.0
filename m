@@ -1,65 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48791 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759637Ab3CGRq2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 12:46:28 -0500
-Date: Thu, 7 Mar 2013 11:46:23 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: carl9170 A-MPDU transmit problem
-Message-ID: <20130307174623.GC24233@thinkpad-t410> (sfid-20130307_184634_449211_2BA7060B)
-References: <Pine.LNX.4.44L0.1302251516240.1184-100000@iolanthe.rowland.org>
- <201302260030.58332.chunkeey@googlemail.com>
- <20130226165021.GA19077@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130226165021.GA19077@thinkpad-t410>
+Received: from mx1.redhat.com ([209.132.183.28]:30690 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757100Ab3CNLsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Mar 2013 07:48:47 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Zdenek Kabelac <zkabelac@redhat.com>,
+	Krzysztof Kolasa <kkolasa@winsoft.pl>,
+	Pedro Francisco <pedrogfrancisco@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3.9] iwl3945: fix length of dma buffers
+Date: Thu, 14 Mar 2013 12:48:40 +0100
+Message-Id: <1363261720-4344-1-git-send-email-sgruszka@redhat.com> (sfid-20130314_124855_270788_E33C9E4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 26, 2013 at 10:50:21AM -0600, Seth Forshee wrote:
-> On Tue, Feb 26, 2013 at 12:30:58AM +0100, Christian Lamparter wrote:
-> > On Monday, February 25, 2013 09:19:03 PM Alan Stern wrote:
-> > > On Mon, 25 Feb 2013, Seth Forshee wrote:
-> > > > > > >ffff88012fe19500 1519981417 S Bo:3:003:1 -115 126 = 7e000000 ... <-- DATA
-> > > > > > >
-> > > > > > > [... long period where the device receives commands on EP4 and sends
-> > > > > > > wifi data to the host via EP2 - so it is working!]
-> > > > > > >
-> > > > > > >ffff880146c8af00 1522200650 S Bo:3:003:1 -115 62 = 3e000000 ... <-- DELBA
-> > > > > > >ffff88012fe19500 1522200720 C Bo:3:003:1 0 126 > <-- DATA urb completion
-> > > > > > >ffff880146c8af00 1522200756 C Bo:3:003:1 0 62 > <-- DELBA urb completion
-> > > 
-> > > > > Which kernel version are you testing under?  Can you please recompile
-> > > > > with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on, and
-> > > > > send me dmesg?  I should be able to see if there's an unhandled pending
-> > > > > event on the xHCI rings if the data URB stalls for longer than say, a
-> > > > > minute.
-> > > > 
-> > > > I'll do this.
-> > > 
-> > > Bear in mind that the usbmon trace shows the URB stalling for 2 - 3
-> > > seconds.  There may have been other examples that went on for longer,
-> > > but probably nothing anywhere near as long as a minute.
-> > > 
-> > ---
-> > This should open up the window for as long as we want it. 
-> > The driver will now queue, but not deliver any frames to
-> > the device when there are unfinished urbs.
-> 
-> Here's dmesg with USB debug with the patch. I let it run for at least 5
-> minutes after the connection stalled.
-> 
-> http://people.canonical.com/~sforshee/dmesg-carl9170-usb-debug2.txt
+commit bdb084b22d8aee66c87af5e9c36bd6cf7f3bccfd
+Author: Stanislaw Gruszka <sgruszka@redhat.com>
+Date:   Wed Feb 13 15:49:08 2013 +0100
 
-Hi Sarah,
+    iwlegacy: more checks for dma mapping errors
+ 
+broke il3945_tx_skb() dma buffer length settings, what results on
+firmware errors like showed below and make 3945 device non usable.
 
-Just wondering if you've had a chance to take a look at this yet.
+iwl3945 0000:02:00.0: Microcode SW error detected. Restarting 0x82000008.
+iwl3945 0000:02:00.0: Loaded firmware version: 15.32.2.9
+iwl3945 0000:02:00.0: Start IWL Error Log Dump:
+iwl3945 0000:02:00.0: Status: 0x000202E4, count: 1
+iwl3945 0000:02:00.0: Desc 	Time	   asrtPC blink2 ilink1  nmiPC   Line
+iwl3945 0000:02:00.0: SYSASSERT     (0x5) 0000208934 0x008B6 0x0035E 0x00320 0x00000 267
+iwl3945 0000:02:00.0: Error Reply type 0x00000001 cmd
 
-Thanks,
-Seth
+Reported-by: Zdenek Kabelac <zkabelac@redhat.com> 
+Reported-by: Krzysztof Kolasa <kkolasa@winsoft.pl>
+Reported-by: Pedro Francisco <pedrogfrancisco@gmail.com> 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 3630a41..c353b5f 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -475,6 +475,7 @@ il3945_tx_skb(struct il_priv *il,
+ 	dma_addr_t txcmd_phys;
+ 	int txq_id = skb_get_queue_mapping(skb);
+ 	u16 len, idx, hdr_len;
++	u16 firstlen, secondlen;
+ 	u8 id;
+ 	u8 unicast;
+ 	u8 sta_id;
+@@ -589,21 +590,22 @@ il3945_tx_skb(struct il_priv *il,
+ 	len =
+ 	    sizeof(struct il3945_tx_cmd) + sizeof(struct il_cmd_header) +
+ 	    hdr_len;
+-	len = (len + 3) & ~3;
++	firstlen = (len + 3) & ~3;
+ 
+ 	/* Physical address of this Tx command's header (not MAC header!),
+ 	 * within command buffer array. */
+ 	txcmd_phys =
+-	    pci_map_single(il->pci_dev, &out_cmd->hdr, len, PCI_DMA_TODEVICE);
++	    pci_map_single(il->pci_dev, &out_cmd->hdr, firstlen,
++			   PCI_DMA_TODEVICE);
+ 	if (unlikely(pci_dma_mapping_error(il->pci_dev, txcmd_phys)))
+ 		goto drop_unlock;
+ 
+ 	/* Set up TFD's 2nd entry to point directly to remainder of skb,
+ 	 * if any (802.11 null frames have no payload). */
+-	len = skb->len - hdr_len;
+-	if (len) {
++	secondlen = skb->len - hdr_len;
++	if (secondlen > 0) {
+ 		phys_addr =
+-		    pci_map_single(il->pci_dev, skb->data + hdr_len, len,
++		    pci_map_single(il->pci_dev, skb->data + hdr_len, secondlen,
+ 				   PCI_DMA_TODEVICE);
+ 		if (unlikely(pci_dma_mapping_error(il->pci_dev, phys_addr)))
+ 			goto drop_unlock;
+@@ -611,12 +613,12 @@ il3945_tx_skb(struct il_priv *il,
+ 
+ 	/* Add buffer containing Tx command and MAC(!) header to TFD's
+ 	 * first entry */
+-	il->ops->txq_attach_buf_to_tfd(il, txq, txcmd_phys, len, 1, 0);
++	il->ops->txq_attach_buf_to_tfd(il, txq, txcmd_phys, firstlen, 1, 0);
+ 	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
+-	dma_unmap_len_set(out_meta, len, len);
+-	if (len)
+-		il->ops->txq_attach_buf_to_tfd(il, txq, phys_addr, len, 0,
+-					       U32_PAD(len));
++	dma_unmap_len_set(out_meta, len, firstlen);
++	if (secondlen > 0)
++		il->ops->txq_attach_buf_to_tfd(il, txq, phys_addr, secondlen, 0,
++					       U32_PAD(secondlen));
+ 
+ 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
+ 		txq->need_update = 1;
+-- 
+1.7.1
+
