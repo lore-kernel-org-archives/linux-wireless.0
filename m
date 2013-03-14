@@ -1,138 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60706 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755270Ab3CZA52 (ORCPT
+Received: from smtpout3.wanadoo.co.uk ([80.12.242.59]:18578 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752292Ab3CNVrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 20:57:28 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3] mac80211:  Optimize sta lookup for many VIFs
-Date: Mon, 25 Mar 2013 17:57:23 -0700
-Message-Id: <1364259443-22469-1-git-send-email-greearb@candelatech.com> (sfid-20130326_015732_712534_6202434D)
+	Thu, 14 Mar 2013 17:47:49 -0400
+Date: Thu, 14 Mar 2013 21:39:56 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: isedev@gmail.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: BCM4312 / b43 DMA transmission sequence errors
+Message-ID: <20130314213956.05aa6dee@bother.homenet> (sfid-20130314_224753_376595_29718FAA)
+In-Reply-To: <4530943.RJ7WpUJOSz@wks001.ise.net>
+References: <1695808.c7XUjJpf0R@wks001.ise.net>
+	<1476129.oNtxuF3Ght@wks001.ise.net>
+	<51413800.6050300@lwfinger.net>
+	<4530943.RJ7WpUJOSz@wks001.ise.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, 14 Mar 2013 14:08:33 +0100
+ISE Development <isedev@gmail.com> wrote:
+> On Wednesday 13 Mar 2013 21:37:52 Larry Finger wrote:
+> > On 03/13/2013 08:06 PM, ISE Development wrote:
+> > 
+> > >
+> > > I've hacked the driver to 'skip' one header and data frame if
+> > > receiving an interrupt for the first slot + 2. It's not pretty
+> > > and I have literally no idea if it will causes other problems,
+> > > but it has allowed me to keep the Wifi connection up for a little
+> > > over 3 hours now (as compared to the 45 seconds previously). It
+> > > does not appear to be corrupting the data stream (checked by
+> > > download large signed binaries and verifying the signature) and
+> > > as far as my limited knowledge can tell, it should not be causing
+> > > a memory leak.
+> > >
+> > > The patch is listed below, for reference. However, I do not claim
+> > > that it is valid, safe or even reasonsable. It does provide me
+> > > with much needed relief though.
+> > >
+> > > The diff is against the current head of
+> > > linville/wireless-testing.git
+> > > (d41d9c7419e3ac9c81841f43bbd7639dd0a5819e).
+> > >
+> > 
+> > I am testing the patch on BCM4312 and other cards.
+> > 
+> > Larry
+> > 
+> 
+> Here's a slighted cleaner version, with comments, in case you are
+> considering integrating it.
 
-The sta_info hash is designed to deal with an AP
-with lots of stations associated, or a station interface
-connected to a single AP.
+[snip]
 
-However, when you have lots of station VIFs connected
-to the same AP, the sta_info hash becomes worthless
-as there is a single hash bucket that contains all the
-entries in a linked list.
+It might look like a bit of a hack (probably one that broadcom have
+hidden away in their own wl driver if it is a firmware issue) but it is
+certainly effective.
 
-So, have the sdata object cache one of its station
-interfaces.  If we are a station VIF with a single
-sta_info, then this means we can ignore the sta_info
-hash entirely.
+I have applied this patch to the 3.8.2 kernel and for the first time I
+get reliable performance from the bcm4312 card in my netbook using the
+b43 driver.  I have banged about 5 GB through it and I am continuing to
+do so, but it is still up.  I get I would say on average about one TX
+ring error (on ring 1 in the case of my card) per 500 MB of
+throughput and the frame skip resolves the problem for me.
 
-On a test case with 128 stations and 50 TCP streams,
-tx performance went from around 80Mbps to 124Mbps.
+As this patch also avoid spamming the debug log with shed loads of
+error reports once an inconsistency arises, it also reveals that the
+inconsistency always begins with an expected status report of 138 and a
+report of 140 being received.  Yours, however, may well be different,
+and this may be meaningless anyway.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Chris
 
-v3:  Use rcu_dereference_protected as suggested.
 
-:100644 100644 a618bda... 9b10bbf... M	net/mac80211/cfg.c
-:100644 100644 493e2e8... c6386c7... M	net/mac80211/ieee80211_i.h
-:100644 100644 415f9c6... a958ebc... M	net/mac80211/sta_info.c
- net/mac80211/cfg.c         |    5 +++++
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/sta_info.c    |   22 +++++++++++++++++++++-
- 3 files changed, 32 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a618bda..9b10bbf 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	if (params->vlan && params->vlan != sta->sdata->dev) {
- 		bool prev_4addr = false;
- 		bool new_4addr = false;
-+		struct sta_info *some_sta;
- 
- 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
- 
-@@ -1312,7 +1313,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 			prev_4addr = true;
- 		}
- 
-+		some_sta = rcu_dereference_protected(sta->sdata->some_sta, 1);
-+		if (some_sta == sta)
-+			rcu_assign_pointer(sta->sdata->some_sta, NULL);
- 		sta->sdata = vlansdata;
-+		rcu_assign_pointer(sta->sdata->some_sta, sta);
- 
- 		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
- 		    prev_4addr != new_4addr) {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 493e2e8..c6386c7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -669,6 +669,12 @@ struct ieee80211_sub_if_data {
- 	/* count for keys needing tailroom space allocation */
- 	int crypto_tx_tailroom_needed_cnt;
- 
-+	/* A pointer to some station associated with this interface, or
-+	 * NULL.  This allows opportunistic lookup for sta_info objects when
-+	 * sdata is a station with a single sta_info.
-+	 */
-+	struct sta_info __rcu *some_sta;
-+
- 	struct net_device *dev;
- 	struct ieee80211_local *local;
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 415f9c6..a958ebc 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -67,7 +67,11 @@
- static int sta_info_hash_del(struct ieee80211_local *local,
- 			     struct sta_info *sta)
- {
--	struct sta_info *s;
-+	struct sta_info *s, *some_sta;
-+
-+	some_sta = rcu_dereference_protected(sta->sdata->some_sta, 1);
-+	if (some_sta == sta)
-+		rcu_assign_pointer(sta->sdata->some_sta, NULL);
- 
- 	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
- 				      lockdep_is_held(&local->sta_mtx));
-@@ -195,6 +199,20 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		struct sta_info *some_sta;
-+
-+		/* Shortcut for finding station entries for STATION VIFs */
-+		some_sta = rcu_dereference(sdata->some_sta);
-+		if (some_sta) {
-+			if (WARN_ON(some_sta->sdata != sdata))
-+				rcu_assign_pointer(sdata->some_sta, NULL);
-+			else
-+				if (ether_addr_equal(some_sta->sta.addr, addr))
-+					return some_sta;
-+		}
-+	}
-+
- 	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
- 				    lockdep_is_held(&local->sta_mtx));
- 	while (sta) {
-@@ -278,6 +296,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
- 	lockdep_assert_held(&local->sta_mtx);
- 	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
- 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
-+
-+	rcu_assign_pointer(sta->sdata->some_sta, sta);
- }
- 
- static void sta_unblock(struct work_struct *wk)
--- 
-1.7.3.4
+
 
