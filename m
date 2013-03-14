@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:61511 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912Ab3CERlr (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35097 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab3CNXAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 12:41:47 -0500
-Received: by mail-oa0-f42.google.com with SMTP id i18so11425870oag.29
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 09:41:46 -0800 (PST)
-Message-ID: <51362E58.7010004@lwfinger.net> (sfid-20130305_184150_773079_75742C28)
-Date: Tue, 05 Mar 2013 11:41:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 14 Mar 2013 19:00:25 -0400
+Message-ID: <51425681.2040207@candelatech.com> (sfid-20130315_000033_922618_0D7EF8DA)
+Date: Thu, 14 Mar 2013 16:00:17 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Stations disconnected due to no activity in latest wireless-testing.
-References: <513627C4.5040207@candelatech.com> <513629CE.4020307@lwfinger.net> <51362BA4.3020104@candelatech.com>
-In-Reply-To: <51362BA4.3020104@candelatech.com>
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Don't restart sta-timer if not associated.
+References: <1363299471-10442-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1363299471-10442-1-git-send-email-greearb@candelatech.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/2013 11:30 AM, Ben Greear wrote:
-> On 03/05/2013 09:22 AM, Larry Finger wrote:
->> On 03/05/2013 11:13 AM, Ben Greear wrote:
->>> I'm trying the 3.9.0-rc1-wl+, and wlan0 is disconnecting almost immediately
->>> after it connects, supposedly because of inactivity....
->>>
->>> Is this a known issue?
->>
->> Not here. Which driver or drivers are involved? I have tested with b43 on a
->> BCM4312 and rtl8723ae.
+On 03/14/2013 03:17 PM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 >
+> I found another crash when deleting lots of virtual stations
+> in a congested environment.  I think the problem is that
+> the ieee80211_mlme_notify_scan_completed could call
+> ieee80211_restart_sta_timer for a non-associated interface
+> that was about to be deleted.
 >
-> ath9k.  Same system works great on our 3.7 kernel, so I don't think it's
-> a user-space issue, at least (our supplicant and hostapd is not the absolute
-> latest,
-> but it's not that old either).
+> With the following patch I am unable to reproduce the
+> crash.
 
-It is not convenient for me to test with ath9k at the moment, but ath9k_htc is 
-OK. My distro is openSUSE 12.3-RC2 (released Feb 28), thus the supplicant is 
-relatively new (version 1.1). I am using my wireless devices as STA only, thus 
-hostapd is not in play.
+Nevermind..this seems to break association...will work on
+this some more.
 
-Larry
+Ben
 
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 81e0619... a1cc8c4... M	net/mac80211/mlme.c
+>   net/mac80211/mlme.c |    3 +++
+>   1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 81e0619..a1cc8c4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2931,6 +2931,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+>   	u32 flags;
+>
+>   	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+> +		if (unlikely(!sdata->u.mgd.associated))
+> +			return;
+> +
+>   		__ieee80211_stop_poll(sdata);
+>
+>   		/* let's probe the connection once */
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
