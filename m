@@ -1,95 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42596 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751587Ab3CRMzz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56928 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186Ab3CPM5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 08:55:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Pull request: ath6kl 20130318
-Date: Mon, 18 Mar 2013 14:55:50 +0200
-Message-ID: <87obeg7tpl.fsf@kamboji.qca.qualcomm.com> (sfid-20130318_135559_567958_215EB331)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 16 Mar 2013 08:57:10 -0400
+Message-ID: <1363372823.8656.41.camel@jlt4.sipsolutions.net> (sfid-20130316_135714_194817_9E8BBDC8)
+Subject: Re: [RFC] P2P find offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <2799886.P5v870j3h2@lx-vladimir>
+References: <3408094.SIuA27EmQ5@lx-vladimir>
+	 <1362650938.8694.21.camel@jlt4.sipsolutions.net>
+	 <1628850.y8u4o7KRXH@lx-vladimir> <2799886.P5v870j3h2@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Mar 2013 19:40:23 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-here's an ath6kl pull request for 3.10. Please let me know if there are
-any problems.
+> Allow to implement P2P find phase in the driver/firmware.
+> 
+> Offload scheme designed as follows:
+> 
+> - Driver provide methods start_p2p_find and stop_p2p_find in the cfg80211_ops;
+>   indicates support for p2p find offload by setting feature
+>   NL80211_FEATURE_P2P_FIND_OFFLOAD
 
-I added tracing support to ath6kl, along with a new Kconfig option. Now
-there's also a workaround to reset USB devices when the firmware upload
-fails, this happened when host was warm rebooted. There are also quite a
-few small fixes or cleanup.
+Why not just indicate the command presence rather than a feature flag?
 
-The following changes since commit b53cf458ea20dd7f5e32611366f63728e40c9021:
+> - perform legacy scan, through driver's cfg80211_ops 'scan' method
 
-  net: wireless: hostap: hostap_ap.c: Return -ENOMEM instead of -1 for if kmalloc() fails. (2013-02-18 15:30:40 -0500)
+Why the legacy scan? btw this is what I was worried about -- this API
+robs us of the ability to do "progressive" p2p scan.
 
-are available in the git repository at:
+> - configure rx management filter to get probe-request and probe-response frames
 
-  git://github.com/kvalo/ath6kl.git tags/for-linville-20130318
+Interesting, so this is pretty much bypassing the scan BSS table
+mechanism. I guess it makes sense though.
 
-for you to fetch changes up to 243c028099c467186d126859848bdac3bbfe8da0:
+> - driver start p2p find with hardware and notify wpa_supplicant with
+>   cfg80211_p2p_find_notify(NL80211_CMD_START_P2P_FIND)
 
-  ath6kl: Fix a debugfs crash for USB devices (2013-03-18 14:09:40 +0200)
+See other mail -- is that really useful?
 
-----------------------------------------------------------------
-Andrei Epure (1):
-      ath: changed kmalloc to kmemdup
+>   cfg80211_p2p_find_notify(NL80211_CMD_STOP_P2P_FIND)
 
-Dan Carpenter (1):
-      ath6kl: small cleanup in ath6kl_htc_pipe_rx_complete()
+btw, if both are needed I'd prefer not to give a command number here,
+it's useless to give anything else and this is a bit confusing.
 
-Kalle Valo (13):
-      ath6kl: print firmware capabilities
-      ath6kl: cleanup ath6kl_reset_device()
-      ath6kl: fix usb related error handling and warnings
-      ath6kl: cold reset target after host warm boot
-      ath6kl: add tracing support and tracing points for wmi packets
-      ath6kl: add tracing points for sdio transfers
-      ath6kl: add tracing point for hif irqs
-      ath6kl: adding tracing points for htc_mbox
-      ath6kl: convert ath6kl_info/err/warn macros to real functions
-      ath6kl: add tracing support to log functions
-      ath6kl: add tracing support to debug message macros
-      ath6kl: add an extra band check to ath6kl_wmi_beginscan_cmd()
-      ath6kl: remove false check from ath6kl_rx()
+>  /**
+> + * struct cfg80211_p2p_find_params - parameters for P2P find
+> + * @probe_ie: IE's for probe frames
 
-Mohammed Shafi Shajakhan (5):
-      ath6kl: Cosmetic change in checking for free vif slot
-      ath6kl: Protect ath6kl_cfg80211_vif_cleanup using rtnl_locks
-      ath6kl: Return error from ath6kl_bmi_done()
-      ath6kl: Remove NETDEV_REGISTERED flag
-      ath6kl: Fix a debugfs crash for USB devices
+probe request, presumably?
 
-Myoungje Kim (1):
-      ath6kl: Fix the byte alignment rule to avoid loss of bytes in a TCP segment
+Also, this is probably *additional* IEs, i.e. supported rates etc. are
+expected to be created by the driver?
 
- drivers/net/wireless/ath/ath6kl/Kconfig    |    9 +
- drivers/net/wireless/ath/ath6kl/Makefile   |    5 +
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    7 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    3 -
- drivers/net/wireless/ath/ath6kl/debug.c    |   72 +++++-
- drivers/net/wireless/ath/ath6kl/debug.h    |   11 +-
- drivers/net/wireless/ath/ath6kl/hif.c      |    3 +
- drivers/net/wireless/ath/ath6kl/htc_mbox.c |   21 +-
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |   15 +-
- drivers/net/wireless/ath/ath6kl/init.c     |  116 ++++++++--
- drivers/net/wireless/ath/ath6kl/main.c     |   41 +---
- drivers/net/wireless/ath/ath6kl/sdio.c     |   16 +-
- drivers/net/wireless/ath/ath6kl/target.h   |    2 +-
- drivers/net/wireless/ath/ath6kl/trace.c    |   23 ++
- drivers/net/wireless/ath/ath6kl/trace.h    |  332 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/txrx.c     |    5 +-
- drivers/net/wireless/ath/ath6kl/usb.c      |   38 ++--
- drivers/net/wireless/ath/ath6kl/wmi.c      |    6 +
- 18 files changed, 629 insertions(+), 96 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/trace.c
- create mode 100644 drivers/net/wireless/ath/ath6kl/trace.h
+> + * @probe_resp_ie: IE's for probe response frames
 
--- 
-Kalle Valo
+similarly here?
+
+> + * @probe_resp_ie_len: length, bytes, of @probe_resp_ie
+> + * @min_discoverable_interval and
+
+need : otherwise it's not valid kernel-doc
+
+> + * @NL80211_ATTR_MIN_DISCOVERABLE_INTERVAL,
+
+same here
+
+> +	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+> +				nl80211_scan_mcgrp.id, GFP_KERNEL);
+
+indentation
+
+
+> +static inline int rdev_start_p2p_find(struct cfg80211_registered_device *rdev,
+> +				      struct wireless_dev *wdev,
+> +				      struct cfg80211_p2p_find_params *params)
+
+indentation
+
+
+> +static inline void rdev_stop_p2p_find(struct cfg80211_registered_device *rdev,
+> +				      struct wireless_dev *wdev)
+
+ditto
+ 
+> +	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
+> +		 struct cfg80211_p2p_find_params *params),
+
+ditto
+
+> +	TP_printk(WDEV_PR_FMT ", cmd: %d", WDEV_PR_ARG,
+> +		  __entry->cmd)
+
+ditto
+
+johannes
+
