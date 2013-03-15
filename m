@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43085 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932201Ab3CDUPb (ORCPT
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:36449
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754965Ab3COSeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 15:15:31 -0500
-Message-ID: <1362428118.21028.45.camel@jlt4.sipsolutions.net> (sfid-20130304_211535_033397_8BEC9EB6)
-Subject: Re: [PATCH] mac80211: provide race-free 64-bit traffic counters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Mar 2013 21:15:18 +0100
-In-Reply-To: <5134D604.3060608@candelatech.com>
-References: <1362416578-1672-1-git-send-email-johannes@sipsolutions.net>
-	 <5134D604.3060608@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 15 Mar 2013 14:34:37 -0400
+Date: Fri, 15 Mar 2013 14:34:33 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Wojciech.Dubowik@neratec.com, mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.9] ath9k_hw: revert chainmask to user configuration
+ after calibration
+Message-ID: <20130315183433.GA2676@bombadil.infradead.org> (sfid-20130315_193503_660243_E001AC5C)
+References: <1363355611-10426-1-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363355611-10426-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-04 at 09:12 -0800, Ben Greear wrote:
-
-[please trim quotes before and after the part you're replying to]
-
-> >   	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-> > +	sinfo->tx_bytes = 0;
-> > +	sinfo->tx_packets = 0;
-> > +	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-> > +		sinfo->tx_bytes += sta->tx_bytes[ac];
-> > +		sinfo->tx_packets += sta->tx_packets[ac];
-> > +	}
+On Fri, Mar 15, 2013 at 02:53:31PM +0100, Felix Fietkau wrote:
+> The commit 'ath9k_hw: fix calibration issues on chainmask that don't
+> include chain 0' changed the hardware chainmask to the chip chainmask
+> for the duration of the calibration, but the revert to user
+> configuration in the reset path runs too early.
 > 
-> I think you'll need tx_packets to be u64 as well, as otherwise
-> if a queue wraps it's going to be quite hard to figure out?
+> That causes some issues with limiting the number of antennas (including
+> spurious failure in hardware-generated packets).
+> 
+> Fix this by reverting the chainmask after the essential parts of the
+> calibration that need the workaround, and before NF calibration is run.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> Tested-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> Cc: stable@vger.kernel.org
 
-Hmm, that's a good question. I guess I figured it'd never overflow
-anyway, but it seems that it is actually possible. I'll change it.
+This applies to v3.8 as well with the following changes, do you want
+it there as well?
 
-johannes
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 56317b0..e99f481 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -976,6 +976,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 					  AR_PHY_CL_TAB_1,
+ 					  AR_PHY_CL_TAB_2 };
+ 
++	/* Use chip chainmask only for calibration */
+ 	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
+ 
+ 	if (rtt) {
+@@ -1131,6 +1132,9 @@ skip_tx_iqcal:
+ 		ar9003_hw_rtt_disable(ah);
+ 	}
+ 
++	/* Revert chainmask to runtime parameters */
++	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
++
+ 	/* Initialize list pointers */
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 	ah->supp_cals = IQ_MISMATCH_CAL;
