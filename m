@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43009 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56927 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758118Ab3CDT4y (ORCPT
+	with ESMTP id S932091Ab3CPM5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 14:56:54 -0500
+	Sat, 16 Mar 2013 08:57:08 -0400
+Message-ID: <1363362270.8656.25.camel@jlt4.sipsolutions.net> (sfid-20130316_135711_818028_F9300C93)
+Subject: Re: [PATCH 1/2] mac80211: some fixes for ieee80211_do_stop while
+ suspend
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@do-not-panic.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] regulatory: enable channels 52-144 for world roaming
-Date: Mon,  4 Mar 2013 20:56:47 +0100
-Message-Id: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net> (sfid-20130304_205705_623334_8D5CCF4F)
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
+References: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Mar 2013 16:44:30 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2013-03-11 at 18:01 +0100, Stanislaw Gruszka wrote:
+> Is possible that we close interface while we are suspended, that
+> can result warning like below (and some others similar):
 
-If allowed in a country, these channels typically require
-DFS so mark them as such. Channel 144 is a bit special,
-it's coming in use now to allow more VHT 80 channels, but
-world roaming/passive scanning is acceptable anyway. It
-seems fairly unlikely that it'll be used as the control
-channel for a VHT AP, but it needs to be present to allow
-a full VHT connection to an AP that uses it as one of the
-secondary channels.
+> Patch try to avoid calling most of drv callbacks when stopping interface
+> while suspended.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/reg.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+try :-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dee9ab4..69cb4cb 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -188,7 +188,11 @@ static const struct ieee80211_regdomain world_regdom = {
-                         NL80211_RRF_PASSIVE_SCAN |
-                         NL80211_RRF_NO_IBSS),
- 
--		/* NB: 5260 MHz - 5700 MHz requires DFS */
-+		/* IEEE 802.11a, channel 52..144 - DFS required */
-+		REG_RULE(5760-10, 5720+10, 80, 6, 20,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS |
-+			NL80211_RRF_DFS),
- 
- 		/* IEEE 802.11a, channel 149..165 */
- 		REG_RULE(5745-10, 5825+10, 80, 6, 20,
--- 
-1.8.0
+> Some further work is probably needed to handle ROC, DFS, WDS and
+> ieee80211_{add,del}_virtual_monitor . However patch should fix issues
+
+Fixing either any of those would be pretty tricky, I think.
+
+> in most common scenario, i.e. managed mode without any new futures.
+
+I hope you're not into the stock market now ;-)
+
+
+> -		ieee80211_configure_filter(local);
+> +		/* configure filter latter (if not suspended) */
+
+later
+
+> -		mutex_unlock(&local->mtx);
+> +		/* tell driver latter (if not suspended) */
+
+later
+
+> -		if (going_down)
+> +		if (going_down && !local->suspended)
+>  			drv_remove_interface(local, sdata);
+
+I really wonder if there's not a better solution ... I'll think about it
+a bit.
+
+johannes
 
