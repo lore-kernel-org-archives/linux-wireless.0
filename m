@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173001pub.verizon.net ([206.46.173.1]:33497 "EHLO
-	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab3CIWqY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 17:46:24 -0500
-Received: from [192.168.1.7] ([unknown] [173.66.143.125])
- by vms173001.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0MJE003IYXSSTS60@vms173001.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sat, 09 Mar 2013 15:46:05 -0600 (CST)
-Message-id: <513BAD9C.7000408@verizon.net> (sfid-20130309_234637_778669_E2A65931)
-Date: Sat, 09 Mar 2013 16:46:04 -0500
-From: "C. McPherson" <ccmcphe@verizon.net>
-MIME-version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Cannot use ioctl SIOCGIWFREQ
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:44392 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754256Ab3CONxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Mar 2013 09:53:41 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Wojciech.Dubowik@neratec.com,
+	mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.9] ath9k_hw: revert chainmask to user configuration after calibration
+Date: Fri, 15 Mar 2013 14:53:31 +0100
+Message-Id: <1363355611-10426-1-git-send-email-nbd@openwrt.org> (sfid-20130315_145345_669966_793489C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello:
-I am running my compat-wireless with version 3.8-1 and found that when I 
-issue ghe SIOCGIWFREQ ioctl while in monitor mode returns with a 
--ENODATA. I have found that the ieee80211_cfg_get_channel function in 
-net/wireless/cfg.c does not account for any channel context when the 
-interface is in monitor mode and any attepmpt to use the SIOCGIWFREQ 
-function will error out. I have modified my local version to include a 
-check for a monitor interfaces  The code block below fixes the problem:
+The commit 'ath9k_hw: fix calibration issues on chainmask that don't
+include chain 0' changed the hardware chainmask to the chip chainmask
+for the duration of the calibration, but the revert to user
+configuration in the reset path runs too early.
 
+That causes some issues with limiting the number of antennas (including
+spurious failure in hardware-generated packets).
 
-static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
-                                      struct wireless_dev *wdev,
-                                      struct cfg80211_chan_def *chandef)
-{
-         struct ieee80211_sub_if_data *sdata = 
-IEEE80211_WDEV_TO_SUB_IF(wdev);
-         struct ieee80211_chanctx_conf *chanctx_conf;
-         struct ieee80211_local *local = wiphy_priv(wiphy);
-         int ret = -ENODATA;
+Fix this by reverting the chainmask after the essential parts of the
+calibration that need the workaround, and before NF calibration is run.
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Tested-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-         if (!wdev)
-                 return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 4cc1394..f76c3ca 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1023,6 +1023,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
+ 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
+ 
++	/* Use chip chainmask only for calibration */
+ 	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
+ 
+ 	if (rtt) {
+@@ -1150,6 +1151,9 @@ skip_tx_iqcal:
+ 		ar9003_hw_rtt_disable(ah);
+ 	}
+ 
++	/* Revert chainmask to runtime parameters */
++	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
++
+ 	/* Initialize list pointers */
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 
+-- 
+1.8.0.2
 
-         switch (wdev->iftype) {
-                 case NL80211_IFTYPE_MONITOR:
-                         *chandef = local->monitor_chandef;
-                         ret = 0;
-                         break;
-                 default:
-                         rcu_read_lock();
-                         chanctx_conf = 
-rcu_dereference(sdata->vif.chanctx_conf);
-                         if (chanctx_conf) {
-                                 *chandef = chanctx_conf->def;
-                                 ret = 0;
-                         }
-                         rcu_read_unlock();
-         }
-         return ret;
-}
-
-
-Thanks
-Clyde
