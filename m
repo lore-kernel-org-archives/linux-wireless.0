@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41871 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756992Ab3CDOA7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 09:00:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:47898 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755658Ab3COPSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Mar 2013 11:18:54 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/11] iwlwifi: mvm: ignore STOP_AGG when restarting
-Date: Mon,  4 Mar 2013 15:00:49 +0100
-Message-Id: <1362405651-26456-9-git-send-email-johannes@sipsolutions.net> (sfid-20130304_150107_126938_23DF5803)
-In-Reply-To: <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
-References: <1362405609.21028.12.camel@jlt4.sipsolutions.net>
- <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.9] ath9k: limit tx path hang check to normal data queues
+Date: Fri, 15 Mar 2013 16:18:44 +0100
+Message-Id: <1363360724-44435-1-git-send-email-nbd@openwrt.org> (sfid-20130315_161910_659900_0E1AAE20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The beacon and multicast-buffer queues are managed by the beacon
+tasklet, and the generic tx path hang check does not help in any way
+here. Running it on those queues anyway can introduce some race
+conditions leading to unnecessary chip resets.
 
-Since the device is being restarted, all the Rx / Tx Block
-Ack sessions are been wiped out by the driver. So ignore
-the requests from mac80211 that stops Tx agg while
-reconfiguring the device.
-
-Note that stopping a non-existing Rx BA session is harmless,
-so just honor mac80211's request.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/sta.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/ath/ath9k/link.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 861a7f9..274f44e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -770,6 +770,16 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	u16 txq_id;
- 	int err;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index ade3afb..39c84ec 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -28,21 +28,21 @@ void ath_tx_complete_poll_work(struct work_struct *work)
+ 	int i;
+ 	bool needreset = false;
  
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
+-		if (ATH_TXQ_SETUP(sc, i)) {
+-			txq = &sc->tx.txq[i];
+-			ath_txq_lock(sc, txq);
+-			if (txq->axq_depth) {
+-				if (txq->axq_tx_inprogress) {
+-					needreset = true;
+-					ath_txq_unlock(sc, txq);
+-					break;
+-				} else {
+-					txq->axq_tx_inprogress = true;
+-				}
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		txq = sc->tx.txq_map[i];
 +
-+	/*
-+	 * If mac80211 is cleaning its state, then say that we finished since
-+	 * our state has been cleared anyway.
-+	 */
-+	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		return 0;
++		ath_txq_lock(sc, txq);
++		if (txq->axq_depth) {
++			if (txq->axq_tx_inprogress) {
++				needreset = true;
++				ath_txq_unlock(sc, txq);
++				break;
++			} else {
++				txq->axq_tx_inprogress = true;
+ 			}
+-			ath_txq_unlock_complete(sc, txq);
+ 		}
++		ath_txq_unlock_complete(sc, txq);
 +	}
-+
- 	spin_lock_bh(&mvmsta->lock);
  
- 	txq_id = tid_data->txq_id;
+ 	if (needreset) {
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), RESET,
 -- 
-1.8.0
+1.8.0.2
 
