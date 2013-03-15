@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49982 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252Ab3CDXbq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 18:31:46 -0500
-From: greearb@candelatech.com
-To: ath9k-devel@venema.h4ckr.net
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] ath9k: Report rx-crc-errors in ethtool stats.
-Date: Mon,  4 Mar 2013 15:31:17 -0800
-Message-Id: <1362439877-12345-2-git-send-email-greearb@candelatech.com> (sfid-20130305_003148_914842_BEFDF80F)
-In-Reply-To: <1362439877-12345-1-git-send-email-greearb@candelatech.com>
-References: <1362439877-12345-1-git-send-email-greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:34736 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755136Ab3COWVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Mar 2013 18:21:52 -0400
+Message-ID: <51439EF6.8000605@openwrt.org> (sfid-20130315_232156_894392_1BDBF993)
+Date: Fri, 15 Mar 2013 23:21:42 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Wojciech.Dubowik@neratec.com, mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.9] ath9k_hw: revert chainmask to user configuration
+ after calibration
+References: <1363355611-10426-1-git-send-email-nbd@openwrt.org> <20130315183433.GA2676@bombadil.infradead.org>
+In-Reply-To: <20130315183433.GA2676@bombadil.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index daae4d0..67a2a4b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1912,6 +1912,7 @@ static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	AMKSTR(d_tx_desc_cfg_err),
- 	AMKSTR(d_tx_data_underrun),
- 	AMKSTR(d_tx_delim_underrun),
-+	"d_rx_crc_err",
- 	"d_rx_decrypt_crc_err",
- 	"d_rx_phy_err",
- 	"d_rx_mic_err",
-@@ -1992,6 +1993,7 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
- 	AWDATA(data_underrun);
- 	AWDATA(delim_underrun);
- 
-+	AWDATA_RX(crc_err);
- 	AWDATA_RX(decrypt_crc_err);
- 	AWDATA_RX(phy_err);
- 	AWDATA_RX(mic_err);
--- 
-1.7.3.4
+On 2013-03-15 7:34 PM, Luis R. Rodriguez wrote:
+> On Fri, Mar 15, 2013 at 02:53:31PM +0100, Felix Fietkau wrote:
+>> The commit 'ath9k_hw: fix calibration issues on chainmask that don't
+>> include chain 0' changed the hardware chainmask to the chip chainmask
+>> for the duration of the calibration, but the revert to user
+>> configuration in the reset path runs too early.
+>> 
+>> That causes some issues with limiting the number of antennas (including
+>> spurious failure in hardware-generated packets).
+>> 
+>> Fix this by reverting the chainmask after the essential parts of the
+>> calibration that need the workaround, and before NF calibration is run.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> Reported-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+>> Tested-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+>> Cc: stable@vger.kernel.org
+> 
+> This applies to v3.8 as well with the following changes, do you want
+> it there as well?
+Yes
 
