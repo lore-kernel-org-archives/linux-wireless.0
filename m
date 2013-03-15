@@ -1,116 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55566 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752403Ab3CXArv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:47:51 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 03/15] brcmsmac: remove brcms_bss_cfg->BSS
-Date: Sun, 24 Mar 2013 01:45:51 +0100
-Message-Id: <1364085963-25940-4-git-send-email-hauke@hauke-m.de> (sfid-20130324_014801_609121_CEEF069A)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:56911 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755593Ab3CPM44 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 08:56:56 -0400
+Message-ID: <1363361148.8656.9.camel@jlt4.sipsolutions.net> (sfid-20130316_135700_207716_664E5A65)
+Subject: Re: [PATCH] mac80211: Enable sw scan with chan context
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1363057766.778.8.camel@WLAN-SW-TEST-03>
+References: <513DE4BB.9010104@posedge.com>
+	 <1363012784.5284.5.camel@jlt4.sipsolutions.net>
+	 <513DF675.3000800@posedge.com>
+	 <1363015558.5284.11.camel@jlt4.sipsolutions.net>
+	 <1363057766.778.8.camel@WLAN-SW-TEST-03>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Mar 2013 16:25:48 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was a read only member. The checks using BSS are replaced by
-better fitting checks of the new type member.
+On Tue, 2013-03-12 at 08:39 +0530, Mahesh Palivela wrote:
+> On Mon, 2013-03-11 at 17:25 +0200, Johannes Berg wrote:
+> > On Mon, 2013-03-11 at 20:51 +0530, Mahesh Palivela wrote:
+> > 
+> > > I tested this patch. scan works. 
+> > 
+> > Works how? It never tells the driver to go to a different channel ...
+> 
+> sorry. I missed this. But my patch takes care of crash in mac80211 once
+> we remove 'use_chanctx' check in sw_scan function.
 
-The change in brcms_c_tbtt() was based on code from b43, in
-brcms_c_ps_allowed() the same happens with BSS being true or false,
-beaconing and probe responses are just needed in ap mode.
+Yes, but it doesn't make it *do* anything, so the patch is completely
+pointless. I don't see how chanctx and SW scan/roc can ever possibly
+work together.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   23 +++++++++--------------
- drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
- 2 files changed, 9 insertions(+), 16 deletions(-)
+> > > Anyways chan context is a WIP.
+> > 
+> > It pretty much works.
+> 
+> For AP mode yes it works. But for STA mode, we have work I guess.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 4e420ea..90e6c0d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -1069,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
- 
- static void brcms_c_tbtt(struct brcms_c_info *wlc)
- {
--	if (!wlc->bsscfg->BSS)
-+	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
- 		/*
- 		 * DirFrmQ is now valid...defer setting until end
- 		 * of ATIM window
-@@ -3059,16 +3059,8 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
- 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
- 		return false;
- 
--	if (cfg->associated) {
--		/*
--		 * disallow PS when one of the following
--		 * bsscfg specific conditions meets
--		 */
--		if (!cfg->BSS)
--			return false;
--
-+	if (cfg->associated)
- 		return false;
--	}
- 
- 	return true;
- }
-@@ -5078,8 +5070,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 				struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 				mboolset(wlc->pub->radio_disabled,
- 					 WL_RADIO_HW_DISABLE);
--
--				if (bsscfg->enable && bsscfg->BSS)
-+				if (bsscfg->enable &&
-+				    (bsscfg->type == BRCMS_TYPE_STATION ||
-+				     bsscfg->type == BRCMS_TYPE_ADHOC))
- 					brcms_err(wlc->hw->d11core,
- 						  "wl%d: up: rfdisable -> "
- 						  "bsscfg_disable()\n",
-@@ -7386,7 +7379,8 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
- {
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
--	if (bsscfg->up && !bsscfg->BSS)
-+	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
-+			   bsscfg->type == BRCMS_TYPE_ADHOC))
- 		/* Clear the soft intmask */
- 		wlc->defmacintmask &= ~MI_BCNTPL;
- }
-@@ -7461,7 +7455,8 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
- 	/* update AP or IBSS probe responses */
--	if (bsscfg->up && !bsscfg->BSS)
-+	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
-+			   bsscfg->type == BRCMS_TYPE_ADHOC))
- 		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index dbf027c..0cfe782 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -590,7 +590,6 @@ enum brcms_bss_type {
-  * up: is this configuration up operational
-  * enable: is this configuration enabled
-  * associated: is BSS in ASSOCIATED state
-- * BSS: infraustructure or adhoc
-  * SSID_len: the length of SSID
-  * SSID: SSID string
-  *
-@@ -610,7 +609,6 @@ struct brcms_bss_cfg {
- 	bool up;
- 	bool enable;
- 	bool associated;
--	bool BSS;
- 	u8 SSID_len;
- 	u8 SSID[IEEE80211_MAX_SSID_LEN];
- 	u8 BSSID[ETH_ALEN];
--- 
-1.7.10.4
+You may have, but in mac80211 it should work just as designed.
+
+> VHT assoc. To enable VHT on both AP and STA. For VHT to work we need
+> chan_ctx. Isn't it?
+
+Right now, yes, you do.
+
+However, I would argue that if you really want only VHT support, you
+should remove the channel/channel_type fields from struct ieee80211_conf
+and instead add a cfg80211_chan_def. This means a lot of changes in all
+the drivers, but I'd hate to see the data all duplicated, and the
+changes are trivial anyway.
+
+johannes
 
