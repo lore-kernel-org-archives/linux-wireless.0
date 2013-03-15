@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45211 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753461Ab3CKTPa (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:39117 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab3COSWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 15:15:30 -0400
-Date: Mon, 11 Mar 2013 15:05:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
-Message-ID: <20130311190537.GB32171@tuxdriver.com> (sfid-20130311_201540_415821_6AF76030)
-References: <1363020306-924-1-git-send-email-greearb@candelatech.com>
+	Fri, 15 Mar 2013 14:22:41 -0400
+Received: by mail-lb0-f178.google.com with SMTP id n1so3042767lba.37
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2013 11:22:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1363020306-924-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1362651722.8694.25.camel@jlt4.sipsolutions.net>
+References: <1362608366-10771-1-git-send-email-johannes@sipsolutions.net> <1362651722.8694.25.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 15 Mar 2013 11:22:19 -0700
+Message-ID: <CAB=NE6VTCdBzsQ7j7VgpbERUqYDuE-=9B=eoRa0rdSE7AiE7ew@mail.gmail.com> (sfid-20130315_192244_602563_6A0409CD)
+Subject: Re: [PATCH 3.9] mac80211: always synchronize_net() during station removal
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 11, 2013 at 09:45:06AM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Otherwise, can't get the Sparklan AR9380 NICs to be
-> 5Ghz APs, since they are in world-roaming domain by
-> default.  Add this to /etc/modprobe.d/ath9k.conf:
-> 
-> options ath9k override_eeprom_regdomain=0
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+On Thu, Mar 7, 2013 at 2:22 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2013-03-06 at 23:19 +0100, Johannes Berg wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> If there are keys left during station removal, then a
+>> synchronize_net() will be done (for each key, I have a
+>> patch to address this for 3.10), otherwise it won't be
+>> done at all which causes issues because the station
+>> could be used for TX while it's being removed from the
+>> driver -- that might confuse the driver.
+>>
+>> Fix this by always doing synchronize_net() if no key
+>> was present any more.
+>
+> Applied.
 
-Why "=0" to enable it?  Just to make it more confusing?
+This applies to v3.8 as well, do you want it there too?
 
-Do the Atheros folks have an opinion on this?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  LUis
