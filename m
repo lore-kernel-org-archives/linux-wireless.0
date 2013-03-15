@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59972 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756356Ab3CMLW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 07:22:56 -0400
-Message-ID: <514060B5.8060301@openwrt.org> (sfid-20130313_122333_624644_FE4EE1BB)
-Date: Wed, 13 Mar 2013 12:19:17 +0100
-From: John Crispin <blogic@openwrt.org>
-MIME-Version: 1.0
-To: Jonas Gorski <jogo@openwrt.org>
-CC: Paul Bolle <pebolle@tiscali.nl>, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: rt2x00: Kconfig symbols RALINK_RT288X and RALINK_RT305X
-References: <1363165170.3137.182.camel@x61.thuisdomein> <CAOiHx=n4a26z=PS02E2KjD2Y3Pp0P0x-5Ns6WRc-WScNF=EO_Q@mail.gmail.com> <1363169039.3137.186.camel@x61.thuisdomein> <CAOiHx=keYYoCGgHfrSKXOHQQvG1mrt60ems3dcXki1K06MHg2g@mail.gmail.com>
-In-Reply-To: <CAOiHx=keYYoCGgHfrSKXOHQQvG1mrt60ems3dcXki1K06MHg2g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from shards.monkeyblade.net ([149.20.54.216]:47054 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754363Ab3COM5Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Mar 2013 08:57:24 -0400
+Date: Fri, 15 Mar 2013 08:57:39 -0400 (EDT)
+Message-Id: <20130315.085739.1428933964050018561.davem@davemloft.net> (sfid-20130315_135745_659914_6A005015)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next] drivers:net: Remove dma_alloc_coherent OOM
+ messages
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1363302441.2146.30.camel@joe-AO722>
+References: <1363302441.2146.30.camel@joe-AO722>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/03/13 11:35, Jonas Gorski wrote:
-> On 13 March 2013 11:03, Paul Bolle<pebolle@tiscali.nl>  wrote:
->> On Wed, 2013-03-13 at 10:51 +0100, Jonas Gorski wrote:
->>> The actual accepted Kconfig symbol names are different though, so they
->>> should be changed in rt2x00 to match them (SOC_RT288X and SOC_RT305X).
->> Thanks. Note that I could not find an actual Kconfig symbol SOC_RT288X!
-> Ah, yes, the inital submission only included RT305X support, not
-> RT288X (and neither of the newer chips). These will come later.
->
->> Anyhow, I guess somebody has the (trivial) patch to convert
->> RALINK_RT...X and CONFIG_RALINK_RT...X to their SOC_* equivalents queued
->> for inclusion in v3.9-rcX. Is that correct?
-> Yes, that should be everything. John Crispin, anything missing from that?
->
->
-> Jonas
->
->
-Hi,
+From: Joe Perches <joe@perches.com>
+Date: Thu, 14 Mar 2013 16:07:21 -0700
 
-I will look into this later this week.
+> I believe these error messages are already logged
+> on allocation failure by warn_alloc_failed and so
+> get a dump_stack on OOM.
+> 
+> Remove the unnecessary additional error logging.
+> 
+> Around these deletions:
+> 
+> o Alignment neatening.
+> o Remove unnecessary casts of dma_alloc_coherent.
+> o Hoist assigns from ifs.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-John
-
+Applied, thanks Joe.
