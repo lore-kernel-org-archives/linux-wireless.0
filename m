@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39555 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630Ab3C1Lht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 07:37:49 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 2/2] b43: make struct b2056_inittabs_pts const
-Date: Thu, 28 Mar 2013 12:37:31 +0100
-Message-Id: <1364470651-1345-2-git-send-email-hauke@hauke-m.de> (sfid-20130328_123753_892891_795FD612)
-In-Reply-To: <1364470651-1345-1-git-send-email-hauke@hauke-m.de>
-References: <1364470651-1345-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:53340 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab3CORuU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Mar 2013 13:50:20 -0400
+Message-ID: <51435F59.7050403@candelatech.com> (sfid-20130315_185024_528645_1BF3260C)
+Date: Fri, 15 Mar 2013 10:50:17 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Optimizing performance for lots of virtual stations.
+References: <5142074C.1060708@candelatech.com> <51425963.2000904@openwrt.org> <51425AB1.9090603@candelatech.com> <51427CFF.1020105@openwrt.org> <514294ED.7040909@candelatech.com> <514356F3.4030408@candelatech.com>
+In-Reply-To: <514356F3.4030408@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/radio_2056.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On 03/15/2013 10:14 AM, Ben Greear wrote:
+> I probably should have done this first of course..but here is a 'perf top' on
+> the station machine (50 TCP streams transmitting on each of 50 stations,
+> and 78 associated-but-mostly-idle stations:
+>
+> Looks like sta_info_get would be a good place to start :)
+>
+>
+> ---------------------------------------------------------------------------------------------------------------------------
+>     PerfTop:    1890 irqs/sec  kernel:87.9%  exact:  0.0% [1000Hz cycles],  (all, 2 CPUs)
+> ---------------------------------------------------------------------------------------------------------------------------
+>
+>               samples  pcnt function                        DSO
+>               _______ _____ _______________________________ ______________
+>
+>               2261.00 20.8% sta_info_get                    [mac80211]
 
-diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
-index ab1f55f..b4fd934 100644
---- a/drivers/net/wireless/b43/radio_2056.c
-+++ b/drivers/net/wireless/b43/radio_2056.c
-@@ -2980,7 +2980,7 @@ static const struct b2056_inittab_entry b2056_inittab_rev8_rx[] = {
- 	.rx		= prefix##_rx,			\
- 	.rx_length	= ARRAY_SIZE(prefix##_rx)
- 
--static struct b2056_inittabs_pts b2056_inittabs[] = {
-+static const struct b2056_inittabs_pts b2056_inittabs[] = {
- 	[3] = { INITTABSPTS(b2056_inittab_rev3) },
- 	[4] = { INITTABSPTS(b2056_inittab_rev4) },
- 	[5] = { INITTABSPTS(b2056_inittab_rev5) },
-@@ -9035,7 +9035,7 @@ static void b2056_upload_inittab(struct b43_wldev *dev, bool ghz5,
- void b2056_upload_inittabs(struct b43_wldev *dev,
- 			   bool ghz5, bool ignore_uploadflag)
- {
--	struct b2056_inittabs_pts *pts;
-+	const struct b2056_inittabs_pts *pts;
- 
- 	if (dev->phy.rev >= ARRAY_SIZE(b2056_inittabs)) {
- 		B43_WARN_ON(1);
-@@ -9057,7 +9057,7 @@ void b2056_upload_inittabs(struct b43_wldev *dev,
- 
- void b2056_upload_syn_pll_cp2(struct b43_wldev *dev, bool ghz5)
- {
--	struct b2056_inittabs_pts *pts;
-+	const struct b2056_inittabs_pts *pts;
- 	const struct b2056_inittab_entry *e;
- 
- 	if (dev->phy.rev >= ARRAY_SIZE(b2056_inittabs)) {
+Ahh, crap...I see the problem.  The 'sta->addr' is the MAC of the VAP,
+so if I have 100 stations all connected to the same AP, then the hashing
+is worthless and just ends up being a linear search.
+
+Probably not going to be fun to fix that!
+
+Ben
+
 -- 
-1.7.10.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
