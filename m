@@ -1,83 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55593 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752612Ab3CXAsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:48:11 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 06/15] brcmsmac: remove brcms_bss_cfg->up
-Date: Sun, 24 Mar 2013 01:45:54 +0100
-Message-Id: <1364085963-25940-7-git-send-email-hauke@hauke-m.de> (sfid-20130324_014815_672190_F1C8C577)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:56915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709Ab3CPM5A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 08:57:00 -0400
+Message-ID: <1363361717.8656.18.camel@jlt4.sipsolutions.net> (sfid-20130316_135703_463587_8DBA7D11)
+Subject: Re: [RFC 3/3] mac80211: P2P add NOA settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz.Dziedzic@tieto.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <3078A9B976EF864C8DDD0C499FFD07912FA1693F2A@EXMB01.eu.tieto.com>
+References: <3078A9B976EF864C8DDD0C499FFD07912FA1693F2A@EXMB01.eu.tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Mar 2013 16:35:17 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was a read only member, replace it with pub->up.
+On Thu, 2013-03-14 at 09:33 +0200, Janusz.Dziedzic@tieto.com wrote:
+> Add P2P NOA settings for STA mode.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 +++++-----
- drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
- 2 files changed, 5 insertions(+), 7 deletions(-)
+First two patches are fine, here I have some concerns.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index ca1c585..9af5851 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7373,8 +7373,8 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
- {
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
--	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
--			   bsscfg->type == BRCMS_TYPE_ADHOC))
-+	if (wlc->pub->up && (bsscfg->type == BRCMS_TYPE_AP ||
-+			     bsscfg->type == BRCMS_TYPE_ADHOC))
- 		/* Clear the soft intmask */
- 		wlc->defmacintmask &= ~MI_BCNTPL;
- }
-@@ -7449,8 +7449,8 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
- 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
- 
- 	/* update AP or IBSS probe responses */
--	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
--			   bsscfg->type == BRCMS_TYPE_ADHOC))
-+	if (wlc->pub->up && (bsscfg->type == BRCMS_TYPE_AP ||
-+			     bsscfg->type == BRCMS_TYPE_ADHOC))
- 		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
- }
- 
-@@ -7803,7 +7803,7 @@ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
- 	brcms_c_set_bssid(wlc->bsscfg);
- 
- 	/* Update tsf_cfprep if associated and up */
--	if (wlc->pub->associated && wlc->bsscfg->up) {
-+	if (wlc->pub->associated && wlc->pub->up) {
- 		u32 bi;
- 
- 		/* get beacon period and convert to uS */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index e2551a7..65818e2 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -587,7 +587,6 @@ enum brcms_bss_type {
-  *
-  * wlc: wlc to which this bsscfg belongs to.
-  * type: interface type
-- * up: is this configuration up operational
-  * SSID_len: the length of SSID
-  * SSID: SSID string
-  *
-@@ -604,7 +603,6 @@ enum brcms_bss_type {
- struct brcms_bss_cfg {
- 	struct brcms_c_info *wlc;
- 	enum brcms_bss_type type;
--	bool up;
- 	u8 SSID_len;
- 	u8 SSID[IEEE80211_MAX_SSID_LEN];
- 	u8 BSSID[ETH_ALEN];
--- 
-1.7.10.4
+> +/* struct p2p_noa_desc - holds Notice of Absence parameters
+> + *
+
+This isn't valid kernel-doc.
+
+> +struct p2p_noa_desc {
+
+However, in any case, I'd rather you remove this struct.
+
+> +	struct p2p_noa_desc p2p_noa_desc[IEEE80211_P2P_NOA_DESC_MAX];
+
+and use ieee80211_p2p_noa_desc here
+
+> +static u8 ieee80211_setup_noa_attr(struct ieee80211_bss_conf *bss_conf,
+> +				   struct ieee80211_p2p_noa_attr *noa)
+
+indentation is wrong, but you'll get rid of the function anyway :-)
+
+> +		bss_conf->p2p_noa_desc[i].duration =
+> +				le32_to_cpu(noa->desc[i].duration);
+
+I don't see any need to do endian conversion here in mac80211 -- the
+driver can do it. Most drivers won't need it anyway, so this is just
+extra code/time spent.
+
+> -			struct ieee80211_p2p_noa_attr noa;
+> +			struct ieee80211_p2p_noa_attr noa = {0};
+
+Please just use = {}. Although ... see below
+
+> @@ -2953,18 +2976,17 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>  	}
+>  
+>  	if (sdata->vif.p2p) {
+> -		struct ieee80211_p2p_noa_attr noa;
+> +		struct ieee80211_p2p_noa_attr noa = {0};
+>  		int ret;
+>  
+>  		ret = cfg80211_get_p2p_attr(mgmt->u.beacon.variable,
+>  					    len - baselen,
+>  					    IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
+>  					    (u8 *) &noa, sizeof(noa));
+> -		if (ret >= 2 && sdata->u.mgd.p2p_noa_index != noa.index) {
+> -			bss_conf->p2p_oppps = noa.oppps_ctwindow & 0x80;
+> -			bss_conf->p2p_ctwindow = noa.oppps_ctwindow & 0x7f;
+> +		if (sdata->u.mgd.p2p_noa_index != noa.index) {
+> +			sdata->u.mgd.p2p_noa_index =
+> +					ieee80211_setup_noa_attr(bss_conf, &noa);
+>  			changed |= BSS_CHANGED_P2P_PS;
+> -			sdata->u.mgd.p2p_noa_index = noa.index;
+
+Now that we pretty much have *all* fields of the NoA attribute in
+bss_conf (except the index), why not just put the full struct there, and
+have cfg80211 read into that buffer directly? That way, we save all the
+copying. Yes, it would mean changing all the drivers (just one I guess)
+using it, but maybe that'd be better?
+
+Or do we expect broken GOs that change the contents w/o updating the
+index, and then things break or something?
+
+johanes
 
