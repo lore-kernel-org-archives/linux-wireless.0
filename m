@@ -1,48 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12007 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115Ab3CRMJ1 (ORCPT
+Received: from mail-qe0-f53.google.com ([209.85.128.53]:36326 "EHLO
+	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab3CPXWz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 08:09:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Andrei Epure <epure.andrei@gmail.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath: changed kmalloc to kmemdup
-References: <1362919199-16292-1-git-send-email-epure.andrei@gmail.com>
-Date: Mon, 18 Mar 2013 14:09:22 +0200
-In-Reply-To: <1362919199-16292-1-git-send-email-epure.andrei@gmail.com>
-	(Andrei Epure's message of "Sun, 10 Mar 2013 14:39:58 +0200")
-Message-ID: <878v5k9afh.fsf@kamboji.qca.qualcomm.com> (sfid-20130318_130948_216457_C8FB187D)
+	Sat, 16 Mar 2013 19:22:55 -0400
+Received: by mail-qe0-f53.google.com with SMTP id cz11so2621435qeb.40
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Mar 2013 16:22:54 -0700 (PDT)
+Message-ID: <5144FECC.6050504@lwfinger.net> (sfid-20130317_002308_820554_1B95E519)
+Date: Sat, 16 Mar 2013 18:22:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Christian Clauss <cclauss@bluewin.ch>
+CC: ziv_huang@realtek.com, georgia@realtek.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192cu NOT working on Raspberry Pi
+References: <041DFAF5-BEDE-4C1A-9863-A04F2DD3049A@bluewin.ch>
+In-Reply-To: <041DFAF5-BEDE-4C1A-9863-A04F2DD3049A@bluewin.ch>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrei Epure <epure.andrei@gmail.com> writes:
-
-> Signed-off-by: Andrei Epure <epure.andrei@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/usb.c |    4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+On 03/16/2013 05:03 PM, Christian Clauss wrote:
+> Hi Larry, Ziv, and Georgia,
 >
-> diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-> index 5fcd342..ffa1daa 100644
-> --- a/drivers/net/wireless/ath/ath6kl/usb.c
-> +++ b/drivers/net/wireless/ath/ath6kl/usb.c
-> @@ -856,11 +856,9 @@ static int ath6kl_usb_submit_ctrl_out(struct ath6kl_usb *ar_usb,
->  	int ret;
->  
->  	if (size > 0) {
-> -		buf = kmalloc(size, GFP_KERNEL);
-> +		buf = kmemdup(data, size, GFP_KERNEL);
->  		if (buf == NULL)
->  			return -ENOMEM;
-> -
-> -		memcpy(buf, data, size);
->  	}
+>     These rtl8192cu drivers seem to be very flakey / non-functional on Raspberry Pi.
+>
+>      https://github.com/hexameron/rtlwifi
+>
+>      http://www.raspberrypi.org/phpBB3/viewtopic.php?f=71&t=24951
 
-Thanks, applied to ath6kl.git.
+Sorry, but I only support the drivers in the current Linux kernel, and as 
+backported with compat-drivers.
 
--- 
-Kalle Valo
+>
+> # ========
+>
+> $ uname -a
+> Linux raspberrypi 3.6.11+ #371 PREEMPT Thu Feb 7 16:31:35 GMT 2013 armv6l GNU/Linux
+>
+> # ========
+>
+> $ modinfo rtl8192cu          # Only after following hexameron's instructions above.
+> filename:       /lib/modules/3.6.11+/kernel/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
+> firmware:       rtlwifi/rtl8192cufw.bin
+> description:    Realtek 8192C/8188C 802.11n USB wireless
+> license:        GPL
+> author:         Larry Finger	<Larry.Finger@lwfinger.net>
+> author:         Ziv Huang	<ziv_huang@realtek.com>
+> author:         Georgia		<georgia@realtek.com>
+>
+> # ========
+>
+> $ modinfo 8192cu
+> filename:       /lib/modules/3.6.11+/kernel/drivers/net/wireless/rtl8192cu/8192cu.ko
+> version:        v3.4.3_4369.20120622
+> author:         Realtek Semiconductor Corp.
+> description:    Realtek Wireless Lan Driver
+> license:        GPL
+>
+> # ========
+>
+> $ ifup wlan0
+> ioctl[SIOCSIWAP]: Operation not permitted
+> ioctl[SIOCSIWENCODEEXT]: Invalid argument
+> ioctl[SIOCSIWENCODEEXT]: Invalid argument
+
+No mac80211 driver will support *ALL* of the ioctl commands. You should use iw; 
+however, these should not be critical.
+
+>
+> # ========
+>
+> $ ip addr
+> 4: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN qlen 1000
+>      link/ether e0:91:53:62:9e:d9 brd ff:ff:ff:ff:ff:ff
+>
+> # ========
+>
+> $ ifconfig wlan0
+> wlan0     Link encap:Ethernet  HWaddr e0:91:53:62:9e:d9
+>            UP BROADCAST MULTICAST  MTU:1500  Metric:1
+>            RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>            TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>            collisions:0 txqueuelen:1000
+>            RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+There is a major bug in rtl8192cu that was just fixed this past week. See 
+http://marc.info/?l=linux-wireless&m=136319807619280&w=2 for the patch.
+
+Larry
+
+
