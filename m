@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:46340 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024Ab3CBJpS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Mar 2013 04:45:18 -0500
-Received: by mail-oa0-f44.google.com with SMTP id h1so7042779oag.17
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Mar 2013 01:45:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5131C5CF.2090306@hauke-m.de>
-References: <1362186865-20539-1-git-send-email-zajec5@gmail.com>
-	<20130302050900.6e768a3e@milhouse>
-	<CACna6rw1HLX8oP_mepfikpuKZ9zQ8j8+1=mOi_iCLQ49jUq-PA@mail.gmail.com>
-	<5131C5CF.2090306@hauke-m.de>
-Date: Sat, 2 Mar 2013 10:45:17 +0100
-Message-ID: <CACna6rzJoihR5QtYLhWN+VNdCgc-CpEG30T2ju-Q8ro59f1BsQ@mail.gmail.com> (sfid-20130302_104559_193786_A69BF896)
-Subject: Re: [PATCH] b43: HT-PHY: make it BCMA-only
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx3.wp.pl ([212.77.101.7]:41854 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932506Ab3CPSUA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:20:00 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 14/25] rt2800: 5592: setup LDO_CFG0 when configuring channel
+Date: Sat, 16 Mar 2013 19:19:42 +0100
+Message-Id: <1363457993-15541-15-git-send-email-stf_xl@wp.pl> (sfid-20130316_192007_298375_B85D8432)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/2 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 03/02/2013 10:19 AM, Rafał Miłecki wrote:
->> 2013/3/2 Michael Büsch <m@bues.ch>:
->>> On Sat,  2 Mar 2013 02:14:25 +0100
->>> Rafał Miłecki <zajec5@gmail.com> wrote:
->>>
->>>> HT-PHY was found only on BCM4331 which is a BCMA-based chipset. This is
->>>> reallly unlikely we will ever see HT-PHY on SSB thus make the whole code
->>>> BCMA specific. This will allow us to call various BCMA-specific
->>>> functions directly (without extra checks).
->>>>
->>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>> ---
->>>>  drivers/net/wireless/b43/Kconfig  |    2 +-
->>>>  drivers/net/wireless/b43/phy_ht.c |    5 +++++
->>>>  2 files changed, 6 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
->>>> index 7a28d21..09d315d 100644
->>>> --- a/drivers/net/wireless/b43/Kconfig
->>>> +++ b/drivers/net/wireless/b43/Kconfig
->>>> @@ -131,7 +131,7 @@ config B43_PHY_LP
->>>>
->>>>  config B43_PHY_HT
->>>>       bool "Support for HT-PHY (high throughput) devices (EXPERIMENTAL)"
->>>> -     depends on B43 && EXPERIMENTAL
->>>> +     depends on B43 && B43_BCMA && EXPERIMENTAL
->>>
->>> Makes sense.
->>> What about removing EXPERIMENTAL? This flag is mostly useless these days.
->>
->> A little later, I've plan for some minor improvement :)
->
-> There is already a patch [0] in Linus tree removing EXPERIMENTAL.
->
-> Hauke
->
-> [0]:
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=afd19ef0b1a98f420ddcfc619182fd589034577f
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Glad there was a b43-dev Cc...
+Based on:
+RT5592_ChipSwitchChannel()
 
-John please drop this patch. I'll wait for you merging Linus's tree
-and re-submit it rebased.
+from:
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5592.c
 
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 93b9def..189c880 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2187,12 +2187,17 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
+ 					 struct channel_info *info)
+ {
+ 	u8 rfcsr, ep_reg;
++	u32 reg;
+ 	int power_bound;
+ 
+ 	/* TODO */
+ 	const bool is_11b = false;
+ 	const bool is_type_ep = false;
+ 
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL,
++			   (rf->channel > 14 || conf_is_ht40(conf)) ? 5 : 0);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ 
+ 	/* Order of values on rf_channel entry: N, K, mod, R */
+ 	rt2800_rfcsr_write(rt2x00dev, 8, rf->rf1 & 0xff);
 -- 
-Rafał
+1.7.4.4
+
