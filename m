@@ -1,40 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53308 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932726Ab3CGLuX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 06:50:23 -0500
-Message-ID: <1362657018.8694.31.camel@jlt4.sipsolutions.net> (sfid-20130307_125033_390350_6C6AE876)
-Subject: Re: Memory leaks in cfg80211 and mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 07 Mar 2013 12:50:18 +0100
-In-Reply-To: <5137D6F8.4050007@lwfinger.net> (sfid-20130307_005334_931364_1B9BDD2F)
-References: <51365EBC.9080602@lwfinger.net>
-	  (sfid-20130305_220821_742055_EAAAA72D) <1362562265.8457.7.camel@jlt4.sipsolutions.net>
-	 <5137D6F8.4050007@lwfinger.net> (sfid-20130307_005334_931364_1B9BDD2F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx4.wp.pl ([212.77.101.8]:37107 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754080Ab3CPSUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:20:17 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 24/25] rt2800: 5592: iq calibration for 5GHz
+Date: Sat, 16 Mar 2013 19:19:52 +0100
+Message-Id: <1363457993-15541-25-git-send-email-stf_xl@wp.pl> (sfid-20130316_192031_484313_46F4F019)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-06 at 17:53 -0600, Larry Finger wrote:
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> > However, that's a corner case, I don't think you ran into it. Since you
-> > also didn't note any warnings, we can also discount a few cases that
-> > would be code bugs and would leak.
-> >
-> > I wonder if this is related to the first warning? The "new" object in
-> > the first block would typically take ownership of the "ies" object.
-> 
-> Although I do not get any warnings, your patch and mine have made the kmemleak 
-> scan now come up clean. I will continue testing and let you know.
+Based on:
+RT5592_IQCalibration()
 
-Ok. I guess I'll apply my patch, and we can see about yours later (since
-it's only a false positive, while mine actually fixes a potential leak).
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/cips/rt5592.c
 
-Were you reconfiguring your AP's SSID by any chance?
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   70 ++++++++++++++++++++++++++----
+ 1 files changed, 60 insertions(+), 10 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9b1f293..f08a042 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2468,31 +2468,80 @@ static void rt2800_bbp_write_with_rx_chain(struct rt2x00_dev *rt2x00dev,
+ 	}
+ }
+ 
+-
+ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ {
+ 	u8 cal;
+ 
+-	/* TODO */
+-	if (WARN_ON_ONCE(channel > 14))
+-		return;
+-
++	/* TX0 IQ Gain */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x2c);
+-	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX0_2G);
++	if (channel <= 14)
++		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX0_2G);
++	else if (channel >= 36 && channel <= 64)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX0_CH36_TO_CH64_5G);
++	else if (channel >= 100 && channel <= 138)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX0_CH100_TO_CH138_5G);
++	else if (channel >= 140 && channel <= 165)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX0_CH140_TO_CH165_5G);
++	else
++		cal = 0;
+ 	rt2800_bbp_write(rt2x00dev, 159, cal);
+ 
++	/* TX0 IQ Phase */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x2d);
+-	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX0_2G);
++	if (channel <= 14)
++		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX0_2G);
++	else if (channel >= 36 && channel <= 64)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX0_CH36_TO_CH64_5G);
++	else if (channel >= 100 && channel <= 138)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX0_CH100_TO_CH138_5G);
++	else if (channel >= 140 && channel <= 165)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX0_CH140_TO_CH165_5G);
++	else
++		cal = 0;
+ 	rt2800_bbp_write(rt2x00dev, 159, cal);
+ 
++	/* TX1 IQ Gain */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x4a);
+-	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX1_2G);
++	if (channel <= 14)
++		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_GAIN_CAL_TX1_2G);
++	else if (channel >= 36 && channel <= 64)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX1_CH36_TO_CH64_5G);
++	else if (channel >= 100 && channel <= 138)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX1_CH100_TO_CH138_5G);
++	else if (channel >= 140 && channel <= 165)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_GAIN_CAL_TX1_CH140_TO_CH165_5G);
++	else
++		cal = 0;
+ 	rt2800_bbp_write(rt2x00dev, 159, cal);
+ 
++	/* TX1 IQ Phase */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x4b);
+-	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX1_2G);
++	if (channel <= 14)
++		cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_IQ_PHASE_CAL_TX1_2G);
++	else if (channel >= 36 && channel <= 64)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX1_CH36_TO_CH64_5G);
++	else if (channel >= 100 && channel <= 138)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX1_CH100_TO_CH138_5G);
++	else if (channel >= 140 && channel <= 165)
++		cal = rt2x00_eeprom_byte(rt2x00dev,
++					 EEPROM_IQ_PHASE_CAL_TX1_CH140_TO_CH165_5G);
++	else
++		cal = 0;
+ 	rt2800_bbp_write(rt2x00dev, 159, cal);
+ 
++	/* FIXME: possible RX0, RX1 callibration ? */
++
+ 	/* RF IQ compensation control */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x04);
+ 	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_RF_IQ_COMPENSATION_CONTROL);
+@@ -2500,7 +2549,8 @@ static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
+ 
+ 	/* RF IQ imbalance compensation control */
+ 	rt2800_bbp_write(rt2x00dev, 158, 0x03);
+-	cal = rt2x00_eeprom_byte(rt2x00dev, EEPROM_RF_IQ_IMBALANCE_COMPENSATION_CONTROL);
++	cal = rt2x00_eeprom_byte(rt2x00dev,
++				 EEPROM_RF_IQ_IMBALANCE_COMPENSATION_CONTROL);
+ 	rt2800_bbp_write(rt2x00dev, 159, cal != 0xff ? cal : 0);
+ }
+ 
+-- 
+1.7.4.4
 
