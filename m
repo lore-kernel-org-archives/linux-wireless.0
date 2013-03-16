@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55606 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab3CXAsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:48:19 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 08/15] brcmsmac: remove brcms_pub->bcmerr
-Date: Sun, 24 Mar 2013 01:45:56 +0100
-Message-Id: <1364085963-25940-9-git-send-email-hauke@hauke-m.de> (sfid-20130324_014822_956785_4718A279)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Received: from mx3.wp.pl ([212.77.101.7]:41909 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755372Ab3CPSUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:20:10 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 20/25] rt2800: 5592: add AGC init
+Date: Sat, 16 Mar 2013 19:19:48 +0100
+Message-Id: <1363457993-15541-21-git-send-email-stf_xl@wp.pl> (sfid-20130316_192037_281487_387A82D9)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was a write only member
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Based on:
+RT5592_RTMPAGCInit()
+
+from:
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5592.c
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    1 -
- drivers/net/wireless/brcm80211/brcmsmac/pub.h  |    2 --
- 2 files changed, 3 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 056ca2c..7e19295 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4325,7 +4325,6 @@ static void brcms_c_info_init(struct brcms_c_info *wlc, int unit)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9fa10b0..f2446de 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2658,7 +2658,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_bbp_write(rt2x00dev, 195, 141);
+ 		rt2800_bbp_write(rt2x00dev, 196, conf_is_ht40(conf) ? 0x10 : 0x1a);
  
- 	/* WME QoS mode is Auto by default */
- 	wlc->pub->_ampdu = AMPDU_AGG_HOST;
--	wlc->pub->bcmerror = 0;
- }
+-		/* TODO AGC adjust */
++		/* AGC init */
++		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2 * rt2x00dev->lna_gain;
++		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
++
+ 		rt2800_iq_calibrate(rt2x00dev, rf->channel);
+ 	}
  
- static uint brcms_c_attach_module(struct brcms_c_info *wlc)
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index aa8580f..9dae59c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -164,8 +164,6 @@ struct brcms_pub {
- 
- 	u8 cur_etheraddr[ETH_ALEN];	/* our local ethernet address */
- 
--	int bcmerror;		/* last bcm error */
--
- 	u32 radio_disabled;	/* bit vector for radio disabled reasons */
- 
- 	u16 boardrev;	/* version # of particular board */
 -- 
-1.7.10.4
+1.7.4.4
 
