@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36031 "EHLO mx1.redhat.com"
+Received: from mx4.wp.pl ([212.77.101.8]:36917 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752008Ab3CRKBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 06:01:43 -0400
-Date: Mon, 18 Mar 2013 10:30:47 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: some fixes for ieee80211_do_stop while
- suspend
-Message-ID: <20130318093046.GA1458@redhat.com> (sfid-20130318_110147_457147_BBDE18DE)
-References: <1363021279-9809-1-git-send-email-sgruszka@redhat.com>
- <1363362270.8656.25.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1363362270.8656.25.camel@jlt4.sipsolutions.net>
+	id S932128Ab3CPSTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:19:39 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 05/25] rt2800: 5592: MAC registers initalization
+Date: Sat, 16 Mar 2013 19:19:33 +0100
+Message-Id: <1363457993-15541-6-git-send-email-stf_xl@wp.pl> (sfid-20130316_191942_983340_E67707A7)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 15, 2013 at 04:44:30PM +0100, Johannes Berg wrote:
-> On Mon, 2013-03-11 at 18:01 +0100, Stanislaw Gruszka wrote:
-> > Is possible that we close interface while we are suspended, that
-> > can result warning like below (and some others similar):
-> 
-> > Patch try to avoid calling most of drv callbacks when stopping interface
-> > while suspended.
-> 
-> try :-)
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-It basically fix my test case, but I'm not sure if there are no other 
-problems, not covered by this test.
+Based on:
+NICInitRT5592MacRegisters()
+
+from:
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5592.c
+
+On vendor driver we do not initialize TX_SW_CFG{1,2}. However the same
+difference is between rt2x00 and vendor driver for 5390 chip.
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 079086b..a35bce4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3377,7 +3377,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+ 	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
+-		   rt2x00_rt(rt2x00dev, RT5392)) {
++		   rt2x00_rt(rt2x00dev, RT5392) ||
++		   rt2x00_rt(rt2x00dev, RT5592)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+@@ -3557,7 +3558,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, TXOP_CTRL_CFG_EXT_CWMIN, 0);
+ 	rt2800_register_write(rt2x00dev, TXOP_CTRL_CFG, reg);
  
-> I really wonder if there's not a better solution ... I'll think about it
-> a bit.
+-	rt2800_register_write(rt2x00dev, TXOP_HLDR_ET, 0x00000002);
++	reg = rt2x00_rt(rt2x00dev, RT5592) ? 0x00000082 : 0x00000002;
++	rt2800_register_write(rt2x00dev, TXOP_HLDR_ET, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, TX_RTS_CFG, &reg);
+ 	rt2x00_set_field32(&reg, TX_RTS_CFG_AUTO_RTS_RETRY_LIMIT, 32);
+-- 
+1.7.4.4
 
-I thought about 2 solutions:
-
-1) Do not drv_remove_interface() and drv_stop() on suspend. Need to
-check and possibly rewrite drivers to work with that, so this is not
-preferred solution for me.
-
-2) Add "if (local->started && !local->suspended) check in some drv_
-callbacks, IOW silently ignore callbacks when suspended. This looks
-as even worse hack than this patch.
-
-Stanislaw
