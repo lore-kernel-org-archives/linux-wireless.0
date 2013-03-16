@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:59232 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028Ab3CFUhI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 15:37:08 -0500
-Date: Wed, 06 Mar 2013 15:37:06 -0500 (EST)
-Message-Id: <20130306.153706.615872126857441632.davem@davemloft.net> (sfid-20130306_213737_815283_86BD84AB)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-03-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130306192912.GA17452@tuxdriver.com>
-References: <20130306192912.GA17452@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx4.wp.pl ([212.77.101.8]:36866 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755372Ab3CPSTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:19:31 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 01/25] rt2800: do not crash if spec->channels is NULL
+Date: Sat, 16 Mar 2013 19:19:29 +0100
+Message-Id: <1363457993-15541-2-git-send-email-stf_xl@wp.pl> (sfid-20130316_191935_566607_C9242F13)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 6 Mar 2013 14:29:14 -0500
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> As Johannes says, it is a bit large.  But I hope it is still early
-> enough in the cycle to make that worthwhile.
+In case the spec->channels was not specified, print warning instead
+of hard crash the kernel.
 
-It's quite sizable, but I guess better during -rc1 than -rc6 or -rc7
-:-)
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Pulled, thanks John.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a658b4b..182e598 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -5213,6 +5213,9 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		spec->channels = rf_vals_3x;
+ 	}
+ 
++	if (WARN_ON_ONCE(!spec->channels))
++		return -ENODEV;
++
+ 	/*
+ 	 * Initialize HT information.
+ 	 */
+-- 
+1.7.4.4
+
