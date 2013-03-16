@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:64956 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044Ab3CUTUV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 15:20:21 -0400
-Received: by mail-ob0-f182.google.com with SMTP id ef5so657453obb.13
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 12:20:21 -0700 (PDT)
-Message-ID: <514B5D72.1050307@lwfinger.net> (sfid-20130321_202026_067541_34E4B256)
-Date: Thu, 21 Mar 2013 14:20:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Support for Realtek USB PID 0bda:1724 (rtl8723a?)
-References: <1363889497.6412.18.camel@dcbw.foobar.com>  <514B5113.3030501@lwfinger.net> <1363891343.6412.19.camel@dcbw.foobar.com>
-In-Reply-To: <1363891343.6412.19.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:36881 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750848Ab3CPESY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 00:18:24 -0400
+Message-ID: <1363407501.2030.1.camel@joe-AO722> (sfid-20130316_051844_341578_494F5831)
+Subject: Re: [PATCH net-next] drivers:net: dma_alloc_coherent: use
+ __GFP_ZERO instead of memset(, 0)
+From: Joe Perches <joe@perches.com>
+To: "Abodunrin, Akeem G" <akeem.g.abodunrin@intel.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Date: Fri, 15 Mar 2013 21:18:21 -0700
+In-Reply-To: <CFEEE81102D91947B9CC368106979EBA3CF55939@ORSMSX102.amr.corp.intel.com>
+References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
+	 <CFEEE81102D91947B9CC368106979EBA3CF55939@ORSMSX102.amr.corp.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/21/2013 01:42 PM, Dan Williams wrote:
-> On Thu, 2013-03-21 at 13:27 -0500, Larry Finger wrote:
->
-> Lenovo IdeaPad Yoga 13; I've got people that would be interested in
-> trying out fixes.
+On Fri, 2013-03-15 at 22:51 +0000, Abodunrin, Akeem G wrote:
+> -----Original Message-----
+> From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org] On Behalf Of Joe Perches
+[]
+> Reduce the number of calls required to alloc a zeroed block of memory.
+[]
+> diff --git a/drivers/net/ethernet/intel/igbvf/netdev.c b/drivers/net/ethernet/intel/igbvf/netdev.c
+[]
+> @@ -488,7 +487,6 @@ int igbvf_setup_rx_resources(struct igbvf_adapter *adapter,
+>  
+>  	rx_ring->desc = dma_alloc_coherent(&pdev->dev, rx_ring->size,
+>  					   &rx_ring->dma, GFP_KERNEL);
+> -
+>  	if (!rx_ring->desc)
+>  		goto err;
+> 
+> Hi Joe,
 
-I was sort of hoping for a detachable device. I have sent a message to Realtek 
-asking them about any drivers and devices with this chip.
+Hello Akeem.
 
-Larry
+> Your changes did not seem to make it to igbvf/netdev.c - I think
+> instead of removing an extra line added for code clarity, you
+> want to add:
+> "tx_ring->desc = dma_alloc_coherent(&pdev->dev, tx_ring->size,
+>  					   &tx_ring->dma, GFP_KERNEL| __GFP_ZERO);"
+
+Not really, there's no memset here so this
+bit is just a whitespace neatening.
 
 
