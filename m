@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36011 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:39494 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753105Ab3CHMmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 07:42:25 -0500
-Message-ID: <5139DCAA.8050003@openwrt.org> (sfid-20130308_134228_378581_3FF150E3)
-Date: Fri, 08 Mar 2013 13:42:18 +0100
+	id S1751171Ab3CPQAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 12:00:31 -0400
 From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
- that don't include chain 0
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org> <5138B656.5090408@neratec.com> <513996DE.6030500@neratec.com> <5139B35D.9060803@neratec.com>
-In-Reply-To: <5139B35D.9060803@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/3] mac80211/minstrel_ht: avoid useless sampling of high-probability slower rates
+Date: Sat, 16 Mar 2013 17:00:26 +0100
+Message-Id: <1363449627-10884-2-git-send-email-nbd@openwrt.org> (sfid-20130316_170038_198509_CDB0BDED)
+In-Reply-To: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
+References: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-08 10:46 AM, Wojciech Dubowik wrote:
-> On 03/08/2013 08:44 AM, Wojciech Dubowik wrote:
->> On 03/07/2013 04:46 PM, Wojciech Dubowik wrote:
->>> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
->>>> On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
->>>>> There is a regression introduced by this patch when power save is 
->>>>> off on
->>>>> the station for idle checks.
->>>>> I have AR9590 station with rx and tx chain set to 0x1 connected
->>>>> to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
->>>>>
->>>>> Before this patch in connection polling the station was properly 
->>>>> sending
->>>>> null function to check whether AP is still there. After this patch 
->>>>> it sends
->>>>> broadcast probe request which is anyway wrong or some 16 or so packets
->>>>> of random data (rarely). It manifests itself in lost connection 
->>>>> because
->>>>> there
->>>>> is no ack from AP which is expected for null function.
->>>>>
->>>>> I have been following skb's up to the descriptor setting in ath9k 
->>>>> and it was
->>>>> all ok i.e. proper null function with valid addresses.
->>>>>
->>>>> I have been bisecting it twice because it doesn't make much sense 
->>>>> but maybe
->>>>> it's a HW issue?
->>>> You're right, it does not make much sense. I can't figure out how this
->>>> patch could possibly change the runtime behavior with tx chainmask set
->>>> to 0x1. Have you tried reverting this patch in a current build to 
->>>> see if
->>>> that fixes the issue?
->>> It does fix it. I will check tomorrow whether it's only AR9590 or also
->>> previous revisions. I will also try with different chainmasks. I will 
->>> have
->>> to rescrew my setup...
->>>
->> I have been doing some tests and it seems to affect both AR9390 and 
->> AR9590.
->> To summarize: sta doesn't send null function but broadcast probe 
->> request or
->> corrupted frames in idle checking routine when power save is off and 
->> only some
->> antennas are selected for transmission.
->> So for example when I set antenna mask 7 i.e. all available it works 
->> ok but with
->> mask 1, 3 or 6 not. When I swith power save it's all ok no matter what 
->> mask I use.
->>
->> Thing with power save on is that before it goes to idle check it will 
->> go to sleep since
->> there is no traffic anyway, then we get beacon miss, it wakes up and 
->> it sends null
->> function. I guess waking up is reinitializing sth in a chip which 
->> doesn't occur in my
->> scenario.
->> HW issue?
-> It will also work if I set user specified antenna masks instead of hw 
-> capabilities.
-What do you mean with that? How do you set the rx and tx chainmasks if
-not via antenna masks? debugfs?
+Slow rates that have >95% success probability do not need to be
+monitored continuously. When the channel conditions change rapidly, the
+slow sampling results are useless anyway. When conditions change slowly,
+they will be monitored by gradual downgrading of the actively used
+rates. This patch slightly improves throughput under good conditions.
 
-- Felix
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 90499c4..0fc9449 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -653,10 +653,10 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	if (sample_idx == mi->max_tp_rate)
+ 		return -1;
+ 	/*
+-	 * When not using MRR, do not sample if the probability is already
+-	 * higher than 95% to avoid wasting airtime
++	 * Do not sample if the probability is already higher than 95%
++	 * to avoid wasting airtime.
+ 	 */
+-	if (!mp->has_mrr && (mr->probability > MINSTREL_FRAC(95, 100)))
++	if (mr->probability > MINSTREL_FRAC(95, 100))
+ 		return -1;
+ 
+ 	/*
+-- 
+1.8.0.2
 
