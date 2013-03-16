@@ -1,176 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:49754 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755853Ab3CIM4f (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:51435 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab3CPQsP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 07:56:35 -0500
-Received: by mail-wg0-f52.google.com with SMTP id 12so3497208wgh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 04:56:33 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 11/13] b43: HT-PHY: implement RSSI polling
-Date: Sat,  9 Mar 2013 13:56:26 +0100
-Message-Id: <1362833786-3248-1-git-send-email-zajec5@gmail.com> (sfid-20130309_135644_308473_88C0E9E9)
-In-Reply-To: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-12-git-send-email-zajec5@gmail.com>
+	Sat, 16 Mar 2013 12:48:15 -0400
+Message-ID: <5144A184.1060900@iki.fi> (sfid-20130316_174830_252782_D80B0A79)
+Date: Sat, 16 Mar 2013 18:44:52 +0200
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: vishnu <vishnu.kopparapu@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: problem connecting to AP on new kernel (disassociating continuously
+ after associating ) . Can some one please comment on the issue I am facing
+References: <loom.20130315T140953-940@post.gmane.org>
+In-Reply-To: <loom.20130315T140953-940@post.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="----enig2USDDMOSTGLRSHTLAQXQW"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: use static const where possible (for arrays)
----
- drivers/net/wireless/b43/phy_ht.c |   96 ++++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/b43/phy_ht.h |    5 ++
- 2 files changed, 100 insertions(+), 1 deletion(-)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+------enig2USDDMOSTGLRSHTLAQXQW
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 22fdde6..ae9cd29 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -388,6 +388,92 @@ static void b43_phy_ht_tx_tone(struct b43_wldev *dev)
- #endif
- 
- /**************************************************
-+ * RSSI
-+ **************************************************/
-+
-+#if 0
-+static void b43_phy_ht_rssi_select(struct b43_wldev *dev, u8 core_sel,
-+				   u8 rssi_type)
-+{
-+	static const u16 ctl_regs[3][2] = {
-+		{ B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER, },
-+		{ B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER, },
-+		{ B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER, },
-+	};
-+	static const u16 radio_r[] = { R2059_SYN, R2059_TXRX0, R2059_RXRX1, };
-+	int core;
-+
-+	if (core_sel == 0) {
-+		b43err(dev->wl, "RSSI selection for core off not implemented yet\n");
-+	} else {
-+		for (core = 0; core < 3; core++) {
-+			/* Check if caller requested a one specific core */
-+			if ((core_sel == 1 && core != 0) ||
-+			    (core_sel == 2 && core != 1) ||
-+			    (core_sel == 3 && core != 2))
-+				continue;
-+
-+			switch (rssi_type) {
-+			case 4:
-+				b43_phy_set(dev, ctl_regs[core][0], 0x3 << 8);
-+				b43_phy_set(dev, ctl_regs[core][0], 0x3 << 10);
-+				b43_phy_set(dev, ctl_regs[core][1], 0x1 << 9);
-+				b43_phy_set(dev, ctl_regs[core][1], 0x1 << 10);
-+
-+				b43_radio_set(dev, R2059_RXRX1 | 0xbf, 0x1);
-+				b43_radio_write(dev, radio_r[core] | 0x159,
-+						0x11);
-+				break;
-+			default:
-+				b43err(dev->wl, "RSSI selection for type %d not implemented yet\n",
-+				       rssi_type);
-+			}
-+		}
-+	}
-+}
-+
-+static void b43_phy_ht_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
-+				 u8 nsamp)
-+{
-+	u16 phy_regs_values[12];
-+	static const u16 phy_regs_to_save[] = {
-+		B43_PHY_HT_AFE_C1, B43_PHY_HT_AFE_C1_OVER,
-+		0x848, 0x841,
-+		B43_PHY_HT_AFE_C2, B43_PHY_HT_AFE_C2_OVER,
-+		0x868, 0x861,
-+		B43_PHY_HT_AFE_C3, B43_PHY_HT_AFE_C3_OVER,
-+		0x888, 0x881,
-+	};
-+	u16 tmp[3];
-+	int i;
-+
-+	for (i = 0; i < 12; i++)
-+		phy_regs_values[i] = b43_phy_read(dev, phy_regs_to_save[i]);
-+
-+	b43_phy_ht_rssi_select(dev, 5, type);
-+
-+	for (i = 0; i < 6; i++)
-+		buf[i] = 0;
-+
-+	for (i = 0; i < nsamp; i++) {
-+		tmp[0] = b43_phy_read(dev, B43_PHY_HT_RSSI_C1);
-+		tmp[1] = b43_phy_read(dev, B43_PHY_HT_RSSI_C2);
-+		tmp[2] = b43_phy_read(dev, B43_PHY_HT_RSSI_C3);
-+
-+		buf[0] += ((s8)((tmp[0] & 0x3F) << 2)) >> 2;
-+		buf[1] += ((s8)(((tmp[0] >> 8) & 0x3F) << 2)) >> 2;
-+		buf[2] += ((s8)((tmp[1] & 0x3F) << 2)) >> 2;
-+		buf[3] += ((s8)(((tmp[1] >> 8) & 0x3F) << 2)) >> 2;
-+		buf[4] += ((s8)((tmp[2] & 0x3F) << 2)) >> 2;
-+		buf[5] += ((s8)(((tmp[2] >> 8) & 0x3F) << 2)) >> 2;
-+	}
-+
-+	for (i = 0; i < 12; i++)
-+		b43_phy_write(dev, phy_regs_to_save[i], phy_regs_values[i]);
-+}
-+#endif
-+
-+/**************************************************
-  * Tx/Rx
-  **************************************************/
- 
-@@ -454,12 +540,20 @@ static void b43_phy_ht_tx_power_ctl(struct b43_wldev *dev, bool enable)
- 
- static void b43_phy_ht_tx_power_ctl_idle_tssi(struct b43_wldev *dev)
- {
-+	struct b43_phy_ht *phy_ht = dev->phy.ht;
-+	s32 rssi_buf[6];
-+
- 	/* TODO */
- 
- 	b43_phy_ht_tx_tone(dev);
- 	udelay(20);
--	/* TODO: poll RSSI */
-+	b43_phy_ht_poll_rssi(dev, 4, rssi_buf, 1);
- 	b43_phy_ht_stop_playback(dev);
-+	b43_phy_ht_reset_cca(dev);
-+
-+	phy_ht->idle_tssi[0] = rssi_buf[0] & 0xff;
-+	phy_ht->idle_tssi[1] = rssi_buf[2] & 0xff;
-+	phy_ht->idle_tssi[2] = rssi_buf[4] & 0xff;
- 
- 	/* TODO */
- }
-diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
-index c517958..165c501 100644
---- a/drivers/net/wireless/b43/phy_ht.h
-+++ b/drivers/net/wireless/b43/phy_ht.h
-@@ -36,6 +36,9 @@
- #define  B43_PHY_HT_TXPCTL_CMD_C1_PCTLEN	0x8000	/* TX power control enable */
- #define B43_PHY_HT_TXPCTL_CMD_C2		0x222
- #define  B43_PHY_HT_TXPCTL_CMD_C2_INIT		0x007F
-+#define B43_PHY_HT_RSSI_C1			0x219
-+#define B43_PHY_HT_RSSI_C2			0x21A
-+#define B43_PHY_HT_RSSI_C3			0x21B
- 
- #define B43_PHY_HT_C1_CLIP1THRES		B43_PHY_OFDM(0x00E)
- #define B43_PHY_HT_C2_CLIP1THRES		B43_PHY_OFDM(0x04E)
-@@ -91,6 +94,8 @@ struct b43_phy_ht {
- 	u8 tx_pwr_idx[3];
- 
- 	s32 bb_mult_save[3];
-+
-+	u8 idle_tssi[3];
- };
- 
- 
--- 
-1.7.10.4
+On 15.03.2013 15:29, vishnu wrote:
+> Hello all,
+>=20
+> driver used : rtl8192cu
+>=20
+> When I tested with my linux kernel 3.0 , I didn't have any problems con=
+necting=20
+> to AP. But with kernel 3.6.8 , I had a problem . When I tested with 3.7=
+=2E8 also I=20
+> am facing the same problem. This is the latest kernel used by latest re=
+lease of=20
+> buildroot , so I didn't test any kernels after that version.
+>=20
+> The authentication and association are fine but from some reason it is =
 
+> disassociating after that and it keeps repeating it and it never connec=
+ts to the=20
+> AP.
+>=20
+
+Have you tested this patch: http://marc.info/?l=3Dlinux-wireless&m=3D1363=
+18849815054&w=3D2
+
+It solves re-association issues that rtl8192cu had.
+
+-Jussi
+
+
+
+
+------enig2USDDMOSTGLRSHTLAQXQW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQGcBAEBCAAGBQJRRKGJAAoJEAaL+yOpMWaGEW4L/1FvJYqcGHw60ecmSus3hv3b
+wlxyfPgGgDBKMEzmf7OLz/pRH0huWpgtsbdkSPt8d6XnvuGciO7FXG5CUJRsQ01j
+uiDvwv09y9KeNhM3TKPMtCcfNvcJnxaDH3UsPd8htM5AP2rgiK+j9t63gB0qNS4u
+HJuQaN4szdUsm/8iCMIPBOoPMTKHCK28c8Y2kT57eFhtzxa7tuUOuwK0QI2z/jdR
+1jfQfq3Ww3jC9hLb41luh/EYU1zaKFnIPOO1ePW+/gJuTux1I6fvwKPsU8/XJgqC
+y3Xvqe+HzeQ1xEEAa/bo9fx0xWrKqxF8MmI5oY3pduxZsTaLhiQmo72YpqPXvaOC
+I3ajqfRZ5ra3Y5tItnq6e0S7TXs8rqcjgF2nE1aKObs2M7oydrUE4rzCcR8UBDv4
+McJxkuyfpmo9qGY+fPR3hoSoP35GRyr3DKBtu3WjFN9tegP5UzTZg4xbgTGahOY6
+iwCjNpWA27iLtm6IUw/7kGFi6Zx/Y+44T9e4umraOA==
+=5OYm
+-----END PGP SIGNATURE-----
+
+------enig2USDDMOSTGLRSHTLAQXQW--
