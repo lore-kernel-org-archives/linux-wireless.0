@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40213 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821Ab3COROb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 13:14:31 -0400
-Message-ID: <514356F3.4030408@candelatech.com> (sfid-20130315_181435_255433_46F54581)
-Date: Fri, 15 Mar 2013 10:14:27 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Optimizing performance for lots of virtual stations.
-References: <5142074C.1060708@candelatech.com> <51425963.2000904@openwrt.org> <51425AB1.9090603@candelatech.com> <51427CFF.1020105@openwrt.org> <514294ED.7040909@candelatech.com>
-In-Reply-To: <514294ED.7040909@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:39490 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937Ab3CPQAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 12:00:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/3] mac80211/minstrel_ht: improve rate selection stability
+Date: Sat, 16 Mar 2013 17:00:25 +0100
+Message-Id: <1363449627-10884-1-git-send-email-nbd@openwrt.org> (sfid-20130316_170036_803370_15F85A2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I probably should have done this first of course..but here is a 'perf top' on
-the station machine (50 TCP streams transmitting on each of 50 stations,
-and 78 associated-but-mostly-idle stations:
+Under load, otherwise stable rates can easily fluctuate because of
+collisions. In my tests on a clean channel, the success probability of
+the max throughput rate often stays somewhere between 90% and 100% under
+load. This can cause some unnecessary switching to lower rates.
+This patch improves stability by treating success probability values
+between 90% and 100% the same.
+In my tests on a 3x3 HT20 link with lots of TCP traffic, it improves the
+average throughput by a few mbit/s.
 
-Looks like sta_info_get would be a good place to start :)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-
----------------------------------------------------------------------------------------------------------------------------
-    PerfTop:    1890 irqs/sec  kernel:87.9%  exact:  0.0% [1000Hz cycles],  (all, 2 CPUs)
----------------------------------------------------------------------------------------------------------------------------
-
-              samples  pcnt function                        DSO
-              _______ _____ _______________________________ ______________
-
-              2261.00 20.8% sta_info_get                    [mac80211]
-              1707.00 15.7% ieee80211_tx_status             [mac80211]
-              1192.00 11.0% intel_idle                      [kernel]
-               462.00  4.3% __ieee80211_recalc_idle         [mac80211]
-               414.00  3.8% ieee80211_prepare_and_rx_handle [mac80211]
-               240.00  2.2% dev_queue_xmit_nit              [kernel]
-               199.00  1.8% ieee80211_rx                    [mac80211]
-               154.00  1.4% ieee80211_find_sta_by_ifaddr    [mac80211]
-               124.00  1.1% read_hpet                       [kernel]
-               101.00  0.9% _raw_spin_lock_irqsave          [kernel]
-                92.00  0.8% __netif_receive_skb             [kernel]
-                80.00  0.7% tg_load_down                    [kernel]
-                76.00  0.7% fget_light                      [kernel]
-                75.00  0.7% ieee80211_propagate_queue_wake  [mac80211]
-                75.00  0.7% memcpy                          [kernel]
-                71.00  0.7% __ieee80211_stop_queue          [mac80211]
-                70.00  0.6% ipt_do_table                    [kernel]
-                66.00  0.6% csum_partial_copy_generic       [kernel]
-                65.00  0.6% datagram_poll                   [kernel]
-                63.00  0.6% _raw_spin_lock_bh               [kernel]
-                61.00  0.6% ath_get_rate                    [ath9k]
-                49.00  0.5% ieee80211_subif_start_xmit      [mac80211]
-                48.00  0.4% tcp_poll                        [kernel]
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 749552b..90499c4 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -202,14 +202,23 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
+ 	struct minstrel_rate_stats *mr;
+ 	unsigned int nsecs = 0;
+ 	unsigned int tp;
++	unsigned int prob;
+ 
+ 	mr = &mi->groups[group].rates[rate];
++	prob = mr->probability;
+ 
+-	if (mr->probability < MINSTREL_FRAC(1, 10)) {
++	if (prob < MINSTREL_FRAC(1, 10)) {
+ 		mr->cur_tp = 0;
+ 		return;
+ 	}
+ 
++	/*
++	 * For the throughput calculation, limit the probability value to 90% to
++	 * account for collision related packet error rate fluctuation
++	 */
++	if (prob > MINSTREL_FRAC(9, 10))
++		prob = MINSTREL_FRAC(9, 10);
++
+ 	if (group != MINSTREL_CCK_GROUP)
+ 		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.0.2
 
