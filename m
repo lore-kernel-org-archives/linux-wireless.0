@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48938 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754942Ab3CGCGM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 21:06:12 -0500
-Received: by mail-lb0-f174.google.com with SMTP id l12so36417lbo.33
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 18:06:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20788.28891.721850.133032@gargle.gargle.HOWL>
-References: <1362381201-9704-1-git-send-email-sujith@msujith.org>
- <1362381201-9704-2-git-send-email-sujith@msujith.org> <1907650.rOdA2c4Utl@bentobox>
- <20788.28891.721850.133032@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Wed, 6 Mar 2013 18:05:50 -0800
-Message-ID: <CAB=NE6V5fCU1jgV8dUFYJhfox+2cGDeMjPLiGpG3JGEPMwxZTg@mail.gmail.com> (sfid-20130307_030616_508764_79C75771)
-Subject: Re: [PATCH 2/2] initvals: Update AR9462 initvals
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Schrober <franzschrober@yahoo.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx3.wp.pl ([212.77.101.7]:41800 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932476Ab3CPSTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Mar 2013 14:19:48 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 07/25] rt2800: 5592: common BBP initialization
+Date: Sat, 16 Mar 2013 19:19:35 +0100
+Message-Id: <1363457993-15541-8-git-send-email-stf_xl@wp.pl> (sfid-20130316_191952_148635_02E3B8AA)
+In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 4, 2013 at 2:00 AM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Schrober wrote:
->> Why? How it is helping? What it is doing? Does it require changes to the
->> driver? I cite
->>  http://linuxwireless.org/en/users/Drivers/ath9k_hw/initvals-tool
->>
->> "Note that initval changes are expected to have a respective equivalent *good*
->> commit log entry, so please don't simply send initval changes without some
->> sort of explanation, unless you just cannot find one."
->
-> Unfortunately, this particular initvals update has no detailed information.
-> This is the latest INI values for AR9462 which has been given to us by
-> the internal systems team.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Sorry for the delay, thanks, applied and pushed!
+Add BBP registers initialization common with other chipsets, but for now
+performed only for 5592.
 
- Luis
+Based on:
+NICInitBBP()
+
+from:
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022/common/rtmp_init.c
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 16e4200..9ac6f20 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3774,12 +3774,34 @@ static void rt2800_init_bbp_5592_glrt(struct rt2x00_dev *rt2x00dev)
+ 	}
+ };
+ 
++static void rt2800_init_bbb_early(struct rt2x00_dev *rt2x00dev)
++{
++	rt2800_bbp_write(rt2x00dev, 65, 0x2C);
++	rt2800_bbp_write(rt2x00dev, 66, 0x38);
++	rt2800_bbp_write(rt2x00dev, 68, 0x0B);
++	rt2800_bbp_write(rt2x00dev, 69, 0x12);
++	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
++	rt2800_bbp_write(rt2x00dev, 73, 0x10);
++	rt2800_bbp_write(rt2x00dev, 81, 0x37);
++	rt2800_bbp_write(rt2x00dev, 82, 0x62);
++	rt2800_bbp_write(rt2x00dev, 83, 0x6A);
++	rt2800_bbp_write(rt2x00dev, 84, 0x99);
++	rt2800_bbp_write(rt2x00dev, 86, 0x00);
++	rt2800_bbp_write(rt2x00dev, 91, 0x04);
++	rt2800_bbp_write(rt2x00dev, 92, 0x00);
++	rt2800_bbp_write(rt2x00dev, 103, 0x00);
++	rt2800_bbp_write(rt2x00dev, 105, 0x05);
++	rt2800_bbp_write(rt2x00dev, 106, 0x35);
++}
++
+ static void rt2800_init_bbp_5592(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int ant, div_mode;
+ 	u16 eeprom;
+ 	u8 value;
+ 
++	rt2800_init_bbb_early(rt2x00dev);
++
+ 	rt2800_bbp_read(rt2x00dev, 105, &value);
+ 	rt2x00_set_field8(&value, BBP105_MLD,
+ 			  rt2x00dev->default_ant.rx_chain_num == 2);
+-- 
+1.7.4.4
+
