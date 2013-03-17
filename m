@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:45325 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820Ab3COAKw (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:48107 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756614Ab3CQUav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 20:10:52 -0400
-Received: by mail-wi0-f169.google.com with SMTP id l13so63427wie.0
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 17:10:50 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 14 Mar 2013 17:10:50 -0700
-Message-ID: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com> (sfid-20130315_011054_733480_7572FE3C)
-Subject: Announcement: open source AR9380 and later HAL
-From: Adrian Chadd <adrian@freebsd.org>
-To: ath9k-devel <ath9k-devel@lists.ath9k.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 17 Mar 2013 16:30:51 -0400
+Received: by mail-wg0-f46.google.com with SMTP id fg15so4338630wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Mar 2013 13:30:50 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [RFC 2/2] mac80211: Let drivers not supporting channel contexts use VHT
+Date: Sun, 17 Mar 2013 21:30:34 +0100
+Message-Id: <1363552234-6752-3-git-send-email-karl.beldan@gmail.com> (sfid-20130317_213101_559116_4C00925B)
+In-Reply-To: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
+References: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-I just realised I forgot to announce this here!
+It is possible since the global hw config and local switched to
+cfg80211_chan_def.
 
-I've been working on open sourcing the QCA 10.x mainline AR9380 HAL.
-It's passed legal approval (well, last week!) and you can now find it
-online:
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/main.c |   14 +-------------
+ 1 files changed, 1 insertions(+), 13 deletions(-)
 
-https://github.com/qca/qcamain_open_hal_public
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 25db628..276c0ef 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -843,22 +843,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (supp_ht)
+ 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
+ 
+-	if (supp_vht) {
++	if (supp_vht)
+ 		local->scan_ies_len +=
+ 			2 + sizeof(struct ieee80211_vht_cap);
+ 
+-		/*
+-		 * (for now at least), drivers wanting to use VHT must
+-		 * support channel contexts, as they contain all the
+-		 * necessary VHT information and the global hw config
+-		 * doesn't (yet)
+-		 */
+-		if (WARN_ON(!local->use_chanctx)) {
+-			result = -EINVAL;
+-			goto fail_wiphy_register;
+-		}
+-	}
+-
+ 	if (!local->ops->hw_scan) {
+ 		/* For hw_scan, driver needs to set these up. */
+ 		local->hw.wiphy->max_scan_ssids = 4;
+-- 
+1.7.9.dirty
 
-Now, the 30 second FAQ:
-
-* It's from Nov 27, 2012 - which means there are a few things that
-have changed since then - so don't use it as an authoritative
-reference compared to ath9k without doing much more digging! ;
-* It's missing certain things - including but not limited to
-EEPROM/OTP write, TX beamforming, spectral scan (but this will change
-later), fast channel change, various calibration and debug modes which
-are used for manufacturing;
-* It (mostly) compiles and runs as-is, if you're a FreeBSD user and
-have a HAL framework to compile it against.
-
-I've done this so open source developers can see a known good and
-working version of the chipset support for the AR9380 and later.
-
-If you check out my personal git fork:
-
-https://github.com/erikarn/qcamain_open_hal_public
-
-You'll see that I have a branch (local/freebsd) which contains the
-(mostly mechanical!) changes to FreeBSD in order to use it. And yes,
-this branch does compile and run in FreeBSD, giving me AR9380 and
-later chipset support.
-
-I have an update underway to bring it up to the latest code (well, as
-of March 13, 2013) and I'll send out another announcement once that's
-done.
-
-I'll also work with legal and engineering teams to get further
-features opened up.
-
-Thanks and enjoy!
-
-
-
-Adrian
