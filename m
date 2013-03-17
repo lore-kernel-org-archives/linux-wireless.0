@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35097 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab3CNXAZ (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:50772 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932562Ab3CQWk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 19:00:25 -0400
-Message-ID: <51425681.2040207@candelatech.com> (sfid-20130315_000033_922618_0D7EF8DA)
-Date: Thu, 14 Mar 2013 16:00:17 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 17 Mar 2013 18:40:29 -0400
+Received: by mail-we0-f175.google.com with SMTP id x8so4394745wey.6
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Mar 2013 15:40:28 -0700 (PDT)
+Date: Sun, 17 Mar 2013 23:40:19 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] mac80211/minstrel_ht: add support for using CCK rates
+Message-ID: <20130317224019.GA7563@gobelin> (sfid-20130317_234034_463717_80586D14)
+References: <1360749068-3977-1-git-send-email-nbd@openwrt.org>
+ <20130312094119.GA23062@magnum.frso.rivierawaves.com>
+ <1363361818.8656.20.camel@jlt4.sipsolutions.net>
+ <20130317212302.GA6886@gobelin>
+ <514639B3.4050700@openwrt.org>
+ <20130317220737.GB7031@gobelin>
+ <CAJ-VmonRkrd5cw_k6uwMFBrvjz95fcDO7rJi5HY8grKeY6Jp5g@mail.gmail.com>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Don't restart sta-timer if not associated.
-References: <1363299471-10442-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1363299471-10442-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAJ-VmonRkrd5cw_k6uwMFBrvjz95fcDO7rJi5HY8grKeY6Jp5g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/14/2013 03:17 PM, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> I found another crash when deleting lots of virtual stations
-> in a congested environment.  I think the problem is that
-> the ieee80211_mlme_notify_scan_completed could call
-> ieee80211_restart_sta_timer for a non-associated interface
-> that was about to be deleted.
->
-> With the following patch I am unable to reproduce the
-> crash.
-
-Nevermind..this seems to break association...will work on
-this some more.
-
-Ben
-
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> :100644 100644 81e0619... a1cc8c4... M	net/mac80211/mlme.c
->   net/mac80211/mlme.c |    3 +++
->   1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 81e0619..a1cc8c4 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2931,6 +2931,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
->   	u32 flags;
->
->   	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-> +		if (unlikely(!sdata->u.mgd.associated))
-> +			return;
-> +
->   		__ieee80211_stop_poll(sdata);
->
->   		/* let's probe the connection once */
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+On Sun, Mar 17, 2013 at 03:30:17PM -0700, Adrian Chadd wrote:
+> On 17 March 2013 15:07, Karl Beldan <karl.beldan@gmail.com> wrote:
+> 
+> > The best way I could look at it was that it would let drivers know the frame is
+> > being transmitted under BA, but it still changes the meaning and thus
+> > the handling of the flag.
+> > Frankly, if the meaning "officially" becomes "this frames is being
+> > transmitted under BA", as the code behaves, and you seem to say, I am all
+> > for it ;)
+> 
+> Well, having it be "This frame is being transmitted under aggregation"
+> can't be guaranteed anyway.
+> 
+> Eg, imagine the case where your BA window is such that you've sent 0
+> .. 63 and only received a BA for 1..63.
+> So you have to send one single frame - why would you request a
+> blockack and why would you transmit it as an aggregate? :)
+> 
+When I wrote "under BA", I meant "under BlockAck Aggreement" not "will
+be aggregated" ;)
+ 
+Karl
