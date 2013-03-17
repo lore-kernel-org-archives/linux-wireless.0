@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avasout08.plus.net ([212.159.14.20]:39528 "EHLO
-	avasout08.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755523Ab3CTNst convert rfc822-to-8bit (ORCPT
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:48198 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756083Ab3CQJ7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 09:48:49 -0400
-Date: Wed, 20 Mar 2013 13:43:02 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: isedev@gmail.com
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Michael Buesch <mb@bu3sch.de>,
+	Sun, 17 Mar 2013 05:59:20 -0400
+Subject: [PATCH 2/4] rtlwifi: usb: remove extra skb copy on RX path
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] b43: A fix for DMA transmission sequence errors
-Message-ID: <20130320134302.26ea16c7@laptop.homenet> (sfid-20130320_144855_453961_0AA059BE)
-In-Reply-To: <4518745.W5blfs9sIi@wks001.ise.net>
-References: <51421afb.xUa3KbaBuvmUk4RG%Larry.Finger@lwfinger.net>
-	<CACna6rxAGN5cx6BXrdpM+-q_6QAQAvfb8+qhe-romE4hdxSs3g@mail.gmail.com>
-	<514350EA.2060205@lwfinger.net>
-	<4518745.W5blfs9sIi@wks001.ise.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Date: Sun, 17 Mar 2013 11:59:18 +0200
+Message-ID: <20130317095918.24983.57848.stgit@localhost6.localdomain6> (sfid-20130317_105925_696033_A786301A)
+In-Reply-To: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
+References: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 20 Mar 2013 12:26:23 +0100
-ISE Development <isedev@gmail.com> wrote:
+RX path has extra copying of packets, that can be avoided.
 
-> On Friday 15 Mar 2013 11:48:42 Larry Finger wrote:
-> > On 03/15/2013 01:37 AM, Rafał Miłecki wrote:
-> > > OK, so after early tests, this card doesn't support
-> > > full-addressing at all.
-> > > 
-> > > I'll give this patch a try during the weekend.
-> > 
-> > Please follow Michael's suggestion, and change
-> > 
-> > 		if (slot == firstused + 2) {
-> > 
-> > into
-> > 
-> > 		if (slot == next_slot(ring, next_slot(ring,
-> > firstused))) {
-> > 
-> > This change is needed just in case "firstused + 2" wraps around.
-> > 
-> > Thanks,
-> > 
-> > Larry
-> 
-> Did you get a chance to validate this patch?
-> 
-> So far on my system, it has been running for over week without
-> problems (over 15GB of traffic).
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+---
+ drivers/net/wireless/rtlwifi/usb.c |   19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-If it helps as a data point, I have run the patch with the wrap-over
-change suggested by Michael Busch and with the unlikely->likely
-branching correction and it has been working fine for the last 5 days
-on the 3.8.2 kernel, with approx 5GB of traffic. Before that, I put
-about 10GB through the previous version of the patch as originally sent
-by isedev.
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 146d2b4..8563818 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -513,22 +513,11 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 			if (unicast)
+ 				rtlpriv->link_info.num_rx_inperiod++;
+ 		}
+-		if (likely(rtl_action_proc(hw, skb, false))) {
+-			struct sk_buff *uskb = NULL;
+-			u8 *pdata;
+-
+-			uskb = dev_alloc_skb(skb->len + 128);
+-			if (uskb) {	/* drop packet on allocation failure */
+-				memcpy(IEEE80211_SKB_RXCB(uskb), &rx_status,
+-				       sizeof(rx_status));
+-				pdata = (u8 *)skb_put(uskb, skb->len);
+-				memcpy(pdata, skb->data, skb->len);
+-				ieee80211_rx_irqsafe(hw, uskb);
+-			}
+-			dev_kfree_skb_any(skb);
+-		} else {
++
++		if (likely(rtl_action_proc(hw, skb, false)))
++			ieee80211_rx_irqsafe(hw, skb);
++		else
+ 			dev_kfree_skb_any(skb);
+-		}
+ 	}
+ }
+ 
 
-Chris
