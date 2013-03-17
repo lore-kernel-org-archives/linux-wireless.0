@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37748 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751184Ab3CGHMc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 02:12:32 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Corey Richardson <corey@octayn.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: mac80211: regression: fd0f979 no long authenticates w/ath9k_htc
-References: <CA++BO6QA9cFmM2kU4u8ASxWqJeGwUB1385awKfXLP=O0fA87NA@mail.gmail.com>
-	<1362571344.8457.9.camel@jlt4.sipsolutions.net>
-	<CA++BO6TciosdjiFaSAPvyCYsTU-J8UKCefPtxc8bcc04fnh9mQ@mail.gmail.com>
-Date: Thu, 07 Mar 2013 09:12:30 +0200
-In-Reply-To: <CA++BO6TciosdjiFaSAPvyCYsTU-J8UKCefPtxc8bcc04fnh9mQ@mail.gmail.com>
-	(Corey Richardson's message of "Wed, 6 Mar 2013 18:36:53 -0500")
-Message-ID: <877gljadk1.fsf@purkki.adurom.net> (sfid-20130307_081235_348346_60C87E19)
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:43879 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756324Ab3CQRQv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Mar 2013 13:16:51 -0400
+Received: by mail-qc0-f177.google.com with SMTP id u28so2355638qcs.22
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Mar 2013 10:16:50 -0700 (PDT)
+Message-ID: <5145FA80.7040209@lwfinger.net> (sfid-20130317_181708_764187_20AB4C5F)
+Date: Sun, 17 Mar 2013 12:16:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+CC: linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rtlwifi: usb: add missing freeing of skbuff
+References: <20130317095404.23346.42853.stgit@localhost6.localdomain6>
+In-Reply-To: <20130317095404.23346.42853.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Corey Richardson <corey@octayn.net> writes:
-
-> On Wed, Mar 6, 2013 at 7:02 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> Do you think you could run trace-cmd to capture what's going on before
->> and after?
->>
+On 03/17/2013 04:54 AM, Jussi Kivilinna wrote:
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+> ---
+>   drivers/net/wireless/rtlwifi/usb.c |    1 +
+>   1 file changed, 1 insertion(+)
 >
-> What should I be recording? The NetworkManager process? I'm unfamiliar
-> with ftrace.
+> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+> index b5c80b5..41dce83 100644
+> --- a/drivers/net/wireless/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/rtlwifi/usb.c
+> @@ -850,6 +850,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
+>   	if (unlikely(!_urb)) {
+>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+>   			 "Can't allocate urb. Drop skb!\n");
+> +		kfree_skb(skb);
+>   		return;
+>   	}
+>   	_rtl_submit_tx_urb(hw, _urb);
+>
 
-You should use trace-cmd. Something like this:
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-trace-cmd record -e mac80211 -e cfg80211
+John - Add Stable as Cc.
 
-And then send compressed trace.dat to Johannes. More info:
+Good catch. Thanks,
 
-http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
+Larry
 
--- 
-Kalle Valo
+
