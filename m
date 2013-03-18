@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2523 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932543Ab3CGOXG convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7842 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab3CRLkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 09:23:06 -0500
-Message-ID: <5138A2C2.5010504@broadcom.com> (sfid-20130307_152325_272122_A6581829)
-Date: Thu, 7 Mar 2013 15:22:58 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	Mon, 18 Mar 2013 07:40:22 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath6kl-devel@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] ath6kl: fix usb warm reboot and cleanups
+References: <20130309100031.432.94974.stgit@localhost6.localdomain6>
+Date: Mon, 18 Mar 2013 13:40:12 +0200
+In-Reply-To: <20130309100031.432.94974.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Sat, 9 Mar 2013 12:01:26 +0200")
+Message-ID: <87ppyx7x7n.fsf@kamboji.qca.qualcomm.com> (sfid-20130318_124025_396879_E258446D)
 MIME-Version: 1.0
-To: =?UTF-8?B?S8OpdmluIFRISUVSUlk=?= <kevinthierry@myopera.com>
-cc: linux-kernel@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Unable to activate WiFi p2p / WiFi Direct
-References: <1362663176.11919.140661201212753.170BABA0@webmail.messagingengine.com>
-In-Reply-To: <1362663176.11919.140661201212753.170BABA0@webmail.messagingengine.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/13 14:32, Kévin THIERRY wrote:
-> Hi,
-> I've been unable to activate the p2p feature on my WiFi dongle (which
-> otherwise works fine).
-> iwpriv command returns "wlan1 no private ioctls."
-> I'm running Ubuntu 12.04 with kernel 3.5.0-25 and the WiFi dongle is a
-> Netgear model wna1000m (driver rtl8192cu).
-> I've also tried with kernel 3.8.2 with the same result.
-> Thanks,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-You may have more luck on the linux-wireless list.
-
-> Kévin THIERRY
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> While looking at the usb warm reboot I had to some cleanup, especially with error
+> handling.
 >
+> v2:
+>
+> o don't remove reset from ath6kl_stop_txrx()
+> o line wrap commit logs
+>
+> ---
+>
+> Kalle Valo (3):
+>       ath6kl: cleanup ath6kl_reset_device()
+>       ath6kl: fix usb related error handling and warnings
+>       ath6kl: cold reset target after host warm boot
 
+All three patches applied.
 
+-- 
+Kalle Valo
