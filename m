@@ -1,27 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46172 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320Ab3C1Vm7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38219 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482Ab3CRLwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 17:42:59 -0400
-Date: Thu, 28 Mar 2013 17:42:58 -0400 (EDT)
-Message-Id: <20130328.174258.600921919654964205.davem@davemloft.net> (sfid-20130328_224310_869835_77245562)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless 2013-03-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130328191058.GA27701@tuxdriver.com>
-References: <20130328191058.GA27701@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 18 Mar 2013 07:52:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath6kl-devel@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 1/2] ath6kl: add an extra band check to ath6kl_wmi_beginscan_cmd()
+References: <20130310055129.18916.96742.stgit@localhost6.localdomain6>
+Date: Mon, 18 Mar 2013 13:52:01 +0200
+In-Reply-To: <20130310055129.18916.96742.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Sun, 10 Mar 2013 07:51:29 +0200")
+Message-ID: <87hak97wny.fsf@kamboji.qca.qualcomm.com> (sfid-20130318_125212_339537_31DB01D5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 28 Mar 2013 15:10:58 -0400
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Please excuse this larger-than-I-would-like pull request intended
-> for the 3.9 stream.  There are a number of late-breaking fixes,
-> including a revert...
+> Dan reported that smatch found a possible issue in ath6kl_wmi_beginscan_cmd()
+> where we might access sc->supp_rates beyond the end. It shouldn't happen as
+> ar->wiphy->bands always have just the first two bands set, but add an extra
+> check just to be sure.
+>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Pulled, thanks John.
+Both patches applied. Thank Dan.
+
+-- 
+Kalle Valo
