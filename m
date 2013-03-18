@@ -1,320 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42463 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756679Ab3C1JtP (ORCPT
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:13036 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752781Ab3CRQt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:49:15 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 18 Mar 2013 12:49:57 -0400
+Message-ID: <a10f9fe2e0e48f8b7378bb655d673151.squirrel@www.infidigm.net> (sfid-20130318_175003_208382_E9F4844E)
+Date: Mon, 18 Mar 2013 13:53:04 -0400
+Subject: AR9374 v1.3 (Ath6kl - 6004) in sdio mode
+From: drwho@infidigm.net
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 8/9] mac80211: parse VHT channel switch IEs
-Date: Thu, 28 Mar 2013 10:49:04 +0100
-Message-Id: <1364464145-14446-9-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104931_838973_6DC834DC)
-In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
-References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+Cc: ath6kl-devel@qca.qualcomm.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Can anyone confirm if they have had an AR9374 v1.3 (=AR6004) working in
+sdio mode in compat v3.8?  I have three AR9374s working just fine in USB
+mode with compat v3.8.  I have an AR6103 (=AR6003), sdio, working on the
+same host as I'm trying the AR9374 on.  The AR9374 only gets as far as
+registering as mmc1.  The vendor and device IDs are correct.  When I try
+to load ath6kl_sdio, I get....
 
-VHT introduces multiple IEs that need to be parsed for a
-wide bandwidth channel switch. Two are (currently) needed
-in mac80211:
- * wide bandwidth channel switch element
- * channel switch wrapper element
+ath6kl: 8f69fe04
+ath6kl: 8f69fe34
+ath6kl: 8f69fe7c
+ath6kl_sdio: probe of mmc1:0001:1 failed with error -110
 
-The former is contained in the latter for beacons and probe
-responses, but not for the spectrum management action frames
-so the IE parser needs a new argument to differentiate them.
+loading ath6kl_core.ko debug_mask=0xffffffff doesn't give much more. 
+compat is build with
+export CONFIG_ATH_DEBUG=y
+export CONFIG_ATH6KL_DEBUG=y
+and I'm getting tones on debug when booting the AR6103.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h  | 10 ++++++++++
- net/mac80211/ibss.c        |  2 +-
- net/mac80211/ieee80211_i.h |  7 ++++---
- net/mac80211/mesh.c        |  4 ++--
- net/mac80211/mesh_hwmp.c   |  2 +-
- net/mac80211/mesh_plink.c  |  2 +-
- net/mac80211/mlme.c        | 16 ++++++++--------
- net/mac80211/scan.c        |  2 +-
- net/mac80211/util.c        | 36 +++++++++++++++++++++++++++++++++++-
- 9 files changed, 63 insertions(+), 18 deletions(-)
+My hardware settings for usb or sdio mode on the AR9374....
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ce07161..06b0ed0 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -695,6 +695,14 @@ struct ieee80211_sec_chan_offs_ie {
- } __packed;
- 
- /**
-+ * struct ieee80211_wide_bw_chansw_ie - wide bandwidth channel switch IE
-+ */
-+struct ieee80211_wide_bw_chansw_ie {
-+	u8 new_channel_width;
-+	u8 new_center_freq_seg0, new_center_freq_seg1;
-+} __packed;
-+
-+/**
-  * struct ieee80211_tim
-  *
-  * This structure refers to "Traffic Indication Map information element"
-@@ -1698,6 +1706,8 @@ enum ieee80211_eid {
- 	WLAN_EID_VHT_CAPABILITY = 191,
- 	WLAN_EID_VHT_OPERATION = 192,
- 	WLAN_EID_OPMODE_NOTIF = 199,
-+	WLAN_EID_WIDE_BW_CHANNEL_SWITCH = 194,
-+	WLAN_EID_CHANNEL_SWITCH_WRAPPER = 196,
- 
- 	/* 802.11ad */
- 	WLAN_EID_NON_TX_BSSID_CAP =  83,
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 2a0b218..8c3905d 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -911,7 +911,7 @@ void ieee80211_rx_mgmt_probe_beacon(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
--				&elems);
-+			       false, &elems);
- 
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8f240c0..f4a65a3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1179,6 +1179,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_rann_ie *rann;
- 	const struct ieee80211_channel_sw_ie *ch_switch_ie;
- 	const struct ieee80211_ext_chansw_ie *ext_chansw_ie;
-+	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
-@@ -1490,13 +1491,13 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tx_skb_tid(sdata, skb, 7);
- }
- 
--u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
-+u32 ieee802_11_parse_elems_crc(u8 *start, size_t len, bool action,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--static inline void ieee802_11_parse_elems(u8 *start, size_t len,
-+static inline void ieee802_11_parse_elems(u8 *start, size_t len, bool action,
- 					  struct ieee802_11_elems *elems)
- {
--	ieee802_11_parse_elems_crc(start, len, elems, 0, 0);
-+	ieee802_11_parse_elems_crc(start, len, action, elems, 0, 0);
- }
- 
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0acc287..4b98476 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -838,7 +838,7 @@ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
- 	if (baselen > len)
- 		return;
- 
--	ieee802_11_parse_elems(pos, len - baselen, &elems);
-+	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
- 
- 	/* 802.11-2012 10.1.4.3.2 */
- 	if ((!ether_addr_equal(mgmt->da, sdata->vif.addr) &&
-@@ -899,7 +899,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
--			       &elems);
-+			       false, &elems);
- 
- 	/* ignore non-mesh or secure / unsecure mismatch */
- 	if ((!elems.mesh_id || !elems.mesh_config) ||
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index bdb8d3b..8037f05 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -883,7 +883,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	baselen = (u8 *) mgmt->u.action.u.mesh_action.variable - (u8 *) mgmt;
- 	ieee802_11_parse_elems(mgmt->u.action.u.mesh_action.variable,
--			len - baselen, &elems);
-+			       len - baselen, false, &elems);
- 
- 	if (elems.preq) {
- 		if (elems.preq_len != 37)
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 937e06f..61bf06a 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -687,7 +687,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- 		baseaddr += 4;
- 		baselen += 4;
- 	}
--	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
-+	ieee802_11_parse_elems(baseaddr, len - baselen, true, &elems);
- 
- 	if (!elems.peering) {
- 		mpl_dbg(sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3102764..7249bdb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2235,7 +2235,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
- 	u32 tx_flags = 0;
- 
- 	pos = mgmt->u.auth.variable;
--	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), false, &elems);
- 	if (!elems.challenge)
- 		return;
- 	auth_data->expected_transaction = 4;
-@@ -2500,7 +2500,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	pos = mgmt->u.assoc_resp.variable;
--	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), false, &elems);
- 
- 	if (!elems.supp_rates) {
- 		sdata_info(sdata, "no SuppRates element in AssocResp\n");
-@@ -2669,7 +2669,7 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 		   capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
- 
- 	pos = mgmt->u.assoc_resp.variable;
--	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), false, &elems);
- 
- 	if (status_code == WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY &&
- 	    elems.timeout_int &&
-@@ -2792,7 +2792,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		return;
- 
- 	ieee802_11_parse_elems(mgmt->u.probe_resp.variable, len - baselen,
--				&elems);
-+			       false, &elems);
- 
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 
-@@ -2875,7 +2875,7 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->assoc_data && ifmgd->assoc_data->need_beacon &&
- 	    ether_addr_equal(mgmt->bssid, ifmgd->assoc_data->bss->bssid)) {
- 		ieee802_11_parse_elems(mgmt->u.beacon.variable,
--				       len - baselen, &elems);
-+				       len - baselen, false, &elems);
- 
- 		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems);
- 		ifmgd->assoc_data->have_beacon = true;
-@@ -2985,7 +2985,7 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	ncrc = crc32_be(0, (void *)&mgmt->u.beacon.beacon_int, 4);
- 	ncrc = ieee802_11_parse_elems_crc(mgmt->u.beacon.variable,
--					  len - baselen, &elems,
-+					  len - baselen, false, &elems,
- 					  care_about_ies, ncrc);
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
-@@ -3173,7 +3173,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 
- 			ieee802_11_parse_elems(
- 				mgmt->u.action.u.chan_switch.variable,
--				ies_len, &elems);
-+				ies_len, true, &elems);
- 
- 			if (elems.parse_error)
- 				break;
-@@ -3191,7 +3191,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 
- 			ieee802_11_parse_elems(
- 				mgmt->u.action.u.ext_chan_switch.variable,
--				ies_len, &elems);
-+				ies_len, true, &elems);
- 
- 			if (elems.parse_error)
- 				break;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 33fbf10..99b10392 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -181,7 +181,7 @@ void ieee80211_scan_rx(struct ieee80211_local *local, struct sk_buff *skb)
- 	if (baselen > skb->len)
- 		return;
- 
--	ieee802_11_parse_elems(elements, skb->len - baselen, &elems);
-+	ieee802_11_parse_elems(elements, skb->len - baselen, false, &elems);
- 
- 	channel = ieee80211_get_channel(local->hw.wiphy, rx_status->freq);
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 6ded61a..23bbfe0 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -660,7 +660,7 @@ void ieee80211_queue_delayed_work(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_queue_delayed_work);
- 
--u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
-+u32 ieee802_11_parse_elems_crc(u8 *start, size_t len, bool action,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc)
- {
-@@ -668,6 +668,7 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 	u8 *pos = start;
- 	bool calc_crc = filter != 0;
- 	DECLARE_BITMAP(seen_elems, 256);
-+	const u8 *ie;
- 
- 	bitmap_zero(seen_elems, 256);
- 	memset(elems, 0, sizeof(*elems));
-@@ -716,6 +717,11 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 		case WLAN_EID_PWR_CONSTRAINT:
- 		case WLAN_EID_TIMEOUT_INTERVAL:
- 		case WLAN_EID_SECONDARY_CHANNEL_OFFSET:
-+		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
-+		/*
-+		 * not listing WLAN_EID_CHANNEL_SWITCH_WRAPPER -- it seems possible
-+		 * that if the content gets bigger it might be needed more than once
-+		 */
- 			if (test_bit(id, seen_elems)) {
- 				elems->parse_error = true;
- 				left -= elen;
-@@ -877,6 +883,34 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			}
- 			elems->sec_chan_offs = (void *)pos;
- 			break;
-+		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
-+			if (!action ||
-+			    elen != sizeof(*elems->wide_bw_chansw_ie)) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			elems->wide_bw_chansw_ie = (void *)pos;
-+			break;
-+		case WLAN_EID_CHANNEL_SWITCH_WRAPPER:
-+			if (action) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			/*
-+			 * This is a bit tricky, but as we only care about
-+			 * the wide bandwidth channel switch element, so
-+			 * just parse it out manually.
-+			 */
-+			ie = cfg80211_find_ie(WLAN_EID_WIDE_BW_CHANNEL_SWITCH,
-+					      pos, elen);
-+			if (ie) {
-+				if (ie[1] == sizeof(*elems->wide_bw_chansw_ie))
-+					elems->wide_bw_chansw_ie =
-+						(void *)(ie + 2);
-+				else
-+					elem_parse_failed = true;
-+			}
-+			break;
- 		case WLAN_EID_COUNTRY:
- 			elems->country_elem = pos;
- 			elems->country_elem_len = elen;
--- 
-1.8.0
+USB mode
+sdio_cmd = 10k pull down
+
+SDIO mode
+sdio_cmd = 10k pull up to 3.3v
+sdio_D1 = 10k pull up to 3.3v
+
+I've tried dropping my sdio clock from 50Mhz to 10Mhz,  no go either.
+
+Jon
 
