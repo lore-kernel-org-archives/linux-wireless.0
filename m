@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57164 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753249Ab3CJX6A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 19:58:00 -0400
-Date: Mon, 11 Mar 2013 00:57:30 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [3.9] NFC fixes
-Message-ID: <20130310235730.GA27335@zurbaran> (sfid-20130311_005804_724501_E4A3C62F)
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:53972 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618Ab3CRKlh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Mar 2013 06:41:37 -0400
+Received: by mail-qc0-f177.google.com with SMTP id u28so2678092qcs.36
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 03:41:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Mon, 18 Mar 2013 11:41:36 +0100
+Message-ID: <CANMvdA8A4Q90f5wHHg4kLYKMJYJR-jgk=WsZDJF=5TxMTYg6wg@mail.gmail.com> (sfid-20130318_114141_245728_1EFCA030)
+Subject: Question concerning to iw list channels list
+From: Francisco Cuesta <ndarkness@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hello iw developers,
 
-This is the first NFC pull request for 3.9 fixes
 
-With this one we have:
+I would like to ask a question related to the command iw list. The
+channels shown with this command where are they taken from? I mean,
+does iw call the drivers' API to see which frequencies it can provide?
 
-- A fix for properly decreasing socket ack log.
-- A timer and works cleanup upon NFC device removal.
-- A monitoroing socket cleanup round from llcp_socket_release.
-- A proper error report to pending sockets upon NFC device removal.
+I ask this in that if I change the regulatory domain to Japan for
+instance, I cannot see the 4.9GHz channels with iw list, does it mean
+that the driver doesn't support such a channels or that I maybe have
+to modify iw list source in order to make them show up?
 
-Thanks in advance for pulling them in.
+Thanks in advance,
 
-The following changes since commit 930df2dfc7073c9ed2d0b47a08e47027ae83c545:
+REgards,
 
-  Merge branch 'for-davem' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless (2013-03-06 15:33:15 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.9-1
-
-for you to fetch changes up to 3bbc0ceb7ac2bf694d31362eea2c71a680e5deeb:
-
-  NFC: llcp: Report error to pending sockets when a device is removed (2013-03-08 17:35:22 +0100)
-
-----------------------------------------------------------------
-Samuel Ortiz (4):
-      NFC: llcp: Decrease socket ack log when accepting a connection
-      NFC: llcp: Clean local timers and works when removing a device
-      NFC: llcp: Clean raw sockets from nfc_llcp_socket_release
-      NFC: llcp: Report error to pending sockets when a device is removed
-
- net/nfc/llcp/llcp.c |   62 +++++++++++++++++++++++++++++++++++++++++++--------
- net/nfc/llcp/sock.c |    2 ++
- 2 files changed, 55 insertions(+), 9 deletions(-)
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Francisco
