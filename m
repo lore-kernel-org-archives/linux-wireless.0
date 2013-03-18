@@ -1,178 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:33029 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328Ab3CDVHx (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:54679 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab3CRN6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 16:07:53 -0500
-Received: by mail-pb0-f44.google.com with SMTP id wz12so3444894pbc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Mar 2013 13:07:53 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolution.net
-Cc: linux-wireless@vger.kernel.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH v2 1/5] nl80211: explicit userspace MPM
-Date: Mon,  4 Mar 2013 13:06:10 -0800
-Message-Id: <1362431174-4747-1-git-send-email-thomas@cozybit.com> (sfid-20130304_220800_377626_F451D656)
+	Mon, 18 Mar 2013 09:58:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <51471B85.5060404@broadcom.com>
+References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+	<51471B85.5060404@broadcom.com>
+Date: Mon, 18 Mar 2013 14:58:08 +0100
+Message-ID: <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com> (sfid-20130318_145830_108722_C90715DD)
+Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Piotr Haber <phaber@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Secure mesh had the implicit requirement that the Mesh
-Peering Management entity be in userspace.  However
-userspace might want to implement an open MPM as well, so
-specify a mesh setup parameter to indicate this.
+Hi Piotr
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
+> On 03/18/13 11:45, David Herrmann wrote:
+>> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
+>> wireless AP reconnection on: (14e4:4727)
+>>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
+>>
+>> Any attempt to reconnect to an AP results in timeouts no matter how near to the
+>> AP I am:
+>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+>> ---
+>> Hi
+>>
+>> I tried coming up with a fix instead of reverting this commit, but the commit is
+>> way to big for me to understand what's going on. Sorry.
+>>
+>> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
+>> one time, but any further attempt resulted in:
+>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+>>
+>> Even sitting right next to the AP didn't help so I started bisecting and it
+>> turned out to be:
+>>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+>> Please revert it.
+>>
+>> Thanks
+>> David
+>>
+> Hi,
+> unfortunately this is not a first report of this patch breaking 4313 for some users.
+> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
+> successfully in our test setup.
+> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
+> <debugfs_mount>/brcmsmac/bcma0:0/hardware
 
----
+Hi
 
-v2:
-	reject setting userspace MPM if feature not
-	supported (Johannes)
+$ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+board vendor: 185f
+board type: 51a
+board revision: 1408
+board flags: 8402a01
+board flags2: 880
+firmware revision: 262032b
 
- include/net/cfg80211.h       |    2 ++
- include/uapi/linux/nl80211.h |   25 ++++++++++++++++++-------
- net/wireless/mesh.c          |    1 +
- net/wireless/nl80211.c       |    8 ++++++++
- 4 files changed, 29 insertions(+), 7 deletions(-)
+I can also try partial reverts of that commit, but I really don't know
+which parts might be important.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9b34c76..b6be55e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1151,6 +1151,7 @@ struct mesh_config {
-  * @ie_len: length of vendor information elements
-  * @is_authenticated: this mesh requires authentication
-  * @is_secure: this mesh uses security
-+ * @user_mpm: userspace handles all MPM functions
-  * @dtim_period: DTIM period to use
-  * @beacon_interval: beacon interval to use
-  * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
-@@ -1168,6 +1169,7 @@ struct mesh_setup {
- 	u8 ie_len;
- 	bool is_authenticated;
- 	bool is_secure;
-+	bool user_mpm;
- 	u8 dtim_period;
- 	u16 beacon_interval;
- 	int mcast_rate[IEEE80211_NUM_BANDS];
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2d0cff5..8134c6a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -513,9 +513,11 @@
-  * @NL80211_CMD_NEW_PEER_CANDIDATE: Notification on the reception of a
-  *      beacon or probe response from a compatible mesh peer.  This is only
-  *      sent while no station information (sta_info) exists for the new peer
-- *      candidate and when @NL80211_MESH_SETUP_USERSPACE_AUTH is set.  On
-- *      reception of this notification, userspace may decide to create a new
-- *      station (@NL80211_CMD_NEW_STATION).  To stop this notification from
-+ *      candidate and when @NL80211_MESH_SETUP_USERSPACE_AUTH,
-+ *      @NL80211_MESH_SETUP_USERSPACE_AMPE, or
-+ *      @NL80211_MESH_SETUP_USERSPACE_MPM is set.  On reception of this
-+ *      notification, userspace may decide to create a new station
-+ *      (@NL80211_CMD_NEW_STATION).  To stop this notification from
-  *      reoccurring, the userspace authentication daemon may want to create the
-  *      new station with the AUTHENTICATED flag unset and maybe change it later
-  *      depending on the authentication result.
-@@ -1199,10 +1201,10 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SUPPORT_MESH_AUTH: Currently, this means the underlying driver
-  *	allows auth frames in a mesh to be passed to userspace for processing via
-  *	the @NL80211_MESH_SETUP_USERSPACE_AUTH flag.
-- * @NL80211_ATTR_STA_PLINK_STATE: The state of a mesh peer link as
-- *	defined in &enum nl80211_plink_state. Used when userspace is
-- *	driving the peer link management state machine.
-- *	@NL80211_MESH_SETUP_USERSPACE_AMPE must be enabled.
-+ * @NL80211_ATTR_STA_PLINK_STATE: The state of a mesh peer link as defined in
-+ *	&enum nl80211_plink_state. Used when userspace is driving the peer link
-+ *	management state machine.  @NL80211_MESH_SETUP_USERSPACE_AMPE or
-+ *	@NL80211_MESH_SETUP_USERSPACE_MPM must be enabled.
-  *
-  * @NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED: indicates, as part of the wiphy
-  *	capabilities, the supported WoWLAN triggers
-@@ -2612,6 +2614,9 @@ enum nl80211_meshconf_params {
-  *	vendor specific synchronization method or disable it to use the default
-  *	neighbor offset synchronization
-  *
-+ * @NL80211_MESH_SETUP_USERSPACE_MPM: Enable this option if userspace will
-+ *	implement an MPM which handles peer allocation and state.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  *
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -2624,6 +2629,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_USERSPACE_AUTH,
- 	NL80211_MESH_SETUP_USERSPACE_AMPE,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_SYNC,
-+	NL80211_MESH_SETUP_USERSPACE_MPM,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-@@ -3526,6 +3532,10 @@ enum nl80211_ap_sme_features {
-  *	stations the authenticated/associated bits have to be set in the mask.
-  * @NL80211_FEATURE_ADVERTISE_CHAN_LIMITS: cfg80211 advertises channel limits
-  *	(HT40, VHT 80/160 MHz) if this flag is set
-+ * @NL80211_FEATURE_USERSPACE_MPM: This driver supports a userspace Mesh
-+ *	Peering Management entity which may be implemented by registering for
-+ *	beacons or NL80211_CMD_NEW_PEER_CANDIDATE events. The mesh beacon is
-+ *	still generated by the driver.
-  */
- enum nl80211_feature_flags {
- 	NL80211_FEATURE_SK_TX_STATUS			= 1 << 0,
-@@ -3544,6 +3554,7 @@ enum nl80211_feature_flags {
- 	/* bit 13 is reserved */
- 	NL80211_FEATURE_ADVERTISE_CHAN_LIMITS		= 1 << 14,
- 	NL80211_FEATURE_FULL_AP_CLIENT_STATE		= 1 << 15,
-+	NL80211_FEATURE_USERSPACE_MPM			= 1 << 16,
- };
- 
- /**
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 9688b24..0bb93f3 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -85,6 +85,7 @@ const struct mesh_setup default_mesh_setup = {
- 	.ie = NULL,
- 	.ie_len = 0,
- 	.is_secure = false,
-+	.user_mpm = false,
- 	.beacon_interval = MESH_DEFAULT_BEACON_INTERVAL,
- 	.dtim_period = MESH_DEFAULT_DTIM_PERIOD,
- };
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c85a4b8..167fd83 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4596,6 +4596,7 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
-+	[NL80211_MESH_SETUP_USERSPACE_MPM] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 				    .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
-@@ -4734,6 +4735,7 @@ do {									    \
- static int nl80211_parse_mesh_setup(struct genl_info *info,
- 				     struct mesh_setup *setup)
- {
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct nlattr *tb[NL80211_MESH_SETUP_ATTR_MAX + 1];
- 
- 	if (!info->attrs[NL80211_ATTR_MESH_SETUP])
-@@ -4770,8 +4772,14 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		setup->ie = nla_data(ieattr);
- 		setup->ie_len = nla_len(ieattr);
- 	}
-+	if (tb[NL80211_MESH_SETUP_USERSPACE_MPM] &&
-+	    !(rdev->wiphy.features & NL80211_FEATURE_USERSPACE_MPM))
-+		return -EINVAL;
-+	setup->user_mpm = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_MPM]);
- 	setup->is_authenticated = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
- 	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AMPE]);
-+	if (setup->is_secure)
-+		setup->user_mpm = true;
- 
- 	return 0;
- }
--- 
-1.7.10.4
-
+Thanks
+David
