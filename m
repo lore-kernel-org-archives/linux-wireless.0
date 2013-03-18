@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:48703 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab3CFHAP (ORCPT
+Received: from mail-vb0-f42.google.com ([209.85.212.42]:42675 "EHLO
+	mail-vb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab3CRSQJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 02:00:15 -0500
-Received: by mail-we0-f176.google.com with SMTP id s43so7600202wey.35
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 23:00:13 -0800 (PST)
+	Mon, 18 Mar 2013 14:16:09 -0400
+Date: Mon, 18 Mar 2013 15:16:01 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-03-18
+Message-ID: <20130318181601.GB3072@joana> (sfid-20130318_191628_096950_90AC1971)
 MIME-Version: 1.0
-In-Reply-To: <20790.56369.998911.884240@gargle.gargle.HOWL>
-References: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
-	<20790.56369.998911.884240@gargle.gargle.HOWL>
-Date: Wed, 6 Mar 2013 00:00:13 -0700
-Message-ID: <CAEk6VBHTWn8CX7SKNVQz+T+Wqwe9Na=32Lz=+xOdqncNZFhhkQ@mail.gmail.com> (sfid-20130306_080019_139002_76B577B8)
-Subject: Re: [ath9k] Recent driver versions break compatibility with AR9285
- for me
-From: Nick Thomas <nhomas@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith,
 
-Thanks for the reply!
+--NzB8fVQJ5HfG6fxh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-The latter iwconfig readout is from an old kernel version (3.2.39),
-where the card does indeed work. What I wish to report is that in a
-more recent kernel version (3.7.10), the card doesn't work (iwconfig
-says "no wireless extensions"). It's not a problem for me (I'm happily
-using the old kernel), but I thought it was worth reporting.
+Hi John,
 
-Some Googling tells me that a number of people have run into similar
-problems (kernel versions >=3.3 breaking their AR928X cards). Maybe
-you guys have been made aware of this?
+I put together 3 fixes intended for 3.9, there are support for two new devices
+and a NULL dereference fix in the SCO code.
 
-https://bbs.archlinux.org/viewtopic.php?pid=1085309
+Please pull or let me know of any problem. Thanks!
 
-Nick
+        Gustavo
 
-On Tue, Mar 5, 2013 at 11:03 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Nick Thomas wrote:
->> When I run the 3.7.10 kernel with the ath9k module loaded, the
->> wireless does not work, and iwconfig wlan0 reports:
->>
->> wlan0:          no wireless extensions.
->>
->> When I run the 3.2.39 kernel, the wireless works, and iwconfig wlan0 reports:
->>
->> wlan0     IEEE 802.11bgn  ESSID:"HardFatCox"
->>           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:22:75:49:42:F7
->>           Bit Rate=48 Mb/s   Tx-Power=15 dBm
->>           Retry  long limit:7   RTS thr:off   Fragment thr:off
->>           Encryption key:off
->>           Power Management:on
->>           Link Quality=50/70  Signal level=-60 dBm
->>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>           Tx excessive retries:23  Invalid misc:11577   Missed beacon:0
->>
->> My best guess is that recent driver revisions broke compatibility with
->> my wireless card.
->
-> The card is recognized properly by ath9k, since it is shown in the interface
-> list and it's even associated with HardFatCox :)
->
-> What doesn't work ?
->
-> Sujith
+---
+The following changes since commit 94a32d10f47b637ae24b78b1ddc7ef0e8396fda4:
+
+  Bluetooth: Device 0cf3:3008 should map AR 3012 (2013-03-11 18:04:54 -0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to ebaf5795ef57a70a042ea259448a465024e2821d:
+
+  Bluetooth: Add support for Dell[QCA 0cf3:817a] (2013-03-18 14:14:37 -0300)
+
+----------------------------------------------------------------
+Ming Lei (2):
+      Bluetooth: Add support for Dell[QCA 0cf3:0036]
+      Bluetooth: Add support for Dell[QCA 0cf3:817a]
+
+Vinicius Costa Gomes (1):
+      Bluetooth: Fix not closing SCO sockets in the BT_CONNECT2 state
+
+ drivers/bluetooth/ath3k.c | 4 ++++
+ drivers/bluetooth/btusb.c | 2 ++
+ net/bluetooth/sco.c       | 1 +
+ 3 files changed, 7 insertions(+)
+
+--NzB8fVQJ5HfG6fxh
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRR1nhAAoJEPs3PUX4s20oX2gQAJUTAT8Cb6PD4ZuIRNK5fBP1
+uy9idu1SPWkHcFfX27ODLANceYmdvuCpwX4ieceQNg5alnaWuOmxPnCrnpPBsQqD
+L5nkFa1f7vkYZYKS8VRhBXTByKfV+vl5gnKcMzNCQ9Ffka+BdSCOP1QOPIQTKsT4
+dAXRweLSo7ZzQj3m/JspvjfFbdUumA9o7DWuEAKk6P06dqcfz22bZwkLipRJbWvx
+mpbvb07/XRv6+EWh7ULWB33H91E4Hge9lpfqerWonlWBJpLM7OeAd8BARPkCIW8C
+5mrgh997z5+eGl/qPmJ8NFnqwZ5GSZkUswUFibqQKrLUTzJ5lsRzwTQawsqIe/gy
+LNdYB8KTyn1qYpvv+dMeCCb1j2kJBhAkXfIv2xcfc0GJhWQsYqy245KK2YuBd9vv
+oBfIkCf6Plndq8UP3ggovRP4w8wvuDowRinp+cKoFlhjbkgC/AXklzLBjMMtuSRy
+hrVZdOvx8KzgrniOTDZNb5rE4S4rfE2wsOA7uiqbF7euRqDXz/F9Sv75L2UwpLHR
+ygyyN4yYn607yHW7BmqgV3hxG+zG0iJ4s0nntP1snGh3c8EiA202kvybfe4hRS41
+1KZMNpDXWUaSnBIXRxkLP2KLy2Vqj8+Jv/X51KQGJND933maEzHUDZbvVNKEG63b
+JunQybt12ZesJQYGZHbL
+=dvVz
+-----END PGP SIGNATURE-----
+
+--NzB8fVQJ5HfG6fxh--
