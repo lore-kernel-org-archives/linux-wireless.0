@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49049 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565Ab3CKTvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 15:51:55 -0400
-Message-ID: <513E35CD.3010006@candelatech.com> (sfid-20130311_205159_546534_2D78111B)
-Date: Mon, 11 Mar 2013 12:51:41 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4850 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751419Ab3CRNuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Mar 2013 09:50:07 -0400
+Message-ID: <51471B85.5060404@broadcom.com> (sfid-20130318_145035_277893_4DDBA7E8)
+Date: Mon, 18 Mar 2013 14:49:57 +0100
+From: "Piotr Haber" <phaber@broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
-References: <1363020306-924-1-git-send-email-greearb@candelatech.com> <20130311190537.GB32171@tuxdriver.com>
-In-Reply-To: <20130311190537.GB32171@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "David Herrmann" <dh.herrmann@gmail.com>
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>
+Subject: Re: [PATCH regression/bisected] Revert
+ "brcmsmac: support 4313iPA"
+References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+In-Reply-To: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2013 12:05 PM, John W. Linville wrote:
-> On Mon, Mar 11, 2013 at 09:45:06AM -0700, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Otherwise, can't get the Sparklan AR9380 NICs to be
->> 5Ghz APs, since they are in world-roaming domain by
->> default.  Add this to /etc/modprobe.d/ath9k.conf:
->>
->> options ath9k override_eeprom_regdomain=0
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> Why "=0" to enable it?  Just to make it more confusing?
+On 03/18/13 11:45, David Herrmann wrote:
+> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
+> wireless AP reconnection on: (14e4:4727)
+>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
+> 
+> Any attempt to reconnect to an AP results in timeouts no matter how near to the
+> AP I am:
+>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> ---
+> Hi
+> 
+> I tried coming up with a fix instead of reverting this commit, but the commit is
+> way to big for me to understand what's going on. Sorry.
+> 
+> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
+> one time, but any further attempt resulted in:
+>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> 
+> Even sitting right next to the AP didn't help so I started bisecting and it
+> turned out to be:
+>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+> Please revert it.
+> 
+> Thanks
+> David
+> 
+Hi,
+unfortunately this is not a first report of this patch breaking 4313 for some users.
+I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
+successfully in our test setup.
+Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
+<debugfs_mount>/brcmsmac/bcma0:0/hardware
 
-You are just setting the country code...and country-code 0 seems
-to at least open up the US regulatory domain so we use it
-by default.
-
-You can use any country code you wish here.
-
-Thanks,
-Ben
-
->
-> Do the Atheros folks have an opinion on this?
->
-> John
->
+Piotr
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+
+
 
