@@ -1,27 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933126Ab3CZNgI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34769 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859Ab3CRUpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 09:36:08 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UKU2o-0000GM-Hk
-	for linux-wireless@vger.kernel.org; Tue, 26 Mar 2013 14:36:06 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/4] mac80211: proper channel switch support
-Date: Tue, 26 Mar 2013 14:35:57 +0100
-Message-Id: <1364304961-32028-1-git-send-email-johannes@sipsolutions.net> (sfid-20130326_143613_115063_8EB7C194)
+	Mon, 18 Mar 2013 16:45:34 -0400
+Date: Mon, 18 Mar 2013 16:35:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: Pull request: ath6kl 20130318
+Message-ID: <20130318203547.GA2638@tuxdriver.com> (sfid-20130318_214538_345517_24A05E49)
+References: <87obeg7tpl.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87obeg7tpl.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current channel switch support is rather lacking, HT channel switch
-isn't even attempted to be handled correctly ... This makes it a bit more
-complete, though still lacking VHT and channel context handling.
+On Mon, Mar 18, 2013 at 02:55:50PM +0200, Kalle Valo wrote:
+> Hi John,
+> 
+> here's an ath6kl pull request for 3.10. Please let me know if there are
+> any problems.
+> 
+> I added tracing support to ath6kl, along with a new Kconfig option. Now
+> there's also a workaround to reset USB devices when the firmware upload
+> fails, this happened when host was warm rebooted. There are also quite a
+> few small fixes or cleanup.
+> 
+> The following changes since commit b53cf458ea20dd7f5e32611366f63728e40c9021:
+> 
+>   net: wireless: hostap: hostap_ap.c: Return -ENOMEM instead of -1 for if kmalloc() fails. (2013-02-18 15:30:40 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath6kl.git tags/for-linville-20130318
+> 
+> for you to fetch changes up to 243c028099c467186d126859848bdac3bbfe8da0:
+> 
+>   ath6kl: Fix a debugfs crash for USB devices (2013-03-18 14:09:40 +0200)
 
-Does anyone have a test setup for this?
+Pulling now...
 
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
