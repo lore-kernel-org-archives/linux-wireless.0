@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37071 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752553Ab3C0QRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:17:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: mark eromptr as __iomem
-Date: Wed, 27 Mar 2013 17:16:58 +0100
-Message-Id: <1364401018-25534-1-git-send-email-hauke@hauke-m.de> (sfid-20130327_171739_022256_B6920BE0)
+Received: from mail-da0-f44.google.com ([209.85.210.44]:35222 "EHLO
+	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754479Ab3CRVdj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Mar 2013 17:33:39 -0400
+Received: by mail-da0-f44.google.com with SMTP id z20so1589406dae.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 14:33:39 -0700 (PDT)
+Date: Mon, 18 Mar 2013 14:25:44 -0700
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>, 664767@bugs.debian.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20130318212544.GB5062@elie.Belkin> (sfid-20130318_223348_171348_399945B8)
+References: <20130317144603.GA4850@stt008.linux.site>
+ <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
+ <20130317152428.GA4940@stt008.linux.site>
+ <20130317175658.GA8181@elie.Belkin>
+ <20130317182725.GA5811@stt008.linux.site>
+ <20130317183344.GA8786@elie.Belkin>
+ <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
+ <20130318083752.GA6570@elie.Belkin>
+ <51476D25.6030609@broadcom.com>
+ <20130318211428.GA9136@stt008.linux.site>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130318211428.GA9136@stt008.linux.site>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some sparse warnings.
+Camaleón wrote:
+> El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+>> Sorry to hear. Reading back the bug report I noticed you are having a  
+>> bcm4313 and we recently had a regression on it. Could you provide  
+>> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
+>
+> I see. My "/sys/kernel/debug/*" directory is empty
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 8d0b571..bca9c80 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -137,19 +137,19 @@ static void bcma_scan_switch_core(struct bcma_bus *bus, u32 addr)
- 				       addr);
- }
- 
--static u32 bcma_erom_get_ent(struct bcma_bus *bus, u32 **eromptr)
-+static u32 bcma_erom_get_ent(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent = readl(*eromptr);
- 	(*eromptr)++;
- 	return ent;
- }
- 
--static void bcma_erom_push_ent(u32 **eromptr)
-+static void bcma_erom_push_ent(u32 __iomem **eromptr)
- {
- 	(*eromptr)--;
- }
- 
--static s32 bcma_erom_get_ci(struct bcma_bus *bus, u32 **eromptr)
-+static s32 bcma_erom_get_ci(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent = bcma_erom_get_ent(bus, eromptr);
- 	if (!(ent & SCAN_ER_VALID))
-@@ -159,14 +159,14 @@ static s32 bcma_erom_get_ci(struct bcma_bus *bus, u32 **eromptr)
- 	return ent;
- }
- 
--static bool bcma_erom_is_end(struct bcma_bus *bus, u32 **eromptr)
-+static bool bcma_erom_is_end(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent = bcma_erom_get_ent(bus, eromptr);
- 	bcma_erom_push_ent(eromptr);
- 	return (ent == (SCAN_ER_TAG_END | SCAN_ER_VALID));
- }
- 
--static bool bcma_erom_is_bridge(struct bcma_bus *bus, u32 **eromptr)
-+static bool bcma_erom_is_bridge(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent = bcma_erom_get_ent(bus, eromptr);
- 	bcma_erom_push_ent(eromptr);
-@@ -175,7 +175,7 @@ static bool bcma_erom_is_bridge(struct bcma_bus *bus, u32 **eromptr)
- 		((ent & SCAN_ADDR_TYPE) == SCAN_ADDR_TYPE_BRIDGE));
- }
- 
--static void bcma_erom_skip_component(struct bcma_bus *bus, u32 **eromptr)
-+static void bcma_erom_skip_component(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent;
- 	while (1) {
-@@ -189,7 +189,7 @@ static void bcma_erom_skip_component(struct bcma_bus *bus, u32 **eromptr)
- 	bcma_erom_push_ent(eromptr);
- }
- 
--static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 **eromptr)
-+static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 __iomem **eromptr)
- {
- 	u32 ent = bcma_erom_get_ent(bus, eromptr);
- 	if (!(ent & SCAN_ER_VALID))
-@@ -199,7 +199,7 @@ static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 **eromptr)
- 	return ent;
- }
- 
--static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
-+static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
- 				  u32 type, u8 port)
- {
- 	u32 addrl, addrh, sizel, sizeh = 0;
--- 
-1.7.10.4
-
+mount -t debugfs debugfs /sys/kernel/debug
