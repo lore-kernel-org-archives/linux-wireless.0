@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58464 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:36422 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696Ab3CAPKC (ORCPT
+	with ESMTP id S1752567Ab3CRTMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 10:10:02 -0500
-Message-ID: <1362150589.24973.0.camel@jlt4.sipsolutions.net> (sfid-20130301_161007_458778_D9196D98)
-Subject: Re: [PATCH] mac80211: fix oops on mesh PS broadcast forwarding
+	Mon, 18 Mar 2013 15:12:21 -0400
+Message-ID: <1363633936.8260.6.camel@jlt4.sipsolutions.net> (sfid-20130318_201225_756168_EEAB92C7)
+Subject: Re: [PATCH 1/3] mac80211/minstrel_ht: improve rate selection
+ stability
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Date: Fri, 01 Mar 2013 16:09:49 +0100
-In-Reply-To: <1362150078-10802-1-git-send-email-marco@cozybit.com> (sfid-20130301_160127_662995_0DE5B588)
-References: <1362150078-10802-1-git-send-email-marco@cozybit.com>
-	 (sfid-20130301_160127_662995_0DE5B588)
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 18 Mar 2013 20:12:16 +0100
+In-Reply-To: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
+References: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-03-01 at 16:01 +0100, Marco Porsch wrote:
-> Introduced with de74a1d9032f4d37ea453ad2a647e1aff4cd2591
-> "mac80211: fix WPA with VLAN on AP side with ps-sta".
-> Apparently overwrites the sdata pointer with non-valid data in
-> the case of mesh.
-> Fix this by checking for IFTYPE_AP_VLAN.
+On Sat, 2013-03-16 at 17:00 +0100, Felix Fietkau wrote:
+> Under load, otherwise stable rates can easily fluctuate because of
+> collisions. In my tests on a clean channel, the success probability of
+> the max throughput rate often stays somewhere between 90% and 100% under
+> load. This can cause some unnecessary switching to lower rates.
+> This patch improves stability by treating success probability values
+> between 90% and 100% the same.
+> In my tests on a 3x3 HT20 link with lots of TCP traffic, it improves the
+> average throughput by a few mbit/s.
 
-Applied.
+Applied all, thanks.
 
 johannes
 
