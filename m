@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1825 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873Ab3C0MHF convert rfc822-to-8bit (ORCPT
+Received: from mail-da0-f47.google.com ([209.85.210.47]:46945 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab3CRIiC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 08:07:05 -0400
-Message-ID: <5152E0DD.3000001@broadcom.com> (sfid-20130327_130710_346189_6310CDED)
-Date: Wed, 27 Mar 2013 13:06:53 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	Mon, 18 Mar 2013 04:38:02 -0400
+Received: by mail-da0-f47.google.com with SMTP id s35so1205303dak.20
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 01:38:01 -0700 (PDT)
+Date: Mon, 18 Mar 2013 01:37:52 -0700
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+Cc: 664767@bugs.debian.org, Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20130318083752.GA6570@elie.Belkin> (sfid-20130318_093808_109214_B44DDFF7)
+References: <20130317144603.GA4850@stt008.linux.site>
+ <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
+ <20130317152428.GA4940@stt008.linux.site>
+ <20130317175658.GA8181@elie.Belkin>
+ <20130317182725.GA5811@stt008.linux.site>
+ <20130317183344.GA8786@elie.Belkin>
+ <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
 MIME-Version: 1.0
-To: "John Talbut" <jt@dpets.co.uk>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-References: <51514F1B.1080207@dpets.co.uk>
- <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk>
- <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk>
- <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk>
- <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk>
- <51518E14.3050500@broadcom.com>
- <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com>
- <5151EC49.9030109@dpets.co.uk> <5151F088.2040408@hauke-m.de>
- <5151FB85.5080007@dpets.co.uk> <51521A8A.6060900@broadcom.com>
- <CACna6rwWNtPBJDShe1ia9dB_o40V_zZ1DFv677VSpmOmw083-A@mail.gmail.com>
- <5152C8DB.4080105@dpets.co.uk>
- <CACna6ry5A+HfOoDDW6rDy=rj7k913N8qdWhnS3Oacx21gece_g@mail.gmail.com>
- <5152CDDB.4010504@dpets.co.uk> <5152D670.3000707@broadcom.com>
-In-Reply-To: <5152D670.3000707@broadcom.com>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2013 12:22 PM, Arend van Spriel wrote:
-> On 03/27/2013 11:45 AM, John Talbut wrote:
->>
->>
->> On 27/03/13 10:33, Rafał Miłecki wrote:
->>> 2013/3/27 John Talbut <jt@dpets.co.uk>:
->>>> On 27/03/13 07:46, Rafał Miłecki wrote:
->>>>> 2013/3/26 Arend van Spriel <arend@broadcom.com>:
->>>>>> On 03/26/2013 08:48 PM, John Talbut wrote:
->>>>>>> echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
->>>>>>> bash: /sys/bus/pci/drivers/bcma-pci-bridge/new_id: No such file or directory
->>>>>>
->>>>>> This could mean you do not have CONFIG_BCMA_HOST_PCI=y in your .config
->>>>>
->>>>> Exactly. Make sure you have CONFIG_BCMA_HOST_PCI=y and that your
->>>>> host_pci.c is not modified/hacked/whatever.
->>>>>
->>>>> You can compare it with
->>>>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/bcma/host_pci.c
->>>>> bcma_pci_bridge_tbl.
->>>>>
->>>> OK, thanks, I have recompiled the kernel with CONFIG_BCMA_HOST_PCI=y and
->>>> we have some progress.
->>>>
->>>> ls /sys/bus/bcma/devices
->>>> bcma0:0
->>>>
->>>> lspci -d 14e4: -v
->>>> now has a line:
->>>> Kernel driver in use: bcma-pci-bridge
->>>>
->>>> host_pci.c is the same as torvalds.
->>>>
->>>> However, kernel log includes:
->>>> brcmsmac bcma0:0: firmware: agent aborted loading brcm/bcm43xx-0.fw (not
->>>> found?)
->>>> ieee80211 phy0: brcmsmac: Failed to find firmware usually in
->>>> /lib/firmware/brcm
->>>> brcmsmac: brcms_bcma_probe: brcms_attach failed!
->>>
->>> "Failed to find firmware". You didn't tell us if you have firmware installed.
->>> ls /lib/firmware/brcm/
->>> http://wireless.kernel.org/en/users/Drivers/brcm80211#Firmware_installation
->>>
->> Sorry, meant to do that:
->> ls /lib/firmware/brcm/
->> bcm43xx-0.fw bcm43xx_hdr-0.fw
->>
+Camaleón wrote[1]:
 
-To confirm my suspicion could you try following (as root):
+> vermagic:       3.9.0-rc2 SMP mod_unload modversions 686
+>
+> As soon as I load the brcmsmac module, N-M pop-ups and asks for the
+> secrets... constantly until it quits, that is, I cannot even connect
+> to the wifi AP with the Broadcom card, it's a bit frustrating :-(
+>
+> (attaching full dmesg and syslog files)
 
-/sys/bus/bcma/drivers/brcmsmac # echo bcma0:0 > bind
+Thanks.
 
-This should retrigger brcmsmac to get firmware and use the device.
+> I also downloaded Debian experimental kernel sources (3.8.2), do you
+> want me to compile and test this?
 
-Regards,
-Arend
+I see no reason to do that.
 
-> 
-> Do you have a ramdisk during boot? I suspect brcmsmac does request the
-> firmware before the root filesystem is mounted.
-> 
-> Gr. AvS
-> 
+Hm.
+Jonathan
 
-
+[1] http://bugs.debian.org/664767
