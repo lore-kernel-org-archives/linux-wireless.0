@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4850 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751419Ab3CRNuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 09:50:07 -0400
-Message-ID: <51471B85.5060404@broadcom.com> (sfid-20130318_145035_277893_4DDBA7E8)
-Date: Mon, 18 Mar 2013 14:49:57 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+Received: from cooperlighting-sw.cooperlighting.com ([216.130.131.68]:58337
+	"EHLO cooperlighting-sw.cooperlighting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750888Ab3CRGCe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Mar 2013 02:02:34 -0400
 MIME-Version: 1.0
-To: "David Herrmann" <dh.herrmann@gmail.com>
-cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>
-Subject: Re: [PATCH regression/bisected] Revert
- "brcmsmac: support 4313iPA"
-References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
-In-Reply-To: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
 Content-Type: text/plain;
- charset=iso-8859-1
+	charset="us-ascii"
+Subject: Many 4 address mode stations
+Date: Mon, 18 Mar 2013 13:51:59 +0800
+Message-ID: <475A4E02EFF4724A9E58F55A56AC131607C46A1F@APEVS1.ap.ci.root> (sfid-20130318_070238_012272_5621B398)
+From: "Wright, Brett" <Brett.Wright@cooperindustries.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/13 11:45, David Herrmann wrote:
-> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
-> wireless AP reconnection on: (14e4:4727)
->   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
-> 
-> Any attempt to reconnect to an AP results in timeouts no matter how near to the
-> AP I am:
->  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> ---
-> Hi
-> 
-> I tried coming up with a fix instead of reverting this commit, but the commit is
-> way to big for me to understand what's going on. Sorry.
-> 
-> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
-> one time, but any further attempt resulted in:
->  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> 
-> Even sitting right next to the AP didn't help so I started bisecting and it
-> turned out to be:
->   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
-> Please revert it.
-> 
-> Thanks
-> David
-> 
-Hi,
-unfortunately this is not a first report of this patch breaking 4313 for some users.
-I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
-successfully in our test setup.
-Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
-<debugfs_mount>/brcmsmac/bcma0:0/hardware
+Hi All,
 
-Piotr
+When we have 4 address mode stations connecting to an AP, mac80211
+creates a separate virtual interface of type NL80211_IFTYPE_AP_VLAN at
+the Access Point for each and every 4 address mode client that connects
+to it. I guess the reason why this happens is so that each of these
+interfaces is a separate port on a bridge with the AP interface, so that
+the bridge can do the work of learning which devices (i.e. mac
+addresses) are behind which remote station.
 
+My problem is that we have a situation where many stations in 4 address
+mode are connected to the AP. So, for example, I have 64 such stations
+connected to a single AP. This means that there are 64 x
+NL80211_IFTYPE_AP_VLAN interfaces created at the AP, and each added on a
+separate port on a bridge that also has the AP interface.
 
+To cut a long story short, the issue I have no is that any broadcast
+traffic (or in fact any frames the bridge decides to flood) is copied to
+each port on the bridge. So in the case of my example above with 64
+remote stations, a single arp request is sent out as 65 separate
+transmissions on the wireless network.
 
+My problem is that this is terribly inefficient and slows the whole
+wireless network down substantially for any such traffic. The
+alternative is obviously not to create the NL80211_IFTYPE_AP_VLAN
+interfaces for 4 address mode clients, but then the forwarding database
+(or equivalent of) would then have to be managed by mac80211 much like
+madwifi used to do. I can also think of some other solutions where the
+NL80211_IFTYPE_AP_VLAN interfaces could still be used but would still
+need to modify both mac80211 and possibly bridging also.
 
+Has anyone thought about this issue or have any suggestions when lots of
+4 address mode stations are used?
 
+Thanks
+Brett
