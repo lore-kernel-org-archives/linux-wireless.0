@@ -1,109 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from momout1-smtp.messagingengine.com ([66.111.4.229]:55682 "EHLO
-	momout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751187Ab3CMLj7 (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:57037 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754574Ab3CRVOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 07:39:59 -0400
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id AE4421A1C
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Mar 2013 07:39:58 -0400 (EDT)
-Message-Id: <1363174798.13944.140661203751385.64CA1D1D@webmail.messagingengine.com> (sfid-20130313_124004_644396_68F7898B)
-From: =?UTF-8?Q?K=C3=A9vin=20THIERRY?= <kevinthierry@myopera.com>
-To: linux-wireless@vger.kernel.org
+	Mon, 18 Mar 2013 17:14:34 -0400
+Received: by mail-wi0-f172.google.com with SMTP id ez12so3206389wid.5
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Mar 2013 14:14:33 -0700 (PDT)
+Date: Mon, 18 Mar 2013 22:14:28 +0100
+From: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, 664767@bugs.debian.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20130318211428.GA9136@stt008.linux.site> (sfid-20130318_221444_639513_E0A093BE)
+References: <20130317144603.GA4850@stt008.linux.site> <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk> <20130317152428.GA4940@stt008.linux.site> <20130317175658.GA8181@elie.Belkin> <20130317182725.GA5811@stt008.linux.site> <20130317183344.GA8786@elie.Belkin> <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com> <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: wpa_suplicant not working - WiFi Direct - P2P
-Date: Wed, 13 Mar 2013 11:39:58 +0000
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <51476D25.6030609@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
 
-I'm trying to setup wifi direct but I'm unable to launch wpa_supplicant.
+> On 03/18/2013 09:37 AM, Jonathan Nieder wrote:
+>> Camaleón wrote[1]:
+>>
+>>> vermagic:       3.9.0-rc2 SMP mod_unload modversions 686
+>>>
+>>> As soon as I load the brcmsmac module, N-M pop-ups and asks for the
+>>> secrets... constantly until it quits, that is, I cannot even connect
+>>> to the wifi AP with the Broadcom card, it's a bit frustrating :-(
+>
+> Sorry to hear. Reading back the bug report I noticed you are having a  
+> bcm4313 and we recently had a regression on it. Could you provide  
+> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
 
-OS : Ubuntu 12.04 x86_64 kernel 3.5.0-25-generic
-Dongle Wifi : Netgear model wna1000m
-Driver : 8192cu (latest driver provided by Realtek :
-http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&DownTypeID=3&GetDown=false&Downloads=true)
-wpa_suplicant : version 0.8.x (provided by Realtek with the driver)
-wifi p2p: enabled with "iwpriv wlan1 p2p_set enable=1"
+I see. My "/sys/kernel/debug/*" directory is empty so now that I'm going 
+to recompile the whole kernel again to revert the patch, is there any 
+flag I need to turn on at the ".config" file to enable the debug for 
+brcmsmac or any additional flag it could be interesting for this?
 
-wpa_sulicant has been built with these options (.config file):
+> The regression was caused by following commit:
+>
+> "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+>
+> If possible you can revert that and see how that goes.
 
-CONFIG_DRIVER_NL80211=y
-CONFIG_CTRL_IFACE=y
-CONFIG_WPS=y
-CONFIG_WPS2=y
-CONFIG_P2P=y
-CONFIG_AP=y
-CONFIG_WPA_CLI_EDIT=y
-CONFIG_BACKEND=file
-CONFIG_CTRL_IFACE_DBUS=y
-CONFIG_CTRL_IFACE_DBUS_NEW=y
-CONFIG_CTRL_IFACE_DBUS_INTRO=y
-CONFIG_DEBUG_FILE=y
+It will cost me a bunch of dislikes ;-) but sure, I'll try and report 
+back.
 
-wpa_supplicant is launched with these parameters
-(/etc/wpa_supplicant_wlan1.conf) :
+Greetings,
 
-update_config=1
-ctrl_interface=/var/run/wpa_supplicant
-ap_scan=1
-device_name=Netgear Dongle wlan1
-device_type=1-0050F204-1
-p2p_listen_reg_class=81
-p2p_listen_channel=1
-p2p_oper_reg_class=81
-p2p_oper_channel=1
-
-Launching wpa_supplicant:
-
-$ sudo wpa_supplicant -Dnl80211 -c/etc/wpa_supplicant_wlan1.conf -iwlan1
--d
-wpa_supplicant v0.8.x
-random: Trying to read entropy from /dev/random
-Initializing interface 'wlan1' conf '/etc/wpa_supplicant_wlan1.conf'
-driver 'nl80211' ctrl_interface 'N/A' bridge 'N/A'
-Configuration file '/etc/wpa_supplicant_wlan1.conf' ->
-'/etc/wpa_supplicant_wlan1.conf'
-Reading configuration file '/etc/wpa_supplicant_wlan1.conf'
-update_config=1
-ctrl_interface='/var/run/wpa_supplicant'
-ap_scan=1
-device_name='Netgear Dongle wlan1'
-p2p_listen_reg_class=81
-p2p_listen_channel=1
-p2p_oper_reg_class=81
-p2p_oper_channel=1
-Could not open file /sys/class/net/wlan1/phy80211/name: No such file or
-directory
-rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
-rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Try mode change after setting interface down
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Failed to set interface 6 to mode 2: -19 (No such device)
-nl80211: Interface mode change to 2 from 0 failed
-nl80211: Could not configure driver to use managed mode
-netlink: Operstate: linkmode=1, operstate=5
-wlan1: Failed to initialize driver interface
-Failed to add interface wlan1
-wlan1: Cancelling scan request
-wlan1: Cancelling authentication timeout
-
-Since I followed the linux kernel wireless how to
-(http://wireless.kernel.org/en/developers/p2p/howto) and Realtek
-documentation (availlable with the driver) without getting better
-results I figured that you might have an idea.
-
-Thanks,
-
-Kevin
+-- 
+Camaleón 
