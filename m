@@ -1,117 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36834 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751320Ab3CARho (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 12:37:44 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 2/7] mac80211: merge value scaling macros of minstrel_ht and minstrel
-Date: Fri,  1 Mar 2013 18:37:31 +0100
-Message-Id: <1362159456-39448-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183754_616805_A113D7F2)
-In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from mx1.redhat.com ([209.132.183.28]:42981 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932663Ab3CSVgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 17:36:40 -0400
+Message-ID: <1363729054.8874.11.camel@dcbw.foobar.com> (sfid-20130319_223646_127736_8DF61047)
+Subject: Re: Intel Centrino Advanced-N 6205 master mode support
+From: Dan Williams <dcbw@redhat.com>
+To: =?ISO-8859-1?Q?D=E9nes_N=E9meth?= <mr.nemeth.denes@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 16:37:34 -0500
+In-Reply-To: <CAHwWuAE0MxN9_Bf1aTmpsefMAED-9HVsV7VtxorDvF3hSHZ2Ng@mail.gmail.com>
+References: <CAHwWuAE0MxN9_Bf1aTmpsefMAED-9HVsV7VtxorDvF3hSHZ2Ng@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both minstrel versions use individual ways to scale up integer values
-to perform calculations. Merge minstrel_ht's scaling macros into
-minstrels header file and use them in both minstrel versions.
+On Tue, 2013-03-19 at 21:54 +0100, Dénes Németh wrote:
+> Hi
+> 
+> Could you help me the determine if the Intel Centrino Advanced-N 6205
+> is supported in AP / master mode?
+> 
+> Your website http://wireless.kernel.org/en/users/Drivers/iwlwifi states
+> that the "AP mode (experimental; only on some devices/firmware versions)"
+> 
+> Is the wifi card above supported?
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c         | 9 ++++-----
- net/mac80211/rc80211_minstrel.h         | 5 +++++
- net/mac80211/rc80211_minstrel_debugfs.c | 6 +++---
- net/mac80211/rc80211_minstrel_ht.h      | 5 -----
- 4 files changed, 12 insertions(+), 13 deletions(-)
+If it lists AP in "Supported interface modes", then yes, your device is
+capable of it.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index d78f629..c9b9902 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -86,10 +86,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		if (!usecs)
- 			usecs = 1000000;
- 
--		/* To avoid rounding issues, probabilities scale from 0 (0%)
--		 * to 18000 (100%) */
- 		if (mr->attempts) {
--			mr->cur_prob = (mr->success * 18000) / mr->attempts;
-+			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
- 			mr->probability = minstrel_ewma(mr->probability,
-@@ -105,7 +103,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 
- 		/* Sample less often below the 10% chance of success.
- 		 * Sample less often above the 95% chance of success. */
--		if ((mr->probability > 17100) || (mr->probability < 1800)) {
-+		if (mr->probability > MINSTREL_FRAC(95, 100) ||
-+		    mr->probability < MINSTREL_FRAC(10, 100)) {
- 			mr->adjusted_retry_count = mr->retry_count >> 1;
- 			if (mr->adjusted_retry_count > 2)
- 				mr->adjusted_retry_count = 2;
-@@ -300,7 +299,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	/* If we're not using MRR and the sampling rate already
- 	 * has a probability of >95%, we shouldn't be attempting
- 	 * to use it, as this only wastes precious airtime */
--	if (!mrr && sample && (mi->r[ndx].probability > 17100))
-+	if (!mrr && sample && (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
- 		ndx = mi->max_tp_rate;
- 
- 	ar[0].idx = mi->r[ndx].rix;
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 98db93f..fda4a61 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -11,6 +11,11 @@
- 
- #define EWMA_LEVEL 75	/* ewma weighting factor [%] */
- 
-+/* scaled fraction values */
-+#define MINSTREL_SCALE  16
-+#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
-+#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
-+
- /*
-  * Perform EWMA (Exponentially Weighted Moving Average) calculation
-   */
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index d5a5622..c0ebfac 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -79,9 +79,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
- 				(mr->bitrate & 1 ? ".5" : "  "));
- 
--		tp = mr->cur_tp / ((18000 << 10) / 96);
--		prob = mr->cur_prob / 18;
--		eprob = mr->probability / 18;
-+		tp = MINSTREL_TRUNC(mr->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mr->probability * 1000);
- 
- 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
- 				"%3u(%3u)   %8llu    %8llu\n",
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 302dbd5..4ee5999 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -16,11 +16,6 @@
- #define MINSTREL_MAX_STREAMS	3
- #define MINSTREL_STREAM_GROUPS	4
- 
--/* scaled fraction values */
--#define MINSTREL_SCALE	16
--#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
--#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
--
- #define MCS_GROUP_RATES	8
- 
- struct mcs_group {
--- 
-1.8.1.1
+> Here is my debug info, at the bottom with the failure of changing to master mode
+> dmesg:
+>     loaded firmware version 18.168.6.1
+>     cfg80211: Regulatory domain changed to country: EU
+> 
+> iw list wlan0
+>     Supported interface modes:
+>          * IBSS
+>          * managed
+>          * AP
+>          * AP/VLAN
+>          * monitor
+>     software interface modes (can always be added):
+>          * AP/VLAN
+>          * monitor
+> 
+> iwconfig wlan0 mode master
+> Error for wireless request "Set Mode" (8B06) :
+>     SET failed on device wlan0 ; Invalid argument
+
+Don't use iwconfig, because these days a *lot* more information needs to
+be sent to the device for AP mode, and WEXT is long deprecated.  Use
+wpa_supplicant and its lightweight AP mode, or use hostapd.  Make sure
+you use them with the "nl80211" driver too, as in "-Dnl80211" on the
+command line of the supplicant.
+
+Dan
 
