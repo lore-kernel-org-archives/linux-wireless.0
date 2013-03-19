@@ -1,83 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:43949 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932087Ab3CHK1O (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40061 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754739Ab3CST5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 05:27:14 -0500
-Subject: [PATCH 3/3] ath6kl: cold reset target after host warm boot
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Fri, 08 Mar 2013 12:27:11 +0200
-Message-ID: <20130308102711.23245.98569.stgit@localhost6.localdomain6> (sfid-20130308_112716_777007_D5B74662)
-In-Reply-To: <20130308102539.23245.55176.stgit@localhost6.localdomain6>
-References: <20130308102539.23245.55176.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 19 Mar 2013 15:57:50 -0400
+Message-ID: <1363723052.8336.6.camel@jlt4.sipsolutions.net> (sfid-20130319_205755_751711_D4ADDEEC)
+Subject: pull-request: mac80211 2013-03-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 20:57:32 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Hp7gGXktainnYCuBZEoR"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julien reported that ar6004 usb device fails to initialise after host has been rebooted and
-power is still on for the ar6004 device. He found out that doing a cold reset fixes the issue.
 
-I wasn't sure what would be the best way to detect if target needs a reset so I settled on
-checking a timeout from htc_wait_recv_ctrl_message().
+--=-Hp7gGXktainnYCuBZEoR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Julien Massot <jmassot@aldebaran-robotics.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |    2 +-
- drivers/net/wireless/ath/ath6kl/init.c     |   19 ++++++++++++-------
- 2 files changed, 13 insertions(+), 8 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index c02d9d3..67aa924 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -1168,7 +1168,7 @@ static int htc_wait_recv_ctrl_message(struct htc_target *target)
- 
- 	if (count <= 0) {
- 		ath6kl_warn("htc pipe control receive timeout!\n");
--		return -ECOMM;
-+		return -ETIMEDOUT;
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 8b01ec3..ecf196f 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1658,7 +1658,18 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
- 	 * size.
- 	 */
- 	ret = ath6kl_htc_wait_target(ar->htc_target);
--	if (ret) {
-+
-+	if (ret == -ETIMEDOUT) {
-+		/*
-+		 * Most likely USB target is in odd state after reboot and
-+		 * needs a reset. A cold reset makes the whole device
-+		 * disappear from USB bus and initialisation starts from
-+		 * beginning.
-+		 */
-+		ath6kl_warn("htc wait target timed out, resetting device\n");
-+		ath6kl_init_hw_reset(ar);
-+		goto err_power_off;
-+	} else if (ret) {
- 		ath6kl_err("htc wait target failed: %d\n", ret);
- 		goto err_power_off;
- 	}
-@@ -1842,12 +1853,6 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 		ath6kl_htc_stop(ar->htc_target);
- 	}
- 
--	/*
--	 * Try to reset the device if we can. The driver may have been
--	 * configure NOT to reset the target during a debug session.
--	 */
--	ath6kl_init_hw_reset(ar);
--
- 	up(&ar->sem);
- }
- EXPORT_SYMBOL(ath6kl_stop_txrx);
+Coming back after a week of many meetings, I have a set of fixes for the
+3.9 series.
+
+I have two tracing fixes (one from Vladimir), two fixes for P2P device
+crashes and a fix for a BSS memory leak/lost update problem.
+
+Let me know if there's any problem.
+
+johannes
+
+
+The following changes since commit 801d929ca7d935ee199fd61d8ef914f51e892270=
+:
+
+  mac80211: another fix for idle handling in monitor mode (2013-03-02 21:24=
+:42 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to c831bbaef890c0c739f9409f4a2cccb126da7e7a:
+
+  cfg80211: fix wdev tracing crash (2013-03-19 20:26:57 +0100)
+
+----------------------------------------------------------------
+Johannes Berg (5):
+      mac80211: always synchronize_net() during station removal
+      cfg80211: fix potential BSS memory leak and update
+      mac80211: fix crash with P2P Device returning action frames
+      cfg80211: always check for scan end on P2P device
+      cfg80211: fix wdev tracing crash
+
+Vladimir Kondratiev (1):
+      cfg80211: fix inconsistency in trace for rdev_set_mac_acl
+
+ net/mac80211/rx.c       | 14 +++++++++++++-
+ net/mac80211/sta_info.c | 12 ++++++++++--
+ net/wireless/core.c     | 49 +++++++++++++++++++++++++++++++++++++--------=
+----
+ net/wireless/core.h     |  3 +++
+ net/wireless/nl80211.c  | 17 ++---------------
+ net/wireless/scan.c     | 22 ++++++++++++++--------
+ net/wireless/trace.h    |  5 +++--
+ 7 files changed, 82 insertions(+), 40 deletions(-)
+
+
+--=-Hp7gGXktainnYCuBZEoR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRSMMsAAoJEDBSmw7B7bqrrmAP/jQUjx6yWyhTNrR16eV6wNeF
+ZSnZFUSMY6oD8w/FZWJqEnc9Bby0PBtZYynIxOHZeT28wSDN8SUYx7w5NFS0jEQB
+zBQbwx56lkB2E2xBI0DzqC/KPSGep8xz35zoP7+hkjELKBORY4qSyYHxyIyWVdHj
+UW3CjZGAsJ8E7+VRKQTpxhpri4kgydhATP30YpBWHRPXilSY10OZg8V/5OQaIkPA
+b2Ns4M7MLof+EY6uYPtORYBqU7F52xZFmAErk1UZqV8WcN6VaH9UM7v/tjLaW890
+FUTOrS5DK/wPTizD9Hogkwc9fzvJIHUnP9aln8MItMZQ1TNRkDBbg2dB57ToyPji
+uCX1L62zZPLme3yqPjpkEP9Tmlf3wojoqu2qFhnvhjKTx50MqbmOVQkvammsmFZs
+kUPaamEuZE/g/GwDkLAAJJKRLF9cFks8dLO/+nXHI+YwT1VUWUVElJor8lZtid7e
+6CgNCIYMc8LHE5qkFaRj06zMyS3PJ/CyqNDfKUrhNRIA5bHIn69ImZPeiZnqW/kc
++Yp/RzyAlh3PC/IRcz0/lwxd6EoIJUAHJgBy+Lm0L6mJlj/bOw+vtBf3sZ40Ks7Z
+HNSs1EgHTXar3MlP5FWJnKAsn2FRIIrir0VjTpIEm27npix3y5nIVWSsGrH4Ofyg
+VC76O3yOHP70lE8xXkQA
+=GXXC
+-----END PGP SIGNATURE-----
+
+--=-Hp7gGXktainnYCuBZEoR--
 
