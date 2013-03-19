@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:35527 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932198Ab3CDUWb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 15:22:31 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "mcgrof@do-not-panic.com" <mcgrof@do-not-panic.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Date: Mon, 4 Mar 2013 12:19:05 -0800
-Subject: RE: [PATCH] regulatory: enable channels 52-144 for world roaming
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9D8DA3D2@SC-VEXCH1.marvell.com> (sfid-20130304_212242_250662_0F451A0A)
-References: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1362427007-4493-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:57037 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933933Ab3CSVYJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 17:24:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] mac80211:  Be more careful about sending beacon-loss-events.
+Date: Tue, 19 Mar 2013 14:23:54 -0700
+Message-Id: <1363728234-1629-2-git-send-email-greearb@candelatech.com> (sfid-20130319_222412_624378_BDA78077)
+In-Reply-To: <1363728234-1629-1-git-send-email-greearb@candelatech.com>
+References: <1363728234-1629-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Ben Greear <greearb@candelatech.com>
 
-[...]
+I don't think we should send the events unless it was actually
+a beacon that was lost...not just any probe of an AP.
 
-> @@ -188,7 +188,11 @@ static const struct ieee80211_regdomain world_regdom = {
->                          NL80211_RRF_PASSIVE_SCAN |
->                          NL80211_RRF_NO_IBSS),
-> 
-> -		/* NB: 5260 MHz - 5700 MHz requires DFS */
-> +		/* IEEE 802.11a, channel 52..144 - DFS required */
-> +		REG_RULE(5760-10, 5720+10, 80, 6, 20,
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 f46607a... 81e0619... M	net/mac80211/mlme.c
+ net/mac80211/mlme.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-5260-10
-
-> +			NL80211_RRF_PASSIVE_SCAN |
-> +			NL80211_RRF_NO_IBSS |
-> +			NL80211_RRF_DFS),
-> 
->  		/* IEEE 802.11a, channel 149..165 */
->  		REG_RULE(5745-10, 5825+10, 80, 6, 20,
-
-Regards,
-Bing
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f46607a..81e0619 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1624,12 +1624,14 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
+ 
+-	if (beacon)
++	if (beacon) {
+ 		mlme_dbg_ratelimited(sdata,
+ 				     "detected beacon loss from AP - sending probe request\n");
+ 
+-	ieee80211_cqm_rssi_notify(&sdata->vif,
+-		NL80211_CQM_RSSI_BEACON_LOSS_EVENT, GFP_KERNEL);
++		ieee80211_cqm_rssi_notify(&sdata->vif,
++					  NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
++					  GFP_KERNEL);
++	}
+ 
+ 	/*
+ 	 * The driver/our work has already reported this event or the
+-- 
+1.7.3.4
 
