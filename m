@@ -1,164 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:47751 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522Ab3CIMwV (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:51201 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109Ab3CSMmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 07:52:21 -0500
-Received: by mail-we0-f180.google.com with SMTP id k14so1968169wer.25
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 04:52:20 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 08/13] b43: HT-PHY: implement controlling TX power control
-Date: Sat,  9 Mar 2013 13:52:12 +0100
-Message-Id: <1362833532-27995-1-git-send-email-zajec5@gmail.com> (sfid-20130309_135224_920117_73B8FC37)
-In-Reply-To: <1362671247-10766-9-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-9-git-send-email-zajec5@gmail.com>
+	Tue, 19 Mar 2013 08:42:39 -0400
+Received: by mail-wg0-f50.google.com with SMTP id es5so315441wgb.17
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 05:42:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 Mar 2013 13:42:38 +0100
+Message-ID: <CADGp=Qe9NB9EAS=hpTKbDE-JhHqXY=sc1CaumiPaP384Bijb6g@mail.gmail.com> (sfid-20130319_134245_403038_1A604E30)
+Subject: ath6kl: null pointer dereference in do_recv_completion
+From: Julien Massot <jmassot@aldebaran-robotics.com>
+To: ath6kl-devel <ath6kl-devel@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't enable it until we have (almost?) whole TX power management
-figured out. It's similar to the N-PHY, the difference is that we call a
-"fix" *before* disabling power control.
+Hi,
+I just found a segfault in the ath6kl driver.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: use static for cmd_regs array
----
- drivers/net/wireless/b43/phy_ht.c |   55 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/phy_ht.h |   13 +++++++++
- 2 files changed, 68 insertions(+)
+I succeed in triggering it when I'm doing scp on a slow storage. ( ~
+1Mbit/s slow SDIO bus)
+I doesn't succeed in reproducing it using iperf, which gives slightly
+better throughput (100 Mbit/s tcp).
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 1998dca..1663551 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -319,6 +319,46 @@ static void b43_phy_ht_tx_power_fix(struct b43_wldev *dev)
+I'm using a preempt rt Linux 2.6.33 + wireless compat-3.6.6-1.
+
+[ 2937.469910] BUG: unable to handle kernel NULL pointer dereference at (null)
+[ 2937.470826] IP: [<(null)>] (null)
+[ 2937.470826] *pde = 00000000
+[ 2937.470826] Oops: 0000 [#1] PREEMPT SMP
+[ 2937.470826] last sysfs file: /sys/devices/platform/regulatory.0/uevent
+[ 2937.470826] Modules linked in: cdc_acm bridge stp rfcomm l2cap
+bluetooth cgosdrv ov5640 ath6kl_usb ath6kl_core snd_hda_codec_analog
+cfg80211 mmc_block mt9m114 unicorn(C) v4l2_common videodev
+snd_hda_intel v4l1_compat snd_hda_codec videobuf_dma_contig sdhci_pci
+compat videobuf_core i2c_isch snd_hwdep serio_raw sdhci [last
+unloaded: i2c_serial]
+[ 2937.470826]
+[ 2937.470826] Pid: 1841, comm: events/0 Tainted: G         C
+2.6.33.9-rt31-aldebaran-rt #1 /
+[ 2937.470826] EIP: 0060:[<00000000>] EFLAGS: 00010293 CPU: 0
+[ 2937.470826] EIP is at 0x0
+[ 2937.470826] EAX: f3068000 EBX: f5a3bf2c ECX: f5a3bf2c EDX: f30502c0
+[ 2937.470826] ESI: f30687c0 EDI: f30502c0 EBP: f5a3bef4 ESP: f5a3bee8
+[ 2937.470826]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 preempt:00000000
+[ 2937.470826] Process events/0 (pid: 1841, ti=f5a3a000 task=f512a4b0
+task.ti=f5a3a000)
+[ 2937.470826] Stack:
+[ 2937.470826]  f8d05215 f3992020 f3068000 f5a3bf40 f8d05f11 c1024e18
+00000002 f5dc3c40
+[ 2937.470826] <0> f5dc3c40 00000246 08a3bf24 0000064a 008d2424
+f55f2418 00000000 f30688f8
+[ 2937.470826] <0> f5c8de00 f5a3bf2c f5a3bf2c f8d13838 f55f2000
+f55f2418 f5a3bf4c f8d131d0
+[ 2937.470826] Call Trace:
+[ 2937.470826]  [<f8d05215>] ? do_recv_completion+0x2f/0x39 [ath6kl_core]
+[ 2937.470826]  [<f8d05f11>] ? ath6kl_htc_pipe_rx_complete+0x2cc/0x31a
+[ath6kl_core]
+[ 2937.470826]  [<c1024e18>] ? finish_task_switch+0x51/0x67
+[ 2937.470826]  [<f8d131d0>] ? ath6kl_core_rx_complete+0xd/0x10 [ath6kl_core]
+[ 2937.470826]  [<f8d933a9>] ? ath6kl_usb_io_comp_work+0x2d/0x3f [ath6kl_usb]
+[ 2937.470826]  [<c103da3b>] ? worker_thread+0x105/0x17c
+[ 2937.470826]  [<f8d9337c>] ? ath6kl_usb_io_comp_work+0x0/0x3f [ath6kl_usb]
+[ 2937.470826]  [<c104096d>] ? autoremove_wake_function+0x0/0x2f
+[ 2937.470826]  [<c103d936>] ? worker_thread+0x0/0x17c
+[ 2937.470826]  [<c104069b>] ? kthread+0x5f/0x64
+[ 2937.470826]  [<c104063c>] ? kthread+0x0/0x64
+[ 2937.470826]  [<c1002db6>] ? kernel_thread_helper+0x6/0x10
+[ 2937.470826] Code:  Bad EIP value.
+[ 2937.470826] EIP: [<00000000>] 0x0 SS:ESP 0068:f5a3bee8
+[ 2937.470826] CR2: 0000000000000000
+[ 2937.681695] hda-intel: IRQ timing workaround is activated for card
+#0. Suggest a bigger bdl_pos_adj.
+[ 2937.684124] ---[ end trace 65e5f4c37e647fa3 ]---
+
+http://pastebin.com/KEGQRjzu
+http://pastebin.com/cngx9q1e
+http://pastebin.com/GfCdJDUt
+
+ I found that in the file htc_pipe.c line 940 in function do_recv_completion
+the ep->ep_cb.rx function pointer is null.
+
+On Kalle's request, I add a debug line when the bug occurs.
+
+ ath6kl_dbg(ATH6KL_DBG_HTC,
+ 		 	"SVC Ready: 0x%4.4X: ULpipe:%d DLpipe:%d id:%d\n",
+ 		 	ep->svc_id, ep->pipe.pipeid_ul,
+ 		 	ep->pipe.pipeid_dl, ep->eid);
+
+and the log when the bugs occurs:
+SVC Ready: 0x0000: ULpipe:0 DLpipe:0 id:6
+
+So I add a check for null pointer, the communication no longer hang.
+
+here is the patch:
+
+>From 9565f0ab6aa5e739c8ceac6eef9e19b6dba71a07 Mon Sep 17 00:00:00 2001
+From: Julien Massot <jmassot@aldebaran-robotics.com>
+Date: Mon, 18 Mar 2013 17:32:26 +0100
+Subject: [PATCH] ath6kl: check for null rx hanldler of htc_ep_callbacks struct
+
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index 9adb567..969eb2a 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -937,6 +937,10 @@ static void do_recv_completion(struct htc_endpoint *ep,
+ 		packet = list_first_entry(queue_to_indicate,
+ 					  struct htc_packet, list);
+ 		list_del(&packet->list);
++                if (ep->ep_cb.rx == NULL) {
++                  ath6kl_warn("ep->ep_cb.rx is null .. continue ..\n");
++                  continue;
++                }
+ 		ep->ep_cb.rx(ep->target, packet);
  	}
- }
- 
-+#if 0
-+static void b43_phy_ht_tx_power_ctl(struct b43_wldev *dev, bool enable)
-+{
-+	struct b43_phy_ht *phy_ht = dev->phy.ht;
-+	u16 en_bits = B43_PHY_HT_TXPCTL_CMD_C1_COEFF |
-+		      B43_PHY_HT_TXPCTL_CMD_C1_HWPCTLEN |
-+		      B43_PHY_HT_TXPCTL_CMD_C1_PCTLEN;
-+	static const u16 cmd_regs[3] = { B43_PHY_HT_TXPCTL_CMD_C1,
-+					 B43_PHY_HT_TXPCTL_CMD_C2,
-+					 B43_PHY_HT_TXPCTL_CMD_C3 };
-+	int i;
-+
-+	if (!enable) {
-+		if (b43_phy_read(dev, B43_PHY_HT_TXPCTL_CMD_C1) & en_bits) {
-+			/* We disable enabled TX pwr ctl, save it's state */
-+			/*
-+			 * TODO: find the registers. On N-PHY they were 0x1ed
-+			 * and 0x1ee, we need 3 such a registers for HT-PHY
-+			 */
-+		}
-+		b43_phy_mask(dev, B43_PHY_HT_TXPCTL_CMD_C1, ~en_bits);
-+	} else {
-+		b43_phy_set(dev, B43_PHY_HT_TXPCTL_CMD_C1, en_bits);
-+
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
-+			for (i = 0; i < 3; i++)
-+				b43_phy_write(dev, cmd_regs[i], 0x32);
-+		}
-+
-+		for (i = 0; i < 3; i++)
-+			if (phy_ht->tx_pwr_idx[i] <=
-+			    B43_PHY_HT_TXPCTL_CMD_C1_INIT)
-+				b43_phy_write(dev, cmd_regs[i],
-+					      phy_ht->tx_pwr_idx[i]);
-+	}
-+
-+	phy_ht->tx_pwr_ctl = enable;
-+}
-+#endif
-+
- /**************************************************
-  * Channel switching ops.
-  **************************************************/
-@@ -455,14 +495,21 @@ static void b43_phy_ht_op_prepare_structs(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_ht *phy_ht = phy->ht;
-+	int i;
- 
- 	memset(phy_ht, 0, sizeof(*phy_ht));
-+
-+	phy_ht->tx_pwr_ctl = true;
-+	for (i = 0; i < 3; i++)
-+		phy_ht->tx_pwr_idx[i] = B43_PHY_HT_TXPCTL_CMD_C1_INIT + 1;
- }
- 
- static int b43_phy_ht_op_init(struct b43_wldev *dev)
- {
-+	struct b43_phy_ht *phy_ht = dev->phy.ht;
- 	u16 tmp;
- 	u16 clip_state[3];
-+	bool saved_tx_pwr_ctl;
- 
- 	if (dev->dev->bus_type != B43_BUS_BCMA) {
- 		b43err(dev->wl, "HT-PHY is supported only on BCMA bus!\n");
-@@ -589,6 +636,14 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 	b43_httab_write_bulk(dev, B43_HTTAB32(0x1a, 0xc0),
- 			B43_HTTAB_1A_C0_LATE_SIZE, b43_httab_0x1a_0xc0_late);
- 
-+	saved_tx_pwr_ctl = phy_ht->tx_pwr_ctl;
-+	b43_phy_ht_tx_power_fix(dev);
-+#if 0
-+	b43_phy_ht_tx_power_ctl(dev, false);
-+	/* TODO */
-+	b43_phy_ht_tx_power_ctl(dev, saved_tx_pwr_ctl);
-+#endif
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
-index 684807c..bc7a43f 100644
---- a/drivers/net/wireless/b43/phy_ht.h
-+++ b/drivers/net/wireless/b43/phy_ht.h
-@@ -22,6 +22,13 @@
- #define B43_PHY_HT_BW4				0x1D1
- #define B43_PHY_HT_BW5				0x1D2
- #define B43_PHY_HT_BW6				0x1D3
-+#define B43_PHY_HT_TXPCTL_CMD_C1		0x1E7	/* TX power control command */
-+#define  B43_PHY_HT_TXPCTL_CMD_C1_INIT		0x007F	/* Init */
-+#define  B43_PHY_HT_TXPCTL_CMD_C1_COEFF		0x2000	/* Power control coefficients */
-+#define  B43_PHY_HT_TXPCTL_CMD_C1_HWPCTLEN	0x4000	/* Hardware TX power control enable */
-+#define  B43_PHY_HT_TXPCTL_CMD_C1_PCTLEN	0x8000	/* TX power control enable */
-+#define B43_PHY_HT_TXPCTL_CMD_C2		0x222
-+#define  B43_PHY_HT_TXPCTL_CMD_C2_INIT		0x007F
- 
- #define B43_PHY_HT_C1_CLIP1THRES		B43_PHY_OFDM(0x00E)
- #define B43_PHY_HT_C2_CLIP1THRES		B43_PHY_OFDM(0x04E)
-@@ -51,6 +58,9 @@
- #define B43_PHY_HT_AFE_C3_OVER			B43_PHY_EXTG(0x118)
- #define B43_PHY_HT_AFE_C3			B43_PHY_EXTG(0x119)
- 
-+#define B43_PHY_HT_TXPCTL_CMD_C3		B43_PHY_EXTG(0x164)
-+#define  B43_PHY_HT_TXPCTL_CMD_C3_INIT		0x007F
-+
- #define B43_PHY_HT_TEST				B43_PHY_N_BMODE(0x00A)
- 
- 
-@@ -67,6 +77,9 @@ struct b43_phy_ht_channeltab_e_phy {
- 
- struct b43_phy_ht {
- 	u16 rf_ctl_int_save[3];
-+
-+	bool tx_pwr_ctl;
-+	u8 tx_pwr_idx[3];
- };
- 
- 
--- 
-1.7.10.4
 
+-- 
+
+Best Regards
+
+Julien
