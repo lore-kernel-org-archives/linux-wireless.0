@@ -1,46 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40538 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710Ab3CFGFG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40135 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933817Ab3CSUWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 01:05:06 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20790.56369.998911.884240@gargle.gargle.HOWL> (sfid-20130306_070510_026815_489EABDC)
-Date: Wed, 6 Mar 2013 11:33:29 +0530
-To: Nick Thomas <nhomas@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] Recent driver versions break compatibility with AR9285 for me
-In-Reply-To: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
-References: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com>
+	Tue, 19 Mar 2013 16:22:47 -0400
+Message-ID: <1363724562.8336.19.camel@jlt4.sipsolutions.net> (sfid-20130319_212256_083739_8F059B47)
+Subject: Re: question on beacon-loss messages
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Mar 2013 21:22:42 +0100
+In-Reply-To: <5140FADF.9060307@candelatech.com> (sfid-20130313_232505_542751_F9862093)
+References: <5140FADF.9060307@candelatech.com>
+	 (sfid-20130313_232505_542751_F9862093)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Thomas wrote:
-> When I run the 3.7.10 kernel with the ath9k module loaded, the
-> wireless does not work, and iwconfig wlan0 reports:
-> 
-> wlan0:          no wireless extensions.
-> 
-> When I run the 3.2.39 kernel, the wireless works, and iwconfig wlan0 reports:
-> 
-> wlan0     IEEE 802.11bgn  ESSID:"HardFatCox"
->           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:22:75:49:42:F7
->           Bit Rate=48 Mb/s   Tx-Power=15 dBm
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:off
->           Power Management:on
->           Link Quality=50/70  Signal level=-60 dBm
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:23  Invalid misc:11577   Missed beacon:0
-> 
-> My best guess is that recent driver revisions broke compatibility with
-> my wireless card.
+On Wed, 2013-03-13 at 15:17 -0700, Ben Greear wrote:
+> I am wondering, should the rssi_notify() call only be made if 'beacon' is
+> true?
 
-The card is recognized properly by ath9k, since it is shown in the interface
-list and it's even associated with HardFatCox :)
+Yes, it does seem so.
 
-What doesn't work ?
+johannes
 
-Sujith
