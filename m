@@ -1,125 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40286 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757447Ab3CDOWc (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:54913 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab3CSGxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 09:22:32 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
-Date: Mon,  4 Mar 2013 15:22:15 +0100
-Message-Id: <1362406937-69969-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152239_903548_C8E1F901)
-In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Tue, 19 Mar 2013 02:53:02 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	stable@vger.kernel.org
+Subject: [FIX 3.4+][PATCH] b43: N-PHY: increase initial value of "mind" in RSSI calibration
+Date: Tue, 19 Mar 2013 07:52:48 +0100
+Message-Id: <1363675968-20433-1-git-send-email-zajec5@gmail.com> (sfid-20130319_075309_632416_95C45BBB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While minstrel bootstraps and fills the success probabilities of each
-rate the lowest rate has typically a very high success probability
-(often 100% in our tests).
-Its statistics are never updated but considered to setup the mrr chain.
-In our tests we see that especially the 3rd mrr stage (which is that
-rate providing highest success probability) is filled with the lowest rate
-because its initial high sucess probability is never updated. By design
-the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
-mrr stage are equal.
+We're using "mind" variable to find the VCM that got the best polling
+results. For each VCM we calculte "currd" which is compared to the
+"mind". For PHY rev3+ "currd" gets values around 14k-40k. Looking for a
+value smaller than 40 makes no sense, so increase the initial value.
 
-This patch follows minstrels general approach of assuming as little
-as possible about rate dependencies. Consequently we include the
-lowest rate into the random sampling table to get balanced up-to-date
-statistics of all rates and therefore balanced decisions.
+This fixes a regression introduced in 3.4 by commit:
+e0c9a0219a8f542e3946fe972a68aacf8c3f906c
+(my BCM4322 performance dropped from 18,4Mb/s to 9,26Mb/s)
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cc: stable@vger.kernel.org
 ---
- net/mac80211/rc80211_minstrel.c    | 22 ++++++++--------------
- net/mac80211/rc80211_minstrel.h    |  4 +++-
- net/mac80211/rc80211_minstrel_ht.c |  1 -
- 3 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/net/wireless/b43/phy_n.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index aa59f29..c28e60a 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -55,7 +55,6 @@
- #include "rate.h"
- #include "rc80211_minstrel.h"
- 
--#define SAMPLE_COLUMNS	10
- #define SAMPLE_TBL(_mi, _idx, _col) \
- 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
- 
-@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
- 	unsigned int sample_ndx;
- 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
- 	mi->sample_row++;
--	if ((int) mi->sample_row > (mi->n_rates - 2)) {
-+	if ((int) mi->sample_row >= mi->n_rates) {
- 		mi->sample_row = 0;
- 		mi->sample_column++;
- 		if (mi->sample_column >= SAMPLE_COLUMNS)
-@@ -370,26 +369,21 @@ static void
- init_sample_table(struct minstrel_sta_info *mi)
- {
- 	unsigned int i, col, new_idx;
--	unsigned int n_srates = mi->n_rates - 1;
--	u8 rnd[8];
-+	u8 rnd[mi->n_rates];
- 
- 	mi->sample_column = 0;
- 	mi->sample_row = 0;
--	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
-+	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
- 
- 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
--		for (i = 0; i < n_srates; i++) {
-+		for (i = 0; i < mi->n_rates; i++) {
- 			get_random_bytes(rnd, sizeof(rnd));
--			new_idx = (i + rnd[i & 7]) % n_srates;
-+			new_idx = (i + rnd[i]) % mi->n_rates;
- 
--			while (SAMPLE_TBL(mi, new_idx, col) != 0)
--				new_idx = (new_idx + 1) % n_srates;
-+			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
-+				new_idx = (new_idx + 1) % mi->n_rates;
- 
--			/* Don't sample the slowest rate (i.e. slowest base
--			 * rate). We must presume that the slowest rate works
--			 * fine, or else other management frames will also be
--			 * failing and the link will break */
--			SAMPLE_TBL(mi, new_idx, col) = i + 1;
-+			SAMPLE_TBL(mi, new_idx, col) = i;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 3c35382..e014a7a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1615,7 +1615,7 @@ static void b43_nphy_rev3_rssi_cal(struct b43_wldev *dev)
  		}
+ 		for (i = 0; i < 4; i += 2) {
+ 			s32 curr;
+-			s32 mind = 40;
++			s32 mind = 0x100000;
+ 			s32 minpoll = 249;
+ 			u8 minvcm = 0;
+ 			if (2 * core != i)
+@@ -1799,7 +1799,7 @@ static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
  	}
- }
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 200b7e3..a0ccc57 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -9,7 +9,9 @@
- #ifndef __RC_MINSTREL_H
- #define __RC_MINSTREL_H
  
--#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
-+#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
-+#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
-+
- 
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a3081e5..8f88108 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -17,7 +17,6 @@
- #include "rc80211_minstrel_ht.h"
- 
- #define AVG_PKT_SIZE	1200
--#define SAMPLE_COLUMNS	10
- 
- /* Number of bits for an average sized packet */
- #define MCS_NBITS (AVG_PKT_SIZE << 3)
+ 	for (i = 0; i < 4; i++) {
+-		s32 mind = 40;
++		s32 mind = 0x100000;
+ 		u8 minvcm = 0;
+ 		s32 minpoll = 249;
+ 		s32 curr;
 -- 
-1.8.1.1
+1.7.10.4
 
