@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f181.google.com ([209.85.210.181]:35979 "EHLO
-	mail-ia0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757947Ab3CSJnn convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:38010 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933133Ab3CSWIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 05:43:43 -0400
-Received: by mail-ia0-f181.google.com with SMTP id o25so217570iad.40
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 02:43:43 -0700 (PDT)
+	Tue, 19 Mar 2013 18:08:20 -0400
+Received: by mail-wg0-f54.google.com with SMTP id fm10so825434wgb.9
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 15:08:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130318212544.GB5062@elie.Belkin>
-References: <20130317144603.GA4850@stt008.linux.site>
-	<1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
-	<20130317152428.GA4940@stt008.linux.site>
-	<20130317175658.GA8181@elie.Belkin>
-	<20130317182725.GA5811@stt008.linux.site>
-	<20130317183344.GA8786@elie.Belkin>
-	<CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
-	<20130318083752.GA6570@elie.Belkin>
-	<51476D25.6030609@broadcom.com>
-	<20130318211428.GA9136@stt008.linux.site>
-	<20130318212544.GB5062@elie.Belkin>
-Date: Tue, 19 Mar 2013 10:43:42 +0100
-Message-ID: <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com> (sfid-20130319_104351_672893_170051DA)
-Subject: Re: Brcmsmac driver woes, possible regression?
-From: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>, 664767@bugs.debian.org,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <CANMvdA_JKwdnnmHJ36GpT4ARtfda5Ybra77ted=CEmGRr-Eeqw@mail.gmail.com>
+References: <CANMvdA-YEzYM5PCEC=6bwoiFFejLFYuLYPZHhJLctEUOGHBokA@mail.gmail.com>
+ <CAGRGNgWyp47qYv4uHUVdJ+sVRnJxHgPc45meUqB7p4mdc3Xr6g@mail.gmail.com> <CANMvdA_JKwdnnmHJ36GpT4ARtfda5Ybra77ted=CEmGRr-Eeqw@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 20 Mar 2013 09:07:59 +1100
+Message-ID: <CAGRGNgVOQqwk8QJJVk3XMLzuo-r9hhCHMz=jj+XdEga-aRRhzw@mail.gmail.com> (sfid-20130319_230824_479373_D54DB901)
+Subject: Re: IW channels list question
+To: Francisco Cuesta <ndarkness@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/18 Jonathan Nieder <jrnieder@gmail.com>:
-> Camaleón wrote:
->> El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
+Hi Francisco,
+
+Firstly, don't drop the mailing list CC, I do _not_ do private support.
+
+Secondly, don't top post.
+
+On Tue, Mar 19, 2013 at 10:59 PM, Francisco Cuesta <ndarkness@gmail.com> wrote:
+> Hi Julian,
 >
->>> Sorry to hear. Reading back the bug report I noticed you are having a
->>> bcm4313 and we recently had a regression on it. Could you provide
->>> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
->>
->> I see. My "/sys/kernel/debug/*" directory is empty
+> First of all thanks for replying.
 >
-> mount -t debugfs debugfs /sys/kernel/debug
+> Concerning to the call of iw to the API in an openwrt system do you
+> know if this is the same? I mean, I have tried to find some file
+> called nl80211  but without succeeding.
 
-Perfect, thanks.
+nl80211 is an interface with the kernel, it's not a file. It's
+essentially commands to control Wifi (802.11) interfaces over NetLink.
 
-root@stt300:~# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-board vendor: 103c
-board type: 145c
-board revision: 2209
-board flags: 8002a00
-board flags2: 800
-firmware revision: 262032b
+All 'iw' commands, regardless of the Linux distribution or whatever use nl80211.
 
-Now let's see how reverting the patch makes any difference as soon as
-I can compile the module. I will keep you updated
+> On the other hand, I'm working with openwrt and I was aware about the
+> eemprom stuff, indeed, I have enabled an openwrt feature that allows
+> you to force the atheros eemprom to take into account the regulatory
+> domain set by the user, but event though if I set Japan I don't see an
+> update on iw list channels. Is that due to the fact that my card
+> doesn't support such a frequency?
 
-Greetings,
+That is most likely the case.
+
+Thanks,
 
 -- 
-Camaleón
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
