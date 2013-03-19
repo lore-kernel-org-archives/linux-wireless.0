@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:33119 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751847Ab3CAU5a (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40148 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757764Ab3CSU15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 15:57:30 -0500
-Date: Fri, 01 Mar 2013 15:57:28 -0500 (EST)
-Message-Id: <20130301.155728.88068767335721442.davem@davemloft.net> (sfid-20130301_215752_629778_A6451E0F)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-03-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130301192332.GE27114@tuxdriver.com>
-References: <20130301192332.GE27114@tuxdriver.com>
+	Tue, 19 Mar 2013 16:27:57 -0400
+Message-ID: <1363724866.8336.22.camel@jlt4.sipsolutions.net> (sfid-20130319_212805_031231_44C7954F)
+Subject: Re: [RFC] P2P find offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 21:27:46 +0100
+In-Reply-To: <3959922.dEpYdEMVAq@lx-vladimir>
+References: <3408094.SIuA27EmQ5@lx-vladimir>
+	 <1958495.JVcc1yGep9@lx-vladimir>
+	 <1363638685.8260.32.camel@jlt4.sipsolutions.net>
+	 <3959922.dEpYdEMVAq@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 1 Mar 2013 14:23:33 -0500
+On Tue, 2013-03-19 at 19:35 +0200, Vladimir Kondratiev wrote:
+> > I was under the impression that wpa_s allowed "progressive" (i.e.
+> one
+> > non-social channel per iteration) even in find? I could be wrong
+> though,
+> > maybe only in search.
 
-> This is another flurry of fixes intended for the 3.9 stream...
-> 
-> A mac80211 pull from Johannes:
-> 
-> "Seth fixes a stupid bug I introduced into one of his earlier patches,
-> Chun-Yeow fixes mesh forwarding and Felix fixes monitor mode. I myself
-> fixed a small locking issue and, the biggest change here, removed some
-> nl80211 information with which sometimes the per wiphy information was
-> getting too large for the typical 4k-minus-overhead. In my -next tree I
-> have a patch to allow splitting that and add back the information
-> removed now."
-> 
-> An iwlwifi pull from Johannes:
-> 
-> "I have a fix for a pretty important bug regarding DMA mapping, that
-> could cause the DMA engine to overwrite data we wanted to send to it, so
-> that the next time we send it it would be bad. This particularly affects
-> calibration results. Other than that, three little fixes for the MVM
-> driver."
-> 
-> But wait, there's more!
-> 
-> Avinash Patil fixes an incorrectly timed delay in mwifiex.
-> 
-> Bing Zhao prevents a crash in SD8688 caused by failing to properly
-> set a flag before issuing a command.
-> 
-> Felix Fietkau is the big here this time, providing a trio of minor
-> ath9k fixes and correcting the advertised interface combinations for
-> rt2x00 when mesh support is disabled.
-> 
-> Finally, Hauke Mehrtens gives us a patch that correctlin initializes
-> a spin lock in the bcma code.
-> 
-> Please let me know if there are problems!
+> wpa_s do it in that "legacy" scan before find phase
 
-Pulled, thanks John.
+No: p2p_find type=progressive
+
+If this will no longer be supported, I guess you can say so. I also
+don't really see how the API could support it, but it is a potential
+issue.
+
+
+> > Ok, but can you also document what the driver should add? Supported
+> > rates, HT info, ... presumably?
+> 
+> It is same case as for 'scan' or 'start_ap' - driver expect to deal
+> with
+> IE's same way. There we don't say anything, why do it here?
+
+Maybe we're better now? ;-)
+
+I guess I'm not too concerned about this.
+
+> Anything more I expected to do with patch? Or, is it on its way to
+> your git?
+
+Send as [PATCH] for sure, but we should think about the progressive
+thing.
+
+johannes
+
