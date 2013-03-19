@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1545 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753199Ab3CCLqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 06:46:14 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/13] brcm80211: cleanup and rework changes
-Date: Sun, 3 Mar 2013 12:45:19 +0100
-Message-ID: <1362311132-29561-1-git-send-email-arend@broadcom.com> (sfid-20130303_131303_783862_7A2783D1)
+Received: from mail-ia0-f178.google.com ([209.85.210.178]:59558 "EHLO
+	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934172Ab3CSWJe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 18:09:34 -0400
+Received: by mail-ia0-f178.google.com with SMTP id y10so845698iak.37
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 15:09:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130312095826.GB1383@redhat.com>
+References: <513E34FD.8090606@winsoft.pl> <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com>
+ <20130312095826.GB1383@redhat.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Tue, 19 Mar 2013 22:09:13 +0000
+Message-ID: <CAJZjf_yLFUTxMeEMUHuX7CsSeRw=RH5v=YjBrWt=a-=sMmFdbw@mail.gmail.com> (sfid-20130319_230942_545885_CD0D5BF7)
+Subject: Re: iwlegacy iwl3945 unable to connect to any hotspots on 3.9.0-rc1/rc2
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series does contain one brcmsmac patch to provide WLAN led support. It
-is only compiled when BCMA_DRIVER_GPIO is set. The brcmfmac patches contain
-cleanup of the module related macros and patches that rework the driver for
-upcoming firmware feature support. In this series also adding support for
-tracepoints allowing tracing all driver debug messages.
+On Tue, Mar 12, 2013 at 9:58 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Tue, Mar 12, 2013 at 08:30:47AM +0000, Pedro Francisco wrote:
+>> On Mon, Mar 11, 2013 at 7:48 PM, Krzysztof Kolasa <kkolasa@winsoft.pl> wrote:
+>> > Hotspots are visible and are working OK but wifi card can't connect.
+>> >
+>>
+>> Hit this bug also, on the GNOME-3.7.90.iso (based on FC19 testing
+>> ISO), "Can't stop Rx DMA." and friends.
+>>
+>> -snip
+>
+> I'm just tested 3.9-rc2 and have the same problems (including
+> dma map warning). So I don't need debug logs for that.
+> However still I would like to see 3.8 logs from Zdenek.
 
-This patch series is intended for v3.10 and applies to master branch in
-the wireless-next repository.
+Just checking, this problem reported above is independent from the DMA
+map warning, right?
 
-Arend van Spriel (12):
-  brcmfmac: introduce tracepoints for message logging
-  brcmfmac: make debug module parameter more clear
-  brcmfmac: cleanup module information macros
-  brcmfmac: only do auth_type workaround when no WPA or RSN IE is
-    provided
-  brcmfmac: remove null-pointer check in .sched_scan_start() callback
-  brcmfmac: increase required skbuff headroom for firmware signalling
-  brcmutil: add macros for setting bitfields using mask/shift
-    operations
-  brcmfmac: add support for TLV based firmware signalling
-  brcmfmac: release transmit packet in brcmf_txcomplete()
-  brcmfmac: assure brcmf_txcomplete() is called in failure paths
-  brcmutil: add dequeue function with filtering
-  brcmfmac: add parameter to brcmf_proto_hdrpush() for data offset
-
-Piotr Haber (1):
-  brcmsmac: radio on led support
-
- drivers/net/wireless/brcm80211/Kconfig             |    5 +-
- drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    7 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   30 ++-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   33 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c  |   42 +++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   34 ++-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   39 ++-
- .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   28 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |  382 ++++++++++++++++++++
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |   25 ++
- .../net/wireless/brcm80211/brcmfmac/tracepoint.c   |   22 ++
- .../net/wireless/brcm80211/brcmfmac/tracepoint.h   |   87 +++++
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   37 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   10 +-
- drivers/net/wireless/brcm80211/brcmsmac/Makefile   |    4 +
- drivers/net/wireless/brcm80211/brcmsmac/led.c      |  127 +++++++
- drivers/net/wireless/brcm80211/brcmsmac/led.h      |   36 ++
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    4 +
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    4 +
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   25 ++
- .../net/wireless/brcm80211/include/brcmu_utils.h   |   27 ++
- 24 files changed, 943 insertions(+), 72 deletions(-)
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/tracepoint.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/led.c
- create mode 100644 drivers/net/wireless/brcm80211/brcmsmac/led.h
-
--- 
-1.7.6
-
-
+( I tested with 3.9.0-0.rc3.git0.3.fc19.i686.PAE :
+Mar 19 18:17:05 s2 kernel: iwl3945 0000:02:00.0: Queue 4 stuck for 2495 ms.
+(...)
+Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Microcode SW error
+detected. Restarting 0x82000008.
+(...)
+Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Status: 0x000202E4, count: 1 ).
