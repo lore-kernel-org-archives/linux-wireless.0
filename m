@@ -1,168 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:41533 "EHLO
-	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752626Ab3C1CNu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 22:13:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Sagar Bijwe <bsagar@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: use separate AMPDU tx/rx window sizes in 11ac networks
-Date: Wed, 27 Mar 2013 19:10:32 -0700
-Message-ID: <1364436632-24281-2-git-send-email-bzhao@marvell.com> (sfid-20130328_031353_215310_2D115079)
-In-Reply-To: <1364436632-24281-1-git-send-email-bzhao@marvell.com>
-References: <1364436632-24281-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:7791 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933898Ab3CSWKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 18:10:49 -0400
+Message-ID: <1363731087.8874.19.camel@dcbw.foobar.com> (sfid-20130319_231057_663084_B75B8D2C)
+Subject: Re: Brcmsmac driver woes, possible regression?
+From: Dan Williams <dcbw@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	Jonathan Nieder <jrnieder@gmail.com>, 664767@bugs.debian.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 17:11:27 -0500
+In-Reply-To: <5148DEC9.50003@broadcom.com>
+References: <20130317144603.GA4850@stt008.linux.site>
+	 <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
+	 <20130317152428.GA4940@stt008.linux.site>
+	 <20130317175658.GA8181@elie.Belkin>
+	 <20130317182725.GA5811@stt008.linux.site>
+	 <20130317183344.GA8786@elie.Belkin>
+	 <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
+	 <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
+	 <20130318211428.GA9136@stt008.linux.site>
+	 <20130318212544.GB5062@elie.Belkin>
+	 <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
+	 <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
+	 <5148DEC9.50003@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Tue, 2013-03-19 at 22:55 +0100, Arend van Spriel wrote:
+> On 03/19/2013 05:21 PM, Camaleón wrote:
+> > Mar 19 17:05:28 stt300 kernel: [26034.188562] wlan0: authenticated
+> > Mar 19 17:05:28 stt300 kernel: [26034.192108] wlan0: associate with 00:1a:2b:97:7a:97 (try 1/3)
+> > Mar 19 17:05:28 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: authenticating -> associating
+> > Mar 19 17:05:30 stt300 kernel: [26036.586947] wlan0: RX AssocResp from 00:1a:2b:97:7a:97 (capab=0x411 status=0 aid=1)
+> > Mar 19 17:05:30 stt300 kernel: [26036.587560] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
+> > Mar 19 17:05:30 stt300 kernel: [26036.587576] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+> > Mar 19 17:05:30 stt300 kernel: [26036.587603] wlan0: associated
+> > Mar 19 17:05:30 stt300 kernel: [26036.587698] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> > Mar 19 17:05:30 stt300 wpa_supplicant[2855]: wlan0: Associated with 00:1a:2b:97:7a:97
+> 
+> Seems to be heading in the right direction, but....
+> 
+> > Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associating -> associated
+> > Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associated -> 4-way handshake
+> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: Joining mDNS multicast group on interface wlan0.IPv6 with address fe80::ae81:12ff:fe34:6963.
+> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: New relevant interface wlan0.IPv6 for mDNS.
+> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: Registering new address record for fe80::ae81:12ff:fe34:6963 on wlan0.*.
+> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): association took too long.
+> 
+> Here it seem to go bad again...
+> 
+> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <info> (wlan0): device state change: config -> need-auth (reason 'none') [50 60 0]
+> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): asking for new secrets
+> > Mar 19 17:05:32 stt300 kernel: [26039.005158] wlan0: deauthenticating from 00:1a:2b:97:7a:97 by local choice (reason=3)
+> 
+> And we get a deauth request with WLAN_REASON_DEAUTH_LEAVING.
 
-Newer 11ac enabled chipsets have more TX and RX buffers in FW
-and hardware; so they may support larger TX and RX window sizes
-for BA. Reset BA settings during association, adhoc join/start
-or start_ap() if we are joining/creating 11ac network.
+That local choice (reason=3) is NetworkManager terminating the
+association attempt because it already took 25 seconds, which is way too
+long for a simple association.  The cause is long before that.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Sagar Bijwe <bsagar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11ac.c     |   22 ++++++++++++++++++++++
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +++++
- drivers/net/wireless/mwifiex/decl.h     |    4 ++++
- drivers/net/wireless/mwifiex/join.c     |   23 +++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h     |    1 +
- 5 files changed, 55 insertions(+), 0 deletions(-)
+NM tells the supplicant to start associating here:
 
-diff --git a/drivers/net/wireless/mwifiex/11ac.c b/drivers/net/wireless/mwifiex/11ac.c
-index de0a634..966a78f 100644
---- a/drivers/net/wireless/mwifiex/11ac.c
-+++ b/drivers/net/wireless/mwifiex/11ac.c
-@@ -278,3 +278,25 @@ int mwifiex_cmd_11ac_cfg(struct mwifiex_private *priv,
- 
- 	return 0;
- }
-+
-+/* This function initializes the BlockACK setup information for given
-+ * mwifiex_private structure for 11ac enabled networks.
-+ */
-+void mwifiex_set_11ac_ba_params(struct mwifiex_private *priv)
-+{
-+	priv->add_ba_param.timeout = MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT;
-+
-+	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
-+		priv->add_ba_param.tx_win_size =
-+					   MWIFIEX_11AC_UAP_AMPDU_DEF_TXWINSIZE;
-+		priv->add_ba_param.rx_win_size =
-+					   MWIFIEX_11AC_UAP_AMPDU_DEF_RXWINSIZE;
-+	} else {
-+		priv->add_ba_param.tx_win_size =
-+					   MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE;
-+		priv->add_ba_param.rx_win_size =
-+					   MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE;
-+	}
-+
-+	return;
-+}
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 95f3306..8f161e1 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1381,6 +1381,11 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 				      priv->ap_11ac_enabled);
- 	}
- 
-+	if (priv->ap_11ac_enabled)
-+		mwifiex_set_11ac_ba_params(priv);
-+	else
-+		mwifiex_set_ba_params(priv);
-+
- 	mwifiex_set_wmm_params(priv, bss_cfg, params);
- 
- 	if (params->inactivity_timeout > 0) {
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 2af2c7c..94cc09d 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -45,6 +45,10 @@
- #define MWIFIEX_STA_AMPDU_DEF_RXWINSIZE        32
- #define MWIFIEX_UAP_AMPDU_DEF_TXWINSIZE        32
- #define MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE        16
-+#define MWIFIEX_11AC_STA_AMPDU_DEF_TXWINSIZE   32
-+#define MWIFIEX_11AC_STA_AMPDU_DEF_RXWINSIZE   48
-+#define MWIFIEX_11AC_UAP_AMPDU_DEF_TXWINSIZE   48
-+#define MWIFIEX_11AC_UAP_AMPDU_DEF_RXWINSIZE   32
- 
- #define MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT  0xffff
- 
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 2fe0ceb..6bcb66e 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1295,6 +1295,14 @@ int mwifiex_associate(struct mwifiex_private *priv,
- 	    (bss_desc->bss_mode != NL80211_IFTYPE_STATION))
- 		return -1;
- 
-+	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
-+	    !bss_desc->disable_11n && !bss_desc->disable_11ac &&
-+	    (priv->adapter->config_bands & BAND_GAC ||
-+	     priv->adapter->config_bands & BAND_AAC))
-+		mwifiex_set_11ac_ba_params(priv);
-+	else
-+		mwifiex_set_ba_params(priv);
-+
- 	memcpy(&current_bssid,
- 	       &priv->curr_bss_params.bss_descriptor.mac_address,
- 	       sizeof(current_bssid));
-@@ -1323,6 +1331,13 @@ mwifiex_adhoc_start(struct mwifiex_private *priv,
- 	dev_dbg(priv->adapter->dev, "info: curr_bss_params.band = %d\n",
- 		priv->curr_bss_params.band);
- 
-+	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
-+	    (priv->adapter->config_bands & BAND_GAC ||
-+	     priv->adapter->config_bands & BAND_AAC))
-+		mwifiex_set_11ac_ba_params(priv);
-+	else
-+		mwifiex_set_ba_params(priv);
-+
- 	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_AD_HOC_START,
- 				    HostCmd_ACT_GEN_SET, 0, adhoc_ssid);
- }
-@@ -1356,6 +1371,14 @@ int mwifiex_adhoc_join(struct mwifiex_private *priv,
- 		return -1;
- 	}
- 
-+	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info) &&
-+	    !bss_desc->disable_11n && !bss_desc->disable_11ac &&
-+	    (priv->adapter->config_bands & BAND_GAC ||
-+	     priv->adapter->config_bands & BAND_AAC))
-+		mwifiex_set_11ac_ba_params(priv);
-+	else
-+		mwifiex_set_ba_params(priv);
-+
- 	dev_dbg(priv->adapter->dev, "info: curr_bss_params.channel = %d\n",
- 		priv->curr_bss_params.bss_descriptor.channel);
- 	dev_dbg(priv->adapter->dev, "info: curr_bss_params.band = %c\n",
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d032998..cab8a85 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -925,6 +925,7 @@ mwifiex_set_wmm_params(struct mwifiex_private *priv,
- 		       struct mwifiex_uap_bss_param *bss_cfg,
- 		       struct cfg80211_ap_settings *params);
- void mwifiex_set_ba_params(struct mwifiex_private *priv);
-+void mwifiex_set_11ac_ba_params(struct mwifiex_private *priv);
- 
- /*
-  * This function checks if the queuing is RA based or not.
--- 
-1.7.0.2
+Mar 19 17:05:07 stt300 NetworkManager[30971]: <info> Config: set
+interface ap_scan to 1
+
+and finally kills the attempt here:
+
+Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation
+(wlan0/wireless): association took too long.
+
+So the supplicant gets a total of 25 seconds to associate to the AP,
+which, if you're not associated within that time, you're definitely not
+going to get associated if you're given more time.  But between 17:05:07
+and 17:05:32, NM is just waiting for the association to succeed.
+
+It really does look like the supplicant or driver tries to associate but
+then fails, eg:
+
+Mar 19 17:05:08 stt300 kernel: [26014.833011] wlan0: send auth to
+00:1a:2b:97:7a:97 (try 1/3)
+Mar 19 17:05:13 stt300 kernel: [26019.834259] wlan0: deauthenticating
+from 00:1a:2b:97:7a:97 by local choice (reason=3)
+
+There's a whole lot of authentication/association failures in that log,
+which do appear to indicate that the STA can see the AP, but the AP
+can't hear the STA.
+
+Then we also have stuff like:
+
+Mar 19 17:05:24 stt300 wpa_supplicant[2855]: wlan0: SME: Authentication
+request to the driver failed
+
+where it would be nice to know why the request failed.
+
+Dan
+
+> > Mar 19 17:05:33 stt300 kernel: [26040.004150] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
+> > Mar 19 17:05:33 stt300 kernel: [26040.004172] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+> > Mar 19 17:05:34 stt300 kernel: [26040.504402] cfg80211: Calling CRDA to update world regulatory domain
+> > Mar 19 17:05:34 stt300 ntpd[2611]: Listen normally on 16 wlan0 fe80::ae81:12ff:fe34:6963 UDP 123
+> > Mar 19 17:05:34 stt300 ntpd[2611]: peers refreshed
+> > Mar 19 17:05:34 stt300 wpa_supplicant[2855]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
+> > Mar 19 17:05:34 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: 4-way handshake -> disconnected
+> > Mar 19 17:05:34 stt300 NetworkManager[30971]: <warn> Couldn't disconnect supplicant interface: This interface is not connected.
+> 
+> I am trying to make sense of it, but it is getting late over here. Have 
+> a fresh look tomorrow.
+> 
+> Regards,
+> Arend
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
