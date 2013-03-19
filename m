@@ -1,146 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:43358 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932173Ab3CLJKi (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48772 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964828Ab3CSUqn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 05:10:38 -0400
-Message-ID: <20130312111035.96082dc0scui0tu8@www.dalek.fi> (sfid-20130312_101055_526436_EBE36F1D)
-Date: Tue, 12 Mar 2013 11:10:35 +0200
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	'George0505' <george0505@realtek.com>
-Subject: Re: rtl8192cu gets confused when scan is aborted by bringing
- interface down (Re: rtl8192cu goes silent/dead after some time...)
-References: <20130225185141.14193yyf1vunany8@www.dalek.fi>
- <512E58DF.4050001@lwfinger.net>
- <20130310142919.4375603d5escwu4g@www.dalek.fi>
- <20130311211709.17775i5d1zo9c8co@www.dalek.fi>
- <513E3DCD.5040507@lwfinger.net>
- <20130311230656.949364zqs1dt100s@www.dalek.fi>
- <513E4D1B.5000902@lwfinger.net>
-In-Reply-To: <513E4D1B.5000902@lwfinger.net>
+	Tue, 19 Mar 2013 16:46:43 -0400
+Message-ID: <5148CEAD.3010908@candelatech.com> (sfid-20130319_214649_009268_561037B9)
+Date: Tue, 19 Mar 2013 13:46:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_ac69u403oy8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211:  Don't restart sta-timer if not associated.
+References: <1363307043-23771-1-git-send-email-greearb@candelatech.com>  (sfid-20130315_012436_532333_DCDE8CD4) <1363724490.8336.18.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1363724490.8336.18.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message is in MIME format.
-
---=_ac69u403oy8
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Quoting Larry Finger <Larry.Finger@lwfinger.net>:
-
-> On 03/11/2013 04:06 PM, Jussi Kivilinna wrote:
+On 03/19/2013 01:21 PM, Johannes Berg wrote:
+> On Thu, 2013-03-14 at 17:24 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
 >>
->> Scan appearently is not necessary, 'ifconfig wlan0 up & sleep 0.02; ifconfig
->> wlan0 down' is enough. Just doing 'ifconfig wlan0 up; ifconfig  
->> wlan0 down' is
->> enough.
+>> I found another crash when deleting lots of virtual stations
+>> in a congested environment.  I think the problem is that
+>> the ieee80211_mlme_notify_scan_completed could call
+>> ieee80211_restart_sta_timer for a non-associated interface
+>> that was about to be deleted.
 >>
->> I also tested with monitor interface opened for tcpdump while doing  
->> 'ifconfig
->> up&down' on wlan0 and still triggered the issue. Then turning wlan0  
->> up resulted
->> monitor interface only receiving probe requests from nearby devices.
+>> With the following patch I am unable to reproduce the
+>> crash.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>> v2:  Be more selective:  Still need to do sdata->work even
+>>    if not associated so that we *can* associate.
+>>
+>> :100644 100644 81e0619... da805e2... M	net/mac80211/mlme.c
+>>   net/mac80211/mlme.c |    7 +++++--
+>>   1 files changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 81e0619..da805e2 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -2935,11 +2935,14 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+>>
+>>   		/* let's probe the connection once */
+>>   		flags = sdata->local->hw.flags;
+>> -		if (!(flags & IEEE80211_HW_CONNECTION_MONITOR))
+>> +		if ((!(flags & IEEE80211_HW_CONNECTION_MONITOR)) &&
+>> +		    sdata->u.mgd.associated)
 >
-> I am in the middle of a long-term test of rtl8192ce, which keeps me  
-> from running tests of rtl8192cu, but I noticed something strange.  
-> Does the attached patch help? It is compile tested.
+> You really didn't need those extra parentheses :-)
+
+I like them :)
+
+...never can remember if the ! operator takes
+precedence over &&, but can remove them...
+
+>>   			ieee80211_queue_work(&sdata->local->hw,
+>>   					     &sdata->u.mgd.monitor_work);
+>> +
+>>   		/* and do all the other regular work too */
+>> -		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+>> +		if (ieee80211_sdata_running(sdata))
+>> +			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+>
+> Overall, it seems that it would be safe to just check
+> ieee80211_sdata_running() in the beginning of the function instead?
+
+I'm not sure.  I can look at the code closer tomorrow perhaps.
+
+> Maybe you could also look at the ibss/mesh code and fix this issue for
+> good?
+
+Will poke around in that as well, but I have no way to test it currently.
+
+Ben
+
+>
+> johannes
 >
 
-That patch alone did not help.. however replacing  
-_rtl92cu_set_check_bssid() with that new rtl92cu_set_check_bssid()  
-does fix the issue (patch attached).
 
-But I think _rtl92cu_set_check_bssid() needs to be rechecked since it  
-has '(IS_NORMAL_CHIP(rtlhal->version))' conditional etc.
-
--Jussi
-
-
---=_ac69u403oy8
-Content-Type: text/x-diff;
- charset=ISO-8859-1;
- name="01-rtl8192cu_set_network_type_with_new_set_check_bssid.patch"
-Content-Disposition: attachment;
- filename="01-rtl8192cu_set_network_type_with_new_set_check_bssid.patch"
-Content-Transfer-Encoding: 7bit
-
-
-
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-
-
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |   31 +++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 3c6e18c..ee87201 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1377,11 +1377,28 @@ void rtl92cu_card_disable(struct ieee80211_hw *hw)
- 
- void rtl92cu_set_check_bssid(struct ieee80211_hw *hw, bool check_bssid)
- {
--	/* dummy routine needed for callback from rtl_op_configure_filter() */
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 reg_rcr = rtl_read_dword(rtlpriv, REG_RCR);
-+
-+	if (rtlpriv->psc.rfpwr_state != ERFON)
-+		return;
-+
-+	if (check_bssid) {
-+		reg_rcr |= (RCR_CBSSID_DATA | RCR_CBSSID_BCN);
-+		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR,
-+					      (u8 *) (&reg_rcr));
-+		_rtl92cu_set_bcn_ctrl_reg(hw, 0, BIT(4));
-+	} else if (!check_bssid) {
-+		reg_rcr &= (~(RCR_CBSSID_DATA | RCR_CBSSID_BCN));
-+		_rtl92cu_set_bcn_ctrl_reg(hw, BIT(4), 0);
-+		rtlpriv->cfg->ops->set_hw_reg(hw,
-+					      HW_VAR_RCR, (u8 *) (&reg_rcr));
-+	}
- }
- 
- /*========================================================================== */
- 
-+#if 0
- static void _rtl92cu_set_check_bssid(struct ieee80211_hw *hw,
- 			      enum nl80211_iftype type)
- {
-@@ -1439,12 +1456,22 @@ static void _rtl92cu_set_check_bssid(struct ieee80211_hw *hw,
- 		}
- 	}
- }
-+#endif
- 
- int rtl92cu_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
- 	if (_rtl92cu_set_media_status(hw, type))
- 		return -EOPNOTSUPP;
--	_rtl92cu_set_check_bssid(hw, type);
-+
-+	if (rtlpriv->mac80211.link_state == MAC80211_LINKED) {
-+		if (type != NL80211_IFTYPE_AP)
-+			rtl92cu_set_check_bssid(hw, true);
-+	} else {
-+		rtl92cu_set_check_bssid(hw, false);
-+	}
-+
- 	return 0;
- }
- 
-
---=_ac69u403oy8--
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
