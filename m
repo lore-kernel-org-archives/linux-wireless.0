@@ -1,140 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39559 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752893Ab3C1Lhx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 07:37:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 1/2] b43: mark some functions and structs static
-Date: Thu, 28 Mar 2013 12:37:30 +0100
-Message-Id: <1364470651-1345-1-git-send-email-hauke@hauke-m.de> (sfid-20130328_123755_846664_C6B66764)
+Received: from mail-we0-f170.google.com ([74.125.82.170]:33733 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648Ab3CSM4q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 08:56:46 -0400
+Received: by mail-we0-f170.google.com with SMTP id z53so365737wey.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 05:56:45 -0700 (PDT)
+Date: Tue, 19 Mar 2013 13:53:41 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [RFC 1/2] mac80211: Use a cfg80211_chan_def in
+ ieee80211_hw_conf_chan
+Message-ID: <20130319125341.GB26078@magnum.frso.rivierawaves.com> (sfid-20130319_135650_485288_DFC5F55C)
+References: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
+ <1363552234-6752-2-git-send-email-karl.beldan@gmail.com>
+ <1363634710.8260.15.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1363634710.8260.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some sparse warnings.
-
-b43_nphy_set_rxantenna() was not used anywhere.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/phy_n.c          |    6 +-----
- drivers/net/wireless/b43/radio_2056.c     |    2 +-
- drivers/net/wireless/b43/sdio.h           |    4 ++--
- drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
- drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
- 5 files changed, 9 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index f2325ee..55a4a8a 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -2789,10 +2789,6 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
-  * Tx and Rx
-  **************************************************/
+On Mon, Mar 18, 2013 at 08:25:10PM +0100, Johannes Berg wrote:
+> On Sun, 2013-03-17 at 21:30 +0100, Karl Beldan wrote:
+> 
+> > +	if (conf->chandef.chan)
+> 
+> > +	else
+> > +		wiphy_debug(hw->wiphy,
+> > +			    "%s (freq=0/%s idle=%d ps=%d smps=%s)\n",
+> 
+> I don't think the else should be allowed to happen.
+> 
+> > --- a/net/mac80211/cfg.c
+> > +++ b/net/mac80211/cfg.c
+> > @@ -805,8 +805,7 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
+> >  					IEEE80211_CHANCTX_EXCLUSIVE);
+> >  		}
+> >  	} else if (local->open_count == local->monitors) {
+> > -		local->_oper_channel = chandef->chan;
+> > -		local->_oper_channel_type = cfg80211_get_chandef_type(chandef);
+> > +		memcpy(&local->oper_chandef, chandef, sizeof(local->oper_chandef));
+> 
+> Somehow I'd prefer an assignment:
+> 
+> local->oper_chandef = *chandef;
+> 
+> I know it'll just be a memcpy() again, but ... reads nicer, imho.
+> 
+> > +			memcpy(chandef, &local->oper_chandef, sizeof(chandef));
+> 
+> ditto
+> 
+> > @@ -22,7 +22,9 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
+> >  	drv_change_chanctx(local, ctx, IEEE80211_CHANCTX_CHANGE_WIDTH);
+> >  
+> >  	if (!local->use_chanctx) {
+> > -		local->_oper_channel_type = cfg80211_get_chandef_type(chandef);
+> > +		local->oper_chandef.width = chandef->width;
+> > +		local->oper_chandef.center_freq1 = chandef->center_freq1;
+> > +		local->oper_chandef.center_freq2 = chandef->center_freq2;
+> 
+> Why not assign all here as well? Is the channel pointer itself special?
+> 
+> > -	/* For backward compatibility only -- do not use */
+> > -	struct ieee80211_channel *_oper_channel;
+> > -	enum nl80211_channel_type _oper_channel_type;
+> > +	struct cfg80211_chan_def oper_chandef;
+> 
+> You shouldn't remove the comment, and I think you should also keep the
+> leading underscore -- this is still for backward compatibility with
+> non-chanctx drivers only, and mac80211 internally must use chanctxes all
+> the way except in SW scan and SW roc code.
+>  
+> > +static int ieee80211_chandef_cmp(const struct cfg80211_chan_def *def1,
+> > +				 const struct cfg80211_chan_def *def2)
+> 
+> indentation
+> 
+> However this already exists in cfg80211.h --
+> cfg80211_chandef_identical().
+> 
+> >  static u32 ieee80211_hw_conf_chan(struct ieee80211_local *local)
+> >  {
+> >  	struct ieee80211_sub_if_data *sdata;
+> > +	struct cfg80211_chan_def chandef;
+> 
+> better initialize this: struct ... chandef = {};
+> 
+Ok, even though I have done it in the v2 I think I get why now (after
+the comment of Mahesh on center_freq2 != 0).
+And the reason I'd see is that you take care of zeroing center_freq{1,2}
+when they are not used (i.e wrt to the width), and the code behaves
+accordingly ?
+Then, indeed I could obviously drop cfg80211_chandef_identical for
+cfg80211_chandef_identical.
  
--void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
--{//TODO
--}
--
- static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
- {//TODO
- }
-@@ -4892,7 +4888,7 @@ static void b43_nphy_superswitch_init(struct b43_wldev *dev, bool init)
- }
- 
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N */
--int b43_phy_initn(struct b43_wldev *dev)
-+static int b43_phy_initn(struct b43_wldev *dev)
- {
- 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
- 	struct b43_phy *phy = &dev->phy;
-diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
-index ce037fb..ab1f55f 100644
---- a/drivers/net/wireless/b43/radio_2056.c
-+++ b/drivers/net/wireless/b43/radio_2056.c
-@@ -2980,7 +2980,7 @@ static const struct b2056_inittab_entry b2056_inittab_rev8_rx[] = {
- 	.rx		= prefix##_rx,			\
- 	.rx_length	= ARRAY_SIZE(prefix##_rx)
- 
--struct b2056_inittabs_pts b2056_inittabs[] = {
-+static struct b2056_inittabs_pts b2056_inittabs[] = {
- 	[3] = { INITTABSPTS(b2056_inittab_rev3) },
- 	[4] = { INITTABSPTS(b2056_inittab_rev4) },
- 	[5] = { INITTABSPTS(b2056_inittab_rev5) },
-diff --git a/drivers/net/wireless/b43/sdio.h b/drivers/net/wireless/b43/sdio.h
-index fb63309..1e93926 100644
---- a/drivers/net/wireless/b43/sdio.h
-+++ b/drivers/net/wireless/b43/sdio.h
-@@ -25,12 +25,12 @@ void b43_sdio_exit(void);
- #else /* CONFIG_B43_SDIO */
- 
- 
--int b43_sdio_request_irq(struct b43_wldev *dev,
-+static inline int b43_sdio_request_irq(struct b43_wldev *dev,
- 			 void (*handler)(struct b43_wldev *dev))
- {
- 	return -ENODEV;
- }
--void b43_sdio_free_irq(struct b43_wldev *dev)
-+static inline void b43_sdio_free_irq(struct b43_wldev *dev)
- {
- }
- static inline int b43_sdio_init(void)
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index aaca60c..110510d 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2800,7 +2800,7 @@ static const struct nphy_rf_control_override_rev7
- 	{ 0x0010, 0x344, 0x345, 0x0010, 4 },
- };
- 
--struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
-+static struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
- 	{ 10, 14, 19, 27 },
- 	{ -5, 6, 10, 15 },
- 	{ 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA, 0xA },
-@@ -2811,7 +2811,7 @@ struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_wa_phy6_radio11_ghz2 = {
- 	0x18, 0x18, 0x18,
- 	0x01D0, 0x5,
- };
--struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_workaround[2][4] = {
-+static struct nphy_gain_ctl_workaround_entry nphy_gain_ctl_workaround[2][4] = {
- 	{ /* 2GHz */
- 		{ /* PHY rev 3 */
- 			{ 7, 11, 16, 23 },
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index 5176363..e347b8d 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -313,7 +313,7 @@ static const u32 b43_lcntab_0x18[] = {
-  * TX gain.
-  **************************************************/
- 
--const struct b43_lcntab_tx_gain_tbl_entry
-+static const struct b43_lcntab_tx_gain_tbl_entry
- 	b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[B43_LCNTAB_TX_GAIN_SIZE] = {
- 	{ 0x03, 0x00, 0x1f, 0x0, 0x48 },
- 	{ 0x03, 0x00, 0x1f, 0x0, 0x46 },
-@@ -449,7 +449,7 @@ const struct b43_lcntab_tx_gain_tbl_entry
-  * SW control.
-  **************************************************/
- 
--const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
-+static const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
- 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
- 	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
- 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
-@@ -631,7 +631,7 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
- 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
- }
- 
--void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
-+static void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
- 			const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
- {
- 	u32 i;
--- 
-1.7.10.4
-
+Karl
