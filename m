@@ -1,108 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35240 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab3CKIQm (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:47642 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855Ab3CSMbo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 04:16:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johannes Braun <jjo.braun@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: Silex SX-SDCAN (AR6003) sdio module, mmc0 timout on imx35 platform
-References: <CADwvPCsGtzDyY4=yjMuX0qha-cdZHdZ-BTAhuwD7jb8pVXYPdw@mail.gmail.com>
-	<87txoms6hs.fsf@kamboji.qca.qualcomm.com>
-	<CADwvPCvuTWbJ3sHgrzc-dJ+Sc5gdZ26XyAnzT6y92DAyCw161g@mail.gmail.com>
-Date: Mon, 11 Mar 2013 10:16:36 +0200
-In-Reply-To: <CADwvPCvuTWbJ3sHgrzc-dJ+Sc5gdZ26XyAnzT6y92DAyCw161g@mail.gmail.com>
-	(Johannes Braun's message of "Mon, 11 Mar 2013 08:36:56 +0100")
-Message-ID: <87fw02e4gr.fsf@kamboji.qca.qualcomm.com> (sfid-20130311_091647_001710_32AD775E)
+	Tue, 19 Mar 2013 08:31:44 -0400
+Received: by mail-wi0-f177.google.com with SMTP id hm14so424183wib.10
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 05:31:43 -0700 (PDT)
+Date: Tue, 19 Mar 2013 13:28:36 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Mahesh Palivela <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [RFC V2 1/2] mac80211: Use a cfg80211_chan_def in
+ ieee80211_hw_conf_chan
+Message-ID: <20130319122836.GA26078@magnum.frso.rivierawaves.com> (sfid-20130319_133148_718712_E68B04C5)
+References: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
+ <1363652600-23223-2-git-send-email-karl.beldan@gmail.com>
+ <1363693626.3355.14.camel@WLAN-SW-TEST-03>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1363693626.3355.14.camel@WLAN-SW-TEST-03>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Braun <jjo.braun@gmail.com> writes:
+On Tue, Mar 19, 2013 at 05:17:06PM +0530, Mahesh Palivela wrote:
+> On Tue, 2013-03-19 at 01:23 +0100, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > Drivers that don't use chanctxes cannot perform VHT association because
+> > they still use a "backward compatibility" pair of {ieee80211_channel,
+> > nl80211_channel_type} in ieee80211_conf and ieee80211_local.
+> > 
+> > FIXME: this only changes mac80211_hwsim for the RFC
+> > 
+> > Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> > ---
+> >  drivers/net/wireless/mac80211_hwsim.c |   44 +++++++++++++++++---------
+> >  include/net/mac80211.h                |   15 +++++----
+> >  net/mac80211/cfg.c                    |    7 +---
+> >  net/mac80211/chan.c                   |    8 ++---
+> >  net/mac80211/ieee80211_i.h            |    3 +-
+> >  net/mac80211/main.c                   |   55 +++++++++++++++++++--------------
+> >  net/mac80211/mlme.c                   |   20 ++++++++----
+> >  net/mac80211/scan.c                   |    6 ++--
+> >  net/mac80211/trace.h                  |   21 ++++++++-----
+> >  net/mac80211/tx.c                     |    4 +-
+> >  net/mac80211/util.c                   |    3 +-
+> >  11 files changed, 107 insertions(+), 79 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> > index 7490c4f..96e75e2 100644
+> > --- a/drivers/net/wireless/mac80211_hwsim.c
+> > +++ b/drivers/net/wireless/mac80211_hwsim.c
+> > @@ -1056,11 +1056,13 @@ out:
+> >  	return HRTIMER_NORESTART;
+> >  }
+> >  
+> > -static const char *hwsim_chantypes[] = {
+> > -	[NL80211_CHAN_NO_HT] = "noht",
+> > -	[NL80211_CHAN_HT20] = "ht20",
+> > -	[NL80211_CHAN_HT40MINUS] = "ht40-",
+> > -	[NL80211_CHAN_HT40PLUS] = "ht40+",
+> > +static const char *hwsim_chanwidth[] = {
+> > +	[NL80211_CHAN_WIDTH_20_NOHT] = "noht",
+> > +	[NL80211_CHAN_WIDTH_20] = "ht20",
+> > +	[NL80211_CHAN_WIDTH_40] = "ht40",
+> > +	[NL80211_CHAN_WIDTH_80] = "ht80",
+> 
+> better we call as vht80 instead of ht80. ditto below..
+> 
+Yes
 
-> Hello,
->
->> Is your platform big endian or little endian? I haven't tested ath6kl on
->> a big endian platform so there might be issues.
->
-> The arm works in little endian mode. CPU_BIG_ENDIAN is not set in the
-> kernel config.
+> > +	[NL80211_CHAN_WIDTH_80P80] = "ht80p80",
+> > +	[NL80211_CHAN_WIDTH_160] = "ht160",
+> >  };
+> >  
+> 
+> > +	cfreq_off = local->csa_channel->center_freq -
+> > +		local->_oper_chandef.chan->center_freq;
+> > +
+> > +	local->_oper_chandef.center_freq1 += cfreq_off;
+> > +	local->_oper_chandef.center_freq2 += cfreq_off;
+> 
+> can't add cfreq_off to center_freq2. Add only in case of non-zero
+> center_freq2?
+> 
+At first I was like "why ?", but I hadn't spotted the places where we
+only check for "center_freq2 != 0".
 
-Good, so that's not it.
 
->> The last two messages make me suspect a hardware problem, but it's
->> difficult to know really.
->>
->> Can you please enable debug messages and send them? Especially these
->> levels are important:
->>
->>         ATH6KL_DBG_SDIO         = BIT(16),
->>         ATH6KL_DBG_SDIO_DUMP    = BIT(17),
->>         ATH6KL_DBG_BOOT         = BIT(18),    /* driver init and fw boot */
->>
->> Or you could just enable everything with debug_mask=0xffffffff.
->
-> I am a litte bit confused. The module ath6kl_core and ath6kl_sdio.
-> ath6kl_sdio depends on ath6kl_core. When I check the parameters of
-> ath6kl_sdio I can`t see the parameter debug_mask. But the core module
-> has this parameter. First I loaded ath6kl_core via "modprobe
-> ath6kl_core debug_mask=0xffffffff " and afterwards the ath6kl_sdio via
-> "modprobe ath6kl_sdio".
+Thanks Mahesh, Have you tested vht with this ? 
 
-This looks correct to me. Can you check from sysfs that the module
-parameter is really set:
 
-$ cat /sys/module/ath6kl_core/parameters/debug_mask 
-4294967295
-
-> But it seems to have no effect. I can`t see more debug messages as
-> before.
-
-That's odd, you should see something like this when you load
-ath6kl_sdio:
-
-[  186.426262] ath6kl: sdio new func 1 vendor 0x271 device 0x301 block 0x800/0x200
-[  186.426371] ath6kl: ath6kl_sdio_free_bus_req: bus request 0xf35f002c
-[  186.426548] ath6kl: ath6kl_sdio_free_bus_req: bus request 0xf35f0050
-
-> I have also enabled all debug parameters in the "Atheros Wireless
-> Cards" menu in the kernel config, CONFIG_ATH_DEBUG and
-> CONFIG_ATH6KL_DEBUG. Am i doing something wrong?
-
-I can't see anything wrong, but it's Monday morning so I might be
-missing something :)
-
-One thing is to double check that CONFIG_ATH6KL_DEBUG is really set and
-you are using the correct version of _both_ kernel modules. IIRC ath6kl
-has a bug that it doesn't warn if debug_mask is set and
-CONFIG_ATH6KL_DEBUG is not set. We should fix that.
-
->> Also try various quirks in the SDIO controller, if it supports those.
->
-> I googled for quirks in combination with my sdio controller. The
-> controller is a freescale controller and the driver is implemented in
-> /drivers/mmc/host/sdhci-esdhc-imx.c. Currently there are some quirks
-> enabled.
->
-> 389 static struct sdhci_pltfm_data sdhci_esdhc_imx_pdata = {
-> 390         .quirks = ESDHC_DEFAULT_QUIRKS | SDHCI_QUIRK_NO_HISPD_BIT
-> 391                         | SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC
-> 392                         | SDHCI_QUIRK_BROKEN_ADMA_ZEROLEN_DESC
-> 393                         | SDHCI_QUIRK_BROKEN_CARD_DETECTION,
-> 394         .ops = &sdhci_esdhc_ops,
-> 395 };
->
-> I will have a looks at the available quirks in
-> include/linux/mmc/sdhci.h and try to test various combinations. I have
-> to say that I`m not a SDIO expert, and I hope that I have properly
-> understood your hint.
-
-This is exactly what I was suggesting.
-
-Can you use any other SDIO device to test if the problem is in ath6kl or
-in the SDIO bus?
-
--- 
-Kalle Valo
+ 
+Karl
