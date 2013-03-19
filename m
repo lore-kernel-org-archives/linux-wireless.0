@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:42531 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755874Ab3CGQy3 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55868 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754633Ab3CSN2U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 11:54:29 -0500
-Received: by mail-oa0-f43.google.com with SMTP id l10so849097oag.30
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 08:54:28 -0800 (PST)
-Message-ID: <5138C641.5030004@lwfinger.net> (sfid-20130307_175434_884089_F1BDD0EE)
-Date: Thu, 07 Mar 2013 10:54:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 19 Mar 2013 09:28:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix size_t printf warnings
+References: <20130319132520.30756.84770.stgit@localhost6.localdomain6>
+Date: Tue, 19 Mar 2013 15:28:15 +0200
+In-Reply-To: <20130319132520.30756.84770.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Tue, 19 Mar 2013 15:25:20 +0200")
+Message-ID: <87wqt3zfgw.fsf@kamboji.qca.qualcomm.com> (sfid-20130319_142826_736846_35A456A9)
 MIME-Version: 1.0
-To: =?UTF-8?B?S8OpdmluIFRISUVSUlk=?= <kevinthierry@myopera.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: Unable to activate WiFi p2p / WiFi Direct
-References: <1362663176.11919.140661201212753.170BABA0@webmail.messagingengine.com> <1362666346.22280.140661201248433.42E3B535@webmail.messagingengine.com>
-In-Reply-To: <1362666346.22280.140661201248433.42E3B535@webmail.messagingengine.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2013 08:25 AM, Kévin THIERRY wrote:
-> Hi,
-> I've been unable to activate the p2p feature on my WiFi dongle (which
-> otherwise works fine).
-> iwpriv command returns "wlan1 no private ioctls."
-> I'm running Ubuntu 12.04 with kernel 3.5.0-25 and the WiFi dongle is a
-> Netgear model wna1000m (driver rtl8192cu).
-> I've also tried with kernel 3.8.2 with the same result.
-> Thanks,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-P2P is not yet implemented in rtl8192cu. The method is being added to rtlwifi 
-and the PCI-based drivers in patches that are now undergoing tests. They will 
-likely be in kernel 3.10. Once that is done, I will be able to consider P2P for 
-the USB-based driver.
+> My new tracing code for ath6kl introduced these warnings on 64-bit:
+>
+> trace.h:38:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 4 has type 'size_t' [-Wformat]
+> trace.h:61:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 4 has type 'size_t' [-Wformat]
+> trace.h:84:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 6 has type 'size_t' [-Wformat]
+> trace.h:119:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 7 has type 'size_t' [-Wformat]
+> trace.h:173:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 3 has type 'size_t' [-Wformat]
+> trace.h:193:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 5 has type 'size_t' [-Wformat]
+> trace.h:221:1: warning: format '%d' expects argument of type 'int',
+> 	but argument 5 has type 'size_t' [-Wformat]
+>
+> Fix them by using %zd.
+>
+> Reported-by: John W. Linville <linville@tuxdriver.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-FWIW, the use of iwpriv for things like this has been discontinued. Check the 
-use of iw.
+John, can you take this directly so that we can fix the build warnings
+on your tree?
 
-Larry
-
-
+-- 
+Kalle Valo
