@@ -1,134 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925Ab3CHLOd (ORCPT
+Received: from nat-pool-rdu.redhat.com ([66.187.233.202]:34505 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754858Ab3CSNhY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 06:14:33 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Subject: [PATCH] mac80211: add driver callback for per-interface multicast filter
-Date: Fri,  8 Mar 2013 12:14:27 +0100
-Message-Id: <1362741267-19387-1-git-send-email-johannes@sipsolutions.net> (sfid-20130308_121443_550811_F496A6E2)
+	Tue, 19 Mar 2013 09:37:24 -0400
+Date: Tue, 19 Mar 2013 09:30:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: fix size_t printf warnings
+Message-ID: <20130319133036.GB2060@tuxdriver.com> (sfid-20130319_143728_102726_2457E073)
+References: <20130319132520.30756.84770.stgit@localhost6.localdomain6>
+ <87wqt3zfgw.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87wqt3zfgw.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+On Tue, Mar 19, 2013 at 03:28:15PM +0200, Kalle Valo wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+> 
+> > My new tracing code for ath6kl introduced these warnings on 64-bit:
+> >
+> > trace.h:38:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 4 has type 'size_t' [-Wformat]
+> > trace.h:61:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 4 has type 'size_t' [-Wformat]
+> > trace.h:84:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 6 has type 'size_t' [-Wformat]
+> > trace.h:119:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 7 has type 'size_t' [-Wformat]
+> > trace.h:173:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 3 has type 'size_t' [-Wformat]
+> > trace.h:193:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 5 has type 'size_t' [-Wformat]
+> > trace.h:221:1: warning: format '%d' expects argument of type 'int',
+> > 	but argument 5 has type 'size_t' [-Wformat]
+> >
+> > Fix them by using %zd.
+> >
+> > Reported-by: John W. Linville <linville@tuxdriver.com>
+> > Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> 
+> John, can you take this directly so that we can fix the build warnings
+> on your tree?
 
-Some devices have multicast filter capability for each individual
-virtual interface rather than just a global one. Add an interface
-specific driver callback allowing such drivers to configure this.
+I'll take it, thanks -- may be several hours...
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h    |  7 +++++++
- net/mac80211/driver-ops.h | 16 ++++++++++++++++
- net/mac80211/iface.c      |  3 +++
- net/mac80211/trace.h      | 24 ++++++++++++++++++++++++
- 4 files changed, 50 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f940296..d5bc60c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2261,6 +2261,9 @@ enum ieee80211_roc_type {
-  *	See the section "Frame filtering" for more information.
-  *	This callback must be implemented and can sleep.
-  *
-+ * @set_multicast_list: Configure the device's interface specific RX multicast
-+ *	filter. This callback is optional. This callback must be atomic.
-+ *
-  * @set_tim: Set TIM bit. mac80211 calls this function when a TIM bit
-  * 	must be set or cleared for a given STA. Must be atomic.
-  *
-@@ -2610,6 +2613,10 @@ struct ieee80211_ops {
- 				 unsigned int changed_flags,
- 				 unsigned int *total_flags,
- 				 u64 multicast);
-+	void (*set_multicast_list)(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, bool allmulti,
-+				   struct netdev_hw_addr_list *mc_list);
-+
- 	int (*set_tim)(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
- 		       bool set);
- 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 33f99b9..a8b8cf1 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -241,6 +241,22 @@ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+static inline void drv_set_multicast_list(struct ieee80211_local *local,
-+					  struct ieee80211_sub_if_data *sdata,
-+					  struct netdev_hw_addr_list *mc_list)
-+{
-+	bool allmulti = sdata->flags & IEEE80211_SDATA_ALLMULTI;
-+
-+	trace_drv_set_multicast_list(local, sdata, mc_list->count);
-+
-+	check_sdata_in_driver(sdata);
-+
-+	if (local->ops->set_multicast_list)
-+		local->ops->set_multicast_list(&local->hw, &sdata->vif,
-+					       allmulti, mc_list);
-+	trace_drv_return_void(local);
-+}
-+
- static inline void drv_configure_filter(struct ieee80211_local *local,
- 					unsigned int changed_flags,
- 					unsigned int *total_flags,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b22ee2f..3afa831 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -919,6 +919,9 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
- 			atomic_dec(&local->iff_promiscs);
- 		sdata->flags ^= IEEE80211_SDATA_PROMISC;
- 	}
-+
-+	drv_set_multicast_list(local, sdata, &dev->mc);
-+
- 	spin_lock_bh(&local->filter_lock);
- 	__hw_addr_sync(&local->mc_list, &dev->mc, dev->addr_len);
- 	spin_unlock_bh(&local->filter_lock);
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index f18f32b..c589979 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -431,6 +431,30 @@ TRACE_EVENT(drv_prepare_multicast,
- 	)
- );
- 
-+TRACE_EVENT(drv_set_multicast_list,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata, int mc_count),
-+
-+	TP_ARGS(local, sdata, mc_count),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(bool, allmulti)
-+		__field(int, mc_count)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->allmulti = sdata->flags & IEEE80211_SDATA_ALLMULTI;
-+		__entry->mc_count = mc_count;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " configure mc filter, count=%d, allmulti=%d",
-+		LOCAL_PR_ARG, __entry->mc_count, __entry->allmulti
-+	)
-+);
-+
- TRACE_EVENT(drv_configure_filter,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 unsigned int changed_flags,
+John
 -- 
-1.8.0
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
