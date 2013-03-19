@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50354 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755343Ab3CESfp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40190 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886Ab3CSUoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 13:35:45 -0500
-Cc: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [PATCH] ath6kl: print firmware capabilities
-References: <20130305163842.32118.84598.stgit@localhost6.localdomain6>
-	<D298DB6B-8EF2-4619-90D0-15F662F85627@holtmann.org>
-Date: Tue, 5 Mar 2013 20:35:39 +0200
-In-Reply-To: <D298DB6B-8EF2-4619-90D0-15F662F85627@holtmann.org> (Marcel
-	Holtmann's message of "Tue, 5 Mar 2013 10:31:23 -0800")
-Message-ID: <87r4jtbsp0.fsf@kamboji.qca.qualcomm.com> (sfid-20130305_193548_942337_14F29CCD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 19 Mar 2013 16:44:12 -0400
+Message-ID: <1363725845.8336.33.camel@jlt4.sipsolutions.net> (sfid-20130319_214416_365436_A63FCDC1)
+Subject: Re: [RFC] mac80211: avoid rearming BA session timers unnecessarily
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 21:44:05 +0100
+In-Reply-To: <1363691302-11947-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130319_120831_560538_0494E1A8)
+References: <1363691302-11947-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20130319_120831_560538_0494E1A8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel Holtmann <marcel@holtmann.org> writes:
+On Tue, 2013-03-19 at 04:08 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> 
+> If mac80211 tears down the BA sessions with del_timer_sync()
+> technically mod_timer() can still rearm them. If mac80211
+> tears the BA sessions down we don't want to rearm the timers
+> at a later time so avoid this possibility.
 
->> +	{ ATH6KL_FW_CAPABILITY_SCHED_SCAN_MATCH_LIST, "sscan-math-list" },
->
-> math ;)
+Hmm, you may be onto something, but I'm not sure I want to apply this.
+You don't seem to actually understand what you're doing -- two of the
+three changes you're making don't really seem to be needed and the third
+one should probably be fixed differently?
 
-Oops, I'll fix that in v2. Thanks!
+johannes
 
--- 
-Kalle Valo
