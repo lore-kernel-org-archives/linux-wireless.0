@@ -1,49 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39492 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755675Ab3CPQAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 12:00:31 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3/3] mac80211/minstrel_ht: do not sample actively used rates
-Date: Sat, 16 Mar 2013 17:00:27 +0100
-Message-Id: <1363449627-10884-3-git-send-email-nbd@openwrt.org> (sfid-20130316_170037_565194_DB0E5122)
-In-Reply-To: <1363449627-10884-2-git-send-email-nbd@openwrt.org>
-References: <1363449627-10884-1-git-send-email-nbd@openwrt.org>
- <1363449627-10884-2-git-send-email-nbd@openwrt.org>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:38681 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651Ab3CSNZ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 09:25:26 -0400
+Subject: [PATCH] ath6kl: fix size_t printf warnings
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 15:25:20 +0200
+Message-ID: <20130319132520.30756.84770.stgit@localhost6.localdomain6> (sfid-20130319_142529_643234_F52D4322)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-max_tp_rate2 and max_prob_rate tend to get used occasionally during
-retransmission, which is more useful for the statistics than probing
-with individual probe packets.
+My new tracing code for ath6kl introduced these warnings on 64-bit:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+trace.h:38:1: warning: format '%d' expects argument of type 'int',
+	but argument 4 has type 'size_t' [-Wformat]
+trace.h:61:1: warning: format '%d' expects argument of type 'int',
+	but argument 4 has type 'size_t' [-Wformat]
+trace.h:84:1: warning: format '%d' expects argument of type 'int',
+	but argument 6 has type 'size_t' [-Wformat]
+trace.h:119:1: warning: format '%d' expects argument of type 'int',
+	but argument 7 has type 'size_t' [-Wformat]
+trace.h:173:1: warning: format '%d' expects argument of type 'int',
+	but argument 3 has type 'size_t' [-Wformat]
+trace.h:193:1: warning: format '%d' expects argument of type 'int',
+	but argument 5 has type 'size_t' [-Wformat]
+trace.h:221:1: warning: format '%d' expects argument of type 'int',
+	but argument 5 has type 'size_t' [-Wformat]
+
+Fix them by using %zd.
+
+Reported-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/trace.h |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 0fc9449..d2b264d 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -648,10 +648,13 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	/*
- 	 * Sampling might add some overhead (RTS, no aggregation)
- 	 * to the frame. Hence, don't use sampling for the currently
--	 * used max TP rate.
-+	 * used rates.
- 	 */
--	if (sample_idx == mi->max_tp_rate)
-+	if (sample_idx == mi->max_tp_rate ||
-+	    sample_idx == mi->max_tp_rate2 ||
-+	    sample_idx == mi->max_prob_rate)
- 		return -1;
-+
- 	/*
- 	 * Do not sample if the probability is already higher than 95%
- 	 * to avoid wasting airtime.
--- 
-1.8.0.2
+diff --git a/drivers/net/wireless/ath/ath6kl/trace.h b/drivers/net/wireless/ath/ath6kl/trace.h
+index 6af6fa0..1a1ea78 100644
+--- a/drivers/net/wireless/ath/ath6kl/trace.h
++++ b/drivers/net/wireless/ath/ath6kl/trace.h
+@@ -53,7 +53,7 @@ TRACE_EVENT(ath6kl_wmi_cmd,
+ 	),
+ 
+ 	TP_printk(
+-		"id %d len %d",
++		"id %d len %zd",
+ 		__entry->id, __entry->buf_len
+ 	)
+ );
+@@ -76,7 +76,7 @@ TRACE_EVENT(ath6kl_wmi_event,
+ 	),
+ 
+ 	TP_printk(
+-		"id %d len %d",
++		"id %d len %zd",
+ 		__entry->id, __entry->buf_len
+ 	)
+ );
+@@ -108,7 +108,7 @@ TRACE_EVENT(ath6kl_sdio,
+ 	),
+ 
+ 	TP_printk(
+-		"%s addr 0x%x flags 0x%x len %d\n",
++		"%s addr 0x%x flags 0x%x len %zd\n",
+ 		__entry->tx ? "tx" : "rx",
+ 		__entry->addr,
+ 		__entry->flags,
+@@ -161,7 +161,7 @@ TRACE_EVENT(ath6kl_sdio_scat,
+ 	),
+ 
+ 	TP_printk(
+-		"%s addr 0x%x flags 0x%x entries %d total_len %d\n",
++		"%s addr 0x%x flags 0x%x entries %d total_len %zd\n",
+ 		__entry->tx ? "tx" : "rx",
+ 		__entry->addr,
+ 		__entry->flags,
+@@ -186,7 +186,7 @@ TRACE_EVENT(ath6kl_sdio_irq,
+ 	),
+ 
+ 	TP_printk(
+-		"irq len %d\n", __entry->buf_len
++		"irq len %zd\n", __entry->buf_len
+ 	)
+ );
+ 
+@@ -211,7 +211,7 @@ TRACE_EVENT(ath6kl_htc_rx,
+ 	),
+ 
+ 	TP_printk(
+-		"status %d endpoint %d len %d\n",
++		"status %d endpoint %d len %zd\n",
+ 		__entry->status,
+ 		__entry->endpoint,
+ 		__entry->buf_len
+@@ -239,7 +239,7 @@ TRACE_EVENT(ath6kl_htc_tx,
+ 	),
+ 
+ 	TP_printk(
+-		"status %d endpoint %d len %d\n",
++		"status %d endpoint %d len %zd\n",
+ 		__entry->status,
+ 		__entry->endpoint,
+ 		__entry->buf_len
 
