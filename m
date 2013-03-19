@@ -1,128 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38635 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755527Ab3C3Nwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Mar 2013 09:52:38 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/3] rt2x00: rt2800lib: separate RT and RF chipset detection
-Date: Sat, 30 Mar 2013 14:53:09 +0100
-Message-Id: <1364651590-29710-3-git-send-email-juhosg@openwrt.org> (sfid-20130330_145249_132381_655B486F)
-In-Reply-To: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
-References: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15733 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698Ab3CSES6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 00:18:58 -0400
+From: Raja Mani <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Check wmi ready event status before validating abi version
+Date: Tue, 19 Mar 2013 09:48:35 +0530
+Message-ID: <1363666715-10854-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20130319_051902_694925_B2D1AA48)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the newly introduced rt2x00_set_{rf,rt} helpers
-to set the RT and RF chipset separately.
+There is no point to check firmware ABI version when the driver
+fails to wait for WMI_READY event during the boot time.
 
-This change makes it possible to move the RT
-detection code into another function which will
-be done in a subseqent patch.
+For such failures, the driver should assume the firmware is not
+booted and start doing cleanup.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   56 ++++++++++++++++++-------------
- 1 file changed, 32 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f08a042..c4cc624 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5434,33 +5434,19 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	u32 reg;
- 	u16 value;
- 	u16 eeprom;
-+	u32 rt;
-+	u32 rev;
-+	u16 rf;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 072a229..4c54432 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1604,10 +1604,16 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 						    test_bit(WMI_READY,
+ 							     &ar->flag),
+ 						    WMI_TIMEOUT);
++	if (timeleft <= 0) {
++		clear_bit(WMI_READY, &ar->flag);
++		ath6kl_err("wmi is not ready or wait was interrupted: %ld\n",
++			   timeleft);
++		ret = -EIO;
++		goto err_htc_stop;
++	}
  
--	/*
--	 * Read EEPROM word for configuration.
--	 */
--	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
+ 	ath6kl_dbg(ATH6KL_DBG_BOOT, "firmware booted\n");
+ 
 -
--	/*
--	 * Identify RF chipset by EEPROM value
--	 * RT28xx/RT30xx: defined in "EEPROM_NIC_CONF0_RF_TYPE" field
--	 * RT53xx: defined in "EEPROM_CHIP_ID" field
--	 */
- 	if (rt2x00_rt(rt2x00dev, RT3290))
- 		rt2800_register_read(rt2x00dev, MAC_CSR0_3290, &reg);
- 	else
- 		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
- 
--	if (rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT3290 ||
--	    rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5390 ||
--	    rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5392)
--		rt2x00_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &value);
--	else
--		value = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
--
--	rt2x00_set_chip(rt2x00dev, rt2x00_get_field32(reg, MAC_CSR0_CHIPSET),
--			value, rt2x00_get_field32(reg, MAC_CSR0_REVISION));
-+	rt = rt2x00_get_field32(reg, MAC_CSR0_CHIPSET);
-+	rev = rt2x00_get_field32(reg, MAC_CSR0_REVISION);
- 
--	switch (rt2x00dev->chip.rt) {
-+	switch (rt) {
- 	case RT2860:
- 	case RT2872:
- 	case RT2883:
-@@ -5476,11 +5462,32 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RT5592:
- 		break;
- 	default:
--		ERROR(rt2x00dev, "Invalid RT chipset 0x%04x detected.\n", rt2x00dev->chip.rt);
-+		ERROR(rt2x00dev,
-+		      "Invalid RT chipset 0x%04x, rev %04x detected.\n",
-+		      rt, rev);
- 		return -ENODEV;
+ 	if (test_and_clear_bit(FIRST_BOOT, &ar->flag)) {
+ 		ath6kl_info("%s %s fw %s api %d%s\n",
+ 			    ar->hw.name,
+@@ -1624,12 +1630,6 @@ static int __ath6kl_init_hw_start(struct ath6kl *ar)
+ 		goto err_htc_stop;
  	}
  
--	switch (rt2x00dev->chip.rf) {
-+	rt2x00_set_rt(rt2x00dev, rt, rev);
-+
-+	/*
-+	 * Read EEPROM word for configuration.
-+	 */
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
-+
-+	/*
-+	 * Identify RF chipset by EEPROM value
-+	 * RT28xx/RT30xx: defined in "EEPROM_NIC_CONF0_RF_TYPE" field
-+	 * RT53xx: defined in "EEPROM_CHIP_ID" field
-+	 */
-+	if (rt2x00_rt(rt2x00dev, RT3290) ||
-+	    rt2x00_rt(rt2x00dev, RT5390) ||
-+	    rt2x00_rt(rt2x00dev, RT5392))
-+		rt2x00_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
-+	else
-+		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
-+
-+	switch (rf) {
- 	case RF2820:
- 	case RF2850:
- 	case RF2720:
-@@ -5501,11 +5508,12 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF5592:
- 		break;
- 	default:
--		ERROR(rt2x00dev, "Invalid RF chipset 0x%04x detected.\n",
--		      rt2x00dev->chip.rf);
-+		ERROR(rt2x00dev, "Invalid RF chipset 0x%04x detected.\n", rf);
- 		return -ENODEV;
- 	}
+-	if (!timeleft || signal_pending(current)) {
+-		ath6kl_err("wmi is not ready or wait was interrupted\n");
+-		ret = -EIO;
+-		goto err_htc_stop;
+-	}
+-
+ 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: wmi is ready\n", __func__);
  
-+	rt2x00_set_rf(rt2x00dev, rf);
-+
- 	/*
- 	 * Identify default antenna configuration.
- 	 */
+ 	/* communicate the wmi protocol verision to the target */
 -- 
-1.7.10
+1.7.1
 
