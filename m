@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:43842 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757087Ab3CUNg5 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3029 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932251Ab3CSVzh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 09:36:57 -0400
-Received: by mail-ee0-f49.google.com with SMTP id d41so1706281eek.36
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 06:36:54 -0700 (PDT)
-Message-ID: <514B0CF4.40806@gmail.com> (sfid-20130321_143701_138755_EF50814A)
-Date: Thu, 21 Mar 2013 14:36:52 +0100
-From: Giovanni Di Stasi <gdistasi@gmail.com>
+	Tue, 19 Mar 2013 17:55:37 -0400
+Message-ID: <5148DEC9.50003@broadcom.com> (sfid-20130319_225544_707064_E246E6EE)
+Date: Tue, 19 Mar 2013 22:55:21 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: neighbor deleted from arp table after ibss leave
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+To: =?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+cc: "Jonathan Nieder" <jrnieder@gmail.com>, 664767@bugs.debian.org,
+	linux-wireless@vger.kernel.org, "Dan Williams" <dcbw@redhat.com>
+Subject: Re: Brcmsmac driver woes, possible regression?
+References: <20130317144603.GA4850@stt008.linux.site>
+ <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
+ <20130317152428.GA4940@stt008.linux.site>
+ <20130317175658.GA8181@elie.Belkin>
+ <20130317182725.GA5811@stt008.linux.site>
+ <20130317183344.GA8786@elie.Belkin>
+ <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
+ <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
+ <20130318211428.GA9136@stt008.linux.site>
+ <20130318212544.GB5062@elie.Belkin>
+ <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
+ <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
+In-Reply-To: <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+On 03/19/2013 05:21 PM, Camaleón wrote:
+> Mar 19 17:05:28 stt300 kernel: [26034.188562] wlan0: authenticated
+> Mar 19 17:05:28 stt300 kernel: [26034.192108] wlan0: associate with 00:1a:2b:97:7a:97 (try 1/3)
+> Mar 19 17:05:28 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: authenticating -> associating
+> Mar 19 17:05:30 stt300 kernel: [26036.586947] wlan0: RX AssocResp from 00:1a:2b:97:7a:97 (capab=0x411 status=0 aid=1)
+> Mar 19 17:05:30 stt300 kernel: [26036.587560] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
+> Mar 19 17:05:30 stt300 kernel: [26036.587576] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+> Mar 19 17:05:30 stt300 kernel: [26036.587603] wlan0: associated
+> Mar 19 17:05:30 stt300 kernel: [26036.587698] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> Mar 19 17:05:30 stt300 wpa_supplicant[2855]: wlan0: Associated with 00:1a:2b:97:7a:97
 
-I  have noticed a different behaviour related to the way the arp table 
-is managed depending on the tool I use to configure the interfaces 
-(iwconfig or iw).
+Seems to be heading in the right direction, but....
 
-In particular, I considered the following two cases (ath5k used for both).
+> Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associating -> associated
+> Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associated -> 4-way handshake
+> Mar 19 17:05:32 stt300 avahi-daemon[2630]: Joining mDNS multicast group on interface wlan0.IPv6 with address fe80::ae81:12ff:fe34:6963.
+> Mar 19 17:05:32 stt300 avahi-daemon[2630]: New relevant interface wlan0.IPv6 for mDNS.
+> Mar 19 17:05:32 stt300 avahi-daemon[2630]: Registering new address record for fe80::ae81:12ff:fe34:6963 on wlan0.*.
+> Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): association took too long.
 
-First case: I create the interface with iw (in ad-hoc mode), then I set 
-the essid and the channel with iwconfig. After a while (several minutes) 
-I change the channel with iwconfig in order to join a different ibss 
-(with the same essid) on the new channel. The kernel used was 3.0.
+Here it seem to go bad again...
 
-Second case: I create the interface with iw (in ad-hoc mode), then I 
-join an ibss (on a certain essid) setting at the same time the freq (in 
-fixed-freq mode), with iw. After a while I leave the ibss and join 
-another ibss on a different channel with iw (by first issuing iw ibss 
-leave and then iw ibss join on the new channel). The kernel used was 3.2.
+> Mar 19 17:05:32 stt300 NetworkManager[30971]: <info> (wlan0): device state change: config -> need-auth (reason 'none') [50 60 0]
+> Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): asking for new secrets
+> Mar 19 17:05:32 stt300 kernel: [26039.005158] wlan0: deauthenticating from 00:1a:2b:97:7a:97 by local choice (reason=3)
 
-It seemed to me that in both cases the "current" ibss was left and the 
-new one was joined (by looking at dmesg output). However, in the second 
-case, I noticed some arp requests just after the ibss join, while in the 
-first case no arp request at all. Is it due to the fact that in the 
-second scenario the arp table was erased? Is that a known behavior?
-It would be useful for me to know that as unfortunately I cannot easily 
-repeat the two tests;  I would therefore be glad if some of you could 
-give me some hints on what has been happening in the second case that 
-triggered the arp requests (I can say almost for sure that it was not 
-due to the arp timeout because the timeout was larger and I got the same 
-results for different repetitions, i.e. arp request just after the ibss 
-join).
+And we get a deauth request with WLAN_REASON_DEAUTH_LEAVING.
 
-Thanks in advance,
-Giovanni
+> Mar 19 17:05:33 stt300 kernel: [26040.004150] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
+> Mar 19 17:05:33 stt300 kernel: [26040.004172] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+> Mar 19 17:05:34 stt300 kernel: [26040.504402] cfg80211: Calling CRDA to update world regulatory domain
+> Mar 19 17:05:34 stt300 ntpd[2611]: Listen normally on 16 wlan0 fe80::ae81:12ff:fe34:6963 UDP 123
+> Mar 19 17:05:34 stt300 ntpd[2611]: peers refreshed
+> Mar 19 17:05:34 stt300 wpa_supplicant[2855]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
+> Mar 19 17:05:34 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: 4-way handshake -> disconnected
+> Mar 19 17:05:34 stt300 NetworkManager[30971]: <warn> Couldn't disconnect supplicant interface: This interface is not connected.
+
+I am trying to make sense of it, but it is getting late over here. Have 
+a fresh look tomorrow.
+
+Regards,
+Arend
 
