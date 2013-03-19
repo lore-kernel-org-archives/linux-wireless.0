@@ -1,85 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35816 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933407Ab3CZNgK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 09:36:10 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/4] cfg80211: add ieee80211_operating_class_to_band
-Date: Tue, 26 Mar 2013 14:35:59 +0100
-Message-Id: <1364304961-32028-3-git-send-email-johannes@sipsolutions.net> (sfid-20130326_143614_865704_2106174F)
-In-Reply-To: <1364304961-32028-1-git-send-email-johannes@sipsolutions.net>
-References: <1364304961-32028-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:57066 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933287Ab3CSQwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Mar 2013 12:52:30 -0400
+Message-ID: <1363711989.2225.8.camel@dcbw.foobar.com> (sfid-20130319_175239_144384_576D7FF2)
+Subject: Re: Brcmsmac driver woes, possible regression?
+From: Dan Williams <dcbw@redhat.com>
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	664767@bugs.debian.org, linux-wireless@vger.kernel.org
+Date: Tue, 19 Mar 2013 11:53:09 -0500
+In-Reply-To: <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
+References: <20130317144603.GA4850@stt008.linux.site>
+	 <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
+	 <20130317152428.GA4940@stt008.linux.site>
+	 <20130317175658.GA8181@elie.Belkin>
+	 <20130317182725.GA5811@stt008.linux.site>
+	 <20130317183344.GA8786@elie.Belkin>
+	 <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
+	 <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
+	 <20130318211428.GA9136@stt008.linux.site>
+	 <20130318212544.GB5062@elie.Belkin>
+	 <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
+	 <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2013-03-19 at 17:21 +0100, Camaleón wrote:
+> 2013/3/19 Camaleón <noelamac@gmail.com>:
+> > 2013/3/18 Jonathan Nieder <jrnieder@gmail.com>:
+> >> Camaleón wrote:
+> >>> El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
+> >>
+> >>>> Sorry to hear. Reading back the bug report I noticed you are having a
+> >>>> bcm4313 and we recently had a regression on it. Could you provide
+> >>>> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
+> >>>
+> >>> I see. My "/sys/kernel/debug/*" directory is empty
+> >>
+> >> mount -t debugfs debugfs /sys/kernel/debug
+> >
+> > Perfect, thanks.
+> >
+> > root@stt300:~# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+> > board vendor: 103c
+> > board type: 145c
+> > board revision: 2209
+> > board flags: 8002a00
+> > board flags2: 800
+> > firmware revision: 262032b
+> >
+> > Now let's see how reverting the patch makes any difference as soon as
+> > I can compile the module. I will keep you updated
+> 
+> Update: applied the patch to revert the "other" patch but I still
+> cannot get the driver to work (see attached syslog). N-M still asks
+> for password until desists :-(
 
-This function converts a (global only!) operating
-class to an internal band identifier. This will
-be needed for extended channel switch support.
+Note that NM 0.9.8 won't ask for a password when just anything fails,
+but will ask for a password if the 4-way handshake fails, because if
+that fails, it's probably your password.  We're contemplating getting
+rid of that too, and just notifying the user that their password may be
+wrong and that they should go update it in the network configuration
+panel so we don't interrupt.  But if you're 100% sure your PSK is
+correct, then it is, most likely, a driver bug.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 11 +++++++++++
- net/wireless/util.c    | 20 ++++++++++++++++++++
- 2 files changed, 31 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 172a693..ca7f6ed 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4025,6 +4025,17 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
- void cfg80211_ch_switch_notify(struct net_device *dev,
- 			       struct cfg80211_chan_def *chandef);
- 
-+/**
-+ * ieee80211_operating_class_to_band - convert operating class to band
-+ *
-+ * @operating_class: the operating class to convert
-+ * @band: band pointer to fill
-+ *
-+ * Returns %true if the conversion was successful, %false otherwise.
-+ */
-+bool ieee80211_operating_class_to_band(u8 operating_class,
-+				       enum ieee80211_band *band);
-+
- /*
-  * cfg80211_tdls_oper_request - request userspace to perform TDLS operation
-  * @dev: the device on which the operation is requested
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 8b753b1..5871496 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1160,6 +1160,26 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
- }
- EXPORT_SYMBOL(cfg80211_get_p2p_attr);
- 
-+bool ieee80211_operating_class_to_band(u8 operating_class,
-+				       enum ieee80211_band *band)
-+{
-+	switch (operating_class) {
-+	case 112:
-+	case 115 ... 127:
-+		*band = IEEE80211_BAND_5GHZ;
-+		return true;
-+	case 81:
-+	case 82:
-+	case 83:
-+	case 84:
-+		*band = IEEE80211_BAND_2GHZ;
-+		return true;
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(ieee80211_operating_class_to_band);
-+
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int)
- {
--- 
-1.8.0
+Dan
 
