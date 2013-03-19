@@ -1,177 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51884 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932334Ab3CUWkl (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:43963 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135Ab3CSRbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 18:40:41 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 13/15] cw1200: v5: Module defining platform data for Sagrad SG901-1091/1098 modules
-Date: Thu, 21 Mar 2013 18:39:47 -0400
-Message-Id: <1363905589-8350-14-git-send-email-pizza@shaftnet.org> (sfid-20130321_234304_172046_39894977)
-In-Reply-To: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
-References: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
+	Tue, 19 Mar 2013 13:31:00 -0400
+Received: by mail-wi0-f180.google.com with SMTP id hi8so808919wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 10:30:59 -0700 (PDT)
+Date: Tue, 19 Mar 2013 18:30:54 +0100
+From: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	664767@bugs.debian.org, linux-wireless@vger.kernel.org
+Subject: Re: Brcmsmac driver woes, possible regression?
+Message-ID: <20130319173054.GA7873@stt008.linux.site> (sfid-20130319_183106_662626_5E440771)
+References: <20130317182725.GA5811@stt008.linux.site> <20130317183344.GA8786@elie.Belkin> <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com> <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com> <20130318211428.GA9136@stt008.linux.site> <20130318212544.GB5062@elie.Belkin> <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com> <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com> <1363711989.2225.8.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1363711989.2225.8.camel@dcbw.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/cw1200_sagrad.c | 145 ++++++++++++++++++++++++++++
- 1 file changed, 145 insertions(+)
- create mode 100644 drivers/net/wireless/cw1200/cw1200_sagrad.c
+El 2013-03-19 a las 11:53 -0500, Dan Williams escribió:
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_sagrad.c b/drivers/net/wireless/cw1200/cw1200_sagrad.c
-new file mode 100644
-index 0000000..a5ada0e
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/cw1200_sagrad.c
-@@ -0,0 +1,145 @@
-+/*
-+ * Platform glue data for ST-Ericsson CW1200 driver
-+ *
-+ * Copyright (c) 2013, Sagrad, Inc
-+ * Author: Solomon Peachy <speachy@sagrad.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/cw1200_platform.h>
-+
-+MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
-+MODULE_DESCRIPTION("ST-Ericsson CW1200 Platform glue driver");
-+MODULE_LICENSE("GPL");
-+
-+/* Define just one of these.  Feel free to customize as needed */
-+#define SAGRAD_1091_1098_EVK_SDIO
-+/* #define SAGRAD_1091_1098_EVK_SPI */
-+
-+#ifdef SAGRAD_1091_1098_EVK_SDIO
-+#if 0
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = 215,  /* fix me as appropriate */
-+		.end = 215,    /* ditto */
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+	{
-+		.start = 216,  /* fix me as appropriate */
-+		.end = 216,    /* ditto */
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_powerup",
-+	},
-+	{
-+		.start = NOMADIK_GPIO_TO_IRQ(216), /* fix me as appropriate */
-+		.end = NOMADIK_GPIO_TO_IRQ(216),   /* ditto */
-+		.flags = IORESOURCE_IRQ,
-+		.name = "cw1200_wlan_irq",
-+	},
-+};
-+#endif
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+			     bool enable)
-+{
-+	/* Control 3v3 and 1v8 to hardware as appropriate */
-+	/* Note this is not needed if it's controlled elsewhere or always on */
-+
-+	/* May require delay for power to stabilize */
-+	return 0;
-+}
-+
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_sdio *pdata,
-+			   bool enable)
-+{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+
-+	/* May require delay for clock to stabilize */
-+	return 0;
-+}
-+
-+static struct cw1200_platform_data_sdio cw1200_platform_data = {
-+	.ref_clk = 38400,
-+	.have_5ghz = false,
-+#if 0
-+	.reset = &cw1200_href_resources[0],
-+	.powerup = &cw1200_href_resources[1],
-+	.irq = &cw1200_href_resources[2],
-+#endif
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+/*	.macaddr = ??? */
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
-+#endif
-+
-+#ifdef SAGRAD_1091_1098_EVK_SPI
-+/* Note that this is an example of integrating into your board support file */
-+static struct resource cw1200_href_resources[] = {
-+	{
-+		.start = GPIO_RF_RESET,
-+		.end = GPIO_RF_RESET,
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_reset",
-+	},
-+	{
-+		.start = GPIO_RF_POWERUP,
-+		.end = GPIO_RF_POWERUP,
-+		.flags = IORESOURCE_IO,
-+		.name = "cw1200_wlan_powerup",
-+	},
-+};
-+
-+static int cw1200_power_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			     bool enable)
-+{
-+	/* Control 3v3 and 1v8 to hardware as appropriate */
-+	/* Note this is not needed if it's controlled elsewhere or always on */
-+
-+	/* May require delay for power to stabilize */
-+	return 0;
-+}
-+static int cw1200_clk_ctrl(const struct cw1200_platform_data_spi *pdata,
-+			   bool enable)
-+{
-+	/* Turn CLK_32K off and on as appropriate. */
-+	/* Note this is not needed if it's always on */
-+
-+	/* May require delay for clock to stabilize */
-+	return 0;
-+}
-+
-+static struct cw1200_platform_data_spi cw1200_platform_data = {
-+	.ref_clk = 38400,
-+	.spi_bits_per_word = 16,
-+	.reset = &cw1200_href_resources[0],
-+	.powerup = &cw1200_href_resources[1],
-+	.power_ctrl = cw1200_power_ctrl,
-+	.clk_ctrl = cw1200_clk_ctrl,
-+/*	.macaddr = ??? */
-+	.sdd_file = "sdd_sagrad_1091_1098.bin",
-+};
-+static struct spi_board_info myboard_spi_devices[] __initdata = {
-+	{
-+		.modalias = "cw1200_wlan_spi",
-+		.max_speed_hz = 10000000, /* 52MHz Max */
-+		.bus_num = 0,
-+		.irq = WIFI_IRQ,
-+		.platform_data = &cw1200_platform_data,
-+		.chip_select = 0,
-+	},
-+};
-+#endif
-+
-+
-+const void *cw1200_get_platform_data(void)
-+{
-+	return &cw1200_platform_data;
-+}
-+EXPORT_SYMBOL_GPL(cw1200_get_platform_data);
+> On Tue, 2013-03-19 at 17:21 +0100, Camaleón wrote:
+> > 2013/3/19 Camaleón <noelamac@gmail.com>:
+> > > 2013/3/18 Jonathan Nieder <jrnieder@gmail.com>:
+> > >> Camaleón wrote:
+> > >>> El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
+> > >>
+> > >>>> Sorry to hear. Reading back the bug report I noticed you are having a
+> > >>>> bcm4313 and we recently had a regression on it. Could you provide
+> > >>>> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
+> > >>>
+> > >>> I see. My "/sys/kernel/debug/*" directory is empty
+> > >>
+> > >> mount -t debugfs debugfs /sys/kernel/debug
+> > >
+> > > Perfect, thanks.
+> > >
+> > > root@stt300:~# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+> > > board vendor: 103c
+> > > board type: 145c
+> > > board revision: 2209
+> > > board flags: 8002a00
+> > > board flags2: 800
+> > > firmware revision: 262032b
+> > >
+> > > Now let's see how reverting the patch makes any difference as soon as
+> > > I can compile the module. I will keep you updated
+> > 
+> > Update: applied the patch to revert the "other" patch but I still
+> > cannot get the driver to work (see attached syslog). N-M still asks
+> > for password until desists :-(
+> 
+> Note that NM 0.9.8 won't ask for a password when just anything fails,
+> but will ask for a password if the 4-way handshake fails, because if
+> that fails, it's probably your password.  We're contemplating getting
+> rid of that too, and just notifying the user that their password may be
+> wrong and that they should go update it in the network configuration
+> panel so we don't interrupt.  But if you're 100% sure your PSK is
+> correct, then it is, most likely, a driver bug.
+
+Password is correct. I have a second wireless card (external, using 
+rt2800usb driver) that connects without a glitch to the same AP.
+
+Moreover, unless I type the right password, N-M dialog does not allow 
+me to click on the "Connect" button.
+
+Greetings,
+
 -- 
-1.8.1.4
-
+Camaleón 
