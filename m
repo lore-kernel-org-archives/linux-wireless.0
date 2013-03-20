@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:64780 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554Ab3CGD72 (ORCPT
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:58511 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753605Ab3CTTN4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 22:59:28 -0500
-Received: by mail-oa0-f46.google.com with SMTP id k1so43724oag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 19:59:28 -0800 (PST)
-Message-ID: <5138109D.1040605@lwfinger.net> (sfid-20130307_045932_883771_F33DCF9D)
-Date: Wed, 06 Mar 2013 21:59:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 20 Mar 2013 15:13:56 -0400
+Received: by mail-ia0-f174.google.com with SMTP id b35so1697464iac.5
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 12:13:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Jenya Y <jenya.gerstmaier@live.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: PROBLEM: linux kernel 3.9 rc1 and rtl8187 wireless, unable to
- connect to any available hotspots.
-References: <51380336.6030007@live.com> <BLU0-SMTP15357D4D2469B872AE4355CF1E50@phx.gbl>
-In-Reply-To: <BLU0-SMTP15357D4D2469B872AE4355CF1E50@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Wed, 20 Mar 2013 20:13:56 +0100
+Message-ID: <CAFED-jk4pWur+uBruF6BBaDBcMU4MSwgMJmzZgFB5OLKBrqKXw@mail.gmail.com> (sfid-20130320_201359_989803_18523D07)
+Subject: [PATCH 4/4] iwlwifi: mvm: use ieee80211_noa_attr
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2013 09:14 PM, Jenya Y wrote:
->
-> Even though I am presented with a list of available networks, my system with the
-> rc1 kernel is not able to connect to any of them.
-> It stops at the point where it tries to obtain an IP address.
->
-> I tried to delete the Profile of my WiFi and recreate it but no luck.
->
-> This issue is only with 3.9rc1, it worked fine with 3.6 to 3.8.2.
+Use ieee80211_noa_attr structure while
+handling P2P PS.
 
-I am running 3.9-rc1 from wireless-testing, and both my RTL8187L and RTL8187B 
-can connect to WEP, WPA1, and WPA2 networks without a problem. At the moment, it 
-is not convenient for me to boot 3.9-rc1 from mainline, but I should be able to 
-do that tomorrow.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-What kind of encryption are you using, and what is the USB ID for your device as 
-shown by the lsusb command?
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 2779235..1f884b6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -669,6 +669,7 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_client(struct
+iwl_mvm *mvm,
+ 					   u32 action)
+ {
+ 	struct iwl_mac_ctx_cmd cmd = {};
++	struct ieee80211_p2p_noa_attr *noa = &vif->bss_conf.p2p_noa_attr;
 
-Larry
+ 	WARN_ON(vif->type != NL80211_IFTYPE_STATION || !vif->p2p);
 
+@@ -678,7 +679,8 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_client(struct
+iwl_mvm *mvm,
+ 	/* Fill the data specific for station mode */
+ 	iwl_mvm_mac_ctxt_cmd_fill_sta(mvm, vif, &cmd.p2p_sta.sta);
+
+-	cmd.p2p_sta.ctwin = cpu_to_le32(vif->bss_conf.p2p_ctwindow);
++	cmd.p2p_sta.ctwin = cpu_to_le32(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
+
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+ }
+@@ -914,6 +916,7 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 				   u32 action)
+ {
+ 	struct iwl_mac_ctx_cmd cmd = {};
++	struct ieee80211_p2p_noa_attr *noa = &vif->bss_conf.p2p_noa_attr;
+
+ 	WARN_ON(vif->type != NL80211_IFTYPE_AP || !vif->p2p);
+
+@@ -924,8 +927,11 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.go.ap,
+ 				     action == FW_CTXT_ACTION_ADD);
+
+-	cmd.go.ctwin = cpu_to_le32(vif->bss_conf.p2p_ctwindow);
+-	cmd.go.opp_ps_enabled = cpu_to_le32(!!vif->bss_conf.p2p_oppps);
++	cmd.go.ctwin = cpu_to_le32(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
++	cmd.go.opp_ps_enabled =
++			cpu_to_le32(!!(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_ENABLE_BIT));
+
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+ }
+-- 
+1.7.9.5
