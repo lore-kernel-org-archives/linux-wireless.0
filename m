@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37148 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753744Ab3C0QXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:23:37 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/4] bcma: export some gpio functions
-Date: Wed, 27 Mar 2013 17:23:12 +0100
-Message-Id: <1364401392-30360-5-git-send-email-hauke@hauke-m.de> (sfid-20130327_172353_963550_0F9F13BF)
-In-Reply-To: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
-References: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:15973 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752503Ab3CTGDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Mar 2013 02:03:35 -0400
+Date: Wed, 20 Mar 2013 07:04:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlegacy iwl3945 unable to connect to any hotspots on
+ 3.9.0-rc1/rc2
+Message-ID: <20130320060415.GA1370@redhat.com> (sfid-20130320_071107_050799_4AB3564E)
+References: <513E34FD.8090606@winsoft.pl>
+ <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com>
+ <20130312095826.GB1383@redhat.com>
+ <CAJZjf_yLFUTxMeEMUHuX7CsSeRw=RH5v=YjBrWt=a-=sMmFdbw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZjf_yLFUTxMeEMUHuX7CsSeRw=RH5v=YjBrWt=a-=sMmFdbw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions will be used by brcmsmac.
+On Tue, Mar 19, 2013 at 10:09:13PM +0000, Pedro Francisco wrote:
+> On Tue, Mar 12, 2013 at 9:58 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Tue, Mar 12, 2013 at 08:30:47AM +0000, Pedro Francisco wrote:
+> >> On Mon, Mar 11, 2013 at 7:48 PM, Krzysztof Kolasa <kkolasa@winsoft.pl> wrote:
+> >> > Hotspots are visible and are working OK but wifi card can't connect.
+> >> >
+> >>
+> >> Hit this bug also, on the GNOME-3.7.90.iso (based on FC19 testing
+> >> ISO), "Can't stop Rx DMA." and friends.
+> >>
+> >> -snip
+> >
+> > I'm just tested 3.9-rc2 and have the same problems (including
+> > dma map warning). So I don't need debug logs for that.
+> > However still I would like to see 3.8 logs from Zdenek.
+> 
+> Just checking, this problem reported above is independent from the DMA
+> map warning, right?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon.c |    2 ++
- 1 file changed, 2 insertions(+)
+Actually not, but patch I posted should fix both those problems.
 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 88db0cb..036c674 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -214,6 +214,7 @@ u32 bcma_chipco_gpio_out(struct bcma_drv_cc *cc, u32 mask, u32 value)
- 
- 	return res;
- }
-+EXPORT_SYMBOL_GPL(bcma_chipco_gpio_out);
- 
- u32 bcma_chipco_gpio_outen(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
-@@ -226,6 +227,7 @@ u32 bcma_chipco_gpio_outen(struct bcma_drv_cc *cc, u32 mask, u32 value)
- 
- 	return res;
- }
-+EXPORT_SYMBOL_GPL(bcma_chipco_gpio_outen);
- 
- /*
-  * If the bit is set to 0, chipcommon controlls this GPIO,
--- 
-1.7.10.4
+> ( I tested with 3.9.0-0.rc3.git0.3.fc19.i686.PAE :
+> Mar 19 18:17:05 s2 kernel: iwl3945 0000:02:00.0: Queue 4 stuck for 2495 ms.
+> (...)
+> Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Microcode SW error
+> detected. Restarting 0x82000008.
+> (...)
+> Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Status: 0x000202E4, count: 1 ).
 
+Patch should be applied on 3.9-rc4 ...
+
+Stanislaw
