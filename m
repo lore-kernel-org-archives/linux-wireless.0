@@ -1,48 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:13036 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752781Ab3CRQt5 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:60603 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466Ab3CTTK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Mar 2013 12:49:57 -0400
-Message-ID: <a10f9fe2e0e48f8b7378bb655d673151.squirrel@www.infidigm.net> (sfid-20130318_175003_208382_E9F4844E)
-Date: Mon, 18 Mar 2013 13:53:04 -0400
-Subject: AR9374 v1.3 (Ath6kl - 6004) in sdio mode
-From: drwho@infidigm.net
-To: linux-wireless@vger.kernel.org
-Cc: ath6kl-devel@qca.qualcomm.com
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 20 Mar 2013 15:10:58 -0400
+Date: Wed, 20 Mar 2013 15:10:55 -0400 (EDT)
+Message-Id: <20130320.151055.2179062291630664090.davem@davemloft.net> (sfid-20130320_201108_676893_4AD4F898)
+To: daniel.baluta@gmail.com
+Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: Add socket() system call self test.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAEnQRZDOwE592qXK0h-u1B7R-9oWP1CZ2rbt197QTn4oagdwgw@mail.gmail.com>
+References: <20130319.145258.1891905092469394685.davem@davemloft.net>
+	<CAEnQRZDOwE592qXK0h-u1B7R-9oWP1CZ2rbt197QTn4oagdwgw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can anyone confirm if they have had an AR9374 v1.3 (=AR6004) working in
-sdio mode in compat v3.8?  I have three AR9374s working just fine in USB
-mode with compat v3.8.  I have an AR6103 (=AR6003), sdio, working on the
-same host as I'm trying the AR9374 on.  The AR9374 only gets as far as
-registering as mmc1.  The vendor and device IDs are correct.  When I try
-to load ath6kl_sdio, I get....
+From: Daniel Baluta <daniel.baluta@gmail.com>
+Date: Wed, 20 Mar 2013 00:14:05 +0200
 
-ath6kl: 8f69fe04
-ath6kl: 8f69fe34
-ath6kl: 8f69fe7c
-ath6kl_sdio: probe of mmc1:0001:1 failed with error -110
+> I think it's better to have a selftests/net directory dedicated for
+> networking tests. Over time
+> the number of net-{x} directories may become very large.
 
-loading ath6kl_core.ko debug_mask=0xffffffff doesn't give much more. 
-compat is build with
-export CONFIG_ATH_DEBUG=y
-export CONFIG_ATH6KL_DEBUG=y
-and I'm getting tones on debug when booting the AR6103.
+Good idea, here's what I've done for now:
 
-My hardware settings for usb or sdio mode on the AR9374....
+====================
+net: Move selftests to common net/ subdirectory.
 
-USB mode
-sdio_cmd = 10k pull down
+Suggested-by: Daniel Baluta <daniel.baluta@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ tools/testing/selftests/Makefile                         |  3 +--
+ tools/testing/selftests/net-socket/Makefile              | 16 ----------------
+ tools/testing/selftests/{net-afpacket => net}/Makefile   |  9 +++++----
+ .../selftests/{net-afpacket => net}/psock_fanout.c       |  0
+ .../selftests/{net-afpacket => net}/run_afpackettests    |  0
+ .../selftests/{net-socket => net}/run_netsocktests       |  0
+ tools/testing/selftests/{net-socket => net}/socket.c     |  0
+ 7 files changed, 6 insertions(+), 22 deletions(-)
+ delete mode 100644 tools/testing/selftests/net-socket/Makefile
+ rename tools/testing/selftests/{net-afpacket => net}/Makefile (55%)
+ rename tools/testing/selftests/{net-afpacket => net}/psock_fanout.c (100%)
+ rename tools/testing/selftests/{net-afpacket => net}/run_afpackettests (100%)
+ rename tools/testing/selftests/{net-socket => net}/run_netsocktests (100%)
+ rename tools/testing/selftests/{net-socket => net}/socket.c (100%)
 
-SDIO mode
-sdio_cmd = 10k pull up to 3.3v
-sdio_D1 = 10k pull up to 3.3v
-
-I've tried dropping my sdio clock from 50Mhz to 10Mhz,  no go either.
-
-Jon
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index 7f50078..a480593 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -5,8 +5,7 @@ TARGETS += vm
+ TARGETS += cpu-hotplug
+ TARGETS += memory-hotplug
+ TARGETS += efivarfs
+-TARGETS += net-socket
+-TARGETS += net-afpacket
++TARGETS += net
+ 
+ all:
+ 	for TARGET in $(TARGETS); do \
+diff --git a/tools/testing/selftests/net-socket/Makefile b/tools/testing/selftests/net-socket/Makefile
+deleted file mode 100644
+index 2450fd8..0000000
+--- a/tools/testing/selftests/net-socket/Makefile
++++ /dev/null
+@@ -1,16 +0,0 @@
+-# Makefile for net-socket selftests
+-
+-CC = $(CROSS_COMPILE)gcc
+-CFLAGS = -Wall
+-
+-NET_SOCK_PROGS = socket
+-
+-all: $(NET_SOCK_PROGS)
+-%: %.c
+-	$(CC) $(CFLAGS) -o $@ $^
+-
+-run_tests: all
+-	@/bin/sh ./run_netsocktests || echo "sockettests: [FAIL]"
+-
+-clean:
+-	$(RM) $(NET_SOCK_PROGS)
+diff --git a/tools/testing/selftests/net-afpacket/Makefile b/tools/testing/selftests/net/Makefile
+similarity index 55%
+rename from tools/testing/selftests/net-afpacket/Makefile
+rename to tools/testing/selftests/net/Makefile
+index 45f2ffb..bd6e272 100644
+--- a/tools/testing/selftests/net-afpacket/Makefile
++++ b/tools/testing/selftests/net/Makefile
+@@ -1,18 +1,19 @@
+-# Makefile for net-socket selftests
++# Makefile for net selftests
+ 
+ CC = $(CROSS_COMPILE)gcc
+ CFLAGS = -Wall
+ 
+ CFLAGS += -I../../../../usr/include/
+ 
+-AF_PACKET_PROGS = psock_fanout
++NET_PROGS = socket psock_fanout
+ 
+-all: $(AF_PACKET_PROGS)
++all: $(NET_PROGS)
+ %: %.c
+ 	$(CC) $(CFLAGS) -o $@ $^
+ 
+ run_tests: all
++	@/bin/sh ./run_netsocktests || echo "sockettests: [FAIL]"
+ 	@/bin/sh ./run_afpackettests || echo "afpackettests: [FAIL]"
+ 
+ clean:
+-	$(RM) $(AF_PACKET_PROGS)
++	$(RM) $(NET_PROGS)
+diff --git a/tools/testing/selftests/net-afpacket/psock_fanout.c b/tools/testing/selftests/net/psock_fanout.c
+similarity index 100%
+rename from tools/testing/selftests/net-afpacket/psock_fanout.c
+rename to tools/testing/selftests/net/psock_fanout.c
+diff --git a/tools/testing/selftests/net-afpacket/run_afpackettests b/tools/testing/selftests/net/run_afpackettests
+similarity index 100%
+rename from tools/testing/selftests/net-afpacket/run_afpackettests
+rename to tools/testing/selftests/net/run_afpackettests
+diff --git a/tools/testing/selftests/net-socket/run_netsocktests b/tools/testing/selftests/net/run_netsocktests
+similarity index 100%
+rename from tools/testing/selftests/net-socket/run_netsocktests
+rename to tools/testing/selftests/net/run_netsocktests
+diff --git a/tools/testing/selftests/net-socket/socket.c b/tools/testing/selftests/net/socket.c
+similarity index 100%
+rename from tools/testing/selftests/net-socket/socket.c
+rename to tools/testing/selftests/net/socket.c
+-- 
+1.7.11.7
 
