@@ -1,80 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:32785 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188Ab3CNWjR (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:44848 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257Ab3CTWJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 18:39:17 -0400
-Received: by mail-ea0-f176.google.com with SMTP id h10so1232294eaj.7
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 15:39:16 -0700 (PDT)
-From: ISE Development <isedev@gmail.com>
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Reply-To: isedev@gmail.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: BCM4312 / b43 DMA transmission sequence errors
-Date: Thu, 14 Mar 2013 23:39:13 +0100
-Message-ID: <2297787.zcqzRcyLh6@wks001.ise.net> (sfid-20130314_233921_840042_E3486614)
-In-Reply-To: <20130314213956.05aa6dee@bother.homenet>
-References: <1695808.c7XUjJpf0R@wks001.ise.net> <4530943.RJ7WpUJOSz@wks001.ise.net> <20130314213956.05aa6dee@bother.homenet>
+	Wed, 20 Mar 2013 18:09:55 -0400
+Received: by mail-ee0-f50.google.com with SMTP id e51so1452408eek.9
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 15:09:54 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Marco Fonseca <marco@tampabay.rr.com>
+Subject: Re: carl9170: monitor mode hangs due to channel changes
+Date: Wed, 20 Mar 2013 23:09:47 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20130320205013.GA3462@192.168.1.10>
+In-Reply-To: <20130320205013.GA3462@192.168.1.10>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201303202309.47596.chunkeey@googlemail.com> (sfid-20130320_231000_226816_AECB0503)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 14 Mar 2013 21:39:56 Chris Vine wrote:
-> On Thu, 14 Mar 2013 14:08:33 +0100
-> 
-> ISE Development <isedev@gmail.com> wrote:
-> > On Wednesday 13 Mar 2013 21:37:52 Larry Finger wrote:
-> > > On 03/13/2013 08:06 PM, ISE Development wrote:
-> > > > I've hacked the driver to 'skip' one header and data frame if
-> > > > receiving an interrupt for the first slot + 2. It's not pretty
-> > > > and I have literally no idea if it will causes other problems,
-> > > > but it has allowed me to keep the Wifi connection up for a little
-> > > > over 3 hours now (as compared to the 45 seconds previously). It
-> > > > does not appear to be corrupting the data stream (checked by
-> > > > download large signed binaries and verifying the signature) and
-> > > > as far as my limited knowledge can tell, it should not be causing
-> > > > a memory leak.
-> > > > 
-> > > > The patch is listed below, for reference. However, I do not claim
-> > > > that it is valid, safe or even reasonsable. It does provide me
-> > > > with much needed relief though.
-> > > > 
-> > > > The diff is against the current head of
-> > > > linville/wireless-testing.git
-> > > > (d41d9c7419e3ac9c81841f43bbd7639dd0a5819e).
-> > > 
-> > > I am testing the patch on BCM4312 and other cards.
-> > > 
-> > > Larry
-> > 
-> > Here's a slighted cleaner version, with comments, in case you are
-> > considering integrating it.
-> 
-> [snip]
-> 
-> It might look like a bit of a hack (probably one that broadcom have
-> hidden away in their own wl driver if it is a firmware issue) but it is
-> certainly effective.
-> 
-> I have applied this patch to the 3.8.2 kernel and for the first time I
-> get reliable performance from the bcm4312 card in my netbook using the
-> b43 driver.  I have banged about 5 GB through it and I am continuing to
-> do so, but it is still up.  I get I would say on average about one TX
-> ring error (on ring 1 in the case of my card) per 500 MB of
-> throughput and the frame skip resolves the problem for me.
-> 
-> As this patch also avoid spamming the debug log with shed loads of
-> error reports once an inconsistency arises, it also reveals that the
-> inconsistency always begins with an expected status report of 138 and a
-> report of 140 being received.  Yours, however, may well be different,
-> and this may be meaningless anyway.
-> 
-> Chris
+Hello,
 
-Same symptom here: starts with a miss on 138 (or less frequently on 208).
+On Wednesday, March 20, 2013 09:50:13 PM Marco Fonseca wrote:
+> I'm seeing a problem with the carl driver. If I change channels
+> repeatedly on the 2.4ghz band, monitoring (e.g. tcpdump) will
+> eventually halt.  I've seen this on various versions of the carl
+> driver/firmware (both from 1.9.4 to 1.9.7)
+thanks for reporting this. You could try either of the attached
+patch and test if it alleviate the issue. If the patches do help
+then the problem is caused by rf/phy (code) [which is a problem
+since the rf/phy parts are taken from the vendor driver as we
+have no docs or specs for it].
 
--- 
--- isedev
+Regards,
+	Chr
+--
+
+Patch 1: just reinitialize AGC_CONTROL
+(can also be moved behind CMD_FREQ_START)
+---
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index b72c09c..7fffee6 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -1638,6 +1638,13 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 		cmd = CARL9170_CMD_FREQUENCY;
+ 	}
+ 
++	err = carl9170_write_reg(ar, AR9170_PHY_REG_AGC_CONTROL,
++		carl9170_def_val(AR9170_PHY_REG_AGC_CONTROL,
++				 channel->band == IEEE80211_BAND_2GHZ,
++				 conf_is_ht40(&ar->hw->conf)));
++	if (err)
++		return err;
++
+ 	err = carl9170_exec_cmd(ar, CARL9170_CMD_FREQ_START, 0, NULL, 0, NULL);
+ 	if (err)
+ 		return err;
+---
+
+
+Patch 2: always do warm reset when changing channels
+---
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index b72c09c..643cc57 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -1578,7 +1578,7 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 	u32 cmd, tmp, offs = 0, new_ht = 0;
+ 	int err;
+ 	enum carl9170_bw bw;
+-	bool warm_reset;
++	bool warm_reset = true;
+ 	struct ieee80211_channel *old_channel = NULL;
+ 
+ 	bw = nl80211_to_carl(_bw);
+@@ -1592,14 +1592,7 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 	/* may be NULL at first setup */
+ 	if (ar->channel) {
+ 		old_channel = ar->channel;
+-		warm_reset = (old_channel->band != channel->band) ||
+-			     (old_channel->center_freq ==
+-			      channel->center_freq) ||
+-			     (ar->ht_settings != new_ht);
+-
+ 		ar->channel = NULL;
+-	} else {
+-		warm_reset = true;
+ 	}
+ 
+ 	/* HW workaround */
+---
