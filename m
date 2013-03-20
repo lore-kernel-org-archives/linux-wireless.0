@@ -1,99 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab3C0Qva (ORCPT
+Received: from hub022-nj-1.exch022.serverdata.net ([206.225.164.184]:45937
+	"EHLO HUB022-nj-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757433Ab3CTKxW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:51:30 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/3] mac80211: don't fiddle with netdev queues in MLME code
-Date: Wed, 27 Mar 2013 17:51:20 +0100
-Message-Id: <1364403082-20722-2-git-send-email-johannes@sipsolutions.net> (sfid-20130327_175134_317443_BA92143B)
-In-Reply-To: <1364403082-20722-1-git-send-email-johannes@sipsolutions.net>
-References: <1364403082-20722-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 20 Mar 2013 06:53:22 -0400
+Message-ID: <1363776796.9344.14.camel@WLAN-SW-TEST-03> (sfid-20130320_115335_791898_CF299EF9)
+Subject: Re: [RFC V2 1/2] mac80211: Use a cfg80211_chan_def in
+ ieee80211_hw_conf_chan
+From: Mahesh Palivela <maheshp@posedge.com>
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Wed, 20 Mar 2013 16:23:16 +0530
+In-Reply-To: <1363751176.9344.1.camel@WLAN-SW-TEST-03>
+References: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
+	 <1363652600-23223-2-git-send-email-karl.beldan@gmail.com>
+	 <1363693626.3355.14.camel@WLAN-SW-TEST-03>
+	 <20130319122836.GA26078@magnum.frso.rivierawaves.com>
+	 <1363751176.9344.1.camel@WLAN-SW-TEST-03>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-03-20 at 09:16 +0530, Mahesh Palivela wrote:
+> On Tue, 2013-03-19 at 13:28 +0100, Karl Beldan wrote:
+> > On Tue, Mar 19, 2013 at 05:17:06PM +0530, Mahesh Palivela wrote:
+> > > On Tue, 2013-03-19 at 01:23 +0100, Karl Beldan wrote:
+> > > > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> > > > +	local->_oper_chandef.center_freq1 += cfreq_off;
+> > > > +	local->_oper_chandef.center_freq2 += cfreq_off;
+> > > 
+> > > can't add cfreq_off to center_freq2. Add only in case of non-zero
+> > > center_freq2?
+> > > 
+> > At first I was like "why ?", but I hadn't spotted the places where we
+> > only check for "center_freq2 != 0".
+> > 
+> > 
+> > Thanks Mahesh, Have you tested vht with this ? 
+> 
+> Not yet Karl. I will give it a try and update you.
+> 
 
-The netdev queues should always represent the state that
-the driver gave them, so fiddling with them isn't really
-appropriate in the mlme code. Also, since we stop queues
-for flushing now, this really isn't necessary any more.
+Karl, Is this patch based on mac80211-next kernel? I see failures/hunks
+when apply your patch.
 
-As the scan/offchannel code has also been modified to no
-longer do this a while ago, remove the outdated smp_mb()
-and comments about it.
-
-While at it, also add a pair of braces that was missing.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 26 ++------------------------
- 1 file changed, 2 insertions(+), 24 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e12fedc..8a71796 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1443,13 +1443,11 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 
- 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
- 	    !(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
--		netif_tx_stop_all_queues(sdata->dev);
--
--		if (drv_tx_frames_pending(local))
-+		if (drv_tx_frames_pending(local)) {
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 				  msecs_to_jiffies(
- 				  local->hw.conf.dynamic_ps_timeout));
--		else {
-+		} else {
- 			ieee80211_send_nullfunc(local, sdata, 1);
- 			/* Flush to get the tx status of nullfunc frame */
- 			ieee80211_flush_queues(local, sdata);
-@@ -1463,9 +1461,6 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		local->hw.conf.flags |= IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 	}
--
--	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
--		netif_tx_wake_all_queues(sdata->dev);
- }
- 
- void ieee80211_dynamic_ps_timer(unsigned long data)
-@@ -1725,7 +1720,6 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_smps(sdata);
- 	ieee80211_recalc_ps_vif(sdata);
- 
--	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- }
- 
-@@ -1748,22 +1742,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_stop_poll(sdata);
- 
- 	ifmgd->associated = NULL;
--
--	/*
--	 * we need to commit the associated = NULL change because the
--	 * scan code uses that to determine whether this iface should
--	 * go to/wake up from powersave or not -- and could otherwise
--	 * wake the queues erroneously.
--	 */
--	smp_mb();
--
--	/*
--	 * Thus, we can only afterwards stop the queues -- to account
--	 * for the case where another CPU is finishing a scan at this
--	 * time -- we don't want the scan code to enable queues.
--	 */
--
--	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
- 	/*
 -- 
-1.8.0
+Thanks,
+Mahesh
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
