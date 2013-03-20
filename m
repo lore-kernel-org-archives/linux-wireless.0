@@ -1,124 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39398 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977Ab3C0NkE (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42746 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413Ab3CTAwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 09:40:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 19 Mar 2013 20:52:51 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] mac80211: remove unused IE pointers from parser
-Date: Wed, 27 Mar 2013 14:39:54 +0100
-Message-Id: <1364391597-3977-2-git-send-email-johannes@sipsolutions.net> (sfid-20130327_144013_704226_47BA0D6D)
-In-Reply-To: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
-References: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211:  Optimize sta lookup for many VIFs
+Date: Tue, 19 Mar 2013 17:52:44 -0700
+Message-Id: <1363740764-1679-1-git-send-email-greearb@candelatech.com> (sfid-20130320_015255_058611_041FEECF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-There's no need to parse IEs that aren't used
-so just remove them.
+The sta_info hash is designed to deal with an AP
+with lots of stations associated, or a station interface
+connected to a single AP.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+However, when you have lots of station VIFs connected
+to the same AP, the sta_info hash becomes worthless
+as there is a single hash bucket that contains all the
+entries in a linked list.
+
+So, have the sdata object cache one of its station
+interfaces.  If we are a station VIF with a single
+sta_info, then this means we can ignore the sta_info
+hash entirely.
+
+On a test case with 128 stations and 50 TCP streams,
+tx performance went from around 80Mbps to 124Mbps.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/ieee80211_i.h |  9 ---------
- net/mac80211/util.c        | 19 -------------------
- 2 files changed, 28 deletions(-)
+v2:  Try quick-lookup only for Station interfaces.
+     Set/clear the quick-lookup-pointer in the hash
+     setup/clear logic instead of the constructor/destructor.
 
+:100644 100644 a618bda... 5288a4f... M	net/mac80211/cfg.c
+:100644 100644 493e2e8... c6386c7... M	net/mac80211/ieee80211_i.h
+:100644 100644 415f9c6... db7e31d... M	net/mac80211/sta_info.c
+ net/mac80211/cfg.c         |    5 +++++
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ net/mac80211/sta_info.c    |   22 +++++++++++++++++++++-
+ 3 files changed, 32 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a618bda..5288a4f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		bool prev_4addr = false;
+ 		bool new_4addr = false;
++		struct sta_info *some_sta;
+ 
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+@@ -1312,7 +1313,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			prev_4addr = true;
+ 		}
+ 
++		some_sta = rcu_dereference(sta->sdata->some_sta);
++		if (some_sta == sta)
++			rcu_assign_pointer(sta->sdata->some_sta, NULL);
+ 		sta->sdata = vlansdata;
++		rcu_assign_pointer(sta->sdata->some_sta, sta);
+ 
+ 		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+ 		    prev_4addr != new_4addr) {
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3cf89f7..207b4f3 100644
+index 493e2e8..c6386c7 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -1157,11 +1157,8 @@ struct ieee802_11_elems {
- 	/* pointers to IEs */
- 	const u8 *ssid;
- 	const u8 *supp_rates;
--	const u8 *fh_params;
- 	const u8 *ds_params;
--	const u8 *cf_params;
- 	const struct ieee80211_tim_ie *tim;
--	const u8 *ibss_params;
- 	const u8 *challenge;
- 	const u8 *rsn;
- 	const u8 *erp_info;
-@@ -1185,7 +1182,6 @@ struct ieee802_11_elems {
- 	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
--	const u8 *quiet_elem;	/* first quite element */
- 	const u8 *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-@@ -1193,11 +1189,8 @@ struct ieee802_11_elems {
- 	/* length of them, respectively */
- 	u8 ssid_len;
- 	u8 supp_rates_len;
--	u8 fh_params_len;
- 	u8 ds_params_len;
--	u8 cf_params_len;
- 	u8 tim_len;
--	u8 ibss_params_len;
- 	u8 challenge_len;
- 	u8 rsn_len;
- 	u8 erp_info_len;
-@@ -1210,8 +1203,6 @@ struct ieee802_11_elems {
- 	u8 prep_len;
- 	u8 perr_len;
- 	u8 country_elem_len;
--	u8 quiet_elem_len;
--	u8 num_of_quiet_elem;	/* can be more the one */
- 	u8 timeout_int_len;
+@@ -669,6 +669,12 @@ struct ieee80211_sub_if_data {
+ 	/* count for keys needing tailroom space allocation */
+ 	int crypto_tx_tailroom_needed_cnt;
  
- 	/* whether a parse error occurred while retrieving these elements */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d253bf4..83e213b 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -740,18 +740,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			elems->supp_rates = pos;
- 			elems->supp_rates_len = elen;
- 			break;
--		case WLAN_EID_FH_PARAMS:
--			elems->fh_params = pos;
--			elems->fh_params_len = elen;
--			break;
- 		case WLAN_EID_DS_PARAMS:
- 			elems->ds_params = pos;
- 			elems->ds_params_len = elen;
- 			break;
--		case WLAN_EID_CF_PARAMS:
--			elems->cf_params = pos;
--			elems->cf_params_len = elen;
--			break;
- 		case WLAN_EID_TIM:
- 			if (elen >= sizeof(struct ieee80211_tim_ie)) {
- 				elems->tim = (void *)pos;
-@@ -759,10 +751,6 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			} else
- 				elem_parse_failed = true;
- 			break;
--		case WLAN_EID_IBSS_PARAMS:
--			elems->ibss_params = pos;
--			elems->ibss_params_len = elen;
--			break;
- 		case WLAN_EID_CHALLENGE:
- 			elems->challenge = pos;
- 			elems->challenge_len = elen;
-@@ -893,13 +881,6 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			}
- 			elems->wide_bw_chansw_ie = (void *)pos;
- 			break;
--		case WLAN_EID_QUIET:
--			if (!elems->quiet_elem) {
--				elems->quiet_elem = pos;
--				elems->quiet_elem_len = elen;
--			}
--			elems->num_of_quiet_elem++;
--			break;
- 		case WLAN_EID_COUNTRY:
- 			elems->country_elem = pos;
- 			elems->country_elem_len = elen;
++	/* A pointer to some station associated with this interface, or
++	 * NULL.  This allows opportunistic lookup for sta_info objects when
++	 * sdata is a station with a single sta_info.
++	 */
++	struct sta_info __rcu *some_sta;
++
+ 	struct net_device *dev;
+ 	struct ieee80211_local *local;
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 415f9c6..db7e31d 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -67,7 +67,11 @@
+ static int sta_info_hash_del(struct ieee80211_local *local,
+ 			     struct sta_info *sta)
+ {
+-	struct sta_info *s;
++	struct sta_info *s, *some_sta;
++
++	some_sta = rcu_dereference(sta->sdata->some_sta);
++	if (some_sta == sta)
++		rcu_assign_pointer(sta->sdata->some_sta, NULL);
+ 
+ 	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
+ 				      lockdep_is_held(&local->sta_mtx));
+@@ -195,6 +199,20 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		struct sta_info *some_sta;
++
++		/* Shortcut for finding station entries for STATION VIFs */
++		some_sta = rcu_dereference(sdata->some_sta);
++		if (some_sta) {
++			if (WARN_ON(some_sta->sdata != sdata))
++				rcu_assign_pointer(sdata->some_sta, NULL);
++			else
++				if (ether_addr_equal(some_sta->sta.addr, addr))
++					return some_sta;
++		}
++	}
++
+ 	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
+ 				    lockdep_is_held(&local->sta_mtx));
+ 	while (sta) {
+@@ -278,6 +296,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
+ 	lockdep_assert_held(&local->sta_mtx);
+ 	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
+ 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
++
++	rcu_assign_pointer(sta->sdata->some_sta, sta);
+ }
+ 
+ static void sta_unblock(struct work_struct *wk)
 -- 
-1.8.0
+1.7.3.4
 
