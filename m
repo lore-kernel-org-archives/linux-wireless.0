@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1546 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753210Ab3CCLqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Mar 2013 06:46:14 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/13] brcmfmac: make debug module parameter more clear
-Date: Sun, 3 Mar 2013 12:45:22 +0100
-Message-ID: <1362311132-29561-4-git-send-email-arend@broadcom.com> (sfid-20130303_131304_043020_0ADDDADC)
-In-Reply-To: <1362311132-29561-1-git-send-email-arend@broadcom.com>
-References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
+Received: from smtpout5.wanadoo.co.uk ([80.12.242.80]:47403 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975Ab3CTQGx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Mar 2013 12:06:53 -0400
+Date: Wed, 20 Mar 2013 17:06:51 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <24720158.53141363795611541.JavaMail.www@wwinf3703> (sfid-20130320_170658_340681_3DF68484)
+In-Reply-To: <CAD2nsn3BQFh4bBeTYND0cyhGrioq2hA1EJj2eh-4EGZoc-kkqQ@mail.gmail.com>
+Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The module parameter definition for brcmf_msg_level has been
-reworked to a named module parameter with description so
-modinfo is a bit more informative:
 
-parm:           debug:level of debug output (int)
+> + ath6kl-devel
+>
+>
+> care to check with the latest driver and firmware
+> https://github.com/cernekee/linux-firmware/tree/master/ath6k/AR6004
+> http://linuxwireless.org/download/compat-wireless-2.6/
+>
+> AR6004 is pretty decent working.
+>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Hi, Yes, I have the latest driver - from Qualcomm.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 6e3846c..a4d01f3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -40,7 +40,8 @@ MODULE_LICENSE("Dual BSD/GPL");
- 
- /* Error bits */
- int brcmf_msg_level;
--module_param(brcmf_msg_level, int, 0);
-+module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
-+MODULE_PARM_DESC(debug, "level of debug output");
- 
- /* P2P0 enable */
- static int brcmf_p2p_enable;
--- 
-1.7.6
+I think my problem is that I've compiled it for 'sh4' - and it's not guaranteed to work on that platform.
+
+And, indeed it doesn't.
+
+I've just sent out a ping from the wifi adaptor to a PC on the local subnet.
+Wireshark says that a ping request was sent out from Src=00:03:7f:20:50:59 (which is correct),
+And the destination is Dst=7f:20:50:59:00:5c (which is wrong).
+
+The destination MAC address should be 20:cf:30:94:83:7b .
+
+But, look at the two Src and Dst MAC addresses - they are very similar ! !!?!?!?!
+
+I don't understand where the Dst MAC comes from. That's my bug I think.
 
 
+Regards
+
+Nick
