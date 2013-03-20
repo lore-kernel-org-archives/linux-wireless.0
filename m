@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:35444 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933122Ab3CGPwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:52:15 -0500
-Message-ID: <5138B656.5090408@neratec.com> (sfid-20130307_165226_276202_1D908EA0)
-Date: Thu, 07 Mar 2013 16:46:30 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
- that don't include chain 0
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org>
-In-Reply-To: <5138AB4A.7000405@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:42895 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757344Ab3CTPJI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Mar 2013 11:09:08 -0400
+Message-ID: <1363792139.8224.10.camel@jlt4.sipsolutions.net> (sfid-20130320_160934_773672_8262B976)
+Subject: Re: rcutree tree warning during P2P device support testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: David Spinadel <dvdspndl@gmail.com>,
+	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Date: Wed, 20 Mar 2013 16:08:59 +0100
+In-Reply-To: <5149CD81.40301@broadcom.com>
+References: <5149CD81.40301@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2013 03:59 PM, Felix Fietkau wrote:
-> On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
->> There is a regression introduced by this patch when power save is off on
->> the station for idle checks.
->> I have AR9590 station with rx and tx chain set to 0x1 connected
->> to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
->>
->> Before this patch in connection polling the station was properly sending
->> null function to check whether AP is still there. After this patch it sends
->> broadcast probe request which is anyway wrong or some 16 or so packets
->> of random data (rarely). It manifests itself in lost connection because
->> there
->> is no ack from AP which is expected for null function.
->>
->> I have been following skb's up to the descriptor setting in ath9k and it was
->> all ok i.e. proper null function with valid addresses.
->>
->> I have been bisecting it twice because it doesn't make much sense but maybe
->> it's a HW issue?
-> You're right, it does not make much sense. I can't figure out how this
-> patch could possibly change the runtime behavior with tx chainmask set
-> to 0x1. Have you tried reverting this patch in a current build to see if
-> that fixes the issue?
-It does fix it. I will check tomorrow whether it's only AR9590 or also
-previous revisions. I will also try with different chainmasks. I will have
-to rescrew my setup...
 
-Wojtek
+> I am testing the P2P device support patches. Upon stopping the
+> wpa_supplicant I get the following warning and when I unload brcmfmac it
+> hangs resulting in hung_task_timeout message. The whole rcu stuff still
+> needs to settle in my brain. I suspect the warning is related to
+> brcmfmac unload failure, but maybe you have some ideas where I should look.
+
+Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
+you saying you first stop the supplicant, which gets you that warning,
+and then unload fails?
+
+> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
+> rcu_process_callbacks+0x469/0x560()
+
+> [ 1634.133917] Call Trace:
+> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
+> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
+> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
+> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
+> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
+
+Can't say I understand this warning ...
+
+> [ 3606.381631] INFO: task khubd:30 blocked for more than 120 seconds.
+> [ 3606.388366] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 3606.396931] khubd           D f4f01cd8     0    30      2 0x00000000
+> [ 3606.403609]  f4f01d10 00000092 00000000 f4f01cd8 00000246 c1748000
+> c183fb40 c183fb40
+> [ 3606.411731]  d46b6273 0000031c f53e7b40 f4d323c0 c1748000 00000246
+> 00000000 f0820090
+> [ 3606.419807]  00000246 f4f01cd8 00000046 00000001 00000046 00000000
+> 00000002 f0820090
+> [ 3606.427881] Call Trace:
+> [ 3606.430518]  [<c1097aeb>] ? trace_hardirqs_on+0xb/0x10
+> [ 3606.435907]  [<c1525ff3>] schedule+0x23/0x60
+> [ 3606.440402]  [<f8230c65>] wiphy_unregister+0xa5/0x2e0 [cfg80211]
+
+This seems to be because you don't remove the p2p device if it's still
+present when you unload the driver. Call cfg80211_unregister_wdev() at
+some appropriate place.
+
+johannes
+
