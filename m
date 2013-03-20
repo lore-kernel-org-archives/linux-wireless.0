@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:62255 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753460Ab3C2PLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 11:11:34 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kl13so384137pab.32
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2013 08:11:33 -0700 (PDT)
-Message-ID: <5155AF21.3010007@cardaccess-inc.com> (sfid-20130329_161138_221468_ADA56CAF)
-Date: Fri, 29 Mar 2013 09:11:29 -0600
-From: Brandt Deakin <bdeakin@cardaccess-inc.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1806 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308Ab3CTVrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Mar 2013 17:47:07 -0400
+Message-ID: <514A2E47.7080108@broadcom.com> (sfid-20130320_224712_862895_5CDE4936)
+Date: Wed, 20 Mar 2013 22:46:47 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Any suggestions for laptops with ath9k NIC?
-References: <51548501.8010400@candelatech.com>
-In-Reply-To: <51548501.8010400@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "David Spinadel" <dvdspndl@gmail.com>,
+	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Subject: Re: rcutree tree warning during P2P device support testing
+References: <5149CD81.40301@broadcom.com>
+ <1363792139.8224.10.camel@jlt4.sipsolutions.net>
+ <514A274F.5030303@broadcom.com>
+ <1363814947.9284.10.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1363814947.9284.10.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben,
+On 03/20/2013 10:29 PM, Johannes Berg wrote:
+> On Wed, 2013-03-20 at 22:17 +0100, Arend van Spriel wrote:
+>>> Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
+>>> you saying you first stop the supplicant, which gets you that warning,
+>>> and then unload fails?
+>>
+>> Indeed, upon stopping wpa_supplicant I get the warning. And doing a
+>> rmmod from the command line after that fails in the hang.
+> 
+> Right, ok.
+> 
+>>>> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
+>>>> rcu_process_callbacks+0x469/0x560()
+>>>
+>>>> [ 1634.133917] Call Trace:
+>>>> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
+>>>> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
+>>>> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
+>>>> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
+>>>> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
+>>>
+>>> Can't say I understand this warning ...
+>>>
+>>
+>> At least we are on the same page then ;-)
+> 
+> It looks like some rcu head list corruption ... no idea really.
+> 
 
-It may not be an ideal solution, but I've used a Expresscard to PCI-E 
-Mini adapter that basically plugs into the common express card slot and 
-provides a pci-express slot so you can use your choice of AR9xxx radio.  
-That way the BIOS of the Lenovos or HPs of the world don't stop you up.
+I have now (I think). I did a kfree of the driver's vif structure, which
+is container of the wireless_dev and that is still on the rcu head list.
 
-Admittedly, it's less than elegant having a 10 cm card hanging out of 
-your machine, but it does allow great flexibility in testing different 
-radios.
+>> The p2p device is already removed upon stopping wpa_supplicant through
+>> .del_virtual_intf() callback. Took a quick peek in
+>> net/mac80211/iface.c:ieee80211_if_remove() and wonder whether I should
+>> do cfg80211_unregister_wdev() in that code path as well. Guess so, right?
+> 
+> I think so, yes. Does the warning go away if you do? :)
 
-If you have any difficulty finding an adapter PM me and tell you the one 
-I use.
+Not tested yet.
 
-Brandt
+Thanks,
+Arend
 
-On 3/28/2013 11:59 AM, Ben Greear wrote:
-> Someone stole my previous laptop I was using for ath9k testing...
->
->
-> Any suggestions for a new mid-range laptop that comes standard with
-> ath9k NICs, or is known to work with ath9k NICs w/out having to
-> hack the NIC eeprom or laptop BIOS?
->
-> I'd prefer a 3x3, but not sure they exist, so a 2x2 a/b/g/n would be
-> OK as well..
->
-> Thanks,
-> Ben
->
 
