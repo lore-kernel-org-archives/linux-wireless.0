@@ -1,89 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40614 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754263Ab3CYTAo (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42733 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757660Ab3CTAu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 15:00:44 -0400
-Date: Mon, 25 Mar 2013 14:58:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Herrmann <dh.herrmann@gmail.com>
-Cc: Piotr Haber <phaber@broadcom.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
-Message-ID: <20130325185821.GB17454@tuxdriver.com> (sfid-20130325_200110_191845_900241A1)
-References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
- <51471B85.5060404@broadcom.com>
- <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
+	Tue, 19 Mar 2013 20:50:56 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3] mac80211:  Don't restart sta-timer if not associated.
+Date: Tue, 19 Mar 2013 17:50:50 -0700
+Message-Id: <1363740650-1626-1-git-send-email-greearb@candelatech.com> (sfid-20130320_015059_926495_E4689B53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
-> Hi Piotr
-> 
-> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
-> > On 03/18/13 11:45, David Herrmann wrote:
-> >> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
-> >> wireless AP reconnection on: (14e4:4727)
-> >>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
-> >>
-> >> Any attempt to reconnect to an AP results in timeouts no matter how near to the
-> >> AP I am:
-> >>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
-> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
-> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
-> >>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
-> >>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> >> ---
-> >> Hi
-> >>
-> >> I tried coming up with a fix instead of reverting this commit, but the commit is
-> >> way to big for me to understand what's going on. Sorry.
-> >>
-> >> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
-> >> one time, but any further attempt resulted in:
-> >>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
-> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
-> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
-> >>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
-> >>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
-> >>
-> >> Even sitting right next to the AP didn't help so I started bisecting and it
-> >> turned out to be:
-> >>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
-> >> Please revert it.
-> >>
-> >> Thanks
-> >> David
-> >>
-> > Hi,
-> > unfortunately this is not a first report of this patch breaking 4313 for some users.
-> > I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
-> > successfully in our test setup.
-> > Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
-> > <debugfs_mount>/brcmsmac/bcma0:0/hardware
-> 
-> Hi
-> 
-> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-> board vendor: 185f
-> board type: 51a
-> board revision: 1408
-> board flags: 8402a01
-> board flags2: 880
-> firmware revision: 262032b
-> 
-> I can also try partial reverts of that commit, but I really don't know
-> which parts might be important.
+From: Ben Greear <greearb@candelatech.com>
 
-Are we going to see a fix for this (very) soon?  Or should I just go
-ahead and revert this patch?
+I found another crash when deleting lots of virtual stations
+in a congested environment.  I think the problem is that
+the ieee80211_mlme_notify_scan_completed could call
+ieee80211_restart_sta_timer for a stopped interface
+that was about to be deleted.
 
+With the following patch I am unable to reproduce the
+crash.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v3:  Just check for sdata-is-running once at top of method
+  instead of worrying about if it is associated or not.
+
+:100644 100644 aec786d... 74a8c5f... M	net/mac80211/mlme.c
+ net/mac80211/mlme.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index aec786d..74a8c5f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2933,6 +2933,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ {
+ 	u32 flags;
+ 
++	if (!ieee80211_sdata_running(sdata))
++		return;
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		__ieee80211_stop_poll(sdata);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.4
+
