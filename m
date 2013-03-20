@@ -1,31 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22088 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864Ab3CJN10 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755440Ab3CTNMP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 09:27:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Andrei Epure <epure.andrei@gmail.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<ath6kl-devel@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: changed kmalloc to kmemdup
-References: <1362919199-16292-1-git-send-email-epure.andrei@gmail.com>
-Date: Sun, 10 Mar 2013 15:27:20 +0200
-In-Reply-To: <1362919199-16292-1-git-send-email-epure.andrei@gmail.com>
-	(Andrei Epure's message of "Sun, 10 Mar 2013 14:39:58 +0200")
-Message-ID: <87ehfnfkqv.fsf@kamboji.qca.qualcomm.com> (sfid-20130310_142730_208979_B57D317F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 20 Mar 2013 09:12:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] mac80211: ibss: disable beaconing before freeing beacon
+Date: Wed, 20 Mar 2013 14:12:10 +0100
+Message-Id: <1363785131-909-1-git-send-email-johannes@sipsolutions.net> (sfid-20130320_141218_695715_2F47CFC8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrei Epure <epure.andrei@gmail.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Signed-off-by: Andrei Epure <epure.andrei@gmail.com>
+If we don't disable beaconing, the driver might attempt
+to continue, but would fail to request a beacon. That's
+strange, so disable beaconing first.
 
-Thanks, I'll take this. But please prefix ath6kl patches with "ath6kl:"
-in the future.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 539d4a1..bd02fac 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -58,14 +58,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	/* Reset own TSF to allow time synchronization work. */
+ 	drv_reset_tsf(local, sdata);
+ 
+-	skb = ifibss->skb;
+-	RCU_INIT_POINTER(ifibss->presp, NULL);
+-	synchronize_rcu();
+-	skb->data = skb->head;
+-	skb->len = 0;
+-	skb_reset_tail_pointer(skb);
+-	skb_reserve(skb, sdata->local->hw.extra_tx_headroom);
+-
+ 	if (!ether_addr_equal(ifibss->bssid, bssid))
+ 		sta_info_flush(sdata);
+ 
+@@ -73,10 +65,21 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.bss_conf.ibss_joined) {
+ 		sdata->vif.bss_conf.ibss_joined = false;
+ 		sdata->vif.bss_conf.ibss_creator = false;
++		sdata->vif.bss_conf.enable_beacon = false;
+ 		netif_carrier_off(sdata->dev);
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
++		ieee80211_bss_info_change_notify(sdata,
++						 BSS_CHANGED_IBSS |
++						 BSS_CHANGED_BEACON_ENABLED);
+ 	}
+ 
++	skb = ifibss->skb;
++	RCU_INIT_POINTER(ifibss->presp, NULL);
++	synchronize_rcu();
++	skb->data = skb->head;
++	skb->len = 0;
++	skb_reset_tail_pointer(skb);
++	skb_reserve(skb, sdata->local->hw.extra_tx_headroom);
++
+ 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+ 
+ 	cfg80211_chandef_create(&chandef, chan, ifibss->channel_type);
 -- 
-Kalle Valo
+1.8.0
+
