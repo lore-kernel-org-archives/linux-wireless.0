@@ -1,157 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40545 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755674Ab3CYDHR (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45707 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755744Ab3CTQcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 23:07:17 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, page_he@realsil.com.cn
-Subject: [PATCH 00/25] Update rtlwifi drivers to 020713 vendor driver and add new rtl8188ee driver
-Date: Sun, 24 Mar 2013 22:06:32 -0500
-Message-Id: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130325_040739_804758_CADC5051)
+	Wed, 20 Mar 2013 12:32:39 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4] mac80211:  Don't restart sta-timer if not running.
+Date: Wed, 20 Mar 2013 09:32:34 -0700
+Message-Id: <1363797154-16312-1-git-send-email-greearb@candelatech.com> (sfid-20130320_173244_438568_C0316AC8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches are intended for the 3.10 stream. These patches are
-relatively large as I do not currently have access the Realtek revision
-control system, which forces me to generate the patches based on the
-differences between their release versions. It is difficult to break
-those changes into the sort of small patches preferred for the Linux
-kernel.
+From: Ben Greear <greearb@candelatech.com>
 
-The changes in the existing drivers can be characterized as adding P2P,
-and mesh capability. There are some changes in the handling of AP mode,
-and other bug fixes.
+I found another crash when deleting lots of virtual stations
+in a congested environment.  I think the problem is that
+the ieee80211_mlme_notify_scan_completed could call
+ieee80211_restart_sta_timer for a stopped interface
+that was about to be deleted.  Fix similar problem for
+mesh interfaces as well.
 
-Larry Finger (25):
-  rtlwifi: Modify the master header for for updates to vendor version
-    2013.02.07
-  rtlwifi: Modify files for 2013.02.07 vendor version - part 2
-  rtlwifi: Modify files for 2013.02.07 vendor version - part 3
-  rtlwifi: Modify files for 2013.02.07 vendor version - part 4
-  rtlwifi: Modify files for 2013.02.07 vendor version - part 5
-  rtlwifi: rtl8192se: Update driver to match vendor driver of 2013.02.07
-  rtlwifi: rtl8723ae: Update to vendor driver of 2013.02.07
-  rtlwifi: rtl8192c: rtl8192ce: Update to vendor driver of 2013.02.07
-  rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue
-  rtlwifi: rtl8188ee: Add new driver - part 1
-  rtlwifi: rtl8188ee: Add new driver files - part 2
-  rtlwifi: rtl8188ee: Add new driver files - part 3
-  rtlwifi: rtl8188ee: Add files for new driver - part 4
-  rtlwifi: rtl8188ee: Add files for new driver - part 5
-  rtlwifi: rtl8188ee: Add files for new driver - part 6
-  rtlwifi: rtl8188ee: Add files for new driver - part 7
-  rtlwifi: rtl8188ee: Add files for new driver - part 8
-  rtlwifi: rtl8188ee: Add files for new driver - part 9
-  rtlwifi: rtl8188ee: Add files for new driver - part 10
-  rtlwifi: rtl8188ee: Add files for new driver - part 11
-  rtlwifi: rtl8188ee: Add files for new driver - part 12
-  rtlwifi: rtl8188ee: Add files for new driver - part 13
-  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192de: rtl8723ae: Add
-    changes required by adding rtl81988ee
-  rtlwifi: rtl8188ee: Enable recognition of RTL8188EE
-  rtlwifi: rtl8188ee: Enable build of new driver
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v4:  Fix up mesh as well, add check in calling code instead of
+    in the methods that mucks iwth the timers.
 
- drivers/net/wireless/rtlwifi/Kconfig               |    9 +
- drivers/net/wireless/rtlwifi/Makefile              |    1 +
- drivers/net/wireless/rtlwifi/base.c                |  379 ++-
- drivers/net/wireless/rtlwifi/base.h                |   14 +-
- drivers/net/wireless/rtlwifi/core.c                |  213 +-
- drivers/net/wireless/rtlwifi/debug.c               |    5 +-
- drivers/net/wireless/rtlwifi/debug.h               |   13 +-
- drivers/net/wireless/rtlwifi/efuse.c               |   53 +-
- drivers/net/wireless/rtlwifi/efuse.h               |    1 -
- drivers/net/wireless/rtlwifi/pci.c                 |  150 +-
- drivers/net/wireless/rtlwifi/pci.h                 |    2 +
- drivers/net/wireless/rtlwifi/ps.c                  |  330 ++-
- drivers/net/wireless/rtlwifi/ps.h                  |    2 +
- drivers/net/wireless/rtlwifi/rtl8188ee/Makefile    |   16 +
- drivers/net/wireless/rtlwifi/rtl8188ee/def.h       |  324 +++
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        | 1794 ++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.h        |  326 +++
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |  830 +++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.h        |  301 +++
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        | 2529 ++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.h        |   68 +
- drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |  157 ++
- drivers/net/wireless/rtlwifi/rtl8188ee/led.h       |   38 +
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       | 2212 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.h       |  237 ++
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c    |  109 +
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h    |  327 +++
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c |  140 ++
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |   97 +
- drivers/net/wireless/rtlwifi/rtl8188ee/reg.h       | 2258 +++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |  467 ++++
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.h        |   46 +
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |  400 ++++
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.h        |   36 +
- drivers/net/wireless/rtlwifi/rtl8188ee/table.c     |  643 +++++
- drivers/net/wireless/rtlwifi/rtl8188ee/table.h     |   47 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |  817 +++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.h       |  795 ++++++
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  101 +-
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |   99 +-
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h  |    4 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  118 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.h        |    4 +
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |  324 +--
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   20 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   32 +-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   40 +-
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192se/def.h       |    7 -
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   49 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  150 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.h        |    3 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   61 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.h       |    1 +
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    3 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |  296 +--
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |   88 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |    6 +
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |   97 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |    7 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |   70 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |   22 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |    2 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |   10 +-
- drivers/net/wireless/rtlwifi/wifi.h                |  221 +-
- 70 files changed, 17048 insertions(+), 990 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/def.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/hw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/led.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/led.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/phy.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/reg.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/table.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/table.h
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
+:100644 100644 67fcfdf... 02e3d75... M	net/mac80211/mesh.c
+:100644 100644 aec786d... 1d237e9... M	net/mac80211/mlme.c
+ net/mac80211/mesh.c |    3 ++-
+ net/mac80211/mlme.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 67fcfdf..02e3d75 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -779,7 +779,8 @@ void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local)
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
++		if (ieee80211_sdata_running(sdata)
++		    && ieee80211_vif_is_mesh(&sdata->vif))
+ 			ieee80211_queue_work(&local->hw, &sdata->work);
+ 	rcu_read_unlock();
+ }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index aec786d..1d237e9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3054,7 +3054,8 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ 	/* Restart STA timers */
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-		ieee80211_restart_sta_timer(sdata);
++		if (ieee80211_sdata_running(sdata))
++			ieee80211_restart_sta_timer(sdata);
+ 	rcu_read_unlock();
+ }
+ 
 -- 
-1.8.1.4
+1.7.3.4
 
