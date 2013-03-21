@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57066 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933287Ab3CSQwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 12:52:30 -0400
-Message-ID: <1363711989.2225.8.camel@dcbw.foobar.com> (sfid-20130319_175239_144384_576D7FF2)
-Subject: Re: Brcmsmac driver woes, possible regression?
-From: Dan Williams <dcbw@redhat.com>
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	664767@bugs.debian.org, linux-wireless@vger.kernel.org
-Date: Tue, 19 Mar 2013 11:53:09 -0500
-In-Reply-To: <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
-References: <20130317144603.GA4850@stt008.linux.site>
-	 <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
-	 <20130317152428.GA4940@stt008.linux.site>
-	 <20130317175658.GA8181@elie.Belkin>
-	 <20130317182725.GA5811@stt008.linux.site>
-	 <20130317183344.GA8786@elie.Belkin>
-	 <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
-	 <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
-	 <20130318211428.GA9136@stt008.linux.site>
-	 <20130318212544.GB5062@elie.Belkin>
-	 <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
-	 <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51856 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752676Ab3CUWkB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Mar 2013 18:40:01 -0400
+Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
+	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id r2LMdwJb009185
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 18:39:58 -0400
+Received: (from pizza@localhost)
+	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id r2LMdw9v009184
+	for linux-wireless@vger.kernel.org; Thu, 21 Mar 2013 18:39:58 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Subject: RFCv5: ST-E CW1200 WLAN driver
+Date: Thu, 21 Mar 2013 18:39:34 -0400
+Message-Id: <1363905589-8350-1-git-send-email-pizza@shaftnet.org> (sfid-20130321_234008_150557_EEC26150)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-19 at 17:21 +0100, Camaleón wrote:
-> 2013/3/19 Camaleón <noelamac@gmail.com>:
-> > 2013/3/18 Jonathan Nieder <jrnieder@gmail.com>:
-> >> Camaleón wrote:
-> >>> El 2013-03-18 a las 20:38 +0100, Arend van Spriel escribió:
-> >>
-> >>>> Sorry to hear. Reading back the bug report I noticed you are having a
-> >>>> bcm4313 and we recently had a regression on it. Could you provide
-> >>>> debugfs information from <debugfs_mount>/brcmsmac/bcma0:0/hardware
-> >>>
-> >>> I see. My "/sys/kernel/debug/*" directory is empty
-> >>
-> >> mount -t debugfs debugfs /sys/kernel/debug
-> >
-> > Perfect, thanks.
-> >
-> > root@stt300:~# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-> > board vendor: 103c
-> > board type: 145c
-> > board revision: 2209
-> > board flags: 8002a00
-> > board flags2: 800
-> > firmware revision: 262032b
-> >
-> > Now let's see how reverting the patch makes any difference as soon as
-> > I can compile the module. I will keep you updated
-> 
-> Update: applied the patch to revert the "other" patch but I still
-> cannot get the driver to work (see attached syslog). N-M still asks
-> for password until desists :-(
+In-Reply-To: 
 
-Note that NM 0.9.8 won't ask for a password when just anything fails,
-but will ask for a password if the 4-way handshake fails, because if
-that fails, it's probably your password.  We're contemplating getting
-rid of that too, and just notifying the user that their password may be
-wrong and that they should go update it in the network configuration
-panel so we don't interrupt.  But if you're 100% sure your PSK is
-correct, then it is, most likely, a driver bug.
+It's been a little while, but here is the fifth patch series.  Changes 
+from the last posting:
 
-Dan
+ * Stripped out compatibility code for older kernels
+ * IBSS appears to work now!
+ * Major rework of join logic
+ * Improved 802.11g (ERP) coexistence
+ * Many, many checkpatch-suggested cleanups
+ * Respect RX Seqnum when setting TKIP & CCMP group keys
+ * Fix OOPS when hot-unplugging a non-idle device
+ * Eliminate callback structure
+ * Simplify beacon filter configuration
+ * Initial detection logic for CW1160/1260 chips
+ * Greatly simplify bss loss detection logic
+ * Moved Sagrad SDIO support into new module
+ * Disable beacon filter only after association
+
+There are still a pile of checkpatch warnings left (perhaps a quarter 
+from the last submission), but most of them relate to 80-character lines 
+and lingering camelcase in vendor definitions.  I can keep cleaning 
+these up, but my main priority has been feature/stability fixes.
+
+On that front, IBSS now functions properly, and joining and roaming is 
+now far more stable.
+
+The other major change I made was to split the hardwired support for the 
+Sagrad SG901-1091/1098 modules (in their SDIO-mounted EVK form) into 
+their own loadable module, which implements the 
+cw1200_get_platform_data() call that would otherwise need to be 
+implemented in the platform's board support files.
+
+I'm satisfied with this driver from a functional standpoint (it handles 
+everything I'm able throw at it) so I'd really like to kick this thing 
+upstairs into wireless-next, assuming it passes muster.
+
+As always, feedback is welcome.  
 
