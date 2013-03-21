@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753442Ab3CVJ4d (ORCPT
+Received: from smtpout1.wanadoo.co.uk ([80.12.242.29]:37703 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932396Ab3CUNe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 05:56:33 -0400
-Message-ID: <1363946185.8238.1.camel@jlt4.sipsolutions.net> (sfid-20130322_105638_072014_70824DB4)
-Subject: Re: [PATCH v3] mac80211:  Don't restart sta-timer if not associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Fri, 22 Mar 2013 10:56:25 +0100
-In-Reply-To: <20130320073028.GC1761@redhat.com> (sfid-20130320_082953_024251_C5540681)
-References: <1363740650-1626-1-git-send-email-greearb@candelatech.com>
-	 <20130320073028.GC1761@redhat.com> (sfid-20130320_082953_024251_C5540681)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Mar 2013 09:34:59 -0400
+Date: Thu, 21 Mar 2013 14:34:56 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <3255301.1161363872896882.JavaMail.www@wwinf3715> (sfid-20130321_143519_131720_9A8AFE27)
+In-Reply-To: <CAD2nsn1ep2HOZx55rGmbpgof-HWkMMeiEHSGBEqpe0gZzubbWg@mail.gmail.com>
+Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-20 at 08:30 +0100, Stanislaw Gruszka wrote:
-> On Tue, Mar 19, 2013 at 05:50:50PM -0700, greearb@candelatech.com wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> > 
-> > I found another crash when deleting lots of virtual stations
-> > in a congested environment.  I think the problem is that
-> > the ieee80211_mlme_notify_scan_completed could call
-> > ieee80211_restart_sta_timer for a stopped interface
-> > that was about to be deleted.
-> > 
-> > With the following patch I am unable to reproduce the
-> > crash.
-> > 
-> > Signed-off-by: Ben Greear <greearb@candelatech.com>
-> > ---
-> > v3:  Just check for sdata-is-running once at top of method
-> >   instead of worrying about if it is associated or not.
-> > 
-> > :100644 100644 aec786d... 74a8c5f... M	net/mac80211/mlme.c
-> >  net/mac80211/mlme.c |    3 +++
-> >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > index aec786d..74a8c5f 100644
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -2933,6 +2933,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
-> >  {
-> >  	u32 flags;
-> >  
-> > +	if (!ieee80211_sdata_running(sdata))
-> > +		return;
-> > +
-> 
-> I think this check should go to ieee80211_mlme_notify_scan_completed(),
-> and another one to ieee80211_mesh_notify_scan_completed(), IBSS already
-> has it.
+Hi Mohammed,
 
-I made these changes and applied it.
+What do you need to me to do on this?
+I see that function in the wmi.c file.
 
-johannes
+Do you want me to add some debug printk's in there somewhere?
+
+Regards
+
+Nick
+
+> Message Received: Mar 21 2013, 11:42 AM
+> From: "Mohammed Shafi"
+> To: nick@nhthomas.freeserve.co.uk
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+>
+> On Wed, Mar 20, 2013 at 10:33 PM, wrote:
+> >
+> > Here is another example, taken from Wireshark.
+> > It's an ARP response, effectively saying IP address 192.168.0.107 is at 00:03:7f:20:50:59
+> >
+> > This is a message coming out of the wifi adaptor, and the above numbers are the IP address, and MAC address of the wifi device.
+> >
+> > 7f 20 50 59 00 24 00 03 7f 20 50 59 08 06 00 01
+> > 08 00 06 04 00 02 00 03 7f 20 50 59 c0 a8 00 07
+> > 20 cf 30 94 83 7b c0 a8 00 65
+> >
+> > What we see here is the Destination MAC address is 7f:20:50:59:00:24 (first 6 bytes).
+> > But that's wrong. It should be 20:cf:30:94:83:7b .
+> >
+> > The other parts look right though:
+> > 00:03:7f:20:50:59 is the MAC of the wifi device.
+> > c0 a8 00 65 is 192.168.0.101 which is the IP address of the destination.
+> > c0 a8 00 07 is the IP address of the wifi adaptor itself.
+>
+> let us check in ath6kl_wmi_dix_2_dot3, that should give us some clue.
+>
+> >
+> > So, where in the code is the first 6 bytes generated ?
+> >
+> >
+> > Regards
+> >
+> > Nick
+>
+>
+>
+> --
+> thanks,
+> shafi
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
