@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:65314 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3CBGEM (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:39632 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755858Ab3CUN56 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Mar 2013 01:04:12 -0500
-Received: by mail-pb0-f45.google.com with SMTP id ro8so2158468pbb.4
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 22:04:12 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 4/6] nl80211: user_mpm overrides auto_open_plinks
-Date: Fri,  1 Mar 2013 22:02:50 -0800
-Message-Id: <1362204172-28307-4-git-send-email-thomas@cozybit.com> (sfid-20130302_070421_095057_08EA1DDC)
-In-Reply-To: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
-References: <1362204172-28307-1-git-send-email-thomas@cozybit.com>
+	Thu, 21 Mar 2013 09:57:58 -0400
+Received: by mail-bk0-f44.google.com with SMTP id j4so1405739bkw.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 06:57:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <514AF0EA.9020504@tieto.com>
+References: <CAPgLHd-BKoizHok9hDdAz9yBY1YqfpTov6s3CoefPTtbacQW3g@mail.gmail.com>
+	<514AF0EA.9020504@tieto.com>
+Date: Thu, 21 Mar 2013 21:57:56 +0800
+Message-ID: <CAPgLHd9tUibxW53tQXhCsS9LPsgn=UA2Zj8O4Fxet0u7eEK7cQ@mail.gmail.com> (sfid-20130321_145802_123232_F3F77ECF)
+Subject: Re: [linux-nfc] [PATCH] NFC: microread: use kfree_skb() instead of kfree()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: waldemar.rymarkiewicz@tieto.com
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user requested a userspace MPM, automatically
-disable auto_open_plinks to fully disable the kernel MPM.
+On 03/21/2013 07:37 PM, Rymarkiewicz Waldemar wrote:
+> Hi,
+>
+>> Use kfree_skb() instead of kfree() to free sk_buff.
+>>
+>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>> ---
+>>   drivers/nfc/microread/mei.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
+>> index eef38cf..da8264c 100644
+>> --- a/drivers/nfc/microread/mei.c
+>> +++ b/drivers/nfc/microread/mei.c
+>> @@ -130,7 +130,7 @@ static void microread_event_cb(struct mei_device *device, u32 events,
+>>
+>>           reply_size = mei_recv(device, skb->data, MEI_NFC_MAX_READ);
+>>           if (reply_size < MEI_NFC_HEADER_SIZE) {
+>> -            kfree(skb);
+>> +            kfree_skb(skb);
+>>               return;
+>>           }
+>
+> kfree_skb call is used internally by the kernel. A driver should use dev_kfree_skb instead, I guess.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/uapi/linux/nl80211.h |    6 ++++--
- net/wireless/nl80211.c       |    3 +++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+It seems that dev_kfree_skb() call when dev_alloc_skb() is used, and
+kfree_skb() use to free skb malloced by alloc_skb().
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 8134c6a..79da871 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2467,8 +2467,10 @@ enum nl80211_mesh_power_mode {
-  * @NL80211_MESHCONF_TTL: specifies the value of TTL field set at a source mesh
-  *	point.
-  *
-- * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically
-- *	open peer links when we detect compatible mesh peers.
-+ * @NL80211_MESHCONF_AUTO_OPEN_PLINKS: whether we should automatically open
-+ *	peer links when we detect compatible mesh peers. Disabled if
-+ *	@NL80211_MESH_SETUP_USERSPACE_MPM or @NL80211_MESH_SETUP_USERSPACE_AMPE are
-+ *	set.
-  *
-  * @NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES: the number of action frames
-  *	containing a PREQ that an MP can send to a particular destination (path
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e3f2489..bd73231 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7422,6 +7422,9 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	if (setup.user_mpm)
-+		cfg.auto_open_plinks = false;
-+
- 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
- 		err = nl80211_parse_chandef(rdev, info, &setup.chandef);
- 		if (err)
--- 
-1.7.10.4
+Regards,
+Yongjun Wei 
+
 
