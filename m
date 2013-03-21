@@ -1,92 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:34396 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086Ab3CZQ7v convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:47720 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932865Ab3CUOsT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 12:59:51 -0400
-Received: by mail-oa0-f42.google.com with SMTP id i18so7934477oag.29
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 09:59:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51518E14.3050500@broadcom.com>
-References: <51514F1B.1080207@dpets.co.uk>
-	<5151639F.4010700@broadcom.com>
-	<51516BC2.5010004@dpets.co.uk>
-	<515173A4.7030607@broadcom.com>
-	<515179C5.50406@dpets.co.uk>
-	<51517E28.5000303@broadcom.com>
-	<515182C6.5030305@dpets.co.uk>
-	<51518682.7060503@broadcom.com>
-	<515189C6.7070003@dpets.co.uk>
-	<51518E14.3050500@broadcom.com>
-Date: Tue, 26 Mar 2013 17:59:50 +0100
-Message-ID: <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com> (sfid-20130326_175955_552905_C09A84AD)
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: John Talbut <jt@dpets.co.uk>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Mar 2013 10:48:19 -0400
+Received: by mail-ea0-f181.google.com with SMTP id z10so897610ead.26
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 07:48:17 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 3/4] mac80211: P2P add NOA settings
+Date: Thu, 21 Mar 2013 15:47:56 +0100
+Message-Id: <1363877277-5108-3-git-send-email-janusz.dziedzic@gmail.com> (sfid-20130321_155100_652475_FAFAFCF6)
+In-Reply-To: <1363877277-5108-1-git-send-email-janusz.dziedzic@gmail.com>
+References: <1363877277-5108-1-git-send-email-janusz.dziedzic@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/26 Arend van Spriel <arend@broadcom.com>:
-> On 03/26/2013 12:43 PM, John Talbut wrote:
->> On 26/03/13 11:29, Arend van Spriel wrote:
->>> On 03/26/2013 12:13 PM, John Talbut wrote:
->>>>
->>>> On 26/03/13 10:53, Arend van Spriel wrote:
->>>>> On 03/26/2013 11:34 AM, John Talbut wrote:
->>>>>> Kernel log attached.
->>>>>>
->>>>>
->>>>> Now this is weird. I do not see any BCMA log messages. Can you give
->>>>> output of following command:
->>>>>
->>>>> $ lspci -n -s 1:0.0
->>>>
->>>> 01:00.0 0280: 14e4:4357 (rev 01)
->>>
->>> Ok, no problem there.
->>>
->>> digging further in sysfs. Can you execute the following commands:
->>>
->>> if it exists:
->>> $ ls /sys/bus/bcma
->>> $ ls /sys/bus/bcma/devices
->>> $ ls /sys/bus/bcma/drivers
->>>
->>> if it exists also following:
->>> $ ls -l /sys/bus/bcma/drivers/brcmsmac
->>
->> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
->> devices  drivers  drivers_autoprobe  drivers_probe  uevent
->> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
->
-> The fact that there are no devices detected under bcma is suspicious.
-> Adding bcma developer to the list. Maybe he knows about issues when
-> having bcma compiled in kernel image.
+Add P2P NOA settings for STA mode.
 
-Thanks Arend. Unfortunately I can't find archive of this thread, so I
-can see only quotations above.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ include/net/mac80211.h     |    3 +--
+ net/mac80211/cfg.c         |   21 ++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |   45 ++++++++++++++++++++++++--------------------
+ net/mac80211/trace.h       |    6 ++----
+ 5 files changed, 45 insertions(+), 32 deletions(-)
 
-If there is /sys/bus/bcma/ directory, it means bcma had to be loaded
-(or just is built into the kernel). However if there are no "bcma"
-messages in the dmesg, it's probably because there isn't any device
-bcma (currently) handles.
-
-If you can it yourself: remove all 14e4:* devices and do "modprobe
-bcma". You will get /sys/bus/bcma/ without "bcma" messages in dmesg.
-
-14e4:4357 is one of the devices handled by bcma, so there are two options:
-1) It's some old kernel where we didn't have 14e4:4357 in bcma
-2) There is another module that grabbed 14e4:4357 PCI device
-
-The first option can be verified with "modinfo bcma | grep alias" in
-case of bcma as a module. Not sure how to check that for bcma built
-in.
-
-The second option is even easier to verify, just use:
-lspci -d 14e4: -v
-and check for "Kernel driver in use: "
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cdd7cea..582e743 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -363,8 +363,7 @@ struct ieee80211_bss_conf {
+ 	size_t ssid_len;
+ 	bool hidden_ssid;
+ 	int txpower;
+-	u8 p2p_ctwindow;
+-	bool p2p_oppps;
++	struct ieee80211_p2p_noa_attr p2p_noa_attr;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1d1ddab..e9cf6c2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -960,8 +960,11 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.hidden_ssid =
+ 		(params->hidden_ssid != NL80211_HIDDEN_SSID_NOT_IN_USE);
+ 
+-	sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
+-	sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
++	sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow =
++		params->p2p_ctwindow & IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
++	if (params->p2p_opp_ps)
++		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
++					IEEE80211_P2P_OPPPS_ENABLE_BIT;
+ 
+ 	err = ieee80211_assign_beacon(sdata, &params->beacon);
+ 	if (err < 0)
+@@ -1956,12 +1959,20 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (params->p2p_ctwindow >= 0) {
+-		sdata->vif.bss_conf.p2p_ctwindow = params->p2p_ctwindow;
++		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &=
++					~IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
++		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
++			params->p2p_ctwindow & IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
+ 		changed |= BSS_CHANGED_P2P_PS;
+ 	}
+ 
+-	if (params->p2p_opp_ps >= 0) {
+-		sdata->vif.bss_conf.p2p_oppps = params->p2p_opp_ps;
++	if (params->p2p_opp_ps > 0) {
++		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
++					IEEE80211_P2P_OPPPS_ENABLE_BIT;
++		changed |= BSS_CHANGED_P2P_PS;
++	} else if (params->p2p_opp_ps == 0) {
++		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &=
++					~IEEE80211_P2P_OPPPS_ENABLE_BIT;
+ 		changed |= BSS_CHANGED_P2P_PS;
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f4433f0..11451ee 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -442,7 +442,7 @@ struct ieee80211_if_managed {
+ 
+ 	u8 use_4addr;
+ 
+-	u8 p2p_noa_index;
++	s16 p2p_noa_index;
+ 
+ 	/* Signal strength from the last Beacon frame in the current BSS. */
+ 	int last_beacon_signal;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 14612cd..54d0338 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1655,20 +1655,17 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 		rcu_read_lock();
+ 		ies = rcu_dereference(cbss->ies);
+ 		if (ies) {
+-			struct ieee80211_p2p_noa_attr noa;
+ 			int ret;
+ 
+ 			ret = cfg80211_get_p2p_attr(
+ 					ies->data, ies->len,
+ 					IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
+-					(u8 *) &noa, sizeof(noa));
++					(u8 *) &bss_conf->p2p_noa_attr,
++					sizeof(bss_conf->p2p_noa_attr));
+ 			if (ret >= 2) {
+-				bss_conf->p2p_oppps = noa.oppps_ctwindow &
+-						IEEE80211_P2P_OPPPS_ENABLE_BIT;
+-				bss_conf->p2p_ctwindow = noa.oppps_ctwindow &
+-						IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
++				sdata->u.mgd.p2p_noa_index =
++					bss_conf->p2p_noa_attr.index;
+ 				bss_info_changed |= BSS_CHANGED_P2P_PS;
+-				sdata->u.mgd.p2p_noa_index = noa.index;
+ 			}
+ 		}
+ 		rcu_read_unlock();
+@@ -1793,8 +1790,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	changed |= BSS_CHANGED_ASSOC;
+ 	sdata->vif.bss_conf.assoc = false;
+ 
+-	sdata->vif.bss_conf.p2p_ctwindow = 0;
+-	sdata->vif.bss_conf.p2p_oppps = false;
++	ifmgd->p2p_noa_index = -1;
++	memset(&sdata->vif.bss_conf.p2p_noa_attr, 0,
++	       sizeof(sdata->vif.bss_conf.p2p_noa_attr));
+ 
+ 	/* on the next assoc, re-program HT/VHT parameters */
+ 	memset(&ifmgd->ht_capa, 0, sizeof(ifmgd->ht_capa));
+@@ -2955,24 +2953,30 @@ ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (sdata->vif.p2p) {
+-		struct ieee80211_p2p_noa_attr noa;
++		struct ieee80211_p2p_noa_attr noa = {};
+ 		int ret;
+ 
+ 		ret = cfg80211_get_p2p_attr(mgmt->u.beacon.variable,
+ 					    len - baselen,
+ 					    IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
+ 					    (u8 *) &noa, sizeof(noa));
+-		if (ret >= 2 && sdata->u.mgd.p2p_noa_index != noa.index) {
+-			bss_conf->p2p_oppps = noa.oppps_ctwindow &
+-						IEEE80211_P2P_OPPPS_ENABLE_BIT;
+-			bss_conf->p2p_ctwindow = noa.oppps_ctwindow &
+-						IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
++		if (ret >= 2) {
++			if (sdata->u.mgd.p2p_noa_index != noa.index) {
++				/* valid noa_attr and index changed */
++				sdata->u.mgd.p2p_noa_index = noa.index;
++				memcpy(&bss_conf->p2p_noa_attr, &noa, sizeof(noa));
++				changed |= BSS_CHANGED_P2P_PS;
++				/*
++				 * make sure we update all information, the CRC
++				 * mechanism doesn't look at P2P attributes.
++				 */
++				ifmgd->beacon_crc_valid = false;
++			}
++		} else if (sdata->u.mgd.p2p_noa_index != -1) {
++			/* noa_attr not found and we had valid noa_attr before */
++			sdata->u.mgd.p2p_noa_index = -1;
++			memset(&bss_conf->p2p_noa_attr, 0, sizeof(bss_conf->p2p_noa_attr));
+ 			changed |= BSS_CHANGED_P2P_PS;
+-			sdata->u.mgd.p2p_noa_index = noa.index;
+-			/*
+-			 * make sure we update all information, the CRC
+-			 * mechanism doesn't look at P2P attributes.
+-			 */
+ 			ifmgd->beacon_crc_valid = false;
+ 		}
+ 	}
+@@ -3515,6 +3519,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	ifmgd->powersave = sdata->wdev.ps;
+ 	ifmgd->uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+ 	ifmgd->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
++	ifmgd->p2p_noa_index = -1;
+ 
+ 	mutex_init(&ifmgd->mtx);
+ 
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index e7db2b8..b9322b5 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -359,8 +359,7 @@ TRACE_EVENT(drv_bss_info_changed,
+ 		__dynamic_array(u8, ssid, info->ssid_len);
+ 		__field(bool, hidden_ssid);
+ 		__field(int, txpower)
+-		__field(u8, p2p_ctwindow)
+-		__field(bool, p2p_oppps)
++		__field(u8, p2p_oppps_ctwindow)
+ 	),
+ 
+ 	TP_fast_assign(
+@@ -400,8 +399,7 @@ TRACE_EVENT(drv_bss_info_changed,
+ 		memcpy(__get_dynamic_array(ssid), info->ssid, info->ssid_len);
+ 		__entry->hidden_ssid = info->hidden_ssid;
+ 		__entry->txpower = info->txpower;
+-		__entry->p2p_ctwindow = info->p2p_ctwindow;
+-		__entry->p2p_oppps = info->p2p_oppps;
++		__entry->p2p_oppps_ctwindow = info->p2p_noa_attr.oppps_ctwindow;
+ 	),
+ 
+ 	TP_printk(
 -- 
-Rafał
+1.7.9.5
+
