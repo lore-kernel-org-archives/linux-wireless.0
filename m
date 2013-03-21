@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48277 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360Ab3C0Pao (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:34879 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932865Ab3CUOsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 11:30:44 -0400
-Date: Wed, 27 Mar 2013 11:28:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-fixes 2013-03-26
-Message-ID: <20130327152850.GC1868@tuxdriver.com> (sfid-20130327_163047_769095_7F478E3B)
-References: <1364290290.8319.6.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1364290290.8319.6.camel@jlt4.sipsolutions.net>
+	Thu, 21 Mar 2013 10:48:22 -0400
+Received: by mail-ea0-f175.google.com with SMTP id o10so911944eaj.34
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2013 07:48:21 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 4/4] iwlwifi: mvm: use ieee80211_noa_attr
+Date: Thu, 21 Mar 2013 15:47:57 +0100
+Message-Id: <1363877277-5108-4-git-send-email-janusz.dziedzic@gmail.com> (sfid-20130321_155111_182714_13BC9644)
+In-Reply-To: <1363877277-5108-1-git-send-email-janusz.dziedzic@gmail.com>
+References: <1363877277-5108-1-git-send-email-janusz.dziedzic@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 10:31:30AM +0100, Johannes Berg wrote:
-> Hi John,
-> 
-> It looks like I forgot to send this pull-request earlier ...
-> 
-> I have three little fixes to the driver from Emmanuel. One addresses a
-> small bug Ben Hutchings found during the stable review process and two
-> address some warnings in the driver when RF-Kill is asserted.
-> 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> 
-> The following changes since commit 2470b36e84a2e680d7a7e3809cbceae5bfae3606:
-> 
->   iwlwifi: mvm: don't warn on normal BAR sending (2013-03-04 13:39:02 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to 2d5d50ee596361566f7f84300117cba7d7672bc5:
-> 
->   iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
+Use ieee80211_noa_attr structure while
+handling P2P PS.
 
-Pulling now...
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 2779235..1f884b6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -669,6 +669,7 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_client(struct iwl_mvm *mvm,
+ 					   u32 action)
+ {
+ 	struct iwl_mac_ctx_cmd cmd = {};
++	struct ieee80211_p2p_noa_attr *noa = &vif->bss_conf.p2p_noa_attr;
+ 
+ 	WARN_ON(vif->type != NL80211_IFTYPE_STATION || !vif->p2p);
+ 
+@@ -678,7 +679,8 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_client(struct iwl_mvm *mvm,
+ 	/* Fill the data specific for station mode */
+ 	iwl_mvm_mac_ctxt_cmd_fill_sta(mvm, vif, &cmd.p2p_sta.sta);
+ 
+-	cmd.p2p_sta.ctwin = cpu_to_le32(vif->bss_conf.p2p_ctwindow);
++	cmd.p2p_sta.ctwin = cpu_to_le32(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
+ 
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+ }
+@@ -914,6 +916,7 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 				   u32 action)
+ {
+ 	struct iwl_mac_ctx_cmd cmd = {};
++	struct ieee80211_p2p_noa_attr *noa = &vif->bss_conf.p2p_noa_attr;
+ 
+ 	WARN_ON(vif->type != NL80211_IFTYPE_AP || !vif->p2p);
+ 
+@@ -924,8 +927,11 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.go.ap,
+ 				     action == FW_CTXT_ACTION_ADD);
+ 
+-	cmd.go.ctwin = cpu_to_le32(vif->bss_conf.p2p_ctwindow);
+-	cmd.go.opp_ps_enabled = cpu_to_le32(!!vif->bss_conf.p2p_oppps);
++	cmd.go.ctwin = cpu_to_le32(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
++	cmd.go.opp_ps_enabled =
++			cpu_to_le32(!!(noa->oppps_ctwindow &
++					IEEE80211_P2P_OPPPS_ENABLE_BIT));
+ 
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
