@@ -1,47 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f178.google.com ([209.85.210.178]:59558 "EHLO
-	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934172Ab3CSWJe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49631 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab3CVMTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:09:34 -0400
-Received: by mail-ia0-f178.google.com with SMTP id y10so845698iak.37
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 15:09:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130312095826.GB1383@redhat.com>
-References: <513E34FD.8090606@winsoft.pl> <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com>
- <20130312095826.GB1383@redhat.com>
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-Date: Tue, 19 Mar 2013 22:09:13 +0000
-Message-ID: <CAJZjf_yLFUTxMeEMUHuX7CsSeRw=RH5v=YjBrWt=a-=sMmFdbw@mail.gmail.com> (sfid-20130319_230942_545885_CD0D5BF7)
-Subject: Re: iwlegacy iwl3945 unable to connect to any hotspots on 3.9.0-rc1/rc2
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: ML linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 22 Mar 2013 08:19:13 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH] mac80211: allow drivers to set default uAPSD parameters
+Date: Fri, 22 Mar 2013 13:19:07 +0100
+Message-Id: <1363954747-29314-1-git-send-email-johannes@sipsolutions.net> (sfid-20130322_131916_578516_B55AA7C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 12, 2013 at 9:58 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Mar 12, 2013 at 08:30:47AM +0000, Pedro Francisco wrote:
->> On Mon, Mar 11, 2013 at 7:48 PM, Krzysztof Kolasa <kkolasa@winsoft.pl> wrote:
->> > Hotspots are visible and are working OK but wifi card can't connect.
->> >
->>
->> Hit this bug also, on the GNOME-3.7.90.iso (based on FC19 testing
->> ISO), "Can't stop Rx DMA." and friends.
->>
->> -snip
->
-> I'm just tested 3.9-rc2 and have the same problems (including
-> dma map warning). So I don't need debug logs for that.
-> However still I would like to see 3.8 logs from Zdenek.
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-Just checking, this problem reported above is independent from the DMA
-map warning, right?
+mac80211 currently sets uAPSD parameters to have VO AC trigger-
+and delivery-enabled, with maximum service period length.
 
-( I tested with 3.9.0-0.rc3.git0.3.fc19.i686.PAE :
-Mar 19 18:17:05 s2 kernel: iwl3945 0000:02:00.0: Queue 4 stuck for 2495 ms.
-(...)
-Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Microcode SW error
-detected. Restarting 0x82000008.
-(...)
-Mar 19 18:17:13 s2 kernel: iwl3945 0000:02:00.0: Status: 0x000202E4, count: 1 ).
+Allow drivers to change these default settings since different
+uAPSD client implementations may handle errors differently and
+be able to recover from some errors.
+
+Note: some APs may not function correctly if one or all ACs are
+trigger- and delivery-enabled, see
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/93577.
+We retested with this AP and later firmware doesn't have this
+bug any more.
+
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 13 +++++++++++++
+ net/mac80211/main.c    |  2 ++
+ net/mac80211/mlme.c    |  4 ++--
+ 3 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7292607..1b7a9e9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1535,6 +1535,17 @@ enum ieee80211_hw_flags {
+  * @netdev_features: netdev features to be set in each netdev created
+  *	from this HW. Note only HW checksum features are currently
+  *	compatible with mac80211. Other feature bits will be rejected.
++ *
++ * @uapsd_queues: This bitmap is included in (re)association frame to indicate
++ *	for each access category if it is uAPSD trigger-enabled and delivery-
++ *	enabled. Use IEEE80211_WMM_IE_STA_QOSINFO_AC_* to set this bitmap.
++ *	Each bit corresponds to different AC. Value '1' in specific bit means
++ *	that corresponding AC is both trigger- and delivery-enabled. '0' means
++ *	neither enabled.
++ *
++ * @uapsd_max_sp_len: maximum number of total buffered frames the WMM AP may
++ *	deliver to a WMM STA during any Service Period triggered by the WMM STA.
++ *	Use IEEE80211_WMM_IE_STA_QOSINFO_SP_* for correct values.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1560,6 +1571,8 @@ struct ieee80211_hw {
+ 	u8 radiotap_mcs_details;
+ 	u16 radiotap_vht_details;
+ 	netdev_features_t netdev_features;
++	u8 uapsd_queues;
++	u8 uapsd_max_sp_len;
+ };
+ 
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index c6f81ec..b0d2868 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -587,6 +587,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
+ 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
+ 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
++	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
++	local->hw.uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
+ 	local->user_power_level = IEEE80211_UNSET_POWER_LEVEL;
+ 	wiphy->ht_capa_mod_mask = &mac80211_ht_capa_mod_mask;
+ 	wiphy->vht_capa_mod_mask = &mac80211_vht_capa_mod_mask;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ec04543..8a4ed7a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3551,8 +3551,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifmgd->flags = 0;
+ 	ifmgd->powersave = sdata->wdev.ps;
+-	ifmgd->uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+-	ifmgd->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
++	ifmgd->uapsd_queues = sdata->local->hw.uapsd_queues;
++	ifmgd->uapsd_max_sp_len = sdata->local->hw.uapsd_max_sp_len;
+ 	ifmgd->p2p_noa_index = -1;
+ 
+ 	mutex_init(&ifmgd->mtx);
+-- 
+1.8.0
+
