@@ -1,131 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:38184 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756397Ab3CIKBj (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:40296 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423377Ab3CVX1c convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 05:01:39 -0500
-Subject: [PATCH v2 1/3] ath6kl: cleanup ath6kl_reset_device()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Sat, 09 Mar 2013 12:01:35 +0200
-Message-ID: <20130309100135.432.44516.stgit@localhost6.localdomain6> (sfid-20130309_110142_268163_AE96BFED)
-In-Reply-To: <20130309100031.432.94974.stgit@localhost6.localdomain6>
-References: <20130309100031.432.94974.stgit@localhost6.localdomain6>
+	Fri, 22 Mar 2013 19:27:32 -0400
+Received: by mail-ob0-f173.google.com with SMTP id dn14so4548691obc.18
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2013 16:27:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
+References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
+Date: Sat, 23 Mar 2013 00:27:30 +0100
+Message-ID: <CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com> (sfid-20130323_002745_217498_DB6E8562)
+Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, isedev@gmail.com,
+	chris@cvine.freeserve.co.uk, Michael Buesch <m@bues.ch>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move it to init.c, make it static, remove all useless checks and force it to
-always do cold reset.
+2013/3/20 Larry Finger <Larry.Finger@lwfinger.net>:
+> From: Iestyn C. Elfick <isedev@gmail.com>
+>
+> Intermittently, b43 will report "Out of order TX status report on DMA ring".
+> When this happens, the driver must be reset before communication can resume.
+> The cause of the problem is believed to be an error in the closed-source
+> firmware; however, all versions of the firmware are affected.
+>
+> This change uses the observation that the expected status is always 2 less
+> than the observed value, and supplies a fake status report to skip one
+> header/data pair.
+>
+> Not all devices suffer from this problem, but it can occur several times
+> per second under heavy load. As each occurence kills the unmodified driver,
+> this patch makes if possible for the affected devices to function. The patch
+> logs only the first instance of the reset operation to prevent spamming
+> the logs.
+>
+> Tested-by: Chris Vine <chris@cvine.freeserve.co.uk>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h   |    2 --
- drivers/net/wireless/ath/ath6kl/init.c   |   12 ++++++++---
- drivers/net/wireless/ath/ath6kl/main.c   |   33 ------------------------------
- drivers/net/wireless/ath/ath6kl/target.h |    2 +-
- 4 files changed, 10 insertions(+), 39 deletions(-)
+I promised to perform some tests, unfortunately I didn't find enough
+time last weekend.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 1c9ed40..26b0f92 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -935,8 +935,6 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- 			     u8 win_sz);
- void ath6kl_wakeup_event(void *dev);
- 
--void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
--			 bool wait_fot_compltn, bool cold_reset);
- void ath6kl_init_control_info(struct ath6kl_vif *vif);
- struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
- void ath6kl_cfg80211_vif_stop(struct ath6kl_vif *vif, bool wmi_ready);
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 3e45adc..ae1e477 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1619,6 +1619,14 @@ static void ath6kl_init_get_fwcaps(struct ath6kl *ar, char *buf, size_t buf_len)
- 	buf[len] = '\0';
- }
- 
-+static int ath6kl_init_hw_reset(struct ath6kl *ar)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_BOOT, "cold resetting the device");
-+
-+	return ath6kl_diag_write32(ar, RESET_CONTROL_ADDRESS,
-+				   cpu_to_le32(RESET_CONTROL_COLD_RST));
-+}
-+
- static int __ath6kl_init_hw_start(struct ath6kl *ar)
- {
- 	long timeleft;
-@@ -1836,9 +1844,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
- 	 * Try to reset the device if we can. The driver may have been
- 	 * configure NOT to reset the target during a debug session.
- 	 */
--	ath6kl_dbg(ATH6KL_DBG_TRC,
--		   "attempting to reset target on instance destroy\n");
--	ath6kl_reset_device(ar, ar->target_type, true, true);
-+	ath6kl_init_hw_reset(ar);
- 
- 	up(&ar->sem);
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index bd50b6b..bad62b3 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -345,39 +345,6 @@ out:
- 	return ret;
- }
- 
--/* FIXME: move to a better place, target.h? */
--#define AR6003_RESET_CONTROL_ADDRESS 0x00004000
--#define AR6004_RESET_CONTROL_ADDRESS 0x00004000
--
--void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
--			 bool wait_fot_compltn, bool cold_reset)
--{
--	int status = 0;
--	u32 address;
--	__le32 data;
--
--	if (target_type != TARGET_TYPE_AR6003 &&
--	    target_type != TARGET_TYPE_AR6004)
--		return;
--
--	data = cold_reset ? cpu_to_le32(RESET_CONTROL_COLD_RST) :
--			    cpu_to_le32(RESET_CONTROL_MBOX_RST);
--
--	switch (target_type) {
--	case TARGET_TYPE_AR6003:
--		address = AR6003_RESET_CONTROL_ADDRESS;
--		break;
--	case TARGET_TYPE_AR6004:
--		address = AR6004_RESET_CONTROL_ADDRESS;
--		break;
--	}
--
--	status = ath6kl_diag_write32(ar, address, data);
--
--	if (status)
--		ath6kl_err("failed to reset target\n");
--}
--
- static void ath6kl_install_static_wep_keys(struct ath6kl_vif *vif)
- {
- 	u8 index;
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index a98c12b..a580a62 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -25,7 +25,7 @@
- #define AR6004_BOARD_DATA_SZ     6144
- #define AR6004_BOARD_EXT_DATA_SZ 0
- 
--#define RESET_CONTROL_ADDRESS		0x00000000
-+#define RESET_CONTROL_ADDRESS		0x00004000
- #define RESET_CONTROL_COLD_RST		0x00000100
- #define RESET_CONTROL_MBOX_RST		0x00000004
- 
+Today I've plugged my 14e4:4315 and (unfortunately?) it's working
+pretty well. I hoped to reproduce some problems but failed to do so. I
+was transmitting for an hour with average speed 11MiB/s and didn't
+notice any DMA issues.
 
+I was using iperf with interval of 60 seconds and only 3 results
+showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No disconnections
+however and no DMA errors. I just got "Group rekeying completed..." in
+wpa_supplicant.
+
+So as I can't reproduce this, I can't find any other fix for this
+issue, and there's no reason to stop this workaround. I'll just apply
+it and test over weekend to check for any regressions, but they are
+highly unlikely.
+
+-- 
+Rafał
