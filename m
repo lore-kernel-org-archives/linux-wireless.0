@@ -1,65 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51884 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932334Ab3CUWko (ORCPT
+Received: from smtpout3.wanadoo.co.uk ([80.12.242.59]:58174 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932978Ab3CVHKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 18:40:44 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 15/15] cw1200: v5: Add MAINTAINERS entry and add to drivers/net/wireless build
-Date: Thu, 21 Mar 2013 18:39:49 -0400
-Message-Id: <1363905589-8350-16-git-send-email-pizza@shaftnet.org> (sfid-20130321_234303_682124_82DC2FC4)
-In-Reply-To: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
-References: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
+	Fri, 22 Mar 2013 03:10:17 -0400
+Date: Fri, 22 Mar 2013 08:10:14 +0100 (CET)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <5878710.1201363936214787.JavaMail.www@wwinf3724> (sfid-20130322_081022_515279_5430F21A)
+In-Reply-To: <CAD2nsn3GicfGbmwNOpdFP8kKgO0X6HU1bcRBHiP89p2UaLsxxg@mail.gmail.com>
+Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- MAINTAINERS                   | 5 +++++
- drivers/net/wireless/Kconfig  | 1 +
- drivers/net/wireless/Makefile | 3 +++
- 3 files changed, 9 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ce424d7..bfe91c7 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2260,6 +2260,11 @@ M:	Jaya Kumar <jayakumar.alsa@gmail.com>
- S:	Maintained
- F:	sound/pci/cs5535audio/
- 
-+CW1200 WLAN driver
-+M:     Solomon Peachy <pizza@shaftnet.org>
-+S:     Maintained
-+F:     drivers/net/wireless/cw1200/
-+
- CX18 VIDEO4LINUX DRIVER
- M:	Andy Walls <awalls@md.metrocast.net>
- L:	ivtv-devel@ivtvdriver.org (moderated for non-subscribers)
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f8f0156..200020e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -280,5 +280,6 @@ source "drivers/net/wireless/rtlwifi/Kconfig"
- source "drivers/net/wireless/ti/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
-+source "drivers/net/wireless/cw1200/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 67156ef..5c7b6f6 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -57,3 +57,6 @@ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
- 
- obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
-+
-+obj-$(CONFIG_CW1200)    += cw1200/
-+
--- 
-1.8.1.4
+Hi Mohammed.
+
+The platform is H251, made by ST MicroElectronics.
+
+The H251 is an intergrated chip, which has an ST7105 inside.
+The ST7105 has a ST40-300, which has an SH4 CPU at its core.
+
+The SH4 can be run in big or little endian mode.
+I will try to find out what mode we are using.
+
+
+Regards
+
+Nick
+
+
+
+
+> Message Received: Mar 22 2013, 05:28 AM
+> From: "Mohammed Shafi"
+> To: nick@nhthomas.freeserve.co.uk
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+>
+> On Thu, Mar 21, 2013 at 7:55 PM, wrote:
+> > Hi Mohammed,
+> >
+> > OK, so I added the same printks further down in that function.
+> > There is a memcpy in there, and I added the same debug just after the memcpy.
+> >
+> > And, the eth_hdr->h_dest has been changed to a wrong MAC address - by something.
+> >
+> > And, it must be something wrong in skb_push .
+>
+> good Nick, I' ll try to analyze this.
+> what platform are you using ? (is it a big/little endian)
+>
+> >
+> >
+> > Regards
+> >
+> > Nick
+> >
+> >
+> >
+> >
+> >> Message Received: Mar 21 2013, 02:09 PM
+> >> From: nick@nhthomas.freeserve.co.uk
+> >> To: "Mohammed Shafi"
+> >> Cc: linux-wireless@vger.kernel.org
+> >> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >>
+> >>
+> >> Hi Mohammed,
+> >>
+> >> I've added some debug at the top of ath6kl_wmi_dix_2_dot3 function.
+> >>
+> >> Just after:
+> >>
+> >> eth_hdr = (struct ethhdr *) skb->data;
+> >> type = eth_hdr->h_proto;
+> >>
+> >> I added some debug to print all the values of eth_hdr->h_dest and eth_hdr->h_source .
+> >> And, all look correct at that point.
+> >>
+> >> Regards
+> >>
+> >> Nick
+> >>
+> >>
+> >> > Message Received: Mar 21 2013, 01:35 PM
+> >> > From: nick@nhthomas.freeserve.co.uk
+> >> > To: "Mohammed Shafi"
+> >> > Cc: linux-wireless@vger.kernel.org
+> >> > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >> >
+> >> > Hi Mohammed,
+> >> >
+> >> > What do you need to me to do on this?
+> >> > I see that function in the wmi.c file.
+> >> >
+> >> > Do you want me to add some debug printk's in there somewhere?
+> >> >
+> >> > Regards
+> >> >
+> >> > Nick
+> >> >
+> >> > > Message Received: Mar 21 2013, 11:42 AM
+> >> > > From: "Mohammed Shafi"
+> >> > > To: nick@nhthomas.freeserve.co.uk
+> >> > > Cc: linux-wireless@vger.kernel.org
+> >> > > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >> > >
+> >> > > On Wed, Mar 20, 2013 at 10:33 PM, wrote:
+> >> > > >
+> >> > > > Here is another example, taken from Wireshark.
+> >> > > > It's an ARP response, effectively saying IP address 192.168.0.107 is at 00:03:7f:20:50:59
+> >> > > >
+> >> > > > This is a message coming out of the wifi adaptor, and the above numbers are the IP address, and MAC address of the wifi device.
+> >> > > >
+> >> > > > 7f 20 50 59 00 24 00 03 7f 20 50 59 08 06 00 01
+> >> > > > 08 00 06 04 00 02 00 03 7f 20 50 59 c0 a8 00 07
+> >> > > > 20 cf 30 94 83 7b c0 a8 00 65
+> >> > > >
+> >> > > > What we see here is the Destination MAC address is 7f:20:50:59:00:24 (first 6 bytes).
+> >> > > > But that's wrong. It should be 20:cf:30:94:83:7b .
+> >> > > >
+> >> > > > The other parts look right though:
+> >> > > > 00:03:7f:20:50:59 is the MAC of the wifi device.
+> >> > > > c0 a8 00 65 is 192.168.0.101 which is the IP address of the destination.
+> >> > > > c0 a8 00 07 is the IP address of the wifi adaptor itself.
+> >> > >
+> >> > > let us check in ath6kl_wmi_dix_2_dot3, that should give us some clue.
+> >> > >
+> >> > > >
+> >> > > > So, where in the code is the first 6 bytes generated ?
+> >> > > >
+> >> > > >
+> >> > > > Regards
+> >> > > >
+> >> > > > Nick
+> >> > >
+> >> > >
+> >> > >
+> >> > > --
+> >> > > thanks,
+> >> > > shafi
+> >> > > --
+> >> > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> > > the body of a message to majordomo@vger.kernel.org
+> >> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >> > >
+> >> >
+> >> > --
+> >> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> > the body of a message to majordomo@vger.kernel.org
+> >> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >> >
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >>
+> >
+>
+>
+>
+> --
+> thanks,
+> shafi
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
