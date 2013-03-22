@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55026 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756129Ab3CGPro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:47:44 -0500
-Message-ID: <5138B69C.4000102@openwrt.org> (sfid-20130307_164747_637911_6E96FF86)
-Date: Thu, 07 Mar 2013 16:47:40 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:62128 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932786Ab3CVLhC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Mar 2013 07:37:02 -0400
+Received: by mail-ie0-f179.google.com with SMTP id k11so4658634iea.10
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2013 04:37:01 -0700 (PDT)
+Date: Fri, 22 Mar 2013 07:37:17 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: return new mpath from mesh_path_add()
+Message-ID: <20130322113716.GC2808@localhost> (sfid-20130322_123707_131039_8D62924D)
+References: <20130321022033.GA17491@localhost>
+ <1363949056.8238.12.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
-	johannes@sipsolutions.net,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: Question regarding minstrel(_ht) and retry limits
-References: <20130307153100.GA30608@pandem0nium>
-In-Reply-To: <20130307153100.GA30608@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363949056.8238.12.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-07 4:31 PM, Simon Wunderlich wrote:
-> Hello list,
+On Fri, Mar 22, 2013 at 11:44:16AM +0100, Johannes Berg wrote:
+> On Wed, 2013-03-20 at 22:20 -0400, Bob Copeland wrote:
+> > Most times that mesh_path_add() is called, it is followed by
+> > a lookup to get the just-added mpath.  We can instead just
+> > return the new mpath in the case that we allocated one (or the
+> > existing one if already there), so do that.  Also, reorder the
+> > code in mesh_path_add a bit so that we don't need to allocate
+> > in the pre-existing case.
 > 
-> as you might be aware, it is possible to set short and long retry limits
-> to specify how often a frame should be retransmitted before getting dropped.
-> 
-> However, it appears that minstrel completely ignores any retry limit, and it is
-> also not applied later in the code path. I've hacked minstrel_ht a little bit
-> to apply the retry limits in minstrel_get_rate() before returning the rates
-> (i.e. just cutting retries at the end from the struct ieee80211_tx_rate array).
-> 
-> This worked for me, but is probably not clean either and might disturb minstrel
-> operation. Also minstrel uses much more retries than default retry limits
-> (short: 7, long: 4), so this patch might introduce behaviour changes.
-> 
-> What is your opinion on this? Can we get it properly supported? Does it hurt
-> to just use the first $retry_limit retries, and cut the rest at other rates
-> at the end?
-I think simply cutting off from the end of the retry chain is a bad idea
-- if there are too many scheduled retries in the max throughput rate, it
-will not make it to the fallback to a reliable rate if that fails. A
-better approach is to make minstrel use fewer retries per rate.
+> This doesn't apply (on mac80211-next.)
 
-- Felix
+Sorry, thought I rebased there, but I'll give it a respin.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
