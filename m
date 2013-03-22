@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:45746 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212Ab3CKK0J (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753442Ab3CVJ4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 06:26:09 -0400
-Received: by mail-wg0-f54.google.com with SMTP id fm10so4623882wgb.21
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 03:26:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130309100150.432.50619.stgit@localhost6.localdomain6>
-References: <20130309100031.432.94974.stgit@localhost6.localdomain6>
-	<20130309100150.432.50619.stgit@localhost6.localdomain6>
-Date: Mon, 11 Mar 2013 11:26:07 +0100
-Message-ID: <CADGp=QeRNuJLeDBWPH=z89R18-sEMy6qYsfaseyLG9qR+M4AbQ@mail.gmail.com> (sfid-20130311_112613_761177_6F020D0A)
-Subject: Re: [PATCH v2 3/3] ath6kl: cold reset target after host warm boot
-From: Julien Massot <jmassot@aldebaran-robotics.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 22 Mar 2013 05:56:33 -0400
+Message-ID: <1363946185.8238.1.camel@jlt4.sipsolutions.net> (sfid-20130322_105638_072014_70824DB4)
+Subject: Re: [PATCH v3] mac80211:  Don't restart sta-timer if not associated.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Fri, 22 Mar 2013 10:56:25 +0100
+In-Reply-To: <20130320073028.GC1761@redhat.com> (sfid-20130320_082953_024251_C5540681)
+References: <1363740650-1626-1-git-send-email-greearb@candelatech.com>
+	 <20130320073028.GC1761@redhat.com> (sfid-20130320_082953_024251_C5540681)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Wed, 2013-03-20 at 08:30 +0100, Stanislaw Gruszka wrote:
+> On Tue, Mar 19, 2013 at 05:50:50PM -0700, greearb@candelatech.com wrote:
+> > From: Ben Greear <greearb@candelatech.com>
+> > 
+> > I found another crash when deleting lots of virtual stations
+> > in a congested environment.  I think the problem is that
+> > the ieee80211_mlme_notify_scan_completed could call
+> > ieee80211_restart_sta_timer for a stopped interface
+> > that was about to be deleted.
+> > 
+> > With the following patch I am unable to reproduce the
+> > crash.
+> > 
+> > Signed-off-by: Ben Greear <greearb@candelatech.com>
+> > ---
+> > v3:  Just check for sdata-is-running once at top of method
+> >   instead of worrying about if it is associated or not.
+> > 
+> > :100644 100644 aec786d... 74a8c5f... M	net/mac80211/mlme.c
+> >  net/mac80211/mlme.c |    3 +++
+> >  1 files changed, 3 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> > index aec786d..74a8c5f 100644
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -2933,6 +2933,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+> >  {
+> >  	u32 flags;
+> >  
+> > +	if (!ieee80211_sdata_running(sdata))
+> > +		return;
+> > +
+> 
+> I think this check should go to ieee80211_mlme_notify_scan_completed(),
+> and another one to ieee80211_mesh_notify_scan_completed(), IBSS already
+> has it.
 
-> Julien reported that ar6004 usb device fails to initialise
-> after host has been rebooted and power is still on for the ar6004 device. He
-> found out that doing a cold reset fixes the issue.
->
-> I wasn't sure what would be the best way to detect if target needs a reset so I
-> settled on checking a timeout from htc_wait_recv_ctrl_message().
->
-> Reported-by: Julien Massot <jmassot@aldebaran-robotics.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
+I made these changes and applied it.
 
-This patch fix the issue, now my adapter works after a soft reboot.
-The log are also better: (here is what happen on soft reboot)
+johannes
 
-[   17.328029] ath6kl: htc pipe control receive timeout!
-[   17.328033] ath6kl: htc wait target timed out, resetting device
-[   17.332178] ath6kl: Failed to start hardware: -110
-[   17.332208] ath6kl: Failed to init ath6kl core: -110
-[   17.332270] ath6kl_usb: probe of 2-1:1.0 failed with error -110
-[   17.332306] usbcore: registered new interface driver ath6kl_usb
-[   19.040315] ath6kl: ar6004 hw 1.3 usb fw 3.5.0.2356\x01 api 3
-
-Thanks!
-
-Tested-by: Julien Massot <jmassot@aldebaran-robotics.com>
-
-Julien
