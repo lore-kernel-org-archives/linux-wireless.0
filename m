@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-masked.atl.sa.earthlink.net ([209.86.89.68]:44423 "EHLO
-	elasmtp-masked.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757400Ab3CZONs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49963 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932116Ab3CVOV5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 10:13:48 -0400
-Date: Tue, 26 Mar 2013 10:13:44 -0400
-From: Marco Fonseca <marco@tampabay.rr.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Robert Shade <robert.shade@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: Auth Packet TX Delay
-Message-ID: <20130326141344.GB6281@192.168.1.10> (sfid-20130326_151352_502688_AEFC53C6)
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
- <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
- <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
- <201303251712.19808.chunkeey@googlemail.com>
- <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+	Fri, 22 Mar 2013 10:21:57 -0400
+Message-ID: <1363962111.8238.52.camel@jlt4.sipsolutions.net> (sfid-20130322_152202_004826_D4A0E261)
+Subject: Re: [RFC V2 1/2] mac80211: Use a cfg80211_chan_def in
+ ieee80211_hw_conf_chan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Fri, 22 Mar 2013 15:21:51 +0100
+In-Reply-To: <20130322135038.GC29340@magnum.frso.rivierawaves.com> (sfid-20130322_145409_415927_302ECE38)
+References: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
+	 <1363652600-23223-2-git-send-email-karl.beldan@gmail.com>
+	 <1363949737.8238.22.camel@jlt4.sipsolutions.net>
+	 <20130322135038.GC29340@magnum.frso.rivierawaves.com>
+	 (sfid-20130322_145409_415927_302ECE38)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-carl9170 bug created here:
+On Fri, 2013-03-22 at 14:50 +0100, Karl Beldan wrote:
 
-https://bugzilla.kernel.org/show_bug.cgi?id=55751
+> > > @@ -994,21 +996,25 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+> > >  	if (!ifmgd->associated)
+> > >  		goto out;
+> > >  
+> > > -	sdata->local->_oper_channel = sdata->local->csa_channel;
+> > > -	if (!sdata->local->ops->channel_switch) {
+> > > +	cfreq_off = local->csa_channel->center_freq -
+> > > +		local->_oper_chandef.chan->center_freq;
+> > > +
+> > > +	local->_oper_chandef.center_freq1 += cfreq_off;
+> > > +	local->_oper_chandef.center_freq2 += cfreq_off;
+> > 
+> > Adjusting the center_freq1 is quite clearly wrong. :-)
+> > 
+> > Besides, it might not even be supported by the driver.
+> > 
+> Yes, the next serie will downgrade to NL80211_CHAN_WIDTH_20_NOHT.
+> I know this is not acceptable, I will get back to this very soon.
 
-On Mon, Mar 25, 2013 at 09:45:48AM -0700, Adrian Chadd wrote:
-> One for each please.
-> 
-> 
-> 
-> 
-> Adrian
-> 
-> 
-> On 25 March 2013 09:12, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> > On Monday, March 25, 2013 03:23:53 AM Adrian Chadd wrote:
-> >> Also, would you please make sure you file a bugzilla.kernel.org ticket
-> >> so this gets tracked?
-> >>
-> >> It's good to know that some combination of fast channel change and
-> >> warm versus cold reset is making things better/worse.
-> >>
-> >> And although a cold reset is likely a good thing to _fix_ the problem,
-> >> it still leaves the underlying DMA/PHY hangs unresolved.
-> >>
-> >> But yes, please file a bugzilla ticket so this gets tracked right!
-> > Um, do you want a bugreport for ath9k or carl9170 or for both?
-> >
-> > Regards,
-> >         Christian
+That actually seems like a decent compromise, I'd accept that. It'll
+likely not cause much more breakage than the current code would ... :)
+Until we address this properly, of course, which I'll eventually need to
+do as well.
+
+> > There should be ready macros for chandef tracing -- can you use them?
+> > 
+> > > +		LOCAL_PR_FMT " ch:%#x" CHANDEF_PR_FMT,
+> > > +		LOCAL_PR_ARG, __entry->changed, CHANDEF_PR_ARG
+> > 
+> > Hm so you used some? Why not all?
+> > 
+> I would have liked to use CHANDEF_ENTRY and CHANDEF_ASSIGN but they
+> don't check for "chandef.chan != NULL" which would Oops when using
+> chanctxes (and I hesitated to make it too invasive although I would
+> gladly add the check if that doesn't bother you.
+
+Doesn't bother me at all, go ahead and make that change.
+
+johannes
+
