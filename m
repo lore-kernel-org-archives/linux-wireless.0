@@ -1,141 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from icf.org.ru ([91.193.237.1]:45292 "EHLO icf.org.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab3CEKfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 05:35:06 -0500
-Date: Tue, 5 Mar 2013 14:35:00 +0400 (MSK)
-From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
-To: Felix Fietkau <nbd@openwrt.org>
-cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 1/2] mac80211/minstrel_ht: increase sampling frequency
- of some slower rates
-In-Reply-To: <1362311392-83648-1-git-send-email-nbd@openwrt.org>
-Message-ID: <alpine.DEB.2.02.1303051432550.23906@icf.org.ru> (sfid-20130305_113529_376817_02E8C7EB)
-References: <1362311392-83648-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1051000339-334958693-1362479700=:23906"
+Received: from he.sipsolutions.net ([78.46.109.217]:49408 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932267Ab3CVKzu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Mar 2013 06:55:50 -0400
+Message-ID: <1363949737.8238.22.camel@jlt4.sipsolutions.net> (sfid-20130322_115554_435743_9926FC6D)
+Subject: Re: [RFC V2 1/2] mac80211: Use a cfg80211_chan_def in
+ ieee80211_hw_conf_chan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Fri, 22 Mar 2013 11:55:37 +0100
+In-Reply-To: <1363652600-23223-2-git-send-email-karl.beldan@gmail.com> (sfid-20130319_012354_327811_9F02E91B)
+References: <1363652600-23223-1-git-send-email-karl.beldan@gmail.com>
+	 <1363652600-23223-2-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130319_012354_327811_9F02E91B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, 2013-03-19 at 01:23 +0100, Karl Beldan wrote:
 
----1051000339-334958693-1362479700=:23906
-Content-Type: TEXT/PLAIN; charset=KOI8-R
-Content-Transfer-Encoding: 8BIT
+> @@ -106,7 +104,7 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+>  	WARN_ON_ONCE(ctx->refcount != 0);
+>  
+>  	if (!local->use_chanctx) {
+> -		local->_oper_channel_type = NL80211_CHAN_NO_HT;
+> +		local->_oper_chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
+>  		ieee80211_hw_config(local, 0);
 
-On 2013-03-03 12:49 +0100, Felix Fietkau wrote linux-wireless@vger.kernel.org:
+You also have to reset center_freq1/2 here to make it a valid chandef in
+all cases, otherwise you can end up with e.g. "2412 noht20 2422 0" which
+makes no sense.
 
-Hi, in my case this two patches cause throughput drop, withous it i have 50-55Mbs
-with it applied only 35-40.
+I think it'd be worth sticking a
 
-FF>If a rate is below the max_tp_rate, sample it frequently if:
-FF>- it is above max_tp_rate2, or
-FF>- it is above max_prob_rate and is a candidate for max_prob_rate
-FF>  (has fewer streams than max_tp_rate).
-FF>This helps the retry chain recover more quickly from bad statistics
-FF>caused by collisions or interference, and slightly reduces throughput
-FF>fluctuations with higher rates.
-FF>
-FF>Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-FF>---
-FF> net/mac80211/rc80211_minstrel_ht.c | 20 ++++++++++++--------
-FF> net/mac80211/rc80211_minstrel_ht.h |  1 +
-FF> 2 files changed, 13 insertions(+), 8 deletions(-)
-FF>
-FF>diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-FF>index 4d35bc5..1b69924 100644
-FF>--- a/net/mac80211/rc80211_minstrel_ht.c
-FF>+++ b/net/mac80211/rc80211_minstrel_ht.c
-FF>@@ -246,7 +246,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 	struct minstrel_rate_stats *mr;
-FF> 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
-FF> 	int group, i, index;
-FF>-	int prob_max_streams = 1;
-FF> 
-FF> 	if (mi->ampdu_packets > 0) {
-FF> 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-FF>@@ -330,7 +329,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 			cur_tp2 = cur_tp;
-FF> 			mi->max_tp_rate = mg->max_tp_rate;
-FF> 			cur_tp = mr->cur_tp;
-FF>-			prob_max_streams = minstrel_mcs_groups[group].streams - 1;
-FF>+			mi->max_prob_streams = minstrel_mcs_groups[group].streams - 1;
-FF> 		}
-FF> 
-FF> 		mr = minstrel_get_ratestats(mi, mg->max_tp_rate2);
-FF>@@ -340,8 +339,8 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 		}
-FF> 	}
-FF> 
-FF>-	if (prob_max_streams < 1)
-FF>-		prob_max_streams = 1;
-FF>+	if (mi->max_prob_streams < 1)
-FF>+		mi->max_prob_streams = 1;
-FF> 
-FF> 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
-FF> 		mg = &mi->groups[group];
-FF>@@ -349,7 +348,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 			continue;
-FF> 		mr = minstrel_get_ratestats(mi, mg->max_prob_rate);
-FF> 		if (cur_prob_tp < mr->cur_tp &&
-FF>-		    minstrel_mcs_groups[group].streams <= prob_max_streams) {
-FF>+		    minstrel_mcs_groups[group].streams <= mi->max_prob_streams) {
-FF> 			mi->max_prob_rate = mg->max_prob_rate;
-FF> 			cur_prob = mr->cur_prob;
-FF> 			cur_prob_tp = mr->cur_tp;
-FF>@@ -630,6 +629,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> {
-FF> 	struct minstrel_rate_stats *mr;
-FF> 	struct minstrel_mcs_group_data *mg;
-FF>+	unsigned int sample_dur, sample_group;
-FF> 	int sample_idx = 0;
-FF> 
-FF> 	if (mi->sample_wait > 0) {
-FF>@@ -644,7 +644,8 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 	mg = &mi->groups[mi->sample_group];
-FF> 	sample_idx = sample_table[mg->column][mg->index];
-FF> 	mr = &mg->rates[sample_idx];
-FF>-	sample_idx += mi->sample_group * MCS_GROUP_RATES;
-FF>+	sample_group = mi->sample_group;
-FF>+	sample_idx += sample_group * MCS_GROUP_RATES;
-FF> 	minstrel_next_sample_idx(mi);
-FF> 
-FF> 	/*
-FF>@@ -665,8 +666,11 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-FF> 	 * Make sure that lower rates get sampled only occasionally,
-FF> 	 * if the link is working perfectly.
-FF> 	 */
-FF>-	if (minstrel_get_duration(sample_idx) >
-FF>-	    minstrel_get_duration(mi->max_tp_rate)) {
-FF>+	sample_dur = minstrel_get_duration(sample_idx);
-FF>+	if (sample_dur >= minstrel_get_duration(mi->max_tp_rate2) &&
-FF>+	    (mi->max_prob_streams <
-FF>+	     minstrel_mcs_groups[sample_group].streams ||
-FF>+	     sample_dur >= minstrel_get_duration(mi->max_prob_rate))) {
-FF> 		if (mr->sample_skipped < 20)
-FF> 			return -1;
-FF> 
-FF>diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-FF>index 302dbd5..c6d6a0d 100644
-FF>--- a/net/mac80211/rc80211_minstrel_ht.h
-FF>+++ b/net/mac80211/rc80211_minstrel_ht.h
-FF>@@ -85,6 +85,7 @@ struct minstrel_ht_sta {
-FF> 
-FF> 	/* best probability rate */
-FF> 	unsigned int max_prob_rate;
-FF>+	unsigned int max_prob_streams;
-FF> 
-FF> 	/* time of last status update */
-FF> 	unsigned long stats_update;
-FF>
+WARN_ON(!cfg80211_chandef_valid(...))
 
-C уважением                       With Best Regards
-Георгиевский Юрий.                Georgiewskiy Yuriy
-+7 4872 711666                    +7 4872 711666
-факс +7 4872 711143               fax +7 4872 711143
-Компания ООО "Ай Ти Сервис"       IT Service Ltd
-http://nkoort.ru                  http://nkoort.ru
-JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
-YG129-RIPE                        YG129-RIPE
----1051000339-334958693-1362479700=:23906--
+into ieee80211_hw_conf_chan().
+
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -92,45 +92,54 @@ static void ieee80211_reconfig_filter(struct work_struct *work)
+>  	ieee80211_configure_filter(local);
+>  }
+>  
+> +static int ieee80211_chandef_cmp(const struct cfg80211_chan_def *def1,
+> +				 const struct cfg80211_chan_def *def2)
+
+Shouldn't be needed?
+
+> -			local->hw.conf.channel =
+> -			local->_oper_channel = &sband->channels[0];
+> -			local->hw.conf.channel_type = NL80211_CHAN_NO_HT;
+> +			local->hw.conf.chandef.chan =
+> +			local->_oper_chandef.chan = &sband->channels[0];
+> +			local->hw.conf.chandef.width = NL80211_CHAN_NO_HT;
+
+wrong constant
+
+> +++ b/net/mac80211/mlme.c
+> @@ -985,7 +985,9 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+>  {
+>  	struct ieee80211_sub_if_data *sdata =
+>  		container_of(work, struct ieee80211_sub_if_data, u.mgd.chswitch_work);
+> +	struct ieee80211_local *local = sdata->local;
+>  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +	int cfreq_off;
+>  
+>  	if (!ieee80211_sdata_running(sdata))
+>  		return;
+> @@ -994,21 +996,25 @@ static void ieee80211_chswitch_work(struct work_struct *work)
+>  	if (!ifmgd->associated)
+>  		goto out;
+>  
+> -	sdata->local->_oper_channel = sdata->local->csa_channel;
+> -	if (!sdata->local->ops->channel_switch) {
+> +	cfreq_off = local->csa_channel->center_freq -
+> +		local->_oper_chandef.chan->center_freq;
+> +
+> +	local->_oper_chandef.center_freq1 += cfreq_off;
+> +	local->_oper_chandef.center_freq2 += cfreq_off;
+
+Adjusting the center_freq1 is quite clearly wrong. :-)
+
+Besides, it might not even be supported by the driver.
+
+Since we really don't handle anything but 20 MHz channel switches
+correctly, maybe we should just disconnect in that case, like we do in
+the chanctx case today. I'd prefer that as a separate patch (coming
+before this one) though.
+
+Of course, patches to make it handle it correctly would also be welcome
+-- I started playing with it here:
+
+http://git.kernel.org/cgit/linux/kernel/git/jberg/mac80211-next.git/commit/?h=wip&id=cb0308430993e96c79b3449cf0b3c744ef62b50e
+
+(and the parent commit)
+
+> +++ b/net/mac80211/trace.h
+> @@ -269,7 +269,6 @@ DEFINE_EVENT(local_sdata_addr_evt, drv_remove_interface,
+>  		 struct ieee80211_sub_if_data *sdata),
+>  	TP_ARGS(local, sdata)
+>  );
+> -
+>  TRACE_EVENT(drv_config,
+
+please keep that :-)
+
+>  	TP_PROTO(struct ieee80211_local *local,
+>  		 u32 changed),
+> @@ -286,8 +285,10 @@ TRACE_EVENT(drv_config,
+>  		__field(u16, listen_interval)
+>  		__field(u8, long_frame_max_tx_count)
+>  		__field(u8, short_frame_max_tx_count)
+> -		__field(int, center_freq)
+> -		__field(int, channel_type)
+> +		__field(int, control_freq)
+> +		__field(int, center_freq1)
+> +		__field(int, center_freq2)
+> +		__field(int, chan_width)
+
+There should be ready macros for chandef tracing -- can you use them?
+
+> +		LOCAL_PR_FMT " ch:%#x" CHANDEF_PR_FMT,
+> +		LOCAL_PR_ARG, __entry->changed, CHANDEF_PR_ARG
+
+Hm so you used some? Why not all?
+
+johannes
+
