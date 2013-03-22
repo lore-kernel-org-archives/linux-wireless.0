@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19177 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932102Ab3CULmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 07:42:01 -0400
-Date: Thu, 21 Mar 2013 12:42:20 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Parag Warudkar <parag.lkml@gmail.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	senthilb@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k : Fix ieee80211 work while going to suspend
-Message-ID: <20130321114219.GB1459@redhat.com> (sfid-20130321_124245_861321_03078FBC)
-References: <CAOULuOb0_40EX+6A_HM8eJN7kj9J4WhO9UhZbUUqng1Sfy_SQg@mail.gmail.com>
- <20130318191340.GA28919@tuxdriver.com>
- <20130318210308.GD32416@pogo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130318210308.GD32416@pogo>
+Received: from perches-mx.perches.com ([206.117.179.246]:53200 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754957Ab3CVUAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Mar 2013 16:00:19 -0400
+From: Joe Perches <joe@perches.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmsmac: Remove unused macro SI_MSG
+Date: Fri, 22 Mar 2013 13:00:15 -0700
+Message-Id: <25a69b0ba20a54e5c1c0165e68a1ef2c69c84255.1363982285.git.joe@perches.com> (sfid-20130322_210044_357744_66E64ABC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 02:03:08PM -0700, Luis R. Rodriguez wrote:
-> > > --- a/drivers/net/wireless/ath/ath9k/link.c
-> > > +++ b/drivers/net/wireless/ath/ath9k/link.c
-> > > @@ -158,7 +158,8 @@ void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon)
-> > >  {
-> > >   if (!AR_SREV_9300(sc->sc_ah))
-> > >   return;
-> > > -
-> > > + if (sc->suspending)
-> > > + return;
-> 
-> Thanks for the patch! Please note the style issue here, you should
-> use a tab, but other than that lets review what happened.
-> 
-> > >   if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
-> > >   return;
-> 
-> Note that what this will do is call later mod_timer() for
-> rx_poll_timer, the right thing to do then, which would
-> be equivalent to your patch is to modify the ath_start_rx_poll()
-> to instead use the new API mod_timer_pending() added on v2.6.30
-> via commit 74019224. This would not re-arm the timer if it was
-> previously removed.
-[snip]
-> -	mod_timer(&sc->rx_poll_timer, jiffies + msecs_to_jiffies
-> -		  (nbeacon * sc->cur_beacon_conf.beacon_interval));
-> +	mod_timer_pending(&sc->rx_poll_timer, jiffies + msecs_to_jiffies
-> +			  (nbeacon * sc->cur_beacon_conf.beacon_interval));
+commit 6236dc2e2 ("brcmsmac: remove some redundant chip common workarounds")
+removed the last uses.
 
-But isn't this prevent to run timer in case it was not running, but
-we want to start it ?
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-> Looking at this makes me think we should review all usage of
-> mod_timer all over our 802.11 drivers, and mac80211, cfg80211 as
-> well.
-
-I mac80211 we use local->suspended and local->quiesce booleans to
-prevent reschedule of timers when going to suspend for example.
-Works use ifmgd->associted to prevent reschedule when we are
-disassociating.
-
-I think on ath9k also some boolean variable should be used, not only
-for rx_poll_timer but also for other works i.e. tx_complete_work.
-Is possible to use SC_OP_INVALID flags, since mac80211 call ath9k_stop
-on suspend and ath9k_start on resume.
-
-Stanislaw
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index f0888a9..e4fd1ee 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -318,12 +318,6 @@
+ #define	IS_SIM(chippkg)	\
+ 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+ 
+-#ifdef DEBUG
+-#define	SI_MSG(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
+-#else
+-#define	SI_MSG(fmt, ...)	no_printk(fmt, ##__VA_ARGS__)
+-#endif				/* DEBUG */
+-
+ #define	GOODCOREADDR(x, b) \
+ 	(((x) >= (b)) && ((x) < ((b) + SI_MAXCORES * SI_CORE_SIZE)) && \
+ 		IS_ALIGNED((x), SI_CORE_SIZE))
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
