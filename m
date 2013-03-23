@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lerya.net ([213.251.186.118]:37257 "EHLO mx.lerya.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670Ab3CHV6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 16:58:37 -0500
-Received: from fea.lerya.net (fea.lerya.net [10.9.0.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx.lerya.net (Postfix) with ESMTPS id ED613804B9
-	for <linux-wireless@vger.kernel.org>; Fri,  8 Mar 2013 22:58:34 +0100 (CET)
-Date: Fri, 8 Mar 2013 22:58:33 +0100
-From: Vincent Brillault <gentoo@lerya.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
-Message-ID: <20130308215833.GA2829@Fea.lerya.net> (sfid-20130308_225841_187782_2847D4B9)
-References: <20130307192920.GB8668@Fea.lerya.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55188 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751888Ab3CWTqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 15:46:37 -0400
+Message-ID: <514E0691.7010909@hauke-m.de> (sfid-20130323_204641_208567_970AD4F7)
+Date: Sat, 23 Mar 2013 20:46:25 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130307192920.GB8668@Fea.lerya.net>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
+References: <1363885909-12263-1-git-send-email-hauke@hauke-m.de> <CACna6rxAs5hYqePCkVfUXBh2z=W+OWuhCO5J+EqGnUgYOnAGaA@mail.gmail.com>
+In-Reply-To: <CACna6rxAs5hYqePCkVfUXBh2z=W+OWuhCO5J+EqGnUgYOnAGaA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+On 03/23/2013 08:34 PM, Rafał Miłecki wrote:
+> 2013/3/21 Hauke Mehrtens <hauke@hauke-m.de>:
+>> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
+> 
+> Can we wait with this patch few days, please? I'm in process of
+> debugging BCM4322 and channel 13 support, which may be related to this
+> part of driver.
 
-I forgot to mention that those warning from mac80211 (the associated
-comments in the code are 'RC is busted' or 'uh huh?') seems to somehow
-disable completely the rate control: 'iw wlan0 link' gives 'tx bitrate:'
-with nothing after. Furthermore, I loose the network from time to time
-on reason 7. I went back to kernel 3.8.0: if there is enough traffic
-continuously, the link is stable but I loose it randomly when there is
-no traffic.
+I have not problem with waiting and rebasing my patch onto your fix as
+this is not a fix just a code cleanup.
 
-I made more debug on the 3.8.0 kernel, the first warning correspond to
-the following test:
-(info->control.rates[i].idx) 15 >= (sband->n_bitrates) 12
+> Please Cc driver ML when touching it's code.
 
-Please tell me what test I can make to find the source of this problem.
+This was not intended, I just forgot to do so.
 
-Thanks in advance,
-Vincent Brillault
+Hauke
