@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:53394 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932694Ab3CHHuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 02:50:18 -0500
-Message-ID: <513996DE.6030500@neratec.com> (sfid-20130308_085027_387806_5BA044B6)
-Date: Fri, 08 Mar 2013 08:44:30 +0100
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Received: from elasmtp-spurfowl.atl.sa.earthlink.net ([209.86.89.66]:47948
+	"EHLO elasmtp-spurfowl.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751820Ab3CWUAj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 16:00:39 -0400
+Date: Sat, 23 Mar 2013 16:00:38 -0400
+From: Marco Fonseca <marco@tampabay.rr.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: carl9170: monitor mode hangs due to channel changes
+Message-ID: <20130323200037.GA8332@192.168.1.10> (sfid-20130323_210045_275051_5508DA6F)
+References: <20130320205013.GA3462@192.168.1.10>
+ <201303202309.47596.chunkeey@googlemail.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 3.8 1/3] ath9k_hw: fix calibration issues on chainmask
- that don't include chain 0
-References: <1358715322-46447-1-git-send-email-nbd@openwrt.org> <5138A4C8.7040500@neratec.com> <5138AB4A.7000405@openwrt.org> <5138B656.5090408@neratec.com>
-In-Reply-To: <5138B656.5090408@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201303202309.47596.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2013 04:46 PM, Wojciech Dubowik wrote:
-> On 03/07/2013 03:59 PM, Felix Fietkau wrote:
->> On 2013-03-07 3:31 PM, Wojciech Dubowik wrote:
->>> There is a regression introduced by this patch when power save is 
->>> off on
->>> the station for idle checks.
->>> I have AR9590 station with rx and tx chain set to 0x1 connected
->>> to legacy AP (based on Ar9390) with RF cable and 40dB attenuator.
->>>
->>> Before this patch in connection polling the station was properly 
->>> sending
->>> null function to check whether AP is still there. After this patch 
->>> it sends
->>> broadcast probe request which is anyway wrong or some 16 or so packets
->>> of random data (rarely). It manifests itself in lost connection because
->>> there
->>> is no ack from AP which is expected for null function.
->>>
->>> I have been following skb's up to the descriptor setting in ath9k 
->>> and it was
->>> all ok i.e. proper null function with valid addresses.
->>>
->>> I have been bisecting it twice because it doesn't make much sense 
->>> but maybe
->>> it's a HW issue?
->> You're right, it does not make much sense. I can't figure out how this
->> patch could possibly change the runtime behavior with tx chainmask set
->> to 0x1. Have you tried reverting this patch in a current build to see if
->> that fixes the issue?
-> It does fix it. I will check tomorrow whether it's only AR9590 or also
-> previous revisions. I will also try with different chainmasks. I will 
-> have
-> to rescrew my setup...
->
-I have been doing some tests and it seems to affect both AR9390 and AR9590.
-To summarize: sta doesn't send null function but broadcast probe request or
-corrupted frames in idle checking routine when power save is off and 
-only some
-antennas are selected for transmission.
-So for example when I set antenna mask 7 i.e. all available it works ok 
-but with
-mask 1, 3 or 6 not. When I swith power save it's all ok no matter what 
-mask I use.
+As far as I can tell those patches fixed it.  I wasn't paying
+attention and applied both patches though.  My environment
+is a little different today and I will test some more on Monday.
 
-Thing with power save on is that before it goes to idle check it will go 
-to sleep since
-there is no traffic anyway, then we get beacon miss, it wakes up and it 
-sends null
-function. I guess waking up is reinitializing sth in a chip which 
-doesn't occur in my
-scenario.
-HW issue?
+If you think it would help, I can test the patches individually.
 
-Wojtek
+Thanks!
+
+Marco
+
+On Wed, Mar 20, 2013 at 11:09:47PM +0100, Christian Lamparter wrote:
+> Hello,
+> 
+> On Wednesday, March 20, 2013 09:50:13 PM Marco Fonseca wrote:
+> > I'm seeing a problem with the carl driver. If I change channels
+> > repeatedly on the 2.4ghz band, monitoring (e.g. tcpdump) will
+> > eventually halt.  I've seen this on various versions of the carl
+> > driver/firmware (both from 1.9.4 to 1.9.7)
+> thanks for reporting this. You could try either of the attached
+> patch and test if it alleviate the issue. If the patches do help
+> then the problem is caused by rf/phy (code) [which is a problem
+> since the rf/phy parts are taken from the vendor driver as we
+> have no docs or specs for it].
+> 
+> Regards,
+> 	Chr
