@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49638 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab3CVMZA (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:60566 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655Ab3CWR2e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 08:25:00 -0400
-Message-ID: <1363955094.8238.32.camel@jlt4.sipsolutions.net> (sfid-20130322_132507_628642_07E47472)
-Subject: Re: Radiotap injected rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sam Leffler <sleffler@chromium.org>
-Date: Fri, 22 Mar 2013 13:24:54 +0100
-In-Reply-To: <20130318195406.GB17878@gobelin> (sfid-20130318_205432_783925_0898DAE7)
-References: <20130317215544.GA7031@gobelin>
-	 <1363634768.8260.16.camel@jlt4.sipsolutions.net>
-	 <20130318195406.GB17878@gobelin> (sfid-20130318_205432_783925_0898DAE7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 23 Mar 2013 13:28:34 -0400
+Received: by mail-ob0-f180.google.com with SMTP id wo10so2524772obc.39
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2013 10:28:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rx+sCrg1fB-6XfYcSWczu6Mtuvz75FOHbbx3YdPe+U5sw@mail.gmail.com>
+References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
+	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
+	<20130323113517.01906b0b@milhouse>
+	<20130323155355.0a1752f5@laptop.homenet>
+	<CACna6rx+sCrg1fB-6XfYcSWczu6Mtuvz75FOHbbx3YdPe+U5sw@mail.gmail.com>
+Date: Sat, 23 Mar 2013 18:28:33 +0100
+Message-ID: <CACna6rwAOgvbd6z2ckZ6uW=8wOw-+YMT_wc4FC+ZgAaAhCgpwQ@mail.gmail.com> (sfid-20130323_182837_678926_FF41E026)
+Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>, isedev@gmail.com,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-18 at 20:54 +0100, Karl Beldan wrote:
+2013/3/23 Rafał Miłecki <zajec5@gmail.com>:
+> 2013/3/23 Chris Vine <chris@cvine.freeserve.co.uk>:
+>> On Sat, 23 Mar 2013 11:35:17 +0100
+>> Michael Büsch <m@bues.ch> wrote:
+>>> On Sat, 23 Mar 2013 00:27:30 +0100
+>>> Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>
+>>> > Today I've plugged my 14e4:4315 and (unfortunately?) it's working
+>>> > pretty well. I hoped to reproduce some problems but failed to do
+>>> > so. I was transmitting for an hour with average speed 11MiB/s and
+>>> > didn't notice any DMA issues.
+>>> >
+>>> > I was using iperf with interval of 60 seconds and only 3 results
+>>> > showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No
+>>> > disconnections however and no DMA errors. I just got "Group
+>>> > rekeying completed..." in wpa_supplicant.
+>>> >
+>>> > So as I can't reproduce this, I can't find any other fix for this
+>>> > issue, and there's no reason to stop this workaround. I'll just
+>>> > apply it and test over weekend to check for any regressions, but
+>>> > they are highly unlikely.
+>>>
+>>> I don't really believe in this being a firmware bug.
+>>>
+>>> Some b43 DMA engines (all?) have some alignment and
+>>> page-boundary-crossing constraints. I would rather guess that on some
+>>> kernels with some options turned on, alignment and/or boundary
+>>> constraints are violated every now and then. (and thus the packet
+>>> never reaches the firmware).
+>>>
+>>> I don't remember the details, though. Too long since I worked on that.
+>>> But a few sanity checks could probably be added to the code to check
+>>> this hypothesis.
+>>>
+>>> Does the failing kernel/machine have any special things w.r.t. memory?
+>>> Like iommu, hugepages, whetever...
+>>
+>> For what it is worth, this happens to me on both home compiled and
+>> distributor kernels (ubuntu and slackware): in fact, any 32-bit kernel
+>> that I have tried it on.
+>>
+>> And it does not happen with the wl driver on the same kernels.  So if
+>> this is right, the wl driver must be doing something that the b43 driver
+>> does not with respect to alignment: and you might well be right about
+>> that.
+>
+> Could you try changing
+> B43_DMA32_RINGMEMSIZE
+> from 4096 to 8192 in dma.h?
 
-> > No, older wpa_supplicant/hostapd still use monitor interfaces for
-> > management frame transmissions, and require rate control.
-> > 
-> 
-> Since they require rate control, I guess they don't pass any radiotap
-> IEEE80211_RADIOTAP_{RATE,MCS} ? In that case that wouldn't disturb them.
+Blah, ignore that. You're card has 64b DMA, not 32b :|
 
-Yeah, indeed, I wasn't looking right ...
-
-> And, oops typo, I meant :
-> 
-> +	    !(info->flags & IEEE80211_TX_CTL_INJECTED && info->control.rates[0] != -1))
-> 
-> with info->control.rates[0] properly set in the radiotap header parsing,
-> instead of :
-> 
-> > > +	    !(info->flags & IEEE80211_TX_CTL_INJECTED && info->control.rates[i]))
-> 
-> If that changes anything to what you guessed.
-
-Well actually this won't work anyway because control.rates[] isn't
-initialized to -1.
-
-johannes
-
+-- 
+Rafał
