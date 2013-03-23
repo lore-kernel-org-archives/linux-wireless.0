@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42871 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319Ab3CHVAW (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40175 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058Ab3CWPqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 16:00:22 -0500
-Date: Fri, 8 Mar 2013 15:54:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Sat, 23 Mar 2013 11:46:03 -0400
+Date: Sat, 23 Mar 2013 15:45:56 +0000
+From: Luis Henriques <luis.henriques@canonical.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-03-07
-Message-ID: <20130308205419.GC402@tuxdriver.com> (sfid-20130308_220028_604218_7F8AA96F)
-References: <1362650225.8694.13.camel@jlt4.sipsolutions.net>
+Cc: artem.bityutskiy@linux.intel.com, patrik.flykt@intel.com,
+	Eric Dumazet <edumazet@google.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: regression: tethering fails in 3.5 with iwlwifi
+Message-ID: <20130323154556.GA3953@hercules> (sfid-20130323_164626_674441_D12C8ECA)
+References: <1347361823.26457.3.camel@sauron.fi.intel.com>
+ <1DC40B07CD6EC041A66726C271A73AE6195AE9C8@IRSMSX102.ger.corp.intel.com>
+ <1347631355.5263.19.camel@sauron.fi.intel.com>
+ <1347640763.5263.24.camel@sauron.fi.intel.com>
+ <1347892887.7112.9.camel@sauron.fi.intel.com>
+ <1363894451.8181.4.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1362650225.8694.13.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1363894451.8181.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 07, 2013 at 10:57:05AM +0100, Johannes Berg wrote:
-> John,
+On Thu, Mar 21, 2013 at 08:34:11PM +0100, Johannes Berg wrote:
+> On Mon, 2012-09-17 at 17:41 +0300, Artem Bityutskiy wrote:
 > 
-> And another pull request - for iwlwifi-next.
+> > OK, finally I got it. After 3 days of hardcore intelligent bisecting
+> >         I've found out that tethering in 3.5 works for me if I revert
+> > these 2
+> >         patches:
+> >         
+> >             56138f5 iwlwifi: dont pull too much payload in skb head
 > 
-> Here, I also merged iwlwifi-fixes to avoid conflicts, and otherwise have
-> various cleanups and improvements on the MVM driver, along with a few
-> throughout the driver. Other than Bluetooth Coexistence from Emmanuel
-> there's no over-arching theme, so listing them would pretty much
-> reproduce the shortlog.
+> I got back to this for a customer running 3.5, and after many failed
+> attempts realized that you have to have iptables for this problem to
+> actually happen. I reverse-bisected that the *fix* is
+> 6caab7b0544e83e6c160b5e80f5a4a7dd69545c7, in 3.7.
 > 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> 
-> The following changes since commit 6dbe51c251a327e012439c4772097a13df43c5b8:
-> 
->   Linux 3.9-rc1 (2013-03-03 15:11:05 -0800)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to 25b9ea5c797b5d78f8ceced9ad9c7a7daf0db19c:
-> 
->   iwlwifi: mvm: the SCD byte count is a TLV flag (2013-03-06 16:48:03 +0100)
+> Is there still any stable kernel 3.5/3.6 (or possibly before, though for
+> iwlwifi before doesn't matter) that this should be applied to?
 
-Pulling now...
+The 3.5.y.z extended stable tree already contains this commit as well.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers,
+--
+Luis
