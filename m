@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45630 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751377Ab3CJXde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 19:33:34 -0400
-Message-ID: <513D184B.2000805@openwrt.org> (sfid-20130311_003352_540321_A0A0DFD5)
-Date: Mon, 11 Mar 2013 00:33:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:52677 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748Ab3CWTvr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 15:51:47 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k14so5345713oag.11
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2013 12:51:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2 1/2] mac80211: get the rates masks from the txrc in
- rate_control_get_rate
-References: <1362421635-28008-1-git-send-email-karl.beldan@gmail.com> <1362427924.21028.42.camel@jlt4.sipsolutions.net> <20130304204541.GA8819@gobelin> <5135F327.4000408@openwrt.org> <20130310221627.GA3824@gobelin> <513D08B5.1030007@openwrt.org> <20130310230600.GC3824@gobelin>
-In-Reply-To: <20130310230600.GC3824@gobelin>
+In-Reply-To: <514E0691.7010909@hauke-m.de>
+References: <1363885909-12263-1-git-send-email-hauke@hauke-m.de>
+	<CACna6rxAs5hYqePCkVfUXBh2z=W+OWuhCO5J+EqGnUgYOnAGaA@mail.gmail.com>
+	<514E0691.7010909@hauke-m.de>
+Date: Sat, 23 Mar 2013 20:51:47 +0100
+Message-ID: <CACna6rx2eniO8bhHnPZ-6Xq=wMqHo5aE9iWr195G33ORYxCGqQ@mail.gmail.com> (sfid-20130323_205150_891795_5BFE80DC)
+Subject: Re: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-11 12:06 AM, Karl Beldan wrote:
-> On Sun, Mar 10, 2013 at 11:27:01PM +0100, Felix Fietkau wrote:
->> On 2013-03-10 11:16 PM, Karl Beldan wrote:
->> > On Tue, Mar 05, 2013 at 02:29:11PM +0100, Felix Fietkau wrote:
->> >> On 2013-03-04 9:45 PM, john wrote:
->> >> > On Mon, Mar 04, 2013 at 09:12:04PM +0100, Johannes Berg wrote:
->> >> >> On Mon, 2013-03-04 at 19:27 +0100, Karl Beldan wrote:
->> >> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
->> >> >> > 
->> >> >> > Currently it gets it from the sdata. This uses and updates the ad-hoc
->> >> >> > masks of the ieee80211_tx_rate_control instead of copying them.
->> >> >> 
->> >> >> Is there any need to update them?
->> >> >> 
->> >> >> The change for "mask" seems to make it less efficient since it could
->> >> >> otherwise be put into a register.
->> >> >> 
->> >> > Totally, this commit spares the 10bytes copy of mcs_mask but adds a less
->> >> > efficient indirection to mask.
->> >> > I thought of it but kept the symmetry with mcs_mask.
->> >> > Apparently you wouldn't mind the dissymmetry so I will re-send using mask
->> >> > by value, plus I wrote "updates .." where it is more like "lets the
->> >> > ad-hoc masks get overwritten".
->> >> It seems to me that all of this could be made more efficient by default
->> >> if a mcs mask pointer is only passed to rate control if the user
->> >> actually configured a MCS mask. Also, filtering out rates from the mask
->> >> that the sta does not support seems a bit unnecessary, since the rate
->> >> control usually looks at the HT capabilities and the sta's mcs rx mask
->> >> anyway.
->> >> 
->> > Filtering is necessary to lookup alternative downgrade/upgrade rates.
->> Right, but the code could be changed to only do the filtering if
->> mac80211 needs to look up an alternative downgrade/upgrade rate.
->> 
-> With this I agree.
-> Do you have strong opinions wrt basic rates ? The current code might tx
-> mc/bc with non-basic rates.
-The only strong opinion I have about the rate masking code is that it
-shouldn't waste precious CPU cycles in a hot path ;)
+2013/3/23 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 03/23/2013 08:34 PM, Rafał Miłecki wrote:
+>> 2013/3/21 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
+>>
+>> Can we wait with this patch few days, please? I'm in process of
+>> debugging BCM4322 and channel 13 support, which may be related to this
+>> part of driver.
+>
+> I have not problem with waiting and rebasing my patch onto your fix as
+> this is not a fix just a code cleanup.
+>
+>> Please Cc driver ML when touching it's code.
+>
+> This was not intended, I just forgot to do so.
 
-- Felix
+Great, thanks :) I'm really glad to see you improving b43, thanks for your work!
 
+-- 
+Rafał
