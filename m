@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:62925 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab3CAKWa (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:33575 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834Ab3CWR0w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 05:22:30 -0500
-Received: by mail-we0-f171.google.com with SMTP id u54so2405104wey.30
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 02:22:29 -0800 (PST)
+	Sat, 23 Mar 2013 13:26:52 -0400
+Received: by mail-oa0-f50.google.com with SMTP id n1so2413923oag.37
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Mar 2013 10:26:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51307F80.4010202@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
-	<20130228114724.GB16369@localhost>
-	<512F5709.60907@openwrt.org>
-	<CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com>
-	<512FAB01.2050104@openwrt.org>
-	<CAJ-Vmokr4_k5QKrvVGU-1pG0Y07iW9evyRkj_U4-zQ5TH1ZHBQ@mail.gmail.com>
-	<51307F80.4010202@openwrt.org>
-Date: Fri, 1 Mar 2013 02:22:29 -0800
-Message-ID: <CAJ-Vmok9-dmC5-vhHA1DE_KW6mp7P3tijrSz-3D45jjQthbcCA@mail.gmail.com> (sfid-20130301_112234_794702_A990E66F)
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20130323155355.0a1752f5@laptop.homenet>
+References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
+	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
+	<20130323113517.01906b0b@milhouse>
+	<20130323155355.0a1752f5@laptop.homenet>
+Date: Sat, 23 Mar 2013 18:26:51 +0100
+Message-ID: <CACna6rx+sCrg1fB-6XfYcSWczu6Mtuvz75FOHbbx3YdPe+U5sw@mail.gmail.com> (sfid-20130323_182657_203770_012DAC08)
+Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>, isedev@gmail.com,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 March 2013 02:14, Felix Fietkau <nbd@openwrt.org> wrote:
-
->> Having access to schedule which peer and how much to send to each peer
->> would be nice. Stuff like "peer X only can have up to x ms in this WME
->> class this round", so you don't have a busy, close peer monopolising
->> the air. It also means you can start doing smart things with far away
->> peers who retransmit a lot - they're likely tying up a lot of airtime.
+2013/3/23 Chris Vine <chris@cvine.freeserve.co.uk>:
+> On Sat, 23 Mar 2013 11:35:17 +0100
+> Michael Büsch <m@bues.ch> wrote:
+>> On Sat, 23 Mar 2013 00:27:30 +0100
+>> Rafał Miłecki <zajec5@gmail.com> wrote:
 >>
->> None of this is new. It's just, you know, new to open source. :-)
+>> > Today I've plugged my 14e4:4315 and (unfortunately?) it's working
+>> > pretty well. I hoped to reproduce some problems but failed to do
+>> > so. I was transmitting for an hour with average speed 11MiB/s and
+>> > didn't notice any DMA issues.
+>> >
+>> > I was using iperf with interval of 60 seconds and only 3 results
+>> > showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No
+>> > disconnections however and no DMA errors. I just got "Group
+>> > rekeying completed..." in wpa_supplicant.
+>> >
+>> > So as I can't reproduce this, I can't find any other fix for this
+>> > issue, and there's no reason to stop this workaround. I'll just
+>> > apply it and test over weekend to check for any regressions, but
+>> > they are highly unlikely.
+>>
+>> I don't really believe in this being a firmware bug.
+>>
+>> Some b43 DMA engines (all?) have some alignment and
+>> page-boundary-crossing constraints. I would rather guess that on some
+>> kernels with some options turned on, alignment and/or boundary
+>> constraints are violated every now and then. (and thus the packet
+>> never reaches the firmware).
+>>
+>> I don't remember the details, though. Too long since I worked on that.
+>> But a few sanity checks could probably be added to the code to check
+>> this hypothesis.
+>>
+>> Does the failing kernel/machine have any special things w.r.t. memory?
+>> Like iommu, hugepages, whetever...
+>
+> For what it is worth, this happens to me on both home compiled and
+> distributor kernels (ubuntu and slackware): in fact, any 32-bit kernel
+> that I have tried it on.
+>
+> And it does not happen with the wl driver on the same kernels.  So if
+> this is right, the wl driver must be doing something that the b43 driver
+> does not with respect to alignment: and you might well be right about
+> that.
 
-> In my opinion this doesn't really belong into a rate control module.
-> There should be a tx scheduling API to take care of this. Before I
-> implement something like this, I plan on exposing all per-station driver
-> queues to mac80211. This is necessary for a few other things anyway,
-> e.g. unifying software aggregation logic and fixing its buffer management.
+Could you try changing
+B43_DMA32_RINGMEMSIZE
+from 4096 to 8192 in dma.h?
 
-Sure, but then some more clever tricks end up being difficult to
-implement. For example, knowing if a client is tying up too much
-airtime at the given rate and whether to back them off for a bit. Or
-to use smaller aggregation limits for certain clients because your'e
-trying to be "fairer" when trying to keep latency low. That kind of
-thing.
-
-I think "rate control" should likely be expanded to "tx scheduling" as
-a whole, rather than sitting as a separate thing that just selects the
-rate for a node who has already been chosen to transmit.
-
-
-
-Adrian
+-- 
+Rafał
