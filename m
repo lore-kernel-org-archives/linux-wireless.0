@@ -1,30 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:43701 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933736Ab3CUQAP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 12:00:15 -0400
-Date: Thu, 21 Mar 2013 12:00:13 -0400 (EDT)
-Message-Id: <20130321.120013.2069057581829254116.davem@davemloft.net> (sfid-20130321_171256_548376_2BC68C02)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2013-03-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130320201040.GA8895@tuxdriver.com>
-References: <20130320201040.GA8895@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54675 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151Ab3CWPaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 11:30:06 -0400
+Message-ID: <514DCA73.7000403@hauke-m.de> (sfid-20130323_163016_412409_B9D29C23)
+Date: Sat, 23 Mar 2013 16:29:55 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linville@tuxdriver.com, zajec5@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
+References: <1363885909-12263-1-git-send-email-hauke@hauke-m.de> <CAGRGNgXaZ69o9xNfUih3m4fJQQDT0=C0tLpmYuCVuc4=TAarGw@mail.gmail.com> <514DC055.4070402@hauke-m.de>
+In-Reply-To: <514DC055.4070402@hauke-m.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 20 Mar 2013 16:10:41 -0400
-
-> Dave,
+On 03/23/2013 03:46 PM, Hauke Mehrtens wrote:
+> On 03/21/2013 11:41 PM, Julian Calaby wrote:
+>> Hi Hauke,
+>>
+>> On Fri, Mar 22, 2013 at 4:11 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>> ---
+>>>  drivers/net/wireless/b43/phy_n.c |   92 ++++++++------------------------------
+>>>  1 file changed, 18 insertions(+), 74 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>>> index 3c35382..4130c04 100644
+>>> --- a/drivers/net/wireless/b43/phy_n.c
+>>> +++ b/drivers/net/wireless/b43/phy_n.c
+>>> @@ -5220,19 +5150,33 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+>>>
+>>>         if (dev->phy.rev >= 3 &&
+>>>             dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
+>>> -               bool avoid = false;
+>>> +               struct bcma_drv_cc __maybe_unused *cc;
+>>
+>> Could this go inside the #ifdef in the switch statement - that way the
+>> __maybe_unused should be unnecessary?
 > 
-> This is a big pull request for new features intended for the 3.10
-> stream...
- ...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git for-davem
+> No that is not possible, C forbids it there:
+> 
+> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_channel_setup’:
+> drivers/net/wireless/b43/phy_n.c:5169:4: error: a label can only be part
+> of a statement and a declaration is not a statement
+> 
+>>
+>>> +               int avoid = 0;
+>>
+>> I though that bools were converted to ints exactly as you've converted
+>> the avoid variable here.
+> 
+> Yes I will change that.
+> 
+I thought about this and I would like to stay with int, because the
+functions wants an int and bcma_pmu_spuravoid_pllupdate() also handles
+avoid == 2.
 
-Pulled, thanks John.
+Hauke
