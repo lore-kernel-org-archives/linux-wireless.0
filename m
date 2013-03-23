@@ -1,134 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:36842 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751475Ab3CARhp (ORCPT
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:34692 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750969Ab3CWEtR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 12:37:45 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 5/7] mac80211: add lowest rate into minstrel's randmon rate sampling table
-Date: Fri,  1 Mar 2013 18:37:34 +0100
-Message-Id: <1362159456-39448-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130301_183759_243326_268F8618)
-In-Reply-To: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362159456-39448-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Sat, 23 Mar 2013 00:49:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 0/3] mwifiex PCIe power save updates
+Date: Fri, 22 Mar 2013 21:49:04 -0700
+Message-ID: <1364014147-13986-1-git-send-email-bzhao@marvell.com> (sfid-20130323_054928_276403_7EE551F4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While minstrel bootstraps and fills the success probabilities of each
-rate the lowest rate has typically a very high success probability
-(often 100% in our tests).
-Its statistics are never updated but considered to setup the mrr chain.
-In our tests we see that especially the 3rd mrr stage (which is that
-rate providing highest success probability) is filled with the lowest rate
-because its initial high sucess probability is never updated. By design
-the 4th mrr stage is filled with the lowest rate so often 3rd and 4th
-mrr stage are equal.
+These patches update PCIe power save handling
 
-This patch follows minstrels general approach of assuming as little
-as possible about rate dependencies. Consequently we include the
-lowest rate into the random sampling table to get balanced up-to-date
-statistics of all rates and therefore balanced decisions.
+Avinash Patil (3):
+  mwifiex: do not enable PCIe interrupt in Power Save sleep state
+  mwifiex: avoid waking up device in awake state
+  mwifiex: use fw_status register to wake up PCIe card
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c    | 22 ++++++++--------------
- net/mac80211/rc80211_minstrel.h    |  6 ++++--
- net/mac80211/rc80211_minstrel_ht.c |  1 -
- 3 files changed, 12 insertions(+), 17 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index aa59f29..c28e60a 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -55,7 +55,6 @@
- #include "rate.h"
- #include "rc80211_minstrel.h"
- 
--#define SAMPLE_COLUMNS	10
- #define SAMPLE_TBL(_mi, _idx, _col) \
- 		_mi->sample_table[(_idx * SAMPLE_COLUMNS) + _col]
- 
-@@ -210,7 +209,7 @@ minstrel_get_next_sample(struct minstrel_sta_info *mi)
- 	unsigned int sample_ndx;
- 	sample_ndx = SAMPLE_TBL(mi, mi->sample_row, mi->sample_column);
- 	mi->sample_row++;
--	if ((int) mi->sample_row > (mi->n_rates - 2)) {
-+	if ((int) mi->sample_row >= mi->n_rates) {
- 		mi->sample_row = 0;
- 		mi->sample_column++;
- 		if (mi->sample_column >= SAMPLE_COLUMNS)
-@@ -370,26 +369,21 @@ static void
- init_sample_table(struct minstrel_sta_info *mi)
- {
- 	unsigned int i, col, new_idx;
--	unsigned int n_srates = mi->n_rates - 1;
--	u8 rnd[8];
-+	u8 rnd[mi->n_rates];
- 
- 	mi->sample_column = 0;
- 	mi->sample_row = 0;
--	memset(mi->sample_table, 0, SAMPLE_COLUMNS * mi->n_rates);
-+	memset(mi->sample_table, 0xff, SAMPLE_COLUMNS * mi->n_rates);
- 
- 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
--		for (i = 0; i < n_srates; i++) {
-+		for (i = 0; i < mi->n_rates; i++) {
- 			get_random_bytes(rnd, sizeof(rnd));
--			new_idx = (i + rnd[i & 7]) % n_srates;
-+			new_idx = (i + rnd[i]) % mi->n_rates;
- 
--			while (SAMPLE_TBL(mi, new_idx, col) != 0)
--				new_idx = (new_idx + 1) % n_srates;
-+			while (SAMPLE_TBL(mi, new_idx, col) != 0xff)
-+				new_idx = (new_idx + 1) % mi->n_rates;
- 
--			/* Don't sample the slowest rate (i.e. slowest base
--			 * rate). We must presume that the slowest rate works
--			 * fine, or else other management frames will also be
--			 * failing and the link will break */
--			SAMPLE_TBL(mi, new_idx, col) = i + 1;
-+			SAMPLE_TBL(mi, new_idx, col) = i;
- 		}
- 	}
- }
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 200b7e3..49a770b 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -9,7 +9,9 @@
- #ifndef __RC_MINSTREL_H
- #define __RC_MINSTREL_H
- 
--#define EWMA_LEVEL 75	/* ewma weighting factor [%] */
-+#define EWMA_LEVEL	75	/* ewma weighting factor [%] */
-+#define SAMPLE_COLUMNS	10	/* number of columns in sample table */
-+
- 
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
-@@ -78,7 +80,7 @@ struct minstrel_sta_info {
- 	bool prev_sample;
- 
- 	/* sampling table */
--	u8 *sample_table;
-+	void *sample_table;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *dbg_stats;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a3081e5..8f88108 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -17,7 +17,6 @@
- #include "rc80211_minstrel_ht.h"
- 
- #define AVG_PKT_SIZE	1200
--#define SAMPLE_COLUMNS	10
- 
- /* Number of bits for an average sized packet */
- #define MCS_NBITS (AVG_PKT_SIZE << 3)
--- 
-1.8.1.1
+ drivers/net/wireless/mwifiex/pcie.c |   47 ++++++++++++++++++++++------------
+ 1 files changed, 30 insertions(+), 17 deletions(-)
 
