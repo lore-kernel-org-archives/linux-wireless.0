@@ -1,181 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42466 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab3C1JtQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:49:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 9/9] mac80211: handle wide bandwidth channel switch
-Date: Thu, 28 Mar 2013 10:49:05 +0100
-Message-Id: <1364464145-14446-10-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104932_957613_B967D99D)
-In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
-References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55636 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab3CXAsg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:48:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 13/15] brcmsmac: deactivate ucode sending probe responses
+Date: Sun, 24 Mar 2013 01:46:01 +0100
+Message-Id: <1364085963-25940-14-git-send-email-hauke@hauke-m.de> (sfid-20130324_014839_303242_E304620C)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+It is possible to configure the ucode to automatically send the probe
+responses to the clients after they send a probe request. At least for
+WPS the userspace needs to answer the probe requests and we do not know
+a way to say to the ucode to just handle the normal probe requests, so
+for now no probe requests should be handled by the ucode.
 
-Parse and react to the wide bandwidth channel switch element
-in beacons/action frames. Finding the element was done in a
-previous patch (it has different positions in beacons/action
-frames), now handle it. If there's something wrong with it
-simply disconnect.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/mlme.c | 96 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 79 insertions(+), 17 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |   13 ++++++++++++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |   11 +++++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    1 +
+ 3 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7249bdb..55a5729 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1059,7 +1059,11 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	u8 new_chan_no;
- 	u8 count;
- 	u8 mode;
-+	struct ieee80211_channel *new_chan;
- 	struct cfg80211_chan_def new_chandef = {};
-+	struct cfg80211_chan_def new_vht_chandef = {};
-+	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-+	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	int secondary_channel_offset = -1;
- 
- 	ASSERT_MGD_MTX(ifmgd);
-@@ -1074,18 +1078,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
- 		return;
- 
--	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
--		/* if HT is enabled and the IE not present, it's still HT */
--		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
--		if (elems->sec_chan_offs)
--			secondary_channel_offset =
--				elems->sec_chan_offs->sec_chan_offs;
-+	sec_chan_offs = elems->sec_chan_offs;
-+	wide_bw_chansw_ie = elems->wide_bw_chansw_ie;
-+
-+	if (ifmgd->flags & (IEEE80211_STA_DISABLE_HT |
-+			    IEEE80211_STA_DISABLE_40MHZ)) {
-+		sec_chan_offs = NULL;
-+		wide_bw_chansw_ie = NULL;
- 	}
- 
--	if (ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ &&
--	    (secondary_channel_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE ||
--	     secondary_channel_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW))
--		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+	if (ifmgd->flags & IEEE80211_STA_DISABLE_VHT)
-+		wide_bw_chansw_ie = NULL;
- 
- 	if (elems->ext_chansw_ie) {
- 		if (!ieee80211_operating_class_to_band(
-@@ -1113,9 +1116,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	bss = (void *)cbss->priv;
- 
- 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
--	new_chandef.chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
--	if (!new_chandef.chan ||
--	    new_chandef.chan->flags & IEEE80211_CHAN_DISABLED) {
-+	new_chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	if (!new_chan || new_chan->flags & IEEE80211_CHAN_DISABLED) {
- 		sdata_info(sdata,
- 			   "AP %pM switches to unsupported channel (%d MHz), disconnecting\n",
- 			   ifmgd->associated->bssid, new_freq);
-@@ -1124,27 +1126,87 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	if (sec_chan_offs) {
-+		secondary_channel_offset = sec_chan_offs->sec_chan_offs;
-+	} else if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+		/* if HT is enabled and the IE not present, it's still HT */
-+		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+	}
-+
- 	switch (secondary_channel_offset) {
- 	default:
- 		/* secondary_channel_offset was present but is invalid */
- 	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT20);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT40PLUS);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT40MINUS);
- 		break;
- 	case -1:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_NO_HT);
- 		break;
- 	}
- 
-+	if (wide_bw_chansw_ie) {
-+		new_vht_chandef.chan = new_chan;
-+		new_vht_chandef.center_freq1 =
-+			ieee80211_channel_to_frequency(
-+				wide_bw_chansw_ie->new_center_freq_seg0,
-+				new_band);
-+
-+		switch (wide_bw_chansw_ie->new_channel_width) {
-+		default:
-+			/* hmmm, ignore VHT and use HT if present */
-+		case IEEE80211_VHT_CHANWIDTH_USE_HT:
-+			new_vht_chandef.chan = NULL;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_80MHZ:
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_80;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_160MHZ:
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_160;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
-+			/* field is otherwise reserved */
-+			new_vht_chandef.center_freq2 =
-+				ieee80211_channel_to_frequency(
-+					wide_bw_chansw_ie->new_center_freq_seg1,
-+					new_band);
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
-+			break;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index d4a51f0..4b3d46a 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -552,6 +552,12 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		/* Beaconing should be enabled/disabled (beaconing modes) */
+ 		brcms_err(core, "%s: Beacon enabled: %s\n", __func__,
+ 			  info->enable_beacon ? "true" : "false");
++		if (info->enable_beacon &&
++		    hw->wiphy->flags & WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD) {
++			brcms_c_enable_probe_resp(wl->wlc, true);
++		} else {
++			brcms_c_enable_probe_resp(wl->wlc, false);
 +		}
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_80P80MHZ &&
-+		    new_vht_chandef.width == NL80211_CHAN_WIDTH_80P80)
-+			chandef_downgrade(&new_vht_chandef);
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_160MHZ &&
-+		    new_vht_chandef.width == NL80211_CHAN_WIDTH_160)
-+			chandef_downgrade(&new_vht_chandef);
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ &&
-+		    new_vht_chandef.width > NL80211_CHAN_WIDTH_20)
-+			chandef_downgrade(&new_vht_chandef);
-+	}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_CQM) {
+@@ -1047,7 +1053,12 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
+ 	hw->channel_change_time = 7 * 1000;
+ 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+-	hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
++	/*
++	 * deactivate sending probe responses by ucude, because this will
++	 * cause problems when WPS is used.
++	 *
++	 * hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
++	 */
+ 
+ 	hw->rate_control_algorithm = "minstrel_ht";
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 04192ed..63fb9fd 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7480,6 +7480,17 @@ void brcms_c_set_new_probe_resp(struct brcms_c_info *wlc,
+ 	brcms_c_update_probe_resp(wlc, false);
+ }
+ 
++void brcms_c_enable_probe_resp(struct brcms_c_info *wlc, bool enable)
++{
++	/*
++	 * prevent ucode from sending probe responses by setting the timeout
++	 * to 1, it can not send it in that time frame.
++	 */
++	wlc->prb_resp_timeout = enable ? BRCMS_PRB_RESP_TIMEOUT : 1;
++	brcms_b_write_shm(wlc->hw, M_PRS_MAXTIME, wlc->prb_resp_timeout);
++	/* TODO: if (enable) => also deactivate receiving of probe request */
++}
 +
-+	/* if VHT data is there validate & use it */
-+	if (new_vht_chandef.chan) {
-+		if (!cfg80211_chandef_compatible(&new_vht_chandef,
-+						 &new_chandef)) {
-+			sdata_info(sdata,
-+				   "AP %pM CSA has inconsistent channel data, disconnecting\n",
-+				   ifmgd->associated->bssid);
-+			ieee80211_queue_work(&local->hw,
-+					     &ifmgd->csa_connection_drop_work);
-+			return;
-+		}
-+		new_chandef = new_vht_chandef;
-+	}
-+
- 	if (!cfg80211_chandef_usable(local->hw.wiphy, &new_chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
+ /* Write ssid into shared memory */
+ static void
+ brcms_c_shm_ssid_upd(struct brcms_c_info *wlc, struct brcms_bss_cfg *cfg)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 5e6db62..6fa746e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -338,6 +338,7 @@ extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
+ 				   u16 dtim_period);
+ extern void brcms_c_set_new_probe_resp(struct brcms_c_info *wlc,
+ 				       struct sk_buff *probe_resp);
++extern void brcms_c_enable_probe_resp(struct brcms_c_info *wlc, bool enable);
+ extern void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid,
+ 			     size_t ssid_len);
+ 
 -- 
-1.8.0
+1.7.10.4
 
