@@ -1,69 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:42771 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756759Ab3CSWPJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:15:09 -0400
-Received: by mail-wi0-f173.google.com with SMTP id hq4so4570743wib.6
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 15:15:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHwWuAE0MxN9_Bf1aTmpsefMAED-9HVsV7VtxorDvF3hSHZ2Ng@mail.gmail.com>
-References: <CAHwWuAE0MxN9_Bf1aTmpsefMAED-9HVsV7VtxorDvF3hSHZ2Ng@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 20 Mar 2013 09:14:47 +1100
-Message-ID: <CAGRGNgWb_y5LXTHzex1SZyoGOK0DEDAwKjbvU-6=kKBo6bC5aA@mail.gmail.com> (sfid-20130319_231513_992549_C3608A53)
-Subject: Re: Intel Centrino Advanced-N 6205 master mode support
-To: =?ISO-8859-1?B?ROluZXMgTultZXRo?= <mr.nemeth.denes@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55570 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752564Ab3CXArw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:47:52 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 02/15] brcmsmac: add interface type to brcms_bss_cfg
+Date: Sun, 24 Mar 2013 01:45:50 +0100
+Message-Id: <1364085963-25940-3-git-send-email-hauke@hauke-m.de> (sfid-20130324_014802_411968_E8AE894D)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dénes,
+This makes it possible to easily check in which mode the device is
+currently running. This also adds a function to start station mode.
 
-On Wed, Mar 20, 2013 at 7:54 AM, Dénes Németh <mr.nemeth.denes@gmail.com> wrote:
-> Hi
->
-> Could you help me the determine if the Intel Centrino Advanced-N 6205
-> is supported in AP / master mode?
->
-> Your website http://wireless.kernel.org/en/users/Drivers/iwlwifi states
-> that the "AP mode (experimental; only on some devices/firmware versions)"
->
-> Is the wifi card above supported?
->
-> Here is my debug info, at the bottom with the failure of changing to master mode
-> dmesg:
->     loaded firmware version 18.168.6.1
->     cfg80211: Regulatory domain changed to country: EU
->
-> iw list wlan0
->     Supported interface modes:
->          * IBSS
->          * managed
->          * AP
->          * AP/VLAN
->          * monitor
->     software interface modes (can always be added):
->          * AP/VLAN
->          * monitor
->
-> iwconfig wlan0 mode master
-> Error for wireless request "Set Mode" (8B06) :
->     SET failed on device wlan0 ; Invalid argument
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    3 ++-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |    6 ++++++
+ drivers/net/wireless/brcm80211/brcmsmac/main.h        |    8 ++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    1 +
+ 4 files changed, 17 insertions(+), 1 deletion(-)
 
-You're doing it wrong, you _must_ use hostapd to configure master (AP)
-mode, the kernel cannot do it itself.
-
-Read this page:
-
-http://wireless.kernel.org/en/users/Documentation/hostapd
-
-Thanks,
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 7dac719..5bfaefb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -365,9 +365,10 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	}
+ 
+ 	spin_lock_bh(&wl->lock);
+-	memcpy(wl->pub->cur_etheraddr, vif->addr, sizeof(vif->addr));
+ 	wl->mute_tx = false;
+ 	brcms_c_mute(wl->wlc, false);
++	if (vif->type == NL80211_IFTYPE_STATION)
++		brcms_c_start_station(wl->wlc, vif->addr);
+ 	spin_unlock_bh(&wl->lock);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 60276af..4e420ea 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2163,6 +2163,12 @@ void brcms_b_switch_macfreq(struct brcms_hardware *wlc_hw, u8 spurmode)
+ 	}
+ }
+ 
++void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr)
++{
++	memcpy(wlc->pub->cur_etheraddr, addr, sizeof(wlc->pub->cur_etheraddr));
++	wlc->bsscfg->type = BRCMS_TYPE_STATION;
++}
++
+ /* Initialize GPIOs that are controlled by D11 core */
+ static void brcms_c_gpio_init(struct brcms_c_info *wlc)
+ {
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index fb44774..dbf027c 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -576,10 +576,17 @@ struct antsel_info {
+ 	struct brcms_antselcfg antcfg_cur; /* current antenna config (auto) */
+ };
+ 
++enum brcms_bss_type {
++	BRCMS_TYPE_STATION,
++	BRCMS_TYPE_AP,
++	BRCMS_TYPE_ADHOC,
++};
++
+ /*
+  * BSS configuration state
+  *
+  * wlc: wlc to which this bsscfg belongs to.
++ * type: interface type
+  * up: is this configuration up operational
+  * enable: is this configuration enabled
+  * associated: is BSS in ASSOCIATED state
+@@ -599,6 +606,7 @@ struct antsel_info {
+  */
+ struct brcms_bss_cfg {
+ 	struct brcms_c_info *wlc;
++	enum brcms_bss_type type;
+ 	bool up;
+ 	bool enable;
+ 	bool associated;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 382fb09..aa8580f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -333,5 +333,6 @@ extern int brcms_c_get_tx_power(struct brcms_c_info *wlc);
+ extern bool brcms_c_check_radio_disabled(struct brcms_c_info *wlc);
+ extern void brcms_c_mute(struct brcms_c_info *wlc, bool on);
+ extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
++extern void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr);
+ 
+ #endif				/* _BRCM_PUB_H_ */
 -- 
-Julian Calaby
+1.7.10.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
