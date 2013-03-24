@@ -1,36 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:43864 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505Ab3CHK0w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 05:26:52 -0500
-Subject: [PATCH 0/3] ath6kl: fix usb warm reboot and cleanups
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Fri, 08 Mar 2013 12:26:46 +0200
-Message-ID: <20130308102539.23245.55176.stgit@localhost6.localdomain6> (sfid-20130308_112655_973965_F6201CE8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55566 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752403Ab3CXArv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:47:51 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 03/15] brcmsmac: remove brcms_bss_cfg->BSS
+Date: Sun, 24 Mar 2013 01:45:51 +0100
+Message-Id: <1364085963-25940-4-git-send-email-hauke@hauke-m.de> (sfid-20130324_014801_609121_CEEF069A)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While looking at the usb warm reboot I had to some cleanup, especially with error
-handling.
+This was a read only member. The checks using BSS are replaced by
+better fitting checks of the new type member.
 
+The change in brcms_c_tbtt() was based on code from b43, in
+brcms_c_ps_allowed() the same happens with BSS being true or false,
+beaconing and probe responses are just needed in ap mode.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   23 +++++++++--------------
+ drivers/net/wireless/brcm80211/brcmsmac/main.h |    2 --
+ 2 files changed, 9 insertions(+), 16 deletions(-)
 
-Kalle Valo (3):
-      ath6kl: cleanup ath6kl_reset_device()
-      ath6kl: fix usb related error handling and warnings
-      ath6kl: cold reset target after host warm boot
-
-
- drivers/net/wireless/ath/ath6kl/core.h     |    2 --
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |   12 +++++----
- drivers/net/wireless/ath/ath6kl/init.c     |   37 +++++++++++++++++++---------
- drivers/net/wireless/ath/ath6kl/main.c     |   33 -------------------------
- drivers/net/wireless/ath/ath6kl/target.h   |    2 +-
- drivers/net/wireless/ath/ath6kl/usb.c      |   34 +++++++++++++++++---------
- 6 files changed, 54 insertions(+), 66 deletions(-)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 4e420ea..90e6c0d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -1069,7 +1069,7 @@ brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+ 
+ static void brcms_c_tbtt(struct brcms_c_info *wlc)
+ {
+-	if (!wlc->bsscfg->BSS)
++	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
+ 		/*
+ 		 * DirFrmQ is now valid...defer setting until end
+ 		 * of ATIM window
+@@ -3059,16 +3059,8 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (wlc->filter_flags & FIF_PROMISC_IN_BSS)
+ 		return false;
+ 
+-	if (cfg->associated) {
+-		/*
+-		 * disallow PS when one of the following
+-		 * bsscfg specific conditions meets
+-		 */
+-		if (!cfg->BSS)
+-			return false;
+-
++	if (cfg->associated)
+ 		return false;
+-	}
+ 
+ 	return true;
+ }
+@@ -5078,8 +5070,9 @@ int brcms_c_up(struct brcms_c_info *wlc)
+ 				struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 				mboolset(wlc->pub->radio_disabled,
+ 					 WL_RADIO_HW_DISABLE);
+-
+-				if (bsscfg->enable && bsscfg->BSS)
++				if (bsscfg->enable &&
++				    (bsscfg->type == BRCMS_TYPE_STATION ||
++				     bsscfg->type == BRCMS_TYPE_ADHOC))
+ 					brcms_err(wlc->hw->d11core,
+ 						  "wl%d: up: rfdisable -> "
+ 						  "bsscfg_disable()\n",
+@@ -7386,7 +7379,8 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
+ {
+ 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 
+-	if (bsscfg->up && !bsscfg->BSS)
++	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
++			   bsscfg->type == BRCMS_TYPE_ADHOC))
+ 		/* Clear the soft intmask */
+ 		wlc->defmacintmask &= ~MI_BCNTPL;
+ }
+@@ -7461,7 +7455,8 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
+ 	struct brcms_bss_cfg *bsscfg = wlc->bsscfg;
+ 
+ 	/* update AP or IBSS probe responses */
+-	if (bsscfg->up && !bsscfg->BSS)
++	if (bsscfg->up && (bsscfg->type == BRCMS_TYPE_AP ||
++			   bsscfg->type == BRCMS_TYPE_ADHOC))
+ 		brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+index dbf027c..0cfe782 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
+@@ -590,7 +590,6 @@ enum brcms_bss_type {
+  * up: is this configuration up operational
+  * enable: is this configuration enabled
+  * associated: is BSS in ASSOCIATED state
+- * BSS: infraustructure or adhoc
+  * SSID_len: the length of SSID
+  * SSID: SSID string
+  *
+@@ -610,7 +609,6 @@ struct brcms_bss_cfg {
+ 	bool up;
+ 	bool enable;
+ 	bool associated;
+-	bool BSS;
+ 	u8 SSID_len;
+ 	u8 SSID[IEEE80211_MAX_SSID_LEN];
+ 	u8 BSSID[ETH_ALEN];
+-- 
+1.7.10.4
 
