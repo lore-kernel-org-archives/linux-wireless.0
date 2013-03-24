@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59962 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064Ab3CNWR7 (ORCPT
+Received: from mail-ia0-f182.google.com ([209.85.210.182]:55082 "EHLO
+	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754892Ab3CXWks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 18:17:59 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Don't restart sta-timer if not associated.
-Date: Thu, 14 Mar 2013 15:17:51 -0700
-Message-Id: <1363299471-10442-1-git-send-email-greearb@candelatech.com> (sfid-20130314_231802_974308_E8FBA39F)
+	Sun, 24 Mar 2013 18:40:48 -0400
+Received: by mail-ia0-f182.google.com with SMTP id u8so4986993iag.41
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 15:40:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+ <CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
+ <CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
+ <CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
+ <CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
+ <CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
+ <CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
+ <CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
+ <CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
+ <CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com>
+ <CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
+ <CAJ-VmomvQKNHP008vXA8dHrSnG1mUkkx1yoBy6B1jwv_VxTZjw@mail.gmail.com>
+ <CAMgrJ3b_W0it4p9pY0rayuZu5yupMJPrGc2T6DTrKO-G27y4Vg@mail.gmail.com>
+ <CAJ-Vmok-iP+=6EK+mG+jqnEPY2gPLhypjcGKxceEvy=EG59Ngw@mail.gmail.com>
+ <CAMgrJ3aDhKgPjWx_znDCJVeibTChHAORnFS4Cv6fF56SvV=sNA@mail.gmail.com> <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
+From: Robert Shade <robert.shade@gmail.com>
+Date: Sun, 24 Mar 2013 18:40:27 -0400
+Message-ID: <CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com> (sfid-20130324_234056_951750_ED8E253B)
+Subject: Re: Auth Packet TX Delay
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+> Hm, so it's doing some fast channel changes?
 
-I found another crash when deleting lots of virtual stations
-in a congested environment.  I think the problem is that
-the ieee80211_mlme_notify_scan_completed could call
-ieee80211_restart_sta_timer for a non-associated interface
-that was about to be deleted.
+Yes, the fastcc does seem to work, it's just that sometimes the chip
+can get in a bad state when it's not cold reset.
 
-With the following patch I am unable to reproduce the
-crash.
+> Just disable fast channel change entirely and re-test? And why not
+> just force a cold reset always? Why bother checking for the queue to
+> be stopped?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 81e0619... a1cc8c4... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Just disabling fastcc was not enough, the cold resets are what seemed
+to have made the difference.  I was actually thinking about
+re-enabling fastcc and testing again.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 81e0619..a1cc8c4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2931,6 +2931,9 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
- 	u32 flags;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		if (unlikely(!sdata->u.mgd.associated))
-+			return;
-+
- 		__ieee80211_stop_poll(sdata);
- 
- 		/* let's probe the connection once */
--- 
-1.7.3.4
-
+The TXE/RXE checking path is from felix's "ath9k_hw: improve reset
+reliability after errors" patch.  I've just got the exception in there
+for 9160, since I don't have other hardware to test with.  What do the
+hardware engineers say about warm vs. cold reset?  I did notice that
+your latest ar9300 HAL has a note stating that "Warm reset is
+optimistic."
