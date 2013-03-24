@@ -1,55 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f170.google.com ([209.85.210.170]:51014 "EHLO
-	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab3C0DMO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 23:12:14 -0400
-Received: by mail-ia0-f170.google.com with SMTP id h8so7149886iaa.29
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 20:12:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMgrJ3b7yZru5P-bYpmmfjYCoSJqUhAMrTzfKnKLPN3CgdeJ4w@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
- <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
- <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
- <201303251712.19808.chunkeey@googlemail.com> <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
- <CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
- <CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
- <CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
- <5151D752.3080303@candelatech.com> <CAMgrJ3b7yZru5P-bYpmmfjYCoSJqUhAMrTzfKnKLPN3CgdeJ4w@mail.gmail.com>
-From: Robert Shade <robert.shade@gmail.com>
-Date: Tue, 26 Mar 2013 23:11:53 -0400
-Message-ID: <CAMgrJ3bENvfezMSge9_oOJiSsoMpMVFGk+QaSgsHSDASczgn0A@mail.gmail.com> (sfid-20130327_041226_241421_C6B8095B)
-Subject: Re: [ath9k-devel] Auth Packet TX Delay
-To: Ben Greear <greearb@candelatech.com>,
-	Adrian Chadd <adrian@freebsd.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Marco Fonseca <marco@tampabay.rr.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55643 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab3CXAsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:48:41 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 15/15] brcmsmac: add support for adhoc mode
+Date: Sun, 24 Mar 2013 01:46:03 +0100
+Message-Id: <1364085963-25940-16-git-send-email-hauke@hauke-m.de> (sfid-20130324_014844_137680_337581C6)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Think I found it:  In ath_reset_internal, before we reset, we call
-ath_prepare_reset, which calls ath9k_hw_disable_interrupts.  If the
-channel change fails, we never call ath_complete_reset, which calls
-ath9k_hw_enable_interrupts.
+This adds adhoc mode support to brcmsmac.
 
-ath9k_hw_{enable|disable}_interrupts calls definitely needs to be
-balanced.  Looking at an old log, IER never gets re-enabled after the
-channel set failure.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |   12 ++++++++----
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |   11 +++++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    1 +
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
-Any suggestions on the proper cleanup?  Could we just call
-ath_complete_reset anyway?  Some sort of special handling?
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 445de66..0b3f8d9 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -357,11 +357,12 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct brcms_info *wl = hw->priv;
+ 
+-	/* Just STA and AP for now */
++	/* Just STA, AP and ADHOC for now */
+ 	if (vif->type != NL80211_IFTYPE_STATION &&
+-	    vif->type != NL80211_IFTYPE_AP) {
++	    vif->type != NL80211_IFTYPE_AP &&
++	    vif->type != NL80211_IFTYPE_ADHOC) {
+ 		brcms_err(wl->wlc->hw->d11core,
+-			  "%s: Attempt to add type %d, only STA and AP for now\n",
++			  "%s: Attempt to add type %d, only STA, AP and AdHoc for now\n",
+ 			  __func__, vif->type);
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -374,6 +375,8 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	else if (vif->type == NL80211_IFTYPE_AP)
+ 		brcms_c_start_ap(wl->wlc, vif->addr, vif->bss_conf.bssid,
+ 				 vif->bss_conf.ssid, vif->bss_conf.ssid_len);
++	else if (vif->type == NL80211_IFTYPE_ADHOC)
++		brcms_c_start_adhoc(wl->wlc, vif->addr);
+ 	spin_unlock_bh(&wl->lock);
+ 
+ 	return 0;
+@@ -1056,7 +1059,8 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
+ 	/* channel change time is dependent on chip and band  */
+ 	hw->channel_change_time = 7 * 1000;
+ 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-				     BIT(NL80211_IFTYPE_AP);
++				     BIT(NL80211_IFTYPE_AP) |
++				     BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	/*
+ 	 * deactivate sending probe responses by ucude, because this will
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 7825202..59d4384 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2186,6 +2186,14 @@ void brcms_c_start_ap(struct brcms_c_info *wlc, u8 *addr, const u8 *bssid,
+ 	brcms_b_mctrl(wlc->hw, MCTL_AP | MCTL_INFRA, MCTL_AP | MCTL_INFRA);
+ }
+ 
++void brcms_c_start_adhoc(struct brcms_c_info *wlc, u8 *addr)
++{
++	memcpy(wlc->pub->cur_etheraddr, addr, sizeof(wlc->pub->cur_etheraddr));
++	wlc->bsscfg->type = BRCMS_TYPE_ADHOC;
++
++	brcms_b_mctrl(wlc->hw, MCTL_AP | MCTL_INFRA, 0);
++}
++
+ /* Initialize GPIOs that are controlled by D11 core */
+ static void brcms_c_gpio_init(struct brcms_c_info *wlc)
+ {
+@@ -3077,6 +3085,9 @@ static bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (wlc->bsscfg->type == BRCMS_TYPE_AP)
+ 		return false;
+ 
++	if (wlc->bsscfg->type == BRCMS_TYPE_ADHOC)
++		return false;
++
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index e3bdccf..d36ea5e 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -334,6 +334,7 @@ extern bool brcms_c_tx_flush_completed(struct brcms_c_info *wlc);
+ extern void brcms_c_start_station(struct brcms_c_info *wlc, u8 *addr);
+ extern void brcms_c_start_ap(struct brcms_c_info *wlc, u8 *addr,
+ 			     const u8 *bssid, u8 *ssid, size_t ssid_len);
++extern void brcms_c_start_adhoc(struct brcms_c_info *wlc, u8 *addr);
+ extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
+ extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
+ 				   struct sk_buff *beacon, u16 tim_offset,
+-- 
+1.7.10.4
 
-On Tue, Mar 26, 2013 at 8:55 PM, Robert Shade <robert.shade@gmail.com> wrote:
-> On Tue, Mar 26, 2013 at 1:13 PM, Ben Greear <greearb@candelatech.com> wrote:
->> Can you cat out the /debug/ieee80211/wiphy0/ath9k/xmit
->> file when it gets in this hung state?  I saw issues where
->> the xmit queues got hung in our AR9380 NIC systems and
->> ended up adding an ugly bit of cleanup/reset logic to
->> get them working again...
->
-> Dumps are attached on to the bug.  I remember being hopeful when
-> reading your thread that we stumbled on the same issue, but the
-> symptoms don't look the same to me because pending-frames goes back to
-> 0 in my case.
