@@ -1,86 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:62370 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103Ab3CZRBQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 13:01:16 -0400
-Received: by mail-oa0-f46.google.com with SMTP id k1so7828439oag.5
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 10:01:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5151B106.6020800@dpets.co.uk>
-References: <51514F1B.1080207@dpets.co.uk>
-	<5151639F.4010700@broadcom.com>
-	<51516BC2.5010004@dpets.co.uk>
-	<515173A4.7030607@broadcom.com>
-	<515179C5.50406@dpets.co.uk>
-	<51517E28.5000303@broadcom.com>
-	<515182C6.5030305@dpets.co.uk>
-	<51518682.7060503@broadcom.com>
-	<515189C6.7070003@dpets.co.uk>
-	<51518E14.3050500@broadcom.com>
-	<5151B106.6020800@dpets.co.uk>
-Date: Tue, 26 Mar 2013 18:01:16 +0100
-Message-ID: <CACna6rwnOCETmripr6i-=MvPTywXUpPrd-WxPtNA1=5jz6oMUA@mail.gmail.com> (sfid-20130326_180123_068128_EAFF8B97)
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: John Talbut <jt@dpets.co.uk>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55615 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab3CXAsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:48:25 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 11/15] brcmsmac: react on changing SSID
+Date: Sun, 24 Mar 2013 01:45:59 +0100
+Message-Id: <1364085963-25940-12-git-send-email-hauke@hauke-m.de> (sfid-20130324_014828_284053_2B305FBF)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/26 John Talbut <jt@dpets.co.uk>:
-> On 26/03/13 12:01, Arend van Spriel wrote:
->> On 03/26/2013 12:43 PM, John Talbut wrote:
->>> On 26/03/13 11:29, Arend van Spriel wrote:
->>>> On 03/26/2013 12:13 PM, John Talbut wrote:
->>>>>
->>>>> On 26/03/13 10:53, Arend van Spriel wrote:
->>>>>> On 03/26/2013 11:34 AM, John Talbut wrote:
->>>>>>> Kernel log attached.
->>>>>>>
->>>>>>
->>>>>> Now this is weird. I do not see any BCMA log messages. Can you give
->>>>>> output of following command:
->>>>>>
->>>>>> $ lspci -n -s 1:0.0
->>>>>
->>>>> 01:00.0 0280: 14e4:4357 (rev 01)
->>>>
->>>> Ok, no problem there.
->>>>
->>>> digging further in sysfs. Can you execute the following commands:
->>>>
->>>> if it exists:
->>>> $ ls /sys/bus/bcma
->>>> $ ls /sys/bus/bcma/devices
->>>> $ ls /sys/bus/bcma/drivers
->>>>
->>>> if it exists also following:
->>>> $ ls -l /sys/bus/bcma/drivers/brcmsmac
->>>
->>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
->>> devices  drivers  drivers_autoprobe  drivers_probe  uevent
->>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
->>
->> The fact that there are no devices detected under bcma is suspicious.
->> Adding bcma developer to the list. Maybe he knows about issues when
->> having bcma compiled in kernel image.
->>
->> Regards,
->> Arend
->
-> I have just noticed that with a previous version of the kernel which I
-> had compiled with
-> # CONFIG_BCMA is not set
->
-> there are references to brcmsmac in the kernel log.  It complains about
-> failing to find the firmware, though.
+To send the correct probe response the hardware needs to know the SSID
+when it changed.
 
-In earlier kernels brcmsmac was re-implementing "bcma" on it's own. It
-was changed, so now brcmsmac operates just on the bcma 80211 core. You
-need both: bcma and brcmsmac loaded.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    6 ++++++
+ drivers/net/wireless/brcm80211/brcmsmac/main.c        |    9 +++++++++
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 ++
+ 3 files changed, 17 insertions(+)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 591e262..1d0d0f6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -521,6 +521,12 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET, info->bssid);
+ 		spin_unlock_bh(&wl->lock);
+ 	}
++	if (changed & BSS_CHANGED_SSID) {
++		/* BSSID changed, for whatever reason (IBSS and managed mode) */
++		spin_lock_bh(&wl->lock);
++		brcms_c_set_ssid(wl->wlc, info->ssid, info->ssid_len);
++		spin_unlock_bh(&wl->lock);
++	}
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		/* Beacon data changed, retrieve new beacon (beaconing modes) */
+ 		struct sk_buff *beacon;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 60dc2c4..cf11d894 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -3783,6 +3783,15 @@ static void brcms_c_set_bssid(struct brcms_bss_cfg *bsscfg)
+ 	brcms_c_set_addrmatch(bsscfg->wlc, RCM_BSSID_OFFSET, bsscfg->BSSID);
+ }
+ 
++void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid, size_t ssid_len)
++{
++	u8 len = min_t(u8, sizeof(wlc->bsscfg->SSID), ssid_len);
++	memset(wlc->bsscfg->SSID, 0, sizeof(wlc->bsscfg->SSID));
++
++	memcpy(wlc->bsscfg->SSID, ssid, len);
++	wlc->bsscfg->SSID_len = len;
++}
++
+ static void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
+ {
+ 	wlc_hw->shortslot = shortslot;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 8a3071f..6ed0a20 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -336,5 +336,7 @@ extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
+ extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
+ 				   struct sk_buff *beacon, u16 tim_offset,
+ 				   u16 dtim_period);
++extern void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid,
++			     size_t ssid_len);
+ 
+ #endif				/* _BRCM_PUB_H_ */
 -- 
-Rafał
+1.7.10.4
+
