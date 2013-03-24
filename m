@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3489 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755373Ab3CDIaf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 03:30:35 -0500
-Message-ID: <51345B80.3020108@broadcom.com> (sfid-20130304_093047_103707_7C50FD6E)
-Date: Mon, 4 Mar 2013 09:29:52 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/13] brcmfmac: only do auth_type workaround when
- no WPA or RSN IE is provided
-References: <1362311132-29561-1-git-send-email-arend@broadcom.com>
- <1362311132-29561-6-git-send-email-arend@broadcom.com> (
- sfid-20130303_124611_530276_DB95CBBF)
- <1362331252.8226.2.camel@jlt4.sipsolutions.net>
- <5133A8D2.9090100@broadcom.com>
- <1362342943.8226.3.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1362342943.8226.3.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55609 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab3CXAsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Mar 2013 20:48:20 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 09/15] brcmsmac: write beacon period to hardware
+Date: Sun, 24 Mar 2013 01:45:57 +0100
+Message-Id: <1364085963-25940-10-git-send-email-hauke@hauke-m.de> (sfid-20130324_014823_762569_FD586531)
+In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/03/13 21:35, Johannes Berg wrote:
-> On Sun, 2013-03-03 at 20:47 +0100, Arend van Spriel wrote:
->> On 03/03/13 18:20, Johannes Berg wrote:
->>> On Sun, 2013-03-03 at 12:45 +0100, Arend van Spriel wrote:
->>>> The workaround is only needed when auth_type is automatic AND there is
->>>> no WPA or RSN information element provided by cfg80211.
->>>
->>> Does this really actually happen? Why would wpa_s select automatic when
->>> it knows it's going to be open?
->>>
->
->> You are right and it does not happen with wpa_s. However, it does
->> 'actually really happen' :-)
->
-> :-)
-> Just curious.
->
->> when using iw to connect to an unsecure AP.
->
-> Right but then checking for RSN/WPA won't make a difference? I guess I
-> don't really understand the code, so you better ignore me ;-)
+Make brcms_c_set_beacon_period() write the beacon period to the
+hardware if a new one is set.
 
-Hi Johannes,
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-I would not go that far. I guess what you are really asking is whether 
-auth_type will ever be set to automatic when we do get a RSN/WPA ie and 
-I have to admit you got a point there.
-
-John,
-
-Can you pull this patch out of the series.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 7e19295..4ffb0c6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -5551,10 +5551,20 @@ static void brcms_c_time_unlock(struct brcms_c_info *wlc)
+ 
+ int brcms_c_set_beacon_period(struct brcms_c_info *wlc, u16 period)
+ {
++	u32 bcnint_us;
++
+ 	if (period == 0)
+ 		return -EINVAL;
+ 
+ 	wlc->default_bss->beacon_period = period;
++
++	bcnint_us = period << 10;
++	brcms_c_time_lock(wlc);
++	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfprep),
++		     (bcnint_us << CFPREP_CBI_SHIFT));
++	bcma_write32(wlc->hw->d11core, D11REGOFFS(tsf_cfpstart), bcnint_us);
++	brcms_c_time_unlock(wlc);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
