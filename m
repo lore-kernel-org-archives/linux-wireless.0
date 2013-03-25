@@ -1,122 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f170.google.com ([209.85.210.170]:43094 "EHLO
-	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753976Ab3CXSzp (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57316 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932363Ab3CYSTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 14:55:45 -0400
-Received: by mail-ia0-f170.google.com with SMTP id h8so4964789iaa.15
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 11:55:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmok-iP+=6EK+mG+jqnEPY2gPLhypjcGKxceEvy=EG59Ngw@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
- <CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
- <CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
- <CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
- <CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
- <CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
- <CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
- <CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
- <CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
- <CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com>
- <CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
- <CAJ-VmomvQKNHP008vXA8dHrSnG1mUkkx1yoBy6B1jwv_VxTZjw@mail.gmail.com>
- <CAMgrJ3b_W0it4p9pY0rayuZu5yupMJPrGc2T6DTrKO-G27y4Vg@mail.gmail.com> <CAJ-Vmok-iP+=6EK+mG+jqnEPY2gPLhypjcGKxceEvy=EG59Ngw@mail.gmail.com>
-From: Robert Shade <robert.shade@gmail.com>
-Date: Sun, 24 Mar 2013 14:55:25 -0400
-Message-ID: <CAMgrJ3aDhKgPjWx_znDCJVeibTChHAORnFS4Cv6fF56SvV=sNA@mail.gmail.com> (sfid-20130324_195558_331845_DB4AC464)
-Subject: Re: Auth Packet TX Delay
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 25 Mar 2013 14:19:41 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 1/2] mac80211: Add beacon stats to debugfs.
+Date: Mon, 25 Mar 2013 11:19:34 -0700
+Message-Id: <1364235575-20268-1-git-send-email-greearb@candelatech.com> (sfid-20130325_191945_890100_4511B390)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've done some more testing on this and it looks like the auth packets
-aren't delayed, they're never sent.  The "TX Complete" messages are
-from the queue being purged before a reset due to channel change.
+From: Ben Greear <greearb@candelatech.com>
 
-It only gets in this state when it's unable to change the channel due
-to the timeout on setting the AR_PHY_AGC_CONTROL register.  One thing
-that does look interesting is that, when we fail to change the
-channel, ath_complete_reset is never called and therefore
-ieee80211_wake_queues is never called either.  Are stop/wake queues
-calls supposed to be balanced?
+Beacon-timeout and number of beacon loss events.
 
-Felix's "ath9k_hw: improve reset reliability after errors" did help a
-bit, but I still get the DMA errors periodically and it eventually got
-into the state where the calibration fails leading to not sending any
-auth packets.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-Based on your suggestions, I've been testing a few days with the
-following patch and I have yet to see any DMA messages or the auth
-stuck state.  I had to check for SC_OP_INVALID because the initial
-reset in ath9k_start would cause a kernel panic when the system was
-being initialized from a powered off state.  I don't know enough about
-the internals to know if I should expect that, but I'll need to set up
-a serial console in order to capture the panic.
+Now against mac80211-next tree.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c
-b/drivers/net/wireless/ath/ath9k/hw.c
-index 07e2526..05eebdb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1456,6 +1456,7 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw
-*ah, u32 type)
- static bool ath9k_hw_chip_reset(struct ath_hw *ah,
-                                struct ath9k_channel *chan)
- {
-+       struct ath_softc *sc = ah->hw->priv;
-        int reset_type = ATH9K_RESET_WARM;
+:100644 100644 ddb4268... 14abcf4... M	net/mac80211/debugfs_netdev.c
+:100644 100644 4f841fe... 44e201d... M	net/mac80211/debugfs_sta.c
+ net/mac80211/debugfs_netdev.c |   11 +++++++++++
+ net/mac80211/debugfs_sta.c    |    2 ++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-        if (AR_SREV_9280(ah)) {
-@@ -1463,9 +1464,12 @@ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
-                        reset_type = ATH9K_RESET_POWER_ON;
-                else
-                        reset_type = ATH9K_RESET_COLD;
--       } else if (ah->chip_fullsleep || REG_READ(ah, AR_Q_TXE) ||
--                  (REG_READ(ah, AR_CR) & AR_CR_RXE))
-+       } else if (AR_SREV_9160(ah) && !test_bit(SC_OP_INVALID,
-&sc->sc_flags)) {
-+        reset_type = ATH9K_RESET_COLD;
-+    } else if (ah->chip_fullsleep || REG_READ(ah, AR_Q_TXE) ||
-+                  (REG_READ(ah, AR_CR) & AR_CR_RXE)) {
-                reset_type = ATH9K_RESET_COLD;
-+    }
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index ddb4268..14abcf4 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -124,6 +124,15 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 	return scnprintf(buf, buflen, "%d\n", sdata->field / 16);	\
+ }
+ 
++#define IEEE80211_IF_FMT_JIFFIES_TO_MS(name, field)			\
++static ssize_t ieee80211_if_fmt_##name(					\
++	const struct ieee80211_sub_if_data *sdata,			\
++	char *buf, int buflen)						\
++{									\
++	return scnprintf(buf, buflen, "%d\n",				\
++			 jiffies_to_msecs(sdata->field));		\
++}
++
+ #define __IEEE80211_IF_FILE(name, _write)				\
+ static ssize_t ieee80211_if_read_##name(struct file *file,		\
+ 					char __user *userbuf,		\
+@@ -197,6 +206,7 @@ IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
+ IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
+ IEEE80211_IF_FILE(last_beacon, u.mgd.last_beacon_signal, DEC);
+ IEEE80211_IF_FILE(ave_beacon, u.mgd.ave_beacon_signal, DEC_DIV_16);
++IEEE80211_IF_FILE(beacon_timeout, u.mgd.beacon_timeout, JIFFIES_TO_MS);
+ 
+ static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
+ 			      enum ieee80211_smps_mode smps_mode)
+@@ -542,6 +552,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(aid);
+ 	DEBUGFS_ADD(last_beacon);
+ 	DEBUGFS_ADD(ave_beacon);
++	DEBUGFS_ADD(beacon_timeout);
+ 	DEBUGFS_ADD_MODE(smps, 0600);
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
+ 	DEBUGFS_ADD_MODE(uapsd_queues, 0600);
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 4f841fe..44e201d 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -54,6 +54,7 @@ STA_FILE(aid, sta.aid, D);
+ STA_FILE(dev, sdata->name, S);
+ STA_FILE(last_signal, last_signal, D);
+ STA_FILE(last_ack_signal, last_ack_signal, D);
++STA_FILE(beacon_loss_count, beacon_loss_count, D);
+ 
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+@@ -434,6 +435,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(agg_status);
+ 	DEBUGFS_ADD(dev);
+ 	DEBUGFS_ADD(last_signal);
++	DEBUGFS_ADD(beacon_loss_count);
+ 	DEBUGFS_ADD(ht_capa);
+ 	DEBUGFS_ADD(vht_capa);
+ 	DEBUGFS_ADD(last_ack_signal);
+-- 
+1.7.3.4
 
-        if (!ath9k_hw_set_reset_reg(ah, reset_type))
-                return false;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c
-b/drivers/net/wireless/ath/ath9k/main.c
-index 6e66f9c..09b4699 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -252,7 +252,7 @@ static int ath_reset_internal(struct ath_softc
-*sc, struct ath9k_channel *hchan)
-        struct ath_hw *ah = sc->sc_ah;
-        struct ath_common *common = ath9k_hw_common(ah);
-        struct ath9k_hw_cal_data *caldata = NULL;
--       bool fastcc = true;
-+       bool fastcc = !AR_SREV_9160(ah);
-        int r;
-
-        __ath_cancel_work(sc);
-
---
-
-On Sat, Feb 9, 2013 at 2:39 AM, Adrian Chadd <adrian@freebsd.org> wrote:
->
-> On 8 February 2013 10:48, Robert Shade <robert.shade@gmail.com> wrote:
-> > Maybe I have the terminology wrong, but I thought a cold reset meant
-> > toggling the PCI reset line.
->
-> That's a very very cold reset line, that resets the PCI bus glue
-> inside the chip.
->
-> There's a bunch of different reset lines; most of the device can be
-> reset without resetting the PCI/PCIe host interface.
->
-> So a "cold" reset here is resetting almost everything inside the chip
-> by pulling down those reset lines and stopping/restarting clocks.
->
->
-> Adrian
