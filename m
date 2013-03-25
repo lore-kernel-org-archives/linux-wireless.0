@@ -1,129 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:51201 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109Ab3CSMmj (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:38902 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758304Ab3CYJ6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 08:42:39 -0400
-Received: by mail-wg0-f50.google.com with SMTP id es5so315441wgb.17
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 05:42:38 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 19 Mar 2013 13:42:38 +0100
-Message-ID: <CADGp=Qe9NB9EAS=hpTKbDE-JhHqXY=sc1CaumiPaP384Bijb6g@mail.gmail.com> (sfid-20130319_134245_403038_1A604E30)
-Subject: ath6kl: null pointer dereference in do_recv_completion
-From: Julien Massot <jmassot@aldebaran-robotics.com>
-To: ath6kl-devel <ath6kl-devel@qca.qualcomm.com>
+	Mon, 25 Mar 2013 05:58:14 -0400
+Date: Mon, 25 Mar 2013 11:15:59 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH] cfg80211: Document update_ft_ies() cfg80211_ops
+Message-ID: <20130325091559.GA30599@w1.fi> (sfid-20130325_105826_820103_5A13880D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I just found a segfault in the ath6kl driver.
+This was forgotten from the commit that added support for FT
+operations with drivers that implement SME.
 
-I succeed in triggering it when I'm doing scp on a slow storage. ( ~
-1Mbit/s slow SDIO bus)
-I doesn't succeed in reproducing it using iperf, which gives slightly
-better throughput (100 Mbit/s tcp).
-
-I'm using a preempt rt Linux 2.6.33 + wireless compat-3.6.6-1.
-
-[ 2937.469910] BUG: unable to handle kernel NULL pointer dereference at (null)
-[ 2937.470826] IP: [<(null)>] (null)
-[ 2937.470826] *pde = 00000000
-[ 2937.470826] Oops: 0000 [#1] PREEMPT SMP
-[ 2937.470826] last sysfs file: /sys/devices/platform/regulatory.0/uevent
-[ 2937.470826] Modules linked in: cdc_acm bridge stp rfcomm l2cap
-bluetooth cgosdrv ov5640 ath6kl_usb ath6kl_core snd_hda_codec_analog
-cfg80211 mmc_block mt9m114 unicorn(C) v4l2_common videodev
-snd_hda_intel v4l1_compat snd_hda_codec videobuf_dma_contig sdhci_pci
-compat videobuf_core i2c_isch snd_hwdep serio_raw sdhci [last
-unloaded: i2c_serial]
-[ 2937.470826]
-[ 2937.470826] Pid: 1841, comm: events/0 Tainted: G         C
-2.6.33.9-rt31-aldebaran-rt #1 /
-[ 2937.470826] EIP: 0060:[<00000000>] EFLAGS: 00010293 CPU: 0
-[ 2937.470826] EIP is at 0x0
-[ 2937.470826] EAX: f3068000 EBX: f5a3bf2c ECX: f5a3bf2c EDX: f30502c0
-[ 2937.470826] ESI: f30687c0 EDI: f30502c0 EBP: f5a3bef4 ESP: f5a3bee8
-[ 2937.470826]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 preempt:00000000
-[ 2937.470826] Process events/0 (pid: 1841, ti=f5a3a000 task=f512a4b0
-task.ti=f5a3a000)
-[ 2937.470826] Stack:
-[ 2937.470826]  f8d05215 f3992020 f3068000 f5a3bf40 f8d05f11 c1024e18
-00000002 f5dc3c40
-[ 2937.470826] <0> f5dc3c40 00000246 08a3bf24 0000064a 008d2424
-f55f2418 00000000 f30688f8
-[ 2937.470826] <0> f5c8de00 f5a3bf2c f5a3bf2c f8d13838 f55f2000
-f55f2418 f5a3bf4c f8d131d0
-[ 2937.470826] Call Trace:
-[ 2937.470826]  [<f8d05215>] ? do_recv_completion+0x2f/0x39 [ath6kl_core]
-[ 2937.470826]  [<f8d05f11>] ? ath6kl_htc_pipe_rx_complete+0x2cc/0x31a
-[ath6kl_core]
-[ 2937.470826]  [<c1024e18>] ? finish_task_switch+0x51/0x67
-[ 2937.470826]  [<f8d131d0>] ? ath6kl_core_rx_complete+0xd/0x10 [ath6kl_core]
-[ 2937.470826]  [<f8d933a9>] ? ath6kl_usb_io_comp_work+0x2d/0x3f [ath6kl_usb]
-[ 2937.470826]  [<c103da3b>] ? worker_thread+0x105/0x17c
-[ 2937.470826]  [<f8d9337c>] ? ath6kl_usb_io_comp_work+0x0/0x3f [ath6kl_usb]
-[ 2937.470826]  [<c104096d>] ? autoremove_wake_function+0x0/0x2f
-[ 2937.470826]  [<c103d936>] ? worker_thread+0x0/0x17c
-[ 2937.470826]  [<c104069b>] ? kthread+0x5f/0x64
-[ 2937.470826]  [<c104063c>] ? kthread+0x0/0x64
-[ 2937.470826]  [<c1002db6>] ? kernel_thread_helper+0x6/0x10
-[ 2937.470826] Code:  Bad EIP value.
-[ 2937.470826] EIP: [<00000000>] 0x0 SS:ESP 0068:f5a3bee8
-[ 2937.470826] CR2: 0000000000000000
-[ 2937.681695] hda-intel: IRQ timing workaround is activated for card
-#0. Suggest a bigger bdl_pos_adj.
-[ 2937.684124] ---[ end trace 65e5f4c37e647fa3 ]---
-
-http://pastebin.com/KEGQRjzu
-http://pastebin.com/cngx9q1e
-http://pastebin.com/GfCdJDUt
-
- I found that in the file htc_pipe.c line 940 in function do_recv_completion
-the ep->ep_cb.rx function pointer is null.
-
-On Kalle's request, I add a debug line when the bug occurs.
-
- ath6kl_dbg(ATH6KL_DBG_HTC,
- 		 	"SVC Ready: 0x%4.4X: ULpipe:%d DLpipe:%d id:%d\n",
- 		 	ep->svc_id, ep->pipe.pipeid_ul,
- 		 	ep->pipe.pipeid_dl, ep->eid);
-
-and the log when the bugs occurs:
-SVC Ready: 0x0000: ULpipe:0 DLpipe:0 id:6
-
-So I add a check for null pointer, the communication no longer hang.
-
-here is the patch:
-
->From 9565f0ab6aa5e739c8ceac6eef9e19b6dba71a07 Mon Sep 17 00:00:00 2001
-From: Julien Massot <jmassot@aldebaran-robotics.com>
-Date: Mon, 18 Mar 2013 17:32:26 +0100
-Subject: [PATCH] ath6kl: check for null rx hanldler of htc_ep_callbacks struct
-
+Signed-off-by: Jouni Malinen <j@w1.fi>
 ---
- drivers/net/wireless/ath/ath6kl/htc_pipe.c | 4 ++++
+ include/net/cfg80211.h |    4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-index 9adb567..969eb2a 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
-@@ -937,6 +937,10 @@ static void do_recv_completion(struct htc_endpoint *ep,
- 		packet = list_first_entry(queue_to_indicate,
- 					  struct htc_packet, list);
- 		list_del(&packet->list);
-+                if (ep->ep_cb.rx == NULL) {
-+                  ath6kl_warn("ep->ep_cb.rx is null .. continue ..\n");
-+                  continue;
-+                }
- 		ep->ep_cb.rx(ep->target, packet);
- 	}
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bdba9b6..57870b6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1998,6 +1998,10 @@ struct cfg80211_update_ft_ies_params {
+  *	advertise the support for MAC based ACL have to implement this callback.
+  *
+  * @start_radar_detection: Start radar detection in the driver.
++ *
++ * @update_ft_ies: Provide updated Fast BSS Transition information to the
++ *	driver. If the SME is in the driver/firmware, this information can be
++ *	used in building Authentication and Reassociation Request frames.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+-- 
+1.7.9.5
+
 
 -- 
-
-Best Regards
-
-Julien
+Jouni Malinen                                            PGP id EFC895FA
