@@ -1,78 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44258 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753630Ab3C1V2x (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:58766 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758415Ab3CYOnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 17:28:53 -0400
-Message-ID: <1364506118.10397.29.camel@jlt4.sipsolutions.net> (sfid-20130328_222901_878301_5D9AD428)
-Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
- user-space
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Dan Williams <dcbw@redhat.com>, Adrian Chadd <adrian@freebsd.org>,
+	Mon, 25 Mar 2013 10:43:41 -0400
+Date: Mon, 25 Mar 2013 15:43:32 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Adrian Chadd <adrian@freebsd.org>,
 	Felix Fietkau <nbd@openwrt.org>,
+	Antonio Quartulli <antonio@open-mesh.com>,
 	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Date: Thu, 28 Mar 2013 22:28:38 +0100
-In-Reply-To: <5154B347.9080904@broadcom.com>
-References: <1364472669-5629-1-git-send-email-arend@broadcom.com>
-	 <1364487476.10397.23.camel@jlt4.sipsolutions.net>
-	 <5154B347.9080904@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, Marek Lindner <marek@open-mesh.com>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [RFC] design discussion: Collecting information for (non-peer)
+ stations
+Message-ID: <20130325144332.GA11701@pandem0nium> (sfid-20130325_154344_966792_3FB3CD9D)
+References: <20130215171938.GA4140@pandem0nium>
+ <51279AFA.3000608@openwrt.org>
+ <20130222163643.GB3757@open-mesh.com>
+ <5127A4E0.8080101@openwrt.org>
+ <CAJ-Vmo=zj19mxK7aK28NkGq_KWdQtn2SYPMvdvrsd9i4-H6GPw@mail.gmail.com>
+ <20130225102817.GA2069@pandem0nium>
+ <20130308141327.GA3363@pandem0nium>
+ <19067804.31217.1363003263903.JavaMail.root@neratec.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
+In-Reply-To: <19067804.31217.1363003263903.JavaMail.root@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-03-28 at 22:16 +0100, Arend van Spriel wrote:
-> > That seems pretty long? Why have such a long *minimum* duration? At 2.5
-> > seconds, it's way long, and then disabling most of the
-> > protections/powersave/whatever no longer makes sense for this period of
-> > time since really mostly what this does will be reducing the wifi
-> > latency.
 
-> Ok, so what minimum do you (or someone else can chime in here) think a
-> DHCP exchange takes as that was considered a likely protocol that can
-> benefit from this API.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
-of course. I don't really see any reasonable minimum time? We might want
-to enforce a max though, maybe.
+Hey Zefir,
 
-> > Ah, a tricky problem -- unrelated to your patch. You probably saw the
-> > wiphy size limit problem. If we keep adding commands here, we'll
-> > eventually break older userspace completely, so I think we shouldn't. A
-> > new way will probably be required, either adding new commands only
-> > conditionally on split wiphy dump, or inventing a new way. I suppose
-> > making it conditional is acceptable for all new commands since new tools
-> > in userspace will be required anyway to make them work.
-> > 
-> 
-> Indeed noticed some emails on this. I simply added these lines without
-> looking what this code fragment does.
+On Mon, Mar 11, 2013 at 01:01:03PM +0100, Zefir Kurtisi wrote:
+> Hello Simon,
+>=20
+> tested and looks good.
 
-Probably best to just say
-	if (split) {
-		CMD(...)
-	}
+thanks for the feedback!
 
-> Good point. Maybe keep track that crit_proto is started and reject a
-> subsequent call (-EBUSY). Ideally, the start and stop should be done by
-> the same user-space process/application. Is that possible?
+>=20
+> I had to apply below patch to make it compile on latest
+> compat-drivers (hlist_for_each_entry_* API changed in 3.9).
 
-Yes ... but you'd have to make sure you abort when the application dies
-I guess, with the socket closing notifier thing.
+I've adopted your changes and added some compat code.
 
-> > Ah, ok, I guess I misunderstood it. You do use it, but don't pass it to
-> > the driver since you let cfg80211 handle the timing...
-> 
-> Indeed. I wanted to be sure that the duration provided by user-space is
-> applicable independent from a driver implementation. Do you think it
-> makes sense to have this dealt with by cfg80211?
+>=20
+> It is definitively useful and I will start on top of it
+> when I get back to work on our statistics module.
+>=20
+> I have no preferences whether to keep it separated or
+> integrate it upstream. If statistics are required for
+> mesh, there's maybe no choice other than integrating.
 
-Not sure ... Like I said, I think if we'd implement it we'd like to put
-it into the firmware, so at least it'd have to be optional. And at that
-point I don't really see that much value in doing it in cfg80211, it's
-pretty simple after all.
+Thanks for sharing your thoughts!
 
-johannes
+As far as I understood from Thomas, we should not consider
+the mesh case too much for now. Also I don't know if this
+implementation is very useful for him/802.11s
 
+I'll need to put some more effort in this module first
+(its more a proof of concept for now). Maybe we propose it
+for integration later. But I'm grateful for any patches like the
+one you sent with this mail. ;)
+
+>=20
+> As for the API, I'd propose to leave it as simple as it is
+> now, i.e. whoever needs more / different statistics hooks
+> into ws_handle_frame() and adds his handlers after
+> ws_sta_parse_ieee80211_hdr().
+
+Yeah maybe you are right, it's the best to keep it as simple
+as it is.
+
+Thanks again,
+	Simon
+
+--OgqxwSJOaUobr8KG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlFQYpQACgkQrzg/fFk7axb9GgCfQUaa33GxlVWWr9OF3ELS1F2p
+ydgAoM+8nC9ZIdt8RHrkMTMt7CLQF5ZU
+=HIa9
+-----END PGP SIGNATURE-----
+
+--OgqxwSJOaUobr8KG--
