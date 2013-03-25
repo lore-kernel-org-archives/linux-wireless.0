@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60817 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab3CCEAQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60814 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758575Ab3CYPun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Mar 2013 23:00:16 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20786.51827.829167.296365@gargle.gargle.HOWL> (sfid-20130303_050021_420157_48A79121)
-Date: Sun, 3 Mar 2013 09:28:43 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-In-Reply-To: <51325FC2.4060604@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
-	<20782.54505.239733.82364@gargle.gargle.HOWL>
-	<512EDDC5.7020901@openwrt.org>
-	<20784.48093.263373.125536@gargle.gargle.HOWL>
-	<51325FC2.4060604@openwrt.org>
+	Mon, 25 Mar 2013 11:50:43 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Corey Richardson <corey@octayn.net>,
+	Jonas Gorski <jogo@openwrt.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.9] mac80211: fix idle handling sequence
+Date: Mon, 25 Mar 2013 16:50:37 +0100
+Message-Id: <1364226637-7331-1-git-send-email-johannes@sipsolutions.net> (sfid-20130325_165049_121150_3748158C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> I just sent some minstrel_ht improvements to linux-wireless@
-> Please test if they fix the throughput delta in your setup. In my tests
-> they visibly reduce the number of unnecessary fallbacks to lower rates.
+From: Johannes Berg <johannes.berg@intel.com>
 
-With the fixes, the avg. TX throughput crept up to 188 Mbps, but I ran
-ath9k-rc once again and obtained 197 Mbps. There were lots of 200+ Mbps
-max. throughput too.
+Corey Richardson reported that my idle handling cleanup
+(commit fd0f979a1b, "mac80211: simplify idle handling")
+broke ath9k_htc. The reason appears to be that it wants
+to go out of idle before switching channels. To fix it,
+reimplement that sequence.
 
-This is not a synthetic benchmark with shield boxes, attenuators etc.,
-just a simple over-the-air test with not much interference, so a gap of
-~10 Mbps is somewhat surprising.
+Reported-by: Corey Richardson <corey@octayn.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/chan.c        | 17 ++++++++++++++---
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/iface.c       |  2 +-
+ 3 files changed, 16 insertions(+), 4 deletions(-)
 
-Sujith
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 78c0d90..931be41 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -63,6 +63,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		      enum ieee80211_chanctx_mode mode)
+ {
+ 	struct ieee80211_chanctx *ctx;
++	u32 changed;
+ 	int err;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+@@ -76,6 +77,13 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	ctx->conf.rx_chains_dynamic = 1;
+ 	ctx->mode = mode;
+ 
++	/* acquire mutex to prevent idle from changing */
++	mutex_lock(&local->mtx);
++	/* turn idle off *before* setting channel -- some drivers need that */
++	changed = ieee80211_idle_off(local);
++	if (changed)
++		ieee80211_hw_config(local, changed);
++
+ 	if (!local->use_chanctx) {
+ 		local->_oper_channel_type =
+ 			cfg80211_get_chandef_type(chandef);
+@@ -85,14 +93,17 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		err = drv_add_chanctx(local, ctx);
+ 		if (err) {
+ 			kfree(ctx);
+-			return ERR_PTR(err);
++			ctx = ERR_PTR(err);
++
++			ieee80211_recalc_idle(local);
++			goto out;
+ 		}
+ 	}
+ 
++	/* and keep the mutex held until the new chanctx is on the list */
+ 	list_add_rcu(&ctx->list, &local->chanctx_list);
+ 
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(local);
++ out:
+ 	mutex_unlock(&local->mtx);
+ 
+ 	return ctx;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7bdefd9..5672533 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1362,6 +1362,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type);
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
++u32 ieee80211_idle_off(struct ieee80211_local *local);
+ void ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+ 				    const int offset);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3bfe261..58150f8 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -78,7 +78,7 @@ void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_TXPOWER);
+ }
+ 
+-static u32 ieee80211_idle_off(struct ieee80211_local *local)
++u32 ieee80211_idle_off(struct ieee80211_local *local)
+ {
+ 	if (!(local->hw.conf.flags & IEEE80211_CONF_IDLE))
+ 		return 0;
+-- 
+1.8.0
+
