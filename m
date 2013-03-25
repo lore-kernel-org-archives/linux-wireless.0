@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63569 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753161Ab3C1JCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:02:41 -0400
-Date: Thu, 28 Mar 2013 10:03:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ali Ustek <aliustek@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	1156363@bugs.launchpad.net
-Subject: Re: Fwd: Ralink RT3290 card not supported
-Message-ID: <20130328090323.GA1384@redhat.com> (sfid-20130328_100246_799659_C9F3F4D0)
-References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com>
- <CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com>
- <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
- <515392AF.8070809@lwfinger.net>
- <CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40612 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757289Ab3CYTAo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Mar 2013 15:00:44 -0400
+Date: Mon, 25 Mar 2013 14:50:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-03-22
+Message-ID: <20130325185035.GA17454@tuxdriver.com> (sfid-20130325_200109_131685_9C718AA8)
+References: <1363723052.8336.6.camel@jlt4.sipsolutions.net>
+ <1363947571.8238.4.camel@jlt4.sipsolutions.net>
+ <1364120480.9224.0.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+In-Reply-To: <1364120480.9224.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 08:18:37AM +0000, Ali Ustek wrote:
-> >> The wi-fi chip Ralink RT3290 is common in notebooks but is not
-> >> supported by linux-kernel
+On Sun, Mar 24, 2013 at 11:21:20AM +0100, Johannes Berg wrote:
+> *sigh*
+> 
+> 
+> Testing found another issue. I'm not going to resend this, just give you
+> a new commit ID.
+> 
+> > I have two tracing fixes (one from Vladimir), two fixes for P2P device
+> > crashes, a fix for a BSS memory leak/lost update problem and a fix from
+> > Ben for a scanning issue in mac80211. It's a little on the large side
+> > because one of the P2P device problems required a bit much locking work,
+> > but I've run through all the different scenarios (wext/nl80211,
+> > p2p-device/station interface, ifdown/rfkill) to verify locking with
+> > lockdep.
+> 
+> 
+> 
+> > The following changes since commit 801d929ca7d935ee199fd61d8ef914f51e892270:
+> > 
+> >   mac80211: another fix for idle handling in monitor mode (2013-03-02 21:24:42 +0100)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> > 
+> > for you to fetch changes up to 9e68a67a888d98bda8393c29dde12fb4f0b42a19:
+> 
+> Really 370bd005937c0e00f9104a602f9fe1dd6b21b54b now.
 
-This device is supported since 3.7 . You most likely compile kernel
-without CONFIG_RT2800PCI_RT3290.
+Pulling now (before you repost again!)...
 
-Stanislaw
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
