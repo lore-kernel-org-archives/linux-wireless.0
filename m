@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50049 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751736Ab3CUTZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 15:25:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] ssb: read additional sprom v2 and v3 attributes.
-Date: Thu, 21 Mar 2013 20:25:21 +0100
-Message-Id: <1363893921-9208-1-git-send-email-hauke@hauke-m.de> (sfid-20130321_202533_410986_9757A567)
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:51908 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757874Ab3CYQM1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Mar 2013 12:12:27 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jc3so382336bkc.15
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 09:12:26 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Subject: Re: Auth Packet TX Delay
+Date: Mon, 25 Mar 2013 17:12:19 +0100
+Cc: Robert Shade <robert.shade@gmail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com> <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com> <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201303251712.19808.chunkeey@googlemail.com> (sfid-20130325_171231_324633_1AAB4AF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These attributes should be in the sprom for rev 2 and 3, but they were
-not read out.
+On Monday, March 25, 2013 03:23:53 AM Adrian Chadd wrote:
+> Also, would you please make sure you file a bugzilla.kernel.org ticket
+> so this gets tracked?
+>
+> It's good to know that some combination of fast channel change and
+> warm versus cold reset is making things better/worse.
+> 
+> And although a cold reset is likely a good thing to _fix_ the problem,
+> it still leaves the underlying DMA/PHY hangs unresolved.
+> 
+> But yes, please file a bugzilla ticket so this gets tracked right!
+Um, do you want a bugreport for ath9k or carl9170 or for both?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/pci.c |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 63ff69f..d5d90cf 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -347,6 +347,21 @@ static s8 r123_extract_antgain(u8 sprom_revision, const u16 *in,
- 	return (s8)gain;
- }
- 
-+static void sprom_extract_r23(struct ssb_sprom *out, const u16 *in)
-+{
-+	SPEX(boardflags_hi, SSB_SPROM2_BFLHI, 0xFFFF, 0);
-+	SPEX(opo, SSB_SPROM2_OPO, SSB_SPROM2_OPO_VALUE, 0);
-+	SPEX(pa1lob0, SSB_SPROM2_PA1LOB0, 0xFFFF, 0);
-+	SPEX(pa1lob1, SSB_SPROM2_PA1LOB1, 0xFFFF, 0);
-+	SPEX(pa1lob2, SSB_SPROM2_PA1LOB2, 0xFFFF, 0);
-+	SPEX(pa1hib0, SSB_SPROM2_PA1HIB0, 0xFFFF, 0);
-+	SPEX(pa1hib1, SSB_SPROM2_PA1HIB1, 0xFFFF, 0);
-+	SPEX(pa1hib2, SSB_SPROM2_PA1HIB2, 0xFFFF, 0);
-+	SPEX(maxpwr_ah, SSB_SPROM2_MAXP_A, SSB_SPROM2_MAXP_A_HI, 0);
-+	SPEX(maxpwr_al, SSB_SPROM2_MAXP_A, SSB_SPROM2_MAXP_A_LO,
-+	     SSB_SPROM2_MAXP_A_LO_SHIFT);
-+}
-+
- static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- {
- 	u16 loc[3];
-@@ -395,8 +410,7 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	     SSB_SPROM1_ITSSI_A_SHIFT);
- 	SPEX(itssi_bg, SSB_SPROM1_ITSSI, SSB_SPROM1_ITSSI_BG, 0);
- 	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
--	if (out->revision >= 2)
--		SPEX(boardflags_hi, SSB_SPROM2_BFLHI, 0xFFFF, 0);
-+		
- 	SPEX(alpha2[0], SSB_SPROM1_CCODE, 0xff00, 8);
- 	SPEX(alpha2[1], SSB_SPROM1_CCODE, 0x00ff, 0);
- 
-@@ -407,6 +421,8 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	out->antenna_gain.a1 = r123_extract_antgain(out->revision, in,
- 						    SSB_SPROM1_AGAIN_A,
- 						    SSB_SPROM1_AGAIN_A_SHIFT);
-+	if (out->revision >= 2)
-+		sprom_extract_r23(out, in);
- }
- 
- /* Revs 4 5 and 8 have partially shared layout */
--- 
-1.7.10.4
-
+Regards,
+	Christian
