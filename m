@@ -1,61 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:33935 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933423Ab3CSSLl (ORCPT
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:52456 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468Ab3CYDHz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 14:11:41 -0400
-Received: by mail-we0-f180.google.com with SMTP id k14so635297wer.39
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 11:11:39 -0700 (PDT)
-Date: Tue, 19 Mar 2013 19:11:35 +0100
-From: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	664767@bugs.debian.org, linux-wireless@vger.kernel.org
-Subject: Re: Brcmsmac driver woes, possible regression?
-Message-ID: <20130319181135.GA7969@stt008.linux.site> (sfid-20130319_191145_397597_9031FA7B)
-References: <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com> <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com> <20130318211428.GA9136@stt008.linux.site> <20130318212544.GB5062@elie.Belkin> <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com> <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com> <1363711989.2225.8.camel@dcbw.foobar.com> <20130319173054.GA7873@stt008.linux.site> <1363715961.2225.22.camel@dcbw.foobar.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1363715961.2225.22.camel@dcbw.foobar.com>
+	Sun, 24 Mar 2013 23:07:55 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
+	mmarek@suse.cz, zhiyuan_yang@realsil.com.cn, page_he@realsil.com.cn
+Subject: [PATCH 25/25] rtlwifi: rtl8188ee: Enable build of new driver
+Date: Sun, 24 Mar 2013 22:06:57 -0500
+Message-Id: <1364180817-8028-26-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130325_040831_987527_FB32AAA3)
+In-Reply-To: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 2013-03-19 a las 12:59 -0500, Dan Williams escribió:
+These changes enable building the new driver.
 
-> On Tue, 2013-03-19 at 18:30 +0100, Camaleón wrote:
-> > El 2013-03-19 a las 11:53 -0500, Dan Williams escribió:
-> > > 
-> > > Note that NM 0.9.8 won't ask for a password when just anything fails,
-> > > but will ask for a password if the 4-way handshake fails, because if
-> > > that fails, it's probably your password.  We're contemplating getting
-> > > rid of that too, and just notifying the user that their password may be
-> > > wrong and that they should go update it in the network configuration
-> > > panel so we don't interrupt.  But if you're 100% sure your PSK is
-> > > correct, then it is, most likely, a driver bug.
-> > 
-> > Password is correct. I have a second wireless card (external, using 
-> > rt2800usb driver) that connects without a glitch to the same AP.
-> > 
-> > Moreover, unless I type the right password, N-M dialog does not allow 
-> > me to click on the "Connect" button.
-> 
-> NM minimally verifies the PSK, which by 802.11 standards is between 8
-> and 63 ASCII characters inclusive.  So you should be able to type
-> anything you want within those constraints, but clearly only one is your
-> real PSK.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jcheung@suse.com
+Cc: machen@suse.com
+Cc: mmarek@suse.cz
+Cc: zhiyuan_yang@realsil.com.cn
+Cc: page_he@realsil.com.cn
+---
+ drivers/net/wireless/rtlwifi/Kconfig            |  9 +++++++++
+ drivers/net/wireless/rtlwifi/Makefile           |  1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/Makefile | 16 ++++++++++++++++
+ 3 files changed, 26 insertions(+)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
 
-Oops! Okay, so what user inputs is not "bullet-proof".
-
-Anyway, this does not seem to be a problem of bad password. I was 
-finally able to get connected to the AP as soon as I carry the nebook 
-and put it next to the AP which is the problem I've always have had 
-with this driver (brcmsmac).
-
-As soon as I back to another room, N-M asks me again for the pass-key 
-and disconnects.
-
-Greetings,
-
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+index b6aa0c4..7253de3 100644
+--- a/drivers/net/wireless/rtlwifi/Kconfig
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -55,6 +55,15 @@ config RTL8723AE
+ 
+ 	If you choose to build it as a module, it will be called rtl8723ae
+ 
++config RTL8188EE
++	tristate "Realtek RTL8188EE Wireless Network Adapter"
++	depends on RTLWIFI && PCI
++	---help---
++	This is the driver for Realtek RTL8188EE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8188ee
++
+ config RTL8192CU
+ 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
+ 	depends on RTLWIFI && USB
+diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+index 3b1cbac..ff02b87 100644
+--- a/drivers/net/wireless/rtlwifi/Makefile
++++ b/drivers/net/wireless/rtlwifi/Makefile
+@@ -26,5 +26,6 @@ obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
+ obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
+ obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
+ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
++obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+new file mode 100644
+index 0000000..01173a2
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+@@ -0,0 +1,16 @@
++rtl8188ee-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		phy.o		\
++		pwrseq.o	\
++		pwrseqcmd.o	\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o
++
++obj-$(CONFIG_RTL8188EE) += rtl8188ee.o
++
++ccflags-y += -I drivers/net/wireless/rtlwifi -D__CHECK_ENDIAN__
 -- 
-Camaleón 
+1.8.1.4
+
