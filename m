@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679Ab3CVNcM (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:44384 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134Ab3CYAEB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 09:32:12 -0400
-Message-ID: <1363959125.8238.49.camel@jlt4.sipsolutions.net> (sfid-20130322_143216_330539_7B726CE1)
-Subject: Re: Radiotap injected rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sam Leffler <sleffler@chromium.org>
-Date: Fri, 22 Mar 2013 14:32:05 +0100
-In-Reply-To: <20130322132716.GB29340@magnum.frso.rivierawaves.com> (sfid-20130322_143029_102909_B7BB5045)
-References: <20130317215544.GA7031@gobelin>
-	 <1363634768.8260.16.camel@jlt4.sipsolutions.net>
-	 <20130318195406.GB17878@gobelin>
-	 <1363955094.8238.32.camel@jlt4.sipsolutions.net>
-	 <20130322132716.GB29340@magnum.frso.rivierawaves.com>
-	 (sfid-20130322_143029_102909_B7BB5045)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 24 Mar 2013 20:04:01 -0400
+Received: by mail-wg0-f45.google.com with SMTP id dq12so709056wgb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 17:03:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201303242358.17133.chunkeey@googlemail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
+	<CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com>
+	<201303242358.17133.chunkeey@googlemail.com>
+Date: Sun, 24 Mar 2013 17:03:59 -0700
+Message-ID: <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com> (sfid-20130325_010406_435883_A9ADC702)
+Subject: Re: Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Robert Shade <robert.shade@gmail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-03-22 at 14:27 +0100, Karl Beldan wrote:
+Let me just be really clear.
 
-> > > And, oops typo, I meant :
-> > > 
-> > > +	    !(info->flags & IEEE80211_TX_CTL_INJECTED && info->control.rates[0] != -1))
-> > > 
-> > Well actually this won't work anyway because control.rates[] isn't
-> > initialized to -1.
-> > 
-> Of course we would set info->control.rates[0] to -1 by default in
-> ieee80211_parse_tx_radiotap and set it to something else if we parse a
-> IEEE80211_RADIOTAP_{RATE,MCS} (i.e what I was referring to in 1b).
+Fast channel change is notoriously unreliable and really only fully
+debugged on some very later chips.
 
-That still wouldn't work though, there are other paths leading to point
-you're looking at. You'd have to set it always, which would probably
-work but is tricky to ensure at the right points.
+The correct thing to do is something like this:
 
-johannes
+* if you meet the fast cc requirements (same channel width, same
+frequency band, etc) then change channel;
+* if you fail the initial cal, or you hit some traffic stop condition,
+or you start failing NF cals - do a cold reset.
 
+Now, unless you're doing some kind of very latency sensitive
+applications (eg doing channel scans whilst in hostap mode) and you
+debug this very very thoroughly, fast-cc is not guaranteed to work. So
+I'd just ignore fast channel change in its entirety.
+
+Now, warm versus cold reset. Cold reset resets everything. Warm reset
+apparently doesn't fully reset everything in the MAC/PHY. Although I
+-thought- the initval arrays would initialise things, apparently there
+are some things that don't get fully cleared. Hence why I suggest
+doing a cold reset if things are going a bit awry.
+
+Felix's catch was good - if the queues weren't fully stopped, just do
+a cold reset. But I'd just give up on fast-cc for now.
+
+
+
+Adrian
