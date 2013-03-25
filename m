@@ -1,37 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35223 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758096Ab3CESGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Mar 2013 13:06:35 -0500
-Message-ID: <1362506794.1759.2.camel@joe-AO722> (sfid-20130305_190638_389983_57EB5C9B)
-Subject: Re: [PATCH] ath6kl: print firmware capabilities
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 05 Mar 2013 10:06:34 -0800
-In-Reply-To: <20130305163842.32118.84598.stgit@localhost6.localdomain6>
-References: <20130305163842.32118.84598.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:40545 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755674Ab3CYDHR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Mar 2013 23:07:17 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, page_he@realsil.com.cn
+Subject: [PATCH 00/25] Update rtlwifi drivers to 020713 vendor driver and add new rtl8188ee driver
+Date: Sun, 24 Mar 2013 22:06:32 -0500
+Message-Id: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130325_040739_804758_CADC5051)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-05 at 18:38 +0200, Kalle Valo wrote:
-> Printin the  firmware capabilities during the first firmware boot makes it easier to find out what
-> features firmware supports.
-[]
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-[]
-> +static void ath6kl_init_fw_capas(struct ath6kl *ar, char *buf, size_t buf_len)
-> +{
-[]
-> +		if (buf_len - len < 4) {
-> +			ath6kl_warn("firmware capability buffer too small!\n");
-> +			strncpy(buf, "<error>", buf_len);
+This set of patches are intended for the 3.10 stream. These patches are
+relatively large as I do not currently have access the Realtek revision
+control system, which forces me to generate the patches based on the
+differences between their release versions. It is difficult to break
+those changes into the sort of small patches preferred for the Linux
+kernel.
 
-4 is an odd size to use.
-It seems weird to overwrite the known bits.
-why not just add ...?
+The changes in the existing drivers can be characterized as adding P2P,
+and mesh capability. There are some changes in the handling of AP mode,
+and other bug fixes.
 
+Larry Finger (25):
+  rtlwifi: Modify the master header for for updates to vendor version
+    2013.02.07
+  rtlwifi: Modify files for 2013.02.07 vendor version - part 2
+  rtlwifi: Modify files for 2013.02.07 vendor version - part 3
+  rtlwifi: Modify files for 2013.02.07 vendor version - part 4
+  rtlwifi: Modify files for 2013.02.07 vendor version - part 5
+  rtlwifi: rtl8192se: Update driver to match vendor driver of 2013.02.07
+  rtlwifi: rtl8723ae: Update to vendor driver of 2013.02.07
+  rtlwifi: rtl8192c: rtl8192ce: Update to vendor driver of 2013.02.07
+  rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue
+  rtlwifi: rtl8188ee: Add new driver - part 1
+  rtlwifi: rtl8188ee: Add new driver files - part 2
+  rtlwifi: rtl8188ee: Add new driver files - part 3
+  rtlwifi: rtl8188ee: Add files for new driver - part 4
+  rtlwifi: rtl8188ee: Add files for new driver - part 5
+  rtlwifi: rtl8188ee: Add files for new driver - part 6
+  rtlwifi: rtl8188ee: Add files for new driver - part 7
+  rtlwifi: rtl8188ee: Add files for new driver - part 8
+  rtlwifi: rtl8188ee: Add files for new driver - part 9
+  rtlwifi: rtl8188ee: Add files for new driver - part 10
+  rtlwifi: rtl8188ee: Add files for new driver - part 11
+  rtlwifi: rtl8188ee: Add files for new driver - part 12
+  rtlwifi: rtl8188ee: Add files for new driver - part 13
+  rtlwifi: rtl8192c: rtl8192ce: rtl8192cu: rtl8192de: rtl8723ae: Add
+    changes required by adding rtl81988ee
+  rtlwifi: rtl8188ee: Enable recognition of RTL8188EE
+  rtlwifi: rtl8188ee: Enable build of new driver
 
+ drivers/net/wireless/rtlwifi/Kconfig               |    9 +
+ drivers/net/wireless/rtlwifi/Makefile              |    1 +
+ drivers/net/wireless/rtlwifi/base.c                |  379 ++-
+ drivers/net/wireless/rtlwifi/base.h                |   14 +-
+ drivers/net/wireless/rtlwifi/core.c                |  213 +-
+ drivers/net/wireless/rtlwifi/debug.c               |    5 +-
+ drivers/net/wireless/rtlwifi/debug.h               |   13 +-
+ drivers/net/wireless/rtlwifi/efuse.c               |   53 +-
+ drivers/net/wireless/rtlwifi/efuse.h               |    1 -
+ drivers/net/wireless/rtlwifi/pci.c                 |  150 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |    2 +
+ drivers/net/wireless/rtlwifi/ps.c                  |  330 ++-
+ drivers/net/wireless/rtlwifi/ps.h                  |    2 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/Makefile    |   16 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/def.h       |  324 +++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        | 1794 ++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.h        |  326 +++
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |  830 +++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.h        |  301 +++
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        | 2529 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.h        |   68 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |  157 ++
+ drivers/net/wireless/rtlwifi/rtl8188ee/led.h       |   38 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       | 2212 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.h       |  237 ++
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c    |  109 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h    |  327 +++
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c |  140 ++
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |   97 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/reg.h       | 2258 +++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |  467 ++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.h        |   46 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |  400 ++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.h        |   36 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/table.c     |  643 +++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/table.h     |   47 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |  817 +++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.h       |  795 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  101 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |   99 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h  |    4 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  118 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.h        |    4 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |  324 +--
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |   20 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   32 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   40 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/reg.h       |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h       |    7 -
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   49 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  150 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.h        |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   61 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.h       |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |  296 +--
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c        |   88 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h        |    6 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.c        |   97 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/fw.h        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c        |   70 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/led.c       |   22 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |   10 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |  221 +-
+ 70 files changed, 17048 insertions(+), 990 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/trx.h
+
+-- 
+1.8.1.4
 
