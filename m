@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36881 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750848Ab3CPESY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 00:18:24 -0400
-Message-ID: <1363407501.2030.1.camel@joe-AO722> (sfid-20130316_051844_341578_494F5831)
-Subject: Re: [PATCH net-next] drivers:net: dma_alloc_coherent: use
- __GFP_ZERO instead of memset(, 0)
-From: Joe Perches <joe@perches.com>
-To: "Abodunrin, Akeem G" <akeem.g.abodunrin@intel.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Date: Fri, 15 Mar 2013 21:18:21 -0700
-In-Reply-To: <CFEEE81102D91947B9CC368106979EBA3CF55939@ORSMSX102.amr.corp.intel.com>
-References: <dbbfc5e66dba7d2b63549d218407fb0c4031f2ed.1363367992.git.joe@perches.com>
-	 <CFEEE81102D91947B9CC368106979EBA3CF55939@ORSMSX102.amr.corp.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:60811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758419Ab3CYPuF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Mar 2013 11:50:05 -0400
+Message-ID: <1364226597.17540.2.camel@jlt4.sipsolutions.net> (sfid-20130325_165009_959514_EAEB3A75)
+Subject: Re: [PATCH] mwl8k: always apply configuration even when device is
+ idle
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jonas Gorski <jogo@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>
+Date: Mon, 25 Mar 2013 16:49:57 +0100
+In-Reply-To: <1364225994-19375-1-git-send-email-jogo@openwrt.org> (sfid-20130325_164018_264244_A96E8CFF)
+References: <1364225994-19375-1-git-send-email-jogo@openwrt.org>
+	 (sfid-20130325_164018_264244_A96E8CFF)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-03-15 at 22:51 +0000, Abodunrin, Akeem G wrote:
-> -----Original Message-----
-> From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org] On Behalf Of Joe Perches
-[]
-> Reduce the number of calls required to alloc a zeroed block of memory.
-[]
-> diff --git a/drivers/net/ethernet/intel/igbvf/netdev.c b/drivers/net/ethernet/intel/igbvf/netdev.c
-[]
-> @@ -488,7 +487,6 @@ int igbvf_setup_rx_resources(struct igbvf_adapter *adapter,
->  
->  	rx_ring->desc = dma_alloc_coherent(&pdev->dev, rx_ring->size,
->  					   &rx_ring->dma, GFP_KERNEL);
-> -
->  	if (!rx_ring->desc)
->  		goto err;
+On Mon, 2013-03-25 at 16:39 +0100, Jonas Gorski wrote:
+> Fix settings not being applied when the device is idle and the firmware
+> gets reloaded (because of changing from STA to AP mode). This caused
+> the device using the wrong channel (and likely band), e.g. a 5 GHz only
+> card still defaulted to channel 6 in the 2.4 GHz band when left
+> unconfigured.
 > 
-> Hi Joe,
+> This issue was always present, but only made visible with "mwl8k: Do not
+> call mwl8k_cmd_set_rf_channel unconditionally" (0f4316b9), since before
+> that the channel was (re-)configured at the next _config call even when
+> it did not change from the mac80211 perspective.
 
-Hello Akeem.
+I'm changing mac80211 back to unset idle first and then set the channel,
+if that helps ... ath9k_htc was also broken by the change.
 
-> Your changes did not seem to make it to igbvf/netdev.c - I think
-> instead of removing an extra line added for code clarity, you
-> want to add:
-> "tx_ring->desc = dma_alloc_coherent(&pdev->dev, tx_ring->size,
->  					   &tx_ring->dma, GFP_KERNEL| __GFP_ZERO);"
-
-Not really, there's no memset here so this
-bit is just a whitespace neatening.
-
+johannes
 
