@@ -1,484 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:41678 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756331Ab3CYDHm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40614 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754263Ab3CYTAo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 23:07:42 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, jcheung@suse.com, machen@suse.com,
-	mmarek@suse.cz, zhiyuan_yang@realsil.com.cn, page_he@realsil.com.cn
-Subject: [PATCH 16/25] rtlwifi: rtl8188ee: Add files for new driver - part 7
-Date: Sun, 24 Mar 2013 22:06:48 -0500
-Message-Id: <1364180817-8028-17-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130325_040914_749373_0047E9B0)
-In-Reply-To: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1364180817-8028-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 25 Mar 2013 15:00:44 -0400
+Date: Mon, 25 Mar 2013 14:58:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Herrmann <dh.herrmann@gmail.com>
+Cc: Piotr Haber <phaber@broadcom.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
+Message-ID: <20130325185821.GB17454@tuxdriver.com> (sfid-20130325_200110_191845_900241A1)
+References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+ <51471B85.5060404@broadcom.com>
+ <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: jcheung@suse.com
-Cc: machen@suse.com
-Cc: mmarek@suse.cz
-Cc: zhiyuan_yang@realsil.com.cn
-Cc: page_he@realsil.com.cn
----
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c | 109 ++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h | 327 ++++++++++++++++++++++++
- 2 files changed, 436 insertions(+)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
+On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
+> Hi Piotr
+> 
+> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
+> > On 03/18/13 11:45, David Herrmann wrote:
+> >> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
+> >> wireless AP reconnection on: (14e4:4727)
+> >>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
+> >>
+> >> Any attempt to reconnect to an AP results in timeouts no matter how near to the
+> >> AP I am:
+> >>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+> >>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+> >>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> >> ---
+> >> Hi
+> >>
+> >> I tried coming up with a fix instead of reverting this commit, but the commit is
+> >> way to big for me to understand what's going on. Sorry.
+> >>
+> >> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
+> >> one time, but any further attempt resulted in:
+> >>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+> >>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+> >>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+> >>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> >>
+> >> Even sitting right next to the AP didn't help so I started bisecting and it
+> >> turned out to be:
+> >>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+> >> Please revert it.
+> >>
+> >> Thanks
+> >> David
+> >>
+> > Hi,
+> > unfortunately this is not a first report of this patch breaking 4313 for some users.
+> > I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
+> > successfully in our test setup.
+> > Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
+> > <debugfs_mount>/brcmsmac/bcma0:0/hardware
+> 
+> Hi
+> 
+> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+> board vendor: 185f
+> board type: 51a
+> board revision: 1408
+> board flags: 8402a01
+> board flags2: 880
+> firmware revision: 262032b
+> 
+> I can also try partial reverts of that commit, but I really don't know
+> which parts might be important.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
-new file mode 100644
-index 0000000..6dc4e3a
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.c
-@@ -0,0 +1,109 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2013  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "pwrseqcmd.h"
-+#include "pwrseq.h"
-+
-+/* drivers should parse below arrays and do the corresponding actions */
-+/*3 Power on  Array*/
-+struct wlan_pwr_cfg rtl8188e_power_on_flow[RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS +
-+					   RTL8188E_TRANS_END_STEPS] = {
-+	RTL8188E_TRANS_CARDEMU_TO_ACT
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3Radio off GPIO Array */
-+struct wlan_pwr_cfg rtl8188e_radio_off_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
-+					    + RTL8188E_TRANS_END_STEPS] = {
-+	RTL8188E_TRANS_ACT_TO_CARDEMU
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3Card Disable Array*/
-+struct wlan_pwr_cfg rtl8188e_card_disable_flow
-+	[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+	RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
-+	RTL8188E_TRANS_END_STEPS] = {
-+		RTL8188E_TRANS_ACT_TO_CARDEMU
-+		RTL8188E_TRANS_CARDEMU_TO_CARDDIS
-+		RTL8188E_TRANS_END
-+};
-+
-+/*3 Card Enable Array*/
-+struct wlan_pwr_cfg rtl8188e_card_enable_flow
-+	[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+	RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
-+	RTL8188E_TRANS_END_STEPS] = {
-+		RTL8188E_TRANS_CARDDIS_TO_CARDEMU
-+		RTL8188E_TRANS_CARDEMU_TO_ACT
-+		RTL8188E_TRANS_END
-+};
-+
-+/*3Suspend Array*/
-+struct wlan_pwr_cfg rtl8188e_suspend_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
-+					+ RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS
-+					+ RTL8188E_TRANS_END_STEPS] = {
-+	RTL8188E_TRANS_ACT_TO_CARDEMU
-+	RTL8188E_TRANS_CARDEMU_TO_SUS
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3 Resume Array*/
-+struct wlan_pwr_cfg rtl8188e_resume_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
-+					+ RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS
-+					+ RTL8188E_TRANS_END_STEPS] = {
-+	RTL8188E_TRANS_SUS_TO_CARDEMU
-+	RTL8188E_TRANS_CARDEMU_TO_ACT
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3HWPDN Array*/
-+struct wlan_pwr_cfg rtl8188e_hwpdn_flow[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS
-+				+ RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS
-+				+ RTL8188E_TRANS_END_STEPS] = {
-+	RTL8188E_TRANS_ACT_TO_CARDEMU
-+	RTL8188E_TRANS_CARDEMU_TO_PDN
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3 Enter LPS */
-+struct wlan_pwr_cfg rtl8188e_enter_lps_flow[RTL8188E_TRANS_ACT_TO_LPS_STEPS
-+					+ RTL8188E_TRANS_END_STEPS] = {
-+	/*FW behavior*/
-+	RTL8188E_TRANS_ACT_TO_LPS
-+	RTL8188E_TRANS_END
-+};
-+
-+/*3 Leave LPS */
-+struct wlan_pwr_cfg rtl8188e_leave_lps_flow[RTL8188E_TRANS_LPS_TO_ACT_STEPS
-+					+ RTL8188E_TRANS_END_STEPS] = {
-+	/*FW behavior*/
-+	RTL8188E_TRANS_LPS_TO_ACT
-+	RTL8188E_TRANS_END
-+};
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
-new file mode 100644
-index 0000000..028ec6d
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseq.h
-@@ -0,0 +1,327 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2013  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL8723E_PWRSEQ_H__
-+#define __RTL8723E_PWRSEQ_H__
-+
-+#include "pwrseqcmd.h"
-+/*
-+	Check document WM-20110607-Paul-RTL8188E_Power_Architecture-R02.vsd
-+	There are 6 HW Power States:
-+	0: POFF--Power Off
-+	1: PDN--Power Down
-+	2: CARDEMU--Card Emulation
-+	3: ACT--Active Mode
-+	4: LPS--Low Power State
-+	5: SUS--Suspend
-+
-+	The transision from different states are defined below
-+	TRANS_CARDEMU_TO_ACT
-+	TRANS_ACT_TO_CARDEMU
-+	TRANS_CARDEMU_TO_SUS
-+	TRANS_SUS_TO_CARDEMU
-+	TRANS_CARDEMU_TO_PDN
-+	TRANS_ACT_TO_LPS
-+	TRANS_LPS_TO_ACT
-+
-+	TRANS_END
-+	PWR SEQ Version: rtl8188e_PwrSeq_V09.h
-+*/
-+
-+#define	RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS	10
-+#define	RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS	10
-+#define	RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS	10
-+#define	RTL8188E_TRANS_SUS_TO_CARDEMU_STEPS	10
-+#define	RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS	10
-+#define	RTL8188E_TRANS_PDN_TO_CARDEMU_STEPS	10
-+#define	RTL8188E_TRANS_ACT_TO_LPS_STEPS		15
-+#define	RTL8188E_TRANS_LPS_TO_ACT_STEPS		15
-+#define	RTL8188E_TRANS_END_STEPS		1
-+
-+
-+#define RTL8188E_TRANS_CARDEMU_TO_ACT					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value },*/\
-+	{0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/* wait till 0x04[17] = 1    power ready*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(1), BIT(1)},		\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/* 0x02[1:0] = 0	reset BB*/				\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0)|BIT(1), 0},		\
-+	{0x0026, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x24[23] = 2b'01 schmit trigger */				\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), BIT(7)},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/* 0x04[15] = 0 disable HWPDN (control by DRV)*/		\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), 0},			\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x04[12:11] = 2b'00 disable WL suspend*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4)|BIT(3), 0},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x04[8] = 1 polling until return 0*/				\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), BIT(0)},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*wait till 0x04[8] = 0*/					\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(0), 0},			\
-+	{0x0023, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), 0}, /*LDO normal mode*/\
-+	{0x0074, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), BIT(4)}, /*SDIO Driving*/\
-+
-+#define RTL8188E_TRANS_ACT_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value },*/\
-+	{0x001F, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0},/*0x1F[7:0] = 0 turn off RF*/\
-+	{0x0023, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), BIT(4)}, /*LDO Sleep mode*/\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x04[9] = 1 turn off MAC by HW state machine*/		\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), BIT(1)},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*wait till 0x04[9] = 0 polling until return 0 to disable*/	\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(1), 0},			\
-+
-+
-+#define RTL8188E_TRANS_CARDEMU_TO_SUS					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value },*/\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*0x04[12:11] = 2b'01enable WL suspend*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)},	\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+	/*0x04[12:11] = 2b'11enable WL suspend for PCIe*/		\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)|BIT(4)},\
-+	{0x0007, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*  0x04[31:30] = 2b'10 enable enable bandgap mbias in suspend */\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, BIT(7)},			\
-+	{0x0041, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*Clear SIC_EN register 0x40[12] = 1'b0 */			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), 0},			\
-+	{0xfe10, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*Set USB suspend enable local register  0xfe10[4]= 1 */	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), BIT(4)},		\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	/*Set SDIO suspend local register*/				\
-+	PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), BIT(0)},		\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	/*wait power state to suspend*/					\
-+	PWR_BASEADDR_SDIO, PWR_CMD_POLLING, BIT(1), 0},
-+
-+#define RTL8188E_TRANS_SUS_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	/*Set SDIO suspend local register*/				\
-+	PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), 0},			\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	/*wait power state to suspend*/					\
-+	PWR_BASEADDR_SDIO, PWR_CMD_POLLING, BIT(1), BIT(1)},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x04[12:11] = 2b'01enable WL suspend*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), 0},
-+
-+#define RTL8188E_TRANS_CARDEMU_TO_CARDDIS				\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0026, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*0x24[23] = 2b'01 schmit trigger */				\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), BIT(7)},		\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*0x04[12:11] = 2b'01 enable WL suspend*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(3)|BIT(4), BIT(3)},	\
-+	{0x0007, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*  0x04[31:30] = 2b'10 enable enable bandgap mbias in suspend */\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0},			\
-+	{0x0041, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK,			\
-+	PWR_INTF_USB_MSK|PWR_INTF_SDIO_MSK,				\
-+	/*Clear SIC_EN register 0x40[12] = 1'b0 */			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), 0},			\
-+	{0xfe10, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK,	\
-+	/*Set USB suspend enable local register  0xfe10[4]= 1 */	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), BIT(4)},		\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	/*Set SDIO suspend local register*/				\
-+	PWR_BASEADDR_SDIO, PWR_CMD_WRITE, BIT(0), BIT(0)},		\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	PWR_CMD_POLLING, BIT(1), 0}, /*wait power state to suspend*/
-+
-+#define RTL8188E_TRANS_CARDDIS_TO_CARDEMU				\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	PWR_BASEADDR_SDIO,\
-+	PWR_CMD_WRITE, BIT(0), 0}, /*Set SDIO suspend local register*/	\
-+	{0x0086, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	PWR_BASEADDR_SDIO,\
-+	PWR_CMD_POLLING, BIT(1), BIT(1)}, /*wait power state to suspend*/\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC,						\
-+	PWR_CMD_WRITE, BIT(3)|BIT(4), 0},				\
-+	/*0x04[12:11] = 2b'01enable WL suspend*/
-+
-+
-+#define RTL8188E_TRANS_CARDEMU_TO_PDN					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0006, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), 0},/* 0x04[16] = 0*/	\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), BIT(7)},/* 0x04[15] = 1*/
-+
-+
-+#define RTL8188E_TRANS_PDN_TO_CARDEMU					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0005, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(7), 0},/* 0x04[15] = 0*/
-+
-+
-+#define RTL8188E_TRANS_ACT_TO_LPS					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value },*/\
-+	{0x0522, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x7F},/*Tx Pause*/	\
-+	{0x05F8, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*zero if no pkt is tx*/\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},			\
-+	{0x05F9, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*Should be zero if no packet is transmitting*/	\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},			\
-+	{0x05FA, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*Should be zero if no packet is transmitting*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},			\
-+	{0x05FB, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*Should be zero if no packet is transmitting*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, 0xFF, 0},			\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*CCK and OFDM are disabled, and clock are gated*/		\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(0), 0},			\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_DELAY, 0, PWRSEQ_DELAY_US},/*Delay 1us*/\
-+	{0x0100, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x3F},/*Reset MAC TRX*/	\
-+	{0x0101, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*check if removed later*/					\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), 0},			\
-+	{0x0553, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*Respond TxOK to scheduler*/					\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(5), BIT(5)},		\
-+
-+
-+#define RTL8188E_TRANS_LPS_TO_ACT					\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value }, */\
-+	{0x0080, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_SDIO_MSK,	\
-+	PWR_BASEADDR_SDIO, PWR_CMD_WRITE, 0xFF, 0x84}, /*SDIO RPWM*/	\
-+	{0xFE58, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_USB_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x84}, /*USB RPWM*/	\
-+	{0x0361, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_PCI_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0x84}, /*PCIe RPWM*/	\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	PWR_BASEADDR_MAC, PWR_CMD_DELAY, 0, PWRSEQ_DELAY_MS}, /*Delay*/	\
-+	{0x0008, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*.	0x08[4] = 0		 switch TSF to 40M*/		\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(4), 0},			\
-+	{0x0109, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*Polling 0x109[7]= 0  TSF in 40M*/				\
-+	PWR_BASEADDR_MAC, PWR_CMD_POLLING, BIT(7), 0},			\
-+	{0x0029, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*. 0x29[7:6] = 2b'00	 enable BB clock*/			\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(6)|BIT(7), 0},		\
-+	{0x0101, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*.	0x101[1] = 1*/\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1), BIT(1)},		\
-+	{0x0100, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*.	0x100[7:0] = 0xFF	 enable WMAC TRX*/\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0xFF},			\
-+	{0x0002, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,	\
-+	/*. 0x02[1:0] = 2b'11  enable BB macro*/\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, BIT(1)|BIT(0), BIT(1)|BIT(0)},	\
-+	{0x0522, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,\
-+	PWR_BASEADDR_MAC, PWR_CMD_WRITE, 0xFF, 0}, /*.	0x522 = 0*/
-+
-+
-+#define RTL8188E_TRANS_END						\
-+	/* format */							\
-+	/* { offset, cut_msk, fab_msk|interface_msk, base|cmd, msk, value },*/\
-+	{0xFFFF, PWR_CUT_ALL_MSK, PWR_FAB_ALL_MSK, PWR_INTF_ALL_MSK,\
-+	0, PWR_CMD_END, 0, 0}
-+
-+extern struct wlan_pwr_cfg rtl8188e_power_on_flow
-+		[RTL8188E_TRANS_CARDEMU_TO_ACT_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_radio_off_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_card_disable_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_card_enable_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_suspend_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_resume_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_CARDEMU_TO_SUS_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_hwpdn_flow
-+		[RTL8188E_TRANS_ACT_TO_CARDEMU_STEPS +
-+		RTL8188E_TRANS_CARDEMU_TO_PDN_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_enter_lps_flow
-+		[RTL8188E_TRANS_ACT_TO_LPS_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+extern struct wlan_pwr_cfg rtl8188e_leave_lps_flow
-+		[RTL8188E_TRANS_LPS_TO_ACT_STEPS +
-+		RTL8188E_TRANS_END_STEPS];
-+
-+/* RTL8723 Power Configuration CMDs for PCIe interface */
-+#define Rtl8188E_NIC_PWR_ON_FLOW	rtl8188e_power_on_flow
-+#define Rtl8188E_NIC_RF_OFF_FLOW	rtl8188e_radio_off_flow
-+#define Rtl8188E_NIC_DISABLE_FLOW	rtl8188e_card_disable_flow
-+#define Rtl8188E_NIC_ENABLE_FLOW	rtl8188e_card_enable_flow
-+#define Rtl8188E_NIC_SUSPEND_FLOW	rtl8188e_suspend_flow
-+#define Rtl8188E_NIC_RESUME_FLOW	rtl8188e_resume_flow
-+#define Rtl8188E_NIC_PDN_FLOW		rtl8188e_hwpdn_flow
-+#define Rtl8188E_NIC_LPS_ENTER_FLOW	rtl8188e_enter_lps_flow
-+#define Rtl8188E_NIC_LPS_LEAVE_FLOW	rtl8188e_leave_lps_flow
-+
-+#endif
+Are we going to see a fix for this (very) soon?  Or should I just go
+ahead and revert this patch?
+
 -- 
-1.8.1.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
