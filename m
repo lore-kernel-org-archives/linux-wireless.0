@@ -1,83 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:36222 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756288Ab3CGSnn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 13:43:43 -0500
-Received: by mail-ob0-f171.google.com with SMTP id x4so618248obh.30
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 10:43:41 -0800 (PST)
+Received: from bear.ext.ti.com ([192.94.94.41]:46993 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757419Ab3CYLL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Mar 2013 07:11:27 -0400
+Date: Mon, 25 Mar 2013 13:11:01 +0200
+From: Felipe Balbi <balbi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+CC: <linux-wireless@vger.kernel.org>, <ido@wizery.com>, <balbi@ti.com>,
+	<gregoire@alwaysinnovating.com>
+Subject: Re: [PATCH] wlcore: move handling from hardirq to the irq thread
+ function
+Message-ID: <20130325111101.GD25656@arwen.pp.htv.fi> (sfid-20130325_121132_158002_D931BFBD)
+Reply-To: <balbi@ti.com>
+References: <1364208824-18751-1-git-send-email-coelho@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <5138D7D7.5020204@lwfinger.net>
-References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
-	<5138D7D7.5020204@lwfinger.net>
-Date: Thu, 7 Mar 2013 19:43:41 +0100
-Message-ID: <CACna6rySpJnu4-GVkey7CUSScO8yV3u1V4+az+qnvQy4iz2=Lw@mail.gmail.com> (sfid-20130307_194347_965961_D31DDBFD)
-Subject: Re: [PATCH 00/13] b43: implement basic TX power mgmt
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Xm/fll+QQv+hsKip"
+In-Reply-To: <1364208824-18751-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/3/7 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 03/07/2013 09:47 AM, Rafał Miłecki wrote:
->>
->> After spotting a lot of N-PHY-similar functions in
->> BCM4331 dump of MMIO ops - split into names parts
->> I was able to finally improve HT-PHY code.
->>
->> It now sets TX basically, I can finally talk with devices that are few
->> meters away, not just few centimetres. It's a little patch bomb, sorry
->> for that, but I wasn't sure if my code is correct until it was complete
->> and started working.
->>
->> Rafał Miłecki (13):
->>    b43: HT-PHY: rename AFE defines
->>    b43: HT-PHY: add classifier control function
->>    b43: HT-PHY: move TX fix to the separated function
->>    b43: HT-PHY: implement spurious tone avoidance
->>    b43: HT-PHY: implement MAC reclocking
->>    b43: HT-PHY: implement CCA reset
->>    b43: HT-PHY: implement PA override
->>    b43: HT-PHY: implement controlling TX power control
->>    b43: HT-PHY: implement stopping sample tone playback
->>    b43: HT-PHY: implement playing sample tone
->>    b43: HT-PHY: implement RSSI polling
->>    b43: HT-PHY: setup TX power control
->>    b43: HT-PHY: enable basic TX power setup
->>
->>   drivers/net/wireless/b43/phy_ht.c |  603
->> +++++++++++++++++++++++++++++++++----
->>   drivers/net/wireless/b43/phy_ht.h |   77 ++++-
->>   2 files changed, 613 insertions(+), 67 deletions(-)
->
->
-> What tree is used for these patches? Numbers 1-7 applied with offsets, and
-> some fuzz. Number 8 failed, and I quit trying there. I am using
-> wireless-testing that was a fresh pull yesterday after John rebased it.
+--Xm/fll+QQv+hsKip
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Whoops? It should apply just fine on re-based wireless-testing. I
-think I've refreshed my tree today.
+On Mon, Mar 25, 2013 at 12:53:44PM +0200, Luciano Coelho wrote:
+> Spin locks and completions are expensive in hard IRQ context and cause
+> problems with RT kernels.  In RT kernels, both spin locks and
+> completions can schedule(), so we can't use them in hard irq context.
+>=20
+> Move handling code into the irq thread function to avoid that.
+>=20
+> Reported-by: Gregoire Gentil <gregoire@alwaysinnovating.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c |   53 +++++++++++++--------------=
+------
+>  1 file changed, 21 insertions(+), 32 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless=
+/ti/wlcore/main.c
+> index 248daa9..c2730a7 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -651,6 +651,25 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
+>  	unsigned long flags;
+>  	struct wl1271 *wl =3D cookie;
+> =20
+> +	/* complete the ELP completion */
+> +	spin_lock_irqsave(&wl->wl_lock, flags);
+> +	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+> +	if (wl->elp_compl) {
+> +		complete(wl->elp_compl);
+> +		wl->elp_compl =3D NULL;
+> +	}
+> +
+> +	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
+> +		/* don't enqueue a work right now. mark it as pending */
+> +		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
+> +		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
+> +		disable_irq_nosync(wl->irq);
+> +		pm_wakeup_event(wl->dev, 0);
+> +		spin_unlock_irqrestore(&wl->wl_lock, flags);
+> +		return IRQ_HANDLED;
+> +	}
+> +	spin_unlock_irqrestore(&wl->wl_lock, flags);
 
-git log drivers/net/wireless/
+I still think _irqrestore() here is wrong, since it will reenable the
+IRQ line... other than that, it looks alright.
 
-commit 7f6231751ef492c38dbef61d14881bff6f1de165
-Author: Rafał Miłecki <zajec5@gmail.com>
-Date:   Sun Feb 24 17:41:56 2013 +0100
+--=20
+balbi
 
-    b43: HT-PHY: rename AFE defines
+--Xm/fll+QQv+hsKip
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-commit 7c2332b8061b7d4d7cd539ced1277e78d976f3da
-Author: Rafał Miłecki <zajec5@gmail.com>
-Date:   Mon Mar 4 16:39:10 2013 +0100
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-    b43: HT-PHY: make it BCMA-only
+iQIcBAEBAgAGBQJRUDDFAAoJEIaOsuA1yqREVBMP/AkoX8vkdM9ZevGFNdDRvCyX
+fYedLUwqSNySXYtKGhagitDnc9tAfQ/nfL5pvzTVh7+O+jxZ+z4rnPe5H9Bt7eS3
+BOvBJXJz+8YsR0/J74spJUA68KiC6OeVBR1nDUEFTwwgeBb1aycP5sAKhYh7xrH9
+D8EnSBH7oeJW9fHNAPksLaVyW1bFZc3ihHioGBLIY2Wtq1Anys2/h7WfdtYBODS8
+L0+tQXAytjxNtUVvopGePIlYiQCckuW1raDfjETZ3MXXpC4k84adWswRrb/UB445
+ln3bjWhaHVtJTOPfxAY8Dd0YqEyCsSS2XuLodneXpZQTG7ctayf+Re/Mm2xoha1E
+qs3na1m5n059YB1zzyPExmrq93OvRxYRUhCcru2zSKp8AJZ/bhGliTSNmjqLYO6V
+FG5vokqNGsZbmYR/e/Ljy3dGIYfEEVLbo2KUlfJ5nI9absyUIv9XtUiNT0Zh8vrU
+Mn2JdcGfpv7vlEHQON+fsRJPA8RBBnQqLGYr67GbSepk1PSo1EZCSc2g4izjrTLn
+yXpA+J2ChvgDa1TylcpGMiMH5lZ7pmOAKna2WbGjg8G1ful41Ay1RdQXIWLHjZXK
+/f/qdQq9mBUDli9NI8j8iTUaZrQTcll+ZvlLqgfRvc02Eb3AtVkBEUDelnZ+T4GM
+6fY1cWGhKSSbvD4v10Bo
+=+sl4
+-----END PGP SIGNATURE-----
 
-So the newest b43 patch my patchset applies on top of is
-7c2332b8061b7d4d7cd539ced1277e78d976f3da
-
--- 
-Rafał
+--Xm/fll+QQv+hsKip--
