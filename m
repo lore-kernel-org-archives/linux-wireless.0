@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757582Ab3CDOA6 (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39786 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758081Ab3CYPa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 09:00:58 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dor Shaish <dor.shaish@intel.com>
-Subject: [PATCH 06/11] iwlwifi: mvm: Set valid TX antennas value before calib request
-Date: Mon,  4 Mar 2013 15:00:46 +0100
-Message-Id: <1362405651-26456-6-git-send-email-johannes@sipsolutions.net> (sfid-20130304_150115_377415_3C16DBDE)
-In-Reply-To: <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
-References: <1362405609.21028.12.camel@jlt4.sipsolutions.net>
- <1362405651-26456-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 25 Mar 2013 11:30:28 -0400
+Received: by mail-ee0-f46.google.com with SMTP id e49so3243234eek.5
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 08:30:27 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH 3/3] mac80211_hwsim: advertise VHT support also when channels == 1
+Date: Mon, 25 Mar 2013 16:26:59 +0100
+Message-Id: <1364225219-18473-4-git-send-email-karl.beldan@gmail.com> (sfid-20130325_163036_128725_ADAEE019)
+In-Reply-To: <1364225219-18473-1-git-send-email-karl.beldan@gmail.com>
+References: <1364225219-18473-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dor Shaish <dor.shaish@intel.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-We must set the valid TX antennas number in the ucode before
-sending the phy_cfg_cmd and request for calibrations.
+Drivers can now advertise VHT support even if they don't use channel
+contexts.
 
-Signed-off-by: Dor Shaish <dor.shaish@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index d3d959d..e6d51a9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -446,6 +446,11 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 	ret = iwl_nvm_check_version(mvm->nvm_data, mvm->trans);
- 	WARN_ON(ret);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4ac5486..70b6ce6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2310,9 +2310,6 @@ static int __init init_mac80211_hwsim(void)
  
-+	/* Send TX valid antennas before triggering calibrations */
-+	ret = iwl_send_tx_ant_cfg(mvm, mvm->nvm_data->valid_tx_ant);
-+	if (ret)
-+		goto error;
-+
- 	/* Override the calibrations from TLV and the const of fw */
- 	iwl_set_default_calib_trigger(mvm);
+ 			hw->wiphy->bands[band] = sband;
  
+-			if (channels == 1)
+-				continue;
+-
+ 			sband->vht_cap.vht_supported = true;
+ 			sband->vht_cap.cap =
+ 				IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
 -- 
-1.8.0
+1.7.10.GIT
 
