@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:45210 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932241Ab3CLJoN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57326 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932363Ab3CYSTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 05:44:13 -0400
-Received: by mail-wg0-f51.google.com with SMTP id 8so6005692wgl.30
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 02:44:12 -0700 (PDT)
-Date: Tue, 12 Mar 2013 10:41:19 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH v4] mac80211/minstrel_ht: add support for using CCK rates
-Message-ID: <20130312094119.GA23062@magnum.frso.rivierawaves.com> (sfid-20130312_104417_195559_33DCCD0F)
-References: <1360749068-3977-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1360749068-3977-1-git-send-email-nbd@openwrt.org>
+	Mon, 25 Mar 2013 14:19:49 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/2] mac80211: Be more careful about sending beacon-loss-events.
+Date: Mon, 25 Mar 2013 11:19:35 -0700
+Message-Id: <1364235575-20268-2-git-send-email-greearb@candelatech.com> (sfid-20130325_191952_187668_19F41606)
+In-Reply-To: <1364235575-20268-1-git-send-email-greearb@candelatech.com>
+References: <1364235575-20268-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 13, 2013 at 10:51:08AM +0100, Felix Fietkau wrote:
-> When MCS rates start to get bad in 2.4 GHz because of long range or
-> strong interference, CCK rates can be a lot more robust.
-> 
-> This patch adds a pseudo MCS group containing CCK rates (long preamble
-> in the lower 4 slots, short preamble in the upper slots).
-> 
-With this, mac80211 might send CCK rates with IEEE80211_TX_CTL_AMPDU set.
-For aggregates, if we don't currently set NO_CCK, at the very least the
-1st rate index should belong to an MCS_GROUP.
+From: Ben Greear <greearb@candelatech.com>
 
+I don't think we should send the events unless it was actually
+a beacon that was lost...not just any probe of an AP.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+Now against mac80211-next tree.
+
+:100644 100644 9958cb7... fe72749... M	net/mac80211/mlme.c
+ net/mac80211/mlme.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9958cb7..fe72749 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1978,13 +1978,15 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 	}
  
-Karl
+-	if (beacon)
++	if (beacon) {
+ 		mlme_dbg_ratelimited(sdata,
+ 				     "detected beacon loss from AP (missed %d beacons) - probing\n",
+ 				     beacon_loss_count);
+ 
+-	ieee80211_cqm_rssi_notify(&sdata->vif,
+-		NL80211_CQM_RSSI_BEACON_LOSS_EVENT, GFP_KERNEL);
++		ieee80211_cqm_rssi_notify(&sdata->vif,
++					  NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
++					  GFP_KERNEL);
++	}
+ 
+ 	/*
+ 	 * The driver/our work has already reported this event or the
+-- 
+1.7.3.4
+
