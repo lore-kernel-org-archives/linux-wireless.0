@@ -1,111 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:56637 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756309Ab3CYLie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 07:38:34 -0400
-Date: Mon, 25 Mar 2013 13:38:03 +0200
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <balbi@ti.com>, <linux-wireless@vger.kernel.org>, <ido@wizery.com>,
-	<gregoire@alwaysinnovating.com>
-Subject: Re: [PATCH] wlcore: move handling from hardirq to the irq thread
- function
-Message-ID: <20130325113803.GF25656@arwen.pp.htv.fi> (sfid-20130325_123837_669214_694A5B20)
-Reply-To: <balbi@ti.com>
-References: <1364208824-18751-1-git-send-email-coelho@ti.com>
- <20130325111101.GD25656@arwen.pp.htv.fi>
- <1364211205.23210.18.camel@cumari.coelho.fi>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KJY2Ze80yH5MUxol"
-In-Reply-To: <1364211205.23210.18.camel@cumari.coelho.fi>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:37765 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932207Ab3CYS1x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Mar 2013 14:27:53 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, parag.lkml@gmail.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] ath9k: avoid queueing hw check work when suspended
+Date: Mon, 25 Mar 2013 11:27:46 -0700
+Message-Id: <1364236066-11811-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130325_192758_968284_B40DC160)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---KJY2Ze80yH5MUxol
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-On Mon, Mar 25, 2013 at 01:33:25PM +0200, Luciano Coelho wrote:
-> On Mon, 2013-03-25 at 13:11 +0200, Felipe Balbi wrote:
-> > On Mon, Mar 25, 2013 at 12:53:44PM +0200, Luciano Coelho wrote:
-> > > Spin locks and completions are expensive in hard IRQ context and cause
-> > > problems with RT kernels.  In RT kernels, both spin locks and
-> > > completions can schedule(), so we can't use them in hard irq context.
-> > >=20
-> > > Move handling code into the irq thread function to avoid that.
-> > >=20
-> > > Reported-by: Gregoire Gentil <gregoire@alwaysinnovating.com>
-> > > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > > ---
-> > >  drivers/net/wireless/ti/wlcore/main.c |   53 +++++++++++++----------=
-----------
-> > >  1 file changed, 21 insertions(+), 32 deletions(-)
-> > >=20
-> > > diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wire=
-less/ti/wlcore/main.c
-> > > index 248daa9..c2730a7 100644
-> > > --- a/drivers/net/wireless/ti/wlcore/main.c
-> > > +++ b/drivers/net/wireless/ti/wlcore/main.c
-> > > @@ -651,6 +651,25 @@ static irqreturn_t wlcore_irq(int irq, void *coo=
-kie)
-> > >  	unsigned long flags;
-> > >  	struct wl1271 *wl =3D cookie;
-> > > =20
-> > > +	/* complete the ELP completion */
-> > > +	spin_lock_irqsave(&wl->wl_lock, flags);
-> > > +	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
-> > > +	if (wl->elp_compl) {
-> > > +		complete(wl->elp_compl);
-> > > +		wl->elp_compl =3D NULL;
-> > > +	}
-> > > +
-> > > +	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
-> > > +		/* don't enqueue a work right now. mark it as pending */
-> > > +		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
-> > > +		wl1271_debug(DEBUG_IRQ, "should not enqueue work");
-> > > +		disable_irq_nosync(wl->irq);
-> > > +		pm_wakeup_event(wl->dev, 0);
-> > > +		spin_unlock_irqrestore(&wl->wl_lock, flags);
-> > > +		return IRQ_HANDLED;
-> > > +	}
-> > > +	spin_unlock_irqrestore(&wl->wl_lock, flags);
-> >=20
-> > I still think _irqrestore() here is wrong, since it will reenable the
-> > IRQ line... other than that, it looks alright.
->=20
-> As we discussed earlier, it won't re-enable, since it was not enabled
-> when we saved.  But, in any case, as we agreed, I'll send a separate
-> patch removing it.  Don't want to mix two things in the same patch.
+The following issue was reported.
 
-alright...
+WARNING: at net/mac80211/util.c:599 ieee80211_can_queue_work.isra.7+0x32/0x40 [mac80211]()
+Hardware name: iMac12,1
+queueing ieee80211 work while going to suspend
+Pid: 0, comm: swapper/0 Tainted: PF          O 3.8.2-206.fc18.x86_64 #1
+Call Trace: Mar 16 09:39:17 Parags-iMac kernel: [ 3993.642992]  <IRQ>
+[<ffffffff8105e61f>] warn_slowpath_common+0x7f/0xc0
+[<ffffffffa0581420>] ? ath_start_rx_poll+0x70/0x70 [ath9k]
+<ffffffff8105e716>] warn_slowpath_fmt+0x46/0x50
+[<ffffffffa045b542>] ieee80211_can_queue_work.isra.7+0x32/0x40
 
-Reviewed-by: Felipe Balbi <balbi@ti.com>
+Fix this by avoiding to queue the work if our device has
+already been marked as suspended or stopped.
 
---=20
-balbi
+Reported-by: Parag Warudkar <parag.lkml@gmail.com>
+Tested-by: Parag Warudkar <parag.lkml@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/ath/ath9k/link.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---KJY2Ze80yH5MUxol
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 39c84ec..7fdac6c 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -170,7 +170,8 @@ void ath_rx_poll(unsigned long data)
+ {
+ 	struct ath_softc *sc = (struct ath_softc *)data;
+ 
+-	ieee80211_queue_work(sc->hw, &sc->hw_check_work);
++	if (!test_bit(SC_OP_INVALID, &sc->sc_flags))
++		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRUDcbAAoJEIaOsuA1yqREY58QAKBY3CItAQqJQgnICtxFoHnK
-ejGMZTLg5UHuF5bK5rbNl6P9BYXlZJ68xD4hQXTGJ3L3YPKfrewSOR1STQ3Y2AXT
-lY1WMab0ZalBEvJENt5NjIyj2QM8hT47X8MHzVZxe3qu0Z/W9ataR5Cb6H6ebS/E
-xe+ZxNxpxP+EAIc1A/eWPpCqXCYq0c52J8hDpY6eRG1qqYciZMS7mKrqa9Bu0qoJ
-5afpGQp6+V8tZGy0KUczibfd+5+DgSJV3Sn0Kon/f4UcA2Mgbw20fMvE4WosWzJO
-zpM2D2rPBJvu4QsaY0SuoSWyI7Z8x6PUyt5pRfr6xljjuNKRDeQWNNtX0SzRAZLn
-RJuiHxoQVTZSTka9uR6jx2ediJZbzmSCidjVrbtA/aBKqBddllTzfjj8ADJPK/1y
-LiGAcFKYrbQ3/dlbX3fLjb66yubg2qAig1Kh8ypnEZJ5p9Nx3HZLcAOMP3fg2o98
-W2iV+4DyPXijwHg4pEsTvbqmQGVRemyZPAco9wjUQw/W4OqU/F5ZayliIyHfEAdg
-fq4nNdn6xfJpWNaXZct8dZNk1SazzY5wURT940DeJ39pR7qPAz4W5kwRchndL9oG
-I9VqA5j4w5q5Hd1CaT//exTcGAHsQrXQygCO6uAe1HtVYP7ahllyu1SXCUHPie9K
-i9NdesxFsUB7lv8Dq1ys
-=rOR1
------END PGP SIGNATURE-----
-
---KJY2Ze80yH5MUxol--
