@@ -1,89 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35181 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934174Ab3CZJbk (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:55720 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758123Ab3CZNYE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 05:31:40 -0400
-Message-ID: <1364290290.8319.6.camel@jlt4.sipsolutions.net> (sfid-20130326_103144_417469_316EFE54)
-Subject: pull-request: iwlwifi-fixes 2013-03-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Mar 2013 10:31:30 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-UtF/9vK+ncj1htfhBGzh"
-Mime-Version: 1.0
+	Tue, 26 Mar 2013 09:24:04 -0400
+Received: by mail-ie0-f170.google.com with SMTP id c11so8848497ieb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 06:24:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+ <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
+ <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+ <201303251712.19808.chunkeey@googlemail.com> <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+ <CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+From: Robert Shade <robert.shade@gmail.com>
+Date: Tue, 26 Mar 2013 09:23:43 -0400
+Message-ID: <CAMgrJ3YdE+5M0rRdApJSTKLanc1LQ0KKRkS_PbYforvG3y1+9w@mail.gmail.com> (sfid-20130326_142409_899716_3D725E05)
+Subject: Re: Auth Packet TX Delay
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath9k bug created: https://bugzilla.kernel.org/show_bug.cgi?id=55771
 
---=-UtF/9vK+ncj1htfhBGzh
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi John,
-
-It looks like I forgot to send this pull-request earlier ...
-
-I have three little fixes to the driver from Emmanuel. One addresses a
-small bug Ben Hutchings found during the stable review process and two
-address some warnings in the driver when RF-Kill is asserted.
-
-Please pull.
-
-Thanks,
-johannes
-
-
-The following changes since commit 2470b36e84a2e680d7a7e3809cbceae5bfae3606=
-:
-
-  iwlwifi: mvm: don't warn on normal BAR sending (2013-03-04 13:39:02 +0100=
-)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
-or-john
-
-for you to fetch changes up to 2d5d50ee596361566f7f84300117cba7d7672bc5:
-
-  iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (3):
-      iwlwifi: fix length check in multi-TB HCMD
-      iwlwifi: set rfkill in internal state of the transport
-      iwlwifi: dvm: don't send HCMD in restart flow
-
- drivers/net/wireless/iwlwifi/dvm/lib.c    |  9 +++++++++
- drivers/net/wireless/iwlwifi/dvm/ucode.c  |  4 ++--
- drivers/net/wireless/iwlwifi/pcie/trans.c | 13 +++++++++++++
- drivers/net/wireless/iwlwifi/pcie/tx.c    |  2 +-
- 4 files changed, 25 insertions(+), 3 deletions(-)
-
-
---=-UtF/9vK+ncj1htfhBGzh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRUWryAAoJEDBSmw7B7bqrZ9EQAI5vjrv5k+fCB4ufYyoLF/dv
-allg1SrvB/1q9Qbrck0oLD+0UC0XNlO1laRvmPXbcLgiEFHqzxY+YRrCdxzq4dtm
-ndMZcgk/n/NU5K6CLnuu1RYtmTabmJNv67ZNEInVO1zna94pFogbjz8/itDg9W8u
-Vzm/W3FWFRnZ1Ohg2k6L22t7z0jItkZ+rw8ulNJ/W2lpFlUWaJp2rALB5STL5QdB
-4AvOFrOlCvIWaOqnkKllt71Pn1URHpZ2M2hKh3Y1frqPXU+yx7CV/63CwXUoMuqv
-VD7QeiuiFI37/1p0g+82SuPCqNCcfWkewAhm0tqSXWc4+/zUTw4iGA1HcyrRancU
-XIh4uQ5UweyAdcBGAi9BO9/aSrKxsEHqp4JJxSTGBY+YMyslVGllRtZXrh7CR1f3
-/HdgjxxeAHhjxtkqphTgDWgVq1d546+u1s9EkdET6bYVz0dZeAPXz6wn2TGibrFp
-H9lkapqJ1tY7NMJHxttzcxvzw/z/8fFHYNyzig6RnynyHcBACCtFOK+fl4IzkKC0
-IF+kciz4qKYq3DnHCFycUPUsK934Os4RXcnC78109oS/Xf9PKB1iVgIYiXvT+0XF
-hKASVSVUymVXvS8gbKxi0FlpyOPCOKJXNLZxVoGpg9Jb+x7WSdqXQoqLv17zxuOd
-dsxkRgcns0Z4/ltBQtq+
-=i6oZ
------END PGP SIGNATURE-----
-
---=-UtF/9vK+ncj1htfhBGzh--
-
+On Tue, Mar 26, 2013 at 8:21 AM, Robert Shade <robert.shade@gmail.com> wrote:
+> I'll get a bug together, but I wanted to report that even with the
+> patch above (fastcc disabled/cold reset always), it still eventually
+> was unable to change the channel.  As soon as that failed, it's back
+> into the state where it never seems to xmit anything in the data
+> queues and can't associate.
+>
+> On Mon, Mar 25, 2013 at 12:45 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> One for each please.
+>>
+>>
+>>
+>>
+>> Adrian
+>>
+>>
+>> On 25 March 2013 09:12, Christian Lamparter <chunkeey@googlemail.com> wrote:
+>>> On Monday, March 25, 2013 03:23:53 AM Adrian Chadd wrote:
+>>>> Also, would you please make sure you file a bugzilla.kernel.org ticket
+>>>> so this gets tracked?
+>>>>
+>>>> It's good to know that some combination of fast channel change and
+>>>> warm versus cold reset is making things better/worse.
+>>>>
+>>>> And although a cold reset is likely a good thing to _fix_ the problem,
+>>>> it still leaves the underlying DMA/PHY hangs unresolved.
+>>>>
+>>>> But yes, please file a bugzilla ticket so this gets tracked right!
+>>> Um, do you want a bugreport for ath9k or carl9170 or for both?
+>>>
+>>> Regards,
+>>>         Christian
