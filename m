@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:64150 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850Ab3CJRfb (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48590 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876Ab3CZR2A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 13:35:31 -0400
-Received: by mail-ob0-f179.google.com with SMTP id un3so2669989obb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Mar 2013 10:35:30 -0700 (PDT)
-Message-ID: <513CC45E.7090402@lwfinger.net> (sfid-20130310_183535_582941_DCD95824)
-Date: Sun, 10 Mar 2013 12:35:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 26 Mar 2013 13:28:00 -0400
+Message-ID: <5151DA98.7030903@candelatech.com> (sfid-20130326_182806_936522_45746D92)
+Date: Tue, 26 Mar 2013 10:27:52 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Joe Perches <joe@perches.com>, Hauke Mehrtens <hauke@hauke-m.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: fix unaligned access to mac address
-References: <1361021140-19871-1-git-send-email-hauke@hauke-m.de> <CACna6ryaMfZ9x7VWHnRR9RF0wSN0A+H6vr3AC103Sn4G1XZdKQ@mail.gmail.com> <1361381489.3065.1.camel@joe-AO722> <51250E6B.3030308@lwfinger.net> <1361384969.2219.4.camel@joe-AO722> <51252132.3050603@hauke-m.de> <1361391065.2223.5.camel@joe-AO722> <512595BC.5030607@lwfinger.net> <CACna6rzQNo9CBrg08y6y+bf3009_EuL5f2UqOXVLKSoE_q7BRQ@mail.gmail.com> <513BCC20.70900@lwfinger.net> <CACna6rzNTfcuDOdpQrvbeWa4YhgDm_j6nkJ0OwbrLqCjh+qWJQ@mail.gmail.com>
-In-Reply-To: <CACna6rzNTfcuDOdpQrvbeWa4YhgDm_j6nkJ0OwbrLqCjh+qWJQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Robert Shade <robert.shade@gmail.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+Subject: Re: [ath9k-devel] Auth Packet TX Delay
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com> <CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com> <CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com> <201303251712.19808.chunkeey@googlemail.com> <CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com> <CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com> <CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com> <CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com> <5151D752.3080303@candelatech.com> <CAJ-VmontjZ2+RWCK50gf5RADkMeCbCc=HfstVAffkCHCtTmNew@mail.gmail.com>
+In-Reply-To: <CAJ-VmontjZ2+RWCK50gf5RADkMeCbCc=HfstVAffkCHCtTmNew@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/2013 06:36 AM, Rafał Miłecki wrote:
+On 03/26/2013 10:16 AM, Adrian Chadd wrote:
+> ... and the odd thing here is that during scanning, it should be
+> flushing the queues entirely so any new frame being transmitted
+> _SHOULD_ result in:
 >
-> Feel free to fix. I've another 3 regressions to track...
+> * TxDP for that queue being written (either FIFO or otherwise);
+> * TxE for that queue being set.
+>
+> So unless the queue is "full" already and isn't being drained, I'm
+> kinda curious as to why TX isn't starting.
 
-Upon further investigation, the flipping of the MAC bytes was not due to "ssb: 
-pci: Standardize a function to get mac address", or "ssb: fix unaligned access 
-to mac address". For other reasons, I had to run 3.8 today and found the 
-flipping, even though neither patch was installed. Joe and Hauke are blameless - 
-they merely reproduced the existing bug. I have no real desire to find out when 
-that error was introduced as I am not an archeologist. Note that b43legacy does 
-not have the problem, thus it was introduced after the split of those two variants.
+At least for the problems I saw, it was fairly easy to spot the
+problem once you looked at the xmit debugfs file.  There would
+be 127 pending-frames, axq-depth and ampdu-depth were zero,
+queue is stopped, and it stays like that for many seconds or minutes.
 
-I will submit the fix.
+Just resetting the NIC didn't help...I had to also tell the reset to
+not retry any packets and to set the pending-frames to zero.  After
+that, packets started transmitting again, and often after several
+seconds I'd see at least most of the old stuck packets be processed
+to one degree or another (pending frames would go negative since I
+had forced it to zero earlier).
 
-Larry
+I still do not know the root cause of this, nor have I had time to look
+at it in any more detail..the work-around is good enough for me for now
+and I have higher priority issues currently...
 
+I only saw the problem in the data queue (BE), but maybe it can happen
+in other queues as well.
 
+Or of course it could be completely un-related to the problem in
+this email thread....
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
