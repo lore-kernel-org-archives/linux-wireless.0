@@ -1,259 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:56886 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757971Ab3CYPaX (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:56344 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131Ab3CZRdt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 11:30:23 -0400
-Received: by mail-ea0-f178.google.com with SMTP id g14so2489234eak.9
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 08:30:22 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>
-Subject: [PATCH 0/3] mac80211: Enable VHT for non chanctxes drivers
-Date: Mon, 25 Mar 2013 16:26:56 +0100
-Message-Id: <1364225219-18473-1-git-send-email-karl.beldan@gmail.com> (sfid-20130325_163028_110230_06F6ABB6)
+	Tue, 26 Mar 2013 13:33:49 -0400
+Received: by mail-we0-f182.google.com with SMTP id k14so3747103wer.27
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 10:33:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5151DA98.7030903@candelatech.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
+	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+	<201303251712.19808.chunkeey@googlemail.com>
+	<CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+	<CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+	<CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
+	<CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
+	<5151D752.3080303@candelatech.com>
+	<CAJ-VmontjZ2+RWCK50gf5RADkMeCbCc=HfstVAffkCHCtTmNew@mail.gmail.com>
+	<5151DA98.7030903@candelatech.com>
+Date: Tue, 26 Mar 2013 10:33:47 -0700
+Message-ID: <CAJ-Vmom67dWGVASc-dm03NfG2bWFQ+v6b1UMW7nh1t4Q+j0RJw@mail.gmail.com> (sfid-20130326_183353_794835_DA2621CD)
+Subject: Re: [ath9k-devel] Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Robert Shade <robert.shade@gmail.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Right. Well, when you reset the FIFO chances are you should walk said
+FIFO queue in the TXQ (not the pending frames, the "hw" frames) and
+requeue each to the hardware.
+
+What I am doing in my EDMA restart routine in FreeBSD:
+
+* (assume TX is stopped, chip is reset, the completed frames are
+already removed from the FIFO queue in the TXQ);
+
+* save the old FIFO count
+* blank the FIFO count
+* walk the FIFO list (NOT the pending list), pushing head pointers
+back into the FIFO - and this will bump the FIFO counter by one each
+time;
+* when I've finished that, compare the FIFO count to the old FIFO
+count - they should match.
+
+I've not looked at the ath9k code in too much depth lately as I've
+been more interested in getting FreeBSD's EDMA code finished (and I
+think it is, woo!); so if you give me an hour or two I'll go do
+another code review and see what pops up.
 
 
-Hi,
-
-
-This follows the RFC of the same name which handled the mac80211 + 
-mac80211_hwsim parts, this serie adds the drivers part.
-
-Johannes, your review would be helpful.
-
-I don't know about the timing and who to CC if anyone.
-
-The changes imply modifications on drivers side, which consist in replacing :
-- hw->conf.channel with hw->conf.chandef.chan
-- hw->conf.channel_type with cfg80211_get_chandef_type(&hw->conf.chandef)
-Some places could use an hw->conf.chandef.width instead of performing 
-cfg80211_get_chandef_type, but to keep it an even dummier change I just kept 
-the use of channel_type.
-
-
-For the parts addressed by the RFC there is no difference, except mac80211_hwsim
-displays center_freqs{1,2} without checking its chandef.width.
-
-
-checkpatch complaints for drivers/net/wireless :
-{
-WARNING: Avoid CamelCase: <currCal->calData->calType>
-#163: FILE: drivers/net/wireless/ath/ath9k/calib.c:211:
-+               currCal->calData->calType, conf->chandef.chan->center_freq);
-
-WARNING: line over 80 characters
-#781: FILE: drivers/net/wireless/iwlwifi/dvm/rxon.c:955:
-+               sband = priv->hw->wiphy->bands[priv->hw->conf.chandef.chan->band];
-
-WARNING: line over 80 characters
-#1212: FILE: drivers/net/wireless/rtl818x/rtl8180/max2820.c:98:
-+               ieee80211_frequency_to_channel(conf->chandef.chan->center_freq) : 1;
-}
-
-
-
-
-Compile-tested with:
-{
-CONFIG_WLAN=y
-CONFIG_PCMCIA_RAYCS=m
-CONFIG_LIBERTAS_THINFIRM=m
-CONFIG_LIBERTAS_THINFIRM_DEBUG=y
-CONFIG_LIBERTAS_THINFIRM_USB=m
-CONFIG_AIRO=m
-CONFIG_ATMEL=m
-CONFIG_PCI_ATMEL=m
-CONFIG_PCMCIA_ATMEL=m
-CONFIG_AT76C50X_USB=m
-CONFIG_AIRO_CS=m
-CONFIG_PCMCIA_WL3501=m
-CONFIG_PRISM54=m
-CONFIG_USB_ZD1201=m
-CONFIG_USB_NET_RNDIS_WLAN=m
-CONFIG_RTL8180=m
-CONFIG_RTL8187=m
-CONFIG_RTL8187_LEDS=y
-CONFIG_ADM8211=m
-CONFIG_MAC80211_HWSIM=m
-CONFIG_MWL8K=m
-CONFIG_ATH_COMMON=m
-CONFIG_ATH_CARDS=m
-CONFIG_ATH_DEBUG=y
-CONFIG_ATH5K=m
-CONFIG_ATH5K_DEBUG=y
-CONFIG_ATH5K_TRACER=y
-CONFIG_ATH5K_PCI=y
-CONFIG_ATH5K_TEST_CHANNELS=y
-CONFIG_ATH9K_HW=m
-CONFIG_ATH9K_COMMON=m
-CONFIG_ATH9K_DFS_DEBUGFS=y
-CONFIG_ATH9K_BTCOEX_SUPPORT=y
-CONFIG_ATH9K=m
-CONFIG_ATH9K_PCI=y
-CONFIG_ATH9K_AHB=y
-CONFIG_ATH9K_DEBUGFS=y
-CONFIG_ATH9K_DFS_CERTIFIED=y
-CONFIG_ATH9K_MAC_DEBUG=y
-CONFIG_ATH9K_RATE_CONTROL=y
-CONFIG_ATH9K_HTC=m
-CONFIG_ATH9K_HTC_DEBUGFS=y
-CONFIG_CARL9170=m
-CONFIG_CARL9170_LEDS=y
-CONFIG_CARL9170_DEBUGFS=y
-CONFIG_CARL9170_WPC=y
-CONFIG_CARL9170_HWRNG=y
-CONFIG_ATH6KL=m
-CONFIG_ATH6KL_USB=m
-CONFIG_ATH6KL_DEBUG=y
-CONFIG_ATH6KL_REGDOMAIN=y
-CONFIG_AR5523=m
-CONFIG_WIL6210=m
-CONFIG_WIL6210_ISR_COR=y
-CONFIG_B43=m
-CONFIG_B43_BCMA=y
-# CONFIG_B43_BCMA_EXTRA is not set
-CONFIG_B43_SSB=y
-CONFIG_B43_PCI_AUTOSELECT=y
-CONFIG_B43_PCICORE_AUTOSELECT=y
-CONFIG_B43_PCMCIA=y
-CONFIG_B43_BCMA_PIO=y
-CONFIG_B43_PIO=y
-CONFIG_B43_PHY_N=y
-CONFIG_B43_PHY_LP=y
-CONFIG_B43_PHY_HT=y
-CONFIG_B43_LEDS=y
-CONFIG_B43_HWRNG=y
-CONFIG_B43_DEBUG=y
-CONFIG_B43LEGACY=m
-CONFIG_B43LEGACY_PCI_AUTOSELECT=y
-CONFIG_B43LEGACY_PCICORE_AUTOSELECT=y
-CONFIG_B43LEGACY_LEDS=y
-CONFIG_B43LEGACY_HWRNG=y
-CONFIG_B43LEGACY_DEBUG=y
-CONFIG_B43LEGACY_DMA=y
-CONFIG_B43LEGACY_PIO=y
-CONFIG_B43LEGACY_DMA_AND_PIO_MODE=y
-# CONFIG_B43LEGACY_DMA_MODE is not set
-# CONFIG_B43LEGACY_PIO_MODE is not set
-CONFIG_BRCMUTIL=m
-CONFIG_BRCMSMAC=m
-CONFIG_BRCMFMAC=m
-CONFIG_BRCMFMAC_USB=y
-CONFIG_BRCM_TRACING=y
-CONFIG_BRCMDBG=y
-CONFIG_HOSTAP=m
-CONFIG_HOSTAP_FIRMWARE=y
-CONFIG_HOSTAP_FIRMWARE_NVRAM=y
-CONFIG_HOSTAP_PLX=m
-CONFIG_HOSTAP_PCI=m
-CONFIG_HOSTAP_CS=m
-CONFIG_IPW2100=m
-CONFIG_IPW2100_MONITOR=y
-CONFIG_IPW2100_DEBUG=y
-CONFIG_IPW2200=m
-CONFIG_IPW2200_MONITOR=y
-CONFIG_IPW2200_RADIOTAP=y
-CONFIG_IPW2200_PROMISCUOUS=y
-CONFIG_IPW2200_QOS=y
-CONFIG_IPW2200_DEBUG=y
-CONFIG_LIBIPW=m
-CONFIG_LIBIPW_DEBUG=y
-CONFIG_IWLWIFI=m
-CONFIG_IWLDVM=m
-CONFIG_IWLMVM=m
-
-#
-# Debugging Options
-#
-# CONFIG_IWLWIFI_DEBUG is not set
-# CONFIG_IWLWIFI_DEBUGFS is not set
-# CONFIG_IWLWIFI_DEVICE_TRACING is not set
-CONFIG_IWLWIFI_DEVICE_TESTMODE=y
-CONFIG_IWLWIFI_P2P=y
-CONFIG_IWLEGACY=m
-CONFIG_IWL4965=m
-CONFIG_IWL3945=m
-
-#
-# iwl3945 / iwl4965 Debugging Options
-#
-# CONFIG_IWLEGACY_DEBUG is not set
-# CONFIG_IWLEGACY_DEBUGFS is not set
-CONFIG_LIBERTAS=m
-CONFIG_LIBERTAS_USB=m
-CONFIG_LIBERTAS_CS=m
-CONFIG_LIBERTAS_SPI=m
-CONFIG_LIBERTAS_DEBUG=y
-CONFIG_LIBERTAS_MESH=y
-CONFIG_HERMES=m
-CONFIG_HERMES_PRISM=y
-CONFIG_HERMES_CACHE_FW_ON_INIT=y
-CONFIG_PLX_HERMES=m
-CONFIG_TMD_HERMES=m
-CONFIG_NORTEL_HERMES=m
-CONFIG_PCI_HERMES=m
-CONFIG_PCMCIA_HERMES=m
-CONFIG_PCMCIA_SPECTRUM=m
-CONFIG_ORINOCO_USB=m
-CONFIG_P54_COMMON=m
-CONFIG_P54_USB=m
-CONFIG_P54_PCI=m
-CONFIG_P54_SPI=m
-CONFIG_P54_SPI_DEFAULT_EEPROM=y
-CONFIG_P54_LEDS=y
-CONFIG_RT2X00=m
-CONFIG_RT2400PCI=m
-CONFIG_RT2500PCI=m
-CONFIG_RT61PCI=m
-CONFIG_RT2800PCI=m
-CONFIG_RT2800PCI_RT33XX=y
-CONFIG_RT2800PCI_RT35XX=y
-CONFIG_RT2800PCI_RT53XX=y
-CONFIG_RT2800PCI_RT3290=y
-CONFIG_RT2500USB=m
-CONFIG_RT73USB=m
-CONFIG_RT2800USB=m
-CONFIG_RT2800USB_RT33XX=y
-CONFIG_RT2800USB_RT35XX=y
-CONFIG_RT2800USB_RT53XX=y
-CONFIG_RT2800USB_UNKNOWN=y
-CONFIG_RT2800_LIB=m
-CONFIG_RT2X00_LIB_PCI=m
-CONFIG_RT2X00_LIB_USB=m
-CONFIG_RT2X00_LIB=m
-CONFIG_RT2X00_LIB_FIRMWARE=y
-CONFIG_RT2X00_LIB_CRYPTO=y
-CONFIG_RT2X00_LIB_LEDS=y
-CONFIG_RT2X00_LIB_DEBUGFS=y
-CONFIG_RT2X00_DEBUG=y
-CONFIG_RTLWIFI=m
-CONFIG_RTLWIFI_DEBUG=y
-CONFIG_RTL8192CE=m
-CONFIG_RTL8192SE=m
-CONFIG_RTL8192DE=m
-CONFIG_RTL8723AE=m
-CONFIG_RTL8192CU=m
-CONFIG_RTL8192C_COMMON=m
-CONFIG_WL_TI=y
-CONFIG_WL1251=m
-CONFIG_WL1251_SPI=m
-CONFIG_WL12XX=m
-CONFIG_WL18XX=m
-CONFIG_WLCORE=m
-CONFIG_WLCORE_SPI=m
-CONFIG_ZD1211RW=m
-CONFIG_ZD1211RW_DEBUG=y
-CONFIG_MWIFIEX=m
-CONFIG_MWIFIEX_PCIE=m
-CONFIG_MWIFIEX_USB=m
-}
-
-
-Thanks for your review,
- 
-Karl
+Adrian
