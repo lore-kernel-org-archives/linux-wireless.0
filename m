@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886Ab3CTV3O (ORCPT
+Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:36856 "EHLO
+	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964792Ab3CZOzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 17:29:14 -0400
-Message-ID: <1363814947.9284.10.camel@jlt4.sipsolutions.net> (sfid-20130320_222918_154499_E497740E)
-Subject: Re: rcutree tree warning during P2P device support testing
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 26 Mar 2013 10:55:45 -0400
+Message-ID: <5151B106.6020800@dpets.co.uk> (sfid-20130326_155551_432404_472ED8EB)
+Date: Tue, 26 Mar 2013 14:30:30 +0000
+From: John Talbut <jt@dpets.co.uk>
+MIME-Version: 1.0
 To: Arend van Spriel <arend@broadcom.com>
-Cc: David Spinadel <dvdspndl@gmail.com>,
-	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Date: Wed, 20 Mar 2013 22:29:07 +0100
-In-Reply-To: <514A274F.5030303@broadcom.com>
-References: <5149CD81.40301@broadcom.com>
-	 <1363792139.8224.10.camel@jlt4.sipsolutions.net>
-	 <514A274F.5030303@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac in kernel driver on a Samsung NC110
+References: <51514F1B.1080207@dpets.co.uk> <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk> <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk> <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk> <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk> <51518E14.3050500@broadcom.com>
+In-Reply-To: <51518E14.3050500@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-20 at 22:17 +0100, Arend van Spriel wrote:
-> > Hmm, why would stopping the supplicant cause brcmfmac to unload?? Or are
-> > you saying you first stop the supplicant, which gets you that warning,
-> > and then unload fails?
+On 26/03/13 12:01, Arend van Spriel wrote:
+> On 03/26/2013 12:43 PM, John Talbut wrote:
+>> On 26/03/13 11:29, Arend van Spriel wrote:
+>>> On 03/26/2013 12:13 PM, John Talbut wrote:
+>>>>
+>>>> On 26/03/13 10:53, Arend van Spriel wrote:
+>>>>> On 03/26/2013 11:34 AM, John Talbut wrote:
+>>>>>> Kernel log attached.
+>>>>>>
+>>>>>
+>>>>> Now this is weird. I do not see any BCMA log messages. Can you give
+>>>>> output of following command:
+>>>>>
+>>>>> $ lspci -n -s 1:0.0
+>>>>
+>>>> 01:00.0 0280: 14e4:4357 (rev 01)
+>>>
+>>> Ok, no problem there.
+>>>
+>>> digging further in sysfs. Can you execute the following commands:
+>>>
+>>> if it exists:
+>>> $ ls /sys/bus/bcma
+>>> $ ls /sys/bus/bcma/devices
+>>> $ ls /sys/bus/bcma/drivers
+>>>
+>>> if it exists also following:
+>>> $ ls -l /sys/bus/bcma/drivers/brcmsmac
+>>
+>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
+>> devices  drivers  drivers_autoprobe  drivers_probe  uevent
+>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
 > 
-> Indeed, upon stopping wpa_supplicant I get the warning. And doing a
-> rmmod from the command line after that fails in the hang.
-
-Right, ok.
-
-> >> [ 1634.039095] WARNING: at kernel/rcutree.c:1960
-> >> rcu_process_callbacks+0x469/0x560()
-> > 
-> >> [ 1634.133917] Call Trace:
-> >> [ 1634.139833]  [<c1039c92>] warn_slowpath_common+0x72/0xa0
-> >> [ 1634.148659]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
-> >> [ 1634.157914]  [<c10c61f9>] ? rcu_process_callbacks+0x469/0x560
-> >> [ 1634.167121]  [<c1039ce2>] warn_slowpath_null+0x22/0x30
-> >> [ 1634.175725]  [<c10c61f9>] rcu_process_callbacks+0x469/0x560
-> > 
-> > Can't say I understand this warning ...
-> >
+> The fact that there are no devices detected under bcma is suspicious.
+> Adding bcma developer to the list. Maybe he knows about issues when
+> having bcma compiled in kernel image.
 > 
-> At least we are on the same page then ;-)
+> Regards,
+> Arend
 
-It looks like some rcu head list corruption ... no idea really.
+I have just noticed that with a previous version of the kernel which I
+had compiled with
+# CONFIG_BCMA is not set
 
-> The p2p device is already removed upon stopping wpa_supplicant through
-> .del_virtual_intf() callback. Took a quick peek in
-> net/mac80211/iface.c:ieee80211_if_remove() and wonder whether I should
-> do cfg80211_unregister_wdev() in that code path as well. Guess so, right?
+there are references to brcmsmac in the kernel log.  It complains about
+failing to find the firmware, though.
 
-I think so, yes. Does the warning go away if you do? :)
-
-johannes
-
+Regards
+John
