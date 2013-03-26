@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:59533 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753397Ab3CGAp0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934174Ab3CZJbk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 19:45:26 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Paul Fox <pgf@laptop.org>, Daniel Drake <dsd@laptop.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix potential null dereference 'mef_entry'
-Date: Wed,  6 Mar 2013 16:44:26 -0800
-Message-Id: <1362617066-10703-1-git-send-email-bzhao@marvell.com> (sfid-20130307_014529_895221_A52332CF)
+	Tue, 26 Mar 2013 05:31:40 -0400
+Message-ID: <1364290290.8319.6.camel@jlt4.sipsolutions.net> (sfid-20130326_103144_417469_316EFE54)
+Subject: pull-request: iwlwifi-fixes 2013-03-26
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 26 Mar 2013 10:31:30 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-UtF/9vK+ncj1htfhBGzh"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/mwifiex/cfg80211.c:2357 mwifiex_cfg80211_suspend()
-  error: potential null dereference 'mef_entry'
-  (kzalloc returns null)
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+--=-UtF/9vK+ncj1htfhBGzh
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index df30107..c9bc5f5 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2350,9 +2350,12 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 		return 0;
- 	}
- 
-+	mef_entry = kzalloc(sizeof(*mef_entry), GFP_KERNEL);
-+	if (!mef_entry)
-+		return -ENOMEM;
-+
- 	memset(&mef_cfg, 0, sizeof(mef_cfg));
- 	mef_cfg.num_entries = 1;
--	mef_entry = kzalloc(sizeof(*mef_entry), GFP_KERNEL);
- 	mef_cfg.mef_entry = mef_entry;
- 	mef_entry->mode = MEF_MODE_HOST_SLEEP;
- 	mef_entry->action = MEF_ACTION_ALLOW_AND_WAKEUP_HOST;
--- 
-1.7.0.2
+Hi John,
+
+It looks like I forgot to send this pull-request earlier ...
+
+I have three little fixes to the driver from Emmanuel. One addresses a
+small bug Ben Hutchings found during the stable review process and two
+address some warnings in the driver when RF-Kill is asserted.
+
+Please pull.
+
+Thanks,
+johannes
+
+
+The following changes since commit 2470b36e84a2e680d7a7e3809cbceae5bfae3606=
+:
+
+  iwlwifi: mvm: don't warn on normal BAR sending (2013-03-04 13:39:02 +0100=
+)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to 2d5d50ee596361566f7f84300117cba7d7672bc5:
+
+  iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (3):
+      iwlwifi: fix length check in multi-TB HCMD
+      iwlwifi: set rfkill in internal state of the transport
+      iwlwifi: dvm: don't send HCMD in restart flow
+
+ drivers/net/wireless/iwlwifi/dvm/lib.c    |  9 +++++++++
+ drivers/net/wireless/iwlwifi/dvm/ucode.c  |  4 ++--
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 13 +++++++++++++
+ drivers/net/wireless/iwlwifi/pcie/tx.c    |  2 +-
+ 4 files changed, 25 insertions(+), 3 deletions(-)
+
+
+--=-UtF/9vK+ncj1htfhBGzh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRUWryAAoJEDBSmw7B7bqrZ9EQAI5vjrv5k+fCB4ufYyoLF/dv
+allg1SrvB/1q9Qbrck0oLD+0UC0XNlO1laRvmPXbcLgiEFHqzxY+YRrCdxzq4dtm
+ndMZcgk/n/NU5K6CLnuu1RYtmTabmJNv67ZNEInVO1zna94pFogbjz8/itDg9W8u
+Vzm/W3FWFRnZ1Ohg2k6L22t7z0jItkZ+rw8ulNJ/W2lpFlUWaJp2rALB5STL5QdB
+4AvOFrOlCvIWaOqnkKllt71Pn1URHpZ2M2hKh3Y1frqPXU+yx7CV/63CwXUoMuqv
+VD7QeiuiFI37/1p0g+82SuPCqNCcfWkewAhm0tqSXWc4+/zUTw4iGA1HcyrRancU
+XIh4uQ5UweyAdcBGAi9BO9/aSrKxsEHqp4JJxSTGBY+YMyslVGllRtZXrh7CR1f3
+/HdgjxxeAHhjxtkqphTgDWgVq1d546+u1s9EkdET6bYVz0dZeAPXz6wn2TGibrFp
+H9lkapqJ1tY7NMJHxttzcxvzw/z/8fFHYNyzig6RnynyHcBACCtFOK+fl4IzkKC0
+IF+kciz4qKYq3DnHCFycUPUsK934Os4RXcnC78109oS/Xf9PKB1iVgIYiXvT+0XF
+hKASVSVUymVXvS8gbKxi0FlpyOPCOKJXNLZxVoGpg9Jb+x7WSdqXQoqLv17zxuOd
+dsxkRgcns0Z4/ltBQtq+
+=i6oZ
+-----END PGP SIGNATURE-----
+
+--=-UtF/9vK+ncj1htfhBGzh--
 
