@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:60960 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab3CFFmE (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:41140 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596Ab3CZROv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 00:42:04 -0500
-Received: by mail-wg0-f52.google.com with SMTP id 12so6742936wgh.31
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Mar 2013 21:42:02 -0800 (PST)
+	Tue, 26 Mar 2013 13:14:51 -0400
+Received: by mail-wi0-f174.google.com with SMTP id hj8so1253357wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 10:14:50 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 5 Mar 2013 22:42:01 -0700
-Message-ID: <CAEk6VBHnWn_KF0TJ_vojuOhWFhR6TncAok+B9mqgGzAdC5DzVg@mail.gmail.com> (sfid-20130306_064209_944472_6FA0A7C6)
-Subject: [ath9k] Recent driver versions break compatibility with AR9285 for me
-From: Nick Thomas <nhomas@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
+	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+	<201303251712.19808.chunkeey@googlemail.com>
+	<CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+	<CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+	<CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
+	<CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
+Date: Tue, 26 Mar 2013 10:14:49 -0700
+Message-ID: <CAJ-VmomiVrvy-HLJeTdTr6rjgTODiQHJv2V_GapSUPuGrFQCLw@mail.gmail.com> (sfid-20130326_181454_388137_12723A97)
+Subject: Re: Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Robert Shade <robert.shade@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marco Fonseca <marco@tampabay.rr.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
+On 26 March 2013 09:29, Robert Shade <robert.shade@gmail.com> wrote:
 
-Summary: In my case, the ath9k driver in kernel 3.7.10 does not work
-with the Atheros AR2985, but the 3.2.39 driver does.
+>> Even after a cold reset?
+>
+> Yes, which is why I'm curious about the start/stop queues calls. It
+> looks to my (untrained) eye that it's simply not processing the data
+> queue.
 
-I have a Dell Inspiron N5040, which has an Atheros AR9285 wireless
-card. lspci -v reports:
+Well if there's anything in the data queue once you've reset the chip
+(ie, the whole "no loss" reset path for doing resets when you're doing
+a scan or recovering from a hung chip) you need to re-program the
+queue.
 
-12:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless Network
-Adapter (PCI-Express) (rev 01)
-        Subsystem: Dell Wireless 1502 802.11bgn Half-size Mini PCIe Card
-        Flags: bus master, fast devsel, latency 0, IRQ 17
-        Memory at fbe00000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
-        Capabilities: [60] Express Legacy Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [140] Virtual Channel
-        Capabilities: [160] Device Serial Number 00-15-17-ff-ff-24-14-12
-        Capabilities: [170] Power Budgeting <?>
-        Kernel driver in use: ath9k
+For the pre-AR9380 chips its easy - for each TXQ:
 
-When I run the 3.7.10 kernel with the ath9k module loaded, the
-wireless does not work, and iwconfig wlan0 reports:
+* update axq_link to the be the link field in the last descriptor in
+the last frame;
+* push the first descriptor in the first frame into the QCU TxDP address;
+* set TxE for that queue.
 
-wlan0:          no wireless extensions.
+For the AR9380 and later chips its a little more complicated because
+of how the FIFO management works. Felix knows more about this in
+ath9k; I'm doing something different in FreeBSD.
+But the basics are the same - you need to walk the FIFO frame list and
+push the head of each FIFO entry back into the FIFO, then start TX.
 
-When I run the 3.2.39 kernel, the wireless works, and iwconfig wlan0 reports:
 
-wlan0     IEEE 802.11bgn  ESSID:"HardFatCox"
-          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:22:75:49:42:F7
-          Bit Rate=48 Mb/s   Tx-Power=15 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
-          Link Quality=50/70  Signal level=-60 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:23  Invalid misc:11577   Missed beacon:0
-
-My best guess is that recent driver revisions broke compatibility with
-my wireless card.
-
-The non-working sources that I used (the 3.7.10 kernel) were
-downloaded from the Gentoo portage repository, which has some patches
-applied. I am willing to try a more "official" version of the kernel
-(really, any version you guys want me to) if you think it would help
-in understanding this. Also let me know if there is anything else I
-can do to help.
-
-I am not subscribed to the mailing list; please cc me on any replies.
-Thank you for your good work on this project! I am very glad that I
-can use my wireless card on Linux.
-
-Nick Thomas
+adrian
