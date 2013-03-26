@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65206 "EHLO mx1.redhat.com"
+Received: from sycorax.lbl.gov ([128.3.11.121]:40312 "EHLO sycorax.lbl.gov"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753606Ab3C1XYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 19:24:12 -0400
-Message-ID: <1364511671.3226.22.camel@dcbw.foobar.com> (sfid-20130329_002416_969233_3053020D)
-Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
- user-space
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Date: Thu, 28 Mar 2013 18:01:11 -0500
-In-Reply-To: <1364510646.10397.81.camel@jlt4.sipsolutions.net>
-References: <1364472669-5629-1-git-send-email-arend@broadcom.com>
-	 <1364487476.10397.23.camel@jlt4.sipsolutions.net>
-	 <5154B347.9080904@broadcom.com>
-	 <1364506118.10397.29.camel@jlt4.sipsolutions.net>
-	 <1364510577.3226.7.camel@dcbw.foobar.com>
-	 <1364510646.10397.81.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752172Ab3CZU6w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Mar 2013 16:58:52 -0400
+Received: from sycorax.lbl.gov (romosan@localhost [127.0.0.1])
+	by sycorax.lbl.gov (8.14.4/8.14.4/Debian-4) with ESMTP id r2QKqd58022373
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 13:52:39 -0700
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi unable to reconnect after suspend since v3.9-rc1
+Date: Tue, 26 Mar 2013 13:52:39 -0700
+Message-ID: <87li993mug.fsf@sycorax.lbl.gov> (sfid-20130326_215912_863066_7A8A33F1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-03-28 at 23:44 +0100, Johannes Berg wrote:
-> On Thu, 2013-03-28 at 17:42 -0500, Dan Williams wrote:
-> 
-> > > Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
-> > > of course. I don't really see any reasonable minimum time? We might want
-> > > to enforce a max though, maybe.
-> > 
-> > Not quite.  A lot is dependent on the server itself, and I've had users
-> > on university and corporate networks report it sometimes takes 30 to 60
-> > seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
-> > OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
-> > like your lease, which means you need another round-trip.  So in many
-> > cases, it's a couple round-trips and each of these packets may or may
-> > not get lost in noisy environments.
-> 
-> Oh, yes, of course. However, we're talking about optimising the good
-> cases, not the bad ones. Think of it this way: if it goes fast, we
-> shouldn't make it slow by putting things like powersave or similar in
-> the way. If it's slow, then it'll still work, just slower. But when
-> "slower" only means a few hundred milliseconds, it doesn't matter if
-> everything takes forever (30-60 secs)
+since v3.9-rc1 i have been unable to reconnect to my access point. the
+access point is a netgear n600 and the my card is a Centrino Advanced-N
+6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
+boot up the laptop the connection is established but if i bring down the
+network with ifdown then i cannot reconnect. this is what i see in the
+logs:
 
-True, but at least 4 or 5 seconds is the minimum time I'd recommend here
-for DHCP.
+ iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+ iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+ wlan0: authenticate with xx:xx:xx:xx:xx:xx
+ wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+ wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+ wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+ wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
 
-Dan
+today i discovered that this happens only if i connect to the 5GHz.
+connecting to 2.4GHz works on resume. i tried to do a 'git bisect start
+-- drivers/net/wireless' and i ended up with
 
+Bisecting: 0 revisions left to test after this (roughly 0 steps)
+[e1a0c6b3a4b27ed5f21291d0bbee2167ec201ef5] mac80211: stop toggling IEEE80211_HT_CAP_SUP_WIDTH_20_40
 
+but i haven't been able to revert it cleanly so i don't know if that's
+the problem or not?
+
+any ideas? thanks.
+
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
