@@ -1,139 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:61171 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757692Ab3CNNIi (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:64142 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095Ab3CZRKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 09:08:38 -0400
-Received: by mail-ee0-f45.google.com with SMTP id b57so1053020eek.32
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Mar 2013 06:08:36 -0700 (PDT)
-From: ISE Development <isedev@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Reply-To: isedev@gmail.com
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4312 / b43 DMA transmission sequence errors
-Date: Thu, 14 Mar 2013 14:08:33 +0100
-Message-ID: <4530943.RJ7WpUJOSz@wks001.ise.net> (sfid-20130314_140842_043226_21139E6A)
-In-Reply-To: <51413800.6050300@lwfinger.net>
-References: <1695808.c7XUjJpf0R@wks001.ise.net> <1476129.oNtxuF3Ght@wks001.ise.net> <51413800.6050300@lwfinger.net>
+	Tue, 26 Mar 2013 13:10:38 -0400
+Received: by mail-ob0-f171.google.com with SMTP id x4so7272670obh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 10:10:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Tue, 26 Mar 2013 18:10:37 +0100
+Message-ID: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com> (sfid-20130326_181054_958567_0E045FFC)
+Subject: Scanning regression since "cfg80211: use DS or HT operation IEs to
+ determine BSS channel"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>
+Content-Type: multipart/mixed; boundary=089e0115fac61801f304d8d70070
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 Mar 2013 21:37:52 Larry Finger wrote:
-> On 03/13/2013 08:06 PM, ISE Development wrote:
-> 
-> >
-> > I've hacked the driver to 'skip' one header and data frame if receiving an interrupt for the first slot + 2. It's not pretty and I have literally no idea if it will causes other problems, but it has allowed me to keep the Wifi connection up for a little over 3 hours now (as compared to the 45 seconds previously). It does not appear to be corrupting the data stream (checked by download large signed binaries and verifying the signature) and as far as my limited knowledge can tell, it should not be causing a memory leak.
-> >
-> > The patch is listed below, for reference. However, I do not claim that it is valid, safe or even reasonsable. It does provide me with much needed relief though.
-> >
-> > The diff is against the current head of linville/wireless-testing.git (d41d9c7419e3ac9c81841f43bbd7639dd0a5819e).
-> >
-> 
-> I am testing the patch on BCM4312 and other cards.
-> 
-> Larry
-> 
+--089e0115fac61801f304d8d70070
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Here's a slighted cleaner version, with comments, in case you are considering integrating it.
+Hi,
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 38bc5a7..edc759d 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1489,6 +1489,7 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-        struct b43_dmadesc_meta *meta;
-        int slot, firstused;
-        bool frame_succeed;
-+       int skip;
- 
-        ring = parse_cookie(dev, status->cookie, &slot);
-        if (unlikely(!ring))
-@@ -1501,13 +1502,22 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-        firstused = ring->current_slot - ring->used_slots + 1;
-        if (firstused < 0)
-                firstused = ring->nr_slots + firstused;
-+
-+       skip = 0;
-        if (unlikely(slot != firstused)) {
-                /* This possibly is a firmware bug and will result in
-                 * malfunction, memory leaks and/or stall of DMA functionality. */
-                b43dbg(dev->wl, "Out of order TX status report on DMA ring %d. "
-                       "Expected %d, but got %d\n",
-                       ring->index, firstused, slot);
--               return;
-+               if(slot == firstused + 2) {
-+                       /* If a single header/data pair was missed, skip over the first
-+                        * two slots in an attempt to recover. */
-+                       slot = firstused;
-+                       skip = 2;
-+               } else {
-+                       return;
-+               }
-        }
- 
-        ops = ring->ops;
-@@ -1522,6 +1532,7 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-                               slot, firstused, ring->index);
-                        break;
-                }
-+
-                if (meta->skb) {
-                        struct b43_private_tx_info *priv_info =
-                                b43_get_priv_tx_info(IEEE80211_SKB_CB(meta->skb));
-@@ -1552,7 +1563,18 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-                         * Call back to inform the ieee80211 subsystem about
-                         * the status of the transmission.
-                         */
--                       frame_succeed = b43_fill_txstatus_report(dev, info, status);
-+                       if(!skip)
-+                       {
-+                               frame_succeed = b43_fill_txstatus_report(dev, info, status);
-+                       }
-+                       else
-+                       {
-+                           /* When skipping over a missed TX status report, use a status
-+                            * structure which indicates that the frame was not sent
-+                            * (frame_count 0) and not acknowledged */
-+                               struct b43_txstatus fake = B43_FAKE_TXSTATUS;
-+                               frame_succeed = b43_fill_txstatus_report(dev, info, &fake);
-+                       }
- #ifdef CONFIG_B43_DEBUG
-                        if (frame_succeed)
-                                ring->nr_succeed_tx_packets++;
-@@ -1580,12 +1602,14 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
-                /* Everything unmapped and free'd. So it's not used anymore. */
-                ring->used_slots--;
- 
--               if (meta->is_last_fragment) {
-+               if (meta->is_last_fragment && !skip) {
-                        /* This is the last scatter-gather
-                         * fragment of the frame. We are done. */
-                        break;
-                }
-                slot = next_slot(ring, slot);
-+               if(skip > 0)
-+                       --skip;
-        }
-        if (ring->stopped) {
-                B43_WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME);
-diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
-index 98d9074..eae730c 100644
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -218,6 +218,9 @@ struct b43_txstatus {
-        u8 acked;               /* Wireless ACK received */
- };
- 
-+/* This needs to match the b43_txstatus structure above, all zeroed-out */
-+#define B43_FAKE_TXSTATUS { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-+
- /* txstatus supp_reason values */
- enum {
-        B43_TXST_SUPP_NONE,     /* Not suppressed */
+I've just finished bisecting wireless scanning regression I'm
+experiencing with my 14e4:432b (BCM4322) and b43 driver.
+
+The problem is getting my network visible in scanning results (iw dev
+wlan0 scan). I've to repeat scanning dozens of time to notice my AP.
+It's also well visible when using wpa_supplicant. It takes from 20s to
+100s before I get the "Trying to authenticate with".
+The performance however is not affected. Once I connect to my network,
+I can transmit (tested with iperf) with stable 21.5Mb/s which is just
+great for 802.11g.
+
+After going back to the kernel before that commit it takes
+wpa_supplicant less than 2 seconds to connect to my WiFi network.
+
+My network is at channel 13, I still have to verify if it matters.
+
+Any thought about that?
 
 
--- 
--- isedev
+The first bad commit (I've verified manually after bisecting) appears to be=
+:
+
+0172bb75073e11a5aa9d8a953bdaefb8709f00c8 is the first bad commit
+commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Nov 23 14:23:30 2012 +0100
+
+    cfg80211: use DS or HT operation IEs to determine BSS channel
+
+    Currently, mac80211 checks the DS params IE if present and
+    uses it for the (primary) BSS channel, instead of the one
+    that the frame was received on. This is particularly useful
+    in the 2.4 GHz band since a frame is often received on one
+    of the adjacent channels due to overlap.
+
+    Move this code to cfg80211 so other drivers also do this.
+
+    Additionally, on 5 GHz, in particular with some (possibly)
+    upcoming changes in 802.11ai and duplicate transmissions
+    when wider channels are used, something similar happens.
+    So if present, also use the (primary) channel information
+    contained in the HT operation IE.
+
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+--=20
+Rafa=C5=82
+
+--089e0115fac61801f304d8d70070
+Content-Type: text/plain; charset=US-ASCII; name="scanning.txt"
+Content-Disposition: attachment; filename="scanning.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_herbli0s0
+
+QlNTIDAwOjExOjIyOjMzOjQ0OjU1IChvbiB3bGFuMCkKCVRTRjogMTY1Mzc2Mzg0IHVzZWMgKDBk
+LCAwMDowMjo0NSkKCWZyZXE6IDI0NzIKCWJlYWNvbiBpbnRlcnZhbDogMTAwCgljYXBhYmlsaXR5
+OiBFU1MgUHJpdmFjeSBTaG9ydFNsb3RUaW1lICgweDA0MTEpCglzaWduYWw6IC01MC4wMCBkQm0K
+CWxhc3Qgc2VlbjogMTUzIG1zIGFnbwoJSW5mb3JtYXRpb24gZWxlbWVudHMgZnJvbSBQcm9iZSBS
+ZXNwb25zZSBmcmFtZToKCVNTSUQ6IHphamVjX3Bvem5hbl8xNjAKCVN1cHBvcnRlZCByYXRlczog
+MS4wKiAyLjAqIDUuNSogMTEuMCogNi4wIDkuMCAxMi4wIDE4LjAgCglEUyBQYXJhbWV0ZXIgc2V0
+OiBjaGFubmVsIDEzCglDb3VudHJ5OiBQTCAgICAgRW52aXJvbm1lbnQ6IEluZG9vci9PdXRkb29y
+CgkJQ2hhbm5lbHMgWzEgLSAxM10gQCAyMCBkQm0KCUVSUDogQmFya2VyX1ByZWFtYmxlX01vZGUK
+CUV4dGVuZGVkIHN1cHBvcnRlZCByYXRlczogMjQuMCAzNi4wIDQ4LjAgNTQuMCAKCVJTTjogICAg
+ICogVmVyc2lvbjogMQoJCSAqIEdyb3VwIGNpcGhlcjogQ0NNUAoJCSAqIFBhaXJ3aXNlIGNpcGhl
+cnM6IENDTVAKCQkgKiBBdXRoZW50aWNhdGlvbiBzdWl0ZXM6IFBTSwoJCSAqIENhcGFiaWxpdGll
+czogMTYtUFRLU0EtUkMgKDB4MDAwYykKCUhUIGNhcGFiaWxpdGllczoKCQlDYXBhYmlsaXRpZXM6
+IDB4MTA0ZQoJCQlIVDIwL0hUNDAKCQkJU00gUG93ZXIgU2F2ZSBkaXNhYmxlZAoJCQlSWCBIVDQw
+IFNHSQoJCQlObyBSWCBTVEJDCgkJCU1heCBBTVNEVSBsZW5ndGg6IDM4MzkgYnl0ZXMKCQkJRFNT
+Uy9DQ0sgSFQ0MAoJCU1heGltdW0gUlggQU1QRFUgbGVuZ3RoIDY1NTM1IGJ5dGVzIChleHBvbmVu
+dDogMHgwMDMpCgkJTWluaW11bSBSWCBBTVBEVSB0aW1lIHNwYWNpbmc6IDggdXNlYyAoMHgwNikK
+CQlIVCBUWC9SWCBNQ1MgcmF0ZSBpbmRleGVzIHN1cHBvcnRlZDogMC0xNQoJSFQgb3BlcmF0aW9u
+OgoJCSAqIHByaW1hcnkgY2hhbm5lbDogMTMKCQkgKiBzZWNvbmRhcnkgY2hhbm5lbCBvZmZzZXQ6
+IGJlbG93CgkJICogU1RBIGNoYW5uZWwgd2lkdGg6IGFueQoJCSAqIFJJRlM6IDAKCQkgKiBIVCBw
+cm90ZWN0aW9uOiAyMCBNSHoKCQkgKiBub24tR0YgcHJlc2VudDogMAoJCSAqIE9CU1Mgbm9uLUdG
+IHByZXNlbnQ6IDAKCQkgKiBkdWFsIGJlYWNvbjogMAoJCSAqIGR1YWwgQ1RTIHByb3RlY3Rpb246
+IDAKCQkgKiBTVEJDIGJlYWNvbjogMAoJCSAqIEwtU0lHIFRYT1AgUHJvdDogMAoJCSAqIFBDTyBh
+Y3RpdmU6IDAKCQkgKiBQQ08gcGhhc2U6IDAKCVdNTTogICAgICogUGFyYW1ldGVyIHZlcnNpb24g
+MQoJCSAqIEJFOiBDVyAxNS0xMDIzLCBBSUZTTiAzCgkJICogQks6IENXIDE1LTEwMjMsIEFJRlNO
+IDcKCQkgKiBWSTogQ1cgNy0xNSwgQUlGU04gMiwgVFhPUCAzMDA4IHVzZWMKCQkgKiBWTzogYWNt
+IENXIDMtNywgQUlGU04gMiwgVFhPUCAxNTA0IHVzZWMK
+--089e0115fac61801f304d8d70070--
