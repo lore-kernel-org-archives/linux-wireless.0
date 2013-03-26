@@ -1,141 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54205 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495Ab3C2QA3 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:55111 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab3CZRfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 12:00:29 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
-Date: Fri, 29 Mar 2013 09:00:23 -0700
-Message-Id: <1364572823-28071-1-git-send-email-greearb@candelatech.com> (sfid-20130329_170033_026763_9F6C74DD)
+	Tue, 26 Mar 2013 13:35:30 -0400
+From: Colin King <colin.king@canonical.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlegacy: 4965-rs: avoid null pointer dereference error
+Date: Tue, 26 Mar 2013 17:35:23 +0000
+Message-Id: <1364319323-14272-1-git-send-email-colin.king@canonical.com> (sfid-20130326_183535_219846_B1A0E27D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-The sta_info hash is designed to deal with an AP
-with lots of stations associated, or a station interface
-connected to a single AP.
+il4965_rs_initialize_lq checks to see if sta is null, however, before that
+check il4965_rs_use_green dereferences sta when intializing use_green.
+Avoid a potential null pointer dereference error by only calling
+il4965_rs_use_green after we are sure sta is not null.
 
-However, when you have lots of station VIFs connected
-to the same AP, the sta_info hash becomes worthless
-as there is a single hash bucket that contains all the
-entries in a linked list.
+Smatch analysis:
 
-So, have the sdata object cache one of its station
-interfaces.  If we are a station VIF with a single
-sta_info, then this means we can ignore the sta_info
-hash entirely.
+drivers/net/wireless/iwlegacy/4965-rs.c:2160 il4965_rs_initialize_lq() warn:
+  variable dereferenced before check 'sta' (see line 2155)
 
-On a test case with 128 stations and 50 TCP streams,
-tx performance went from around 80Mbps to 124Mbps.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
+ drivers/net/wireless/iwlegacy/4965-rs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-v4:  Use rcu_dereference_protected as designed, passing a mutex
-     as the second argument instead of hard-coding it to 1.
-
-:100644 100644 a618bda... a7e7f5d... M	net/mac80211/cfg.c
-:100644 100644 493e2e8... c6386c7... M	net/mac80211/ieee80211_i.h
-:100644 100644 415f9c6... d87a76d... M	net/mac80211/sta_info.c
- net/mac80211/cfg.c         |    6 ++++++
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/sta_info.c    |   23 ++++++++++++++++++++++-
- 3 files changed, 34 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a618bda..a7e7f5d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	if (params->vlan && params->vlan != sta->sdata->dev) {
- 		bool prev_4addr = false;
- 		bool new_4addr = false;
-+		struct sta_info *some_sta;
+diff --git a/drivers/net/wireless/iwlegacy/4965-rs.c b/drivers/net/wireless/iwlegacy/4965-rs.c
+index e8324b5..6c7493c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-rs.c
++++ b/drivers/net/wireless/iwlegacy/4965-rs.c
+@@ -2152,7 +2152,7 @@ il4965_rs_initialize_lq(struct il_priv *il, struct ieee80211_conf *conf,
+ 	int rate_idx;
+ 	int i;
+ 	u32 rate;
+-	u8 use_green = il4965_rs_use_green(il, sta);
++	u8 use_green;
+ 	u8 active_tbl = 0;
+ 	u8 valid_tx_ant;
+ 	struct il_station_priv *sta_priv;
+@@ -2160,6 +2160,7 @@ il4965_rs_initialize_lq(struct il_priv *il, struct ieee80211_conf *conf,
+ 	if (!sta || !lq_sta)
+ 		return;
  
- 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
++	use_green = il4965_rs_use_green(il, sta);
+ 	sta_priv = (void *)sta->drv_priv;
  
-@@ -1312,7 +1313,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 			prev_4addr = true;
- 		}
- 
-+		some_sta = rcu_dereference_protected(sta->sdata->some_sta,
-+					lockdep_is_held(&local->sta_mtx));
-+		if (some_sta == sta)
-+			rcu_assign_pointer(sta->sdata->some_sta, NULL);
- 		sta->sdata = vlansdata;
-+		rcu_assign_pointer(sta->sdata->some_sta, sta);
- 
- 		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
- 		    prev_4addr != new_4addr) {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 493e2e8..c6386c7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -669,6 +669,12 @@ struct ieee80211_sub_if_data {
- 	/* count for keys needing tailroom space allocation */
- 	int crypto_tx_tailroom_needed_cnt;
- 
-+	/* A pointer to some station associated with this interface, or
-+	 * NULL.  This allows opportunistic lookup for sta_info objects when
-+	 * sdata is a station with a single sta_info.
-+	 */
-+	struct sta_info __rcu *some_sta;
-+
- 	struct net_device *dev;
- 	struct ieee80211_local *local;
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 415f9c6..d87a76d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -67,7 +67,12 @@
- static int sta_info_hash_del(struct ieee80211_local *local,
- 			     struct sta_info *sta)
- {
--	struct sta_info *s;
-+	struct sta_info *s, *some_sta;
-+
-+	some_sta = rcu_dereference_protected(sta->sdata->some_sta,
-+					     lockdep_is_held(&local->sta_mtx));
-+	if (some_sta == sta)
-+		rcu_assign_pointer(sta->sdata->some_sta, NULL);
- 
- 	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
- 				      lockdep_is_held(&local->sta_mtx));
-@@ -195,6 +200,20 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		struct sta_info *some_sta;
-+
-+		/* Shortcut for finding station entries for STATION VIFs */
-+		some_sta = rcu_dereference(sdata->some_sta);
-+		if (some_sta) {
-+			if (WARN_ON(some_sta->sdata != sdata))
-+				rcu_assign_pointer(sdata->some_sta, NULL);
-+			else
-+				if (ether_addr_equal(some_sta->sta.addr, addr))
-+					return some_sta;
-+		}
-+	}
-+
- 	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
- 				    lockdep_is_held(&local->sta_mtx));
- 	while (sta) {
-@@ -278,6 +297,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
- 	lockdep_assert_held(&local->sta_mtx);
- 	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
- 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
-+
-+	rcu_assign_pointer(sta->sdata->some_sta, sta);
- }
- 
- static void sta_unblock(struct work_struct *wk)
+ 	i = lq_sta->last_txrate_idx;
 -- 
-1.7.3.4
+1.8.1.2
 
