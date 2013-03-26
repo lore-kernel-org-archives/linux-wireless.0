@@ -1,86 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:37095 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624Ab3CALSD (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:40221 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab3CZRQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 06:18:03 -0500
-Received: by mail-oa0-f44.google.com with SMTP id h1so5496291oag.31
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 03:18:02 -0800 (PST)
+	Tue, 26 Mar 2013 13:16:07 -0400
+Received: by mail-wi0-f179.google.com with SMTP id hn17so1213724wib.6
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 10:16:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <513082F8.8080002@openwrt.org>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
-	<20130228114724.GB16369@localhost>
-	<512F5709.60907@openwrt.org>
-	<CAJ-Vmom_YFWOU5+eAYv=mnUKVOuP6n3OO32GbO7AcwTgi5-HwQ@mail.gmail.com>
-	<512FAB01.2050104@openwrt.org>
-	<CAJ-Vmokr4_k5QKrvVGU-1pG0Y07iW9evyRkj_U4-zQ5TH1ZHBQ@mail.gmail.com>
-	<51307F80.4010202@openwrt.org>
-	<CAJ-Vmok9-dmC5-vhHA1DE_KW6mp7P3tijrSz-3D45jjQthbcCA@mail.gmail.com>
-	<513082F8.8080002@openwrt.org>
-Date: Fri, 1 Mar 2013 16:48:02 +0530
-Message-ID: <CAD2nsn3pEOHJ+Cmd+sRm32jObU09cv+wae+3hsFtRzN5WLyFtg@mail.gmail.com> (sfid-20130301_121808_207212_DF2F891C)
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Sujith Manoharan <sujith@msujith.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <5151D752.3080303@candelatech.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
+	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+	<201303251712.19808.chunkeey@googlemail.com>
+	<CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+	<CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+	<CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
+	<CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
+	<5151D752.3080303@candelatech.com>
+Date: Tue, 26 Mar 2013 10:16:05 -0700
+Message-ID: <CAJ-VmontjZ2+RWCK50gf5RADkMeCbCc=HfstVAffkCHCtTmNew@mail.gmail.com> (sfid-20130326_181612_617953_63D3A3BB)
+Subject: Re: [ath9k-devel] Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Robert Shade <robert.shade@gmail.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Marco Fonseca <marco@tampabay.rr.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+... and the odd thing here is that during scanning, it should be
+flushing the queues entirely so any new frame being transmitted
+_SHOULD_ result in:
 
-On Fri, Mar 1, 2013 at 3:59 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2013-03-01 11:22 AM, Adrian Chadd wrote:
->> On 1 March 2013 02:14, Felix Fietkau <nbd@openwrt.org> wrote:
->>
->>>> Having access to schedule which peer and how much to send to each peer
->>>> would be nice. Stuff like "peer X only can have up to x ms in this WME
->>>> class this round", so you don't have a busy, close peer monopolising
->>>> the air. It also means you can start doing smart things with far away
->>>> peers who retransmit a lot - they're likely tying up a lot of airtime.
->>>>
->>>> None of this is new. It's just, you know, new to open source. :-)
->>
->>> In my opinion this doesn't really belong into a rate control module.
->>> There should be a tx scheduling API to take care of this. Before I
->>> implement something like this, I plan on exposing all per-station driver
->>> queues to mac80211. This is necessary for a few other things anyway,
->>> e.g. unifying software aggregation logic and fixing its buffer management.
->>
->> Sure, but then some more clever tricks end up being difficult to
->> implement. For example, knowing if a client is tying up too much
->> airtime at the given rate and whether to back them off for a bit. Or
->> to use smaller aggregation limits for certain clients because your'e
->> trying to be "fairer" when trying to keep latency low. That kind of
->> thing.
->>
->> I think "rate control" should likely be expanded to "tx scheduling" as
->> a whole, rather than sitting as a separate thing that just selects the
->> rate for a node who has already been chosen to transmit.
-> Even with client airtime use, I still don't see how tx scheduling and
-> rate control belong together. In my opinion, the rate selection should
-> not be based on client airtime usage or the current load, as it can
-> optimize for throughput/airtime ratio without it.
->
+* TxDP for that queue being written (either FIFO or otherwise);
+* TxE for that queue being set.
 
-Algorithm folks and Engineers had spent considerable time on ath9k rate control.
-Wouldn't be a great idea to remove it completely, We can have it optional.
-With lot of throughput tests ran over internally and with the test
-team verification,
-it wouldn't be fair to throw it away.
+So unless the queue is "full" already and isn't being drained, I'm
+kinda curious as to why TX isn't starting.
 
--- 
-thanks,
-shafi
+
+
+Adrian
