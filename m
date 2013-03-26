@@ -1,117 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:40282 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756459Ab3CDOWa (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:43509 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625Ab3CZWN3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 09:22:30 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 2/7] mac80211: merge value scaling macros of minstrel_ht and minstrel
-Date: Mon,  4 Mar 2013 15:22:12 +0100
-Message-Id: <1362406937-69969-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20130304_152236_464829_0F405A24)
-In-Reply-To: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1362406937-69969-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Tue, 26 Mar 2013 18:13:29 -0400
+Received: by mail-ob0-f172.google.com with SMTP id tb18so7677301obb.31
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Mar 2013 15:13:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxpiPp_FR8jF=jKHbd6XrYndfFZC5O4g6=fvioK=e8vEg@mail.gmail.com>
+References: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com>
+	<1364323118.8319.13.camel@jlt4.sipsolutions.net>
+	<CACna6rxpiPp_FR8jF=jKHbd6XrYndfFZC5O4g6=fvioK=e8vEg@mail.gmail.com>
+Date: Tue, 26 Mar 2013 23:13:28 +0100
+Message-ID: <CACna6ry+km7_epXz5NQ84D_jKQ9e6iFjtrmzHKb1Gxc1ywjtmw@mail.gmail.com> (sfid-20130326_231333_300089_F39C607C)
+Subject: Re: Scanning regression since "cfg80211: use DS or HT operation IEs
+ to determine BSS channel"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: multipart/mixed; boundary=e89a8fb205482cd39104d8db3baa
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both minstrel versions use individual ways to scale up integer values
-to perform calculations. Merge minstrel_ht's scaling macros into
-minstrels header file and use them in both minstrel versions.
+--e89a8fb205482cd39104d8db3baa
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c         | 9 ++++-----
- net/mac80211/rc80211_minstrel.h         | 5 +++++
- net/mac80211/rc80211_minstrel_debugfs.c | 6 +++---
- net/mac80211/rc80211_minstrel_ht.h      | 5 -----
- 4 files changed, 12 insertions(+), 13 deletions(-)
+2013/3/26 Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>:
+> 2013/3/26 Johannes Berg <johannes@sipsolutions.net>:
+>> Can you check your channel list? (iw list or iw phy0 info)
+>
+> Sure, attaching iw.list.log.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index d78f629..c9b9902 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -86,10 +86,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		if (!usecs)
- 			usecs = 1000000;
- 
--		/* To avoid rounding issues, probabilities scale from 0 (0%)
--		 * to 18000 (100%) */
- 		if (mr->attempts) {
--			mr->cur_prob = (mr->success * 18000) / mr->attempts;
-+			mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
- 			mr->succ_hist += mr->success;
- 			mr->att_hist += mr->attempts;
- 			mr->probability = minstrel_ewma(mr->probability,
-@@ -105,7 +103,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 
- 		/* Sample less often below the 10% chance of success.
- 		 * Sample less often above the 95% chance of success. */
--		if ((mr->probability > 17100) || (mr->probability < 1800)) {
-+		if (mr->probability > MINSTREL_FRAC(95, 100) ||
-+		    mr->probability < MINSTREL_FRAC(10, 100)) {
- 			mr->adjusted_retry_count = mr->retry_count >> 1;
- 			if (mr->adjusted_retry_count > 2)
- 				mr->adjusted_retry_count = 2;
-@@ -300,7 +299,7 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	/* If we're not using MRR and the sampling rate already
- 	 * has a probability of >95%, we shouldn't be attempting
- 	 * to use it, as this only wastes precious airtime */
--	if (!mrr && sample && (mi->r[ndx].probability > 17100))
-+	if (!mrr && sample && (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
- 		ndx = mi->max_tp_rate;
- 
- 	ar[0].idx = mi->r[ndx].rix;
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 98db93f..fda4a61 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -11,6 +11,11 @@
- 
- #define EWMA_LEVEL 75	/* ewma weighting factor [%] */
- 
-+/* scaled fraction values */
-+#define MINSTREL_SCALE  16
-+#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
-+#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
-+
- /*
-  * Perform EWMA (Exponentially Weighted Moving Average) calculation
-   */
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index d5a5622..c0ebfac 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -79,9 +79,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
- 				(mr->bitrate & 1 ? ".5" : "  "));
- 
--		tp = mr->cur_tp / ((18000 << 10) / 96);
--		prob = mr->cur_prob / 18;
--		eprob = mr->probability / 18;
-+		tp = MINSTREL_TRUNC(mr->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mr->probability * 1000);
- 
- 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
- 				"%3u(%3u)   %8llu    %8llu\n",
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 302dbd5..4ee5999 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -16,11 +16,6 @@
- #define MINSTREL_MAX_STREAMS	3
- #define MINSTREL_STREAM_GROUPS	4
- 
--/* scaled fraction values */
--#define MINSTREL_SCALE	16
--#define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
--#define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
--
- #define MCS_GROUP_RATES	8
- 
- struct mcs_group {
--- 
-1.8.1.1
+Hm, after some recompilations, rmmod, modprobe... now I can see
+> * 2472 MHz [13] (20.0 dBm) (passive scanning, no IBSS)
+(I didn't have "passive" for channel 13 earlier). Not sure what could
+change that. I've to do more experiments with different channels.
 
+
+>> Does reverting just the mac80211 change fix it?
+>
+> Yes. Reverting just a change in net/mac80211/scan.c fixes the problem
+> for me. I've tested this with the latest wireless-testing.
+
+Just to make it clear: I've modified scan.c as you can see in attached
+0001-mac80211-fix.patch (application/octet-stream) 2 KB
+
+--=20
+Rafa=C5=82
+
+--e89a8fb205482cd39104d8db3baa
+Content-Type: application/octet-stream; name="0001-mac80211-fix.patch"
+Content-Disposition: attachment; filename="0001-mac80211-fix.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hermeuex1
+
+RnJvbSAxMDgwM2U4MWI1MGI3YmMyNTdmOWNlZTQ0YTc3NWE5YTc5YTlhYmU3IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiA9P1VURi04P3E/UmFmYT1DNT04Mj0yME1pPUM1PTgyZWNraT89
+IDxybWlsZWNraUBhbnRtaWNyby5jb20+CkRhdGU6IFR1ZSwgMjYgTWFyIDIwMTMgMjI6MzA6MTMg
+KzAxMDAKU3ViamVjdDogW1BBVENIXSBtYWM4MDIxMSBmaXgKCi0tLQogbmV0L21hYzgwMjExL3Nj
+YW4uYyB8ICAgIDkgKysrKysrKystCiAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAx
+IGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvbmV0L21hYzgwMjExL3NjYW4uYyBiL25ldC9tYWM4
+MDIxMS9zY2FuLmMKaW5kZXggY2IzNGNiYi4uZDIzZTQ2YyAxMDA2NDQKLS0tIGEvbmV0L21hYzgw
+MjExL3NjYW4uYworKysgYi9uZXQvbWFjODAyMTEvc2Nhbi5jCkBAIC0xNTMsNiArMTUzLDcgQEAg
+dm9pZCBpZWVlODAyMTFfc2Nhbl9yeChzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCwgc3Ry
+dWN0IHNrX2J1ZmYgKnNrYikKIAl1OCAqZWxlbWVudHM7CiAJc3RydWN0IGllZWU4MDIxMV9jaGFu
+bmVsICpjaGFubmVsOwogCXNpemVfdCBiYXNlbGVuOworCWludCBmcmVxOwogCXN0cnVjdCBpZWVl
+ODAyXzExX2VsZW1zIGVsZW1zOwogCiAJaWYgKHNrYi0+bGVuIDwgMjQgfHwKQEAgLTE4NCw3ICsx
+ODUsMTMgQEAgdm9pZCBpZWVlODAyMTFfc2Nhbl9yeChzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICps
+b2NhbCwgc3RydWN0IHNrX2J1ZmYgKnNrYikKIAogCWllZWU4MDJfMTFfcGFyc2VfZWxlbXMoZWxl
+bWVudHMsIHNrYi0+bGVuIC0gYmFzZWxlbiwgJmVsZW1zKTsKIAotCWNoYW5uZWwgPSBpZWVlODAy
+MTFfZ2V0X2NoYW5uZWwobG9jYWwtPmh3LndpcGh5LCByeF9zdGF0dXMtPmZyZXEpOworCWlmIChl
+bGVtcy5kc19wYXJhbXMgJiYgZWxlbXMuZHNfcGFyYW1zX2xlbiA9PSAxKQorCQlmcmVxID0gaWVl
+ZTgwMjExX2NoYW5uZWxfdG9fZnJlcXVlbmN5KGVsZW1zLmRzX3BhcmFtc1swXSwKKwkJCQkJCSAg
+ICAgIHJ4X3N0YXR1cy0+YmFuZCk7CisJZWxzZQorCQlmcmVxID0gcnhfc3RhdHVzLT5mcmVxOwor
+CisJY2hhbm5lbCA9IGllZWU4MDIxMV9nZXRfY2hhbm5lbChsb2NhbC0+aHcud2lwaHksIGZyZXEp
+OwogCiAJaWYgKCFjaGFubmVsIHx8IGNoYW5uZWwtPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fRElT
+QUJMRUQpCiAJCXJldHVybjsKLS0gCjEuNy4xMC40Cgo=
+--e89a8fb205482cd39104d8db3baa--
