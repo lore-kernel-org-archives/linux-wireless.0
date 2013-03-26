@@ -1,119 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34413 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751628Ab3CZTBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 15:01:42 -0400
-Message-ID: <5151F088.2040408@hauke-m.de> (sfid-20130326_200146_625653_6D287916)
-Date: Tue, 26 Mar 2013 20:01:28 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: John Talbut <jt@dpets.co.uk>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-References: <51514F1B.1080207@dpets.co.uk> <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk> <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk> <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk> <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk> <51518E14.3050500@broadcom.com> <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com> <5151EC49.9030109@dpets.co.uk>
-In-Reply-To: <5151EC49.9030109@dpets.co.uk>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:36651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760108Ab3CZSiy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Mar 2013 14:38:54 -0400
+Message-ID: <1364323118.8319.13.camel@jlt4.sipsolutions.net> (sfid-20130326_193903_336333_E6353AD0)
+Subject: Re: Scanning regression since "cfg80211: use DS or HT operation IEs
+ to determine BSS channel"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Date: Tue, 26 Mar 2013 19:38:38 +0100
+In-Reply-To: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com> (sfid-20130326_181054_958567_0E045FFC)
+References: <CACna6rwdAAsCX76=nwHpj-grVvQznbNCPVnpXL9kP2TkvhR-yw@mail.gmail.com>
+	 (sfid-20130326_181054_958567_0E045FFC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2013 07:43 PM, John Talbut wrote:
-> On 26/03/13 16:59, Rafał Miłecki wrote:
->> 2013/3/26 Arend van Spriel<arend@broadcom.com>:
->>> On 03/26/2013 12:43 PM, John Talbut wrote:
->>>> On 26/03/13 11:29, Arend van Spriel wrote:
->>>>> On 03/26/2013 12:13 PM, John Talbut wrote:
->>>>>>
->>>>>> On 26/03/13 10:53, Arend van Spriel wrote:
->>>>>>> On 03/26/2013 11:34 AM, John Talbut wrote:
->>>>>>>> Kernel log attached.
->>>>>>>>
->>>>>>>
->>>>>>> Now this is weird. I do not see any BCMA log messages. Can you give
->>>>>>> output of following command:
->>>>>>>
->>>>>>> $ lspci -n -s 1:0.0
->>>>>>
->>>>>> 01:00.0 0280: 14e4:4357 (rev 01)
->>>>>
->>>>> Ok, no problem there.
->>>>>
->>>>> digging further in sysfs. Can you execute the following commands:
->>>>>
->>>>> if it exists:
->>>>> $ ls /sys/bus/bcma
->>>>> $ ls /sys/bus/bcma/devices
->>>>> $ ls /sys/bus/bcma/drivers
->>>>>
->>>>> if it exists also following:
->>>>> $ ls -l /sys/bus/bcma/drivers/brcmsmac
->>>>
->>>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
->>>> devices  drivers  drivers_autoprobe  drivers_probe  uevent
->>>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
->>>
->>> The fact that there are no devices detected under bcma is suspicious.
->>> Adding bcma developer to the list. Maybe he knows about issues when
->>> having bcma compiled in kernel image.
->>
->> Thanks Arend. Unfortunately I can't find archive of this thread, so I
->> can see only quotations above.
->>
->> If there is /sys/bus/bcma/ directory, it means bcma had to be loaded
->> (or just is built into the kernel). However if there are no "bcma"
->> messages in the dmesg, it's probably because there isn't any device
->> bcma (currently) handles.
->>
->> If you can it yourself: remove all 14e4:* devices and do "modprobe
->> bcma". You will get /sys/bus/bcma/ without "bcma" messages in dmesg.
->>
->> 14e4:4357 is one of the devices handled by bcma, so there are two
->> options:
->> 1) It's some old kernel where we didn't have 14e4:4357 in bcma
->> 2) There is another module that grabbed 14e4:4357 PCI device
->>
->> The first option can be verified with "modinfo bcma | grep alias" in
->> case of bcma as a module. Not sure how to check that for bcma built
->> in.
->>
->> The second option is even easier to verify, just use:
->> lspci -d 14e4: -v
->> and check for "Kernel driver in use: "
->>
-> Thanks Rafał.
+On Tue, 2013-03-26 at 18:10 +0100, Rafał Miłecki wrote:
+
+> I've just finished bisecting wireless scanning regression I'm
+> experiencing with my 14e4:432b (BCM4322) and b43 driver.
+
+Hmmm.
+
+> The problem is getting my network visible in scanning results (iw dev
+> wlan0 scan). I've to repeat scanning dozens of time to notice my AP.
+> It's also well visible when using wpa_supplicant. It takes from 20s to
+> 100s before I get the "Trying to authenticate with".
+
+That's strange.
+
+> After going back to the kernel before that commit it takes
+> wpa_supplicant less than 2 seconds to connect to my WiFi network.
+
+> My network is at channel 13, I still have to verify if it matters.
 > 
-> I have everything built into the kernel which is compiled using the 3.8
-> kernel source from Debian, so not an old kernel.
+> Any thought about that?
 > 
-> ls /sys/bus/bcma
-> devices  drivers  drivers_autoprobe  drivers_probe  uevent
 > 
-> lspci -d 14e4: -v
-> 01:00.0 Network controller: Broadcom Corporation BCM43225 802.11b/g/n
-> (rev 01)
->     Subsystem: Wistron NeWeb Corp. Device 04db
->     Flags: bus master, fast devsel, latency 0, IRQ 11
->     Memory at dfe00000 (64-bit, non-prefetchable) [size=16K]
->     Capabilities: [40] Power Management version 3
->     Capabilities: [58] Vendor Specific Information: Len=78 <?>
->     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
->     Capabilities: [d0] Express Endpoint, MSI 00
->     Capabilities: [100] Advanced Error Reporting
->     Capabilities: [13c] Virtual Channel
->     Capabilities: [160] Device Serial Number 00-00-b1-ff-ff-29-00-1b
->     Capabilities: [16c] Power Budgeting <?>
-> 
-> John
-Hi,
+> The first bad commit (I've verified manually after bisecting) appears to be:
 
-Could you provide the output of "modinfo bcma | grep alias" as Rafał asked.
+"verified manually" how? By reverting the commit? But anyway the commit
+is clearly scanning related, so ...
 
-The Debian kernel 3.2 contains some patch removing all PCI IDs expect
-14e4:4331 from bcma, if this is still in your kernel that's the problem.
+Can you check your channel list? (iw list or iw phy0 info)
 
-If this is the case please try this:
+Also can you show the full data including beacon data from the AP (iw
+wlan0 scan dump -b) please?
 
-echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+Does reverting just the mac80211 change fix it?
 
-Hauke
+johannes
+
