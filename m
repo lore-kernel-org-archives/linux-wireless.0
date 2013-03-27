@@ -1,137 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:49642 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756735Ab3CSPlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 11:41:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UHyfE-0006ZF-HJ
-	for linux-wireless@vger.kernel.org; Tue, 19 Mar 2013 16:41:24 +0100
-Received: from 213.48.13.39 ([213.48.13.39])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 16:41:24 +0100
-Received: from vishnu.kopparapu by 213.48.13.39 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Mar 2013 16:41:24 +0100
-To: linux-wireless@vger.kernel.org
-From: vishnu <vishnu.kopparapu@gmail.com>
-Subject: Re: problem connecting to AP on new kernel (disassociating continuously after associating ) . Can some one please comment on the issue I am facing
-Date: Tue, 19 Mar 2013 15:40:42 +0000 (UTC)
-Message-ID: <loom.20130319T163402-330@post.gmane.org> (sfid-20130319_164109_792100_6AB4302E)
-References: <loom.20130315T140953-940@post.gmane.org> <5144A184.1060900@iki.fi> <loom.20130318T191350-236@post.gmane.org> <51475D23.70108@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:36310 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823Ab3C0Ui7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 16:38:59 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr17so2709467wib.11
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2013 13:38:58 -0700 (PDT)
+References: <1363808915-14278-1-git-send-email-blogic@openwrt.org> <3D4497AD-8992-47D6-BCF2-5D738B6AC9B4@gmail.com> <514AB846.9090407@openwrt.org> <20130327171713.GD1868@tuxdriver.com> <515339AB.30609@openwrt.org>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <515339AB.30609@openwrt.org>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <AC53EE34-1306-490A-9BB3-290434C08D1C@gmail.com> (sfid-20130327_213905_323434_1AFE315C)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: make the driver build for Ralink SoC
+Date: Wed, 27 Mar 2013 21:38:54 +0100
+To: John Crispin <blogic@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
 
+
+Sent from my iPad
+
+On 27 mrt. 2013, at 19:25, John Crispin <blogic@openwrt.org> wrote:
+
+> On 27/03/13 18:17, John W. Linville wrote:
+>> On Thu, Mar 21, 2013 at 08:35:34AM +0100, John Crispin wrote:
+>>>>> Fix up the dependencies to make the driver actually compile on Ralink WiSoC.
+>>>>> 
+>>>>> Signed-off-by: John Crispin<blogic@openwrt.org>
+>>>> I don't think this is a proper way to handle this. rt2x00pci.c was only meant to be used for PCI devices; introducing the use of CONFIG_PCI in that file doesn't seem appropriate to me.
+>>>> 
+>>>> Unfortunately I am away from my home computer, so I can't look at this properly until the weekend.
+>>>> 
+>>> Indeed not the cleanest patch ... after changing the config symbols
+>>> I realized that that is not enough to make the driver actually work
+>>> 
+>>> It turns out that inside openwrt the compat-wireless package sets
+>>> CONFIG_RT2800PCI=m to make the driver build and then applies the
+>>> #ifdef'ery to rt2880pci.c
+>>> 
+>>> I will try to find the time today or tomorrow to have a closer look at this
+>> Any more word on this?
+> Gabor posted a series as RFC that would fix this properly ->
 > 
-> On 03/18/2013 01:20 PM, vishnu wrote:
-> >
-> > Hello Jussi,
-> >
-> > I have applied the patch to kernel 3.7.8 and it doesn't fix my issue. I have
-> > started testing the latest 3.9.0-rc2 version. I will let you know once I 
-have
-> > tested.
-> 
-> Please be aware that the patch is not in 3.9-rc2 from Linus's git tree (yet), 
-> but it is in the wireless-testing git repo.
-> 
-> Larry
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-March/005837.html
 
+Yeah, and that series looks good. Unfortunately, it is too intrusive to still apply for 3.9.
 
-Hello Larry,
+John L., could we get in a scheme where we apply John C.'s patch for 3.9 and then use Gabor's series for 3.10?
+Don't know how that works with making sure that this patch is reverted for 3.10.
 
-I have tried with 3.9-rc2 wireless-testing kernel and it is working fine . But 
-it is taking around 10 to 15 minutes , until which it is continuously 
-disassociating after association.  Is this behaviour expected? Please find the 
-log if it is useful (Please discard the dates). This continuous for about 10 to 
-15 minutes and finally it doesn't disassociate with the AP.
+Can you coordinate, or should I help you with this?
 
+---
+Gertjan
 
-Feb 25 05:20:06 buildroot kern.info kernel: wlan0: RX AssocResp from 
-00:17:3f:15:8f:55 (capab=0x411 status=0 aid=3)^M
-wlan0: associated^M
-Feb 25 05:20:06 buildroot kern.info kernel: wlan0: associated^M
-wlan0: deauthenticating from 00:17:3f:15:8f:55 by local choice (reason=3)^M
-Feb 25 05:20:16 buildroot kern.info kernel: wlan0: deauthenticating from 
-00:17:3f:15:8f:55 by local choice (reason=3)^M
-cfg80211: Calling CRDA to update world regulatory domain^M
-Feb 25 05:20:16 buildroot kern.debug kernel: cfg80211: All devices are 
-disconnected, going to restore regulatory settings^M
-Feb 25 05:20:16 buildroot kern.debug kernel: cfg80211: Restoring regulatory 
-settings^M
-Feb 25 05:20:16 buildroot kern.debug kernel: cfg80211: Kicking the queue^M
-Feb 25 05:20:16 buildroot kern.info kernel: cfg80211: Calling CRDA to update 
-world regulatory domain^M
-wlan0: authenticate with 00:17:3f:15:8f:55^M
-Feb 25 05:21:18 buildroot kern.info kernel: wlan0: authenticate with 
-00:17:3f:15:8f:55^M
-wlan0: send auth to 00:17:3f:15:8f:55 (try 1/3)^M
-Feb 25 05:21:18 buildroot kern.info kerwlan0: authenticated^M
-nel: wlan0: send auth to 00:17:3f:15:8f:55 (try 1/3)^M
-Feb 25 05:21:18 buildroot kern.info kernel: wlan0: authenticated^M
-rtl8192cu 1-1:1.0 wlan0: disabling HT/VHT due to WEP/TKIP use^M
-rtl8192cu 1-1:1.0 wlan0: disabling HT as WMM/QoS is not supported by the AP^M
-Feb 25 05:21:18 buildroot kern.info kernel: rtl8192cu 1-1:1.0 wlan0: disabling 
-HT/VHT due to WEP/TKIP use^M
-rtl8192cu 1-1:1.0 wlan0: disabling VHT as WMM/QoS is not supported by the AP^M
-Feb 25 05:21:18 buildroot kern.info kernel: rtl8192cu 1-1:1.0 wlan0: disabling 
-HT as WMM/QoS is not supported by the AP^M
-wlan0: associate with 00:17:3f:15:8f:55 (try 1/3)^M
-Feb 25 05:21:18 buildroot kern.info kernel: wlan0: associate with 
-00:17:3f:15:8f:55 (try 1/3)^M
-wlan0: RX AssocResp from 00:17:3f:15:8f:55 (capab=0x411 status=0 aid=3)^M
-Feb 25 05:21:18 buildroot kern.info kernel: wlan0: RX AssocResp from 
-00:17:3f:15:8f:55 (capab=0x411 status=0 aidwlan0: associated^M
-=3)^M
-Feb 25 05:21:18 buildroot kern.info kernel: wlan0: associated^M
-wlan0: deauthenticating from 00:17:3f:15:8f:55 by local choice (reason=3)^M
-Feb 25 05:21:28 buildroot kern.info kernel: wlan0: deauthenticating from 
-00:17:3f:15:8f:55 by local choice (reason=3)^M
-cfg80211: Calling CRDA to update world regulatory domain^M
-Feb 25 05:21:28 buildroot kern.debug kernel: cfg80211: All devices are 
-disconnected, going to restore regulatory settings^M
-Feb 25 05:21:28 buildroot kern.debug kernel: cfg80211: Restoring regulatory 
-settings^M
-Feb 25 05:21:28 buildroot kern.debug kernel: cfg80211: Kicking the queue^M
-Feb 25 05:21:28 buildroot kern.info kernel: cfg80211: Calling CRDA to update 
-world regulatory domain^M
-wlan0: authenticate with 00:17:3f:15:8f:55^M
-Feb 25 05:22:30 buildroot kern.info kernel: wlan0: authenticate with 
-00:17:3f:15:8f:55^M
-wlan0: send auth to 00:17:3f:15:8f:55 (try 1/3)^M
-Feb 25 05:22:30 buildroot kern.info kernel: wlan0: send auth to 
-00:17:3f:15:8f:55 (trwlan0: authenticated^M
-y 1/3)^M
-Feb 25 05:22:30 buildroot kern.info kernel:rtl8192cu 1-1:1.0 wlan0: disabling 
-HT/VHT due to WEP/TKIP use^M
- wlan0: authenticated^M
-Feb 25 05:22:31 buildroot kern.info kernel: rtl8192cu 1-1:1.0 wlan0: disabling 
-HT/VHT due to WEP/TKIP use^M
-rtl8192cu 1-1:1.0 wlan0: disabling HT as WMM/QoS is not supported by the AP^M
-Feb 25 05:22:31 buildroot kern.info kernel: rtl8192cu 1-1:1.0 wlan0rtl8192cu 1-
-1:1.0 wlan0: disabling VHT as WMM/QoS is not supported by the AP^M
-: disabling HT as WMM/QoS is not supported by the AP^M
-Feb 25 05wlan0: associate with 00:17:3f:15:8f:55 (try 1/3)^M
-:22:31 buildroot kern.info kernwlan0: RX AssocResp from 00:17:3f:15:8f:55 
-(capab=0x411 status=0 aid=3)^M
-el: rtl8192cu 1-1:1.0 wlan0: disabling VHT as WMM/QoS is not supported by the 
-AP^M
-Feb 25 05:22:31 buildroot kern.info kernel: wlan0: associate with 00:1wlan0: 
-associated^M
-
-
-Regards,
-Vishnu.
 
