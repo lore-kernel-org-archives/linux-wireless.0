@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:54875 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755095Ab3CLKMg (ORCPT
+Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:45047 "EHLO
+	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754851Ab3C0KqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 06:12:36 -0400
-Received: by mail-wg0-f42.google.com with SMTP id 12so3063149wgh.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2013 03:12:35 -0700 (PDT)
-Date: Tue, 12 Mar 2013 11:09:46 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Mahesh Palivela <maheshp@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Enable sw scan with chan context
-Message-ID: <20130312100946.GB23062@magnum.frso.rivierawaves.com> (sfid-20130312_111239_877382_E03DF0E8)
-References: <513DE4BB.9010104@posedge.com>
- <1363012784.5284.5.camel@jlt4.sipsolutions.net>
- <513DF675.3000800@posedge.com>
- <1363015558.5284.11.camel@jlt4.sipsolutions.net>
- <1363057766.778.8.camel@WLAN-SW-TEST-03>
+	Wed, 27 Mar 2013 06:46:00 -0400
+Message-ID: <5152CDDB.4010504@dpets.co.uk> (sfid-20130327_114605_554916_7DA52EB8)
+Date: Wed, 27 Mar 2013 10:45:47 +0000
+From: John Talbut <jt@dpets.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1363057766.778.8.camel@WLAN-SW-TEST-03>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac in kernel driver on a Samsung NC110
+References: <51514F1B.1080207@dpets.co.uk> <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk> <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk> <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk> <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk> <51518E14.3050500@broadcom.com> <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com> <5151EC49.9030109@dpets.co.uk> <5151F088.2040408@hauke-m.de> <5151FB85.5080007@dpets.co.uk> <51521A8A.6060900@broadcom.com> <CACna6rwWNtPBJDShe1ia9dB_o40V_zZ1DFv677VSpmOmw083-A@mail.gmail.com> <5152C8DB.4080105@dpets.co.uk> <CACna6ry5A+HfOoDDW6rDy=rj7k913N8qdWhnS3Oacx21gece_g@mail.gmail.com>
+In-Reply-To: <CACna6ry5A+HfOoDDW6rDy=rj7k913N8qdWhnS3Oacx21gece_g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 12, 2013 at 08:39:26AM +0530, Mahesh Palivela wrote:
-> On Mon, 2013-03-11 at 17:25 +0200, Johannes Berg wrote:
-> > On Mon, 2013-03-11 at 20:51 +0530, Mahesh Palivela wrote:
-> > 
-> > > I tested this patch. scan works. 
-> > 
-> > Works how? It never tells the driver to go to a different channel ...
+
+
+On 27/03/13 10:33, Rafał Miłecki wrote:
+> 2013/3/27 John Talbut <jt@dpets.co.uk>:
+>> On 27/03/13 07:46, Rafał Miłecki wrote:
+>>> 2013/3/26 Arend van Spriel <arend@broadcom.com>:
+>>>> On 03/26/2013 08:48 PM, John Talbut wrote:
+>>>>> echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+>>>>> bash: /sys/bus/pci/drivers/bcma-pci-bridge/new_id: No such file or directory
+>>>>
+>>>> This could mean you do not have CONFIG_BCMA_HOST_PCI=y in your .config
+>>>
+>>> Exactly. Make sure you have CONFIG_BCMA_HOST_PCI=y and that your
+>>> host_pci.c is not modified/hacked/whatever.
+>>>
+>>> You can compare it with
+>>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/bcma/host_pci.c
+>>> bcma_pci_bridge_tbl.
+>>>
+>> OK, thanks, I have recompiled the kernel with CONFIG_BCMA_HOST_PCI=y and
+>> we have some progress.
+>>
+>> ls /sys/bus/bcma/devices
+>> bcma0:0
+>>
+>> lspci -d 14e4: -v
+>> now has a line:
+>> Kernel driver in use: bcma-pci-bridge
+>>
+>> host_pci.c is the same as torvalds.
+>>
+>> However, kernel log includes:
+>> brcmsmac bcma0:0: firmware: agent aborted loading brcm/bcm43xx-0.fw (not
+>> found?)
+>> ieee80211 phy0: brcmsmac: Failed to find firmware usually in
+>> /lib/firmware/brcm
+>> brcmsmac: brcms_bcma_probe: brcms_attach failed!
 > 
-> sorry. I missed this. But my patch takes care of crash in mac80211 once
-> we remove 'use_chanctx' check in sw_scan function.
+> "Failed to find firmware". You didn't tell us if you have firmware installed.
+> ls /lib/firmware/brcm/
+> http://wireless.kernel.org/en/users/Drivers/brcm80211#Firmware_installation
 > 
-> > 
-> > Besides, telling the driver to go to one channel via the hw_config call,
-> > and using chanctx for vif configuration seems like a really bad idea.
-> > 
-> 
-> Agree.
-> 
-> > > Anyways chan context is a WIP.
-> > 
-> > It pretty much works.
-> 
-> For AP mode yes it works. But for STA mode, we have work I guess.
-> 
-> > 
-> > > There is no driver which is using the chan ctx work yet.
-> > 
-> > There is, our mvm driver uses it.
-> > 
-> 
-It uses hw scan and roc, and thus can use the chanctxes as is.
- 
-Karl
+Sorry, meant to do that:
+ls /lib/firmware/brcm/
+bcm43xx-0.fw bcm43xx_hdr-0.fw
