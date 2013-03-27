@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:56937 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809Ab3CFUAZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Mar 2013 15:00:25 -0500
-Received: by mail-oa0-f45.google.com with SMTP id o6so13296579oag.18
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Mar 2013 12:00:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5137188A.4070007@broadcom.com>
-References: <CA+K+NcR9tExM9y-yjH_MB=ZpjeeakMW2GozECg4Pejp54nkCjA@mail.gmail.com>
-	<513624B7.8010109@broadcom.com>
-	<loom.20130306T000201-626@post.gmane.org>
-	<5137188A.4070007@broadcom.com>
-Date: Wed, 6 Mar 2013 21:00:24 +0100
-Message-ID: <CA+K+NcRUeC2Y-4n828gtMCUeoOb9JVOj5c6zGjKG8iWnvJFnOg@mail.gmail.com> (sfid-20130306_210029_612621_CBF49636)
-Subject: Re: BCM4313 problems connecting to AP since 3.8
-From: =?UTF-8?B?SsOhbiBWZXNlbMO9?= <jano.vesely@gmail.com>
-To: Piotr Haber <phaber@broadcom.com>
-Cc: Alexander Mezin <mezin.alexander@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37146 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753744Ab3C0QXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 12:23:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/4] bcma: export bcma_chipco_get_alp_clock()
+Date: Wed, 27 Mar 2013 17:23:11 +0100
+Message-Id: <1364401392-30360-4-git-send-email-hauke@hauke-m.de> (sfid-20130327_172352_438795_4E31A6E5)
+In-Reply-To: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
+References: <1364401392-30360-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
-this is what my card says:
+This function will be used by brcmsmac.
 
-# cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
-board vendor: 1028
-board type: 10
-board revision: 2400
-board flags: 8002a00
-board flags2: 0
-firmware revision: 262032b
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_chipcommon.c            |    3 ++-
+ include/linux/bcma/bcma_driver_chipcommon.h |    2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-I'll try to verify that reverting that commit fixes my problem as well.
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 28fa50a..88db0cb 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -25,13 +25,14 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+ 	return value;
+ }
+ 
+-static u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc)
++u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc)
+ {
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU)
+ 		return bcma_pmu_get_alp_clock(cc);
+ 
+ 	return 20000000;
+ }
++EXPORT_SYMBOL_GPL(bcma_chipco_get_alp_clock);
+ 
+ static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
+ {
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 1db4c6d..453fcc9 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -608,6 +608,8 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
+ 
+ extern u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks);
+ 
++extern u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc);
++
+ void bcma_chipco_irq_mask(struct bcma_drv_cc *cc, u32 mask, u32 value);
+ 
+ u32 bcma_chipco_irq_status(struct bcma_drv_cc *cc, u32 mask);
+-- 
+1.7.10.4
 
-Jan
-
-On Wed, Mar 6, 2013 at 11:20 AM, Piotr Haber <phaber@broadcom.com> wrote:
-> On 03/06/13 00:06, Alexander Mezin wrote:
->> Arend van Spriel <arend@...> writes:
->>
->>>
->>> On 03/04/13 22:47, Ján Veselý wrote:
->>>> Hi,
->>>>
->>>> after upgrading to 3.8 I started running into a timeout problem on
->>>> BCM4313 wifi using brcmsmac driver (compiled as module, x86_64).
->>>> the card is unable to connect to ap after startup of resume.
->>>> Although it eventually connects it takes a long time (several minutes)
->>>> and dmesg log is spammed with:
->>>>
->>>> [  144.725431] wlan0: authenticate with 00:23:f8:8f:29:14
->>>> [  144.727786] wlan0: capabilities/regulatory prevented using AP
->>>> HT/VHT configuration, downgraded
->>>> [  144.727820] wlan0: direct probe to 00:23:f8:8f:29:14 (try 1/3)
->>>> [  144.930780] wlan0: direct probe to 00:23:f8:8f:29:14 (try 2/3)
->>>> [  145.133855] wlan0: direct probe to 00:23:f8:8f:29:14 (try 3/3)
->>>> [  145.336931] wlan0: authentication with 00:23:f8:8f:29:14 timed out
->>>> [  151.217245] wlan0: authenticate with 00:23:f8:8f:29:14
->>>>
->>>> (30+ times in some cases)
->>
->> Had the same problem.
->> It seems that this commit introduces the bug:
->> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?
->> id=b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
->> I reverted it and now I have successful connection on first attempt. Linux
->> 3.8.2, BCM4313 802.11b/g/n Wireless LAN Controller.
->>
-> Hi,
-> that's disturbing.
-> I wonder what hardware version you have.
-> Could you share the contents of this debugfs file:
-> <debugfs_mount>/brcmsmac/bcma0:0/hardware
->
-> Piotr
->
->
->
