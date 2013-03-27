@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41678 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3827 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932304Ab3CLJ6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 05:58:06 -0400
-Date: Tue, 12 Mar 2013 10:58:27 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: Krzysztof Kolasa <kkolasa@winsoft.pl>,
-	ML linux-wireless <linux-wireless@vger.kernel.org>,
-	linville@tuxdriver.com, Zdenek Kabelac <zkabelac@redhat.com>
-Subject: Re: iwlegacy iwl3945 unable to connect to any hotspots on
- 3.9.0-rc1/rc2
-Message-ID: <20130312095826.GB1383@redhat.com> (sfid-20130312_105811_123383_5F5BD82F)
-References: <513E34FD.8090606@winsoft.pl>
- <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com>
+	id S1751743Ab3C0LWe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 07:22:34 -0400
+Message-ID: <5152D670.3000707@broadcom.com> (sfid-20130327_122241_880067_FAED0A8E)
+Date: Wed, 27 Mar 2013 12:22:24 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZjf_zfi3Eph2nnn+qJfGt3wGWJEFGxLuJtXAnb+s-Q9nrzgg@mail.gmail.com>
+To: "John Talbut" <jt@dpets.co.uk>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac in kernel driver on a Samsung NC110
+References: <51514F1B.1080207@dpets.co.uk>
+ <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk>
+ <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk>
+ <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk>
+ <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk>
+ <51518E14.3050500@broadcom.com>
+ <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com>
+ <5151EC49.9030109@dpets.co.uk> <5151F088.2040408@hauke-m.de>
+ <5151FB85.5080007@dpets.co.uk> <51521A8A.6060900@broadcom.com>
+ <CACna6rwWNtPBJDShe1ia9dB_o40V_zZ1DFv677VSpmOmw083-A@mail.gmail.com>
+ <5152C8DB.4080105@dpets.co.uk>
+ <CACna6ry5A+HfOoDDW6rDy=rj7k913N8qdWhnS3Oacx21gece_g@mail.gmail.com>
+ <5152CDDB.4010504@dpets.co.uk>
+In-Reply-To: <5152CDDB.4010504@dpets.co.uk>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 12, 2013 at 08:30:47AM +0000, Pedro Francisco wrote:
-> On Mon, Mar 11, 2013 at 7:48 PM, Krzysztof Kolasa <kkolasa@winsoft.pl> wrote:
-> > Hotspots are visible and are working OK but wifi card can't connect.
-> >
+On 03/27/2013 11:45 AM, John Talbut wrote:
 > 
-> Hit this bug also, on the GNOME-3.7.90.iso (based on FC19 testing
-> ISO), "Can't stop Rx DMA." and friends.
 > 
-> iwl3945 was/is working fine on 3.8.
+> On 27/03/13 10:33, Rafał Miłecki wrote:
+>> 2013/3/27 John Talbut <jt@dpets.co.uk>:
+>>> On 27/03/13 07:46, Rafał Miłecki wrote:
+>>>> 2013/3/26 Arend van Spriel <arend@broadcom.com>:
+>>>>> On 03/26/2013 08:48 PM, John Talbut wrote:
+>>>>>> echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+>>>>>> bash: /sys/bus/pci/drivers/bcma-pci-bridge/new_id: No such file or directory
+>>>>>
+>>>>> This could mean you do not have CONFIG_BCMA_HOST_PCI=y in your .config
+>>>>
+>>>> Exactly. Make sure you have CONFIG_BCMA_HOST_PCI=y and that your
+>>>> host_pci.c is not modified/hacked/whatever.
+>>>>
+>>>> You can compare it with
+>>>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/bcma/host_pci.c
+>>>> bcma_pci_bridge_tbl.
+>>>>
+>>> OK, thanks, I have recompiled the kernel with CONFIG_BCMA_HOST_PCI=y and
+>>> we have some progress.
+>>>
+>>> ls /sys/bus/bcma/devices
+>>> bcma0:0
+>>>
+>>> lspci -d 14e4: -v
+>>> now has a line:
+>>> Kernel driver in use: bcma-pci-bridge
+>>>
+>>> host_pci.c is the same as torvalds.
+>>>
+>>> However, kernel log includes:
+>>> brcmsmac bcma0:0: firmware: agent aborted loading brcm/bcm43xx-0.fw (not
+>>> found?)
+>>> ieee80211 phy0: brcmsmac: Failed to find firmware usually in
+>>> /lib/firmware/brcm
+>>> brcmsmac: brcms_bcma_probe: brcms_attach failed!
+>>
+>> "Failed to find firmware". You didn't tell us if you have firmware installed.
+>> ls /lib/firmware/brcm/
+>> http://wireless.kernel.org/en/users/Drivers/brcm80211#Firmware_installation
+>>
+> Sorry, meant to do that:
+> ls /lib/firmware/brcm/
+> bcm43xx-0.fw bcm43xx_hdr-0.fw
 > 
-> Krzysztof Kolasa, you may want to see
-> http://www.spinics.net/lists/linux-wireless/msg104564.html on
-> requested debugging procedure for the problem.
 
-I'm just tested 3.9-rc2 and have the same problems (including
-dma map warning). So I don't need debug logs for that.
-However still I would like to see 3.8 logs from Zdenek.
+Do you have a ramdisk during boot? I suspect brcmsmac does request the
+firmware before the root filesystem is mounted.
 
-Stanislaw
+Gr. AvS
+
