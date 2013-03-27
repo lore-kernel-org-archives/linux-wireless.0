@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:40373 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754275Ab3C0U3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 16:29:55 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:60248 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752531Ab3C0Mqs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 08:46:48 -0400
+Date: Wed, 27 Mar 2013 08:44:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
-References: <87li993mug.fsf@sycorax.lbl.gov>
-	<1364390086.8388.7.camel@jlt4.sipsolutions.net>
-	<87r4j021ac.fsf@sycorax.lbl.gov>
-	<1364406085.8388.11.camel@jlt4.sipsolutions.net>
-	<87ip4cg1qg.fsf@sycorax.lbl.gov>
-	<1364410962.8388.19.camel@jlt4.sipsolutions.net>
-	<87txnwacdw.fsf@sycorax.lbl.gov>
-	<1364411696.8388.21.camel@jlt4.sipsolutions.net>
-	<871ub0zlgp.fsf@sycorax.lbl.gov>
-	<1364413484.8388.23.camel@jlt4.sipsolutions.net>
-	<87k3oszk2g.fsf@sycorax.lbl.gov>
-	<1364415196.8388.26.camel@jlt4.sipsolutions.net>
-Date: Wed, 27 Mar 2013 13:29:49 -0700
-In-Reply-To: <1364415196.8388.26.camel@jlt4.sipsolutions.net> (message from
-	Johannes Berg on Wed, 27 Mar 2013 21:13:16 +0100)
-Message-ID: <87d2ukziv6.fsf@sycorax.lbl.gov> (sfid-20130327_212959_493828_106A5F72)
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@redhat.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: P2P support in brcmfmac
+Message-ID: <20130327124422.GB2146@tuxdriver.com> (sfid-20130327_134651_978568_E9676660)
+References: <5152DD47.2080501@broadcom.com>
+ <20130327122216.GA2146@tuxdriver.com>
+ <1364387698.8388.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1364387698.8388.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, Mar 27, 2013 at 01:34:58PM +0100, Johannes Berg wrote:
+> On Wed, 2013-03-27 at 08:22 -0400, John W. Linville wrote:
+> > On Wed, Mar 27, 2013 at 12:51:35PM +0100, Arend van Spriel wrote:
+> > 
+> > > In 3.9 we introduced P2P support in brcmfmac which was functional using
+> > > current wpa_supplicant P2P support, but we did not yet support the
+> > > P2P_DEVICE user-space API.
+> > > 
+> > > Last week I enabled that in brcmfmac testing it with wpa_supplicant
+> > > patches for P2P_DEVICE support from David Spinadel. So I do have a
+> > > couple of brcmfmac patches to make that work and would like to submit
+> > > those for 3.9 although it is not strictly a bug fix. Would you consider
+> > > taking these?
+> > 
+> > That doesn't sound to me like something that would be worthy of such
+> > an exception.
+> 
+> Maybe just make a small patch to disable the other API, so we don't end
+> up having to support both?
 
-> Ah so it's even the same packet because we set
-> IEEE80211_TX_STAT_TX_FILTERED.
->
-> Note the delay here -- roughly between 84.4428 and 84.5328 we wait for a
-> beacon.
->
-> I'll apply the patch and add your tested-by, like this:
->
-> http://p.sipsolutions.net/7e871bfb5a0b272a.txt
->
-> OK?
-
-looks good. thanks.
-
---alex--
+Maybe I misunderstood.  So brcmfmac currently supports a P2P API
+that is not otherwise available and which we don't want to support
+in the future?
 
 -- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
