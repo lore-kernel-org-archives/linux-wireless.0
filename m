@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:63035 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994Ab3CKW4M (ORCPT
+Received: from anchor-post-2.mail.demon.net ([195.173.77.133]:35432 "EHLO
+	anchor-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752589Ab3C0MBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 18:56:12 -0400
-Received: by mail-pb0-f45.google.com with SMTP id ro8so4265701pbb.18
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Mar 2013 15:56:11 -0700 (PDT)
+	Wed, 27 Mar 2013 08:01:11 -0400
+Message-ID: <5152DF77.3080806@dpets.co.uk> (sfid-20130327_130115_483509_2E8E7A04)
+Date: Wed, 27 Mar 2013 12:00:55 +0000
+From: John Talbut <jt@dpets.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <513E5E7D.2050705@gmail.com>
-References: <513E5E7D.2050705@gmail.com>
-Date: Mon, 11 Mar 2013 15:56:11 -0700
-Message-ID: <CAJ-Vmokdusg+fEX9Ac100abzEdOLRy+F4CDOVcbv-VhOtVbF3Q@mail.gmail.com> (sfid-20130311_235616_109633_B67AD879)
-Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: greearb@candelatech.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac in kernel driver on a Samsung NC110
+References: <51514F1B.1080207@dpets.co.uk> <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk> <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk> <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk> <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk> <51518E14.3050500@broadcom.com> <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com> <5151EC49.9030109@dpets.co.uk> <5151F088.2040408@hauke-m.de> <5151FB85.5080007@dpets.co.uk> <51521A8A.6060900@broadcom.com> <CACna6rwWNtPBJDShe1ia9dB_o40V_zZ1DFv677VSpmOmw083-A@mail.gmail.com> <5152C8DB.4080105@dpets.co.uk> <CACna6ry5A+HfOoDDW6rDy=rj7k913N8qdWhnS3Oacx21gece_g@mail.gmail.com> <5152CDDB.4010504@dpets.co.uk> <5152D670.3000707@broadcom.com>
+In-Reply-To: <5152D670.3000707@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh I hate you. ;-)
-
-Besides, that will not work on AR9300 NICs with only OTP.
 
 
+On 27/03/13 11:22, Arend van Spriel wrote:
+> On 03/27/2013 11:45 AM, John Talbut wrote:
+>>
+>>
+>> On 27/03/13 10:33, Rafał Miłecki wrote:
+>>> 2013/3/27 John Talbut <jt@dpets.co.uk>:
+>>>> On 27/03/13 07:46, Rafał Miłecki wrote:
+>>>>> 2013/3/26 Arend van Spriel <arend@broadcom.com>:
+>>>>>> On 03/26/2013 08:48 PM, John Talbut wrote:
+>>>>>>> echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+>>>>>>> bash: /sys/bus/pci/drivers/bcma-pci-bridge/new_id: No such file or directory
+>>>>>>
+>>>>>> This could mean you do not have CONFIG_BCMA_HOST_PCI=y in your .config
+>>>>>
+>>>>> Exactly. Make sure you have CONFIG_BCMA_HOST_PCI=y and that your
+>>>>> host_pci.c is not modified/hacked/whatever.
+>>>>>
+>>>>> You can compare it with
+>>>>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/bcma/host_pci.c
+>>>>> bcma_pci_bridge_tbl.
+>>>>>
+>>>> OK, thanks, I have recompiled the kernel with CONFIG_BCMA_HOST_PCI=y and
+>>>> we have some progress.
+>>>>
+>>>> ls /sys/bus/bcma/devices
+>>>> bcma0:0
+>>>>
+>>>> lspci -d 14e4: -v
+>>>> now has a line:
+>>>> Kernel driver in use: bcma-pci-bridge
+>>>>
+>>>> host_pci.c is the same as torvalds.
+>>>>
+>>>> However, kernel log includes:
+>>>> brcmsmac bcma0:0: firmware: agent aborted loading brcm/bcm43xx-0.fw (not
+>>>> found?)
+>>>> ieee80211 phy0: brcmsmac: Failed to find firmware usually in
+>>>> /lib/firmware/brcm
+>>>> brcmsmac: brcms_bcma_probe: brcms_attach failed!
+>>>
+>>> "Failed to find firmware". You didn't tell us if you have firmware installed.
+>>> ls /lib/firmware/brcm/
+>>> http://wireless.kernel.org/en/users/Drivers/brcm80211#Firmware_installation
+>>>
+>> Sorry, meant to do that:
+>> ls /lib/firmware/brcm/
+>> bcm43xx-0.fw bcm43xx_hdr-0.fw
+>>
+> 
+> Do you have a ramdisk during boot? I suspect brcmsmac does request the
+> firmware before the root filesystem is mounted.
+> 
+> Gr. AvS
+> 
 
-Adrian
+Yes.  Everything apart from the boot partition is encrypted, so,
+presumably, if it tries to fetch the firmware before the root filesystem
+is decripted and mounted it will not find it.  How do I prove that this
+is what is happening and get round it?
 
+Regards
 
-On 11 March 2013 15:45, Xose Vazquez Perez <xose.vazquez@gmail.com> wrote:
-> Ben Greear wrote:
->
->> Otherwise, can't get the Sparklan AR9380 NICs to be
->> 5Ghz APs, since they are in world-roaming domain by
->> default.  Add this to /etc/modprobe.d/ath9k.conf:
->
-> You can use atheros branch [0] of iwleeprom [1] to
-> manipulate the EEPROM.
->
-> And you should read: http://wireless.kernel.org/en/users/Drivers/ath#Regulatory
->
->
-> [0] svn co http://iwleeprom.googlecode.com/svn/
-> [1] http://code.google.com/p/iwleeprom/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
