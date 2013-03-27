@@ -1,87 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53840 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754027Ab3CLJlx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 05:41:53 -0400
-Date: Tue, 12 Mar 2013 10:42:19 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Alex A. Mihaylov" <minimumlaw@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: RFC: RT3070 TX Power troubles
-Message-ID: <20130312094218.GA1383@redhat.com> (sfid-20130312_104157_168170_A831A35D)
-References: <CALK7Yahs2=2UkN9uXGbuoWXhvcC1u4-R4xak5cx0ZqKm7OfK+A@mail.gmail.com>
- <20130308162126.GC1409@redhat.com>
- <CALK7YajjwBPahgT0Vzz45O8EVc6q7myo2bBgE6u8kbi5s_nN_g@mail.gmail.com>
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:60952 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750968Ab3C0PnW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 11:43:22 -0400
+Date: Wed, 27 Mar 2013 11:43:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Herrmann <dh.herrmann@gmail.com>
+Cc: Piotr Haber <phaber@broadcom.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
+Message-ID: <20130327154312.GE2146@tuxdriver.com> (sfid-20130327_164340_767106_12FFC6CC)
+References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+ <51471B85.5060404@broadcom.com>
+ <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
+ <20130325185821.GB17454@tuxdriver.com>
+ <51516AD4.8080306@broadcom.com>
+ <20130327145654.GA1868@tuxdriver.com>
+ <CANq1E4TCyhpBS3XspW53jp1WxjU+i8iQwLpyy0OCL=DaHqQF+w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALK7YajjwBPahgT0Vzz45O8EVc6q7myo2bBgE6u8kbi5s_nN_g@mail.gmail.com>
+In-Reply-To: <CANq1E4TCyhpBS3XspW53jp1WxjU+i8iQwLpyy0OCL=DaHqQF+w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 09, 2013 at 10:05:48AM +0400, Alex A. Mihaylov wrote:
-> 2013/3/8 Stanislaw Gruszka <sgruszka@redhat.com>:
-> >> +     /*
-> >> +      * FixMe: Why POWER_BOUND and FREQ_OFFSET_BOUND not init here?
-> >> +      */
-> > ???
+On Wed, Mar 27, 2013 at 04:32:28PM +0100, David Herrmann wrote:
+> Hi John
 > 
-> Sorry! Patch created only for discussion. I not sure in my my
-> code.Final patch some later.
-
-No worries.
-
-However I just realized that we probably do not set RF_R49 on vendor
-driver for chips other than 5392. I thought we set RF_R49 in function
-AsicGetAutoAgcOffset() for all chipsets handled by driver, but seems
-I missed IS_RT5392(pAd) branch.
-
-I'm using 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
-as source, are you using some other vendor driver sources ?
-
-Also could you please elaborate how did you measure TX power?
-
-> and function VOID RT30xxLoadRFNormalModeSetup in vendor rt30xx.c
+> On Wed, Mar 27, 2013 at 3:56 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Tue, Mar 26, 2013 at 10:31:00AM +0100, Piotr Haber wrote:
+> >> On 03/25/13 19:58, John W. Linville wrote:
+> >> > On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
+> >> >> Hi Piotr
+> >> >>
+> >> >> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
+> >> >>> On 03/18/13 11:45, David Herrmann wrote:
+> >> >>>> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
+> >> >>>> wireless AP reconnection on: (14e4:4727)
+> >> >>>>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
+> >> >>>>
+> >> >>>> Any attempt to reconnect to an AP results in timeouts no matter how near to the
+> >> >>>> AP I am:
+> >> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+> >> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+> >> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> >> >>>> ---
+> >> >>>> Hi
+> >> >>>>
+> >> >>>> I tried coming up with a fix instead of reverting this commit, but the commit is
+> >> >>>> way to big for me to understand what's going on. Sorry.
+> >> >>>>
+> >> >>>> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
+> >> >>>> one time, but any further attempt resulted in:
+> >> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+> >> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+> >> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+> >> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+> >> >>>>
+> >> >>>> Even sitting right next to the AP didn't help so I started bisecting and it
+> >> >>>> turned out to be:
+> >> >>>>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+> >> >>>> Please revert it.
+> >> >>>>
+> >> >>>> Thanks
+> >> >>>> David
+> >> >>>>
+> >> >>> Hi,
+> >> >>> unfortunately this is not a first report of this patch breaking 4313 for some users.
+> >> >>> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
+> >> >>> successfully in our test setup.
+> >> >>> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
+> >> >>> <debugfs_mount>/brcmsmac/bcma0:0/hardware
+> >> >>
+> >> >> Hi
+> >> >>
+> >> >> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+> >> >> board vendor: 185f
+> >> >> board type: 51a
+> >> >> board revision: 1408
+> >> >> board flags: 8402a01
+> >> >> board flags2: 880
+> >> >> firmware revision: 262032b
+> >> >>
+> >> >> I can also try partial reverts of that commit, but I really don't know
+> >> >> which parts might be important.
+> >> >
+> >> > Are we going to see a fix for this (very) soon?  Or should I just go
+> >> > ahead and revert this patch?
+> >> >
+> >> I cannot reproduce the issue on a set of devices we have here (3 different 4313 ePA models).
+> >> Some of the devices that are reported to be broken are being shipped to us.
+> >> So I would say we need around 2 weeks at least to resolve this (if we reproduce the problem and find
+> >> a fix).
+> >> Not sure this is soon enough.
+> >> If not please go ahead an revert the patch.
+> >
+> > I am reverting the patch.
 > 
-> /* TX_LO1_en, RF R17 register Bit 3 to 0*/
-> RT30xxReadRFRegister(pAd, RF_R17, &RFValue);
-> RFValue &= (~0x08);
-> /* to fix rx long range issue*/
-> if (((pAd->MACVersion & 0xffff) >= 0x0211) &&
-> (pAd->NicConfig2.field.ExternalLNAForG == 0))
-> {
->     RFValue |= 0x20;
-> }
->     /* set RF_R17_bit[2:0] equal to EEPROM setting at 0x48h*/
->     if (pAd->TxMixerGain24G >= 2)
->     {
->         RFValue &= (~0x7);  /* clean bit [2:0]*/
->         RFValue |= pAd->TxMixerGain24G;
->     }
-> RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
-> 
-> But 0x5f for RF_R17... I'm insure.
+> Can you CC stable? Otherwise I will try to sent it to them after you applied it.
 
-I think we already do this in rt2800_init_rfcsr():
+Sorry, I already pushed it out to kernel.org.  I would prefer not to modify my repository now.
 
-        if (!rt2x00_rt(rt2x00dev, RT5390) &&
-            !rt2x00_rt(rt2x00dev, RT5392)) {
-                rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
-                rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
-                if (rt2x00_rt(rt2x00dev, RT3070) ||
-                    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
-                    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E) ||
-                    rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E)) {
-                        if (!test_bit(CAPABILITY_EXTERNAL_LNA_BG,
-                                      &rt2x00dev->cap_flags))
-                                rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
-                }
-                rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
-                                  drv_data->txmixer_gain_24g);
-                rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
-
-
-BTW: please cc rt2x00 related patches/emails to users@rt2x00.serialmonkey.com
-(I already do this for this email). List is moderated to non-subscribers,
-so would be good if you subscribe there.
-
-Stanislaw
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
