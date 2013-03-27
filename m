@@ -1,107 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:48271 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756085Ab3CQJ7b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 05:59:31 -0400
-Subject: [PATCH 4/4] rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when
- needed
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sun, 17 Mar 2013 11:59:29 +0200
-Message-ID: <20130317095929.24983.14535.stgit@localhost6.localdomain6> (sfid-20130317_105934_044772_35692FBD)
-In-Reply-To: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
-References: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
+Received: from sycorax.lbl.gov ([128.3.11.121]:40353 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753752Ab3C0TJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 15:09:07 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
+References: <87li993mug.fsf@sycorax.lbl.gov>
+	<1364390086.8388.7.camel@jlt4.sipsolutions.net>
+	<87r4j021ac.fsf@sycorax.lbl.gov>
+	<1364406085.8388.11.camel@jlt4.sipsolutions.net>
+	<87ip4cg1qg.fsf@sycorax.lbl.gov>
+	<1364410962.8388.19.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Mar 2013 12:08:59 -0700
+In-Reply-To: <1364410962.8388.19.camel@jlt4.sipsolutions.net> (message from
+	Johannes Berg on Wed, 27 Mar 2013 20:02:42 +0100)
+Message-ID: <87txnwacdw.fsf@sycorax.lbl.gov> (sfid-20130327_200913_967166_37293384)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add proper alignment at first packet copy, to avoid extra copies made later
-in networking stack.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
----
- drivers/net/wireless/rtlwifi/usb.c |   41 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 40 insertions(+), 1 deletion(-)
+> On Wed, 2013-03-27 at 11:02 -0700, Alex Romosan wrote:
+>
+>> > Humm, yes, that makes more sense. That commit fixed a bug in another
+>> > commit though, I'm surprised you ended up there?! Curious ... I'll
+>> > check over the commit and see if I can find anything wrong with it.
+>> 
+>> i just reverted that commit on top of 3.9-rc4 and now i can reconnect
+>> when resuming from suspend. so whatever bug that commit fixed, it also
+>> introduced a new one.
+>
+> Hmm, actually ... I suspect this didn't introduce a bug but rather
+> unmasked one in iwlwifi/mac80211 interaction.
+>
+> Are you sure this only happens after suspend/resume? It seems like it
+> would always happen? At least if there was a beacon in the scan results
+> already, which should probably always be the case...
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 6cb2940..83915dc 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -569,6 +569,37 @@ static void _rtl_rx_work(unsigned long param)
- 	}
- }
- 
-+static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
-+					unsigned int len)
-+{
-+	unsigned int padding = 0;
-+
-+	/* make function no-op when possible */
-+	if (NET_IP_ALIGN == 0 || len < sizeof(*hdr))
-+		return 0;
-+
-+	/* alignment calculation as in lbtf_rx() / carl9170_rx_copy_data() */
-+	/* TODO: deduplicate common code, define helper function instead? */
-+
-+	if (ieee80211_is_data_qos(hdr->frame_control)) {
-+		u8 *qc = ieee80211_get_qos_ctl(hdr);
-+
-+		padding ^= NET_IP_ALIGN;
-+
-+		/* Input might be invalid, avoid accessing memory outside
-+		 * the buffer.
-+		 */
-+		if ((unsigned long)qc - (unsigned long)hdr < len &&
-+		    *qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT)
-+			padding ^= NET_IP_ALIGN;
-+	}
-+
-+	if (ieee80211_has_a4(hdr->frame_control))
-+		padding ^= NET_IP_ALIGN;
-+
-+	return padding;
-+}
-+
- #define __RADIO_TAP_SIZE_RSV	32
- 
- static void _rtl_rx_completed(struct urb *_urb)
-@@ -582,9 +613,11 @@ static void _rtl_rx_completed(struct urb *_urb)
- 		goto free;
- 
- 	if (likely(0 == _urb->status)) {
-+		unsigned int padding;
- 		struct sk_buff *skb;
- 		unsigned int qlen;
- 		unsigned int size = _urb->actual_length;
-+		struct ieee80211_hdr *hdr;
- 
- 		if (size < RTL_RX_DESC_SIZE + sizeof(struct ieee80211_hdr)) {
- 			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-@@ -601,7 +634,10 @@ static void _rtl_rx_completed(struct urb *_urb)
- 			goto resubmit;
- 		}
- 
--		skb = dev_alloc_skb(size + __RADIO_TAP_SIZE_RSV);
-+		hdr = (void *)(_urb->transfer_buffer + RTL_RX_DESC_SIZE);
-+		padding = _rtl_rx_get_padding(hdr, size - RTL_RX_DESC_SIZE);
-+
-+		skb = dev_alloc_skb(size + __RADIO_TAP_SIZE_RSV + padding);
- 		if (!skb) {
- 			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
- 				 "Can't allocate skb for bulk IN!\n");
-@@ -610,6 +646,9 @@ static void _rtl_rx_completed(struct urb *_urb)
- 
- 		_rtl_install_trx_info(rtlusb, skb, rtlusb->in_ep);
- 
-+		/* Make sure the payload data is 4 byte aligned. */
-+		skb_reserve(skb, padding);
-+
- 		/* reserve some space for mac80211's radiotap */
- 		skb_reserve(skb, __RADIO_TAP_SIZE_RSV);
- 
+no, it always happens, but i only noticed it after suspend/resume. when
+i suspend i do an ifdown (because i haven't figured out a way to
+convince my new access point not to drop idle connections) and then i do
+an ifup to reconnect on resume. when i'm testing it now, i just take the
+network down and then try to bring it back up.
 
+> Can you enable iwlwifi debugging and set the iwlwifi module parameter
+> debug=0x40000000 ? I have a feeling you'll see something like
+> "PASSIVE_NO_RX" in there.
+
+i'll do it and let you know. i have iwlwifi compiled in the kernel, how
+do i specify it at boot time?
+
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
