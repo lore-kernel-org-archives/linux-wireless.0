@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:37301 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756079Ab3CTTN0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 15:13:26 -0400
-Received: by mail-ie0-f180.google.com with SMTP id a11so2285164iee.25
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2013 12:13:26 -0700 (PDT)
+Received: from sycorax.lbl.gov ([128.3.11.121]:40327 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751597Ab3C0RgB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 13:36:01 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
+References: <87li993mug.fsf@sycorax.lbl.gov>
+	<1364390086.8388.7.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Mar 2013 10:35:55 -0700
+In-Reply-To: <1364390086.8388.7.camel@jlt4.sipsolutions.net> (message from
+	Johannes Berg on Wed, 27 Mar 2013 14:14:46 +0100)
+Message-ID: <87r4j021ac.fsf@sycorax.lbl.gov> (sfid-20130327_183607_592387_721A31B5)
 MIME-Version: 1.0
-Date: Wed, 20 Mar 2013 20:13:26 +0100
-Message-ID: <CAFED-jmrmbMb=puPn1Nu6zc2SnZvJNWFnwV4CHNNjo7E_yKr1g@mail.gmail.com> (sfid-20130320_201330_576750_EC999E13)
-Subject: [PATCH 1/4] cfg80211: add P2P Notice of Absence attribute
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add P2P Notice of Absence attribute structure.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/linux/ieee80211.h |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> That sounds like it stopped the queues. Can you check debugfs:
+>
+> cat /sys/kernel/debug/ieee80211/phy0/queues
+>
+> when this happens?
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4cf0c9e..9dc9e1c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1027,6 +1027,26 @@ enum ieee80211_p2p_attr_id {
- 	IEEE80211_P2P_ATTR_MAX
- };
+i don't have anything under /sys/kernel/debug/ so i probably need to
+turn some debugging options on, but...
 
-+/* Notice of Absence attribute - described in P2P spec 4.1.14 */
-+/* Typical max value used here */
-+#define IEEE80211_P2P_NOA_DESC_MAX	4
-+
-+struct ieee80211_p2p_noa_desc {
-+	u8	count;
-+	__le32	duration;
-+	__le32	interval;
-+	__le32	start_time;
-+} __packed;
-+
-+struct ieee80211_p2p_noa_attr {
-+	u8	index;
-+	u8	oppps_ctwindow;
-+	struct ieee80211_p2p_noa_desc desc[IEEE80211_P2P_NOA_DESC_MAX];
-+} __packed;
-+
-+#define IEEE80211_P2P_OPPPS_ENABLE_BIT		BIT(7)
-+#define IEEE80211_P2P_OPPPS_CTWINDOW_MASK	0x7F
-+
- /**
-  * struct ieee80211_bar - HT Block Ack Request
-  *
+> git bisect start -- drivers/net/wireless net/wireless net/mac80211
+>
+> would probably have been more successful.
+
+...i did a bisect using the above and it came up with this:
+
+89afe614c0c737fd40eda1f8c8ef686246cf3cb6 is the first bad commit
+commit 89afe614c0c737fd40eda1f8c8ef686246cf3cb6
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed Feb 13 15:39:57 2013 +0100
+
+    mac80211: fix auth/assoc timeout handling
+
+which makes a lot more sense. i'll try reverting it to see if it fixes
+the problem, or i can try patches if you have any.
+
+--alex--
+
 -- 
-1.7.9.5
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
