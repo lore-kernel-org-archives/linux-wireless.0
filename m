@@ -1,148 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:56150 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074Ab3CJMk3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40832 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754280Ab3C0WlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Mar 2013 08:40:29 -0400
-Message-ID: <20130310142919.4375603d5escwu4g@www.dalek.fi> (sfid-20130310_134035_544360_9547B4D1)
-Date: Sun, 10 Mar 2013 14:29:19 +0200
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless@vger.kernel.org,
-	'George0505' <george0505@realtek.com>
-Subject: Re: rtl8192cu goes silent/dead after some time...
-References: <20130225185141.14193yyf1vunany8@www.dalek.fi>
- <512E58DF.4050001@lwfinger.net>
-In-Reply-To: <512E58DF.4050001@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+	Wed, 27 Mar 2013 18:41:22 -0400
+Message-ID: <1364424077.8388.28.camel@jlt4.sipsolutions.net> (sfid-20130327_234126_578276_4723239C)
+Subject: [RFC v2 3/3] mac80211: fix do_stop handling while suspended
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: sgruszka@redhat.com
+Date: Wed, 27 Mar 2013 23:41:17 +0100
+In-Reply-To: <1364423602-18821-4-git-send-email-johannes@sipsolutions.net> (sfid-20130327_233334_233635_67836BB6)
+References: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
+	 <1364423602-18821-4-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130327_233334_233635_67836BB6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've made some more testing, and noticed that device does not go  
-completely silent...
+When a device is unplugged while suspended, mac80211 is
+de-initialized and all interfaces are removed while no
+state is actually present in the driver. This can cause
+warnings and driver confusion.
 
-After device stops working in managed mode, I added monitor interface  
-and it receives beacons and other broadcast packets. However if I turn  
-on any monitor interface for device, managed interface is silent and  
-monitor interface only receives probe requests.
+Fix this by reordering the do_stop code to not call the
+driver when it is suspended, i.e. when there's no state
+in the driver anyway.
 
-Before this condition appears, there is "wlan0: deauthenticated from  
-xx:xx:xx:xx:xx:xx (Reason: 2)" with reconnect to AP:
+The previous patches removed a few corner cases in ROC
+and virtual monitor interfaces so that now this is safe
+to do and no state should be left over.
 
-[   22.910000] wlan0: authenticate with xx:xx:xx:xx:xx:xx
-[   22.940000] wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
-[   22.980000] wlan0: authenticated
-[   23.000000] wlan0: associate with xx:xx:xx:xx:xx:xx (try 1/3)
-[   23.030000] wlan0: RX AssocResp from xx:xx:xx:xx:xx:xx (capab=0x411  
-status=0 aid=2)
-[   23.040000] wlan0: associated
-[   23.050000] cfg80211: Calling CRDA for country: FI
-[   23.080000] cfg80211: Updating information on frequency 2412 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.090000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.100000] cfg80211: Updating information on frequency 2417 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.110000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.120000] cfg80211: Updating information on frequency 2422 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.130000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.140000] cfg80211: Updating information on frequency 2427 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.150000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.160000] cfg80211: Updating information on frequency 2432 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.170000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.180000] cfg80211: Updating information on frequency 2437 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.190000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.200000] cfg80211: Updating information on frequency 2442 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.210000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.220000] cfg80211: Updating information on frequency 2447 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.230000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.240000] cfg80211: Updating information on frequency 2452 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.250000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.260000] cfg80211: Updating information on frequency 2457 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.270000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.280000] cfg80211: Updating information on frequency 2462 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.290000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.300000] cfg80211: Updating information on frequency 2467 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.310000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.320000] cfg80211: Updating information on frequency 2472 MHz  
-for a 20 MHz width channel with regulatory rule:
-[   23.330000] cfg80211: 2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A  
-mBi, 2000 mBm)
-[   23.340000] cfg80211: Disabling freq 2484 MHz
-[   23.350000] cfg80211: Regulatory domain changed to country: FI
-[   23.360000] cfg80211:   (start_freq - end_freq @ bandwidth),  
-(max_antenna_gain, max_eirp)
-[   23.370000] cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz),  
-(N/A, 2000 mBm)
-[   23.380000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),  
-(N/A, 2000 mBm)
-[   23.390000] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz),  
-(N/A, 2000 mBm)
-[   23.400000] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz),  
-(N/A, 2700 mBm)
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 72 ++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 48 insertions(+), 24 deletions(-)
 
-After which silence strikes. So maybe that signal average bug is not  
-related to this connection issue, but driver/device goes in to some  
-mixed up state because of disconnect/reconnect?
-
--Jussi
-
-Quoting Larry Finger <Larry.Finger@lwfinger.net>:
-
->
-> Thanks for the log and the signal average data. All of the BUGs come  
-> from a single debug statement in the source. I will delete that  
-> trace call.
->
-> Realtek has apparently stopped development on the mac80211-based  
-> driver. The latest version is dated 2011.02.10. The latest driver  
-> with Realtek's softmac stack is 2012.06.22. As the two drivers are  
-> totally different, porting the fixes from one to the other are quite  
-> difficult.
->
-> My plan is to try to improve rtl8192cu; however, if that does not  
-> work, I will pull it in favor of the version with Realtek's stack.  
-> It will, of course, need to be placed in staging. The downside is  
-> that a number of distros do not install drivers from staging, and  
-> all the mac80211 features will be lost. That is the worst case  
-> outcome.
->
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5ec9c02..3591c4c 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -760,8 +760,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 				 sdata->dev->addr_len);
+ 		spin_unlock_bh(&local->filter_lock);
+ 		netif_addr_unlock_bh(sdata->dev);
+-
+-		ieee80211_configure_filter(local);
+ 	}
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
+@@ -772,6 +770,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
+ 
+ 	if (sdata->wdev.cac_started) {
++		WARN_ON(local->suspended);
+ 		mutex_lock(&local->iflist_mtx);
+ 		ieee80211_vif_release_channel(sdata);
+ 		mutex_unlock(&local->iflist_mtx);
+@@ -822,14 +821,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+-			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+-		ieee80211_configure_filter(local);
+-		mutex_lock(&local->mtx);
+-		ieee80211_recalc_idle(local);
+-		mutex_unlock(&local->mtx);
+ 		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		/* relies on synchronize_rcu() below */
+@@ -859,27 +853,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+ 		skb_queue_purge(&sdata->skb_queue);
+-
+-		if (going_down)
+-			drv_remove_interface(local, sdata);
+ 	}
+ 
+ 	sdata->bss = NULL;
+ 
+-	ieee80211_recalc_ps(local, -1);
+-
+-	if (local->open_count == 0) {
+-		ieee80211_clear_tx_pending(local);
+-		ieee80211_stop_device(local);
+-
+-		/* no reconfiguring after stop! */
+-		hw_reconf_flags = 0;
+-	}
+-
+-	/* do after stop to avoid reconfiguring when we stop anyway */
+-	if (hw_reconf_flags)
+-		ieee80211_hw_config(local, hw_reconf_flags);
+-
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
+@@ -892,6 +869,53 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
++	if (local->open_count == 0)
++		ieee80211_clear_tx_pending(local);
++
++	/*
++	 * If the interface goes down while suspended, presumably because
++	 * the device was unplugged and that happens before our resume,
++	 * then the driver is already unconfigured and the remainder of
++	 * this function isn't needed.
++	 * XXX: what about WoWLAN? If the device has software state, e.g.
++	 *	memory allocated, it might expect teardown commands from
++	 *	mac80211 here?
++	 */
++	if (local->suspended) {
++		WARN_ON(local->wowlan);
++		WARN_ON(rtnl_dereference(local->monitor_sdata));
++		return;
++	}
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP_VLAN:
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (local->monitors == 0)
++			ieee80211_del_virtual_monitor(local);
++
++		mutex_lock(&local->mtx);
++		ieee80211_recalc_idle(local);
++		mutex_unlock(&local->mtx);
++		break;
++	default:
++		if (going_down)
++			drv_remove_interface(local, sdata);
++	}
++
++	ieee80211_recalc_ps(local, -1);
++
++	if (local->open_count == 0) {
++		ieee80211_stop_device(local);
++
++		/* no reconfiguring after stop! */
++		return;
++	}
++
++	/* do after stop to avoid reconfiguring when we stop anyway */
++	ieee80211_configure_filter(local);
++	ieee80211_hw_config(local, hw_reconf_flags);
++
+ 	if (local->monitors == local->open_count && local->monitors > 0)
+ 		ieee80211_add_virtual_monitor(local);
+ }
+-- 
+1.8.0
 
 
 
