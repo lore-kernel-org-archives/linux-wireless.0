@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:37850 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418Ab3CQV2h (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716Ab3C0OjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 17:28:37 -0400
-Received: by mail-wg0-f41.google.com with SMTP id ds1so1968664wgb.4
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Mar 2013 14:28:36 -0700 (PDT)
-Date: Sun, 17 Mar 2013 22:28:30 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [RFC 1/2] mac80211: Use a cfg80211_chan_def in
- ieee80211_hw_conf_chan
-Message-ID: <20130317212830.GB6886@gobelin> (sfid-20130317_222840_793008_1671707D)
-References: <1363552234-6752-1-git-send-email-karl.beldan@gmail.com>
- <1363552234-6752-2-git-send-email-karl.beldan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1363552234-6752-2-git-send-email-karl.beldan@gmail.com>
+	Wed, 27 Mar 2013 10:39:11 -0400
+Message-ID: <1364395136.8388.9.camel@jlt4.sipsolutions.net> (sfid-20130327_153917_997724_A503CD8B)
+Subject: Re: P2P support in brcmfmac
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"John W. Linville" <linville@redhat.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 27 Mar 2013 15:38:56 +0100
+In-Reply-To: <51530267.5020705@broadcom.com>
+References: <5152DD47.2080501@broadcom.com>
+	 <20130327122216.GA2146@tuxdriver.com>
+	 <1364387698.8388.1.camel@jlt4.sipsolutions.net>
+	 <20130327124422.GB2146@tuxdriver.com>
+	 <1364388675.8388.5.camel@jlt4.sipsolutions.net>
+	 <51530267.5020705@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 17, 2013 at 09:30:33PM +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> Drivers that don't use chanctxes cannot perform VHT association because
-> they still use a "backward compatibility" pair of {ieee80211_channel,
-> nl80211_channel_type} in ieee80211_conf and ieee80211_local.
-> (FIXME: this only changes mac80211_hwsim for the RFC)
-> 
-I forgot the monitor part (I thought I would not miss a part from what
-I've been using at work, sorry), anyways I'll wait for your feedback
-before adjusting that.
+On Wed, 2013-03-27 at 15:29 +0100, Arend van Spriel wrote:
 
- 
-Karl
+> > As I understand it, brcmfmac currently supports having a P2P device
+> > *netdev*, which is of (wireless) type STATION (presumably), which isn't
+> > something we want to support (well, I don't anyway, it's difficult to
+> > discover for applications).
+> 
+> It is a bit more subtle. After the merge window since 3.9-rc1 brcmfmac
+> supports to have a P2P device *wireless dev* WITH a netdev associated as
+> the old wpa_supplicant needed a network interface. 
+
+Oh, funky, I had no idea.
+
+> However, this
+> interface is only created when the driver is loaded with a module
+> parameter p2pon set to 1.
+
+You could just remove the module parameter then?
+
+> So brcmfmac announces P2P_DEVICE support in wiphy information. This will
+> cause wpa_supplicant (with P2P device patches) to create a
+> *wireless_dev* interface of P2P_DEVICE type.
+
+Right, but this wouldn't work because you don't support the interface
+creation, so it would really just be an attempt to create it?
+
+> The interim patches went in 3.9-rc1 so they end up in 3.9 without
+> nl80211 user-space support. I am now suggesting to add that nl80211
+> user-space support for 3.9 as well. As you indicated you do not consider
+> this as an exception to the bugfix rule, I will have to look what
+> happens when the new wpa_supplicant (with P2P device patches) tries to
+> use the 3.9-rc1 brcmfmac.
+
+Or you could just remove the module parameter *and* advertisting the
+P2P_DEVICE interface type, that would be a very small patch to "fix" the
+API by disabling it for that kernel version. OTOH, I'm not sure if
+that's a concern for you. For me, it wouldn't be a concern because we
+mostly use compat-wireless anyway, but your situation might be
+different.
+
+johannes
+
