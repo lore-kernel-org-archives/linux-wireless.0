@@ -1,142 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from anchor-post-1.mail.demon.net ([195.173.77.132]:49746 "EHLO
-	anchor-post-1.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754545Ab3CZTsY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 15:48:24 -0400
-Message-ID: <5151FB85.5080007@dpets.co.uk> (sfid-20130326_204833_478328_05AB6569)
-Date: Tue, 26 Mar 2013 19:48:21 +0000
-From: John Talbut <jt@dpets.co.uk>
+Received: from sycorax.lbl.gov ([128.3.11.121]:40337 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751615Ab3C0SCo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 14:02:44 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
+References: <87li993mug.fsf@sycorax.lbl.gov>
+	<1364390086.8388.7.camel@jlt4.sipsolutions.net>
+	<87r4j021ac.fsf@sycorax.lbl.gov>
+	<1364406085.8388.11.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Mar 2013 11:02:31 -0700
+In-Reply-To: <1364406085.8388.11.camel@jlt4.sipsolutions.net> (message from
+	Johannes Berg on Wed, 27 Mar 2013 18:41:25 +0100)
+Message-ID: <87ip4cg1qg.fsf@sycorax.lbl.gov> (sfid-20130327_190250_280564_CC29EFE8)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac in kernel driver on a Samsung NC110
-References: <51514F1B.1080207@dpets.co.uk> <5151639F.4010700@broadcom.com> <51516BC2.5010004@dpets.co.uk> <515173A4.7030607@broadcom.com> <515179C5.50406@dpets.co.uk> <51517E28.5000303@broadcom.com> <515182C6.5030305@dpets.co.uk> <51518682.7060503@broadcom.com> <515189C6.7070003@dpets.co.uk> <51518E14.3050500@broadcom.com> <CACna6ryjYroPdWoKhz25KUtURpSGDta0UvGeOLms9jy1tnw1Xg@mail.gmail.com> <5151EC49.9030109@dpets.co.uk> <5151F088.2040408@hauke-m.de>
-In-Reply-To: <5151F088.2040408@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26/03/13 19:01, Hauke Mehrtens wrote:
-> On 03/26/2013 07:43 PM, John Talbut wrote:
->> On 26/03/13 16:59, Rafał Miłecki wrote:
->>> 2013/3/26 Arend van Spriel<arend@broadcom.com>:
->>>> On 03/26/2013 12:43 PM, John Talbut wrote:
->>>>> On 26/03/13 11:29, Arend van Spriel wrote:
->>>>>> On 03/26/2013 12:13 PM, John Talbut wrote:
->>>>>>>
->>>>>>> On 26/03/13 10:53, Arend van Spriel wrote:
->>>>>>>> On 03/26/2013 11:34 AM, John Talbut wrote:
->>>>>>>>> Kernel log attached.
->>>>>>>>>
->>>>>>>>
->>>>>>>> Now this is weird. I do not see any BCMA log messages. Can you give
->>>>>>>> output of following command:
->>>>>>>>
->>>>>>>> $ lspci -n -s 1:0.0
->>>>>>>
->>>>>>> 01:00.0 0280: 14e4:4357 (rev 01)
->>>>>>
->>>>>> Ok, no problem there.
->>>>>>
->>>>>> digging further in sysfs. Can you execute the following commands:
->>>>>>
->>>>>> if it exists:
->>>>>> $ ls /sys/bus/bcma
->>>>>> $ ls /sys/bus/bcma/devices
->>>>>> $ ls /sys/bus/bcma/drivers
->>>>>>
->>>>>> if it exists also following:
->>>>>> $ ls -l /sys/bus/bcma/drivers/brcmsmac
->>>>>
->>>>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma
->>>>> devices  drivers  drivers_autoprobe  drivers_probe  uevent
->>>>> root@johnwtnc110:/usr/src/linux-source-3.8# ls /sys/bus/bcma/devices
->>>>
->>>> The fact that there are no devices detected under bcma is suspicious.
->>>> Adding bcma developer to the list. Maybe he knows about issues when
->>>> having bcma compiled in kernel image.
->>>
->>> Thanks Arend. Unfortunately I can't find archive of this thread, so I
->>> can see only quotations above.
->>>
->>> If there is /sys/bus/bcma/ directory, it means bcma had to be loaded
->>> (or just is built into the kernel). However if there are no "bcma"
->>> messages in the dmesg, it's probably because there isn't any device
->>> bcma (currently) handles.
->>>
->>> If you can it yourself: remove all 14e4:* devices and do "modprobe
->>> bcma". You will get /sys/bus/bcma/ without "bcma" messages in dmesg.
->>>
->>> 14e4:4357 is one of the devices handled by bcma, so there are two
->>> options:
->>> 1) It's some old kernel where we didn't have 14e4:4357 in bcma
->>> 2) There is another module that grabbed 14e4:4357 PCI device
->>>
->>> The first option can be verified with "modinfo bcma | grep alias" in
->>> case of bcma as a module. Not sure how to check that for bcma built
->>> in.
->>>
->>> The second option is even easier to verify, just use:
->>> lspci -d 14e4: -v
->>> and check for "Kernel driver in use: "
->>>
->> Thanks Rafał.
->>
->> I have everything built into the kernel which is compiled using the 3.8
->> kernel source from Debian, so not an old kernel.
->>
->> ls /sys/bus/bcma
->> devices  drivers  drivers_autoprobe  drivers_probe  uevent
->>
->> lspci -d 14e4: -v
->> 01:00.0 Network controller: Broadcom Corporation BCM43225 802.11b/g/n
->> (rev 01)
->>     Subsystem: Wistron NeWeb Corp. Device 04db
->>     Flags: bus master, fast devsel, latency 0, IRQ 11
->>     Memory at dfe00000 (64-bit, non-prefetchable) [size=16K]
->>     Capabilities: [40] Power Management version 3
->>     Capabilities: [58] Vendor Specific Information: Len=78 <?>
->>     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
->>     Capabilities: [d0] Express Endpoint, MSI 00
->>     Capabilities: [100] Advanced Error Reporting
->>     Capabilities: [13c] Virtual Channel
->>     Capabilities: [160] Device Serial Number 00-00-b1-ff-ff-29-00-1b
->>     Capabilities: [16c] Power Budgeting <?>
->>
->> John
-> Hi,
-> 
-> Could you provide the output of "modinfo bcma | grep alias" as Rafał asked.
-> 
-> The Debian kernel 3.2 contains some patch removing all PCI IDs expect
-> 14e4:4331 from bcma, if this is still in your kernel that's the problem.
-> 
-> If this is the case please try this:
-> 
-> echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
-> 
-> Hauke
-> 
-Hi
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-modinfo bcma | grep alias
-ERROR: Module bcma not found.
+> On Wed, 2013-03-27 at 10:35 -0700, Alex Romosan wrote:
+>
+>> ...i did a bisect using the above and it came up with this:
+>> 
+>> 89afe614c0c737fd40eda1f8c8ef686246cf3cb6 is the first bad commit
+>> commit 89afe614c0c737fd40eda1f8c8ef686246cf3cb6
+>> Author: Johannes Berg <johannes.berg@intel.com>
+>> Date:   Wed Feb 13 15:39:57 2013 +0100
+>> 
+>>     mac80211: fix auth/assoc timeout handling
+>> 
+>> which makes a lot more sense. i'll try reverting it to see if it fixes
+>> the problem, or i can try patches if you have any.
+>
+> Humm, yes, that makes more sense. That commit fixed a bug in another
+> commit though, I'm surprised you ended up there?! Curious ... I'll
+> check over the commit and see if I can find anything wrong with it.
 
-echo "14e4 4357" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
-bash: /sys/bus/pci/drivers/bcma-pci-bridge/new_id: No such file or directory
+i just reverted that commit on top of 3.9-rc4 and now i can reconnect
+when resuming from suspend. so whatever bug that commit fixed, it also
+introduced a new one.
 
-Because I am not using modules?
+--alex--
 
-I found a reference to this patch:
-http://git.grml.org/?p=grml-kernel.git;a=blobdiff;f=linux-3/debian/patches/debian/bcma-Do-not-claim-PCI-device-IDs-also-claimed-by-brc.patch;fp=linux-3/debian/patches/debian/bcma-Do-not-claim-PCI-device-IDs-also-claimed-by-brc.patch;h=0000000000000000000000000000000000000000;hp=f8fd94163e10ff9fa3803d6f7aaae7adb3b2c0f5;hb=dfd70ee5283216f7635b367327a9389b10030d87;hpb=76b7ce681bb74b69aea9b155747c47ec86d4e6c5
-
-This appears to refer to /drivers/bcma/host_pci.c, but the patch does
-not appear to be applied to that file in the Debian 3.8 kernel source,
-there are lines including:
-{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
-in the 3.8 version of the file.
-
-John
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
