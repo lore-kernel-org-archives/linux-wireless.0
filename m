@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:36977 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758038Ab3CYPa0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48277 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360Ab3C0Pao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 11:30:26 -0400
-Received: by mail-ee0-f47.google.com with SMTP id t10so302666eei.34
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2013 08:30:25 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
+	Wed, 27 Mar 2013 11:30:44 -0400
+Date: Wed, 27 Mar 2013 11:28:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [PATCH 2/3] Let drivers not supporting channel contexts use VHT
-Date: Mon, 25 Mar 2013 16:26:58 +0100
-Message-Id: <1364225219-18473-3-git-send-email-karl.beldan@gmail.com> (sfid-20130325_163033_253611_969386E6)
-In-Reply-To: <1364225219-18473-1-git-send-email-karl.beldan@gmail.com>
-References: <1364225219-18473-1-git-send-email-karl.beldan@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-03-26
+Message-ID: <20130327152850.GC1868@tuxdriver.com> (sfid-20130327_163047_769095_7F478E3B)
+References: <1364290290.8319.6.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1364290290.8319.6.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Tue, Mar 26, 2013 at 10:31:30AM +0100, Johannes Berg wrote:
+> Hi John,
+> 
+> It looks like I forgot to send this pull-request earlier ...
+> 
+> I have three little fixes to the driver from Emmanuel. One addresses a
+> small bug Ben Hutchings found during the stable review process and two
+> address some warnings in the driver when RF-Kill is asserted.
+> 
+> Please pull.
+> 
+> Thanks,
+> johannes
+> 
+> 
+> The following changes since commit 2470b36e84a2e680d7a7e3809cbceae5bfae3606:
+> 
+>   iwlwifi: mvm: don't warn on normal BAR sending (2013-03-04 13:39:02 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to 2d5d50ee596361566f7f84300117cba7d7672bc5:
+> 
+>   iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
 
-It is possible since the global hw config and local switched to
-cfg80211_chan_def.
+Pulling now...
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/main.c |   14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 25a87f4..4b2e654 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -838,22 +838,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (supp_ht)
- 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
- 
--	if (supp_vht) {
-+	if (supp_vht)
- 		local->scan_ies_len +=
- 			2 + sizeof(struct ieee80211_vht_cap);
- 
--		/*
--		 * (for now at least), drivers wanting to use VHT must
--		 * support channel contexts, as they contain all the
--		 * necessary VHT information and the global hw config
--		 * doesn't (yet)
--		 */
--		if (WARN_ON(!local->use_chanctx)) {
--			result = -EINVAL;
--			goto fail_wiphy_register;
--		}
--	}
--
- 	if (!local->ops->hw_scan) {
- 		/* For hw_scan, driver needs to set these up. */
- 		local->hw.wiphy->max_scan_ssids = 4;
 -- 
-1.7.10.GIT
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
