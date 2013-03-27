@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:52849 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754898Ab3CIBxS (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:34896 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791Ab3C0Qdk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 20:53:18 -0500
-Received: by mail-ob0-f169.google.com with SMTP id ta14so1834544obb.28
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2013 17:53:18 -0800 (PST)
-Message-ID: <513A960B.2020304@lwfinger.net> (sfid-20130309_025330_764993_9856353B)
-Date: Fri, 08 Mar 2013 19:53:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 27 Mar 2013 12:33:40 -0400
+Received: by mail-we0-f176.google.com with SMTP id s43so3183344wey.35
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2013 09:33:39 -0700 (PDT)
 MIME-Version: 1.0
-To: Vincent Brillault <gentoo@lerya.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
-References: <20130307192920.GB8668@Fea.lerya.net> <20130308215833.GA2829@Fea.lerya.net>
-In-Reply-To: <20130308215833.GA2829@Fea.lerya.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAMgrJ3bENvfezMSge9_oOJiSsoMpMVFGk+QaSgsHSDASczgn0A@mail.gmail.com>
+References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
+	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
+	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
+	<201303251712.19808.chunkeey@googlemail.com>
+	<CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
+	<CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
+	<CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
+	<CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
+	<5151D752.3080303@candelatech.com>
+	<CAMgrJ3b7yZru5P-bYpmmfjYCoSJqUhAMrTzfKnKLPN3CgdeJ4w@mail.gmail.com>
+	<CAMgrJ3bENvfezMSge9_oOJiSsoMpMVFGk+QaSgsHSDASczgn0A@mail.gmail.com>
+Date: Wed, 27 Mar 2013 09:33:38 -0700
+Message-ID: <CAJ-Vmomp2gS34jwWuh7046Y+6mBGCpirG6nk-E37enE3mSh5GA@mail.gmail.com> (sfid-20130327_173353_667997_BB38B0AA)
+Subject: Re: [ath9k-devel] Auth Packet TX Delay
+From: Adrian Chadd <adrian@freebsd.org>
+To: Robert Shade <robert.shade@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Marco Fonseca <marco@tampabay.rr.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2013 03:58 PM, Vincent Brillault wrote:
-> Hi again,
+Good catch! Can you add that to the bugzilla bug please?
+
+
+
+Adrian
+
+
+On 26 March 2013 20:11, Robert Shade <robert.shade@gmail.com> wrote:
+> Think I found it:  In ath_reset_internal, before we reset, we call
+> ath_prepare_reset, which calls ath9k_hw_disable_interrupts.  If the
+> channel change fails, we never call ath_complete_reset, which calls
+> ath9k_hw_enable_interrupts.
 >
-> I forgot to mention that those warning from mac80211 (the associated
-> comments in the code are 'RC is busted' or 'uh huh?') seems to somehow
-> disable completely the rate control: 'iw wlan0 link' gives 'tx bitrate:'
-> with nothing after. Furthermore, I loose the network from time to time
-> on reason 7. I went back to kernel 3.8.0: if there is enough traffic
-> continuously, the link is stable but I loose it randomly when there is
-> no traffic.
+> ath9k_hw_{enable|disable}_interrupts calls definitely needs to be
+> balanced.  Looking at an old log, IER never gets re-enabled after the
+> channel set failure.
 >
-> I made more debug on the 3.8.0 kernel, the first warning correspond to
-> the following test:
-> (info->control.rates[i].idx) 15 >= (sband->n_bitrates) 12
+> Any suggestions on the proper cleanup?  Could we just call
+> ath_complete_reset anyway?  Some sort of special handling?
 >
-> Please tell me what test I can make to find the source of this problem.
-
- From what I remember, that problem has been fixed. The correct code should be 
-in 3.8.2 and in 3.9-rc1.
-
-The firmware in all the cards that use the rtlwifi family of drivers its own 
-rate control. The drivers do not pay any attention to any rate-setting calls 
-from user space.
-
-I also see reason 7 disconnects; however, with NetworkManager, the network is 
-reconnects. If you are using ifup or similar method, it probably does not reconnect.
-
-Larry
-
+> On Tue, Mar 26, 2013 at 8:55 PM, Robert Shade <robert.shade@gmail.com> wrote:
+>> On Tue, Mar 26, 2013 at 1:13 PM, Ben Greear <greearb@candelatech.com> wrote:
+>>> Can you cat out the /debug/ieee80211/wiphy0/ath9k/xmit
+>>> file when it gets in this hung state?  I saw issues where
+>>> the xmit queues got hung in our AR9380 NIC systems and
+>>> ended up adding an ugly bit of cleanup/reset logic to
+>>> get them working again...
+>>
+>> Dumps are attached on to the bug.  I remember being hopeful when
+>> reading your thread that we stumbled on the same issue, but the
+>> symptoms don't look the same to me because pending-frames goes back to
+>> 0 in my case.
