@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36559 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab3C1FVL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50963 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595Ab3C0Raq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 01:21:11 -0400
-Date: Thu, 28 Mar 2013 01:21:08 -0400 (EDT)
-Message-Id: <20130328.012108.961738246524996742.davem@davemloft.net> (sfid-20130328_062128_799486_8D8CF4EE)
-To: horms@verge.net.au
-Cc: jesse@nicira.com, isdn@linux-pingi.de, linville@tuxdriver.com,
-	johannes@sipsolutions.net, bart.de.schuymer@pandora.be,
-	stephen@networkplumber.org, kaber@trash.net, marcel@holtmann.org,
-	gustavo@padovan.org, johan.hedberg@gmail.com,
-	linux-bluetooth@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-	linux1394-devel@lists.sourceforge.net, linux-media@vger.kernel.org,
-	netdev@vger.kernel.org, dev@openvswitch.org
-Subject: Re: [PATCH v2] net: add ETH_P_802_3_MIN
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1364445505-9745-1-git-send-email-horms@verge.net.au>
-References: <1364445505-9745-1-git-send-email-horms@verge.net.au>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 27 Mar 2013 13:30:46 -0400
+Date: Wed, 27 Mar 2013 13:17:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: John Crispin <blogic@openwrt.org>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: make the driver build for Ralink SoC
+Message-ID: <20130327171713.GD1868@tuxdriver.com> (sfid-20130327_183050_931263_73FD5652)
+References: <1363808915-14278-1-git-send-email-blogic@openwrt.org>
+ <3D4497AD-8992-47D6-BCF2-5D738B6AC9B4@gmail.com>
+ <514AB846.9090407@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <514AB846.9090407@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Simon Horman <horms@verge.net.au>
-Date: Thu, 28 Mar 2013 13:38:25 +0900
+On Thu, Mar 21, 2013 at 08:35:34AM +0100, John Crispin wrote:
+> 
+> >>Fix up the dependencies to make the driver actually compile on Ralink WiSoC.
+> >>
+> >>Signed-off-by: John Crispin<blogic@openwrt.org>
+> >I don't think this is a proper way to handle this. rt2x00pci.c was only meant to be used for PCI devices; introducing the use of CONFIG_PCI in that file doesn't seem appropriate to me.
+> >
+> >Unfortunately I am away from my home computer, so I can't look at this properly until the weekend.
+> >
+> 
+> Indeed not the cleanest patch ... after changing the config symbols
+> I realized that that is not enough to make the driver actually work
+> 
+> It turns out that inside openwrt the compat-wireless package sets
+> CONFIG_RT2800PCI=m to make the driver build and then applies the
+> #ifdef'ery to rt2880pci.c
+> 
+> I will try to find the time today or tomorrow to have a closer look at this
 
-> Add a new constant ETH_P_802_3_MIN, the minimum ethernet type for
-> an 802.3 frame. Frames with a lower value in the ethernet type field
-> are Ethernet II.
-> 
-> Also update all the users of this value that David Miller and
-> I could find to use the new constant.
-> 
-> Also correct a bug in util.c. The comparison with ETH_P_802_3_MIN
-> should be >= not >.
-> 
-> As suggested by Jesse Gross.
-> 
-> Compile tested only.
-> 
-> Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
-> Acked-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-> Signed-off-by: Simon Horman <horms@verge.net.au>
+Any more word on this?
 
-Looks great, applied, thanks Simon.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
