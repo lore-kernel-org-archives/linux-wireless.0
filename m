@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20103 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755361Ab3CMMNL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752347Ab3C0RzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:11 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 00/14] wil6210 patch set for 3.10
-Date: Wed, 13 Mar 2013 14:12:37 +0200
-Message-ID: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131317_416468_AB209A61)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 27 Mar 2013 13:55:09 -0400
+Message-ID: <1364406895.8388.14.camel@jlt4.sipsolutions.net> (sfid-20130327_185514_692251_FA5A6140)
+Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 27 Mar 2013 18:54:55 +0100
+In-Reply-To: <87mwto20q1.fsf@sycorax.lbl.gov>
+References: <87li993mug.fsf@sycorax.lbl.gov>
+	 <1364406146.8388.12.camel@jlt4.sipsolutions.net>
+	 <87mwto20q1.fsf@sycorax.lbl.gov>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is set of patches for wil6210.
+On Wed, 2013-03-27 at 10:48 -0700, Alex Romosan wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Tue, 2013-03-26 at 13:52 -0700, Alex Romosan wrote:
+> >> since v3.9-rc1 i have been unable to reconnect to my access point. the
+> >> access point is a netgear n600 and the my card is a Centrino Advanced-N
+> >> 6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
+> >> boot up the laptop the connection is established but if i bring down the
+> >> network with ifdown then i cannot reconnect. this is what i see in the
+> >> logs:
+> >> 
+> >>  iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> >>  iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+> >>  wlan0: authenticate with xx:xx:xx:xx:xx:xx
+> >>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+> >>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+> >>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+> >>  wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
+> >
+> > Btw, since we're looking at the timeout handling -- do you have a
+> > version of this log with timestamps on each line?
+> 
+> i do but the timestamp is the same on all the lines:
+> 
+> Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+> Mar 27 09:43:16 trinculo kernel: wlan0: authenticate with xx:xx:xx:xx:xx:xx
+> Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+> Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+> Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+> Mar 27 09:43:16 trinculo kernel: wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
 
-New features:
-- shortened SW reset procedure
-- temperature measurement
-- updated firmware API
+Ok, well, that doesn't tell us all that much since you don't have
+sub-second timestamps. Maybe you can enable printk timestamps:
 
-Rest is bug fixes and clean-ups.
+echo Y > /sys/module/printk/parameters/time
 
-Vladimir Kondratiev (14):
-  wil6210: Remove local implementation of dynamic hexdump
-  wil6210: handle linkup/linkdown WMI events
-  wil6210: handle WMI_BA_STATUS_EVENTID
-  wil6210: do not set IE's for beacon
-  wil6210: Fix garbage sent to the FW with wmi_set_ie()
-  wil6210: refactor connect_worker
-  wil6210: use cfg80211_inform_bss_frame()
-  wil6210: report all received mgmt frames
-  wil6210: fix FW error notification
-  wil6210: use WLAN_CAPABILITY_DMG_TYPE_MASK
-  wil6210: headers clean-up
-  wil6210: new SW reset
-  wil6210: sync with new firmware
-  wil6210: temperature measurement
-
- drivers/net/wireless/ath/wil6210/cfg80211.c    |   31 +-
- drivers/net/wireless/ath/wil6210/dbg_hexdump.h |   20 --
- drivers/net/wireless/ath/wil6210/debugfs.c     |   44 +++
- drivers/net/wireless/ath/wil6210/interrupt.c   |   25 +-
- drivers/net/wireless/ath/wil6210/main.c        |   60 ++--
- drivers/net/wireless/ath/wil6210/netdev.c      |    3 -
- drivers/net/wireless/ath/wil6210/pcie_bus.c    |    3 -
- drivers/net/wireless/ath/wil6210/txrx.c        |    5 +-
- drivers/net/wireless/ath/wil6210/wil6210.h     |   17 +-
- drivers/net/wireless/ath/wil6210/wmi.c         |  154 +++++++---
- drivers/net/wireless/ath/wil6210/wmi.h         |  363 +++++++++++++++++-------
- 11 files changed, 490 insertions(+), 235 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/wil6210/dbg_hexdump.h
-
--- 
-1.7.10.4
+johannes
 
