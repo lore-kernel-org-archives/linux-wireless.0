@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31102 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab3CAFWM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39911 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249Ab3C0Qve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Mar 2013 00:22:12 -0500
-Date: Fri, 1 Mar 2013 08:20:21 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Thierry Escande <thierry.escande@linux.intel.com>,
-	Szymon Janc <szymon.janc@tieto.com>,
-	linux-wireless@vger.kernel.org, linux-nfc@ml01.01.org,
-	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] NFC: llcp: cleanup underflow check
-Message-ID: <20130301052021.GB2669@longonot.mountain> (sfid-20130301_062222_833559_2C8A1301)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2148581.S8tzak9aE2@uw000953>
+	Wed, 27 Mar 2013 12:51:34 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/3] mac80211: don't start new netdev queues if driver stopped
+Date: Wed, 27 Mar 2013 17:51:22 +0100
+Message-Id: <1364403082-20722-4-git-send-email-johannes@sipsolutions.net> (sfid-20130327_175137_611172_2F25F0C3)
+In-Reply-To: <1364403082-20722-1-git-send-email-johannes@sipsolutions.net>
+References: <1364403082-20722-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Szymon Janc suggested I should move the lower bound check into the
-caller and make it match the check for NFC_MAX_GT_LEN.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+If a new netdev (e.g. an AP VLAN) is created while the driver
+has queues stopped, the new netdev queues will be started even
+though they shouldn't. This will lead to frames accumulating
+on the internal mac80211 pending queues instead of properly
+being held on the netdev queues.
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 87a6417..e50dd2c 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -74,6 +74,7 @@ struct nfc_ops {
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 273d851..79f3758 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -639,8 +639,28 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
  
- #define NFC_TARGET_IDX_ANY -1
- #define NFC_MAX_GT_LEN 48
-+#define NFC_MIN_GT_LEN 3
- #define NFC_ATR_RES_GT_OFFSET 15
+ 	ieee80211_recalc_ps(local, -1);
  
- struct nfc_target {
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 6ceee8e..e2c3b6e 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -450,7 +450,7 @@ int nfc_set_remote_general_bytes(struct nfc_dev *dev, u8 *gb, u8 gb_len)
- {
- 	pr_debug("dev_name=%s gb_len=%d\n", dev_name(&dev->dev), gb_len);
+-	if (dev)
+-		netif_tx_start_all_queues(dev);
++	if (dev) {
++		unsigned long flags;
++		int n_acs = IEEE80211_NUM_ACS;
++		int ac;
++
++		if (local->hw.queues < IEEE80211_NUM_ACS)
++			n_acs = 1;
++
++		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++		if (sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE ||
++		    (local->queue_stop_reasons[sdata->vif.cab_queue] == 0 &&
++		     skb_queue_empty(&local->pending[sdata->vif.cab_queue]))) {
++			for (ac = 0; ac < n_acs; ac++) {
++				int ac_queue = sdata->vif.hw_queue[ac];
++
++				if (local->queue_stop_reasons[ac_queue] == 0 &&
++				    skb_queue_empty(&local->pending[ac_queue]))
++					netif_start_subqueue(dev, ac);
++			}
++		}
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	}
  
--	if (gb_len > NFC_MAX_GT_LEN)
-+	if (gb_len < NFC_MIN_GT_LEN || gb_len > NFC_MAX_GT_LEN)
- 		return -EINVAL;
- 
- 	return nfc_llcp_set_remote_gb(dev, gb, gb_len);
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 7f8266d..7be27fb 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -547,8 +547,6 @@ int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len)
- 		pr_err("No LLCP device\n");
- 		return -ENODEV;
- 	}
--	if (gb_len < 3)
--		return -EINVAL;
- 
- 	memset(local->remote_gb, 0, NFC_MAX_GT_LEN);
- 	memcpy(local->remote_gb, gb, gb_len);
+ 	return 0;
+  err_del_interface:
+-- 
+1.8.0
+
