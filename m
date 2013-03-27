@@ -1,68 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:34596 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932589Ab3CEB2N (ORCPT
+Received: from mail-ia0-f182.google.com ([209.85.210.182]:64017 "EHLO
+	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab3C0Pc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 20:28:13 -0500
-Message-ID: <51354A28.3040607@lwfinger.net> (sfid-20130305_022846_649907_EA1D5F6F)
-Date: Mon, 04 Mar 2013 19:28:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 27 Mar 2013 11:32:29 -0400
 MIME-Version: 1.0
-To: shuah.khan@hp.com
-CC: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	linville@tuxdriver.com, seth.forshee@canonical.com,
-	pieterpg@broadcom.com, linux-wireless@vger.kernel.org,
+In-Reply-To: <20130327145654.GA1868@tuxdriver.com>
+References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
+	<51471B85.5060404@broadcom.com>
+	<CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
+	<20130325185821.GB17454@tuxdriver.com>
+	<51516AD4.8080306@broadcom.com>
+	<20130327145654.GA1868@tuxdriver.com>
+Date: Wed, 27 Mar 2013 16:32:28 +0100
+Message-ID: <CANq1E4TCyhpBS3XspW53jp1WxjU+i8iQwLpyy0OCL=DaHqQF+w@mail.gmail.com> (sfid-20130327_163256_728780_FC842278)
+Subject: Re: [PATCH regression/bisected] Revert "brcmsmac: support 4313iPA"
+From: David Herrmann <dh.herrmann@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Piotr Haber <phaber@broadcom.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
 	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
-Subject: Re: [PATCH] net/wireless/brcm80211: remove PCI_BUS define from defs.h
- to fix warnings
-References: <1362445374.4591.28.camel@lorien2>
-In-Reply-To: <1362445374.4591.28.camel@lorien2>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/04/2013 07:02 PM, Shuah Khan wrote:
-> PCI_BUS defined in defs.h results in warnings from all brcm80211 source files
-> including defs.h. This define is not used in brcm80211. Removing this define
-> fixes the warning.
->
-> In file included from drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:35:0:
-> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-> include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
->    CC [M]  drivers/net/wireless/b43legacy/dma.o
->    CC [M]  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.o
->    CC [M]  drivers/net/wireless/b43legacy/pio.o
-> In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
-> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-> include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
-> In file included from drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:29:0:
-> drivers/net/wireless/brcm80211/include/defs.h:23:0: warning: "PCI_BUS" redefined [enabled by default]
-> include/uapi/linux/pci.h:36:0: note: this is the location of the previous definition
+Hi John
 
-Strange, I do not see PCI_BUS defined anywhere in the include/ branch in either 
-3.8 or 3.9. In addition, I don't get these warnings. What is different in your 
-system?
+On Wed, Mar 27, 2013 at 3:56 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Tue, Mar 26, 2013 at 10:31:00AM +0100, Piotr Haber wrote:
+>> On 03/25/13 19:58, John W. Linville wrote:
+>> > On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
+>> >> Hi Piotr
+>> >>
+>> >> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
+>> >>> On 03/18/13 11:45, David Herrmann wrote:
+>> >>>> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
+>> >>>> wireless AP reconnection on: (14e4:4727)
+>> >>>>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
+>> >>>>
+>> >>>> Any attempt to reconnect to an AP results in timeouts no matter how near to the
+>> >>>> AP I am:
+>> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+>> >>>> ---
+>> >>>> Hi
+>> >>>>
+>> >>>> I tried coming up with a fix instead of reverting this commit, but the commit is
+>> >>>> way to big for me to understand what's going on. Sorry.
+>> >>>>
+>> >>>> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
+>> >>>> one time, but any further attempt resulted in:
+>> >>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
+>> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
+>> >>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
+>> >>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
+>> >>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
+>> >>>>
+>> >>>> Even sitting right next to the AP didn't help so I started bisecting and it
+>> >>>> turned out to be:
+>> >>>>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
+>> >>>> Please revert it.
+>> >>>>
+>> >>>> Thanks
+>> >>>> David
+>> >>>>
+>> >>> Hi,
+>> >>> unfortunately this is not a first report of this patch breaking 4313 for some users.
+>> >>> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
+>> >>> successfully in our test setup.
+>> >>> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
+>> >>> <debugfs_mount>/brcmsmac/bcma0:0/hardware
+>> >>
+>> >> Hi
+>> >>
+>> >> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
+>> >> board vendor: 185f
+>> >> board type: 51a
+>> >> board revision: 1408
+>> >> board flags: 8402a01
+>> >> board flags2: 880
+>> >> firmware revision: 262032b
+>> >>
+>> >> I can also try partial reverts of that commit, but I really don't know
+>> >> which parts might be important.
+>> >
+>> > Are we going to see a fix for this (very) soon?  Or should I just go
+>> > ahead and revert this patch?
+>> >
+>> I cannot reproduce the issue on a set of devices we have here (3 different 4313 ePA models).
+>> Some of the devices that are reported to be broken are being shipped to us.
+>> So I would say we need around 2 weeks at least to resolve this (if we reproduce the problem and find
+>> a fix).
+>> Not sure this is soon enough.
+>> If not please go ahead an revert the patch.
+>
+> I am reverting the patch.
 
-Larry
+Can you CC stable? Otherwise I will try to sent it to them after you applied it.
 
->
-> Signed-off-by: Shuah Khan <shuah.khan@hp.com>
-> ---
->   drivers/net/wireless/brcm80211/include/defs.h |    1 -
->   1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/include/defs.h b/drivers/net/wireless/brcm80211/include/defs.h
-> index fb7cbcf..3608436 100644
-> --- a/drivers/net/wireless/brcm80211/include/defs.h
-> +++ b/drivers/net/wireless/brcm80211/include/defs.h
-> @@ -20,7 +20,6 @@
->   #include <linux/types.h>
->
->   #define	SI_BUS			0
-> -#define	PCI_BUS			1
->   #define	PCMCIA_BUS		2
->   #define SDIO_BUS		3
->   #define JTAG_BUS		4
->
-
+Thanks
+David
