@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42164 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48055 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758894Ab3CYUpt (ORCPT
+	with ESMTP id S1751192Ab3C0PPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 16:45:49 -0400
-Date: Mon, 25 Mar 2013 16:40:25 -0400
+	Wed, 27 Mar 2013 11:15:46 -0400
+Date: Wed, 27 Mar 2013 11:04:28 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2013-03-21
-Message-ID: <20130325204025.GF17454@tuxdriver.com> (sfid-20130325_214556_624673_5ADFB5BA)
-References: <20130321222408.GA8890@joana>
+To: Robert Shade <robert.shade@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: Show actual timeout value in failed calibration
+ messages.
+Message-ID: <20130327150428.GB1868@tuxdriver.com> (sfid-20130327_161549_464434_B64CA2DE)
+References: <CAMgrJ3YYZuR2oN9p4jMXvEd22aU+O69Bv-M5uOEO-FUZkdf_MA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130321222408.GA8890@joana>
+In-Reply-To: <CAMgrJ3YYZuR2oN9p4jMXvEd22aU+O69Bv-M5uOEO-FUZkdf_MA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 21, 2013 at 07:24:08PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> This is our first batch of patches for 3.10. The biggest changes of this pull
-> request are from Johan Hedberg, he implemented a HCI request framework to make
-> life easier when we have to send many HCI commands and a block and wait for
-> all of the to finish, we were able to fix a few issues in stack with the
-> introduction of this framework.
-> 
-> Other than that Dean Jenkins did a good work cleaning the RFCOMM code, the
-> refcnt infrastructure was removed and now we use NULL pointer checks to know
-> when a object was freed or not. That code was buggy and now it looks a way
-> better.
-> 
-> The rest of changes are clean ups, fixes and small improvements all over the
-> Bluetooth subsystem. 
-> 
-> Please pull, or let me know of any issues! Thanks.
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit 7da060c1c01b103d181dba39bce9bd141a945f99:
-> 
->   mwifiex: add WOWLAN support (2013-03-06 16:29:17 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-> 
-> for you to fetch changes up to 0227c7b56959cd8f5edd20b6a47db86fa553e91a:
-> 
->   Bluetooth: fix error return code in rfcomm_add_listener() (2013-03-20 14:17:52 -0300)
+Missing a Signed-off-by line...
 
-Pulling now...
+On Sun, Mar 24, 2013 at 02:25:02PM -0400, Robert Shade wrote:
+> The messages are currently hard coding "1ms", which does not match
+> the actual timeout being used.
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    9 ++++++---
+>  drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ++-
+>  2 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> index c55e5bb..9f58974 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> @@ -731,7 +731,8 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah,
+> struct ath9k_channel *chan)
+>  		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+>  				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
+>  			ath_dbg(common, CALIBRATE,
+> -				"offset calibration failed to complete in 1ms; noisy environment?\n");
+> +				"offset calibration failed to complete in %d ms; noisy environment?\n",
+> +				AH_WAIT_TIMEOUT / 1000);
+>  			return false;
+>  		}
+>  		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
+> @@ -745,7 +746,8 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah,
+> struct ath9k_channel *chan)
+>  	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+>  			  0, AH_WAIT_TIMEOUT)) {
+>  		ath_dbg(common, CALIBRATE,
+> -			"offset calibration failed to complete in 1ms; noisy environment?\n");
+> +			"offset calibration failed to complete in %d ms; noisy environment?\n",
+> +			AH_WAIT_TIMEOUT / 1000);
+>  		return false;
+>  	}
+> 
+> @@ -841,7 +843,8 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah,
+> struct ath9k_channel *chan)
+>  				   AR_PHY_AGC_CONTROL_CAL,
+>  				   0, AH_WAIT_TIMEOUT)) {
+>  			ath_dbg(common, CALIBRATE,
+> -				"offset calibration failed to complete in 1ms; noisy environment?\n");
+> +				"offset calibration failed to complete in %d ms; noisy environment?\n",
+> +				AH_WAIT_TIMEOUT / 1000);
+>  			return false;
+>  		}
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> index f76c3ca..639ba7d 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> @@ -1126,7 +1126,8 @@ skip_tx_iqcal:
+>  			ar9003_hw_rtt_disable(ah);
+> 
+>  		ath_dbg(common, CALIBRATE,
+> -			"offset calibration failed to complete in 1ms; noisy environment?\n");
+> +			"offset calibration failed to complete in %d ms; noisy environment?\n",
+> +			AH_WAIT_TIMEOUT / 1000);
+>  		return false;
+>  	}
+> 
+> -- 
+> 1.7.1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
 John W. Linville		Someday the world will need a hero, and you
