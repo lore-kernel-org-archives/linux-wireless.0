@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40268 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:40027 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753906Ab3C0TMD (ORCPT
+	with ESMTP id S1754044Ab3C0Rmc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 15:12:03 -0400
-Message-ID: <1364411509.8388.20.camel@jlt4.sipsolutions.net> (sfid-20130327_201220_002011_E6BB49A7)
+	Wed, 27 Mar 2013 13:42:32 -0400
+Message-ID: <1364406146.8388.12.camel@jlt4.sipsolutions.net> (sfid-20130327_184238_267229_1B706DE4)
 Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 27 Mar 2013 20:11:49 +0100
-In-Reply-To: <87txnwacdw.fsf@sycorax.lbl.gov>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 27 Mar 2013 18:42:26 +0100
+In-Reply-To: <87li993mug.fsf@sycorax.lbl.gov> (sfid-20130326_215912_863066_7A8A33F1)
 References: <87li993mug.fsf@sycorax.lbl.gov>
-	 <1364390086.8388.7.camel@jlt4.sipsolutions.net>
-	 <87r4j021ac.fsf@sycorax.lbl.gov>
-	 <1364406085.8388.11.camel@jlt4.sipsolutions.net>
-	 <87ip4cg1qg.fsf@sycorax.lbl.gov>
-	 <1364410962.8388.19.camel@jlt4.sipsolutions.net>
-	 <87txnwacdw.fsf@sycorax.lbl.gov>
+	 (sfid-20130326_215912_863066_7A8A33F1)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-27 at 12:08 -0700, Alex Romosan wrote:
-
-> > Can you enable iwlwifi debugging and set the iwlwifi module parameter
-> > debug=0x40000000 ? I have a feeling you'll see something like
-> > "PASSIVE_NO_RX" in there.
+On Tue, 2013-03-26 at 13:52 -0700, Alex Romosan wrote:
+> since v3.9-rc1 i have been unable to reconnect to my access point. the
+> access point is a netgear n600 and the my card is a Centrino Advanced-N
+> 6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
+> boot up the laptop the connection is established but if i bring down the
+> network with ifdown then i cannot reconnect. this is what i see in the
+> logs:
 > 
-> i'll do it and let you know. i have iwlwifi compiled in the kernel, how
-> do i specify it at boot time?
+>  iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+>  iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+>  wlan0: authenticate with xx:xx:xx:xx:xx:xx
+>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+>  wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
 
-Oh, you can either specify iwlwifi.debug=0x40000000 or just do
-
-echo 0x40000000 > /sys/module/iwlwifi/parameters/debug
+Btw, since we're looking at the timeout handling -- do you have a
+version of this log with timestamps on each line?
 
 johannes
 
