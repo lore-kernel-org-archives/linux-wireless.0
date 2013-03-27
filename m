@@ -1,46 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:41096 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755425Ab3C2Nq3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39400 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049Ab3C0NkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Mar 2013 09:46:29 -0400
-Received: by mail-qa0-f42.google.com with SMTP id bv4so2059938qab.8
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2013 06:46:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DCBEBB7@SC-VEXCH1.marvell.com>
-References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
-	<CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com>
-	<CAMLZHHR+OCQd_2J8NkmK0CND9vo6VaT73L+rJKJRk7bUknh7Qw@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9D9C1608@SC-VEXCH1.marvell.com>
-	<CAMLZHHQyTDHD8q=Q-edSew+KnpaGWOaVwxiK_fjABG9ZC9g-Qg@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9D9C2199@SC-VEXCH1.marvell.com>
-	<CAMLZHHQYB8wYEq1gppNEMiV0BPfM3qKtujR4=4u1jVww-N6z5w@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9DAD3AE4@SC-VEXCH1.marvell.com>
-	<477F20668A386D41ADCC57781B1F70430D9DAD430D@SC-VEXCH1.marvell.com>
-	<CAMLZHHRmyftv4sz+jmozJoAjvRTP-4DF-59C6N22R7tccCJ5WQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9DCBEBB7@SC-VEXCH1.marvell.com>
-Date: Fri, 29 Mar 2013 07:46:28 -0600
-Message-ID: <CAMLZHHT92u7gAGyfnqo_4S=+MgmEu0iW0bCbQ1jPycuRWf_6fQ@mail.gmail.com> (sfid-20130329_144632_734311_4851BEB2)
-Subject: Re: mwifiex crash when removing interface while scanning
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Rhodes <jrhodes@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 27 Mar 2013 09:40:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/4] mac80211: check DSSS params IE length in parser
+Date: Wed, 27 Mar 2013 14:39:55 +0100
+Message-Id: <1364391597-3977-3-git-send-email-johannes@sipsolutions.net> (sfid-20130327_144016_622283_C39D059B)
+In-Reply-To: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
+References: <1364391597-3977-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 8:24 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> This is caused by decreasing cmd_pending while cleanup scan commands in scan_pending_q.
-> cmd_pending only counts the commands queued in cmd_pending_q.
->
-> Attached v2 patch should fix it. Please try it out.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, applied both patches, that seems to be working now.
+It's always just one byte, so check for that and
+remove the length field from the parser struct.
 
-Daniel
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c        | 2 +-
+ net/mac80211/ieee80211_i.h | 1 -
+ net/mac80211/mesh.c        | 2 +-
+ net/mac80211/mlme.c        | 2 +-
+ net/mac80211/util.c        | 6 ++++--
+ 5 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5ab32e2..2a0b218 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -463,7 +463,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
+ 	bool rates_updated = false;
+ 
+-	if (elems->ds_params && elems->ds_params_len == 1)
++	if (elems->ds_params)
+ 		freq = ieee80211_channel_to_frequency(elems->ds_params[0],
+ 						      band);
+ 	else
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 207b4f3..bf020d0 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1189,7 +1189,6 @@ struct ieee802_11_elems {
+ 	/* length of them, respectively */
+ 	u8 ssid_len;
+ 	u8 supp_rates_len;
+-	u8 ds_params_len;
+ 	u8 tim_len;
+ 	u8 challenge_len;
+ 	u8 rsn_len;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index aead541..0acc287 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -907,7 +907,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	    (!elems.rsn && sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE))
+ 		return;
+ 
+-	if (elems.ds_params && elems.ds_params_len == 1)
++	if (elems.ds_params)
+ 		freq = ieee80211_channel_to_frequency(elems.ds_params[0], band);
+ 	else
+ 		freq = rx_status->freq;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c98a26d..7208612 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2764,7 +2764,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	if (elems->ds_params && elems->ds_params_len == 1)
++	if (elems->ds_params)
+ 		freq = ieee80211_channel_to_frequency(elems->ds_params[0],
+ 						      rx_status->band);
+ 	else
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 83e213b..9d7664f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -741,8 +741,10 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			elems->supp_rates_len = elen;
+ 			break;
+ 		case WLAN_EID_DS_PARAMS:
+-			elems->ds_params = pos;
+-			elems->ds_params_len = elen;
++			if (elen >= 1)
++				elems->ds_params = pos;
++			else
++				elem_parse_failed = true;
+ 			break;
+ 		case WLAN_EID_TIM:
+ 			if (elen >= sizeof(struct ieee80211_tim_ie)) {
+-- 
+1.8.0
+
