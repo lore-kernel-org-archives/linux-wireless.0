@@ -1,84 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:39942 "EHLO bues.ch"
+Received: from mms2.broadcom.com ([216.31.210.18]:4176 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998Ab3CWKfi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 06:35:38 -0400
-Date: Sat, 23 Mar 2013 11:35:17 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	isedev@gmail.com
-Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
-Message-ID: <20130323113517.01906b0b@milhouse> (sfid-20130323_113542_805052_A881409C)
-In-Reply-To: <CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
-References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
-	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/uKzXFLyv0QY2hOYTnefKETt"; protocol="application/pgp-signature"
+	id S1752149Ab3C0OaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 10:30:11 -0400
+Message-ID: <51530267.5020705@broadcom.com> (sfid-20130327_153016_494478_79BD5F56)
+Date: Wed, 27 Mar 2013 15:29:59 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"John W. Linville" <linville@redhat.com>,
+	"David Spinadel" <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: P2P support in brcmfmac
+References: <5152DD47.2080501@broadcom.com>
+ <20130327122216.GA2146@tuxdriver.com>
+ <1364387698.8388.1.camel@jlt4.sipsolutions.net>
+ <20130327124422.GB2146@tuxdriver.com>
+ <1364388675.8388.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1364388675.8388.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/uKzXFLyv0QY2hOYTnefKETt
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 03/27/2013 01:51 PM, Johannes Berg wrote:
+> On Wed, 2013-03-27 at 08:44 -0400, John W. Linville wrote:
+>> On Wed, Mar 27, 2013 at 01:34:58PM +0100, Johannes Berg wrote:
+>>> On Wed, 2013-03-27 at 08:22 -0400, John W. Linville wrote:
+>>>> On Wed, Mar 27, 2013 at 12:51:35PM +0100, Arend van Spriel wrote:
+>>>>
+>>>>> In 3.9 we introduced P2P support in brcmfmac which was functional using
+>>>>> current wpa_supplicant P2P support, but we did not yet support the
+>>>>> P2P_DEVICE user-space API.
+>>>>>
+>>>>> Last week I enabled that in brcmfmac testing it with wpa_supplicant
+>>>>> patches for P2P_DEVICE support from David Spinadel. So I do have a
+>>>>> couple of brcmfmac patches to make that work and would like to submit
+>>>>> those for 3.9 although it is not strictly a bug fix. Would you consider
+>>>>> taking these?
+>>>>
+>>>> That doesn't sound to me like something that would be worthy of such
+>>>> an exception.
+>>>
+>>> Maybe just make a small patch to disable the other API, so we don't end
+>>> up having to support both?
+>>
+>> Maybe I misunderstood.  So brcmfmac currently supports a P2P API
+>> that is not otherwise available and which we don't want to support
+>> in the future?
+> 
+> As I understand it, brcmfmac currently supports having a P2P device
+> *netdev*, which is of (wireless) type STATION (presumably), which isn't
+> something we want to support (well, I don't anyway, it's difficult to
+> discover for applications).
 
-On Sat, 23 Mar 2013 00:27:30 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+It is a bit more subtle. After the merge window since 3.9-rc1 brcmfmac
+supports to have a P2P device *wireless dev* WITH a netdev associated as
+the old wpa_supplicant needed a network interface. However, this
+interface is only created when the driver is loaded with a module
+parameter p2pon set to 1.
 
-> Today I've plugged my 14e4:4315 and (unfortunately?) it's working
-> pretty well. I hoped to reproduce some problems but failed to do so. I
-> was transmitting for an hour with average speed 11MiB/s and didn't
-> notice any DMA issues.
->=20
-> I was using iperf with interval of 60 seconds and only 3 results
-> showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No disconnections
-> however and no DMA errors. I just got "Group rekeying completed..." in
-> wpa_supplicant.
->=20
-> So as I can't reproduce this, I can't find any other fix for this
-> issue, and there's no reason to stop this workaround. I'll just apply
-> it and test over weekend to check for any regressions, but they are
-> highly unlikely.
+So brcmfmac announces P2P_DEVICE support in wiphy information. This will
+cause wpa_supplicant (with P2P device patches) to create a
+*wireless_dev* interface of P2P_DEVICE type.
 
-I don't really believe in this being a firmware bug.
+> The "correct" way (the way I decided to implement this P2P device
+> concept in the upstreamtree ) is to have a P2P device *wireless dev*
+> which has no netdev associated -- this makes more sense since no data
+> frames are ever transmitted or received on a P2P device.
 
-Some b43 DMA engines (all?) have some alignment and page-boundary-crossing
-constraints. I would rather guess that on some kernels with some options
-turned on, alignment and/or boundary constraints are violated every
-now and then. (and thus the packet never reaches the firmware).
+True and I made additional patches on top of 3.9-rc1 that add support
+for creating the "correct" P2P device *wireless_dev* through user-space.
 
-I don't remember the details, though. Too long since I worked on that.
-But a few sanity checks could probably be added to the code to check
-this hypothesis.
+> As I understand Arend, he was suggesting to put patches into 3.9 that
+> would move brcmfmac from the interim API with a netdev he had used for
+> testing to the final API that is actually implemented in 3.9 but before
+> the wpa_supplicant patches had no way to get used. Now those patches are
+> there in wpa_supplicant though (or well, on their way in)
 
-Does the failing kernel/machine have any special things w.r.t. memory?
-Like iommu, hugepages, whetever...
+The interim patches went in 3.9-rc1 so they end up in 3.9 without
+nl80211 user-space support. I am now suggesting to add that nl80211
+user-space support for 3.9 as well. As you indicated you do not consider
+this as an exception to the bugfix rule, I will have to look what
+happens when the new wpa_supplicant (with P2P device patches) tries to
+use the 3.9-rc1 brcmfmac.
 
---=20
-Michael
+Regards,
+Arend
 
---Sig_/uKzXFLyv0QY2hOYTnefKETt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRTYVlAAoJEPUyvh2QjYsO+xQP/3yIpevmrHAhTJ0fy2z3wkkm
-KzYmOoDhY1uoCeQdtaqSJyiF0zRJ9HmGrzapptRVpv2GiMoUs+B0PnP4mhqCVbI3
-hXL6hvLqNb3s2YadhQPG3NWRasZCElA1STVVRhWciOFXriIDohMijcW7lKa+0XWR
-bWT1txeHhu9cUWnSB6aETWcx1EduAwGoDy1kVRyR/6gbe64quxHNviX2wZ88eKBu
-WMWoyJMmEO1GZgfIEKK9stHZRYt9pjFHClzd2+uWxzjE557/wniwLH659CAeMULl
-LYFsCo19cKOjgTQ19iF282OR9dkHKBjwLYXIUPIU48SjjGOqtjSFYPvM7Y1bDC8j
-XcWY0b7rP6qzr8IMGCghoI6Nw9CeTeUdgWOd3dxazklDzreIkFYeLf2nJEDNvfmO
-A7LLGeOPfQjlCYO9Rh0FL2vE6125lcsW4XzeRRqG++iqFz3DIbEPRjYD7D1GDGX5
-ps172GVKcikbsFBvdlWIl7LfBiNEpD3yGJDlRX1ITdYLtBuEB65LmvTGoLeSGiq1
-Nz4AB2I3mtIZgyPHmRBfs+Xx0c0xeMpGdQGRzm23NeUrPUp7oird8zKFAAwHVbyn
-zVbbid6kPOU6UC1YYKBrhvxp9nfgkzsyNW0oGSr4x7eGxbZ2FnrRUxSp0Hdix9mv
-M3qOPpWf9tUEoQDr22Xk
-=x7a4
------END PGP SIGNATURE-----
-
---Sig_/uKzXFLyv0QY2hOYTnefKETt--
