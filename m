@@ -1,122 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7791 "EHLO mx1.redhat.com"
+Received: from sycorax.lbl.gov ([128.3.11.121]:40330 "EHLO sycorax.lbl.gov"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933898Ab3CSWKt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:10:49 -0400
-Message-ID: <1363731087.8874.19.camel@dcbw.foobar.com> (sfid-20130319_231057_663084_B75B8D2C)
-Subject: Re: Brcmsmac driver woes, possible regression?
-From: Dan Williams <dcbw@redhat.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	Jonathan Nieder <jrnieder@gmail.com>, 664767@bugs.debian.org,
-	linux-wireless@vger.kernel.org
-Date: Tue, 19 Mar 2013 17:11:27 -0500
-In-Reply-To: <5148DEC9.50003@broadcom.com>
-References: <20130317144603.GA4850@stt008.linux.site>
-	 <1363532310.3937.266.camel@deadeye.wl.decadent.org.uk>
-	 <20130317152428.GA4940@stt008.linux.site>
-	 <20130317175658.GA8181@elie.Belkin>
-	 <20130317182725.GA5811@stt008.linux.site>
-	 <20130317183344.GA8786@elie.Belkin>
-	 <CAKprTDFhNnGOPHUqg8Wn6Cd170KaeXj7-w-D6wS2Cc38vstt5A@mail.gmail.com>
-	 <20130318083752.GA6570@elie.Belkin> <51476D25.6030609@broadcom.com>
-	 <20130318211428.GA9136@stt008.linux.site>
-	 <20130318212544.GB5062@elie.Belkin>
-	 <CAKprTDFXV4J7cxGqNck95Cu=ncBXCfdNTir40aWRtXjpLPO6OQ@mail.gmail.com>
-	 <CAKprTDEddPVp+bk7RJX1Jk60b0zVHr4ghvqt0HKnY+h238t3Zw@mail.gmail.com>
-	 <5148DEC9.50003@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751417Ab3C0RsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 13:48:10 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
+References: <87li993mug.fsf@sycorax.lbl.gov>
+	<1364406146.8388.12.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Mar 2013 10:48:06 -0700
+In-Reply-To: <1364406146.8388.12.camel@jlt4.sipsolutions.net> (message from
+	Johannes Berg on Wed, 27 Mar 2013 18:42:26 +0100)
+Message-ID: <87mwto20q1.fsf@sycorax.lbl.gov> (sfid-20130327_184816_932221_A28A96E0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-03-19 at 22:55 +0100, Arend van Spriel wrote:
-> On 03/19/2013 05:21 PM, Camaleón wrote:
-> > Mar 19 17:05:28 stt300 kernel: [26034.188562] wlan0: authenticated
-> > Mar 19 17:05:28 stt300 kernel: [26034.192108] wlan0: associate with 00:1a:2b:97:7a:97 (try 1/3)
-> > Mar 19 17:05:28 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: authenticating -> associating
-> > Mar 19 17:05:30 stt300 kernel: [26036.586947] wlan0: RX AssocResp from 00:1a:2b:97:7a:97 (capab=0x411 status=0 aid=1)
-> > Mar 19 17:05:30 stt300 kernel: [26036.587560] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
-> > Mar 19 17:05:30 stt300 kernel: [26036.587576] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
-> > Mar 19 17:05:30 stt300 kernel: [26036.587603] wlan0: associated
-> > Mar 19 17:05:30 stt300 kernel: [26036.587698] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> > Mar 19 17:05:30 stt300 wpa_supplicant[2855]: wlan0: Associated with 00:1a:2b:97:7a:97
-> 
-> Seems to be heading in the right direction, but....
-> 
-> > Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associating -> associated
-> > Mar 19 17:05:30 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: associated -> 4-way handshake
-> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: Joining mDNS multicast group on interface wlan0.IPv6 with address fe80::ae81:12ff:fe34:6963.
-> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: New relevant interface wlan0.IPv6 for mDNS.
-> > Mar 19 17:05:32 stt300 avahi-daemon[2630]: Registering new address record for fe80::ae81:12ff:fe34:6963 on wlan0.*.
-> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): association took too long.
-> 
-> Here it seem to go bad again...
-> 
-> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <info> (wlan0): device state change: config -> need-auth (reason 'none') [50 60 0]
-> > Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation (wlan0/wireless): asking for new secrets
-> > Mar 19 17:05:32 stt300 kernel: [26039.005158] wlan0: deauthenticating from 00:1a:2b:97:7a:97 by local choice (reason=3)
-> 
-> And we get a deauth request with WLAN_REASON_DEAUTH_LEAVING.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-That local choice (reason=3) is NetworkManager terminating the
-association attempt because it already took 25 seconds, which is way too
-long for a simple association.  The cause is long before that.
+> On Tue, 2013-03-26 at 13:52 -0700, Alex Romosan wrote:
+>> since v3.9-rc1 i have been unable to reconnect to my access point. the
+>> access point is a netgear n600 and the my card is a Centrino Advanced-N
+>> 6205 [Taylor Peak] (rev 34). the last kernel that worked was 3.8. when i
+>> boot up the laptop the connection is established but if i bring down the
+>> network with ifdown then i cannot reconnect. this is what i see in the
+>> logs:
+>> 
+>>  iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+>>  iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+>>  wlan0: authenticate with xx:xx:xx:xx:xx:xx
+>>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+>>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+>>  wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+>>  wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
+>
+> Btw, since we're looking at the timeout handling -- do you have a
+> version of this log with timestamps on each line?
 
-NM tells the supplicant to start associating here:
+i do but the timestamp is the same on all the lines:
 
-Mar 19 17:05:07 stt300 NetworkManager[30971]: <info> Config: set
-interface ap_scan to 1
+Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+Mar 27 09:43:14 trinculo kernel: iwlwifi 0000:03:00.0: Radio type=0x1-0x2-0x0
+Mar 27 09:43:16 trinculo kernel: wlan0: authenticate with xx:xx:xx:xx:xx:xx
+Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+Mar 27 09:43:16 trinculo kernel: wlan0: send auth to xx:xx:xx:xx:xx:xx (try 3/3)
+Mar 27 09:43:16 trinculo kernel: wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
 
-and finally kills the attempt here:
+--alex--
 
-Mar 19 17:05:32 stt300 NetworkManager[30971]: <warn> Activation
-(wlan0/wireless): association took too long.
-
-So the supplicant gets a total of 25 seconds to associate to the AP,
-which, if you're not associated within that time, you're definitely not
-going to get associated if you're given more time.  But between 17:05:07
-and 17:05:32, NM is just waiting for the association to succeed.
-
-It really does look like the supplicant or driver tries to associate but
-then fails, eg:
-
-Mar 19 17:05:08 stt300 kernel: [26014.833011] wlan0: send auth to
-00:1a:2b:97:7a:97 (try 1/3)
-Mar 19 17:05:13 stt300 kernel: [26019.834259] wlan0: deauthenticating
-from 00:1a:2b:97:7a:97 by local choice (reason=3)
-
-There's a whole lot of authentication/association failures in that log,
-which do appear to indicate that the STA can see the AP, but the AP
-can't hear the STA.
-
-Then we also have stuff like:
-
-Mar 19 17:05:24 stt300 wpa_supplicant[2855]: wlan0: SME: Authentication
-request to the driver failed
-
-where it would be nice to know why the request failed.
-
-Dan
-
-> > Mar 19 17:05:33 stt300 kernel: [26040.004150] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
-> > Mar 19 17:05:33 stt300 kernel: [26040.004172] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
-> > Mar 19 17:05:34 stt300 kernel: [26040.504402] cfg80211: Calling CRDA to update world regulatory domain
-> > Mar 19 17:05:34 stt300 ntpd[2611]: Listen normally on 16 wlan0 fe80::ae81:12ff:fe34:6963 UDP 123
-> > Mar 19 17:05:34 stt300 ntpd[2611]: peers refreshed
-> > Mar 19 17:05:34 stt300 wpa_supplicant[2855]: wlan0: CTRL-EVENT-DISCONNECTED bssid=00:00:00:00:00:00 reason=3
-> > Mar 19 17:05:34 stt300 NetworkManager[30971]: <info> (wlan0): supplicant interface state: 4-way handshake -> disconnected
-> > Mar 19 17:05:34 stt300 NetworkManager[30971]: <warn> Couldn't disconnect supplicant interface: This interface is not connected.
-> 
-> I am trying to make sense of it, but it is getting late over here. Have 
-> a fresh look tomorrow.
-> 
-> Regards,
-> Arend
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
