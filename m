@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49538 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932519Ab3CUP03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Mar 2013 11:26:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] ssb: fix sprom constant for ant_available_{bg,a}
-Date: Thu, 21 Mar 2013 16:26:19 +0100
-Message-Id: <1363879579-7027-1-git-send-email-hauke@hauke-m.de> (sfid-20130321_162635_227230_004CB686)
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:51512 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754344Ab3C0Rnn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 13:43:43 -0400
+Received: by mail-oa0-f42.google.com with SMTP id i18so9197231oag.29
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2013 10:43:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130327172740.GE1868@tuxdriver.com>
+References: <1364400951-25488-1-git-send-email-hauke@hauke-m.de>
+	<20130327172740.GE1868@tuxdriver.com>
+Date: Wed, 27 Mar 2013 18:43:42 +0100
+Message-ID: <CACna6ryua5Bok2w1B4g1C6_tyqkAbBT6B+7GjBARH02s70ua+A@mail.gmail.com> (sfid-20130327_184354_608639_99F13AF2)
+Subject: Re: [PATCH 1/2] b43: mark some functions and structs static
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was done accordingly to new specs.
+2013/3/27 John W. Linville <linville@tuxdriver.com>:
+> On Wed, Mar 27, 2013 at 05:15:50PM +0100, Hauke Mehrtens wrote:
+>> This fixes some sparse warnings.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  drivers/net/wireless/b43/phy_n.c          |    6 ++++--
+>>  drivers/net/wireless/b43/radio_2056.c     |    2 +-
+>>  drivers/net/wireless/b43/sdio.h           |    4 ++--
+>>  drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
+>>  drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
+>>  5 files changed, 12 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>> index 1ec0d69..8d15878 100644
+>> --- a/drivers/net/wireless/b43/phy_n.c
+>> +++ b/drivers/net/wireless/b43/phy_n.c
+>> @@ -2789,9 +2789,11 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
+>>   * Tx and Rx
+>>   **************************************************/
+>>
+>> -void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+>> +#if 0
+>> +static void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+>>  {//TODO
+>>  }
+>> +#endif
+>>
+>>  static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
+>>  {//TODO
+>
+> If this isn't necessary, why not just remove it?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/ssb/ssb_regs.h |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+They are used for pointers that AFAIR can't be null.
 
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index 6ecfa02..3a72569 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -289,11 +289,11 @@
- #define  SSB_SPROM4_ETHPHY_ET1A_SHIFT	5
- #define  SSB_SPROM4_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
- #define  SSB_SPROM4_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
--#define SSB_SPROM4_ANTAVAIL		0x005D  /* Antenna available bitfields */
--#define  SSB_SPROM4_ANTAVAIL_A		0x00FF	/* A-PHY bitfield */
--#define  SSB_SPROM4_ANTAVAIL_A_SHIFT	0
--#define  SSB_SPROM4_ANTAVAIL_BG		0xFF00	/* B-PHY and G-PHY bitfield */
--#define  SSB_SPROM4_ANTAVAIL_BG_SHIFT	8
-+#define SSB_SPROM4_ANTAVAIL		0x005C  /* Antenna available bitfields */
-+#define  SSB_SPROM4_ANTAVAIL_BG		0x00FF	/* B-PHY and G-PHY bitfield */
-+#define  SSB_SPROM4_ANTAVAIL_BG_SHIFT	0
-+#define  SSB_SPROM4_ANTAVAIL_A		0xFF00	/* A-PHY bitfield */
-+#define  SSB_SPROM4_ANTAVAIL_A_SHIFT	8
- #define SSB_SPROM4_AGAIN01		0x005E	/* Antenna Gain (in dBm Q5.2) */
- #define  SSB_SPROM4_AGAIN0		0x00FF	/* Antenna 0 */
- #define  SSB_SPROM4_AGAIN0_SHIFT	0
 -- 
-1.7.10.4
-
+Rafał
