@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:57690 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556Ab3CHXrA (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:60389 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753786Ab3C0NGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 18:47:00 -0500
+	Wed, 27 Mar 2013 09:06:50 -0400
+Date: Wed, 27 Mar 2013 09:04:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@redhat.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: P2P support in brcmfmac
+Message-ID: <20130327130451.GC2146@tuxdriver.com> (sfid-20130327_140655_384512_E085A76F)
+References: <5152DD47.2080501@broadcom.com>
+ <20130327122216.GA2146@tuxdriver.com>
+ <1364387698.8388.1.camel@jlt4.sipsolutions.net>
+ <20130327124422.GB2146@tuxdriver.com>
+ <1364388675.8388.5.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 8 Mar 2013 15:46:38 -0800
-Message-ID: <CAB=NE6WwQDfx+H4zV2niLDaZ0vGAahEF5jg1WS+NU7YhTZ9rQw@mail.gmail.com> (sfid-20130309_004723_734901_268EC978)
-Subject: Re: [Announce] open ath9k_htc firmware
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath9k_htc_fw@lists.infradead.org, Chris Zankel <chris@zankel.net>,
-	linux-kernel@vger.kernel.org, Marc Gauthier <marc@tensilica.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1364388675.8388.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many thanks to Adrian for his hard work on all this and to everyone
-else who volunteered to help make this happen, including the
-understanding by our management at QCA and even Tensilica requires
-some handsome applause for their commitment, understanding on letting
-us get this out. We now have a public mailing list for development:
+On Wed, Mar 27, 2013 at 01:51:15PM +0100, Johannes Berg wrote:
+> On Wed, 2013-03-27 at 08:44 -0400, John W. Linville wrote:
+> > On Wed, Mar 27, 2013 at 01:34:58PM +0100, Johannes Berg wrote:
+> > > On Wed, 2013-03-27 at 08:22 -0400, John W. Linville wrote:
+> > > > On Wed, Mar 27, 2013 at 12:51:35PM +0100, Arend van Spriel wrote:
+> > > > 
+> > > > > In 3.9 we introduced P2P support in brcmfmac which was functional using
+> > > > > current wpa_supplicant P2P support, but we did not yet support the
+> > > > > P2P_DEVICE user-space API.
+> > > > > 
+> > > > > Last week I enabled that in brcmfmac testing it with wpa_supplicant
+> > > > > patches for P2P_DEVICE support from David Spinadel. So I do have a
+> > > > > couple of brcmfmac patches to make that work and would like to submit
+> > > > > those for 3.9 although it is not strictly a bug fix. Would you consider
+> > > > > taking these?
+> > > > 
+> > > > That doesn't sound to me like something that would be worthy of such
+> > > > an exception.
+> > > 
+> > > Maybe just make a small patch to disable the other API, so we don't end
+> > > up having to support both?
+> > 
+> > Maybe I misunderstood.  So brcmfmac currently supports a P2P API
+> > that is not otherwise available and which we don't want to support
+> > in the future?
+> 
+> As I understand it, brcmfmac currently supports having a P2P device
+> *netdev*, which is of (wireless) type STATION (presumably), which isn't
+> something we want to support (well, I don't anyway, it's difficult to
+> discover for applications).
+> 
+> The "correct" way (the way I decided to implement this P2P device
+> concept in the upstreamtree ) is to have a P2P device *wireless dev*
+> which has no netdev associated -- this makes more sense since no data
+> frames are ever transmitted or received on a P2P device.
+> 
+> As I understand Arend, he was suggesting to put patches into 3.9 that
+> would move brcmfmac from the interim API with a netdev he had used for
+> testing to the final API that is actually implemented in 3.9 but before
+> the wpa_supplicant patches had no way to get used. Now those patches are
+> there in wpa_supplicant though (or well, on their way in)
 
-http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
+I see...in that case, a patch that disables the interim API seems appropriate.
 
-Full steam ahead!
-
-  Luis
-
-On Fri, Mar 8, 2013 at 3:32 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
->
-> I hate fanfare.
->
-> You can all thank Luis Rodriguez for his ridiculously long and hard
-> fighting to get this stuff pushed through the grinder to make this
-> happen.
->
-> There's also been a hard working team of developers behind the scene -
-> Felix Fietkau, Eugene Krasnikov, Sujith Manoharan, and the team from
-> Cozybit. They've been working hard to get the codebase converted over
-> to using the open source tensilica toolchain and finding/fixing up any
-> silly issues that may creep up from that.
->
-> I've just been involved in shepharding this stuff into a sensible
-> shape and pushing it through the final stage (legal review) before
-> publication.
->
-> You can find it here:
->
-> https://github.com/qca/open-ath9k-htc-firmware
->
-> There's a bunch of sorely needed work to do in the short term:
->
-> * felix has a replacement cmake build system that I'd like to now integrate;
-> * there's lots of build warnings which need to be removed (and then
-> build this thing using -Wall -Werror);
-> * some general code cleanup and documentation wouldn't be rejected -
-> but I don't really want any sweeping code changes to go in until we've
-> tidied up the build warnings and validated that the image(s) work
-> right.
->
-> I plan on doing some test builds shortly. I plan on bumping the
-> firmware to 1.4 once felix's cmake system is in place and people have
-> validated that this work.s
->
-> Thanks,
->
->
->
-> Adrian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
