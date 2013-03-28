@@ -1,113 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49308 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43310 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933002Ab3CVKTl (ORCPT
+	with ESMTP id S1754526Ab3C1P3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Mar 2013 06:19:41 -0400
-Message-ID: <1363947571.8238.4.camel@jlt4.sipsolutions.net> (sfid-20130322_111945_083051_806A9563)
-Subject: Re: pull-request: mac80211 2013-03-22
+	Thu, 28 Mar 2013 11:29:41 -0400
+Message-ID: <1364484573.10397.4.camel@jlt4.sipsolutions.net> (sfid-20130328_162945_299070_B0DB5C45)
+Subject: pull-request: mac80211 2013-03-28
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 22 Mar 2013 11:19:31 +0100
-In-Reply-To: <1363723052.8336.6.camel@jlt4.sipsolutions.net> (sfid-20130319_205755_751711_D4ADDEEC)
-References: <1363723052.8336.6.camel@jlt4.sipsolutions.net>
-	 (sfid-20130319_205755_751711_D4ADDEEC)
+Date: Thu, 28 Mar 2013 16:29:33 +0100
 Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-GGWMdf5o8ZVf/LZnH83H"
+	protocol="application/pgp-signature"; boundary="=-RJMGWY2HAtpcEin+EJXg"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GGWMdf5o8ZVf/LZnH83H
+--=-RJMGWY2HAtpcEin+EJXg
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi John,
+John,
 
-Now I'm reviving this pull-request :-)
+Before I disappear for Easter vacation, I decided to send you two more
+mac80211 fixes.
 
-I have two tracing fixes (one from Vladimir), two fixes for P2P device
-crashes, a fix for a BSS memory leak/lost update problem and a fix from
-Ben for a scanning issue in mac80211. It's a little on the large side
-because one of the P2P device problems required a bit much locking work,
-but I've run through all the different scenarios (wext/nl80211,
-p2p-device/station interface, ifdown/rfkill) to verify locking with
-lockdep.
+I had changed the idle handling to simplify it, but broken the
+sequencing of commands, at least for ath9k-htc, one patch restores the
+sequence. The other patch fixes a crash Jouni found while stress-testing
+the remain-on-channel code, when an item is deleted the work struct can
+run twice and crash the second time.
 
-Let me know if there's any problem.
-
+Please pull. Thanks,
 johannes
 
 
-The following changes since commit 801d929ca7d935ee199fd61d8ef914f51e892270=
+The following changes since commit 370bd005937c0e00f9104a602f9fe1dd6b21b54b=
 :
 
-  mac80211: another fix for idle handling in monitor mode (2013-03-02 21:24=
-:42 +0100)
+  mac80211: Don't restart sta-timer if not associated. (2013-03-24 11:15:59=
+ +0100)
 
 are available in the git repository at:
 
   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
 
-for you to fetch changes up to 9e68a67a888d98bda8393c29dde12fb4f0b42a19:
+for you to fetch changes up to 382a103b2b528a3085cde4ac56fc69d92a828b72:
 
-  mac80211: Don't restart sta-timer if not associated. (2013-03-22 10:55:55=
- +0100)
+  mac80211: fix idle handling sequence (2013-03-25 16:50:18 +0100)
 
 ----------------------------------------------------------------
-Ben Greear (1):
-      mac80211: Don't restart sta-timer if not associated.
+Johannes Berg (2):
+      mac80211: fix remain-on-channel cancel crash
+      mac80211: fix idle handling sequence
 
-Johannes Berg (6):
-      mac80211: always synchronize_net() during station removal
-      cfg80211: fix potential BSS memory leak and update
-      mac80211: fix crash with P2P Device returning action frames
-      cfg80211: fix wdev tracing crash
-      mac80211: fix virtual monitor interface locking
-      cfg80211: always check for scan end on P2P device
-
-Vladimir Kondratiev (1):
-      cfg80211: fix inconsistency in trace for rdev_set_mac_acl
-
- net/mac80211/iface.c    | 35 ++++++++++++++++--------------
- net/mac80211/mesh.c     |  3 ++-
- net/mac80211/mlme.c     |  6 ++++--
- net/mac80211/rx.c       | 14 +++++++++++-
- net/mac80211/sta_info.c | 12 +++++++++--
- net/wireless/core.c     | 57 ++++++++++++++++++++++++++++++++++++---------=
-----
- net/wireless/core.h     |  3 +++
- net/wireless/nl80211.c  | 52 ++++++++++++++++++++++----------------------
- net/wireless/scan.c     | 24 ++++++++++++++-------
- net/wireless/sme.c      |  6 ++++--
- net/wireless/trace.h    |  5 +++--
- net/wireless/wext-sme.c |  6 ++++++
- 12 files changed, 149 insertions(+), 74 deletions(-)
+ net/mac80211/cfg.c         |  6 ++++--
+ net/mac80211/chan.c        | 17 ++++++++++++++---
+ net/mac80211/ieee80211_i.h |  4 +++-
+ net/mac80211/iface.c       |  2 +-
+ net/mac80211/offchannel.c  | 23 +++++++++++++++++------
+ 5 files changed, 39 insertions(+), 13 deletions(-)
 
 
---=-GGWMdf5o8ZVf/LZnH83H
+--=-RJMGWY2HAtpcEin+EJXg
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABCAAGBQJRTDAzAAoJEDBSmw7B7bqrJqkQAKVAjpC59eOVVqtYclJae4OP
-KwV1rt8ujZqvps1a0vWbA7oVnl18ovyMQGaRvFfvYmaE0vPH3isRMlxKIDp7EFWP
-n1kQnU1n4TB9p7CbWs6S2kzuHVy93rfb8DCZyhVbaJEpq2c0zk88Kt3DJjEGKC9y
-8mfC5xsy/M7qsdtkL3x2OvAAqBHZpOhyQzB5GxGk/NZ9Xwf0VZG4LdjEUjd+ogn0
-eGlWO4TmTv6+xDM3mL3qF083+QtXjP5B+W2N0Q2jMtLhqMHz7M3/AyQFnL0bBGSU
-zd2+ljOISQBv7FqShnMnqXR6IRWNUI90SbZ5Tr4JpuHrQA8IcrniYpD6pokq7z4G
-1Wgg8ayOTq5weCY8BOU9q2PsPR11mEvVL8FeTQim18XZPaNeEnAL5Ms0Go+ZNHk+
-uJFZZrS6UNnMWu6ZCRJIvdfC0I0lIadFVtpZIa2Cv9C04kLWbXETXOJO6jL6YyS1
-8hgmAe0WfFddPZhqi0FC5XL5fvdHjfske28NBKMvjmnykOirqB5LFsDspw0G/r8s
-G0gaIe2qPiuXCsnvweQODMjns/uXLQxkKGZ6GxWcE6nMw17RH1ZfX+3BE4bcrSm8
-pIfFNorGndWzW9lN4XV2CIoQpJ07KUaVkgWT1SoUyzpi/b1n615S6qb4EIT2ZmYW
-8dO154LKGa8t8zUH62jM
-=Rcvn
+iQIcBAABCAAGBQJRVGHdAAoJEDBSmw7B7bqryIEP/3YG2u4qwPynGLXBah1LMKIP
+MSWNsURnugG0E9FZQo/odpoPNsn3HOnkA02j3k0xzgg/NXuBTLojXDb6FWXbbnS5
+dGDnlf46teQO0dn8r8Au9ZNZBa3HVeyNGQYjKJ28d2aF6iQpCKB9YvAvSRytFwV/
+Fjk8BjLnwLiJ1O3fapHJl8FwP1WEJRztLx8CmuOOPlnY2KqY+tBuij2dLr0W4Bc8
+V0JLgCYvu5r+wZsg5CAtewc2E2mO2V3EWVQ06TkPzcM4OkNEitxjEw7NTHxkPSfF
+E/YxFyjRAN5tk+/5mKOMQ2FZNP6rBSo3eEOGjpdPaeA3wHFfQb4I/s0v9J/Ixr95
+ND5Ai7/+sHi/PhZ0WPyGd/TYVjXZcAOuLbeucP5527msfPKcFbcWhY7tXDLDEat5
+1Nn5NIy9DIgcdB/5XJI6enGL1njzaGqax0Tn5TYSMnqpGmvcqH/GVhX16iP3b5EA
+7k8bshamM8+OyM60RrSSCkn2DsRvNu3OrUCEySB+dFAr7Jw0OFGTBLBsvav9pmcH
+4e24qGX6A5iVx2650nDUgnqrYEm9CEwt2j8QiFw4WryZ0E3sSSCUMaEBMYL1MWtO
+j9xX1ws5MdTxDLxYIt6P+uXpJ4FxIjOi2RL+/pwRinN0k59yT3MdXBqMa+A75c0u
+L2inrAWDyarNc5DXuTdh
+=JCT6
 -----END PGP SIGNATURE-----
 
---=-GGWMdf5o8ZVf/LZnH83H--
+--=-RJMGWY2HAtpcEin+EJXg--
 
