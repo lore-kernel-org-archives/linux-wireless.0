@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20103 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab3CMMNM (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:34063 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753559Ab3C1K43 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Mar 2013 08:13:12 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/14] wil6210: handle linkup/linkdown WMI events
-Date: Wed, 13 Mar 2013 14:12:39 +0200
-Message-ID: <1363176771-10082-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130313_131318_145971_4A8A0EC0)
-In-Reply-To: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363176771-10082-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Thu, 28 Mar 2013 06:56:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130328104030.GA4602@stt008.linux.site>
+References: <CAKprTDHpf0PgisfJK9bJOYgYxLU5PRLNtbkg7V6Zj2s=gVVMCA@mail.gmail.com>
+ <CAB=NE6Wbym4XksV=uKz9eZD0rZwmtS3ZfP-zbXg9TAc2+2+Z9g@mail.gmail.com>
+ <CAKprTDEEEdy++Bk5AY4Zfrtwsc9HOKGQ+uWR58PFCWU=v+PE1g@mail.gmail.com>
+ <CAB=NE6UtuxuTduYhDy5BcPap-rri+P1mcKYr2KEjAbuE2FU13g@mail.gmail.com>
+ <20130327175711.GA8794@stt008.linux.site> <CAKprTDFspW4B2tk9EZPBBXy3C6gL_NJsjwj-bUeYj1rN3j6sYg@mail.gmail.com>
+ <CAB=NE6W6Ey8iU1vs=XfA7Or0wF=Qh6Gu8zF-DxMatgk-V+wdkQ@mail.gmail.com>
+ <CAKprTDFJet+m7RmkZt5uyf=FMyEYciCYUahEcCC6_ukRQ2pjgw@mail.gmail.com>
+ <CAB=NE6VzvVkFvGaudZHQTM5R3s05QV5Jw23wZ_DLxkNf00Utdg@mail.gmail.com> <20130328104030.GA4602@stt008.linux.site>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 28 Mar 2013 03:56:08 -0700
+Message-ID: <CAB=NE6V=AnTabh3p_yY+GmzPo-+GLAdzEBTQMm4VN1xUuVm_sw@mail.gmail.com> (sfid-20130328_115633_685329_B807B655)
+Subject: Re: brcmsmac: Unknown symbol backport_cordic_calc_iq (err 0)
+To: =?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+Cc: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	meuleman <meuleman@broadcom.com>, brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware indicates linkup/linkdown when data path becomes ready.
+On Thu, Mar 28, 2013 at 3:40 AM, Camaleón <noelamac@gmail.com> wrote:
+> Now you say... can you please tell me -in user's parlance terms so I can
+> understand it- what's the difference between "brcmsmac" from the stock
+> kernel modules and this one from "compat-drivers"? I mean, what's the
+> difference from a user's POV and from kernel hacker POV. Are they
+> related? Are they going to me merged somehow? What's the goal of having
+> both?
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+The releases annotated with a date come from linux-next. While Linus
+is whipping people in shape for the RC releases in preparation for the
+first official release we hounds still do some development. During the
+RC cycle only regression fixes get merged into Linus' tree as well a
+shiny new drivers as they do not regress. The development cycle
+continues on without Linus. Stephen Rothwell maintains a tree that
+sucks all development trees together daily, this is called linux-next.
+We use linux-next for compat-drivers given that we backport not just
+wireless but also drm. So by you using dated compat-drivers releases
+you are using what's currently being developed and will likely hit
+3.10.
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 0bb3b76..895ae9d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -528,6 +528,27 @@ static void wmi_evt_eapol_rx(struct wil6210_priv *wil, int id,
- 	}
- }
- 
-+static void wmi_evt_linkup(struct wil6210_priv *wil, int id, void *d, int len)
-+{
-+	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wmi_data_port_open_event *evt = d;
-+
-+	wil_dbg_wmi(wil, "Link UP for CID %d\n", evt->cid);
-+
-+	netif_carrier_on(ndev);
-+}
-+
-+static void wmi_evt_linkdown(struct wil6210_priv *wil, int id, void *d, int len)
-+{
-+	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wmi_wbe_link_down_event *evt = d;
-+
-+	wil_dbg_wmi(wil, "Link DOWN for CID %d, reason %d\n",
-+		    evt->cid, le32_to_cpu(evt->reason));
-+
-+	netif_carrier_off(ndev);
-+}
-+
- static const struct {
- 	int eventid;
- 	void (*handler)(struct wil6210_priv *wil, int eventid,
-@@ -541,6 +562,8 @@ static const struct {
- 	{WMI_DISCONNECT_EVENTID,	wmi_evt_disconnect},
- 	{WMI_NOTIFY_REQ_DONE_EVENTID,	wmi_evt_notify},
- 	{WMI_EAPOL_RX_EVENTID,		wmi_evt_eapol_rx},
-+	{WMI_DATA_PORT_OPEN_EVENTID,	wmi_evt_linkup},
-+	{WMI_WBE_LINKDOWN_EVENTID,	wmi_evt_linkdown},
- };
- 
- /*
--- 
-1.7.10.4
-
+  Luis
