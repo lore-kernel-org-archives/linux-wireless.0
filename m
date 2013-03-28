@@ -1,129 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:48589 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755770Ab3CIMn5 (ORCPT
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:35020 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755957Ab3C1JT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Mar 2013 07:43:57 -0500
-Received: by mail-we0-f182.google.com with SMTP id t57so2049620wey.13
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Mar 2013 04:43:56 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3 01/13] b43: HT-PHY: rename AFE defines
-Date: Sat,  9 Mar 2013 13:43:49 +0100
-Message-Id: <1362833029-8484-1-git-send-email-zajec5@gmail.com> (sfid-20130309_134401_204184_A9FEB2A1)
-In-Reply-To: <1362671247-10766-2-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-2-git-send-email-zajec5@gmail.com>
+	Thu, 28 Mar 2013 05:19:28 -0400
+Received: by mail-qe0-f50.google.com with SMTP id k5so5061161qej.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 02:19:28 -0700 (PDT)
 MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20130328090323.GA1384@redhat.com>
+References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com>
+	<CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com>
+	<CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
+	<515392AF.8070809@lwfinger.net>
+	<CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+	<20130328090323.GA1384@redhat.com>
+Date: Thu, 28 Mar 2013 10:19:27 +0100
+Message-ID: <CA+icZUVzdxoDvontxSR99Jxu1UY88OG4xCCjsKErXBpmLzH_+g@mail.gmail.com> (sfid-20130328_101933_108856_680DBDE2)
+Subject: Re: Fwd: Ralink RT3290 card not supported
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Ali Ustek <aliustek@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	1156363@bugs.launchpad.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It you take a look at N-PHY analog switch function it touches every core
-on the chipset. It seems HT-PHY does they same, it just has 3 cores
-instead of 2 (which make sense since BCM4331 is 3x3). Rename AFE defines
-to include core id.
+On Thu, Mar 28, 2013 at 10:03 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Mar 28, 2013 at 08:18:37AM +0000, Ali Ustek wrote:
+>> >> The wi-fi chip Ralink RT3290 is common in notebooks but is not
+>> >> supported by linux-kernel
+>
+> This device is supported since 3.7 . You most likely compile kernel
+> without CONFIG_RT2800PCI_RT3290.
+>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: make ctl_regs array static btw
-V3: use correct --in-reply-to
+Hi Ali,
 
-Sorry for using wrong In-Reply-To in V2 :(
----
- drivers/net/wireless/b43/phy_ht.c |   38 ++++++++++++++++++-------------------
- drivers/net/wireless/b43/phy_ht.h |   12 ++++++------
- 2 files changed, 25 insertions(+), 25 deletions(-)
+your kernel-config (self-compiled or the one of your $distro) and
+dmesg logs are always helpful, the same to lspci/lsusb outputs.
+And... informations to your $distro plus used your
+$network-userspace-apps like network-manager (NM), wpa-supplicant etc.
+are helpful... if you want your issue be tracked... successfully :-).
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 3719a88..df07c83 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -176,10 +176,10 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
- {
- 	u8 i;
- 
--	const u16 ctl_regs[3][2] = {
--		{ B43_PHY_HT_AFE_CTL1, B43_PHY_HT_AFE_CTL2 },
--		{ B43_PHY_HT_AFE_CTL3, B43_PHY_HT_AFE_CTL4 },
--		{ B43_PHY_HT_AFE_CTL5, B43_PHY_HT_AFE_CTL6},
-+	static const u16 ctl_regs[3][2] = {
-+		{ B43_PHY_HT_AFE_C1_OVER, B43_PHY_HT_AFE_C1 },
-+		{ B43_PHY_HT_AFE_C2_OVER, B43_PHY_HT_AFE_C2 },
-+		{ B43_PHY_HT_AFE_C3_OVER, B43_PHY_HT_AFE_C3},
- 	};
- 
- 	for (i = 0; i < 3; i++) {
-@@ -362,9 +362,9 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	b43_phy_mask(dev, B43_PHY_EXTG(0), ~0x3);
- 
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0);
--	b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0);
-+	b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0);
- 
- 	b43_phy_write(dev, B43_PHY_EXTG(0x103), 0x20);
- 	b43_phy_write(dev, B43_PHY_EXTG(0x101), 0x20);
-@@ -511,19 +511,19 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- static void b43_phy_ht_op_switch_analog(struct b43_wldev *dev, bool on)
- {
- 	if (on) {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x0000);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00cd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x0000);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00cd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x0000);
- 	} else {
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL2, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL4, 0x00fd);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL5, 0x07ff);
--		b43_phy_write(dev, B43_PHY_HT_AFE_CTL6, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C1, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C2, 0x00fd);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3_OVER, 0x07ff);
-+		b43_phy_write(dev, B43_PHY_HT_AFE_C3, 0x00fd);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
-index 6544c42..60824fa 100644
---- a/drivers/net/wireless/b43/phy_ht.h
-+++ b/drivers/net/wireless/b43/phy_ht.h
-@@ -36,12 +36,12 @@
- 
- #define B43_PHY_HT_RF_CTL1			B43_PHY_EXTG(0x010)
- 
--#define B43_PHY_HT_AFE_CTL1			B43_PHY_EXTG(0x110)
--#define B43_PHY_HT_AFE_CTL2			B43_PHY_EXTG(0x111)
--#define B43_PHY_HT_AFE_CTL3			B43_PHY_EXTG(0x114)
--#define B43_PHY_HT_AFE_CTL4			B43_PHY_EXTG(0x115)
--#define B43_PHY_HT_AFE_CTL5			B43_PHY_EXTG(0x118)
--#define B43_PHY_HT_AFE_CTL6			B43_PHY_EXTG(0x119)
-+#define B43_PHY_HT_AFE_C1_OVER			B43_PHY_EXTG(0x110)
-+#define B43_PHY_HT_AFE_C1			B43_PHY_EXTG(0x111)
-+#define B43_PHY_HT_AFE_C2_OVER			B43_PHY_EXTG(0x114)
-+#define B43_PHY_HT_AFE_C2			B43_PHY_EXTG(0x115)
-+#define B43_PHY_HT_AFE_C3_OVER			B43_PHY_EXTG(0x118)
-+#define B43_PHY_HT_AFE_C3			B43_PHY_EXTG(0x119)
- 
- 
- /* Values for PHY registers used on channel switching */
--- 
-1.7.10.4
+Check also docs section for debugging the different wifi-drivers on
+<wireless.kernel.org>.
 
+Hope this helps you!
+
+Regards,
+- Sedat -
+
+> Stanislaw
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
