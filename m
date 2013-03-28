@@ -1,109 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:41958 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757223Ab3C1QSM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42459 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756900Ab3C1JtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 12:18:12 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [FIX 3.3+][PATCH] ssb: implement spurious tone avoidance
-Date: Thu, 28 Mar 2013 17:18:02 +0100
-Message-Id: <1364487482-14642-1-git-send-email-zajec5@gmail.com> (sfid-20130328_171832_088118_8311CB4F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 28 Mar 2013 05:49:14 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 6/9] mac80211: handle extended channel switch announcement
+Date: Thu, 28 Mar 2013 10:49:02 +0100
+Message-Id: <1364464145-14446-7-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104928_211725_7BD3BC93)
+In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And make use of it in b43. This fixes a regression introduced with
-49d55cef5b1925a5c1efb6aaddaa40fc7c693335
-b43: N-PHY: implement spurious tone avoidance
-This commit made BCM4322 use only MCS 0 on channel 13, which of course
-resulted in performance drop (down to 0.7Mb/s).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reported-by: Stefan Brüns <stefan.bruens@rwth-aachen.de>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Stable <stable@vger.kernel.org>
----
-John:
-While this is fix, unfortunately it's not a one-liner. I wish to see it
-in 3.9 and backported to stable kernels, but if you think it's too big,
-well, just take it for the next.
----
- drivers/net/wireless/b43/phy_n.c          |    3 ++-
- drivers/ssb/driver_chipcommon_pmu.c       |   25 +++++++++++++++++++++++++
- include/linux/ssb/ssb_driver_chipcommon.h |    2 ++
- 3 files changed, 29 insertions(+), 1 deletion(-)
+Handle the (public) extended channel switch announcement
+action frames. Parts of the data in these frames isn't
+really in IEs, but put it into the elems struct anyway
+to simplify the handling.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index e8486c1..b70f220 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -5165,7 +5165,8 @@ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
- #endif
- #ifdef CONFIG_B43_SSB
- 	case B43_BUS_SSB:
--		/* FIXME */
-+		ssb_pmu_spuravoid_pllupdate(&dev->dev->sdev->bus->chipco,
-+					    avoid);
- 		break;
- #endif
- 	}
-diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
-index 791da2c..8af4c20 100644
---- a/drivers/ssb/driver_chipcommon_pmu.c
-+++ b/drivers/ssb/driver_chipcommon_pmu.c
-@@ -670,3 +670,28 @@ u32 ssb_pmu_get_controlclock(struct ssb_chipcommon *cc)
- 		return 0;
- 	}
- }
-+
-+void ssb_pmu_spuravoid_pllupdate(struct ssb_chipcommon *cc, int spuravoid)
-+{
-+	u32 pmu_ctl = 0;
-+
-+	switch (cc->dev->bus->chip_id) {
-+	case 0x4322:
-+		ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL0, 0x11100070);
-+		ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL1, 0x1014140a);
-+		ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL5, 0x88888854);
-+		if (spuravoid == 1)
-+			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL2, 0x05201828);
-+		else
-+			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL2, 0x05001828);
-+		pmu_ctl = SSB_CHIPCO_PMU_CTL_PLL_UPD;
-+		break;
-+	default:
-+		ssb_err("Unknown spuravoidance settings for chip 0x%04X, not changing PLL\n",
-+			cc->dev->bus->chip_id);
-+		return;
-+	}
-+
-+	chipco_set32(cc, SSB_CHIPCO_PMU_CTL, pmu_ctl);
-+}
-+EXPORT_SYMBOL_GPL(ssb_pmu_spuravoid_pllupdate);
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index 9e492be..6fcfe99 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -219,6 +219,7 @@
- #define SSB_CHIPCO_PMU_CTL			0x0600 /* PMU control */
- #define  SSB_CHIPCO_PMU_CTL_ILP_DIV		0xFFFF0000 /* ILP div mask */
- #define  SSB_CHIPCO_PMU_CTL_ILP_DIV_SHIFT	16
-+#define  SSB_CHIPCO_PMU_CTL_PLL_UPD		0x00000400
- #define  SSB_CHIPCO_PMU_CTL_NOILPONW		0x00000200 /* No ILP on wait */
- #define  SSB_CHIPCO_PMU_CTL_HTREQEN		0x00000100 /* HT req enable */
- #define  SSB_CHIPCO_PMU_CTL_ALPREQEN		0x00000080 /* ALP req enable */
-@@ -667,5 +668,6 @@ enum ssb_pmu_ldo_volt_id {
- void ssb_pmu_set_ldo_voltage(struct ssb_chipcommon *cc,
- 			     enum ssb_pmu_ldo_volt_id id, u32 voltage);
- void ssb_pmu_set_ldo_paref(struct ssb_chipcommon *cc, bool on);
-+void ssb_pmu_spuravoid_pllupdate(struct ssb_chipcommon *cc, int spuravoid);
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h |  6 ++++++
+ net/mac80211/mlme.c       | 31 +++++++++++++++++++++++++++----
+ net/mac80211/rx.c         | 16 ++++++++++++++++
+ 3 files changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 9562152..ce07161 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -866,6 +866,11 @@ struct ieee80211_mgmt {
+ 				} __packed chan_switch;
+ 				struct{
+ 					u8 action_code;
++					struct ieee80211_ext_chansw_ie data;
++					u8 variable[0];
++				} __packed ext_chan_switch;
++				struct{
++					u8 action_code;
+ 					u8 dialog_token;
+ 					u8 element_id;
+ 					u8 length;
+@@ -1816,6 +1821,7 @@ enum ieee80211_key_len {
  
- #endif /* LINUX_SSB_CHIPCO_H_ */
+ /* Public action codes */
+ enum ieee80211_pub_actioncode {
++	WLAN_PUB_ACTION_EXT_CHANSW_ANN = 4,
+ 	WLAN_PUB_ACTION_TDLS_DISCOVER_RES = 14,
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3e46583..3102764 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3132,6 +3132,8 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	enum rx_mgmt_action rma = RX_MGMT_NONE;
+ 	u8 deauth_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	u16 fc;
++	struct ieee802_11_elems elems;
++	int ies_len;
+ 
+ 	rx_status = (struct ieee80211_rx_status *) skb->cb;
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+@@ -3162,10 +3164,9 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	case IEEE80211_STYPE_ACTION:
+ 		if (mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT) {
+-			struct ieee802_11_elems elems;
+-			int ies_len = skb->len -
+-				      offsetof(struct ieee80211_mgmt,
+-					       u.action.u.chan_switch.variable);
++			ies_len = skb->len -
++				  offsetof(struct ieee80211_mgmt,
++					   u.action.u.chan_switch.variable);
+ 
+ 			if (ies_len < 0)
+ 				break;
+@@ -3180,6 +3181,28 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_sta_process_chanswitch(sdata,
+ 							 rx_status->mactime,
+ 							 &elems);
++		} else if (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC) {
++			ies_len = skb->len -
++				  offsetof(struct ieee80211_mgmt,
++					   u.action.u.ext_chan_switch.variable);
++
++			if (ies_len < 0)
++				break;
++
++			ieee802_11_parse_elems(
++				mgmt->u.action.u.ext_chan_switch.variable,
++				ies_len, &elems);
++
++			if (elems.parse_error)
++				break;
++
++			/* for the handling code pretend this was also an IE */
++			elems.ext_chansw_ie =
++				&mgmt->u.action.u.ext_chan_switch.data;
++
++			ieee80211_sta_process_chanswitch(sdata,
++							 rx_status->mactime,
++							 &elems);
+ 		}
+ 		break;
+ 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ea91262..562ae34 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2452,6 +2452,22 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		}
+ 
+ 		break;
++	case WLAN_CATEGORY_PUBLIC:
++		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
++			goto invalid;
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
++			break;
++		if (!rx->sta)
++			break;
++		if (!ether_addr_equal(mgmt->bssid, sdata->u.mgd.bssid))
++			break;
++		if (mgmt->u.action.u.ext_chan_switch.action_code !=
++				WLAN_PUB_ACTION_EXT_CHANSW_ANN)
++			break;
++		if (len < offsetof(struct ieee80211_mgmt,
++				   u.action.u.ext_chan_switch.variable))
++			goto invalid;
++		goto queue;
+ 	case WLAN_CATEGORY_VHT:
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
 -- 
-1.7.10.4
+1.8.0
 
