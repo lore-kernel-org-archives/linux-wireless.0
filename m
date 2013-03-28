@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57548 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933057Ab3CLQP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Mar 2013 12:15:56 -0400
-Message-ID: <513F54B5.1040203@qca.qualcomm.com> (sfid-20130312_171601_653647_B9C044B8)
-Date: Tue, 12 Mar 2013 21:45:49 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from mga03.intel.com ([143.182.124.21]:39955 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752589Ab3C1LXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Mar 2013 07:23:40 -0400
+Date: Thu, 28 Mar 2013 12:23:35 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Rymarkiewicz Waldemar <waldemar.rymarkiewicz@tieto.com>
+Cc: Wei Yongjun <weiyj.lk@gmail.com>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"yongjun_wei@trendmicro.com.cn" <yongjun_wei@trendmicro.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-nfc@lists.01.org" <linux-nfc@lists.01.org>
+Subject: Re: [linux-nfc] [PATCH] NFC: microread: use kfree_skb() instead of
+ kfree()
+Message-ID: <20130328112335.GG2153@zurbaran> (sfid-20130328_122342_790274_3C6DE25B)
+References: <CAPgLHd-BKoizHok9hDdAz9yBY1YqfpTov6s3CoefPTtbacQW3g@mail.gmail.com>
+ <514AF0EA.9020504@tieto.com>
+ <CAPgLHd9tUibxW53tQXhCsS9LPsgn=UA2Zj8O4Fxet0u7eEK7cQ@mail.gmail.com>
+ <514C34C1.1010004@tieto.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Julien Massot <jmassot@aldebaran-robotics.com>,
-	<linux-wireless@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
-Subject: Re: ath6kl: AR6004 failed to start on computer boot
-References: <CADGp=QfF1bBgqP_X9=+PXfH0xCgPFn=h2VG19uV8_cJ8xzg8gg@mail.gmail.com> <87ehghanxe.fsf@kamboji.qca.qualcomm.com> <CADGp=Qf=j+kWA4EM1Z-xyKkuutW64Fi0vfUNqm1tPM1+4WEKyQ@mail.gmail.com> <511E44B8.3000308@qca.qualcomm.com> <CADGp=QfOyyTpwEg1=XXiyvRE7ZOGsn6TfiPQHs3+Jc3C69RM6Q@mail.gmail.com> <51262CB2.6070208@qca.qualcomm.com> <87sj46mbhn.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87sj46mbhn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <514C34C1.1010004@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2013 03:58 PM, Kalle Valo wrote:
-> Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
->
->> Hi Julien,
->>
->> On 02/21/2013 07:33 PM, Julien Massot wrote:
->>> Hi,
->>> I just find a quick and dirty patch to workaround this issue.
->>> I just reset the device on initialization failure.
->>>
->>> I hope this helps to understand the real issue.
->>>
->>> [    7.012514] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/bdata.bin
->>> [    7.035276] cfg80211: World regulatory domain updated:
->>> [    7.035287] cfg80211:   (start_freq - end_freq @ bandwidth),
->>> (max_antenna_gain, max_eirp)
->>> [    7.035299] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [    7.037916] usb 1-7: firmware: requesting ath6k/AR6004/hw1.3/fw-3.bin
->>> [    9.378940] ath6kl: f59afe4c
->>> [    9.379054] ath6kl: f59afe6c
->>> [    9.379391] ath6kl_usb: probe of 1-7:1.0 failed with error -5
->>> Here I reset the device.
->>
->> that was the suggestion gave by Wei. The failure it seems
->> check hostapp area to check target status and reset the device
->> if needed.
->>
->> Great that you figured it out yourself!
->
-> The power of Open Source in action :)
->
-> But thanks a lot Julien, it was really great that you could solve it
-> yourself.
->
->> We will send a proper patch for this.
->
-> I now sent a patch (plus few cleanups) to fix this.
->
-yeah, I had a few patches in my stash, but you addressed them in your 
-series. thanks :-)
+Hi Waldemar,
+
+On Fri, Mar 22, 2013 at 11:38:57AM +0100, Rymarkiewicz Waldemar wrote:
+> Hi,
+> 
+> >>
+> >>kfree_skb call is used internally by the kernel. A driver should use dev_kfree_skb instead, I guess.
+> >
+> >It seems that dev_kfree_skb() call when dev_alloc_skb() is used, and
+> >kfree_skb() use to free skb malloced by alloc_skb().
+> 
+> I agree. The driver should use  dev_* flavoured skb function then.
+I'd prefer the driver to call nfc_alloc_recv_skb() instead. This one calls
+alloc_skb() but we could have it call dev_alloc_skb() I suppose. dev_alloc_skb
+does atomic allocation though.
+And kfree_skb() or dev_kfree_skb() is essentially the same.
+
+I'll fix the driver so that it calls nfc_alloc_recv_skb() and kfree_skb unless
+Wei beats me at it.
+
+Cheers,
+Samuel.
 
 -- 
-thanks,
-shafi
+Intel Open Source Technology Centre
+http://oss.intel.com/
