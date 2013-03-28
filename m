@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avasout08.plus.net ([212.159.14.20]:37359 "EHLO
-	avasout08.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab3CWPyA convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36435 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755262Ab3C1MTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 11:54:00 -0400
-Date: Sat, 23 Mar 2013 15:53:55 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Michael =?ISO-8859-1?B?QvxzY2g=?= <m@bues.ch>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	isedev@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
-Message-ID: <20130323155355.0a1752f5@laptop.homenet> (sfid-20130323_165406_697997_A9E08A33)
-In-Reply-To: <20130323113517.01906b0b@milhouse>
-References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
-	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
-	<20130323113517.01906b0b@milhouse>
-Mime-Version: 1.0
+	Thu, 28 Mar 2013 08:19:18 -0400
+Received: by mail-wi0-f170.google.com with SMTP id hm11so3315028wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 05:19:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUVzdxoDvontxSR99Jxu1UY88OG4xCCjsKErXBpmLzH_+g@mail.gmail.com>
+References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com>
+ <CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com>
+ <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
+ <515392AF.8070809@lwfinger.net> <CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+ <20130328090323.GA1384@redhat.com> <CA+icZUVzdxoDvontxSR99Jxu1UY88OG4xCCjsKErXBpmLzH_+g@mail.gmail.com>
+From: Ali Ustek <aliustek@gmail.com>
+Date: Thu, 28 Mar 2013 12:18:37 +0000
+Message-ID: <CAGmUV-tU6uSS2dW4vuNN7Zbm1qWk_0r3vkJ8crRAvygQ-+NuAA@mail.gmail.com> (sfid-20130328_131921_427029_8FF5ACE8)
+Subject: Re: Fwd: Ralink RT3290 card not supported
+To: sedat.dilek@gmail.com
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	1156363@bugs.launchpad.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Mar 2013 11:35:17 +0100
-Michael Büsch <m@bues.ch> wrote:
-> On Sat, 23 Mar 2013 00:27:30 +0100
-> Rafał Miłecki <zajec5@gmail.com> wrote:
-> 
-> > Today I've plugged my 14e4:4315 and (unfortunately?) it's working
-> > pretty well. I hoped to reproduce some problems but failed to do
-> > so. I was transmitting for an hour with average speed 11MiB/s and
-> > didn't notice any DMA issues.
-> > 
-> > I was using iperf with interval of 60 seconds and only 3 results
-> > showed some problems (8.5MiB/s, 2.5MiB/s, 4.5MiB/s). No
-> > disconnections however and no DMA errors. I just got "Group
-> > rekeying completed..." in wpa_supplicant.
-> > 
-> > So as I can't reproduce this, I can't find any other fix for this
-> > issue, and there's no reason to stop this workaround. I'll just
-> > apply it and test over weekend to check for any regressions, but
-> > they are highly unlikely.
-> 
-> I don't really believe in this being a firmware bug.
-> 
-> Some b43 DMA engines (all?) have some alignment and
-> page-boundary-crossing constraints. I would rather guess that on some
-> kernels with some options turned on, alignment and/or boundary
-> constraints are violated every now and then. (and thus the packet
-> never reaches the firmware).
-> 
-> I don't remember the details, though. Too long since I worked on that.
-> But a few sanity checks could probably be added to the code to check
-> this hypothesis.
-> 
-> Does the failing kernel/machine have any special things w.r.t. memory?
-> Like iommu, hugepages, whetever...
+Hi Sedat,
 
-For what it is worth, this happens to me on both home compiled and
-distributor kernels (ubuntu and slackware): in fact, any 32-bit kernel
-that I have tried it on.
+The kernel I am using is from Ubuntu and I am using NM.
 
-And it does not happen with the wl driver on the same kernels.  So if
-this is right, the wl driver must be doing something that the b43 driver
-does not with respect to alignment: and you might well be right about
-that.
+All the other logs I have attached on to launchpad bug
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1156363
+if that's any help at all.
 
-Chris
+Thanks
 
+On Thu, Mar 28, 2013 at 9:19 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Thu, Mar 28, 2013 at 10:03 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> On Thu, Mar 28, 2013 at 08:18:37AM +0000, Ali Ustek wrote:
+>>> >> The wi-fi chip Ralink RT3290 is common in notebooks but is not
+>>> >> supported by linux-kernel
+>>
+>> This device is supported since 3.7 . You most likely compile kernel
+>> without CONFIG_RT2800PCI_RT3290.
+>>
+>
+> Hi Ali,
+>
+> your kernel-config (self-compiled or the one of your $distro) and
+> dmesg logs are always helpful, the same to lspci/lsusb outputs.
+> And... informations to your $distro plus used your
+> $network-userspace-apps like network-manager (NM), wpa-supplicant etc.
+> are helpful... if you want your issue be tracked... successfully :-).
+>
+> Check also docs section for debugging the different wifi-drivers on
+> <wireless.kernel.org>.
+>
+> Hope this helps you!
+>
+> Regards,
+> - Sedat -
+>
+>> Stanislaw
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
