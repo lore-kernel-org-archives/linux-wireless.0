@@ -1,65 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37624 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3CKWAn (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:35867 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab3C1UNp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Mar 2013 18:00:43 -0400
-Message-ID: <513E5401.8030607@candelatech.com> (sfid-20130311_230047_916309_E54CE551)
-Date: Mon, 11 Mar 2013 15:00:33 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 28 Mar 2013 16:13:45 -0400
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Allow over-riding reg-domain.
-References: <1363020306-924-1-git-send-email-greearb@candelatech.com> <20130311190537.GB32171@tuxdriver.com> <513E35CD.3010006@candelatech.com> <513E3BE8.1000909@openwrt.org> <513E4617.2020906@candelatech.com> <513E4E76.2000000@openwrt.org> <513E5057.4030601@candelatech.com> <513E51F5.6080005@openwrt.org>
-In-Reply-To: <513E51F5.6080005@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 28 Mar 2013 13:13:23 -0700
+Message-ID: <CAB=NE6WLuz7-QD3v4BwZkLLNUed=X7jgvZtZX8cDEh3HiD51oQ@mail.gmail.com> (sfid-20130328_211411_468465_781DDA0B)
+Subject: Possibility for an external staging tree - bring up quality code
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kalle Valo <kvalo@adurom.com>, Jouni Malinen <j@w1.fi>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kathy Giori <Kathy.Giori@qca.qualcomm.com>,
+	Mathieu Olivari <mathieu@qca.qualcomm.com>,
+	Yanbo Li <dreamfly281@gmail.com>, k.eugene.e@gmail.com,
+	Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2013 02:51 PM, Felix Fietkau wrote:
-> On 2013-03-11 10:44 PM, Ben Greear wrote:
->> On 03/11/2013 02:36 PM, Felix Fietkau wrote:
->>> On 2013-03-11 10:01 PM, Ben Greear wrote:
->>>> On 03/11/2013 01:17 PM, Felix Fietkau wrote:
->>
->>>> I am not sure what you are suggesting.  I enabled this override
->>>> only when ONUS is selected because I wanted it clear that users
->>>> were taking their regulatory compliance into their own hands.
->>> And as far as I understand, CONFIG_CFG80211_CERTIFICATION_ONUS already
->>> enables some code in cfg80211 that allows a special type of regulatory
->>> change request from user space that bypasses intersection.
->>>
->>>> I always want the module option at least visible so that
->>>> you don't have to muck with modprobe.conf just to get ath9k.ko
->>>> to load when it's compiled differently.
->>>>
->>>> For the second part, you want the ability to set the regdomain
->>>> be a compile-time option like CONFIG_ATH9K_OVERRIDE_REGDOMAIN
->>>> or something like that?
->>> Something like that, yes. It should depend on
->>> CONFIG_CFG80211_CERTIFICATION_ONUS and should contain a help text that
->>> strongly discourages any distribution from enabling it in their kernel
->>> builds.
->>
->> It seems to me that this doesn't gain much.  The ONUS configuration is already
->> strongly discouraged from vendor kernels.  If you are already compiling
->> with ONUS set, is there any reason you'd care to disable the override
->> module option?  When you don't set the module option, nothing happens
->> anyway...
-> I'd like to avoid accumulating more hackish driver specific module
-> options for working around a generic issue.
+Greg, folks,
 
-I don't think I'm up for any significant re-write of the
-regdomain logic, and I'm not sure it's worth the effort
-of anyone doing this for code that will be compiled out
-of all vendor kernels anyway...
+So the staging area of the Linux kernel has proven quite successful
+for a few drivers for 802.11 already. Otus [0] for example was
+rewritten completely first as ar9170 [1] and then carl9170 [2] even
+with open firmware, carl9170.fw [3] and then Otus got nuked. ath6kl
+[4] is another example, it got a lot of heavy handing on staging and
+then Kalle took over and decided to work on the tree outside of the
+kernel given that he was actually familiar with upstream requirements,
+he just needed a lot more freedom than what we allow for patches
+upstream to do a lot of heavy handing cleanup.
 
-Thanks,
-Ben
+So staging helps a lot with drivers that likely get a little attention
+or to help educate developers or vendors not used to upstream
+development, but for experienced upstream developers that don't need
+these lessons its a bit of a arm twister (although still good
+practice) to deal with the requirements of patches upstream for a huge
+cleanup. Granted keeping the history is good and important, specially
+if accepting patches and so on, but at least from what I'm seeing some
+802.11 developers are preferring to do the staging outside of the
+Linux kernel. For both of these drivers then the main usage of staging
+was as immediate enablement for users given that otherwise other Linux
+distributions would cherry pick these drivers anyway and stable fixes
+for these users, but for development experienced 802.11 developers
+have used it only as a base to fork and do major overhauls. That was
+the case for both otus and ath6kl and from the looks of it it seems
+that the same is being preferred for the wcn36xx driver [5] which is a
+clean rewrite of prima driver [6]. There are also some drivers on my
+radar that I think might take similar approach, but not because they
+are crap but still because they are still real staging drivers.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Despite these things some folks may want them. For example the
+Wilocity 60 GHz 802.11ad wil6210 [8] driver was desired just for
+monitor mode support as soon as that was supported and we wanted those
+folks to be able to get it through a unified, and yet
+upstream-prioritizing-friendly-fassion. Obviously no one runs the
+latest foo-next subsystem kernels unless you are a developer so we
+backport these drivers through compat-drivers [7]. For a while I
+accepted these drivers into compat-drivers as a patch under crap/ with
+the caveat that I'd kick them out after a kernel release or two if
+they were not upstream by then. The maintenance of such drivers proved
+painful, so I decided to kick them all out and push everyone to
+usptream ASAP. That worked for wil6210, now upstrea, but for the
+Ethernet alx driver [9], based on community feedback, still requires
+more work. The crux of the alx driver was to either go to staging or
+keep it externally for whatever reason. I was fan of just getting it
+under staging but at that point I started addressing driver code
+quality in general at corporations with Adrian [10] who works on
+FreeBSD. If we can address code quality at large from inception, from
+bring up code, then we'd all be in a better place. This experience has
+been very educational given that it has brought up general bring up
+considerations and timeline considerations for code and hardware. We
+have to separate all these. We are currently testing an idea to use a
+unified driver strategy for both FreeBSD and Linux under a unified
+driver git tree for both which would never put in compromise the
+upstream requirements for both. The idea is to do the staging
+development companies typically do on their end publicly and address
+their idea of unification *with* the community [11]. We chose alx
+given the simplicity of the driver but work is going slow there. While
+we give some time for that work to brew I have integrated it to
+compat-drivers by extracting code using a reference git tree, this
+lets the driver always have to deal with only linux-next being the
+target and we'd deal with the backporting through compat-drivers and
+compat. I will kick the alx driver out of compat-drivers though if we
+don't get any unification interest from FreeBSD though, but this
+experience has helped so far.
 
+The issue of staging and bring up still exists and another drivers is
+on the roadmap that is already sort of upstream quality but developers
+would prefer to do development outside of drivers/staging/ to simply
+address proper upstream as an ultimate objective given the major
+overhauls required still and given the developers involved are
+experienced upstream developers. The question of enablement to end
+users of that driver comes up and I now have to consider adding cherry
+picking drivers of that type to compat-drivers or simply asking for
+folks to wait until its upstream. This has me thinking if it makes
+sense to have an external driver tree for staging drivers but lead by
+engineers who already know the rules of upstream, they just want to
+get things done faster. Wanted to get your and the community's
+feedback on this.
+
+[0] http://wireless.kernel.org/en/users/Drivers/otus
+[1] http://wireless.kernel.org/en/users/Drivers/ar9170
+[2] http://wireless.kernel.org/en/users/Drivers/carl9170
+[3] http://wireless.kernel.org/en/users/Drivers/carl9170.fw
+[4] http://wireless.kernel.org/en/users/Drivers/ath6kl
+[5] https://github.com/KrasnikovEugene/wcn36xx
+[6] https://www.codeaurora.org/gitweb/external/wlan/?p=prima.git
+[7] https://backports.wiki.kernel.org
+[8] http://wireless.kernel.org/en/users/Drivers/wil6210
+[9] http://www.linuxfoundation.org/collaborate/workgroups/networking/alx
+[10] http://www.do-not-panic.com/2013/03/killing-proprietary-drivers-for-all.html
+[11] http://lists.infradead.org/mailman/listinfo/unified-drivers
+
+  Luis
