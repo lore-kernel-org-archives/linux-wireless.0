@@ -1,43 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:59270 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755096Ab3CHVCd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756321Ab3C1PgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Mar 2013 16:02:33 -0500
-Received: by mail-ob0-f181.google.com with SMTP id ni5so1648976obc.40
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Mar 2013 13:02:32 -0800 (PST)
-Message-ID: <513A51E6.9090704@lwfinger.net> (sfid-20130308_220236_794435_FB45D69B)
-Date: Fri, 08 Mar 2013 15:02:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jenya Y <jy.gerstmaier@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: PROBLEM: linux kernel 3.9 rc1 and rtl8187 wireless, unable to
- connect to any available hotspots.
-References: <51380336.6030007@live.com> <BLU0-SMTP15357D4D2469B872AE4355CF1E50@phx.gbl> <5138109D.1040605@lwfinger.net> <BLU0-SMTP18556F96AB7DC8FE9D76DA3F1E50@phx.gbl> <513936C8.5060908@lwfinger.net> <513A04BD.3020002@gmail.com> <513A0D9D.8020600@lwfinger.net> <513A1F5F.3080209@gmail.com> <513A2824.30603@lwfinger.net> <513A4154.3040000@gmail.com>
-In-Reply-To: <513A4154.3040000@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 28 Mar 2013 11:36:02 -0400
+Message-ID: <1364484949.10397.7.camel@jlt4.sipsolutions.net> (sfid-20130328_163622_081526_EBFC9A45)
+Subject: pull-request: iwlwifi-fixes 2013-03-28
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 28 Mar 2013 16:35:49 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Di2kMQwXqNh9x0w4tLxB"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2013 01:51 PM, Jenya Y wrote:
->
-> I just recompiled the kernel with CONFIG_USB_DEBUG flag and here is the output
-> of the same commands you provided me with earlier + output of dmesg (though it's
-> might be superfluous)
 
-No, it was not. At the end were the lines
+--=-Di2kMQwXqNh9x0w4tLxB
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[   19.322729] rtl8187: wireless switch is on
-[   19.322763] usbcore: registered new interface driver rtl8187
-[   19.423269] systemd-udevd[272]: renamed network interface wlan0 to wlp0s29f7u7u3
-[   21.321746] IPv6: ADDRCONF(NETDEV_UP): wlp0s29f7u7u3: link is not ready
+Hi John,
 
-Why are your udev rules renaming wlan0 to that crazy string?
+I know you just pulled my other iwlwifi-fixes request ... but in the
+meantime I debugged with Alex Romosan, you probably saw the thread, and
+thus have another fix and I wanted to send it to you.
 
-Your ESSID for the AP of "1.618029" is also strange, but that works OK here.
+The only fix here is to the passive-no-RX firmware regulatory
+enforcement driver support code to not drop auth frames in quick
+succession, leading to not being able to connect to APs on passive
+channels in certain circumstances.
 
-Note that I added the ML to this reply.
+Let me know if there's any issue. Thanks,
+johannes
 
-Larry
+
+The following changes since commit 2d5d50ee596361566f7f84300117cba7d7672bc5=
+:
+
+  iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git f=
+or-john
+
+for you to fetch changes up to b8730b403aee94db4631bfefb546a6ce8c287dc2:
+
+  iwlwifi: dvm: fix the passive-no-RX workaround (2013-03-28 16:31:26 +0100=
+)
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      iwlwifi: dvm: fix the passive-no-RX workaround
+
+ drivers/net/wireless/iwlwifi/dvm/rxon.c | 18 ++++++++----------
+ drivers/net/wireless/iwlwifi/dvm/tx.c   |  2 +-
+ 2 files changed, 9 insertions(+), 11 deletions(-)
+
+
+--=-Di2kMQwXqNh9x0w4tLxB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRVGNVAAoJEDBSmw7B7bqrUNUP/3iY60GdvoFhYa7QlESuppjj
+FodY7fOUYlGeCapxC/63lbePRfw5J6T2ZTFc6FDxGGnG5G6Eaj86/GcuLblwkq1u
+cdhzYdRgCyJtMsJCIAXvIrwxxgm4WYFpD1CqU+8m58Y8Mn3Q1wD1gvwHISSzODtE
+JoK/3zO679o4yl9LDEQ/B8ivQwCiHriNAoRbJUQqc+Ox0hcdLDFN4plUN9QLsCUk
+jTI4T0ew0ij08v6Uwva9cH93jAdndy0b16OPauBsT4hyoshv0RX8Ipkj6We4rmu9
+KiGfm4tpDrtXLRVTrE58Y78wn0wOz8d4CbovBwhuc8kw2OcfpA/cTFib3YR19qac
+IZ6rl6sw0/69ViGNsIvihp/i0oTf/N4bOIbN4NzF5uKZ1jk8u2I5bVv7Tfn4ctKc
+/U8bUx6MwnDSmG3FXVdLRG9jWKYXn8R3INpbvp46YFSePtG2ZyORbOtS80WfSb1U
+UIFb3Ki9OzFEWaQH9BziHsU080U2Fcc5txIjisPig9RSO+ZE5C5lPzTKJexpzUl3
+MfcvQxdq8Jxalaraw8gQBoddUbos2udzgp6CSlhQOI/fJkYUhHbIbHeGbWfriLzX
+ObvUQJFgLIS1rdNhDqPkJNc7s2EkdTabIYJUZ0p79WqwcjvSUfIuOFXQOZb+gsph
+lG2+O62gszyzpaqyeKyF
+=5/ke
+-----END PGP SIGNATURE-----
+
+--=-Di2kMQwXqNh9x0w4tLxB--
 
