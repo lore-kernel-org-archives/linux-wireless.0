@@ -1,71 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43109 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42451 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255Ab3CDUZj (ORCPT
+	with ESMTP id S1756685Ab3C1JtM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 15:25:39 -0500
-Message-ID: <1362428733.21028.53.camel@jlt4.sipsolutions.net> (sfid-20130304_212544_272012_09136D73)
-Subject: Re: [PATCHv4 2/3] mac80211: mesh power save doze scheduling
+	Thu, 28 Mar 2013 05:49:12 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Marco Porsch <marco@cozybit.com>, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, ath9k-devel@lists.ath9k.org
-Date: Mon, 04 Mar 2013 21:25:33 +0100
-In-Reply-To: <20130304192320.GB20505@thinkpad-t410>
-References: <1362419675-27127-1-git-send-email-marco@cozybit.com>
-	 <1362419675-27127-2-git-send-email-marco@cozybit.com>
-	 <20130304192320.GB20505@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/9] cfg80211: add ieee80211_operating_class_to_band
+Date: Thu, 28 Mar 2013 10:48:59 +0100
+Message-Id: <1364464145-14446-4-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104918_397133_5D5E389F)
+In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-03-04 at 13:23 -0600, Seth Forshee wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I've been looking at power save in mac80211 over the past few days with
-> an eye towards allowing multiple interface to be supported, as a result
-> of comments Johannes made at [1]. It seems like adding driver callbacks
-> for PS which are specific to the interface type is contrary to this
-> goal.
+This function converts a (global only!) operating
+class to an internal band identifier. This will
+be needed for extended channel switch support.
 
-Yeah, this is a concern. I didn't really stand in the way of doing mesh
-powersave though, and it seemed that the new interface here would
-actually be somewhat suitable, since for mesh any kind of powersave code
-needs to know when to wake up/sleep. I would've liked to see less
-reliance on host timers directly in core mac80211 even for the going to
-sleep part though... basically I'm not sure for mesh just having PS
-state will cut it. For managed mode this is easy because it only needs
-to sync with a single AP, but for mesh that's a bit more complicated and
-I think the whole sync should stay in mac80211. In the general case,
-just having the TSF might not be enough, but that can be solved as
-needed.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 11 +++++++++++
+ net/wireless/util.c    | 20 ++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
-> The basic idea that's been forming on my mind is add PS states to vifs
-> and make the managed, mesh, etc. code manipulate vif PS states rather
-> than hw states. Then a PS module would manage the hw state based on the
-> aggregate of the vif states.
-
-Yeah, that about matches what I was thinking. But like I said above,
-while this is fairly simple for managed mode, at least as required
-today, it's clearly not as simple for mesh.
-
-For managed mode, we also assume that we can send packets while the
-device is sleeping, and the device will do the right thing to wake up
-for beacons from the AP etc. For mesh, there are many more wakeup
-sources, from what I can tell.
-
-> I don't have a lot of the details worked out yet, and my knowledge of PS
-> in mesh networks (and of mesh network operation in general) is pretty
-> rudimentary at this point. But afaict any modes which support PS define
-> the same two hw states, awake and doze. I wonder whether we should
-> instead aim for a single interface into the driver for PS that's capable
-> of supporting all interface types.
-
-Such an interface would probably have to be the interface now defined
-for mesh, telling the device when to wake up and go to sleep? But this
-interface is rather inefficient for most chipsets...
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 172a693..ca7f6ed 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4025,6 +4025,17 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
+ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 			       struct cfg80211_chan_def *chandef);
+ 
++/**
++ * ieee80211_operating_class_to_band - convert operating class to band
++ *
++ * @operating_class: the operating class to convert
++ * @band: band pointer to fill
++ *
++ * Returns %true if the conversion was successful, %false otherwise.
++ */
++bool ieee80211_operating_class_to_band(u8 operating_class,
++				       enum ieee80211_band *band);
++
+ /*
+  * cfg80211_tdls_oper_request - request userspace to perform TDLS operation
+  * @dev: the device on which the operation is requested
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 8b753b1..5871496 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1160,6 +1160,26 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
+ }
+ EXPORT_SYMBOL(cfg80211_get_p2p_attr);
+ 
++bool ieee80211_operating_class_to_band(u8 operating_class,
++				       enum ieee80211_band *band)
++{
++	switch (operating_class) {
++	case 112:
++	case 115 ... 127:
++		*band = IEEE80211_BAND_5GHZ;
++		return true;
++	case 81:
++	case 82:
++	case 83:
++	case 84:
++		*band = IEEE80211_BAND_2GHZ;
++		return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL(ieee80211_operating_class_to_band);
++
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int)
+ {
+-- 
+1.8.0
 
