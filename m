@@ -1,89 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:47151 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3CQJMx (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38351 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753471Ab3C1Xam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 05:12:53 -0400
-Message-ID: <5145890A.7070308@iki.fi> (sfid-20130317_101302_104245_5AE83D91)
-Date: Sun, 17 Mar 2013 11:12:42 +0200
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+	Thu, 28 Mar 2013 19:30:42 -0400
+Message-ID: <5154D286.4040001@candelatech.com> (sfid-20130329_003046_071119_C4041C9E)
+Date: Thu, 28 Mar 2013 16:30:14 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Christian Clauss <cclauss@bluewin.ch>, ziv_huang@realtek.com,
-	georgia@realtek.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192cu NOT working on Raspberry Pi
-References: <041DFAF5-BEDE-4C1A-9863-A04F2DD3049A@bluewin.ch> <5144FECC.6050504@lwfinger.net>
-In-Reply-To: <5144FECC.6050504@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="----enig2KMGACUGSRNQCPIROVFPE"
+To: Dan Williams <dcbw@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
+ user-space
+References: <1364472669-5629-1-git-send-email-arend@broadcom.com>  <1364487476.10397.23.camel@jlt4.sipsolutions.net>  <5154B347.9080904@broadcom.com>  <1364506118.10397.29.camel@jlt4.sipsolutions.net>  <1364510577.3226.7.camel@dcbw.foobar.com>  <1364510646.10397.81.camel@jlt4.sipsolutions.net> <1364511671.3226.22.camel@dcbw.foobar.com>
+In-Reply-To: <1364511671.3226.22.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
-------enig2KMGACUGSRNQCPIROVFPE
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On 17.03.2013 01:22, Larry Finger wrote:
-> On 03/16/2013 05:03 PM, Christian Clauss wrote:
->> Hi Larry, Ziv, and Georgia,
+On 03/28/2013 04:01 PM, Dan Williams wrote:
+> On Thu, 2013-03-28 at 23:44 +0100, Johannes Berg wrote:
+>> On Thu, 2013-03-28 at 17:42 -0500, Dan Williams wrote:
 >>
->>     These rtl8192cu drivers seem to be very flakey / non-functional on=
- Raspberry Pi.
+>>>> Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
+>>>> of course. I don't really see any reasonable minimum time? We might want
+>>>> to enforce a max though, maybe.
+>>>
+>>> Not quite.  A lot is dependent on the server itself, and I've had users
+>>> on university and corporate networks report it sometimes takes 30 to 60
+>>> seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
+>>> OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
+>>> like your lease, which means you need another round-trip.  So in many
+>>> cases, it's a couple round-trips and each of these packets may or may
+>>> not get lost in noisy environments.
 >>
->>      https://github.com/hexameron/rtlwifi
->>
->>      http://www.raspberrypi.org/phpBB3/viewtopic.php?f=3D71&t=3D24951
->=20
-> Sorry, but I only support the drivers in the current Linux kernel, and =
-as backported with compat-drivers.
->=20
+>> Oh, yes, of course. However, we're talking about optimising the good
+>> cases, not the bad ones. Think of it this way: if it goes fast, we
+>> shouldn't make it slow by putting things like powersave or similar in
+>> the way. If it's slow, then it'll still work, just slower. But when
+>> "slower" only means a few hundred milliseconds, it doesn't matter if
+>> everything takes forever (30-60 secs)
+>
+> True, but at least 4 or 5 seconds is the minimum time I'd recommend here
+> for DHCP.
 
-Problems I had with rtl8192cu on arm/sunxi, were mostly related to USB ho=
-st driver not handling unaligned and/or overlapping URB buffers correctly=
- which lead to memory corruption and random crashes. So if you get proble=
-matic behavior with latest compat-drivers (+ with the patch Larry pointed=
- out), I'd say look at USB host driver of raspberry.
+Couldn't dhcp just turn off the critical protection as soon as it is done?
 
-You can check the workarounds for sunxi-ehci/ohci and tegra-ehci at:
- https://github.com/linux-sunxi/linux-sunxi/blob/stage/sunxi-3.4/drivers/=
-usb/host/ehci-tegra.c#L386
- https://github.com/linux-sunxi/linux-sunxi/blob/stage/sunxi-3.4/drivers/=
-usb/host/sw_hci_sunxi.c#L633
+Then, you only need to worry about the max time allowed.
 
--Jussi
+Also, you would probably need to enforce in the kernel that only
+x out of y time in any given period can be locked, otherwise lots
+of different dhclient processes (perhaps erroneously spawned..or
+running on lots of different VIFs) could basically disable scanning
+or channel changes...
 
-<snip>
->=20
-> There is a major bug in rtl8192cu that was just fixed this past week. S=
-ee http://marc.info/?l=3Dlinux-wireless&m=3D136319807619280&w=3D2 for the=
- patch.
->=20
-> Larry
->=20
+Thanks,
+Ben
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-------enig2KMGACUGSRNQCPIROVFPE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQGcBAEBCAAGBQJRRYkRAAoJEAaL+yOpMWaGmvwL/j2UAbSC4fDwH3nMNPxe5YVC
-vzd2/BLkHwa4j7+KY3O2lzRULgJAJSWKOsLmmL40QhVRGTtvLWi4BJbbQf5Jvz+e
-QY7x4m7SZlQBXIsIhUdb0CElEDQSMsFPlUvX48yWVjqhvGf6bwBqj6ML2wuDaPQe
-01OcFV5YYZu75lEqj8DLW4p6WmYAn2aBMY3DLs6AnXsyiCR/b3X07Prd22IsL4ok
-mZSYYLjJWjbP411bH4tDZT7yf0QwYrFYasjQj4DXo9sCHi2cNKryyIPA3BS+Etzs
-gZyy8TEsVvi6pNt/UbalCLiCQbdq38Mks7nl7/3AN9QdksqJ3AF1FvhxeNFinu8L
-BVln24K4x4gO614o5j/2sc8Ec1cFuwoWmXfhGUjUFydr1k1iWLHY5i0aqGu9mSTn
-8+XfLS26LnGpewhx9TAW4qGvYuF4Y+IyoLYPWL64Rs/ikSqIzQNK7MHrX18GMSp6
-tCs/kAHHsME4wVpmLUYF2PZxnPGanSpx4tY6Pm2H6g==
-=3ENf
------END PGP SIGNATURE-----
-
-------enig2KMGACUGSRNQCPIROVFPE--
