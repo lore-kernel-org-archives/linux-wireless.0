@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38351 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753471Ab3C1Xam (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:53671 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753559Ab3C1MQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 19:30:42 -0400
-Message-ID: <5154D286.4040001@candelatech.com> (sfid-20130329_003046_071119_C4041C9E)
-Date: Thu, 28 Mar 2013 16:30:14 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 28 Mar 2013 08:16:52 -0400
+Received: by mail-wg0-f49.google.com with SMTP id e11so1486838wgh.16
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 05:16:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
- user-space
-References: <1364472669-5629-1-git-send-email-arend@broadcom.com>  <1364487476.10397.23.camel@jlt4.sipsolutions.net>  <5154B347.9080904@broadcom.com>  <1364506118.10397.29.camel@jlt4.sipsolutions.net>  <1364510577.3226.7.camel@dcbw.foobar.com>  <1364510646.10397.81.camel@jlt4.sipsolutions.net> <1364511671.3226.22.camel@dcbw.foobar.com>
-In-Reply-To: <1364511671.3226.22.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20130328090323.GA1384@redhat.com>
+References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com>
+ <CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com>
+ <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
+ <515392AF.8070809@lwfinger.net> <CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+ <20130328090323.GA1384@redhat.com>
+From: Ali Ustek <aliustek@gmail.com>
+Date: Thu, 28 Mar 2013 12:16:11 +0000
+Message-ID: <CAGmUV-vhi8r=2TO06Y735a2Ws43hLJqEYv+ztYMmL3AgVKiQfQ@mail.gmail.com> (sfid-20130328_131656_574596_16E2DA50)
+Subject: Re: Fwd: Ralink RT3290 card not supported
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	1156363@bugs.launchpad.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2013 04:01 PM, Dan Williams wrote:
-> On Thu, 2013-03-28 at 23:44 +0100, Johannes Berg wrote:
->> On Thu, 2013-03-28 at 17:42 -0500, Dan Williams wrote:
->>
->>>> Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
->>>> of course. I don't really see any reasonable minimum time? We might want
->>>> to enforce a max though, maybe.
->>>
->>> Not quite.  A lot is dependent on the server itself, and I've had users
->>> on university and corporate networks report it sometimes takes 30 to 60
->>> seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
->>> OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
->>> like your lease, which means you need another round-trip.  So in many
->>> cases, it's a couple round-trips and each of these packets may or may
->>> not get lost in noisy environments.
->>
->> Oh, yes, of course. However, we're talking about optimising the good
->> cases, not the bad ones. Think of it this way: if it goes fast, we
->> shouldn't make it slow by putting things like powersave or similar in
->> the way. If it's slow, then it'll still work, just slower. But when
->> "slower" only means a few hundred milliseconds, it doesn't matter if
->> everything takes forever (30-60 secs)
+I know it is supported after 3.6 but the kernel (3.9.rc4) I have from
+Ubuntu upstream hasn't got it, that is the reason I have raised a bug
+and trying to get it fixed.
+
+On Thu, Mar 28, 2013 at 9:03 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Mar 28, 2013 at 08:18:37AM +0000, Ali Ustek wrote:
+>> >> The wi-fi chip Ralink RT3290 is common in notebooks but is not
+>> >> supported by linux-kernel
 >
-> True, but at least 4 or 5 seconds is the minimum time I'd recommend here
-> for DHCP.
-
-Couldn't dhcp just turn off the critical protection as soon as it is done?
-
-Then, you only need to worry about the max time allowed.
-
-Also, you would probably need to enforce in the kernel that only
-x out of y time in any given period can be locked, otherwise lots
-of different dhclient processes (perhaps erroneously spawned..or
-running on lots of different VIFs) could basically disable scanning
-or channel changes...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> This device is supported since 3.7 . You most likely compile kernel
+> without CONFIG_RT2800PCI_RT3290.
+>
+> Stanislaw
