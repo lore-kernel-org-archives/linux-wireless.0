@@ -1,108 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758575Ab3CYPun (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35789 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756388Ab3C1Qay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Mar 2013 11:50:43 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Corey Richardson <corey@octayn.net>,
-	Jonas Gorski <jogo@openwrt.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.9] mac80211: fix idle handling sequence
-Date: Mon, 25 Mar 2013 16:50:37 +0100
-Message-Id: <1364226637-7331-1-git-send-email-johannes@sipsolutions.net> (sfid-20130325_165049_121150_3748158C)
+	Thu, 28 Mar 2013 12:30:54 -0400
+Message-ID: <51547024.7060800@candelatech.com> (sfid-20130328_173058_866439_A581EAA7)
+Date: Thu, 28 Mar 2013 09:30:28 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
+ user-space
+References: <1364472669-5629-1-git-send-email-arend@broadcom.com> <1364487476.10397.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1364487476.10397.23.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/28/2013 09:17 AM, Johannes Berg wrote:
+> On Thu, 2013-03-28 at 13:11 +0100, Arend van Spriel wrote:
+>> Some protocols need a more reliable connection to complete
+>> successful in reasonable time. This patch adds a user-space
+>> API to indicate the wireless driver that a critical protocol
+>> is about to commence and when it is done, using nl80211 primitives
+>> NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
+>>
+>> The driver can support this by implementing the cfg80211 callbacks
+>> .crit_proto_start() and .crit_proto_stop(). Examples of protocols
+>> that can benefit from this are DHCP, EAPOL, APIPA. Exactly how the
+>> link can/should be made more reliable is up to the driver. Things
+>> to consider are avoid scanning, no multi-channel operations, and
+>> alter coexistence schemes.
+>
+> Looks better than the BT coex thing :-)
+>
+>> + * @NL80211_CMD_CRIT_PROTOCOL_START: Indicates user-space will start running
+>> + *	a critical protocol that needs more reliability in the connection to
+>> + *	complete.
+>
+> I think this needs a little bit more documentation, addressing
+> specifically:
+>
+>   * What is the protocol ID? You haven't defined that at all, I don't
 
-Corey Richardson reported that my idle handling cleanup
-(commit fd0f979a1b, "mac80211: simplify idle handling")
-broke ath9k_htc. The reason appears to be that it wants
-to go out of idle before switching channels. To fix it,
-reimplement that sequence.
+Maybe just ignore the protocol entirely.  Let applications set their
+skb->priority or ToS so that their packets are handled with priority
+as desired.
 
-Reported-by: Corey Richardson <corey@octayn.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/chan.c        | 17 ++++++++++++++---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/iface.c       |  2 +-
- 3 files changed, 16 insertions(+), 4 deletions(-)
+I'm guessing the NIC should have the same behaviour regardless of
+the protocol (ie, stop scanning, no off-channel work, etc), so
+why would it care about protocol.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 78c0d90..931be41 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -63,6 +63,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 		      enum ieee80211_chanctx_mode mode)
- {
- 	struct ieee80211_chanctx *ctx;
-+	u32 changed;
- 	int err;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
-@@ -76,6 +77,13 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
- 
-+	/* acquire mutex to prevent idle from changing */
-+	mutex_lock(&local->mtx);
-+	/* turn idle off *before* setting channel -- some drivers need that */
-+	changed = ieee80211_idle_off(local);
-+	if (changed)
-+		ieee80211_hw_config(local, changed);
-+
- 	if (!local->use_chanctx) {
- 		local->_oper_channel_type =
- 			cfg80211_get_chandef_type(chandef);
-@@ -85,14 +93,17 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 		err = drv_add_chanctx(local, ctx);
- 		if (err) {
- 			kfree(ctx);
--			return ERR_PTR(err);
-+			ctx = ERR_PTR(err);
-+
-+			ieee80211_recalc_idle(local);
-+			goto out;
- 		}
- 	}
- 
-+	/* and keep the mutex held until the new chanctx is on the list */
- 	list_add_rcu(&ctx->list, &local->chanctx_list);
- 
--	mutex_lock(&local->mtx);
--	ieee80211_recalc_idle(local);
-+ out:
- 	mutex_unlock(&local->mtx);
- 
- 	return ctx;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7bdefd9..5672533 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1362,6 +1362,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 			     enum nl80211_iftype type);
- void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
- void ieee80211_remove_interfaces(struct ieee80211_local *local);
-+u32 ieee80211_idle_off(struct ieee80211_local *local);
- void ieee80211_recalc_idle(struct ieee80211_local *local);
- void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
- 				    const int offset);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 3bfe261..58150f8 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -78,7 +78,7 @@ void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_TXPOWER);
- }
- 
--static u32 ieee80211_idle_off(struct ieee80211_local *local)
-+u32 ieee80211_idle_off(struct ieee80211_local *local)
- {
- 	if (!(local->hw.conf.flags & IEEE80211_CONF_IDLE))
- 		return 0;
+And, I do like the timeout (with maximum value hard-coded in the
+kernel so that a crashed or buggy app can't disable scanning/off-channel
+for longer than a few seconds).
+
+Thanks,
+Ben
+
 -- 
-1.8.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
