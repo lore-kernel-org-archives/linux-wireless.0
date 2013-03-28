@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40022 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753948Ab3C0Rlg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 13:41:36 -0400
-Message-ID: <1364406085.8388.11.camel@jlt4.sipsolutions.net> (sfid-20130327_184141_852661_FDB8F266)
-Subject: Re: iwlwifi unable to reconnect after suspend since v3.9-rc1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 27 Mar 2013 18:41:25 +0100
-In-Reply-To: <87r4j021ac.fsf@sycorax.lbl.gov>
-References: <87li993mug.fsf@sycorax.lbl.gov>
-	 <1364390086.8388.7.camel@jlt4.sipsolutions.net>
-	 <87r4j021ac.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39555 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630Ab3C1Lht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Mar 2013 07:37:49 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 2/2] b43: make struct b2056_inittabs_pts const
+Date: Thu, 28 Mar 2013 12:37:31 +0100
+Message-Id: <1364470651-1345-2-git-send-email-hauke@hauke-m.de> (sfid-20130328_123753_892891_795FD612)
+In-Reply-To: <1364470651-1345-1-git-send-email-hauke@hauke-m.de>
+References: <1364470651-1345-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-03-27 at 10:35 -0700, Alex Romosan wrote:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/radio_2056.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> ...i did a bisect using the above and it came up with this:
-> 
-> 89afe614c0c737fd40eda1f8c8ef686246cf3cb6 is the first bad commit
-> commit 89afe614c0c737fd40eda1f8c8ef686246cf3cb6
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Wed Feb 13 15:39:57 2013 +0100
-> 
->     mac80211: fix auth/assoc timeout handling
-> 
-> which makes a lot more sense. i'll try reverting it to see if it fixes
-> the problem, or i can try patches if you have any.
-
-Humm, yes, that makes more sense. That commit fixed a bug in another
-commit though, I'm surprised you ended up there?! Curious ... I'll check
-over the commit and see if I can find anything wrong with it.
-
-johannes
+diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
+index ab1f55f..b4fd934 100644
+--- a/drivers/net/wireless/b43/radio_2056.c
++++ b/drivers/net/wireless/b43/radio_2056.c
+@@ -2980,7 +2980,7 @@ static const struct b2056_inittab_entry b2056_inittab_rev8_rx[] = {
+ 	.rx		= prefix##_rx,			\
+ 	.rx_length	= ARRAY_SIZE(prefix##_rx)
+ 
+-static struct b2056_inittabs_pts b2056_inittabs[] = {
++static const struct b2056_inittabs_pts b2056_inittabs[] = {
+ 	[3] = { INITTABSPTS(b2056_inittab_rev3) },
+ 	[4] = { INITTABSPTS(b2056_inittab_rev4) },
+ 	[5] = { INITTABSPTS(b2056_inittab_rev5) },
+@@ -9035,7 +9035,7 @@ static void b2056_upload_inittab(struct b43_wldev *dev, bool ghz5,
+ void b2056_upload_inittabs(struct b43_wldev *dev,
+ 			   bool ghz5, bool ignore_uploadflag)
+ {
+-	struct b2056_inittabs_pts *pts;
++	const struct b2056_inittabs_pts *pts;
+ 
+ 	if (dev->phy.rev >= ARRAY_SIZE(b2056_inittabs)) {
+ 		B43_WARN_ON(1);
+@@ -9057,7 +9057,7 @@ void b2056_upload_inittabs(struct b43_wldev *dev,
+ 
+ void b2056_upload_syn_pll_cp2(struct b43_wldev *dev, bool ghz5)
+ {
+-	struct b2056_inittabs_pts *pts;
++	const struct b2056_inittabs_pts *pts;
+ 	const struct b2056_inittab_entry *e;
+ 
+ 	if (dev->phy.rev >= ARRAY_SIZE(b2056_inittabs)) {
+-- 
+1.7.10.4
 
