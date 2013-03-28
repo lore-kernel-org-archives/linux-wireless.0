@@ -1,54 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f182.google.com ([209.85.210.182]:55082 "EHLO
-	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab3CXWks (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 18:40:48 -0400
-Received: by mail-ia0-f182.google.com with SMTP id u8so4986993iag.41
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 15:40:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
- <CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
- <CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
- <CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
- <CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
- <CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
- <CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
- <CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
- <CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
- <CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com>
- <CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
- <CAJ-VmomvQKNHP008vXA8dHrSnG1mUkkx1yoBy6B1jwv_VxTZjw@mail.gmail.com>
- <CAMgrJ3b_W0it4p9pY0rayuZu5yupMJPrGc2T6DTrKO-G27y4Vg@mail.gmail.com>
- <CAJ-Vmok-iP+=6EK+mG+jqnEPY2gPLhypjcGKxceEvy=EG59Ngw@mail.gmail.com>
- <CAMgrJ3aDhKgPjWx_znDCJVeibTChHAORnFS4Cv6fF56SvV=sNA@mail.gmail.com> <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com>
-From: Robert Shade <robert.shade@gmail.com>
-Date: Sun, 24 Mar 2013 18:40:27 -0400
-Message-ID: <CAMgrJ3buZxZermRmpUW2r3gYtUmF=3UoEo7NW9VYTkAwS7gdtQ@mail.gmail.com> (sfid-20130324_234056_951750_ED8E253B)
-Subject: Re: Auth Packet TX Delay
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:57136 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752893Ab3C1WmJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Mar 2013 18:42:09 -0400
+Message-ID: <1364510577.3226.7.camel@dcbw.foobar.com> (sfid-20130328_234215_275307_FAE1625A)
+Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
+ user-space
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Date: Thu, 28 Mar 2013 17:42:57 -0500
+In-Reply-To: <1364506118.10397.29.camel@jlt4.sipsolutions.net>
+References: <1364472669-5629-1-git-send-email-arend@broadcom.com>
+	 <1364487476.10397.23.camel@jlt4.sipsolutions.net>
+	 <5154B347.9080904@broadcom.com>
+	 <1364506118.10397.29.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hm, so it's doing some fast channel changes?
+On Thu, 2013-03-28 at 22:28 +0100, Johannes Berg wrote:
+> On Thu, 2013-03-28 at 22:16 +0100, Arend van Spriel wrote:
+> > > That seems pretty long? Why have such a long *minimum* duration? At 2.5
+> > > seconds, it's way long, and then disabling most of the
+> > > protections/powersave/whatever no longer makes sense for this period of
+> > > time since really mostly what this does will be reducing the wifi
+> > > latency.
+> 
+> > Ok, so what minimum do you (or someone else can chime in here) think a
+> > DHCP exchange takes as that was considered a likely protocol that can
+> > benefit from this API.
+> 
+> Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
+> of course. I don't really see any reasonable minimum time? We might want
+> to enforce a max though, maybe.
 
-Yes, the fastcc does seem to work, it's just that sometimes the chip
-can get in a bad state when it's not cold reset.
+Not quite.  A lot is dependent on the server itself, and I've had users
+on university and corporate networks report it sometimes takes 30 to 60
+seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
+OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
+like your lease, which means you need another round-trip.  So in many
+cases, it's a couple round-trips and each of these packets may or may
+not get lost in noisy environments.
 
-> Just disable fast channel change entirely and re-test? And why not
-> just force a cold reset always? Why bother checking for the queue to
-> be stopped?
+"nicer" DHCP clients have larger-bounded random backoffs between request
+packets to ensure they don't hammer the DHCP server or network if there
+are a bunch of machines booting up at the same time.  That can often
+make the transaction take longer than a few seconds if even one DISCOVER
+or REQUEST packet gets lost due to noise.
 
-Just disabling fastcc was not enough, the cold resets are what seemed
-to have made the difference.  I was actually thinking about
-re-enabling fastcc and testing again.
+So really at least 15 seconds is a more useful timeout for DHCP.
 
-The TXE/RXE checking path is from felix's "ath9k_hw: improve reset
-reliability after errors" patch.  I've just got the exception in there
-for 9160, since I don't have other hardware to test with.  What do the
-hardware engineers say about warm vs. cold reset?  I did notice that
-your latest ar9300 HAL has a note stating that "Warm reset is
-optimistic."
+Dan
+
+> > > Ah, a tricky problem -- unrelated to your patch. You probably saw the
+> > > wiphy size limit problem. If we keep adding commands here, we'll
+> > > eventually break older userspace completely, so I think we shouldn't. A
+> > > new way will probably be required, either adding new commands only
+> > > conditionally on split wiphy dump, or inventing a new way. I suppose
+> > > making it conditional is acceptable for all new commands since new tools
+> > > in userspace will be required anyway to make them work.
+> > > 
+> > 
+> > Indeed noticed some emails on this. I simply added these lines without
+> > looking what this code fragment does.
+> 
+> Probably best to just say
+> 	if (split) {
+> 		CMD(...)
+> 	}
+> 
+> > Good point. Maybe keep track that crit_proto is started and reject a
+> > subsequent call (-EBUSY). Ideally, the start and stop should be done by
+> > the same user-space process/application. Is that possible?
+> 
+> Yes ... but you'd have to make sure you abort when the application dies
+> I guess, with the socket closing notifier thing.
+> 
+> > > Ah, ok, I guess I misunderstood it. You do use it, but don't pass it to
+> > > the driver since you let cfg80211 handle the timing...
+> > 
+> > Indeed. I wanted to be sure that the duration provided by user-space is
+> > applicable independent from a driver implementation. Do you think it
+> > makes sense to have this dealt with by cfg80211?
+> 
+> Not sure ... Like I said, I think if we'd implement it we'd like to put
+> it into the firmware, so at least it'd have to be optional. And at that
+> point I don't really see that much value in doing it in cfg80211, it's
+> pretty simple after all.
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
