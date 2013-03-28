@@ -1,65 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51928 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753223Ab3COBoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Mar 2013 21:44:34 -0400
-Message-ID: <51427CFF.1020105@openwrt.org> (sfid-20130315_024438_871541_4A4813A3)
-Date: Fri, 15 Mar 2013 02:44:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:34807 "EHLO
+	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755221Ab3C1CNE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Mar 2013 22:13:04 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Sagar Bijwe <bsagar@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: change default tx/rx win_size for BA setup
+Date: Wed, 27 Mar 2013 19:10:31 -0700
+Message-ID: <1364436632-24281-1-git-send-email-bzhao@marvell.com> (sfid-20130328_031310_251908_8D37F498)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Optimizing performance for lots of virtual stations.
-References: <5142074C.1060708@candelatech.com> <51425963.2000904@openwrt.org> <51425AB1.9090603@candelatech.com>
-In-Reply-To: <51425AB1.9090603@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-03-15 12:18 AM, Ben Greear wrote:
-> On 03/14/2013 04:12 PM, Felix Fietkau wrote:
->> On 2013-03-14 6:22 PM, Ben Greear wrote:
->>> I've been doing some performance testing, and having lots of
->>> stations causes quite a drag:  total throughput with 1 station: 250Mbps TCP throughput,
->>> total with 50 stations:  225 Mbps, and with 128 stations: 20-40Mbps (it varies a lot..not so sure why).
->>>
->>> I poked around in the rx logic and it seems the rx-data path is fairly
->>> clean for data packets.  But, from what I can tell, each beacon is going
->>> to cause an skb_copy() call and a queued work-item for each station interface,
->>> and there are going to be lots of beacons per second in most scenarios...
->>>
->>> I was wondering if this could be optimized a bit to special case beacons
->>> and not make a new copy (or possibly move some of the beacon handling
->>> logic up to the radio object and out of the sdata).
->>>
->>> And of course, it could be there are more important optimizations...I'm curious
->>> if anyone is aware of any other code that should be optimized to have better
->>> performance with lots of stations...
->> How about doing some profiling with lots of stations - that should
->> hopefully reveal where the real bottleneck is.
->> By the way, with that many stations and low throughput, is the CPU usage
->> on your system significantly higher, or could it just be some extra
->> latency introduced somewhere else in the code?
-> 
-> CPU load is fairly high, but doesn't seem to just be CPU bound.  Maybe
-> lots and lots of work items all piled up or something like that...
-> 
-> I'll work on some profiling as soon as I get a chance.
-> 
-> I'm suspicious that the the management frame handling will
-> need some optimization though..I think it basically copies
-> the skb and broadcasts all mgt frames to all running stations....
-Here's another thing that might be negatively affecting your tests. The
-driver has a 128-packet buffer limit per hardware queue for aggregation.
-With too many stations, they will be competing for a very limited number
-of buffers, making aggregation a lot less effective.
-Increasing the number of buffers is a bad idea here, as it will harm
-environments with fewer stations due to bufferbloat.
+From: Avinash Patil <patila@marvell.com>
 
-What's required to fix this properly is better queue management,
-something that will require some bigger changes to the ath9k tx path and
-some mac80211 changes as well. It's on my TODO list, but I don't know
-when I'll get around to implementing it.
+This patch fixes an issue where RX throughput values observed
+were substantially lower than TX counterparts for PCIe8897 STA.
+PCIe8897 supports larger rx_win_size. After changing these values
+we see big improvement for TX and RX throughput values.
 
-- Felix
+Different tx_win_size and rx_win_size are used for AP mode.
+
+All BA setup related initialization has been moved to separate
+function.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Sagar Bijwe <bsagar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.c  |   22 ++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/decl.h |    7 +++++--
+ drivers/net/wireless/mwifiex/main.h |    1 +
+ drivers/net/wireless/mwifiex/wmm.c  |    5 +----
+ 4 files changed, 29 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 45f1971..41e9d25 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -679,3 +679,25 @@ void mwifiex_del_tx_ba_stream_tbl_by_ra(struct mwifiex_private *priv, u8 *ra)
+ 
+ 	return;
+ }
++
++/* This function initializes the BlockACK setup information for given
++ * mwifiex_private structure.
++ */
++void mwifiex_set_ba_params(struct mwifiex_private *priv)
++{
++	priv->add_ba_param.timeout = MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT;
++
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
++		priv->add_ba_param.tx_win_size =
++						MWIFIEX_UAP_AMPDU_DEF_TXWINSIZE;
++		priv->add_ba_param.rx_win_size =
++						MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE;
++	} else {
++		priv->add_ba_param.tx_win_size =
++						MWIFIEX_STA_AMPDU_DEF_TXWINSIZE;
++		priv->add_ba_param.rx_win_size =
++						MWIFIEX_STA_AMPDU_DEF_RXWINSIZE;
++	}
++
++	return;
++}
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index e8a569a..2af2c7c 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -41,8 +41,11 @@
+ #define MWIFIEX_MAX_TX_BASTREAM_SUPPORTED	2
+ #define MWIFIEX_MAX_RX_BASTREAM_SUPPORTED	16
+ 
+-#define MWIFIEX_AMPDU_DEF_TXWINSIZE        32
+-#define MWIFIEX_AMPDU_DEF_RXWINSIZE        16
++#define MWIFIEX_STA_AMPDU_DEF_TXWINSIZE        16
++#define MWIFIEX_STA_AMPDU_DEF_RXWINSIZE        32
++#define MWIFIEX_UAP_AMPDU_DEF_TXWINSIZE        32
++#define MWIFIEX_UAP_AMPDU_DEF_RXWINSIZE        16
++
+ #define MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT  0xffff
+ 
+ #define MWIFIEX_RATE_BITMAP_MCS0   32
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 535595e..d032998 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -924,6 +924,7 @@ void
+ mwifiex_set_wmm_params(struct mwifiex_private *priv,
+ 		       struct mwifiex_uap_bss_param *bss_cfg,
+ 		       struct cfg80211_ap_settings *params);
++void mwifiex_set_ba_params(struct mwifiex_private *priv);
+ 
+ /*
+  * This function checks if the queuing is RA based or not.
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 32adc87..3ddae52 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -436,10 +436,7 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 					= priv->aggr_prio_tbl[7].ampdu_user
+ 					= BA_STREAM_NOT_ALLOWED;
+ 
+-		priv->add_ba_param.timeout = MWIFIEX_DEFAULT_BLOCK_ACK_TIMEOUT;
+-		priv->add_ba_param.tx_win_size = MWIFIEX_AMPDU_DEF_TXWINSIZE;
+-		priv->add_ba_param.rx_win_size = MWIFIEX_AMPDU_DEF_RXWINSIZE;
+-
++		mwifiex_set_ba_params(priv);
+ 		mwifiex_reset_11n_rx_seq_num(priv);
+ 
+ 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
+-- 
+1.7.0.2
 
