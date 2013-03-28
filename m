@@ -1,94 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48055 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192Ab3C0PPq (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:57382 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755913Ab3C1KX6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 11:15:46 -0400
-Date: Wed, 27 Mar 2013 11:04:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Robert Shade <robert.shade@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Show actual timeout value in failed calibration
- messages.
-Message-ID: <20130327150428.GB1868@tuxdriver.com> (sfid-20130327_161549_464434_B64CA2DE)
-References: <CAMgrJ3YYZuR2oN9p4jMXvEd22aU+O69Bv-M5uOEO-FUZkdf_MA@mail.gmail.com>
+	Thu, 28 Mar 2013 06:23:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMgrJ3YYZuR2oN9p4jMXvEd22aU+O69Bv-M5uOEO-FUZkdf_MA@mail.gmail.com>
+In-Reply-To: <CAKprTDFJet+m7RmkZt5uyf=FMyEYciCYUahEcCC6_ukRQ2pjgw@mail.gmail.com>
+References: <CAKprTDHpf0PgisfJK9bJOYgYxLU5PRLNtbkg7V6Zj2s=gVVMCA@mail.gmail.com>
+ <CAB=NE6Wbym4XksV=uKz9eZD0rZwmtS3ZfP-zbXg9TAc2+2+Z9g@mail.gmail.com>
+ <CAKprTDEEEdy++Bk5AY4Zfrtwsc9HOKGQ+uWR58PFCWU=v+PE1g@mail.gmail.com>
+ <CAB=NE6UtuxuTduYhDy5BcPap-rri+P1mcKYr2KEjAbuE2FU13g@mail.gmail.com>
+ <20130327175711.GA8794@stt008.linux.site> <CAKprTDFspW4B2tk9EZPBBXy3C6gL_NJsjwj-bUeYj1rN3j6sYg@mail.gmail.com>
+ <CAB=NE6W6Ey8iU1vs=XfA7Or0wF=Qh6Gu8zF-DxMatgk-V+wdkQ@mail.gmail.com> <CAKprTDFJet+m7RmkZt5uyf=FMyEYciCYUahEcCC6_ukRQ2pjgw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 28 Mar 2013 03:23:37 -0700
+Message-ID: <CAB=NE6VzvVkFvGaudZHQTM5R3s05QV5Jw23wZ_DLxkNf00Utdg@mail.gmail.com> (sfid-20130328_112404_308146_6A2D08C3)
+Subject: Re: brcmsmac: Unknown symbol backport_cordic_calc_iq (err 0)
+To: =?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+Cc: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	meuleman <meuleman@broadcom.com>, brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Missing a Signed-off-by line...
+On Thu, Mar 28, 2013 at 2:56 AM, Camaleón <noelamac@gmail.com> wrote:
+> 2013/3/28 Luis R. Rodriguez <mcgrof@frijolero.org>:
+>> On Thu, Mar 28, 2013 at 2:02 AM, Camaleón <noelamac@gmail.com> wrote:
+>
+> (...)
+>
+>>> Now, as soon as I proceed to load "brcmsmac" I get a long and
+>>> uninterruptible "beeeeep", system hard-freezes (no mouse nor caps lock
+>>> led reaction) and only restart is possible.
+>>>
+>>> Any clue?
+>>
+>> You are on 3.9.0-rc2, so there is nothing for us to backport on these
+>> linux-next based releases except the delta between v3.9 and what is
+>> not yet on Linus' tree, in other worlds just the development delta for
+>> the 802.11 subsystem.
+>
+> I have two sets of kernels installed in this system: Debian's stock
+> kernel (3.2.39-2) and another one I get from kernel.org (3.9.0-rc2).
+>
+> Now, what happens is that the compat-driver freezes with kernel 3.9
+> and I get this message with kernel 3.2:
+>
+> [  684.589268] Compat-drivers backport release: compat-drivers-2013-03-26-u
+> [  684.589279] Backport based on linux-next.git next-20130326
+> [  684.589285] compat.git: linux-next.git
+> [  684.609187] cfg80211: Unknown symbol
+> backport_netdev_set_default_ethtool_ops (err 0)
+>
+> This driver is "driving" me nuts :-)
 
-On Sun, Mar 24, 2013 at 02:25:02PM -0400, Robert Shade wrote:
-> The messages are currently hard coding "1ms", which does not match
-> the actual timeout being used.
-> ---
->  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    9 ++++++---
->  drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ++-
->  2 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> index c55e5bb..9f58974 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-> @@ -731,7 +731,8 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah,
-> struct ath9k_channel *chan)
->  		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
->  				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
->  			ath_dbg(common, CALIBRATE,
-> -				"offset calibration failed to complete in 1ms; noisy environment?\n");
-> +				"offset calibration failed to complete in %d ms; noisy environment?\n",
-> +				AH_WAIT_TIMEOUT / 1000);
->  			return false;
->  		}
->  		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
-> @@ -745,7 +746,8 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah,
-> struct ath9k_channel *chan)
->  	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
->  			  0, AH_WAIT_TIMEOUT)) {
->  		ath_dbg(common, CALIBRATE,
-> -			"offset calibration failed to complete in 1ms; noisy environment?\n");
-> +			"offset calibration failed to complete in %d ms; noisy environment?\n",
-> +			AH_WAIT_TIMEOUT / 1000);
->  		return false;
->  	}
-> 
-> @@ -841,7 +843,8 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah,
-> struct ath9k_channel *chan)
->  				   AR_PHY_AGC_CONTROL_CAL,
->  				   0, AH_WAIT_TIMEOUT)) {
->  			ath_dbg(common, CALIBRATE,
-> -				"offset calibration failed to complete in 1ms; noisy environment?\n");
-> +				"offset calibration failed to complete in %d ms; noisy environment?\n",
-> +				AH_WAIT_TIMEOUT / 1000);
->  			return false;
->  		}
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> index f76c3ca..639ba7d 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-> @@ -1126,7 +1126,8 @@ skip_tx_iqcal:
->  			ar9003_hw_rtt_disable(ah);
-> 
->  		ath_dbg(common, CALIBRATE,
-> -			"offset calibration failed to complete in 1ms; noisy environment?\n");
-> +			"offset calibration failed to complete in %d ms; noisy environment?\n",
-> +			AH_WAIT_TIMEOUT / 1000);
->  		return false;
->  	}
-> 
-> -- 
-> 1.7.1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I have a fix for this, mind you, this is a Debian thing, that is --
+debian cherry picked some code from a future kernel on their own
+kernel. The new LINUX_BACKPORT() macro will rescue these. I'll post a
+new release tomorrow, but I'm working on backporting some other
+collateral evolutions right now.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>> We have yet to require any backport work between 3.9 and what we assume will be
+>> 3.10. My bet is this is a real driver bug, not backport bug.
+>
+> Curious is that brcmsmac module loads fine from the common kernel
+> module, I mean, the stock one.
+
+What do you mean? Have you tried the stock driver from 3.9-rc2?
+
+>> Can you
+>>
+>> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>>
+>> and use your .config, and build and test that kernel ? If it fails to
+>> boot / crash then you know its the driver.
+>
+> I'm not using git (don't even have it installed in my system), I'm
+> used to compile kernels/modules in the old fashion way. Sorry, I don't
+> know how git works.
+
+make localmodconfig
+make
+make install
+
+>> Has brcmsmac ever worked for you?
+>
+> Well, yes (this is a long story¹ with many helpful people doing their
+> best). It stopped from working since kernel 2.38 or so, but even
+> though the driver is giving me some headaches, it never froze the
+> system like is doing now.
+>
+> ¹ http://marc.info/?t=136359599600001&r=1&w=2
+
+Sorry to hear that, if its a driver issue I hope the maintainers will
+jump in as they are Cc'd.
+
+  Luis
