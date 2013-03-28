@@ -1,64 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f54.google.com ([209.85.128.54]:48549 "EHLO
-	mail-qe0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754610Ab3COWDv (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:58043 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754770Ab3C1Kkg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Mar 2013 18:03:51 -0400
-Received: by mail-qe0-f54.google.com with SMTP id i11so2191061qej.41
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Mar 2013 15:03:50 -0700 (PDT)
+	Thu, 28 Mar 2013 06:40:36 -0400
+Date: Thu, 28 Mar 2013 11:40:30 +0100
+From: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	meuleman <meuleman@broadcom.com>, brcm80211-dev-list@broadcom.com
+Subject: Re: brcmsmac: Unknown symbol backport_cordic_calc_iq (err 0)
+Message-ID: <20130328104030.GA4602@stt008.linux.site> (sfid-20130328_114042_424264_D6752397)
+References: <CAKprTDHpf0PgisfJK9bJOYgYxLU5PRLNtbkg7V6Zj2s=gVVMCA@mail.gmail.com> <CAB=NE6Wbym4XksV=uKz9eZD0rZwmtS3ZfP-zbXg9TAc2+2+Z9g@mail.gmail.com> <CAKprTDEEEdy++Bk5AY4Zfrtwsc9HOKGQ+uWR58PFCWU=v+PE1g@mail.gmail.com> <CAB=NE6UtuxuTduYhDy5BcPap-rri+P1mcKYr2KEjAbuE2FU13g@mail.gmail.com> <20130327175711.GA8794@stt008.linux.site> <CAKprTDFspW4B2tk9EZPBBXy3C6gL_NJsjwj-bUeYj1rN3j6sYg@mail.gmail.com> <CAB=NE6W6Ey8iU1vs=XfA7Or0wF=Qh6Gu8zF-DxMatgk-V+wdkQ@mail.gmail.com> <CAKprTDFJet+m7RmkZt5uyf=FMyEYciCYUahEcCC6_ukRQ2pjgw@mail.gmail.com> <CAB=NE6VzvVkFvGaudZHQTM5R3s05QV5Jw23wZ_DLxkNf00Utdg@mail.gmail.com>
 MIME-Version: 1.0
-Date: Fri, 15 Mar 2013 16:03:50 -0600
-Message-ID: <CAMLZHHRpPghm0tWTksFiD-zxUUM1dSbgPbj6doMck1jqv-yokw@mail.gmail.com> (sfid-20130315_230355_645411_A2767465)
-Subject: mwifiex frequent "not allowed while suspended" crash on resume
-From: Daniel Drake <dsd@laptop.org>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bing Zhao <bzhao@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAB=NE6VzvVkFvGaudZHQTM5R3s05QV5Jw23wZ_DLxkNf00Utdg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+El 2013-03-28 a las 03:23 -0700, Luis R. Rodriguez escribió:
 
-When the XO-4 with 8787 wireless is woken up due to wake-on-WLAN,
-mwifiex is often unhappy and reports this:
+> On Thu, Mar 28, 2013 at 2:56 AM, Camaleón <noelamac@gmail.com> wrote:
 
-mwifiex_sdio mmc0:0001:1: mwifiex_write_data_sync: not allowed while suspended
-mwifiex_sdio mmc0:0001:1: host_to_card, write iomem (1) failed: -1
-mwifiex_sdio mmc0:0001:1: mwifiex_write_data_sync: not allowed while suspended
-mwifiex_sdio mmc0:0001:1: host_to_card, write iomem (2) failed: -1
-mwifiex_sdio mmc0:0001:1: mwifiex_write_data_sync: not allowed while suspended
-mwifiex_sdio mmc0:0001:1: host_to_card, write iomem (3) failed: -1
-mwifiex_sdio mmc0:0001:1: mwifiex_write_data_async failed: 0xFFFFFFFF
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-mwifiex_sdio mmc0:0001:1: mwifiex_sdio_host_to_card: no wr_port available
-[...]
+(...)
 
-After this flood of messages, the interface is unusable.
+> > Now, what happens is that the compat-driver freezes with kernel 3.9
+> > and I get this message with kernel 3.2:
+> >
+> > [  684.589268] Compat-drivers backport release: compat-drivers-2013-03-26-u
+> > [  684.589279] Backport based on linux-next.git next-20130326
+> > [  684.589285] compat.git: linux-next.git
+> > [  684.609187] cfg80211: Unknown symbol
+> > backport_netdev_set_default_ethtool_ops (err 0)
+> >
+> > This driver is "driving" me nuts :-)
+> 
+> I have a fix for this, mind you, this is a Debian thing, that is --
+> debian cherry picked some code from a future kernel on their own
+> kernel. The new LINUX_BACKPORT() macro will rescue these. I'll post a
+> new release tomorrow, but I'm working on backporting some other
+> collateral evolutions right now.
 
-This can be readily reproduced when putting the XO-4 in a loop where
-it goes to sleep due to inactivity, but then wakes up due to an
-incoming ping. The error is hit within an hour or two.
+Okay, no problem and thanks for caring about this.
+ 
+> >> We have yet to require any backport work between 3.9 and what we assume will be
+> >> 3.10. My bet is this is a real driver bug, not backport bug.
+> >
+> > Curious is that brcmsmac module loads fine from the common kernel
+> > module, I mean, the stock one.
+> 
+> What do you mean? Have you tried the stock driver from 3.9-rc2?
 
-I think it shows a race where the upper mwifiex layers try to do card
-communication before  mwifiex_sdio_resume() has done its work - there
-is some serialization missing.
+Sure! (full report is on the kernel wireless mailing list)
 
-This can be reproduced on every single ping-invoked wakeup if you
-insert a msleep(1000) inside mwifiex_sdio_resume() e.g. here:
+In fact, the only reason I compiled the kernel is to test the latest brcmsmac 
+driver because being this a netbook, having to use an external usb card 
+to be "online" when I'm out of home is a bit annoying.
 
-if (!adapter->is_suspended) {
-dev_warn(adapter->dev, "device already resumed\n");
-return 0;
-}
+Now you say... can you please tell me -in user's parlance terms so I can 
+understand it- what's the difference between "brcmsmac" from the stock 
+kernel modules and this one from "compat-drivers"? I mean, what's the 
+difference from a user's POV and from kernel hacker POV. Are they 
+related? Are they going to me merged somehow? What's the goal of having 
+both?
 
-msleep(1000);
-adapter->is_suspended = false;
+> >> Can you
+> >>
+> >> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> >>
+> >> and use your .config, and build and test that kernel ? If it fails to
+> >> boot / crash then you know its the driver.
+> >
+> > I'm not using git (don't even have it installed in my system), I'm
+> > used to compile kernels/modules in the old fashion way. Sorry, I don't
+> > know how git works.
+> 
+> make localmodconfig
+> make
+> make install
 
+(...)
 
-Thanks for any help you can offer.
-Daniel
+Will try and report back. Thanks, Luis.
+ 
+Greetings,
+
+-- 
+Camaleón 
