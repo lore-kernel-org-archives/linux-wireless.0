@@ -1,70 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:43968 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161Ab3CXVw6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42453 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756728Ab3C1JtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 17:52:58 -0400
-Received: by mail-wi0-f182.google.com with SMTP id hi18so6009508wib.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Mar 2013 14:52:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMgrJ3aDhKgPjWx_znDCJVeibTChHAORnFS4Cv6fF56SvV=sNA@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
-	<CAMgrJ3YQ5oua0MJvmVcbb-GuQ8Rr5vwAO3Jy1vs0w-VRRDdcMg@mail.gmail.com>
-	<CAJ-VmomnvMqc_0sKvmL-_OQY4cm5xKjqfeWXs_jfUsvFtK9YcQ@mail.gmail.com>
-	<CAMgrJ3bvJ-XwBGVcWuUGGyqAoJbjRFZz=om5dsG6MecRAYRO7g@mail.gmail.com>
-	<CAJ-VmonzUE9uFN=tDfMXVF-b1Vk3c_+ZTWiGZKPgw8Vnwwadgw@mail.gmail.com>
-	<CAMgrJ3ZHRMxzzxf0pj5zc+1TeWkfT2RPwL82JSkTU=AsYnXwfg@mail.gmail.com>
-	<CAJ-VmomRvj2hf0i6AMJzCiR42thmTUQ=QCe7FX0k3tw1DTbkoQ@mail.gmail.com>
-	<CAMgrJ3YCryn2VvtZJbJSVFUT61TQYPXw+cOXnJQN8Jab-rSuKA@mail.gmail.com>
-	<CAMgrJ3b-_a5aBDjAMPChnxEWobnYOhXX3y_FwfNwF75u4hHD6A@mail.gmail.com>
-	<CAJ-VmombhTgTaFuQXWR1Q4M8Awg4CwFseDu+iN_U6GfBDUaCig@mail.gmail.com>
-	<CAMgrJ3bLJyVYa47zxGgNOcks0bK70oo1w1JLObW4DT_vpyU_SA@mail.gmail.com>
-	<CAJ-VmomvQKNHP008vXA8dHrSnG1mUkkx1yoBy6B1jwv_VxTZjw@mail.gmail.com>
-	<CAMgrJ3b_W0it4p9pY0rayuZu5yupMJPrGc2T6DTrKO-G27y4Vg@mail.gmail.com>
-	<CAJ-Vmok-iP+=6EK+mG+jqnEPY2gPLhypjcGKxceEvy=EG59Ngw@mail.gmail.com>
-	<CAMgrJ3aDhKgPjWx_znDCJVeibTChHAORnFS4Cv6fF56SvV=sNA@mail.gmail.com>
-Date: Sun, 24 Mar 2013 14:52:56 -0700
-Message-ID: <CAJ-Vmo=_t0SwB0hiekXcCMgAps1noghp273O-QXGQ-1tABQvkg@mail.gmail.com> (sfid-20130324_225302_880342_E03EE253)
-Subject: Re: Auth Packet TX Delay
-From: Adrian Chadd <adrian@freebsd.org>
-To: Robert Shade <robert.shade@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 28 Mar 2013 05:49:13 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 2/9] mac80211: unify CSA action frame/beacon processing
+Date: Thu, 28 Mar 2013 10:48:58 +0100
+Message-Id: <1364464145-14446-3-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104925_400878_D369BEAB)
+In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 March 2013 11:55, Robert Shade <robert.shade@gmail.com> wrote:
-> I've done some more testing on this and it looks like the auth packets
-> aren't delayed, they're never sent.  The "TX Complete" messages are
-> from the queue being purged before a reset due to channel change.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ew, ok.
+CSA action frame content should be processed as variable IEs
+rather than fixed to make it extensible. Unify the code and
+process them just like CSA in beacons to make it easier to
+extend for HT/VHT.
 
-> It only gets in this state when it's unable to change the channel due
-> to the timeout on setting the AR_PHY_AGC_CONTROL register.  One thing
-> that does look interesting is that, when we fail to change the
-> channel, ath_complete_reset is never called and therefore
-> ieee80211_wake_queues is never called either.  Are stop/wake queues
-> calls supposed to be balanced?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h  |  4 +--
+ net/mac80211/ieee80211_i.h |  4 ---
+ net/mac80211/mlme.c        | 71 ++++++++++++++++++++++++++++------------------
+ net/mac80211/rx.c          |  4 ---
+ 4 files changed, 44 insertions(+), 39 deletions(-)
 
-I'll leave that up to Felix.
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index e46fea8..8f80b3a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -840,9 +840,7 @@ struct ieee80211_mgmt {
+ 				} __packed wme_action;
+ 				struct{
+ 					u8 action_code;
+-					u8 element_id;
+-					u8 length;
+-					struct ieee80211_channel_sw_ie sw_elem;
++					u8 variable[0];
+ 				} __packed chan_switch;
+ 				struct{
+ 					u8 action_code;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 55fb382..0acc2da 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1252,10 +1252,6 @@ void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
+ int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+-void
+-ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+-				 const struct ieee80211_channel_sw_ie *sw_elem,
+-				 struct ieee80211_bss *bss, u64 timestamp);
+ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ce5adcf..ca2061d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1052,33 +1052,37 @@ static void ieee80211_chswitch_timer(unsigned long data)
+ 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
+ }
+ 
+-void
++static void
+ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+-				 const struct ieee80211_channel_sw_ie *sw_elem,
+-				 struct ieee80211_bss *bss, u64 timestamp)
++				 u64 timestamp, struct ieee802_11_elems *elems)
+ {
+-	struct cfg80211_bss *cbss =
+-		container_of((void *)bss, struct cfg80211_bss, priv);
+-	struct ieee80211_channel *new_ch;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
+-						      cbss->channel->band);
++	struct cfg80211_bss *cbss = ifmgd->associated;
++	struct ieee80211_bss *bss;
++	struct ieee80211_channel *new_ch;
++	int new_freq;
+ 	struct ieee80211_chanctx *chanctx;
+ 
+ 	ASSERT_MGD_MTX(ifmgd);
+ 
+-	if (!ifmgd->associated)
++	if (!cbss)
+ 		return;
+ 
+ 	if (sdata->local->scanning)
+ 		return;
+ 
+-	/* Disregard subsequent beacons if we are already running a timer
+-	   processing a CSA */
+-
++	/* disregard subsequent announcements if we are already processing */
+ 	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
+ 		return;
+ 
++	if (!elems->ch_switch_ie)
++		return;
++
++	bss = (void *)cbss->priv;
++
++	new_freq = ieee80211_channel_to_frequency(
++			elems->ch_switch_ie->new_ch_num,
++			cbss->channel->band);
+ 	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
+ 	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
+ 		sdata_info(sdata,
+@@ -1118,7 +1122,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->local->csa_channel = new_ch;
+ 
+-	if (sw_elem->mode)
++	if (elems->ch_switch_ie->mode)
+ 		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+ 				IEEE80211_MAX_QUEUE_MAP,
+ 				IEEE80211_QUEUE_STOP_REASON_CSA);
+@@ -1127,9 +1131,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		/* use driver's channel switch callback */
+ 		struct ieee80211_channel_switch ch_switch = {
+ 			.timestamp = timestamp,
+-			.block_tx = sw_elem->mode,
++			.block_tx = elems->ch_switch_ie->mode,
+ 			.channel = new_ch,
+-			.count = sw_elem->count,
++			.count = elems->ch_switch_ie->count,
+ 		};
+ 
+ 		drv_channel_switch(sdata->local, &ch_switch);
+@@ -1137,11 +1141,11 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* channel switch handled in software */
+-	if (sw_elem->count <= 1)
++	if (elems->ch_switch_ie->count <= 1)
+ 		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
+ 	else
+ 		mod_timer(&ifmgd->chswitch_timer,
+-			  TU_TO_EXP_TIME(sw_elem->count *
++			  TU_TO_EXP_TIME(elems->ch_switch_ie->count *
+ 					 cbss->beacon_interval));
+ }
+ 
+@@ -2687,7 +2691,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	if (bss)
+ 		ieee80211_rx_bss_put(local, bss);
+ 
+-	if (!sdata->u.mgd.associated)
++	if (!sdata->u.mgd.associated ||
++	    !ether_addr_equal(mgmt->bssid, sdata->u.mgd.associated->bssid))
+ 		return;
+ 
+ 	if (need_ps) {
+@@ -2696,10 +2701,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		mutex_unlock(&local->iflist_mtx);
+ 	}
+ 
+-	if (elems->ch_switch_ie &&
+-	    memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid, ETH_ALEN) == 0)
+-		ieee80211_sta_process_chanswitch(sdata, elems->ch_switch_ie,
+-						 bss, rx_status->mactime);
++	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime, elems);
+ }
+ 
+ 
+@@ -3093,14 +3095,27 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		rma = ieee80211_rx_mgmt_assoc_resp(sdata, mgmt, skb->len, &bss);
+ 		break;
+ 	case IEEE80211_STYPE_ACTION:
+-		switch (mgmt->u.action.category) {
+-		case WLAN_CATEGORY_SPECTRUM_MGMT:
++		if (mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT) {
++			struct ieee802_11_elems elems;
++			int ies_len = skb->len -
++				      offsetof(struct ieee80211_mgmt,
++					       u.action.u.chan_switch.variable);
++
++			if (ies_len < 0)
++				break;
++
++			ieee802_11_parse_elems(
++				mgmt->u.action.u.chan_switch.variable,
++				ies_len, &elems);
++
++			if (elems.parse_error)
++				break;
++
+ 			ieee80211_sta_process_chanswitch(sdata,
+-					&mgmt->u.action.u.chan_switch.sw_elem,
+-					(void *)ifmgd->associated->priv,
+-					rx_status->mactime);
+-			break;
++							 rx_status->mactime,
++							 &elems);
+ 		}
++		break;
+ 	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9239bfa..ea91262 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2535,10 +2535,6 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			ieee80211_process_measurement_req(sdata, mgmt, len);
+ 			goto handled;
+ 		case WLAN_ACTION_SPCT_CHL_SWITCH:
+-			if (len < (IEEE80211_MIN_ACTION_SIZE +
+-				   sizeof(mgmt->u.action.u.chan_switch)))
+-				break;
+-
+ 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 				break;
+ 
+-- 
+1.8.0
 
-> Based on your suggestions, I've been testing a few days with the
-> following patch and I have yet to see any DMA messages or the auth
-> stuck state.  I had to check for SC_OP_INVALID because the initial
-> reset in ath9k_start would cause a kernel panic when the system was
-> being initialized from a powered off state.  I don't know enough about
-> the internals to know if I should expect that, but I'll need to set up
-> a serial console in order to capture the panic.
-
-Hm, so it's doing some fast channel changes?
-
-Just disable fast channel change entirely and re-test? And why not
-just force a cold reset always? Why bother checking for the queue to
-be stopped?
-
-
-
-
-
-Adrian
