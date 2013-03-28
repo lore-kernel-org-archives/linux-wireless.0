@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54675 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751151Ab3CWPaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 11:30:06 -0400
-Message-ID: <514DCA73.7000403@hauke-m.de> (sfid-20130323_163016_412409_B9D29C23)
-Date: Sat, 23 Mar 2013 16:29:55 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linville@tuxdriver.com, zajec5@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
-References: <1363885909-12263-1-git-send-email-hauke@hauke-m.de> <CAGRGNgXaZ69o9xNfUih3m4fJQQDT0=C0tLpmYuCVuc4=TAarGw@mail.gmail.com> <514DC055.4070402@hauke-m.de>
-In-Reply-To: <514DC055.4070402@hauke-m.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from mo2.mail-out.ovh.net ([178.32.228.2]:41246 "EHLO
+	mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754308Ab3C2Bkg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Mar 2013 21:40:36 -0400
+Received: from mail626.ha.ovh.net (gw6.ovh.net [213.251.189.206])
+	by mo2.mail-out.ovh.net (Postfix) with SMTP id ADFA7DC2416
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 23:16:18 +0100 (CET)
+Date: Thu, 28 Mar 2013 23:02:58 +0100
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Any suggestions for laptops with ath9k NIC?
+Message-ID: <20130328230258.6c996dd7@m4a785t-m.gnutoo.workgroup> (sfid-20130329_024041_192348_F114EDEE)
+In-Reply-To: <51548501.8010400@candelatech.com>
+References: <51548501.8010400@candelatech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/2013 03:46 PM, Hauke Mehrtens wrote:
-> On 03/21/2013 11:41 PM, Julian Calaby wrote:
->> Hi Hauke,
->>
->> On Fri, Mar 22, 2013 at 4:11 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>  drivers/net/wireless/b43/phy_n.c |   92 ++++++++------------------------------
->>>  1 file changed, 18 insertions(+), 74 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
->>> index 3c35382..4130c04 100644
->>> --- a/drivers/net/wireless/b43/phy_n.c
->>> +++ b/drivers/net/wireless/b43/phy_n.c
->>> @@ -5220,19 +5150,33 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
->>>
->>>         if (dev->phy.rev >= 3 &&
->>>             dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
->>> -               bool avoid = false;
->>> +               struct bcma_drv_cc __maybe_unused *cc;
->>
->> Could this go inside the #ifdef in the switch statement - that way the
->> __maybe_unused should be unnecessary?
-> 
-> No that is not possible, C forbids it there:
-> 
-> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_channel_setup’:
-> drivers/net/wireless/b43/phy_n.c:5169:4: error: a label can only be part
-> of a statement and a declaration is not a statement
-> 
->>
->>> +               int avoid = 0;
->>
->> I though that bools were converted to ints exactly as you've converted
->> the avoid variable here.
-> 
-> Yes I will change that.
-> 
-I thought about this and I would like to stay with int, because the
-functions wants an int and bcma_pmu_spuravoid_pllupdate() also handles
-avoid == 2.
+Hi,
 
-Hauke
+On Thu, 28 Mar 2013 10:59:29 -0700
+Ben Greear <greearb@candelatech.com> wrote:
+
+> Someone stole my previous laptop I was using for ath9k testing...
+> 
+> 
+> Any suggestions for a new mid-range laptop that comes standard with
+> ath9k NICs, or is known to work with ath9k NICs w/out having to
+> hack the NIC eeprom or laptop BIOS?
+> 
+> I'd prefer a 3x3, but not sure they exist, so a 2x2 a/b/g/n would be
+> OK as well..
+
+In the free software community ath9k are quite common, because many
+other cards require non-free firmware and so are not supported by 100%
+free software GNU/Linux distributions.
+
+http://h-node.org/ is a website that reference laptops that work with
+100% free software distributions.
+
+So there are a high number of laptops that have ath9k in that list,
+however the number of users is quite low.
+
+There is also the website https://www.thinkpenguin.com/ which sells
+laptops(and wifi cards).
+
+Since many electronic devices are changed without changing the product
+name, double check the hardware before buying...
+
+Denis.
+
