@@ -1,225 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42453 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756728Ab3C1JtN (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46172 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752320Ab3C1Vm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 05:49:13 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/9] mac80211: unify CSA action frame/beacon processing
-Date: Thu, 28 Mar 2013 10:48:58 +0100
-Message-Id: <1364464145-14446-3-git-send-email-johannes@sipsolutions.net> (sfid-20130328_104925_400878_D369BEAB)
-In-Reply-To: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
-References: <1364464145-14446-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 28 Mar 2013 17:42:59 -0400
+Date: Thu, 28 Mar 2013 17:42:58 -0400 (EDT)
+Message-Id: <20130328.174258.600921919654964205.davem@davemloft.net> (sfid-20130328_224310_869835_77245562)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless 2013-03-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130328191058.GA27701@tuxdriver.com>
+References: <20130328191058.GA27701@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 28 Mar 2013 15:10:58 -0400
 
-CSA action frame content should be processed as variable IEs
-rather than fixed to make it extensible. Unify the code and
-process them just like CSA in beacons to make it easier to
-extend for HT/VHT.
+> Please excuse this larger-than-I-would-like pull request intended
+> for the 3.9 stream.  There are a number of late-breaking fixes,
+> including a revert...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h  |  4 +--
- net/mac80211/ieee80211_i.h |  4 ---
- net/mac80211/mlme.c        | 71 ++++++++++++++++++++++++++++------------------
- net/mac80211/rx.c          |  4 ---
- 4 files changed, 44 insertions(+), 39 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index e46fea8..8f80b3a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -840,9 +840,7 @@ struct ieee80211_mgmt {
- 				} __packed wme_action;
- 				struct{
- 					u8 action_code;
--					u8 element_id;
--					u8 length;
--					struct ieee80211_channel_sw_ie sw_elem;
-+					u8 variable[0];
- 				} __packed chan_switch;
- 				struct{
- 					u8 action_code;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 55fb382..0acc2da 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1252,10 +1252,6 @@ void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata);
- int ieee80211_max_network_latency(struct notifier_block *nb,
- 				  unsigned long data, void *dummy);
- int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
--void
--ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
--				 const struct ieee80211_channel_sw_ie *sw_elem,
--				 struct ieee80211_bss *bss, u64 timestamp);
- void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				  struct sk_buff *skb);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ce5adcf..ca2061d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1052,33 +1052,37 @@ static void ieee80211_chswitch_timer(unsigned long data)
- 	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.chswitch_work);
- }
- 
--void
-+static void
- ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
--				 const struct ieee80211_channel_sw_ie *sw_elem,
--				 struct ieee80211_bss *bss, u64 timestamp)
-+				 u64 timestamp, struct ieee802_11_elems *elems)
- {
--	struct cfg80211_bss *cbss =
--		container_of((void *)bss, struct cfg80211_bss, priv);
--	struct ieee80211_channel *new_ch;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
--						      cbss->channel->band);
-+	struct cfg80211_bss *cbss = ifmgd->associated;
-+	struct ieee80211_bss *bss;
-+	struct ieee80211_channel *new_ch;
-+	int new_freq;
- 	struct ieee80211_chanctx *chanctx;
- 
- 	ASSERT_MGD_MTX(ifmgd);
- 
--	if (!ifmgd->associated)
-+	if (!cbss)
- 		return;
- 
- 	if (sdata->local->scanning)
- 		return;
- 
--	/* Disregard subsequent beacons if we are already running a timer
--	   processing a CSA */
--
-+	/* disregard subsequent announcements if we are already processing */
- 	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
- 		return;
- 
-+	if (!elems->ch_switch_ie)
-+		return;
-+
-+	bss = (void *)cbss->priv;
-+
-+	new_freq = ieee80211_channel_to_frequency(
-+			elems->ch_switch_ie->new_ch_num,
-+			cbss->channel->band);
- 	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
- 	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
- 		sdata_info(sdata,
-@@ -1118,7 +1122,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->local->csa_channel = new_ch;
- 
--	if (sw_elem->mode)
-+	if (elems->ch_switch_ie->mode)
- 		ieee80211_stop_queues_by_reason(&sdata->local->hw,
- 				IEEE80211_MAX_QUEUE_MAP,
- 				IEEE80211_QUEUE_STOP_REASON_CSA);
-@@ -1127,9 +1131,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		/* use driver's channel switch callback */
- 		struct ieee80211_channel_switch ch_switch = {
- 			.timestamp = timestamp,
--			.block_tx = sw_elem->mode,
-+			.block_tx = elems->ch_switch_ie->mode,
- 			.channel = new_ch,
--			.count = sw_elem->count,
-+			.count = elems->ch_switch_ie->count,
- 		};
- 
- 		drv_channel_switch(sdata->local, &ch_switch);
-@@ -1137,11 +1141,11 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	/* channel switch handled in software */
--	if (sw_elem->count <= 1)
-+	if (elems->ch_switch_ie->count <= 1)
- 		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
- 	else
- 		mod_timer(&ifmgd->chswitch_timer,
--			  TU_TO_EXP_TIME(sw_elem->count *
-+			  TU_TO_EXP_TIME(elems->ch_switch_ie->count *
- 					 cbss->beacon_interval));
- }
- 
-@@ -2687,7 +2691,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	if (bss)
- 		ieee80211_rx_bss_put(local, bss);
- 
--	if (!sdata->u.mgd.associated)
-+	if (!sdata->u.mgd.associated ||
-+	    !ether_addr_equal(mgmt->bssid, sdata->u.mgd.associated->bssid))
- 		return;
- 
- 	if (need_ps) {
-@@ -2696,10 +2701,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		mutex_unlock(&local->iflist_mtx);
- 	}
- 
--	if (elems->ch_switch_ie &&
--	    memcmp(mgmt->bssid, sdata->u.mgd.associated->bssid, ETH_ALEN) == 0)
--		ieee80211_sta_process_chanswitch(sdata, elems->ch_switch_ie,
--						 bss, rx_status->mactime);
-+	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime, elems);
- }
- 
- 
-@@ -3093,14 +3095,27 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		rma = ieee80211_rx_mgmt_assoc_resp(sdata, mgmt, skb->len, &bss);
- 		break;
- 	case IEEE80211_STYPE_ACTION:
--		switch (mgmt->u.action.category) {
--		case WLAN_CATEGORY_SPECTRUM_MGMT:
-+		if (mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT) {
-+			struct ieee802_11_elems elems;
-+			int ies_len = skb->len -
-+				      offsetof(struct ieee80211_mgmt,
-+					       u.action.u.chan_switch.variable);
-+
-+			if (ies_len < 0)
-+				break;
-+
-+			ieee802_11_parse_elems(
-+				mgmt->u.action.u.chan_switch.variable,
-+				ies_len, &elems);
-+
-+			if (elems.parse_error)
-+				break;
-+
- 			ieee80211_sta_process_chanswitch(sdata,
--					&mgmt->u.action.u.chan_switch.sw_elem,
--					(void *)ifmgd->associated->priv,
--					rx_status->mactime);
--			break;
-+							 rx_status->mactime,
-+							 &elems);
- 		}
-+		break;
- 	}
- 	mutex_unlock(&ifmgd->mtx);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9239bfa..ea91262 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2535,10 +2535,6 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			ieee80211_process_measurement_req(sdata, mgmt, len);
- 			goto handled;
- 		case WLAN_ACTION_SPCT_CHL_SWITCH:
--			if (len < (IEEE80211_MIN_ACTION_SIZE +
--				   sizeof(mgmt->u.action.u.chan_switch)))
--				break;
--
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 				break;
- 
--- 
-1.8.0
-
+Pulled, thanks John.
