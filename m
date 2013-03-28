@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:50991 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950Ab3CSWMb (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:38815 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640Ab3C1KAK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Mar 2013 18:12:31 -0400
+	Thu, 28 Mar 2013 06:00:10 -0400
+Received: by mail-oa0-f54.google.com with SMTP id n12so9765057oag.13
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 03:00:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130319.145258.1891905092469394685.davem@davemloft.net>
-References: <20130319.145258.1891905092469394685.davem@davemloft.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 20 Mar 2013 09:12:09 +1100
-Message-ID: <CAGRGNgU4nyDrbbN6QWh06PknACP9+h2sFrRcNyOLU_pnwMU5EA@mail.gmail.com> (sfid-20130319_231240_839149_002A3D0E)
-Subject: Re: [PATCH] net: Add socket() system call self test.
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <5153321B.5010206@hauke-m.de>
+References: <1364400951-25488-1-git-send-email-hauke@hauke-m.de>
+	<20130327172740.GE1868@tuxdriver.com>
+	<CACna6ryua5Bok2w1B4g1C6_tyqkAbBT6B+7GjBARH02s70ua+A@mail.gmail.com>
+	<5153321B.5010206@hauke-m.de>
+Date: Thu, 28 Mar 2013 11:00:09 +0100
+Message-ID: <CACna6rzhTg-L+p5Sz7zTEgP4PJvVvXuhVtgSCcr3g3FhAmCSww@mail.gmail.com> (sfid-20130328_110015_770632_E74CC54E)
+Subject: Re: [PATCH 1/2] b43: mark some functions and structs static
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+2013/3/27 Hauke Mehrtens <hauke@hauke-m.de>:
+> On 03/27/2013 06:43 PM, Rafał Miłecki wrote:
+>> 2013/3/27 John W. Linville <linville@tuxdriver.com>:
+>>> On Wed, Mar 27, 2013 at 05:15:50PM +0100, Hauke Mehrtens wrote:
+>>>> This fixes some sparse warnings.
+>>>>
+>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>> ---
+>>>>  drivers/net/wireless/b43/phy_n.c          |    6 ++++--
+>>>>  drivers/net/wireless/b43/radio_2056.c     |    2 +-
+>>>>  drivers/net/wireless/b43/sdio.h           |    4 ++--
+>>>>  drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
+>>>>  drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
+>>>>  5 files changed, 12 insertions(+), 10 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>>>> index 1ec0d69..8d15878 100644
+>>>> --- a/drivers/net/wireless/b43/phy_n.c
+>>>> +++ b/drivers/net/wireless/b43/phy_n.c
+>>>> @@ -2789,9 +2789,11 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
+>>>>   * Tx and Rx
+>>>>   **************************************************/
+>>>>
+>>>> -void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+>>>> +#if 0
+>>>> +static void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+>>>>  {//TODO
+>>>>  }
+>>>> +#endif
+>>>>
+>>>>  static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
+>>>>  {//TODO
+>>>
+>>> If this isn't necessary, why not just remove it?
+>>
+>> They are used for pointers that AFAIR can't be null.
+>
+> The set_rx_antenna is not set for the n-phy and it is checked for null
+> before calling it and b43_nphy_set_rxantenna() is not referenced, so it
+> could be removed. The others are probably needed.
 
-On Wed, Mar 20, 2013 at 5:52 AM, David Miller <davem@davemloft.net> wrote:
->
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
->
-> As mentioned during the netfilter workshop, we will be adding
-> all sorts of networking tests now that 3.9.x has a selftest
-> framework in place.
->
-> The first test I'm adding to net-next does some very simple
-> testing of the socket() system call.
->
-> Feel free to send patches for more tests, making the run
-> script more powerful (perhaps by taking a whitespace
-> seperated list of tests to run on the command line), and
-> adding more checks to the socket.c test.
->
-> Thanks.
->
->  tools/testing/selftests/Makefile                   |  1 +
->  tools/testing/selftests/net-socket/Makefile        | 16 ++++
->  .../testing/selftests/net-socket/run_netsocktests  | 12 +++
->  tools/testing/selftests/net-socket/socket.c        | 92 ++++++++++++++++++++++
->  4 files changed, 121 insertions(+)
->  create mode 100644 tools/testing/selftests/net-socket/Makefile
->  create mode 100644 tools/testing/selftests/net-socket/run_netsocktests
->  create mode 100644 tools/testing/selftests/net-socket/socket.c
->
-> diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-> index 3cc0ad7..7c6280f 100644
-> --- a/tools/testing/selftests/Makefile
-> +++ b/tools/testing/selftests/Makefile
-> @@ -5,6 +5,7 @@ TARGETS += vm
->  TARGETS += cpu-hotplug
->  TARGETS += memory-hotplug
->  TARGETS += efivarfs
-> +TARGETS += net-socket
->
->  all:
->         for TARGET in $(TARGETS); do \
-> diff --git a/tools/testing/selftests/net-socket/Makefile b/tools/testing/selftests/net-socket/Makefile
-> new file mode 100644
-> index 0000000..f27ee10
-> --- /dev/null
-> +++ b/tools/testing/selftests/net-socket/Makefile
-> @@ -0,0 +1,16 @@
-> +# Makefile for net-socket selftests
-> +
-> +CC = $(CROSS_COMPILE)gcc
-> +CFLAGS = -Wall
-> +
-> +NET_SOCK_PROGS = socket
-> +
-> +all: $(NET_SOCK_PROGS)
-> +%: %.c
-> +       $(CC) $(CFLAGS) -o $@ $^
-> +
-> +run_tests: all
-> +       @/bin/sh ./run_netsocktests || echo "vmtests: [FAIL]"
-
-Should that not be "vmtests"?
-
-Thanks,
+Whoops, I didn't know that fact about b43_nphy_set_rxantenna. Yeah, it
+should be removed.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Rafał
