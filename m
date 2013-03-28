@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:59303 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750930Ab3CRC7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Mar 2013 22:59:46 -0400
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Subject: Re: [PATCH 0/25] rt2800: add experimental support for 5592 chip
-Date: Mon, 18 Mar 2013 11:00:43 +0800
-Message-Id: <1363575643-8981-1-git-send-email-gaowanlong@cn.fujitsu.com> (sfid-20130318_035950_700923_C96FBD35)
-In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
-References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+Received: from shards.monkeyblade.net ([149.20.54.216]:36559 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911Ab3C1FVL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Mar 2013 01:21:11 -0400
+Date: Thu, 28 Mar 2013 01:21:08 -0400 (EDT)
+Message-Id: <20130328.012108.961738246524996742.davem@davemloft.net> (sfid-20130328_062128_799486_8D8CF4EE)
+To: horms@verge.net.au
+Cc: jesse@nicira.com, isdn@linux-pingi.de, linville@tuxdriver.com,
+	johannes@sipsolutions.net, bart.de.schuymer@pandora.be,
+	stephen@networkplumber.org, kaber@trash.net, marcel@holtmann.org,
+	gustavo@padovan.org, johan.hedberg@gmail.com,
+	linux-bluetooth@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+	linux1394-devel@lists.sourceforge.net, linux-media@vger.kernel.org,
+	netdev@vger.kernel.org, dev@openvswitch.org
+Subject: Re: [PATCH v2] net: add ETH_P_802_3_MIN
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1364445505-9745-1-git-send-email-horms@verge.net.au>
+References: <1364445505-9745-1-git-send-email-horms@verge.net.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Simon Horman <horms@verge.net.au>
+Date: Thu, 28 Mar 2013 13:38:25 +0900
 
->This patch set add support for 5592 a new Ralink wlan chip. Register
->programming code is all is based on Ralink linux driver available at
->(despite the url it linux driver download web page ):
->
->http://www.mediatek.com/_en/07_downloads/01_windows.php?sn=501
->
->Currently only support for USB devices is added, PCIe is on the way
->together with some other changes that will clean BBP/RF rt2800
->programming code, which is now quite Lionel (messy :-).
+> Add a new constant ETH_P_802_3_MIN, the minimum ethernet type for
+> an 802.3 frame. Frames with a lower value in the ethernet type field
+> are Ethernet II.
+> 
+> Also update all the users of this value that David Miller and
+> I could find to use the new constant.
+> 
+> Also correct a bug in util.c. The comparison with ETH_P_802_3_MIN
+> should be >= not >.
+> 
+> As suggested by Jesse Gross.
+> 
+> Compile tested only.
+> 
+> Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+> Acked-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> Signed-off-by: Simon Horman <horms@verge.net.au>
 
-
-Thank you very much, this works well on my new RT5572 wireless device.
-
-Tested-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-
->
-> Kconfig     |    7 
-> rt2800.h    |  103 ++++++-
-> rt2800lib.c |  857 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
-> rt2800pci.c |    5 
-> rt2800usb.c |   63 ++++
-> rt2x00.h    |   10 
-> 6 files changed, 989 insertions(+), 56 deletions(-)
-
+Looks great, applied, thanks Simon.
