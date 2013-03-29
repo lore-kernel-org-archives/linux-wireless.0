@@ -1,100 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2890 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932538Ab3CZJbM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Mar 2013 05:31:12 -0400
-Message-ID: <51516AD4.8080306@broadcom.com> (sfid-20130326_103132_637242_16A920AD)
-Date: Tue, 26 Mar 2013 10:31:00 +0100
-From: "Piotr Haber" <phaber@broadcom.com>
+Received: from mail-ia0-f173.google.com ([209.85.210.173]:38219 "EHLO
+	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755515Ab3C2Nij (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Mar 2013 09:38:39 -0400
+Received: by mail-ia0-f173.google.com with SMTP id h37so409543iak.32
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2013 06:38:38 -0700 (PDT)
+Date: Fri, 29 Mar 2013 09:38:39 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: johannes@sipsolutions.net, thomas@cozybit.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: return new mpath from mesh_path_add()
+Message-ID: <20130329133839.GB25331@localhost> (sfid-20130329_143843_893067_185381AF)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "David Herrmann" <dh.herrmann@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>
-Subject: Re: [PATCH regression/bisected] Revert
- "brcmsmac: support 4313iPA"
-References: <1363603503-2378-1-git-send-email-dh.herrmann@gmail.com>
- <51471B85.5060404@broadcom.com>
- <CANq1E4TsM6yoSt9aELFan0ayEw3PSfYCe+PEe35YFHzZ-9rTuA@mail.gmail.com>
- <20130325185821.GB17454@tuxdriver.com>
-In-Reply-To: <20130325185821.GB17454@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/13 19:58, John W. Linville wrote:
-> On Mon, Mar 18, 2013 at 02:58:08PM +0100, David Herrmann wrote:
->> Hi Piotr
->>
->> On Mon, Mar 18, 2013 at 2:49 PM, Piotr Haber <phaber@broadcom.com> wrote:
->>> On 03/18/13 11:45, David Herrmann wrote:
->>>> This reverts commit b6fc28a158076ca2764edc9a6d1e1402f56e1c0c. It breaks
->>>> wireless AP reconnection on: (14e4:4727)
->>>>   Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller
->>>>
->>>> Any attempt to reconnect to an AP results in timeouts no matter how near to the
->>>> AP I am:
->>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
->>>> ---
->>>> Hi
->>>>
->>>> I tried coming up with a fix instead of reverting this commit, but the commit is
->>>> way to big for me to understand what's going on. Sorry.
->>>>
->>>> With linux-3.8 connecting to an AP broke on my machine. I could connect to an AP
->>>> one time, but any further attempt resulted in:
->>>>  00:10:40 $nb kernel: wlan0: authenticate with 00:18:39:0a:8e:23
->>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 1/3)
->>>>  00:10:40 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 2/3)
->>>>  00:10:41 $nb kernel: wlan0: direct probe to 00:18:39:0a:8e:23 (try 3/3)
->>>>  00:10:41 $nb kernel: wlan0: authentication with 00:18:39:0a:8e:23 timed out
->>>>
->>>> Even sitting right next to the AP didn't help so I started bisecting and it
->>>> turned out to be:
->>>>   "brcmsmac: support 4313iPA" b6fc28a158076ca2764edc9a6d1e1402f56e1c0c
->>>> Please revert it.
->>>>
->>>> Thanks
->>>> David
->>>>
->>> Hi,
->>> unfortunately this is not a first report of this patch breaking 4313 for some users.
->>> I'm pretty confident that it is hardware revision related as we have 4313ePA and iPA boards running
->>> successfully in our test setup.
->>> Could you aid us in effort of finding the problem by supplying the contents of this debugfs file:
->>> <debugfs_mount>/brcmsmac/bcma0:0/hardware
->>
->> Hi
->>
->> $ cat /sys/kernel/debug/brcmsmac/bcma0\:0/hardware
->> board vendor: 185f
->> board type: 51a
->> board revision: 1408
->> board flags: 8402a01
->> board flags2: 880
->> firmware revision: 262032b
->>
->> I can also try partial reverts of that commit, but I really don't know
->> which parts might be important.
-> 
-> Are we going to see a fix for this (very) soon?  Or should I just go
-> ahead and revert this patch?
-> 
-I cannot reproduce the issue on a set of devices we have here (3 different 4313 ePA models).
-Some of the devices that are reported to be broken are being shipped to us.
-So I would say we need around 2 weeks at least to resolve this (if we reproduce the problem and find
-a fix).
-Not sure this is soon enough.
-If not please go ahead an revert the patch.
+Most times that mesh_path_add() is called, it is followed by
+a lookup to get the just-added mpath.  We can instead just
+return the new mpath in the case that we allocated one (or the
+existing one if already there), so do that.  Also, reorder the
+code in mesh_path_add a bit so that we don't need to allocate
+in the pre-existing case.
 
+Signed-off-by: Bob Copeland <bob@cozybit.com>
 
+---
+v2: rebased/retested on mac80211-next
 
+ net/mac80211/cfg.c          |   12 +++-------
+ net/mac80211/mesh.h         |    3 ++-
+ net/mac80211/mesh_hwmp.c    |   22 +++++++----------
+ net/mac80211/mesh_pathtbl.c |   56 +++++++++++++++++++++----------------------
+ 4 files changed, 42 insertions(+), 51 deletions(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6e43feb..edca2a2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1540,7 +1540,6 @@ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct mesh_path *mpath;
+ 	struct sta_info *sta;
+-	int err;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -1551,17 +1550,12 @@ static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
+ 		return -ENOENT;
+ 	}
+ 
+-	err = mesh_path_add(sdata, dst);
+-	if (err) {
++	mpath = mesh_path_add(sdata, dst);
++	if (IS_ERR(mpath)) {
+ 		rcu_read_unlock();
+-		return err;
++		return PTR_ERR(mpath);
+ 	}
+ 
+-	mpath = mesh_path_lookup(sdata, dst);
+-	if (!mpath) {
+-		rcu_read_unlock();
+-		return -ENXIO;
+-	}
+ 	mesh_path_fix_nexthop(mpath, sta);
+ 
+ 	rcu_read_unlock();
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 6ffabbe..da15877 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -275,7 +275,8 @@ void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
+ void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
+ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee80211_mgmt *mgmt, size_t len);
+-int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst);
++struct mesh_path *
++mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst);
+ 
+ int mesh_path_add_gate(struct mesh_path *mpath);
+ int mesh_path_send_to_gates(struct mesh_path *mpath);
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index bdb8d3b..ab9c65a 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -445,9 +445,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 				}
+ 			}
+ 		} else {
+-			mesh_path_add(sdata, orig_addr);
+-			mpath = mesh_path_lookup(sdata, orig_addr);
+-			if (!mpath) {
++			mpath = mesh_path_add(sdata, orig_addr);
++			if (IS_ERR(mpath)) {
+ 				rcu_read_unlock();
+ 				return 0;
+ 			}
+@@ -486,9 +485,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 					(last_hop_metric > mpath->metric)))
+ 				fresh_info = false;
+ 		} else {
+-			mesh_path_add(sdata, ta);
+-			mpath = mesh_path_lookup(sdata, ta);
+-			if (!mpath) {
++			mpath = mesh_path_add(sdata, ta);
++			if (IS_ERR(mpath)) {
+ 				rcu_read_unlock();
+ 				return 0;
+ 			}
+@@ -804,9 +802,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	mpath = mesh_path_lookup(sdata, orig_addr);
+ 	if (!mpath) {
+-		mesh_path_add(sdata, orig_addr);
+-		mpath = mesh_path_lookup(sdata, orig_addr);
+-		if (!mpath) {
++		mpath = mesh_path_add(sdata, orig_addr);
++		if (IS_ERR(mpath)) {
+ 			rcu_read_unlock();
+ 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
+ 			return;
+@@ -1098,11 +1095,10 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+ 	/* no nexthop found, start resolving */
+ 	mpath = mesh_path_lookup(sdata, target_addr);
+ 	if (!mpath) {
+-		mesh_path_add(sdata, target_addr);
+-		mpath = mesh_path_lookup(sdata, target_addr);
+-		if (!mpath) {
++		mpath = mesh_path_add(sdata, target_addr);
++		if (IS_ERR(mpath)) {
+ 			mesh_path_discard_frame(sdata, skb);
+-			err = -ENOSPC;
++			err = PTR_ERR(mpath);
+ 			goto endlookup;
+ 		}
+ 	}
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index dc7c8df..89aacfd 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -493,7 +493,8 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata)
+  *
+  * State: the initial state of the new path is set to 0
+  */
+-int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
++struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
++				const u8 *dst)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -502,18 +503,33 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
+ 	struct mpath_node *node, *new_node;
+ 	struct hlist_head *bucket;
+ 	int grow = 0;
+-	int err = 0;
++	int err;
+ 	u32 hash_idx;
+ 
+ 	if (ether_addr_equal(dst, sdata->vif.addr))
+ 		/* never add ourselves as neighbours */
+-		return -ENOTSUPP;
++		return ERR_PTR(-ENOTSUPP);
+ 
+ 	if (is_multicast_ether_addr(dst))
+-		return -ENOTSUPP;
++		return ERR_PTR(-ENOTSUPP);
+ 
+ 	if (atomic_add_unless(&sdata->u.mesh.mpaths, 1, MESH_MAX_MPATHS) == 0)
+-		return -ENOSPC;
++		return ERR_PTR(-ENOSPC);
++
++	read_lock_bh(&pathtbl_resize_lock);
++	tbl = resize_dereference_mesh_paths();
++
++	hash_idx = mesh_table_hash(dst, sdata, tbl);
++	bucket = &tbl->hash_buckets[hash_idx];
++
++	spin_lock(&tbl->hashwlock[hash_idx]);
++
++	hlist_for_each_entry(node, bucket, list) {
++		mpath = node->mpath;
++		if (mpath->sdata == sdata &&
++		    ether_addr_equal(dst, mpath->dst))
++			goto found;
++	}
+ 
+ 	err = -ENOMEM;
+ 	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
+@@ -524,7 +540,6 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
+ 	if (!new_node)
+ 		goto err_node_alloc;
+ 
+-	read_lock_bh(&pathtbl_resize_lock);
+ 	memcpy(new_mpath->dst, dst, ETH_ALEN);
+ 	eth_broadcast_addr(new_mpath->rann_snd_addr);
+ 	new_mpath->is_root = false;
+@@ -538,21 +553,6 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
+ 	spin_lock_init(&new_mpath->state_lock);
+ 	init_timer(&new_mpath->timer);
+ 
+-	tbl = resize_dereference_mesh_paths();
+-
+-	hash_idx = mesh_table_hash(dst, sdata, tbl);
+-	bucket = &tbl->hash_buckets[hash_idx];
+-
+-	spin_lock(&tbl->hashwlock[hash_idx]);
+-
+-	err = -EEXIST;
+-	hlist_for_each_entry(node, bucket, list) {
+-		mpath = node->mpath;
+-		if (mpath->sdata == sdata &&
+-		    ether_addr_equal(dst, mpath->dst))
+-			goto err_exists;
+-	}
+-
+ 	hlist_add_head_rcu(&new_node->list, bucket);
+ 	if (atomic_inc_return(&tbl->entries) >=
+ 	    tbl->mean_chain_len * (tbl->hash_mask + 1))
+@@ -560,23 +560,23 @@ int mesh_path_add(struct ieee80211_sub_if_data *sdata, const u8 *dst)
+ 
+ 	mesh_paths_generation++;
+ 
+-	spin_unlock(&tbl->hashwlock[hash_idx]);
+-	read_unlock_bh(&pathtbl_resize_lock);
+ 	if (grow) {
+ 		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
+ 		ieee80211_queue_work(&local->hw, &sdata->work);
+ 	}
+-	return 0;
+-
+-err_exists:
++	mpath = new_mpath;
++found:
+ 	spin_unlock(&tbl->hashwlock[hash_idx]);
+ 	read_unlock_bh(&pathtbl_resize_lock);
+-	kfree(new_node);
++	return mpath;
++
+ err_node_alloc:
+ 	kfree(new_mpath);
+ err_path_alloc:
+ 	atomic_dec(&sdata->u.mesh.mpaths);
+-	return err;
++	spin_unlock(&tbl->hashwlock[hash_idx]);
++	read_unlock_bh(&pathtbl_resize_lock);
++	return ERR_PTR(err);
+ }
+ 
+ static void mesh_table_free_rcu(struct rcu_head *rcu)
+-- 
+1.7.10.4
 
+-- 
+Bob Copeland %% www.bobcopeland.com
