@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37446 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752234Ab3C0Rxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 13:53:40 -0400
-Message-ID: <5153321B.5010206@hauke-m.de> (sfid-20130327_185343_954625_99137B55)
-Date: Wed, 27 Mar 2013 18:53:31 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-qc0-f180.google.com ([209.85.216.180]:38617 "EHLO
+	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755743Ab3C2Nqm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Mar 2013 09:46:42 -0400
+Received: by mail-qc0-f180.google.com with SMTP id v28so233066qcm.11
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2013 06:46:41 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 1/2] b43: mark some functions and structs static
-References: <1364400951-25488-1-git-send-email-hauke@hauke-m.de> <20130327172740.GE1868@tuxdriver.com> <CACna6ryua5Bok2w1B4g1C6_tyqkAbBT6B+7GjBARH02s70ua+A@mail.gmail.com>
-In-Reply-To: <CACna6ryua5Bok2w1B4g1C6_tyqkAbBT6B+7GjBARH02s70ua+A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 29 Mar 2013 07:46:41 -0600
+Message-ID: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com> (sfid-20130329_144645_486430_13D54070)
+Subject: Memory leak in mwifiex_cfg80211_scan
+From: Daniel Drake <dsd@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2013 06:43 PM, Rafał Miłecki wrote:
-> 2013/3/27 John W. Linville <linville@tuxdriver.com>:
->> On Wed, Mar 27, 2013 at 05:15:50PM +0100, Hauke Mehrtens wrote:
->>> This fixes some sparse warnings.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>  drivers/net/wireless/b43/phy_n.c          |    6 ++++--
->>>  drivers/net/wireless/b43/radio_2056.c     |    2 +-
->>>  drivers/net/wireless/b43/sdio.h           |    4 ++--
->>>  drivers/net/wireless/b43/tables_nphy.c    |    4 ++--
->>>  drivers/net/wireless/b43/tables_phy_lcn.c |    6 +++---
->>>  5 files changed, 12 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
->>> index 1ec0d69..8d15878 100644
->>> --- a/drivers/net/wireless/b43/phy_n.c
->>> +++ b/drivers/net/wireless/b43/phy_n.c
->>> @@ -2789,9 +2789,11 @@ static void b43_nphy_iq_cal_gain_params(struct b43_wldev *dev, u16 core,
->>>   * Tx and Rx
->>>   **************************************************/
->>>
->>> -void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
->>> +#if 0
->>> +static void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
->>>  {//TODO
->>>  }
->>> +#endif
->>>
->>>  static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
->>>  {//TODO
->>
->> If this isn't necessary, why not just remove it?
-> 
-> They are used for pointers that AFAIR can't be null.
+Hi,
 
-The set_rx_antenna is not set for the n-phy and it is checked for null
-before calling it and b43_nphy_set_rxantenna() is not referenced, so it
-could be removed. The others are probably needed.
+The following test script triggers a memory leak:
 
-Hauke
+insmod mwifiex_sdio.ko
+sleep 1
+ifconfig eth0 up
+iwlist eth0 scan &
+sleep 0.5
+rmmod mwifiex_sdio
+
+kmemleak says:
+unreferenced object 0xed8bb200 (size 512):
+  comm "iwlist", pid 666, jiffies 4294952762 (age 16.330s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 e8 b8 8b ed 01 01 00  ................
+    01 00 00 00 00 00 02 00 01 00 00 00 00 00 03 00  ................
+  backtrace:
+    [<c00a7f1c>] create_object+0x118/0x2b0
+    [<c03db82c>] kmemleak_alloc+0x80/0xc4
+    [<c00a3444>] kmem_cache_alloc+0xa8/0x110
+    [<c022f8ac>] mwifiex_cfg80211_scan+0xc0/0x300
+    [<c03bfe2c>] cfg80211_wext_siwscan+0x280/0x2f8
+    [<c03d7cf8>] ioctl_standard_call+0x290/0x3b8
+    [<c03d7f14>] wext_handle_ioctl+0xf4/0x1c0
+    [<c0308d70>] dev_ioctl+0x6b4/0x6dc
+    [<c02f3f00>] sock_ioctl+0x254/0x28c
+    [<c00b994c>] vfs_ioctl+0x30/0x44
+    [<c00ba504>] do_vfs_ioctl+0x560/0x5b8
+    [<c00ba59c>] sys_ioctl+0x40/0x68
+    [<c000eb40>] ret_fast_syscall+0x0/0x30
+    [<ffffffff>] 0xffffffff
+
+The test environment is XO-4 running Linux 3.8
+(http://wiki.laptop.org/go/User:DanielDrake/Run_upstream_kernel_on_XO-4).
+NetworkManager can be enabled or disabled (doesn't matter) and the
+driver is hacked to remove p2p0 and uap0 interfaces. And these patches
+are applied:
+
+    mwifiex: fix race when queuing commands
+    mwifiex: skip pending commands after function shutdown
+    mwifiex: cancel cmd timer and free curr_cmd in shutdown process
+    mwifiex: fix negative cmd_pending count
+    mwifiex: complete last internal scan
+
+I'm relatively sure this issue is old and not related to those patches
+so I'm creating a new thread for it.
+
+Thanks
+Daniel
