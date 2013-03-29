@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:51532 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932407Ab3CGPrv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Mar 2013 10:47:51 -0500
-Received: by mail-ee0-f41.google.com with SMTP id c13so442043eek.14
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Mar 2013 07:47:50 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 05/13] b43: HT-PHY: implement MAC reclocking
-Date: Thu,  7 Mar 2013 16:47:19 +0100
-Message-Id: <1362671247-10766-6-git-send-email-zajec5@gmail.com> (sfid-20130307_164754_571945_D9CC08BE)
-In-Reply-To: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
-References: <1362671247-10766-1-git-send-email-zajec5@gmail.com>
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:60936 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753909Ab3C2Spm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Mar 2013 14:45:42 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Rhodes <jrhodes@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 29 Mar 2013 11:44:48 -0700
+Subject: RE: mwifiex crash when removing interface while scanning
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DCBF0E7@SC-VEXCH1.marvell.com> (sfid-20130329_194546_438883_C715373A)
+References: <CAMLZHHS_G3N+UcKqPBWr6JPTWADCNOgdXReL8s3q3GPpYebGvQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE59E@SC-VEXCH1.marvell.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE6CD@SC-VEXCH1.marvell.com>
+	<CAMLZHHRmd+Yfr_72HdfNd+knPJg8KvuAA2WrC0TC0wQ8pOeMeA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CE95B@SC-VEXCH1.marvell.com>
+	<CAMLZHHR+OCQd_2J8NkmK0CND9vo6VaT73L+rJKJRk7bUknh7Qw@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D6CEC9D@SC-VEXCH1.marvell.com>
+	<477F20668A386D41ADCC57781B1F70430D9D9C1608@SC-VEXCH1.marvell.com>
+	<CAMLZHHQyTDHD8q=Q-edSew+KnpaGWOaVwxiK_fjABG9ZC9g-Qg@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9D9C2199@SC-VEXCH1.marvell.com>
+	<CAMLZHHQYB8wYEq1gppNEMiV0BPfM3qKtujR4=4u1jVww-N6z5w@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9DAD3AE4@SC-VEXCH1.marvell.com>
+	<477F20668A386D41ADCC57781B1F70430D9DAD430D@SC-VEXCH1.marvell.com>
+	<CAMLZHHRmyftv4sz+jmozJoAjvRTP-4DF-59C6N22R7tccCJ5WQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9DCBEBB7@SC-VEXCH1.marvell.com>
+ <CAMLZHHT92u7gAGyfnqo_4S=+MgmEu0iW0bCbQ1jPycuRWf_6fQ@mail.gmail.com>
+In-Reply-To: <CAMLZHHT92u7gAGyfnqo_4S=+MgmEu0iW0bCbQ1jPycuRWf_6fQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Daniel,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+> On Wed, Mar 27, 2013 at 8:24 PM, Bing Zhao <bzhao@marvell.com> wrote:
+> > This is caused by decreasing cmd_pending while cleanup scan commands in scan_pending_q.
+> > cmd_pending only counts the commands queued in cmd_pending_q.
+> >
+> > Attached v2 patch should fix it. Please try it out.
+> 
+> Thanks, applied both patches, that seems to be working now.
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 4ccd371..4b24816 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -290,6 +290,7 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
- {
- 	struct bcma_device *core = dev->dev->bdev;
- 	int spuravoid = 0;
-+	u16 tmp;
- 
- 	/* Check for 13 and 14 is just a guess, we don't have enough logs. */
- 	if (new_channel->hw_value == 13 || new_channel->hw_value == 14)
-@@ -301,6 +302,23 @@ static void b43_phy_ht_spur_avoid(struct b43_wldev *dev,
- 			  B43_BCMA_CLKCTLST_PHY_PLL_REQ,
- 			  B43_BCMA_CLKCTLST_80211_PLL_ST |
- 			  B43_BCMA_CLKCTLST_PHY_PLL_ST, false);
-+
-+	/* Values has been taken from wlc_bmac_switch_macfreq comments */
-+	switch (spuravoid) {
-+	case 2: /* 126MHz */
-+		tmp = 0x2082;
-+		break;
-+	case 1: /* 123MHz */
-+		tmp = 0x5341;
-+		break;
-+	default: /* 120MHz */
-+		tmp = 0x8889;
-+	}
-+
-+	b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW, tmp);
-+	b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
-+
-+	/* TODO: reset PLL */
- }
- 
- static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
--- 
-1.7.10.4
+Thanks for testing. I will resend the patches to the list.
 
+Thanks,
+Bing
