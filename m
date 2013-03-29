@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60370 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab3CDHOj (ORCPT
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:57230 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab3C2MeE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Mar 2013 02:14:39 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k_hw: Fix fixed antenna for AR9462
-Date: Mon,  4 Mar 2013 12:42:55 +0530
-Message-Id: <1362381175-9634-4-git-send-email-sujith@msujith.org> (sfid-20130304_081445_454022_5804F750)
-In-Reply-To: <1362381175-9634-1-git-send-email-sujith@msujith.org>
-References: <1362381175-9634-1-git-send-email-sujith@msujith.org>
+	Fri, 29 Mar 2013 08:34:04 -0400
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: [PATCH -mmotm resend] brcm80211: fix the misaligned indentation
+Date: Fri, 29 Mar 2013 21:33:20 +0900
+Message-Id: <1364560400-30242-1-git-send-email-akinobu.mita@gmail.com> (sfid-20130329_133425_130421_F910B58E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This fixes the misaligned indentation introduced by
+drivers-net-rename-random32-to-prandom_u32.patch in the -mm tree.
 
-When the RX chainmask is set to 0x2 for AR9462, certain values
-from chain1 have to be programmed for chain0 also.
+This also remove unneeded parentheses in order not to cause line over
+80 characters.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 881e989..e6b92ff 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3606,6 +3606,12 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
- 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_COM_2, AR_SWITCH_TABLE_COM2_ALL, value);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index bca31a8..5da1645 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -1118,7 +1118,7 @@ static void brcmf_p2p_afx_handler(struct work_struct *work)
+ 	if (afx_hdl->is_listen && afx_hdl->my_listen_chan)
+ 		/* 100ms ~ 300ms */
+ 		err = brcmf_p2p_discover_listen(p2p, afx_hdl->my_listen_chan,
+-					100 * (1 + (prandom_u32() % 3)));
++						100 * (1 + prandom_u32() % 3));
+ 	else
+ 		err = brcmf_p2p_act_frm_search(p2p, afx_hdl->peer_listen_chan);
  
-+	if ((AR_SREV_9462(ah)) && (ah->rxchainmask == 0x2)) {
-+		value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
-+		REG_RMW_FIELD(ah, switch_chain_reg[0],
-+			      AR_SWITCH_TABLE_ALL, value);
-+	}
-+
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
- 		if ((ah->rxchainmask & BIT(chain)) ||
- 		    (ah->txchainmask & BIT(chain))) {
-@@ -3772,6 +3778,17 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
- 					  AR_PHY_EXT_ATTEN_CTL_2,
- 					 };
- 
-+	if ((AR_SREV_9462(ah)) && (ah->rxchainmask == 0x2)) {
-+		value = ar9003_hw_atten_chain_get(ah, 1, chan);
-+		REG_RMW_FIELD(ah, ext_atten_reg[0],
-+			      AR_PHY_EXT_ATTEN_CTL_XATTEN1_DB, value);
-+
-+		value = ar9003_hw_atten_chain_get_margin(ah, 1, chan);
-+		REG_RMW_FIELD(ah, ext_atten_reg[0],
-+			      AR_PHY_EXT_ATTEN_CTL_XATTEN1_MARGIN,
-+			      value);
-+	}
-+
- 	/* Test value. if 0 then attenuation is unused. Don't load anything. */
- 	for (i = 0; i < 3; i++) {
- 		if (ah->txchainmask & BIT(i)) {
 -- 
-1.8.1.5
+1.8.1.4
 
