@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:45939 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756Ab3CBFkQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Mar 2013 00:40:16 -0500
-Received: by mail-wi0-f180.google.com with SMTP id hi8so234114wib.13
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Mar 2013 21:40:14 -0800 (PST)
+Received: from mms1.broadcom.com ([216.31.210.17]:4363 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755618Ab3C2NzT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Mar 2013 09:55:19 -0400
+Message-ID: <51559A4A.6050308@broadcom.com> (sfid-20130329_145523_291811_529FA36A)
+Date: Fri, 29 Mar 2013 14:42:34 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20785.24998.602035.570736@gargle.gargle.HOWL>
-References: <1360329197-72631-1-git-send-email-nbd@openwrt.org>
-	<20757.1753.863278.858198@gargle.gargle.HOWL>
-	<511508A6.8020104@openwrt.org>
-	<CAMcMvsjE=NNqt_q=vepZbFE8vwLypN2qZwyXg=aCBj3vvYOpMw@mail.gmail.com>
-	<51152D9E.1040106@openwrt.org>
-	<20130227192030.GW12537@pogo>
-	<CAJ-VmonSQi1SZVrkvcuS8dubqSAy8s1RCGJounL1EA23z3FXzw@mail.gmail.com>
-	<512ECE01.8010102@openwrt.org>
-	<20782.54505.239733.82364@gargle.gargle.HOWL>
-	<512EDDC5.7020901@openwrt.org>
-	<20784.48093.263373.125536@gargle.gargle.HOWL>
-	<CAJ-Vmon8B=wUkSd5tq=e-2FoUZykv28TD+tR71+-1R0W9_hYew@mail.gmail.com>
-	<20785.24998.602035.570736@gargle.gargle.HOWL>
-Date: Fri, 1 Mar 2013 21:40:14 -0800
-Message-ID: <CAJ-Vmokn4A7nQdOHa4iJU=mP6_VEfHn8nYB1fsDiUhbZ1Z2mwQ@mail.gmail.com> (sfid-20130302_064021_507980_78B6B1F9)
-Subject: Re: [RFC] ath9k: remove ath9k_rate_control
-From: Adrian Chadd <adrian@freebsd.org>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Ben Greear" <greearb@candelatech.com>
+cc: "Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Adrian Chadd" <adrian@freebsd.org>,
+	"Felix Fietkau" <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication
+ from user-space
+References: <1364472669-5629-1-git-send-email-arend@broadcom.com>
+ <1364487476.10397.23.camel@jlt4.sipsolutions.net>
+ <5154B347.9080904@broadcom.com>
+ <1364506118.10397.29.camel@jlt4.sipsolutions.net>
+ <1364510577.3226.7.camel@dcbw.foobar.com>
+ <1364510646.10397.81.camel@jlt4.sipsolutions.net>
+ <1364511671.3226.22.camel@dcbw.foobar.com>
+ <5154D286.4040001@candelatech.com>
+In-Reply-To: <5154D286.4040001@candelatech.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 March 2013 18:19, Sujith Manoharan <sujith@msujith.org> wrote:
-> Adrian Chadd wrote:
->> (190mbit TCP on 2-stream? Damn. Looks like I have a little more
->> optimisation to do in FreeBSD. I'm only hitting 160/170mbit TCP on
->> AR9280<->AR9280 and AR9280<->AR9287. But I hit 220-240mbit UDP.)
->
-> I used a AR9462 card for this test. With AR9280/AR9287 I get abysmal
-> numbers with both rate control algorithms. Maybe something has regressed
-> in ath9k for the AR9002 family...
+On 03/29/2013 12:30 AM, Ben Greear wrote:
+> On 03/28/2013 04:01 PM, Dan Williams wrote:
+>> On Thu, 2013-03-28 at 23:44 +0100, Johannes Berg wrote:
+>>> On Thu, 2013-03-28 at 17:42 -0500, Dan Williams wrote:
+>>>
+>>>>> Well, you can do DHCP a second or so, I'd think? And EAPOL much
+>>>>> quicker,
+>>>>> of course. I don't really see any reasonable minimum time? We might
+>>>>> want
+>>>>> to enforce a max though, maybe.
+>>>>
+>>>> Not quite.  A lot is dependent on the server itself, and I've had users
+>>>> on university and corporate networks report it sometimes takes 30 to 60
+>>>> seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
+>>>> OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
+>>>> like your lease, which means you need another round-trip.  So in many
+>>>> cases, it's a couple round-trips and each of these packets may or may
+>>>> not get lost in noisy environments.
+>>>
+>>> Oh, yes, of course. However, we're talking about optimising the good
+>>> cases, not the bad ones. Think of it this way: if it goes fast, we
+>>> shouldn't make it slow by putting things like powersave or similar in
+>>> the way. If it's slow, then it'll still work, just slower. But when
+>>> "slower" only means a few hundred milliseconds, it doesn't matter if
+>>> everything takes forever (30-60 secs)
+>>
+>> True, but at least 4 or 5 seconds is the minimum time I'd recommend here
+>> for DHCP.
+> 
+> Couldn't dhcp just turn off the critical protection as soon as it is done?
 
-It's almost like we need some kind of lab space set aside for running
-regression tests with all of the ath9k hardware ,dating back to
-AR5416, with some automated testing rigs..
+That is the idea. It just seemed sane to have some minimum specified,
+but I guess its value depends on the protocol that needs protection as
+this API is not limited to DHCP. I will remove the minimum.
 
-I have the hardware. Who wants to do it? :)
+Also I think DHCP should not use the API to protect the whole
+transaction, but only when there is a message exchange being initiated.
 
+> Then, you only need to worry about the max time allowed.
 
+True, but I think that also depends on the protocol and possibly also on
+the solution in the driver to increase a more reliable connection. Some
+solution may have a negative effect on other functions (eg. bluetooth)
+which require another maximum timeout opposed to suppressing a scanning.
+With DHCP in mind I would say somewhere between 5-10 sec. is (more than)
+enough.
 
-adrian
+> Also, you would probably need to enforce in the kernel that only
+> x out of y time in any given period can be locked, otherwise lots
+> of different dhclient processes (perhaps erroneously spawned..or
+> running on lots of different VIFs) could basically disable scanning
+> or channel changes...
+
+True. Will try to come up with some sane solution for this.
+
+Gr. AvS
+
