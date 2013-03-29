@@ -1,66 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:34896 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791Ab3C0Qdk (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54205 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495Ab3C2QA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:33:40 -0400
-Received: by mail-we0-f176.google.com with SMTP id s43so3183344wey.35
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2013 09:33:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMgrJ3bENvfezMSge9_oOJiSsoMpMVFGk+QaSgsHSDASczgn0A@mail.gmail.com>
-References: <CAMgrJ3Y9=K4umoLD=htrrW-Wn4Hgi7qfaKDpY55_GKd=KgD==A@mail.gmail.com>
-	<CAJ-VmonoNE1azzwZrjr+BX2un=oz9D_Tf3AAWdw9twJjyzFMOA@mail.gmail.com>
-	<CAJ-Vmo=XMnm9b3t102q305Kj2LiVqEhTJ+X1+mrW=1X8cvArSg@mail.gmail.com>
-	<201303251712.19808.chunkeey@googlemail.com>
-	<CAJ-VmonVKm+SQrbB_D+0R-V5airK8fUZpE2Y_TK22TuMczMu6A@mail.gmail.com>
-	<CAMgrJ3afo=woPwXo6HO16b1CPuo4aRYM+w0__gQQYRvvJT3D-g@mail.gmail.com>
-	<CAJ-Vmok8p9T0anY_1zGvArA5tZ4Fx4gdHHTVmSOGgprfNDqS+w@mail.gmail.com>
-	<CAMgrJ3Zy1EKBcdcVouK9=r6=ErU8R72-=aC149VPT1Cg9=wiTg@mail.gmail.com>
-	<5151D752.3080303@candelatech.com>
-	<CAMgrJ3b7yZru5P-bYpmmfjYCoSJqUhAMrTzfKnKLPN3CgdeJ4w@mail.gmail.com>
-	<CAMgrJ3bENvfezMSge9_oOJiSsoMpMVFGk+QaSgsHSDASczgn0A@mail.gmail.com>
-Date: Wed, 27 Mar 2013 09:33:38 -0700
-Message-ID: <CAJ-Vmomp2gS34jwWuh7046Y+6mBGCpirG6nk-E37enE3mSh5GA@mail.gmail.com> (sfid-20130327_173353_667997_BB38B0AA)
-Subject: Re: [ath9k-devel] Auth Packet TX Delay
-From: Adrian Chadd <adrian@freebsd.org>
-To: Robert Shade <robert.shade@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Marco Fonseca <marco@tampabay.rr.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 29 Mar 2013 12:00:29 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
+Date: Fri, 29 Mar 2013 09:00:23 -0700
+Message-Id: <1364572823-28071-1-git-send-email-greearb@candelatech.com> (sfid-20130329_170033_026763_9F6C74DD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good catch! Can you add that to the bugzilla bug please?
+From: Ben Greear <greearb@candelatech.com>
 
+The sta_info hash is designed to deal with an AP
+with lots of stations associated, or a station interface
+connected to a single AP.
 
+However, when you have lots of station VIFs connected
+to the same AP, the sta_info hash becomes worthless
+as there is a single hash bucket that contains all the
+entries in a linked list.
 
-Adrian
+So, have the sdata object cache one of its station
+interfaces.  If we are a station VIF with a single
+sta_info, then this means we can ignore the sta_info
+hash entirely.
 
+On a test case with 128 stations and 50 TCP streams,
+tx performance went from around 80Mbps to 124Mbps.
 
-On 26 March 2013 20:11, Robert Shade <robert.shade@gmail.com> wrote:
-> Think I found it:  In ath_reset_internal, before we reset, we call
-> ath_prepare_reset, which calls ath9k_hw_disable_interrupts.  If the
-> channel change fails, we never call ath_complete_reset, which calls
-> ath9k_hw_enable_interrupts.
->
-> ath9k_hw_{enable|disable}_interrupts calls definitely needs to be
-> balanced.  Looking at an old log, IER never gets re-enabled after the
-> channel set failure.
->
-> Any suggestions on the proper cleanup?  Could we just call
-> ath_complete_reset anyway?  Some sort of special handling?
->
-> On Tue, Mar 26, 2013 at 8:55 PM, Robert Shade <robert.shade@gmail.com> wrote:
->> On Tue, Mar 26, 2013 at 1:13 PM, Ben Greear <greearb@candelatech.com> wrote:
->>> Can you cat out the /debug/ieee80211/wiphy0/ath9k/xmit
->>> file when it gets in this hung state?  I saw issues where
->>> the xmit queues got hung in our AR9380 NIC systems and
->>> ended up adding an ugly bit of cleanup/reset logic to
->>> get them working again...
->>
->> Dumps are attached on to the bug.  I remember being hopeful when
->> reading your thread that we stumbled on the same issue, but the
->> symptoms don't look the same to me because pending-frames goes back to
->> 0 in my case.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v4:  Use rcu_dereference_protected as designed, passing a mutex
+     as the second argument instead of hard-coding it to 1.
+
+:100644 100644 a618bda... a7e7f5d... M	net/mac80211/cfg.c
+:100644 100644 493e2e8... c6386c7... M	net/mac80211/ieee80211_i.h
+:100644 100644 415f9c6... d87a76d... M	net/mac80211/sta_info.c
+ net/mac80211/cfg.c         |    6 ++++++
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ net/mac80211/sta_info.c    |   23 ++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a618bda..a7e7f5d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+ 		bool prev_4addr = false;
+ 		bool new_4addr = false;
++		struct sta_info *some_sta;
+ 
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+@@ -1312,7 +1313,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			prev_4addr = true;
+ 		}
+ 
++		some_sta = rcu_dereference_protected(sta->sdata->some_sta,
++					lockdep_is_held(&local->sta_mtx));
++		if (some_sta == sta)
++			rcu_assign_pointer(sta->sdata->some_sta, NULL);
+ 		sta->sdata = vlansdata;
++		rcu_assign_pointer(sta->sdata->some_sta, sta);
+ 
+ 		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+ 		    prev_4addr != new_4addr) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 493e2e8..c6386c7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -669,6 +669,12 @@ struct ieee80211_sub_if_data {
+ 	/* count for keys needing tailroom space allocation */
+ 	int crypto_tx_tailroom_needed_cnt;
+ 
++	/* A pointer to some station associated with this interface, or
++	 * NULL.  This allows opportunistic lookup for sta_info objects when
++	 * sdata is a station with a single sta_info.
++	 */
++	struct sta_info __rcu *some_sta;
++
+ 	struct net_device *dev;
+ 	struct ieee80211_local *local;
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 415f9c6..d87a76d 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -67,7 +67,12 @@
+ static int sta_info_hash_del(struct ieee80211_local *local,
+ 			     struct sta_info *sta)
+ {
+-	struct sta_info *s;
++	struct sta_info *s, *some_sta;
++
++	some_sta = rcu_dereference_protected(sta->sdata->some_sta,
++					     lockdep_is_held(&local->sta_mtx));
++	if (some_sta == sta)
++		rcu_assign_pointer(sta->sdata->some_sta, NULL);
+ 
+ 	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
+ 				      lockdep_is_held(&local->sta_mtx));
+@@ -195,6 +200,20 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		struct sta_info *some_sta;
++
++		/* Shortcut for finding station entries for STATION VIFs */
++		some_sta = rcu_dereference(sdata->some_sta);
++		if (some_sta) {
++			if (WARN_ON(some_sta->sdata != sdata))
++				rcu_assign_pointer(sdata->some_sta, NULL);
++			else
++				if (ether_addr_equal(some_sta->sta.addr, addr))
++					return some_sta;
++		}
++	}
++
+ 	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
+ 				    lockdep_is_held(&local->sta_mtx));
+ 	while (sta) {
+@@ -278,6 +297,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
+ 	lockdep_assert_held(&local->sta_mtx);
+ 	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
+ 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
++
++	rcu_assign_pointer(sta->sdata->some_sta, sta);
+ }
+ 
+ static void sta_unblock(struct work_struct *wk)
+-- 
+1.7.3.4
+
