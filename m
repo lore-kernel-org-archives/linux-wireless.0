@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60783 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756178Ab3CTTVl (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:64106 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab3C2APk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Mar 2013 15:21:41 -0400
-Date: Wed, 20 Mar 2013 15:21:38 -0400 (EDT)
-Message-Id: <20130320.152138.409022277193754258.davem@davemloft.net> (sfid-20130320_202213_698338_A15C02A9)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-03-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130320191107.GA9978@tuxdriver.com>
-References: <20130320191107.GA9978@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 28 Mar 2013 20:15:40 -0400
+Received: by mail-pd0-f170.google.com with SMTP id 4so36144pdd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 17:15:39 -0700 (PDT)
+From: Matteo Danieletto <matteo.danieletto@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Subject: [ATH6KL and B43] Contention window
+Date: Thu, 28 Mar 2013 17:15:37 -0700
+Message-Id: <D9B259F2-219E-4D7F-B866-D6561CEF135B@gmail.com> (sfid-20130329_011544_172446_C3E24EC6)
+To: linux-wireless@vger.kernel.org
+Mime-Version: 1.0 (Apple Message framework v1085)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 20 Mar 2013 15:11:08 -0400
+Hello everybody,
 
-> I present to you another batch of fixes intended for the 3.9 stream...
-> 
-> On the bluetooth bits, Gustavo says:
-> 
-> "I put together 3 fixes intended for 3.9, there are support for two
-> new devices and a NULL dereference fix in the SCO code."
-> 
-> Amitkumar Karwar fixes a command queueing race in mwifiex.
-> 
-> Bing Zhao provides a pair of mwifiex related to cleaning-up before
-> a shutdown.
-> 
-> Felix Fietkau provides an ath9k fix for a regression caused by an
-> earlier calibration fix, and another ath9k fix to avoid race conditions
-> that unnecessarily lead to chip resets.
-> 
-> Jussi Kivilinna prevents and skbuff leak in rtlwifi.
-> 
-> Stanislaw Gruszka corrects a length paramater for a DMA buffer mapping
-> operation in iwlegacy.
+I don't know if my question is easy or no. I tried to find myself on google and reading the kernel code but I didn't find an answer.
+I am trying to read and after modify the contention window for atheros6 and for broadcom.
 
-Pulled, thanks John!
+
+Is it possible? or is implemented on chipset?
+
+Thanks a lot
+Matteo
