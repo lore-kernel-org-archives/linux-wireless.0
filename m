@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avasout07.plus.net ([84.93.230.235]:33095 "EHLO
-	avasout07.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161Ab3CXVv2 convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:35016 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754359Ab3C2ArG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Mar 2013 17:51:28 -0400
-Date: Sun, 24 Mar 2013 21:51:22 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Michael =?ISO-8859-1?B?QvxzY2g=?= <m@bues.ch>, isedev@gmail.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: A fix for DMA transmission sequence errors
-Message-ID: <20130324215122.3a5b8aca@laptop.homenet> (sfid-20130324_225141_569389_C5AC0D5D)
-In-Reply-To: <CACna6rze+5YaU3Ec2iEnP7G_gT-bYVwSiefSSFioK4E9dYZxoQ@mail.gmail.com>
-References: <514a07c7.ZQz6MhmMaq58WJlA%Larry.Finger@lwfinger.net>
-	<CACna6rz75ecyy5CdaJfi=dRjrTh_Rg793Ub+-0QdVnCZNyV+Lg@mail.gmail.com>
-	<20130323113517.01906b0b@milhouse>
-	<20130323155355.0a1752f5@laptop.homenet>
-	<CACna6rx+sCrg1fB-6XfYcSWczu6Mtuvz75FOHbbx3YdPe+U5sw@mail.gmail.com>
-	<CACna6rwAOgvbd6z2ckZ6uW=8wOw-+YMT_wc4FC+ZgAaAhCgpwQ@mail.gmail.com>
-	<20130323184357.6b4f2037@milhouse>
-	<CACna6rze+5YaU3Ec2iEnP7G_gT-bYVwSiefSSFioK4E9dYZxoQ@mail.gmail.com>
-Mime-Version: 1.0
+	Thu, 28 Mar 2013 20:47:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130328225300.GA20285@kroah.com>
+References: <CAB=NE6WLuz7-QD3v4BwZkLLNUed=X7jgvZtZX8cDEh3HiD51oQ@mail.gmail.com>
+ <20130328225300.GA20285@kroah.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 28 Mar 2013 17:46:44 -0700
+Message-ID: <CAB=NE6UF97ETqXXyNFCRRhv=d=AgA=nq3d830uG+pvykAmB2xA@mail.gmail.com> (sfid-20130329_014724_913263_5B4DB052)
+Subject: Re: Possibility for an external staging tree - bring up quality code
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
+	Kalle Valo <kvalo@adurom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Kathy Giori <Kathy.Giori@qca.qualcomm.com>,
+	Yanbo Li <dreamfly281@gmail.com>,
+	Mathieu Olivari <mathieu@qca.qualcomm.com>,
+	"k.eugene.e" <k.eugene.e@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Mar 2013 19:01:26 +0100
-Rafał Miłecki <zajec5@gmail.com> wrote:
-> 2013/3/23 Michael Büsch <m@bues.ch>:
-> > On Sat, 23 Mar 2013 18:28:33 +0100
-> > Rafał Miłecki <zajec5@gmail.com> wrote:
-> >
-> >> > Could you try changing
-> >> > B43_DMA32_RINGMEMSIZE
-> >> > from 4096 to 8192 in dma.h?
-> >>
-> >> Blah, ignore that. You're card has 64b DMA, not 32b :|
-> >
-> > You could try playing with the constants anyway. Maybe something
-> > interesting happens.
-> 
-> Won't hurt.
-> 
-> Chris, isedev: can you try replacing B43_DMA64_RINGMEMSIZE with some
-> higher values than 8192?
-> 
-> 8192 is 0x2000, so please try 0x4000 or even 0x8000
+On Thu, Mar 28, 2013 at 3:53 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Thu, Mar 28, 2013 at 01:13:23PM -0700, Luis R. Rodriguez wrote:
+>
+> <huge snip>
+>
+>> This has me thinking if it makes sense to have an external driver tree
+>> for staging drivers but lead by engineers who already know the rules
+>> of upstream, they just want to get things done faster.
+>
+> That's called a "fork" or "tree" or whatever you want to call it, and
+> all of us have them, and end up merging stuff to mainline through them
+> eventually.
+>
+> There is no need to "codify" something that we all have been doing for
+> years.  If someone thinks they can "work faster" in their own tree,
+> great for them, have them do it.  I don't see what I need to agree or
+> disagree with here to keep anyone from doing such a thing.
+>
+> Or am I just totally missing something here?
 
-I still get the errors with these values.
+OK, yes I think we can work better if we had an external trees for
+each driver to cherry pick them as they get sanitized, prior to
+upstream for *some* drivers. Very well. I'll simply let vendors /
+developers get their 802.11 driver as part of compat-drivers so long
+as they maintain their poo.
 
-Chris
+  Luis
