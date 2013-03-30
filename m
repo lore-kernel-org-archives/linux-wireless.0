@@ -1,79 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55615 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab3CXAsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Mar 2013 20:48:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 11/15] brcmsmac: react on changing SSID
-Date: Sun, 24 Mar 2013 01:45:59 +0100
-Message-Id: <1364085963-25940-12-git-send-email-hauke@hauke-m.de> (sfid-20130324_014828_284053_2B305FBF)
-In-Reply-To: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
-References: <1364085963-25940-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:42007 "EHLO
+	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757496Ab3C3Bt2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Mar 2013 21:49:28 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Marco Cesarano <marco@marvell.com>,
+	John Rhodes <jrhodes@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.9 1/2] mwifiex: fix negative cmd_pending count
+Date: Fri, 29 Mar 2013 18:45:58 -0700
+Message-ID: <1364607959-28905-1-git-send-email-bzhao@marvell.com> (sfid-20130330_025521_480383_ABA2532E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To send the correct probe response the hardware needs to know the SSID
-when it changed.
+cmd_pending is increased in mwifiex_wait_queue_complete() and
+decreased in mwifiex_complete_cmd() currently.
+If there are two or more commands in the cmd_pending_q the main
+worker thread will pick up next command from cmd_pending_q
+automatically after finishing current command. As a result
+mwifiex_wait_queue_complete() will not be called because
+the command is alreay completed. This leads to a negative
+number in cmd_pending count.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Fix it by increasing cmd_pending when a cmd is queued into
+cmd_pending_q and decreasing when that cmd is recycled. For scan
+commands we don't perform inc/dec operations until it's moved
+from scan_pending_q to cmd_pending_q. This covers both
+synchronous and asynchronous commands.
+
+Cc: <stable@vger.kernel.org> # 3.8
+Reported-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Marco Cesarano <marco@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c |    6 ++++++
- drivers/net/wireless/brcm80211/brcmsmac/main.c        |    9 +++++++++
- drivers/net/wireless/brcm80211/brcmsmac/pub.h         |    2 ++
- 3 files changed, 17 insertions(+)
+ drivers/net/wireless/mwifiex/cmdevt.c      |   35 ++++++++++++++++++++--------
+ drivers/net/wireless/mwifiex/init.c        |    2 +-
+ drivers/net/wireless/mwifiex/main.h        |    2 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 --
+ drivers/net/wireless/mwifiex/util.c        |    1 -
+ 6 files changed, 29 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 591e262..1d0d0f6 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -521,6 +521,12 @@ brcms_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		brcms_c_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET, info->bssid);
- 		spin_unlock_bh(&wl->lock);
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 9a1302b..da469c3 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -153,7 +153,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			" or cmd size is 0, not sending\n");
+ 		if (cmd_node->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		return -1;
  	}
-+	if (changed & BSS_CHANGED_SSID) {
-+		/* BSSID changed, for whatever reason (IBSS and managed mode) */
-+		spin_lock_bh(&wl->lock);
-+		brcms_c_set_ssid(wl->wlc, info->ssid, info->ssid_len);
-+		spin_unlock_bh(&wl->lock);
-+	}
- 	if (changed & BSS_CHANGED_BEACON) {
- 		/* Beacon data changed, retrieve new beacon (beaconing modes) */
- 		struct sk_buff *beacon;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 60dc2c4..cf11d894 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3783,6 +3783,15 @@ static void brcms_c_set_bssid(struct brcms_bss_cfg *bsscfg)
- 	brcms_c_set_addrmatch(bsscfg->wlc, RCM_BSSID_OFFSET, bsscfg->BSSID);
+ 
+@@ -167,7 +167,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			"DNLD_CMD: FW in reset state, ignore cmd %#x\n",
+ 			cmd_code);
+ 		mwifiex_complete_cmd(adapter, cmd_node);
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		return -1;
+ 	}
+ 
+@@ -228,7 +228,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			adapter->cmd_sent = false;
+ 		if (cmd_node->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+@@ -632,6 +632,20 @@ mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
  }
  
-+void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid, size_t ssid_len)
++/* This function reuses a command node. */
++void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
++			      struct cmd_ctrl_node *cmd_node)
 +{
-+	u8 len = min_t(u8, sizeof(wlc->bsscfg->SSID), ssid_len);
-+	memset(wlc->bsscfg->SSID, 0, sizeof(wlc->bsscfg->SSID));
++	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
 +
-+	memcpy(wlc->bsscfg->SSID, ssid, len);
-+	wlc->bsscfg->SSID_len = len;
++	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++
++	atomic_dec(&adapter->cmd_pending);
++	dev_dbg(adapter->dev, "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
++		le16_to_cpu(host_cmd->command),
++		atomic_read(&adapter->cmd_pending));
 +}
 +
- static void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
- {
- 	wlc_hw->shortslot = shortslot;
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 8a3071f..6ed0a20 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -336,5 +336,7 @@ extern void brcms_c_update_beacon(struct brcms_c_info *wlc);
- extern void brcms_c_set_new_beacon(struct brcms_c_info *wlc,
- 				   struct sk_buff *beacon, u16 tim_offset,
- 				   u16 dtim_period);
-+extern void brcms_c_set_ssid(struct brcms_c_info *wlc, u8 *ssid,
-+			     size_t ssid_len);
+ /*
+  * This function queues a command to the command pending queue.
+  *
+@@ -673,7 +687,9 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+ 		list_add(&cmd_node->list, &adapter->cmd_pending_q);
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
  
- #endif				/* _BRCM_PUB_H_ */
+-	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x is queued\n", command);
++	atomic_inc(&adapter->cmd_pending);
++	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x, cmd_pending=%d\n",
++		command, atomic_read(&adapter->cmd_pending));
+ }
+ 
+ /*
+@@ -783,7 +799,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
+ 		dev_err(adapter->dev, "CMD_RESP: %#x been canceled\n",
+ 			le16_to_cpu(resp->command));
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+@@ -833,7 +849,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 		if (adapter->curr_cmd->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+ 
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+@@ -865,8 +881,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 		if (adapter->curr_cmd->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = ret;
+ 
+-		/* Clean up and put current command back to cmd_free_q */
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+@@ -993,7 +1008,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 			mwifiex_complete_cmd(adapter, cmd_node);
+ 			cmd_node->wait_q_enabled = false;
+ 		}
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+@@ -1040,7 +1055,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		cmd_node = adapter->curr_cmd;
+ 		cmd_node->wait_q_enabled = false;
+ 		cmd_node->cmd_flag |= CMD_F_CANCELED;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index daf8801..003c014 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -713,7 +713,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 	if (adapter->curr_cmd) {
+ 		dev_warn(adapter->dev, "curr_cmd is still in processing\n");
+ 		del_timer(&adapter->cmd_timer);
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		adapter->curr_cmd = NULL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index cab8a85..fef89fd 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -798,6 +798,8 @@ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ 
+ void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 				  struct cmd_ctrl_node *cmd_node);
++void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
++			      struct cmd_ctrl_node *cmd_node);
+ 
+ void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+ 				     struct cmd_ctrl_node *cmd_node,
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index c7dc450..9f990e1 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -95,7 +95,7 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 		break;
+ 	}
+ 	/* Handling errors here */
+-	mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++	mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 	adapter->curr_cmd = NULL;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 8c943b6..e6c9b2a 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -59,9 +59,6 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
+ {
+ 	int status;
+ 
+-	dev_dbg(adapter->dev, "cmd pending\n");
+-	atomic_inc(&adapter->cmd_pending);
+-
+ 	/* Wait for completion */
+ 	status = wait_event_interruptible(adapter->cmd_wait_q.wait,
+ 					  *(cmd_queued->condition));
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 54667e6..e57ac0d 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -239,7 +239,6 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
+ int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
+ 			 struct cmd_ctrl_node *cmd_node)
+ {
+-	atomic_dec(&adapter->cmd_pending);
+ 	dev_dbg(adapter->dev, "cmd completed: status=%d\n",
+ 		adapter->cmd_wait_q.status);
+ 
 -- 
-1.7.10.4
+1.7.0.2
 
