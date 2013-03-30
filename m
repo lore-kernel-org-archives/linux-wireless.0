@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:62112 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469Ab3C1WxD (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33430 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757496Ab3C3BqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Mar 2013 18:53:03 -0400
-Received: by mail-pa0-f45.google.com with SMTP id kl13so106516pab.18
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2013 15:53:03 -0700 (PDT)
-Date: Thu, 28 Mar 2013 15:53:00 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Adrian Chadd <adrian@freebsd.org>, Jouni Malinen <j@w1.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Kathy Giori <Kathy.Giori@qca.qualcomm.com>,
-	Yanbo Li <dreamfly281@gmail.com>,
-	Mathieu Olivari <mathieu@qca.qualcomm.com>,
-	k.eugene.e@gmail.com
-Subject: Re: Possibility for an external staging tree - bring up quality code
-Message-ID: <20130328225300.GA20285@kroah.com> (sfid-20130328_235312_813046_DAED111F)
-References: <CAB=NE6WLuz7-QD3v4BwZkLLNUed=X7jgvZtZX8cDEh3HiD51oQ@mail.gmail.com>
+	Fri, 29 Mar 2013 21:46:09 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Marco Cesarano <marco@marvell.com>,
+	John Rhodes <jrhodes@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.9 2/2] mwifiex: complete last internal scan
+Date: Fri, 29 Mar 2013 18:45:59 -0700
+Message-ID: <1364607959-28905-2-git-send-email-bzhao@marvell.com> (sfid-20130330_025520_507302_9126A150)
+In-Reply-To: <1364607959-28905-1-git-send-email-bzhao@marvell.com>
+References: <1364607959-28905-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6WLuz7-QD3v4BwZkLLNUed=X7jgvZtZX8cDEh3HiD51oQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 01:13:23PM -0700, Luis R. Rodriguez wrote:
+We are waiting on first scan command of internal scan request
+before association, so we should complete on last internal scan
+command response.
 
-<huge snip>
+Cc: <stable@vger.kernel.org> # 3.8
+Tested-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Marco Cesarano <marco@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/scan.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-> This has me thinking if it makes sense to have an external driver tree
-> for staging drivers but lead by engineers who already know the rules
-> of upstream, they just want to get things done faster.
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index d215b4d..e7f6dea 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1393,8 +1393,10 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+ 			queue_work(adapter->workqueue, &adapter->main_work);
+ 
+ 			/* Perform internal scan synchronously */
+-			if (!priv->scan_request)
++			if (!priv->scan_request) {
++				dev_dbg(adapter->dev, "wait internal scan\n");
+ 				mwifiex_wait_queue_complete(adapter, cmd_node);
++			}
+ 		} else {
+ 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+ 					       flags);
+@@ -1793,7 +1795,12 @@ check_next_scan:
+ 		/* Need to indicate IOCTL complete */
+ 		if (adapter->curr_cmd->wait_q_enabled) {
+ 			adapter->cmd_wait_q.status = 0;
+-			mwifiex_complete_cmd(adapter, adapter->curr_cmd);
++			if (!priv->scan_request) {
++				dev_dbg(adapter->dev,
++					"complete internal scan\n");
++				mwifiex_complete_cmd(adapter,
++						     adapter->curr_cmd);
++			}
+ 		}
+ 		if (priv->report_scan_result)
+ 			priv->report_scan_result = false;
+-- 
+1.7.0.2
 
-That's called a "fork" or "tree" or whatever you want to call it, and
-all of us have them, and end up merging stuff to mainline through them
-eventually.
-
-There is no need to "codify" something that we all have been doing for
-years.  If someone thinks they can "work faster" in their own tree,
-great for them, have them do it.  I don't see what I need to agree or
-disagree with here to keep anyone from doing such a thing.
-
-Or am I just totally missing something here?
-
-greg k-h
