@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:37057 "EHLO mx4.wp.pl"
+Received: from arrakis.dune.hu ([78.24.191.176]:38644 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932540Ab3CPSUI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Mar 2013 14:20:08 -0400
-From: stf_xl@wp.pl
-To: "John W. Linville\"" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH 19/25] rt2800: add write_with_rx_chain function
-Date: Sat, 16 Mar 2013 19:19:47 +0100
-Message-Id: <1363457993-15541-20-git-send-email-stf_xl@wp.pl> (sfid-20130316_192017_249708_E2CB841B)
-In-Reply-To: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
-References: <1363457993-15541-1-git-send-email-stf_xl@wp.pl>
+	id S1756101Ab3C3Nwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Mar 2013 09:52:38 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/3] rt2x00: introduce rt2x00_set_{rt,rf} helpers
+Date: Sat, 30 Mar 2013 14:53:08 +0100
+Message-Id: <1364651590-29710-2-git-send-email-juhosg@openwrt.org> (sfid-20130330_145250_938394_355CBA46)
+In-Reply-To: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
+References: <1364651590-29710-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+The new helpers can be used to set the type of the
+RT and RF chipsets separately.
 
-Based on:
-AsicBBPWriteWithRxChain()
-
-from:
-DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rtmp_chip.c
-
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |    3 +++
- drivers/net/wireless/rt2x00/rt2800lib.c |   16 ++++++++++++++++
- 2 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 25c94b5..6105243 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1939,6 +1939,9 @@ struct mac_iveiv_entry {
- #define BBP4_BANDWIDTH			FIELD8(0x18)
- #define BBP4_MAC_IF_CTRL		FIELD8(0x40)
- 
-+/* BBP27 */
-+#define BBP27_RX_CHAIN_SEL		FIELD8(0x60)
-+
- /*
-  * BBP 47: Bandwidth
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e36cf4a..9fa10b0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2458,6 +2458,22 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 	rt2800_bbp_write(rt2x00dev, 196, (rf->channel <= 14) ? 0x19 : 0x7F);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index cdf26ed..0d02d16 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -1106,6 +1106,23 @@ static inline void rt2x00_set_chip(struct rt2x00_dev *rt2x00dev,
+ 	     rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
  }
  
-+static void rt2800_bbp_write_with_rx_chain(struct rt2x00_dev *rt2x00dev,
-+					   const unsigned int word,
-+					   const u8 value)
++static inline void rt2x00_set_rt(struct rt2x00_dev *rt2x00dev,
++				 const u16 rt, const u16 rev)
 +{
-+	u8 chain, reg;
++	rt2x00dev->chip.rt = rt;
++	rt2x00dev->chip.rev = rev;
 +
-+	for (chain = 0; chain < rt2x00dev->default_ant.rx_chain_num; chain++) {
-+		rt2800_bbp_read(rt2x00dev, 27, &reg);
-+		rt2x00_set_field8(&reg,  BBP27_RX_CHAIN_SEL, chain);
-+		rt2800_bbp_write(rt2x00dev, 27, reg);
-+
-+		rt2800_bbp_write(rt2x00dev, word, value);
-+	}
++	INFO(rt2x00dev, "RT chipset %04x, rev %04x detected\n",
++	     rt2x00dev->chip.rt, rt2x00dev->chip.rev);
 +}
 +
++static inline void rt2x00_set_rf(struct rt2x00_dev *rt2x00dev, const u16 rf)
++{
++	rt2x00dev->chip.rf = rf;
 +
- static void rt2800_iq_calibrate(struct rt2x00_dev *rt2x00dev, int channel)
++	INFO(rt2x00dev, "RF chipset %04x detected\n", rt2x00dev->chip.rf);
++}
++
+ static inline bool rt2x00_rt(struct rt2x00_dev *rt2x00dev, const u16 rt)
  {
- 	u8 cal;
+ 	return (rt2x00dev->chip.rt == rt);
 -- 
-1.7.4.4
+1.7.10
 
