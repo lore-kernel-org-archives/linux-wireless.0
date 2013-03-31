@@ -1,91 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.nanl.de ([217.115.11.12]:52893 "EHLO mail.nanl.de"
+Received: from mga03.intel.com ([143.182.124.21]:46930 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355Ab3DNMNe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 08:13:34 -0400
-From: Jonas Gorski <jogo@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] mwl8k: remove nonstandard rate 72 Mbps
-Date: Sun, 14 Apr 2013 14:11:58 +0200
-Message-Id: <1365941518-4963-1-git-send-email-jogo@openwrt.org> (sfid-20130414_141346_740464_E0A058E9)
-In-Reply-To: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
-References: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
+	id S1756014Ab3CaX0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Mar 2013 19:26:17 -0400
+Date: Mon, 1 Apr 2013 01:26:10 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux NFC <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [GIT] [3.9] NFC fixes
+Message-ID: <20130331232610.GQ2153@zurbaran> (sfid-20130401_012629_677408_C45270B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This rate causes an overflow in the extended rates IE's data rate field,
-with the overflowing bit setting the Basic Rate Set membership. This
-results in a bogus 8 Mpbs basic rate, making clients checking them refuse
-association.
+Hi John,
 
-Since the rate is likely unused anyway (HT will yield better rates between
-supporting chips), we can just remove it.
+This is the 2nd batch of NFC fixes for 3.9. This time we have:
 
-This fixes association from wpa_supplicant and Android 4.x and newer.
+- A crash fix for when a DGRAM LLCP socket is listening while the NFC adapter
+  is physically removed.
+- A potential double skb free when the LLCP socket receive queue is full.
+- A fix for properly handling multiple and consecutive LLCP connections, and
+  not trash the socket ack log.
+- A build failure for the MEI microread physical layer, now that the MEI bus
+  APIs have been merged into char-misc-next.
 
-Signed-off-by: Jonas Gorski <jogo@openwrt.org>
----
-Changes from RFC -> v1
- * only remove 72 Mbps, as that's the problematic one
- * reword everything, add real cause
+The following changes since commit 36ef0b473fbf43d5db23eea4616cc1d18cec245f:
 
- drivers/net/wireless/mwl8k.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+  rtlwifi: usb: add missing freeing of skbuff (2013-03-18 15:20:38 -0400)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ee1778c..6820fce 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -193,10 +193,10 @@ struct mwl8k_priv {
- 	struct rxd_ops *rxd_ops;
- 	struct ieee80211_supported_band band_24;
- 	struct ieee80211_channel channels_24[14];
--	struct ieee80211_rate rates_24[14];
-+	struct ieee80211_rate rates_24[13];
- 	struct ieee80211_supported_band band_50;
- 	struct ieee80211_channel channels_50[4];
--	struct ieee80211_rate rates_50[9];
-+	struct ieee80211_rate rates_50[8];
- 	u32 ap_macids_supported;
- 	u32 sta_macids_supported;
- 
-@@ -366,7 +366,6 @@ static const struct ieee80211_rate mwl8k_rates_24[] = {
- 	{ .bitrate = 360, .hw_value = 72, },
- 	{ .bitrate = 480, .hw_value = 96, },
- 	{ .bitrate = 540, .hw_value = 108, },
--	{ .bitrate = 720, .hw_value = 144, },
- };
- 
- static const struct ieee80211_channel mwl8k_channels_50[] = {
-@@ -385,7 +384,6 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
- 	{ .bitrate = 360, .hw_value = 72, },
- 	{ .bitrate = 480, .hw_value = 96, },
- 	{ .bitrate = 540, .hw_value = 108, },
--	{ .bitrate = 720, .hw_value = 144, },
- };
- 
- /* Set or get info from Firmware */
-@@ -3083,11 +3081,11 @@ static void legacy_rate_mask_to_array(u8 *rates, u32 mask)
- 	int j;
- 
- 	/*
--	 * Clear nonstandard rates 4 and 13.
-+	 * Clear nonstandard rate 4.
- 	 */
- 	mask &= 0x1fef;
- 
--	for (i = 0, j = 0; i < 14; i++) {
-+	for (i = 0, j = 0; i < 13; i++) {
- 		if (mask & (1 << i))
- 			rates[j++] = mwl8k_rates_24[i].hw_value;
- 	}
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.9-2
+
+for you to fetch changes up to 9593b0b1179c526436f14849a9587fd2aae12040:
+
+  NFC: microread: Fix build failure due to a new MEI bus API (2013-04-01 00:52:42 +0200)
+
+----------------------------------------------------------------
+Samuel Ortiz (3):
+      NFC: llcp: Detach socket from process context only when releasing the socket
+      NFC: llcp: Keep the connected socket parent pointer alive
+      NFC: microread: Fix build failure due to a new MEI bus API
+
+Thierry Escande (1):
+      NFC: llcp: Remove possible double call to kfree_skb
+
+ drivers/nfc/microread/mei.c |   38 +++++++++++++++++---------------------
+ net/nfc/llcp/llcp.c         |    8 --------
+ net/nfc/llcp/sock.c         |    6 +++---
+ 3 files changed, 20 insertions(+), 32 deletions(-)
 -- 
-1.7.10.4
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
