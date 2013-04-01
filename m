@@ -1,183 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f171.google.com ([209.85.210.171]:36407 "EHLO
-	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162001Ab3DEQmu (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:56469 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759419Ab3DATsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 12:42:50 -0400
+	Mon, 1 Apr 2013 15:48:11 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix negative cmd_pending count
+Date: Mon, 1 Apr 2013 12:44:46 -0700
+Message-ID: <1364845486-1074-2-git-send-email-bzhao@marvell.com> (sfid-20130401_214817_711370_87DB48E5)
+In-Reply-To: <1364845486-1074-1-git-send-email-bzhao@marvell.com>
+References: <1364845486-1074-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmom7gNBhyuBgg9YkCLRohR6eE-JfBYYtxfFeTkSiGhgHyw@mail.gmail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
-	<CAJ-Vmom7gNBhyuBgg9YkCLRohR6eE-JfBYYtxfFeTkSiGhgHyw@mail.gmail.com>
-Date: Fri, 5 Apr 2013 18:42:49 +0200
-Message-ID: <CAFSJ42Y7-MVAbGx__A52KNfACmZZpXvMzyqiDHOOVziCm49nFg@mail.gmail.com> (sfid-20130405_184309_203660_E24D9DA3)
-Subject: Re: Version number policy!
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adrian,
+cmd_pending is increased in mwifiex_wait_queue_complete() and
+decreased in mwifiex_complete_cmd() currently.
+If there are two or more commands in the cmd_pending_q the main
+worker thread will pick up next command from cmd_pending_q
+automatically after finishing current command. As a result
+mwifiex_wait_queue_complete() will not be called because
+the command is alreay completed. This leads to a negative
+number in cmd_pending count.
 
-This is the patch with new wmi command to support build number. Please
-let me know if it's ok so i can send it as pull request:
+Fix it by increasing cmd_pending when a cmd is queued into
+cmd_pending_q and decreasing when that cmd is recycled. For scan
+commands we don't perform inc/dec operations until it's moved
+from scan_pending_q to cmd_pending_q. This covers both
+synchronous and asynchronous commands.
 
->From 2591efa83bd24a807e3d93c4c8e1bf5c570737e1 Mon Sep 17 00:00:00 2001
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-Date: Fri, 5 Apr 2013 18:37:26 +0200
-Subject: [PATCH] Add WMI_GET_BUILD_NUMBER
-
-New command WMI_GET_BUILD_NUMBER has
-following fields:
-major
-minor
-tag
-
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+Reported-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Marco Cesarano <marco@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- target_firmware/wlan/if_ath.c                  |   14 ++++++++++++++
- target_firmware/wlan/include/k2/wlan_cfg.h     |    5 ++++-
- target_firmware/wlan/include/magpie/wlan_cfg.h |    3 +++
- target_firmware/wlan/include/wlan_hdr.h        |    6 ++++++
- target_firmware/wlan/include/wmi.h             |    1 +
- 5 files changed, 28 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/cmdevt.c      |   35 ++++++++++++++++++++--------
+ drivers/net/wireless/mwifiex/init.c        |    2 +-
+ drivers/net/wireless/mwifiex/main.h        |    2 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 --
+ drivers/net/wireless/mwifiex/util.c        |    1 -
+ 6 files changed, 29 insertions(+), 16 deletions(-)
 
-diff --git a/target_firmware/wlan/if_ath.c b/target_firmware/wlan/if_ath.c
-index 409aecf..034b8ea 100755
---- a/target_firmware/wlan/if_ath.c
-+++ b/target_firmware/wlan/if_ath.c
-@@ -1729,6 +1729,19 @@ static void ath_rc_mask_tgt(void *Context,
-A_UINT16 Command,
-     wmi_cmd_rsp(sc->tgt_wmi_handle, Command, SeqNo, NULL, 0);
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 9a1302b..da469c3 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -153,7 +153,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			" or cmd size is 0, not sending\n");
+ 		if (cmd_node->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		return -1;
+ 	}
+ 
+@@ -167,7 +167,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			"DNLD_CMD: FW in reset state, ignore cmd %#x\n",
+ 			cmd_code);
+ 		mwifiex_complete_cmd(adapter, cmd_node);
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		return -1;
+ 	}
+ 
+@@ -228,7 +228,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+ 			adapter->cmd_sent = false;
+ 		if (cmd_node->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+@@ -632,6 +632,20 @@ mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
  }
-
-+static void ath_get_build_number_tgt(void *Context,A_UINT16 Command,
-A_UINT16 SeqNo,
-+                A_UINT8 *data, a_int32_t datalen)
+ 
++/* This function reuses a command node. */
++void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
++			      struct cmd_ctrl_node *cmd_node)
 +{
-+    struct ath_softc_tgt *sc = (struct ath_softc_tgt *)Context;
-+    struct wmi_build_number bld_num;
++	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
 +
-+    bld_num.major = ATH_BUILD_NUMBER_MAJOR;
-+    bld_num.minor = ATH_BUILD_NUMBER_MINOR;
-+    bld_num.tag = ATH_BUILD_NUMBER_TAG;
++	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
 +
-+    wmi_cmd_rsp(sc->tgt_wmi_handle, Command, SeqNo, &bld_num, sizeof(bld_num));
++	atomic_dec(&adapter->cmd_pending);
++	dev_dbg(adapter->dev, "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
++		le16_to_cpu(host_cmd->command),
++		atomic_read(&adapter->cmd_pending));
 +}
 +
- static WMI_DISPATCH_ENTRY Magpie_Sys_DispatchEntries[] =
- {
-     {handle_echo_command,         WMI_ECHO_CMDID,               0},
-@@ -1762,6 +1775,7 @@ static WMI_DISPATCH_ENTRY Magpie_Sys_DispatchEntries[] =
-     {ath_tx_stats_tgt,            WMI_TX_STATS_CMDID,           0},
-     {ath_rx_stats_tgt,            WMI_RX_STATS_CMDID,           0},
-     {ath_rc_mask_tgt,             WMI_BITRATE_MASK_CMDID,       0},
-+    {ath_get_build_number_tgt,    WMI_GET_BUILD_NUMBER,         0}
- };
-
- /*****************/
-diff --git a/target_firmware/wlan/include/k2/wlan_cfg.h
-b/target_firmware/wlan/include/k2/wlan_cfg.h
-index ce42d2c..5ad7d0a 100755
---- a/target_firmware/wlan/include/k2/wlan_cfg.h
-+++ b/target_firmware/wlan/include/k2/wlan_cfg.h
-@@ -82,7 +82,10 @@
-
- #define ATH_VERSION_MAJOR 1
- #define ATH_VERSION_MINOR 4
--
-+
-+#define ATH_BUILD_NUMBER_MAJOR 1
-+#define ATH_BUILD_NUMBER_MINOR 1
-+#define ATH_BUILD_NUMBER_TAG   1
- /************************** HAL configurations **************************/
-
- #define HAL_DESC_OPTIMIZATION
-diff --git a/target_firmware/wlan/include/magpie/wlan_cfg.h
-b/target_firmware/wlan/include/magpie/wlan_cfg.h
-index 2590e9f..c66bf06 100755
---- a/target_firmware/wlan/include/magpie/wlan_cfg.h
-+++ b/target_firmware/wlan/include/magpie/wlan_cfg.h
-@@ -68,6 +68,9 @@
- #define ATH_VERSION_MAJOR 1
- #define ATH_VERSION_MINOR 4
-
-+#define ATH_BUILD_NUMBER_MAJOR 1
-+#define ATH_BUILD_NUMBER_MINOR 1
-+#define ATH_BUILD_NUMBER_TAG   1
- /************************** HAL configurations **************************/
-
- #define HAL_DESC_OPTIMIZATION
-diff --git a/target_firmware/wlan/include/wlan_hdr.h
-b/target_firmware/wlan/include/wlan_hdr.h
-index cfcfa0a..838f2bf 100755
---- a/target_firmware/wlan/include/wlan_hdr.h
-+++ b/target_firmware/wlan/include/wlan_hdr.h
-@@ -221,6 +221,12 @@ struct ath_aggr_info {
-     a_uint8_t padding;
- };
-
-+struct wmi_build_number {
-+    a_uint16_t major;
-+    a_uint16_t minor;
-+    a_uint16_t tag;
-+};
-+
- struct wmi_data_delba {
-     a_uint8_t  ni_nodeindex;
-     a_uint8_t  tidno;
-diff --git a/target_firmware/wlan/include/wmi.h
-b/target_firmware/wlan/include/wmi.h
-index 47bf4a7..9c577a6 100755
---- a/target_firmware/wlan/include/wmi.h
-+++ b/target_firmware/wlan/include/wmi.h
-@@ -162,6 +162,7 @@ typedef enum {
-     WMI_TX_STATS_CMDID,
-     WMI_RX_STATS_CMDID,
-     WMI_BITRATE_MASK_CMDID,
-+    WMI_GET_BUILD_NUMBER
- } WMI_COMMAND_ID;
-
  /*
---
-1.7.9.5
-
-2013/4/5 Adrian Chadd <adrian@freebsd.org>:
-> On 5 April 2013 01:19, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
->
->> This is better than anything we had drafted before for 802.11 open
->> firmware design rules. Cc'ing a few lists for wider review given that
->> what we had written before for rules was for 802.11 and Bluetooth [0]
->> and it was very Linux specific. We are striving for open firmware here
->> for the community, for BSD / Linux. Christian would have dealt with
->> more of the support on open firmware design so far due to carl9170.fw
->> [1] so curious if he has any input.
->>
->
-> I'm treating it like shared libraries should be treated - minor
-> versions shouldn't break existing stuff, just add new calls. Major
-> versions are incompatible.
->
-> We'll see how well this scales after people hack at it for a while.
->
->
->
-> Adrian
->
-> _______________________________________________
-> Ath9k_htc_fw mailing list
-> Ath9k_htc_fw@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
-
-
-
+  * This function queues a command to the command pending queue.
+  *
+@@ -673,7 +687,9 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+ 		list_add(&cmd_node->list, &adapter->cmd_pending_q);
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+ 
+-	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x is queued\n", command);
++	atomic_inc(&adapter->cmd_pending);
++	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x, cmd_pending=%d\n",
++		command, atomic_read(&adapter->cmd_pending));
+ }
+ 
+ /*
+@@ -783,7 +799,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
+ 		dev_err(adapter->dev, "CMD_RESP: %#x been canceled\n",
+ 			le16_to_cpu(resp->command));
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+@@ -833,7 +849,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 		if (adapter->curr_cmd->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = -1;
+ 
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+@@ -865,8 +881,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 		if (adapter->curr_cmd->wait_q_enabled)
+ 			adapter->cmd_wait_q.status = ret;
+ 
+-		/* Clean up and put current command back to cmd_free_q */
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->curr_cmd = NULL;
+@@ -993,7 +1008,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 			mwifiex_complete_cmd(adapter, cmd_node);
+ 			cmd_node->wait_q_enabled = false;
+ 		}
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+@@ -1040,7 +1055,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		cmd_node = adapter->curr_cmd;
+ 		cmd_node->wait_q_enabled = false;
+ 		cmd_node->cmd_flag |= CMD_F_CANCELED;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+ 		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index daf8801..003c014 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -713,7 +713,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 	if (adapter->curr_cmd) {
+ 		dev_warn(adapter->dev, "curr_cmd is still in processing\n");
+ 		del_timer(&adapter->cmd_timer);
+-		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 		adapter->curr_cmd = NULL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index cab8a85..fef89fd 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -798,6 +798,8 @@ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ 
+ void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 				  struct cmd_ctrl_node *cmd_node);
++void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
++			      struct cmd_ctrl_node *cmd_node);
+ 
+ void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+ 				     struct cmd_ctrl_node *cmd_node,
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index c7dc450..9f990e1 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -95,7 +95,7 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 		break;
+ 	}
+ 	/* Handling errors here */
+-	mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
++	mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+ 
+ 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 	adapter->curr_cmd = NULL;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 8c943b6..e6c9b2a 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -59,9 +59,6 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
+ {
+ 	int status;
+ 
+-	dev_dbg(adapter->dev, "cmd pending\n");
+-	atomic_inc(&adapter->cmd_pending);
+-
+ 	/* Wait for completion */
+ 	status = wait_event_interruptible(adapter->cmd_wait_q.wait,
+ 					  *(cmd_queued->condition));
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 54667e6..e57ac0d 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -239,7 +239,6 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
+ int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
+ 			 struct cmd_ctrl_node *cmd_node)
+ {
+-	atomic_dec(&adapter->cmd_pending);
+ 	dev_dbg(adapter->dev, "cmd completed: status=%d\n",
+ 		adapter->cmd_wait_q.status);
+ 
 -- 
-Best regards,
-Eugene
+1.7.0.2
+
