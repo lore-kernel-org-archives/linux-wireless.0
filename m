@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:30257 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936239Ab3DIAxY (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:60475 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758132Ab3DAOmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 20:53:24 -0400
-Date: Mon, 08 Apr 2013 19:53:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: dan.carpenter@oracle.com, linux-wireless@vger.kernel.org
-Subject: [PATCH -next V2] rtlwifi: rtl8188ee: Fix loop that ends early
-Message-ID: <51636681.ROF3hAQdAAJN447/%Larry.Finger@lwfinger.net> (sfid-20130409_025328_160236_A4CDA3C6)
+	Mon, 1 Apr 2013 10:42:35 -0400
+Date: Mon, 1 Apr 2013 10:42:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: phaber@broadcom.com, arend@broadcom.com, pieterpg@broadcom.com,
+	meuleman@broadcom.com, LKML <linux-kernel@vger.kernel.org>,
+	brudley@broadcom.com, frankyl@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: Re: [v3.8, v3.9] [Regression] brcmsmac: move PHY functions
+Message-ID: <20130401144225.GC21859@tuxdriver.com> (sfid-20130401_164304_386214_10E6CFAF)
+References: <5155F107.6050408@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5155F107.6050408@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In routine _rtl8188e_read_power_value_fromprom(), there are loops initializing
-index_cck_base and index_bw40_base from the PROM. As the result of a typo, the
-second loop is ended one element too soon.
+On Fri, Mar 29, 2013 at 03:52:39PM -0400, Joseph Salisbury wrote:
+> Hi Piotr,
+> 
+> A bug was opened against the Ubuntu kernel[0].  After a kernel
+> bisect, it was found that reverting the following commit resolved
+> this bug:
+> 
+> commit b83576341664957978e125f5f5db2f15496980b1
+> Author: Piotr Haber <phaber@broadcom.com>
+> Date:   Wed Nov 28 21:44:09 2012 +0100
+> 
+>     brcmsmac: move PHY functions
+> 
+> The regression was introduced as of v3.8-rc1.  The regression still
+> exists in v3.9-rc4.
+> 
+> I see that you are the author of this patch, so I wanted to run this
+> by you.  I was thinking of requesting a revert for v3.9, but I
+> wanted to get your feedback first.
+> 
+> 
+> Thanks,
+> 
+> Joe
+> 
+> [0] http://pad.lv/1131914
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
----
+I recently reverted b6fc28a1, which is the follow-on to that patch.
+The revert is _not_ in 3.9-rc5.
 
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-@@ -1635,7 +1635,7 @@ static void _rtl8188e_read_power_value_f
- 			if (pwr2g->index_cck_base[path][i] == 0xFF)
- 				pwr2g->index_cck_base[path][i] = 0x2D;
- 		}
--		for (i = 0; i < MAX_CHNL_GROUP_24G-1; i++) {
-+		for (i = 0; i < MAX_CHNL_GROUP_24G; i++) {
- 			pwr2g->index_bw40_base[path][i] = hwinfo[eadr++];
- 			if (pwr2g->index_bw40_base[path][i] == 0xFF)
- 				pwr2g->index_bw40_base[path][i] = 0x2D;
+Could you try reverting that patch instead?  Does that fix the issue
+for you?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
