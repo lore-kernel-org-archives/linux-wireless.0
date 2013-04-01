@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2681 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750768Ab3DEHXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 03:23:34 -0400
-Message-ID: <515E7BE7.6040909@broadcom.com> (sfid-20130405_092353_189363_13DCCD0C)
-Date: Fri, 5 Apr 2013 09:23:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:63362 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599Ab3DAQ0Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 12:26:24 -0400
+Message-ID: <5159B52D.3050601@lwfinger.net> (sfid-20130401_182646_521767_4BEB677B)
+Date: Mon, 01 Apr 2013 11:26:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Julian Calaby" <julian.calaby@gmail.com>
-cc: "Wang YanQing" <udknight@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] lib80211: make lib80211 can be enabled
- independently
-References: <20130404160130.GA2577@udknight>
- <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com>
-In-Reply-To: <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Dan Williams <dcbw@redhat.com>,
+	'George0505' <george0505@realtek.com>,
+	Joon Ro <joonhyoung.ro@gmail.com>
+Subject: Linux driver for Realtek RTL8723AU devices with USB ID 0bda:1724
+ such as found in Lenovo IdeaPad Yoga 13
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2013 01:51 AM, Julian Calaby wrote:
-> Hi Wang,
->
-> On Fri, Apr 5, 2013 at 3:01 AM, Wang YanQing <udknight@gmail.com> wrote:
->>
->> Current we can only enable lib80211 by enable a driver
->> in tree use it which will select it, but some out tree's
->> drivers also use it, so I think it has sense to make lib80211
->> can be enabled independently.
->
-> Just as a bit of explanation for Johannes' NACK:
->
-> 3. I believe that the in-tree brcmsmac driver already supports the
-> Broadcom card you reference.
+After receiving a number of inquiries regarding a Linux driver for the RTL8723AU 
+device with USB ID 0bda:1724, I asked my contacts in the USB group at Realtek if 
+such a driver were available. They responded that there is one, but not on their 
+public FTP site; however, they gave me the necessary info to get it from their 
+private site, and also granted permission for me to make it publicly available.
 
-That is correct.
+Therefore, I have created a git repository that can be copied using the command:
 
-Gr. AvS
+git clone http://github.com/lwfinger/rtl8723au.git
 
+Once cloned, the command sequence 'make && sudo make install' in the resulting 
+source directory will build and install the driver, which is named 8723au. At 
+the moment, it does not require external firmware. The driver will build on all 
+kernel versions up to, and including 3.9. I have not tested on kernels older 
+than 3.7, but the code contains conditional statements testing against kernel 
+2.6.18. It should build on any kernel new enough for the base hardware.
+
+My plan is to evolve this driver into a form that is suitable for inclusion in 
+the staging tree of the kernel; however, that will take some effort and time, 
+which is why I am making the intermediate results available now. As that work 
+proceeds, the git version will evolve into code that can be submitted to the 
+kernel with only small changes.
+
+Please be aware that I do not have any hardware that uses this driver, thus I 
+can only guarantee that the code compiles; however, Joon Ro has tested the 
+driver and he assures me that it works. Together we have been eliminating 
+spurious log entries.
+
+The 8723a chip also includes Bluetooth hardware. I have not received any 
+indication that it is active in the RTL8723AU, but it certainly is in the 
+RTL8723AE, the PCIe version. In a separate activity, I am working with Realtek 
+to prepare a kernel driver for this portion of the device.
+
+I welcome your comments, bug reports, patches, suggestions for changes, and 
+testing. In addition, please spread the word to anyone that has been seeking 
+this driver.
+
+Thanks,
+
+Larry
