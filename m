@@ -1,90 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56798 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752855Ab3DPKwU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 06:52:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 2/2] ath9k: always set common->macaddr to the MAC adress of a virtual interface
-Date: Tue, 16 Apr 2013 12:51:57 +0200
-Message-Id: <1366109517-64645-2-git-send-email-nbd@openwrt.org> (sfid-20130416_125224_866185_80C078F3)
-In-Reply-To: <1366109517-64645-1-git-send-email-nbd@openwrt.org>
-References: <1366109517-64645-1-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58446 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457Ab3DAUQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 16:16:07 -0400
+Date: Mon, 1 Apr 2013 16:01:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Stable <stable@vger.kernel.org>
+Subject: Re: [FIX 3.3+][PATCH] ssb: implement spurious tone avoidance
+Message-ID: <20130401200156.GF3526@tuxdriver.com> (sfid-20130401_221618_470740_BA762F38)
+References: <1364487482-14642-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1364487482-14642-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases it can be useful to change the MAC address of a virtual
-interface to something that's completely different from the EEPROM
-stored MAC address. In this case it is a bad idea to use the EEPROM MAC
-address for calculating the BSSID mask, as that would make it too wide.
+On Thu, Mar 28, 2013 at 05:18:02PM +0100, Rafał Miłecki wrote:
+> And make use of it in b43. This fixes a regression introduced with
+> 49d55cef5b1925a5c1efb6aaddaa40fc7c693335
+> b43: N-PHY: implement spurious tone avoidance
+> This commit made BCM4322 use only MCS 0 on channel 13, which of course
+> resulted in performance drop (down to 0.7Mb/s).
+> 
+> Reported-by: Stefan Brüns <stefan.bruens@rwth-aachen.de>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+> John:
+> While this is fix, unfortunately it's not a one-liner. I wish to see it
+> in 3.9 and backported to stable kernels, but if you think it's too big,
+> well, just take it for the next.
 
-In one case a few devices have been observed to send ACKs for many
-packets on the channel not directed at them, which results in a neat
-Denial of Service attack on the channel.
+  CC      drivers/ssb/driver_chipcommon_pmu.o
+drivers/ssb/driver_chipcommon_pmu.c: In function ‘ssb_pmu_spuravoid_pllupdate’:
+drivers/ssb/driver_chipcommon_pmu.c:695:3: error: implicit declaration of function ‘ssb_err’ [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
+make[1]: *** [drivers/ssb/driver_chipcommon_pmu.o] Error 1
+make: *** [drivers/ssb/] Error 2
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 7 +++----
- drivers/net/wireless/ath/ath9k/main.c  | 9 +++++++--
- 2 files changed, 10 insertions(+), 6 deletions(-)
+When building in wireless.git...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 86d3572..1915f12 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -658,11 +658,10 @@ enum sc_op_flags {
- struct ath_rate_table;
- 
- struct ath9k_vif_iter_data {
--	const u8 *hw_macaddr; /* phy's hardware address, set
--			       * before starting iteration for
--			       * valid bssid mask.
--			       */
-+	u8 hw_macaddr[ETH_ALEN]; /* address of the first vif */
- 	u8 mask[ETH_ALEN]; /* bssid mask */
-+	bool has_hw_macaddr;
-+
- 	int naps;      /* number of AP vifs */
- 	int nmeshes;   /* number of mesh vifs */
- 	int nstations; /* number of station vifs */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a383483..6963862 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -839,10 +839,14 @@ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath9k_vif_iter_data *iter_data = data;
- 	int i;
- 
--	if (iter_data->hw_macaddr)
-+	if (iter_data->has_hw_macaddr) {
- 		for (i = 0; i < ETH_ALEN; i++)
- 			iter_data->mask[i] &=
- 				~(iter_data->hw_macaddr[i] ^ mac[i]);
-+	} else {
-+		memcpy(iter_data->hw_macaddr, mac, ETH_ALEN);
-+		iter_data->has_hw_macaddr = true;
-+	}
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
-@@ -891,7 +895,6 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 	 * together with the BSSID mask when matching addresses.
- 	 */
- 	memset(iter_data, 0, sizeof(*iter_data));
--	iter_data->hw_macaddr = common->macaddr;
- 	memset(&iter_data->mask, 0xff, ETH_ALEN);
- 
- 	if (vif)
-@@ -901,6 +904,8 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 	ieee80211_iterate_active_interfaces_atomic(
- 		sc->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
- 		ath9k_vif_iter, iter_data);
-+
-+	memcpy(common->macaddr, iter_data->hw_macaddr, ETH_ALEN);
- }
- 
- /* Called with sc->mutex held. */
 -- 
-1.8.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
