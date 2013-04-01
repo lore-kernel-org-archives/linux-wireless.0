@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34952 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754066Ab3DKJPO (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46714 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab3DAWhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 05:15:14 -0400
-Message-ID: <1365671709.8272.31.camel@jlt4.sipsolutions.net> (sfid-20130411_111519_684774_1419C804)
-Subject: Re: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 11 Apr 2013 11:15:09 +0200
-In-Reply-To: <5164517C.1050304@candelatech.com>
-References: <1364572823-28071-1-git-send-email-greearb@candelatech.com>
-	  (sfid-20130329_170033_026763_9F6C74DD) <1365501048.8465.13.camel@jlt4.sipsolutions.net>
-	 <5164517C.1050304@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 1 Apr 2013 18:37:53 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath: Let user know which keycache method is complaining.
+Date: Mon,  1 Apr 2013 15:37:29 -0700
+Message-Id: <1364855849-30825-1-git-send-email-greearb@candelatech.com> (sfid-20130402_004617_066834_421CDDE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-09 at 10:35 -0700, Ben Greear wrote:
-> On 04/09/2013 02:50 AM, Johannes Berg wrote:
-> > On Fri, 2013-03-29 at 09:00 -0700, greearb@candelatech.com wrote:
-> >> From: Ben Greear <greearb@candelatech.com>
-> >>
-> >> The sta_info hash is designed to deal with an AP
-> >> with lots of stations associated, or a station interface
-> >> connected to a single AP.
-> >
-> > Given your other hash patches, does this even make sense still?
-> 
-> This handles the TX side for station VIFs.  The more complicated
-> hashing handles the rx logic.  I could use the hash
-> for the tx side, though performance is likely a small bit
-> worse since you have to deal with the hash logic.
+From: Ben Greear <greearb@candelatech.com>
 
-Well, for the TX side in your particular case the vhash should always
-just find the right station first, so basically it's the same, no? I
-mean, if you used the new hash in the TX code, it would basically do the
-same the some_sta thing does, assuming your hash spreads well, no?
+Should make the warning messages more useful.
 
-> And, if the more complicated RFC hashing patch has no upstream
-> chance anyway, then if the 'some-sta' patch is acceptable,
-> I'd still be interested in seeing it upstream.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/key.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-Well I'm debating (with myself mostly) ... The some_sta seems
-reasonable, but still a big ugly and like a special case. I'd rather not
-merge the vhash because of the various overheads, so you'd probably want
-to maintain that out of tree anyway. It seems to me that the vhash
-should address your other case pretty much just as well, so then if you
-maintain that anyway I wouldn't have to merge the some_sta patch ... I
-guess I'd kinda prefer that :-)
-
-johannes
+diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+index 5c54aa4..1816b4e 100644
+--- a/drivers/net/wireless/ath/key.c
++++ b/drivers/net/wireless/ath/key.c
+@@ -45,7 +45,8 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry)
+ 	void *ah = common->ah;
+ 
+ 	if (entry >= common->keymax) {
+-		ath_err(common, "keycache entry %u out of range\n", entry);
++		ath_err(common, "keyreset: keycache entry %u out of range\n",
++			entry);
+ 		return false;
+ 	}
+ 
+@@ -91,7 +92,8 @@ static bool ath_hw_keysetmac(struct ath_common *common,
+ 	void *ah = common->ah;
+ 
+ 	if (entry >= common->keymax) {
+-		ath_err(common, "keycache entry %u out of range\n", entry);
++		ath_err(common, "keysetmac: keycache entry %u out of range\n",
++			entry);
+ 		return false;
+ 	}
+ 
+@@ -133,7 +135,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
+ 	u32 keyType;
+ 
+ 	if (entry >= common->keymax) {
+-		ath_err(common, "keycache entry %u out of range\n", entry);
++		ath_err(common, "set-entry: keycache entry %u out of range\n",
++			entry);
+ 		return false;
+ 	}
+ 
+-- 
+1.7.3.4
 
