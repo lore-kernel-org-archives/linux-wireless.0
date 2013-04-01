@@ -1,218 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52581 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab3DHLje (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 07:39:34 -0400
-Message-ID: <1365421170.25475.9.camel@jlt4.sipsolutions.net> (sfid-20130408_133938_475100_520E73DD)
-Subject: pull-request: mac80211-next 2013-04-08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 08 Apr 2013 13:39:30 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-JOBRaQa7VsNv7h8wAvLu"
-Mime-Version: 1.0
+Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:43465 "EHLO
+	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758756Ab3DATpH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 15:45:07 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@laptop.org>, Paul Fox <pgf@laptop.org>,
+	Tim Shepard <shep@laptop.org>,
+	Marco Cesarano <marco@marvell.com>,
+	John Rhodes <jrhodes@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 1 Apr 2013 12:39:50 -0700
+Subject: RE: [PATCH 3.9 1/2] mwifiex: fix negative cmd_pending count
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DDAAC6F@SC-VEXCH1.marvell.com> (sfid-20130401_214531_730780_D1313A2F)
+References: <1364607959-28905-1-git-send-email-bzhao@marvell.com>
+ <20130401191801.GD3526@tuxdriver.com>
+In-Reply-To: <20130401191801.GD3526@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi John,
 
---=-JOBRaQa7VsNv7h8wAvLu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> This patch seems rather large and is not at all obvious to me...
+> 
+> What is the actual effect of it?  Does it cause a crash?  A lock-up?
+> Data loss?
 
-John,
+It only produces a warning in driver while unloading the driver module.
+It doesn't cause crash/lockup/data loss.
 
-Here's another big pull request for the -next stream. This one has a ton
-of driver updates, which hopefully addresses all drivers, but maybe you
-have more new drivers than I have in my tree? Not entirely sure, let me
-know if this is the case and then I can merge wireless-next.
+I will resend this patch (1/2) for wireless-next.
 
-I'm including a large number of small changes, see the shortlog. The two
-bigger things are making VHT compatible with not using channel contexts
-(from Karl) and the stop-while-suspended fixes I developed together with
-Stanislaw.
+Thanks,
+Bing
 
-Let me know if there are any problems.
-
-johannes
-
-
-
-The following changes since commit f00f188f8212fec9976394976c4fd5d4a3bc4dcf=
-:
-
-  cfg80211: fix error return code in cfg80211_init() (2013-03-20 14:09:56 +=
-0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to ddc4db2e3d5393ede7a9222bb3b7522a603a4678:
-
-  mac80211: make ieee802_11_parse_elems an inline (2013-04-08 11:08:32 +020=
-0)
-
-----------------------------------------------------------------
-Alexander Bondar (2):
-      mac80211: allow drivers to set default uAPSD parameters
-      mac80211: disable uAPSD if all ACs are under ACM
-
-Ben Greear (3):
-      mac80211: make beacon-loss-count configurable
-      mac80211: add beacon stats to debugfs
-      mac80211: be more careful about sending beacon-loss-events
-
-Bob Copeland (1):
-      mac80211: return new mpath from mesh_path_add()
-
-Chun-Yeow Yeoh (1):
-      mac80211: fix the PREP mesh hwmp debug message
-
-Emmanuel Grumbach (1):
-      mac80211: return the RSSI in dBm
-
-Janusz Dziedzic (3):
-      cfg80211: add P2P Notice of Absence attribute
-      mac80211: use ieee80211_p2p_noa_attr structure
-      mac80211: add P2P NoA settings
-
-Johannes Berg (15):
-      mac80211: ibss: disable beaconing before freeing beacon
-      mac80211: ibss: use beacon_data struct for beacon and probe response
-      mac80211: remove ancient reference to master interface
-      mac80211: remove unused IE pointers from parser
-      mac80211: check DSSS params IE length in parser
-      mac80211: check ERP info IE length in parser
-      mac80211: parse Timeout Interval Element using a struct
-      mac80211: remove outdated comment referring to master interface
-      mac80211: purge remain-on-channel items when suspending
-      mac80211: destroy virtual monitor interface across suspend
-      mac80211: fix do_stop handling while suspended
-      mac80211: don't fiddle with netdev queues in MLME code
-      mac80211: replace some dead code by a warning
-      mac80211: don't start new netdev queues if driver stopped
-      mac80211: make ieee802_11_parse_elems an inline
-
-Jouni Malinen (1):
-      cfg80211: Document update_ft_ies() cfg80211_ops
-
-Karl Beldan (3):
-      mac80211: Use a cfg80211_chan_def in ieee80211_hw_conf_chan
-      mac80211: let drivers not supporting channel contexts use VHT
-      mac80211_hwsim: advertise VHT support also when channels =3D=3D 1
-
- drivers/net/wireless/adm8211.c                     |   3 +-
- drivers/net/wireless/at76c50x-usb.c                |   4 +-
- drivers/net/wireless/ath/ar5523/ar5523.c           |  14 +--
- drivers/net/wireless/ath/ath5k/base.c              |   2 +-
- drivers/net/wireless/ath/ath5k/mac80211-ops.c      |   4 +-
- drivers/net/wireless/ath/ath9k/beacon.c            |   2 +-
- drivers/net/wireless/ath/ath9k/calib.c             |   2 +-
- drivers/net/wireless/ath/ath9k/common.c            |   5 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  16 +--
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |   8 +-
- drivers/net/wireless/ath/ath9k/hw.c                |   5 +-
- drivers/net/wireless/ath/ath9k/link.c              |   2 +-
- drivers/net/wireless/ath/ath9k/main.c              |  10 +-
- drivers/net/wireless/ath/ath9k/rc.c                |   4 +-
- drivers/net/wireless/ath/ath9k/recv.c              |   6 +-
- drivers/net/wireless/ath/carl9170/debug.c          |   5 +-
- drivers/net/wireless/ath/carl9170/mac.c            |   8 +-
- drivers/net/wireless/ath/carl9170/main.c           |   9 +-
- drivers/net/wireless/ath/carl9170/phy.c            |   4 +-
- drivers/net/wireless/b43/b43.h                     |   2 +-
- drivers/net/wireless/b43/main.c                    |   8 +-
- drivers/net/wireless/b43/phy_ht.c                  |   5 +-
- drivers/net/wireless/b43/phy_lcn.c                 |   5 +-
- drivers/net/wireless/b43/phy_n.c                   |   5 +-
- drivers/net/wireless/b43legacy/main.c              |   9 +-
- drivers/net/wireless/brcm80211/brcmsmac/channel.c  |   4 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   6 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |   4 +-
- drivers/net/wireless/iwlegacy/3945-rs.c            |   2 +-
- drivers/net/wireless/iwlegacy/4965-rs.c            |   2 +-
- drivers/net/wireless/iwlegacy/common.c             |   2 +-
- drivers/net/wireless/iwlwifi/dvm/rs.c              |   2 +-
- drivers/net/wireless/iwlwifi/dvm/rxon.c            |   9 +-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c        |  12 +-
- drivers/net/wireless/libertas_tf/main.c            |   8 +-
- drivers/net/wireless/mac80211_hwsim.c              |  45 ++++---
- drivers/net/wireless/mwl8k.c                       |  36 +++---
- drivers/net/wireless/p54/fwio.c                    |   4 +-
- drivers/net/wireless/p54/main.c                    |   4 +-
- drivers/net/wireless/p54/txrx.c                    |   4 +-
- drivers/net/wireless/rt2x00/rt2800lib.c            |   8 +-
- drivers/net/wireless/rt2x00/rt2x00config.c         |  10 +-
- drivers/net/wireless/rt2x00/rt61pci.c              |   2 +-
- drivers/net/wireless/rt2x00/rt73usb.c              |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/dev.c         |   4 +-
- drivers/net/wireless/rtl818x/rtl8180/grf5101.c     |   3 +-
- drivers/net/wireless/rtl818x/rtl8180/max2820.c     |   2 +-
- drivers/net/wireless/rtl818x/rtl8180/rtl8225.c     |   3 +-
- drivers/net/wireless/rtl818x/rtl8180/sa2400.c      |   3 +-
- drivers/net/wireless/rtl818x/rtl8187/dev.c         |   4 +-
- drivers/net/wireless/rtl818x/rtl8187/rtl8225.c     |   3 +-
- drivers/net/wireless/rtlwifi/base.c                |   4 +-
- drivers/net/wireless/rtlwifi/core.c                |   6 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   4 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |   8 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   4 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   4 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c       |   4 +-
- drivers/net/wireless/ti/wl1251/main.c              |   5 +-
- drivers/net/wireless/ti/wlcore/main.c              |   2 +-
- drivers/net/wireless/zd1211rw/zd_mac.c             |   4 +-
- include/linux/ieee80211.h                          |  30 +++++
- include/net/cfg80211.h                             |   4 +
- include/net/mac80211.h                             |  37 ++++--
- net/mac80211/cfg.c                                 |  42 ++++---
- net/mac80211/chan.c                                |  11 +-
- net/mac80211/debugfs_netdev.c                      |  11 ++
- net/mac80211/debugfs_sta.c                         |   2 +
- net/mac80211/ibss.c                                | 140 ++++++++++-------=
-----
- net/mac80211/ieee80211_i.h                         |  35 +++---
- net/mac80211/iface.c                               | 116 +++++++++++------
- net/mac80211/main.c                                |  75 ++++++-----
- net/mac80211/mesh.c                                |   2 +-
- net/mac80211/mesh.h                                |   3 +-
- net/mac80211/mesh_hwmp.c                           |  26 ++--
- net/mac80211/mesh_pathtbl.c                        |  56 ++++-----
- net/mac80211/mlme.c                                | 128 ++++++++++-------=
---
- net/mac80211/offchannel.c                          |   6 +-
- net/mac80211/pm.c                                  |   8 +-
- net/mac80211/scan.c                                |  11 +-
- net/mac80211/trace.h                               |  43 +++----
- net/mac80211/tx.c                                  |  11 +-
- net/mac80211/util.c                                |  53 +++-----
- 83 files changed, 674 insertions(+), 556 deletions(-)
-
-
---=-JOBRaQa7VsNv7h8wAvLu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRYqxyAAoJEDBSmw7B7bqrQrcP/29Ah9mKWq2b9s84QuhtDtNl
-Ft2p0+ABGuSujRaq0RI/IcTGpEFvz2P2rhn/A7Rv6dzGGlWnvz4POsPdEUuRN0ST
-/3baRm4IVIRg238T3RV/qOuO2glT4tPUsEkYtD7Khab8zt9ckEwZpUuczOsIavCY
-/TuT1TLbtJkrjRTpGVP104xcb9Fk3OPgHUDLqWSrqqa6pfnMMrU3AwAsK6hFK1LB
-pqhSsW9BdmXq3zXlLBMhPAspmpWQmTVoRs1nLVj2PGYsvnFPuoSB9OvSIFF1CNTa
-coghboblM+cTy8G5YEb/n+cy3E2ddumxGsin1EYcmtKH/cFqG/WAtkNyswYKXHJo
-FkkdIuzKfUmPo7GHjNUtK0pdnoX6OSCx9aoALGGFeRYRMB3ph1uQE6smNUcar0na
-sPa8c5ub4dyMwKRnuwESQQ+vEUhWzPjAcPl6q6jqo1AF97d1zhGEfavhidx5R606
-zgkSqZBFUwAFZPruYU/zktg/RiSjJMrZbK9RCqvfR97Ex+SogEXRYYOpdrJvhZgH
-WC5z/ZmXXIqQ+M6Zy93BNRq8zr2GzIXi6IYEKV5sapDd+Cu5oK/d1mU5fAOvcSjs
-TvM39s+8CjkjwNIW64c+1DvYf+yKEZvzxgJSIUc4Hi7fcuRejtRs3uK4D5otzJ/U
-3VUk2mrLrNPbTeLlTrSm
-=9mzw
------END PGP SIGNATURE-----
-
---=-JOBRaQa7VsNv7h8wAvLu--
-
+> 
+> Is this an actual regression?
+> 
+> John
+> 
+> On Fri, Mar 29, 2013 at 06:45:58PM -0700, Bing Zhao wrote:
+> > cmd_pending is increased in mwifiex_wait_queue_complete() and
+> > decreased in mwifiex_complete_cmd() currently.
+> > If there are two or more commands in the cmd_pending_q the main
+> > worker thread will pick up next command from cmd_pending_q
+> > automatically after finishing current command. As a result
+> > mwifiex_wait_queue_complete() will not be called because
+> > the command is alreay completed. This leads to a negative
+> > number in cmd_pending count.
+> >
+> > Fix it by increasing cmd_pending when a cmd is queued into
+> > cmd_pending_q and decreasing when that cmd is recycled. For scan
+> > commands we don't perform inc/dec operations until it's moved
+> > from scan_pending_q to cmd_pending_q. This covers both
+> > synchronous and asynchronous commands.
+> >
+> > Cc: <stable@vger.kernel.org> # 3.8
+> > Reported-by: Daniel Drake <dsd@laptop.org>
+> > Tested-by: Daniel Drake <dsd@laptop.org>
+> > Tested-by: Marco Cesarano <marco@marvell.com>
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > ---
+> >  drivers/net/wireless/mwifiex/cmdevt.c      |   35 ++++++++++++++++++++--------
+> >  drivers/net/wireless/mwifiex/init.c        |    2 +-
+> >  drivers/net/wireless/mwifiex/main.h        |    2 +
+> >  drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +-
+> >  drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 --
+> >  drivers/net/wireless/mwifiex/util.c        |    1 -
+> >  6 files changed, 29 insertions(+), 16 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+> > index 9a1302b..da469c3 100644
+> > --- a/drivers/net/wireless/mwifiex/cmdevt.c
+> > +++ b/drivers/net/wireless/mwifiex/cmdevt.c
+> > @@ -153,7 +153,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+> >  			" or cmd size is 0, not sending\n");
+> >  		if (cmd_node->wait_q_enabled)
+> >  			adapter->cmd_wait_q.status = -1;
+> > -		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> > +		mwifiex_recycle_cmd_node(adapter, cmd_node);
+> >  		return -1;
+> >  	}
+> >
+> > @@ -167,7 +167,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+> >  			"DNLD_CMD: FW in reset state, ignore cmd %#x\n",
+> >  			cmd_code);
+> >  		mwifiex_complete_cmd(adapter, cmd_node);
+> > -		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> > +		mwifiex_recycle_cmd_node(adapter, cmd_node);
+> >  		return -1;
+> >  	}
+> >
+> > @@ -228,7 +228,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
+> >  			adapter->cmd_sent = false;
+> >  		if (cmd_node->wait_q_enabled)
+> >  			adapter->cmd_wait_q.status = -1;
+> > -		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >
+> >  		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+> >  		adapter->curr_cmd = NULL;
+> > @@ -632,6 +632,20 @@ mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+> >  	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
+> >  }
+> >
+> > +/* This function reuses a command node. */
+> > +void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
+> > +			      struct cmd_ctrl_node *cmd_node)
+> > +{
+> > +	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
+> > +
+> > +	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> > +
+> > +	atomic_dec(&adapter->cmd_pending);
+> > +	dev_dbg(adapter->dev, "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
+> > +		le16_to_cpu(host_cmd->command),
+> > +		atomic_read(&adapter->cmd_pending));
+> > +}
+> > +
+> >  /*
+> >   * This function queues a command to the command pending queue.
+> >   *
+> > @@ -673,7 +687,9 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+> >  		list_add(&cmd_node->list, &adapter->cmd_pending_q);
+> >  	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+> >
+> > -	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x is queued\n", command);
+> > +	atomic_inc(&adapter->cmd_pending);
+> > +	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x, cmd_pending=%d\n",
+> > +		command, atomic_read(&adapter->cmd_pending));
+> >  }
+> >
+> >  /*
+> > @@ -783,7 +799,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+> >  	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
+> >  		dev_err(adapter->dev, "CMD_RESP: %#x been canceled\n",
+> >  			le16_to_cpu(resp->command));
+> > -		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >  		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+> >  		adapter->curr_cmd = NULL;
+> >  		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+> > @@ -833,7 +849,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+> >  		if (adapter->curr_cmd->wait_q_enabled)
+> >  			adapter->cmd_wait_q.status = -1;
+> >
+> > -		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >  		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+> >  		adapter->curr_cmd = NULL;
+> >  		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+> > @@ -865,8 +881,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+> >  		if (adapter->curr_cmd->wait_q_enabled)
+> >  			adapter->cmd_wait_q.status = ret;
+> >
+> > -		/* Clean up and put current command back to cmd_free_q */
+> > -		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >
+> >  		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+> >  		adapter->curr_cmd = NULL;
+> > @@ -993,7 +1008,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+> >  			mwifiex_complete_cmd(adapter, cmd_node);
+> >  			cmd_node->wait_q_enabled = false;
+> >  		}
+> > -		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> > +		mwifiex_recycle_cmd_node(adapter, cmd_node);
+> >  		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
+> >  	}
+> >  	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+> > @@ -1040,7 +1055,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+> >  		cmd_node = adapter->curr_cmd;
+> >  		cmd_node->wait_q_enabled = false;
+> >  		cmd_node->cmd_flag |= CMD_F_CANCELED;
+> > -		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> > +		mwifiex_recycle_cmd_node(adapter, cmd_node);
+> >  		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+> >  		adapter->curr_cmd = NULL;
+> >  		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+> > diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+> > index daf8801..003c014 100644
+> > --- a/drivers/net/wireless/mwifiex/init.c
+> > +++ b/drivers/net/wireless/mwifiex/init.c
+> > @@ -713,7 +713,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+> >  	if (adapter->curr_cmd) {
+> >  		dev_warn(adapter->dev, "curr_cmd is still in processing\n");
+> >  		del_timer(&adapter->cmd_timer);
+> > -		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >  		adapter->curr_cmd = NULL;
+> >  	}
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+> > index cab8a85..fef89fd 100644
+> > --- a/drivers/net/wireless/mwifiex/main.h
+> > +++ b/drivers/net/wireless/mwifiex/main.h
+> > @@ -798,6 +798,8 @@ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+> >
+> >  void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+> >  				  struct cmd_ctrl_node *cmd_node);
+> > +void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
+> > +			      struct cmd_ctrl_node *cmd_node);
+> >
+> >  void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
+> >  				     struct cmd_ctrl_node *cmd_node,
+> > diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > index c7dc450..9f990e1 100644
+> > --- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > +++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+> > @@ -95,7 +95,7 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+> >  		break;
+> >  	}
+> >  	/* Handling errors here */
+> > -	mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+> > +	mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
+> >
+> >  	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+> >  	adapter->curr_cmd = NULL;
+> > diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> > index 8c943b6..e6c9b2a 100644
+> > --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
+> > +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> > @@ -59,9 +59,6 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
+> >  {
+> >  	int status;
+> >
+> > -	dev_dbg(adapter->dev, "cmd pending\n");
+> > -	atomic_inc(&adapter->cmd_pending);
+> > -
+> >  	/* Wait for completion */
+> >  	status = wait_event_interruptible(adapter->cmd_wait_q.wait,
+> >  					  *(cmd_queued->condition));
+> > diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+> > index 54667e6..e57ac0d 100644
+> > --- a/drivers/net/wireless/mwifiex/util.c
+> > +++ b/drivers/net/wireless/mwifiex/util.c
+> > @@ -239,7 +239,6 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
+> >  int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
+> >  			 struct cmd_ctrl_node *cmd_node)
+> >  {
+> > -	atomic_dec(&adapter->cmd_pending);
+> >  	dev_dbg(adapter->dev, "cmd completed: status=%d\n",
+> >  		adapter->cmd_wait_q.status);
+> >
+> > --
+> > 1.7.0.2
+> >
+> >
+> 
+> --
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
