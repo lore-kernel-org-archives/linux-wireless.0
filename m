@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2749 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757944Ab3DYVMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Apr 2013 17:12:33 -0400
-Message-ID: <51799C33.7040109@broadcom.com> (sfid-20130425_231237_626574_A63ADB41)
-Date: Thu, 25 Apr 2013 14:12:19 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:50433 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758471Ab3DAPS5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 11:18:57 -0400
+Message-ID: <5159A559.4000808@canonical.com> (sfid-20130401_171918_705660_CCF3FD7E)
+Date: Mon, 01 Apr 2013 11:18:49 -0400
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-To: "Bruno Randolf" <br1@einfach.org>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, meuleman@broadcom.com,
-	brudley@broadcom.com, brcm80211-dev-list@broadcom.com,
-	"=?UTF-8?B?5rW36Je7?= =?UTF-8?B?5pWs5LmL?=" <tkaiso@thinktube.com>
-Subject: Re: Broadcom brcmfmac vs bcmdhd on Android
-References: <5176ABB1.2070506@einfach.org>
- <5176F8C2.7050502@broadcom.com> <5177F7D6.2020800@einfach.org>
- <51797866.9030403@einfach.org>
-In-Reply-To: <51797866.9030403@einfach.org>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: phaber@broadcom.com, arend@broadcom.com, pieterpg@broadcom.com,
+	meuleman@broadcom.com, LKML <linux-kernel@vger.kernel.org>,
+	brudley@broadcom.com, frankyl@broadcom.com,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: Re: [v3.8, v3.9] [Regression] brcmsmac: move PHY functions
+References: <5155F107.6050408@canonical.com> <20130401144225.GC21859@tuxdriver.com>
+In-Reply-To: <20130401144225.GC21859@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/25/2013 11:39 AM, Bruno Randolf wrote:
-> I manually changed the list to only include 4330 and that way modinfo 
-> shows it correctly also on the device, but maybe this is part of the 
-> problem?
+On 04/01/2013 10:42 AM, John W. Linville wrote:
+> On Fri, Mar 29, 2013 at 03:52:39PM -0400, Joseph Salisbury wrote:
+>> Hi Piotr,
+>>
+>> A bug was opened against the Ubuntu kernel[0].  After a kernel
+>> bisect, it was found that reverting the following commit resolved
+>> this bug:
+>>
+>> commit b83576341664957978e125f5f5db2f15496980b1
+>> Author: Piotr Haber <phaber@broadcom.com>
+>> Date:   Wed Nov 28 21:44:09 2012 +0100
+>>
+>>      brcmsmac: move PHY functions
+>>
+>> The regression was introduced as of v3.8-rc1.  The regression still
+>> exists in v3.9-rc4.
+>>
+>> I see that you are the author of this patch, so I wanted to run this
+>> by you.  I was thinking of requesting a revert for v3.9, but I
+>> wanted to get your feedback first.
+>>
+>>
+>> Thanks,
+>>
+>> Joe
+>>
+>> [0] http://pad.lv/1131914
+> I recently reverted b6fc28a1, which is the follow-on to that patch.
+> The revert is _not_ in 3.9-rc5.
 >
-> How did you get it to work? Which device did you use (Galaxy Nexus?)?
-> Do I need to activate CONFIG_BRCMFMAC_SDIO_OOB (I tried with no 
-> difference)?
+> Could you try reverting that patch instead?  Does that fix the issue
+> for you?
 >
-It looks like the device is not powered up. Do you see the wifi chip get 
-enumerated by SDIO bus? There should be something like mmc0:0001:1 under 
-/sys/bus/sdio/devices
+> John
 
-Franky
+Hi John,
+
+Thanks for the response.
+
+Yes, reverting commit b6fc28a1 does resolve this bug.  That is the 
+appropriate fix for this issue.  Thanks for the assistance.
+
+Thanks,
+
+Joe
+
+
 
