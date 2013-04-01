@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:55056 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab3DZSHK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57520 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759297Ab3DATPw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 14:07:10 -0400
-Message-ID: <517AC21E.30705@infradead.org> (sfid-20130426_200715_656386_3F44BD3B)
-Date: Fri, 26 Apr 2013 11:06:22 -0700
-From: Randy Dunlap <rdunlap@infradead.org>
+	Mon, 1 Apr 2013 15:15:52 -0400
+Date: Mon, 1 Apr 2013 15:10:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-fixes 2013-03-28
+Message-ID: <20130401191006.GA3526@tuxdriver.com> (sfid-20130401_211557_166970_07EDD4DB)
+References: <1364484949.10397.7.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] NFC: Add missing RFKILL dependency for Kconfig
-References: <1366999114-26903-1-git-send-email-marcel@holtmann.org>
-In-Reply-To: <1366999114-26903-1-git-send-email-marcel@holtmann.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1364484949.10397.7.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/13 10:58, Marcel Holtmann wrote:
-> Since the NFC subsystem gained RFKILL support, it needs to be able
-> to build properly with whatever option for RFKILL has been selected.
+On Thu, Mar 28, 2013 at 04:35:49PM +0100, Johannes Berg wrote:
+> Hi John,
 > 
-> on i386:
+> I know you just pulled my other iwlwifi-fixes request ... but in the
+> meantime I debugged with Alex Romosan, you probably saw the thread, and
+> thus have another fix and I wanted to send it to you.
 > 
-> net/built-in.o: In function `nfc_unregister_device':
-> (.text+0x6a36d): undefined reference to `rfkill_unregister'
-> net/built-in.o: In function `nfc_unregister_device':
-> (.text+0x6a378): undefined reference to `rfkill_destroy'
-> net/built-in.o: In function `nfc_register_device':
-> (.text+0x6a493): undefined reference to `rfkill_alloc'
-> net/built-in.o: In function `nfc_register_device':
-> (.text+0x6a4a4): undefined reference to `rfkill_register'
-> net/built-in.o: In function `nfc_register_device':
-> (.text+0x6a4b3): undefined reference to `rfkill_destroy'
-> net/built-in.o: In function `nfc_dev_up':
-> (.text+0x6a8e8): undefined reference to `rfkill_blocked'
+> The only fix here is to the passive-no-RX firmware regulatory
+> enforcement driver support code to not drop auth frames in quick
+> succession, leading to not being able to connect to APs on passive
+> channels in certain circumstances.
 > 
-> when CONFIG_RFKILL=m but NFC is builtin.
+> Let me know if there's any issue. Thanks,
+> johannes
 > 
-> Reported-by: Randy Dunlap <rdunlap@infradead.org>
-> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+> 
+> The following changes since commit 2d5d50ee596361566f7f84300117cba7d7672bc5:
+> 
+>   iwlwifi: dvm: don't send HCMD in restart flow (2013-03-20 12:10:57 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
+> 
+> for you to fetch changes up to b8730b403aee94db4631bfefb546a6ce8c287dc2:
+> 
+>   iwlwifi: dvm: fix the passive-no-RX workaround (2013-03-28 16:31:26 +0100)
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-
-Thanks.
-
-> ---
->  net/nfc/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/nfc/Kconfig b/net/nfc/Kconfig
-> index 60c3bbb..28afdb1 100644
-> --- a/net/nfc/Kconfig
-> +++ b/net/nfc/Kconfig
-> @@ -4,6 +4,7 @@
->  
->  menuconfig NFC
->  	depends on NET
-> +	depends on RFKILL || !RFKILL
->  	tristate "NFC subsystem support"
->  	default n
->  	help
-> 
-
+Pulling now...
 
 -- 
-~Randy
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
