@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:45800 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966202Ab3DQMpX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:45:23 -0400
-Received: by mail-ie0-f180.google.com with SMTP id qd14so1851610ieb.11
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:45:22 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:37316 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932321Ab3DBJ14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Apr 2013 05:27:56 -0400
+Date: Tue, 2 Apr 2013 11:27:51 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] Revert "NFC: microread: Fix MEI build failure"
+Message-ID: <20130402092751.GE17363@zurbaran> (sfid-20130402_112807_151546_A3F0D52B)
 MIME-Version: 1.0
-In-Reply-To: <1366200500-4661-11-git-send-email-stf_xl@wp.pl>
-References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
-	<1366200500-4661-11-git-send-email-stf_xl@wp.pl>
-Date: Wed, 17 Apr 2013 14:45:21 +0200
-Message-ID: <CAL1gcdPdxMa9zEqp9h4zGVZf4J2ykHU8UaZ7Szxa7OwvH8UK4g@mail.gmail.com> (sfid-20130417_144527_674317_E9C069EA)
-Subject: Re: [PATCH v2 10/11] rt2800: add rt2800_normal_mode_setup_3xxx subroutine
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 2:08 PM,  <stf_xl@wp.pl> wrote:
-> From: Stanislaw Gruszka <stf_xl@wp.pl>
->
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+This reverts commit 63cd353c34a08af2d1935f8d0c2b6b091714ff79.
 
+We no longer need this fix as the MEI bus APIs are now merged into
+char-misc-next.
+
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+
+John, this one is for wireless-next and will fix the conflict between net-next
+and wireless that Stephen reported today.
 
 ---
-Gertjan
+ drivers/nfc/microread/mei.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
+index 13bde92..eef38cf 100644
+--- a/drivers/nfc/microread/mei.c
++++ b/drivers/nfc/microread/mei.c
+@@ -48,7 +48,7 @@ struct mei_nfc_hdr {
+ #define MEI_NFC_MAX_READ (MEI_NFC_HEADER_SIZE + MEI_NFC_MAX_HCI_PAYLOAD)
+ 
+ struct microread_mei_phy {
+-	struct mei_device *device;
++	struct mei_device *mei_device;
+ 	struct nfc_hci_dev *hdev;
+ 
+ 	int powered;
+-- 
+1.7.10.4
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
