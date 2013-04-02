@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45686 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:56340 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756448Ab3D1TVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 15:21:00 -0400
-Message-ID: <517D769A.80205@openwrt.org> (sfid-20130428_212104_311382_906CC7B6)
-Date: Sun, 28 Apr 2013 21:20:58 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1760022Ab3DBTMm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Apr 2013 15:12:42 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jonathan McDowell <noodles@earth.li>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: RE: [Ilw] Problems with Intel 2230 and AP mode
+Date: Tue, 2 Apr 2013 19:11:12 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301965EC0@HASMSX103.ger.corp.intel.com> (sfid-20130402_211248_309315_8DB94435)
+References: <20130402190831.GQ31591@earth.li>
+In-Reply-To: <20130402190831.GQ31591@earth.li>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D2E77.8000104@rempel-privat.de> <517D3A5F.6020205@rempel-privat.de> <517D7626.6030109@rempel-privat.de>
-In-Reply-To: <517D7626.6030109@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-28 9:19 PM, Oleksij Rempel wrote:
-> Am 28.04.2013 17:03, schrieb Oleksij Rempel:
->> Am 28.04.2013 16:13, schrieb Oleksij Rempel:
->>> Am 28.04.2013 14:51, schrieb Felix Fietkau:
->>>> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->>>>> Collect statistics about recived duplicate and STBC packets.
->>>>> This information should help see if STBC is actually working.
->>>>>
->>>>> Tested on ar9285;
->>>>>
->>>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->>>> I thought about this patch some more, and I'm wondering what's the point
->>>> in doing this? These statistics are going to be completely useless for
->>>> most people and they'll waste some memory/cpu cycles, especially on
->>>> small-cache devices. I think it's much more useful to simply pass the
->>>> information to mac80211 via rx flags and get them added to the radiotap
->>>> header.
->>>
->>> Sure.
 > 
-> Now i need some help.
-> Why there is no traces of  radiotap in ath9k. Some other drivers have 
-> them? Do it communicate in some different way or there is just no 
-> radiotap support in ath9k?
-radiotap is generated in mac80211, so there's no need for the driver to
-do it.
+> I'm trying to build my own wifi router, cobbling together a Debian
+> (wheezy) box, hostapd (1.0) and an Intel 2230. I'm seeing various
+> problems with the 2230 and I'm wondering if I'm mad for trying to use
+> this card in AP mode (in which case is there an alternative Intel card I
+> should use, or is an ath9k my best bet), or if it's worthwhile reporting
+> the issues and trying fixes.
+> 
+> I'm using 3.8.5 (and previously 3.8.4). I tried 3.9-rc4 briefly but it
+> was unusable - as soon as there was any traffic I saw errors like:
+> 
+> Mar 27 19:33:51 ramen kernel: [ 7687.814137] iwlwifi 0000:04:00.0: Stopping
+> AGG while state not ON or starting for 3 on 0 (4)
+> Mar 27 19:33:51 ramen kernel: [ 7687.818846] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
+> Mar 27 19:33:51 ramen kernel: [ 7687.818899] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
+> Mar 27 19:33:51 ramen kernel: [ 7687.818946] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
+> Mar 27 19:33:51 ramen kernel: [ 7687.818993] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
+> Mar 27 19:33:51 ramen kernel: [ 7687.819039] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
+> Mar 27 19:33:51 ramen kernel: [ 7687.819085] iwlwifi 0000:04:00.0: txq_id
+> mismatch: 11 0
 
-- Felix
+Can you please try with debug=0x80000000 and send the output of it?
+---------------------------------------------------------------------
+A member of the Intel Corporation group of companies
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
