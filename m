@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f50.google.com ([209.85.210.50]:49171 "EHLO
-	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934794Ab3DIIa3 (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:61679 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760232Ab3DBMvU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 04:30:29 -0400
-Received: by mail-da0-f50.google.com with SMTP id t1so2996089dae.37
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 01:30:29 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: qca_vkondrat@qca.qualcomm.com, yunsenw@qca.qualcomm.com,
-	kandala@qca.qualcomm.com, wireless-regdb@lists.infradead.org,
-	green@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 3/3] wireless-regdb: add 802.11ad 60 GHz channels 1..3 to world regdom
-Date: Tue,  9 Apr 2013 01:30:23 -0700
-Message-Id: <1365496223-23908-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130409_103035_213514_48343222)
+	Tue, 2 Apr 2013 08:51:20 -0400
+Received: by mail-wi0-f179.google.com with SMTP id hn17so387470wib.6
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 05:51:19 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 2 Apr 2013 14:51:19 +0200
+Message-ID: <CAMEN=G4gwKC5oTbJyDfU4QcnO+EAff+nGsj+++AH0ip4eVV3MA@mail.gmail.com> (sfid-20130402_145124_592160_AAC1D66B)
+Subject: Status of the RTL8712 staging driver
+From: Juan Carlos Garza Fernandez <juancarlosgarza@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hi Larry,
 
-This is a port of what Vladimir Kondratiev sent to the
-Linux kernel for the static world regulatory domain.
+A long time ago, I asked you about the status of the realtek 8192cu
+driver in the mainline and for access points and you told me that it
+would be eventually implemented, which was indeed.
 
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: Yunsen Wang <yunsenw@qca.qualcomm.com>
-Cc: wireless-regdb@lists.infradead.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
+Now I have another question regarding the 8712 driver which has been
+in staging forever.
 
-Fix subject and comments below.
+In your opinion, are there any chances that it will be improved to
+reach the mainline level?
 
- db.txt |    2 ++
- 1 file changed, 2 insertions(+)
+If so, would it be possible to use it as an access point with HostAPD,
+or is it limited by the firmware?
 
-diff --git a/db.txt b/db.txt
-index ae0f83d..c878b27 100644
---- a/db.txt
-+++ b/db.txt
-@@ -10,6 +10,8 @@ country 00:
- 	# NB: 5260 MHz - 5700 MHz requies DFS
- 	# Channel 149 - 165
- 	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	# IEEE 802.11ad (60GHz), channels 1..3
-+	(57240 - 63720 @ 2160), (N/A, 0)
- 
- 
- country AD:
+Best regards,
+
 -- 
-1.7.10.4
-
+________________________________
+Juan Carlos Garza
