@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935614Ab3DIK3V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 06:29:21 -0400
-Message-ID: <1365503356.8465.37.camel@jlt4.sipsolutions.net> (sfid-20130409_122925_200868_8AD8574F)
-Subject: Re: [PATCH] mac80211: always pick a basic rate to tx RTS/CTS for
- pre-HT rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Tue, 09 Apr 2013 12:29:16 +0200
-In-Reply-To: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com> (sfid-20130405_121029_391208_2FD323E8)
-References: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20130405_121029_391208_2FD323E8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.22]:61132 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758759Ab3DBAJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 20:09:07 -0400
+Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0LaIM4-1V3HbQ17q2-00m354 for
+ <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 02:09:06 +0200
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+To: bzhao@marvell.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	daniel@zonque.org,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Subject: [PATCH 2/6] mwifiex: bug: wrong list in list_empty check.
+Date: Tue,  2 Apr 2013 02:08:41 +0200
+Message-Id: <1364861325-30844-2-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130402_020926_448017_4ACC370C)
+In-Reply-To: <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
+References: <20130402000511.GA31921@blumentopf>
+ <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-04-05 at 12:06 +0200, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> When the 1st rate control entry is a pre-HT rate we want to set
-> rts_cts_rate_idx "as the fastest basic rate that is not faster than the
-> data rate"(code comments).
-> But in case some bss allowed rate indexes are lower than the lowest bss
-> basic rate, if the rate control selects a rate among the formers for its
-> 1st rate control entry, rts_cts_rate_idx remains 0 and is not a basic
-> rate index.
-> This commit sets rts_cts_rate_idx to the lowest bss basic rate index in
-> this situation.
+adapter->bss_prio_tbl list has already been checked in outer loop. The
+inner loop works with priv_tmp->wmm.tid_tbl_ptr list. Also the lock taken,
+gives hint that this is likely a copy-paste error.
 
-I guess it's a good thing you're looking at this code. However, I'm not
-sure what you're doing here is correct. In this case, the PHY mandatory
-rates should be used. See 9.7.6.5.2 "Selection of a rate or MCS":
+Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-        To allow the transmitting STA to calculate the contents of the
-        Duration/ID field, a STA responding to a received frame
-        transmits its control response frame at a primary rate, or at an
-        alternate rate, or at an MCS, as specified by the following
-        rules:
-
-              * If a CTS or ACK control response frame is carried in a
-                non-HT PPDU, the primary rate is defined to be the
-                highest rate in the BSSBasicRateSet parameter that is
-                less than or equal to the rate (or non-HT reference
-                rate; see 9.7.9) of the previous frame. If no rate in
-                the BSSBasicRateSet parameter meets these conditions,
-                the primary rate is defined to be the highest mandatory
-                rate of the attached PHY that is less than or equal to
-                the rate (or non-HT reference rate; see 9.7.9) of the
-                previous frame. The STA may select an alternate rate
-                according to the rules in 9.7.6.5.4. The STA shall
-                transmit the non-HT PPDU CTS or ACK control response
-                frame at either the primary rate or the alternate rate,
-                if one exists.
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 91dee27..5b454d6 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -937,8 +937,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
+ 						  flags);
+ 				is_list_empty =
+-					list_empty(&adapter->bss_prio_tbl[j]
+-						   .bss_prio_head);
++					list_empty(&tid_ptr->ra_list);
+ 				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
+ 						       flags);
+ 				if (is_list_empty)
+-- 
+1.7.10.4
 
