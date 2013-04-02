@@ -1,223 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1807 "EHLO mms2.broadcom.com"
+Received: from mout.gmx.net ([212.227.17.22]:64383 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162010Ab3DEI6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 04:58:09 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/16] brcmfmac: use struct brcmf_if instance as
- parameter in brcmf_set_mpc()
-Date: Fri, 5 Apr 2013 10:57:48 +0200
-Message-ID: <1365152274-4252-11-git-send-email-arend@broadcom.com> (sfid-20130405_111304_016697_80FC8170)
-In-Reply-To: <1365152274-4252-1-git-send-email-arend@broadcom.com>
-References: <1365152274-4252-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1758759Ab3DBAJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Apr 2013 20:09:13 -0400
+Received: from mailout-de.gmx.net ([10.1.76.10]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0Lbx3C-1V61QS22ya-00jI9V for
+ <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 02:09:12 +0200
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+To: bzhao@marvell.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	daniel@zonque.org,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Subject: [PATCH 3/6] mwifiex: remove unused tid_tbl_lock from mwifiex_tid_tbl.
+Date: Tue,  2 Apr 2013 02:08:42 +0200
+Message-Id: <1364861325-30844-3-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130402_020927_177105_FBB97C80)
+In-Reply-To: <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
+References: <20130402000511.GA31921@blumentopf>
+ <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove use of struct netdevice as parameter to brcmf_set_mpc() as it
-will not always be available, ie. there will be non-netdevice interfaces.
+ra_list_spinlock is used to protect struct mwifiex_wmm_desc and embedded
+structures such as ra_list. tid_tbl_lock while more fine grained, is not
+used but in one function. That function is not called reentrantly. To
+protect ra_list from concurrent modification ra_list_spinlock must be held.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |    8 +++---
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   29 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 +-
- 3 files changed, 20 insertions(+), 19 deletions(-)
+ drivers/net/wireless/mwifiex/init.c |    1 -
+ drivers/net/wireless/mwifiex/main.h |    2 --
+ drivers/net/wireless/mwifiex/wmm.c  |    8 ++++----
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 4166e64..454a8de 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1384,7 +1384,7 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 		/* After complete GO Negotiation, roll back to mpc mode */
- 		if ((action == P2P_PAF_GON_CONF) ||
- 		    (action == P2P_PAF_PROVDIS_RSP))
--			brcmf_set_mpc(ifp->ndev, 1);
-+			brcmf_set_mpc(ifp, 1);
- 		if (action == P2P_PAF_GON_CONF) {
- 			brcmf_dbg(TRACE, "P2P: GO_NEG_PHASE status cleared\n");
- 			clear_bit(BRCMF_P2P_STATUS_GO_NEG_PHASE, &p2p->status);
-@@ -1725,7 +1725,7 @@ bool brcmf_p2p_send_action_frame(struct brcmf_cfg80211_info *cfg,
- 
- 	/* To make sure to send successfully action frame, turn off mpc */
- 	if (config_af_params.mpc_onoff == 0)
--		brcmf_set_mpc(ndev, 0);
-+		brcmf_set_mpc(netdev_priv(ndev), 0);
- 
- 	/* set status and destination address before sending af */
- 	if (p2p->next_af_subtype != P2P_PAF_SUBTYPE_INVALID) {
-@@ -1820,7 +1820,7 @@ exit:
- 	clear_bit(BRCMF_P2P_STATUS_WAITING_NEXT_ACT_FRAME, &p2p->status);
- 	/* if all done, turn mpc on again */
- 	if (config_af_params.mpc_onoff == 1)
--		brcmf_set_mpc(ndev, 1);
-+		brcmf_set_mpc(netdev_priv(ndev), 1);
- 
- 	return ack;
- }
-@@ -2046,7 +2046,7 @@ int brcmf_p2p_ifchange(struct brcmf_cfg80211_info *cfg,
- 		brcmf_err("vif for P2PAPI_BSSCFG_CONNECTION does not exist\n");
- 		return -EPERM;
- 	}
--	brcmf_set_mpc(vif->ifp->ndev, 0);
-+	brcmf_set_mpc(vif->ifp, 0);
- 
- 	/* In concurrency case, STA may be already associated in a particular */
- 	/* channel. so retrieve the current channel of primary interface and  */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 56359e3..3b79f0c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -490,9 +490,8 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
- 	}
- }
- 
--void brcmf_set_mpc(struct net_device *ndev, int mpc)
-+void brcmf_set_mpc(struct brcmf_if *ifp, int mpc)
- {
--	struct brcmf_if *ifp = netdev_priv(ndev);
- 	s32 err = 0;
- 
- 	if (check_vif_up(ifp->vif)) {
-@@ -510,6 +509,7 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 			    struct net_device *ndev,
- 			    bool aborted, bool fw_abort)
- {
-+	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_scan_params_le params_le;
- 	struct cfg80211_scan_request *scan_request;
- 	s32 err = 0;
-@@ -539,7 +539,7 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 		/* Scan is aborted by setting channel_list[0] to -1 */
- 		params_le.channel_list[0] = cpu_to_le16(-1);
- 		/* E-Scan (or anyother type) can be aborted by SCAN */
--		err = brcmf_fil_cmd_data_set(netdev_priv(ndev), BRCMF_C_SCAN,
-+		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN,
- 					     &params_le, sizeof(params_le));
- 		if (err)
- 			brcmf_err("Scan abort  failed\n");
-@@ -553,12 +553,12 @@ brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 		cfg->sched_escan = false;
- 		if (!aborted)
- 			cfg80211_sched_scan_results(cfg_to_wiphy(cfg));
--		brcmf_set_mpc(ndev, 1);
-+		brcmf_set_mpc(ifp, 1);
- 	} else if (scan_request) {
- 		brcmf_dbg(SCAN, "ESCAN Completed scan: %s\n",
- 			  aborted ? "Aborted" : "Done");
- 		cfg80211_scan_done(scan_request, aborted);
--		brcmf_set_mpc(ndev, 1);
-+		brcmf_set_mpc(ifp, 1);
- 	}
- 	if (!test_and_clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
- 		brcmf_dbg(SCAN, "Scan complete, probably P2P scan\n");
-@@ -813,19 +813,20 @@ brcmf_do_escan(struct brcmf_cfg80211_info *cfg, struct wiphy *wiphy,
- 	u32 passive_scan;
- 	struct brcmf_scan_results *results;
- 	struct escan_info *escan = &cfg->escan_info;
-+	struct brcmf_if *ifp = netdev_priv(ndev);
- 
- 	brcmf_dbg(SCAN, "Enter\n");
- 	escan->ndev = ndev;
- 	escan->wiphy = wiphy;
- 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
- 	passive_scan = cfg->active_scan ? 0 : 1;
--	err = brcmf_fil_cmd_int_set(netdev_priv(ndev), BRCMF_C_SET_PASSIVE_SCAN,
-+	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
- 				    passive_scan);
- 	if (err) {
- 		brcmf_err("error (%d)\n", err);
- 		return err;
- 	}
--	brcmf_set_mpc(ndev, 0);
-+	brcmf_set_mpc(ifp, 0);
- 	results = (struct brcmf_scan_results *)cfg->escan_info.escan_buf;
- 	results->version = 0;
- 	results->count = 0;
-@@ -833,7 +834,7 @@ brcmf_do_escan(struct brcmf_cfg80211_info *cfg, struct wiphy *wiphy,
- 
- 	err = escan->run(cfg, ndev, request, WL_ESCAN_ACTION_START);
- 	if (err)
--		brcmf_set_mpc(ndev, 1);
-+		brcmf_set_mpc(ifp, 1);
- 	return err;
- }
- 
-@@ -921,7 +922,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("WLC_SET_PASSIVE_SCAN error (%d)\n", err);
- 			goto scan_out;
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index e38aa9b..ba9c5a5 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -535,7 +535,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 		priv = adapter->priv[i];
+ 		for (j = 0; j < MAX_NUM_TID; ++j) {
+ 			INIT_LIST_HEAD(&priv->wmm.tid_tbl_ptr[j].ra_list);
+-			spin_lock_init(&priv->wmm.tid_tbl_ptr[j].tid_tbl_lock);
  		}
--		brcmf_set_mpc(ndev, 0);
-+		brcmf_set_mpc(ifp, 0);
- 		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCAN,
- 					     &sr->ssid_le, sizeof(sr->ssid_le));
- 		if (err) {
-@@ -931,7 +932,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct net_device *ndev,
- 			else
- 				brcmf_err("WLC_SCAN error (%d)\n", err);
+ 		INIT_LIST_HEAD(&priv->tx_ba_stream_tbl_ptr);
+ 		INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 3de4cc7..082a468 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -210,8 +210,6 @@ struct mwifiex_ra_list_tbl {
  
--			brcmf_set_mpc(ndev, 1);
-+			brcmf_set_mpc(ifp, 1);
- 			goto scan_out;
- 		}
- 	}
-@@ -2697,7 +2698,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- 		brcmf_abort_scanning(cfg);
+ struct mwifiex_tid_tbl {
+ 	struct list_head ra_list;
+-	/* spin lock for tid table */
+-	spinlock_t tid_tbl_lock;
+ 	struct mwifiex_ra_list_tbl *ra_list_curr;
+ };
  
- 	/* Turn off watchdog timer */
--	brcmf_set_mpc(ndev, 1);
-+	brcmf_set_mpc(netdev_priv(ndev), 1);
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 5b454d6..faae344 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -934,12 +934,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				if (!tid_ptr->ra_list_curr)
+ 					continue;
  
- exit:
- 	brcmf_dbg(TRACE, "Exit\n");
-@@ -3668,7 +3669,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 		ssid_le.SSID_len = cpu_to_le32((u32)settings->ssid_len);
- 	}
+-				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
+-						  flags);
++				spin_lock_irqsave(&priv_tmp->wmm.
++						  ra_list_spinlock, flags);
+ 				is_list_empty =
+ 					list_empty(&tid_ptr->ra_list);
+-				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
+-						       flags);
++				spin_unlock_irqrestore(&priv_tmp->wmm.
++						       ra_list_spinlock, flags);
+ 				if (is_list_empty)
+ 					continue;
  
--	brcmf_set_mpc(ndev, 0);
-+	brcmf_set_mpc(ifp, 0);
- 
- 	/* find the RSN_IE */
- 	rsn_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-@@ -3776,7 +3777,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 
- exit:
- 	if (err)
--		brcmf_set_mpc(ndev, 1);
-+		brcmf_set_mpc(ifp, 1);
- 	return err;
- }
- 
-@@ -3810,7 +3811,7 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 		if (err < 0)
- 			brcmf_err("bss_enable config failed %d\n", err);
- 	}
--	brcmf_set_mpc(ndev, 1);
-+	brcmf_set_mpc(ifp, 1);
- 	set_bit(BRCMF_VIF_STATUS_AP_CREATING, &ifp->vif->sme_state);
- 	clear_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-index 8b5d498..cd4af98 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -495,7 +495,7 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
- s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 				struct net_device *ndev,
- 				bool aborted, bool fw_abort);
--void brcmf_set_mpc(struct net_device *ndev, int mpc);
-+void brcmf_set_mpc(struct brcmf_if *ndev, int mpc);
- void brcmf_abort_scanning(struct brcmf_cfg80211_info *cfg);
- 
- #endif				/* _wl_cfg80211_h_ */
 -- 
 1.7.10.4
-
 
