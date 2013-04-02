@@ -1,52 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog129.obsmtp.com ([74.125.149.142]:36847 "EHLO
-	na3sys009aog129.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965160Ab3DTAxz (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:38183 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab3DBPcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 20:53:55 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: correct bss_mode check while appending vht operation IE
-Date: Fri, 19 Apr 2013 17:44:43 -0700
-Message-ID: <1366418684-6148-3-git-send-email-bzhao@marvell.com> (sfid-20130420_025358_188277_B409215F)
-In-Reply-To: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
-References: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
+	Tue, 2 Apr 2013 11:32:48 -0400
+Message-ID: <515AFA1D.3020404@lwfinger.net> (sfid-20130402_173258_832897_9D2C5F40)
+Date: Tue, 02 Apr 2013 10:32:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Chen, Chien-Chia" <machen@suse.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	netdev@vger.kernel.org, zhiyuan_yang@realsil.com.cn,
+	page_he@realsil.com.cn
+Subject: Re: [PATCH] rtlwifi: rtl8188ee: Fix wrong header patch
+References: <1364911315-3601-1-git-send-email-machen@suse.com>
+In-Reply-To: <1364911315-3601-1-git-send-email-machen@suse.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-priv->bss_mode uses NL80211_IFTYPE_* definitions.
-HostCmd_BSS_MODE_IBSS is used in ad-hoc start/join command between
-driver and firmware.
+On 04/02/2013 09:01 AM, Chen, Chien-Chia wrote:
+> From: "Chen, Chien-Chia" <machen@suse.com>
+>
+> This patch is to fix some wrong header file path.
+> It has caused the build failed.
+>
+> Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+> Cc: larry.finger@lwfinger.net
+> Cc: zhiyuan_yang@realsil.com.cn
+> Cc: page_he@realsil.com.cn
+> Cc: mmarek@suse.cz
 
-Coincidentally both HostCmd_BSS_MODE_IBSS and NL80211_IFTYPE_STATION
-are defined as 2. That explains why nobody complained.
+ACK this for the interim. I still plan to remove all the relative paths for the 
+headers. Maybe I will get it right next time.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11ac.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/mwifiex/11ac.c b/drivers/net/wireless/mwifiex/11ac.c
-index 966a78f..5e0eec4 100644
---- a/drivers/net/wireless/mwifiex/11ac.c
-+++ b/drivers/net/wireless/mwifiex/11ac.c
-@@ -200,7 +200,7 @@ int mwifiex_cmd_append_11ac_tlv(struct mwifiex_private *priv,
- 
- 	/* VHT Operation IE */
- 	if (bss_desc->bcn_vht_oper) {
--		if (priv->bss_mode == HostCmd_BSS_MODE_IBSS) {
-+		if (priv->bss_mode == NL80211_IFTYPE_STATION) {
- 			vht_op = (struct mwifiex_ie_types_vht_oper *)*buffer;
- 			memset(vht_op, 0, sizeof(*vht_op));
- 			vht_op->header.type =
--- 
-1.7.0.2
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +++---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |    6 +++---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   14 +++++++-------
+>   drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |    4 ++--
+>   drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    6 +++---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |    2 +-
+>   drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |    2 +-
+>   drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    6 +++---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 ++++----
+>   9 files changed, 27 insertions(+), 27 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+> index 0a338cc..21a5cf0 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+> @@ -27,9 +27,9 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "base.h"
+> -#include "pci.h"
+> +#include "../wifi.h"
+> +#include "../base.h"
+> +#include "../pci.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+> index 66ff30b..57e4cc5 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+> @@ -27,9 +27,9 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "pci.h"
+> -#include "base.h"
+> +#include "../wifi.h"
+> +#include "../pci.h"
+> +#include "../base.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "fw.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> index d734d19..0f464d0 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> @@ -27,13 +27,13 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "efuse.h"
+> -#include "base.h"
+> -#include "regd.h"
+> -#include "cam.h"
+> -#include "ps.h"
+> -#include "pci.h"
+> +#include "../wifi.h"
+> +#include "../efuse.h"
+> +#include "../base.h"
+> +#include "../regd.h"
+> +#include "../cam.h"
+> +#include "../ps.h"
+> +#include "../pci.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+> index 95d42af..c81a9cb 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+> @@ -27,8 +27,8 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "pci.h"
+> +#include "../wifi.h"
+> +#include "../pci.h"
+>   #include "reg.h"
+>   #include "led.h"
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+> index c285631..224f801 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+> @@ -27,9 +27,9 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "pci.h"
+> -#include "ps.h"
+> +#include "../wifi.h"
+> +#include "../pci.h"
+> +#include "../ps.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+> index 622ea7e..70456ab 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+> @@ -30,7 +30,7 @@
+>   #ifndef __RTL8723E_PWRSEQCMD_H__
+>   #define __RTL8723E_PWRSEQCMD_H__
+>
+> -#include "wifi.h"
+> +#include "../wifi.h"
+>   /*---------------------------------------------*/
+>   /* The value of cmd: 4 bits */
+>   /*---------------------------------------------*/
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+> index e62bcab..4faafdb 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+> @@ -27,7 +27,7 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> +#include "../wifi.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> index e8ce189..c254693 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+> @@ -27,9 +27,9 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "core.h"
+> -#include "pci.h"
+> +#include "../wifi.h"
+> +#include "../core.h"
+> +#include "../pci.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+> index 2518531..d075237 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+> @@ -27,10 +27,10 @@
+>    *
+>    *****************************************************************************/
+>
+> -#include "wifi.h"
+> -#include "pci.h"
+> -#include "base.h"
+> -#include "stats.h"
+> +#include "../wifi.h"
+> +#include "../pci.h"
+> +#include "../base.h"
+> +#include "../stats.h"
+>   #include "reg.h"
+>   #include "def.h"
+>   #include "phy.h"
+>
 
