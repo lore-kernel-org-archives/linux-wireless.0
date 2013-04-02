@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:52083 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345Ab3DEJu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 05:50:57 -0400
-Message-ID: <515E9E6F.7050301@openwrt.org> (sfid-20130405_115100_667879_F1B9BB72)
-Date: Fri, 05 Apr 2013 11:50:39 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH 0/6] rt2x00: use rt2x00mmio prefix for rt2x00mmio module
- functions
-References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org> <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
-In-Reply-To: <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:33387 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759591Ab3DBQkE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Apr 2013 12:40:04 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: zefir.kurtisi@neratec.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH] mac80211: fix recalc_radar hwconf sync problem
+Date: Tue,  2 Apr 2013 18:39:49 +0200
+Message-Id: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130402_184017_183870_B78BD6C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.04.05. 10:16 keltezéssel, Helmut Schaa írta:
-> On Fri, Apr 5, 2013 at 8:26 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
->> This series replaces the rt2x00pci prefix to
->> rt2x00mmio of the functions provided by the
->> rt2x00mmio module. This is a supplement of the
->> 'rt2x00: rt2x00pci: fix build error on Ralink
->> RT3x5x SoCs' patch.
-> 
-> Patch set looks good to me! Thanks a lot Gabor.
-> 
-> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+local->hw.conf maybe not be synced when recalcing whether radar is
+enabled, sometimes leaving radar enabled even if it's not neccesary
+anymore.
 
-Thanks!
+Fix this by always applying the setting.
 
--Gabor
+Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/chan.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 931be41..9442c46 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -251,9 +251,6 @@ void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
+ 	}
+ 	rcu_read_unlock();
+ 
+-	if (radar_enabled == chanctx->conf.radar_enabled)
+-		return;
+-
+ 	chanctx->conf.radar_enabled = radar_enabled;
+ 	local->radar_detect_enabled = chanctx->conf.radar_enabled;
+ 
+-- 
+1.7.10.4
+
