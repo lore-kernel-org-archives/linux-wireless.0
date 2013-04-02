@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4874 "EHLO mms2.broadcom.com"
+Received: from mout.gmx.net ([212.227.15.19]:60513 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966742Ab3DQT0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 15:26:19 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/10] brcmfmac: reinitialize dequeue mask per node
-Date: Wed, 17 Apr 2013 21:25:49 +0200
-Message-ID: <1366226758-20641-2-git-send-email-arend@broadcom.com> (sfid-20130417_212629_622594_5CEDB5A7)
-In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
-References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
+	id S1753681Ab3DBTgz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Apr 2013 15:36:55 -0400
+Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0LmQiS-1UvtbD1lv0-00Zz8O for
+ <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 21:36:53 +0200
+Date: Tue, 2 Apr 2013 21:35:55 +0200
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Daniel Mack <daniel@zonque.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: mwifiex: infinite loop in mwifiex_main_process
+Message-ID: <20130402193555.GA14343@blumentopf> (sfid-20130402_213703_697443_73C8A13A)
+References: <20130319095235.GA22962@blumentopf>
+ <477F20668A386D41ADCC57781B1F70430D9DBCE43F@SC-VEXCH1.marvell.com>
+ <20130402000511.GA31921@blumentopf>
+ <477F20668A386D41ADCC57781B1F70430D9DDAAFDA@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DDAAFDA@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mask was only initialized for the first node, but it should be
-done for each node that is handled in the loop.
+On Tue, Apr 02, 2013 at 11:16:26AM -0700, Bing Zhao wrote:
+> Hi Andi,
+> 
+> [...]
+> 
+> > +			spin_lock_irqsave(&priv_tmp->wmm.ra_list_spinlock, flags);
+> > +			BUG_ON(atomic_read(&priv_tmp->wmm.tx_pkts_queued));
+> > +			spin_unlock_irqrestore(&priv_tmp->wmm.ra_list_spinlock, flags);
+> > +
+> >                         /* No packet at any TID for this priv. Mark as such
+> >                          * to skip checking TIDs for this priv (until pkt is
+> >                          * added).
+> > 			atomic_set(hqp, NO_PKT_PRIO_TID);
+> > 
+> > 
+> > Which crashed. Hence searching for queued packets and adding new ones is
+> > not synchronized, new packets can be added while searching the WMM
+> > queues. If a packet is added right before setting max prio to NO_PKT,
+> > that packet is trapped and creates an infinite loop.
+> > 
+> > Because of the new packet tx_pkts_queued is at least 1, indicating wmm
+> > lists are not empty. Opposing that max prio is NO_PKT, which means "skip
+> > this wmm queue, it has no packets".
+> > The infinite loop results, because the main loop checks the wmm lists
+> > for not empty (tx_pkts_queued != 0), but then finds no packet since it
+> > skips the wmm queue where it is located on. This will never end, unless
+> > a new packet is added which will restore max prio.
+> 
+> Thanks for your analysis.
+> 
+> > One possible solution is is to rely on tx_pkts_queued solely for
+> > checking wmm queue to be empty, and drop the NO_PKT define.
+> 
+> FYI, Yogesh suggested another fix (attached).
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Started with similar patch, but then learned that NO_PKT_PRIO_TID
+is not needed at all. It only adds complexity, rely on
+tx_pkts_queued!
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 1bcd58c..9dae8fc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1070,7 +1070,7 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
- 	int num_nodes;
- 	int node_pos;
- 	int prec_out;
--	int pmsk = 3;
-+	int pmsk;
- 	int i;
- 
- 	table = (struct brcmf_fws_mac_descriptor *)&fws->desc;
-@@ -1084,6 +1084,8 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
- 
- 		if (entry->suppressed)
- 			pmsk = 2;
-+		else
-+			pmsk = 3;
- 		p = brcmu_pktq_mdeq(&entry->psq, pmsk << (fifo * 2), &prec_out);
- 		if (p == NULL) {
- 			if (entry->suppressed) {
--- 
-1.7.10.4
+On top, bss_prio_tbl should be locked as well.
+
+> 
+> [...]
+> 
+> > seems to be intruduced with this patch:
+> > 17e8cec  05-16-2011 mwifiex: CPU mips optimization with NO_PKT_PRIO_TID
+> > 
+> > I was wondering why hasn't happened more frequently. Evtl. if the
+> > interface is working in bridge mode, new packets might be added to the
+> > WMM queue with the trapped packet. 2c
+> > 
+> > I prepared a few patches, fixing above bug as suggested and plus some
+> > cleanup patches I did while trying to get an understanding. Pls review.
+> 
+> Thanks for the patches. We will review them and run some WMM tests.
+
+Thanks, looking forward to that. 
+
+Andi
 
 
