@@ -1,41 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:47764 "EHLO
-	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754603Ab3DVSjY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 14:39:24 -0400
-Date: Mon, 22 Apr 2013 14:38:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	mcgrof@qca.qualcomm.com, sven@narfation.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
-Message-ID: <20130422183834.GB2055@tuxdriver.com> (sfid-20130422_203928_918709_204937B3)
-References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <508FCB77.9000303@openwrt.org>
- <50C1E2A5.40206@fokus.fraunhofer.de>
- <20130422100818.GA8402@pandem0nium>
- <51750DDC.8080206@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51750DDC.8080206@openwrt.org>
+Received: from victor.provo.novell.com ([137.65.250.26]:49733 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761022Ab3DBN6W (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 2 Apr 2013 09:58:22 -0400
+From: "Chen, Chien-Chia" <machen@suse.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, zhiyuan_yang@realsil.com.cn,
+	page_he@realsil.com.cn, Larry.Finger@lwfinger.net
+Subject: [PATCH] rtlwifi: rtl8188ee: Fix wrong header patch
+Date: Tue,  2 Apr 2013 22:01:55 +0800
+Message-Id: <1364911315-3601-1-git-send-email-machen@suse.com> (sfid-20130402_155829_416330_1B6776C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 22, 2013 at 12:15:56PM +0200, Felix Fietkau wrote:
-> On 2013-04-22 12:08 PM, Simon Wunderlich wrote:
-> > Hey Felix,
-> > 
-> > just wanted to bump on this issue again, as it has not been applied
-> > yet - the patch seems still valid, and Mathias results appear to show
-> > that as well. What do you think?
-> Looks ok to me, let's get it merged.
+From: "Chen, Chien-Chia" <machen@suse.com>
 
-I don't seem to have it in my queue.  Could someone resend it?
+This patch is to fix some wrong header file path.
+It has caused the build failed.
 
+Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+Cc: larry.finger@lwfinger.net
+Cc: zhiyuan_yang@realsil.com.cn
+Cc: page_he@realsil.com.cn
+Cc: mmarek@suse.cz
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   14 +++++++-------
+ drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |    4 ++--
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 ++++----
+ 9 files changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+index 0a338cc..21a5cf0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "base.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../base.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+index 66ff30b..57e4cc5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "base.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index d734d19..0f464d0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -27,13 +27,13 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "efuse.h"
+-#include "base.h"
+-#include "regd.h"
+-#include "cam.h"
+-#include "ps.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../efuse.h"
++#include "../base.h"
++#include "../regd.h"
++#include "../cam.h"
++#include "../ps.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+index 95d42af..c81a9cb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+@@ -27,8 +27,8 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "led.h"
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+index c285631..224f801 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "ps.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../ps.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+index 622ea7e..70456ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+@@ -30,7 +30,7 @@
+ #ifndef __RTL8723E_PWRSEQCMD_H__
+ #define __RTL8723E_PWRSEQCMD_H__
+ 
+-#include "wifi.h"
++#include "../wifi.h"
+ /*---------------------------------------------*/
+ /* The value of cmd: 4 bits */
+ /*---------------------------------------------*/
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+index e62bcab..4faafdb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+@@ -27,7 +27,7 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
++#include "../wifi.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+index e8ce189..c254693 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "core.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../core.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+index 2518531..d075237 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+@@ -27,10 +27,10 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "base.h"
+-#include "stats.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
++#include "../stats.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.7
+
