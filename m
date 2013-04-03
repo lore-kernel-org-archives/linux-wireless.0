@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:51578 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935135Ab3DHTAN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 15:00:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:62601 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760575Ab3DCKEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 06:04:32 -0400
+Date: Wed, 3 Apr 2013 12:05:29 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Laurens <laurens.nikolaisen@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: =?iso-8859-1?Q?Intel?= =?iso-8859-1?Q?=AE?= PRO/Wireless 3945ABG
+ seems to cause system freeze
+Message-ID: <20130403100528.GB1575@redhat.com> (sfid-20130403_120436_674372_76229303)
+References: <51558D37.7040508@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <201304081733.15727.chunkeey@googlemail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com>
-	<CAFSJ42Zd3s8xKwt4X3LNcupCTntDULxNntMuD-_Xh6_csiGA4A@mail.gmail.com>
-	<201304081733.15727.chunkeey@googlemail.com>
-Date: Mon, 8 Apr 2013 12:00:12 -0700
-Message-ID: <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com> (sfid-20130408_210041_884304_3D6D338F)
-Subject: Re: Version number policy!
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51558D37.7040508@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 April 2013 08:33, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> On Monday, April 08, 2013 11:10:30 AM Eugene Krasnikov wrote:
->> It’s a good idea to pack bitmap into the tail/header of the firmware
->> binary to get capabilities even before fw loading. The plan is to add
->> 8 bytes for caps and also add time stamp. Let me play around with that
->> and provide fw and driver patch for review.
->
-> Hm, come to think of it. Kalle, do you think ath9k_htc could use
-> some bits of the fw header format, parser or the complete infrastructure
-> from ath6kl? This could be great for Adrian, because he could
-> just point people to it and they could moved it into the code
-> into /drivers/net/wireless/ath/fw.c.
+On Fri, Mar 29, 2013 at 01:46:47PM +0100, Laurens wrote:
+> it seems like if the Intel 3945BG causes freezes to my computer
+> system under Xubuntu 12.04.2. Though I am not very sure about it I'd
+> like to ask you to go through my dmesg log. If you can point out if
+> it's the wireless card which causes trouble please let me know. Also
+> if you know how to fix that I would much appreciate that!
+> 
+> There is one log called dmesg, including the whole log, and one with
+> this request:
+> 
+> dmesg_wifi.txt
+> 
+> dmesg | egrep 'net|eth|sky|sis|via|3c3|3c5|e100|8139|8169|acx|air|ath|atl|ar9|carl|atme|at7|herm|iwl|ipw|rtl8|r81|rt2|rt3|rt6|rt7|tg3|ssb|wl|b43|b44|ori|pri|p5|zd|ndis|wmi|ns8|FW'
+> 
+> ...called dmesg wifi.
 
-Just remember that we (ath9k_htc and carl9170) aren't constrained by
-the same kinds of issues that closed firmware is. So version checks
-aren't that bad, because that way over time we don't end up needing to
-maintain lots of special cases for firmware options.
+Dmesg's do not show much, beside that you use old 3.2 kernel.
+What make you think iwl3945 cause freezes on your system?
+If you blacklist that module freezes do not happen ?
 
-I still like the idea of firmware options for build time options that
-people may wish to use - eg, say we want to support a version of
-ath9k-htc firmware that does offloaded TX rate control, versus not.
-But, maintaining multiple builds of the same firmware is IMHO going to
-be a path towards madness to maintain.
+Stanislaw
 
-The maintainability is why I'm hoping (!) to keep the number of
-options low and just do "clean slate" moves whenever we shift to the
-next major firmware version.
-
-
-Adrian
