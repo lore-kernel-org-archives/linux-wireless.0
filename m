@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:53560 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965961Ab3DQMMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:12:40 -0400
-Received: by mail-we0-f172.google.com with SMTP id r3so1137200wey.31
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:12:39 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] mac80211: cosmetics for minstrel_debugfs
-Date: Wed, 17 Apr 2013 14:08:26 +0200
-Message-Id: <1366200506-23584-1-git-send-email-karl.beldan@gmail.com> (sfid-20130417_141246_177216_DA25999F)
+Received: from mail.neratec.com ([80.75.119.105]:38790 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762065Ab3DCQct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 12:32:49 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: siwu@hrz.tu-chemnitz.de, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [TESTING-QH 2/2] REMOVEME: remove NO_IBSS and PASSIVE_SCAN from reg_can_beacon()
+Date: Wed,  3 Apr 2013 18:32:39 +0200
+Message-Id: <1365006759-16779-3-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130403_183254_111254_9B40EF49)
+In-Reply-To: <1365006759-16779-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1365006759-16779-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 
-This changes the minstrel stats ouput from:
+The concept of clearing a DFS channel with a CAC and open it for transmission
+is not yet supported by the channel framework. This patch is required to
+temporary remove the additional consideration of the flags that are anyhow
+superposed by the DFS flag.
 
-rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
- BCD   6         0.0        0.0        0.0          0(  0)          0           0
-
-to:
-
-rate      throughput  ewma prob  this prob  this succ/attempt   success    attempts
- BCD   6         0.0        0.0        0.0             0(  0)         0           0
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- net/mac80211/rc80211_minstrel_debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/wireless/chan.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index d104834..fd0b9ca 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -68,7 +68,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index fd556ac..16d0ee7 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -425,8 +425,8 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
  
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, "rate     throughput  ewma prob   this prob  "
-+	p += sprintf(p, "rate      throughput  ewma prob  this prob  "
- 			"this succ/attempt   success    attempts\n");
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-@@ -86,7 +86,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		eprob = MINSTREL_TRUNC(mr->probability * 1000);
+ 	res = cfg80211_chandef_usable(wiphy, chandef,
+ 				      IEEE80211_CHAN_DISABLED |
+-				      IEEE80211_CHAN_PASSIVE_SCAN |
+-				      IEEE80211_CHAN_NO_IBSS |
++//				      IEEE80211_CHAN_PASSIVE_SCAN |
++//				      IEEE80211_CHAN_NO_IBSS |
+ 				      IEEE80211_CHAN_RADAR);
  
- 		p += sprintf(p, "  %6u.%1u   %6u.%1u   %6u.%1u        "
--				"%3u(%3u)   %8llu    %8llu\n",
-+				"   %3u(%3u)  %8llu    %8llu\n",
- 				tp / 10, tp % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
+ 	trace_cfg80211_return_bool(res);
 -- 
-1.8.2
+1.7.4.1
 
