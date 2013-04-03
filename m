@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:36765 "EHLO
-	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965558Ab3DQWGw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761359Ab3DCMXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 18:06:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Paul Stewart <pstew@chromium.org>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] net-sysfs: Add entry for nl80211 interface type
-Date: Wed, 17 Apr 2013 15:06:09 -0700
-Message-ID: <1366236369-543-1-git-send-email-bzhao@marvell.com> (sfid-20130418_000709_842159_3005786A)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 3 Apr 2013 08:23:37 -0400
+Message-ID: <1364991812.8351.25.camel@jlt4.sipsolutions.net> (sfid-20130403_142340_637329_F9F1F968)
+Subject: Re: [RFC 0/3] mac80211: fixes for do_stop while suspended
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Apr 2013 14:23:32 +0200
+In-Reply-To: <20130329123321.GA22165@redhat.com>
+References: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
+	 <20130329123321.GA22165@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a "wireless/nl80211_iftype" entry in the net device sysfs
-file structure to indicate the mode of the wireless device so
-it can be discovered easily from userspace.
+On Fri, 2013-03-29 at 13:33 +0100, Stanislaw Gruszka wrote:
 
-Signed-off-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- net/core/net-sysfs.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+> Just tested (with 3/3 v2 patch) and it fixes the test case I have,
+> that I used to create my patches. Test case is doing suspend with
+> reverted commit 761ce8c41ed20ee3af77f2df527edc3f92e6f3bf. This make
+> device is automatically removed/added during suspend, because lack 
+> of .reset_resume callback.
+> 
+> Than I tested with physical remove device from USB slot while machine
+> is suspend. This gives warnings in ieee80211_reconfig() and
+> ieee80211_stop(). I'm not sure why, I'm going to look at that, but
+> I think this patch set should be applied and some more fixes provided
+> on top of it.
 
-diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
-index 7427ab5..454bd7f 100644
---- a/net/core/net-sysfs.c
-+++ b/net/core/net-sysfs.c
-@@ -17,6 +17,7 @@
- #include <linux/nsproxy.h>
- #include <net/sock.h>
- #include <net/net_namespace.h>
-+#include <net/cfg80211.h>
- #include <linux/rtnetlink.h>
- #include <linux/vmalloc.h>
- #include <linux/export.h>
-@@ -448,7 +449,24 @@ static struct attribute_group netstat_group = {
- };
- 
- #if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
-+static ssize_t show_nl80211_iftype(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	const struct net_device *netdev = to_net_dev(dev);
-+	ssize_t ret = 0;
-+
-+	if (!rtnl_trylock())
-+		return restart_syscall();
-+	if (netdev->ieee80211_ptr)
-+		ret = sprintf(buf, "%d\n", netdev->ieee80211_ptr->iftype);
-+	rtnl_unlock();
-+
-+	return ret;
-+}
-+static DEVICE_ATTR(nl80211_iftype, S_IRUGO, show_nl80211_iftype, NULL);
-+
- static struct attribute *wireless_attrs[] = {
-+	&dev_attr_nl80211_iftype.attr,
- 	NULL
- };
- 
--- 
-1.7.0.2
+Sounds good. I'll send it as [PATCH] for the record.
+
+johannes
 
