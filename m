@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59422 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756457Ab3DZR6k (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35345 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761504Ab3DCMVi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 13:58:40 -0400
-Received: from aeonflux.amr.corp.intel.com (S010620c9d099deff.vc.shawcable.net [24.84.124.211])
-	by mail.holtmann.org (Postfix) with ESMTPSA id BC0AF8B33C
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 19:58:38 +0200 (CEST)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] NFC: Add missing RFKILL dependency for Kconfig
-Date: Fri, 26 Apr 2013 10:58:34 -0700
-Message-Id: <1366999114-26903-1-git-send-email-marcel@holtmann.org> (sfid-20130426_195847_673455_918A5BC4)
+	Wed, 3 Apr 2013 08:21:38 -0400
+Message-ID: <1364991693.8351.23.camel@jlt4.sipsolutions.net> (sfid-20130403_142145_705886_006BE590)
+Subject: Re: [PATCH] mac80211: return new mpath from mesh_path_add()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: thomas@cozybit.com, linux-wireless@vger.kernel.org
+Date: Wed, 03 Apr 2013 14:21:33 +0200
+In-Reply-To: <20130329133839.GB25331@localhost> (sfid-20130329_143900_595905_ECA036F2)
+References: <20130329133839.GB25331@localhost>
+	 (sfid-20130329_143900_595905_ECA036F2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the NFC subsystem gained RFKILL support, it needs to be able
-to build properly with whatever option for RFKILL has been selected.
+On Fri, 2013-03-29 at 09:38 -0400, Bob Copeland wrote:
+> Most times that mesh_path_add() is called, it is followed by
+> a lookup to get the just-added mpath.  We can instead just
+> return the new mpath in the case that we allocated one (or the
+> existing one if already there), so do that.  Also, reorder the
+> code in mesh_path_add a bit so that we don't need to allocate
+> in the pre-existing case.
 
-on i386:
+Applied.
 
-net/built-in.o: In function `nfc_unregister_device':
-(.text+0x6a36d): undefined reference to `rfkill_unregister'
-net/built-in.o: In function `nfc_unregister_device':
-(.text+0x6a378): undefined reference to `rfkill_destroy'
-net/built-in.o: In function `nfc_register_device':
-(.text+0x6a493): undefined reference to `rfkill_alloc'
-net/built-in.o: In function `nfc_register_device':
-(.text+0x6a4a4): undefined reference to `rfkill_register'
-net/built-in.o: In function `nfc_register_device':
-(.text+0x6a4b3): undefined reference to `rfkill_destroy'
-net/built-in.o: In function `nfc_dev_up':
-(.text+0x6a8e8): undefined reference to `rfkill_blocked'
-
-when CONFIG_RFKILL=m but NFC is builtin.
-
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
----
- net/nfc/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/nfc/Kconfig b/net/nfc/Kconfig
-index 60c3bbb..28afdb1 100644
---- a/net/nfc/Kconfig
-+++ b/net/nfc/Kconfig
-@@ -4,6 +4,7 @@
- 
- menuconfig NFC
- 	depends on NET
-+	depends on RFKILL || !RFKILL
- 	tristate "NFC subsystem support"
- 	default n
- 	help
--- 
-1.8.1.4
+johannes
 
