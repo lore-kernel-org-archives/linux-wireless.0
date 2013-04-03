@@ -1,61 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52636 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754811Ab3D0JrQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 05:47:16 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	greearb@candelatech.com
-Subject: [PATCH] ath9k: fix key allocation error handling for powersave keys
-Date: Sat, 27 Apr 2013 11:47:01 +0200
-Message-Id: <1367056021-38929-1-git-send-email-nbd@openwrt.org> (sfid-20130427_114720_320970_283B6CAE)
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:44016 "EHLO
+	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758784Ab3DCRdK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 13:33:10 -0400
+Date: Wed, 3 Apr 2013 13:32:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Cc: linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 0/4] rtlwifi: usb: improve RX performance and lower CPU
+ usage
+Message-ID: <20130403173248.GA14611@tuxdriver.com> (sfid-20130403_193314_921728_58F05376)
+References: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
+ <515C63E4.7020506@iki.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <515C63E4.7020506@iki.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If no keycache slots are available, ath_key_config can return -ENOSPC.
-If the key index is not checked for errors, it can lead to logspam that
-looks like this: "ath: wiphy0: keyreset: keycache entry 228 out of range"
-This can cause follow-up errors if the invalid keycache index gets
-used for tx.
+They are in wireless-next...
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+commit 657e27656dfb3a99e81c99df6e78e770d7fe0d48
+Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Date:   Sun Mar 17 11:59:29 2013 +0200
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6963862..c4fc3d1 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1332,6 +1332,7 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_node *an = (struct ath_node *) sta->drv_priv;
- 	struct ieee80211_key_conf ps_key = { };
-+	int key;
- 
- 	ath_node_attach(sc, sta, vif);
- 
-@@ -1339,7 +1340,9 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 	    vif->type != NL80211_IFTYPE_AP_VLAN)
- 		return 0;
- 
--	an->ps_key = ath_key_config(common, vif, sta, &ps_key);
-+	key = ath_key_config(common, vif, sta, &ps_key);
-+	if (key > 0)
-+		an->ps_key = key;
- 
- 	return 0;
- }
-@@ -1356,6 +1359,7 @@ static void ath9k_del_ps_key(struct ath_softc *sc,
- 	    return;
- 
- 	ath_key_delete(common, &ps_key);
-+	an->ps_key = 0;
- }
- 
- static int ath9k_sta_remove(struct ieee80211_hw *hw,
+    rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
+    
+    Add proper alignment at first packet copy, to avoid extra copies made later
+    in networking stack.
+    
+    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+commit 29bb7013a53d8fc43f79f39d22a15ba8d3e77d9b
+Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Date:   Sun Mar 17 11:59:24 2013 +0200
+
+    rtlwifi: usb: defer rx processing to tasklet
+    
+    Move processing of received packets to tasklet from hard-irq context.
+    
+    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+commit d7d0f081c48951018133cac38c8c0796f37db727
+Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Date:   Sun Mar 17 11:59:18 2013 +0200
+
+    rtlwifi: usb: remove extra skb copy on RX path
+    
+    RX path has extra copying of packets, that can be avoided.
+    
+    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+commit 872de8ff04922e4ad95c5af39131ae9fbefe6ac5
+Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Date:   Sun Mar 17 11:59:13 2013 +0200
+
+    rtlwifi: usb: use usb_alloc_coherent for RX buffers
+    
+    Use dedicated DMA coherent buffers for RX urbs, to avoid allocation of large
+    skbuffs in hard-irq context and improve performance.
+    
+    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+On Wed, Apr 03, 2013 at 08:16:20PM +0300, Jussi Kivilinna wrote:
+> Any comments on this patchset?
+> 
+> On 17.03.2013 11:59, Jussi Kivilinna wrote:
+> > Patchset improves RX path handling in rtlwifi/usb.c by:
+> >  - change to use preallocated DMA coherent URB buffers.
+> >  - kill unnessasary skbuff copies.
+> >  - defer RX processing to tasklet.
+> >  - add proper alignment of skbuff early on.
+> > 
+> > With this patchset IRQ CPU usage drops from 37% to 25% on ARM system with
+> > 1Ghz Cortex-A8, when doing large transfer with rtl8192cu. Tranfer speed
+> > appears to be slightly improved too, from 29Mbit to 31Mbit.
+> > 
+> > ---
+> > 
+> > Jussi Kivilinna (4):
+> >       rtlwifi: usb: use usb_alloc_coherent for RX buffers
+> >       rtlwifi: usb: remove extra skb copy on RX path
+> >       rtlwifi: usb: defer rx processing to tasklet
+> >       rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
+> > 
+> > 
+> >  drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2
+> >  drivers/net/wireless/rtlwifi/usb.c           |  220 ++++++++++++++++++--------
+> >  drivers/net/wireless/rtlwifi/usb.h           |    5 -
+> >  3 files changed, 156 insertions(+), 71 deletions(-)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.8.0.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
