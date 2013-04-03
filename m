@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:33587 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab3DOM5m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34657 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757785Ab3DCIFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 08:57:42 -0400
-Received: by mail-wg0-f41.google.com with SMTP id e11so101161wgh.4
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 05:57:40 -0700 (PDT)
-Date: Mon, 15 Apr 2013 14:53:25 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: vht off-by-one nss
-Message-ID: <20130415125325.GB13843@magnum.frso.rivierawaves.com> (sfid-20130415_145745_731197_CFC875EE)
-References: <20130415100909.GA29924@magnum.frso.rivierawaves.com>
- <1366021975.8361.10.camel@jlt4.sipsolutions.net>
- <20130415123358.GA13843@magnum.frso.rivierawaves.com>
- <1366030075.8361.16.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1366030075.8361.16.camel@jlt4.sipsolutions.net>
+	Wed, 3 Apr 2013 04:05:23 -0400
+Message-ID: <1364976319.8351.2.camel@jlt4.sipsolutions.net> (sfid-20130403_100533_037667_8C1E2D23)
+Subject: Re: question on SMPS for AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vivekanandah@posedge.com
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 03 Apr 2013 10:05:19 +0200
+In-Reply-To: <fbef7a2278fe739a398430949087c950@posedge.com> (sfid-20130403_093709_189406_740B7438)
+References: <fbef7a2278fe739a398430949087c950@posedge.com>
+	 (sfid-20130403_093709_189406_740B7438)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 02:47:55PM +0200, Johannes Berg wrote:
-> On Mon, 2013-04-15 at 14:33 +0200, Karl Beldan wrote:
-> 
-> > > > +++ b/net/mac80211/cfg.c
-> > > > @@ -389,7 +389,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
-> > > >  	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-> > > >  		rinfo->flags |= RATE_INFO_FLAGS_VHT_MCS;
-> > > >  		rinfo->mcs = ieee80211_rate_get_vht_mcs(rate);
-> > > > -		rinfo->nss = ieee80211_rate_get_vht_nss(rate);
-> > > > +		rinfo->nss = ieee80211_rate_get_vht_nss(rate) + 1;
-> > > >  	} else {
-> > > >  		struct ieee80211_supported_band *sband;
-> > > >  		sband = sta->local->hw.wiphy->bands[
-> > > > }
-> > > 
-> > > 
-> > > Wouldn't this one also require an update for VHT radiotap in
-> > > net/mac80211/rx.c around line 320 (RX_FLAG_VHT)?
-> > > 
-> > The radiotap field is set with ieee80211_rx_status.vht_nss, so no need.
-> 
-> And that's properly 1-based, rather than 0-based like in TX info? I
-> guess I forgot all of this already, heh.
-> 
-ieee80211_rx_status.vht_nss asks for a 1-based field but it is set by
-drivers .. and since no driver report any (yet) .. anyways, I'll send a
-patch along with it for mac80211_hwsim .. that can serve as a reminder ;).
+Hi Vivek,
 
- 
-Karl
+> i was looking into the MAC80211 code for Spatial multiplexing Power 
+> Save handling.
+> 
+> i see that for the station side, the code seems to be handled.
+> is the same true for an AP interface as well? this is my current 
+> understanding and i do not see any code handling for AP for SMPS.
+
+Which part? There are two sides to SMPS handling:
+ 1) changing our own SMPS mode
+ 2) handling stations changing their SMPS mode
+
+1) is implemented only for station mode, 2) is implemented for both AP
+and station mode (though is less relevant for station mode)
+
+>  From the perspective of an AP, the only thing it needs to do, is to 
+> monitor the station for change to dynamic SMPS mode and if the station 
+> is in dynamic SMPS mode, set the RTS flag for the first packet to be 
+> sent out to the station so that an RTS/CTS mechanism is employed before 
+> the packet transfer. this will make the station to wake up its receive 
+> chains for the impending packet tranfer.
+> 
+> can anyone provide any inputs for the same and direct me to any code 
+> that will help in understanding SMPS for AP?
+
+Yes this is implemented, it starts in ieee80211_rx_h_action(),
+WLAN_CATEGORY_HT, WLAN_HT_ACTION_SMPS and ends by calling
+rate_control_rate_update(). The driver or rate control algorithm has to
+take this into account, I'm not certain that all drivers and algorithms
+do this correctly (yet).
+
+johannes
+
