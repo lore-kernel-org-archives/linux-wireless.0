@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:35575 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753777Ab3DSUji (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53126 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760802Ab3DCNhY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 16:39:38 -0400
-Date: Fri, 19 Apr 2013 22:39:05 +0200
-From: Joerg Mayer <jmayer@loplof.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] iw: Deocde some more IEs
-Message-ID: <20130419203905.GA15678@rhrk.uni-kl.de> (sfid-20130419_223942_492307_9749A9B7)
+	Wed, 3 Apr 2013 09:37:24 -0400
+Message-ID: <515C308F.7030506@candelatech.com> (sfid-20130403_153727_786583_8DBF9DFC)
+Date: Wed, 03 Apr 2013 06:37:19 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  Hashing by VIF addr for rx of data packets.
+References: <515B6D98.4060303@candelatech.com>  (sfid-20130403_014533_732333_9EEA2246) <1364993169.8351.34.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1364993169.8351.34.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Small update, found while verifying against the standard.
+On 04/03/2013 05:46 AM, Johannes Berg wrote:
+> On Tue, 2013-04-02 at 16:45 -0700, Ben Greear wrote:
+>> I notice that the rx logic currently walks through all stations when a NIC receives
+>> a packet.
+>>
+>> With the attached patch, total TCP download throughput goes from 70Mbps to 190Mbps on
+>> my test system (Atom 1.6Ghz) with 50 station VIFs receiving TCP data streams.
+>>
+>> The basic idea is to hash on the VIF addr (ie, what you see in 'ifconfig wlan0' as MAC
+>> address), and then look up stations using the hdr->addr1 in the rx logic.
+>>
+>> The attached patch probably breaks monitor interfaces and other VIFs other than AP and
+>> STA.  It also changes the behaviour of PROMISC, but I'm not sure that is bad (is
+>> the old behaviour needed for anything useful?)
+>>
+>> I'm thinking to store a count of all VIF types on a radio, and make
+>> this hash code only be enabled when only STA and AP exist.  Maybe later optimize
+>> so we can quickly find monitor or other VIF types to handle them properly.
+>>
+>> Comments and suggestions are welcome.
+>
+> Hmmm. I'm not really convinced this will make sense upstream. I'm kinda
+> fine with the single-station cache, but maintaining a whole other hash
+> table seems too much overhead for every use case but yours.
 
-Thanks
-    Jörg
+Yeah, aside from multiple stations, I'm not sure it helps anything.  It would
+require a different scheme to help with multiple VAP I think, and I'm not
+sure there are any other multi-vif use cases out there...
 
-The results of a boring train ride:
-- Decode some IEs sent by other traveller's devices
-  + IBSS ATIM window
-  + TPC report
-  + Old ERP IE (802.11g D4.0)
-- Tiny whitespace fix
-- Add Unit 'TUs' to beacon interval.
+>> +		/* If we have only station and AP interfaces, then hash on
+>> +		 * the destination MAC (ie, local sdata MAC).  Could add other
+>> +		 * device types as well, perhaps.  This changes 'promisc' behaviour,
+>> +		 * but not sure that is a bad thing.
+>> +		 */
+>> +		if (!is_multicast_ether_addr(hdr->addr1)) {
+>> +			sta = sta_info_get_by_vif(local, hdr->addr1);
+>
+> AFAICT, this is also wrong for TDLS and other cases where we might
+> receive a frame that's not from the AP, even if it's only by accident or
+> from an attacker.
 
-v2: TPC: Link margin element is not used in beacons
+I think patch is probably wrong for any VIF that can be associated with more than
+one station (such as APs).  I'm going to re-work the vhash to only include
+Station VIFS and see how that works for my test case.
 
-In case this project requires a sob:
-Signed-off-by: Joerg Mayer <jmayer@loplof.de>
+Thanks,
+Ben
 
-diff --git a/scan.c b/scan.c
-index dfb78c0..0863ad0 100644
---- a/scan.c
-+++ b/scan.c
-@@ -285,6 +285,12 @@ static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t
- 	printf(" %d dB\n", data[0]);
- }
- 
-+static void print_tpcreport(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	printf(" TX power: %d dBm\n", data[0]);
-+	/* printf(" Link Margin (%d dB) is reserved in Beacons\n", data[1]); */
-+}
-+
- static void print_erp(const uint8_t type, uint8_t len, const uint8_t *data)
- {
- 	if (data[0] == 0x00)
-@@ -693,6 +699,11 @@ static void print_tim(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf("\n");
- }
- 
-+static void print_ibssatim(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	printf(" %d TUs", (data[1] << 8) + data[0]);
-+}
-+
- static void print_vht_capa(const uint8_t type, uint8_t len, const uint8_t *data)
- {
- 	printf("\n");
-@@ -791,11 +802,14 @@ static const struct ie_print ieprinters[] = {
- 	[1] = { "Supported rates", print_supprates, 0, 255, BIT(PRINT_SCAN), },
- 	[3] = { "DS Parameter set", print_ds, 1, 1, BIT(PRINT_SCAN), },
- 	[5] = { "TIM", print_tim, 4, 255, BIT(PRINT_SCAN), },
-+	[6] = { "IBSS ATIM window", print_ibssatim, 2, 2, BIT(PRINT_SCAN), },
- 	[7] = { "Country", print_country, 3, 255, BIT(PRINT_SCAN), },
- 	[11] = { "BSS Load", print_bss_load, 5, 5, BIT(PRINT_SCAN), },
- 	[32] = { "Power constraint", print_powerconstraint, 1, 1, BIT(PRINT_SCAN), },
-+	[35] = { "TPC report", print_tpcreport, 2, 2, BIT(PRINT_SCAN), },
- 	[42] = { "ERP", print_erp, 1, 255, BIT(PRINT_SCAN), },
- 	[45] = { "HT capabilities", print_ht_capa, 26, 26, BIT(PRINT_SCAN), },
-+	[47] = { "ERP D4.0", print_erp, 1, 255, BIT(PRINT_SCAN), },
- 	[74] = { "Overlapping BSS scan params", print_obss_scan_params, 14, 255, BIT(PRINT_SCAN), },
- 	[61] = { "HT operation", print_ht_op, 22, 22, BIT(PRINT_SCAN), },
- 	[62] = { "Secondary Channel Offset", print_secchan_offs, 1, 1, BIT(PRINT_SCAN), },
-@@ -1378,7 +1393,7 @@ static int print_bss_handler(struct nl_msg *msg, void *arg)
- 			is_dmg = true;
- 	}
- 	if (bss[NL80211_BSS_BEACON_INTERVAL])
--		printf("\tbeacon interval: %d\n",
-+		printf("\tbeacon interval: %d TUs\n",
- 			nla_get_u16(bss[NL80211_BSS_BEACON_INTERVAL]));
- 	if (bss[NL80211_BSS_CAPABILITY]) {
- 		__u16 capa = nla_get_u16(bss[NL80211_BSS_CAPABILITY]);
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
