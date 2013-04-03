@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51981 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4448 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab3DOOht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 10:37:49 -0400
-Message-ID: <1366036772.2404.3.camel@dcbw.foobar.com> (sfid-20130415_163753_659716_F0EBFC0E)
-Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: schwaahed <schwaahed@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 15 Apr 2013 09:39:32 -0500
-In-Reply-To: <1366032132.8361.19.camel@jlt4.sipsolutions.net>
-References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
-	 <1365804259.10342.20.camel@dcbw.foobar.com>
-	 (sfid-20130413_000245_000077_30E72639) <1366032132.8361.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1760475Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 06:41:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 24/25] brcmfmac: no flow-control tlv signals when fcmode
+ is NONE
+Date: Wed, 3 Apr 2013 12:40:49 +0200
+Message-ID: <1364985650-11719-25-git-send-email-arend@broadcom.com> (sfid-20130403_124305_000167_CD0C6E25)
+In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-15 at 15:22 +0200, Johannes Berg wrote:
-> On Fri, 2013-04-12 at 17:04 -0500, Dan Williams wrote:
-> > On Thu, 2013-04-11 at 20:03 -0400, schwaahed wrote:
-> > > Hello,
-> > > 
-> > > I have an HP Elitebook 8460w laptop containing a Centrino Ultimate-N
-> > > 6300 AGN (linux-3.8.6 iwlwifi module -  firmware version 9.221.4.1
-> > > build 25532)
-> > 
-> > I notice that your 'rfkill list all' dumps below don't contain an entry
-> > for hp-wmi.  Is that module loaded on your machine?  It's needed at
-> > least for earlier models of the Elitebook, up at least until the xx40
-> > series.  Perhaps it needs to be updated for your laptop?  You might ask
-> > on the general kernel lists if anyone knows how rfkill is supposed to
-> > work for the 8460 and if hp-wmi supports it, or if some other mechanism
-> > is used.
-> 
-> Yeah it seems not loaded, but how then does the soft block affect hard
-> block? All very odd, but almost certainly a platform rather than a wifi
-> issue. 
+The fcmode provided by module parameter defaults to NONE, which
+means no flow-control is required. In this case flow-control
+signals should not be enabled.
 
-On my 2530p and a lot of other laptops, blocking the BIOS
-"switch" (either physically or softblock) hardblocks phy0.  I guess the
-BIOS twiddles a GPIO that's connected to the mPCI-E module's rfkill
-line/GPIO?
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Which leads to the problem we've talked about a long time ago; you can't
-treat phy0 hardblock as a physical block that cannot be soft-unblocked,
-because some other switch might actually control it's state.  We tried
-to gray-out the "Enable Wireless" when hardblocked (since logically you
-can't soft-unblock something that's hardblocked), but it turns out you
-can't do that because unblocking BIOS switches might un-hardblock the
-phy0 wifi switch...  (and the kernel doesn't describe these
-dependencies, because, well, that's laptop-specific and would never be
-up-to-date).
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 430baa2..22a6eb2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1221,16 +1221,12 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp)
+ 
+ int brcmf_fws_init(struct brcmf_pub *drvr)
+ {
+-	u32 tlv = 0;
++	u32 tlv = BRCMF_FWS_FLAGS_RSSI_SIGNALS;
+ 	int rc;
+ 
+ 	if (!drvr->fw_signals)
+ 		return 0;
+ 
+-	tlv = BRCMF_FWS_FLAGS_RSSI_SIGNALS |
+-	      BRCMF_FWS_FLAGS_XONXOFF_SIGNALS |
+-	      BRCMF_FWS_FLAGS_CREDIT_STATUS_SIGNALS;
+-
+ 	spin_lock_init(&drvr->fws_spinlock);
+ 
+ 	drvr->fws = kzalloc(sizeof(*(drvr->fws)), GFP_KERNEL);
+@@ -1243,7 +1239,11 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
+ 	drvr->fws->drvr = drvr;
+ 	drvr->fws->fcmode = fcmode;
+ 
+-	/* enable proptxtstatus signaling by default */
++	/* enable firmware signalling if fcmode active */
++	if (drvr->fws->fcmode != BRCMF_FWS_FCMODE_NONE)
++		tlv |= BRCMF_FWS_FLAGS_XONXOFF_SIGNALS |
++		       BRCMF_FWS_FLAGS_CREDIT_STATUS_SIGNALS;
++
+ 	rc = brcmf_fil_iovar_int_set(drvr->iflist[0], "tlv", tlv);
+ 	if (rc < 0) {
+ 		brcmf_err("failed to set bdcv2 tlv signaling\n");
+-- 
+1.7.10.4
 
-Dan
 
