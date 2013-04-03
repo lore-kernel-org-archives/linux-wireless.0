@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta1.parkeon.com ([91.121.43.66]:41301 "EHLO mta1.parkeon.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4456 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751086Ab3DOMzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 08:55:47 -0400
-Message-ID: <516BF8D0.5070401@parkeon.com> (sfid-20130415_145553_301607_D9E88FB7)
-Date: Mon, 15 Apr 2013 14:55:44 +0200
-From: Martin Fuzzey <mfuzzey@parkeon.com>
-Reply-To: mfuzzey@parkeon.com
+	id S1760345Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 06:41:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/25] brcmfmac: avoid error output on header only
+ packet
+Date: Wed, 3 Apr 2013 12:40:43 +0200
+Message-ID: <1364985650-11719-19-git-send-email-arend@broadcom.com> (sfid-20130403_124306_971587_6F7E592B)
+In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware problems with Lesswire Wibear  11n module using mwifiex
-References: <5155BF92.2020704@parkeon.com> <477F20668A386D41ADCC57781B1F70430D9DCBF173@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DCBF173@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+From: Piotr Haber <phaber@broadcom.com>
 
-Thanks for your reply.
-On 29/03/13 22:32, Bing Zhao wrote:
-> Hi Martin,
->
->> [ 2210.066680] mwifiex_sdio mmc1:0001:1: WLAN FW is active
->> [ 2220.083880] mwifiex_sdio mmc1:0001:1: mwifiex_cmd_timeout_func:
->> Timeout cmd id (1584563353.27844) = 0xa9, act = 0x0
->>
->> This shows that there is no reply to the first command sent in
->> mwifiex_sta_init_cmd()
-> There is a possibility that the firmware has responded to this command but the SDIO interrupt gets stuck somewhere.
->
-> Are you able to hook up an oscilloscope to check whether SDIO DAT1 pin stays low or not?
-Indeed,
+During SDIO layer flow control signalling firmware can issue
+invalid packets. Prevent printing of parsing errors in such case.
 
-DAT1 goes low after the command is sent and stays low until the card is 
-reset.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-No SDIO interrupts are received by the host controller (i.MX53)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index e224bcb..59c77aa 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -303,8 +303,8 @@ int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
+ 
+ 	/* Pop BDC header used to convey priority for buses that don't */
+ 
+-	if (pktbuf->len < BDC_HEADER_LEN) {
+-		brcmf_err("rx data too short (%d < %d)\n",
++	if (pktbuf->len <= BDC_HEADER_LEN) {
++		brcmf_dbg(INFO, "rx data too short (%d <= %d)\n",
+ 			  pktbuf->len, BDC_HEADER_LEN);
+ 		return -EBADE;
+ 	}
+-- 
+1.7.10.4
 
-So it looks like a host controller issue - right?
-
-Regards,
-
-Martin
 
