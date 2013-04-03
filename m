@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57880 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759349Ab3DATav (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 15:30:51 -0400
-Date: Mon, 1 Apr 2013 15:15:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.9] NFC fixes
-Message-ID: <20130401191550.GC3526@tuxdriver.com> (sfid-20130401_213102_112508_CA620F5D)
-References: <20130331232610.GQ2153@zurbaran>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130331232610.GQ2153@zurbaran>
+Received: from mail.neratec.com ([80.75.119.105]:38723 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759781Ab3DCQbu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 12:31:50 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, siwu@hrz.tu-chemnitz.de,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH 0/3] ath9k: enable DFS support
+Date: Wed,  3 Apr 2013 18:31:28 +0200
+Message-Id: <1365006691-16705-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130403_183155_579690_22E4284F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 01, 2013 at 01:26:10AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the 2nd batch of NFC fixes for 3.9. This time we have:
-> 
-> - A crash fix for when a DGRAM LLCP socket is listening while the NFC adapter
->   is physically removed.
-> - A potential double skb free when the LLCP socket receive queue is full.
-> - A fix for properly handling multiple and consecutive LLCP connections, and
->   not trash the socket ack log.
-> - A build failure for the MEI microread physical layer, now that the MEI bus
->   APIs have been merged into char-misc-next.
-> 
-> The following changes since commit 36ef0b473fbf43d5db23eea4616cc1d18cec245f:
-> 
->   rtlwifi: usb: add missing freeing of skbuff (2013-03-18 15:20:38 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.9-2
-> 
-> for you to fetch changes up to 9593b0b1179c526436f14849a9587fd2aae12040:
-> 
->   NFC: microread: Fix build failure due to a new MEI bus API (2013-04-01 00:52:42 +0200)
+With Simon finalizing DFS master support in mac80211 and hostapd, these are
+the remaining patches to enable DFS radar detection in ath9k.
 
-Pulling now...
+The series includes updated and rebased versions of patches already posted
+as RFCs in the past that has been tested with the latest DFS master enabled
+hostapd. While they are clean for review, testing DFS functionality requires
+tweaks in mac80211 to resolve pending issues that will be addressed in a
+separate patch.
+
+Building ath9k with DFS support requires setting CONFIG_ATH9K_DFS_CERTIFIED.
+During testing, ensure to have CONFIG_ATH_DEBUG, CONFIG_ATH9K_DEBUGFS, and
+CONFIG_ATH9K_DFS_DEBUGFS enabled.
+
+Simon Wunderlich (2):
+  ath9k: add interface combinations for DFS master
+  ath9k: add debugfs based DFS radar simulation
+Zefir Kurtisi (1):
+  ath9k: add support for DFS master mode
+
+ drivers/net/wireless/ath/ath9k/dfs.c       |    4 +--
+ drivers/net/wireless/ath/ath9k/dfs_debug.c |   20 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |    3 ++
+ drivers/net/wireless/ath/ath9k/init.c      |   36 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/main.c      |   25 ++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/recv.c      |    7 +++++
+ 6 files changed, 80 insertions(+), 15 deletions(-)
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
