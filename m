@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49667 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392Ab3DONoi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 09:44:38 -0400
-Message-ID: <1366033473.8361.26.camel@jlt4.sipsolutions.net> (sfid-20130415_154442_413488_F5D72785)
-Subject: Re: [PATCH 3/5] mac80211: improve the rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 15 Apr 2013 15:44:33 +0200
-In-Reply-To: <1365890626-86895-3-git-send-email-nbd@openwrt.org>
-References: <1365890626-86895-1-git-send-email-nbd@openwrt.org>
-	 <1365890626-86895-2-git-send-email-nbd@openwrt.org>
-	 <1365890626-86895-3-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4056 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760308Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 06:41:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 21/25] brcmfmac: correct specified length from
+ FIFOCREDITBACK signal
+Date: Wed, 3 Apr 2013 12:40:46 +0200
+Message-ID: <1364985650-11719-22-git-send-email-arend@broadcom.com> (sfid-20130403_124305_983883_0B9068E3)
+In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-04-14 at 00:03 +0200, Felix Fietkau wrote:
+The length is not according specification so better fix it.
 
-> +EXPORT_SYMBOL(rate_control_set_rates);
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't think that needs to be exported (at least not now)?
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 6d036b7..6da9f82 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -59,7 +59,7 @@
+ 	BRCMF_FWS_TLV_DEF(RSSI, 8, 1) \
+ 	BRCMF_FWS_TLV_DEF(INTERFACE_OPEN, 9, 1) \
+ 	BRCMF_FWS_TLV_DEF(INTERFACE_CLOSE, 10, 1) \
+-	BRCMF_FWS_TLV_DEF(FIFO_CREDITBACK, 11, 8) \
++	BRCMF_FWS_TLV_DEF(FIFO_CREDITBACK, 11, 6) \
+ 	BRCMF_FWS_TLV_DEF(PENDING_TRAFFIC_BMP, 12, 2) \
+ 	BRCMF_FWS_TLV_DEF(MAC_REQUEST_PACKET, 13, 3) \
+ 	BRCMF_FWS_TLV_DEF(HOST_REORDER_RXPKTS, 14, 10) \
+-- 
+1.7.10.4
 
-I suspect that the answer to my question in patch 2 lies here, if the
-rate control updates the table then would it not just update the table
-when the protection mechanism needs to be changed? There should be
-triggers for that, rather than having to check the "use_cts" variables
-on every packet, and if they aren't complete that should be fixed?
-
-johannes
 
