@@ -1,105 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:35252 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755074Ab3DLRj7 (ORCPT
+Received: from hub022-ca-2.exch022.serverdata.net ([64.78.56.54]:21454 "EHLO
+	HUB022-ca-2.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762034Ab3DCIgV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 13:39:59 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Doug Anderson <dianders@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 2/2] mwifiex: remove redundant initialization for bss_descriptor
-Date: Fri, 12 Apr 2013 10:34:18 -0700
-Message-ID: <1365788058-22508-2-git-send-email-bzhao@marvell.com> (sfid-20130412_194030_131476_0C52F1D1)
-In-Reply-To: <1365788058-22508-1-git-send-email-bzhao@marvell.com>
-References: <1365788058-22508-1-git-send-email-bzhao@marvell.com>
+	Wed, 3 Apr 2013 04:36:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Date: Wed, 3 Apr 2013 01:36:20 -0700
+From: <vivekanandah@posedge.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: question on SMPS for AP
+In-Reply-To: <1364976319.8351.2.camel@jlt4.sipsolutions.net>
+References: <fbef7a2278fe739a398430949087c950@posedge.com>
+ (sfid-20130403_093709_189406_740B7438)
+ <1364976319.8351.2.camel@jlt4.sipsolutions.net>
+Message-ID: <7a1a483e9382db42e8f648c3933bc2cd@posedge.com> (sfid-20130403_103627_128567_CECF6040)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialization of bss_descriptor is unnecessary as the entire
-structure will be overwritten by a memcpy followed by.
+hi Johannes,
 
-Initialize disable_11ac flag properly by setting it to true in
-mwifiex_fill_new_bss_desc().
+thanks for the response.
 
-Reported-by: Doug Anderson <dianders@chromium.org>
-Reviewed-by: Doug Anderson <dianders@chromium.org>
-Reviewed-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
-v2: Initialize disable_11ac properly (Troy Kisky troy.kisky@boundarydevices.com)
+for the below statement:
 
- drivers/net/wireless/mwifiex/scan.c      |   29 -----------------------------
- drivers/net/wireless/mwifiex/sta_ioctl.c |    5 +++++
- 2 files changed, 5 insertions(+), 29 deletions(-)
+Yes this is implemented, it starts in ieee80211_rx_h_action(),
+> WLAN_CATEGORY_HT, WLAN_HT_ACTION_SMPS and ends by calling
+> rate_control_rate_update(). The driver or rate control algorithm has 
+> to
+> take this into account, I'm not certain that all drivers and 
+> algorithms
+> do this correctly (yet).
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 37b24e8..9cf5d8f 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1500,36 +1500,7 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 	if (ret)
- 		goto done;
- 
--	/* Update current bss descriptor parameters */
- 	spin_lock_irqsave(&priv->curr_bcn_buf_lock, flags);
--	priv->curr_bss_params.bss_descriptor.bcn_wpa_ie = NULL;
--	priv->curr_bss_params.bss_descriptor.wpa_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_rsn_ie = NULL;
--	priv->curr_bss_params.bss_descriptor.rsn_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
--	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
--	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_ht_oper = NULL;
--	priv->curr_bss_params.bss_descriptor.ht_info_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 = NULL;
--	priv->curr_bss_params.bss_descriptor.bss_co_2040_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_ext_cap = NULL;
--	priv->curr_bss_params.bss_descriptor.ext_cap_offset = 0;
--	priv->curr_bss_params.bss_descriptor.beacon_buf = NULL;
--	priv->curr_bss_params.bss_descriptor.beacon_buf_size = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_vht_cap = NULL;
--	priv->curr_bss_params.bss_descriptor.vht_cap_offset = 0;
--	priv->curr_bss_params.bss_descriptor.bcn_vht_oper = NULL;
--	priv->curr_bss_params.bss_descriptor.vht_info_offset = 0;
--	priv->curr_bss_params.bss_descriptor.oper_mode = NULL;
--	priv->curr_bss_params.bss_descriptor.oper_mode_offset = 0;
--
--	/* Disable 11ac by default. Enable it only where there
--	 * exist VHT_CAP IE in AP beacon
--	 */
--	priv->curr_bss_params.bss_descriptor.disable_11ac = true;
--
- 	/* Make a copy of current BSSID descriptor */
- 	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
- 	       sizeof(priv->curr_bss_params.bss_descriptor));
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 27729cf..311d0b2 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -184,6 +184,11 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 	else
- 		bss_desc->bss_mode = NL80211_IFTYPE_STATION;
- 
-+	/* Disable 11ac by default. Enable it only where there
-+	 * exist VHT_CAP IE in AP beacon
-+	 */
-+	bss_desc->disable_11ac = true;
-+
- 	return mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
- }
- 
--- 
-1.7.0.2
 
+i see that the rate_control_rate_update is called with the 
+IEEE80211_RC_SMPS_CHANGED flag. however, i see that the minstrel_ht code 
+does not check for SMPS with respect to RTS.
+
+Also, the code - rate_control_rate_update calls - sta_rc_update 
+mac80211 op. i was first thinking that i could use this for the AP side 
+notification to driver layer. however, a comment for sta_rc_update 
+indicates that it is to be used only when IEEE80211_HW_HAS_RATE_CONTROL 
+is true.
+this led to the confusion.
+
+Can this op be used to update the driver about change in station's SMPS 
+mode for AP ?
+
+thanks and regards
+Vivek
+
+
+On Wed, 03 Apr 2013 10:05:19 +0200, Johannes Berg wrote:
+> Hi Vivek,
+>
+>> i was looking into the MAC80211 code for Spatial multiplexing Power
+>> Save handling.
+>>
+>> i see that for the station side, the code seems to be handled.
+>> is the same true for an AP interface as well? this is my current
+>> understanding and i do not see any code handling for AP for SMPS.
+>
+> Which part? There are two sides to SMPS handling:
+>  1) changing our own SMPS mode
+>  2) handling stations changing their SMPS mode
+>
+> 1) is implemented only for station mode, 2) is implemented for both 
+> AP
+> and station mode (though is less relevant for station mode)
+>
+>>  From the perspective of an AP, the only thing it needs to do, is to
+>> monitor the station for change to dynamic SMPS mode and if the 
+>> station
+>> is in dynamic SMPS mode, set the RTS flag for the first packet to be
+>> sent out to the station so that an RTS/CTS mechanism is employed 
+>> before
+>> the packet transfer. this will make the station to wake up its 
+>> receive
+>> chains for the impending packet tranfer.
+>>
+>> can anyone provide any inputs for the same and direct me to any code
+>> that will help in understanding SMPS for AP?
+>
+> Yes this is implemented, it starts in ieee80211_rx_h_action(),
+> WLAN_CATEGORY_HT, WLAN_HT_ACTION_SMPS and ends by calling
+> rate_control_rate_update(). The driver or rate control algorithm has 
+> to
+> take this into account, I'm not certain that all drivers and 
+> algorithms
+> do this correctly (yet).
+>
+> johannes
