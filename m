@@ -1,33 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52369 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755488Ab3DCHjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 03:39:42 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UNIIe-0005hE-0Q
-	for linux-wireless@vger.kernel.org; Wed, 03 Apr 2013 09:40:04 +0200
-Received: from static-adsl-c-5-188.ipcom.comunitel.net ([static-adsl-c-5-188.ipcom.comunitel.net])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 09:40:04 +0200
-Received: from rtpardavila by static-adsl-c-5-188.ipcom.comunitel.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 09:40:04 +0200
+Received: from victor.provo.novell.com ([137.65.250.26]:40770 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760582Ab3DCIrx (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 3 Apr 2013 04:47:53 -0400
+From: "Chen, Chien-Chia" <machen@suse.com>
 To: linux-wireless@vger.kernel.org
-From: Ricardo =?utf-8?b?VHViw61v?= <rtpardavila@gmail.com>
-Subject: [ath5k][802.11p] Deactivate beacon
-Date: Wed, 3 Apr 2013 07:30:45 +0000 (UTC)
-Message-ID: <loom.20130403T092722-24@post.gmane.org> (sfid-20130403_093946_428029_56438EA7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: larry.finger@lwfinger.net, zhiyuan_yang@realsil.com.cn,
+	page_he@realsil.com.cn, mmarek@suse.cz
+Subject: [PATCH] rtlwifi: rtl8188ee: Fix wrong header path
+Date: Wed,  3 Apr 2013 16:51:22 +0800
+Message-Id: <1364979082-24226-1-git-send-email-machen@suse.com> (sfid-20130403_104805_329147_5CF054E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My name is Ricardo Tubío and I am currently trying to use GCDC patches for the 
-'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would 
-like to know if somebody has either a patch for deactivating the beacon or can 
-help me in locating the code where the beacon is implemented.
+From: "Chen, Chien-Chia" <machen@suse.com>
 
-Thank you very much in advance. 
+This patch is to fix some wrong header file path.
+It has caused the build failed.
+
+Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+Cc: larry.finger@lwfinger.net
+Cc: zhiyuan_yang@realsil.com.cn
+Cc: page_he@realsil.com.cn
+Cc: mmarek@suse.cz
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   14 +++++++-------
+ drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |    4 ++--
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    6 +++---
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 ++++----
+ 9 files changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+index 0a338cc..21a5cf0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "base.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../base.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+index 66ff30b..57e4cc5 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "base.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index d734d19..0f464d0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -27,13 +27,13 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "efuse.h"
+-#include "base.h"
+-#include "regd.h"
+-#include "cam.h"
+-#include "ps.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../efuse.h"
++#include "../base.h"
++#include "../regd.h"
++#include "../cam.h"
++#include "../ps.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+index 95d42af..c81a9cb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
+@@ -27,8 +27,8 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "led.h"
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+index c285631..224f801 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "ps.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../ps.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+index 622ea7e..70456ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
+@@ -30,7 +30,7 @@
+ #ifndef __RTL8723E_PWRSEQCMD_H__
+ #define __RTL8723E_PWRSEQCMD_H__
+ 
+-#include "wifi.h"
++#include "../wifi.h"
+ /*---------------------------------------------*/
+ /* The value of cmd: 4 bits */
+ /*---------------------------------------------*/
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+index e62bcab..4faafdb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
+@@ -27,7 +27,7 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
++#include "../wifi.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+index e8ce189..c254693 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
+@@ -27,9 +27,9 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "core.h"
+-#include "pci.h"
++#include "../wifi.h"
++#include "../core.h"
++#include "../pci.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+index 2518531..d075237 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+@@ -27,10 +27,10 @@
+  *
+  *****************************************************************************/
+ 
+-#include "wifi.h"
+-#include "pci.h"
+-#include "base.h"
+-#include "stats.h"
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
++#include "../stats.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+-- 
+1.7.7
 
