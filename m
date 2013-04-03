@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50433 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758471Ab3DAPS5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34783 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762155Ab3DCIqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 11:18:57 -0400
-Message-ID: <5159A559.4000808@canonical.com> (sfid-20130401_171918_705660_CCF3FD7E)
-Date: Mon, 01 Apr 2013 11:18:49 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: phaber@broadcom.com, arend@broadcom.com, pieterpg@broadcom.com,
-	meuleman@broadcom.com, LKML <linux-kernel@vger.kernel.org>,
-	brudley@broadcom.com, frankyl@broadcom.com,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: Re: [v3.8, v3.9] [Regression] brcmsmac: move PHY functions
-References: <5155F107.6050408@canonical.com> <20130401144225.GC21859@tuxdriver.com>
-In-Reply-To: <20130401144225.GC21859@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 3 Apr 2013 04:46:10 -0400
+Message-ID: <1364978764.8351.6.camel@jlt4.sipsolutions.net> (sfid-20130403_104615_399608_EE058C93)
+Subject: Re: question on SMPS for AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vivekanandah@posedge.com
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Apr 2013 10:46:04 +0200
+In-Reply-To: <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
+References: <fbef7a2278fe739a398430949087c950@posedge.com>
+	 (sfid-20130403_093709_189406_740B7438) <1364976319.8351.2.camel@jlt4.sipsolutions.net>
+	 <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/01/2013 10:42 AM, John W. Linville wrote:
-> On Fri, Mar 29, 2013 at 03:52:39PM -0400, Joseph Salisbury wrote:
->> Hi Piotr,
->>
->> A bug was opened against the Ubuntu kernel[0].  After a kernel
->> bisect, it was found that reverting the following commit resolved
->> this bug:
->>
->> commit b83576341664957978e125f5f5db2f15496980b1
->> Author: Piotr Haber <phaber@broadcom.com>
->> Date:   Wed Nov 28 21:44:09 2012 +0100
->>
->>      brcmsmac: move PHY functions
->>
->> The regression was introduced as of v3.8-rc1.  The regression still
->> exists in v3.9-rc4.
->>
->> I see that you are the author of this patch, so I wanted to run this
->> by you.  I was thinking of requesting a revert for v3.9, but I
->> wanted to get your feedback first.
->>
->>
->> Thanks,
->>
->> Joe
->>
->> [0] http://pad.lv/1131914
-> I recently reverted b6fc28a1, which is the follow-on to that patch.
-> The revert is _not_ in 3.9-rc5.
->
-> Could you try reverting that patch instead?  Does that fix the issue
-> for you?
->
-> John
 
-Hi John,
+> i see that the rate_control_rate_update is called with the 
+> IEEE80211_RC_SMPS_CHANGED flag. however, i see that the minstrel_ht code 
+> does not check for SMPS with respect to RTS.
 
-Thanks for the response.
+It's very well possible that minstrel doesn't implement this correctly.
+I don't care all that much right now about minstrel, so it's up to those
+who do :)
 
-Yes, reverting commit b6fc28a1 does resolve this bug.  That is the 
-appropriate fix for this issue.  Thanks for the assistance.
+> Also, the code - rate_control_rate_update calls - sta_rc_update 
+> mac80211 op. i was first thinking that i could use this for the AP side 
+> notification to driver layer. however, a comment for sta_rc_update 
+> indicates that it is to be used only when IEEE80211_HW_HAS_RATE_CONTROL 
+> is true.
+> this led to the confusion.
+> 
+> Can this op be used to update the driver about change in station's SMPS 
+> mode for AP ?
 
-Thanks,
+Well, in theory it could be, but it doesn't make sense. If you have a
+rate control algorithm in software (like minstrel) then that should
+likely configure the RTS, and rate control is updated via the rate
+control rate_update() callback instead of via the driver.
 
-Joe
-
-
+johannes
 
