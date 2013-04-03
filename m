@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53420 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754734Ab3DBMYg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 08:24:36 -0400
-Message-ID: <515ACE00.7020103@openwrt.org> (sfid-20130402_142440_129037_7A112A44)
-Date: Tue, 02 Apr 2013 14:24:32 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:46438 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756543Ab3DCSVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 14:21:35 -0400
+Received: by mail-qa0-f47.google.com with SMTP id hu16so2208232qab.13
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 11:21:35 -0700 (PDT)
+Message-ID: <515C732C.1010805@gmail.com> (sfid-20130403_202142_121337_A7F692D8)
+Date: Wed, 03 Apr 2013 14:21:32 -0400
+From: Jonathan Bither <jonbither@gmail.com>
 MIME-Version: 1.0
-To: Robert Shade <robert.shade@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [PATCH] ath9k: Re-enable interrupts after a channel change failure
-References: <CAMgrJ3b0EUUae8k1Z2RR92eLbFyPGpqA5px1J_gALDTJ+rmAnA@mail.gmail.com> <5159C697.4040609@openwrt.org> <CAMgrJ3YFCY1gFp6sT5HJw-KVpvGpx82_HiZkWBDQj1Me96Bw=w@mail.gmail.com>
-In-Reply-To: <CAMgrJ3YFCY1gFp6sT5HJw-KVpvGpx82_HiZkWBDQj1Me96Bw=w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmljYXJkbyBUdWLDrW8=?= <rtpardavila@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [ath5k][802.11p] Deactivate beacon
+References: <loom.20130403T092722-24@post.gmane.org>
+In-Reply-To: <loom.20130403T092722-24@post.gmane.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-02 2:03 PM, Robert Shade wrote:
-> On Mon, Apr 1, 2013 at 1:40 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Your patch is badly whitespace damaged.
-> 
-> Ouch, must be the gmail web client.  I'll resubmit a fixed one.
-> 
->> Why the call to ath9k_hw_set_interrupts here?
-> 
-> Simply because that's what ath_complete_reset does
-OK. You can leave it out, because it's not required for
-interrupt-disable refcounting, and it will be called again after a
-successful reset.
+Ricardo,
+	I have not looked at the GCDC patches yet, but it would probably be 
+best to implement another nl80211_iftype as "NL80211_IFTYPE_WAVE" for 
+example.
 
-- Felix
+On 04/03/2013 03:30 AM, Ricardo Tubío wrote:
+> My name is Ricardo Tubío and I am currently trying to use GCDC patches for the
+> 'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would
+> like to know if somebody has either a patch for deactivating the beacon or can
+> help me in locating the code where the beacon is implemented.
+>
+> Thank you very much in advance.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
