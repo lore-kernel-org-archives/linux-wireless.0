@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:57799 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755932Ab3DPM0l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 08:26:41 -0400
-Received: by mail-bk0-f43.google.com with SMTP id jm19so125532bkc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 05:26:40 -0700 (PDT)
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:52141 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759936Ab3DCSig convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 14:38:36 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Wed, 3 Apr 2013 11:37:43 -0700
+Subject: RE: [PATCH 1/6] mwifiex: bug: remove NO_PKT_PRIO_TID.
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DDAB35D@SC-VEXCH1.marvell.com> (sfid-20130403_203843_405820_3186135A)
+References: <20130402000511.GA31921@blumentopf>
+ <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB197@SC-VEXCH1.marvell.com>
+ <20130403113554.GA14785@blumentopf>
+In-Reply-To: <20130403113554.GA14785@blumentopf>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <000601ce39de$b26e2950$174a7bf0$@acksys.fr>
-References: <000601ce39de$b26e2950$174a7bf0$@acksys.fr>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 16 Apr 2013 14:26:19 +0200
-Message-ID: <CAG6hwVNbQ4uJynkcOGi+Pqi7c2tbExyuJENBogLwnJKOwBDtFw@mail.gmail.com> (sfid-20130416_142645_629296_00F05D58)
-Subject: Re: mesh questions/suggestion about airtime metric and device
- constant in mesh_hwmp.c
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
-Cc: linux-wireless@vger.kernel.org,
-	open11s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ o11s-devel
+Hi Andi,
 
-On Mon, Apr 15, 2013 at 3:39 PM, Jean-Pierre Tosoni <jp.tosoni@acksys.fr> wrote:
-> Hi all,
->
-> The airtime_link_metric_get()  function follows closely section 13.9 of the
-> standard, except for the "channel access overhead" which is said to depend
-> on the PHY, headers, etc.
-> Hence I understand that a complete implementation is not trivial.
->
-> The 'device_constant' variable is given the constant value '1<<ARITH_SHIFT',
-> which means 1 microsecond if I am correct. But the smallest possible
+> > With this patch (1/6) applied, I'm getting soft-lockup watchdog:
+> >
+> > BUG: soft lockup - CPU#3 stuck for 22s! [kworker/3:1:37]
+> 
+> My bad here, should be like this when patch is applied first:
+> 
+> @@ -919,8 +919,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct
+> mwifiex_adapter *adapter,
+> 
+>                 do {
+>                         priv_tmp = bssprio_node->priv;
+> -                       hqp = &priv_tmp->wmm.highest_queued_prio;
+> 
+> +                       if (atomic_read(&priv_tmp->wmm.tx_pkts_queued) == 0)
+> +                               goto skip_bss;
+> +
+> +                       /* iterate over the WMM queues of the BSS */
+> +                       hqp = &priv_tmp->wmm.highest_queued_prio;
+>                         for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
+> 
+>                                 tid_ptr = &(priv_tmp)->wmm.
+> @@ -980,12 +984,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+>                                 } while (ptr != head);
+>                         }
+> 
+> -                       /* No packet at any TID for this priv. Mark as
+>                         such
+> -                        * to skip checking TIDs for this priv (until
+>                          pkt is
+> -                        * added).
+> -                        */
+> -                       atomic_set(hqp, NO_PKT_PRIO_TID);
+> -
+> +skip_bss:
+>                         /* Get next bss priority node */
+>                         bssprio_node = list_first_entry(&bssprio_node->list,
+>                                                 struct mwifiex_bss_prio_node,
 
-The airtime is in units of 0.01TU, so a device_constant of 1 is more like 10us.
+Thanks for looking into it. This change fixes the soft-lockup.
 
-> duration for the PPDU header is 20 microseconds in non-HT or 24 us in HT, as
-> shown in section 20.3.2
->
-> For the test frame of 8192 bits, say at 300Mbps (MCS15), Bt/r = the
-> currently computed airtime is 28 instead of 51, underevaluated by -45% !
-> Since the value accumulates on the mesh path, it may make a big difference
-> for the path selection.
+> 
+> That said, yes I developed the pathset the other way round. First
+> cleaned up, until I knew how to fix the bug best. Then pulled the fix
+> in front of the cleanup patches and -- mea culpa -- didn't test the
+> patches individually. Sorry again.
+> 
+> Also found issue here, which could be a problem without patch 6/6:
+> 
+> --- a/drivers/net/wireless/mwifiex/wmm.c
+> +++ b/drivers/net/wireless/mwifiex/wmm.c
+> @@ -688,13 +688,13 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+>         ra_list->total_pkts_size += skb->len;
+>         ra_list->pkt_count++;
+> 
+> -       atomic_inc(&priv->wmm.tx_pkts_queued);
+> -
+>         if (atomic_read(&priv->wmm.highest_queued_prio) <
+>                                                 tos_to_tid_inv[tid_down])
+>                 atomic_set(&priv->wmm.highest_queued_prio,
+>                            tos_to_tid_inv[tid_down]);
+> 
+> +       atomic_inc(&priv->wmm.tx_pkts_queued);
+> +
+> 
+> 
+> How should I proceed? Can I reorder patches to match my development
+> cycle, which is? 2-5;1;6 or more verbosely cleanup first followed
+> by bug fix and proper locking last
 
-Since O (channel access overhead) is constant, changing it just scales
-the metric equally across all links, so I'm not sure what difference
-this would make?
+You can separate 6 patches into two patch sets.
+1-3 fix the bug and clean up.
+4-6 implement ra list rotation and proper locking.
 
-Getting device_constant as a function of current protection parameters
-and channel type (ie. actual channel access overhead) however, makes
-sense.
+We will run stress tests against 4-6.
 
-> Questions:
-> Even if device_constant is kept as a constant, shouldn't we set it to
-> something more realistic, like 20 or 24 ?
-> (I mean 20<<ARITH_SHIFT)
-> Does the standard really mean to include the PPDU header ?
->
-> (By the way, I understand that this value should also include the DIFS, and
-> maybe the ACK, so it should be much greater than 20)
+Thanks,
+Bing
 
--- 
-Thomas
+> 
+> Or should keep the order as is, but fix patch 1, and propagate changes
+> through patch 2 till 6?
+
