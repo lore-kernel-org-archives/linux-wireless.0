@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:34697 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750806Ab3DKSfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 14:35:31 -0400
-Message-ID: <1365705330.1929.30.camel@joe-AO722> (sfid-20130411_203535_327456_D565AAAD)
-Subject: Re: [PATCH] Fix uninitialized-variable warnings.
-From: Joe Perches <joe@perches.com>
-To: Han Shen <shenhan@google.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn
-Date: Thu, 11 Apr 2013 11:35:30 -0700
-In-Reply-To: <1365703360-19982-1-git-send-email-shenhan@google.com>
-References: <1365703360-19982-1-git-send-email-shenhan@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:57528 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759668Ab3DCNSa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 09:18:30 -0400
+Message-ID: <515C2C1F.4000804@candelatech.com> (sfid-20130403_151833_130844_6A6268E5)
+Date: Wed, 03 Apr 2013 06:18:23 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
+References: <1364572823-28071-1-git-send-email-greearb@candelatech.com>  (sfid-20130329_170033_026763_9F6C74DD) <1364993882.8351.39.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1364993882.8351.39.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-04-11 at 11:02 -0700, Han Shen wrote:
-> GCC 4.8 is spitting out uninitialized-varaible warnings against "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".
-> This trivial patch just adds initialization to the variable.
+On 04/03/2013 05:58 AM, Johannes Berg wrote:
+> On Fri, 2013-03-29 at 09:00 -0700, greearb@candelatech.com wrote:
+>
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>>   	if (params->vlan && params->vlan != sta->sdata->dev) {
+>>   		bool prev_4addr = false;
+>>   		bool new_4addr = false;
+>> +		struct sta_info *some_sta;
+>>
+>>   		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+>>
+>> @@ -1312,7 +1313,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>>   			prev_4addr = true;
+>>   		}
+>>
+>> +		some_sta = rcu_dereference_protected(sta->sdata->some_sta,
+>> +					lockdep_is_held(&local->sta_mtx));
+>> +		if (some_sta == sta)
+>> +			rcu_assign_pointer(sta->sdata->some_sta, NULL);
+>>   		sta->sdata = vlansdata;
+>> +		rcu_assign_pointer(sta->sdata->some_sta, sta);
+>>
+>>   		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+>>   		    prev_4addr != new_4addr) {
+>
+> I think you can drop all this code since you don't allow this for
+> non-station interfaces, and stations here can only be reassigned between
+> AP/AP_VLAN, no?
 
-Not sure this is correct.
-I think the logic should be inspected instead.
+Well, it seems more fragile to skip this code.  If someone ever changes
+how reassignment can happen it may be a while before anyone notices
+the bug.  This code is not in any sort of hot path, so there isn't much
+overhead...
 
-ofdm_index_old[1] _is_ used uninitialized.
+But, if you still prefer this code removed then I'll make the change.
 
-It appears there might be a missing
+>> @@ -278,6 +297,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
+>>   	lockdep_assert_held(&local->sta_mtx);
+>>   	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
+>>   	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
+>> +
+>> +	rcu_assign_pointer(sta->sdata->some_sta, sta);
+>
+> Maybe also assign it only for station to start with?
 
-	ofdm_index_old[1] = (u8) i;
+That sounds fine, though I doubt it matters any performance wise.
 
-as that's the same style test done in the
-section above.
+Let me know on the point above and I'll re-spin the patch.
 
-Maybe this:
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 1 +
- 1 file changed, 1 insertion(+)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index b793a65..56b2b2f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -717,6 +717,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
- 			for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
- 				if (ele_d == (ofdmswing_table[i] &
- 				    MASKOFDM_D)) {
-+					ofdm_index_old[1] = (u8) i;
- 
- 					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
- 						 DBG_LOUD,
+>
+> johannes
+>
 
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
