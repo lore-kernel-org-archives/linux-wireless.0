@@ -1,194 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:40770 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760582Ab3DCIrx (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 3 Apr 2013 04:47:53 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: linux-wireless@vger.kernel.org
-Cc: larry.finger@lwfinger.net, zhiyuan_yang@realsil.com.cn,
-	page_he@realsil.com.cn, mmarek@suse.cz
-Subject: [PATCH] rtlwifi: rtl8188ee: Fix wrong header path
-Date: Wed,  3 Apr 2013 16:51:22 +0800
-Message-Id: <1364979082-24226-1-git-send-email-machen@suse.com> (sfid-20130403_104805_329147_5CF054E3)
+Received: from he.sipsolutions.net ([78.46.109.217]:35553 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759456Ab3DCNT5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 09:19:57 -0400
+Message-ID: <1364995190.8351.41.camel@jlt4.sipsolutions.net> (sfid-20130403_152002_183712_2738DE84)
+Subject: Re: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Apr 2013 15:19:50 +0200
+In-Reply-To: <515C2C1F.4000804@candelatech.com>
+References: <1364572823-28071-1-git-send-email-greearb@candelatech.com>
+	  (sfid-20130329_170033_026763_9F6C74DD) <1364993882.8351.39.camel@jlt4.sipsolutions.net>
+	 <515C2C1F.4000804@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Chen, Chien-Chia" <machen@suse.com>
+On Wed, 2013-04-03 at 06:18 -0700, Ben Greear wrote:
+> On 04/03/2013 05:58 AM, Johannes Berg wrote:
+> > On Fri, 2013-03-29 at 09:00 -0700, greearb@candelatech.com wrote:
+> >
+> >> --- a/net/mac80211/cfg.c
+> >> +++ b/net/mac80211/cfg.c
+> >> @@ -1287,6 +1287,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+> >>   	if (params->vlan && params->vlan != sta->sdata->dev) {
+> >>   		bool prev_4addr = false;
+> >>   		bool new_4addr = false;
+> >> +		struct sta_info *some_sta;
+> >>
+> >>   		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+> >>
+> >> @@ -1312,7 +1313,12 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+> >>   			prev_4addr = true;
+> >>   		}
+> >>
+> >> +		some_sta = rcu_dereference_protected(sta->sdata->some_sta,
+> >> +					lockdep_is_held(&local->sta_mtx));
+> >> +		if (some_sta == sta)
+> >> +			rcu_assign_pointer(sta->sdata->some_sta, NULL);
+> >>   		sta->sdata = vlansdata;
+> >> +		rcu_assign_pointer(sta->sdata->some_sta, sta);
+> >>
+> >>   		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+> >>   		    prev_4addr != new_4addr) {
+> >
+> > I think you can drop all this code since you don't allow this for
+> > non-station interfaces, and stations here can only be reassigned between
+> > AP/AP_VLAN, no?
+> 
+> Well, it seems more fragile to skip this code.  If someone ever changes
+> how reassignment can happen it may be a while before anyone notices
+> the bug.  This code is not in any sort of hot path, so there isn't much
+> overhead...
 
-This patch is to fix some wrong header file path.
-It has caused the build failed.
+True.
 
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
-Cc: larry.finger@lwfinger.net
-Cc: zhiyuan_yang@realsil.com.cn
-Cc: page_he@realsil.com.cn
-Cc: mmarek@suse.cz
----
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   14 +++++++-------
- drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |    4 ++--
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |    2 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |    2 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 ++++----
- 9 files changed, 27 insertions(+), 27 deletions(-)
+> But, if you still prefer this code removed then I'll make the change.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-index 0a338cc..21a5cf0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "base.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../base.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-index 66ff30b..57e4cc5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "base.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../base.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-index d734d19..0f464d0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-@@ -27,13 +27,13 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "efuse.h"
--#include "base.h"
--#include "regd.h"
--#include "cam.h"
--#include "ps.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../efuse.h"
-+#include "../base.h"
-+#include "../regd.h"
-+#include "../cam.h"
-+#include "../ps.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-index 95d42af..c81a9cb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-@@ -27,8 +27,8 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "led.h"
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-index c285631..224f801 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "ps.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../ps.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-index 622ea7e..70456ab 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-@@ -30,7 +30,7 @@
- #ifndef __RTL8723E_PWRSEQCMD_H__
- #define __RTL8723E_PWRSEQCMD_H__
- 
--#include "wifi.h"
-+#include "../wifi.h"
- /*---------------------------------------------*/
- /* The value of cmd: 4 bits */
- /*---------------------------------------------*/
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-index e62bcab..4faafdb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-@@ -27,7 +27,7 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
-+#include "../wifi.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-index e8ce189..c254693 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "core.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../core.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-index 2518531..d075237 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -27,10 +27,10 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "base.h"
--#include "stats.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../base.h"
-+#include "../stats.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
--- 
-1.7.7
+No, mostly just wondering.
+
+> >> @@ -278,6 +297,8 @@ static void sta_info_hash_add(struct ieee80211_local *local,
+> >>   	lockdep_assert_held(&local->sta_mtx);
+> >>   	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
+> >>   	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
+> >> +
+> >> +	rcu_assign_pointer(sta->sdata->some_sta, sta);
+> >
+> > Maybe also assign it only for station to start with?
+> 
+> That sounds fine, though I doubt it matters any performance wise.
+
+It won't, it's really not used for lookup anyway.
+
+I'll just apply it as is.
+
+johannes
 
