@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3437 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933029Ab3DBTGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 15:06:37 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for-3.9 4/4] brcmfmac: do not proceed if fail to
- download nvram to dongle
-Date: Tue, 2 Apr 2013 21:06:20 +0200
-Message-ID: <1364929580-6206-5-git-send-email-arend@broadcom.com> (sfid-20130402_210656_530417_215A541F)
-In-Reply-To: <1364929580-6206-1-git-send-email-arend@broadcom.com>
-References: <1364929580-6206-1-git-send-email-arend@broadcom.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:42482 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761784Ab3DCU4s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 16:56:48 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr17so4067806wib.5
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 13:56:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <loom.20130403T092722-24@post.gmane.org>
+References: <loom.20130403T092722-24@post.gmane.org>
+Date: Wed, 3 Apr 2013 13:56:46 -0700
+Message-ID: <CAJ-Vmomn8A77jEvR2c312QukWy7Zozs4T2NQuiYMForr5+DthQ@mail.gmail.com> (sfid-20130403_225653_494512_4CF97FCE)
+Subject: Re: [ath5k][802.11p] Deactivate beacon
+From: Adrian Chadd <adrian@freebsd.org>
+To: =?ISO-8859-1?Q?Ricardo_Tub=EDo?= <rtpardavila@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On 3 April 2013 00:30, Ricardo Tubío <rtpardavila@gmail.com> wrote:
+> My name is Ricardo Tubío and I am currently trying to use GCDC patches for the
+> 'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would
+> like to know if somebody has either a patch for deactivating the beacon or can
+> help me in locating the code where the beacon is implemented.
 
-Nvram contains critical initialization parameter for firmware to run. Host
-driver should not proceed if nvram fails to be downloaded to dongle.
+Where are these patches hiding?
 
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I've just been sent a couple of unex cards to implement 802.11p on FreeBSD.
+So I'd like to see what the current state of the art with ath5k is.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 4469321..35fc68b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3317,15 +3317,15 @@ static int _brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
- 		goto err;
- 	}
- 
--	/* External image takes precedence if specified */
- 	if (brcmf_sdbrcm_download_code_file(bus)) {
- 		brcmf_err("dongle image file download failed\n");
- 		goto err;
- 	}
- 
--	/* External nvram takes precedence if specified */
--	if (brcmf_sdbrcm_download_nvram(bus))
-+	if (brcmf_sdbrcm_download_nvram(bus)) {
- 		brcmf_err("dongle nvram file download failed\n");
-+		goto err;
-+	}
- 
- 	/* Take arm out of reset */
- 	if (brcmf_sdbrcm_download_state(bus, false)) {
--- 
-1.7.10.4
+Thanks!
 
 
+
+Adrian
