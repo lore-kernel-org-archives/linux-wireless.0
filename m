@@ -1,73 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:33405 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751485Ab3DNNwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 09:52:19 -0400
-Date: Sun, 14 Apr 2013 15:53:16 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: minimumlaw@rambler.ru
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] Fix transmit power troubles on some Ralink RT30xx cards
-Message-ID: <20130414135316.GA14248@localhost.localdomain> (sfid-20130414_155223_957025_DBCF2C52)
-References: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
+Received: from he.sipsolutions.net ([78.46.109.217]:35446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758541Ab3DCMsy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Apr 2013 08:48:54 -0400
+Message-ID: <1364993329.8351.37.camel@jlt4.sipsolutions.net> (sfid-20130403_144857_567435_EA97E9CC)
+Subject: Re: problems with iwlwifi - intel 5300 - 5GHz - all versions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Date: Wed, 03 Apr 2013 14:48:49 +0200
+In-Reply-To: <alpine.DEB.2.00.1304011908390.23668@uplift.swm.pp.se> (sfid-20130401_191237_181984_A9EDAC20)
+References: <alpine.DEB.2.00.1303291240580.11255@uplift.swm.pp.se>
+	 <alpine.DEB.2.00.1304011908390.23668@uplift.swm.pp.se>
+	 (sfid-20130401_191237_181984_A9EDAC20)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 14, 2013 at 02:54:43PM +0400, minimumlaw@rambler.ru wrote:
-> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+On Mon, 2013-04-01 at 19:12 +0200, Mikael Abrahamsson wrote:
+> On Fri, 29 Mar 2013, Mikael Abrahamsson wrote:
 > 
-> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
-> value in them EEPROM/EFUSE. In this case, we must use default value,
-> but always used EEPROM/EFUSE value. As result we have tranmitt power
-> range from -10dBm to +6dBm instead 0dBm to +16dBm.
-
-Thanks for great work on debugging this!
-> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
-> more for other RT30xx chips.
->
-> Testen on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
-> embedded Wi-Fi module.
-
-Signed-off-by: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
-Cc: stable@vger.kernel.org
-
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
+> Another data point.
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index a658b4b..92849e5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -4436,6 +4436,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->  
->  	if (!rt2x00_rt(rt2x00dev, RT5390) &&
->  	    !rt2x00_rt(rt2x00dev, RT5392)) {
-> +		u8 min_gain = rt2x00_rt(rt2x00dev, RT3070) ? 1 : 2;
-> +
->  		rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
->  		rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
->  		if (rt2x00_rt(rt2x00dev, RT3070) ||
-> @@ -4446,8 +4448,10 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->  				      &rt2x00dev->cap_flags))
->  				rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
->  		}
-> -		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
-> -				  drv_data->txmixer_gain_24g);
-> +		if (drv_data->txmixer_gain_24g >= min_gain) {
-> +			rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
-> +					  drv_data->txmixer_gain_24g);
-> +		}
->  		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
->  	}
->  
-> -- 
-> 1.8.1.5
-> 
-> 
+> With 3.2.0-39 with backported 3.6 drivers 
+> (linux-backports-modules-cw-3.6-3.2.0-39-generic-pae).
+
+I really have no idea what your distro (Ubuntu?) backports into
+everything, sorry.
+
+If you can't connect, this might be related:
+http://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=b8730b403aee94db4631bfefb546a6ce8c287dc2
+
+johannes
+
+
