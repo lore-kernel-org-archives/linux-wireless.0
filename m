@@ -1,131 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:52720 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935213Ab3DHRFZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 13:05:25 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: zefir.kurtisi@neratec.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv3] mac80211: fix recalc_radar hwconf sync problem
-Date: Mon,  8 Apr 2013 19:04:58 +0200
-Message-Id: <1365440698-16678-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130408_190530_465494_8028165D)
-In-Reply-To: <1365431343.25475.15.camel@jlt4.sipsolutions.net>
-References: <1365431343.25475.15.camel@jlt4.sipsolutions.net>
+Received: from mout.gmx.net ([212.227.15.15]:55616 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762376Ab3DDVCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 17:02:20 -0400
+Received: from mailout-de.gmx.net ([10.1.76.29]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MYZHI-1UB7Zg3BUQ-00VMfL for
+ <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 23:02:18 +0200
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+To: bzhao@marvell.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	daniel@zonque.org,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Subject: [PATCH 4/4] mwifiex: bug: hold proper locks when accessing ra_list / bss_prio lists.
+Date: Thu,  4 Apr 2013 23:01:25 +0200
+Message-Id: <1365109286-5075-4-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130404_230227_266391_E2B8C918)
+In-Reply-To: <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
+References: <20130404205706.GA29851@blumentopf>
+ <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-local->hw.conf maybe not be synced when recalcing whether radar is
-enabled, sometimes leaving radar enabled even if it's not neccesary
-anymore.
+Not locking ra_list when dequeuing packets creates race conditions.
+When adding a packet 'tx_pkts_queued' is modified before setting
+highest_priority_queue. If in-between the main loop starts, it will see
+a packet queued (tx_pkts_queued > 0) but will not find it, since max prio
+is not set yet. Depending on the scheduling, the thread trying to add the
+packet could complete and restore the situation. But this is not something
+to rely on.
+Another race condition exists, if a new packet, exceeding current max prio
+is added. If concurrently a packet is dequeued, the newly set max
+prio will be overwritten with the value of the dequeued packet.
+This can occur, because selecting a packet and modifying the max prio
+is not atomic. The result in an infinite loop unless, a new packet is
+added that has at least the priority of the hidden packet.
 
-Fix this by:
- * setting radar_enabled when creating the chanctx
- * turning radar_enabled off before destroying the last channel context
+Same applies to bss_prio_tbl. Forward iteration is no proper lock-free
+technique and provides no protection from calls to list_del. Although
+BSS are currently not added/removed dynamically, this must not be the
+case in the future. Hence always hold proper locks when accessing those
+lists.
 
-Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 ---
-Changes to PATCHv2:
- * add comment about single context, and check for it
- * rebase on mac80211-next
----
- net/mac80211/chan.c |   43 +++++++++++++++++++++++++++++++++----------
- 1 file changed, 33 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mwifiex/wmm.c |   57 ++++++++++++++++++++----------------
+ 1 file changed, 31 insertions(+), 26 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 8024874..23cb270 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -57,6 +57,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	return NULL;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 62b07d3..62d740b 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -688,13 +688,13 @@ mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 	ra_list->total_pkts_size += skb->len;
+ 	ra_list->pkt_count++;
+ 
+-	atomic_inc(&priv->wmm.tx_pkts_queued);
+-
+ 	if (atomic_read(&priv->wmm.highest_queued_prio) <
+ 						tos_to_tid_inv[tid_down])
+ 		atomic_set(&priv->wmm.highest_queued_prio,
+ 			   tos_to_tid_inv[tid_down]);
+ 
++	atomic_inc(&priv->wmm.tx_pkts_queued);
++
+ 	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
  }
  
-+static bool ieee80211_is_radar_required(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (sdata->radar_required) {
-+			rcu_read_unlock();
-+			return true;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	return false;
-+}
-+
- static struct ieee80211_chanctx *
- ieee80211_new_chanctx(struct ieee80211_local *local,
- 		      const struct cfg80211_chan_def *chandef,
-@@ -75,6 +91,9 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
-+	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
-+	if (!local->use_chanctx)
-+		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
+@@ -890,19 +890,15 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 	struct mwifiex_bss_prio_node *bssprio_node, *bssprio_head;
+ 	struct mwifiex_tid_tbl *tid_ptr;
+ 	atomic_t *hqp;
+-	int is_list_empty;
+-	unsigned long flags;
++	unsigned long flags_bss, flags_ra;
+ 	int i, j;
  
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = *chandef;
-@@ -99,6 +118,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *ctx)
- {
-+	bool check_single_channel = false;
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
- 	WARN_ON_ONCE(ctx->refcount != 0);
-@@ -108,6 +128,13 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
- 		chandef->center_freq1 = chandef->chan->center_freq;
- 		chandef->center_freq2 = 0;
+ 	for (j = adapter->priv_num - 1; j >= 0; --j) {
+ 		spin_lock_irqsave(&adapter->bss_prio_tbl[j].bss_prio_lock,
+-				  flags);
+-		is_list_empty = list_empty(&adapter->bss_prio_tbl[j]
+-					   .bss_prio_head);
+-		spin_unlock_irqrestore(&adapter->bss_prio_tbl[j].bss_prio_lock,
+-				       flags);
+-		if (is_list_empty)
+-			continue;
++				  flags_bss);
 +
-+		/* NOTE: Disabling radar he is only valid here for
-+		 * single channel context. To be sure, check it ... */
-+		if (local->hw.conf.radar_enabled)
-+			check_single_channel = true;
-+		local->hw.conf.radar_enabled = false;
++		if (list_empty(&adapter->bss_prio_tbl[j].bss_prio_head))
++			goto skip_prio_tbl;
+ 
+ 		if (adapter->bss_prio_tbl[j].bss_prio_cur ==
+ 		    (struct mwifiex_bss_prio_node *)
+@@ -927,21 +923,18 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 			hqp = &priv_tmp->wmm.highest_queued_prio;
+ 			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
+ 
++				spin_lock_irqsave(&priv_tmp->wmm.
++						  ra_list_spinlock, flags_ra);
 +
- 		ieee80211_hw_config(local, 0);
- 	} else {
- 		drv_remove_chanctx(local, ctx);
-@@ -116,6 +143,10 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 	list_del_rcu(&ctx->list);
- 	kfree_rcu(ctx, rcu_head);
+ 				tid_ptr = &(priv_tmp)->wmm.
+ 					tid_tbl_ptr[tos_to_tid[i]];
  
-+	/* throw a warning if this wasn't the only channel context. */
-+	if (check_single_channel)
-+		WARN_ON(!list_empty(&local->chanctx_list));
+ 				/* For non-STA ra_list_curr may be NULL */
+ 				if (!tid_ptr->ra_list_curr)
+-					continue;
++					goto skip_wmm_queue;
+ 
+-				spin_lock_irqsave(&priv_tmp->wmm.
+-						  ra_list_spinlock, flags);
+-				is_list_empty =
+-					list_empty(&tid_ptr->ra_list);
+-				spin_unlock_irqrestore(&priv_tmp->wmm.
+-						       ra_list_spinlock, flags);
+-				if (is_list_empty)
+-					continue;
++				if (list_empty(&tid_ptr->ra_list))
++					goto skip_wmm_queue;
+ 
+ 				/*
+ 				 * Always choose the next ra we transmitted
+@@ -963,11 +956,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				}
+ 
+ 				do {
+-					is_list_empty =
+-						skb_queue_empty(&ptr->skb_head);
+-
+-					if (!is_list_empty)
++					if (!skb_queue_empty(&ptr->skb_head)) {
++						/* holds both locks */
+ 						goto found;
++					}
+ 
+ 					/* Get next ra */
+ 					ptr = list_first_entry(&ptr->list,
+@@ -981,6 +973,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 						    struct mwifiex_ra_list_tbl,
+ 						    list);
+ 				} while (ptr != head);
 +
- 	mutex_lock(&local->mtx);
- 	ieee80211_recalc_idle(local);
- 	mutex_unlock(&local->mtx);
-@@ -227,19 +258,11 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
- 				    struct ieee80211_chanctx *chanctx)
- {
--	struct ieee80211_sub_if_data *sdata;
--	bool radar_enabled = false;
-+	bool radar_enabled;
++skip_wmm_queue:
++				spin_unlock_irqrestore(&priv_tmp->wmm.
++						       ra_list_spinlock,
++						       flags_ra);
++
+ 			}
  
- 	lockdep_assert_held(&local->chanctx_mtx);
+ skip_bss:
+@@ -998,14 +996,21 @@ skip_bss:
+ 						struct mwifiex_bss_prio_node,
+ 						list);
+ 		} while (bssprio_node != bssprio_head);
++
++skip_prio_tbl:
++		spin_unlock_irqrestore(&adapter->bss_prio_tbl[j].bss_prio_lock,
++				       flags_bss);
++
+ 	}
+ 	return NULL;
  
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		if (sdata->radar_required) {
--			radar_enabled = true;
--			break;
--		}
--	}
--	rcu_read_unlock();
-+	radar_enabled = ieee80211_is_radar_required(local);
+ found:
+-	spin_lock_irqsave(&priv_tmp->wmm.ra_list_spinlock, flags);
++	/* holds bss_prio_lock / ra_list_spinlock */
+ 	if (atomic_read(hqp) > i)
+ 		atomic_set(hqp, i);
+-	spin_unlock_irqrestore(&priv_tmp->wmm.ra_list_spinlock, flags);
++	spin_unlock_irqrestore(&priv_tmp->wmm.ra_list_spinlock, flags_ra);
++	spin_unlock_irqrestore(&adapter->bss_prio_tbl[j].bss_prio_lock,
++			       flags_bss);
  
- 	if (radar_enabled == chanctx->conf.radar_enabled)
- 		return;
+ 	*priv = priv_tmp;
+ 	*tid = tos_to_tid[i];
 -- 
 1.7.10.4
 
