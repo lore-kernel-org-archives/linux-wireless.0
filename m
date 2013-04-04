@@ -1,438 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758267Ab3D2M7j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 08:59:39 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v4] cfg80211: Android P2P-Device workaround
-Date: Mon, 29 Apr 2013 14:26:24 +0200
-Message-Id: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net> (sfid-20130429_145948_379492_A4E1A5FD)
+Received: from mout.gmx.net ([212.227.17.22]:59323 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761891Ab3DDU5O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 16:57:14 -0400
+Received: from mailout-de.gmx.net ([10.1.76.31]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MT5po-1UEPZW2ILO-00SAoA for
+ <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 22:57:12 +0200
+Date: Thu, 4 Apr 2013 22:57:07 +0200
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [PATCH 1/6] mwifiex: bug: remove NO_PKT_PRIO_TID.
+Message-ID: <20130404205706.GA29851@blumentopf> (sfid-20130404_225719_232301_7BF750DA)
+References: <20130402000511.GA31921@blumentopf>
+ <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB197@SC-VEXCH1.marvell.com>
+ <20130403113554.GA14785@blumentopf>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB35D@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DDAB35D@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Bing,
+On Wed, Apr 03, 2013 at 11:37:43AM -0700, Bing Zhao wrote:
+> 
+[snip]
+> > How should I proceed? Can I reorder patches to match my
+> > development cycle, which is? 2-5;1;6 or more verbosely
+> > cleanup first followed by bug fix and proper locking last
 
-Android requires a "p2p0" netdev to exist for P2P Device
-functionality, and will even set it "UP" to start the P2P
-Device functionality.
+> You can separate 6 patches into two patch sets.
+> 1-3 fix the bug and clean up.
+> 4-6 implement ra list rotation and proper locking.
 
-This is a hack to provide it so not only is Android happy
-but also the current version of wpa_supplicant can work
-with P2P-Device functionality without needing changes to
-support the P2P-Device commands, just a little bit to not
-attempt to change the interface type to station.
+I reworked the patchset and split into two.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |   4 ++
- net/wireless/Kconfig   |   7 +++
- net/wireless/Makefile  |   1 +
- net/wireless/android.c | 147 +++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.c    |  14 +++++
- net/wireless/core.h    |   6 ++
- net/wireless/nl80211.c |  63 +++++++++++++++++++++
- 7 files changed, 242 insertions(+)
- create mode 100644 net/wireless/android.c
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 87f7e1d..6e312ef 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2924,6 +2924,10 @@ struct wireless_dev {
- 		bool prev_bssid_valid;
- 	} wext;
- #endif
-+
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	struct net_device *p2pdev;
-+#endif
- };
- 
- static inline u8 *wdev_address(struct wireless_dev *wdev)
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 16d08b3..7c2981c 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -139,6 +139,13 @@ config CFG80211_WEXT
- 	  Enable this option if you need old userspace for wireless
- 	  extensions with cfg80211-based drivers.
- 
-+config CFG80211_ANDROID_P2P_HACK
-+	bool "Android P2P netdevice hack"
-+	depends on CFG80211
-+	depends on !CFG80211_WEXT
-+	help
-+	  Enable this option for Android P2P w/ P2P Device.
-+
- config LIB80211
- 	tristate
- 	default n
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index a761670..2800e67 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -14,6 +14,7 @@ cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o ap.o trace.o
- cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
- cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
-+cfg80211-$(CONFIG_CFG80211_ANDROID_P2P_HACK) += android.o
- 
- CFLAGS_trace.o := -I$(src)
- 
-diff --git a/net/wireless/android.c b/net/wireless/android.c
-new file mode 100644
-index 0000000..e24c764
---- /dev/null
-+++ b/net/wireless/android.c
-@@ -0,0 +1,147 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under the GPLv2 license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * Author: Johannes Berg <johannes.berg@intel.com>
-+ *
-+ *****************************************************************************/
-+#include <linux/kernel.h>
-+#include <linux/netdevice.h>
-+#include <linux/rtnetlink.h>
-+#include <net/cfg80211.h>
-+#include "core.h"
-+#include "rdev-ops.h"
-+
-+static int cfg80211_android_p2pdev_open(struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	int err;
-+
-+	if (!rdev->ops->start_p2p_device)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->p2p_started)
-+		return 0;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	err = cfg80211_can_add_interface(rdev, wdev->iftype);
-+	mutex_unlock(&rdev->devlist_mtx);
-+	if (err)
-+		return err;
-+
-+	err = rdev_start_p2p_device(rdev, wdev);
-+	if (err)
-+		return err;
-+
-+	wdev->p2p_started = true;
-+	mutex_lock(&rdev->devlist_mtx);
-+	rdev->opencount++;
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return 0;
-+}
-+
-+static int cfg80211_android_p2pdev_stop(struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (!wdev->p2p_started)
-+		return 0;
-+
-+	mutex_lock(&rdev->devlist_mtx);
-+	mutex_lock(&rdev->sched_scan_mtx);
-+	cfg80211_stop_p2p_device(rdev, wdev);
-+	mutex_unlock(&rdev->sched_scan_mtx);
-+	mutex_unlock(&rdev->devlist_mtx);
-+
-+	return 0;
-+}
-+
-+static netdev_tx_t cfg80211_android_p2pdev_start_xmit(struct sk_buff *skb,
-+						      struct net_device *dev)
-+{
-+	dev_kfree_skb(skb);
-+	return NETDEV_TX_OK;
-+}
-+
-+static const struct net_device_ops cfg80211_android_p2pdev_ops = {
-+	.ndo_open = cfg80211_android_p2pdev_open,
-+	.ndo_stop = cfg80211_android_p2pdev_stop,
-+	.ndo_start_xmit = cfg80211_android_p2pdev_start_xmit,
-+};
-+
-+static void cfg80211_android_p2pdev_setup(struct net_device *dev)
-+{
-+	ether_setup(dev);
-+	dev->features |= NETIF_F_NETNS_LOCAL;
-+	dev->netdev_ops = &cfg80211_android_p2pdev_ops;
-+	dev->destructor = free_netdev;
-+}
-+
-+void cfg80211_android_create_p2p_device(struct wireless_dev *wdev,
-+					const char *name)
-+{
-+	if (WARN_ON(wdev->p2pdev))
-+		return;
-+
-+	wdev->p2pdev = alloc_netdev(0, name, cfg80211_android_p2pdev_setup);
-+	if (WARN(!wdev->p2pdev,
-+		 "Failed to allocate P2P-Device netdev, things will fail!\n"))
-+		return;
-+
-+	memcpy(wdev->p2pdev->dev_addr, wdev->address, ETH_ALEN);
-+	wdev->p2pdev->ieee80211_ptr = wdev;
-+
-+	if (WARN(register_netdevice(wdev->p2pdev),
-+		 "Failed to register P2P-Device netdev, things will fail!\n")) {
-+		free_netdev(wdev->p2pdev);
-+		return;
-+	}
-+
-+	if (sysfs_create_link(&wdev->p2pdev->dev.kobj, &wdev->wiphy->dev.kobj,
-+			      "phy80211"))
-+		pr_err("failed to add phy80211 symlink to netdev!\n");
-+}
-+
-+void cfg80211_android_destroy_p2p_device(struct wireless_dev *wdev)
-+{
-+	ASSERT_RTNL();
-+
-+	if (!wdev->p2pdev)
-+		return;
-+
-+	dev_close(wdev->p2pdev);
-+	wdev->p2pdev->ieee80211_ptr = NULL;
-+	unregister_netdevice(wdev->p2pdev);
-+	wdev->p2pdev = NULL;
-+}
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 84c9ad7..59da6df 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -170,6 +170,12 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 		return -EOPNOTSUPP;
- 
- 	list_for_each_entry(wdev, &rdev->wdev_list, list) {
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+		if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE) {
-+			err = -EBUSY;
-+			break;
-+		}
-+#endif
- 		if (!wdev->netdev)
- 			continue;
- 		wdev->netdev->features &= ~NETIF_F_NETNS_LOCAL;
-@@ -818,6 +824,9 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		cfg80211_stop_p2p_device(rdev, wdev);
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+		cfg80211_android_destroy_p2p_device(wdev);
-+#endif
- 		break;
- 	default:
- 		WARN_ON_ONCE(1);
-@@ -898,6 +907,11 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 
- 	WARN_ON(wdev->iftype == NL80211_IFTYPE_UNSPECIFIED);
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE)
-+		return NOTIFY_DONE;
-+#endif
-+
- 	switch (state) {
- 	case NETDEV_POST_INIT:
- 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fd35dae..0cc74d5 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -522,4 +522,10 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
- #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
- #endif
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+void cfg80211_android_create_p2p_device(struct wireless_dev *wdev,
-+					const char *name);
-+void cfg80211_android_destroy_p2p_device(struct wireless_dev *wdev);
-+#endif
-+
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f687a8d..732a29b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -87,6 +87,13 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
- 				result = wdev;
- 				break;
- 			}
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+			if (have_ifidx && wdev->p2pdev &&
-+			    wdev->p2pdev->ifindex == ifidx) {
-+				result = wdev;
-+				break;
-+			}
-+#endif
- 			if (have_wdev_id && wdev->identifier == (u32)wdev_id) {
- 				result = wdev;
- 				break;
-@@ -2350,6 +2357,14 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (otype == NL80211_IFTYPE_P2P_DEVICE) {
-+		if (ntype == NL80211_IFTYPE_P2P_DEVICE)
-+			return 0;
-+		return -EINVAL;
-+	}
-+#endif
-+
- 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
- 		struct wireless_dev *wdev = dev->ieee80211_ptr;
- 
-@@ -2479,6 +2494,10 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+		cfg80211_android_create_p2p_device(wdev,
-+			nla_data(info->attrs[NL80211_ATTR_IFNAME]));
-+#endif
- 		mutex_lock(&rdev->devlist_mtx);
- 		wdev->identifier = ++rdev->wdev_id;
- 		list_add_rcu(&wdev->list, &rdev->wdev_list);
-@@ -5624,6 +5643,11 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 	if (wdev->netdev &&
- 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->netdev->ifindex))
- 		goto nla_put_failure;
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->p2pdev &&
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->p2pdev->ifindex))
-+		goto nla_put_failure;
-+#endif
- 	if (nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
- 		goto nla_put_failure;
- 
-@@ -8183,6 +8207,11 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
- 		return err;
- 
- 	wdev->p2p_started = true;
-+
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	WARN_ON(wdev->p2pdev && dev_open(wdev->p2pdev));
-+#endif
-+
- 	mutex_lock(&rdev->devlist_mtx);
- 	rdev->opencount++;
- 	mutex_unlock(&rdev->devlist_mtx);
-@@ -8207,6 +8236,10 @@ static int nl80211_stop_p2p_device(struct sk_buff *skb, struct genl_info *info)
- 	mutex_unlock(&rdev->sched_scan_mtx);
- 	mutex_unlock(&rdev->devlist_mtx);
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	WARN_ON(wdev->p2pdev && dev_close(wdev->p2pdev));
-+#endif
-+
- 	return 0;
- }
- 
-@@ -8361,6 +8394,12 @@ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
- 		dev = wdev->netdev;
- 		rdev = wiphy_to_dev(wdev->wiphy);
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+		if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
-+		    info->genlhdr->cmd == NL80211_CMD_SET_INTERFACE)
-+			dev = wdev->p2pdev;
-+#endif
-+
- 		if (ops->internal_flags & NL80211_FLAG_NEED_NETDEV) {
- 			if (!dev) {
- 				mutex_unlock(&cfg80211_mutex);
-@@ -9118,6 +9157,12 @@ static int nl80211_send_scan_msg(struct sk_buff *msg,
- 	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
- 		goto nla_put_failure;
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->p2pdev &&
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->p2pdev->ifindex))
-+		goto nla_put_failure;
-+#endif
-+
- 	/* ignore errors and send incomplete event anyway */
- 	nl80211_add_scan_req(msg, rdev);
- 
-@@ -9764,6 +9809,12 @@ static void nl80211_send_remain_on_chan_event(
- 	    nla_put_u64(msg, NL80211_ATTR_COOKIE, cookie))
- 		goto nla_put_failure;
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->p2pdev &&
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->p2pdev->ifindex))
-+		goto nla_put_failure;
-+#endif
-+
- 	if (cmd == NL80211_CMD_REMAIN_ON_CHANNEL &&
- 	    nla_put_u32(msg, NL80211_ATTR_DURATION, duration))
- 		goto nla_put_failure;
-@@ -10014,6 +10065,12 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 	    nla_put(msg, NL80211_ATTR_FRAME, len, buf))
- 		goto nla_put_failure;
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->p2pdev &&
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->p2pdev->ifindex))
-+		goto nla_put_failure;
-+#endif
-+
- 	genlmsg_end(msg, hdr);
- 
- 	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-@@ -10053,6 +10110,12 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- 	    (ack && nla_put_flag(msg, NL80211_ATTR_ACK)))
- 		goto nla_put_failure;
- 
-+#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-+	if (wdev->p2pdev &&
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->p2pdev->ifindex))
-+		goto nla_put_failure;
-+#endif
-+
- 	genlmsg_end(msg, hdr);
- 
- 	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, gfp);
--- 
-1.8.0
+set 1:
+1/4 mwifiex: rework round robin scheduling of bss nodes.
+2/4 mwifiex: replace ra_list_curr by list rotation.
+3/4 mwifiex: bug: hold proper locks when accessing ra_list / bss_prio lists.
+4/4 mwifiex: bug: remove NO_PKT_PRIO_TID.
 
+3/4 previous 6/6 is bugfix now:
+
+        ...
+        Another race condition exists, if a new highest priority
+        packet is added. If concurrently a packet is dequeued, the newly
+        set max prio will be overwritten with the value of the dequeued
+        packet. This can occur, because selecting a packet and modifying
+        the max prio is not atomic. This results in an infinite loop
+        unless, a new packet is added that has at least the priority of
+        the hidden packet.
+        ...
+
+
+set 2:
+1/2 mwifiex: remove unused tid_tbl_lock from mwifiex_tid_tbl.
+2/2 mwifiex: bug: wrong list in list_empty check.
+
+Patch set 2 can be delayed, but since hard to read code probably
+introduced all the problems, I suggest to apply it promptly.
+It simplifies the code a lot.
+
+
+> 
+> We will run stress tests against 4-6.
+
+I'm here at 4+ days, still running. This exceeds all previous
+tests on my particular setup.
+
+> 
+> Thanks,
+> Bing
+
+rgds,
+Andi
