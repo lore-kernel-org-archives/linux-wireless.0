@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51586 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762080Ab3DJXYG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 19:24:06 -0400
-Message-ID: <5165F491.2060301@openwrt.org> (sfid-20130411_012410_364310_9CFD1E01)
-Date: Thu, 11 Apr 2013 01:24:01 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:41813 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765281Ab3DDWa0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 18:30:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 4 Apr 2013 15:29:14 -0700
+Subject: RE: [PATCH 1/4] mwifiex: bug: wrong list in list_empty check.
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DDAB6C1@SC-VEXCH1.marvell.com> (sfid-20130405_003030_468695_7DBAB1A2)
+References: <20130404205706.GA29851@blumentopf>
+ <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
+In-Reply-To: <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Tobias Steinicke <tobias.steinicke@net.t-labs.tu-berlin.de>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Respect current txpower setting
-References: <5165E1C2.4020407@net.t-labs.tu-berlin.de> <CAJ-Vmo=boxae6Cs+yDerTCGOa=rq-dZeNLeTjGjroBMxwsfU4A@mail.gmail.com>
-In-Reply-To: <CAJ-Vmo=boxae6Cs+yDerTCGOa=rq-dZeNLeTjGjroBMxwsfU4A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-11 1:20 AM, Adrian Chadd wrote:
-> On 10 April 2013 15:03, Tobias Steinicke
-> <tobias.steinicke@net.t-labs.tu-berlin.de> wrote:
->> In routine ath_tx_fill_desc(), the txpower is only set to
->> MAX_RATE_POWER. Now it respects the txpower from bss_conf and set it if it
->> is (txpower * 2) < MAX_RATE_POWER else set to MAX_RATE_POWER.
-> 
-> This doesn't do anything unless TPC is enabled.
-> 
-> And if TPC is enabled, you have to jump through hoops to set the
-> correct target TX power, as it's not always 1:1 between dBm value
-> programmed in and dBm value transmitted.
-I think TPC power value mappings were only problematic in pre-802.11n
-chipsets, all chipsets supported by ath9k should be fine. There may be
-some minor changes missing to enable it on some older chipsets, but
-other than that it should be functional.
+Hi Andi,
 
-- Felix
+Thanks for the v2 patch series.
+
+> adapter->bss_prio_tbl list has already been checked in outer loop. The
+> inner loop works with priv_tmp->wmm.tid_tbl_ptr list. Also the lock taken,
+> gives hint that this is likely a copy-paste error.
+> 
+> Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Thanks,
+Bing
+
+> ---
+>  drivers/net/wireless/mwifiex/wmm.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+> index 32adc87..b132c42 100644
+> --- a/drivers/net/wireless/mwifiex/wmm.c
+> +++ b/drivers/net/wireless/mwifiex/wmm.c
+> @@ -933,8 +933,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+>  				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
+>  						  flags);
+>  				is_list_empty =
+> -					list_empty(&adapter->bss_prio_tbl[j]
+> -						   .bss_prio_head);
+> +					list_empty(&tid_ptr->ra_list);
+>  				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
+>  						       flags);
+>  				if (is_list_empty)
+> --
+> 1.7.10.4
+
