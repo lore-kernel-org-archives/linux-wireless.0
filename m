@@ -1,43 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:55000 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297Ab3DEJNX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 05:13:23 -0400
-Received: by mail-wi0-f181.google.com with SMTP id hj8so358750wib.14
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 02:13:22 -0700 (PDT)
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:40934 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765154Ab3DDWhu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 18:37:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 4 Apr 2013 15:34:42 -0700
+Subject: RE: [PATCH 3/4] mwifiex: bug: remove NO_PKT_PRIO_TID.
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DDAB6CE@SC-VEXCH1.marvell.com> (sfid-20130405_003755_855832_12FE947D)
+References: <20130404205706.GA29851@blumentopf>
+ <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
+ <1365109286-5075-3-git-send-email-andreas.fenkart@streamunlimited.com>
+In-Reply-To: <1365109286-5075-3-git-send-email-andreas.fenkart@streamunlimited.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
-	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
-	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
-	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
-	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-Date: Fri, 5 Apr 2013 02:13:22 -0700
-Message-ID: <CAJ-Vmo=sJRgfqztsbcq39Tf7imBG+2CKZ5u3qO4RXzSO8VtmJg@mail.gmail.com> (sfid-20130405_111333_455407_C90114C1)
-Subject: Re: AR9287 ; 2-wire coexistence expected behavior
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 April 2013 02:06, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
-> Thanks Mr.Adrian for the information. I had a look at the source code for
-> Ath9k. For 2-wire coexistence, other than GPIO configuration (direction, Mux
-> etc) for WLAN_ACTIVE and BT_ACTIVITY, is there also weight register
-> configuration for BT and WLAN for 2-wire?
-> What exactly is the meaning of these weight registers?
 
-I've no idea just yet, sorry. I'm still trying to digest how bluetooth
-coexistence works.
+> Using NO_PKT_PRIO_TID and tx_pkts_queued to check for an empty state, can
+> lead to a contradictory state, resulting in an infinite loop.
+> Currently queueing and dequeuing of packets is not synchronized, and can
+> happen concurrently. While tx_pkts_queued is incremented when adding a
+> packet, max prio is set to NO_PKT when the WMM list is empty. If a packet
+> is added right after the check for empty, but before setting max prio to
+> NO_PKT, that packet is trapped and creates an infinite loop.
+> Because of the new packet, tx_pkts_queued is at least 1, indicating wmm
+> lists are not empty. Opposing that max prio is NO_PKT, which means "skip
+> this wmm queue, it has no packets". The infinite loop results, because the
+> main loop checks the wmm lists for not empty via tx_pkts_queued, but for
+> dequeing it uses max_prio to see if it can skip current list. This will
+> never end, unless a new packet is added which will restore max prio to the
+> level of the trapped packet.
+> The solution here is to rely on tx_pkts_queued solely for checking wmm
+> queue to be empty, and drop the NO_PKT define. It does not address the
+> locking issue.
+> 
+> Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
+Thanks,
+Bing
 
-Adrian
+> ---
+>  drivers/net/wireless/mwifiex/main.h |    1 -
+>  drivers/net/wireless/mwifiex/wmm.c  |   13 ++++++-------
+>  2 files changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+> index d94406a..082a468 100644
+> --- a/drivers/net/wireless/mwifiex/main.h
+> +++ b/drivers/net/wireless/mwifiex/main.h
+> @@ -216,7 +216,6 @@ struct mwifiex_tid_tbl {
+>  #define WMM_HIGHEST_PRIORITY		7
+>  #define HIGH_PRIO_TID				7
+>  #define LOW_PRIO_TID				0
+> -#define NO_PKT_PRIO_TID				(-1)
+> 
+>  struct mwifiex_wmm_desc {
+>  	struct mwifiex_tid_tbl tid_tbl_ptr[MAX_NUM_TID];
+> diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+> index 96eed2f..62b07d3 100644
+> --- a/drivers/net/wireless/mwifiex/wmm.c
+> +++ b/drivers/net/wireless/mwifiex/wmm.c
+> @@ -919,8 +919,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+> 
+>  		do {
+>  			priv_tmp = bssprio_node->priv;
+> -			hqp = &priv_tmp->wmm.highest_queued_prio;
+> 
+> +			if (atomic_read(&priv_tmp->wmm.tx_pkts_queued) == 0)
+> +				goto skip_bss;
+> +
+> +			/* iterate over the WMM queues of the BSS */
+> +			hqp = &priv_tmp->wmm.highest_queued_prio;
+>  			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
+> 
+>  				tid_ptr = &(priv_tmp)->wmm.
+> @@ -979,12 +983,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+>  				} while (ptr != head);
+>  			}
+> 
+> -			/* No packet at any TID for this priv. Mark as such
+> -			 * to skip checking TIDs for this priv (until pkt is
+> -			 * added).
+> -			 */
+> -			atomic_set(hqp, NO_PKT_PRIO_TID);
+> -
+> +skip_bss:
+>  			/* Get next bss priority node */
+>  			bssprio_node = list_first_entry(&bssprio_node->list,
+>  						struct mwifiex_bss_prio_node,
+> --
+> 1.7.10.4
+
