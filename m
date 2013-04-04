@@ -1,73 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4956 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754654Ab3DKL3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 07:29:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 13/15] brcmfmac: pass ifp pointer in
- brcmf_fws_find_mac_desc()
-Date: Thu, 11 Apr 2013 13:28:58 +0200
-Message-ID: <1365679740-25679-14-git-send-email-arend@broadcom.com> (sfid-20130411_132935_560922_FFF59EF6)
-In-Reply-To: <1365679740-25679-1-git-send-email-arend@broadcom.com>
-References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
+Received: from ht2.myhostedexchange.com ([69.50.2.38]:21003 "EHLO
+	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1763729Ab3DDUD7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 16:03:59 -0400
+From: Antonio Quartulli <antonio@open-mesh.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: [PATCH 1/3] cfg80211: add get_max_tp() API
+Date: Thu, 4 Apr 2013 21:57:20 +0200
+Message-ID: <1365105442-31876-1-git-send-email-antonio@open-mesh.com> (sfid-20130404_220402_348503_AFB8ED01)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of passing the ifidx and lookup the ifp inside the
-function brcmf_fws_find_mac_desc() simply pass the ifp as
-parameter.
+This new API is aimed to let other modules in the kernel
+fetch the maximum throughput value towards a peer over
+a given VIF.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h | 20 ++++++++++++++++++++
+ net/wireless/core.c    | 11 +++++++++++
+ 2 files changed, 31 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index f8ee4dc..e26bbfd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -681,19 +681,16 @@ brcmf_fws_mac_descriptor_lookup(struct brcmf_fws_info *fws, u8 *ea)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 57870b6..5019f67 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2002,6 +2002,9 @@ struct cfg80211_update_ft_ies_params {
+  * @update_ft_ies: Provide updated Fast BSS Transition information to the
+  *	driver. If the SME is in the driver/firmware, this information can be
+  *	used in building Authentication and Reassociation Request frames.
++ *
++ * @get_max_tp: Get the maximum throughput estimated by the rate control
++ *	algorithm towards a given peer
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2231,6 +2234,9 @@ struct cfg80211_ops {
+ 					 struct cfg80211_chan_def *chandef);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
++
++	int	(*get_max_tp)(struct wireless_dev *wdev, const u8 *peer,
++			      u32 *tp);
+ };
+ 
+ /*
+@@ -4126,6 +4132,20 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+ 				   struct cfg80211_wowlan_wakeup *wakeup,
+ 				   gfp_t gfp);
+ 
++/**
++ * cfg80211_get_max_tp - get the maximum estimated throughput towards a peer
++ * @wdev: the wireless device which the peer is connected to
++ * @peer: MAC address of the peer
++ * @tp: output buffer. Will contain the throughput value
++ *
++ * This functions queries the underlaying driver and gets the maximum
++ * estimated throughput towards the given peer. The result is then stored in the
++ * variable pointed by tp
++ *
++ * Return 0 on success or a negative error code otherwise
++ */
++int cfg80211_get_max_tp(struct wireless_dev *wdev, u8 *peer, u32 *tp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 92e3fd4..ae86515 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -854,6 +854,17 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 	wdev->beacon_interval = 0;
  }
  
- static struct brcmf_fws_mac_descriptor*
--brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, int ifidx, u8 *da)
-+brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, struct brcmf_if *ifp,
-+			u8 *da)
- {
- 	struct brcmf_fws_mac_descriptor *entry = &fws->desc.other;
--	struct brcmf_if *ifp;
- 	bool multicast;
- 	enum nl80211_iftype iftype;
--	brcmf_dbg(TRACE, "enter: ifidx=%d\n", ifidx);
- 
--	multicast = is_multicast_ether_addr(da);
--	ifp = fws->drvr->iflist[ifidx ? ifidx + 1 : 0];
--	if (WARN_ON(!ifp))
--		goto done;
-+	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
- 
-+	multicast = is_multicast_ether_addr(da);
- 	iftype = brcmf_cfg80211_get_iftype(ifp);
- 
- 	/* Multicast destination and P2P clients get the interface entry.
-@@ -1750,7 +1747,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 
- 	/* set control buffer information */
- 	skcb->if_flags = 0;
--	skcb->mac = brcmf_fws_find_mac_desc(drvr->fws, ifidx, eh->h_dest);
-+	skcb->mac = brcmf_fws_find_mac_desc(drvr->fws, ifp, eh->h_dest);
- 	skcb->state = BRCMF_FWS_SKBSTATE_NEW;
- 	brcmf_skb_if_flags_set_field(skb, INDEX, ifidx);
- 	if (!multicast)
++int cfg80211_get_max_tp(struct wireless_dev *wdev, u8 *peer, u32 *tp)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++
++	if (!rdev->ops->get_max_tp)
++		return -EOPNOTSUPP;
++
++	return rdev->ops->get_max_tp(wdev, peer, tp);
++}
++EXPORT_SYMBOL(cfg80211_get_max_tp);
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
 -- 
-1.7.10.4
-
+1.8.1.5
 
