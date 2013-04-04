@@ -1,41 +1,335 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:54344 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966624Ab3DQOpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 10:45:24 -0400
-Received: by mail-vc0-f171.google.com with SMTP id ha12so1373872vcb.16
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 07:45:23 -0700 (PDT)
-Message-ID: <516EB581.9080602@lwfinger.net> (sfid-20130417_164529_311971_3D663800)
-Date: Wed, 17 Apr 2013 09:45:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:4581 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758095Ab3DDKK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 06:10:29 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH for-3.9 1/2] brcmsmac: request firmware in .start()
+ callback
+Date: Thu, 4 Apr 2013 12:10:10 +0200
+Message-ID: <1365070211-26308-2-git-send-email-arend@broadcom.com> (sfid-20130404_121034_778597_3777D903)
+In-Reply-To: <1365070211-26308-1-git-send-email-arend@broadcom.com>
+References: <1365070211-26308-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Joelle <JoelleEmmily@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8187 in master mode with hostapd
-References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow> <5016A5D3.10301@lwfinger.net> <loom.20130417T144556-632@post.gmane.org>
-In-Reply-To: <loom.20130417T144556-632@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2013 07:51 AM, Joelle wrote:
->
-> The statement that the rtl8187 CANNOT be set as an AP is utterly wrong. Alfa
-> networks provides a Windows utility that allows one to setup an AP, I've
-> used it and it works(as well as anything on windows). It seems that this is
-> a crime against technology that windows can provide a functionality that
-> Linux cannot or may never.
+The firmware is requested from user-space. To assure the request
+is handled it is recommended to do the request upon IFF_UP. For
+a mac80211 driver the .start() callback can be considered the
+equivalent.
 
-I did not say that the RTL8187{B,L} cannot be used as an AP! I said that rtl8187 
-cannot. The capitalization is important. With caps, it refers to a device; 
-without implies a driver.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  264 ++++++++++----------
+ 1 file changed, 132 insertions(+), 132 deletions(-)
 
-I am not sure how well an RTL8187L would work as it only has a single transmit 
-queue, but perhaps it would work.
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index c6451c6..e2340b2 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -274,6 +274,130 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+ 	}
+ }
+ 
++/**
++ * This function frees the WL per-device resources.
++ *
++ * This function frees resources owned by the WL device pointed to
++ * by the wl parameter.
++ *
++ * precondition: can both be called locked and unlocked
++ *
++ */
++static void brcms_free(struct brcms_info *wl)
++{
++	struct brcms_timer *t, *next;
++
++	/* free ucode data */
++	if (wl->fw.fw_cnt)
++		brcms_ucode_data_free(&wl->ucode);
++	if (wl->irq)
++		free_irq(wl->irq, wl);
++
++	/* kill dpc */
++	tasklet_kill(&wl->tasklet);
++
++	if (wl->pub) {
++		brcms_debugfs_detach(wl->pub);
++		brcms_c_module_unregister(wl->pub, "linux", wl);
++	}
++
++	/* free common resources */
++	if (wl->wlc) {
++		brcms_c_detach(wl->wlc);
++		wl->wlc = NULL;
++		wl->pub = NULL;
++	}
++
++	/* virtual interface deletion is deferred so we cannot spinwait */
++
++	/* wait for all pending callbacks to complete */
++	while (atomic_read(&wl->callbacks) > 0)
++		schedule();
++
++	/* free timers */
++	for (t = wl->timers; t; t = next) {
++		next = t->next;
++#ifdef DEBUG
++		kfree(t->name);
++#endif
++		kfree(t);
++	}
++}
++
++/*
++* called from both kernel as from this kernel module (error flow on attach)
++* precondition: perimeter lock is not acquired.
++*/
++static void brcms_remove(struct bcma_device *pdev)
++{
++	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
++	struct brcms_info *wl = hw->priv;
++
++	if (wl->wlc) {
++		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
++		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
++		ieee80211_unregister_hw(hw);
++	}
++
++	brcms_free(wl);
++
++	bcma_set_drvdata(pdev, NULL);
++	ieee80211_free_hw(hw);
++}
++
++/*
++ * Precondition: Since this function is called in brcms_pci_probe() context,
++ * no locking is required.
++ */
++static void brcms_release_fw(struct brcms_info *wl)
++{
++	int i;
++	for (i = 0; i < MAX_FW_IMAGES; i++) {
++		release_firmware(wl->fw.fw_bin[i]);
++		release_firmware(wl->fw.fw_hdr[i]);
++	}
++}
++
++/*
++ * Precondition: Since this function is called in brcms_pci_probe() context,
++ * no locking is required.
++ */
++static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
++{
++	int status;
++	struct device *device = &pdev->dev;
++	char fw_name[100];
++	int i;
++
++	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
++	for (i = 0; i < MAX_FW_IMAGES; i++) {
++		if (brcms_firmwares[i] == NULL)
++			break;
++		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
++			UCODE_LOADER_API_VER);
++		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
++		if (status) {
++			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
++				  KBUILD_MODNAME, fw_name);
++			return status;
++		}
++		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
++			UCODE_LOADER_API_VER);
++		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
++		if (status) {
++			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
++				  KBUILD_MODNAME, fw_name);
++			return status;
++		}
++		wl->fw.hdr_num_entries[i] =
++		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
++	}
++	wl->fw.fw_cnt = i;
++	status = brcms_ucode_data_init(wl, &wl->ucode);
++	brcms_release_fw(wl);
++	return status;
++}
++
+ static void brcms_ops_tx(struct ieee80211_hw *hw,
+ 			 struct ieee80211_tx_control *control,
+ 			 struct sk_buff *skb)
+@@ -306,6 +430,14 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
+ 	if (!blocked)
+ 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+ 
++	if (!wl->ucode.bcm43xx_bomminor) {
++		err = brcms_request_fw(wl, wl->wlc->hw->d11core);
++		if (err) {
++			brcms_remove(wl->wlc->hw->d11core);
++			return -ENOENT;
++		}
++	}
++
+ 	spin_lock_bh(&wl->lock);
+ 	/* avoid acknowledging frames before a non-monitor device is added */
+ 	wl->mute_tx = true;
+@@ -793,128 +925,6 @@ void brcms_dpc(unsigned long data)
+ 	wake_up(&wl->tx_flush_wq);
+ }
+ 
+-/*
+- * Precondition: Since this function is called in brcms_pci_probe() context,
+- * no locking is required.
+- */
+-static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
+-{
+-	int status;
+-	struct device *device = &pdev->dev;
+-	char fw_name[100];
+-	int i;
+-
+-	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
+-	for (i = 0; i < MAX_FW_IMAGES; i++) {
+-		if (brcms_firmwares[i] == NULL)
+-			break;
+-		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
+-			UCODE_LOADER_API_VER);
+-		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
+-		if (status) {
+-			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+-				  KBUILD_MODNAME, fw_name);
+-			return status;
+-		}
+-		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
+-			UCODE_LOADER_API_VER);
+-		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
+-		if (status) {
+-			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+-				  KBUILD_MODNAME, fw_name);
+-			return status;
+-		}
+-		wl->fw.hdr_num_entries[i] =
+-		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
+-	}
+-	wl->fw.fw_cnt = i;
+-	return brcms_ucode_data_init(wl, &wl->ucode);
+-}
+-
+-/*
+- * Precondition: Since this function is called in brcms_pci_probe() context,
+- * no locking is required.
+- */
+-static void brcms_release_fw(struct brcms_info *wl)
+-{
+-	int i;
+-	for (i = 0; i < MAX_FW_IMAGES; i++) {
+-		release_firmware(wl->fw.fw_bin[i]);
+-		release_firmware(wl->fw.fw_hdr[i]);
+-	}
+-}
+-
+-/**
+- * This function frees the WL per-device resources.
+- *
+- * This function frees resources owned by the WL device pointed to
+- * by the wl parameter.
+- *
+- * precondition: can both be called locked and unlocked
+- *
+- */
+-static void brcms_free(struct brcms_info *wl)
+-{
+-	struct brcms_timer *t, *next;
+-
+-	/* free ucode data */
+-	if (wl->fw.fw_cnt)
+-		brcms_ucode_data_free(&wl->ucode);
+-	if (wl->irq)
+-		free_irq(wl->irq, wl);
+-
+-	/* kill dpc */
+-	tasklet_kill(&wl->tasklet);
+-
+-	if (wl->pub) {
+-		brcms_debugfs_detach(wl->pub);
+-		brcms_c_module_unregister(wl->pub, "linux", wl);
+-	}
+-
+-	/* free common resources */
+-	if (wl->wlc) {
+-		brcms_c_detach(wl->wlc);
+-		wl->wlc = NULL;
+-		wl->pub = NULL;
+-	}
+-
+-	/* virtual interface deletion is deferred so we cannot spinwait */
+-
+-	/* wait for all pending callbacks to complete */
+-	while (atomic_read(&wl->callbacks) > 0)
+-		schedule();
+-
+-	/* free timers */
+-	for (t = wl->timers; t; t = next) {
+-		next = t->next;
+-#ifdef DEBUG
+-		kfree(t->name);
+-#endif
+-		kfree(t);
+-	}
+-}
+-
+-/*
+-* called from both kernel as from this kernel module (error flow on attach)
+-* precondition: perimeter lock is not acquired.
+-*/
+-static void brcms_remove(struct bcma_device *pdev)
+-{
+-	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
+-	struct brcms_info *wl = hw->priv;
+-
+-	if (wl->wlc) {
+-		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
+-		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+-		ieee80211_unregister_hw(hw);
+-	}
+-
+-	brcms_free(wl);
+-
+-	bcma_set_drvdata(pdev, NULL);
+-	ieee80211_free_hw(hw);
+-}
+-
+ static irqreturn_t brcms_isr(int irq, void *dev_id)
+ {
+ 	struct brcms_info *wl;
+@@ -1047,18 +1057,8 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+ 	spin_lock_init(&wl->lock);
+ 	spin_lock_init(&wl->isr_lock);
+ 
+-	/* prepare ucode */
+-	if (brcms_request_fw(wl, pdev) < 0) {
+-		wiphy_err(wl->wiphy, "%s: Failed to find firmware usually in "
+-			  "%s\n", KBUILD_MODNAME, "/lib/firmware/brcm");
+-		brcms_release_fw(wl);
+-		brcms_remove(pdev);
+-		return NULL;
+-	}
+-
+ 	/* common load-time initialization */
+ 	wl->wlc = brcms_c_attach((void *)wl, pdev, unit, false, &err);
+-	brcms_release_fw(wl);
+ 	if (!wl->wlc) {
+ 		wiphy_err(wl->wiphy, "%s: attach() failed with code %d\n",
+ 			  KBUILD_MODNAME, err);
+-- 
+1.7.10.4
 
-If you think there is a "crime against technology", then you need to be the one 
-to make the necessary changes to rtl8187. After all, the source is open.
-
-Larry
 
