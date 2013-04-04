@@ -1,122 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:43840 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569Ab3DEENE (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:33373 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765254Ab3DDXvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 00:13:04 -0400
-Received: by mail-wi0-f170.google.com with SMTP id hm11so1384425wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 21:13:03 -0700 (PDT)
+	Thu, 4 Apr 2013 19:51:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
-	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-Date: Thu, 4 Apr 2013 21:13:03 -0700
-Message-ID: <CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com> (sfid-20130405_061314_111632_FA522946)
-Subject: Re: AR9287 ; 2-wire coexistence expected behavior
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <20130404160130.GA2577@udknight>
+References: <20130404160130.GA2577@udknight>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 5 Apr 2013 10:51:30 +1100
+Message-ID: <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com> (sfid-20130405_015215_911581_5FCA67D3)
+Subject: Re: [PATCH] lib80211: make lib80211 can be enabled independently
+To: Wang YanQing <udknight@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You'll have to give me some more time to digest what I'm reading
-internally; it's all new to me.
+Hi Wang,
 
-For FreeBSD, you can look at these files in FreeBSD-HEAD:
+On Fri, Apr 5, 2013 at 3:01 AM, Wang YanQing <udknight@gmail.com> wrote:
+>
+> Current we can only enable lib80211 by enable a driver
+> in tree use it which will select it, but some out tree's
+> drivers also use it, so I think it has sense to make lib80211
+> can be enabled independently.
 
-sys/dev/ath/ath_hal/ar5416/ar5416_btcoex.c
-sys/dev/ath/ath_hal/ar9002/ar9285_btcoex.c (not that relevant for you,
-but still)
+Just as a bit of explanation for Johannes' NACK:
 
-These contain the register writes that the internal reference HAL is
-doing when programming btcoex for AR9285/AR9287.
+1. The only reason lib80211 still exists is because a couple of
+in-tree drivers still use it. If this weren't the case, the code would
+have been removed a long time ago as it's been completely replaced by
+mac80211 and cfg80211. All modern drivers _must_ use mac80211 or
+cfg80211 without exception.
+2. In general, there is no official in-kernel support for
+out-of-kernel drivers, regardless of quality, status or importance.
+3. I believe that the in-tree brcmsmac driver already supports the
+Broadcom card you reference.
 
-The AR9287 should support 2-wire coex fine.
+Thanks,
 
-Just read those source files. The ar5416InitBTCoex() programs the
-BT_ACTIVE / WLAN_ACTIVE gpio's when you say the coexistence type is
-2-wire. There's weights and such being programmed elsewhere; you need
-to make sure you pick the default values for that and try it out.
+--
+Julian Calaby
 
-I can't help you more than that at the moment; I'm busy doing other
-work that doesn't at all touch wifi. :)
-
-
-
-Adrian
-
-On 4 April 2013 20:08, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
-> Hello Mr.Adrian,
->     Thanks for your mail. Regarding your comment below:
->
-> "THen you need to ensure the bluetooth coexistence registers are programmed
-> so that btactive will correctly stomp wifi traffic."
->
-> Can you please elaborate on this? As I understand the concept of "stomping"
-> is only in 3-wire coexistence; correct me if I am wrong.
->
-> As mentioned earlier, the set-up we have is a PCB board with general purpose
-> MCU controlling the 2-wire coexistence pins of AR9287. As there are other
-> 2.4GHz radio (called PROP radio here) on the board, we want to ensure that
-> both radios do not transmit at the same time which will result in
-> collisions. Hence we want to build a co-operative coexistence approach so
-> that when PROP radio is active (by asserting BT_ACTIVE), AR9287 has to
-> buffer transmissions and allow PROP radio to be active. Only when PROP radio
-> is inactive (BT_ACTIVE is deasserted), only then WiFi can be active. Hope
-> this is achievable?
->
-> Thanks & Regards
-> Sandeep.
->
-> From: Adrian Chadd <adrian@freebsd.org>
-> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-> Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>;
-> ath9k-devel <ath9k-devel@lists.ath9k.org>
-> Sent: Thursday, 4 April 2013 11:36 PM
->
-> Subject: Re: AR9287 ; 2-wire coexistence expected behavior
->
-> Hi!
->
-> I'm glad you're looking into this in more depth!
->
-> On 4 April 2013 08:19, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
->
->> I understand that ATH_BTCOEX_CFG_2_WIRE, ATH_BTACTIVE_GPIO_9280 (GPIO6 as
->> per btcoex.h) and ATH_WLANACTIVE_GPIO_9280 (GPIO5 as per btcoex.h) are
->> used.
->
-> Ok, right.
->
->> I next started monitoring GPIO5 on oscillaoscope to see WLAN activity and
->> I
->> could see a lot of pulse trains. Next in order to simulate high priority
->> BT
->> traffic, I pulled the line GPIO6 high. But I did not see any change in
->> WLAN
->> activity as I could continue to see the pulse trains. My expectation was
->> that there should not be any WLAN activity and hence no pulses. Please
->> guide
->> if I am missing anything?
->
-> Well, firstyl you need to ensure that the GPIO pin has been programmed
-> to be an input, and it's of the right bluetooth type. As I said
-> before, GPIO pins can be input, output; they can be connected via an
-> internal mux to a variety of "behaviours". Take a look at the gpio
-> configure code in ath9k to see more.
->
-> THen you need to ensure the bluetooth coexistence registers are
-> programmed so that btactive will correctly stomp wifi traffic.
->
-> THat's all I know for now. Sorry.
->
->
->
-> adrian
->
->
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
