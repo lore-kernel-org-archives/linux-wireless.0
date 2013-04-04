@@ -1,181 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964864Ab3DJMnv (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2897 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758883Ab3DDJhG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 08:43:51 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 8/8] mac80211: handle wide bandwidth channel switch
-Date: Wed, 10 Apr 2013 14:43:42 +0200
-Message-Id: <1365597822-27660-9-git-send-email-johannes@sipsolutions.net> (sfid-20130410_144357_572708_2ACD0C03)
-In-Reply-To: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
-References: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 4 Apr 2013 05:37:06 -0400
+Message-ID: <515D49B5.6070803@broadcom.com> (sfid-20130404_113717_902821_426C75C7)
+Date: Thu, 4 Apr 2013 11:36:53 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH for-3.9] brcmsmac: request firmware in .start()
+ callback
+References: <1364978488-5295-1-git-send-email-arend@broadcom.com>
+ <20130403184936.GA320@tuxdriver.com>
+In-Reply-To: <20130403184936.GA320@tuxdriver.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 04/03/2013 08:49 PM, John W. Linville wrote:
+>    CC      drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.o
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c: In function ‘brcms_remove’:
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:337:3: error: implicit declaration of function ‘brcms_led_unregister’ [-Werror=implicit-function-declaration]
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c: In function ‘brcms_request_fw’:
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:385:2: error: implicit declaration of function ‘brcms_release_fw’ [-Werror=implicit-function-declaration]
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c: At top level:
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:393:13: warning: conflicting types for ‘brcms_release_fw’ [enabled by default]
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:393:13: error: static declaration of ‘brcms_release_fw’ follows non-static declaration
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:385:2: note: previous implicit declaration of ‘brcms_release_fw’ was here
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c:393:13: warning: ‘brcms_release_fw’ defined but not used [-Wunused-function]
+> cc1: some warnings being treated as errors
 
-Parse and react to the wide bandwidth channel switch element
-in beacons/action frames. Finding the element was done in a
-previous patch (it has different positions in beacons/action
-frames), now handle it. If there's something wrong with it
-simply disconnect.
+Yikes. That is not properly rebased on the wireless tree. Sorry about 
+that. I will correct that and send a working patch.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 96 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 79 insertions(+), 17 deletions(-)
+Gr. AvS
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index bfe70de..2172daa 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1028,7 +1028,11 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	u8 new_chan_no;
- 	u8 count;
- 	u8 mode;
-+	struct ieee80211_channel *new_chan;
- 	struct cfg80211_chan_def new_chandef = {};
-+	struct cfg80211_chan_def new_vht_chandef = {};
-+	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-+	const struct ieee80211_wide_bw_chansw_ie *wide_bw_chansw_ie;
- 	int secondary_channel_offset = -1;
- 
- 	ASSERT_MGD_MTX(ifmgd);
-@@ -1043,18 +1047,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
- 		return;
- 
--	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
--		/* if HT is enabled and the IE not present, it's still HT */
--		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
--		if (elems->sec_chan_offs)
--			secondary_channel_offset =
--				elems->sec_chan_offs->sec_chan_offs;
-+	sec_chan_offs = elems->sec_chan_offs;
-+	wide_bw_chansw_ie = elems->wide_bw_chansw_ie;
-+
-+	if (ifmgd->flags & (IEEE80211_STA_DISABLE_HT |
-+			    IEEE80211_STA_DISABLE_40MHZ)) {
-+		sec_chan_offs = NULL;
-+		wide_bw_chansw_ie = NULL;
- 	}
- 
--	if (ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ &&
--	    (secondary_channel_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE ||
--	     secondary_channel_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW))
--		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+	if (ifmgd->flags & IEEE80211_STA_DISABLE_VHT)
-+		wide_bw_chansw_ie = NULL;
- 
- 	if (elems->ext_chansw_ie) {
- 		if (!ieee80211_operating_class_to_band(
-@@ -1082,9 +1085,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	bss = (void *)cbss->priv;
- 
- 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
--	new_chandef.chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
--	if (!new_chandef.chan ||
--	    new_chandef.chan->flags & IEEE80211_CHAN_DISABLED) {
-+	new_chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	if (!new_chan || new_chan->flags & IEEE80211_CHAN_DISABLED) {
- 		sdata_info(sdata,
- 			   "AP %pM switches to unsupported channel (%d MHz), disconnecting\n",
- 			   ifmgd->associated->bssid, new_freq);
-@@ -1093,27 +1095,87 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	if (sec_chan_offs) {
-+		secondary_channel_offset = sec_chan_offs->sec_chan_offs;
-+	} else if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HT)) {
-+		/* if HT is enabled and the IE not present, it's still HT */
-+		secondary_channel_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+	}
-+
- 	switch (secondary_channel_offset) {
- 	default:
- 		/* secondary_channel_offset was present but is invalid */
- 	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT20);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT40PLUS);
- 		break;
- 	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_HT40MINUS);
- 		break;
- 	case -1:
--		cfg80211_chandef_create(&new_chandef, new_chandef.chan,
-+		cfg80211_chandef_create(&new_chandef, new_chan,
- 					NL80211_CHAN_NO_HT);
- 		break;
- 	}
- 
-+	if (wide_bw_chansw_ie) {
-+		new_vht_chandef.chan = new_chan;
-+		new_vht_chandef.center_freq1 =
-+			ieee80211_channel_to_frequency(
-+				wide_bw_chansw_ie->new_center_freq_seg0,
-+				new_band);
-+
-+		switch (wide_bw_chansw_ie->new_channel_width) {
-+		default:
-+			/* hmmm, ignore VHT and use HT if present */
-+		case IEEE80211_VHT_CHANWIDTH_USE_HT:
-+			new_vht_chandef.chan = NULL;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_80MHZ:
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_80;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_160MHZ:
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_160;
-+			break;
-+		case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
-+			/* field is otherwise reserved */
-+			new_vht_chandef.center_freq2 =
-+				ieee80211_channel_to_frequency(
-+					wide_bw_chansw_ie->new_center_freq_seg1,
-+					new_band);
-+			new_vht_chandef.width = NL80211_CHAN_WIDTH_80P80;
-+			break;
-+		}
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_80P80MHZ &&
-+		    new_vht_chandef.width == NL80211_CHAN_WIDTH_80P80)
-+			chandef_downgrade(&new_vht_chandef);
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_160MHZ &&
-+		    new_vht_chandef.width == NL80211_CHAN_WIDTH_160)
-+			chandef_downgrade(&new_vht_chandef);
-+		if (ifmgd->flags & IEEE80211_STA_DISABLE_40MHZ &&
-+		    new_vht_chandef.width > NL80211_CHAN_WIDTH_20)
-+			chandef_downgrade(&new_vht_chandef);
-+	}
-+
-+	/* if VHT data is there validate & use it */
-+	if (new_vht_chandef.chan) {
-+		if (!cfg80211_chandef_compatible(&new_vht_chandef,
-+						 &new_chandef)) {
-+			sdata_info(sdata,
-+				   "AP %pM CSA has inconsistent channel data, disconnecting\n",
-+				   ifmgd->associated->bssid);
-+			ieee80211_queue_work(&local->hw,
-+					     &ifmgd->csa_connection_drop_work);
-+			return;
-+		}
-+		new_chandef = new_vht_chandef;
-+	}
-+
- 	if (!cfg80211_chandef_usable(local->hw.wiphy, &new_chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
--- 
-1.8.0
+> On Wed, Apr 03, 2013 at 10:41:28AM +0200, Arend van Spriel wrote:
+>> The firmware is requested from user-space. To assure the request
+>> can be handled it is recommended to do the request upon IFF_UP.
+>> For a mac80211 driver the .start() callback can be considered
+>> the equivalent.
+>>
+>> Reported-by: John Talbut <jt@dpets.co.uk>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Reviewed-by: Piotr Haber <phaber@broadcom.com>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>> Hi John,
+>>
+>> Forgot this one for the 3.9 kernel, which was reported recently
+>> using a system with an encrypted root filesystem although the issue
+>> is more generic.
+>>
+>> It applies to the master branch in the wireless repository.
+>>
+>> Gr. AvS
+>> ---
+>>   .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  267 ++++++++++----------
+>>   1 file changed, 134 insertions(+), 133 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> index c6451c6..2f063a2 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+>> @@ -274,6 +274,131 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
+>>   	}
+>>   }
+>>
+>> +/**
+>> + * This function frees the WL per-device resources.
+>> + *
+>> + * This function frees resources owned by the WL device pointed to
+>> + * by the wl parameter.
+>> + *
+>> + * precondition: can both be called locked and unlocked
+>> + *
+>> + */
+>> +static void brcms_free(struct brcms_info *wl)
+>> +{
+>> +	struct brcms_timer *t, *next;
+>> +
+>> +	/* free ucode data */
+>> +	if (wl->fw.fw_cnt)
+>> +		brcms_ucode_data_free(&wl->ucode);
+>> +	if (wl->irq)
+>> +		free_irq(wl->irq, wl);
+>> +
+>> +	/* kill dpc */
+>> +	tasklet_kill(&wl->tasklet);
+>> +
+>> +	if (wl->pub) {
+>> +		brcms_debugfs_detach(wl->pub);
+>> +		brcms_c_module_unregister(wl->pub, "linux", wl);
+>> +	}
+>> +
+>> +	/* free common resources */
+>> +	if (wl->wlc) {
+>> +		brcms_c_detach(wl->wlc);
+>> +		wl->wlc = NULL;
+>> +		wl->pub = NULL;
+>> +	}
+>> +
+>> +	/* virtual interface deletion is deferred so we cannot spinwait */
+>> +
+>> +	/* wait for all pending callbacks to complete */
+>> +	while (atomic_read(&wl->callbacks) > 0)
+>> +		schedule();
+>> +
+>> +	/* free timers */
+>> +	for (t = wl->timers; t; t = next) {
+>> +		next = t->next;
+>> +#ifdef DEBUG
+>> +		kfree(t->name);
+>> +#endif
+>> +		kfree(t);
+>> +	}
+>> +}
+>> +
+>> +/*
+>> +* called from both kernel as from this kernel module (error flow on attach)
+>> +* precondition: perimeter lock is not acquired.
+>> +*/
+>> +static void brcms_remove(struct bcma_device *pdev)
+>> +{
+>> +	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
+>> +	struct brcms_info *wl = hw->priv;
+>> +
+>> +	if (wl->wlc) {
+>> +		brcms_led_unregister(wl);
+>> +		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
+>> +		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+>> +		ieee80211_unregister_hw(hw);
+>> +	}
+>> +
+>> +	brcms_free(wl);
+>> +
+>> +	bcma_set_drvdata(pdev, NULL);
+>> +	ieee80211_free_hw(hw);
+>> +}
+>> +
+>> +/*
+>> + * Precondition: Since this function is called in brcms_pci_probe() context,
+>> + * no locking is required.
+>> + */
+>> +static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
+>> +{
+>> +	int status;
+>> +	struct device *device = &pdev->dev;
+>> +	char fw_name[100];
+>> +	int i;
+>> +
+>> +	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
+>> +	for (i = 0; i < MAX_FW_IMAGES; i++) {
+>> +		if (brcms_firmwares[i] == NULL)
+>> +			break;
+>> +		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
+>> +			UCODE_LOADER_API_VER);
+>> +		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
+>> +		if (status) {
+>> +			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+>> +				  KBUILD_MODNAME, fw_name);
+>> +			return status;
+>> +		}
+>> +		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
+>> +			UCODE_LOADER_API_VER);
+>> +		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
+>> +		if (status) {
+>> +			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+>> +				  KBUILD_MODNAME, fw_name);
+>> +			return status;
+>> +		}
+>> +		wl->fw.hdr_num_entries[i] =
+>> +		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
+>> +	}
+>> +	wl->fw.fw_cnt = i;
+>> +	status = brcms_ucode_data_init(wl, &wl->ucode);
+>> +	brcms_release_fw(wl);
+>> +	return status;
+>> +}
+>> +
+>> +/*
+>> + * Precondition: Since this function is called in brcms_pci_probe() context,
+>> + * no locking is required.
+>> + */
+>> +static void brcms_release_fw(struct brcms_info *wl)
+>> +{
+>> +	int i;
+>> +	for (i = 0; i < MAX_FW_IMAGES; i++) {
+>> +		release_firmware(wl->fw.fw_bin[i]);
+>> +		release_firmware(wl->fw.fw_hdr[i]);
+>> +	}
+>> +}
+>> +
+>>   static void brcms_ops_tx(struct ieee80211_hw *hw,
+>>   			 struct ieee80211_tx_control *control,
+>>   			 struct sk_buff *skb)
+>> @@ -297,7 +422,7 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
+>>   {
+>>   	struct brcms_info *wl = hw->priv;
+>>   	bool blocked;
+>> -	int err;
+>> +	int err = 0;
+>>
+>>   	ieee80211_wake_queues(hw);
+>>   	spin_lock_bh(&wl->lock);
+>> @@ -306,6 +431,14 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
+>>   	if (!blocked)
+>>   		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+>>
+>> +	if (!wl->ucode.bcm43xx_bomminor) {
+>> +		err = brcms_request_fw(wl, wl->wlc->hw->d11core);
+>> +		if (err) {
+>> +			brcms_remove(wl->wlc->hw->d11core);
+>> +			return -ENOENT;
+>> +		}
+>> +	}
+>> +
+>>   	spin_lock_bh(&wl->lock);
+>>   	/* avoid acknowledging frames before a non-monitor device is added */
+>>   	wl->mute_tx = true;
+>> @@ -793,128 +926,6 @@ void brcms_dpc(unsigned long data)
+>>   	wake_up(&wl->tx_flush_wq);
+>>   }
+>>
+>> -/*
+>> - * Precondition: Since this function is called in brcms_pci_probe() context,
+>> - * no locking is required.
+>> - */
+>> -static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
+>> -{
+>> -	int status;
+>> -	struct device *device = &pdev->dev;
+>> -	char fw_name[100];
+>> -	int i;
+>> -
+>> -	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
+>> -	for (i = 0; i < MAX_FW_IMAGES; i++) {
+>> -		if (brcms_firmwares[i] == NULL)
+>> -			break;
+>> -		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
+>> -			UCODE_LOADER_API_VER);
+>> -		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
+>> -		if (status) {
+>> -			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+>> -				  KBUILD_MODNAME, fw_name);
+>> -			return status;
+>> -		}
+>> -		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
+>> -			UCODE_LOADER_API_VER);
+>> -		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
+>> -		if (status) {
+>> -			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
+>> -				  KBUILD_MODNAME, fw_name);
+>> -			return status;
+>> -		}
+>> -		wl->fw.hdr_num_entries[i] =
+>> -		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
+>> -	}
+>> -	wl->fw.fw_cnt = i;
+>> -	return brcms_ucode_data_init(wl, &wl->ucode);
+>> -}
+>> -
+>> -/*
+>> - * Precondition: Since this function is called in brcms_pci_probe() context,
+>> - * no locking is required.
+>> - */
+>> -static void brcms_release_fw(struct brcms_info *wl)
+>> -{
+>> -	int i;
+>> -	for (i = 0; i < MAX_FW_IMAGES; i++) {
+>> -		release_firmware(wl->fw.fw_bin[i]);
+>> -		release_firmware(wl->fw.fw_hdr[i]);
+>> -	}
+>> -}
+>> -
+>> -/**
+>> - * This function frees the WL per-device resources.
+>> - *
+>> - * This function frees resources owned by the WL device pointed to
+>> - * by the wl parameter.
+>> - *
+>> - * precondition: can both be called locked and unlocked
+>> - *
+>> - */
+>> -static void brcms_free(struct brcms_info *wl)
+>> -{
+>> -	struct brcms_timer *t, *next;
+>> -
+>> -	/* free ucode data */
+>> -	if (wl->fw.fw_cnt)
+>> -		brcms_ucode_data_free(&wl->ucode);
+>> -	if (wl->irq)
+>> -		free_irq(wl->irq, wl);
+>> -
+>> -	/* kill dpc */
+>> -	tasklet_kill(&wl->tasklet);
+>> -
+>> -	if (wl->pub) {
+>> -		brcms_debugfs_detach(wl->pub);
+>> -		brcms_c_module_unregister(wl->pub, "linux", wl);
+>> -	}
+>> -
+>> -	/* free common resources */
+>> -	if (wl->wlc) {
+>> -		brcms_c_detach(wl->wlc);
+>> -		wl->wlc = NULL;
+>> -		wl->pub = NULL;
+>> -	}
+>> -
+>> -	/* virtual interface deletion is deferred so we cannot spinwait */
+>> -
+>> -	/* wait for all pending callbacks to complete */
+>> -	while (atomic_read(&wl->callbacks) > 0)
+>> -		schedule();
+>> -
+>> -	/* free timers */
+>> -	for (t = wl->timers; t; t = next) {
+>> -		next = t->next;
+>> -#ifdef DEBUG
+>> -		kfree(t->name);
+>> -#endif
+>> -		kfree(t);
+>> -	}
+>> -}
+>> -
+>> -/*
+>> -* called from both kernel as from this kernel module (error flow on attach)
+>> -* precondition: perimeter lock is not acquired.
+>> -*/
+>> -static void brcms_remove(struct bcma_device *pdev)
+>> -{
+>> -	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
+>> -	struct brcms_info *wl = hw->priv;
+>> -
+>> -	if (wl->wlc) {
+>> -		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
+>> -		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+>> -		ieee80211_unregister_hw(hw);
+>> -	}
+>> -
+>> -	brcms_free(wl);
+>> -
+>> -	bcma_set_drvdata(pdev, NULL);
+>> -	ieee80211_free_hw(hw);
+>> -}
+>> -
+>>   static irqreturn_t brcms_isr(int irq, void *dev_id)
+>>   {
+>>   	struct brcms_info *wl;
+>> @@ -1047,18 +1058,8 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+>>   	spin_lock_init(&wl->lock);
+>>   	spin_lock_init(&wl->isr_lock);
+>>
+>> -	/* prepare ucode */
+>> -	if (brcms_request_fw(wl, pdev) < 0) {
+>> -		wiphy_err(wl->wiphy, "%s: Failed to find firmware usually in "
+>> -			  "%s\n", KBUILD_MODNAME, "/lib/firmware/brcm");
+>> -		brcms_release_fw(wl);
+>> -		brcms_remove(pdev);
+>> -		return NULL;
+>> -	}
+>> -
+>>   	/* common load-time initialization */
+>>   	wl->wlc = brcms_c_attach((void *)wl, pdev, unit, false, &err);
+>> -	brcms_release_fw(wl);
+>>   	if (!wl->wlc) {
+>>   		wiphy_err(wl->wiphy, "%s: attach() failed with code %d\n",
+>>   			  KBUILD_MODNAME, err);
+>> --
+>> 1.7.10.4
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+
 
