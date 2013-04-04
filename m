@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:60574 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764294Ab3DDSGv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 14:06:51 -0400
-Received: by mail-wg0-f48.google.com with SMTP id m15so3045764wgh.27
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 11:06:50 -0700 (PDT)
+Received: from mail.neratec.com ([80.75.119.105]:34892 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760872Ab3DDNim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 09:38:42 -0400
+Message-ID: <515D8259.1030208@neratec.com> (sfid-20130404_153846_721079_0D1134FD)
+Date: Thu, 04 Apr 2013 15:38:33 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-Date: Thu, 4 Apr 2013 11:06:50 -0700
-Message-ID: <CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com> (sfid-20130404_200658_203764_788012C9)
-Subject: Re: AR9287 ; 2-wire coexistence expected behavior
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
+References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de>  (sfid-20130402_184017_183870_B78BD6C4) <1364993200.8351.35.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1364993200.8351.35.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On 04/03/2013 02:46 PM, Johannes Berg wrote:
+> On Tue, 2013-04-02 at 18:39 +0200, Simon Wunderlich wrote:
+>> local->hw.conf maybe not be synced when recalcing whether radar is
+>> enabled, sometimes leaving radar enabled even if it's not neccesary
+>> anymore.
+> 
+> I don't really see how, can you explain more?
+> 
+> johannes
+> 
 
-I'm glad you're looking into this in more depth!
+You seem to be right, the patch does not resolve the observed problem.
 
-On 4 April 2013 08:19, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+I am not deep enough in the DFS master code and its integration to resolve it
+myself. What I see is that ath9k_config() is called with a non-DFS channel but
+with ieee80211_hw->conf.radar_enabled set. For ath9k that's no problem at all
+(radar pulse detection can be enabled on any channel), but indicates a problem in
+the channel context handling for DFS.
 
-> I understand that ATH_BTCOEX_CFG_2_WIRE, ATH_BTACTIVE_GPIO_9280 (GPIO6 as
-> per btcoex.h) and ATH_WLANACTIVE_GPIO_9280 (GPIO5 as per btcoex.h) are used.
-
-Ok, right.
-
-> I next started monitoring GPIO5 on oscillaoscope to see WLAN activity and I
-> could see a lot of pulse trains. Next in order to simulate high priority BT
-> traffic, I pulled the line GPIO6 high. But I did not see any change in WLAN
-> activity as I could continue to see the pulse trains. My expectation was
-> that there should not be any WLAN activity and hence no pulses. Please guide
-> if I am missing anything?
-
-Well, firstyl you need to ensure that the GPIO pin has been programmed
-to be an input, and it's of the right bluetooth type. As I said
-before, GPIO pins can be input, output; they can be connected via an
-internal mux to a variety of "behaviours". Take a look at the gpio
-configure code in ath9k to see more.
-
-THen you need to ensure the bluetooth coexistence registers are
-programmed so that btactive will correctly stomp wifi traffic.
-
-THat's all I know for now. Sorry.
+To reproduce, start an AP on a DFS channel, wait until CAC is finished and fire a
+radar. hostapd will switch to a non-DFS channel with the radar_enabled flag set.
 
 
-
-adrian
