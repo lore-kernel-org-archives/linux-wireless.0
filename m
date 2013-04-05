@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:50457 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935660Ab3DPTzq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 15:55:46 -0400
-Received: from smtp02.msg.oleane.net (smtp02.mail.priv [172.17.20.111])
-	by smtp-out05.msg.oleane.net with ESMTP id r3GGl1Fu019859
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:47:01 +0200
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp02.msg.oleane.net (MTA) with ESMTP id r3GGQUa8028129
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:26:30 +0200
-Subject: ath9k null ppointer
-Date: Tue, 16 Apr 2013 18:26:29 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A3190152C875@sbs2003.acksys.local> (sfid-20130416_215550_174434_58E8F852)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:33558 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161662Ab3DEG0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 02:26:45 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 6/6] rt2x00: rt2x00mmio: remove unused rt2x00pci_* defines
+Date: Fri,  5 Apr 2013 08:27:05 +0200
+Message-Id: <1365143225-24532-7-git-send-email-juhosg@openwrt.org> (sfid-20130405_082654_406969_61D61DA8)
+In-Reply-To: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tried to use a mesh network with security (meshd/authsae).
-I am using :
-	- openwrt with the latest mac80211 package from openwrt
-(2013-02-22).
-	-  the Thomas Pedersen patch to add the authsae package in my
-openwrt source tree
-(http://permalink.gmane.org/gmane.linux.drivers.mesh.open80211s/2530)
-(Use the latest version, because I sent a patch in meshd this morning,
-without it the HT mode should not correctly enable)
-	- AR9xx wirless card
-	- Kernel 3.3.8 on power PC (mpc 8314)
+All users are converted to use the rt2x00mmio_*
+functions so remove the now unused defines.
 
-When I configure the meshd daemon to use the HT mode, I have a null
-pointer in ath9k (That work correctly without HT mode).
+The patch contain no functional changes.
 
-In the file, drivers/net/wireless/ath/ath9k in the function
-ath_tx_aggr_wakeup the ac pointer is null.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00mmio.h |   11 -----------
+ 1 file changed, 11 deletions(-)
 
-Do you know why this pointer can be null?
-
-Cedric Voncken 
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.h b/drivers/net/wireless/rt2x00/rt2x00mmio.h
+index b0396ca..cda3dbc 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mmio.h
++++ b/drivers/net/wireless/rt2x00/rt2x00mmio.h
+@@ -37,7 +37,6 @@ static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
+ {
+ 	*value = readl(rt2x00dev->csr.base + offset);
+ }
+-#define rt2x00pci_register_read rt2x00mmio_register_read
+ 
+ static inline void rt2x00mmio_register_multiread(struct rt2x00_dev *rt2x00dev,
+ 						 const unsigned int offset,
+@@ -45,7 +44,6 @@ static inline void rt2x00mmio_register_multiread(struct rt2x00_dev *rt2x00dev,
+ {
+ 	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
+ }
+-#define rt2x00pci_register_multiread rt2x00mmio_register_multiread
+ 
+ static inline void rt2x00mmio_register_write(struct rt2x00_dev *rt2x00dev,
+ 					     const unsigned int offset,
+@@ -53,7 +51,6 @@ static inline void rt2x00mmio_register_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	writel(value, rt2x00dev->csr.base + offset);
+ }
+-#define rt2x00pci_register_write rt2x00mmio_register_write
+ 
+ static inline void rt2x00mmio_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+ 						  const unsigned int offset,
+@@ -62,7 +59,6 @@ static inline void rt2x00mmio_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+ {
+ 	__iowrite32_copy(rt2x00dev->csr.base + offset, value, length >> 2);
+ }
+-#define rt2x00pci_register_multiwrite rt2x00mmio_register_multiwrite
+ 
+ /**
+  * rt2x00mmio_regbusy_read - Read from register with busy check
+@@ -81,7 +77,6 @@ int rt2x00mmio_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 			    const unsigned int offset,
+ 			    const struct rt2x00_field32 field,
+ 			    u32 *reg);
+-#define rt2x00pci_regbusy_read rt2x00mmio_regbusy_read
+ 
+ /**
+  * struct queue_entry_priv_mmio: Per entry PCI specific information
+@@ -95,7 +90,6 @@ struct queue_entry_priv_mmio {
+ 	__le32 *desc;
+ 	dma_addr_t desc_dma;
+ };
+-#define queue_entry_priv_pci queue_entry_priv_mmio
+ 
+ /**
+  * rt2x00mmio_rxdone - Handle RX done events
+@@ -105,7 +99,6 @@ struct queue_entry_priv_mmio {
+  * pending rx frames were processed.
+  */
+ bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev);
+-#define rt2x00pci_rxdone rt2x00mmio_rxdone
+ 
+ /**
+  * rt2x00mmio_flush_queue - Flush data queue
+@@ -116,15 +109,11 @@ bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev);
+  * to become empty.
+  */
+ void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop);
+-#define rt2x00pci_flush_queue rt2x00mmio_flush_queue
+ 
+ /*
+  * Device initialization handlers.
+  */
+ int rt2x00mmio_initialize(struct rt2x00_dev *rt2x00dev);
+-#define rt2x00pci_initialize rt2x00mmio_initialize
+-
+ void rt2x00mmio_uninitialize(struct rt2x00_dev *rt2x00dev);
+-#define rt2x00pci_uninitialize rt2x00mmio_uninitialize
+ 
+ #endif /* RT2X00MMIO_H */
+-- 
+1.7.10
 
