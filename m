@@ -1,63 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.nanl.de ([217.115.11.12]:52915 "EHLO mail.nanl.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754682Ab3DOHxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 03:53:11 -0400
-Date: Mon, 15 Apr 2013 09:53:00 +0200
-From: Jonas Gorski <jogo@openwrt.org>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] mwl8k: remove nonstandard rate 72 Mbps
-Message-ID: <20130415095300.000003d2@unknown> (sfid-20130415_095328_522491_C4404152)
-In-Reply-To: <20130415063838.GB801@markyou.marvell.com>
-References: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
-	<1365941518-4963-1-git-send-email-jogo@openwrt.org>
-	<20130415063838.GB801@markyou.marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:48256 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161251Ab3DEDET (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Apr 2013 23:04:19 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	<daniel@zonque.org>, Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 2/4] mwifiex: remove unused tid_tbl_lock from mwifiex_tid_tbl
+Date: Thu, 4 Apr 2013 20:03:51 -0700
+Message-ID: <1365131033-7417-3-git-send-email-bzhao@marvell.com> (sfid-20130405_050429_127615_B50CB3F6)
+In-Reply-To: <1365131033-7417-1-git-send-email-bzhao@marvell.com>
+References: <1365131033-7417-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 15 Apr 2013 12:08:38 +0530
-Yogesh Ashok Powar <yogeshp@marvell.com> wrote:
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 
-> On Sun, Apr 14, 2013 at 05:11:58AM -0700, Jonas Gorski wrote:
-> > This rate causes an overflow in the extended rates IE's data rate
-> > field, with the overflowing bit setting the Basic Rate Set
-> > membership. This results in a bogus 8 Mpbs basic rate, making
-> > clients checking them refuse association.
-> > 
-> > Since the rate is likely unused anyway (HT will yield better rates
-> > between supporting chips), we can just remove it.
-> > 
-> > This fixes association from wpa_supplicant and Android 4.x and
-> > newer.
-> 
-> Hi Jonas,
-> 
-> If you are using hostapd, have you tried using 'supported_rates'
-> and/or 'basic_rates' being set to correct rates in the hostapd.conf.
+ra_list_spinlock is used to protect struct mwifiex_wmm_desc and
+embedded structures such as ra_list. tid_tbl_lock while more fine
+grained, is not used but in one function. That function is not
+called reentrantly. To protect ra_list from concurrent modification
+ra_list_spinlock must be held.
 
-Not sure if that helps. The main problem is that this rate is
-unadvertisable in Beacons, as (Extended) Supported Rates (802.11-2012
-8.4.2.3) encodes the rates as u8, with seven bits for the rate in units
-of 500 kb/s, which isn't enough for 72 Mbps; the maximum is 63.5 Mbps.
-The result is that it spills into the MSB, marking it as a "Basic Rate"
-even though it isn't marked as such by hostapd. It's just that 72 Mbps
-=> 0x90 => "8 Mbps, Basic Rate".
-This is partially a bug in hostapd, it should probably reject rates not
-encodable.
-So AFAICT the only way to use it in hostapd is to not use it.
+Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c |    4 +---
+ drivers/net/wireless/mwifiex/main.h |    2 --
+ drivers/net/wireless/mwifiex/wmm.c  |    8 ++++----
+ 3 files changed, 5 insertions(+), 9 deletions(-)
 
-Which makes me wonder how or if this rate is usable at all in 802.11
-context, without a proprietary way of telling the other end that this
-rate is available, and therefore if it even makes sense to keep.
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 003c014..42d7f0a 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -533,10 +533,8 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 		if (!adapter->priv[i])
+ 			continue;
+ 		priv = adapter->priv[i];
+-		for (j = 0; j < MAX_NUM_TID; ++j) {
++		for (j = 0; j < MAX_NUM_TID; ++j)
+ 			INIT_LIST_HEAD(&priv->wmm.tid_tbl_ptr[j].ra_list);
+-			spin_lock_init(&priv->wmm.tid_tbl_ptr[j].tid_tbl_lock);
+-		}
+ 		INIT_LIST_HEAD(&priv->tx_ba_stream_tbl_ptr);
+ 		INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
+ 		INIT_LIST_HEAD(&priv->sta_list);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index fef89fd..622b17f 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -213,8 +213,6 @@ struct mwifiex_ra_list_tbl {
+ 
+ struct mwifiex_tid_tbl {
+ 	struct list_head ra_list;
+-	/* spin lock for tid table */
+-	spinlock_t tid_tbl_lock;
+ 	struct mwifiex_ra_list_tbl *ra_list_curr;
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 1b039ba..c1d8488 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -927,12 +927,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				if (!tid_ptr->ra_list_curr)
+ 					continue;
+ 
+-				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
+-						  flags);
++				spin_lock_irqsave(&priv_tmp->wmm.
++						  ra_list_spinlock, flags);
+ 				is_list_empty =
+ 					list_empty(&tid_ptr->ra_list);
+-				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
+-						       flags);
++				spin_unlock_irqrestore(&priv_tmp->wmm.
++						       ra_list_spinlock, flags);
+ 				if (is_list_empty)
+ 					continue;
+ 
+-- 
+1.7.0.2
 
-
-Jonas
