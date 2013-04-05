@@ -1,102 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55271 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935225Ab3DHMKH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 08:10:07 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: zefir.kurtisi@neratec.com, mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCHv2] mac80211: fix recalc_radar hwconf sync problem
-Date: Mon,  8 Apr 2013 14:09:57 +0200
-Message-Id: <1365422997-15728-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130408_141012_232911_870275CB)
-In-Reply-To: <1365165364.8515.24.camel@jlt4.sipsolutions.net>
-References: <1365165364.8515.24.camel@jlt4.sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:1664 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161614Ab3DEI6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 04:58:09 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/16] brcmfmac: read firmware console without trap
+ indication
+Date: Fri, 5 Apr 2013 10:57:42 +0200
+Message-ID: <1365152274-4252-5-git-send-email-arend@broadcom.com> (sfid-20130405_105835_867892_193F1CD3)
+In-Reply-To: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+References: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-local->hw.conf maybe not be synced when recalcing whether radar is
-enabled, sometimes leaving radar enabled even if it's not neccesary
-anymore.
+From: Piotr Haber <phaber@broadcom.com>
 
-Fix this by:
- * setting radar_enabled when creating the chanctx
- * turning radar_enabled off before destroying the last channel context
+Firmware console output can be read also when there was
+no trap indication.
 
-Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/chan.c |   32 ++++++++++++++++++++++----------
- 1 file changed, 22 insertions(+), 10 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   30 +++++++++-----------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 931be41..1f54ffe 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -57,6 +57,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
- 	return NULL;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index d2a9d78..ac9f650 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2804,21 +2804,18 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
+ 	int error, res;
+ 	char buf[350];
+ 	struct brcmf_trap_info tr;
+-	int nbytes;
+ 	loff_t pos = 0;
+ 
+-	if ((sh->flags & SDPCM_SHARED_TRAP) == 0)
++	if ((sh->flags & SDPCM_SHARED_TRAP) == 0) {
++		brcmf_dbg(INFO, "no trap in firmware\n");
+ 		return 0;
++	}
+ 
+ 	error = brcmf_sdbrcm_membytes(bus, false, sh->trap_addr, (u8 *)&tr,
+ 				      sizeof(struct brcmf_trap_info));
+ 	if (error < 0)
+ 		return error;
+ 
+-	nbytes = brcmf_sdio_dump_console(bus, sh, data, count);
+-	if (nbytes < 0)
+-		return nbytes;
+-
+ 	res = scnprintf(buf, sizeof(buf),
+ 			"dongle trap info: type 0x%x @ epc 0x%08x\n"
+ 			"  cpsr 0x%08x spsr 0x%08x sp 0x%08x\n"
+@@ -2834,12 +2831,7 @@ static int brcmf_sdio_trap_info(struct brcmf_sdio *bus, struct sdpcm_shared *sh,
+ 			le32_to_cpu(tr.r4), le32_to_cpu(tr.r5),
+ 			le32_to_cpu(tr.r6), le32_to_cpu(tr.r7));
+ 
+-	error = simple_read_from_buffer(data+nbytes, count, &pos, buf, res);
+-	if (error < 0)
+-		return error;
+-
+-	nbytes += error;
+-	return nbytes;
++	return simple_read_from_buffer(data, count, &pos, buf, res);
  }
  
-+static bool ieee80211_is_radar_required(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
+ static int brcmf_sdio_assert_info(struct brcmf_sdio *bus,
+@@ -2921,14 +2913,20 @@ static int brcmf_sdbrcm_died_dump(struct brcmf_sdio *bus, char __user *data,
+ 	error = brcmf_sdio_assert_info(bus, &sh, data, count);
+ 	if (error < 0)
+ 		goto done;
+-
+ 	nbytes = error;
+-	error = brcmf_sdio_trap_info(bus, &sh, data, count);
 +
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (sdata->radar_required) {
-+			rcu_read_unlock();
-+			return true;
-+		}
-+	}
-+	rcu_read_unlock();
++	error = brcmf_sdio_trap_info(bus, &sh, data+nbytes, count);
+ 	if (error < 0)
+ 		goto done;
++	nbytes += error;
 +
-+	return false;
-+}
-+
- static struct ieee80211_chanctx *
- ieee80211_new_chanctx(struct ieee80211_local *local,
- 		      const struct cfg80211_chan_def *chandef,
-@@ -76,6 +92,9 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
-+	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
-+	if (!local->use_chanctx)
-+		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
++	error = brcmf_sdio_dump_console(bus, &sh, data+nbytes, count);
++	if (error < 0)
++		goto done;
++	nbytes += error;
  
- 	/* acquire mutex to prevent idle from changing */
- 	mutex_lock(&local->mtx);
-@@ -118,6 +137,7 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_channel_type = NL80211_CHAN_NO_HT;
-+		local->hw.conf.radar_enabled = false;
- 		ieee80211_hw_config(local, 0);
- 	} else {
- 		drv_remove_chanctx(local, ctx);
-@@ -237,19 +257,11 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
- void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
- 				    struct ieee80211_chanctx *chanctx)
- {
--	struct ieee80211_sub_if_data *sdata;
--	bool radar_enabled = false;
-+	bool radar_enabled;
- 
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		if (sdata->radar_required) {
--			radar_enabled = true;
--			break;
--		}
--	}
--	rcu_read_unlock();
-+	radar_enabled = ieee80211_is_radar_required(local);
- 
- 	if (radar_enabled == chanctx->conf.radar_enabled)
- 		return;
+-	error += nbytes;
+-	*ppos += error;
++	error = nbytes;
++	*ppos += nbytes;
+ done:
+ 	return error;
+ }
 -- 
 1.7.10.4
+
 
