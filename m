@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37077 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965003Ab3DPS1W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 14:27:22 -0400
-Subject: [PATCH 20/28] hostap: proc: Use remove_proc_subtree() [RFC]
-To: linux-kernel@vger.kernel.org
-From: David Howells <dhowells@redhat.com>
-Cc: devel@driverdev.osuosl.org, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
-	linux-fsdevel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 16 Apr 2013 19:27:07 +0100
-Message-ID: <20130416182706.27773.46011.stgit@warthog.procyon.org.uk> (sfid-20130416_202734_269371_CA04A8B7)
-In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:50901 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162274Ab3DESIV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 14:08:21 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: Re: Version number policy!
+Date: Fri, 5 Apr 2013 20:08:14 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linux-bluetooth" <linux-bluetooth@vger.kernel.org>,
+	Adrian Chadd <adrian@freebsd.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com> <201304051903.11215.chunkeey@googlemail.com> <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
+In-Reply-To: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201304052008.15412.chunkeey@googlemail.com> (sfid-20130405_200840_883971_7352A514)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use remove_proc_subtree() rather than remove_proc_entry() to remove a
-device-specific proc directory and all its children.
+On Friday 05 April 2013 19:23:54 Eugene Krasnikov wrote:
+> When it comes to feature bitmap do you have an example of such a
+> bitmap from carl9170? 
+That's a weird way of asking. No, I don't have an example?!
+But carl9170fw_feature_list is used in "production".
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Jouni Malinen <j@w1.fi>
-cc: Johannes Berg <johannes@sipsolutions.net>
-cc: linux-wireless@vger.kernel.org
-cc: devel@driverdev.osuosl.org
----
+Anyway, there is one defined in:
+<https://github.com/chunkeey/carl9170fw/blob/master/include/shared/fwdesc.h#L26>
 
- drivers/net/wireless/hostap/hostap_proc.c |   20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+It's packed into the OTUS firmware descriptor:
+<https://github.com/chunkeey/carl9170fw/blob/master/include/shared/fwdesc.h#L118>
 
-diff --git a/drivers/net/wireless/hostap/hostap_proc.c b/drivers/net/wireless/hostap/hostap_proc.c
-index 89292cf..7491dab 100644
---- a/drivers/net/wireless/hostap/hostap_proc.c
-+++ b/drivers/net/wireless/hostap/hostap_proc.c
-@@ -496,25 +496,7 @@ void hostap_init_proc(local_info_t *local)
- 
- void hostap_remove_proc(local_info_t *local)
- {
--	if (local->proc != NULL) {
--#ifndef PRISM2_NO_STATION_MODES
--		remove_proc_entry("scan_results", local->proc);
--#endif /* PRISM2_NO_STATION_MODES */
--#ifdef PRISM2_IO_DEBUG
--		remove_proc_entry("io_debug", local->proc);
--#endif /* PRISM2_IO_DEBUG */
--		remove_proc_entry("pda", local->proc);
--		remove_proc_entry("aux_dump", local->proc);
--		remove_proc_entry("wds", local->proc);
--		remove_proc_entry("stats", local->proc);
--		remove_proc_entry("bss_list", local->proc);
--		remove_proc_entry("crypt", local->proc);
--#ifndef PRISM2_NO_PROCFS_DEBUG
--		remove_proc_entry("debug", local->proc);
--#endif /* PRISM2_NO_PROCFS_DEBUG */
--		if (hostap_proc != NULL)
--			remove_proc_entry(local->proc->name, hostap_proc);
--	}
-+	remove_proc_subtree(local->ddev->name, hostap_proc);
- }
- 
- 
+And the descriptor is filled in:
+<https://github.com/chunkeey/carl9170fw/blob/master/carlfw/src/fw.c>
 
+[Basically, a bit for every feature in kconfig.]
+
+Of course, the nice thing is, if you have something like
+kconfig (carl9170fw.git uses a pretty much the vanilla kernel
+kconfig. Everything apart from the cmake scripts for gperf
+(which is in extra/) is packed into the conf/ directory.
+
+And it has the necessary cmake files. So it should integrate 
+well into the "new" ath9k_htc cmake build system Felix made.
+
+> Why not to rely always on major version?
+Ok, let's do the same with major version...
+
+if  ((fw_major == 1 && fw_minor > 30) ||
+     (fw_major == 2 && fw_minor > 7) ||
+     (fw_major == 3 && fw_minor > 3) ||
+     (fw_major > 4))
+      feature_supported = true;
+
+Nope, I think it looks just as bad.
+[Please, explain what you meant to say...
+Because the new versioning draft stats that very
+major release is incompatible with the old one and
+clearly, having to support a ton of different firmware
+trees is no joy.... and not necessary]
+
+BTW: Instead of a GET_BUILD command, why not make a add a
+firmware header or pack the information into the tail... 
+
+This way, it can be read and parsed by tools, without having
+to upload it to the device first.
+
+carl9170fw already such a tool, it's called: fwinfo and it is located in: 
+<https://github.com/chunkeey/carl9170fw/blob/master/tools/src/fwinfo.c>
+
+Regards,
+	Christian
