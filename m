@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:40565 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934826Ab3DJSGC (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34517 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162581Ab3DET3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 14:06:02 -0400
+	Fri, 5 Apr 2013 15:29:49 -0400
+Message-ID: <515F2627.4050908@candelatech.com> (sfid-20130405_212953_784995_F6A1FC1A)
+Date: Fri, 05 Apr 2013 12:29:43 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <5165A874.50804@candelatech.com>
-References: <CAB=NE6XH8wGbFhmB54Y0BUB2N-PbzUBvN+arH5F_BAkEa=DjUw@mail.gmail.com>
- <5165A874.50804@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 10 Apr 2013 11:05:40 -0700
-Message-ID: <CAB=NE6U_0E+y8jc_0O3+9pmUyLXX9CuSMYMMWk__4Q8-+-AHTg@mail.gmail.com> (sfid-20130410_200627_270377_8E428B42)
-Subject: Re: Jitter and latency benchmarks with netlink / nl80211
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC V4] cfg80211: introduce critical protocol indication from
+ user-space
+References: <1365168312-14780-1-git-send-email-arend@broadcom.com> <515ED9BF.20203@candelatech.com> <515F23A4.3040906@broadcom.com>
+In-Reply-To: <515F23A4.3040906@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 10, 2013 at 10:59 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 04/10/2013 10:55 AM, Luis R. Rodriguez wrote:
+On 04/05/2013 12:19 PM, Arend van Spriel wrote:
+
+>>> +    trace_rdev_crit_proto_stop(&rdev->wiphy, wdev);
+>>> +    if (rdev->crit_proto_started) {
+>>> +        ret = rdev->ops->crit_proto_stop(&rdev->wiphy, wdev);
+>>> +        rdev->crit_proto_started = ret != 0;
 >>
->> Curious if anyone has worked on latency and jitter benchmarks in using
->> netlink, specifically with nl80211. Has anyone benchmarked this? Ben,
->> have you? If not for nl80211 perhaps this has been done before for
->> other netlink families?
+>> Maybe:  rdev->crit_proto_started = !ret;
 >
->
-> You mean timing related to netlink configuration/report requests?
+> Maybe not. If ret == 0, crit_proto_started should be false. If ret != 0, ie. crit_proto_stop() failed, it should remain true. It is a bit of reverse logic. I
+> could change it to !!ret or make it more clear using !ret ? false : true. Another idea is changing the return type of crit_proto_stop() to void and always set
+> crit_proto_started to false.
 
-Yes.
+Well, I had a hard time figuring out what that code was supposed to do (obviously).
 
-> We have lots of ways to measure wifi packet throughput latencies
-> and jitter (to/from userspace and/or to/from pktgen), but it doesn't use
-> netlink....
+Maybe just:
+	if (ret == 0)
+		rdev->crit_proto_started = false;
 
-Not looking for latency / jitter for 802.11, but for the core nl80211 messages.
+Or just require that the driver not fail this operation ever and always set crit_proto_started to false.
 
-  Luis
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
