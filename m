@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f48.google.com ([209.85.212.48]:41021 "EHLO
-	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755229Ab3DLUew (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 16:34:52 -0400
-Received: by mail-vb0-f48.google.com with SMTP id p13so2448582vbe.35
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2013 13:34:51 -0700 (PDT)
+Received: from arrakis.dune.hu ([78.24.191.176]:46890 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762185Ab3DEP0K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 11:26:10 -0400
+Message-ID: <515EED2D.8090601@openwrt.org> (sfid-20130405_172614_525602_EA89EFEC)
+Date: Fri, 05 Apr 2013 17:26:37 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKKzdA1+HyU+-EyMRru4AqMQRkhhZvbTCDVZOn_edc+DZKoTkQ@mail.gmail.com>
-References: <CAKKzdA1+HyU+-EyMRru4AqMQRkhhZvbTCDVZOn_edc+DZKoTkQ@mail.gmail.com>
-Date: Fri, 12 Apr 2013 13:34:51 -0700
-Message-ID: <CA++WF2NfyNxq6guc=R=k3JtnAgyUmMMFrLw7bCdH0Bx+GMikdQ@mail.gmail.com> (sfid-20130412_223456_931995_7EE4A504)
-Subject: Re: driver IPW2200 of gentoo 3.7.10 kernel
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Peter van Toorn <pvantoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 2/6] rt2x00: rt2400pci: use the rt2x00mmio_* routines
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org> <1365143225-24532-3-git-send-email-juhosg@openwrt.org> <20130405133234.GB1571@redhat.com>
+In-Reply-To: <20130405133234.GB1571@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Peter,
+2013.04.05. 15:32 keltezéssel, Stanislaw Gruszka írta:
+> On Fri, Apr 05, 2013 at 08:27:01AM +0200, Gabor Juhos wrote:
+>> Use the recently introduced rt2x00mmio_* routines
+>> instead of the rt2x00pci_* variants.
+>>
+>> The patch contains no functional changes.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2400pci.c |  309 ++++++++++++++++---------------
+> 
+> Why do you modify rt2400pci ?
 
-On 12 April 2013 05:26, Peter van Toorn <pvantoorn@gmail.com> wrote:
->
-> Dear Stas
->
-> I found your name and email on the "MAINTAINERS"of the linux-3.7.10-gentoo
-> kernel
->
-> I have an old laptop which needs the IPW2200 module.
->
-> I encounter two problems:
-> 1) via the menuconfig I am unable to set the IPW2200 module, although
-> instructions are given
-> via the help info how to do. So I cannot turn on the "module"option for
-> the driver via the GUI of
-> menuconfig
->
-> 2) Worse, the CONFIG_IP2200 option is not present in the .config file. So
-> the ability
-> to set the IP2200 driver is not available.
->
-> Is this a temporarily bug only for this version of linux, or is support
-> for this driver stopped.
->
-> A newer version of linux will fix the problem???
->
-> I have an operational system using kernel 3.5.7
->
-> Any idea?
+Because the rt2x00pci_* functions provided by the rt2x00mmio module has been
+renamed in the first patch and those are using the rt2x00mmio_ prefix now. The
+rt2x00mmio.h header provides definitions for the old function names but those
+definitions are removed by the last patch.
 
-CONFIG_IPW2200 option depends on CFG80211_EXT which is not enabled by
-default any more.
+Here is a quote from 1/6:
 
-So you need to enable CFG80211_EXT first. You can do this via 'make menuconfig'.
+"The renamed functions are used by several modules,
+and updating the names in all of them would result
+in a big patch. In order to keep the patch simple,
+add compatibility defines for the old function
+names. This allows to update the names in each
+module separately. After each module is updated,
+the defines can be removed."
 
-[*] Networking support --->
--*- Wireless --->
-<*> cfg80211 - wireless configuration API
-[*] cfg80211 wireless extension compatability
+Should I merge the whole series into a single patch instead?
 
-Than you can enable IPW2200 as usual.
-
-Stanislav.
+-Gabor
