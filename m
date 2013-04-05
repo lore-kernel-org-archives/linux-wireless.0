@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45877 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931Ab3DVNtx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 09:49:53 -0400
-Message-ID: <1366638588.8637.15.camel@jlt4.sipsolutions.net> (sfid-20130422_154957_712550_0E1DFBE5)
-Subject: Re: [PATCH V7 1/3] cfg80211: introduce critical protocol indication
- from user-space
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 22 Apr 2013 15:49:48 +0200
-In-Reply-To: <1366292942-21038-1-git-send-email-arend@broadcom.com>
-References: <1366292942-21038-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:51408 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765499Ab3DFTIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Apr 2013 15:08:45 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1UOYG0-0003j3-JJ
+	for linux-wireless@vger.kernel.org; Sat, 06 Apr 2013 20:54:32 +0200
+Received: from static-65-129-225-77.ipcom.comunitel.net ([static-65-129-225-77.ipcom.comunitel.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Apr 2013 20:54:32 +0200
+Received: from rtpardavila by static-65-129-225-77.ipcom.comunitel.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Apr 2013 20:54:32 +0200
+To: linux-wireless@vger.kernel.org
+From: Ricardo =?utf-8?b?VHViw61v?= <rtpardavila@gmail.com>
+Subject: Re: [ath5k][802.11p] Deactivate beacon
+Date: Fri, 5 Apr 2013 18:50:58 +0000 (UTC)
+Message-ID: <loom.20130405T204912-602@post.gmane.org> (sfid-20130406_210858_176098_FBA6C767)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-04-18 at 15:49 +0200, Arend van Spriel wrote:
-> Some protocols need a more reliable connection to complete
-> successful in reasonable time. This patch adds a user-space
-> API to indicate the wireless driver that a critical protocol
-> is about to commence and when it is done, using nl80211 primitives
-> NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
-> 
-> There can be only on critical protocol session started per
-> registered cfg80211 device.
-> 
-> The driver can support this by implementing the cfg80211 callbacks
-> .crit_proto_start() and .crit_proto_stop(). Examples of protocols
-> that can benefit from this are DHCP, EAPOL, APIPA. Exactly how the
-> link can/should be made more reliable is up to the driver. Things
-> to consider are avoid scanning, no multi-channel operations, and
-> alter coexistence schemes.
+I am now working with the GCDC v3 branch software and, after compiling it, I 
+found that you still have to do some hacks on that code for it to work 
+properly. I have made a couple of patches and, with that, I have achieved the 
+following:
 
-Applied.
+1) Full ITS band support (channels 176-184 @5.8-5.9 GHz).
+2) iw tool modified for setting the beacon interval.
+3) airemon-ng and aircrack utils support for the ITS band channels (by 
+default, they do not support any channel above 120).
 
-johannes
+Currently, I am working on the following issues:
+
+1) Packet injection support through 'aireplay-ng' by patching ath5k with the 
+patches that I found on their website.
+2) Bandwidth selection instead of turbo mode selection. For this, I am based 
+my patch on the following patch submitted previously to the linux-networking 
+group: http://thread.gmane.org/gmane.linux.kernel.wireless.general/59932
+
+ I am testing all this and I have a network analyzer up to 6 GHz, so I can 
+fully verified the integrity of the signal generated.
+
+I would appreciate that anybody can provide me any support on these tasks.
 
