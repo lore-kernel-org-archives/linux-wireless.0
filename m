@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:39441 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab3DJKw2 (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:38791 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506Ab3DELvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 06:52:28 -0400
-Received: by mail-la0-f46.google.com with SMTP id ea20so292025lab.5
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 03:52:27 -0700 (PDT)
+	Fri, 5 Apr 2013 07:51:39 -0400
+Received: by mail-lb0-f177.google.com with SMTP id r10so3605907lbi.8
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 04:51:38 -0700 (PDT)
+Message-ID: <515EBABB.2030104@gmail.com> (sfid-20130405_135142_933587_62627063)
+Date: Fri, 05 Apr 2013 13:51:23 +0200
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <516338CF.8010102@gmail.com>
-References: <516338CF.8010102@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 10 Apr 2013 03:52:07 -0700
-Message-ID: <CAB=NE6Wk_ppMTAkhykrGCp2h_RwXAQbXYKx6kFLE3_=QR+C8=A@mail.gmail.com> (sfid-20130410_125232_031377_C4A3886B)
-Subject: Re: Google Summer of Code 2013 - The Linux Foundation is accepted!
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	cocci@systeme.lip6.fr, Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+To: Solomon Peachy <pizza@shaftnet.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RFCv5: ST-E CW1200 WLAN driver
+References: <1363905589-8350-1-git-send-email-pizza@shaftnet.org> <20130402191327.GA9444@shaftnet.org>
+In-Reply-To: <20130402191327.GA9444@shaftnet.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 8, 2013 at 2:38 PM, Till Kamppeter <till.kamppeter@gmail.com> wrote:
-> Hi,
+On 2013-04-02 21:13, Solomon Peachy wrote:
+> On Thu, Mar 21, 2013 at 06:39:34PM -0400, Solomon Peachy wrote:
+>> I'm satisfied with this driver from a functional standpoint (it handles
+>> everything I'm able throw at it) so I'd really like to kick this thing
+>> upstairs into wireless-next, assuming it passes muster.
 >
-> the Linux Foundation is accepted as a mentoring organization for the
-> Google Summer of Code 2013!
->
-> Please spread the news so that we get a lot of good students.
->
-> Our Google Summer of Code 2013 page is here:
->
-> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2013
+> ...anything?
 
-This is great! I've update the driver backport project stuff. I've
-Cc'd Coccinelle folks, perhaps they might be willing to help mentor as
-well :)
+FWIW I just smoke tested this on a U8500 based device. No problems seen.
 
-> Please also apply as a mentor, so that you get correctly registered for
-> everything, subscribed to the mentor's mailing list at Google, your
-> student's applications getting accepted, ...
+I agree that this thing is ready for merging.
 
-Will do, thanks!
+Cheers,
 
-  Luis
+Pontus
+
