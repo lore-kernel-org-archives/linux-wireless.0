@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38308 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755532Ab3DTRXE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42247 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab3DELXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Apr 2013 13:23:04 -0400
-Received: by mail-wi0-f169.google.com with SMTP id h11so2571545wiv.2
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Apr 2013 10:23:02 -0700 (PDT)
-Date: Sat, 20 Apr 2013 19:22:48 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH v4 1/3] mac80211: improve the rate control API
-Message-ID: <20130420172247.GA767@gobelin> (sfid-20130420_192314_410268_50086B0D)
-References: <1366385329-42690-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1366385329-42690-1-git-send-email-nbd@openwrt.org>
+	Fri, 5 Apr 2013 07:23:00 -0400
+Message-ID: <1365160971.8515.23.camel@jlt4.sipsolutions.net> (sfid-20130405_132314_428349_D5917A02)
+Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Fri, 05 Apr 2013 13:22:51 +0200
+In-Reply-To: <20130404182219.GA24704@pandem0nium>
+References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1364993200.8351.35.camel@jlt4.sipsolutions.net>
+	 <515D8259.1030208@neratec.com> <20130404182219.GA24704@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we need to send 'low' rates (i.e those selected by *send_low) then 'low'
-rates get mixed with the rate table rates after fill_sta_table.
-If the driver doesn't advertise IEEE80211_HW_SUPPORTS_RC_TABLE, the
-solution could be to set info->control.rates[i > 0].idx to -1 in
-__rate_control_send_low, otherwise the driver would have to perform a
-check like rate_control_send_low already did.
- 
-Karl
+On Thu, 2013-04-04 at 20:22 +0200, Simon Wunderlich wrote:
+
+> As far as I see, the problem happens when changing from a DFS to a non-DFS
+> channel. local->hw.conf.radar_enabled is true from the last (DFS) channel,
+> but the channel gets released when stopping the AP, and the channel context
+> is freed. 
+
+At this point, why doesn't it disable hw.conf.radar_enabled? I really
+think it should?
+
+johannes
+
