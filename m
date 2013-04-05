@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27487 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762520Ab3DINyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 09:54:25 -0400
-From: "Green, Michael" <green@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"Kandala, Srinivas" <kandala@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
-	"Wang, Yunsen" <yunsenw@qca.qualcomm.com>
-Subject: [wireless-regdb] [PATCH 2/3] wireless-regdb: enable VHT80 when
- world roaming
-Date: Tue, 9 Apr 2013 13:54:14 +0000
-Message-ID: <237CF5B631AA3446BAC55A2F73815CEB07DFE41B@NASANEXD02D.na.qualcomm.com> (sfid-20130409_155505_155040_BF0F78AD)
-References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
- <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
- <1365490278.8465.1.camel@jlt4.sipsolutions.net>
- <CAB=NE6XjS7647FADXs7g9P4GmZPpdZmH1A9tNyY9u1_6QHX9og@mail.gmail.com>
-In-Reply-To: <CAB=NE6XjS7647FADXs7g9P4GmZPpdZmH1A9tNyY9u1_6QHX9og@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mms2.broadcom.com ([216.31.210.18]:1664 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1162000Ab3DEI6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 04:58:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/16] brcmfmac: remove condition for calling event
+ handler
+Date: Fri, 5 Apr 2013 10:57:46 +0200
+Message-ID: <1365152274-4252-9-git-send-email-arend@broadcom.com> (sfid-20130405_105823_345947_E53EEFDB)
+In-Reply-To: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+References: <1365152274-4252-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SWYgdGhpcyBkaXNjdXNzaW9uIGlzIGFib3V0IEphcGFuLCB0aGVuIHllcywgVkhUMTYwIG9uIHRo
-ZSBhbGxvd2VkIGNoYW5uZWxzIGZvciBKYXBhbiwgY2FuIGJlIGVuYWJsZWQgbm93Lg0KDQpPciBp
-cyB0aGUgcXVlc3Rpb24gYWJvdXQgZW5hYmxpbmcgVkhUODAgJiBWSFQxNjAgaW4gd29ybGQgbW9k
-ZShzKSB1c2luZyBwYXNzaXZlIHNjYW5uaW5nPw0KDQpNaWNoYWVsIEdyZWVuDQpncmVlbkBxY2Eu
-cXVhbGNvbW0uY29tDQoNClF1YWxjb21tIEF0aGVyb3MsIEluYy4NCjc4MS00MDAtMTQ5MSAob2Zm
-aWNlKQ0KNTA4LTM4MC00OTIxIChjZWxsKQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBtY2dyb2ZAZ21haWwuY29tIFttYWlsdG86bWNncm9mQGdtYWlsLmNvbV0gT24gQmVo
-YWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQpTZW50OiBUdWVzZGF5LCBBcHJpbCAwOSwgMjAxMyA0
-OjI2IEFNDQpUbzogSm9oYW5uZXMgQmVyZw0KQ2M6IEpvaG4gVy4gTGludmlsbGU7IHdpcmVsZXNz
-LXJlZ2RiQGxpc3RzLmluZnJhZGVhZC5vcmc7IEthbmRhbGEsIFNyaW5pdmFzOyBsaW51eC13aXJl
-bGVzczsgcWNhX3Zrb25kcmF0OyBHcmVlbiwgTWljaGFlbDsgV2FuZywgWXVuc2VuDQpTdWJqZWN0
-OiBSZTogW3dpcmVsZXNzLXJlZ2RiXSBbUEFUQ0ggMi8zXSB3aXJlbGVzcy1yZWdkYjogZW5hYmxl
-IFZIVDgwIHdoZW4gd29ybGQgcm9hbWluZw0KDQpPbiBNb24sIEFwciA4LCAyMDEzIGF0IDExOjUx
-IFBNLCBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0PiB3cm90ZToNCj4g
-T24gTW9uLCAyMDEzLTA0LTA4IGF0IDIyOjUyIC0wNzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4+IEZyb206ICJMdWlzIFIuIFJvZHJpZ3VleiIgPG1jZ3JvZkBkby1ub3QtcGFuaWMuY29t
-Pg0KPj4NCj4+IEZvciBWSFQsIHRoZSB3aWRlciBiYW5kd2lkdGhzICh1cCB0byAxNjAgTUh6KSBu
-ZWVkIHRvIGJlIGFsbG93ZWQuIA0KPj4gU2luY2Ugd29ybGQgcm9hbWluZyBvbmx5IGNvdmVycyB0
-aGUgY2FzZSBvZiBjb25uZWN0aW5nIHRvIGFuIEFQLCBpdCANCj4+IGNhbiBiZSBvcGVuZWQgdXAg
-dGhlcmUsIHdlIHdpbGwgcmVseSBvbiB0aGUgQVAgdG8ga25vdyB0aGUgbG9jYWwgDQo+PiByZWd1
-bGF0aW9ucy4NCj4+DQo+PiBCYXNlZCBvbiBhIHBhdGNoIGJ5IEpvaGFubmVzIEJlcmcgZm9yIHVw
-c3RyZWFtIExpbnV4Lg0KPg0KPj4gLS0tIGEvZGIudHh0DQo+PiArKysgYi9kYi50eHQNCj4+IEBA
-IC02LDEwICs2LDEwIEBAIGNvdW50cnkgMDA6DQo+PiAgICAgICAjIENoYW5uZWwgMTQuIE9ubHkg
-SlAgZW5hYmxlcyB0aGlzIGFuZCBmb3IgODAyLjExYiBvbmx5DQo+PiAgICAgICAoMjQ3NCAtIDI0
-OTQgQCAyMCksICgzLCAyMCksIFBBU1NJVkUtU0NBTiwgTk8tSUJTUywgTk8tT0ZETQ0KPj4gICAg
-ICAgIyBDaGFubmVsIDM2IC0gNDgNCj4+IC0gICAgICg1MTcwIC0gNTI1MCBAIDQwKSwgKDMsIDIw
-KSwgUEFTU0lWRS1TQ0FOLCBOTy1JQlNTDQo+PiArICAgICAoNTE3MCAtIDUyNTAgQCA4MCksICgz
-LCAyMCksIFBBU1NJVkUtU0NBTiwgTk8tSUJTUw0KPj4gICAgICAgIyBOQjogNTI2MCBNSHogLSA1
-NzAwIE1IeiByZXF1aWVzIERGUw0KPj4gICAgICAgIyBDaGFubmVsIDE0OSAtIDE2NQ0KPj4gLSAg
-ICAgKDU3MzUgLSA1ODM1IEAgNDApLCAoMywgMjApLCBQQVNTSVZFLVNDQU4sIE5PLUlCU1MNCj4+
-ICsgICAgICg1NzM1IC0gNTgzNSBAIDgwKSwgKDMsIDIwKSwgUEFTU0lWRS1TQ0FOLCBOTy1JQlNT
-DQo+DQo+IEkgYWxzbyBoYXZlIGEgc2VwYXJhdGUgdXBzdHJlYW0gcGF0Y2ggdGhhdCBJIGhhdmVu
-J3Qgc2VudCBoZXJlIHlldCB0byANCj4gZW5hYmxlIDE2MCBNSHogYnkgZW5hYmxpbmcgdGhlIHJh
-ZGFyIGNoYW5uZWxzIChwYXNzaXZlbHkpLCBzZWUgYmVsb3c7IA0KPiBhbnkgdGhvdWdodHMgb24g
-dGhhdD8NCg0KRW5hYmxpbmcgaXQgcGFzc2l2ZWx5IHNlZW1zIGZpbmUgdG8gbWUuIE1pY2hhZWwg
-aWYgd2UgdGFrZSBjYXJlIG9mIERGUyAvIHBhc3NpdmUgc2NhbiwgZXRjLCBhcmUgd2Ugc3RpbGwg
-T0sgdG8gdXNlIFZIVDE2MCBpZiB3ZSBmaW5kIGFuIEFQIHRoYXQgdXNlcyBpdCBvbiB0aGUgREZT
-IGNoYW5uZWxzIChhc3N1bWluZyBjbGllbnQgZm9sbG93cyBjaGFubmVsIGNoYW5nZSBhbm5vdW5j
-ZW1lbnRzLCBldGMpPw0KDQogIEx1aXMNCg==
+In fweh module the event handler was only called if the
+struct brcmf_if instance had a non-null netdev associated.
+This restriction is no longer valid for P2P_DEVICE type
+of interface. This patch removes that restriction.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+index 9672b99..51ba13d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.c
+@@ -156,7 +156,7 @@ static int brcmf_fweh_call_event_handler(struct brcmf_if *ifp,
+ 		fweh = &ifp->drvr->fweh;
+ 
+ 		/* handle the event if valid interface and handler */
+-		if (ifp->ndev && fweh->evt_handler[code])
++		if (fweh->evt_handler[code])
+ 			err = fweh->evt_handler[code](ifp, emsg, data);
+ 		else
+ 			brcmf_err("unhandled event %d ignored\n", code);
+-- 
+1.7.10.4
+
+
