@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2170 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752954Ab3DLHoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 03:44:46 -0400
-Message-ID: <5167BB62.1060405@broadcom.com> (sfid-20130412_094450_058532_740408E7)
-Date: Fri, 12 Apr 2013 09:44:34 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: Re: [PATCH 11/15] brcmfmac: define and use platform specific
- data for SDIO.
-References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
- <1365679740-25679-12-git-send-email-arend@broadcom.com>
- <5166A745.9080709@hauke-m.de> <5166B608.8030803@broadcom.com>
- <5167440A.3040205@hauke-m.de>
-In-Reply-To: <5167440A.3040205@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:42576 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765141Ab3DENUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 09:20:09 -0400
+Message-ID: <1365168001.8515.28.camel@jlt4.sipsolutions.net> (sfid-20130405_152013_689663_10A88192)
+Subject: Re: [PATCH 1/3] cfg80211: add get_max_tp() API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 05 Apr 2013 15:20:01 +0200
+In-Reply-To: <20130405083956.GA14463@open-mesh.com>
+References: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
+	 <CAGXE3d98a4pBG=gWKUm9A2RJRN+eic4Zi8dh4grTuqQmW3GOsg@mail.gmail.com>
+	 <20130405083956.GA14463@open-mesh.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2013 01:15 AM, Hauke Mehrtens wrote:
-> On 04/11/2013 03:09 PM, Arend van Spriel wrote:
->> On 04/11/2013 02:06 PM, Hauke Mehrtens wrote:
->>> On 04/11/2013 01:28 PM, Arend van Spriel wrote:
->>>> From: Hante Meuleman <meuleman@broadcom.com>
->>>>
->>>> This patch adds support for platform specific data for SDIO
->>>> fullmac devices. Currently OOB interrupts are configured by Kconfig
->>>> BRCMFMAC_SDIO_OOB but that is now determined dynamically by checking
->>>> availibility of platform data.
->>>>
->>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->>>> Reviewed-by: Piotr Haber <phaber@broadcom.com>
->>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
->>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>>> ---
->>>>    drivers/net/wireless/brcm80211/Kconfig             |    9 --
->>>>    drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  155
->>>> ++++++++++----------
->>>>    .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  114
->>>> ++++----------
->>>>    drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++--
->>>>    .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    6 +-
->>>>    include/linux/brcmfmac_platform.h                  |  125
->>>> ++++++++++++++++
->>>>    6 files changed, 251 insertions(+), 187 deletions(-)
->>>>    create mode 100644 include/linux/brcmfmac_platform.h
->>>>
->>>
->>> ....
->>>
->>>> --- /dev/null
->>>> +++ b/include/linux/brcmfmac_platform.h
->>>
->>> This should be placed into include/linux/platform_data/
->>>
->>
->> Are you sure. This file specifies the platform data API so it does not
->> contain actual platform_data. At first glance this folder seems to
->> contain board specific platform data, but did not look closely.
->
-> I think, all the files in include/linux/platform_data/*.h are defining
-> some struct used in pdev->dev.platform_data in various drivers. The
-> content of such structs is mostly located in the arch code where the SoC
-> gets initialized, but I am not sure about this.
+On Fri, 2013-04-05 at 10:39 +0200, Antonio Quartulli wrote:
 
-Hi Hauke,
+> In the batman-adv module (which implements a routing protocol for mesh networks
+> on layer 2) we are trying to switch metric from packet loss to throughput and
+> the idea is to read the estimation from the rate control component (thanks to
+> the API mechanism in cfg/mac80211 this can be eventually changed later).
 
-I did some more digging in there and I think you are right. I will send 
-a replacement patch to John.
+While this makes some sense, going into the details of your patchset I
+find that it's overly complex.
 
-Thanks & Regards,
-Arend
+I think you should fix minstrel to report the best rate in
+txrc.reported_rate. This would also have the effect of not showing
+sampling attempts to userspace in the "current TX rate", which generally
+makes a lot of sense.
+
+After doing that, reading the rate becomes a get_station_info() call or
+so.
+
+One more detail:
+
+int cfg80211_get_max_tp(struct wireless_dev *wdev, u8 *peer, u32 *tp)
+
+I really don't think that the wireless_dev should be necessary for this,
+it ought to be just a netdev IMHO. Also, the peer should be const :)
+
+johannes
 
