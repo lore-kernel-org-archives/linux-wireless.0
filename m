@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:60430 "EHLO
-	imap.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936310Ab3DIAhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 20:37:39 -0400
-Date: Mon, 8 Apr 2013 20:37:20 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Version number policy!
-Message-ID: <20130409003720.GA5145@thunk.org> (sfid-20130409_023755_418454_23C8310E)
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
- <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
- <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
- <201304090003.47056.chunkeey@googlemail.com>
- <CAJ-VmomksDSNvTpKQpNRRQx+QboSVHpby7V4qq4rngqVkTvf+A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-VmomksDSNvTpKQpNRRQx+QboSVHpby7V4qq4rngqVkTvf+A@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161541Ab3DENEi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 09:04:38 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH] mac80211: disable uAPSD if all ACs are under ACM
+Date: Fri,  5 Apr 2013 15:04:31 +0200
+Message-Id: <1365167071-2450-1-git-send-email-johannes@sipsolutions.net> (sfid-20130405_150446_432380_9604795F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 08, 2013 at 04:12:07PM -0700, Adrian Chadd wrote:
-> I'm a FreeBSD user. I know what it's like to have an alternate, out of
-> linux implementation of ext2/3 that doesn't implement all of the
-> features.
-> 
-> I also know what kinds of crap happens when you try mounting a more
-> recent extX filesystem on an earlier kernel. Ie, it doesn't
-> necessarily end well. :-)
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-There shouldn't be any crap; just a an error message indicating that
-"the file system has features which this implementation doesn't
-understand".  At least, if the implementation was competently
-coded.... (ext2/3/4 has feature bitmasks that make it very clear what
-features are required so that an implementation can mount the file
-system read/write or read/only).
+It's unlikely that an AP requires WMM mandatory admission control
+for all access categories, and if it does then we still transmit
+on the background AC without requesting admission. However, avoid
+using uAPSD in this case since the implementation could run into
+issues and might use other ACs etc.
 
-							- Ted
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 304d6cf..43bfa81 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4086,7 +4086,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_unlock();
+ 
+ 	if (bss->wmm_used && bss->uapsd_supported &&
+-	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
++	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD) &&
++	    sdata->wmm_acm != 0xff) {
+ 		assoc_data->uapsd = true;
+ 		ifmgd->flags |= IEEE80211_STA_UAPSD_ENABLED;
+ 	} else {
+-- 
+1.8.0
+
