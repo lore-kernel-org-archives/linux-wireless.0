@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mundo.umh.es ([193.147.144.26]:47620 "EHLO mundo.umh.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751700Ab3D2Jhn convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:38054 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162478Ab3DEVOx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:37:43 -0400
-Received: from bcoll (unknown [10.1.60.57])
-	by mundo.umh.es (Postfix) with ESMTP id B06C2205B6E
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2013 11:37:42 +0200 (CEST)
-From: "Coll Perales, Baldomero" <bcoll@umh.es>
-To: <linux-wireless@vger.kernel.org>
-Subject: Pause and restart 802.11 ad-hoc communication
-Date: Mon, 29 Apr 2013 11:37:47 +0200
-Message-ID: <002801ce44bd$358d3f40$a0a7bdc0$@es> (sfid-20130429_113746_852925_890CAA91)
-MIME-Version: 1.0
+	Fri, 5 Apr 2013 17:14:53 -0400
+Received: by mail-we0-f170.google.com with SMTP id z2so3244812wey.29
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 14:14:52 -0700 (PDT)
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org> <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset=us-ascii
+Message-Id: <5F6B3AA0-EB1B-4002-AB44-A61BDE6DE31D@gmail.com> (sfid-20130405_231457_959125_F1124257)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 0/6] rt2x00: use rt2x00mmio prefix for rt2x00mmio module functions
+Date: Fri, 5 Apr 2013 23:14:49 +0200
+To: Gabor Juhos <juhosg@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good morning everybody,
-I am doing research on 802.11 ad-hoc wireless networks. Currently I am
-working on how to pause and restart the communication process between two
-802.11 nodes. I am looking for the best solution to this problem and I found
-two possible implementations:
-1) Implementing a NIC (Network Interface Card) that should be able to manage
-the interface between the kernel and the network card.
-2)  Changing the source code that implements the TCP/IP stack inside the
-Linux Kernel. I am trying to do this changing the source code of
-“net/mac80211/tx.c” and “net/mac80211/rx.c”. 
 
-This pause and restart process should stop the queue of data packets that
-will be passed to the network card and store them until one event happens.
-This solution should not interfere to the automatic works of the network
-card such as the sensing of the channel or the reception of other packets
-(for example beacons).
 
-The main problem is that I do not know which is the best option or, maybe if
-another one exists. I am so worried about the problems that can cause this
-pause in the other processes that are working in the kernel.
-Nowadays I am working with the 2.6.24 version of Linux kernel (because I am
-following a book that explains how drivers works in Linux) but my intention
-is to do this implementation in the newest versions of Linux.
-Thanks you very much for your attention,
-Alejandro Moraleda
+Sent from my iPad
 
+On 5 apr. 2013, at 10:16, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+
+> On Fri, Apr 5, 2013 at 8:26 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> This series replaces the rt2x00pci prefix to
+>> rt2x00mmio of the functions provided by the
+>> rt2x00mmio module. This is a supplement of the
+>> 'rt2x00: rt2x00pci: fix build error on Ralink
+>> RT3x5x SoCs' patch.
+> 
+> Patch set looks good to me! Thanks a lot Gabor.
+> 
+> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+
+Yep, looks good to me as well.
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+for the whole series.
+
+Note to John: you will have to pull the wireless tree into the wireless-next tree before you can apply this series there.
+
+---
+Gertjan
