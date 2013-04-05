@@ -1,114 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:50168 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932231Ab3DXLYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 07:24:08 -0400
-Message-ID: <1366802638.21854.11.camel@jlt4.sipsolutions.net> (sfid-20130424_132413_694423_B399900A)
-Subject: Re: [PATCH] mac80211: fix spurious use of rcu_dereference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	karl.beldan@gmail.com
-Date: Wed, 24 Apr 2013 13:23:58 +0200
-In-Reply-To: <201304231526.47996.chunkeey@googlemail.com> (sfid-20130423_152714_476409_02299025)
-References: <1366640083-1054-1-git-send-email-nbd@openwrt.org>
-	 <201304230258.08359.chunkeey@googlemail.com>
-	 <1366699708.8385.1.camel@jlt4.sipsolutions.net>
-	 <201304231526.47996.chunkeey@googlemail.com>
-	 (sfid-20130423_152714_476409_02299025)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:46965 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161515Ab3DEIRZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 04:17:25 -0400
+Received: by mail-wg0-f47.google.com with SMTP id y10so3411217wgg.26
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 01:17:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+Date: Fri, 5 Apr 2013 01:17:23 -0700
+Message-ID: <CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com> (sfid-20130405_101733_034732_45415949)
+Subject: Re: AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-23 at 15:26 +0200, Christian Lamparter wrote:
-
-> > > Actually, rcu_read_lock() might not be necessary in this special
-> > > case [the RC is not yet initialized, so nothing bad can happen].
-> > > 
-> > > But, since the rcu_read_lock() has a low overhead and
-> > > rate_control_set_rates mac80211.h doc does not mention
-> > > anything about locking, I think this is a viable way. 
-> > 
-> > I think that, on the contrary, it's completely strange/wrong. ;-)
-
-> Sorry, I think I cut too much from the stack trace and I didn't
-> explain how the code end up in this case. This time, I commented out
-> the rcu_read_(un)lock() [=> rate.c:694 is rate.c:691 in wireless-testing.git]
-> and started hostapd and let a station connect. (see attached log)
-
-Yes, I understand how you can get here. But every time the assignment
-here happens, the value is completely overwritten. And when we free it
-here, we don't look at the value.
-
-> > > +       rcu_read_lock();
-> > > +       old = rcu_dereference(pubsta->rates);
-> > 
-> > Here's have a dereference.
-> >  
-> > >         rcu_assign_pointer(pubsta->rates, rates);
-> > 
-> > and here's an assignment. The assignment ought to be protected already
-> > by some locking, presumably, so similarly is the rcu_dereference() which
-> > then should just be rcu_dereference_protected()?
-
-> The issue seems to be in ieee80211_add_station in net/mac80211/cfg.c.
-> This function allocates, initializes and adds the new station for
-> hostapd. And of course: the alloc and (rate_)init part is done without
-> acquiring any special mac80211 locks. (just rtnl, genl and rdev->mtx).
-> 
-> [And why should it? After all, during initialization, the station is
-> not yet in the station hash table.]
-> 
-> So, what else can be done? 
-> 
-> Obviously, the locking requirement needs to be added to the
-> doc entry for rate_control_set_rates in include/net/mac80211.h.
-
-I don't see that any bug can happen here right now, even without
-locking.
-
-> And one of the following changes:
-> 
-> 1. move the rate_control_rate_init after sta_info_insert_rcu
->    and remove the rcu_read_locks from rate_control_set_rates.
->    However then we would add an incomplete station (this can't be right?!).
-> 
-> 2. add rcu or other lock around rate_control_set_rates in
->    minstrel_update_rates() and minstrel_ht_update_rates().
-
-Both seem wrong.
-
-> 3. add a new function: rate_control_init_rates which is
->    reserved for this case and only does the assignment.
-
-I like that.
-
-> (4. use rcu_dereference_protected and test the rtnl_lock - really?)
-
-Nah that'll never work anyway.
-
-> (5. some other way?)
-
-The problem here is that even the rcu_read_lock() around here that's
-actually there in most cases *isn't* what's protecting this code. What's
-protecting this assignment is the fact that we require drivers to not
-call ieee80211_tx_status() concurrently (and if they call
-ieee80211_tx_status_irqsafe() then we serialize via the tasklet.)
-
-If this wasn't the case, then calling the function could cause
-double-free or so by having two CPUs read the old pointer and both call
-kfree_rcu() on it.
-
-Actually, looking at this code, this does seem possible in minstrel_ht
-because it also calls this from minstrel_ht_rate_update() (indirectly),
-which is called from the RX path which I'm not sure we require to be not
-concurrent with the TX status path? Most drivers probably don't call
-them concurrently, but I haven't checked all of them.
+There's nothing public, no. Just the source code. :)
 
 
-So as you can see, the RCU warning is just the tip of the iceberg.
-
-johannes
+adrian
 
 
+On 5 April 2013 01:00, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+> Thanks Mr. Adrian. I will revert back to you after sometime. But are there
+> any documents/datasheets explaining on the BTCOEX mode registers, timing
+> diagrams for 2-wire/3-wire coexistence based on Atheros chipset?
+> I have already gone through the ath9k website; but does not contain these
+> details.
+> Thanks & Regards
+> Sandeep.
+>
+> From: Adrian Chadd <adrian@freebsd.org>
+> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+> Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>;
+> ath9k-devel <ath9k-devel@lists.ath9k.org>
+> Sent: Friday, 5 April 2013 9:43 AM
+>
+> Subject: Re: AR9287 ; 2-wire coexistence expected behavior
+>
+> You'll have to give me some more time to digest what I'm reading
+> internally; it's all new to me.
+>
+> For FreeBSD, you can look at these files in FreeBSD-HEAD:
+>
+> sys/dev/ath/ath_hal/ar5416/ar5416_btcoex.c
+> sys/dev/ath/ath_hal/ar9002/ar9285_btcoex.c (not that relevant for you,
+> but still)
+>
+> These contain the register writes that the internal reference HAL is
+> doing when programming btcoex for AR9285/AR9287.
+>
+> The AR9287 should support 2-wire coex fine.
+>
+> Just read those source files. The ar5416InitBTCoex() programs the
+> BT_ACTIVE / WLAN_ACTIVE gpio's when you say the coexistence type is
+> 2-wire. There's weights and such being programmed elsewhere; you need
+> to make sure you pick the default values for that and try it out.
+>
+> I can't help you more than that at the moment; I'm busy doing other
+> work that doesn't at all touch wifi. :)
+>
+>
+>
+> Adrian
+>
+> On 4 April 2013 20:08, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+>> Hello Mr.Adrian,
+>>    Thanks for your mail. Regarding your comment below:
+>>
+>> "THen you need to ensure the bluetooth coexistence registers are
+>> programmed
+>> so that btactive will correctly stomp wifi traffic."
+>>
+>> Can you please elaborate on this? As I understand the concept of
+>> "stomping"
+>> is only in 3-wire coexistence; correct me if I am wrong.
+>>
+>> As mentioned earlier, the set-up we have is a PCB board with general
+>> purpose
+>> MCU controlling the 2-wire coexistence pins of AR9287. As there are other
+>> 2.4GHz radio (called PROP radio here) on the board, we want to ensure that
+>> both radios do not transmit at the same time which will result in
+>> collisions. Hence we want to build a co-operative coexistence approach so
+>> that when PROP radio is active (by asserting BT_ACTIVE), AR9287 has to
+>> buffer transmissions and allow PROP radio to be active. Only when PROP
+>> radio
+>> is inactive (BT_ACTIVE is deasserted), only then WiFi can be active. Hope
+>> this is achievable?
+>>
+>> Thanks & Regards
+>> Sandeep.
+>>
+>> From: Adrian Chadd <adrian@freebsd.org>
+>> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+>> Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>;
+>> ath9k-devel <ath9k-devel@lists.ath9k.org>
+>> Sent: Thursday, 4 April 2013 11:36 PM
+>>
+>> Subject: Re: AR9287 ; 2-wire coexistence expected behavior
+>>
+>> Hi!
+>>
+>> I'm glad you're looking into this in more depth!
+>>
+>> On 4 April 2013 08:19, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+>>
+>>> I understand that ATH_BTCOEX_CFG_2_WIRE, ATH_BTACTIVE_GPIO_9280 (GPIO6 as
+>>> per btcoex.h) and ATH_WLANACTIVE_GPIO_9280 (GPIO5 as per btcoex.h) are
+>>> used.
+>>
+>> Ok, right.
+>>
+>>> I next started monitoring GPIO5 on oscillaoscope to see WLAN activity and
+>>> I
+>>> could see a lot of pulse trains. Next in order to simulate high priority
+>>> BT
+>>> traffic, I pulled the line GPIO6 high. But I did not see any change in
+>>> WLAN
+>>> activity as I could continue to see the pulse trains. My expectation was
+>>> that there should not be any WLAN activity and hence no pulses. Please
+>>> guide
+>>> if I am missing anything?
+>>
+>> Well, firstyl you need to ensure that the GPIO pin has been programmed
+>> to be an input, and it's of the right bluetooth type. As I said
+>> before, GPIO pins can be input, output; they can be connected via an
+>> internal mux to a variety of "behaviours". Take a look at the gpio
+>> configure code in ath9k to see more.
+>>
+>> THen you need to ensure the bluetooth coexistence registers are
+>> programmed so that btactive will correctly stomp wifi traffic.
+>>
+>> THat's all I know for now. Sorry.
+>>
+>>
+>>
+>> adrian
+>>
+>>
+>
+>
