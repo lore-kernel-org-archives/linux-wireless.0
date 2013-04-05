@@ -1,101 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1823 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4672 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752379Ab3DKPNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 11:13:47 -0400
+	id S1162530Ab3DETTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 15:19:09 -0400
+Message-ID: <515F23A4.3040906@broadcom.com> (sfid-20130405_211912_900729_FE70055D)
+Date: Fri, 5 Apr 2013 21:19:00 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V2 14/15] brcmfmac: rename brcmf_fws_mac_desc_ready()
-Date: Thu, 11 Apr 2013 17:12:04 +0200
-Message-ID: <1365693124-3043-1-git-send-email-arend@broadcom.com> (sfid-20130411_171351_107261_2C9C076F)
-In-Reply-To: <1365679740-25679-15-git-send-email-arend@broadcom.com>
-References: <1365679740-25679-15-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Ben Greear" <greearb@candelatech.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC V4] cfg80211: introduce critical protocol indication
+ from user-space
+References: <1365168312-14780-1-git-send-email-arend@broadcom.com>
+ <515ED9BF.20203@candelatech.com>
+In-Reply-To: <515ED9BF.20203@candelatech.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the function by brcmf_fws_mac_desc_closed(). The new function
-is used in the transmit path and in the dequeue worker.
+On 04/05/2013 04:03 PM, Ben Greear wrote:
+> On 04/05/2013 06:25 AM, Arend van Spriel wrote:
+>> Some protocols need a more reliable connection to complete
+>> successful in reasonable time. This patch adds a user-space
+>> API to indicate the wireless driver that a critical protocol
+>> is about to commence and when it is done, using nl80211 primitives
+>> NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
+>>
+>> There can be only on critical protocol session started per
+>> registered cfg80211 device. The driver can support this by
+>> implementing the cfg80211 callbacks .crit_proto_start() and
+>> .crit_proto_stop(). Examples of protocols that can benefit from
+>> this are DHCP, EAPOL, APIPA. Exactly how the link can/should be
+>> made more reliable is up to the driver. Things to consider are
+>> avoid scanning, no multi-channel operations, and alter coexistence
+>> schemes.
+>>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
+>> +
+>> +    duration = max_t(u16, duration, NL80211_MAX_CRIT_PROT_DURATION);
+>
+> Maybe that should be min_t(....) ?
 
-Can not blame merging this time. The original patch has some checkpatch
-warnings that this patch fixes. Sorry about that.
+Yes, definitely.
 
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   31 ++++++++------------
- 1 file changed, 13 insertions(+), 18 deletions(-)
+>> cfg80211_registered_device *rdev,
+>> +                    struct wireless_dev *wdev,
+>> +                    enum nl80211_crit_proto_id protocol,
+>> +                    u16 duration)
+>> +{
+>> +    int ret;
+>> +
+>> +    trace_rdev_crit_proto_start(&rdev->wiphy, wdev, protocol, duration);
+>> +    ret = rdev->ops->crit_proto_start(&rdev->wiphy, wdev,
+>> +                      protocol, duration);
+>> +    rdev->crit_proto_started = !ret;
+>> +    trace_rdev_return_int(&rdev->wiphy, ret);
+>> +    return ret;
+>> +}
+>> +
+>> +static inline int rdev_crit_proto_stop(struct
+>> cfg80211_registered_device *rdev,
+>> +                       struct wireless_dev *wdev)
+>> +{
+>> +    int ret = 0;
+>> +
+>> +    trace_rdev_crit_proto_stop(&rdev->wiphy, wdev);
+>> +    if (rdev->crit_proto_started) {
+>> +        ret = rdev->ops->crit_proto_stop(&rdev->wiphy, wdev);
+>> +        rdev->crit_proto_started = ret != 0;
+>
+> Maybe:  rdev->crit_proto_started = !ret;
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index d9572fb..1234de3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -714,26 +714,19 @@ done:
- 	return entry;
- }
- 
--static bool brcmf_fws_mac_desc_ready(struct brcmf_fws_mac_descriptor *entry,
--				     int fifo)
-+static bool brcmf_fws_mac_desc_closed(struct brcmf_fws_mac_descriptor *entry,
-+				      int fifo)
- {
--	bool ready;
-+	bool closed;
- 
--	/*
--	 * destination entry is ready when firmware says it is OPEN
--	 * and there are no packets enqueued for it.
-+	/* an entry is closed when the state is closed and
-+	 * the firmware did not request anything.
- 	 */
--	ready = entry->state == BRCMF_FWS_STATE_OPEN &&
--		!entry->suppressed &&
--		brcmu_pktq_mlen(&entry->psq, 3 << (fifo * 2)) == 0;
-+	closed = entry->state == BRCMF_FWS_STATE_CLOSE &&
-+		 !entry->requested_credit && !entry->requested_packet;
- 
--	/*
--	 * Or when the destination entry is CLOSED, but firmware has
--	 * specifically requested packets for this entry.
--	 */
--	ready = ready || (entry->state == BRCMF_FWS_STATE_CLOSE &&
--		(entry->requested_credit + entry->requested_packet));
--	return ready;
-+	/* Or firmware does not allow traffic for given fifo */
-+	return closed || !(entry->ac_bitmap & BIT(fifo));
- }
- 
- static void brcmf_fws_mac_desc_cleanup(struct brcmf_fws_info *fws,
-@@ -1086,7 +1079,7 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
- 
- 	for (i = 0; i < num_nodes; i++) {
- 		entry = &table[(node_pos + i) % num_nodes];
--		if (!entry->occupied)
-+		if (!entry->occupied || brcmf_fws_mac_desc_closed(entry, fifo))
- 			continue;
- 
- 		if (entry->suppressed)
-@@ -1758,7 +1751,9 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 		  multicast, fifo);
- 
- 	brcmf_fws_lock(drvr, flags);
--	if (!brcmf_fws_mac_desc_ready(skcb->mac, fifo) ||
-+	if (skcb->mac->suppressed ||
-+	    brcmf_fws_mac_desc_closed(skcb->mac, fifo) ||
-+	    brcmu_pktq_mlen(&skcb->mac->psq, 3 << (fifo * 2)) ||
- 	    (!multicast &&
- 	     brcmf_fws_consume_credit(drvr->fws, fifo, skb) < 0)) {
- 		/* enqueue the packet in delayQ */
--- 
-1.7.10.4
+Maybe not. If ret == 0, crit_proto_started should be false. If ret != 0, 
+ie. crit_proto_stop() failed, it should remain true. It is a bit of 
+reverse logic. I could change it to !!ret or make it more clear using 
+!ret ? false : true. Another idea is changing the return type of 
+crit_proto_stop() to void and always set crit_proto_started to false.
 
+Gr. AvS
 
