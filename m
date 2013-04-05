@@ -1,485 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2451 "EHLO mms1.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:33539 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756134Ab3DRNtU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 09:49:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V7 1/3] cfg80211: introduce critical protocol indication
- from user-space
-Date: Thu, 18 Apr 2013 15:49:00 +0200
-Message-ID: <1366292942-21038-1-git-send-email-arend@broadcom.com> (sfid-20130418_154927_537465_8C1262C7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1161633Ab3DEG0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 02:26:44 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/6] rt2x00: rt2x00mmio: use rt2x00mmio prefix in function names
+Date: Fri,  5 Apr 2013 08:27:00 +0200
+Message-Id: <1365143225-24532-2-git-send-email-juhosg@openwrt.org> (sfid-20130405_082701_019391_44FAC50E)
+In-Reply-To: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some protocols need a more reliable connection to complete
-successful in reasonable time. This patch adds a user-space
-API to indicate the wireless driver that a critical protocol
-is about to commence and when it is done, using nl80211 primitives
-NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
+The functions in the rt2x00mmio module has been
+moved from the rt2x00pci module. Each function
+uses the rt2x00pci prefix which is a bit confusing.
+Use the r2x000mmio prefix for each function to make
+it consistent with the module name.
 
-There can be only on critical protocol session started per
-registered cfg80211 device.
+The renamed functions are used by several modules,
+and updating the names in all of them would result
+in a big patch. In order to keep the patch simple,
+add compatibility defines for the old function
+names. This allows to update the names in each
+module separately. After each module is updated,
+the defines can be removed.
 
-The driver can support this by implementing the cfg80211 callbacks
-.crit_proto_start() and .crit_proto_stop(). Examples of protocols
-that can benefit from this are DHCP, EAPOL, APIPA. Exactly how the
-link can/should be made more reliable is up to the driver. Things
-to consider are avoid scanning, no multi-channel operations, and
-alter coexistence schemes.
+The patch contains no functional changes.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
-Hi Johannes,
+ drivers/net/wireless/rt2x00/rt2x00mmio.c |   48 +++++++++++------------
+ drivers/net/wireless/rt2x00/rt2x00mmio.h |   63 ++++++++++++++++++------------
+ 2 files changed, 61 insertions(+), 50 deletions(-)
 
-Not sure whether you made the minor fixes already as you offered
-to do so. I saw the change pop-up in your repo a couple of nights
-ago, but it disappeared the next morning after another fetch.
-
-I also made related changes in our brcmfmac driver. Can you take
-them through your tree as well.
-
-Regards,
-Arend
-
-Changelog:
-----------
-V7:
-- remove crit_proto_started field from wireless_dev.
-- remove CRIT_PROTO_STOPPED_EVENT definition.
-- allow always calling cfg80211_crit_proto_stopped().
-V6:
-- added crit_proto_stopped event message.
-- use nlportid as flag for critical protocol being active.
-- return error when duration is over specified limit.
-- remove logic from rdev_* inline wrappers.
-- added more documentation.
-- some renaming of identifiers.
-V5:
-- change return type for .crit_prot_stop() to void.
-- correct limiting the duration.
-V4:
-- added cfg80211_crit_proto_stopped() for drivers to use.
-- added back protocol identifier for drivers to use.
-- reject starting critical protocol session when already started.
-- critical protocol session tracked per registered device.
-V3:
-- remove protocol identifier.
-- remove delayed work from cfg80211.
-- guard maximum limit for duration.
-- do .crit_proto_stop() upon netlink socket release.
-V2:
-- subject changed. Below previous subject is given for reference:
-  [RFC] cfg80211: configuration of Bluetooth coexistence mode
-- introduced dedicated nl80211 API.
-V1:
-- initial proposal.
----
- include/net/cfg80211.h       |   23 +++++++++
- include/uapi/linux/nl80211.h |   39 ++++++++++++++
- net/wireless/core.h          |    3 ++
- net/wireless/mlme.c          |    5 ++
- net/wireless/nl80211.c       |  117 ++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |   24 ++++++++-
- net/wireless/trace.h         |   35 +++++++++++++
- 7 files changed, 245 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index dff96d8..26b5b69 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2002,6 +2002,12 @@ struct cfg80211_update_ft_ies_params {
-  * @update_ft_ies: Provide updated Fast BSS Transition information to the
-  *	driver. If the SME is in the driver/firmware, this information can be
-  *	used in building Authentication and Reassociation Request frames.
-+ *
-+ * @crit_proto_start: Indicates a critical protocol needs more link reliability
-+ *	for a given duration (milliseconds). The protocol is provided so the
-+ *	driver can take the most appropriate actions.
-+ * @crit_proto_stop: Indicates critical protocol no longer needs increased link
-+ *	reliability. This operation can not fail.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.c b/drivers/net/wireless/rt2x00/rt2x00mmio.c
+index d84a680..06c7669 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mmio.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mmio.c
+@@ -34,10 +34,10 @@
+ /*
+  * Register access.
   */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -2231,6 +2237,12 @@ struct cfg80211_ops {
- 					 struct cfg80211_chan_def *chandef);
- 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_update_ft_ies_params *ftie);
-+	int	(*crit_proto_start)(struct wiphy *wiphy,
-+				    struct wireless_dev *wdev,
-+				    enum nl80211_crit_proto_id protocol,
-+				    u16 duration);
-+	void	(*crit_proto_stop)(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev);
- };
+-int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+-			   const unsigned int offset,
+-			   const struct rt2x00_field32 field,
+-			   u32 *reg)
++int rt2x00mmio_regbusy_read(struct rt2x00_dev *rt2x00dev,
++			    const unsigned int offset,
++			    const struct rt2x00_field32 field,
++			    u32 *reg)
+ {
+ 	unsigned int i;
+ 
+@@ -45,7 +45,7 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 		return 0;
+ 
+ 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+-		rt2x00pci_register_read(rt2x00dev, offset, reg);
++		rt2x00mmio_register_read(rt2x00dev, offset, reg);
+ 		if (!rt2x00_get_field32(*reg, field))
+ 			return 1;
+ 		udelay(REGISTER_BUSY_DELAY);
+@@ -57,13 +57,13 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(rt2x00pci_regbusy_read);
++EXPORT_SYMBOL_GPL(rt2x00mmio_regbusy_read);
+ 
+-bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
++bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue = rt2x00dev->rx;
+ 	struct queue_entry *entry;
+-	struct queue_entry_priv_pci *entry_priv;
++	struct queue_entry_priv_mmio *entry_priv;
+ 	struct skb_frame_desc *skbdesc;
+ 	int max_rx = 16;
+ 
+@@ -96,24 +96,24 @@ bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
+ 
+ 	return !max_rx;
+ }
+-EXPORT_SYMBOL_GPL(rt2x00pci_rxdone);
++EXPORT_SYMBOL_GPL(rt2x00mmio_rxdone);
+ 
+-void rt2x00pci_flush_queue(struct data_queue *queue, bool drop)
++void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop)
+ {
+ 	unsigned int i;
+ 
+ 	for (i = 0; !rt2x00queue_empty(queue) && i < 10; i++)
+ 		msleep(10);
+ }
+-EXPORT_SYMBOL_GPL(rt2x00pci_flush_queue);
++EXPORT_SYMBOL_GPL(rt2x00mmio_flush_queue);
  
  /*
-@@ -4137,6 +4149,17 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
- 				   struct cfg80211_wowlan_wakeup *wakeup,
- 				   gfp_t gfp);
- 
-+/**
-+ * cfg80211_crit_proto_stopped() - indicate critical protocol stopped by driver.
-+ *
-+ * @wdev: the wireless device for which critical protocol is stopped.
-+ *
-+ * This function can be called by the driver to indicate it has reverted
-+ * operation back to normal. One reason could be that the duration given
-+ * by .crit_proto_start() has expired.
-+ */
-+void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 79da871..d1e48b5 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -639,6 +639,13 @@
-  *	with the relevant Information Elements. This event is used to report
-  *	received FT IEs (MDIE, FTIE, RSN IE, TIE, RICIE).
-  *
-+ * @NL80211_CMD_CRIT_PROTOCOL_START: Indicates user-space will start running
-+ *	a critical protocol that needs more reliability in the connection to
-+ *	complete.
-+ *
-+ * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
-+ *	return back to normal.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
+  * Device initialization handlers.
   */
-@@ -798,6 +805,9 @@ enum nl80211_commands {
- 	NL80211_CMD_UPDATE_FT_IES,
- 	NL80211_CMD_FT_EVENT,
+-static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
+-				     struct data_queue *queue)
++static int rt2x00mmio_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
++				      struct data_queue *queue)
+ {
+-	struct queue_entry_priv_pci *entry_priv;
++	struct queue_entry_priv_mmio *entry_priv;
+ 	void *addr;
+ 	dma_addr_t dma;
+ 	unsigned int i;
+@@ -141,10 +141,10 @@ static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
+ 	return 0;
+ }
  
-+	NL80211_CMD_CRIT_PROTOCOL_START,
-+	NL80211_CMD_CRIT_PROTOCOL_STOP,
-+
- 	/* add new commands above here */
+-static void rt2x00pci_free_queue_dma(struct rt2x00_dev *rt2x00dev,
+-				     struct data_queue *queue)
++static void rt2x00mmio_free_queue_dma(struct rt2x00_dev *rt2x00dev,
++				      struct data_queue *queue)
+ {
+-	struct queue_entry_priv_pci *entry_priv =
++	struct queue_entry_priv_mmio *entry_priv =
+ 	    queue->entries[0].priv_data;
  
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1414,6 +1424,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_IE_RIC: Resource Information Container Information
-  *	Element
-  *
-+ * @NL80211_ATTR_CRIT_PROT_ID: critical protocol identifier requiring increased
-+ *	reliability, see &enum nl80211_crit_proto_id (u16).
-+ * @NL80211_ATTR_MAX_CRIT_PROT_DURATION: duration in milliseconds in which
-+ *      the connection should have increased reliability (u16).
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
+ 	if (entry_priv->desc)
+@@ -154,7 +154,7 @@ static void rt2x00pci_free_queue_dma(struct rt2x00_dev *rt2x00dev,
+ 	entry_priv->desc = NULL;
+ }
+ 
+-int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
++int rt2x00mmio_initialize(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue;
+ 	int status;
+@@ -163,7 +163,7 @@ int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
+ 	 * Allocate DMA
+ 	 */
+ 	queue_for_each(rt2x00dev, queue) {
+-		status = rt2x00pci_alloc_queue_dma(rt2x00dev, queue);
++		status = rt2x00mmio_alloc_queue_dma(rt2x00dev, queue);
+ 		if (status)
+ 			goto exit;
+ 	}
+@@ -184,13 +184,13 @@ int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
+ 
+ exit:
+ 	queue_for_each(rt2x00dev, queue)
+-		rt2x00pci_free_queue_dma(rt2x00dev, queue);
++		rt2x00mmio_free_queue_dma(rt2x00dev, queue);
+ 
+ 	return status;
+ }
+-EXPORT_SYMBOL_GPL(rt2x00pci_initialize);
++EXPORT_SYMBOL_GPL(rt2x00mmio_initialize);
+ 
+-void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
++void rt2x00mmio_uninitialize(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue;
+ 
+@@ -203,9 +203,9 @@ void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
+ 	 * Free DMA
+ 	 */
+ 	queue_for_each(rt2x00dev, queue)
+-		rt2x00pci_free_queue_dma(rt2x00dev, queue);
++		rt2x00mmio_free_queue_dma(rt2x00dev, queue);
+ }
+-EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize);
++EXPORT_SYMBOL_GPL(rt2x00mmio_uninitialize);
+ 
+ /*
+  * rt2x00mmio module information.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.h b/drivers/net/wireless/rt2x00/rt2x00mmio.h
+index 4ecaf60..b0396ca 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mmio.h
++++ b/drivers/net/wireless/rt2x00/rt2x00mmio.h
+@@ -31,37 +31,41 @@
+ /*
+  * Register access.
   */
-@@ -1709,6 +1724,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MDID,
- 	NL80211_ATTR_IE_RIC,
+-static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
+-					   const unsigned int offset,
+-					   u32 *value)
++static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
++					    const unsigned int offset,
++					    u32 *value)
+ {
+ 	*value = readl(rt2x00dev->csr.base + offset);
+ }
++#define rt2x00pci_register_read rt2x00mmio_register_read
  
-+	NL80211_ATTR_CRIT_PROT_ID,
-+	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-static inline void rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
+-						const unsigned int offset,
+-						void *value, const u32 length)
++static inline void rt2x00mmio_register_multiread(struct rt2x00_dev *rt2x00dev,
++						 const unsigned int offset,
++						 void *value, const u32 length)
+ {
+ 	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
+ }
++#define rt2x00pci_register_multiread rt2x00mmio_register_multiread
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3682,4 +3700,25 @@ enum nl80211_protocol_features {
- 	NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP =	1 << 0,
+-static inline void rt2x00pci_register_write(struct rt2x00_dev *rt2x00dev,
+-					    const unsigned int offset,
+-					    u32 value)
++static inline void rt2x00mmio_register_write(struct rt2x00_dev *rt2x00dev,
++					     const unsigned int offset,
++					     u32 value)
+ {
+ 	writel(value, rt2x00dev->csr.base + offset);
+ }
++#define rt2x00pci_register_write rt2x00mmio_register_write
+ 
+-static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+-						 const unsigned int offset,
+-						 const void *value,
+-						 const u32 length)
++static inline void rt2x00mmio_register_multiwrite(struct rt2x00_dev *rt2x00dev,
++						  const unsigned int offset,
++						  const void *value,
++						  const u32 length)
+ {
+ 	__iowrite32_copy(rt2x00dev->csr.base + offset, value, length >> 2);
+ }
++#define rt2x00pci_register_multiwrite rt2x00mmio_register_multiwrite
+ 
+ /**
+- * rt2x00pci_regbusy_read - Read from register with busy check
++ * rt2x00mmio_regbusy_read - Read from register with busy check
+  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
+  * @offset: Register offset
+  * @field: Field to check if register is busy
+@@ -73,47 +77,54 @@ static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
+  * is not read after a certain timeout, this function will return
+  * FALSE.
+  */
+-int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+-			   const unsigned int offset,
+-			   const struct rt2x00_field32 field,
+-			   u32 *reg);
++int rt2x00mmio_regbusy_read(struct rt2x00_dev *rt2x00dev,
++			    const unsigned int offset,
++			    const struct rt2x00_field32 field,
++			    u32 *reg);
++#define rt2x00pci_regbusy_read rt2x00mmio_regbusy_read
+ 
+ /**
+- * struct queue_entry_priv_pci: Per entry PCI specific information
++ * struct queue_entry_priv_mmio: Per entry PCI specific information
+  *
+  * @desc: Pointer to device descriptor
+  * @desc_dma: DMA pointer to &desc.
+  * @data: Pointer to device's entry memory.
+  * @data_dma: DMA pointer to &data.
+  */
+-struct queue_entry_priv_pci {
++struct queue_entry_priv_mmio {
+ 	__le32 *desc;
+ 	dma_addr_t desc_dma;
  };
++#define queue_entry_priv_pci queue_entry_priv_mmio
  
-+/**
-+ * enum nl80211_crit_proto_id - nl80211 critical protocol identifiers
-+ *
-+ * @NL80211_CRIT_PROTO_UNSPEC: protocol unspecified.
-+ * @NL80211_CRIT_PROTO_DHCP: BOOTP or DHCPv6 protocol.
-+ * @NL80211_CRIT_PROTO_EAPOL: EAPOL protocol.
-+ * @NL80211_CRIT_PROTO_APIPA: APIPA protocol.
-+ * @NUM_NL80211_CRIT_PROTO: must be kept last.
-+ */
-+enum nl80211_crit_proto_id {
-+	NL80211_CRIT_PROTO_UNSPEC,
-+	NL80211_CRIT_PROTO_DHCP,
-+	NL80211_CRIT_PROTO_EAPOL,
-+	NL80211_CRIT_PROTO_APIPA,
-+	/* add other protocols before this one */
-+	NUM_NL80211_CRIT_PROTO
-+};
-+
-+/* maximum duration for critical protocol measures */
-+#define NL80211_CRIT_PROTO_MAX_DURATION		5000 /* msec */
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index d5d06fd..eac5308 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -88,6 +88,9 @@ struct cfg80211_registered_device {
+ /**
+- * rt2x00pci_rxdone - Handle RX done events
++ * rt2x00mmio_rxdone - Handle RX done events
+  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
+  *
+  * Returns true if there are still rx frames pending and false if all
+  * pending rx frames were processed.
+  */
+-bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev);
++bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev);
++#define rt2x00pci_rxdone rt2x00mmio_rxdone
  
- 	struct delayed_work dfs_update_channels_wk;
+ /**
+- * rt2x00pci_flush_queue - Flush data queue
++ * rt2x00mmio_flush_queue - Flush data queue
+  * @queue: Data queue to stop
+  * @drop: True to drop all pending frames.
+  *
+  * This will wait for a maximum of 100ms, waiting for the queues
+  * to become empty.
+  */
+-void rt2x00pci_flush_queue(struct data_queue *queue, bool drop);
++void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop);
++#define rt2x00pci_flush_queue rt2x00mmio_flush_queue
  
-+	/* netlink port which started critical protocol (0 means not started) */
-+	u32 crit_proto_nlportid;
+ /*
+  * Device initialization handlers.
+  */
+-int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev);
+-void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev);
++int rt2x00mmio_initialize(struct rt2x00_dev *rt2x00dev);
++#define rt2x00pci_initialize rt2x00mmio_initialize
 +
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
- 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 390198b..0c7b7dd 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -648,6 +648,11 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
++void rt2x00mmio_uninitialize(struct rt2x00_dev *rt2x00dev);
++#define rt2x00pci_uninitialize rt2x00mmio_uninitialize
  
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
- 
-+	if (nlportid && rdev->crit_proto_nlportid == nlportid) {
-+		rdev->crit_proto_nlportid = 0;
-+		rdev_crit_proto_stop(rdev, wdev);
-+	}
-+
- 	if (nlportid == wdev->ap_unexpected_nlportid)
- 		wdev->ap_unexpected_nlportid = 0;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f924d45..96ba1eb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1417,6 +1417,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
- 		}
- 		CMD(start_p2p_device, START_P2P_DEVICE);
- 		CMD(set_mcast_rate, SET_MCAST_RATE);
-+		if (split) {
-+			CMD(crit_proto_start, CRIT_PROTOCOL_START);
-+			CMD(crit_proto_stop, CRIT_PROTOCOL_STOP);
-+		}
- 
- #ifdef CONFIG_NL80211_TESTMODE
- 		CMD(testmode_cmd, TESTMODE);
-@@ -8196,6 +8200,64 @@ static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
- 	return rdev_update_ft_ies(rdev, dev, &ft_params);
- }
- 
-+static int nl80211_crit_protocol_start(struct sk_buff *skb,
-+				       struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	enum nl80211_crit_proto_id proto = NL80211_CRIT_PROTO_UNSPEC;
-+	u16 duration;
-+	int ret;
-+
-+	if (!rdev->ops->crit_proto_start)
-+		return -EOPNOTSUPP;
-+
-+	if (WARN_ON(!rdev->ops->crit_proto_stop))
-+		return -EINVAL;
-+
-+	if (rdev->crit_proto_nlportid)
-+		return -EBUSY;
-+
-+	/* determine protocol if provided */
-+	if (info->attrs[NL80211_ATTR_CRIT_PROT_ID])
-+		proto = nla_get_u16(info->attrs[NL80211_ATTR_CRIT_PROT_ID]);
-+
-+	if (proto >= NUM_NL80211_CRIT_PROTO)
-+		return -EINVAL;
-+
-+	/* timeout must be provided */
-+	if (!info->attrs[NL80211_ATTR_MAX_CRIT_PROT_DURATION])
-+		return -EINVAL;
-+
-+	duration =
-+		nla_get_u16(info->attrs[NL80211_ATTR_MAX_CRIT_PROT_DURATION]);
-+
-+	if (duration > NL80211_CRIT_PROTO_MAX_DURATION)
-+		return -ERANGE;
-+
-+	ret = rdev_crit_proto_start(rdev, wdev, proto, duration);
-+	if (!ret)
-+		rdev->crit_proto_nlportid = info->snd_portid;
-+
-+	return ret;
-+}
-+
-+static int nl80211_crit_protocol_stop(struct sk_buff *skb,
-+				      struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+
-+	if (!rdev->ops->crit_proto_stop)
-+		return -EOPNOTSUPP;
-+
-+	if (rdev->crit_proto_nlportid) {
-+		rdev->crit_proto_nlportid = 0;
-+		rdev_crit_proto_stop(rdev, wdev);
-+	}
-+	return 0;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -8885,6 +8947,22 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_CRIT_PROTOCOL_START,
-+		.doit = nl80211_crit_protocol_start,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_CRIT_PROTOCOL_STOP,
-+		.doit = nl80211_crit_protocol_stop,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	}
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-@@ -10630,6 +10708,45 @@ void cfg80211_ft_event(struct net_device *netdev,
- }
- EXPORT_SYMBOL(cfg80211_ft_event);
- 
-+void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u32 nlportid;
-+
-+	rdev = wiphy_to_dev(wdev->wiphy);
-+	if (!rdev->crit_proto_nlportid)
-+		return;
-+
-+	nlportid = rdev->crit_proto_nlportid;
-+	rdev->crit_proto_nlportid = 0;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CRIT_PROTOCOL_STOP);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-+	return;
-+
-+ nla_put_failure:
-+	if (hdr)
-+		genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+
-+}
-+EXPORT_SYMBOL(cfg80211_crit_proto_stopped);
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index d77e1c1..9f15f0a 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -875,7 +875,7 @@ static inline void rdev_stop_p2p_device(struct cfg80211_registered_device *rdev,
- 	trace_rdev_stop_p2p_device(&rdev->wiphy, wdev);
- 	rdev->ops->stop_p2p_device(&rdev->wiphy, wdev);
- 	trace_rdev_return_void(&rdev->wiphy);
--}					
-+}
- 
- static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
- 				   struct net_device *dev,
-@@ -901,4 +901,26 @@ static inline int rdev_update_ft_ies(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int rdev_crit_proto_start(struct cfg80211_registered_device *rdev,
-+					struct wireless_dev *wdev,
-+					enum nl80211_crit_proto_id protocol,
-+					u16 duration)
-+{
-+	int ret;
-+
-+	trace_rdev_crit_proto_start(&rdev->wiphy, wdev, protocol, duration);
-+	ret = rdev->ops->crit_proto_start(&rdev->wiphy, wdev,
-+					  protocol, duration);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
-+static inline void rdev_crit_proto_stop(struct cfg80211_registered_device *rdev,
-+				       struct wireless_dev *wdev)
-+{
-+	trace_rdev_crit_proto_stop(&rdev->wiphy, wdev);
-+	rdev->ops->crit_proto_stop(&rdev->wiphy, wdev);
-+	trace_rdev_return_void(&rdev->wiphy);
-+}
-+
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ccadef2..499c982 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1805,6 +1805,41 @@ TRACE_EVENT(rdev_update_ft_ies,
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->md)
- );
- 
-+TRACE_EVENT(rdev_crit_proto_start,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
-+		 enum nl80211_crit_proto_id protocol, u16 duration),
-+	TP_ARGS(wiphy, wdev, protocol, duration),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		WDEV_ENTRY
-+		__field(u16, proto)
-+		__field(u16, duration)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		WDEV_ASSIGN;
-+		__entry->proto = protocol;
-+		__entry->duration = duration;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", proto=%x, duration=%u",
-+		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->proto, __entry->duration)
-+);
-+
-+TRACE_EVENT(rdev_crit_proto_stop,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	TP_ARGS(wiphy, wdev),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		WDEV_ENTRY
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		WDEV_ASSIGN;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT,
-+		  WIPHY_PR_ARG, WDEV_PR_ARG)
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
+ #endif /* RT2X00MMIO_H */
 -- 
-1.7.10.4
-
+1.7.10
 
