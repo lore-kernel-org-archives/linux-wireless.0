@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2978 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760450Ab3DCKlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:41:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 20/25] brcmfmac: initialize struct brcmf_fws_info fields
- before iovar
-Date: Wed, 3 Apr 2013 12:40:45 +0200
-Message-ID: <1364985650-11719-21-git-send-email-arend@broadcom.com> (sfid-20130403_124305_635751_F4A36850)
-In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:60281 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab3DEJpI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 05:45:08 -0400
+Received: by mail-ea0-f170.google.com with SMTP id a15so1331201eae.29
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 02:45:07 -0700 (PDT)
+Message-ID: <515E9D1F.8000701@gmail.com> (sfid-20130405_114514_181757_C2A61E50)
+Date: Fri, 05 Apr 2013 12:45:03 +0300
+From: Nick Kossifidis <mickflemm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Adrian Chadd <adrian@freebsd.org>
+CC: linux-wireless@vger.kernel.org,
+	=?UTF-8?B?UmljYXJkbyBUdWLDrW8=?= <rtpardavila@gmail.com>
+Subject: Re: [ath5k][802.11p] Deactivate beacon
+References: <loom.20130403T092722-24@post.gmane.org> <CAJ-Vmomn8A77jEvR2c312QukWy7Zozs4T2NQuiYMForr5+DthQ@mail.gmail.com>
+In-Reply-To: <CAJ-Vmomn8A77jEvR2c312QukWy7Zozs4T2NQuiYMForr5+DthQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If iovar to the firmware fails the firmware-signalling module
-does a cleanup for which it needs pointer to struct brcmf_pub, which
-it gets from struct brcmf_fws_info::drvr. Assign this field before
-doing the tlv iovar.
+On Wed Apr  3 23:56:46 2013, Adrian Chadd wrote:
+> On 3 April 2013 00:30, Ricardo Tubío <rtpardavila@gmail.com> wrote:
+>> My name is Ricardo Tubío and I am currently trying to use GCDC patches for the
+>> 'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would
+>> like to know if somebody has either a patch for deactivating the beacon or can
+>> help me in locating the code where the beacon is implemented.
+>
+> Where are these patches hiding?
+>
+> I've just been sent a couple of unex cards to implement 802.11p on FreeBSD.
+> So I'd like to see what the current state of the art with ath5k is.
+>
+> Thanks!
+>
+>
+>
+> Adrian
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 314aedc..6d036b7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -919,6 +919,10 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 		goto fail;
- 	}
- 
-+	/* set linkage back */
-+	drvr->fws->drvr = drvr;
-+	drvr->fws->fcmode = fcmode;
-+
- 	/* enable proptxtstatus signaling by default */
- 	rc = brcmf_fil_iovar_int_set(drvr->iflist[0], "tlv", tlv);
- 	if (rc < 0) {
-@@ -937,10 +941,6 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 	/* create debugfs file for statistics */
- 	brcmf_debugfs_create_fws_stats(drvr, &drvr->fws->stats);
- 
--	/* set linkage back */
--	drvr->fws->drvr = drvr;
--	drvr->fws->fcmode = fcmode;
--
- 	/* TODO: remove upon feature delivery */
- 	brcmf_err("%s bdcv2 tlv signaling [%x]\n",
- 		  drvr->fw_signals ? "enabled" : "disabled", tlv);
--- 
-1.7.10.4
-
-
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/80154
