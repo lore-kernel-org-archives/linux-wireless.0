@@ -1,104 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2829 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757965Ab3DXINy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 04:13:54 -0400
-Message-ID: <51779434.4010709@broadcom.com> (sfid-20130424_101400_945415_BF7D2179)
-Date: Wed, 24 Apr 2013 10:13:40 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:35115 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1162968Ab3DEXtI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 19:49:08 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Rhodes <jrhodes@marvell.com>
+Date: Fri, 5 Apr 2013 16:48:32 -0700
+Subject: RE: mwifiex frequent "not allowed while suspended" crash on resume
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DDAB9CC@SC-VEXCH1.marvell.com> (sfid-20130406_014913_476021_11095CC8)
+References: <CAMLZHHRpPghm0tWTksFiD-zxUUM1dSbgPbj6doMck1jqv-yokw@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9DAD431B@SC-VEXCH1.marvell.com>
+ <CAMLZHHRcTgQ66fucR09SEyjCCRiZixigM=cDwnfKB5yWYk4PQw@mail.gmail.com>
+In-Reply-To: <CAMLZHHRcTgQ66fucR09SEyjCCRiZixigM=cDwnfKB5yWYk4PQw@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_477F20668A386D41ADCC57781B1F70430D9DDAB9CCSCVEXCH1marve_"
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Marcel Holtmann" <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
- <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
- <1366735340.8385.20.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1366735340.8385.20.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/2013 06:42 PM, Johannes Berg wrote:
-> On Tue, 2013-04-23 at 07:50 -0700, Marcel Holtmann wrote:
->
->>> +config CFG80211_ANDROID_P2P_HACK
->>> +	bool "Android P2P netdevice hack"
->>> +	depends on CFG80211
->>> +	depends on !CFG80211_WEXT
->>> +	help
->>> +	  Enable this option for Android P2P w/ P2P Device.
->>> +
->>
->> do you really think this is a good idea? Wouldn't it be better if
->> Android just gets its userspace fixed. This way, they never will and
->> you carry this workaround forever.
->
-> Well, I'm about 50/50 on whether to merge this. On the one hand, it's a
-> very simple patch to carry out of tree, on the other hand more than one
-> person will need it.
->
+--_002_477F20668A386D41ADCC57781B1F70430D9DDAB9CCSCVEXCH1marve_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Here is one who needs it. I consider this patch as a temporary solution, 
-but it would be good to have it upstream. We would be using 
-compat-drivers to backport the upstream brcmfmac to the android kernel, 
-which also takes care of cfg80211.
+Hi Daniel,
 
->> Has anybody actually looked into what it would take to just fix
->> Android userspace to use nl80211 to bring up P2P. I just see tons of
->> #ifdef added to the kernel.
->
-> Yes, I did :-)
->
-> However, for any system running Jelly Bean that's not really an option,
-> and I have no idea if/how K-whatever is coming, so it might not be
-> possible there either. Additionally, fairly large changes are needed in
-> wpa_supplicant to actually support the P2P-Device with only nl82011
-> APIs.
+> As we haven't heard back from you in a while, and this is blocking
+> several things on our end, I had a quick look myself.
+>=20
+> The problem seems to be TX soon after resume, and there does seem to
+> be a bit of a lack of synchronization here (i.e. mwifiex_main_process
+> should maybe avoid doing TX while the interface is suspended).
 
-If android is moving to 3.8 kernel with KLP (key lime pie), you could 
-say that it requires middleware/wifi-framework to deal with the new 
-kernel API. However, it mostly involves wpa_supplicant regardless of 
-using it on android or not. So this is more a wpa_supplicant P2P hack.
+Normally TX is blocked until resume handler is called and host sleep handsh=
+ake between driver and firmware is done. Does the TX happen before "hs_deac=
+tivated" event?
 
-> This gives us a transition path while making changes to the other parts
-> of the stack.
+>=20
+> As a quick hack I added netdev_device_detach() early in suspend, and
+> netdev_device_attach() late in resume, and that seems to serialize
+> things. But I don't think its a good fix. Hopefully you can find a
+> solution that flows better with the mwifiex design.
 
-For 'selfish' reasons I am not opposed to this path ;-)
+I'm thinking of releasing IRQ in driver suspend handler and re-claim the IR=
+Q in resume. Of course it needs some changes in sdio_release_irq to skip SD=
+IO_CCCR_IENx disabling, otherwise host may not be woken up by SDIO DAT1.
 
->>> +			if (!dev
->>> +#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
->>> +			    || (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
->>> +				info->genlhdr->cmd != NL80211_CMD_SET_INTERFACE)
->>> +#endif
->>> +			) {
->>> 				mutex_unlock(&cfg80211_mutex);
->>> 				if (rtnl)
->>> 					rtnl_unlock();
->>
->> And doing an #ifdef in the middle of if-clause doesn't ring any alarm
->> bells that this might be a really bad idea ;)
->
-> Well, I could put an #ifdef into each and every command instead which I
-> didn't want to, which incidentally is the reason for not allowing this
-> with WEXT, WEXT ioctls on the P2P-Device netdev just cause crashes :)
+Attached is the sample code, not tested.
 
-I dislike these kind of constructs as well so I would like this to be 
-made somewhat cleaner (conditional helper function?).
+Thanks,
+Bing
 
-> Basically this way also reduces the surface of this patch to make it
-> easier to use out of tree.
->
->> When I am looking at the USB gadget handling, I see a lot of progress
->> in establishing a standard kernel interface and changing Android
->> userspace to work with that instead.
->
-> "progress" doesn't really help, at least in this case it's pretty much
-> an either-or situation and changing the userspace will take a long time.
 
-As long as changing the user-space is done eventually, right.
+--_002_477F20668A386D41ADCC57781B1F70430D9DDAB9CCSCVEXCH1marve_
+Content-Type: application/octet-stream; name="release_irq_in_suspend.diff"
+Content-Description: release_irq_in_suspend.diff
+Content-Disposition: attachment; filename="release_irq_in_suspend.diff";
+	size=2244; creation-date="Fri, 05 Apr 2013 23:10:36 GMT";
+	modification-date="Fri, 05 Apr 2013 23:10:36 GMT"
+Content-Transfer-Encoding: base64
 
-Gr. AvS
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbW1jL2NvcmUvc2Rpb19pcnEuYyBiL2RyaXZlcnMvbW1jL2Nv
+cmUvc2Rpb19pcnEuYwppbmRleCAzZDhjZWI0Li5iYTcyZTdiIDEwMDY0NAotLS0gYS9kcml2ZXJz
+L21tYy9jb3JlL3NkaW9faXJxLmMKKysrIGIvZHJpdmVycy9tbWMvY29yZS9zZGlvX2lycS5jCkBA
+IC0yODYsMTQgKzI4NiwyMCBAQCBpbnQgc2Rpb19yZWxlYXNlX2lycShzdHJ1Y3Qgc2Rpb19mdW5j
+ICpmdW5jKQogCUJVR19PTighZnVuYyk7CiAJQlVHX09OKCFmdW5jLT5jYXJkKTsKIAotCXByX2Rl
+YnVnKCJTRElPOiBEaXNhYmxpbmcgSVJRIGZvciAlcy4uLlxuIiwgc2Rpb19mdW5jX2lkKGZ1bmMp
+KTsKLQogCWlmIChmdW5jLT5pcnFfaGFuZGxlcikgewogCQlmdW5jLT5pcnFfaGFuZGxlciA9IE5V
+TEw7CiAJCXNkaW9fY2FyZF9pcnFfcHV0KGZ1bmMtPmNhcmQpOwogCQlzZGlvX3NpbmdsZV9pcnFf
+c2V0KGZ1bmMtPmNhcmQpOwogCX0KIAorCWlmKGZ1bmMtPmNhcmQtPmhvc3QgJiYKKwkgICBmdW5j
+LT5jYXJkLT5ob3N0LT5wbV9mbGFncyAmIE1NQ19QTV9XQUtFX1NESU9fSVJRKSB7CisJCXByX2lu
+Zm8oIlNESU86IEtFRVAgSVJRIE9OIGZvciAlcy4uLlxuIiwgc2Rpb19mdW5jX2lkKGZ1bmMpKTsK
+KwkJcmV0dXJuIDA7CisJfQorCisJcHJfZGVidWcoIlNESU86IERpc2FibGluZyBJUlEgZm9yICVz
+Li4uXG4iLCBzZGlvX2Z1bmNfaWQoZnVuYykpOworCiAJcmV0ID0gbW1jX2lvX3J3X2RpcmVjdChm
+dW5jLT5jYXJkLCAwLCAwLCBTRElPX0NDQ1JfSUVOeCwgMCwgJnJlZyk7CiAJaWYgKHJldCkKIAkJ
+cmV0dXJuIHJldDsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Rp
+by5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmMKaW5kZXggMzYzYmEzMS4u
+YjllZjkzZSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmMK
+KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmMKQEAgLTUxLDYgKzUxLDcg
+QEAgc3RhdGljIHN0cnVjdCBtd2lmaWV4X2lmX29wcyBzZGlvX29wczsKIHN0YXRpYyBzdHJ1Y3Qg
+c2VtYXBob3JlIGFkZF9yZW1vdmVfY2FyZF9zZW07CiAKIHN0YXRpYyBpbnQgbXdpZmlleF9zZGlv
+X3Jlc3VtZShzdHJ1Y3QgZGV2aWNlICpkZXYpOworc3RhdGljIHZvaWQgbXdpZmlleF9zZGlvX2lu
+dGVycnVwdChzdHJ1Y3Qgc2Rpb19mdW5jICpmdW5jKTsKIAogLyoKICAqIFNESU8gcHJvYmUuCkBA
+IC0xOTEsNiArMTkyLDEwIEBAIHN0YXRpYyBpbnQgbXdpZmlleF9zZGlvX3N1c3BlbmQoc3RydWN0
+IGRldmljZSAqZGV2KQogCQlyZXR1cm4gLUVGQVVMVDsKIAl9CiAKKwlzZGlvX2NsYWltX2hvc3Qo
+Y2FyZC0+ZnVuYyk7CisJc2Rpb19yZWxlYXNlX2lycShmdW5jKTsKKwlzZGlvX3JlbGVhc2VfaG9z
+dChjYXJkLT5mdW5jKTsKKwogCWRldl9kYmcoYWRhcHRlci0+ZGV2LCAiY21kOiBzdXNwZW5kIHdp
+dGggTU1DX1BNX0tFRVBfUE9XRVJcbiIpOwogCXJldCA9IHNkaW9fc2V0X2hvc3RfcG1fZmxhZ3Mo
+ZnVuYywgTU1DX1BNX0tFRVBfUE9XRVIpOwogCkBAIC0yMTYsNiArMjIxLDcgQEAgc3RhdGljIGlu
+dCBtd2lmaWV4X3NkaW9fcmVzdW1lKHN0cnVjdCBkZXZpY2UgKmRldikKIAlzdHJ1Y3Qgc2Rpb19t
+bWNfY2FyZCAqY2FyZDsKIAlzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyICphZGFwdGVyOwogCW1tY19w
+bV9mbGFnX3QgcG1fZmxhZyA9IDA7CisJaW50IHJldDsKIAogCWlmIChmdW5jKSB7CiAJCXBtX2Zs
+YWcgPSBzZGlvX2dldF9ob3N0X3BtX2NhcHMoZnVuYyk7CkBAIC0yMzgsNiArMjQ0LDE0IEBAIHN0
+YXRpYyBpbnQgbXdpZmlleF9zZGlvX3Jlc3VtZShzdHJ1Y3QgZGV2aWNlICpkZXYpCiAKIAlhZGFw
+dGVyLT5pc19zdXNwZW5kZWQgPSBmYWxzZTsKIAorCXNkaW9fY2xhaW1faG9zdChjYXJkLT5mdW5j
+KTsKKwlyZXQgPSBzZGlvX2NsYWltX2lycShmdW5jLCBtd2lmaWV4X3NkaW9faW50ZXJydXB0KTsK
+KwlzZGlvX3JlbGVhc2VfaG9zdChjYXJkLT5mdW5jKTsKKwlpZiAocmV0KSB7CisJCXByX2Vycigi
+JXM6IGNsYWltIGlycSBmYWlsZWQ6IHJldD0lZFxuIiwgX19mdW5jX18sIHJldCk7CisJCXJldHVy
+biByZXQ7CisJfQorCiAJLyogRGlzYWJsZSBIb3N0IFNsZWVwICovCiAJbXdpZmlleF9jYW5jZWxf
+aHMobXdpZmlleF9nZXRfcHJpdihhZGFwdGVyLCBNV0lGSUVYX0JTU19ST0xFX1NUQSksCiAJCQkg
+IE1XSUZJRVhfQVNZTkNfQ01EKTsK
 
+--_002_477F20668A386D41ADCC57781B1F70430D9DDAB9CCSCVEXCH1marve_--
