@@ -1,62 +1,432 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:51730 "EHLO smtp1.u-psud.fr"
+Received: from mms3.broadcom.com ([216.31.210.19]:1616 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934469Ab3DHIB5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 04:01:57 -0400
-Message-ID: <51627793.1040505@lri.fr> (sfid-20130408_100202_322269_B6FDE101)
-Date: Mon, 08 Apr 2013 09:53:55 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+	id S1161177Ab3DEN3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 09:29:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [RFC V4] cfg80211: introduce critical protocol indication from
+ user-space
+Date: Fri, 5 Apr 2013 15:25:12 +0200
+Message-ID: <1365168312-14780-1-git-send-email-arend@broadcom.com> (sfid-20130405_152939_792698_BECC4903)
 MIME-Version: 1.0
-To: Antonio Quartulli <antonio@open-mesh.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Will Hawkins <hawkinsw@opentechinstitute.org>
-Subject: Re: [PATCHv3 2/2] mac80211: in AD-HOC mode wait for the AUTH response
-References: <50E400A7.5060100@lri.fr> <20130107114048.GH27589@ritirata.org> <50EACA95.8040004@lri.fr> <1359151524.4655.37.camel@jlt4.sipsolutions.net> <5103C774.4080403@lri.fr> <1359459469.8108.11.camel@jlt4.sipsolutions.net> <5107D5D5.3070601@lri.fr> <1359639241.8415.17.camel@jlt4.sipsolutions.net> <510A7D40.2030206@lri.fr> <1359642373.8415.57.camel@jlt4.sipsolutions.net> <20130407211654.GA6083@open-mesh.com>
-In-Reply-To: <20130407211654.GA6083@open-mesh.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/04/2013 23:17, Antonio Quartulli wrote:
-> Hi all,
-> 
-> let's resurrect this thread :)
-> 
-> On Thu, Jan 31, 2013 at 06:26:13AM -0800, Johannes Berg wrote:
->> On Thu, 2013-01-31 at 15:18 +0100, Nicolas Cavallari wrote:
->>
->>>> I think that's acceptable, but if it requires a wpa_s change anyway we
->>>> could just implement reboot detection there instead of adding all these
->>>> new events etc.? I.e. rather than having a new supplicant say "OK I will
->>>> listen to the right event when handling reboot detection", it could just
->>>> use the existing infrastructure and implement it itself?
->>>
->>> Well i already have wpa_supplicant patches for that. Might just need to clean that up a
->>> bit so it's at least configurable.
->>>
-> 
-> Would you mind sharing this code?
+Some protocols need a more reliable connection to complete
+successful in reasonable time. This patch adds a user-space
+API to indicate the wireless driver that a critical protocol
+is about to commence and when it is done, using nl80211 primitives
+NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
 
-Well yes, i just need to untangle it with some other local policies ;)
+There can be only on critical protocol session started per
+registered cfg80211 device. The driver can support this by
+implementing the cfg80211 callbacks .crit_proto_start() and
+.crit_proto_stop(). Examples of protocols that can benefit from
+this are DHCP, EAPOL, APIPA. Exactly how the link can/should be
+made more reliable is up to the driver. Things to consider are
+avoid scanning, no multi-channel operations, and alter coexistence
+schemes.
 
-> Maybe I can help and offload some work. :)
-> Anyhow I did not understand how you can detect a node reboot from userspace if, as
-> you stated, wpa_s is not able to distinguish encrypted from un-encrypted frames.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Changelog:
+----------
+V4:
+- added cfg80211_crit_proto_stopped() for drivers to use.
+- added back protocol identifier for drivers to use.
+- reject starting critical protocol session when already started.
+- critical protocol session tracked per registered device.
+V3:
+- remove protocol identifier.
+- remove delayed work from cfg80211.
+- guard maximum limit for duration.
+- do .crit_proto_stop() upon netlink socket release.
+V2:
+- subject changed. Below previous subject is given for reference:
+  [RFC] cfg80211: configuration of Bluetooth coexistence mode
+- introduced dedicated nl80211 API.
+V1:
+- initial proposal.
+---
+ include/net/cfg80211.h       |   23 ++++++++++++
+ include/uapi/linux/nl80211.h |   31 ++++++++++++++++
+ net/wireless/core.h          |    3 ++
+ net/wireless/mlme.c          |    3 ++
+ net/wireless/nl80211.c       |   80 ++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |   31 +++++++++++++++-
+ net/wireless/trace.h         |   35 ++++++++++++++++++
+ 7 files changed, 205 insertions(+), 1 deletion(-)
 
-Well, you do it the same way as you do in the kernel, using auth frames. Except you're not
-in the kernel.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 57870b6..998ae47 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2002,6 +2002,9 @@ struct cfg80211_update_ft_ies_params {
+  * @update_ft_ies: Provide updated Fast BSS Transition information to the
+  *	driver. If the SME is in the driver/firmware, this information can be
+  *	used in building Authentication and Reassociation Request frames.
++ * @crit_proto_start: Indicates a critical protocol needs more link reliability.
++ * @crit_proto_stop: Indicates critical protocol no longer needs increased link
++ *	reliability.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2231,6 +2234,12 @@ struct cfg80211_ops {
+ 					 struct cfg80211_chan_def *chandef);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
++	int	(*crit_proto_start)(struct wiphy *wiphy,
++				    struct wireless_dev *wdev,
++				    enum nl80211_crit_proto_id protocol,
++				    u16 duration);
++	int	(*crit_proto_stop)(struct wiphy *wiphy,
++				   struct wireless_dev *wdev);
+ };
+ 
+ /*
+@@ -2830,6 +2839,7 @@ struct cfg80211_cached_keys;
+  * @p2p_started: true if this is a P2P Device that has been started
+  * @cac_started: true if DFS channel availability check has been started
+  * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
++ * @crit_proto_started: true if crit_proto_start() has been done.
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -2884,6 +2894,8 @@ struct wireless_dev {
+ 	bool cac_started;
+ 	unsigned long cac_start_time;
+ 
++	bool crit_proto_started;
++
+ #ifdef CONFIG_CFG80211_WEXT
+ 	/* wext data */
+ 	struct {
+@@ -4126,6 +4138,17 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+ 				   struct cfg80211_wowlan_wakeup *wakeup,
+ 				   gfp_t gfp);
+ 
++/**
++ * cfg80211_crit_proto_stopped() - indicate critical protocol stopped by driver.
++ *
++ * @wdev: the wireless device for which critical protocol is stopped.
++ *
++ * This function can be called by the driver to indicate it has reverted
++ * operation back to normal. One reason could be that the duration given
++ * by .crit_proto_start() has expired.
++ */
++void cfg80211_crit_proto_stopped(struct wireless_dev *wdev);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 79da871..16d3eb5 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -639,6 +639,13 @@
+  *	with the relevant Information Elements. This event is used to report
+  *	received FT IEs (MDIE, FTIE, RSN IE, TIE, RICIE).
+  *
++ * @NL80211_CMD_CRIT_PROTOCOL_START: Indicates user-space will start running
++ *	a critical protocol that needs more reliability in the connection to
++ *	complete.
++ *
++ * @NL80211_CMD_CRIT_PROTOCOL_STOP: Indicates the connection reliability can
++ *	return back to normal.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -798,6 +805,9 @@ enum nl80211_commands {
+ 	NL80211_CMD_UPDATE_FT_IES,
+ 	NL80211_CMD_FT_EVENT,
+ 
++	NL80211_CMD_CRIT_PROTOCOL_START,
++	NL80211_CMD_CRIT_PROTOCOL_STOP,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1709,6 +1719,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_MDID,
+ 	NL80211_ATTR_IE_RIC,
+ 
++	NL80211_ATTR_CRIT_PROT_ID,
++	NL80211_ATTR_MAX_CRIT_PROT_DURATION,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3682,4 +3695,22 @@ enum nl80211_protocol_features {
+ 	NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP =	1 << 0,
+ };
+ 
++/**
++ * enum nl80211_crit_proto_id - nl80211 critical protocol identifiers
++ *
++ * @NL80211_CRIT_PROTO_UNSPEC: protocol unspecified.
++ * @NL80211_CRIT_PROTO_BOOTP: BOOTP protocol.
++ * @NL80211_CRIT_PROTO_EAPOL: EAPOL protocol.
++ * @NL80211_CRIT_PROTO_ARP: ARP protocol for APIPA.
++ * @NL80211_CRIT_PROTO_LAST: must be kept last.
++ */
++enum nl80211_crit_proto_id {
++	NL80211_CRIT_PROTO_UNSPEC,
++	NL80211_CRIT_PROTO_BOOTP,
++	NL80211_CRIT_PROTO_EAPOL,
++	NL80211_CRIT_PROTO_ARP,
++	/* add other protocols before this one */
++	NL80211_CRIT_PROTO_LAST
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index d5d06fd..2db239c 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -88,6 +88,9 @@ struct cfg80211_registered_device {
+ 
+ 	struct delayed_work dfs_update_channels_wk;
+ 
++	/* critical protocol operation started */
++	bool crit_proto_started;
++
+ 	/* must be last because of the way we do wiphy_priv(),
+ 	 * and it should at least be aligned to NETDEV_ALIGN */
+ 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 390198b..7c42b04 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -648,6 +648,9 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlportid)
+ 
+ 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
+ 
++	if (rdev->ops->crit_proto_stop)
++		rdev_crit_proto_stop(rdev, wdev);
++
+ 	if (nlportid == wdev->ap_unexpected_nlportid)
+ 		wdev->ap_unexpected_nlportid = 0;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f924d45..e83aba8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -25,6 +25,8 @@
+ #include "reg.h"
+ #include "rdev-ops.h"
+ 
++#define NL80211_MAX_CRIT_PROT_DURATION		5000 /* msec */
++
+ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 				   struct genl_info *info,
+ 				   struct cfg80211_crypto_settings *settings,
+@@ -1417,6 +1419,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 		}
+ 		CMD(start_p2p_device, START_P2P_DEVICE);
+ 		CMD(set_mcast_rate, SET_MCAST_RATE);
++		if (split) {
++			CMD(crit_proto_start, CRIT_PROTOCOL_START);
++			CMD(crit_proto_stop, CRIT_PROTOCOL_STOP);
++		}
+ 
+ #ifdef CONFIG_NL80211_TESTMODE
+ 		CMD(testmode_cmd, TESTMODE);
+@@ -8196,6 +8202,54 @@ static int nl80211_update_ft_ies(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev_update_ft_ies(rdev, dev, &ft_params);
+ }
+ 
++static int nl80211_crit_protocol_start(struct sk_buff *skb,
++				       struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	enum nl80211_crit_proto_id proto = NL80211_CRIT_PROTO_UNSPEC;
++	u16 duration;
++
++	if (!rdev->ops->crit_proto_start)
++		return -EOPNOTSUPP;
++
++	if (WARN_ON(!rdev->ops->crit_proto_stop))
++		return -EINVAL;
++
++	if (rdev->crit_proto_started)
++		return -EBUSY;
++
++	/* determine protocol if provided */
++	if (info->attrs[NL80211_ATTR_CRIT_PROT_ID])
++		proto = nla_get_u16(info->attrs[NL80211_ATTR_CRIT_PROT_ID]);
++
++	if (proto >= NL80211_CRIT_PROTO_LAST)
++		return -EINVAL;
++
++	/* timeout must be provided */
++	if (!info->attrs[NL80211_ATTR_MAX_CRIT_PROT_DURATION])
++		return -EINVAL;
++
++	duration =
++		nla_get_u16(info->attrs[NL80211_ATTR_MAX_CRIT_PROT_DURATION]);
++
++	duration = max_t(u16, duration, NL80211_MAX_CRIT_PROT_DURATION);
++
++	return rdev_crit_proto_start(rdev, wdev, proto, duration);
++}
++
++static int nl80211_crit_protocol_stop(struct sk_buff *skb,
++				      struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++
++	if (!rdev->ops->crit_proto_stop)
++		return -EOPNOTSUPP;
++
++	return rdev_crit_proto_stop(rdev, wdev);
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -8885,6 +8939,22 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_CRIT_PROTOCOL_START,
++		.doit = nl80211_crit_protocol_start,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_CRIT_PROTOCOL_STOP,
++		.doit = nl80211_crit_protocol_stop,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	}
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -10630,6 +10700,16 @@ void cfg80211_ft_event(struct net_device *netdev,
+ }
+ EXPORT_SYMBOL(cfg80211_ft_event);
+ 
++void cfg80211_crit_proto_stopped(struct wireless_dev *wdev)
++{
++	struct cfg80211_registered_device *rdev;
++
++	rdev = wiphy_to_dev(wdev->wiphy);
++	WARN_ON(!rdev->crit_proto_started);
++	rdev->crit_proto_started = false;
++}
++EXPORT_SYMBOL(cfg80211_crit_proto_stopped);
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index d77e1c1..a80a7c9 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -875,7 +875,7 @@ static inline void rdev_stop_p2p_device(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_stop_p2p_device(&rdev->wiphy, wdev);
+ 	rdev->ops->stop_p2p_device(&rdev->wiphy, wdev);
+ 	trace_rdev_return_void(&rdev->wiphy);
+-}					
++}
+ 
+ static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *dev,
+@@ -901,4 +901,33 @@ static inline int rdev_update_ft_ies(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int rdev_crit_proto_start(struct cfg80211_registered_device *rdev,
++					struct wireless_dev *wdev,
++					enum nl80211_crit_proto_id protocol,
++					u16 duration)
++{
++	int ret;
++
++	trace_rdev_crit_proto_start(&rdev->wiphy, wdev, protocol, duration);
++	ret = rdev->ops->crit_proto_start(&rdev->wiphy, wdev,
++					  protocol, duration);
++	rdev->crit_proto_started = !ret;
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline int rdev_crit_proto_stop(struct cfg80211_registered_device *rdev,
++				       struct wireless_dev *wdev)
++{
++	int ret = 0;
++
++	trace_rdev_crit_proto_stop(&rdev->wiphy, wdev);
++	if (rdev->crit_proto_started) {
++		ret = rdev->ops->crit_proto_stop(&rdev->wiphy, wdev);
++		rdev->crit_proto_started = ret != 0;
++	}
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ccadef2..499c982 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1805,6 +1805,41 @@ TRACE_EVENT(rdev_update_ft_ies,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->md)
+ );
+ 
++TRACE_EVENT(rdev_crit_proto_start,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 enum nl80211_crit_proto_id protocol, u16 duration),
++	TP_ARGS(wiphy, wdev, protocol, duration),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u16, proto)
++		__field(u16, duration)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->proto = protocol;
++		__entry->duration = duration;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", proto=%x, duration=%u",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->proto, __entry->duration)
++);
++
++TRACE_EVENT(rdev_crit_proto_stop,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT,
++		  WIPHY_PR_ARG, WDEV_PR_ARG)
++);
++
+ /*************************************************************
+  *	     cfg80211 exported functions traces		     *
+  *************************************************************/
+-- 
+1.7.10.4
 
->>> But now i'm reminded that transmitting management frames from userspace requires a
->>> frequency. For wpasupp to be race-free during ibss merges, we should have a way to
->>> transmit management frames to the current bss without specifying a frequency...
->>
->> That seems reasonable.
->>
-> 
-> This is a common problem I faced in other contexts too...
 
-I sent a patch shorty after this message, trying to solve the problem, except Johannes
-pointed out that it could still introduce races, at least in some non-mac80211 drivers,
-the most problematic being ath6kl. I don't have any ath6kl hardware here, and i don't like
-patching things that i can't test.
