@@ -1,133 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41210 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751210Ab3DVVLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 17:11:53 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:40136 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765997Ab3DEK4z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 06:56:55 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so3741077wgg.24
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 03:56:53 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 5 Apr 2013 07:56:53 -0300
+Message-ID: <CAJ6uix7giXd1oUEc1MYo7=nGEVPPOR8_MMmT5zY3AWFYPpi4=A@mail.gmail.com> (sfid-20130405_125717_052715_753891EE)
+Subject: Problems with Intel 6200/iwlwifi, WEP, and HT/VHT
+From: Leonardo Boiko <leoboiko@namakajiri.net>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/2] ath9k: merge ath_tx_start_dma into ath_tx_start
-Date: Mon, 22 Apr 2013 23:11:43 +0200
-Message-Id: <1366665104-28737-1-git-send-email-nbd@openwrt.org> (sfid-20130422_231157_355842_AE8462AD)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The split makes no sense and merging the functions makes further changes
-easier to implement
+Hi,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 80 ++++++++++++++++-------------------
- 1 file changed, 36 insertions(+), 44 deletions(-)
+I'm sorry if this isn't the right place to report this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5bc5802..108fe5f 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1892,49 +1892,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 	return bf;
- }
- 
--/* FIXME: tx power */
--static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
--			     struct ath_tx_control *txctl)
--{
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ath_atx_tid *tid = NULL;
--	struct ath_buf *bf;
--	u8 tidno;
--
--	if (txctl->an && ieee80211_is_data_qos(hdr->frame_control)) {
--		tidno = ieee80211_get_qos_ctl(hdr)[0] &
--			IEEE80211_QOS_CTL_TID_MASK;
--		tid = ATH_AN_2_TID(txctl->an, tidno);
--
--		WARN_ON(tid->ac->txq != txctl->txq);
--	}
--
--	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
--		/*
--		 * Try aggregation if it's a unicast data frame
--		 * and the destination is HT capable.
--		 */
--		ath_tx_send_ampdu(sc, tid, skb, txctl);
--	} else {
--		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
--		if (!bf) {
--			if (txctl->paprd)
--				dev_kfree_skb_any(skb);
--			else
--				ieee80211_free_txskb(sc->hw, skb);
--			return;
--		}
--
--		bf->bf_state.bfs_paprd = txctl->paprd;
--
--		if (txctl->paprd)
--			bf->bf_state.bfs_paprd_timestamp = jiffies;
--
--		ath_tx_send_normal(sc, txctl->txq, tid, skb);
--	}
--}
--
- /* Upon failure caller should free skb */
- int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		 struct ath_tx_control *txctl)
-@@ -1945,8 +1902,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_txq *txq = txctl->txq;
-+	struct ath_atx_tid *tid = NULL;
-+	struct ath_buf *bf;
- 	int padpos, padsize;
- 	int frmlen = skb->len + FCS_LEN;
-+	u8 tidno;
- 	int q;
- 
- 	/* NOTE:  sta can be NULL according to net/mac80211.h */
-@@ -2002,8 +1962,40 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		txq->stopped = true;
- 	}
- 
--	ath_tx_start_dma(sc, skb, txctl);
-+	if (txctl->an && ieee80211_is_data_qos(hdr->frame_control)) {
-+		tidno = ieee80211_get_qos_ctl(hdr)[0] &
-+			IEEE80211_QOS_CTL_TID_MASK;
-+		tid = ATH_AN_2_TID(txctl->an, tidno);
-+
-+		WARN_ON(tid->ac->txq != txctl->txq);
-+	}
-+
-+	if ((info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
-+		/*
-+		 * Try aggregation if it's a unicast data frame
-+		 * and the destination is HT capable.
-+		 */
-+		ath_tx_send_ampdu(sc, tid, skb, txctl);
-+		goto out;
-+	}
-+
-+	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+	if (!bf) {
-+		if (txctl->paprd)
-+			dev_kfree_skb_any(skb);
-+		else
-+			ieee80211_free_txskb(sc->hw, skb);
-+		goto out;
-+	}
-+
-+	bf->bf_state.bfs_paprd = txctl->paprd;
-+
-+	if (txctl->paprd)
-+		bf->bf_state.bfs_paprd_timestamp = jiffies;
-+
-+	ath_tx_send_normal(sc, txctl->txq, tid, skb);
- 
-+out:
- 	ath_txq_unlock(sc, txq);
- 
- 	return 0;
--- 
-1.8.0.2
+I'm having trouble associating with the AP.  The players are:
+ - Intel 6200 [8086:4239] (built-in on a Thinkpad X201), iwlwifi,
+kernel 3.9.0-rc4 (Debian wheezy)
+ - Linksys WRT54G-TM AP running openwrt, Linux 3.3.8 mips, using WEP
+(don't ask).
 
+When I try to iwconfig it fails like this:
+    wlan0: authenticate with 00:1c:10:3b:b5:a6
+    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 1/3)
+    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 2/3)
+    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 3/3)
+    wlan0: authentication with 00:1c:10:3b:b5:a6 timed out
+    wlan0: authenticate with 00:1c:10:3b:b5:a6
+    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 1/3)
+    wlan0: 00:1c:10:3b:b5:a6 denied authentication (status 13)
+
+Fiddling with parameters and such I found it would ~sometimes~ work,
+unpredictably (signal quality is 60/70).  After a while I noticed I
+could just leave a for loop running, & it would eventually connect.
+It seems that, whenever it suceeds, it's preceded by this message:
+
+    iwlwifi 0000:02:00.0 wlan0: disabling HT/VHT due to WEP/TKIP use
+    wlan0: associate with 00:1c:10:3b:b5:a6 (try 1/3)
+    wlan0: associate with 00:1c:10:3b:b5:a6 (try 2/3)
+    wlan0: RX AssocResp from 00:1c:10:3b:b5:a6 (capab=0x411 status=0 aid=1)
+    wlan0: associated
+    IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+
+But I don't understand what triggers the VHT disable, or why it didn't
+disable it from the start.
