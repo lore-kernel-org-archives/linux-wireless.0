@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48352 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967265Ab3DRMUi (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:60632 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161498Ab3DEDET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 08:20:38 -0400
-Received: by mail-wi0-f174.google.com with SMTP id m6so3964550wiv.1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:20:36 -0700 (PDT)
-Date: Thu, 18 Apr 2013 14:16:28 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 1/2] mac80211: minstrel_ht: pick only supported rates for
- sta and group max*rates
-Message-ID: <20130418121628.GB8638@magnum.frso.rivierawaves.com> (sfid-20130418_142040_766735_F74319D5)
-References: <1366285887-23416-1-git-send-email-karl.beldan@gmail.com>
- <1366287462.8336.0.camel@jlt4.sipsolutions.net>
+	Thu, 4 Apr 2013 23:04:19 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	<daniel@zonque.org>, Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 0/4] Andreas Fenkart's patches to fix a dead loop
+Date: Thu, 4 Apr 2013 20:03:49 -0700
+Message-ID: <1365131033-7417-1-git-send-email-bzhao@marvell.com> (sfid-20130405_050430_778100_FFE9AF57)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1366287462.8336.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 02:17:42PM +0200, Johannes Berg wrote:
-> On Thu, 2013-04-18 at 13:51 +0200, Karl Beldan wrote:
-> 
-> > +			// initialize {mg,mi}->max_rates indexes
-> 
-> Please don't use C99 comments (both here and the other patch)
-> 
-Oops, will fix this.
- 
-Karl
+v3: minor cleanups for coding style; shorten lines in commit logs.
+v2: split 6 patches into 2 patchsets. This is the set 1.
+
+Andreas Fenkart (4):
+  mwifiex: correct wrong list in list_empty check
+  mwifiex: remove unused tid_tbl_lock from mwifiex_tid_tbl
+  mwifiex: fix infinite loop by removing NO_PKT_PRIO_TID
+  mwifiex: hold proper locks when accessing ra_list / bss_prio lists
+
+ drivers/net/wireless/mwifiex/init.c |    4 +-
+ drivers/net/wireless/mwifiex/main.h |    3 -
+ drivers/net/wireless/mwifiex/wmm.c  |   71 ++++++++++++++++++-----------------
+ 3 files changed, 37 insertions(+), 41 deletions(-)
+
