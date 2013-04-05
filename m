@@ -1,30 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45983 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168Ab3DVOSk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 10:18:40 -0400
-Message-ID: <1366640311.8637.25.camel@jlt4.sipsolutions.net> (sfid-20130422_161843_726131_DEA2123B)
-Subject: Re: [PATCH v6 1/3] mac80211: improve the rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
-Date: Mon, 22 Apr 2013 16:18:31 +0200
-In-Reply-To: <1366640083-1054-1-git-send-email-nbd@openwrt.org>
-References: <1366640083-1054-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1822 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1162012Ab3DEI6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 04:58:09 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/16] brcmfmac: obtain wdev using vif object in action
+ frame rx
+Date: Fri, 5 Apr 2013 10:57:53 +0200
+Message-ID: <1365152274-4252-16-git-send-email-arend@broadcom.com> (sfid-20130405_111304_618910_04ECB99A)
+In-Reply-To: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+References: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-22 at 16:14 +0200, Felix Fietkau wrote:
-> Allow rate control modules to pass a rate selection table to mac80211
-> and the driver. This allows drivers to fetch the most recent rate
-> selection from the sta pointer for already buffered frames. This allows
-> rate control to respond faster to sudden link changes and it is also a
-> step towards adding minstrel_ht support to drivers like iwlwifi.
+The function brcmf_p2p_notify_action_frame_rx() the wireless_dev
+is needed to pass the action frame to cfg80211. The wireless_dev
+is held in brcmf_cfg80211_vif object. Use that instead of the
+ieee80211_ptr in net_device as P2P_DEVICE interface does not have
+a net_device associated with it.
 
-Applied all. Karl, thanks for the detailed review!
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index 6f16556..94ff045 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -1431,7 +1431,8 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
+ 					      CHSPEC_IS2G(chanspec) ?
+ 					      IEEE80211_BAND_2GHZ :
+ 					      IEEE80211_BAND_5GHZ);
+-	wdev = ifp->ndev->ieee80211_ptr;
++
++	wdev = &ifp->vif->wdev;
+ 	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
+ 			 GFP_ATOMIC);
+ 
+-- 
+1.7.10.4
+
 
