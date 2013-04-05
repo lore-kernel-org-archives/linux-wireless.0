@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:50111 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757870Ab3DXLMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 07:12:52 -0400
-Message-ID: <1366801969.21854.1.camel@jlt4.sipsolutions.net> (sfid-20130424_131255_550188_0AC7588B)
-Subject: Re: Question on ieee80211_tx_status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 24 Apr 2013 13:12:49 +0200
-In-Reply-To: <5176DD33.9000100@candelatech.com> (sfid-20130423_233115_840840_D02CAECE)
-References: <5176DD33.9000100@candelatech.com>
-	 (sfid-20130423_233115_840840_D02CAECE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:49603 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1162571Ab3DET1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 15:27:46 -0400
+From: Joe Perches <joe@perches.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 0/3] nfc: standardize logging styles
+Date: Fri,  5 Apr 2013 12:27:36 -0700
+Message-Id: <cover.1365189658.git.joe@perches.com> (sfid-20130405_212910_232616_B572DD76)
+In-Reply-To: <1365180413.2075.5.camel@joe-AO722>
+References: <1365180413.2075.5.camel@joe-AO722>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-23 at 12:12 -0700, Ben Greear wrote:
-> It appears that ieee80211_tx_status also scales poorly
-> when using large numbers of virtual stations connected
-> to a single AP, due to for_each_sta_info(local, hdr->addr1, sta, tmp)...
-> 
-> I'm going to try using the vif-hashing to make this faster,
-> but first a question:
-> 
-> Since it matches on MAC addresses, should it
-> just return at the bottom of the loop since it has
-> found a match, and MACs are supposed to be unique?
-> 
-> 	for_each_sta_info(local, hdr->addr1, sta, tmp) {
-> 		/* skip wrong virtual interface */
-> 		if (!ether_addr_equal(hdr->addr2, sta->sdata->vif.addr))
-> 			continue;
-> ...
+Fix some defects in the logging too
 
-I think that'd be mostly safe, since we don't allow the same station to
-be added to multiple VLANs. However, I'm not entirely sure if it really
-is safe in the case of WDS interfaces.
+Joe Perches (3):
+  nfc: Replace nfc_dev_dbg with dev_dbg, remove function tracing
+  nfc: Convert nfc_dev_info and nfc_dev_err to nfc_<level>
+  nfc: Standardize logging style
 
-> If so, that would be a good improvement since the hash can easily
-> be turned into a linear search even in AP mode (without all of
-> my virtual-station scenarios)...
+ drivers/nfc/microread/i2c.c       |  32 ++---
+ drivers/nfc/microread/mei.c       |  20 +--
+ drivers/nfc/microread/microread.c |   7 +-
+ drivers/nfc/nfcwilink.c           |  95 ++++++-------
+ drivers/nfc/pn533.c               | 271 ++++++++++++++++----------------------
+ drivers/nfc/pn544/i2c.c           |  38 +++---
+ drivers/nfc/pn544/pn544.c         |  13 +-
+ include/net/nfc/nfc.h             |   5 +-
+ 8 files changed, 196 insertions(+), 285 deletions(-)
 
-I don't really see how the hash could be linear? When the low byte of
-MAC addresses is the same, but otherwise?
-
-johannes
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
