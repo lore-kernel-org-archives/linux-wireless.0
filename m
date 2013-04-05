@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:61223 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755043Ab3DBXwr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 19:52:47 -0400
-Received: by mail-qa0-f44.google.com with SMTP id o13so1776421qaj.3
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 16:52:46 -0700 (PDT)
-Message-ID: <515B6F4D.4030203@gmail.com> (sfid-20130403_020009_814012_4B5BA7E5)
-Date: Tue, 02 Apr 2013 19:52:45 -0400
-From: Robert Shade <robert.shade@gmail.com>
+Received: from mx3.wp.pl ([212.77.101.7]:37395 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1162097Ab3DEVEG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 17:04:06 -0400
+Date: Fri, 5 Apr 2013 23:05:09 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/6] rt2x00: rt2400pci: use the
+ rt2x00mmio_* routines
+Message-ID: <20130405210509.GB2396@localhost.localdomain> (sfid-20130405_230414_863107_CAF81BE6)
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+ <1365143225-24532-3-git-send-email-juhosg@openwrt.org>
+ <20130405133234.GB1571@redhat.com>
+ <515EED2D.8090601@openwrt.org>
+ <20130405210222.GA2396@localhost.localdomain>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-CC: adrian@freebsd.org, nbd@openwrt.org
-Subject: [PATCH V2] ath9k: Re-enable interrupts after a channel change failure
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20130405210222.GA2396@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_complete_reset will not be called if ath9k_hw_reset
-is unsuccessful, so we need to re-enable intertupts to
-balence the previous ath_prepare_reset call.  Also schedule a
-reset as a best effort method to recover the chip from
-whatever state caused the channel change failure.
+On Fri, Apr 05, 2013 at 11:02:22PM +0200, Stanislaw Gruszka wrote:
+> On Fri, Apr 05, 2013 at 05:26:37PM +0200, Gabor Juhos wrote:
+> > 2013.04.05. 15:32 keltezéssel, Stanislaw Gruszka írta:
+> > > On Fri, Apr 05, 2013 at 08:27:01AM +0200, Gabor Juhos wrote:
+> > >> Use the recently introduced rt2x00mmio_* routines
+> > >> instead of the rt2x00pci_* variants.
+> > >>
+> > >> The patch contains no functional changes.
+> > >>
+> > >> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> > >> ---
+> > >>  drivers/net/wireless/rt2x00/rt2400pci.c |  309 ++++++++++++++++---------------
+> > > 
+> > > Why do you modify rt2400pci ?
+> > 
+> > Because the rt2x00pci_* functions provided by the rt2x00mmio module has been
+> > renamed in the first patch and those are using the rt2x00mmio_ prefix now. The
+> > rt2x00mmio.h header provides definitions for the old function names but those
+> > definitions are removed by the last patch.
+> 
+> Ah, ok, but this breaks compilation. This should be avoided, to do not
+> break bisection. Hance patches should be merged into one or incremental
+> changes proposed that do not break compilation. Otherwise changes look
+> ok for me.
+Nevermind, you provided those compat defines, so compilation do not
+break.
 
-Fixes https://bugzilla.kernel.org/show_bug.cgi?id=55771
+ACK for set.
 
-Signed-off-by: Robert Shade <robert.shade@gmail.com>
----
-V2
-- (hopefully) Fixed whitespace issues
-- Removed call to ath9k_hw_set_interrupts
----
- drivers/net/wireless/ath/ath9k/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 24650fd4..83608be 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -280,6 +280,10 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 	if (r) {
- 		ath_err(common,
- 			"Unable to reset channel, reset status %d\n", r);
-+
-+		ath9k_hw_enable_interrupts(ah);
-+		ath9k_queue_reset(sc, RESET_TYPE_BB_HANG);
-+
- 		goto out;
- 	}
- 
--- 
-1.8.2
-
+Stanislaw
