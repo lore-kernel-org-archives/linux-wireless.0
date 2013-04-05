@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40170 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757665Ab3DRJSA (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:52478 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1162040Ab3DEQbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 05:18:00 -0400
-From: Luis Henriques <luis.henriques@canonical.com>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>,
-	Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 37/72] rt2x00: rt2x00pci_regbusy_read() - only print register access failure once
-Date: Thu, 18 Apr 2013 10:16:22 +0100
-Message-Id: <1366276617-3553-38-git-send-email-luis.henriques@canonical.com> (sfid-20130418_112839_960565_A7B7C3FC)
-In-Reply-To: <1366276617-3553-1-git-send-email-luis.henriques@canonical.com>
-References: <1366276617-3553-1-git-send-email-luis.henriques@canonical.com>
+	Fri, 5 Apr 2013 12:31:24 -0400
+Message-ID: <1365179481.1830.69.camel@x61.thuisdomein> (sfid-20130405_183142_574547_35FE3F39)
+Subject: [PATCH] nfc: Remove useless Makefile line
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-nfc@lists.01.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 05 Apr 2013 18:31:21 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.5.7.11 -stable review patch.  If anyone has any objections, please let me know.
+There's no Kconfig symbol NFC_DEBUG. Besides, there doesn't seem to be
+any nfc code that uses a DEBUG macro. This line can safely be removed.
 
-------------------
-
-From: Tim Gardner <tim.gardner@canonical.com>
-
-commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
-
-BugLink: http://bugs.launchpad.net/bugs/1128840
-
-It appears that when this register read fails it never recovers, so
-I think there is no need to repeat the same error message ad infinitum.
-
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 ---
- drivers/net/wireless/rt2x00/rt2x00pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Untested.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 0a4653a..1ea98a8 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 		udelay(REGISTER_BUSY_DELAY);
- 	}
- 
--	ERROR(rt2x00dev, "Indirect register access failed: "
--	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
-+	printk_once(KERN_ERR "%s() Indirect register access failed: "
-+	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
- 	*reg = ~0;
- 
- 	return 0;
+ drivers/nfc/Makefile | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
+index a189ada0..5b4ad00 100644
+--- a/drivers/nfc/Makefile
++++ b/drivers/nfc/Makefile
+@@ -6,5 +6,3 @@ obj-$(CONFIG_NFC_PN544)		+= pn544/
+ obj-$(CONFIG_NFC_MICROREAD)	+= microread/
+ obj-$(CONFIG_NFC_PN533)		+= pn533.o
+ obj-$(CONFIG_NFC_WILINK)	+= nfcwilink.o
+-
+-ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
 -- 
-1.8.1.2
+1.7.11.7
 
