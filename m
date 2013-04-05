@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:51339 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756584Ab3DWXv6 (ORCPT
+Received: from mail-ia0-f178.google.com ([209.85.210.178]:61191 "EHLO
+	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312Ab3DEIQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 19:51:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.10 2/4] mwifiex: Call pci_release_region after calling pci_disable_device
-Date: Tue, 23 Apr 2013 16:49:48 -0700
-Message-ID: <1366760990-15748-3-git-send-email-bzhao@marvell.com> (sfid-20130424_015200_902557_E3B1E400)
-In-Reply-To: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
-References: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
+	Fri, 5 Apr 2013 04:16:15 -0400
+Received: by mail-ia0-f178.google.com with SMTP id r13so3034207iar.9
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 01:16:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+Date: Fri, 5 Apr 2013 10:16:13 +0200
+Message-ID: <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com> (sfid-20130405_101622_298847_66922BE4)
+Subject: Re: [PATCH 0/6] rt2x00: use rt2x00mmio prefix for rt2x00mmio module functions
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+On Fri, Apr 5, 2013 at 8:26 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> This series replaces the rt2x00pci prefix to
+> rt2x00mmio of the functions provided by the
+> rt2x00mmio module. This is a supplement of the
+> 'rt2x00: rt2x00pci: fix build error on Ralink
+> RT3x5x SoCs' patch.
 
-"drivers should call pci_release_region() AFTER
-calling pci_disable_device()"
+Patch set looks good to me! Thanks a lot Gabor.
 
-Please refer section 3.2 Request MMIO/IOP resources
-in Documentation/PCI/pci.txt
-
-Cc: <stable@vger.kernel.org> # 3.2+
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index fec2a61..b924e1d 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -2294,9 +2294,9 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
- 	if (pdev) {
- 		pci_iounmap(pdev, card->pci_mmap);
- 		pci_iounmap(pdev, card->pci_mmap1);
-+		pci_disable_device(pdev);
- 		pci_release_region(pdev, 2);
- 		pci_release_region(pdev, 0);
--		pci_disable_device(pdev);
- 		pci_set_drvdata(pdev, NULL);
- 	}
- }
--- 
-1.7.0.2
-
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
