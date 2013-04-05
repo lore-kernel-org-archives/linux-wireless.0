@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:10647 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592Ab3DPHeW (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:43891 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203Ab3DEFpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 03:34:22 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath10k-devel@qca.qualcomm.com>
-Subject: Re: ath10k: mac80211 driver for QCA9880
-References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
-	<CAGXE3d_uW5ffOZUx31ifHFPMkiQUH6z4Yq6yBkNewi8KwUU+yg@mail.gmail.com>
-Date: Tue, 16 Apr 2013 10:34:16 +0300
-In-Reply-To: <CAGXE3d_uW5ffOZUx31ifHFPMkiQUH6z4Yq6yBkNewi8KwUU+yg@mail.gmail.com>
-	(Helmut Schaa's message of "Tue, 16 Apr 2013 09:30:11 +0200")
-Message-ID: <871uabylmv.fsf@kamboji.qca.qualcomm.com> (sfid-20130416_093426_464302_4CE2662C)
+	Fri, 5 Apr 2013 01:45:33 -0400
+Date: Fri, 5 Apr 2013 13:45:19 +0800
+From: Wang YanQing <udknight@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	rdunlap@infradead.org
+Subject: Re: [PATCH] lib80211: make lib80211 can be enabled independently
+Message-ID: <20130405054519.GA2073@udknight> (sfid-20130405_074556_379555_D3B5354B)
+References: <20130404160130.GA2577@udknight>
+ <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Helmut,
+On Fri, Apr 05, 2013 at 10:51:30AM +1100, Julian Calaby wrote:
+> Just as a bit of explanation for Johannes' NACK:
+> 
+> 1. The only reason lib80211 still exists is because a couple of
+> in-tree drivers still use it. If this weren't the case, the code would
+> have been removed a long time ago as it's been completely replaced by
+> mac80211 and cfg80211. All modern drivers _must_ use mac80211 or
+> cfg80211 without exception.
+> 2. In general, there is no official in-kernel support for
+> out-of-kernel drivers, regardless of quality, status or importance.
+> 3. I believe that the in-tree brcmsmac driver already supports the
+> Broadcom card you reference.
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
+Hi Julian.
 
-> On Mon, Apr 15, 2013 at 2:20 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> I just pushed initial version of ath10k, our new driver for QCA9880 &
->> co, to github.com:
->
-> Nice, any idea when these devices will be available to the public?
+Thanks for your complete explanation.
+I have tried in-tree brcmsmac driver and it works well,
+I use it to send out this email! This is wonderful, then
+I don't need to fix compilation errors about the old, ugly
+and closed wl driver for my notebook with BCM43225 802.11b/g/n
+every time I upgrade kernel.
 
-Luckily I'm in a position where I don't need to speak with marketing and
-sales so I have no idea :)
-
--- 
-Kalle Valo
+Thanks Julian and all.
