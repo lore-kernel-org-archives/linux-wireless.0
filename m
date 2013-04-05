@@ -1,94 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56797 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753497Ab3DPKwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 06:52:19 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/2] ath: update hardware mac address with bssid mask
-Date: Tue, 16 Apr 2013 12:51:56 +0200
-Message-Id: <1366109517-64645-1-git-send-email-nbd@openwrt.org> (sfid-20130416_125223_471386_61355AAF)
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:50664 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752450Ab3DERXy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Apr 2013 13:23:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <201304051903.11215.chunkeey@googlemail.com>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
+	<201304051903.11215.chunkeey@googlemail.com>
+Date: Fri, 5 Apr 2013 19:23:54 +0200
+Message-ID: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com> (sfid-20130405_192426_238084_3F906473)
+Subject: Re: Version number policy!
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Adrian Chadd <adrian@freebsd.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for updating common->macaddr along with virtual interface
-MAC address changes.
+Good point regarding timestamp.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 7 +++----
- drivers/net/wireless/ath/ath9k/reg.h | 3 ---
- drivers/net/wireless/ath/hw.c        | 6 ++++++
- drivers/net/wireless/ath/reg.h       | 4 ++++
- 4 files changed, 13 insertions(+), 7 deletions(-)
+When it comes to feature bitmap do you have an example of such a
+bitmap from carl9170? Why not to rely always on major version?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8a980a4..10eb6ba 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1698,12 +1698,11 @@ static void ath9k_hw_reset_opmode(struct ath_hw *ah,
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
--	REG_WRITE(ah, AR_STA_ID1, get_unaligned_le16(common->macaddr + 4)
--		  | macStaId1
-+	REG_RMW(ah, AR_STA_ID1, macStaId1
- 		  | AR_STA_ID1_RTS_USE_DEF
- 		  | (ah->config.ack_6mb ? AR_STA_ID1_ACKCTS_6MB : 0)
--		  | ah->sta_id1_defaults);
-+		  | ah->sta_id1_defaults,
-+		  ~AR_STA_ID1_SADH_MASK);
- 	ath_hw_setbssidmask(common);
- 	REG_WRITE(ah, AR_DEF_ANTENNA, saveDefAntenna);
- 	ath9k_hw_write_associd(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 5929850..5c4ab50 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1493,9 +1493,6 @@ enum {
- #define AR9271_RADIO_RF_RST			0x20
- #define AR9271_GATE_MAC_CTL			0x4000
- 
--#define AR_STA_ID0                 0x8000
--#define AR_STA_ID1                 0x8004
--#define AR_STA_ID1_SADH_MASK       0x0000FFFF
- #define AR_STA_ID1_STA_AP          0x00010000
- #define AR_STA_ID1_ADHOC           0x00020000
- #define AR_STA_ID1_PWR_SAV         0x00040000
-diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
-index 39e8a59..eae9abf 100644
---- a/drivers/net/wireless/ath/hw.c
-+++ b/drivers/net/wireless/ath/hw.c
-@@ -118,6 +118,12 @@
- void ath_hw_setbssidmask(struct ath_common *common)
- {
- 	void *ah = common->ah;
-+	u32 id1;
-+
-+	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
-+	id1 = REG_READ(ah, AR_STA_ID1) & ~AR_STA_ID1_SADH_MASK;
-+	id1 |= get_unaligned_le16(common->macaddr + 4);
-+	REG_WRITE(ah, AR_STA_ID1, id1);
- 
- 	REG_WRITE(ah, AR_BSSMSKL, get_unaligned_le32(common->bssidmask));
- 	REG_WRITE(ah, AR_BSSMSKU, get_unaligned_le16(common->bssidmask + 4));
-diff --git a/drivers/net/wireless/ath/reg.h b/drivers/net/wireless/ath/reg.h
-index 298e53f..3ad4c77 100644
---- a/drivers/net/wireless/ath/reg.h
-+++ b/drivers/net/wireless/ath/reg.h
-@@ -23,6 +23,10 @@
- #define AR_MIBC_CMC		0x00000004
- #define AR_MIBC_MCS		0x00000008
- 
-+#define AR_STA_ID0		0x8000
-+#define AR_STA_ID1		0x8004
-+#define AR_STA_ID1_SADH_MASK	0x0000ffff
-+
- /*
-  * BSSID mask registers. See ath_hw_set_bssid_mask()
-  * for detailed documentation about these registers.
+2013/4/5 Christian Lamparter <chunkeey@googlemail.com>:
+> On Friday 05 April 2013 10:19:00 Luis R. Rodriguez wrote:
+>> On Thu, Apr 4, 2013 at 11:27 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> > Here's my first take on the version number policy:
+>> >
+>> > https://github.com/qca/open-ath9k-htc-firmware/wiki/VersionPolicy
+>> > The summary:
+>> >
+>> > * major version number changes are for firmware API / behaviour
+>> > changes that aren't backwards compatible;
+>> > * minor version number changes are for firmware API / behaviour
+>> > changes that are incremental and default to the old behaviour (eg, new
+>> > optional commands);
+>> > * the driver should check the minor version number before using any
+>> > optional features with that version.
+>> >
+>> > What's TODO:
+>> >
+>> > * Add a new WMI command to get the build number, git string, etc.
+>> > * add it as our first optional minor version command :-)
+>>
+>> This is better than anything we had drafted before for 802.11 open
+>> firmware design rules. Cc'ing a few lists for wider review given that
+>> what we had written before for rules was for 802.11 and Bluetooth [0]
+>> and it was very Linux specific. We are striving for open firmware here
+>> for the community, for BSD / Linux. Christian would have dealt with
+>> more of the support on open firmware design so far due to carl9170.fw
+>> [1] so curious if he has any input.
+> Based on my experience with carl9170, I can tell you that
+> new stuff (new wmi commands, or advanced offload caps, features
+> and bugfixes) should be advised via feature flags in bitmaps
+> and not firmware versions. [Just make it long enough...]
+>
+> Otherwise you'll have to write endless checks like:
+> if ((fw_minor == 1 && fw_patch > 30) ||
+>     (fw_minor == 2 && fw_patch > 7) ||
+>     (fw_minor == 3 && fw_patch > 3) ||
+>     (fw_minor > 4))
+>                 feature_supported = true;
+>
+> everytime you backport features and bugfixes to older firmwares.
+>
+> Also, firmware dates are more important than you think.
+> They allow some way of syncing the firmware->driver and
+> your inbox.
+>
+> Regards,
+>         Christian
+>
+> _______________________________________________
+> Ath9k_htc_fw mailing list
+> Ath9k_htc_fw@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
+
+
+
 -- 
-1.8.0.2
-
+Best regards,
+Eugene
