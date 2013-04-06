@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35442 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760077Ab3DCMqp (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:54227 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932430Ab3DFTir (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 08:46:45 -0400
-Message-ID: <1364993200.8351.35.camel@jlt4.sipsolutions.net> (sfid-20130403_144710_438704_8F70ED9E)
-Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, zefir.kurtisi@neratec.com,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 03 Apr 2013 14:46:40 +0200
-In-Reply-To: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130402_184017_183870_B78BD6C4)
-References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 (sfid-20130402_184017_183870_B78BD6C4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 6 Apr 2013 15:38:47 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20832.31054.946037.961056@gargle.gargle.HOWL> (sfid-20130406_213900_145856_C461E18C)
+Date: Sun, 7 Apr 2013 01:06:46 +0530
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+In-Reply-To: <1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-02 at 18:39 +0200, Simon Wunderlich wrote:
-> local->hw.conf maybe not be synced when recalcing whether radar is
-> enabled, sometimes leaving radar enabled even if it's not neccesary
-> anymore.
+sandeep suresh wrote:
+> But the question is for 2-wire coexistence, are there any weight register?
 
-I don't really see how, can you explain more?
+No.
 
-johannes
+> Do you know if AR9287 also supports MCI mode?
 
+No.
+
+Sujith
