@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:54227 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430Ab3DFTir (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Apr 2013 15:38:47 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from purkki.adurom.net ([80.68.90.206]:40391 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754195Ab3DFFwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Apr 2013 01:52:23 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Adrian Chadd <adrian@freebsd.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Version number policy!
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
+	<201304051903.11215.chunkeey@googlemail.com>
+	<CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
+Date: Sat, 06 Apr 2013 08:52:19 +0300
+In-Reply-To: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
+	(Eugene Krasnikov's message of "Fri, 5 Apr 2013 19:23:54 +0200")
+Message-ID: <8762008auk.fsf@purkki.adurom.net> (sfid-20130406_075227_805423_72AFDB03)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <20832.31054.946037.961056@gargle.gargle.HOWL> (sfid-20130406_213900_145856_C461E18C)
-Date: Sun, 7 Apr 2013 01:06:46 +0530
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
-In-Reply-To: <1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
-	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
-	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
-	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
-	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<20830.46610.23754.783231@gargle.gargle.HOWL>
-	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sandeep suresh wrote:
-> But the question is for 2-wire coexistence, are there any weight register?
+Eugene Krasnikov <k.eugene.e@gmail.com> writes:
 
-No.
+> Good point regarding timestamp.
+>
+> When it comes to feature bitmap do you have an example of such a
+> bitmap from carl9170? Why not to rely always on major version?
 
-> Do you know if AR9287 also supports MCI mode?
+I'm with Christian here. In ath6kl we switched to firmware advertising
+feature capabilities and I have never looked back, it's so much easier.
+You don't need to do any mapping between firmware versions and features,
+you just deal one feature at a time.
 
-No.
-
-Sujith
+-- 
+Kalle Valo
