@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from x1.w4w.guest.it ([77.95.174.1]:40297 "EHLO x1.w4w.guest.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab3DNKiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 06:38:01 -0400
-Received: from [46.182.93.125] (helo=[192.168.1.35])
-	by x1.w4w.guest.it with esmtpa (Exim 4.80.1)
-	(envelope-from <danjde@msw.it>)
-	id 1URKJj-0004Tj-H5
-	for linux-wireless@vger.kernel.org; Sun, 14 Apr 2013 12:37:58 +0200
-Message-ID: <516A86DF.6020605@msw.it> (sfid-20130414_123809_857034_BE8110DD)
-Date: Sun, 14 Apr 2013 12:37:19 +0200
-From: Davide Marchi <danjde@msw.it>
+Received: from s72.web-hosting.com ([198.187.29.21]:43305 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932443Ab3DFTmM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Apr 2013 15:42:12 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: realtek usb wifi based on "rtl8192cu"
-References: <516539DC.8060004@msw.it> <51657D84.2080308@lwfinger.net> <5166E8CB.3040802@msw.it>
-In-Reply-To: <5166E8CB.3040802@msw.it>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <20832.31263.98659.776540@gargle.gargle.HOWL> (sfid-20130406_214216_139967_127CAD2D)
+Date: Sun, 7 Apr 2013 01:10:15 +0530
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+In-Reply-To: <20832.31054.946037.961056@gargle.gargle.HOWL>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20832.31054.946037.961056@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/10/2013  04:56 PM,Larry Finger wrote:
-> If 3.8.6 does not fix it, then try the kernel from the 
-> wireless-testing git tree.
-ok, i've tryed the wireless-testing git tree kernel (3.9.0-rc6 #1 SMP 
-x86_64 GNU/Linux), and doesn't work.
-Infinitely it ask me the wep/wpa key..
+Sujith Manoharan wrote:
+> > Do you know if AR9287 also supports MCI mode?
+> 
+> No.
 
-any other suggestion? Module loading options?
+I mean - AR9287 doesn't have MCI. :)
 
-many many thanks!
-
-davide
-italy
-
--- 
-firma
-
-cosmogoniA <http://www.cosmogonia.org/>
-noprovarenofareononfarenonc'èprovare
+Sujith
