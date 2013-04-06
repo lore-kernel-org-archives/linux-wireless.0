@@ -1,114 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:20908 "EHLO
+Received: from ht1.myhostedexchange.com ([69.50.2.37]:16148 "EHLO
 	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1763426Ab3DDUDt (ORCPT
+	by vger.kernel.org with ESMTP id S1754235Ab3DFHee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 16:03:49 -0400
+	Sat, 6 Apr 2013 03:34:34 -0400
+Date: Sat, 6 Apr 2013 09:33:09 +0200
 From: Antonio Quartulli <antonio@open-mesh.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 2/3] mac80211: add rate_control_ops::get_max_tp() and implement it
-Date: Thu, 4 Apr 2013 21:57:21 +0200
-Message-ID: <1365105442-31876-2-git-send-email-antonio@open-mesh.com> (sfid-20130404_220352_639950_DB9A3C91)
-In-Reply-To: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] cfg80211: add get_max_tp() API
+Message-ID: <20130406073309.GB14463@open-mesh.com> (sfid-20130406_093438_591483_B6CB33E1)
 References: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
+ <CAGXE3d98a4pBG=gWKUm9A2RJRN+eic4Zi8dh4grTuqQmW3GOsg@mail.gmail.com>
+ <20130405083956.GA14463@open-mesh.com>
+ <1365168001.8515.28.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="A6N2fC+uXW/VQSAv"
+In-Reply-To: <1365168001.8515.28.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This new API is aimed to return the maximum throughput
-estimated by a rate control algorithm towards a given peer.
+--A6N2fC+uXW/VQSAv
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The API is implemented for minstrel and minstrel_ht.
+Hi all,
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- include/net/mac80211.h             |  2 ++
- net/mac80211/rc80211_minstrel.c    |  9 +++++++++
- net/mac80211/rc80211_minstrel_ht.c | 21 +++++++++++++++++++++
- 3 files changed, 32 insertions(+)
+On Fri, Apr 05, 2013 at 06:20:01AM -0700, Johannes Berg wrote:
+> On Fri, 2013-04-05 at 10:39 +0200, Antonio Quartulli wrote:
+>=20
+> > In the batman-adv module (which implements a routing protocol for mesh =
+networks
+> > on layer 2) we are trying to switch metric from packet loss to throughp=
+ut and
+> > the idea is to read the estimation from the rate control component (tha=
+nks to
+> > the API mechanism in cfg/mac80211 this can be eventually changed later).
+>=20
+> While this makes some sense, going into the details of your patchset I
+> find that it's overly complex.
+>=20
+> I think you should fix minstrel to report the best rate in
+> txrc.reported_rate. This would also have the effect of not showing
+> sampling attempts to userspace in the "current TX rate", which generally
+> makes a lot of sense.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 64faf01..5a1b7c2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4147,6 +4147,8 @@ struct rate_control_ops {
- 	void (*add_sta_debugfs)(void *priv, void *priv_sta,
- 				struct dentry *dir);
- 	void (*remove_sta_debugfs)(void *priv, void *priv_sta);
-+
-+	void (*get_max_tp)(void *priv_sta, u32 *tp);
- };
- 
- static inline int rate_supported(struct ieee80211_sta *sta,
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 1c36c9b..7af6884 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -604,6 +604,14 @@ minstrel_free(void *priv)
- 	kfree(priv);
- }
- 
-+static void minstrel_get_max_tp(void *priv_sta, u32 *tp)
-+{
-+	struct minstrel_sta_info *mi = priv_sta;
-+	int idx = mi->max_tp_rate[0];
-+
-+	*tp = MINSTREL_TRUNC(mi->r[idx].cur_tp / 10);
-+}
-+
- struct rate_control_ops mac80211_minstrel = {
- 	.name = "minstrel",
- 	.tx_status = minstrel_tx_status,
-@@ -617,6 +625,7 @@ struct rate_control_ops mac80211_minstrel = {
- 	.add_sta_debugfs = minstrel_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_remove_sta_debugfs,
- #endif
-+	.get_max_tp = minstrel_get_max_tp,
- };
- 
- int __init
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index d2b264d..421c770 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -960,6 +960,26 @@ error:
- 	return NULL;
- }
- 
-+static void minstrel_ht_get_max_tp(void *priv_sta, u32 *tp)
-+{
-+	struct minstrel_ht_sta_priv *msp = priv_sta;
-+	struct minstrel_ht_sta *mi = &msp->ht;
-+	struct minstrel_rate_stats *mr;
-+	int i, j;
-+
-+	if (!msp->is_ht) {
-+		mac80211_minstrel.get_max_tp(priv_sta, tp);
-+		return;
-+	}
-+
-+	i = mi->max_tp_rate / MCS_GROUP_RATES;
-+	j = mi->max_tp_rate % MCS_GROUP_RATES;
-+
-+	mr = &mi->groups[i].rates[j];
-+
-+	*tp = mr->cur_tp / 10;
-+}
-+
- static void
- minstrel_ht_free_sta(void *priv, struct ieee80211_sta *sta, void *priv_sta)
- {
-@@ -996,6 +1016,7 @@ static struct rate_control_ops mac80211_minstrel_ht = {
- 	.add_sta_debugfs = minstrel_ht_add_sta_debugfs,
- 	.remove_sta_debugfs = minstrel_ht_remove_sta_debugfs,
- #endif
-+	.get_max_tp = minstrel_ht_get_max_tp,
- };
- 
- 
--- 
-1.8.1.5
+But the reported_rate field would just contain the index of the selected ra=
+te,
+not the throughput. As far as I can tell the latter is an RC private inform=
+ation
+(it not exported anywhere outside of the RC algorithm) and that is why I ma=
+de
+this API which would directly talk to minstrel and get this value.
 
+>=20
+> After doing that, reading the rate becomes a get_station_info() call or
+> so.
+>=20
+
+true, but still we have the problem above..unless I alter the ieee8011_tx_r=
+ate
+and rate_info struct..but I don't know if this would make much sense.
+
+> One more detail:
+>=20
+> int cfg80211_get_max_tp(struct wireless_dev *wdev, u8 *peer, u32 *tp)
+>=20
+> I really don't think that the wireless_dev should be necessary for this,
+> it ought to be just a netdev IMHO.
+
+well, yes, I can pass the struct net_dev only, even if I need the wdev to o=
+btain
+the cf80211_register_dev object for the ops.
+
+> Also, the peer should be const :)
+
+Right
+
+
+Thanks.
+Cheer,
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--A6N2fC+uXW/VQSAv
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRX8+1AAoJEADl0hg6qKeOSYQQAIg/vZPNmAo6xkr8tnhSqtuL
+B3QH6DnG+m7DpFqgOMwwKP4ErckggM3+ZO1bEJoBy90sERTkOKO2KT12v/esNGeX
+mFAP4WuA0iASJVIeC6s6kCQR/mi+ChSRnZs26uiD9hW3smshzNSQoewg7iA5R6zj
+WYQpPyhiZSH22SljcEBOGIzO2jBHd7F2dEoEfaSdru1LF0PGGT3utOSjdkWLGfQs
+C+ax6QqT79SnF90WKIJRrUNmJzg0aYAp07w3abvLQqFwVnczU/3JzAqNGdf9Yr8q
+xkQcD8EO+IFRvdDXYkUlbmgRXK32crOoT9raLFBV7+YiWByFPr6spE2WWhDJVzcf
+/TZnPdqOh3cSv63EUPJvrvRYLq/N8FgkqmWAWhR60XDHFo+MqMS+5ZjmMcerxmnM
+DBws/7dT+r/MifmQzcp4YroZJPMPlSgcp8H4Jq+svcl9JL7KYa9BQN1lDae4p3zH
+Yk6So/S3lCIm98tB5dj31j9tcn5TFtY/W2k8PaI3pE9/VR8tKlH1mxqaanS43gtT
+5YVtoxQro8VsHsXkwUv5PzcBNka0RQdJLE137JEI/Yoc64E65KYEUa2HqJquXCly
+AKMHQbhC69lNQEaLvV9iak/GkKRUfmmw/lFNTpUokwIrbsE7+uQ/dOyosKGUBmTj
+rfrcmAYoFTg6g25pXcuk
+=JLHq
+-----END PGP SIGNATURE-----
+
+--A6N2fC+uXW/VQSAv--
