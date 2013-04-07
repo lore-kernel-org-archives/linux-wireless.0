@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43578 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:49422 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911Ab3DOO1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 10:27:24 -0400
-Message-ID: <516C0E40.3020502@openwrt.org> (sfid-20130415_162727_416971_E76F39A5)
-Date: Mon, 15 Apr 2013 16:27:12 +0200
+	id S1752627Ab3DGTK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Apr 2013 15:10:58 -0400
 From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/5] mac80211: improve the rate control API
-References: <1365890626-86895-1-git-send-email-nbd@openwrt.org>  <1365890626-86895-2-git-send-email-nbd@openwrt.org>  <1365890626-86895-3-git-send-email-nbd@openwrt.org> <1366033473.8361.26.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1366033473.8361.26.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, adrian@freebsd.org
+Subject: [PATCH 3.9] ath9k_htc: accept 1.x firmware newer than 1.3
+Date: Sun,  7 Apr 2013 21:10:48 +0200
+Message-Id: <1365361848-65831-1-git-send-email-nbd@openwrt.org> (sfid-20130407_211103_094237_4671EB26)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-15 3:44 PM, Johannes Berg wrote:
-> On Sun, 2013-04-14 at 00:03 +0200, Felix Fietkau wrote:
-> 
->> +EXPORT_SYMBOL(rate_control_set_rates);
-> 
-> I don't think that needs to be exported (at least not now)?
-Just thought I'd let driver-implemented rate control modules access it
-as well if they want to.
+Since the firmware has been open sourced, the minor version has been
+bumped to 1.4 and the API/ABI will stay compatible across further 1.x
+releases.
 
-> I suspect that the answer to my question in patch 2 lies here, if the
-> rate control updates the table then would it not just update the table
-> when the protection mechanism needs to be changed? There should be
-> triggers for that, rather than having to check the "use_cts" variables
-> on every packet, and if they aren't complete that should be fixed?
-I guess we could do some further work on that, but for now I wanted to
-keep things simple by having only the rate control module touch the
-table (and not have it care about CTS protection).
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Felix
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 716058b..a47f5e0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -796,7 +796,7 @@ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
+ 	 * required version.
+ 	 */
+ 	if (priv->fw_version_major != MAJOR_VERSION_REQ ||
+-	    priv->fw_version_minor != MINOR_VERSION_REQ) {
++	    priv->fw_version_minor < MINOR_VERSION_REQ) {
+ 		dev_err(priv->dev, "ath9k_htc: Please upgrade to FW version %d.%d\n",
+ 			MAJOR_VERSION_REQ, MINOR_VERSION_REQ);
+ 		return -EINVAL;
+-- 
+1.8.0.2
+
