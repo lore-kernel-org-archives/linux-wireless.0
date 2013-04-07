@@ -1,86 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from contumacia.investici.org ([178.255.144.35]:57444 "EHLO
-	contumacia.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935156Ab3DHSd4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 14:33:56 -0400
-Date: Mon, 8 Apr 2013 20:32:31 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Subject: Re: [PATCH 3/6] mac80211: ieee80211_queue_stopped returns reasons
-Message-ID: <20130408183231.GD5938@ritirata.org> (sfid-20130408_203400_282369_371D8282)
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
- <1365444377-9959-3-git-send-email-thomas@cozybit.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="xJK8B5Wah2CMJs8h"
-In-Reply-To: <1365444377-9959-3-git-send-email-thomas@cozybit.com>
+Received: from nbd.name ([46.4.11.11]:58782 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934414Ab3DGWET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Apr 2013 18:04:19 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 4/7] ath9k: improve dma map failure handling
+Date: Mon,  8 Apr 2013 00:04:10 +0200
+Message-Id: <1365372253-32782-4-git-send-email-nbd@openwrt.org> (sfid-20130408_000423_529925_824E31AC)
+In-Reply-To: <1365372253-32782-3-git-send-email-nbd@openwrt.org>
+References: <1365372253-32782-1-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-2-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Instead of leaving the buffer without skb and breaking out of the loop
+(which could leak the rx buffer), use the common error path.
 
---xJK8B5Wah2CMJs8h
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 30 +++++++++++++-----------------
+ 1 file changed, 13 insertions(+), 17 deletions(-)
 
-Hi Thomas,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a617ef9..1bc8030 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1162,6 +1162,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	u64 tsf = 0;
+ 	u32 tsf_lower = 0;
+ 	unsigned long flags;
++	dma_addr_t new_buf_addr;
+ 
+ 	if (edma)
+ 		dma_type = DMA_BIDIRECTIONAL;
+@@ -1257,10 +1258,20 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			goto requeue_drop_frag;
+ 		}
+ 
++		/* We will now give hardware our shiny new allocated skb */
++		new_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
++					      common->rx_bufsize, dma_type);
++		if (unlikely(dma_mapping_error(sc->dev, new_buf_addr))) {
++			dev_kfree_skb_any(requeue_skb);
++			goto requeue_drop_frag;
++		}
++
++		bf->bf_mpdu = requeue_skb;
++		bf->bf_buf_addr = new_buf_addr;
++
+ 		/* Unmap the frame */
+ 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+-				 common->rx_bufsize,
+-				 dma_type);
++				 common->rx_bufsize, dma_type);
+ 
+ 		skb_put(skb, rs.rs_datalen + ah->caps.rx_status_len);
+ 		if (ah->caps.rx_status_len)
+@@ -1270,21 +1281,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			ath9k_rx_skb_postprocess(common, hdr_skb, &rs,
+ 						 rxs, decrypt_error);
+ 
+-		/* We will now give hardware our shiny new allocated skb */
+-		bf->bf_mpdu = requeue_skb;
+-		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
+-						 common->rx_bufsize,
+-						 dma_type);
+-		if (unlikely(dma_mapping_error(sc->dev,
+-			  bf->bf_buf_addr))) {
+-			dev_kfree_skb_any(requeue_skb);
+-			bf->bf_mpdu = NULL;
+-			bf->bf_buf_addr = 0;
+-			ath_err(common, "dma_mapping_error() on RX\n");
+-			ieee80211_rx(hw, skb);
+-			break;
+-		}
+-
+ 		if (rs.rs_more) {
+ 			RX_STAT_INC(rx_frags);
+ 			/*
+-- 
+1.8.0.2
 
-On Mon, Apr 08, 2013 at 11:06:14AM -0700, Thomas Pedersen wrote:
-> Have ieee80211_queue_stopped() return a bitmap of enum
-> queue_stop_reasons while checking queue status. This is
-> handy when we care about the queue stop reason codes.
->=20
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  include/net/mac80211.h |   10 +++++++---
->  net/mac80211/util.c    |    8 ++++----
->  2 files changed, 11 insertions(+), 7 deletions(-)
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 64faf01..8bbe799 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -3589,15 +3589,19 @@ void ieee80211_stop_queue(struct ieee80211_hw *hw=
-, int queue);
-> =20
->  /**
->   * ieee80211_queue_stopped - test status of the queue
-> + *
-
-I think you added this new line by mistake.
-
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---xJK8B5Wah2CMJs8h
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRYw0/AAoJEADl0hg6qKeOL2QP/R/nMfzs/gimqpgWzD03ZmGO
-aD/nOgnj4K6ZXErPZKmK/xCZmFVl3TgyrxwXKEHPM0Li8G3nsJ3KNUNeXGdJH/oU
-Lezcc14yIHlAjjJVAmhmJrlG3fiVjt/jjDqLZmVLOyBNEqZSmtRqaplI/adR1PU7
-zlHJZ3ktWYC3+0G6wJyDwa1MR1l1HU84IPvY/ye2VgkSBv5+W0sjLIQWlRA2QYCX
-hW1GWxn5hPdmpTUihAGWNMkG/kdrolWbn+PeM9gVoZlPXa6K9nBsrzPucl58Qlab
-JRls1vObXuWdw51l0dRqpE5EVINJQWmNP7c1nqNi95pIXqDgI5dQKZjua5yNeBeg
-VBHGxHUCJh/ZVNpdhEda3yb4BVZcn8VP2yKGIFB/jRyVqO8r4i6Z7PquLT5q3C2I
-zyUKeAFH617BPQIasY75UvDNzmM0iDIBHyZgkPrqSDeRpf3nZxBd/nLDncWdNnJ7
-aq7BLSn6B6mhFTo9AZA63dTP3rg+fCQ7ORun0dnE4BRwl22tj3Co1/HYgfytxFkB
-Q+iQrE4oe+mcy+Z4yDkQOg9cXl7I/R24LAfVo7DrkNavjDfYqMzrGF2723NcgA6H
-FxwZW1zm8OAB1NUbPthN7v0c+UDCF9bZZm0IhYKKfaWi0R7uwuTXmbIyA5d+ZMXH
-rk1A74bHw1LHMeUGa1KB
-=nnI7
------END PGP SIGNATURE-----
-
---xJK8B5Wah2CMJs8h--
