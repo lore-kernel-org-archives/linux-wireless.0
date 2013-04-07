@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1607 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757003Ab3DXTQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 15:16:31 -0400
-Message-ID: <51782F84.6070605@broadcom.com> (sfid-20130424_211636_624407_7BB0D744)
-Date: Wed, 24 Apr 2013 21:16:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:46897 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934419Ab3DGWYK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Apr 2013 18:24:10 -0400
+Received: by mail-wg0-f46.google.com with SMTP id l18so5157249wgh.25
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Apr 2013 15:24:09 -0700 (PDT)
 MIME-Version: 1.0
-To: "Kalle Valo" <kvalo@adurom.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] cfg80211: Android P2P-Device workaround
-References: <1366791988-11309-1-git-send-email-johannes@sipsolutions.net>
- <87mwso5jbx.fsf@purkki.adurom.net>
- <1366800294.11111.7.camel@jlt4.sipsolutions.net>
- <87ehe05hgc.fsf@purkki.adurom.net>
-In-Reply-To: <87ehe05hgc.fsf@purkki.adurom.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <1365372253-32782-5-git-send-email-nbd@openwrt.org>
+References: <1365372253-32782-1-git-send-email-nbd@openwrt.org>
+	<1365372253-32782-2-git-send-email-nbd@openwrt.org>
+	<1365372253-32782-3-git-send-email-nbd@openwrt.org>
+	<1365372253-32782-4-git-send-email-nbd@openwrt.org>
+	<1365372253-32782-5-git-send-email-nbd@openwrt.org>
+Date: Sun, 7 Apr 2013 15:24:09 -0700
+Message-ID: <CAJ-Vmo=6W_C0d_wEeT8UM1+1LXOsi5xHGj=KdKF7E5BNdtLbgQ@mail.gmail.com> (sfid-20130408_002414_137458_B728CA82)
+Subject: Re: [PATCH 5/7] ath9k: fix handling of broken descriptors
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2013 12:52 PM, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
+Hm!
+
+On 7 April 2013 15:04, Felix Fietkau <nbd@openwrt.org> wrote:
+> As the comment in ath_get_next_rx_buf indicates, if a descriptor with
+> the done bit set follows one with the done bit cleared, both descriptors
+> should be discarded, however the driver is not doing that yet.
 >
->> On Wed, 2013-04-24 at 13:11 +0300, Kalle Valo wrote:
->>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>
->>>> +#ifndef CONFIG_CFG80211_ANDROID_P2P_HACK
->>>>   	if (WARN_ON(wdev->netdev))
->>>>   		return;
->>>> +#endif
->>>
->>> With my favorite kernel macro, config_enabled(), you could get rid of
->>> quite a lot of the ugly ifdefs.
->>
->> Yeah, but as long as this isn't going upstream I don't really want to
->> though since then it touches the code and is less obvious. Anyway we'll
->> see.
->
-> Ah, makes send.
->
-> FWIW, I think we should push this, and other wireless Android support,
-> upstream. We should first get them to use upstream interfaces and then
-> start fixing the problematic areas one by one.
+> To fix this, use the rs->rs_more flag as an indicator that the following
+> frame should be discarded. This also helps with the split buffer case:
+> if the first part of the frame is discarded, the following parts need to
+> be discarded as well, since they contain no valid header or usable data.
 
-I agree. Another big hurdle I see are the android driver private ioctls. 
-Do you have a good knowledge about those? I think some of those already 
-have a nl80211 equivalent.
+Have you seen this happen?
 
-Maybe it would be good to update twiki [1] on wireless.kernel.org with 
-such information. It seems a bit outdated.
+I've added code to this in FreeBSD (based on the reference driver and
+ath9k doing it) and I've never, ever seen it trigger.
 
-Regards,
-Arend
+I went digging through the EV database and I found a bug (long since
+fixed) where the code was adjusting the skb size and then pushing it
+back onto the RX queue with an incorrect size. If it allocated a 2kiB
+SKU and then reset the size to 4KiB, hilarity would ensue.
 
-[1] http://wireless.kernel.org/en/developers/Documentation/Android
+This is why I'm asking. If it happens in the real world, fine. :-)
 
+Thanks,
+
+
+adrian
