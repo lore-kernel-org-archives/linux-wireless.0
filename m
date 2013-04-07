@@ -1,49 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34245 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755456Ab3DXO3a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 10:29:30 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <51779434.4010709@broadcom.com>
-Date: Wed, 24 Apr 2013 07:29:28 -0700
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <F323F29D-5EF8-4D01-A4B3-F9AF12326012@holtmann.org> (sfid-20130424_162933_221569_793DB5BC)
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net> <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org> <1366735340.8385.20.camel@jlt4.sipsolutions.net> <51779434.4010709@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:58778 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934403Ab3DGWES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Apr 2013 18:04:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 7/7] ath9k: implement buffer holding handling for EDMA FIFO
+Date: Mon,  8 Apr 2013 00:04:13 +0200
+Message-Id: <1365372253-32782-7-git-send-email-nbd@openwrt.org> (sfid-20130408_000427_104537_C152703D)
+In-Reply-To: <1365372253-32782-6-git-send-email-nbd@openwrt.org>
+References: <1365372253-32782-1-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-2-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-3-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-4-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-5-git-send-email-nbd@openwrt.org>
+ <1365372253-32782-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Inside one FIFO slot queue, EDMA chipsets have the same link pointer
+re-read race condition as older chipsets, so the same buffer holding
+logic needs to be used in order to avoid use-after-free bugs.
+Unlike on older chips, it can be skipped for the end of the queue.
 
->>>> +config CFG80211_ANDROID_P2P_HACK
->>>> +	bool "Android P2P netdevice hack"
->>>> +	depends on CFG80211
->>>> +	depends on !CFG80211_WEXT
->>>> +	help
->>>> +	  Enable this option for Android P2P w/ P2P Device.
->>>> +
->>> 
->>> do you really think this is a good idea? Wouldn't it be better if
->>> Android just gets its userspace fixed. This way, they never will and
->>> you carry this workaround forever.
->> 
->> Well, I'm about 50/50 on whether to merge this. On the one hand, it's a
->> very simple patch to carry out of tree, on the other hand more than one
->> person will need it.
->> 
-> 
-> Here is one who needs it. I consider this patch as a temporary solution, but it would be good to have it upstream. We would be using compat-drivers to backport the upstream brcmfmac to the android kernel, which also takes care of cfg80211.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
-why do I get the feeling that the root-cause for this stupid p2p0 device is the Broadcom binary only driver  ;)
-
-I feel like being back in the world of Wireless Extensions ;)
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 94b2ee1..5bc5802 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -516,8 +516,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		 * not a holding desc.
+ 		 */
+ 		INIT_LIST_HEAD(&bf_head);
+-		if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) ||
+-		    bf_next != NULL || !bf_last->bf_stale)
++		if (bf_next != NULL || !bf_last->bf_stale)
+ 			list_move_tail(&bf->list, &bf_head);
+ 
+ 		if (!txpending || (tid->state & AGGR_CLEANUP)) {
+@@ -537,8 +536,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				!txfail);
+ 		} else {
+ 			/* retry the un-acked ones */
+-			if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
+-			    bf->bf_next == NULL && bf_last->bf_stale) {
++			if (bf->bf_next == NULL && bf_last->bf_stale) {
+ 				struct ath_buf *tbf;
+ 
+ 				tbf = ath_clone_txbuf(sc, bf_last);
+@@ -2264,6 +2262,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 	struct ath_txq *txq;
+ 	struct ath_buf *bf, *lastbf;
+ 	struct list_head bf_head;
++	struct list_head *fifo_list;
+ 	int status;
+ 
+ 	for (;;) {
+@@ -2291,20 +2290,24 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 
+ 		TX_STAT_INC(txq->axq_qnum, txprocdesc);
+ 
+-		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
++		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
++		if (list_empty(fifo_list)) {
+ 			ath_txq_unlock(sc, txq);
+ 			return;
+ 		}
+ 
+-		bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
+-				      struct ath_buf, list);
++		bf = list_first_entry(fifo_list, struct ath_buf, list);
++		if (bf->bf_stale) {
++			list_del(&bf->list);
++			ath_tx_return_buffer(sc, bf);
++			bf = list_first_entry(fifo_list, struct ath_buf, list);
++		}
++
+ 		lastbf = bf->bf_lastbf;
+ 
+ 		INIT_LIST_HEAD(&bf_head);
+-		list_cut_position(&bf_head, &txq->txq_fifo[txq->txq_tailidx],
+-				  &lastbf->list);
+-
+-		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
++		if (list_is_last(&lastbf->list, fifo_list)) {
++			list_splice_tail_init(fifo_list, &bf_head);
+ 			INCR(txq->txq_tailidx, ATH_TXFIFO_DEPTH);
+ 
+ 			if (!list_empty(&txq->axq_q)) {
+@@ -2315,6 +2318,11 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 				list_splice_tail_init(&txq->axq_q, &bf_q);
+ 				ath_tx_txqaddbuf(sc, txq, &bf_q, true);
+ 			}
++		} else {
++			lastbf->bf_stale = true;
++			if (bf != lastbf)
++				list_cut_position(&bf_head, fifo_list,
++						  lastbf->list.prev);
+ 		}
+ 
+ 		ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
+-- 
+1.8.0.2
 
