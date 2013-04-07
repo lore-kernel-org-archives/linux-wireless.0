@@ -1,104 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35976 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760987Ab3DCP2W (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:41271 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934189Ab3DGRtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 11:28:22 -0400
-Message-ID: <515C4A89.6040903@canonical.com> (sfid-20130403_172843_331534_53FB6F45)
-Date: Wed, 03 Apr 2013 11:28:09 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+	Sun, 7 Apr 2013 13:49:22 -0400
+Received: by mail-we0-f172.google.com with SMTP id r3so3953206wey.31
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Apr 2013 10:49:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Piotr Haber <phaber@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>, arend@broadcom.com,
-	pieterpg@broadcom.com, meuleman@broadcom.com,
-	LKML <linux-kernel@vger.kernel.org>, brudley@broadcom.com,
-	frankyl@broadcom.com, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org
-Subject: Re: [v3.8, v3.9] [Regression] brcmsmac: move PHY functions
-References: <5155F107.6050408@canonical.com> <20130401144225.GC21859@tuxdriver.com> <5159A559.4000808@canonical.com> <515A9EAF.4010005@broadcom.com>
-In-Reply-To: <515A9EAF.4010005@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <51614F9E.9010109@gmail.com>
+References: <loom.20130403T092722-24@post.gmane.org>
+	<CAJ-Vmomn8A77jEvR2c312QukWy7Zozs4T2NQuiYMForr5+DthQ@mail.gmail.com>
+	<515E9D1F.8000701@gmail.com>
+	<CAJ-Vmok__=unaWchTzB6_ExM+P_krc4MmMNJ-9C-=We9NUGjGQ@mail.gmail.com>
+	<CAMqNPvLAea9N2eSjkNo7s-4aNFoQMfkSDesTxfZFSiNWXdHB2w@mail.gmail.com>
+	<CAJ-Vmoko0UOztAy2coQ2+XCqqiiPZN-6=mssCb1+5gFPwDBAdw@mail.gmail.com>
+	<51614F9E.9010109@gmail.com>
+Date: Sun, 7 Apr 2013 10:49:20 -0700
+Message-ID: <CAJ-VmomtFvXuQtj-Kxs5QPcptO-QWsySkTEzWTC1XzG1zdbU2g@mail.gmail.com> (sfid-20130407_194928_544363_C732A1EE)
+Subject: Re: [ath5k][802.11p] Deactivate beacon
+From: Adrian Chadd <adrian@freebsd.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?ISO-8859-1?Q?Ricardo_Tub=EDo_Pardavila?= <rtpardavila@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/02/2013 05:02 AM, Piotr Haber wrote:
-> On 04/01/13 17:18, Joseph Salisbury wrote:
->> On 04/01/2013 10:42 AM, John W. Linville wrote:
->>> On Fri, Mar 29, 2013 at 03:52:39PM -0400, Joseph Salisbury wrote:
->>>> Hi Piotr,
->>>>
->>>> A bug was opened against the Ubuntu kernel[0].  After a kernel
->>>> bisect, it was found that reverting the following commit resolved
->>>> this bug:
->>>>
->>>> commit b83576341664957978e125f5f5db2f15496980b1
->>>> Author: Piotr Haber <phaber@broadcom.com>
->>>> Date:   Wed Nov 28 21:44:09 2012 +0100
->>>>
->>>>       brcmsmac: move PHY functions
->>>>
->>>> The regression was introduced as of v3.8-rc1.  The regression still
->>>> exists in v3.9-rc4.
->>>>
->>>> I see that you are the author of this patch, so I wanted to run this
->>>> by you.  I was thinking of requesting a revert for v3.9, but I
->>>> wanted to get your feedback first.
->>>>
->>>>
->>>> Thanks,
->>>>
->>>> Joe
->>>>
->>>> [0] http://pad.lv/1131914
->>> I recently reverted b6fc28a1, which is the follow-on to that patch.
->>> The revert is _not_ in 3.9-rc5.
->>>
->>> Could you try reverting that patch instead?  Does that fix the issue
->>> for you?
->>>
->>> John
->> Hi John,
->>
->> Thanks for the response.
->>
->> Yes, reverting commit b6fc28a1 does resolve this bug.  That is the appropriate fix for this issue.
->> Thanks for the assistance.
->>
->> Thanks,
->>
->> Joe
->>
->>
->>
->>
-> Hi Joe,
-> could you elaborate a little bit on your failure scenario?
-> In bug report you say it happens after suspend/resume, are there any other scenarios you see this
-> behaviour? (like disassociation/association without suspend)
-> Also you mention it comes back after some time - what is the time needed?
-> We had reports of problems on 4313 with this patch (that's why the revert was done) but so far i
-> assumed it was a total breakdown, in your case this seem like a transient issue.
-This only happens after a suspend/resume cycle.  I haven't seen the 
-issue happen with disassociation/association without suspend.  After 
-suspend, the connection will re-establish after about 15 minutes or so.
+On 7 April 2013 03:51, Nick Kossifidis <mickflemm@gmail.com> wrote:
 
->
-> One more thing, could you provide info about your hardware by sending me contents of:
-> <debugfs_mount>/brcmsmac/bcma0:0/hardware
+> I don't know, so far I 've talked with many people about 802.11p, I 've
+> helped most of them with their implementations and so far we have no
+> incoming patches. They just don't seem to care if 802.11p support goes
+> into mainline.
 
-board vendor: 144f
-board type: 7179
-board revision: 1408
-board flags: 8402a01
-board flags2: 880
-firmware revision: 262032c
+Shocking!
+
+:-)
+
+One of the FreeBSD wifi developers has nicely built a table for what's
+needed for 802.11p support, at least from the kernel side. I'll get it
+tidied up and pushed online so we can both take a stab at fixing up
+the kernel/driver support.
+
+Some of it is mostly done in linux (half/quarter rate), we will need a
+new mode where beacons are disabled; but the fun bits are stuff like
+the QoS configuration parameters, time synchronisation stuff and
+apparently some requirement that channel change happen within a TU.
+
+That last one? Full of hilarity.
 
 
 
-
->
-> Kind regards
-> Piotr
->
->
-
+Adrian
