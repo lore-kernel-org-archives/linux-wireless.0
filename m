@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4904 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753892Ab3DWVKg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 17:10:36 -0400
-Message-ID: <5176F8C2.7050502@broadcom.com> (sfid-20130423_235840_186706_56866203)
-Date: Tue, 23 Apr 2013 23:10:26 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-vc0-f182.google.com ([209.85.220.182]:57401 "EHLO
+	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934539Ab3DHJKb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 05:10:31 -0400
 MIME-Version: 1.0
-To: "Bruno Randolf" <br1@einfach.org>
-cc: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
-	meuleman@broadcom.com, brudley@broadcom.com,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: Broadcom brcmfmac vs bcmdhd on Android
-References: <5176ABB1.2070506@einfach.org>
-In-Reply-To: <5176ABB1.2070506@einfach.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
+	<201304051903.11215.chunkeey@googlemail.com>
+	<CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
+	<8762008auk.fsf@purkki.adurom.net>
+	<CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com>
+Date: Mon, 8 Apr 2013 11:10:30 +0200
+Message-ID: <CAFSJ42Zd3s8xKwt4X3LNcupCTntDULxNntMuD-_Xh6_csiGA4A@mail.gmail.com> (sfid-20130408_111053_519003_FE80D6A0)
+Subject: Re: Version number policy!
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/2013 05:41 PM, Bruno Randolf wrote:
-> Hello!
+Thanx Christian for a valuable input.
+
+It’s a good idea to pack bitmap into the tail/header of the firmware
+binary to get capabilities even before fw loading. The plan is to add
+8 bytes for caps and also add time stamp. Let me play around with that
+and provide fw and driver patch for review.
+
+2013/4/6 Adrian Chadd <adrian@freebsd.org>:
+> On 5 April 2013 22:52, Kalle Valo <kvalo@adurom.com> wrote:
+>> Eugene Krasnikov <k.eugene.e@gmail.com> writes:
+>>
+>>> Good point regarding timestamp.
+>>>
+>>> When it comes to feature bitmap do you have an example of such a
+>>> bitmap from carl9170? Why not to rely always on major version?
+>>
+>> I'm with Christian here. In ath6kl we switched to firmware advertising
+>> feature capabilities and I have never looked back, it's so much easier.
+>> You don't need to do any mapping between firmware versions and features,
+>> you just deal one feature at a time.
 >
-> I know this is the Linux kernel wireless list, and not Android, but due
-> to the lack of better places, I'm going to ask here...
-
-The lines are less drawn than they used to be (at least for me).
-
-> I am trying to make IBSS mode work on Android. As I'm finding problems
-> with "bcmdhd", I am wondering if using the "brcmfmac" under Android
-> would be the better way to go?
-
-I am working mainly on brcmfmac. IBSS should work, but reading the 
-commit message of your patch I guess it may be a firmware issue so using 
-brcmfmac will not make a difference.
-
-> I succeeded to compile brcmfmac from recent compat-drivers against the
-> "tuna" (Galaxy Nexus) kernel, the modules load, but no device is
-> recognized. Has anyone succeeded doing this? Is there any chance it can
-> work?
-
-That is how we did it and with success. What do you mean by 'no device 
-is recognized'? Do you have any traces to look at?
-
-> Also I'm wondering what is the relation between the "bcmdhd" driver on
-> Android and "brcmfmac" in the standard Linux kernel. Is there any
-> official maintainer of "bcmdhd", any place where to submit patches? Will
-> "bcmdhd" and "brcmfmac" merge eventually?
-
-bcmdhd is what broadcom open-sourced for android. Separately, we started 
-working on brcmfmac for the mainline linux kernel. Both drivers come 
-from the same proprietary driver. The goal is to have brcmfmac work on 
-Android as well and we have most features on board for that.
-
-Regards
+> Ok. Well, we've got plenty of time to finalise this before things get
+> established. There's still plenty of tidying up to do before we start
+> pushing in new features.
+>
+> Thanks for all your feedback so far!
+>
+>
+>
+> Adrian
 
 
+
+-- 
+Best regards,
+Eugene
