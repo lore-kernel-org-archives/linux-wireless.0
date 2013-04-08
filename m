@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4448 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760475Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:41:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 24/25] brcmfmac: no flow-control tlv signals when fcmode
- is NONE
-Date: Wed, 3 Apr 2013 12:40:49 +0200
-Message-ID: <1364985650-11719-25-git-send-email-arend@broadcom.com> (sfid-20130403_124305_000167_CD0C6E25)
-In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:52794 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762858Ab3DHSHx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 14:07:53 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w11so3340615pde.9
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 11:07:51 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 1/6] mac80211: unset FC retry bit in mesh fwding path
+Date: Mon,  8 Apr 2013 11:06:12 -0700
+Message-Id: <1365444377-9959-1-git-send-email-thomas@cozybit.com> (sfid-20130408_200758_043732_81FDE0AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fcmode provided by module parameter defaults to NONE, which
-means no flow-control is required. In this case flow-control
-signals should not be enabled.
+Otherwise forwarded frames would keep the retry bit set
+from the previous link transmission.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ net/mac80211/rx.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 430baa2..22a6eb2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1221,16 +1221,12 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5b4492a..5168f89 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2085,6 +2085,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	}
  
- int brcmf_fws_init(struct brcmf_pub *drvr)
- {
--	u32 tlv = 0;
-+	u32 tlv = BRCMF_FWS_FLAGS_RSSI_SIGNALS;
- 	int rc;
- 
- 	if (!drvr->fw_signals)
- 		return 0;
- 
--	tlv = BRCMF_FWS_FLAGS_RSSI_SIGNALS |
--	      BRCMF_FWS_FLAGS_XONXOFF_SIGNALS |
--	      BRCMF_FWS_FLAGS_CREDIT_STATUS_SIGNALS;
--
- 	spin_lock_init(&drvr->fws_spinlock);
- 
- 	drvr->fws = kzalloc(sizeof(*(drvr->fws)), GFP_KERNEL);
-@@ -1243,7 +1239,11 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 	drvr->fws->drvr = drvr;
- 	drvr->fws->fcmode = fcmode;
- 
--	/* enable proptxtstatus signaling by default */
-+	/* enable firmware signalling if fcmode active */
-+	if (drvr->fws->fcmode != BRCMF_FWS_FCMODE_NONE)
-+		tlv |= BRCMF_FWS_FLAGS_XONXOFF_SIGNALS |
-+		       BRCMF_FWS_FLAGS_CREDIT_STATUS_SIGNALS;
-+
- 	rc = brcmf_fil_iovar_int_set(drvr->iflist[0], "tlv", tlv);
- 	if (rc < 0) {
- 		brcmf_err("failed to set bdcv2 tlv signaling\n");
+ 	fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
++	fwd_hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_RETRY);
+ 	info = IEEE80211_SKB_CB(fwd_skb);
+ 	memset(info, 0, sizeof(*info));
+ 	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
 -- 
 1.7.10.4
-
 
