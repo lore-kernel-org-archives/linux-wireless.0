@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960Ab3DKIWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 04:22:35 -0400
-Message-ID: <1365668549.8272.9.camel@jlt4.sipsolutions.net> (sfid-20130411_102241_230797_BB58DA15)
-Subject: Re: [Patch] mac80211: SMPS for AP Mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: vivekanandah@posedge.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Apr 2013 10:22:29 +0200
-In-Reply-To: <403b23c5df64cb4e0d6ffbabb7ca804f@posedge.com>
-References: <516541FD.9050109@posedge.com>
-	 <1365592730.8388.8.camel@jlt4.sipsolutions.net>
-	 <403b23c5df64cb4e0d6ffbabb7ca804f@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.neratec.com ([80.75.119.105]:44998 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936054Ab3DHORz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 10:17:55 -0400
+Message-ID: <5162D18B.2040607@neratec.com> (sfid-20130408_161759_726590_BAB2816A)
+Date: Mon, 08 Apr 2013 16:17:47 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCHv2] mac80211: fix recalc_radar hwconf sync problem
+References: <1365165364.8515.24.camel@jlt4.sipsolutions.net> <1365422997-15728-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+In-Reply-To: <1365422997-15728-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vivek,
-
-No worries.
-
-> i have outlined three requirements based on my understanding for SMPS 
-> code and have also incorporated a code snippet. if you are okay with the 
-> code snippet, i will provide a patch for the same.
+On 04/08/2013 02:09 PM, Simon Wunderlich wrote:
+> local->hw.conf maybe not be synced when recalcing whether radar is
+> enabled, sometimes leaving radar enabled even if it's not neccesary
+> anymore.
 > 
-> 1) check if the receiving station has Dynamic SMPS on
-> 2) check if the current MCS rate is greater than a single stream rate 
-> for the first rate
+> Fix this by:
+>  * setting radar_enabled when creating the chanctx
+>  * turning radar_enabled off before destroying the last channel context
+> 
+> Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> ---
 
-Note that MCS 32 is also single-stream. I'm not sure any driver supports
-it, and I think minstrel_ht probably also doesn't support it, so I guess
-you don't have to worry about it, but you may want to check.
+Thanks, this one does what it should, so feel free to add
 
-> 3) if conditions 1 and 2 are true, set the RTS_CTS flag for the first 
-> rate that will be attempted to be transmitted
-
-No, you don't just need the first rate, you need any rate that's
-multi-stream. Otherwise a retransmission at a lower rate would never
-work.
-
-johannes
-
+Tested-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
