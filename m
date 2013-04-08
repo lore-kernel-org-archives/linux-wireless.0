@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:57040 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752108Ab3D1PEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 11:04:09 -0400
-Received: from mailout-de.gmx.net ([10.1.76.4]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MJ0dz-1UTzF01hQP-002UiO for
- <linux-wireless@vger.kernel.org>; Sun, 28 Apr 2013 17:04:07 +0200
-Message-ID: <517D3A5F.6020205@rempel-privat.de> (sfid-20130428_170424_238131_41A5ED93)
-Date: Sun, 28 Apr 2013 17:03:59 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D2E77.8000104@rempel-privat.de>
-In-Reply-To: <517D2E77.8000104@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from toronto-hs-216-138-233-67.s-ip.magma.ca ([216.138.233.67]:51402
+	"HELO yow.sam-i-am.me" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S934972Ab3DHWw7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 18:52:59 -0400
+Date: Mon, 8 Apr 2013 18:46:15 -0400
+From: Sean MacLennan <seanm@seanm.ca>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: David Howells <dhowells@redhat.com>, gregkh@suse.de,
+	viro@ZenIV.linux.org.uk, awong1@novell.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: The rtl8192e procfs-based debug interface seems very broken
+Message-ID: <20130408184615.38b20264@lappy.seanm.ca> (sfid-20130409_005313_492633_59354436)
+In-Reply-To: <51634550.3090300@lwfinger.net>
+References: <17570.1365415364@warthog.procyon.org.uk>
+	<51634550.3090300@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.04.2013 16:13, schrieb Oleksij Rempel:
-> Am 28.04.2013 14:51, schrieb Felix Fietkau:
->> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->>> Collect statistics about recived duplicate and STBC packets.
->>> This information should help see if STBC is actually working.
->>>
->>> Tested on ar9285;
->>>
->>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->> I thought about this patch some more, and I'm wondering what's the point
->> in doing this? These statistics are going to be completely useless for
->> most people and they'll waste some memory/cpu cycles, especially on
->> small-cache devices. I think it's much more useful to simply pass the
->> information to mac80211 via rx flags and get them added to the radiotap
->> header.
->
-> Sure.
->
+On Mon, 08 Apr 2013 17:31:44 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-I see Wojciech Dubowik sanded some patches, for at least one year, to 
-make exactly what Felix suggested. Are there any reason why this patches 
-was not accepted?
-Wojciech if you alive and have some time, can you update them?
--- 
-Regards,
-Oleksij
+> David,
+> 
+> That whole driver is quite broken.
+> 
+> My initial response would be to delete the whole procfs structure. I
+> have one of those devices, but I never use it. At the moment, I do
+> not have time to add locking and test the changes.
+
+The driver isn't optimal, but I use it daily in one laptop. So it does
+work, it just has a few quirks :D
+
+Is the procfs structure only used for debugging? Unless it is used by
+user mode tools, I have never used it. I may try quickly commenting it
+out and see if things still work.
+
+Cheers,
+   Sean
