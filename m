@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755758Ab3DILRA (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:34098 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935803Ab3DHT5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 07:17:00 -0400
-Message-ID: <1365506215.8465.41.camel@jlt4.sipsolutions.net> (sfid-20130409_131705_977206_E78DF9FC)
-Subject: Re: [PATCH] mac80211: always pick a basic rate to tx RTS/CTS for
- pre-HT rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Tue, 09 Apr 2013 13:16:55 +0200
-In-Reply-To: <20130409111028.GB27875@magnum.frso.rivierawaves.com> (sfid-20130409_131418_369760_89FEFF28)
-References: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com>
-	 <1365503356.8465.37.camel@jlt4.sipsolutions.net>
-	 <20130409105535.GA27875@magnum.frso.rivierawaves.com>
-	 <1365505512.8465.40.camel@jlt4.sipsolutions.net>
-	 <20130409111028.GB27875@magnum.frso.rivierawaves.com>
-	 (sfid-20130409_131418_369760_89FEFF28)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 8 Apr 2013 15:57:35 -0400
+Received: by mail-bk0-f44.google.com with SMTP id jk13so3255298bkc.17
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 12:57:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365449914.25475.20.camel@jlt4.sipsolutions.net>
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+ <1365444377-9959-3-git-send-email-thomas@cozybit.com> <1365446248.25475.17.camel@jlt4.sipsolutions.net>
+ <CAG6hwVOBqfP_Mw-pirzEOFytck-7H6_LNiTtO_90gXskbEuNTg@mail.gmail.com> <1365449914.25475.20.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 8 Apr 2013 12:57:14 -0700
+Message-ID: <CAG6hwVOAwtngWU3uEueG7hZX3z5dxLLc8c8-Vd7Q+e93wM-UaQ@mail.gmail.com> (sfid-20130408_215744_691890_C570AD6D)
+Subject: Re: [PATCH 3/6] mac80211: ieee80211_queue_stopped returns reasons
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-09 at 13:10 +0200, Karl Beldan wrote:
+On Mon, Apr 8, 2013 at 12:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-04-08 at 12:30 -0700, Thomas Pedersen wrote:
+>
+>> OK those functions are exported to the drivers. The 'enum
+>> queue_stop_reason' is defined in ieee80211_i.h, so the driver wouldn't
+>> be able to interpret them anyway?
+>
+> Oh, you're way underestimating the creativity of driver authors :-)
+>
+>> Would you prefer a utility function internal to mac80211 which does
+>> return the reason,
+>
+> That seems fine, although a bit more inefficient?
+>
+>> or just the following pattern?
+>>
+>> if (ieee80211_queue_stopped(hw, queue)) {
+>>     qreason = hw_to_local(hw)->queue_stop_reasons[queue];
+>>     if (qreason & ~(ALLOWED_QUEUE_STOP_REASONS))
+>>         something;
+>> }
+>
+> That seems racy? Even asking whether it's stopped is racy though, what
+> are you even trying to accomplish?
 
-> > Oh, oops, confused. But then you look at 9.7.6.2 "Rate selection for
-> > control frames that initiate a TXOP", which just mandates that you use
-> > any rate that the receiver supports, so why bother doing basic rates
-> > etc. at all?
-> > 
-> 
-> This chapter precisely, however it reads:
-> {
-> "If a control frame other than a Basic BlockAckReq or Basic BlockAck is
-> carried in a non-HT PPDU, the transmitting STA shall transmit the frame
-> using one of the rates in the BSSBasicRateSet parameter or a rate from
-> the mandatory rate set of the attached PHY if the BSSBasicRateSet is
-> empty."
-> }
+Yeah, that's why I'd like to get the reason the first time.
 
-Oh, right. I'll review the patch again I guess :-)
+_h_mesh_fwding() checks whether the outgoing queue is stopped, to
+avoid piling frames on the pending queue if the outgoing medium is
+busy. I guess the idea was to avoid queueing frames faster than the
+hardware could unload them. Maybe this doesn't actually happen, but we
+can be a little bit smarter about when to drop forwarded frames. Like
+if skbs are just being added to the outgoing queue, we probably
+shouldn't.
 
-johannes
+This patch and the next one show a small improvement in throughput and
+loss % in the forwarding path.
 
+-- 
+Thomas
