@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49951 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757274Ab3DWQmg (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:58109 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763340Ab3DHVi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 12:42:36 -0400
-Message-ID: <1366735340.8385.20.camel@jlt4.sipsolutions.net> (sfid-20130423_184250_298456_36DFEC36)
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Apr 2013 18:42:20 +0200
-In-Reply-To: <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
-	 <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 8 Apr 2013 17:38:28 -0400
+Received: by mail-ea0-f177.google.com with SMTP id q14so2500399eaj.22
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 14:38:26 -0700 (PDT)
+Message-ID: <516338CF.8010102@gmail.com> (sfid-20130408_233831_646896_75F431D0)
+Date: Mon, 08 Apr 2013 23:38:23 +0200
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>
+Subject: Google Summer of Code 2013 - The Linux Foundation is accepted!
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-23 at 07:50 -0700, Marcel Holtmann wrote:
+Hi,
 
-> > +config CFG80211_ANDROID_P2P_HACK
-> > +	bool "Android P2P netdevice hack"
-> > +	depends on CFG80211
-> > +	depends on !CFG80211_WEXT
-> > +	help
-> > +	  Enable this option for Android P2P w/ P2P Device.
-> > +
-> 
-> do you really think this is a good idea? Wouldn't it be better if
-> Android just gets its userspace fixed. This way, they never will and
-> you carry this workaround forever.
+the Linux Foundation is accepted as a mentoring organization for the
+Google Summer of Code 2013!
 
-Well, I'm about 50/50 on whether to merge this. On the one hand, it's a
-very simple patch to carry out of tree, on the other hand more than one
-person will need it.
+Please spread the news so that we get a lot of good students.
 
-> Has anybody actually looked into what it would take to just fix
-> Android userspace to use nl80211 to bring up P2P. I just see tons of
-> #ifdef added to the kernel.
+Our Google Summer of Code 2013 page is here:
 
-Yes, I did :-)
+https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2013
 
-However, for any system running Jelly Bean that's not really an option,
-and I have no idea if/how K-whatever is coming, so it might not be
-possible there either. Additionally, fairly large changes are needed in
-wpa_supplicant to actually support the P2P-Device with only nl82011
-APIs.
+Please also apply as a mentor, so that you get correctly registered for
+everything, subscribed to the mentor's mailing list at Google, your
+student's applications getting accepted, ...
 
-This gives us a transition path while making changes to the other parts
-of the stack.
+   Till
 
-> > +			if (!dev
-> > +#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-> > +			    || (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
-> > +				info->genlhdr->cmd != NL80211_CMD_SET_INTERFACE)
-> > +#endif
-> > +			) {
-> > 				mutex_unlock(&cfg80211_mutex);
-> > 				if (rtnl)
-> > 					rtnl_unlock();
-> 
-> And doing an #ifdef in the middle of if-clause doesn't ring any alarm
-> bells that this might be a really bad idea ;)
-
-Well, I could put an #ifdef into each and every command instead which I
-didn't want to, which incidentally is the reason for not allowing this
-with WEXT, WEXT ioctls on the P2P-Device netdev just cause crashes :)
-
-Basically this way also reduces the surface of this patch to make it
-easier to use out of tree.
-
-> When I am looking at the USB gadget handling, I see a lot of progress
-> in establishing a standard kernel interface and changing Android
-> userspace to work with that instead.
-
-"progress" doesn't really help, at least in this case it's pretty much
-an either-or situation and changing the userspace will take a long time.
-
-johannes
 
