@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46714 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab3DAWhx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754067Ab3DHJNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 18:37:53 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath: Let user know which keycache method is complaining.
-Date: Mon,  1 Apr 2013 15:37:29 -0700
-Message-Id: <1364855849-30825-1-git-send-email-greearb@candelatech.com> (sfid-20130402_004617_066834_421CDDE6)
+	Mon, 8 Apr 2013 05:13:01 -0400
+Message-ID: <1365412374.25475.2.camel@jlt4.sipsolutions.net> (sfid-20130408_111325_581427_01D2BCAA)
+Subject: Re: [PATCH] mac80211_hwsim: Register and bind to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Martin Pitt <martin.pitt@ubuntu.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Date: Mon, 08 Apr 2013 11:12:54 +0200
+In-Reply-To: <20130408090633.GB2818@piware.de>
+References: <20130408090633.GB2818@piware.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Looks fine, but ...
 
-Should make the warning messages more useful.
+> @@ -2179,6 +2183,8 @@ static int __init init_mac80211_hwsim(void)
+>  	if (IS_ERR(hwsim_class))
+>  		return PTR_ERR(hwsim_class);
+>  
+> +	driver_register(&mac80211_hwsim_driver);
+> +
+>  	memset(addr, 0, ETH_ALEN);
+>  	addr[0] = 0x02;
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/key.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+I think you forgot to update the error path to unregister the driver.
 
-diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-index 5c54aa4..1816b4e 100644
---- a/drivers/net/wireless/ath/key.c
-+++ b/drivers/net/wireless/ath/key.c
-@@ -45,7 +45,8 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry)
- 	void *ah = common->ah;
- 
- 	if (entry >= common->keymax) {
--		ath_err(common, "keycache entry %u out of range\n", entry);
-+		ath_err(common, "keyreset: keycache entry %u out of range\n",
-+			entry);
- 		return false;
- 	}
- 
-@@ -91,7 +92,8 @@ static bool ath_hw_keysetmac(struct ath_common *common,
- 	void *ah = common->ah;
- 
- 	if (entry >= common->keymax) {
--		ath_err(common, "keycache entry %u out of range\n", entry);
-+		ath_err(common, "keysetmac: keycache entry %u out of range\n",
-+			entry);
- 		return false;
- 	}
- 
-@@ -133,7 +135,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 	u32 keyType;
- 
- 	if (entry >= common->keymax) {
--		ath_err(common, "keycache entry %u out of range\n", entry);
-+		ath_err(common, "set-entry: keycache entry %u out of range\n",
-+			entry);
- 		return false;
- 	}
- 
--- 
-1.7.3.4
+johannes
 
