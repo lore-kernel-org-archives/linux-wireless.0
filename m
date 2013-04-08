@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxout1.rambler.ru ([81.19.67.58]:2845 "EHLO mxout1.rambler.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932124Ab3DOIXq convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52183 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934555Ab3DHJE4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 04:23:46 -0400
-From: "Alex Mihaylov" <minimumlaw@rambler.ru>
-To: "Gertjan van Wingerde" <gwingerde@gmail.com>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org
-Reply-To: "Alex Mihaylov" <minimumlaw@rambler.ru>
-Subject: RE: Re: [PATCH v2] rt2x00: Fix transmit power troubles on some Ralink RT30xx cards
-Date: Mon, 15 Apr 2013 12:18:32 +0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-In-Reply-To: <CAL1gcdP90HGCPxw_L6mph3D5GoJevg_oJyuBUW9Uxg6N8AfxvA@mail.gmail.com>
-Message-Id: <1366013912.676272.13358.5267@saddam4.rambler.ru> (sfid-20130415_102350_662557_9BA3B0F9)
-References: <CAL1gcdP90HGCPxw_L6mph3D5GoJevg_oJyuBUW9Uxg6N8AfxvA@mail.gmail.com>
+	Mon, 8 Apr 2013 05:04:56 -0400
+Message-ID: <1365411891.25475.0.camel@jlt4.sipsolutions.net> (sfid-20130408_110503_073715_9D5445FA)
+Subject: Re: [PATCH] mac80211: disable uAPSD if all ACs are under ACM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Date: Mon, 08 Apr 2013 11:04:51 +0200
+In-Reply-To: <1365167071-2450-1-git-send-email-johannes@sipsolutions.net> (sfid-20130405_150446_432380_9604795F)
+References: <1365167071-2450-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130405_150446_432380_9604795F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2013-04-05 at 15:04 +0200, Johannes Berg wrote:
+> From: Alexander Bondar <alexander.bondar@intel.com>
+> 
+> It's unlikely that an AP requires WMM mandatory admission control
+> for all access categories, and if it does then we still transmit
+> on the background AC without requesting admission. However, avoid
+> using uAPSD in this case since the implementation could run into
+> issues and might use other ACs etc.
 
-Good day!
-> > From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
-> > Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
-> > value in them EEPROM/EFUSE. In this case, we must use default value,
-> > but always used EEPROM/EFUSE value. As result we have tranmitt power
-> > range from -10dBm to +6dBm instead 0dBm to +16dBm.
+Applied.
 
-> > Signed-off-by: Alex A. Mihaylov <minimumlaw@rambler.ru>
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
- 
-> Could you explain how you have come to this patch?
-> Is this behavior of the Ralink provided driver that you replicated
-> here, or have you come to this approach in an other way?
+johannes
 
-Yes, vendor driver have this code in chips/rt3070.c (function NICInitRT3070RFRegisters) and chips/rt30xx.c (function RT30xxLoadRFNormalModeSetup) files.
-Look like this:
-[skipped]
-if (pAd->TxMixerGain24G >= 2)
-{
-      RFValue &= (~0x7);  /* clean bit [2:0]*/
-      RFValue |= pAd->TxMixerGain24G;
-}
-RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
-[skipped]
-and have differents only in constants (2 in rt30xx.c and one in tr3070.c). TxPower i messaurment on power detector, connected directly to module.
