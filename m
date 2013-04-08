@@ -1,82 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55947 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758442Ab3DIJ6C (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:52720 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935213Ab3DHRFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 05:58:02 -0400
-Message-ID: <1365501478.8465.17.camel@jlt4.sipsolutions.net> (sfid-20130409_115808_969808_46938599)
-Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX
- performance.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 09 Apr 2013 11:57:58 +0200
-In-Reply-To: <1365007698-25295-1-git-send-email-greearb@candelatech.com> (sfid-20130403_184908_772897_29241D1E)
-References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130403_184908_772897_29241D1E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 8 Apr 2013 13:05:25 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: zefir.kurtisi@neratec.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv3] mac80211: fix recalc_radar hwconf sync problem
+Date: Mon,  8 Apr 2013 19:04:58 +0200
+Message-Id: <1365440698-16678-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130408_190530_465494_8028165D)
+In-Reply-To: <1365431343.25475.15.camel@jlt4.sipsolutions.net>
+References: <1365431343.25475.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-03 at 09:48 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> When one has multiple station VIFS all connected to the same
-> AP, the rx logic becomes a linear walk of all stations.  To
-> improve performance in this case, hash the station VIFs on
-> the VIF MAC.  This significantly improves performance:  70Mbps
-> without the patch, 190Mbps with patch, when using 50 stations
-> receiving TCP traffic.
-> 
-> Probably not many people doing this, so not worth pushing upstream
-> at this time.
+local->hw.conf maybe not be synced when recalcing whether radar is
+enabled, sometimes leaving radar enabled even if it's not neccesary
+anymore.
 
-I tend to agree.
+Fix this by:
+ * setting radar_enabled when creating the chanctx
+ * turning radar_enabled off before destroying the last channel context
 
-> +++ b/net/mac80211/sta_info.c
-> @@ -77,19 +77,42 @@ static int sta_info_hash_del(struct ieee80211_local *local,
->  	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
->  				      lockdep_is_held(&local->sta_mtx));
->  	if (!s)
-> -		return -ENOENT;
-> +		goto try_lhash;
+Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+Changes to PATCHv2:
+ * add comment about single context, and check for it
+ * rebase on mac80211-next
+---
+ net/mac80211/chan.c |   43 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 33 insertions(+), 10 deletions(-)
 
-Does this make sense? If the station doesn't exist in the regular hash,
-it really shouldn't be in the vif hash either, no?
-
->  	if (rcu_access_pointer(s->hnext)) {
->  		rcu_assign_pointer(s->hnext, sta->hnext);
-> +		goto try_lhash;
-> +	}
-> +
-> +	/* Remove from the local VIF addr hash */
-> +try_lhash:
-
-That last goto there seems a bit pointless :)
-
-> +	s = rcu_dereference_protected(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
-> +				      lockdep_is_held(&local->sta_mtx));
-> +	if (!s)
-> +		return -ENONET;
-
-You probably want -ENOENT, not -ENONET.
-
-> +struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
-> +				     const u8 *vif_addr, const u8 * sta_addr) {
-> +	struct sta_info *sta;
-> +
-> +	sta = rcu_dereference_check(local->sta_vhash[STA_HASH(vif_addr)],
-> +				    lockdep_is_held(&local->sta_mtx));
-> +	while (sta) {
-> +		if (ether_addr_equal(sta->sdata->vif.addr, vif_addr) &&
-> +		    ether_addr_equal(sta->sta.addr, sta_addr))
-> +			break;
-> +		sta = rcu_dereference_check(sta->vnext,
-> +					    lockdep_is_held(&local->sta_mtx));
-
-Almost all of your rcu_dereference_check() invocations should be
-rcu_dereference_protected(). See include/linux/rcupdate.h :)
-
-johannes
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 8024874..23cb270 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -57,6 +57,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	return NULL;
+ }
+ 
++static bool ieee80211_is_radar_required(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (sdata->radar_required) {
++			rcu_read_unlock();
++			return true;
++		}
++	}
++	rcu_read_unlock();
++
++	return false;
++}
++
+ static struct ieee80211_chanctx *
+ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		      const struct cfg80211_chan_def *chandef,
+@@ -75,6 +91,9 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+ 	ctx->mode = mode;
++	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
++	if (!local->use_chanctx)
++		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
+ 
+ 	if (!local->use_chanctx) {
+ 		local->_oper_chandef = *chandef;
+@@ -99,6 +118,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 				   struct ieee80211_chanctx *ctx)
+ {
++	bool check_single_channel = false;
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+ 	WARN_ON_ONCE(ctx->refcount != 0);
+@@ -108,6 +128,13 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 		chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
+ 		chandef->center_freq1 = chandef->chan->center_freq;
+ 		chandef->center_freq2 = 0;
++
++		/* NOTE: Disabling radar he is only valid here for
++		 * single channel context. To be sure, check it ... */
++		if (local->hw.conf.radar_enabled)
++			check_single_channel = true;
++		local->hw.conf.radar_enabled = false;
++
+ 		ieee80211_hw_config(local, 0);
+ 	} else {
+ 		drv_remove_chanctx(local, ctx);
+@@ -116,6 +143,10 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 	list_del_rcu(&ctx->list);
+ 	kfree_rcu(ctx, rcu_head);
+ 
++	/* throw a warning if this wasn't the only channel context. */
++	if (check_single_channel)
++		WARN_ON(!list_empty(&local->chanctx_list));
++
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+ 	mutex_unlock(&local->mtx);
+@@ -227,19 +258,11 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
+ 				    struct ieee80211_chanctx *chanctx)
+ {
+-	struct ieee80211_sub_if_data *sdata;
+-	bool radar_enabled = false;
++	bool radar_enabled;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (sdata->radar_required) {
+-			radar_enabled = true;
+-			break;
+-		}
+-	}
+-	rcu_read_unlock();
++	radar_enabled = ieee80211_is_radar_required(local);
+ 
+ 	if (radar_enabled == chanctx->conf.radar_enabled)
+ 		return;
+-- 
+1.7.10.4
 
