@@ -1,82 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:48712 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476Ab3D0TGW (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:51578 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935135Ab3DHTAN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 15:06:22 -0400
-Received: by mail-wg0-f41.google.com with SMTP id e11so1077167wgh.2
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 12:06:20 -0700 (PDT)
+	Mon, 8 Apr 2013 15:00:13 -0400
 MIME-Version: 1.0
-In-Reply-To: <517C1EC1.8060808@rempel-privat.de>
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de>
-	<1367087995-8960-1-git-send-email-linux@rempel-privat.de>
-	<CAJ-VmonF9XaVZ6MkP-T3cdfGNjXaroM-rXYcA=TUndicp77UnQ@mail.gmail.com>
-	<517C1EC1.8060808@rempel-privat.de>
-Date: Sat, 27 Apr 2013 12:06:20 -0700
-Message-ID: <CAJ-VmokUFtFjQk0T87E57kEhp40f1v4XgJL-iN35Bzo4h-McDQ@mail.gmail.com> (sfid-20130427_210629_745002_8A7BEB2B)
-Subject: Re: [PATCH v2] ath9k: collect statistics about Rx-Dup and Rx-STBC packets
+In-Reply-To: <201304081733.15727.chunkeey@googlemail.com>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com>
+	<CAFSJ42Zd3s8xKwt4X3LNcupCTntDULxNntMuD-_Xh6_csiGA4A@mail.gmail.com>
+	<201304081733.15727.chunkeey@googlemail.com>
+Date: Mon, 8 Apr 2013 12:00:12 -0700
+Message-ID: <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com> (sfid-20130408_210041_884304_3D6D338F)
+Subject: Re: Version number policy!
 From: Adrian Chadd <adrian@freebsd.org>
-To: Oleksij Rempel <linux@rempel-privat.de>,
-	Felix Fietkau <nbd@nbd.name>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 April 2013 11:53, Oleksij Rempel <linux@rempel-privat.de> wrote:
-
->> (And then go and re-align things inside that struct so you don't waste
->> space.)
+On 8 April 2013 08:33, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> On Monday, April 08, 2013 11:10:30 AM Eugene Krasnikov wrote:
+>> It’s a good idea to pack bitmap into the tail/header of the firmware
+>> binary to get capabilities even before fw loading. The plan is to add
+>> 8 bytes for caps and also add time stamp. Let me play around with that
+>> and provide fw and driver patch for review.
 >
->
-> hmm.. what do you mean here?
+> Hm, come to think of it. Kalle, do you think ath9k_htc could use
+> some bits of the fw header format, parser or the complete infrastructure
+> from ath6kl? This could be great for Adrian, because he could
+> just point people to it and they could moved it into the code
+> into /drivers/net/wireless/ath/fw.c.
 
-Structure alignment? Well, you typically want to have everything be
-dword aligned (32 bits) or word (16 bits) aligned. Otherwise the
-compiler may insert extra padding between fields in order to meet
-alignment requirements on platforms that need it (MIPS, older ARM) or
-platforms that perform slower (newer ARM.)
+Just remember that we (ath9k_htc and carl9170) aren't constrained by
+the same kinds of issues that closed firmware is. So version checks
+aren't that bad, because that way over time we don't end up needing to
+maintain lots of special cases for firmware options.
 
-Eg:
+I still like the idea of firmware options for build time options that
+people may wish to use - eg, say we want to support a version of
+ath9k-htc firmware that does offloaded TX rate control, versus not.
+But, maintaining multiple builds of the same firmware is IMHO going to
+be a path towards madness to maintain.
 
-u32 a;
-u16 b;
-u8 c;
-u8 d;
-
-.. that's fine - the u32 is dword aligned, the u16 is word aligned,
-the u8's don't need aligning.
-
-But, considder:
-
-u32 a;
-u8 b;
-u16 c;
-u8 d;
-
-.. u32 is dword aligned, u8 b is fine as it's a a byte and doesn't
-need aligning, but 'u16 c' isn't dword aligned! So the compiler will
-insert a byte padding between 'b' and 'c'.
-
-same deal with:
-
-u32 a;
-u16 b;
-u32 c;
-
-.. 'a' is fine; 'b' is fine, but 'c' starts at a word boundary, not a
-dword boundary.
-
-Hence why things like IP/TCP headers and such look the way they do. :-)
-
-Now, i don't know what 'bool' is, whether it's a byte, word or dword.
-That "is_mybeacon" field should probably be just another flag in
-rx_status, then just extend 'rs_flags' to 16 bits and include it. That
-way the alignment is easy to see - all the fields in rx_status and the
-htc rx_status structs have explicit sizes. :-)
-
-Felix, what do you think?
-
+The maintainability is why I'm hoping (!) to keep the number of
+options low and just do "clean slate" moves whenever we shift to the
+next major firmware version.
 
 
 Adrian
