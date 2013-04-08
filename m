@@ -1,76 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64897 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161852Ab3DEOqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 10:46:33 -0400
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] mac80211: provide SSID for IBSS vif
-Date: Fri, 5 Apr 2013 16:46:21 +0200
-Message-ID: <1365173181-5142-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20130405_164638_122551_9E474C01)
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:44423 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754481Ab3DHI6p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 04:58:45 -0400
+Received: by mail-wg0-f45.google.com with SMTP id x12so5433336wgg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 01:58:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
+	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
+	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
+	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmomAYEXiDxC=RinVU-Ze85iESomT4Z+iOEErWkmc9Tw4SA@mail.gmail.com>
+	<1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+Date: Mon, 8 Apr 2013 01:58:43 -0700
+Message-ID: <CAJ-VmomXWAE7H1AsCJWYkNLQqvtub=yZzeK=6N=8AXaN=JExdQ@mail.gmail.com> (sfid-20130408_105849_349103_690D2911)
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers need SSID in AP and IBSS mode. AP SSID is provided
-through BSS_CHANGED_SSID notification. There was no easy way
-to do the same for IBSS. In IBSS mode SSID is known but was
-not stored in BSS configuration. This patch provides functionality
-which stores IBSS ssid in BSS conf and expands BSS_CHANGED_SSID
-notification to cover also IBSS mode.
+hi,
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- include/net/mac80211.h |    4 ++--
- net/mac80211/ibss.c    |    3 +++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+I'd first double-check that you've correctly configured the btactive
+GPIO pin to be an input and the mux config makes it be BT_ACTIVE.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dd73b8c..68330f3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -209,7 +209,7 @@ struct ieee80211_chanctx_conf {
-  * @BSS_CHANGED_QOS: QoS for this association was enabled/disabled. Note
-  *	that it is only ever disabled for station mode.
-  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
-- * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
-+ * @BSS_CHANGED_SSID: SSID changed for this BSS (AP and IBSS mode)
-  * @BSS_CHANGED_AP_PROBE_RESP: Probe Response changed for this BSS (AP mode)
-  * @BSS_CHANGED_PS: PS changed for this BSS (STA mode)
-  * @BSS_CHANGED_TXPOWER: TX power setting changed for this interface
-@@ -326,7 +326,7 @@ enum ieee80211_rssi_event {
-  *	your driver/device needs to do.
-  * @ps: power-save mode (STA only). This flag is NOT affected by
-  *	offchannel/dynamic_ps operations.
-- * @ssid: The SSID of the current vif. Only valid in AP-mode.
-+ * @ssid: The SSID of the current vif. Valid in AP and IBSS mode.
-  * @ssid_len: Length of SSID given in @ssid.
-  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
-  * @txpower: TX power in dBm
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 539d4a1..dd86ef7 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -194,6 +194,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.bss_conf.enable_beacon = true;
- 	sdata->vif.bss_conf.beacon_int = beacon_int;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
-+	sdata->vif.bss_conf.ssid_len = ifibss->ssid_len;
-+	memcpy(sdata->vif.bss_conf.ssid, ifibss->ssid, ifibss->ssid_len);
- 	bss_change = BSS_CHANGED_BEACON_INT;
- 	bss_change |= ieee80211_reset_erp_info(sdata);
- 	bss_change |= BSS_CHANGED_BSSID;
-@@ -202,6 +204,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	bss_change |= BSS_CHANGED_BASIC_RATES;
- 	bss_change |= BSS_CHANGED_HT;
- 	bss_change |= BSS_CHANGED_IBSS;
-+	bss_change |= BSS_CHANGED_SSID;
- 
- 	/*
- 	 * In 5 GHz/802.11a, we can always use short slot time.
--- 
-1.7.0.4
+I can't really help you more than this right now; I haven't sat down
+and actually tried this. :-(
 
+But it doesn't look like much else needs to happen besides configuring
+the GPIOs right, enabling BTCOEX and setting the weights.
+
+Thanks,
+
+
+Adrian
+
+On 7 April 2013 22:20, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+> Hello Mr.Adrian & Mr.Sujith,
+>     Started doing some experiments with different settings but there wasn't
+> any good progress. Need your help further in analysis & recommendation,
+> please. I monitor WLAN_ACTIVE (GPIO5) and BT_ACTIVE (GPIO6) on the
+> oscilloscope. There were always a lot of pulse trains on WLAN_ACTIVE. On
+> BT_ACTIVE, I initially pulled it high and also tested with a periodic pulse
+> train (450ms On and 450ms Off). The following were the different settings
+> with which I tested; the difference across each test case is marked in
+> underline/bold:
+>
+> 1. In ath9k_hw_btcoex_enable_2wire(), I added the following code:
+>     ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT, AR_STOMP_LOW_WLAN_WGHT);
+>     REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_hw->bt_coex_weights);
+>     Result: WLAN_ACTIVE pulse trains observed during BT_ACTIVE high.
+>
+> 2. In ath9k_hw_btcoex_enable_2wire(), I added the following code:
+>     ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT, AR_STOMP_ALL_WLAN_WGHT);
+>     REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_hw->bt_coex_weights);
+>     Result: WLAN_ACTIVE pulse trains observed during BT_ACTIVE high.
+>
+> 3. In ath9k_hw_btcoex_enable_2wire(), I added the following code:
+>     ath9k_hw_btcoex_set_weight(ah, 0xFFFF, 0x0000);
+>     REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_hw->bt_coex_weights);
+>     Result: WLAN_ACTIVE pulse trains observed during BT_ACTIVE high.
+>
+> In the next test cases, I realized that there are two registers
+> (AR_BT_COEX_MODE, AR_BT_COEX_MODE2) for setting the coexistence mode. The
+> following is the code and the test results:
+>
+> 4. In ath9k_hw_btcoex_enable_2wire(), I added the following code:
+>     REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_hw->bt_coex_mode);
+>     REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_hw->bt_coex_mode);
+>     ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT, AR_STOMP_LOW_WLAN_WGHT);
+>     REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_hw->bt_coex_weights);
+>     Result: WLAN_ACTIVE pulse trains observed during BT_ACTIVE high.
+>
+>
+>     Result: WLAN_ACTIVE pulse trains observed during BT_ACTIVE high.
+>
+> 5.    Next I changed different enum for BT coex modes i.e ath_bt_mode.
+> Changed from ATH_BT_COEX_MODE_SLOTTED, ATH_BT_COEX_MODE_UNSLOTTED and
+> ATH_BT_COEX_MODE_LEGACY. I used again the above settings. But there still
+> there were pulse trains observed.
+>
+> Please help to further solve these problems, please.
+> Regards
+> Sandeep Suresh.
+> From: Adrian Chadd <adrian@freebsd.org>
+> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+> Cc: Sujith Manoharan <sujith@msujith.org>; ath9k-devel
+> <ath9k-devel@lists.ath9k.org>; "linux-wireless@vger.kernel.org"
+> <linux-wireless@vger.kernel.org>
+> Sent: Sunday, 7 April 2013 11:16 PM
+>
+> Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+>
+> On 7 April 2013 07:54, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+>> Hello Mr.Adrian and Mr.Sujith,
+>>    Thanks for your responses. In order to ensure that all of us are on the
+>> same page and referring to the same code base, some queries:
+>>
+>> 1. Please let me know you are referring to freebsd.org or
+>> linuxwireless.org
+>> drivers? Because you are referring to Kite & Kiwi which are in FreeBSD.
+>>    FreeBSD --> http://svn.freebsd.org/base/head/sys/
+>>    Ath9k --> http://linuxwireless.org/en/users/Drivers/ath9k
+>>    Because currently I am using ath9k drivers only from linuxwireless.org.
+>
+> Kite = AR9285
+> Kiwi = AR9287
+>
+> I know ath9k enough to be (somewhat) helpful and dangerous. But I'm
+> the FreeBSD guy here; I know the HAL and FreeBSD code much better.
+>
+> The FreeBSD code is closer to what our reference driver does / did
+> than Linux, at least for the legacy chipset support.
+>
+>> 2. Which version of ath9k driver is stable & complete from 2-wire/3-wire
+>> coexistence? The reason for this query is that I downloaded
+>> compat-wireless-3.6.8-1 which contains the function ath9k_start_btcoex()
+>> in
+>> which the Weight register is initialized. But this function is not
+>> available
+>> in some of the stable versions of ath9k which I am using.
+>
+> Not unsurprising. ath9k's btcoex code is (relatively) recent. it
+> sounds like you've been using an older kernel.
+>
+>> 3. What exactly are Kite and Kiwi? Are these third party modules using
+>> AR9287 Atheros chipsets? I did not see this in linuxwireless.org but only
+>> in
+>> FreeBSD.
+>
+> They're chip names. AR9285 = Kite, AR9287 = Kiwi.
+>
+>> 4. Just wanted to confirm if the address of the weight register that you
+>> are
+>> mentioning below for 2-wire coexistence is : AR_BT_COEX_WEIGHT (0x8174)
+>
+> Yup. That's what it is for AR5146 -> AR9287. AR9380 changed this.
+>
+>> 5. Just wanted to cross check if the weight register mentioned is for
+>> 2-wire
+>> coexistence? The reason for this doubt is I see bt_freq, bt_prio bits
+>>    in BT weight register and these bits are relevant to BT_FREQUENCY and
+>> BT_PRIORITY lines which are relevant for 3-wire coexistence?
+>
+> The weight register is still used. I just don't quite know what the
+> table mapping is.
+>
+> But specifically, as you're effectively trying to implement "bluetooth
+> stomps everything", what you really want is a table where bt wins each
+> round, except perhaps for beacon interval (so you send out beacons
+> reliably.) There should already be static stomp register values for
+> "BT wins all" and "Wifi wins all." That's all you should need to write
+> into that register.
+>
+>
+>
+>
+> Adrian
+>
+>
