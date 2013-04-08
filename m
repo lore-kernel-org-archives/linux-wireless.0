@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:46152 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759595Ab3DHWYt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 18:24:49 -0400
-Received: by mail-oa0-f44.google.com with SMTP id h1so6804379oag.17
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 15:24:49 -0700 (PDT)
-Message-ID: <516343AE.6020503@lwfinger.net> (sfid-20130409_002452_993759_1EA3CF5D)
-Date: Mon, 08 Apr 2013 17:24:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:56588 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762937Ab3DHSUp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 14:20:45 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Mon, 8 Apr 2013 11:19:12 -0700
+Subject: RE: [PATCH 1/6] mwifiex: bug: remove NO_PKT_PRIO_TID.
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DE96073@SC-VEXCH1.marvell.com> (sfid-20130408_202102_483985_8549ADA1)
+References: <20130402000511.GA31921@blumentopf>
+ <1364861325-30844-1-git-send-email-andreas.fenkart@streamunlimited.com>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB197@SC-VEXCH1.marvell.com>
+ <20130403113554.GA14785@blumentopf>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB35D@SC-VEXCH1.marvell.com>
+ <20130404205706.GA29851@blumentopf>
+ <477F20668A386D41ADCC57781B1F70430D9DDAB6EC@SC-VEXCH1.marvell.com>
+ <20130405082659.GA12495@blumentopf>
+In-Reply-To: <20130405082659.GA12495@blumentopf>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi: rtl8188ee: Add new driver
-References: <20130407093859.GA28809@longonot.mountain>
-In-Reply-To: <20130407093859.GA28809@longonot.mountain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/07/2013 04:39 AM, Dan Carpenter wrote:
-> Hi Larry,
->
-> I had a question about f0eb856e0b6c: "rtlwifi: rtl8188ee: Add new
-> driver" from Mar 24, 2013.
->
-> drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
->    1631          for (path = 0; path < MAX_RF_PATH; path++) {
->    1632                  /*2.4G default value*/
->    1633                  for (i = 0; i < MAX_CHNL_GROUP_24G; i++) {
->    1634                          pwr2g->index_cck_base[path][i] = hwinfo[eadr++];
->    1635                          if (pwr2g->index_cck_base[path][i] == 0xFF)
->    1636                                  pwr2g->index_cck_base[path][i] = 0x2D;
->    1637                  }
->    1638                  for (i = 0; i < MAX_CHNL_GROUP_24G-1; i++) {
->                                          ^^^^^^^^^^^^^^^^^^^^
-> We skip the last element of the array.  It's declared on the stack in
-> the caller function so it just has uninitialized stack data.  It doesn't
-> look intentional to me.
->
->    1639                          pwr2g->index_bw40_base[path][i] = hwinfo[eadr++];
->    1640                          if (pwr2g->index_bw40_base[path][i] == 0xFF)
->    1641                                  pwr2g->index_bw40_base[path][i] = 0x2D;
->    1642                  }
->
-> regards,
+Hi Andi,
 
-Dan,
+> If I run: checkpatch.pl -f drivers/net/wireless/mwifiex/wmm.c. I
+> get about 10-20 similar warnings. In general it seems mwifiex
+> sticks with type 1 multiline comments. And I wanted to stick with
+> the de-facto standard.
+> 
+> Should I still fix the warning?
 
-Thanks for noticing this difference. I agree that there is no reason for any 
-difference in the range os the two loops.
+Yes. Please fix the warning in these 2 patches.
+Also there are some other warnings:
 
-I will submit a patch.
+CHECK: Blank lines aren't necessary before a close brace '}'
+#154: FILE: drivers/net/wireless/mwifiex/wmm.c:935:
 
-Larry
+You have to use "--strict" option to spot these messages.
 
+> Should I prepare a separate patch on top fixing all multiline
+> comments?
+
+I think that will be too much in the entire driver code.
+Let's keep them for now.
+
+[...]
+
+> > Could you share what test cases you are running? I will try to cover the cases you have not done.
+> 
+> Duration test with high load, sender and receiver.
+> 
+> I have dualband router and two DUT. One DUT connects to
+> 2.4GHz-band the other to 5GHz-band. One is running iperf as
+> server the other iperf as a client in a while true loop.
+> 
+> Eventually I will switch over to set one DUT as uAP, but didn't
+> play with uAP yet.
+
+Thanks for the information.
+
+Regards,
+Bing
 
