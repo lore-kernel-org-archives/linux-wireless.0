@@ -1,230 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:56469 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759419Ab3DATsL (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51147 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757835Ab3DHLvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 15:48:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix negative cmd_pending count
-Date: Mon, 1 Apr 2013 12:44:46 -0700
-Message-ID: <1364845486-1074-2-git-send-email-bzhao@marvell.com> (sfid-20130401_214817_711370_87DB48E5)
-In-Reply-To: <1364845486-1074-1-git-send-email-bzhao@marvell.com>
-References: <1364845486-1074-1-git-send-email-bzhao@marvell.com>
+	Mon, 8 Apr 2013 07:51:19 -0400
+Date: Mon, 8 Apr 2013 13:51:11 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	linux-wireless@vger.kernel.org,
+	mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
+Message-ID: <20130408115111.GA15594@pandem0nium> (sfid-20130408_135123_691247_90D74DE6)
+References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1364993200.8351.35.camel@jlt4.sipsolutions.net>
+ <515D8259.1030208@neratec.com>
+ <20130404182219.GA24704@pandem0nium>
+ <1365160971.8515.23.camel@jlt4.sipsolutions.net>
+ <20130405121629.GB29188@pandem0nium>
+ <1365165364.8515.24.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
+In-Reply-To: <1365165364.8515.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cmd_pending is increased in mwifiex_wait_queue_complete() and
-decreased in mwifiex_complete_cmd() currently.
-If there are two or more commands in the cmd_pending_q the main
-worker thread will pick up next command from cmd_pending_q
-automatically after finishing current command. As a result
-mwifiex_wait_queue_complete() will not be called because
-the command is alreay completed. This leads to a negative
-number in cmd_pending count.
 
-Fix it by increasing cmd_pending when a cmd is queued into
-cmd_pending_q and decreasing when that cmd is recycled. For scan
-commands we don't perform inc/dec operations until it's moved
-from scan_pending_q to cmd_pending_q. This covers both
-synchronous and asynchronous commands.
+--LZvS9be/3tNcYl/X
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Marco Cesarano <marco@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cmdevt.c      |   35 ++++++++++++++++++++--------
- drivers/net/wireless/mwifiex/init.c        |    2 +-
- drivers/net/wireless/mwifiex/main.h        |    2 +
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c   |    3 --
- drivers/net/wireless/mwifiex/util.c        |    1 -
- 6 files changed, 29 insertions(+), 16 deletions(-)
+On Fri, Apr 05, 2013 at 02:36:04PM +0200, Johannes Berg wrote:
+> On Fri, 2013-04-05 at 14:16 +0200, Simon Wunderlich wrote:
+> > On Fri, Apr 05, 2013 at 01:22:51PM +0200, Johannes Berg wrote:
+> > > On Thu, 2013-04-04 at 20:22 +0200, Simon Wunderlich wrote:
+> > >=20
+> > > > As far as I see, the problem happens when changing from a DFS to a =
+non-DFS
+> > > > channel. local->hw.conf.radar_enabled is true from the last (DFS) c=
+hannel,
+> > > > but the channel gets released when stopping the AP, and the channel=
+ context
+> > > > is freed.=20
+> > >=20
+> > > At this point, why doesn't it disable hw.conf.radar_enabled? I really
+> > > think it should?
+> >=20
+> > As far as I see release_channel() -> unassign_vif_chanctx() -> ieee8021=
+1_recalc_radar_chanctx()
+> > is called while the interface with radar enabled is still present, and =
+therefore it is assumed
+> > that the radar enable is still required.
+> >=20
+> > We could reset local->hw.conf.radar_enabled ieee80211_free_chanctx() th=
+ough, but IMHO the cleaner
+> > way would be to properly initialize it when the the channel is used nex=
+t time through
+> > vif_use_channel().
+>=20
+> I disagree, it would leave the hardware in a weird state -- idle but
+> having to detect radars??
+>=20
+> johannes
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 9a1302b..da469c3 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -153,7 +153,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 			" or cmd size is 0, not sending\n");
- 		if (cmd_node->wait_q_enabled)
- 			adapter->cmd_wait_q.status = -1;
--		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+		mwifiex_recycle_cmd_node(adapter, cmd_node);
- 		return -1;
- 	}
- 
-@@ -167,7 +167,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 			"DNLD_CMD: FW in reset state, ignore cmd %#x\n",
- 			cmd_code);
- 		mwifiex_complete_cmd(adapter, cmd_node);
--		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+		mwifiex_recycle_cmd_node(adapter, cmd_node);
- 		return -1;
- 	}
- 
-@@ -228,7 +228,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 			adapter->cmd_sent = false;
- 		if (cmd_node->wait_q_enabled)
- 			adapter->cmd_wait_q.status = -1;
--		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->curr_cmd = NULL;
-@@ -632,6 +632,20 @@ mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
- 	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
- }
- 
-+/* This function reuses a command node. */
-+void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
-+			      struct cmd_ctrl_node *cmd_node)
-+{
-+	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
-+
-+	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+
-+	atomic_dec(&adapter->cmd_pending);
-+	dev_dbg(adapter->dev, "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
-+		le16_to_cpu(host_cmd->command),
-+		atomic_read(&adapter->cmd_pending));
-+}
-+
- /*
-  * This function queues a command to the command pending queue.
-  *
-@@ -673,7 +687,9 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
- 		list_add(&cmd_node->list, &adapter->cmd_pending_q);
- 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
- 
--	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x is queued\n", command);
-+	atomic_inc(&adapter->cmd_pending);
-+	dev_dbg(adapter->dev, "cmd: QUEUE_CMD: cmd=%#x, cmd_pending=%d\n",
-+		command, atomic_read(&adapter->cmd_pending));
- }
- 
- /*
-@@ -783,7 +799,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
- 		dev_err(adapter->dev, "CMD_RESP: %#x been canceled\n",
- 			le16_to_cpu(resp->command));
--		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->curr_cmd = NULL;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-@@ -833,7 +849,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 		if (adapter->curr_cmd->wait_q_enabled)
- 			adapter->cmd_wait_q.status = -1;
- 
--		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->curr_cmd = NULL;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
-@@ -865,8 +881,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 		if (adapter->curr_cmd->wait_q_enabled)
- 			adapter->cmd_wait_q.status = ret;
- 
--		/* Clean up and put current command back to cmd_free_q */
--		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->curr_cmd = NULL;
-@@ -993,7 +1008,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
- 			mwifiex_complete_cmd(adapter, cmd_node);
- 			cmd_node->wait_q_enabled = false;
- 		}
--		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+		mwifiex_recycle_cmd_node(adapter, cmd_node);
- 		spin_lock_irqsave(&adapter->cmd_pending_q_lock, flags);
- 	}
- 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
-@@ -1040,7 +1055,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- 		cmd_node = adapter->curr_cmd;
- 		cmd_node->wait_q_enabled = false;
- 		cmd_node->cmd_flag |= CMD_F_CANCELED;
--		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+		mwifiex_recycle_cmd_node(adapter, cmd_node);
- 		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
- 		adapter->curr_cmd = NULL;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index daf8801..003c014 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -713,7 +713,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 	if (adapter->curr_cmd) {
- 		dev_warn(adapter->dev, "curr_cmd is still in processing\n");
- 		del_timer(&adapter->cmd_timer);
--		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+		mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 		adapter->curr_cmd = NULL;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index cab8a85..fef89fd 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -798,6 +798,8 @@ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
- 
- void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
- 				  struct cmd_ctrl_node *cmd_node);
-+void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
-+			      struct cmd_ctrl_node *cmd_node);
- 
- void mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
- 				     struct cmd_ctrl_node *cmd_node,
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index c7dc450..9f990e1 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -95,7 +95,7 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
- 		break;
- 	}
- 	/* Handling errors here */
--	mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
-+	mwifiex_recycle_cmd_node(adapter, adapter->curr_cmd);
- 
- 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 	adapter->curr_cmd = NULL;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 8c943b6..e6c9b2a 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -59,9 +59,6 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
- {
- 	int status;
- 
--	dev_dbg(adapter->dev, "cmd pending\n");
--	atomic_inc(&adapter->cmd_pending);
--
- 	/* Wait for completion */
- 	status = wait_event_interruptible(adapter->cmd_wait_q.wait,
- 					  *(cmd_queued->condition));
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 54667e6..e57ac0d 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -239,7 +239,6 @@ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb)
- int mwifiex_complete_cmd(struct mwifiex_adapter *adapter,
- 			 struct cmd_ctrl_node *cmd_node)
- {
--	atomic_dec(&adapter->cmd_pending);
- 	dev_dbg(adapter->dev, "cmd completed: status=%d\n",
- 		adapter->cmd_wait_q.status);
- 
--- 
-1.7.0.2
+Well, you have a point ...
 
+I'll look into it, it should be doable that the radar flag is always set
+correctly. Please drop this patch for now.
+
+Cheers,
+	Simon
+
+--LZvS9be/3tNcYl/X
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAlFiry8ACgkQrzg/fFk7axbZDACfWXcB4fJuD96oPKZkiaofPFfR
+xU0An0IiHtmlSnyPEV6/1RbZIaFx8vAK
+=West
+-----END PGP SIGNATURE-----
+
+--LZvS9be/3tNcYl/X--
