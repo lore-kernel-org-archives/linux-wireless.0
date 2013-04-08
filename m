@@ -1,99 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53067 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965622Ab3DRLeU (ORCPT
+Received: from mail-ia0-f180.google.com ([209.85.210.180]:42164 "EHLO
+	mail-ia0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935969Ab3DHUhN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 07:34:20 -0400
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 4/4] wil6210: more Rx descriptor accessor functions
-Date: Thu, 18 Apr 2013 14:33:53 +0300
-Message-ID: <1366284834-540-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130418_133424_446169_72741A8E)
-In-Reply-To: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 8 Apr 2013 16:37:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com>
+	<CAFSJ42Zd3s8xKwt4X3LNcupCTntDULxNntMuD-_Xh6_csiGA4A@mail.gmail.com>
+	<201304081733.15727.chunkeey@googlemail.com>
+	<CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
+Date: Mon, 8 Apr 2013 22:37:08 +0200
+Message-ID: <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com> (sfid-20130408_223811_785639_340A3802)
+Subject: Re: Version number policy!
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helpers to fetch various fields from the Rx descriptor
+Christian,
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.h |   42 ++++++++++++++++++++++++++-----
- 1 file changed, 36 insertions(+), 6 deletions(-)
+Did you have such a situation when e.g. one feature has 2 incompatible
+implementations? Let’s say initial implementation of “offloaded TX
+rate control” feature was immature and community decides to change
+implementation drastically so final realization of this feature is
+incompatible with initial. How did carl9170 track such a situation in
+feature bitmap?
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
-index f0cc48a..adef12f 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.h
-+++ b/drivers/net/wireless/ath/wil6210/txrx.h
-@@ -339,19 +339,19 @@ union vring_desc {
- 	struct vring_rx_desc rx;
- } __packed;
- 
--static inline int wil_rxdesc_phy_length(struct vring_rx_desc *d)
-+static inline int wil_rxdesc_tid(struct vring_rx_desc *d)
- {
--	return WIL_GET_BITS(d->dma.d0, 16, 29);
-+	return WIL_GET_BITS(d->mac.d0, 0, 3);
- }
- 
--static inline int wil_rxdesc_mcs(struct vring_rx_desc *d)
-+static inline int wil_rxdesc_cid(struct vring_rx_desc *d)
- {
--	return WIL_GET_BITS(d->mac.d1, 21, 24);
-+	return WIL_GET_BITS(d->mac.d0, 4, 6);
- }
- 
--static inline int wil_rxdesc_ds_bits(struct vring_rx_desc *d)
-+static inline int wil_rxdesc_mid(struct vring_rx_desc *d)
- {
--	return WIL_GET_BITS(d->mac.d1, 8, 9);
-+	return WIL_GET_BITS(d->mac.d0, 8, 9);
- }
- 
- static inline int wil_rxdesc_ftype(struct vring_rx_desc *d)
-@@ -359,6 +359,36 @@ static inline int wil_rxdesc_ftype(struct vring_rx_desc *d)
- 	return WIL_GET_BITS(d->mac.d0, 10, 11);
- }
- 
-+static inline int wil_rxdesc_subtype(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->mac.d0, 12, 15);
-+}
-+
-+static inline int wil_rxdesc_seq(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->mac.d0, 16, 27);
-+}
-+
-+static inline int wil_rxdesc_ext_subtype(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->mac.d0, 28, 31);
-+}
-+
-+static inline int wil_rxdesc_ds_bits(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->mac.d1, 8, 9);
-+}
-+
-+static inline int wil_rxdesc_mcs(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->mac.d1, 21, 24);
-+}
-+
-+static inline int wil_rxdesc_phy_length(struct vring_rx_desc *d)
-+{
-+	return WIL_GET_BITS(d->dma.d0, 16, 29);
-+}
-+
- static inline struct vring_rx_desc *wil_skb_rxdesc(struct sk_buff *skb)
- {
- 	return (void *)skb->cb;
+2013/4/8 Adrian Chadd <adrian@freebsd.org>:
+> On 8 April 2013 08:33, Christian Lamparter <chunkeey@googlemail.com> wrote:
+>> On Monday, April 08, 2013 11:10:30 AM Eugene Krasnikov wrote:
+>>> It’s a good idea to pack bitmap into the tail/header of the firmware
+>>> binary to get capabilities even before fw loading. The plan is to add
+>>> 8 bytes for caps and also add time stamp. Let me play around with that
+>>> and provide fw and driver patch for review.
+>>
+>> Hm, come to think of it. Kalle, do you think ath9k_htc could use
+>> some bits of the fw header format, parser or the complete infrastructure
+>> from ath6kl? This could be great for Adrian, because he could
+>> just point people to it and they could moved it into the code
+>> into /drivers/net/wireless/ath/fw.c.
+>
+> Just remember that we (ath9k_htc and carl9170) aren't constrained by
+> the same kinds of issues that closed firmware is. So version checks
+> aren't that bad, because that way over time we don't end up needing to
+> maintain lots of special cases for firmware options.
+>
+> I still like the idea of firmware options for build time options that
+> people may wish to use - eg, say we want to support a version of
+> ath9k-htc firmware that does offloaded TX rate control, versus not.
+> But, maintaining multiple builds of the same firmware is IMHO going to
+> be a path towards madness to maintain.
+>
+> The maintainability is why I'm hoping (!) to keep the number of
+> options low and just do "clean slate" moves whenever we shift to the
+> next major firmware version.
+>
+>
+> Adrian
+
+
+
 -- 
-1.7.10.4
-
+Best regards,
+Eugene
