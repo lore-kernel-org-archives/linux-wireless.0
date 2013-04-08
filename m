@@ -1,335 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4581 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758095Ab3DDKK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 06:10:29 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for-3.9 1/2] brcmsmac: request firmware in .start()
- callback
-Date: Thu, 4 Apr 2013 12:10:10 +0200
-Message-ID: <1365070211-26308-2-git-send-email-arend@broadcom.com> (sfid-20130404_121034_778597_3777D903)
-In-Reply-To: <1365070211-26308-1-git-send-email-arend@broadcom.com>
-References: <1365070211-26308-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:52577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934522Ab3DHLgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 07:36:54 -0400
+Message-ID: <1365421010.25475.5.camel@jlt4.sipsolutions.net> (sfid-20130408_133658_219987_0F77F12D)
+Subject: pull-request: mac80211 2013-04-08
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 08 Apr 2013 13:36:50 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-t0wMYlVc0kYpC5o8k/kq"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware is requested from user-space. To assure the request
-is handled it is recommended to do the request upon IFF_UP. For
-a mac80211 driver the .start() callback can be considered the
-equivalent.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |  264 ++++++++++----------
- 1 file changed, 132 insertions(+), 132 deletions(-)
+--=-t0wMYlVc0kYpC5o8k/kq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index c6451c6..e2340b2 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -274,6 +274,130 @@ static void brcms_set_basic_rate(struct brcm_rateset *rs, u16 rate, bool is_br)
- 	}
- }
- 
-+/**
-+ * This function frees the WL per-device resources.
-+ *
-+ * This function frees resources owned by the WL device pointed to
-+ * by the wl parameter.
-+ *
-+ * precondition: can both be called locked and unlocked
-+ *
-+ */
-+static void brcms_free(struct brcms_info *wl)
-+{
-+	struct brcms_timer *t, *next;
-+
-+	/* free ucode data */
-+	if (wl->fw.fw_cnt)
-+		brcms_ucode_data_free(&wl->ucode);
-+	if (wl->irq)
-+		free_irq(wl->irq, wl);
-+
-+	/* kill dpc */
-+	tasklet_kill(&wl->tasklet);
-+
-+	if (wl->pub) {
-+		brcms_debugfs_detach(wl->pub);
-+		brcms_c_module_unregister(wl->pub, "linux", wl);
-+	}
-+
-+	/* free common resources */
-+	if (wl->wlc) {
-+		brcms_c_detach(wl->wlc);
-+		wl->wlc = NULL;
-+		wl->pub = NULL;
-+	}
-+
-+	/* virtual interface deletion is deferred so we cannot spinwait */
-+
-+	/* wait for all pending callbacks to complete */
-+	while (atomic_read(&wl->callbacks) > 0)
-+		schedule();
-+
-+	/* free timers */
-+	for (t = wl->timers; t; t = next) {
-+		next = t->next;
-+#ifdef DEBUG
-+		kfree(t->name);
-+#endif
-+		kfree(t);
-+	}
-+}
-+
-+/*
-+* called from both kernel as from this kernel module (error flow on attach)
-+* precondition: perimeter lock is not acquired.
-+*/
-+static void brcms_remove(struct bcma_device *pdev)
-+{
-+	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
-+	struct brcms_info *wl = hw->priv;
-+
-+	if (wl->wlc) {
-+		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
-+		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
-+		ieee80211_unregister_hw(hw);
-+	}
-+
-+	brcms_free(wl);
-+
-+	bcma_set_drvdata(pdev, NULL);
-+	ieee80211_free_hw(hw);
-+}
-+
-+/*
-+ * Precondition: Since this function is called in brcms_pci_probe() context,
-+ * no locking is required.
-+ */
-+static void brcms_release_fw(struct brcms_info *wl)
-+{
-+	int i;
-+	for (i = 0; i < MAX_FW_IMAGES; i++) {
-+		release_firmware(wl->fw.fw_bin[i]);
-+		release_firmware(wl->fw.fw_hdr[i]);
-+	}
-+}
-+
-+/*
-+ * Precondition: Since this function is called in brcms_pci_probe() context,
-+ * no locking is required.
-+ */
-+static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
-+{
-+	int status;
-+	struct device *device = &pdev->dev;
-+	char fw_name[100];
-+	int i;
-+
-+	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
-+	for (i = 0; i < MAX_FW_IMAGES; i++) {
-+		if (brcms_firmwares[i] == NULL)
-+			break;
-+		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
-+			UCODE_LOADER_API_VER);
-+		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
-+		if (status) {
-+			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
-+				  KBUILD_MODNAME, fw_name);
-+			return status;
-+		}
-+		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
-+			UCODE_LOADER_API_VER);
-+		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
-+		if (status) {
-+			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
-+				  KBUILD_MODNAME, fw_name);
-+			return status;
-+		}
-+		wl->fw.hdr_num_entries[i] =
-+		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
-+	}
-+	wl->fw.fw_cnt = i;
-+	status = brcms_ucode_data_init(wl, &wl->ucode);
-+	brcms_release_fw(wl);
-+	return status;
-+}
-+
- static void brcms_ops_tx(struct ieee80211_hw *hw,
- 			 struct ieee80211_tx_control *control,
- 			 struct sk_buff *skb)
-@@ -306,6 +430,14 @@ static int brcms_ops_start(struct ieee80211_hw *hw)
- 	if (!blocked)
- 		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
- 
-+	if (!wl->ucode.bcm43xx_bomminor) {
-+		err = brcms_request_fw(wl, wl->wlc->hw->d11core);
-+		if (err) {
-+			brcms_remove(wl->wlc->hw->d11core);
-+			return -ENOENT;
-+		}
-+	}
-+
- 	spin_lock_bh(&wl->lock);
- 	/* avoid acknowledging frames before a non-monitor device is added */
- 	wl->mute_tx = true;
-@@ -793,128 +925,6 @@ void brcms_dpc(unsigned long data)
- 	wake_up(&wl->tx_flush_wq);
- }
- 
--/*
-- * Precondition: Since this function is called in brcms_pci_probe() context,
-- * no locking is required.
-- */
--static int brcms_request_fw(struct brcms_info *wl, struct bcma_device *pdev)
--{
--	int status;
--	struct device *device = &pdev->dev;
--	char fw_name[100];
--	int i;
--
--	memset(&wl->fw, 0, sizeof(struct brcms_firmware));
--	for (i = 0; i < MAX_FW_IMAGES; i++) {
--		if (brcms_firmwares[i] == NULL)
--			break;
--		sprintf(fw_name, "%s-%d.fw", brcms_firmwares[i],
--			UCODE_LOADER_API_VER);
--		status = request_firmware(&wl->fw.fw_bin[i], fw_name, device);
--		if (status) {
--			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
--				  KBUILD_MODNAME, fw_name);
--			return status;
--		}
--		sprintf(fw_name, "%s_hdr-%d.fw", brcms_firmwares[i],
--			UCODE_LOADER_API_VER);
--		status = request_firmware(&wl->fw.fw_hdr[i], fw_name, device);
--		if (status) {
--			wiphy_err(wl->wiphy, "%s: fail to load firmware %s\n",
--				  KBUILD_MODNAME, fw_name);
--			return status;
--		}
--		wl->fw.hdr_num_entries[i] =
--		    wl->fw.fw_hdr[i]->size / (sizeof(struct firmware_hdr));
--	}
--	wl->fw.fw_cnt = i;
--	return brcms_ucode_data_init(wl, &wl->ucode);
--}
--
--/*
-- * Precondition: Since this function is called in brcms_pci_probe() context,
-- * no locking is required.
-- */
--static void brcms_release_fw(struct brcms_info *wl)
--{
--	int i;
--	for (i = 0; i < MAX_FW_IMAGES; i++) {
--		release_firmware(wl->fw.fw_bin[i]);
--		release_firmware(wl->fw.fw_hdr[i]);
--	}
--}
--
--/**
-- * This function frees the WL per-device resources.
-- *
-- * This function frees resources owned by the WL device pointed to
-- * by the wl parameter.
-- *
-- * precondition: can both be called locked and unlocked
-- *
-- */
--static void brcms_free(struct brcms_info *wl)
--{
--	struct brcms_timer *t, *next;
--
--	/* free ucode data */
--	if (wl->fw.fw_cnt)
--		brcms_ucode_data_free(&wl->ucode);
--	if (wl->irq)
--		free_irq(wl->irq, wl);
--
--	/* kill dpc */
--	tasklet_kill(&wl->tasklet);
--
--	if (wl->pub) {
--		brcms_debugfs_detach(wl->pub);
--		brcms_c_module_unregister(wl->pub, "linux", wl);
--	}
--
--	/* free common resources */
--	if (wl->wlc) {
--		brcms_c_detach(wl->wlc);
--		wl->wlc = NULL;
--		wl->pub = NULL;
--	}
--
--	/* virtual interface deletion is deferred so we cannot spinwait */
--
--	/* wait for all pending callbacks to complete */
--	while (atomic_read(&wl->callbacks) > 0)
--		schedule();
--
--	/* free timers */
--	for (t = wl->timers; t; t = next) {
--		next = t->next;
--#ifdef DEBUG
--		kfree(t->name);
--#endif
--		kfree(t);
--	}
--}
--
--/*
--* called from both kernel as from this kernel module (error flow on attach)
--* precondition: perimeter lock is not acquired.
--*/
--static void brcms_remove(struct bcma_device *pdev)
--{
--	struct ieee80211_hw *hw = bcma_get_drvdata(pdev);
--	struct brcms_info *wl = hw->priv;
--
--	if (wl->wlc) {
--		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
--		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
--		ieee80211_unregister_hw(hw);
--	}
--
--	brcms_free(wl);
--
--	bcma_set_drvdata(pdev, NULL);
--	ieee80211_free_hw(hw);
--}
--
- static irqreturn_t brcms_isr(int irq, void *dev_id)
- {
- 	struct brcms_info *wl;
-@@ -1047,18 +1057,8 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
- 	spin_lock_init(&wl->lock);
- 	spin_lock_init(&wl->isr_lock);
- 
--	/* prepare ucode */
--	if (brcms_request_fw(wl, pdev) < 0) {
--		wiphy_err(wl->wiphy, "%s: Failed to find firmware usually in "
--			  "%s\n", KBUILD_MODNAME, "/lib/firmware/brcm");
--		brcms_release_fw(wl);
--		brcms_remove(pdev);
--		return NULL;
--	}
--
- 	/* common load-time initialization */
- 	wl->wlc = brcms_c_attach((void *)wl, pdev, unit, false, &err);
--	brcms_release_fw(wl);
- 	if (!wl->wlc) {
- 		wiphy_err(wl->wiphy, "%s: attach() failed with code %d\n",
- 			  KBUILD_MODNAME, err);
--- 
-1.7.10.4
+(resend with list CC'ed, oops)
 
+John,
+
+Sadly, I have another pull request -- the idle handling fix broke LED
+handling in some cases.
+
+johannes
+
+
+The following changes since commit 90e0970f8788cef2c8f5183af5a98f4f94600faf=
+:
+
+  cfg80211: sched_scan_mtx lock in cfg80211_conn_work() (2013-03-30 22:33:1=
+9 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 62a40a15554d6924a58b3e9f8756e0d683dc9c0c:
+
+  mac80211: fix LED in idle handling (2013-04-08 13:12:05 +0200)
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      mac80211: fix LED in idle handling
+
+ net/mac80211/iface.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+
+
+
+--=-t0wMYlVc0kYpC5o8k/kq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJRYqvSAAoJEDBSmw7B7bqr/lkP/1gi6p8GFVK7BZ0Oz+4dYncW
+z0HgSEDQR7GRCVpXQ19sUFqXq5U/W/xt70qUamAM9hFiiHHx9lNAAhTYbenqYq7g
+ztgF08bUmcT3FSKxiQ3iZJ9+ky06VObmEf7Xwi/1o2IX3asNglsGCFCfO+CuC7cn
+85BqEc0zHDwTw7nqMK2PG/iaZ55I5BHfVgYuQnQEiQwUxdkeSTX6l49qSSXW5Bg5
+5IvCG6BU9xLbEuIXObms9C5EuQS6E+Xq3ttzTMUM9Bd/OuxJarf2xijSEO4xGPjW
+XYji5Aoh7Hg7pqNGsQG43aVdthdODSv0MCA7anJj2w9XH4x3DF5YDgvmYm9rk4pK
+Kouh9Q87npyBlX+zyA1qItWxFDBiufnRw1Qvb/KZ6p1pa4weJoEKc396kAixdEbE
+0LNDgR5OZTpG5D8TzFm4JTZ9xeMnyrK7F28EsVfnj9kmP076DP+TwyTD6g7gwsfa
+CO0YTP3L7B9byZsyx8vyc2WKXGJPJBOiE2cmT94Gy6ShMBjk6pK9u1+kgto7UJz1
+dw/JQucOpjDnA9osQcbKWPgc78b1fsvBL4lgJlUqdGyZZ1uFLkDq43LaQDAoIPRN
+kDvGnjGMSV6DOSoSNCemo/BRPJz62yNOYrwsRnYqTSzH9Ztcz/y68T1ere/1e2d3
+wVEol9Co/sNMHs2hFQ6o
+=JiUl
+-----END PGP SIGNATURE-----
+
+--=-t0wMYlVc0kYpC5o8k/kq--
 
