@@ -1,81 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:54044 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757497Ab3D2Qc2 convert rfc822-to-8bit (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:55271 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935225Ab3DHMKH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 12:32:28 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [RFC v4] cfg80211: Android P2P-Device workaround
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
-Date: Mon, 29 Apr 2013 09:32:24 -0700
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Message-Id: <AF37C6F9-E04F-4692-A973-E0221E2C84AF@holtmann.org> (sfid-20130429_183232_116227_2600A789)
-References: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 8 Apr 2013 08:10:07 -0400
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: zefir.kurtisi@neratec.com, mathias.kretschmer@fokus.fraunhofer.de,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCHv2] mac80211: fix recalc_radar hwconf sync problem
+Date: Mon,  8 Apr 2013 14:09:57 +0200
+Message-Id: <1365422997-15728-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130408_141012_232911_870275CB)
+In-Reply-To: <1365165364.8515.24.camel@jlt4.sipsolutions.net>
+References: <1365165364.8515.24.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+local->hw.conf maybe not be synced when recalcing whether radar is
+enabled, sometimes leaving radar enabled even if it's not neccesary
+anymore.
 
-> Android requires a "p2p0" netdev to exist for P2P Device
-> functionality, and will even set it "UP" to start the P2P
-> Device functionality.
-> 
-> This is a hack to provide it so not only is Android happy
-> but also the current version of wpa_supplicant can work
-> with P2P-Device functionality without needing changes to
-> support the P2P-Device commands, just a little bit to not
-> attempt to change the interface type to station.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> include/net/cfg80211.h |   4 ++
-> net/wireless/Kconfig   |   7 +++
-> net/wireless/Makefile  |   1 +
-> net/wireless/android.c | 147 +++++++++++++++++++++++++++++++++++++++++++++++++
-> net/wireless/core.c    |  14 +++++
-> net/wireless/core.h    |   6 ++
-> net/wireless/nl80211.c |  63 +++++++++++++++++++++
-> 7 files changed, 242 insertions(+)
-> create mode 100644 net/wireless/android.c
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 87f7e1d..6e312ef 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2924,6 +2924,10 @@ struct wireless_dev {
-> 		bool prev_bssid_valid;
-> 	} wext;
-> #endif
-> +
-> +#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-> +	struct net_device *p2pdev;
-> +#endif
-> };
-> 
-> static inline u8 *wdev_address(struct wireless_dev *wdev)
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index 16d08b3..7c2981c 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -139,6 +139,13 @@ config CFG80211_WEXT
-> 	  Enable this option if you need old userspace for wireless
-> 	  extensions with cfg80211-based drivers.
-> 
-> +config CFG80211_ANDROID_P2P_HACK
-> +	bool "Android P2P netdevice hack"
-> +	depends on CFG80211
-> +	depends on !CFG80211_WEXT
-> +	help
-> +	  Enable this option for Android P2P w/ P2P Device.
-> +
+Fix this by:
+ * setting radar_enabled when creating the chanctx
+ * turning radar_enabled off before destroying the last channel context
 
-can we get a proper help entry with a big fat warning on what this is for. So that nobody enables this by accident on a major distro without being warned.
+Reported-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ net/mac80211/chan.c |   32 ++++++++++++++++++++++----------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
 
-Regards
-
-Marcel
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 931be41..1f54ffe 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -57,6 +57,22 @@ ieee80211_find_chanctx(struct ieee80211_local *local,
+ 	return NULL;
+ }
+ 
++static bool ieee80211_is_radar_required(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (sdata->radar_required) {
++			rcu_read_unlock();
++			return true;
++		}
++	}
++	rcu_read_unlock();
++
++	return false;
++}
++
+ static struct ieee80211_chanctx *
+ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		      const struct cfg80211_chan_def *chandef,
+@@ -76,6 +92,9 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+ 	ctx->mode = mode;
++	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
++	if (!local->use_chanctx)
++		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
+ 
+ 	/* acquire mutex to prevent idle from changing */
+ 	mutex_lock(&local->mtx);
+@@ -118,6 +137,7 @@ static void ieee80211_free_chanctx(struct ieee80211_local *local,
+ 
+ 	if (!local->use_chanctx) {
+ 		local->_oper_channel_type = NL80211_CHAN_NO_HT;
++		local->hw.conf.radar_enabled = false;
+ 		ieee80211_hw_config(local, 0);
+ 	} else {
+ 		drv_remove_chanctx(local, ctx);
+@@ -237,19 +257,11 @@ static void __ieee80211_vif_release_channel(struct ieee80211_sub_if_data *sdata)
+ void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
+ 				    struct ieee80211_chanctx *chanctx)
+ {
+-	struct ieee80211_sub_if_data *sdata;
+-	bool radar_enabled = false;
++	bool radar_enabled;
+ 
+ 	lockdep_assert_held(&local->chanctx_mtx);
+ 
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		if (sdata->radar_required) {
+-			radar_enabled = true;
+-			break;
+-		}
+-	}
+-	rcu_read_unlock();
++	radar_enabled = ieee80211_is_radar_required(local);
+ 
+ 	if (radar_enabled == chanctx->conf.radar_enabled)
+ 		return;
+-- 
+1.7.10.4
 
