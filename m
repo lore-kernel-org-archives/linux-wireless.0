@@ -1,51 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37316 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932321Ab3DBJ14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 05:27:56 -0400
-Date: Tue, 2 Apr 2013 11:27:51 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] Revert "NFC: microread: Fix MEI build failure"
-Message-ID: <20130402092751.GE17363@zurbaran> (sfid-20130402_112807_151546_A3F0D52B)
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:57400 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934846Ab3DHWDr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 18:03:47 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: Re: Version number policy!
+Date: Tue, 9 Apr 2013 00:03:46 +0200
+Cc: Adrian Chadd <adrian@freebsd.org>, Kalle Valo <kvalo@adurom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"linux-bluetooth" <linux-bluetooth@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com> <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com> <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
+In-Reply-To: <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201304090003.47056.chunkeey@googlemail.com> (sfid-20130409_000407_155693_DD9E8920)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
-This reverts commit 63cd353c34a08af2d1935f8d0c2b6b091714ff79.
+On Monday, April 08, 2013 10:37:08 PM Eugene Krasnikov wrote:
+> Did you have such a situation when e.g. one feature has 2 incompatible
+> implementations?
+I'm not aware of anything in particular. But we can look elsewhere for
+examples, maybe Kalle knows one? Or you could ask the file system folks.
+AFAIK ext2 fs is using one and they have maintained some basic 
+compatibility throughout the major releases.
 
-We no longer need this fix as the MEI bus APIs are now merged into
-char-misc-next.
-
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
-
-John, this one is for wireless-next and will fix the conflict between net-next
-and wireless that Stephen reported today.
-
----
- drivers/nfc/microread/mei.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index 13bde92..eef38cf 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -48,7 +48,7 @@ struct mei_nfc_hdr {
- #define MEI_NFC_MAX_READ (MEI_NFC_HEADER_SIZE + MEI_NFC_MAX_HCI_PAYLOAD)
+For example, it's possible to read data on a ext3 and ext4(dev) file
+system with the old ext2 module - this is very user-friendly [1]!
+Maybe, you can dig up more examples, just browse the web for "feature 
+bits/flags/..."
  
- struct microread_mei_phy {
--	struct mei_device *device;
-+	struct mei_device *mei_device;
- 	struct nfc_hci_dev *hdev;
- 
- 	int powered;
--- 
-1.7.10.4
+> 2013/4/8 Adrian Chadd <adrian@freebsd.org>:
+> > On 8 April 2013 08:33, Christian Lamparter <chunkeey@googlemail.com> wrote:
+> >> On Monday, April 08, 2013 11:10:30 AM Eugene Krasnikov wrote:
+> >>> It’s a good idea to pack bitmap into the tail/header of the firmware
+> >>> binary to get capabilities even before fw loading. The plan is to add
+> >>> 8 bytes for caps and also add time stamp. Let me play around with that
+> >>> and provide fw and driver patch for review.
+> >>
+> >> Hm, come to think of it. Kalle, do you think ath9k_htc could use
+> >> some bits of the fw header format, parser or the complete infrastructure
+> >> from ath6kl? This could be great for Adrian, because he could
+> >> just point people to it and they could moved it into the code
+> >> into /drivers/net/wireless/ath/fw.c.
+> >
+> > Just remember that we (ath9k_htc and carl9170) aren't constrained by
+> > the same kinds of issues that closed firmware is. So version checks
+> > aren't that bad, because that way over time we don't end up needing to
+> > maintain lots of special cases for firmware options.
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+I know, I know, but wouldn't it be great to have a common firmware parsing
+infrastructure for all the driver with firmware under ath/? [No, I'm not
+talking about writing a firmware that works on all devices. I want common
+rules for firmware header descriptors. But if you peg features (firmware
+or device!) to abstract firmware versions like "1.2.3.4-34+", then this is
+going to be difficult.] 
+
+> > I still like the idea of firmware options for build time options that
+> > people may wish to use - eg, say we want to support a version of
+> > ath9k-htc firmware that does offloaded TX rate control, versus not.
+> > But, maintaining multiple builds of the same firmware is IMHO going to
+> > be a path towards madness to maintain.
+> >
+> > The maintainability is why I'm hoping (!) to keep the number of
+> > options low and just do "clean slate" moves whenever we shift to the
+> > next major firmware version.
+
+Or like ext2,3,4 => just have a lowest common denominator. So users can
+at least always access the web and get a matching firmware. 
+
+Of course, it could be that we are just talking about completely different
+things. Anyway, Luis asked me, if I have any "input"... and not more ;-).
+
+Regards,
+	Christian
+
+[1] 
+<https://ext4.wiki.kernel.org/index.php/Frequently_Asked_Questions#Can_I_mount_existing_Ext3_as_Ext4.3F_And_vice_versa.3F_Similarly_from_Ext2_to_Ext4_and_its_reverse.3F>
