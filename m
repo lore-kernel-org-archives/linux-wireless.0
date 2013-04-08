@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934522Ab3DHLgy (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:57713 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934675Ab3DHSID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 07:36:54 -0400
-Message-ID: <1365421010.25475.5.camel@jlt4.sipsolutions.net> (sfid-20130408_133658_219987_0F77F12D)
-Subject: pull-request: mac80211 2013-04-08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 08 Apr 2013 13:36:50 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-t0wMYlVc0kYpC5o8k/kq"
-Mime-Version: 1.0
+	Mon, 8 Apr 2013 14:08:03 -0400
+Received: by mail-pa0-f45.google.com with SMTP id kl13so3377022pab.18
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 11:08:02 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 6/6] mac80211: avoid mesh peer rate update warning
+Date: Mon,  8 Apr 2013 11:06:17 -0700
+Message-Id: <1365444377-9959-6-git-send-email-thomas@cozybit.com> (sfid-20130408_200807_629725_2073CFC2)
+In-Reply-To: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some drivers (like ath9k_htc) will take a mutex in
+rate_control_rate_update(), so drop the sta lock before we
+get there.
 
---=-t0wMYlVc0kYpC5o8k/kq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 
-(resend with list CC'ed, oops)
+Can go towards 3.9.
+---
+ net/mac80211/mesh_plink.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-John,
-
-Sadly, I have another pull request -- the idle handling fix broke LED
-handling in some cases.
-
-johannes
-
-
-The following changes since commit 90e0970f8788cef2c8f5183af5a98f4f94600faf=
-:
-
-  cfg80211: sched_scan_mtx lock in cfg80211_conn_work() (2013-03-30 22:33:1=
-9 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to 62a40a15554d6924a58b3e9f8756e0d683dc9c0c:
-
-  mac80211: fix LED in idle handling (2013-04-08 13:12:05 +0200)
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: fix LED in idle handling
-
- net/mac80211/iface.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
-
-
-
---=-t0wMYlVc0kYpC5o8k/kq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRYqvSAAoJEDBSmw7B7bqr/lkP/1gi6p8GFVK7BZ0Oz+4dYncW
-z0HgSEDQR7GRCVpXQ19sUFqXq5U/W/xt70qUamAM9hFiiHHx9lNAAhTYbenqYq7g
-ztgF08bUmcT3FSKxiQ3iZJ9+ky06VObmEf7Xwi/1o2IX3asNglsGCFCfO+CuC7cn
-85BqEc0zHDwTw7nqMK2PG/iaZ55I5BHfVgYuQnQEiQwUxdkeSTX6l49qSSXW5Bg5
-5IvCG6BU9xLbEuIXObms9C5EuQS6E+Xq3ttzTMUM9Bd/OuxJarf2xijSEO4xGPjW
-XYji5Aoh7Hg7pqNGsQG43aVdthdODSv0MCA7anJj2w9XH4x3DF5YDgvmYm9rk4pK
-Kouh9Q87npyBlX+zyA1qItWxFDBiufnRw1Qvb/KZ6p1pa4weJoEKc396kAixdEbE
-0LNDgR5OZTpG5D8TzFm4JTZ9xeMnyrK7F28EsVfnj9kmP076DP+TwyTD6g7gwsfa
-CO0YTP3L7B9byZsyx8vyc2WKXGJPJBOiE2cmT94Gy6ShMBjk6pK9u1+kgto7UJz1
-dw/JQucOpjDnA9osQcbKWPgc78b1fsvBL4lgJlUqdGyZZ1uFLkDq43LaQDAoIPRN
-kDvGnjGMSV6DOSoSNCemo/BRPJz62yNOYrwsRnYqTSzH9Ztcz/y68T1ere/1e2d3
-wVEol9Co/sNMHs2hFQ6o
-=JiUl
------END PGP SIGNATURE-----
-
---=-t0wMYlVc0kYpC5o8k/kq--
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index cdd4183..ca284ee 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -379,8 +379,10 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	sta->last_rx = jiffies;
+ 
+ 	/* rates and capabilities don't change during peering */
+-	if (sta->plink_state == NL80211_PLINK_ESTAB)
+-		goto out;
++	if (sta->plink_state == NL80211_PLINK_ESTAB) {
++		spin_unlock_bh(&sta->lock);
++		return;
++	}
+ 
+ 	if (sta->sta.supp_rates[band] != rates)
+ 		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
+@@ -398,13 +400,12 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 			changed |= IEEE80211_RC_BW_CHANGED;
+ 		sta->sta.bandwidth = IEEE80211_STA_RX_BW_20;
+ 	}
++	spin_unlock_bh(&sta->lock);
+ 
+ 	if (insert)
+ 		rate_control_rate_init(sta);
+ 	else
+ 		rate_control_rate_update(local, sband, sta, changed);
+-out:
+-	spin_unlock_bh(&sta->lock);
+ }
+ 
+ static struct sta_info *
+-- 
+1.7.10.4
 
