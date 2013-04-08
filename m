@@ -1,29 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:64826 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864Ab3DLQTr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 12:19:47 -0400
-Received: by mail-ob0-f175.google.com with SMTP id va7so2557209obc.34
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2013 09:19:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1365779338-8224-1-git-send-email-hauke@hauke-m.de>
-References: <1365779338-8224-1-git-send-email-hauke@hauke-m.de>
-Date: Fri, 12 Apr 2013 18:19:46 +0200
-Message-ID: <CACna6ryALXd6-=UciKJrMJ8PjmPyTXjPL1vJdWOmtBRSciO8Ew@mail.gmail.com> (sfid-20130412_181950_757407_FC29464A)
-Subject: Re: [PATCH v3] b43: use bcma_pmu_spuravoid_pllupdate()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:42749 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751379Ab3DHQDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 12:03:18 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1UPK9W-0002l8-K5
+	for linux-wireless@vger.kernel.org; Tue, 09 Apr 2013 00:03:02 +0200
+Received: from static-adsl-c-5-188.ipcom.comunitel.net ([static-adsl-c-5-188.ipcom.comunitel.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 00:03:02 +0200
+Received: from rtpardavila by static-adsl-c-5-188.ipcom.comunitel.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 00:03:02 +0200
+To: linux-wireless@vger.kernel.org
+From: Ricardo =?utf-8?b?VHViw61v?= <rtpardavila@gmail.com>
+Subject: [ath5k][injection] Userspace packet injection
+Date: Mon, 8 Apr 2013 08:18:41 +0000 (UTC)
+Message-ID: <loom.20130408T101729-253@post.gmane.org> (sfid-20130408_180322_081052_B39F9B22)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/4/12 Hauke Mehrtens <hauke@hauke-m.de>:
-> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
+Can somebody give me any information about a userspace tool for packet 
+injection with ath5k drivers? I need it for testing the modifications of the 
+drivers I have just recompiled.
 
-Ack
-
--- 
-Rafał
