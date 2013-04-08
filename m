@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1323 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161198Ab3DEHZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 03:25:22 -0400
-Message-ID: <515E7C5B.2000408@broadcom.com> (sfid-20130405_092553_302775_DC5642AF)
-Date: Fri, 5 Apr 2013 09:25:15 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-we0-f170.google.com ([74.125.82.170]:64263 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758971Ab3DHSjW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 14:39:22 -0400
+Received: by mail-we0-f170.google.com with SMTP id z2so4992954wey.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 11:39:20 -0700 (PDT)
 MIME-Version: 1.0
-To: "Randy Dunlap" <rdunlap@infradead.org>
-cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	"Wang YanQing" <udknight@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] lib80211: make lib80211 can be enabled
- independently
-References: <20130404160130.GA2577@udknight>
- <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com>
- <515E4CB7.6020405@infradead.org>
-In-Reply-To: <515E4CB7.6020405@infradead.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <1365433751.96373.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
+	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
+	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
+	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmomGT4grPwA0dSGqPD=Zi=dZk6WwpqKEXXDvfLUqr08o0w@mail.gmail.com>
+	<1365413949.24195.YahooMailNeo@web193502.mail.sg3.yahoo.com>
+	<1365433751.96373.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+Date: Mon, 8 Apr 2013 11:39:20 -0700
+Message-ID: <CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com> (sfid-20130408_203926_536471_99A9C12B)
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2013 06:01 AM, Randy Dunlap wrote:
-> On 04/04/13 16:51, Julian Calaby wrote:
->> Hi Wang,
->>
->> On Fri, Apr 5, 2013 at 3:01 AM, Wang YanQing <udknight@gmail.com> wrote:
->>>
->>> Current we can only enable lib80211 by enable a driver
->>> in tree use it which will select it, but some out tree's
->>> drivers also use it, so I think it has sense to make lib80211
->>> can be enabled independently.
->>
->> Just as a bit of explanation for Johannes' NACK:
->>
->> 1. The only reason lib80211 still exists is because a couple of
->> in-tree drivers still use it. If this weren't the case, the code would
->> have been removed a long time ago as it's been completely replaced by
->> mac80211 and cfg80211. All modern drivers _must_ use mac80211 or
->> cfg80211 without exception.
->> 2. In general, there is no official in-kernel support for
->> out-of-kernel drivers, regardless of quality, status or importance.
->> 3. I believe that the in-tree brcmsmac driver already supports the
->> Broadcom card you reference.
->
->
-> 3b.  If 3. is not correct, someone should endeavor to merge this
-> out-of-tree driver into the kernel tree.
+yes, there's GPIO MUX modes for:
 
-Actually, it is correct and brcmsmac and the out-of-tree wl driver are 
-coming from the same code base although you should not compare the two 
-these days.
+* RX clear (but I think this "Wlan active" pin is likely triggering on
+RX_CLEAR, which I think gets asserted for both TX and RX busy. I'll
+have to check.
+* TX active
 
-Gr. AvS
+Check the GPIO MUX pin definitions to see.
+
+But if I understand this right, if you have the correct btcoex setup
+and GPIO pins working, then stomping traffic will stomp both TX and
+RX..
 
 
+Adrian
