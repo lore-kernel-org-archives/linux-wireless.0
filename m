@@ -1,55 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:52278 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab3DOOAd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 10:00:33 -0400
-Received: from smtp06.msg.oleane.net (smtp06.mail.priv [172.17.20.115])
-	by smtp-out06.msg.oleane.net with ESMTP id r3FE0VQl011315
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 16:00:31 +0200
-Received: from RD9 ([195.6.104.67])
-	by smtp06.msg.oleane.net (MTA) with ESMTP id r3FDdlH2028203
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 15:39:47 +0200
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Subject: mesh questions/suggestion about airtime metric and device constant in mesh_hwmp.c
-Date: Mon, 15 Apr 2013 15:39:47 +0200
-Message-ID: <000601ce39de$b26e2950$174a7bf0$@acksys.fr> (sfid-20130415_160038_072047_2BA4F555)
+Received: from www.piware.de ([213.9.93.70]:37948 "EHLO www.piware.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934527Ab3DHJNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 05:13:49 -0400
+Date: Mon, 8 Apr 2013 11:06:33 +0200
+From: Martin Pitt <martin.pitt@ubuntu.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] mac80211_hwsim: Register and bind to driver
+Message-ID: <20130408090633.GB2818@piware.de> (sfid-20130408_111408_534483_53913022)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Properly register our mac80211_hwsim_driver, attach it to the platform bus.
+Bind newly created hwsim devices to that driver, so that our wlan devices get
+a proper "driver" sysfs attribute.
 
-The airtime_link_metric_get()  function follows closely section 13.9 of the
-standard, except for the "channel access overhead" which is said to depend
-on the PHY, headers, etc. 
-Hence I understand that a complete implementation is not trivial.
+This makes mac80211_hwsim interfaces work with NetworkManager.
 
-The 'device_constant' variable is given the constant value '1<<ARITH_SHIFT',
-which means 1 microsecond if I am correct. But the smallest possible
-duration for the PPDU header is 20 microseconds in non-HT or 24 us in HT, as
-shown in section 20.3.2
+Signed-off-by: Martin Pitt <martin.pitt@ubuntu.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
-For the test frame of 8192 bits, say at 300Mbps (MCS15), Bt/r = the
-currently computed airtime is 28 instead of 51, underevaluated by -45% !
-Since the value accumulates on the mesh path, it may make a big difference
-for the path selection.
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 0064d38..50a8b52 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -25,6 +25,7 @@
+ #include <linux/if_arp.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/etherdevice.h>
++#include <linux/platform_device.h>
+ #include <linux/debugfs.h>
+ #include <linux/module.h>
+ #include <linux/ktime.h>
+@@ -1675,6 +1676,7 @@ static void mac80211_hwsim_free(void)
+ 		debugfs_remove(data->debugfs_ps);
+ 		debugfs_remove(data->debugfs);
+ 		ieee80211_unregister_hw(data->hw);
++		device_release_driver(data->dev);
+ 		device_unregister(data->dev);
+ 		ieee80211_free_hw(data->hw);
+ 	}
+@@ -1683,7 +1685,9 @@ static void mac80211_hwsim_free(void)
+ 
+ 
+ static struct device_driver mac80211_hwsim_driver = {
+-	.name = "mac80211_hwsim"
++	.name = "mac80211_hwsim",
++	.bus = &platform_bus_type,
++	.owner = THIS_MODULE,
+ };
+ 
+ static const struct net_device_ops hwsim_netdev_ops = {
+@@ -2179,6 +2183,8 @@ static int __init init_mac80211_hwsim(void)
+ 	if (IS_ERR(hwsim_class))
+ 		return PTR_ERR(hwsim_class);
+ 
++	driver_register(&mac80211_hwsim_driver);
++
+ 	memset(addr, 0, ETH_ALEN);
+ 	addr[0] = 0x02;
+ 
+@@ -2205,6 +2211,14 @@ static int __init init_mac80211_hwsim(void)
+ 			goto failed_drvdata;
+ 		}
+ 		data->dev->driver = &mac80211_hwsim_driver;
++		err = device_bind_driver(data->dev);
++		if (err != 0) {
++			printk(KERN_DEBUG
++			       "mac80211_hwsim: device_bind_driver "
++			       "failed (%d)\n", err);
++			goto failed_hw;
++		}
++
+ 		skb_queue_head_init(&data->pending);
+ 
+ 		SET_IEEE80211_DEV(hw, data->dev);
+@@ -2518,5 +2532,6 @@ static void __exit exit_mac80211_hwsim(void)
+ 
+ 	mac80211_hwsim_free();
+ 	unregister_netdev(hwsim_mon);
++	driver_unregister(&mac80211_hwsim_driver);
+ }
+ module_exit(exit_mac80211_hwsim);
+-- 
+1.7.2.5
 
-Questions:
-Even if device_constant is kept as a constant, shouldn't we set it to
-something more realistic, like 20 or 24 ?
-(I mean 20<<ARITH_SHIFT)
-Does the standard really mean to include the PPDU header ?
-
-(By the way, I understand that this value should also include the DIFS, and
-maybe the ACK, so it should be much greater than 20)
-
-Regards,
-
-Jean-Pierre Tosoni
-
-
-
+-- 
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
