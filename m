@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:49690 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756672Ab3DXIdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 04:33:33 -0400
-Message-ID: <1366792108.11111.0.camel@jlt4.sipsolutions.net> (sfid-20130424_103338_896774_AE8859DB)
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 24 Apr 2013 10:28:28 +0200
-In-Reply-To: <51779434.4010709@broadcom.com>
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
-	 <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
-	 <1366735340.8385.20.camel@jlt4.sipsolutions.net>
-	 <51779434.4010709@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-da0-f45.google.com ([209.85.210.45]:55628 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934675Ab3DHSH4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Apr 2013 14:07:56 -0400
+Received: by mail-da0-f45.google.com with SMTP id v40so2711272dad.18
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 11:07:55 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 3/6] mac80211: ieee80211_queue_stopped returns reasons
+Date: Mon,  8 Apr 2013 11:06:14 -0700
+Message-Id: <1365444377-9959-3-git-send-email-thomas@cozybit.com> (sfid-20130408_200800_818110_40CED9B8)
+In-Reply-To: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-24 at 10:13 +0200, Arend van Spriel wrote:
+Have ieee80211_queue_stopped() return a bitmap of enum
+queue_stop_reasons while checking queue status. This is
+handy when we care about the queue stop reason codes.
 
-> If android is moving to 3.8 kernel with KLP (key lime pie), you could 
-> say that it requires middleware/wifi-framework to deal with the new 
-> kernel API. However, it mostly involves wpa_supplicant regardless of 
-> using it on android or not. So this is more a wpa_supplicant P2P hack.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/net/mac80211.h |   10 +++++++---
+ net/mac80211/util.c    |    8 ++++----
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-There's no driver in 3.8 though that even uses P2P-Device. :-)
-
-> >>> +#ifdef CONFIG_CFG80211_ANDROID_P2P_HACK
-> >>> +			    || (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
-> >>> +				info->genlhdr->cmd != NL80211_CMD_SET_INTERFACE)
-> >>> +#endif
-> >>> +			) {
-> >>> 				mutex_unlock(&cfg80211_mutex);
-> >>> 				if (rtnl)
-> >>> 					rtnl_unlock();
-> >>
-> >> And doing an #ifdef in the middle of if-clause doesn't ring any alarm
-> >> bells that this might be a really bad idea ;)
-> >
-> > Well, I could put an #ifdef into each and every command instead which I
-> > didn't want to, which incidentally is the reason for not allowing this
-> > with WEXT, WEXT ioctls on the P2P-Device netdev just cause crashes :)
-> 
-> I dislike these kind of constructs as well so I would like this to be 
-> made somewhat cleaner (conditional helper function?).
-
-Actually I had to change it anyway, see the v2 patch, to fix a crash
-when removing the p2p-device again.
-
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 64faf01..8bbe799 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3589,15 +3589,19 @@ void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue);
+ 
+ /**
+  * ieee80211_queue_stopped - test status of the queue
++ *
+  * @hw: pointer as obtained from ieee80211_alloc_hw().
+  * @queue: queue number (counted from zero).
+  *
+  * Drivers should use this function instead of netif_stop_queue.
+  *
+- * Return: %true if the queue is stopped. %false otherwise.
++ * Return 0 if queue not stopped, or else a bitmap of
++ * queue_stop_reasons.
++ *
++ * If @queue doesn't exist, return -1UL.
++ *
+  */
+-
+-int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue);
++unsigned long ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue);
+ 
+ /**
+  * ieee80211_stop_queues - stop all queues
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 447e665..739cddb 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -475,17 +475,17 @@ void ieee80211_stop_queues(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
+-int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
++unsigned long ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+-	int ret;
++	unsigned long ret;
+ 
+ 	if (WARN_ON(queue >= hw->queues))
+-		return true;
++		return -1UL;
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	ret = !!local->queue_stop_reasons[queue];
++	ret = local->queue_stop_reasons[queue];
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 	return ret;
+ }
+-- 
+1.7.10.4
 
