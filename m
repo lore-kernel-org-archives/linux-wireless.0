@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37316 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765431Ab3DJSKK (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:51882 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935512Ab3DHXMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 14:10:10 -0400
-Message-ID: <5165AB00.2000605@candelatech.com> (sfid-20130410_201038_720666_B1B6CE8C)
-Date: Wed, 10 Apr 2013 11:10:08 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 8 Apr 2013 19:12:09 -0400
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: Jitter and latency benchmarks with netlink / nl80211
-References: <CAB=NE6XH8wGbFhmB54Y0BUB2N-PbzUBvN+arH5F_BAkEa=DjUw@mail.gmail.com> <5165A874.50804@candelatech.com> <CAB=NE6U_0E+y8jc_0O3+9pmUyLXX9CuSMYMMWk__4Q8-+-AHTg@mail.gmail.com>
-In-Reply-To: <CAB=NE6U_0E+y8jc_0O3+9pmUyLXX9CuSMYMMWk__4Q8-+-AHTg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <201304090003.47056.chunkeey@googlemail.com>
+References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
+	<CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
+	<CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
+	<201304090003.47056.chunkeey@googlemail.com>
+Date: Mon, 8 Apr 2013 16:12:07 -0700
+Message-ID: <CAJ-VmomksDSNvTpKQpNRRQx+QboSVHpby7V4qq4rngqVkTvf+A@mail.gmail.com> (sfid-20130409_011226_210660_7E8E7654)
+Subject: Re: Version number policy!
+From: Adrian Chadd <adrian@freebsd.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/10/2013 11:05 AM, Luis R. Rodriguez wrote:
-> On Wed, Apr 10, 2013 at 10:59 AM, Ben Greear <greearb@candelatech.com> wrote:
->> On 04/10/2013 10:55 AM, Luis R. Rodriguez wrote:
->>>
->>> Curious if anyone has worked on latency and jitter benchmarks in using
->>> netlink, specifically with nl80211. Has anyone benchmarked this? Ben,
->>> have you? If not for nl80211 perhaps this has been done before for
->>> other netlink families?
->>
->>
->> You mean timing related to netlink configuration/report requests?
->
-> Yes.
+I'm a FreeBSD user. I know what it's like to have an alternate, out of
+linux implementation of ext2/3 that doesn't implement all of the
+features.
 
-No, I haven't bothered to do this...  The way we use netlink is
-mostly asynchronous..ie we just listen for events and process them
-as they come in.  Most of our configuration would be driven through 'iw',
-'wpa_supplicant', 'ip', etc, and much of our stats gathering is through
-the ethool get-stats API.
+I also know what kinds of crap happens when you try mounting a more
+recent extX filesystem on an earlier kernel. Ie, it doesn't
+necessarily end well. :-)
 
-I would imagine any latency would be highly dependent on other applications
-taking RTNL (for instance, creating/deleting lots of virtual stations,
-mac-vlans, ip-address changes, etc).
+Anyway, there's been a lot of good points in this discussion. Let's
+keep it in mind as we slowly march forward.
 
-Thanks,
-Ben
+There's only like, 60k of generated binary code on these things. Let's
+not overthink things too much for now. :)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
+
+Adrian
