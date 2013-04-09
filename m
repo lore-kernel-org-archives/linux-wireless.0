@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35848 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757024Ab3DSLGx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 07:06:53 -0400
-Received: by mail-wi0-f170.google.com with SMTP id l13so750806wie.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 04:06:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
-References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
- <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com> <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 19 Apr 2013 21:06:32 +1000
-Message-ID: <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com> (sfid-20130419_130657_564651_A73B1492)
-Subject: Re: very bad work of wl (bcm 43228)
-To: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	Arend van Spriel <arend@broadcom.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	Larry Finger <larry.finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx3.wp.pl ([212.77.101.7]:49602 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765454Ab3DIPEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 11:04:47 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 03/11] rt2800: move RFCSR29_RSSI_GAIN to 3290 specific rfcsr init
+Date: Tue,  9 Apr 2013 17:05:22 +0200
+Message-Id: <1365519930-3230-4-git-send-email-stf_xl@wp.pl> (sfid-20130409_170450_474283_3EF4C4D4)
+In-Reply-To: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vasiliy,
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-On Fri, Apr 19, 2013 at 8:44 PM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
-> 2013/4/19 Julian Calaby <julian.calaby@gmail.com>:
->> I'm not completely sure, but I believe your card is supported in the
->> latest kernel, however I'm not sure exactly how to install it for your
->> version of Ubuntu. The alternative is to install the compat-wireless
->> package - it'll be called something like
->> linux-backports-modules-cw-3.6-3.6-3.2.0-40-generic. If you use either
->> of these methods, your card should work without the
->> broadcom-sta-source driver.
->
->
-> I'm already get answers on wireless list that my card not supported =(
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-I was certain I'd heard about support going in, clearly my memory is
-wrong. Searching around, you asked this question before. Sorry to
-mislead you.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 334973a..085b60c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4511,6 +4511,8 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+ {
++	u8 rfcsr;
++
+ 	rt2800_rf_init_calibration_53xx(rt2x00dev);
+ 
+ 	rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
+@@ -4559,6 +4561,10 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 59, 0x09);
+ 	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+ 	rt2800_rfcsr_write(rt2x00dev, 61, 0xc1);
++
++	rt2800_rfcsr_read(rt2x00dev, 29, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR29_RSSI_GAIN, 3);
++	rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+ }
+ 
+ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+@@ -5103,12 +5109,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3290)) {
+-		rt2800_rfcsr_read(rt2x00dev, 29, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR29_RSSI_GAIN, 3);
+-		rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+-	}
+-
+ 	return 0;
+ }
+ 
+-- 
+1.7.4.4
 
-There are two ways that support for your card will happen:
-1. The b43 developers will finish reverse engineering it and release
-support for it.
-2. Broadcom will release support through the brcmsmac driver.
-
-Option 1 will take some time, this is not easy work, you might be able
-to help with the development, but it's _very_ technical work. That
-said, if you can compile a kernel, you can help with the testing once
-all the code starts to get together. I believe that Rafał is working
-on this and have CC'd him.
-
-Option 2 may take some time as we're waiting for Broadcom. Arend is
-their main person here, I've also CC'd him.
-
-If you're desperate for a good wireless connection on that laptop
-right now, your best bet is to buy yourself a cheap USB card, I
-personally recommend ones with Atheros chipsets as they're very well
-supported and tend to work well. TP-Link make some cheap  and good
-ones like the TL-WN821N and TL-WN822N.
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
