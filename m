@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35396 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756709Ab3DCMl3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 08:41:29 -0400
-Message-ID: <1364992883.8351.32.camel@jlt4.sipsolutions.net> (sfid-20130403_144132_894083_8F470396)
-Subject: Re: [PATCH 2/2] mac80211:  Make un-found-rate splat a warn-once.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 03 Apr 2013 14:41:23 +0200
-In-Reply-To: <514C7FF6.6070301@candelatech.com>
-References: <1363727997-1554-1-git-send-email-greearb@candelatech.com>
-	  <1363727997-1554-2-git-send-email-greearb@candelatech.com>
-	  (sfid-20130319_222017_355151_860485B7) <1363948082.8238.9.camel@jlt4.sipsolutions.net>
-	 <514C7FF6.6070301@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hub022-nj-3.exch022.serverdata.net ([206.225.164.186]:20904
+	"EHLO HUB022-nj-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S936360Ab3DIQDi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 12:03:38 -0400
+From: Naveenraj Subramanian <naveenrajs@posedge.com>
+To: Vivekananda Holla <vivekanandah@posedge.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"nbd@openwrt.org" <nbd@openwrt.org>
+Subject: RE: RFC: SMPS for AP mode
+Date: Tue, 9 Apr 2013 15:55:32 +0000
+Message-ID: <E010768E26DFE947BD731EFACA2252B70DE20788@MBX022-E1-NJ-8.exch022.domain.local> (sfid-20130409_180341_309987_3D3A6828)
+References: <fbef7a2278fe739a398430949087c950@posedge.com>
+	 (sfid-20130403_093709_189406_740B7438)
+ <1364976319.8351.2.camel@jlt4.sipsolutions.net>
+	 <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
+	 <1364978764.8351.6.camel@jlt4.sipsolutions.net>
+	 <021a065e3ab402466e8049b2f4cd3fdd@posedge.com>,<1365502750.8465.30.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1365502750.8465.30.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-03-22 at 08:59 -0700, Ben Greear wrote:
-> On 03/22/2013 03:28 AM, Johannes Berg wrote:
-> > On Tue, 2013-03-19 at 14:19 -0700, greearb@candelatech.com wrote:
-> >> From: Ben Greear <greearb@candelatech.com>
-> >>
-> >> After that, print it out with net_ratelimit.  We saw a system
-> >> continually hit this warning, for reasons unknown, and it
-> >> seems it bogged the system down enough to make it go OOM.
-> >
-> > I'm not really sure I like this ... that points to a deeper problem, and
-> > this just papers over it while causing more cost in the TX path for all
-> > the different checks.
-> 
-> If I add an 'unlikely' to the initial check, that gets back to the original
-> TX path cost, or are you worried about something else?
-> 
-> I think in most cases we should be using some variation of WARN_ONCE
-> in all the places that splat a warning...
+Hi Vivek,
 
-Let's just make this WARN_ONCE() then maybe?
+Do you plan to implement this piece of code?
+
+Regards,
+Naveen.
+________________________________________
+From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Johannes Berg [johannes@sipsolutions.net]
+Sent: Tuesday, April 09, 2013 3:49 PM
+To: Vivekananda Holla
+Cc: linux-wireless@vger.kernel.org; nbd@openwrt.org
+Subject: Re: RFC: SMPS for AP mode
+
+Hi,
+
+> based on the discussion, i have come out with an RFC for SMPS support
+> for AP in minstrel_ht. kindly see the explanation below and indicate to
+> me, if this okay or any changes are required?
+
+Code talks ;-)
+
+> RFC To send out RTS for AP connected to a dynamic SMPS station
+>
+> This code change addresses the AP requirement of sending out a
+> RTS frame when dynamic SMPS is enabled at the station
+>
+> the minstrel_ht rate module needs to provide the lower driver layer
+> an indication of enabling RTS frame transmission for an AP connected
+> to a dynamic SMPS station.
+
+It really just needs to set the RTS flag on the frames.
+
+> the SMPS state of the station is stored in the ieee80211_sta
+> structure's ht_cap variable.
+
+No, not any more.
+
+> the minstrel_ht_get_rate function can be modified to check if the
+> station is a dynamic SMPS
+> station and a new flag can be incorporated for the ieee80211_tx_info
+> flags (e.g. IEEE80211_TX_CTL_SMPS_SET_RTS)
+> that indicates to the lower layer that the station is a dynamic SMPS
+> enabled station.
+>
+> the lower AP driver can then enable RTS before the first frame
+> transmission to the station by checking for the above flag.
+
+Sounds about right.
 
 johannes
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
