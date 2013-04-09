@@ -1,112 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f48.google.com ([209.85.128.48]:60159 "EHLO
-	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206Ab3DKTvZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56112 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932110Ab3DIRyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 15:51:25 -0400
-Received: by mail-qe0-f48.google.com with SMTP id 2so1115564qea.21
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 12:51:25 -0700 (PDT)
-Message-ID: <5167143A.70503@lwfinger.net> (sfid-20130411_215129_847487_F8B3FDF2)
-Date: Thu, 11 Apr 2013 14:51:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 9 Apr 2013 13:54:25 -0400
+Message-ID: <516455CA.6070504@candelatech.com> (sfid-20130409_195429_657963_27AC6895)
+Date: Tue, 09 Apr 2013 10:54:18 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Han Shen <shenhan@google.com>, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH] Fix uninitialized-variable warnings.
-References: <1365703360-19982-1-git-send-email-shenhan@google.com> <1365705330.1929.30.camel@joe-AO722>
-In-Reply-To: <1365705330.1929.30.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX performance.
+References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>  (sfid-20130403_184908_772897_29241D1E) <1365501478.8465.17.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1365501478.8465.17.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2013 01:35 PM, Joe Perches wrote:
-> On Thu, 2013-04-11 at 11:02 -0700, Han Shen wrote:
->> GCC 4.8 is spitting out uninitialized-varaible warnings against "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".
->> This trivial patch just adds initialization to the variable.
->
-> Not sure this is correct.
-> I think the logic should be inspected instead.
->
-> ofdm_index_old[1] _is_ used uninitialized.
->
-> It appears there might be a missing
->
-> 	ofdm_index_old[1] = (u8) i;
->
-> as that's the same style test done in the
-> section above.
->
-> Maybe this:
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> index b793a65..56b2b2f 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-> @@ -717,6 +717,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
->   			for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
->   				if (ele_d == (ofdmswing_table[i] &
->   				    MASKOFDM_D)) {
-> +					ofdm_index_old[1] = (u8) i;
->
->   					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
->   						 DBG_LOUD,
->
->
-> --
+On 04/09/2013 02:57 AM, Johannes Berg wrote:
+> On Wed, 2013-04-03 at 09:48 -0700, greearb@candelatech.com wrote:
 
-Joe's patch would work, but as the elements of ofdm_index_old[] are just filled 
-with the contents of i, just eliominate the middle man as in:
+>> +++ b/net/mac80211/sta_info.c
+>> @@ -77,19 +77,42 @@ static int sta_info_hash_del(struct ieee80211_local *local,
+>>   	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
+>>   				      lockdep_is_held(&local->sta_mtx));
+>>   	if (!s)
+>> -		return -ENOENT;
+>> +		goto try_lhash;
+>
+> Does this make sense? If the station doesn't exist in the regular hash,
+> it really shouldn't be in the vif hash either, no?
 
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -669,7 +669,7 @@ static void rtl92c_dm_txpower_tracking_c
-         u8 thermalvalue, delta, delta_lck, delta_iqk;
-         long ele_a, ele_d, temp_cck, val_x, value32;
-         long val_y, ele_c = 0;
--       u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
-+       u8 ofdm_index[2], cck_index_old = 0;
-         s8 cck_index = 0;
-         int i;
-         bool is2t = IS_92C_SERIAL(rtlhal->version);
-@@ -700,12 +700,10 @@ static void rtl92c_dm_txpower_tracking_c
+It shouldn't be in the new vif hash, so I could add a short-cut
+as you suggest.  I had left it in for reasons of paranoia.
 
-                 for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
-                         if (ele_d == (ofdmswing_table[i] & MASKOFDM_D)) {
--                               ofdm_index_old[0] = (u8) i;
--
-                                 RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-                                          "Initial pathA ele_d reg0x%x = 0x%lx, 
-ofdm_index=0x%x\n",
-                                          ROFDM0_XATXIQIMBALANCE,
--                                        ele_d, ofdm_index_old[0]);
-+                                        ele_d, i);
-                                 break;
-                         }
-                 }
-@@ -722,7 +720,7 @@ static void rtl92c_dm_txpower_tracking_c
-                                                  DBG_LOUD,
-                                                  "Initial pathB ele_d reg0x%x = 
-0x%lx, ofdm_index=0x%x\n",
-                                                  ROFDM0_XBTXIQIMBALANCE, ele_d,
--                                                ofdm_index_old[1]);
-+                                                i);
-                                         break;
-                                 }
-                         }
+>> +	s = rcu_dereference_protected(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
+>> +				      lockdep_is_held(&local->sta_mtx));
+>> +	if (!s)
+>> +		return -ENONET;
+>
+> You probably want -ENOENT, not -ENONET.
 
-I will submit this as a proper patch later. Fortunately, the driver is seldom 
-run with the debug level as high as DBG_LOUD, then the RT_TRACE statements 
-rarely result in any output.
+Yes, and in fact, I need to return just the rv from the old
+hash logic since otherwise we get false failure results since
+the new hash only has vifs.  This was the cause of that splat
+I posted a week or two ago...
 
-Larry
+>> +struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
+>> +				     const u8 *vif_addr, const u8 * sta_addr) {
+>> +	struct sta_info *sta;
+>> +
+>> +	sta = rcu_dereference_check(local->sta_vhash[STA_HASH(vif_addr)],
+>> +				    lockdep_is_held(&local->sta_mtx));
+>> +	while (sta) {
+>> +		if (ether_addr_equal(sta->sdata->vif.addr, vif_addr) &&
+>> +		    ether_addr_equal(sta->sta.addr, sta_addr))
+>> +			break;
+>> +		sta = rcu_dereference_check(sta->vnext,
+>> +					    lockdep_is_held(&local->sta_mtx));
+>
+> Almost all of your rcu_dereference_check() invocations should be
+> rcu_dereference_protected(). See include/linux/rcupdate.h :)
+
+Now this, I'm not so sure of.  That rcu_dereference_protected seems to
+be only used for the 'update-side' use.  I was under the impression
+that when the mac80211 rx logic is called we are only protected by rcu,
+not the update mutex.
+
+I also struggle to understand RCU properly...so maybe I'm just
+wrong about all that...
+
+The other methods to get sta_info around that code use the _check() variant,
+by the way...
+
+Thanks,
+Ben
 
 
-Larry
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
