@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34938 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756162Ab3DQA7F (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55495 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934554Ab3DIGwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 20:59:05 -0400
-Received: by mail-pa0-f52.google.com with SMTP id fb10so627041pad.39
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 17:59:04 -0700 (PDT)
-Date: Tue, 16 Apr 2013 17:58:55 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	devel@driverdev.osuosl.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-scsi@vger.kernel.org,
-	Jerry Chuang <jerry-chuang@realtek.com>,
-	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 10/28] proc: Add proc_mkdir_data() [RFC]
-Message-ID: <20130417005855.GC11541@kroah.com> (sfid-20130417_025922_785734_FBE172FA)
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
- <20130416182630.27773.83021.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130416182630.27773.83021.stgit@warthog.procyon.org.uk>
+	Tue, 9 Apr 2013 02:52:42 -0400
+Message-ID: <1365490352.8465.3.camel@jlt4.sipsolutions.net> (sfid-20130409_085244_739393_C8F383C4)
+Subject: Re: [PATCH 3/3] wireless-regdb: add VHT channels 1..3 to world
+ regdom
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, qca_vkondrat@qca.qualcomm.com,
+	yunsenw@qca.qualcomm.com, kandala@qca.qualcomm.com,
+	wireless-regdb@lists.infradead.org, green@qca.qualcomm.com,
+	linux-wireless@vger.kernel.org
+Date: Tue, 09 Apr 2013 08:52:32 +0200
+In-Reply-To: <1365486778-2336-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130409_075322_170119_582B1385)
+References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1365486778-2336-4-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20130409_075322_170119_582B1385)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 07:26:30PM +0100, David Howells wrote:
-> Add proc_mkdir_data() to allow procfs directories to be created that are
-> annotated at the time of creation with private data rather than doing this
-> post-creation.  This means no access is then required to the proc_dir_entry
-> struct to set this.
-> 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: Neela Syam Kolli <megaraidlinux@lsi.com>
-> cc: Jerry Chuang <jerry-chuang@realtek.com>
-> cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> cc: linux-scsi@vger.kernel.org
-> cc: devel@driverdev.osuosl.org
-> cc: linux-wireless@vger.kernel.org
-> ---
+On Mon, 2013-04-08 at 22:52 -0700, Luis R. Rodriguez wrote:
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> +	# IEEE 802.11ad (60gHz), channels 1..3
+> +	(57240 - 63720 @ 2160), (N/A, 0)
+
+Also -- GHz, not gHz :)
+
+johannes
+
