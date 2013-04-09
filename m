@@ -1,57 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:33259 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965626Ab3DQMzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:55:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1USRt9-0006m6-Ft
-	for linux-wireless@vger.kernel.org; Wed, 17 Apr 2013 14:55:03 +0200
-Received: from 69-165-152-163.dsl.teksavvy.com ([69.165.152.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 14:55:03 +0200
-Received: from JoelleEmmily by 69-165-152-163.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 14:55:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Joelle <JoelleEmmily@gmail.com>
-Subject: Re: RTL8187 in master mode with hostapd
-Date: Wed, 17 Apr 2013 12:51:32 +0000 (UTC)
-Message-ID: <loom.20130417T144556-632@post.gmane.org> (sfid-20130417_145512_125729_1E5F89B6)
-References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow> <5016A5D3.10301@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:55483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885Ab3DIGva (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 02:51:30 -0400
+Message-ID: <1365490278.8465.1.camel@jlt4.sipsolutions.net> (sfid-20130409_085133_634901_B72A0BBF)
+Subject: Re: [wireless-regdb] [PATCH 2/3] wireless-regdb: enable VHT80 when
+ world roaming
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
+	kandala@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	qca_vkondrat@qca.qualcomm.com, green@qca.qualcomm.com,
+	yunsenw@qca.qualcomm.com
+Date: Tue, 09 Apr 2013 08:51:18 +0200
+In-Reply-To: <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
+References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
-
+On Mon, 2013-04-08 at 22:52 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 > 
-> As far as I know, there are no USB devices that meet all of your
-requirements. 
-> If you relax the one about external firmware, then any of the USB devices
-that 
-> run rt2800usb (Ralink) should support master mode. I'm not at home now and do 
-> not have mine with me, thus I cannot give you a make/model. An older
-dual-band 
-> model is the Dell 1450U. These are available new on E-bay for $10. Perhaps 
-> someone else on this list can suggest other specific models. I am quite
-certain 
-> that Atheros also has such devices.
+> For VHT, the wider bandwidths (up to 160 MHz) need
+> to be allowed. Since world roaming only covers the
+> case of connecting to an AP, it can be opened up
+> there, we will rely on the AP to know the local
+> regulations.
 > 
-> Larry
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Based on a patch by Johannes Berg for upstream Linux.
 
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -6,10 +6,10 @@ country 00:
+>  	# Channel 14. Only JP enables this and for 802.11b only
+>  	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
+>  	# Channel 36 - 48
+> -	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+> +	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
+>  	# NB: 5260 MHz - 5700 MHz requies DFS
+>  	# Channel 149 - 165
+> -	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+> +	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
 
-The statement that the rtl8187 CANNOT be set as an AP is utterly wrong. Alfa
-networks provides a Windows utility that allows one to setup an AP, I've
-used it and it works(as well as anything on windows). It seems that this is
-a crime against technology that windows can provide a functionality that
-Linux cannot or may never. 
+I also have a separate upstream patch that I haven't sent here yet to
+enable 160 MHz by enabling the radar channels (passively), see below;
+any thoughts on that?
 
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -184,11 +184,21 @@ static const struct ieee80211_regdomain
+world_regdom = {
+                        NL80211_RRF_NO_IBSS |
+                        NL80211_RRF_NO_OFDM),
+                /* IEEE 802.11a, channel 36..48 */
+-               REG_RULE(5180-10, 5240+10, 80, 6, 20,
++               REG_RULE(5180-10, 5240+10, 160, 6, 20,
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
+ 
+-               /* NB: 5260 MHz - 5700 MHz requires DFS */
++               /* IEEE 802.11a, channel 52..64 - DFS required */
++               REG_RULE(5260-10, 5320+10, 160, 6, 20,
++                       NL80211_RRF_PASSIVE_SCAN |
++                       NL80211_RRF_NO_IBSS |
++                       NL80211_RRF_DFS),
++
++               /* IEEE 802.11a, channel 100..144 - DFS required */
++               REG_RULE(5500-10, 5720+10, 160, 6, 20,
++                       NL80211_RRF_PASSIVE_SCAN |
++                       NL80211_RRF_NO_IBSS |
++                       NL80211_RRF_DFS),
+ 
+                /* IEEE 802.11a, channel 149..165 */
+                REG_RULE(5745-10, 5825+10, 80, 6, 20,
+
+johannes
 
