@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:39361 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758758Ab3DAVrQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55878 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935212Ab3DIJmL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 17:47:16 -0400
-Received: by mail-pd0-f176.google.com with SMTP id r11so1409904pdi.35
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Apr 2013 14:47:16 -0700 (PDT)
-Date: Mon, 1 Apr 2013 14:47:14 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andrew Lutomirski <luto@mit.edu>, linux-wireless@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: Mysterious (?) VHT/HT warning on 3.8.2
-Message-ID: <20130401214714.GA5976@kroah.com> (sfid-20130401_234723_278821_12E16851)
-References: <CAObL_7G8i9fuvoVMu2D1P7vk9DE_=EwJcp3uDPiLPC7YfuHROg@mail.gmail.com>
- <1364767324.8598.0.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1364767324.8598.0.camel@jlt4.sipsolutions.net>
+	Tue, 9 Apr 2013 05:42:11 -0400
+Message-ID: <1365500525.8465.8.camel@jlt4.sipsolutions.net> (sfid-20130409_114215_786518_11556CF2)
+Subject: Re: [PATCH 6/6] mac80211: avoid mesh peer rate update warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 09 Apr 2013 11:42:05 +0200
+In-Reply-To: <1365500301.8465.6.camel@jlt4.sipsolutions.net> (sfid-20130409_113828_957604_9F52C1F0)
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+	 <1365444377-9959-6-git-send-email-thomas@cozybit.com>
+	 (sfid-20130408_200821_359359_9CD5C99F) <1365500301.8465.6.camel@jlt4.sipsolutions.net>
+	 (sfid-20130409_113828_957604_9F52C1F0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 01, 2013 at 12:02:04AM +0200, Johannes Berg wrote:
-> On Sat, 2013-03-30 at 18:49 -0700, Andrew Lutomirski wrote:
+On Tue, 2013-04-09 at 11:38 +0200, Johannes Berg wrote:
+> On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
+> > Some drivers (like ath9k_htc) will take a mutex in
+> > rate_control_rate_update(), so drop the sta lock before we
+> > get there.
 > 
-> > wlan0: capabilities/regulatory prevented using AP HT/VHT
-> > configuration, downgraded
-> > 
-> > Despite this warning, HT seems to work.  I'm getting >7 MB/s over ssh,
-> > which isn't terrible.
-> 
-> Yeah, the warning is spurious, it's disabling VHT because neither you
-> nor the AP have it ;-)
-> 
-> I fixed it in
-> 
-> commit 586e01ededf9b713a1512dd658806791a7ca1a50
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Thu Feb 14 12:13:53 2013 +0100
-> 
->     mac80211: prevent spurious HT/VHT downgrade message
-> 
-> but I guess that didn't make it to 3.8, maybe it should be applied to
-> stable.
+> That driver is broken then. rate_control_rate_update() can be called
+> from the RX path where this also isn't allowed.
 
-Now applied, thanks.
+ * @sta_rc_update: Notifies the driver of changes to the bitrates that
+can be
+ *      used to transmit to the station. The changes are advertised with
+bits
+ *      from &enum ieee80211_rate_control_changed and the values are
+reflected
+ *      in the station data. This callback should only be used when the
+driver
+ *      uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL)
+since
+ *      otherwise the rate control algorithm is notified directly.
+ *      Must be atomic.
 
-greg k-h
+(note last line)
+
+johannes
+
