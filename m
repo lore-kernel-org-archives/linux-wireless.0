@@ -1,51 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:46332 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab3DIXAk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 19:00:40 -0400
-Received: by mail-wg0-f53.google.com with SMTP id c11so7369898wgh.8
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 16:00:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
-	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
-	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
-	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
-	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<20830.46610.23754.783231@gargle.gargle.HOWL>
-	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
-	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
-	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
-	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmomGT4grPwA0dSGqPD=Zi=dZk6WwpqKEXXDvfLUqr08o0w@mail.gmail.com>
-	<1365413949.24195.YahooMailNeo@web193502.mail.sg3.yahoo.com>
-	<1365433751.96373.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
-Date: Tue, 9 Apr 2013 16:00:38 -0700
-Message-ID: <CAJ-Vmo===nANf3g5psxf3aV7L8jVQ8mjRP+1WM0PSS9PgcGHBA@mail.gmail.com> (sfid-20130410_010043_694058_94C6751E)
-Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx3.wp.pl ([212.77.101.7]:30988 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764934Ab3DIPE4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 11:04:56 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 08/11] rt2800: move RF_R27 setup to individual rfcsr init subroutines
+Date: Tue,  9 Apr 2013 17:05:27 +0200
+Message-Id: <1365519930-3230-9-git-send-email-stf_xl@wp.pl> (sfid-20130409_170501_366813_40C2861D)
+In-Reply-To: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Yes, "WLAN_ACTIVE" here is just both TX and RX activity.
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-So if it were working, that would stay low.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index df8760f..fe0df88 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4588,6 +4588,11 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	rt2800_rx_filter_calibration(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
++	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
++	    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+@@ -4761,6 +4766,9 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+ 
+ 	rt2800_rx_filter_calibration(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+@@ -5007,6 +5015,9 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ 
+ 	rt2800_normal_mode_setup_5xxx(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT5592, REV_RT5592C))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+@@ -5063,13 +5074,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		return 0;
+ 	}
+ 
+-	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT5592, REV_RT5592C))
+-		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+-
+ 	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
+ 	rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
+ 	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
+-- 
+1.7.4.4
 
-
-
-adrian
