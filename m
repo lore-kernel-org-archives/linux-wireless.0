@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32878 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55860 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932803Ab3DJTym (ORCPT
+	with ESMTP id S932892Ab3DIJhk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 15:54:42 -0400
+	Tue, 9 Apr 2013 05:37:40 -0400
+Message-ID: <1365500246.8465.5.camel@jlt4.sipsolutions.net> (sfid-20130409_113749_590216_C779559A)
+Subject: Re: [PATCH 3/6] mac80211: ieee80211_queue_stopped returns reasons
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Subject: [PATCH] mac80211: remove warning from ieee80211_beacon_loss
-Date: Wed, 10 Apr 2013 21:54:33 +0200
-Message-Id: <1365623673-2368-1-git-send-email-johannes@sipsolutions.net> (sfid-20130410_215447_644627_5CA90C05)
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 09 Apr 2013 11:37:26 +0200
+In-Reply-To: <CAG6hwVOAwtngWU3uEueG7hZX3z5dxLLc8c8-Vd7Q+e93wM-UaQ@mail.gmail.com> (sfid-20130408_215754_514729_5AC29991)
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+	 <1365444377-9959-3-git-send-email-thomas@cozybit.com>
+	 <1365446248.25475.17.camel@jlt4.sipsolutions.net>
+	 <CAG6hwVOBqfP_Mw-pirzEOFytck-7H6_LNiTtO_90gXskbEuNTg@mail.gmail.com>
+	 <1365449914.25475.20.camel@jlt4.sipsolutions.net>
+	 <CAG6hwVOAwtngWU3uEueG7hZX3z5dxLLc8c8-Vd7Q+e93wM-UaQ@mail.gmail.com>
+	 (sfid-20130408_215754_514729_5AC29991)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+On Mon, 2013-04-08 at 12:57 -0700, Thomas Pedersen wrote:
 
-Currently, mac80211 assumes that connection monitor offload
-for BSS station implies that the device:
-- sends periodic keep alive packets to associated AP
-- monitors missed beacons
-- actively probes the AP in case of missed beacons
+> > That seems racy? Even asking whether it's stopped is racy though, what
+> > are you even trying to accomplish?
+> 
+> Yeah, that's why I'd like to get the reason the first time.
+> 
+> _h_mesh_fwding() checks whether the outgoing queue is stopped, to
+> avoid piling frames on the pending queue if the outgoing medium is
+> busy. I guess the idea was to avoid queueing frames faster than the
+> hardware could unload them. Maybe this doesn't actually happen, but we
+> can be a little bit smarter about when to drop forwarded frames. Like
+> if skbs are just being added to the outgoing queue, we probably
+> shouldn't.
 
-In case of poor connection conditions it expects the function
-ieee80211_connection_loss() to be called by driver. However,
-some devices implement connection monitor offload excluding
-active AP probing.
+Technically I guess that can happen if your inbound link is better than
+the outbound one? But it'll depend on the AC parameters etc. too.
 
-To allow them to call ieee80211_beacon_loss() cleanly, remove
-the warning there and thus allow them to use mac80211 for the
-AP probing even if connection monitor offload is supported.
+However it seems that ieee80211_queue_stopped() is actually kinda broken
+and should only return the 'driver-stopped' reason to start with. If you
+fix that, it's probably good enough for you. I don't think in patch 4
+you should drop frames for scanning, for example.
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 43023f0..c7860d0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2215,7 +2215,6 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
- 
- 	trace_api_beacon_loss(sdata);
- 
--	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
- 	sdata->u.mgd.connection_loss = false;
- 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
--- 
-1.8.0
+johannes
 
