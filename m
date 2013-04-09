@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:49686 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758089Ab3DXIbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 04:31:48 -0400
-Message-ID: <1366792305.11111.4.camel@jlt4.sipsolutions.net> (sfid-20130424_103202_642130_ED744E50)
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 24 Apr 2013 10:31:45 +0200
-In-Reply-To: <51779434.4010709@broadcom.com>
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
-	 <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
-	 <1366735340.8385.20.camel@jlt4.sipsolutions.net>
-	 <51779434.4010709@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-da0-f45.google.com ([209.85.210.45]:34178 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605Ab3DIFxT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 01:53:19 -0400
+Received: by mail-da0-f45.google.com with SMTP id v40so2928599dad.18
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 22:53:18 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: qca_vkondrat@qca.qualcomm.com, yunsenw@qca.qualcomm.com,
+	kandala@qca.qualcomm.com, wireless-regdb@lists.infradead.org,
+	green@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 3/3] wireless-regdb: add VHT channels 1..3 to world regdom
+Date: Mon,  8 Apr 2013 22:52:58 -0700
+Message-Id: <1365486778-2336-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130409_075322_170119_582B1385)
+In-Reply-To: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-24 at 10:13 +0200, Arend van Spriel wrote:
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-> >> When I am looking at the USB gadget handling, I see a lot of progress
-> >> in establishing a standard kernel interface and changing Android
-> >> userspace to work with that instead.
-> >
-> > "progress" doesn't really help, at least in this case it's pretty much
-> > an either-or situation and changing the userspace will take a long time.
-> 
-> As long as changing the user-space is done eventually, right.
+This is a port of what Vladimir Kondratiev sent to the
+Linux kernel for the static world regulatory domain.
 
-Separate subthread for this ...
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Yunsen Wang <yunsenw@qca.qualcomm.com>
+Cc: wireless-regdb@lists.infradead.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    2 ++
+ 1 file changed, 2 insertions(+)
 
-What do we even consider to be the "right" changes? Android really only
-wants a "p2p0" control/monitor socket in wpa_supplicant, it doesn't
-really care about anything else (apart from the stupidity about wanting
-a p2p0 netdev to set it UP) whether you use P2P-Device in the kernel or
-not.
-
-So I would say that using the "standard kernel interface" is actually
-more of a wpa_supplicant thing, I think it should simply allow the
-option of
- a) use the P2P-Device internally (as David Spinadel's patches do)
- b) be able to create a separate control/monitor P2P socket, regardless
-of
-    whether there's a P2P-Device or not
-
-Alternatively, Android could presumably use the regular socket for P2P,
-but I'm not sure what the reason is for not doing so?
-
-johannes
+diff --git a/db.txt b/db.txt
+index ae0f83d..5657c11 100644
+--- a/db.txt
++++ b/db.txt
+@@ -10,6 +10,8 @@ country 00:
+ 	# NB: 5260 MHz - 5700 MHz requies DFS
+ 	# Channel 149 - 165
+ 	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
++	# IEEE 802.11ad (60gHz), channels 1..3
++	(57240 - 63720 @ 2160), (N/A, 0)
+ 
+ 
+ country AD:
+-- 
+1.7.10.4
 
