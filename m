@@ -1,69 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:36738 "EHLO
-	na3sys009aog130.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759445Ab3DATtH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55947 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758442Ab3DIJ6C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 15:49:07 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.9 RESEND] mwifiex: complete last internal scan
-Date: Mon, 1 Apr 2013 12:44:45 -0700
-Message-ID: <1364845486-1074-1-git-send-email-bzhao@marvell.com> (sfid-20130401_214911_241795_EE3955BA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 9 Apr 2013 05:58:02 -0400
+Message-ID: <1365501478.8465.17.camel@jlt4.sipsolutions.net> (sfid-20130409_115808_969808_46938599)
+Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX
+ performance.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 09 Apr 2013 11:57:58 +0200
+In-Reply-To: <1365007698-25295-1-git-send-email-greearb@candelatech.com> (sfid-20130403_184908_772897_29241D1E)
+References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20130403_184908_772897_29241D1E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are waiting on first scan command of internal scan request
-before association, so we should complete on last internal scan
-command response.
+On Wed, 2013-04-03 at 09:48 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> When one has multiple station VIFS all connected to the same
+> AP, the rx logic becomes a linear walk of all stations.  To
+> improve performance in this case, hash the station VIFs on
+> the VIF MAC.  This significantly improves performance:  70Mbps
+> without the patch, 190Mbps with patch, when using 50 stations
+> receiving TCP traffic.
+> 
+> Probably not many people doing this, so not worth pushing upstream
+> at this time.
 
-Cc: <stable@vger.kernel.org> # 3.8
-Tested-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Marco Cesarano <marco@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/scan.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+I tend to agree.
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index d215b4d..e7f6dea 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1393,8 +1393,10 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
- 			queue_work(adapter->workqueue, &adapter->main_work);
- 
- 			/* Perform internal scan synchronously */
--			if (!priv->scan_request)
-+			if (!priv->scan_request) {
-+				dev_dbg(adapter->dev, "wait internal scan\n");
- 				mwifiex_wait_queue_complete(adapter, cmd_node);
-+			}
- 		} else {
- 			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
- 					       flags);
-@@ -1793,7 +1795,12 @@ check_next_scan:
- 		/* Need to indicate IOCTL complete */
- 		if (adapter->curr_cmd->wait_q_enabled) {
- 			adapter->cmd_wait_q.status = 0;
--			mwifiex_complete_cmd(adapter, adapter->curr_cmd);
-+			if (!priv->scan_request) {
-+				dev_dbg(adapter->dev,
-+					"complete internal scan\n");
-+				mwifiex_complete_cmd(adapter,
-+						     adapter->curr_cmd);
-+			}
- 		}
- 		if (priv->report_scan_result)
- 			priv->report_scan_result = false;
--- 
-1.7.0.2
+> +++ b/net/mac80211/sta_info.c
+> @@ -77,19 +77,42 @@ static int sta_info_hash_del(struct ieee80211_local *local,
+>  	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
+>  				      lockdep_is_held(&local->sta_mtx));
+>  	if (!s)
+> -		return -ENOENT;
+> +		goto try_lhash;
+
+Does this make sense? If the station doesn't exist in the regular hash,
+it really shouldn't be in the vif hash either, no?
+
+>  	if (rcu_access_pointer(s->hnext)) {
+>  		rcu_assign_pointer(s->hnext, sta->hnext);
+> +		goto try_lhash;
+> +	}
+> +
+> +	/* Remove from the local VIF addr hash */
+> +try_lhash:
+
+That last goto there seems a bit pointless :)
+
+> +	s = rcu_dereference_protected(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
+> +				      lockdep_is_held(&local->sta_mtx));
+> +	if (!s)
+> +		return -ENONET;
+
+You probably want -ENOENT, not -ENONET.
+
+> +struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
+> +				     const u8 *vif_addr, const u8 * sta_addr) {
+> +	struct sta_info *sta;
+> +
+> +	sta = rcu_dereference_check(local->sta_vhash[STA_HASH(vif_addr)],
+> +				    lockdep_is_held(&local->sta_mtx));
+> +	while (sta) {
+> +		if (ether_addr_equal(sta->sdata->vif.addr, vif_addr) &&
+> +		    ether_addr_equal(sta->sta.addr, sta_addr))
+> +			break;
+> +		sta = rcu_dereference_check(sta->vnext,
+> +					    lockdep_is_held(&local->sta_mtx));
+
+Almost all of your rcu_dereference_check() invocations should be
+rcu_dereference_protected(). See include/linux/rcupdate.h :)
+
+johannes
 
