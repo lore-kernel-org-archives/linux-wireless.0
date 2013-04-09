@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45826 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55868 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab3DVNlI (ORCPT
+	with ESMTP id S933173Ab3DIJjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 09:41:08 -0400
-Message-ID: <1366638061.8637.12.camel@jlt4.sipsolutions.net> (sfid-20130422_154113_132002_67C7D37E)
-Subject: Re: [PATCH v2] mac80211: use synchronize_rcu() with rcu_barrier()
+	Tue, 9 Apr 2013 05:39:51 -0400
+Message-ID: <1365500387.8465.7.camel@jlt4.sipsolutions.net> (sfid-20130409_113958_750337_D32342CF)
+Subject: Re: [PATCH 1/6] mac80211: unset FC retry bit in mesh fwding path
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, paulmck@linux.vnet.ibm.com
-Date: Mon, 22 Apr 2013 15:41:01 +0200
-In-Reply-To: <20130418222649.GC3759@localhost> (sfid-20130419_002738_056827_6A84C745)
-References: <20130418220443.GB3759@localhost>
-	 <20130418222649.GC3759@localhost> (sfid-20130419_002738_056827_6A84C745)
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 09 Apr 2013 11:39:47 +0200
+In-Reply-To: <1365444377-9959-1-git-send-email-thomas@cozybit.com> (sfid-20130408_200759_469758_60CEE9C3)
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20130408_200759_469758_60CEE9C3)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-04-18 at 18:26 -0400, Bob Copeland wrote:
-> The RCU docs used to state that rcu_barrier() included a wait
-> for an RCU grace period; however the comments for rcu_barrier()
-> as of commit f0a0e6f... "rcu: Clarify memory-ordering properties
-> of grace-period primitives" contradict this.
-> 
-> So add back synchronize_{rcu,net}() to where they once were,
-> but keep the rcu_barrier()s for the call_rcu() callbacks.
+On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
+> Otherwise forwarded frames would keep the retry bit set
+> from the previous link transmission.
 
-Applied, thanks for spotting this!
+Applied.
 
 johannes
 
