@@ -1,104 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40403 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752425Ab3D1Pc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 11:32:29 -0400
-Message-ID: <517D4108.9070508@openwrt.org> (sfid-20130428_173245_729633_F9F35716)
-Date: Sun, 28 Apr 2013 17:32:24 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D3840.2060000@candelatech.com> <517D3B50.6070806@openwrt.org> <517D3D0A.1080505@candelatech.com>
-In-Reply-To: <517D3D0A.1080505@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:56012 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935573Ab3DIKTQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 06:19:16 -0400
+Message-ID: <1365502750.8465.30.camel@jlt4.sipsolutions.net> (sfid-20130409_121925_585764_5E93C1E8)
+Subject: Re: RFC: SMPS for AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vivekanandah@posedge.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
+Date: Tue, 09 Apr 2013 12:19:10 +0200
+In-Reply-To: <021a065e3ab402466e8049b2f4cd3fdd@posedge.com>
+References: <fbef7a2278fe739a398430949087c950@posedge.com>
+	 (sfid-20130403_093709_189406_740B7438) <1364976319.8351.2.camel@jlt4.sipsolutions.net>
+	 <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
+	 <1364978764.8351.6.camel@jlt4.sipsolutions.net>
+	 <021a065e3ab402466e8049b2f4cd3fdd@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-28 5:15 PM, Ben Greear wrote:
-> On 04/28/2013 08:08 AM, Felix Fietkau wrote:
->> On 2013-04-28 4:54 PM, Ben Greear wrote:
->>> On 04/28/2013 05:51 AM, Felix Fietkau wrote:
->>>> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->>>>> Collect statistics about recived duplicate and STBC packets.
->>>>> This information should help see if STBC is actually working.
->>>>>
->>>>> Tested on ar9285;
->>>>>
->>>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->>>> I thought about this patch some more, and I'm wondering what's the point
->>>> in doing this? These statistics are going to be completely useless for
->>>> most people and they'll waste some memory/cpu cycles, especially on
->>>> small-cache devices. I think it's much more useful to simply pass the
->>>> information to mac80211 via rx flags and get them added to the radiotap
->>>> header.
->>>> I'd like to keep the number of 'poor man's debug hacks' in the driver to
->>>> a minimum, and there are some other things that I think should be
->>>> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
->>>> sampling hack, and pretty much anything else that can be just as easily
->>>> accessed from mac80211 through regular interfaces.
->>>
->>> Does that mean we can just put the stats in mac80211, or do we have
->>> to be running a sniffer to gather the stats?
->> Right now you'd have to use a sniffer, but if you really care about
->> getting specific stats it might make sense to write a kernel module that
->> attaches to a monitor interface and gathers them (maybe even with
->> support for gathering arbitrary stats by attaching bpf filters).
+Hi,
+
+> based on the discussion, i have come out with an RFC for SMPS support 
+> for AP in minstrel_ht. kindly see the explanation below and indicate to 
+> me, if this okay or any changes are required?
+
+Code talks ;-)
+
+> RFC To send out RTS for AP connected to a dynamic SMPS station
 > 
-> I'd like ongoing stats w/out a monitor interface or sniffer, though
-> it would be fine to add it to the sniffer path as well.  Maybe we can
-> have compile-time flag to enable the extra and mostly useless
-> stats so only the 1% that cares pays the overhead.
-I'd like to have proper justification for stats added to the code and
-kick out stuff not worth keeping. It's not just about runtime overhead,
-but keeping the number of lines of code down is important for
-maintenance as well. Adding extra compile time flags just makes the
-maintenance part worse.
-
->> The problem I have with the current stats is they're just an arbitrary
->> collection of random stuff that is probably useless for 99% of all
->> users. In many cases the way the stats are collected also makes the data
->> completely meaningless (e.g. because the source/destination address is
->> not taken into account).
->>
->> Why care about the number of packets on the air that were sent with a
->> specific rate flag? Why care about the number of beacons on the air
->> (with no filter on a set of APs or anything)? Or what about the number
->> of fragments received? To me it just looks like an incoherent set of
->> useless facts.
+> This code change addresses the AP requirement of sending out a
+> RTS frame when dynamic SMPS is enabled at the station
 > 
-> I think having lots of stats allows for the possibility of seeing a pattern
-> that might otherwise be missed, and when testing in an isolated environment,
-> you don't have to care about who is sending what being reported..you already
-> know.
-The stats I pointed out seem mostly useless for that purpose. When
-testing in an isolated environment you might as well run a capture on a
-monitor mode interface and do some more sophisticated analysis afterwards.
+> the minstrel_ht rate module needs to provide the lower driver layer
+> an indication of enabling RTS frame transmission for an AP connected
+> to a dynamic SMPS station.
 
-> One thing I'd like to do, for instance, is to figure out how to get some
-> average MPDU lengths calculated in hopes that would correlate with decreased
-> performance in cases were we have lots of stations....
-Please don't throw hooks for such stacks all over the ath9k or mac80211
-data path. Making a module for analyzing such stuff on a monitor mode
-interface might be a bit more work than spraying hacks onto the code,
-but at least it doesn't push the maintenance/performance overhead burden
-onto everybody else.
+It really just needs to set the RTS flag on the frames.
 
-Something like a BPF based statistics gathering module would be useful
-for more people as well - I'd probably help with the code myself as
-well. I made a proof of concept of such a module several years ago. It
-was based on madwifi back then, but the code is mostly generic. You can
-find it here:
-http://git.openwrt.org/?p=packages.git;a=tree;f=net/wprobe/src
+> the SMPS state of the station is stored in the ieee80211_sta 
+> structure's ht_cap variable.
 
-When implemented properly, such am module would even make things a lot
-easier for you by letting you add new stats at runtime without changing
-kernel code or reloading modules.
+No, not any more.
 
-So let's stop wasting time on keeping lots of tiny useless hacks around
-and instead build something more useful. :)
+> the minstrel_ht_get_rate function can be modified to check if the 
+> station is a dynamic SMPS
+> station and a new flag can be incorporated for the ieee80211_tx_info 
+> flags (e.g. IEEE80211_TX_CTL_SMPS_SET_RTS)
+> that indicates to the lower layer that the station is a dynamic SMPS 
+> enabled station.
+> 
+> the lower AP driver can then enable RTS before the first frame 
+> transmission to the station by checking for the above flag.
 
-- Felix
+Sounds about right.
+
+johannes
+
