@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:42211 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab3DIBvM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55918 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933110Ab3DIJrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 21:51:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130409003720.GA5145@thunk.org>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
-	<CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
-	<201304090003.47056.chunkeey@googlemail.com>
-	<CAJ-VmomksDSNvTpKQpNRRQx+QboSVHpby7V4qq4rngqVkTvf+A@mail.gmail.com>
-	<20130409003720.GA5145@thunk.org>
-Date: Mon, 8 Apr 2013 18:51:10 -0700
-Message-ID: <CAJ-VmokQ=1FLnn-0Ew1JTY_WhYuSYmZq2=DuNTV0TR3kF4wo7g@mail.gmail.com> (sfid-20130409_035129_452838_0AC9F3B5)
-Subject: Re: Version number policy!
-From: Adrian Chadd <adrian@freebsd.org>
-To: "Theodore Ts'o" <tytso@mit.edu>, Adrian Chadd <adrian@freebsd.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Apr 2013 05:47:53 -0400
+Message-ID: <1365500869.8465.10.camel@jlt4.sipsolutions.net> (sfid-20130409_114800_082862_5BFF4EA2)
+Subject: Re: [PATCH 2/6] mac80211: exclude multicast frames from BA
+ accounting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Date: Tue, 09 Apr 2013 11:47:49 +0200
+In-Reply-To: <1365444377-9959-2-git-send-email-thomas@cozybit.com> (sfid-20130408_200803_746944_CA235B9A)
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+	 <1365444377-9959-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20130408_200803_746944_CA235B9A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 April 2013 17:37, Theodore Ts'o <tytso@mit.edu> wrote:
+Subject should probably say "reordering" rather than "accounting"
 
-> There shouldn't be any crap; just a an error message indicating that
-> "the file system has features which this implementation doesn't
-> understand".  At least, if the implementation was competently
-> coded.... (ext2/3/4 has feature bitmasks that make it very clear what
-> features are required so that an implementation can mount the file
-> system read/write or read/only).
+> Since multicast aggregation is not currently supported by
+> mac80211, we can safely ignore them when reordering
+> aggregate MPDUs.
 
-Right, the design side of it is fine.
+Multicast may have a lower expectation of ordering than unicast, but is
+this really the right thing to do? It seems better to just fix it?
 
-But then you end up with people making filesystems which aren't
-necessarily backwards compatible (and aren't aware of this), then try
-to share with other extX implementations; or boot an older Linux
-kernel (eg plugging an ext3 device on a newer box to an older box.)
-Now, ext3 is a bit more mature nowdays so people aren't _always_
-hitting this corner case. But I do recall earlier on when things were
-moving forward quite quickly, people would create drives on Linux
-machine X that couldn't be read or written to on Linux machine Y.
+johannes
 
-I'm not knocking extX here; I'm just pointing out that exposing things
-as a set of capability flags doesn't magically fix interoperability.
-It just stops you from scribbling crap where it shouldn't be.
-
-
-
-Adrian
