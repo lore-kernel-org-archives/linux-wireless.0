@@ -1,105 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.piware.de ([213.9.93.70]:38002 "EHLO www.piware.de"
+Received: from mx4.wp.pl ([212.77.101.8]:52381 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751097Ab3DHJaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 05:30:02 -0400
-Date: Mon, 8 Apr 2013 11:30:01 +0200
-From: Martin Pitt <martin.pitt@ubuntu.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH v2] mac80211_hwsim: Register and bind to driver
-Message-ID: <20130408093001.GE2818@piware.de> (sfid-20130408_113023_067461_6029F82C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S934334Ab3DIPEu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 11:04:50 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville\"" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 05/11] rt2800: move GPIO_SWITCH setup to 3390 specific rfcsr init
+Date: Tue,  9 Apr 2013 17:05:24 +0200
+Message-Id: <1365519930-3230-6-git-send-email-stf_xl@wp.pl> (sfid-20130409_170454_327188_EAFCC0F3)
+In-Reply-To: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Properly register our mac80211_hwsim_driver, attach it to the platform bus.
-Bind newly created hwsim devices to that driver, so that our wlan devices get
-a proper "driver" sysfs attribute.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-This makes mac80211_hwsim interfaces work with NetworkManager.
-
-Signed-off-by: Martin Pitt <martin.pitt@ubuntu.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 0064d38..0a6fb4a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -25,6 +25,7 @@
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
- #include <linux/etherdevice.h>
-+#include <linux/platform_device.h>
- #include <linux/debugfs.h>
- #include <linux/module.h>
- #include <linux/ktime.h>
-@@ -1675,6 +1676,7 @@ static void mac80211_hwsim_free(void)
- 		debugfs_remove(data->debugfs_ps);
- 		debugfs_remove(data->debugfs);
- 		ieee80211_unregister_hw(data->hw);
-+		device_release_driver(data->dev);
- 		device_unregister(data->dev);
- 		ieee80211_free_hw(data->hw);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 216ceb6..83554da 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4668,6 +4668,8 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ {
++	u32 reg;
++
+ 	rt2800_rfcsr_write(rt2x00dev, 0, 0xa0);
+ 	rt2800_rfcsr_write(rt2x00dev, 1, 0xe1);
+ 	rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
+@@ -4700,6 +4702,10 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+ 	rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
++
++	rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
++	rt2x00_set_field32(&reg, GPIO_SWITCH_5, 0);
++	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+ }
+ 
+ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+@@ -4985,11 +4991,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
  	}
-@@ -1683,7 +1685,9 @@ static void mac80211_hwsim_free(void)
  
  
- static struct device_driver mac80211_hwsim_driver = {
--	.name = "mac80211_hwsim"
-+	.name = "mac80211_hwsim",
-+	.bus = &platform_bus_type,
-+	.owner = THIS_MODULE,
- };
- 
- static const struct net_device_ops hwsim_netdev_ops = {
-@@ -2179,6 +2183,8 @@ static int __init init_mac80211_hwsim(void)
- 	if (IS_ERR(hwsim_class))
- 		return PTR_ERR(hwsim_class);
- 
-+	driver_register(&mac80211_hwsim_driver);
-+
- 	memset(addr, 0, ETH_ALEN);
- 	addr[0] = 0x02;
- 
-@@ -2205,6 +2211,14 @@ static int __init init_mac80211_hwsim(void)
- 			goto failed_drvdata;
- 		}
- 		data->dev->driver = &mac80211_hwsim_driver;
-+		err = device_bind_driver(data->dev);
-+		if (err != 0) {
-+			printk(KERN_DEBUG
-+			       "mac80211_hwsim: device_bind_driver "
-+			       "failed (%d)\n", err);
-+			goto failed_hw;
-+		}
-+
- 		skb_queue_head_init(&data->pending);
- 
- 		SET_IEEE80211_DEV(hw, data->dev);
-@@ -2506,6 +2520,7 @@ failed_drvdata:
- 	ieee80211_free_hw(hw);
- failed:
- 	mac80211_hwsim_free();
-+	driver_unregister(&mac80211_hwsim_driver);
- 	return err;
- }
- module_init(init_mac80211_hwsim);
-@@ -2518,5 +2533,6 @@ static void __exit exit_mac80211_hwsim(void)
- 
- 	mac80211_hwsim_free();
- 	unregister_netdev(hwsim_mon);
-+	driver_unregister(&mac80211_hwsim_driver);
- }
- module_exit(exit_mac80211_hwsim);
+-	if (rt2x00_rt(rt2x00dev, RT3390)) {
+-		rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
+-		rt2x00_set_field32(&reg, GPIO_SWITCH_5, 0);
+-		rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+-	} else if (rt2x00_rt(rt2x00dev, RT3572)) {
++	if (rt2x00_rt(rt2x00dev, RT3572)) {
+ 		rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+ 		rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
+ 		rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
 -- 
-1.7.2.5
+1.7.4.4
 
-Martin Pitt                        | http://www.piware.de
-Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
