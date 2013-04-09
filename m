@@ -1,82 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:62106 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751512Ab3D0TOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 15:14:00 -0400
-Received: from mailout-de.gmx.net ([10.1.76.17]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M9M3c-1UKb2f0Fzi-00Cjjo for
- <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 21:13:59 +0200
-Message-ID: <517C2375.3030907@rempel-privat.de> (sfid-20130427_211405_161950_F94CFB34)
-Date: Sat, 27 Apr 2013 21:13:57 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Felix Fietkau <nbd@nbd.name>, ath9k-devel@lists.ath9k.org,
+Received: from he.sipsolutions.net ([78.46.109.217]:55489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934846Ab3DIGwM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Apr 2013 02:52:12 -0400
+Message-ID: <1365490320.8465.2.camel@jlt4.sipsolutions.net> (sfid-20130409_085215_344524_0921FC65)
+Subject: Re: [PATCH 3/3] wireless-regdb: add VHT channels 1..3 to world
+ regdom
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, qca_vkondrat@qca.qualcomm.com,
+	yunsenw@qca.qualcomm.com, kandala@qca.qualcomm.com,
+	wireless-regdb@lists.infradead.org, green@qca.qualcomm.com,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: collect statistics about Rx-Dup and Rx-STBC
- packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <1367087995-8960-1-git-send-email-linux@rempel-privat.de> <CAJ-VmonF9XaVZ6MkP-T3cdfGNjXaroM-rXYcA=TUndicp77UnQ@mail.gmail.com> <517C1EC1.8060808@rempel-privat.de> <CAJ-VmokUFtFjQk0T87E57kEhp40f1v4XgJL-iN35Bzo4h-McDQ@mail.gmail.com>
-In-Reply-To: <CAJ-VmokUFtFjQk0T87E57kEhp40f1v4XgJL-iN35Bzo4h-McDQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Tue, 09 Apr 2013 08:52:00 +0200
+In-Reply-To: <1365486778-2336-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130409_075322_170119_582B1385)
+References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1365486778-2336-4-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20130409_075322_170119_582B1385)
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 27.04.2013 21:06, schrieb Adrian Chadd:
-> On 27 April 2013 11:53, Oleksij Rempel <linux@rempel-privat.de> wrote:
->
->>> (And then go and re-align things inside that struct so you don't waste
->>> space.)
->>
->>
->> hmm.. what do you mean here?
->
-> Structure alignment? Well, you typically want to have everything be
-> dword aligned (32 bits) or word (16 bits) aligned. Otherwise the
-> compiler may insert extra padding between fields in order to meet
-> alignment requirements on platforms that need it (MIPS, older ARM) or
-> platforms that perform slower (newer ARM.)
->
-> Eg:
->
-> u32 a;
-> u16 b;
-> u8 c;
-> u8 d;
->
-> .. that's fine - the u32 is dword aligned, the u16 is word aligned,
-> the u8's don't need aligning.
->
-> But, considder:
->
-> u32 a;
-> u8 b;
-> u16 c;
-> u8 d;
->
-> .. u32 is dword aligned, u8 b is fine as it's a a byte and doesn't
-> need aligning, but 'u16 c' isn't dword aligned! So the compiler will
-> insert a byte padding between 'b' and 'c'.
->
-> same deal with:
->
-> u32 a;
-> u16 b;
-> u32 c;
->
-> .. 'a' is fine; 'b' is fine, but 'c' starts at a word boundary, not a
-> dword boundary.
->
-> Hence why things like IP/TCP headers and such look the way they do. :-)
->
-> Now, i don't know what 'bool' is, whether it's a byte, word or dword.
-> That "is_mybeacon" field should probably be just another flag in
-> rx_status, then just extend 'rs_flags' to 16 bits and include it. That
-> way the alignment is easy to see - all the fields in rx_status and the
-> htc rx_status structs have explicit sizes. :-)
+Subject is wrong -- this isn't VHT but 60G
 
-ok, i was not sure if you mean what i think :)
-I would prefer to do this in separate patch.
+johannes
 
--- 
-Regards,
-Oleksij
