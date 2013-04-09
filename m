@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:37400 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756476Ab3DZUUL (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:46332 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab3DIXAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 16:20:11 -0400
-Received: by mail-qe0-f43.google.com with SMTP id f6so2996606qej.2
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 13:20:10 -0700 (PDT)
+	Tue, 9 Apr 2013 19:00:40 -0400
+Received: by mail-wg0-f53.google.com with SMTP id c11so7369898wgh.8
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 16:00:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <517A427E.3010809@broadcom.com>
-References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
- <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
- <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
- <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
- <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
- <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
- <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com> <517A427E.3010809@broadcom.com>
-From: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Date: Sat, 27 Apr 2013 00:19:53 +0400
-Message-ID: <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com> (sfid-20130426_222017_348379_9EB8D2ED)
-Subject: Re: very bad work of wl (bcm 43228)
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Larry Finger <larry.finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
+	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
+	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
+	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmomGT4grPwA0dSGqPD=Zi=dZk6WwpqKEXXDvfLUqr08o0w@mail.gmail.com>
+	<1365413949.24195.YahooMailNeo@web193502.mail.sg3.yahoo.com>
+	<1365433751.96373.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
+Date: Tue, 9 Apr 2013 16:00:38 -0700
+Message-ID: <CAJ-Vmo===nANf3g5psxf3aV7L8jVQ8mjRP+1WM0PSS9PgcGHBA@mail.gmail.com> (sfid-20130410_010043_694058_94C6751E)
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/4/26 Arend van Spriel <arend@broadcom.com>:
-> Not really. You could try disabling powersave. I am not very familiar with
-> wl driver.
->
-> $ iw dev wlanX power_save off
->
-> Can you still provide lsusb and lspci for all devices?
->
-> Gr. AvS
+Hi,
 
+Yes, "WLAN_ACTIVE" here is just both TX and RX activity.
 
-I'm already disable powersaving but it not helps. My lspci and lsusb:
-
-00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor
-Family DRAM Controller (rev 09)
-00:02.0 VGA compatible controller: Intel Corporation 2nd Generation
-Core Processor Family Integrated Graphics Controller (rev 09)
-00:14.0 USB controller: Intel Corporation Panther Point USB xHCI Host
-Controller (rev 04)
-00:16.0 Communication controller: Intel Corporation Panther Point MEI
-Controller #1 (rev 04)
-00:1a.0 USB controller: Intel Corporation Panther Point USB Enhanced
-Host Controller #2 (rev 04)
-00:1b.0 Audio device: Intel Corporation Panther Point High Definition
-Audio Controller (rev 04)
-00:1c.0 PCI bridge: Intel Corporation Panther Point PCI Express Root
-Port 1 (rev c4)
-00:1c.1 PCI bridge: Intel Corporation Panther Point PCI Express Root
-Port 2 (rev c4)
-00:1c.2 PCI bridge: Intel Corporation Panther Point PCI Express Root
-Port 3 (rev c4)
-00:1d.0 USB controller: Intel Corporation Panther Point USB Enhanced
-Host Controller #1 (rev 04)
-00:1f.0 ISA bridge: Intel Corporation Panther Point LPC Controller (rev 04)
-00:1f.2 SATA controller: Intel Corporation Panther Point 6 port SATA
-Controller [AHCI mode] (rev 04)
-00:1f.3 SMBus: Intel Corporation Panther Point SMBus Controller (rev 04)
-03:00.0 Network controller: Broadcom Corporation BCM43228 802.11a/b/g/n
-04:00.0 Ethernet controller: Broadcom Corporation NetLink BCM57785
-Gigabit Ethernet PCIe (rev 10)
-04:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765
-Memory Card Reader (rev 10)
-
-
-Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-Bus 001 Device 003: ID 0489:e046 Foxconn / Hon Hai
-Bus 001 Device 004: ID 04f2:b336 Chicony Electronics Co., Ltd
+So if it were working, that would stay low.
 
 
 
-
---
-Vasiliy Tolstov,
-e-mail: v.tolstov@selfip.ru
-jabber: vase@selfip.ru
+adrian
