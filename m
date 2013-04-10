@@ -1,112 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:44904 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab3D0NTh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934852Ab3DJMnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 09:19:37 -0400
-Received: by mail-bk0-f47.google.com with SMTP id ji1so2034244bkc.20
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 06:19:35 -0700 (PDT)
-Message-ID: <517BD02A.5060904@unicz.it> (sfid-20130427_151940_748350_F10D6AF1)
-Date: Sat, 27 Apr 2013 15:18:34 +0200
-From: Paolo Zaffino <p.zaffino@unicz.it>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: Intel Centrino Wireless-N 2230 (rev c4) bug
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 10 Apr 2013 08:43:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/8] mac80211: handle extended channel switch announcement
+Date: Wed, 10 Apr 2013 14:43:40 +0200
+Message-Id: <1365597822-27660-7-git-send-email-johannes@sipsolutions.net> (sfid-20130410_144400_881186_2830A529)
+In-Reply-To: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
+References: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Developers,
-my name is Paolo Zaffino and I'm an Italian GNU/Linux user.
-I have an asus NV56 with an Intel Corporation Centrino Wireless-N 2230 
-(rev c4) wifi card.
-I installed Arch Linux at 64 bit, my kernel version is the  3.8.7-1 and 
-I use Gnome with Network Manager.
-I am facing a strange bug in the wifi driver.
-I am able to get a working connection to many wifi networks (open and 
-wpa), but in other cases I can not connect to them or I connect but 
-every 30 seconds (more o less) the connection drops.
-In this last case dmesg return this:
+From: Johannes Berg <johannes.berg@intel.com>
 
-[   25.459573] iwlwifi 0000:03:00.0: RF_KILL bit toggled to enable radio.
-[   25.460892] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[   25.468385] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
-[   25.846472] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[   25.853963] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
-[   26.065675] IPv6: ADDRCONF(NETDEV_UP): wlp3s0: link is not ready
-[   27.186073] wlp3s0: authenticate with 74:ea:3a:cd:28:42
-[   27.202371] wlp3s0: send auth to 74:ea:3a:cd:28:42 (try 1/3)
-[   27.229754] wlp3s0: authenticated
-[   27.229912] iwlwifi 0000:03:00.0 wlp3s0: disabling HT/VHT due to 
-WEP/TKIP use
-[   27.229915] iwlwifi 0000:03:00.0 wlp3s0: disabling HT as WMM/QoS is 
-not supported by the AP
-[   27.229916] iwlwifi 0000:03:00.0 wlp3s0: disabling VHT as WMM/QoS is 
-not supported by the AP
-[   27.232552] wlp3s0: associate with 74:ea:3a:cd:28:42 (try 1/3)
-[   27.235911] wlp3s0: RX AssocResp from 74:ea:3a:cd:28:42 (capab=0x431 
-status=0 aid=8)
-[   27.237835] wlp3s0: associated
-[   27.237875] IPv6: ADDRCONF(NETDEV_CHANGE): wlp3s0: link becomes ready
-[ 1756.822019] wlp3s0: deauthenticating from 74:ea:3a:cd:28:42 by local 
-choice (reason=3)
-[ 1756.828531] cfg80211: Calling CRDA to update world regulatory domain
-[ 1757.303801] wlp3s0: authenticate with 74:ea:3a:cd:29:13
-[ 1757.308566] wlp3s0: send auth to 74:ea:3a:cd:29:13 (try 1/3)
-[ 1757.310340] wlp3s0: authenticated
-[ 1757.310586] iwlwifi 0000:03:00.0 wlp3s0: disabling HT as WMM/QoS is 
-not supported by the AP
-[ 1757.310592] iwlwifi 0000:03:00.0 wlp3s0: disabling VHT as WMM/QoS is 
-not supported by the AP
-[ 1757.310598] wlp3s0: waiting for beacon from 74:ea:3a:cd:29:13
-[ 1757.385290] wlp3s0: associate with 74:ea:3a:cd:29:13 (try 1/3)
-[ 1757.387810] wlp3s0: RX AssocResp from 74:ea:3a:cd:29:13 (capab=0x431 
-status=0 aid=13)
-[ 1757.389812] wlp3s0: associated
-[ 1757.793015] wlp3s0: deauthenticating from 74:ea:3a:cd:29:13 by local 
-choice (reason=3)
-[ 1757.806386] cfg80211: Calling CRDA to update world regulatory domain
-[ 1758.222639] wlp3s0: authenticate with 74:ea:3a:cd:29:13
-[ 1758.225663] wlp3s0: send auth to 74:ea:3a:cd:29:13 (try 1/3)
-[ 1758.228142] wlp3s0: authenticated
-[ 1758.228424] iwlwifi 0000:03:00.0 wlp3s0: disabling HT as WMM/QoS is 
-not supported by the AP
-[ 1758.228436] iwlwifi 0000:03:00.0 wlp3s0: disabling VHT as WMM/QoS is 
-not supported by the AP
-[ 1758.230701] wlp3s0: associate with 74:ea:3a:cd:29:13 (try 1/3)
-[ 1758.233728] wlp3s0: RX AssocResp from 74:ea:3a:cd:29:13 (capab=0x431 
-status=0 aid=13)
-[ 1758.236525] wlp3s0: associated
-[ 1758.761549] wlp3s0: deauthenticating from 74:ea:3a:cd:29:13 by local 
-choice (reason=3)
-[ 1758.771562] cfg80211: Calling CRDA to update world regulatory domain
-[ 1759.206738] wlp3s0: authenticate with 74:ea:3a:cd:28:42
-[ 1759.211055] wlp3s0: send auth to 74:ea:3a:cd:28:42 (try 1/3)
-[ 1759.213441] wlp3s0: authenticated
-[ 1759.213538] iwlwifi 0000:03:00.0 wlp3s0: disabling HT/VHT due to 
-WEP/TKIP use
-[ 1759.213540] iwlwifi 0000:03:00.0 wlp3s0: disabling HT as WMM/QoS is 
-not supported by the AP
-[ 1759.213541] iwlwifi 0000:03:00.0 wlp3s0: disabling VHT as WMM/QoS is 
-not supported by the AP
-[ 1759.215855] wlp3s0: associate with 74:ea:3a:cd:28:42 (try 1/3)
-[ 1759.218253] wlp3s0: RX AssocResp from 74:ea:3a:cd:28:42 (capab=0x431 
-status=0 aid=2)
-[ 1759.220225] wlp3s0: associated
+Handle the (public) extended channel switch announcement
+action frames. Parts of the data in these frames isn't
+really in IEs, but put it into the elems struct anyway
+to simplify the handling.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h |  6 ++++++
+ net/mac80211/mlme.c       | 31 +++++++++++++++++++++++++++----
+ net/mac80211/rx.c         | 16 ++++++++++++++++
+ 3 files changed, 49 insertions(+), 4 deletions(-)
 
-I'm here for further infomations about hardware or configurations.
-Unfortunately this is a nasty problem for me and for a plenty of other 
-users that are in the same situation.
-Thank you very much for your great work!
-
-Regards.
-Paolo Zaffino
-
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 9562152..ce07161 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -866,6 +866,11 @@ struct ieee80211_mgmt {
+ 				} __packed chan_switch;
+ 				struct{
+ 					u8 action_code;
++					struct ieee80211_ext_chansw_ie data;
++					u8 variable[0];
++				} __packed ext_chan_switch;
++				struct{
++					u8 action_code;
+ 					u8 dialog_token;
+ 					u8 element_id;
+ 					u8 length;
+@@ -1816,6 +1821,7 @@ enum ieee80211_key_len {
+ 
+ /* Public action codes */
+ enum ieee80211_pub_actioncode {
++	WLAN_PUB_ACTION_EXT_CHANSW_ANN = 4,
+ 	WLAN_PUB_ACTION_TDLS_DISCOVER_RES = 14,
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b0586e4..54d2cec 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3101,6 +3101,8 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	enum rx_mgmt_action rma = RX_MGMT_NONE;
+ 	u8 deauth_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	u16 fc;
++	struct ieee802_11_elems elems;
++	int ies_len;
+ 
+ 	rx_status = (struct ieee80211_rx_status *) skb->cb;
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+@@ -3131,10 +3133,9 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	case IEEE80211_STYPE_ACTION:
+ 		if (mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT) {
+-			struct ieee802_11_elems elems;
+-			int ies_len = skb->len -
+-				      offsetof(struct ieee80211_mgmt,
+-					       u.action.u.chan_switch.variable);
++			ies_len = skb->len -
++				  offsetof(struct ieee80211_mgmt,
++					   u.action.u.chan_switch.variable);
+ 
+ 			if (ies_len < 0)
+ 				break;
+@@ -3149,6 +3150,28 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_sta_process_chanswitch(sdata,
+ 							 rx_status->mactime,
+ 							 &elems);
++		} else if (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC) {
++			ies_len = skb->len -
++				  offsetof(struct ieee80211_mgmt,
++					   u.action.u.ext_chan_switch.variable);
++
++			if (ies_len < 0)
++				break;
++
++			ieee802_11_parse_elems(
++				mgmt->u.action.u.ext_chan_switch.variable,
++				ies_len, &elems);
++
++			if (elems.parse_error)
++				break;
++
++			/* for the handling code pretend this was also an IE */
++			elems.ext_chansw_ie =
++				&mgmt->u.action.u.ext_chan_switch.data;
++
++			ieee80211_sta_process_chanswitch(sdata,
++							 rx_status->mactime,
++							 &elems);
+ 		}
+ 		break;
+ 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e9825f1..643fcf7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2424,6 +2424,22 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		}
+ 
+ 		break;
++	case WLAN_CATEGORY_PUBLIC:
++		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
++			goto invalid;
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
++			break;
++		if (!rx->sta)
++			break;
++		if (!ether_addr_equal(mgmt->bssid, sdata->u.mgd.bssid))
++			break;
++		if (mgmt->u.action.u.ext_chan_switch.action_code !=
++				WLAN_PUB_ACTION_EXT_CHANSW_ANN)
++			break;
++		if (len < offsetof(struct ieee80211_mgmt,
++				   u.action.u.ext_chan_switch.variable))
++			goto invalid;
++		goto queue;
+ 	case WLAN_CATEGORY_VHT:
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
 -- 
-Paolo Zaffino
-Ph.D. Student - Biomedical and Computer Engineering
-Dept. of Experimental and Clinical Medicine
-"Magna Graecia" University of Catanzaro
-viale Europa, 88100 Catanzaro - Italy
+1.8.0
 
