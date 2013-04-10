@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52596 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498Ab3DVOIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 10:08:23 -0400
-Message-ID: <51754455.40804@openwrt.org> (sfid-20130422_160826_746517_0CEFBB43)
-Date: Mon, 22 Apr 2013 16:08:21 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:44737 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936837Ab3DJO4H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 10:56:07 -0400
+Received: by mail-qa0-f49.google.com with SMTP id i13so321520qae.15
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 07:56:06 -0700 (PDT)
+Message-ID: <51657D84.2080308@lwfinger.net> (sfid-20130410_165616_036278_DBA9D907)
+Date: Wed, 10 Apr 2013 09:56:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
-Subject: Re: [PATCH v5 1/3] mac80211: improve the rate control API
-References: <1366625393-11647-1-git-send-email-nbd@openwrt.org> <1366638766.8637.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1366638766.8637.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: Davide Marchi <danjde@msw.it>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: realtek usb wifi based on "rtl8192cu"
+References: <516539DC.8060004@msw.it>
+In-Reply-To: <516539DC.8060004@msw.it>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-22 3:52 PM, Johannes Berg wrote:
-> On Mon, 2013-04-22 at 12:09 +0200, Felix Fietkau wrote:
-> 
->> @@ -692,16 +692,38 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->>  	 */
->>  	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
->>  
->> -	if (unlikely(info->control.rates[0].idx < 0))
->> -		return TX_DROP;
->> +	if (tx->sta && !info->control.skip_table)
->> +		ratetbl = rcu_dereference(tx->sta->sta.rates);
->> +
->> +	if (unlikely(info->control.rates[0].idx < 0)) {
->> +		if (ratetbl) {
->> +			struct ieee80211_tx_rate rate = {
->> +				.idx = ratetbl->rate[0].idx,
->> +				.flags = ratetbl->rate[0].flags,
->> +				.count = ratetbl->rate[0].count
->> +			};
->> +
->> +			if (ratetbl->rate[0].idx < 0)
->> +				return TX_DROP;
-> 
-> This can't happen, idx is unsigned. Did you intend idx to be signed?
-Right, shouldn't the compiler warn about this? Will send v6.
+On 04/10/2013 05:07 AM, Davide Marchi wrote:
+> Hi friends,
+> on realtek usb wifi based on "rtl8192cu",
+> using kernel 3.8.3.x or 3.8.6 the device seem work good, but is unable to
+> connect. Infinitely it ask me the wep/wpa key..
+>
+> I've tested using kernel "Linux  3.8.3-103.fc17.x86_64 #1 SMP Mon Mar 18
+> 15:46:01 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux"
+> and 3.8.6 vanilla (from kernel.org)
+>
+> Asking to Larry Finger he says that from kernel 3.8.5 this issues is fixed, but
+> is not so, for my experience.
+>
+> lsusb:
+> Bus 001 Device 003: ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 802.11n
+> WLAN Adapter
 
-- Felix
+If 3.8.6 does not fix it, then try the kernel from the wireless-testing git 
+tree. There were a number of other fixes in the code that will go into kernel 
+3.10, and my rtl8192cu devices (3 different models) work fine here with that 
+kernel. Unfortunately, those changes are not yet available in a compat-drivers 
+release.
+
+Otherwise, you need to produce more definitive logging of what is failing.
+
+Larry
 
