@@ -1,30 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42373 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839Ab3DZOId (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56302 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937405Ab3DJWrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 10:08:33 -0400
-Message-ID: <1366985302.8295.9.camel@jlt4.sipsolutions.net> (sfid-20130426_160836_971029_2F19CD5D)
-Subject: Re: [PATCH] iw/event:  Print out PROBE_CLIENT event information.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 26 Apr 2013 16:08:22 +0200
-In-Reply-To: <1366831552-4698-1-git-send-email-greearb@candelatech.com> (sfid-20130424_212604_576887_CA1D7E5C)
-References: <1366831552-4698-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130424_212604_576887_CA1D7E5C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 10 Apr 2013 18:47:47 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org
+Subject: [ 64/64] rt2x00: rt2x00pci_regbusy_read() - only print register access failure once
+Date: Wed, 10 Apr 2013 15:47:01 -0700
+Message-Id: <20130410224348.609013379@linuxfoundation.org> (sfid-20130411_004830_129986_F03957AF)
+In-Reply-To: <20130410224333.114387235@linuxfoundation.org>
+References: <20130410224333.114387235@linuxfoundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-24 at 12:25 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> For instance:
-> vap0 (phy #0): probe client 00:ab:cd:ef:03:5c (cookie f54bb400): no ack
+3.8-stable review patch.  If anyone has any objections, please let me know.
 
-Applied.
+------------------
 
-johannes
+From: Tim Gardner <tim.gardner@canonical.com>
+
+commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
+
+BugLink: http://bugs.launchpad.net/bugs/1128840
+
+It appears that when this register read fails it never recovers, so
+I think there is no need to repeat the same error message ad infinitum.
+
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Cc: netdev@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00
+ 		udelay(REGISTER_BUSY_DELAY);
+ 	}
+ 
+-	ERROR(rt2x00dev, "Indirect register access failed: "
+-	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
++	printk_once(KERN_ERR "%s() Indirect register access failed: "
++	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
+ 	*reg = ~0;
+ 
+ 	return 0;
+
 
