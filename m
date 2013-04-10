@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:57745 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965236Ab3DQPnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 11:43:02 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1USUVh-00085g-6w
-	for linux-wireless@vger.kernel.org; Wed, 17 Apr 2013 17:43:01 +0200
-Received: from 69-165-152-163.dsl.teksavvy.com ([69.165.152.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 17:43:01 +0200
-Received: from JoelleEmmily by 69-165-152-163.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 17:43:01 +0200
-To: linux-wireless@vger.kernel.org
-From: Joelle <JoelleEmmily@gmail.com>
-Subject: Re: RTL8187 in master mode with hostapd
-Date: Wed, 17 Apr 2013 15:42:47 +0000 (UTC)
-Message-ID: <loom.20130417T174126-534@post.gmane.org> (sfid-20130417_174307_227938_F2E4CA83)
-References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow> <5016A5D3.10301@lwfinger.net> <loom.20130417T144556-632@post.gmane.org> <516EB581.9080602@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42153 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759589Ab3DJWMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 18:12:43 -0400
+Message-ID: <5165E1C2.4020407@net.t-labs.tu-berlin.de> (sfid-20130411_001249_363686_6B1C3F08)
+Date: Thu, 11 Apr 2013 00:03:46 +0200
+From: Tobias Steinicke <tobias.steinicke@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: [RFC] ath9k: Respect current txpower setting
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I did not say that the RTL8187{B,L} cannot be used as an AP! I said that
-rtl8187 
-> cannot. The capitalization is important. With caps, it refers to a device; 
-> without implies a driver.
-> 
-> I am not sure how well an RTL8187L would work as it only has a single
-transmit 
-> queue, but perhaps it would work.
-> 
-> If you think there is a "crime against technology", then you need to be
-the one 
-> to make the necessary changes to rtl8187. After all, the source is open.
-> 
-> Larry
-> 
+In routine ath_tx_fill_desc(), the txpower is only set to
+MAX_RATE_POWER. Now it respects the txpower from bss_conf and set it if it
+is (txpower * 2) < MAX_RATE_POWER else set to MAX_RATE_POWER.
 
-The driver as distributed with the distros cannot provided AP functionality,
-this is true. However one only needs to patch in the proper call functions
-for AP functionality to work, which is what I did with the power functions.
-The patch is available on the Realtek site but is formatted for kernal ver
-2.something and thus most be painstakingly edited in. This means that the
-driver as provided by the manufacturer, which was also provided as open
-source, utilized these functions and more. But as this chipset is now
-considered legacy by the manufacturer they no longer update the driver, thus
-breaking compatibility with new generations of linux.
+Signed-off-by: Tobias Steinicke <tsteinicke@net.t-labs.tu-berlin.de>
+---
+  drivers/net/wireless/ath/ath9k/xmit.c |    7 ++++++-
+  1 file changed, 6 insertions(+), 1 deletion(-)
 
-I see this as a "crime against technology", and the comment that
-compatibility will 'never' come because the ability is and was available in
-these prior versions, all be it patched. This means that very little work
-needs to be done by someone who knows what they are doing. As for myself, I
-only 'almost' know what I'm doing and can't provide the technical expertise
-required to build a reliable enough driver to be given to the distros, nor
-do I have the repute to suggest an integration.
-
-It's also a crime that the windows drivers continue to be updated, at the
-least a newish win 7 is available, but the linux community does not wish to
-peruse greater functionality. While I can't substantiate this with any
-degree of certainty I do recall an Ubuntu mod saying that they will never
-provider greater support because the primary use for the Alfa adapters,
-which was the primary purchaser of said chipsets, is for hacking purposes.
-This is a tragedy as the rtl8187, or any in that series, as well as the Alfa
-adapters can and do provide an excellent platform for many wifi needs.
-
-I also should address the transmit issue as well if I'm to maintain any
-credibility. High priority kernal patches can be used to provide one's
-software router with appropriate timing. In fact there were, perhaps are, a
-lot of 'very cheep' wifi router which had limited capabilities in their
-chipsets but made up for those deficiencies with software 'cheats'. At this
-moment I'm serving my 'very' small town with free wifi internet through a
-Windows XP Aspire One, with routing provided by my dedicated linux soft
-router. Despite the slowness of the laptop, idiocies of windows, and other
-drawbacks with my setup I've had up to 30 people surfing at once with a peek
-of 50 or so sitting authenticated.
-
-It's a shame I can't integrate my soft-router and my soft-AP into one unit
-without having to downgrade to an earlier release or having an aneurysm
-because I'm staring at code during my few free time hours.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c 
+b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5bc5802..90701e4 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1110,13 +1110,18 @@ static void ath_tx_fill_desc(struct ath_softc 
+*sc, struct ath_buf *bf,
+  	struct ath_buf *bf_first = bf;
+  	struct ath_tx_info info;
+  	bool aggr = !!(bf->bf_state.bf_type & BUF_AGGR);
++	u8 txpower = tx_info->control.vif->bss_conf.txpower * 2;
+   	memset(&info, 0, sizeof(info));
+  	info.is_first = true;
+  	info.is_last = true;
+-	info.txpower = MAX_RATE_POWER;
+  	info.qcu = txq->axq_qnum;
+  +	if (txpower > MAX_RATE_POWER)
++		info.txpower = MAX_RATE_POWER;
++	else
++		info.txpower = txpower;
++
+  	info.flags = ATH9K_TXDESC_INTREQ;
+  	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
+  		info.flags |= ATH9K_TXDESC_NOACK;
+-- 
+1.7.9.5
 
