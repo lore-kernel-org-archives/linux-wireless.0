@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45990 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab3DVOVE (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:40565 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934826Ab3DJSGC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 10:21:04 -0400
-Message-ID: <1366640459.8637.26.camel@jlt4.sipsolutions.net> (sfid-20130422_162108_889804_804C3806)
-Subject: Re: [PATCH] mac80211_hwsim: handle IEEE80211_HW_SUPPORTS_RC_TABLE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
+	Wed, 10 Apr 2013 14:06:02 -0400
+MIME-Version: 1.0
+In-Reply-To: <5165A874.50804@candelatech.com>
+References: <CAB=NE6XH8wGbFhmB54Y0BUB2N-PbzUBvN+arH5F_BAkEa=DjUw@mail.gmail.com>
+ <5165A874.50804@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 10 Apr 2013 11:05:40 -0700
+Message-ID: <CAB=NE6U_0E+y8jc_0O3+9pmUyLXX9CuSMYMMWk__4Q8-+-AHTg@mail.gmail.com> (sfid-20130410_200627_270377_8E428B42)
+Subject: Re: Jitter and latency benchmarks with netlink / nl80211
+To: Ben Greear <greearb@candelatech.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Mon, 22 Apr 2013 16:20:59 +0200
-In-Reply-To: <1366375492-10979-1-git-send-email-karl.beldan@gmail.com> (sfid-20130419_144931_997658_9283A7DF)
-References: <1366375492-10979-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20130419_144931_997658_9283A7DF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-04-19 at 14:44 +0200, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Wed, Apr 10, 2013 at 10:59 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 04/10/2013 10:55 AM, Luis R. Rodriguez wrote:
+>>
+>> Curious if anyone has worked on latency and jitter benchmarks in using
+>> netlink, specifically with nl80211. Has anyone benchmarked this? Ben,
+>> have you? If not for nl80211 perhaps this has been done before for
+>> other netlink families?
+>
+>
+> You mean timing related to netlink configuration/report requests?
 
-Also applied, nice work guys :)
+Yes.
 
-johannes
+> We have lots of ways to measure wifi packet throughput latencies
+> and jitter (to/from userspace and/or to/from pktgen), but it doesn't use
+> netlink....
 
+Not looking for latency / jitter for 802.11, but for the core nl80211 messages.
+
+  Luis
