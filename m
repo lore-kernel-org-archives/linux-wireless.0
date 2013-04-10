@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1767 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190Ab3DKNJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 09:09:40 -0400
-Message-ID: <5166B608.8030803@broadcom.com> (sfid-20130411_150944_173743_613BCF98)
-Date: Thu, 11 Apr 2013 15:09:28 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:65302 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752147Ab3DJHWh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 03:22:37 -0400
+Received: by mail-la0-f51.google.com with SMTP id fo12so145633lab.10
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 00:22:36 -0700 (PDT)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "John W. Linville" <linville@tuxdriver.com>,
+In-Reply-To: <237CF5B631AA3446BAC55A2F73815CEB07DFE41B@NASANEXD02D.na.qualcomm.com>
+References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
+ <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
+ <1365490278.8465.1.camel@jlt4.sipsolutions.net> <CAB=NE6XjS7647FADXs7g9P4GmZPpdZmH1A9tNyY9u1_6QHX9og@mail.gmail.com>
+ <237CF5B631AA3446BAC55A2F73815CEB07DFE41B@NASANEXD02D.na.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 10 Apr 2013 00:22:15 -0700
+Message-ID: <CAB=NE6X9RqZ8p=L3h2dYr1J4ZUw7=GXkYy6wk58nCUf1JM8CSw@mail.gmail.com> (sfid-20130410_092241_245312_0EE04B1C)
+Subject: Re: [wireless-regdb] [PATCH 2/3] wireless-regdb: enable VHT80 when
+ world roaming
+To: "Green, Michael" <green@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"Kandala, Srinivas" <kandala@qca.qualcomm.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>
-Subject: Re: [PATCH 11/15] brcmfmac: define and use platform specific
- data for SDIO.
-References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
- <1365679740-25679-12-git-send-email-arend@broadcom.com>
- <5166A745.9080709@hauke-m.de>
-In-Reply-To: <5166A745.9080709@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	qca_vkondrat <qca_vkondrat@qca.qualcomm.com>,
+	"Wang, Yunsen" <yunsenw@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2013 02:06 PM, Hauke Mehrtens wrote:
-> On 04/11/2013 01:28 PM, Arend van Spriel wrote:
->> From: Hante Meuleman <meuleman@broadcom.com>
->>
->> This patch adds support for platform specific data for SDIO
->> fullmac devices. Currently OOB interrupts are configured by Kconfig
->> BRCMFMAC_SDIO_OOB but that is now determined dynamically by checking
->> availibility of platform data.
->>
->> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->> Reviewed-by: Piotr Haber <phaber@broadcom.com>
->> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> ---
->>   drivers/net/wireless/brcm80211/Kconfig             |    9 --
->>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  155 ++++++++++----------
->>   .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  114 ++++----------
->>   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++--
->>   .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    6 +-
->>   include/linux/brcmfmac_platform.h                  |  125 ++++++++++++++++
->>   6 files changed, 251 insertions(+), 187 deletions(-)
->>   create mode 100644 include/linux/brcmfmac_platform.h
->>
->
-> ....
->
->> --- /dev/null
->> +++ b/include/linux/brcmfmac_platform.h
->
-> This should be placed into include/linux/platform_data/
->
+On Tue, Apr 9, 2013 at 6:54 AM, Green, Michael <green@qca.qualcomm.com> wrote:
+> If this discussion is about Japan, then yes, VHT160 on the allowed channels for Japan, can be enabled now.
 
-Are you sure. This file specifies the platform data API so it does not 
-contain actual platform_data. At first glance this folder seems to 
-contain board specific platform data, but did not look closely.
+Oh neat, well this is good to know! I sent a patch.
 
-Regards,
-Arend
+> Or is the question about enabling VHT80 & VHT160 in world mode(s) using passive scanning?
 
+The question was about that.
 
-
-
+  Luis
