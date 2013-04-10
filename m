@@ -1,143 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37473 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755207Ab3DTMdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Apr 2013 08:33:37 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 2/2] mac80211: add support for per-chain signal strength reporting
-Date: Sat, 20 Apr 2013 14:33:34 +0200
-Message-Id: <1366461214-61176-2-git-send-email-nbd@openwrt.org> (sfid-20130420_143354_765906_C9BF5A27)
-In-Reply-To: <1366461214-61176-1-git-send-email-nbd@openwrt.org>
-References: <1366461214-61176-1-git-send-email-nbd@openwrt.org>
+Received: from hub022-ca-3.exch022.serverdata.net ([64.78.56.55]:60144 "EHLO
+	HUB022-ca-3.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752731Ab3DJJfp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 05:35:45 -0400
+Message-ID: <5165326C.7010706@posedge.com> (sfid-20130410_113549_691617_5317A2D3)
+Date: Wed, 10 Apr 2013 15:05:40 +0530
+From: Vivekananda Holla <vivekanandah@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Patch] mac80211: SMPS for AP Mode
+References: <516528C8.90509@posedge.com>  (sfid-20130410_105443_117821_9F07C071) <1365584151.8388.0.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1365584151.8388.0.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h  |  5 +++++
- net/mac80211/cfg.c      | 13 ++++++++++++-
- net/mac80211/rx.c       | 14 ++++++++++++++
- net/mac80211/sta_info.c |  2 ++
- net/mac80211/sta_info.h |  5 +++++
- 5 files changed, 38 insertions(+), 1 deletion(-)
+hi Johannes,
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 39c0d51..542279a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -847,6 +847,9 @@ enum mac80211_rx_flags {
-  * @signal: signal strength when receiving this frame, either in dBm, in dB or
-  *	unspecified depending on the hardware capabilities flags
-  *	@IEEE80211_HW_SIGNAL_*
-+ * @chains: bitmask of receive chains for which separate signal strength
-+ *	values were filled.
-+ * @chain_signal: per-chain signal strength, same format as @signal
-  * @antenna: antenna used
-  * @rate_idx: index of data rate into band's supported rates or MCS index if
-  *	HT or VHT is used (%RX_FLAG_HT/%RX_FLAG_VHT)
-@@ -878,6 +881,8 @@ struct ieee80211_rx_status {
- 	u8 band;
- 	u8 antenna;
- 	s8 signal;
-+	u8 chains;
-+	s8 chain_signal[IEEE80211_MAX_CHAINS];
- 	u8 ampdu_delimiter_crc;
- 	u8 vendor_radiotap_align;
- 	u8 vendor_radiotap_oui[3];
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 490990e..b1b8841 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -444,7 +444,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	struct ieee80211_local *local = sdata->local;
- 	struct timespec uptime;
- 	u64 packets = 0;
--	int ac;
-+	int i, ac;
- 
- 	sinfo->generation = sdata->local->sta_generation;
- 
-@@ -488,6 +488,17 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 			sinfo->signal = (s8)sta->last_signal;
- 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
- 	}
-+	if (sta->chains) {
-+		sinfo->filled |= STATION_INFO_CHAIN_SIGNAL |
-+				 STATION_INFO_CHAIN_SIGNAL_AVG;
-+
-+		sinfo->chains = sta->chains;
-+		for (i = 0; i < ARRAY_SIZE(sinfo->chain_signal); i++) {
-+			sinfo->chain_signal[i] = sta->chain_signal_last[i];
-+			sinfo->chain_signal_avg[i] =
-+				(s8) -ewma_read(&sta->chain_signal_avg[i]);
-+		}
-+	}
- 
- 	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
- 	sta_set_rate_info_rx(sta, &sinfo->rxrate);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4ffff07..ce33b56 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1372,6 +1372,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	int i;
- 
- 	if (!sta)
- 		return RX_CONTINUE;
-@@ -1422,6 +1423,19 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		ewma_add(&sta->avg_signal, -status->signal);
- 	}
- 
-+	if (status->chains) {
-+		sta->chains = status->chains;
-+		for (i = 0; i < ARRAY_SIZE(status->chain_signal); i++) {
-+			int signal = status->chain_signal[i];
-+
-+			if (!(status->chains & BIT(i)))
-+				continue;
-+
-+			sta->chain_signal_last[i] = signal;
-+			ewma_add(&sta->chain_signal_avg[i], -signal);
-+		}
-+	}
-+
- 	/*
- 	 * Change STA power saving mode only at the end of a frame
- 	 * exchange sequence.
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 11216bc..a04c5671 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -358,6 +358,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	do_posix_clock_monotonic_gettime(&uptime);
- 	sta->last_connected = uptime.tv_sec;
- 	ewma_init(&sta->avg_signal, 1024, 8);
-+	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
-+		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
- 
- 	if (sta_prepare_rate_control(local, sta, gfp)) {
- 		kfree(sta);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 876dd3f..fa1aa8a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -342,6 +342,11 @@ struct sta_info {
- 	int last_signal;
- 	struct ewma avg_signal;
- 	int last_ack_signal;
-+
-+	u8 chains;
-+	s8 chain_signal_last[IEEE80211_MAX_CHAINS];
-+	struct ewma chain_signal_avg[IEEE80211_MAX_CHAINS];
-+
- 	/* Plus 1 for non-QoS frames */
- 	__le16 last_seq_ctrl[IEEE80211_NUM_TIDS + 1];
- 
--- 
-1.8.0.2
+do you mean the IEEE80211_TX_RC_USE_RTS_CTS flag to set RTS/CTS protection for the packet?
+
+I did not use this based on the below understanding
+
+my understanding for SMPS is that a station system does not need to send an RTS packet before frame transmission for SMPS however an AP system needs to send out an RTS frame.
+
+hence, I defined a new txinfo flag which tells the lower driver (if AP) to send RTS frame if the station for which the packet is scheduled is dynamic SMPS to set the RTS frame for the same.
+
+awaiting your feedback
+
+thanks and regards
+Vivek
+
+
+
+On 04/10/2013 02:25 PM, Johannes Berg wrote:
+> On Wed, 2013-04-10 at 14:24 +0530, Vivekananda Holla wrote:
+>> Patch for SMPS mode for AP. This is to define a new ieee80211_tx_info flag to allow a lower AP driver to set RTS/CTS protection for a dynamic SMPS station
+>>
+>> Signed-off-by: Vivekananda Holla <vivekanandah@posedge.com>
+>> ---
+>>  include/net/mac80211.h             |    4 ++++
+>>  net/mac80211/rc80211_minstrel_ht.c |    3 +++
+>>  2 files changed, 7 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index 64faf01..48a950c 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -458,6 +458,9 @@ struct ieee80211_bss_conf {
+>>   * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
+>>   *    would be fragmented by size (this is optional, only used for
+>>   *    monitor injection).
+>> + * @IEEE80211_TX_CTL_SMPS_SET_RTS: set the RTS/CTS protection mechanism
+>> + *    for the packet at AP when SMPS mode at the station is 
+>> + *    dynamic SMPS.
+> Huh? No ... There are perfectly usable flags already inside each rate.
+>
+> johannes
+>
 
