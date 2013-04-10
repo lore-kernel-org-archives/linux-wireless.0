@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:56170 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965131Ab3DHV1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 17:27:48 -0400
-Message-ID: <1365456467.2029.16.camel@joe-AO722> (sfid-20130408_232759_460554_EA53F957)
-Subject: Re: [PATCH 5/6] mac80211: stringify another plink state
-From: Joe Perches <joe@perches.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 08 Apr 2013 14:27:47 -0700
-In-Reply-To: <1782507887.154.1365455855469.JavaMail.mail@webmail12>
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
-	 <1782507887.154.1365455855469.JavaMail.mail@webmail12>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-la0-f46.google.com ([209.85.215.46]:39441 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586Ab3DJKw2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 06:52:28 -0400
+Received: by mail-la0-f46.google.com with SMTP id ea20so292025lab.5
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 03:52:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <516338CF.8010102@gmail.com>
+References: <516338CF.8010102@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 10 Apr 2013 03:52:07 -0700
+Message-ID: <CAB=NE6Wk_ppMTAkhykrGCp2h_RwXAQbXYKx6kFLE3_=QR+C8=A@mail.gmail.com> (sfid-20130410_125232_031377_C4A3886B)
+Subject: Re: Google Summer of Code 2013 - The Linux Foundation is accepted!
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	cocci@systeme.lip6.fr, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
-> The patch "mac80211: stringify mesh peering events" missed
-> an opportunity to print the peering state as a string.
+On Mon, Apr 8, 2013 at 2:38 PM, Till Kamppeter <till.kamppeter@gmail.com> wrote:
+> Hi,
+>
+> the Linux Foundation is accepted as a mentoring organization for the
+> Google Summer of Code 2013!
+>
+> Please spread the news so that we get a lot of good students.
+>
+> Our Google Summer of Code 2013 page is here:
+>
+> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2013
 
-Perhaps it's better to use functions for these instead of
-indexing in case an index is somehow incorrectly set.
+This is great! I've update the driver backport project stuff. I've
+Cc'd Coccinelle folks, perhaps they might be willing to help mentor as
+well :)
 
-> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-[]
-> @@ -544,8 +544,8 @@ static void mesh_plink_timer(unsigned long data)
->  		return;
->  	}
->  	mpl_dbg(sta->sdata,
-> -		"Mesh plink timer for %pM fired on state %d\n",
-> -		sta->sta.addr, sta->plink_state);
-> +		"Mesh plink timer for %pM fired on state %s\n",
-> +		sta->sta.addr, mplstates[sta->plink_state]);
+> Please also apply as a mentor, so that you get correctly registered for
+> everything, subscribed to the mentor's mailing list at Google, your
+> student's applications getting accepted, ...
 
+Will do, thanks!
 
-
+  Luis
