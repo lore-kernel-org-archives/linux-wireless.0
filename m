@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936654Ab3DJMik (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42213 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762080Ab3DJXZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 08:38:40 -0400
-Message-ID: <1365597512.8388.11.camel@jlt4.sipsolutions.net> (sfid-20130410_143846_945672_ED7197F0)
-Subject: Re: [PATCH] mac80211: clear SSID when stoping AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Wed, 10 Apr 2013 14:38:32 +0200
-In-Reply-To: <1365594465-6405-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1365594465-6405-1-git-send-email-marek.puzyniak@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 10 Apr 2013 19:25:07 -0400
+Message-ID: <5165F4D0.8090605@net.t-labs.tu-berlin.de> (sfid-20130411_012511_837327_272A066F)
+Date: Thu, 11 Apr 2013 01:25:04 +0200
+From: Tobias Steinicke <tobias.steinicke@net.t-labs.tu-berlin.de>
+MIME-Version: 1.0
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: [RFCv2] ath9k: Respect current txpower setting
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-10 at 13:47 +0200, Marek Puzyniak wrote:
-> When AP interface was stopped ssid and ssid_len from bss configuration
-> was not cleared. This caused a problem when after AP interface was stopped
-> another AP with shorter ssid was created. Previous ssid was not
-> overwriten by new one shorter.
+In routine ath_tx_fill_desc(), the txpower is only set to
+MAX_RATE_POWER. Now it respects the txpower from bss_conf and set it if it
+is (txpower * 2) < MAX_RATE_POWER else set to MAX_RATE_POWER.
 
-I'll take the patch, sans the memset. If this was causing you trouble
-you're most likely treating the SSID as a string, which it is not, so
-you need to fix your driver.
+Signed-off-by: Tobias Steinicke <tsteinicke@net.t-labs.tu-berlin.de>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5bc5802..90701e4 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1110,13 +1110,18 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ath_buf *bf_first = bf;
+ 	struct ath_tx_info info;
+ 	bool aggr = !!(bf->bf_state.bf_type & BUF_AGGR);
++	u8 txpower = tx_info->control.vif->bss_conf.txpower * 2;
 
+ 	memset(&info, 0, sizeof(info));
+ 	info.is_first = true;
+ 	info.is_last = true;
+-	info.txpower = MAX_RATE_POWER;
+ 	info.qcu = txq->axq_qnum;
+
++	if (txpower > MAX_RATE_POWER)
++		info.txpower = MAX_RATE_POWER;
++	else
++		info.txpower = txpower;
++
+ 	info.flags = ATH9K_TXDESC_INTREQ;
+ 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		info.flags |= ATH9K_TXDESC_NOACK;
+-- 1.7.9.5
