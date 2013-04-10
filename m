@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:39421 "EHLO
-	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965218Ab3DTAvN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 20:51:13 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: make use of msecs_to_jiffies()
-Date: Fri, 19 Apr 2013 17:44:44 -0700
-Message-ID: <1366418684-6148-4-git-send-email-bzhao@marvell.com> (sfid-20130420_025120_288270_A4ECF9FB)
-In-Reply-To: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
-References: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:57318 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752142Ab3DJN0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 09:26:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.9] ath9k_hw: change AR9580 initvals to fix a stability issue
+Date: Wed, 10 Apr 2013 15:26:06 +0200
+Message-Id: <1365600366-59358-1-git-send-email-nbd@openwrt.org> (sfid-20130410_152620_937812_2BA585F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use msecs_to_jiffies() wherever possible.
+The hardware parsing of Control Wrapper Frames needs to be disabled, as
+it has been causing spurious decryption error reports. The initvals for
+other chips have been updated to disable it, but AR9580 was left out for
+some reason.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |    2 +-
- drivers/net/wireless/mwifiex/cmdevt.c        |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index 5e796f8..ada809f 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -447,7 +447,7 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 	end_win = ((start_win + win_size) - 1) & (MAX_TID_VALUE - 1);
- 	del_timer(&tbl->timer_context.timer);
- 	mod_timer(&tbl->timer_context.timer,
--		  jiffies + (MIN_FLUSH_TIMER_MS * win_size * HZ) / 1000);
-+		  jiffies + msecs_to_jiffies(MIN_FLUSH_TIMER_MS * win_size));
- 
- 	/*
- 	 * If seq_num is less then starting win then ignore and drop the
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index da469c3..74db0d2 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -250,7 +250,7 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 
- 	/* Setup the timer after transmit command */
- 	mod_timer(&adapter->cmd_timer,
--		  jiffies + (MWIFIEX_TIMER_10S * HZ) / 1000);
-+		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
- 
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index 28fd992..bdee2ed 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -519,7 +519,7 @@ static const u32 ar9580_1p0_mac_core[][2] = {
+ 	{0x00008258, 0x00000000},
+ 	{0x0000825c, 0x40000000},
+ 	{0x00008260, 0x00080922},
+-	{0x00008264, 0x9bc00010},
++	{0x00008264, 0x9d400010},
+ 	{0x00008268, 0xffffffff},
+ 	{0x0000826c, 0x0000ffff},
+ 	{0x00008270, 0x00000000},
 -- 
-1.7.0.2
+1.8.0.2
 
