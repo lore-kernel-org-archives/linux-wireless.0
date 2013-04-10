@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4132 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753258Ab3DKKrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 06:47:37 -0400
-Message-ID: <516694BF.7090701@broadcom.com> (sfid-20130411_124740_599840_068B44F7)
-Date: Thu, 11 Apr 2013 12:47:27 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38190 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935157Ab3DJRqG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 13:46:06 -0400
+Date: Wed, 10 Apr 2013 13:31:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2013-04-08
+Message-ID: <20130410173107.GC15428@tuxdriver.com> (sfid-20130410_194612_786620_1BDC5A13)
+References: <1365421170.25475.9.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: introduce critical protocol indication
- from user-space
-References: <1365412173-7428-1-git-send-email-arend@broadcom.com>
- <1365501997.8465.23.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1365501997.8465.23.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1365421170.25475.9.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2013 12:06 PM, Johannes Berg wrote:
-> On Mon, 2013-04-08 at 11:09 +0200, Arend van Spriel wrote:
->> +void cfg80211_crit_proto_stopped(struct wireless_dev *wdev)
->> +{
->> +	struct cfg80211_registered_device *rdev;
->> +
->> +	rdev = wiphy_to_dev(wdev->wiphy);
->> +	WARN_ON(!rdev->crit_proto_started);
->> +	rdev->crit_proto_started = false;
->> +}
->
-> Oh, so you don't want to tell userspace?
+On Mon, Apr 08, 2013 at 01:39:30PM +0200, Johannes Berg wrote:
+> John,
+> 
+> Here's another big pull request for the -next stream. This one has a ton
+> of driver updates, which hopefully addresses all drivers, but maybe you
+> have more new drivers than I have in my tree? Not entirely sure, let me
+> know if this is the case and then I can merge wireless-next.
+> 
+> I'm including a large number of small changes, see the shortlog. The two
+> bigger things are making VHT compatible with not using channel contexts
+> (from Karl) and the stop-while-suspended fixes I developed together with
+> Stanislaw.
+> 
+> Let me know if there are any problems.
+> 
+> johannes
+> 
+> 
+> 
+> The following changes since commit f00f188f8212fec9976394976c4fd5d4a3bc4dcf:
+> 
+>   cfg80211: fix error return code in cfg80211_init() (2013-03-20 14:09:56 +0100)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to ddc4db2e3d5393ede7a9222bb3b7522a603a4678:
+> 
+>   mac80211: make ieee802_11_parse_elems an inline (2013-04-08 11:08:32 +0200)
 
-Just an observation will looking for an example of netlink event 
-messaging to user-space. I noticed that the cfg80211_ft_event() function 
-used fixed GFP_KERNEL value. Should event functions always have a gfp_t 
-parameter?
+Pulling now...
 
-Gr. AvS
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
