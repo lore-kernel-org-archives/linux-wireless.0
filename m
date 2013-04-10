@@ -1,113 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:44016 "EHLO
-	Linville-X1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758784Ab3DCRdK (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:38505 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933036Ab3DJHWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 13:33:10 -0400
-Date: Wed, 3 Apr 2013 13:32:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/4] rtlwifi: usb: improve RX performance and lower CPU
- usage
-Message-ID: <20130403173248.GA14611@tuxdriver.com> (sfid-20130403_193314_921728_58F05376)
-References: <20130317095831.24983.97107.stgit@localhost6.localdomain6>
- <515C63E4.7020506@iki.fi>
+	Wed, 10 Apr 2013 03:22:50 -0400
+Received: by mail-wg0-f45.google.com with SMTP id l18so125580wgh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 00:22:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <515C63E4.7020506@iki.fi>
+In-Reply-To: <1365574412.20937.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
+	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
+	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
+	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
+	<CAJ-Vmo===nANf3g5psxf3aV7L8jVQ8mjRP+1WM0PSS9PgcGHBA@mail.gmail.com>
+	<1365561451.4973.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmokkC4veD4UMfP99Rbkyd3OZMxK46vZaQfqbDX9Ux6E3vA@mail.gmail.com>
+	<1365574412.20937.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+Date: Wed, 10 Apr 2013 00:22:49 -0700
+Message-ID: <CAJ-VmonwA=25ooSXFrNJydkERWwP7D_iY+VvDu_wz+=G7tNoBQ@mail.gmail.com> (sfid-20130410_092253_196196_238F39A9)
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are in wireless-next...
+No, wifi stomping occurs with both 2-wire and 3-wire.
 
-commit 657e27656dfb3a99e81c99df6e78e770d7fe0d48
-Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Date:   Sun Mar 17 11:59:29 2013 +0200
+BT_PRIORITY just gives the MAC the ability to tell the difference
+between high priority TX and any bt activity requiring the air, so the
+MAC can then choose a weight based on differnet kinds of BT inputs.
 
-    rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
-    
-    Add proper alignment at first packet copy, to avoid extra copies made later
-    in networking stack.
-    
-    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+If all you have is two wire, then you don't get separate weight table
+entries for different kinds of BT transmissions.
 
-commit 29bb7013a53d8fc43f79f39d22a15ba8d3e77d9b
-Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Date:   Sun Mar 17 11:59:24 2013 +0200
 
-    rtlwifi: usb: defer rx processing to tasklet
-    
-    Move processing of received packets to tasklet from hard-irq context.
-    
-    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-commit d7d0f081c48951018133cac38c8c0796f37db727
-Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Date:   Sun Mar 17 11:59:18 2013 +0200
+adrian
 
-    rtlwifi: usb: remove extra skb copy on RX path
-    
-    RX path has extra copying of packets, that can be avoided.
-    
-    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-commit 872de8ff04922e4ad95c5af39131ae9fbefe6ac5
-Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Date:   Sun Mar 17 11:59:13 2013 +0200
-
-    rtlwifi: usb: use usb_alloc_coherent for RX buffers
-    
-    Use dedicated DMA coherent buffers for RX urbs, to avoid allocation of large
-    skbuffs in hard-irq context and improve performance.
-    
-    Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-On Wed, Apr 03, 2013 at 08:16:20PM +0300, Jussi Kivilinna wrote:
-> Any comments on this patchset?
-> 
-> On 17.03.2013 11:59, Jussi Kivilinna wrote:
-> > Patchset improves RX path handling in rtlwifi/usb.c by:
-> >  - change to use preallocated DMA coherent URB buffers.
-> >  - kill unnessasary skbuff copies.
-> >  - defer RX processing to tasklet.
-> >  - add proper alignment of skbuff early on.
-> > 
-> > With this patchset IRQ CPU usage drops from 37% to 25% on ARM system with
-> > 1Ghz Cortex-A8, when doing large transfer with rtl8192cu. Tranfer speed
-> > appears to be slightly improved too, from 29Mbit to 31Mbit.
-> > 
-> > ---
-> > 
-> > Jussi Kivilinna (4):
-> >       rtlwifi: usb: use usb_alloc_coherent for RX buffers
-> >       rtlwifi: usb: remove extra skb copy on RX path
-> >       rtlwifi: usb: defer rx processing to tasklet
-> >       rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
-> > 
-> > 
-> >  drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2
-> >  drivers/net/wireless/rtlwifi/usb.c           |  220 ++++++++++++++++++--------
-> >  drivers/net/wireless/rtlwifi/usb.h           |    5 -
-> >  3 files changed, 156 insertions(+), 71 deletions(-)
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On 9 April 2013 23:13, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+> Hello Mr.Adrian,
+>     Thanks for your response. I understand the following: Please correct if
+> I am wrong.
+> 1. With WLAN_ACTIVE and BT_ACTIVE, the wireless medium is managed between BT
+> and WLAN without stomping the traffic.
+> 2. With WLAN_ACTIVE, BT_ACTIVE and BT_PRIORITY, WiFI traffic stomping is
+> possible.
+>
+> Regards
+> Sandeep.
+>
+> From: Adrian Chadd <adrian@freebsd.org>
+> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+> Cc: Sujith Manoharan <sujith@msujith.org>; ath9k-devel
+> <ath9k-devel@lists.ath9k.org>; "linux-wireless@vger.kernel.org"
+> <linux-wireless@vger.kernel.org>
+> Sent: Wednesday, 10 April 2013 11:07 AM
+>
+> Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+>
+> Right, but same deal - if it asserts the line, it should stomp wifi
+> transmission in your particular scheme.
+>
+>
+>
+> adrian
+>
+>
+> On 9 April 2013 19:37, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+>> Hello Mr.Adrian,
+>>    Thanks for your response. During googling, I had come across the
+>> following 2-wire coexistence solution from owl modules.
+>>
+>>
+>> http://support.connectblue.com/display/PRODWLAN/cB-OWL22x+Bluetooth+co-existence+application+note
+>> According to this application note, for 2-wire coexistence, WLAN_ACTIVE
+>> and
+>> BT_PRIORITY signals are used rather than WLAN_ACTIVE and BT_ACTIVE.  What
+>> is
+>> your opinion on this? And as I understand owl modules are based on Atheros
+>> chipsets.
+>>
+>> Regards
+>> Sandeep.
+>>
+>> From: Adrian Chadd <adrian@freebsd.org>
+>> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+>> Cc: Sujith Manoharan <sujith@msujith.org>; ath9k-devel
+>> <ath9k-devel@lists.ath9k.org>; "linux-wireless@vger.kernel.org"
+>> <linux-wireless@vger.kernel.org>
+>> Sent: Wednesday, 10 April 2013 4:30 AM
+>>
+>> Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+>>
+>> Hi,
+>>
+>> Yes, "WLAN_ACTIVE" here is just both TX and RX activity.
+>>
+>> So if it were working, that would stay low.
+>>
+>>
+>>
+>> adrian
+>>
+>>
+>
+>
