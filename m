@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:52476 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758590Ab3DXWsy (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:61877 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936308Ab3DJHV5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 18:48:54 -0400
-Received: by mail-qc0-f174.google.com with SMTP id z24so1251654qcq.33
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 15:48:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
-References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
-Date: Wed, 24 Apr 2013 16:48:53 -0600
-Message-ID: <CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com> (sfid-20130425_004907_197914_9F6A9358)
-Subject: Re: Memory leak in mwifiex_cfg80211_scan
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Apr 2013 03:21:57 -0400
+Received: by mail-pa0-f46.google.com with SMTP id lb1so161096pab.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 00:21:57 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: qca_vkondrat@qca.qualcomm.com, yunsenw@qca.qualcomm.com,
+	kandala@qca.qualcomm.com, wireless-regdb@lists.infradead.org,
+	green@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] wireless-regdb: enable VHT80 and VHT160 for JP
+Date: Wed, 10 Apr 2013 00:21:50 -0700
+Message-Id: <1365578510-4665-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130410_092201_548745_0E20FCD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-On Mon, Apr 22, 2013 at 7:50 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> Thanks for reporting this issue.
-> Please find attached the patch and try it on your XO4.
->
-> I will resend the patch to the list if it works for you.
+As per Michael Green we can enable VHT80 and VHT160 on
+the enabled JP channels now. I've enabled them only for
+the channels where either 80 MHz or 160 MHz actually fits
+on the channel spacing for the band defined.
 
-This does seem to make the kmemleak report go away.
+When passed to the kernel I have verified we get:
 
-However, strangely, it seems to make a whole bunch of kmemleak reports
-*appear*, as if the struct netdev is not being destroyed, and more. I
-guess this could just be a kmemleak oddity but it is strange that it
-did not appear before this patch.
+cfg80211: Regulatory domain changed to country: JP
+cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+cfg80211:   (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+cfg80211:   (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+cfg80211:   (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz), (N/A, 2000 mBm)
+cfg80211:   (5250000 KHz - 5330000 KHz @ 80000 KHz), (N/A, 2000 mBm)
+cfg80211:   (5490000 KHz - 5710000 KHz @ 160000 KHz), (N/A, 2300 mBm)
 
-Trying to look for possible causes (memory corruption?), I can't see
-any code that serializes scan_delay_timer_fn with mwifiex_close(), so
-mwifiex_close freeing the scan data while scan_delay_timer_fn is using
-it could cause badness to happen. However I haven't yet figured out
-how to trigger scan_delay_timer_fn to execute even once (any tips?).
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Yunsen Wang <yunsenw@qca.qualcomm.com>
+Cc: wireless-regdb@lists.infradead.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The fact that scan_delay_timer_fn isn't executing at all means that
-its not related to the kmemleak oddness, which must have another cause
-or explanation.
+diff --git a/db.txt b/db.txt
+index c878b27..22c975c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -431,9 +431,9 @@ country JP:
+ 	(2474 - 2494 @ 20), (N/A, 20), NO-OFDM
+ 	(4910 - 4990 @ 40), (N/A, 23)
+ 	(5030 - 5090 @ 40), (N/A, 23)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 23), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 160), (N/A, 23), DFS
+ 
+ country JO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.7.10.4
 
-I will investigate more tomorrow.
-
-Thanks
-Daniel
