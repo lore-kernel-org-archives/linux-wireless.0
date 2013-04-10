@@ -1,88 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-ca-5.exch022.serverdata.net ([64.78.56.50]:38865 "EHLO
-	HUB022-ca-5.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763309Ab3DDG1J (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932924Ab3DJTqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 02:27:09 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Date: Thu, 4 Apr 2013 11:57:07 +0530
-From: <vivekanandah@posedge.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>, <nbd@openwrt.org>
-Subject: RFC: SMPS for AP mode
-In-Reply-To: <1364978764.8351.6.camel@jlt4.sipsolutions.net>
-References: <fbef7a2278fe739a398430949087c950@posedge.com>
- (sfid-20130403_093709_189406_740B7438)
- <1364976319.8351.2.camel@jlt4.sipsolutions.net>
- <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
- <1364978764.8351.6.camel@jlt4.sipsolutions.net>
-Message-ID: <021a065e3ab402466e8049b2f4cd3fdd@posedge.com> (sfid-20130404_082715_519434_D816AE8A)
+	Wed, 10 Apr 2013 15:46:42 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: andersk@mit.edu, dcbw@redhat.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3.9] mac80211: fix cfg80211 interaction on auth/assoc request
+Date: Wed, 10 Apr 2013 21:46:34 +0200
+Message-Id: <1365623194-1893-1-git-send-email-johannes@sipsolutions.net> (sfid-20130410_214648_317246_EC0A4E42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-based on the discussion, i have come out with an RFC for SMPS support 
-for AP in minstrel_ht. kindly see the explanation below and indicate to 
-me, if this okay or any changes are required?
+If authentication (or association with FT) is requested by
+userspace, mac80211 currently doesn't tell cfg80211 that it
+disconnected from the AP. That leaves inconsistent state:
+cfg80211 thinks it's connected while mac80211 thinks it's
+not. Typically this won't last long, as soon as mac80211
+reports the new association to cfg80211 the old one goes
+away. If, however, the new authentication or association
+doesn't succeed, then cfg80211 will forever think the old
+one still exists and will refuse attempts to authenticate
+or associate with the AP it thinks it's connected to.
 
-RFC To send out RTS for AP connected to a dynamic SMPS station
+Anders reported that this leads to it taking a very long
+time to reconnect to a network, or never even succeeding.
+I tested this with an AP hacked to never respond to auth
+frames, and one that works, and with just those two the
+system never recovers because one won't work and cfg80211
+thinks it's connected to the other so refuses connections
+to it.
 
-This code change addresses the AP requirement of sending out a
-RTS frame when dynamic SMPS is enabled at the station
+To fix this, simply make mac80211 tell cfg80211 when it is
+no longer connected to the old AP, while authenticating or
+associating to a new one.
 
-the minstrel_ht rate module needs to provide the lower driver layer
-an indication of enabling RTS frame transmission for an AP connected
-to a dynamic SMPS station.
+Cc: stable@vger.kernel.org
+Reported-by: Anders Kaseorg <andersk@mit.edu>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 24 ++++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
 
-the SMPS state of the station is stored in the ieee80211_sta 
-structure's ht_cap variable.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 82cc303..346ad4c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3964,8 +3964,16 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	/* prep auth_data so we don't go into idle on disassoc */
+ 	ifmgd->auth_data = auth_data;
+ 
+-	if (ifmgd->associated)
+-		ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
++	if (ifmgd->associated) {
++		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++
++		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++				       WLAN_REASON_UNSPECIFIED,
++				       false, frame_buf);
++
++		__cfg80211_send_deauth(sdata->dev, frame_buf,
++				       sizeof(frame_buf));
++	}
+ 
+ 	sdata_info(sdata, "authenticate with %pM\n", req->bss->bssid);
+ 
+@@ -4025,8 +4033,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+-	if (ifmgd->associated)
+-		ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
++	if (ifmgd->associated) {
++		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++
++		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++				       WLAN_REASON_UNSPECIFIED,
++				       false, frame_buf);
++
++		__cfg80211_send_deauth(sdata->dev, frame_buf,
++				       sizeof(frame_buf));
++	}
+ 
+ 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
+ 		err = -EBUSY;
+-- 
+1.8.0
 
-the minstrel_ht_get_rate function can be modified to check if the 
-station is a dynamic SMPS
-station and a new flag can be incorporated for the ieee80211_tx_info 
-flags (e.g. IEEE80211_TX_CTL_SMPS_SET_RTS)
-that indicates to the lower layer that the station is a dynamic SMPS 
-enabled station.
-
-the lower AP driver can then enable RTS before the first frame 
-transmission to the station by checking for the above flag.
-
-thanks and regards
-Vivek
-
-
-
-
-On Wed, 03 Apr 2013 10:46:04 +0200, Johannes Berg wrote:
->> i see that the rate_control_rate_update is called with the
->> IEEE80211_RC_SMPS_CHANGED flag. however, i see that the minstrel_ht 
->> code
->> does not check for SMPS with respect to RTS.
->
-> It's very well possible that minstrel doesn't implement this 
-> correctly.
-> I don't care all that much right now about minstrel, so it's up to 
-> those
-> who do :)
->
->> Also, the code - rate_control_rate_update calls - sta_rc_update
->> mac80211 op. i was first thinking that i could use this for the AP 
->> side
->> notification to driver layer. however, a comment for sta_rc_update
->> indicates that it is to be used only when 
->> IEEE80211_HW_HAS_RATE_CONTROL
->> is true.
->> this led to the confusion.
->>
->> Can this op be used to update the driver about change in station's 
->> SMPS
->> mode for AP ?
->
-> Well, in theory it could be, but it doesn't make sense. If you have a
-> rate control algorithm in software (like minstrel) then that should
-> likely configure the RTS, and rate control is updated via the rate
-> control rate_update() callback instead of via the driver.
->
-> johannes
