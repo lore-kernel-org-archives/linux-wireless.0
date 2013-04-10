@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:62340 "EHLO mout.gmx.net"
+Received: from ebb05.tieto.com ([131.207.168.36]:57416 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762451Ab3DDVBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 17:01:36 -0400
-Received: from mailout-de.gmx.net ([10.1.76.4]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MKwSE-1UNrHq3NVw-0006P1 for
- <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 23:01:34 +0200
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-To: bzhao@marvell.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	daniel@zonque.org,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-Subject: [PATCH 1/4] mwifiex: bug: wrong list in list_empty check.
-Date: Thu,  4 Apr 2013 23:01:22 +0200
-Message-Id: <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130404_230139_443367_BD4B0111)
-In-Reply-To: <20130404205706.GA29851@blumentopf>
-References: <20130404205706.GA29851@blumentopf>
+	id S934753Ab3DJL47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 07:56:59 -0400
+From: Szymon Janc <szymon.janc@tieto.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+CC: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: include/linux/device.h:715:38: error: 'THIS_MODULE' undeclared
+Date: Wed, 10 Apr 2013 13:56:56 +0200
+Message-ID: <8701347.YaW7b4Fxgt@uw000953> (sfid-20130410_135708_517545_38522230)
+In-Reply-To: <CAFSJ42ZZH7Y+MPUURG_hQRuwhv8UKkF5sQQebsTjhH0uT07rjA@mail.gmail.com>
+References: <CAFSJ42ZZH7Y+MPUURG_hQRuwhv8UKkF5sQQebsTjhH0uT07rjA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-adapter->bss_prio_tbl list has already been checked in outer loop. The
-inner loop works with priv_tmp->wmm.tid_tbl_ptr list. Also the lock taken,
-gives hint that this is likely a copy-paste error.
+On Wednesday 10 of April 2013 12:20:37 Eugene Krasnikov wrote:
+Hi Eugene,
+ 
+> I have tried to build latest compat-drivers for android/cyanogenmod
+> kernel version 3.0.60 but it fails with the following error:
+> 
+> /cyanogenmod/kernel/sony/msm8x60/include/linux/device.h: In function
+> 'root_device_register':
+> /cyanogenmod/kernel/sony/msm8x60/include/linux/device.h:715:38: error:
+> 'THIS_MODULE' undeclared (first use in this function)
+> 
+> Command line that is used to build compat-drivers is:
+> 
+> make KLIB=/cyanogenmod/out/target/product/mint/obj/KERNEL_OBJ
+> KLIB_BUILD=/cyanogenmod/out/target/product/mint/obj/KERNEL_OBJ
+> ARCH=arm CROSS_COMPILE=/cyanogenmod/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin/arm-eabi-
+> 
+> Did anybody meet such an error?
+> Patch bellow was used as a workaround to this error, but i would like
+> to find a proper solution.
 
-Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+I had similar issue with grouper (nexus7) 3.1 kernel. This was due to DMA_BUF
+stuff being backported to that kernel (and that pulled also export.h change).
+Maybe it is same with CM kernel?
+
+This fixed build for me:
 ---
- drivers/net/wireless/mwifiex/wmm.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/linux/export.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 32adc87..b132c42 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -933,8 +933,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
- 						  flags);
- 				is_list_empty =
--					list_empty(&adapter->bss_prio_tbl[j]
--						   .bss_prio_head);
-+					list_empty(&tid_ptr->ra_list);
- 				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
- 						       flags);
- 				if (is_list_empty)
+diff --git a/include/linux/export.h b/include/linux/export.h
+index f7842b7..5ef58c5 100644
+--- a/include/linux/export.h
++++ b/include/linux/export.h
+@@ -3,10 +3,10 @@
+ 
+ #include <linux/version.h>
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0))
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
+ #include_next <linux/export.h>
+ #else
+ #include <linux/module.h>
+-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)) */
++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)) */
+ 
+ #endif	/* _COMPAT_LINUX_EXPORT_H */
+
+
+You can check if enabling this for kernel >=3.0.0 works for you:)
+
 -- 
-1.7.10.4
-
+BR
+Szymon Janc
