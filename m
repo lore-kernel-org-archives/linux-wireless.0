@@ -1,272 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:39709 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757018Ab3DWTT3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 15:19:29 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 1/2 RESEND] mwifiex: replace ra_list_curr by list rotation.
-Date: Tue, 23 Apr 2013 12:16:18 -0700
-Message-ID: <1366744579-14458-1-git-send-email-bzhao@marvell.com> (sfid-20130423_233119_212244_CB4F69D6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([143.182.124.37]:35867 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965013Ab3DJLBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 07:01:39 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH] ipw2x00: move to kstrto* functions
+Date: Wed, 10 Apr 2013 14:01:18 +0300
+Message-Id: <1365591678-18781-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20130410_130145_125437_42543DBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+There is better to use kstrto* instead of simple_strtoul. In this case it
+applies a bit stricter rules for input as well.
 
-After a packet is successfully transmitted, ra list is rotated, so the ra
-next to the one transmitted, will be the first in the list. This way we
-pick the ra' in a round robin fashion. This significantly simplifies
-iteration in  mwifiex_wmm_get_highest_priolist_ptr to a call to
-list_for_each_entry.
-List rotation is done via list_move, where the head itself is temporarily
-removed and then re-inserted after the item just transferred.
-
-Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-Acked-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/mwifiex/11n_aggr.c |    8 +--
- drivers/net/wireless/mwifiex/main.h     |    1 -
- drivers/net/wireless/mwifiex/wmm.c      |   97 +++++++++++-------------------
- drivers/net/wireless/mwifiex/wmm.h      |    3 +
- 4 files changed, 40 insertions(+), 69 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2100.c | 32 +++++++-------------------------
+ 1 file changed, 7 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-index af8fe63..c6d7451 100644
---- a/drivers/net/wireless/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/mwifiex/11n_aggr.c
-@@ -296,19 +296,13 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 		break;
- 	}
- 	if (ret != -EBUSY) {
--		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
--		if (mwifiex_is_ralist_valid(priv, pra_list, ptrindex)) {
--			priv->wmm.packets_out[ptrindex]++;
--			priv->wmm.tid_tbl_ptr[ptrindex].ra_list_curr = pra_list;
--		}
-+		mwifiex_rotate_priolists(priv, pra_list, ptrindex);
- 		/* Now bss_prio_cur pointer points to next node */
- 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
- 			list_first_entry(
- 				&adapter->bss_prio_tbl[priv->bss_priority]
- 				.bss_prio_cur->list,
- 				struct mwifiex_bss_prio_node, list);
--		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
--				       ra_list_flags);
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index b7484ef..4ef67fc 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -213,7 +213,6 @@ struct mwifiex_ra_list_tbl {
- 
- struct mwifiex_tid_tbl {
- 	struct list_head ra_list;
--	struct mwifiex_ra_list_tbl *ra_list_curr;
- };
- 
- #define WMM_HIGHEST_PRIORITY		7
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 2cc81ba..b48e03c 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -191,9 +191,6 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
- 		}
- 		list_add_tail(&ra_list->list,
- 			      &priv->wmm.tid_tbl_ptr[i].ra_list);
--
--		if (!priv->wmm.tid_tbl_ptr[i].ra_list_curr)
--			priv->wmm.tid_tbl_ptr[i].ra_list_curr = ra_list;
- 	}
- }
- 
-@@ -424,7 +421,6 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
- 			priv->aggr_prio_tbl[i].amsdu = tos_to_tid_inv[i];
- 			priv->aggr_prio_tbl[i].ampdu_ap = tos_to_tid_inv[i];
- 			priv->aggr_prio_tbl[i].ampdu_user = tos_to_tid_inv[i];
--			priv->wmm.tid_tbl_ptr[i].ra_list_curr = NULL;
- 		}
- 
- 		priv->aggr_prio_tbl[6].amsdu
-@@ -530,8 +526,6 @@ static void mwifiex_wmm_delete_all_ralist(struct mwifiex_private *priv)
- 		}
- 
- 		INIT_LIST_HEAD(&priv->wmm.tid_tbl_ptr[i].ra_list);
--
--		priv->wmm.tid_tbl_ptr[i].ra_list_curr = NULL;
- 	}
- }
- 
-@@ -883,7 +877,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				     struct mwifiex_private **priv, int *tid)
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index cb066f6..15920aa 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -4167,17 +4167,11 @@ static ssize_t show_debug_level(struct device_driver *d, char *buf)
+ static ssize_t store_debug_level(struct device_driver *d,
+ 				 const char *buf, size_t count)
  {
- 	struct mwifiex_private *priv_tmp;
--	struct mwifiex_ra_list_tbl *ptr, *head;
-+	struct mwifiex_ra_list_tbl *ptr;
- 	struct mwifiex_bss_prio_node *bssprio_node, *bssprio_head;
- 	struct mwifiex_tid_tbl *tid_ptr;
- 	atomic_t *hqp;
-@@ -926,51 +920,15 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				tid_ptr = &(priv_tmp)->wmm.
- 					tid_tbl_ptr[tos_to_tid[i]];
+-	char *p = (char *)buf;
+ 	u32 val;
++	int ret;
  
--				/* For non-STA ra_list_curr may be NULL */
--				if (!tid_ptr->ra_list_curr)
--					goto skip_wmm_queue;
--
--				if (list_empty(&tid_ptr->ra_list))
--					goto skip_wmm_queue;
--
--				/*
--				 * Always choose the next ra we transmitted
--				 * last time, this way we pick the ra's in
--				 * round robin fashion.
--				 */
--				ptr = list_first_entry(
--						&tid_ptr->ra_list_curr->list,
--						struct mwifiex_ra_list_tbl,
--						list);
-+				/* iterate over receiver addresses */
-+				list_for_each_entry(ptr, &tid_ptr->ra_list,
-+						    list) {
+-	if (p[1] == 'x' || p[1] == 'X' || p[0] == 'x' || p[0] == 'X') {
+-		p++;
+-		if (p[0] == 'x' || p[0] == 'X')
+-			p++;
+-		val = simple_strtoul(p, &p, 16);
+-	} else
+-		val = simple_strtoul(p, &p, 10);
+-	if (p == buf)
++	ret = kstrtou32(buf, 0, &val);
++	if (ret)
+ 		IPW_DEBUG_INFO(": %s is not in hex or decimal form.\n", buf);
+ 	else
+ 		ipw2100_debug_level = val;
+@@ -4238,27 +4232,15 @@ static ssize_t store_scan_age(struct device *d, struct device_attribute *attr,
+ {
+ 	struct ipw2100_priv *priv = dev_get_drvdata(d);
+ 	struct net_device *dev = priv->net_dev;
+-	char buffer[] = "00000000";
+-	unsigned long len =
+-	    (sizeof(buffer) - 1) > count ? count : sizeof(buffer) - 1;
+ 	unsigned long val;
+-	char *p = buffer;
++	int ret;
  
--				head = ptr;
--				if (ptr == (struct mwifiex_ra_list_tbl *)
--						&tid_ptr->ra_list) {
--					/* Get next ra */
--					ptr = list_first_entry(&ptr->list,
--					    struct mwifiex_ra_list_tbl, list);
--					head = ptr;
--				}
--
--				do {
- 					if (!skb_queue_empty(&ptr->skb_head))
- 						/* holds both locks */
- 						goto found;
-+				}
+ 	(void)dev;		/* kill unused-var warning for debug-only code */
  
--					/* Get next ra */
--					ptr = list_first_entry(&ptr->list,
--						 struct mwifiex_ra_list_tbl,
--						 list);
--					if (ptr ==
--					    (struct mwifiex_ra_list_tbl *)
--					    &tid_ptr->ra_list)
--						ptr = list_first_entry(
--						    &ptr->list,
--						    struct mwifiex_ra_list_tbl,
--						    list);
--				} while (ptr != head);
--
--skip_wmm_queue:
- 				spin_unlock_irqrestore(&priv_tmp->wmm.
- 						       ra_list_spinlock,
- 						       flags_ra);
-@@ -1013,6 +971,35 @@ found:
- 	return ptr;
- }
+ 	IPW_DEBUG_INFO("enter\n");
  
-+/* This functions rotates ra lists so packets are picked in round robin
-+ * fashion.
-+ *
-+ * After a packet is successfully transmitted, rotate the ra list, so the ra
-+ * next to the one transmitted, will come first in the list. This way we pick
-+ * the ra in a round robin fashion.
-+ *
-+ * Function also increments wmm.packets_out counter.
-+ */
-+void mwifiex_rotate_priolists(struct mwifiex_private *priv,
-+				 struct mwifiex_ra_list_tbl *ra,
-+				 int tid)
-+{
-+	struct mwifiex_tid_tbl *tid_ptr = &priv->wmm.tid_tbl_ptr[tid];
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->wmm.ra_list_spinlock, flags);
-+	if (mwifiex_is_ralist_valid(priv, ra, tid)) {
-+		priv->wmm.packets_out[tid]++;
-+		/*
-+		 * dirty trick: we remove 'head' temporarily and reinsert it
-+		 * after curr bss node. imagine list to stay fixed while only
-+		 * head is moved
-+		 */
-+		list_move(&tid_ptr->ra_list, &ra->list);
-+	}
-+	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
-+}
-+
- /*
-  * This function checks if 11n aggregation is possible.
-  */
-@@ -1099,11 +1086,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
- 				       ra_list_flags);
+-	strncpy(buffer, buf, len);
+-	buffer[len] = 0;
+-
+-	if (p[1] == 'x' || p[1] == 'X' || p[0] == 'x' || p[0] == 'X') {
+-		p++;
+-		if (p[0] == 'x' || p[0] == 'X')
+-			p++;
+-		val = simple_strtoul(p, &p, 16);
+-	} else
+-		val = simple_strtoul(p, &p, 10);
+-	if (p == buffer) {
++	ret = kstrtoul(buf, 0, &val);
++	if (ret) {
+ 		IPW_DEBUG_INFO("%s: user supplied invalid value.\n", dev->name);
  	} else {
--		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
--		if (mwifiex_is_ralist_valid(priv, ptr, ptr_index)) {
--			priv->wmm.packets_out[ptr_index]++;
--			priv->wmm.tid_tbl_ptr[ptr_index].ra_list_curr = ptr;
--		}
-+		mwifiex_rotate_priolists(priv, ptr, ptr_index);
- 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
- 			list_first_entry(
- 				&adapter->bss_prio_tbl[priv->bss_priority]
-@@ -1111,8 +1094,6 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
- 				struct mwifiex_bss_prio_node,
- 				list);
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
--		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
--				       ra_list_flags);
+ 		priv->ieee->scan_age = val;
+@@ -4266,7 +4248,7 @@ static ssize_t store_scan_age(struct device *d, struct device_attribute *attr,
  	}
+ 
+ 	IPW_DEBUG_INFO("exit\n");
+-	return len;
++	return strnlen(buf, count);
  }
  
-@@ -1216,11 +1197,7 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
- 		break;
- 	}
- 	if (ret != -EBUSY) {
--		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
--		if (mwifiex_is_ralist_valid(priv, ptr, ptr_index)) {
--			priv->wmm.packets_out[ptr_index]++;
--			priv->wmm.tid_tbl_ptr[ptr_index].ra_list_curr = ptr;
--		}
-+		mwifiex_rotate_priolists(priv, ptr, ptr_index);
- 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
- 			list_first_entry(
- 				&adapter->bss_prio_tbl[priv->bss_priority]
-@@ -1228,8 +1205,6 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
- 				struct mwifiex_bss_prio_node,
- 				list);
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
--		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
--				       ra_list_flags);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
-index b92f39d..644d6e0 100644
---- a/drivers/net/wireless/mwifiex/wmm.h
-+++ b/drivers/net/wireless/mwifiex/wmm.h
-@@ -85,6 +85,9 @@ mwifiex_wmm_is_ra_list_empty(struct list_head *ra_list_hhead)
- void mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
- 					struct sk_buff *skb);
- void mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra);
-+void mwifiex_rotate_priolists(struct mwifiex_private *priv,
-+			      struct mwifiex_ra_list_tbl *ra,
-+			      int tid);
- 
- int mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter);
- void mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter);
+ static DEVICE_ATTR(scan_age, S_IWUSR | S_IRUGO, show_scan_age, store_scan_age);
 -- 
-1.7.0.2
+1.8.2.rc0.22.gb3600c3
 
