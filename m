@@ -1,129 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48117 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750950Ab3DKMjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 08:39:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
-Date: Thu, 11 Apr 2013 14:39:13 +0200
-Message-Id: <1365683953-3430-1-git-send-email-hauke@hauke-m.de> (sfid-20130411_143929_113631_43624BD6)
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:44293 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935720Ab3DJRhM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 13:37:12 -0400
+Received: by mail-bk0-f51.google.com with SMTP id y8so379669bkt.24
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 10:37:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365500246.8465.5.camel@jlt4.sipsolutions.net>
+References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
+ <1365444377-9959-3-git-send-email-thomas@cozybit.com> <1365446248.25475.17.camel@jlt4.sipsolutions.net>
+ <CAG6hwVOBqfP_Mw-pirzEOFytck-7H6_LNiTtO_90gXskbEuNTg@mail.gmail.com>
+ <1365449914.25475.20.camel@jlt4.sipsolutions.net> <CAG6hwVOAwtngWU3uEueG7hZX3z5dxLLc8c8-Vd7Q+e93wM-UaQ@mail.gmail.com>
+ <1365500246.8465.5.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 10 Apr 2013 10:36:50 -0700
+Message-ID: <CAG6hwVOamzGVJ8x3omSu_9oY48WK=8nk=3P4CWnba53TfhsqUw@mail.gmail.com> (sfid-20130410_193717_193389_CFB3174A)
+Subject: Re: [PATCH 3/6] mac80211: ieee80211_queue_stopped returns reasons
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
+On Tue, Apr 9, 2013 at 2:37 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2013-04-08 at 12:57 -0700, Thomas Pedersen wrote:
+>
+>> > That seems racy? Even asking whether it's stopped is racy though, what
+>> > are you even trying to accomplish?
+>>
+>> Yeah, that's why I'd like to get the reason the first time.
+>>
+>> _h_mesh_fwding() checks whether the outgoing queue is stopped, to
+>> avoid piling frames on the pending queue if the outgoing medium is
+>> busy. I guess the idea was to avoid queueing frames faster than the
+>> hardware could unload them. Maybe this doesn't actually happen, but we
+>> can be a little bit smarter about when to drop forwarded frames. Like
+>> if skbs are just being added to the outgoing queue, we probably
+>> shouldn't.
+>
+> Technically I guess that can happen if your inbound link is better than
+> the outbound one? But it'll depend on the AC parameters etc. too.
+>
+> However it seems that ieee80211_queue_stopped() is actually kinda broken
+> and should only return the 'driver-stopped' reason to start with. If you
+> fix that, it's probably good enough for you. I don't think in patch 4
+> you should drop frames for scanning, for example.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43/phy_n.c |   86 +++++++-------------------------------
- 1 file changed, 14 insertions(+), 72 deletions(-)
+It looks like mac80211 already just checks local->queue_stop_reasons
+for being 0 (or not), so that check would still hold. I'm not 100%
+sure the driver calls to ieee80211_queue_stopped() only returning true
+for REASON_DRIVER are ok? What if the queues are being flushed, or say
+REASON_PS is set?
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 7b557ad..05945da 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -5097,77 +5097,6 @@ static void b43_chantab_phy_upload(struct b43_wldev *dev,
- 	b43_phy_write(dev, B43_NPHY_BW6, e->phy_bw6);
- }
- 
--/* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
--static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
--{
--	struct bcma_drv_cc __maybe_unused *cc;
--	u32 __maybe_unused pmu_ctl;
--
--	switch (dev->dev->bus_type) {
--#ifdef CONFIG_B43_BCMA
--	case B43_BUS_BCMA:
--		cc = &dev->dev->bdev->bus->drv_cc;
--		if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
--			if (avoid) {
--				bcma_chipco_pll_write(cc, 0x0, 0x11500010);
--				bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
--				bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
--				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
--				bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
--				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
--			} else {
--				bcma_chipco_pll_write(cc, 0x0, 0x11100010);
--				bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
--				bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
--				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
--				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
--				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
--			}
--			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
--		} else if (dev->dev->chip_id == 0x4716) {
--			if (avoid) {
--				bcma_chipco_pll_write(cc, 0x0, 0x11500060);
--				bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
--				bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
--				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
--				bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
--				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
--			} else {
--				bcma_chipco_pll_write(cc, 0x0, 0x11100060);
--				bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
--				bcma_chipco_pll_write(cc, 0x2, 0x03000000);
--				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
--				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
--				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
--			}
--			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD |
--				  BCMA_CC_PMU_CTL_NOILPONW;
--		} else if (dev->dev->chip_id == 0x4322 ||
--			   dev->dev->chip_id == 0x4340 ||
--			   dev->dev->chip_id == 0x4341) {
--			bcma_chipco_pll_write(cc, 0x0, 0x11100070);
--			bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
--			bcma_chipco_pll_write(cc, 0x5, 0x88888854);
--			if (avoid)
--				bcma_chipco_pll_write(cc, 0x2, 0x05201828);
--			else
--				bcma_chipco_pll_write(cc, 0x2, 0x05001828);
--			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
--		} else {
--			return;
--		}
--		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
--		break;
--#endif
--#ifdef CONFIG_B43_SSB
--	case B43_BUS_SSB:
--		ssb_pmu_spuravoid_pllupdate(&dev->dev->sdev->bus->chipco,
--					    avoid);
--		break;
--#endif
--	}
--}
--
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
- static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 				const struct b43_phy_n_sfo_cfg *e,
-@@ -5229,7 +5158,20 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 				avoid = dev->dev->chip_id == 0x4716;
- 		}
- 
--		b43_nphy_pmu_spur_avoid(dev, avoid);
-+		switch (dev->dev->bus_type) {
-+#ifdef CONFIG_B43_BCMA
-+		case B43_BUS_BCMA:
-+			bcma_pmu_spuravoid_pllupdate(&dev->dev->bdev->bus->drv_cc,
-+						     avoid);
-+			break;
-+#endif
-+#ifdef CONFIG_B43_SSB
-+		case B43_BUS_SSB:
-+			ssb_pmu_spuravoid_pllupdate(&dev->dev->sdev->bus->chipco,
-+						    avoid);
-+			break;
-+#endif
-+		}
- 
- 		if (dev->dev->chip_id == 43222 || dev->dev->chip_id == 43224 ||
- 		    dev->dev->chip_id == 43225) {
 -- 
-1.7.10.4
-
+Thomas
