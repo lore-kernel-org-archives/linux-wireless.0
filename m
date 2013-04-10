@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:56246 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754404Ab3DZJvU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 05:51:20 -0400
-Received: by mail-ob0-f170.google.com with SMTP id eh20so3391007obb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 02:51:19 -0700 (PDT)
+Received: from mx4.wp.pl ([212.77.101.8]:37295 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935753Ab3DJPOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 11:14:07 -0400
+Date: Wed, 10 Apr 2013 17:15:01 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 02/11] rt2800: move rf init calibration code
+Message-ID: <20130410151500.GA2175@localhost.localdomain> (sfid-20130410_171414_316355_CC44713D)
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl>
+ <1365519930-3230-3-git-send-email-stf_xl@wp.pl>
+ <516510D6.5090700@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1698401.RCfH1UvLZM@pebbles>
-References: <1698401.RCfH1UvLZM@pebbles>
-Date: Fri, 26 Apr 2013 11:51:19 +0200
-Message-ID: <CACna6rwW7fMcCLPt9yW6scpVEzvfKsRv7JgDFe6eju0Q9H3Hbg@mail.gmail.com> (sfid-20130426_115125_502046_0107BD2D)
-Subject: Re: Throughput regression in b43 caused by spurious avoidance implementation
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Stefan_Br=C3=BCns?= <stefan.bruens@rwth-aachen.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <516510D6.5090700@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/9/24 Stefan Brüns <stefan.bruens@rwth-aachen.de>:
-> Hi everyone,
->
-> as I have been plagued by the performance regression in b43 between linux 3.2
-> and 3.3, I have bisected it:
->
-> git bisect good
-> 49d55cef5b1925a5c1efb6aaddaa40fc7c693335 is the first bad commit
-> commit 49d55cef5b1925a5c1efb6aaddaa40fc7c693335
-> Author: Rafał Miłecki <zajec5@gmail.com>
-> Date:   Sun Dec 11 13:16:51 2011 +0100
->
->     b43: N-PHY: implement spurious tone avoidance
->
->     Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Wed, Apr 10, 2013 at 09:12:22AM +0200, Gabor Juhos wrote:
+> > -	if (rt2x00_rt(rt2x00dev, RT3290) ||
+> > -	    rt2x00_rt(rt2x00dev, RT5390) ||
+> > -	    rt2x00_rt(rt2x00dev, RT5392)) {
+> > -		rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
+> > -		rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
+> > -		rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
+> > -		msleep(1);
+> > -		rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 0);
+> > -		rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
+> > -	} else {
+> > -		rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+> > -		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+> > -		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> > -		msleep(1);
+> > -		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> > -		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> > -	}
+> 
+> The code in the else branch is required by the 305x_soc devices. However the
+> change moves it into the 'rt2800_init_rfcsr_30xx' function and that is only
+> called for RT3070, RT3071, RT3090.
+> 
+> Either add the code into the 'rt2800_init_rfcsr_305x_soc function' as well or
+> create a helper function and call that from 'rt2800_init_rfcsr_30xx' and from
+> 'rt2800_init_rfcsr_305x_soc'.
 
-Hi Stefan,
+Right. 3352 and 3572 need that too. I'll post v2 shortly.
 
-I'm not sure if you're still interested in this, as half a year has
-passed since your report :( Anyway we've managed to resolve most
-problems with BCM4322.
-
-I took me 3 attempts to debug this issue and the last one that succeed
-took me few days. I was quite tricky to debug & bisect everything, as
-there were 4 regressions in b43 driver and I couldn't really distinct
-them at the beginning.
-
-After all there were 3 patches applied to the kernel that you may be
-interested in:
-
-1) b43: N-PHY: increase initial value of "mind" in RSSI calibration
-It has been applied in 3.4.39 and 3.8.6 stables
-
-2) b43: N-PHY: use more bits for offset in RSSI calibration
-It has been applied in 3.4.39 and 3.8.6 stables
-
-3) ssb: implement spurious tone avoidance
-It has been applied in 3.4.42 and 3.8.9 stables
-
-Unfortunately there is one more regression I've bisected but didn't
-manage to fix yet. It's related to the scanning on channel 13. It was
-reported in:
-
-1) Scanning regression since "cfg80211: use DS or HT operation IEs to
-determine BSS channel"
-http://www.spinics.net/lists/linux-wireless/msg105359.html
-http://marc.info/?t=136431795000003&r=1&w=4
-
-2) [No subject]
-http://lists.infradead.org/pipermail/b43-dev/2013-April/003041.html
-
--- 
-Rafał
+Thanks
+Stanislaw
+ 
