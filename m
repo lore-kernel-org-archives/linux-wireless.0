@@ -1,84 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avasout08.plus.net ([212.159.14.20]:56961 "EHLO
-	avasout08.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752840Ab3DVMhA (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:43840 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab3DJFhI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 08:37:00 -0400
+	Wed, 10 Apr 2013 01:37:08 -0400
+Received: by mail-wg0-f54.google.com with SMTP id a12so70374wgh.33
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 22:37:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 22 Apr 2013 13:30:51 +0100
-From: Gerry Gavigan <gerry@gavigan.f9.co.uk>
-To: <linux-wireless@vger.kernel.org>
-Subject: ath9k problems on openSUSE 12.3
-Message-ID: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net> (sfid-20130422_143707_263868_9C7BE9EE)
+In-Reply-To: <1365561451.4973.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
+	<515A0847.7000306@gmail.com>
+	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
+	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
+	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
+	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
+	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<20830.46610.23754.783231@gargle.gargle.HOWL>
+	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
+	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
+	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
+	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
+	<1365413949.24195.YahooMailNeo@web193502.mail.sg3.yahoo.com>
+	<1365433751.96373.YahooMailNeo@web193505.mail.sg3.yahoo.com>
+	<CAJ-Vmon4K_sFR3JP47YGP13HtepEg=mt3=Y8nQX8fV+cdFZ5rg@mail.gmail.com>
+	<CAJ-Vmo===nANf3g5psxf3aV7L8jVQ8mjRP+1WM0PSS9PgcGHBA@mail.gmail.com>
+	<1365561451.4973.YahooMailNeo@web193504.mail.sg3.yahoo.com>
+Date: Tue, 9 Apr 2013 22:37:05 -0700
+Message-ID: <CAJ-VmokkC4veD4UMfP99Rbkyd3OZMxK46vZaQfqbDX9Ux6E3vA@mail.gmail.com> (sfid-20130410_073715_547805_A15F3E5D)
+Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After some discussion :
-
-https://forums.opensuse.org/english/get-technical-help-here/wireless/484686-advanced-atheros-issue-12-3-ath9k-64bit-frequent-random-de-auths-2.html
-
-I have been advised to seek help here as the phase lock loop is not 
-working.
-
-In case it's relevant:
-
-- the wifi was working if possibly slightly unstable until I upgraded 
-to 3.8.7
-   (to cure suspend and resume on a gma500 in an AAO)
-
-- Downgrading didn't work
-
-lspci -nn returns
-
-02:00.0 Network controller [0280]: Atheros Communications Inc. AR9485 
-Wireless Network Adapter [168c:0032] (rev 01)
-
-dmesg reports
-
-[ 24.800514] ------------[ cut here ]------------
-[ 24.800563] WARNING: at 
-/home/abuild/rpmbuild/BUILD/kernel-desktop-3.7.10/linux-3.7/drivers/net/wireless/ath/ath9k/hw.c:794 
-ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]()
-[ 24.800567] Hardware name: AOD270
-[ 24.800571] Modules linked in: xt_tcpudp xt_pkttype xt_LOG xt_limit 
-af_packet bnep bluetooth ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 
-ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle 
-nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4 
-nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack ip6table_filter 
-ip6_tables x_tables cpufreq_conservative cpufreq_userspace 
-cpufreq_powersave acpi_cpufreq mperf coretemp iTCO_wdt 
-iTCO_vendor_support acer_wmi sparse_keymap snd_hda_codec_realtek 
-snd_hda_codec_hdmi snd_hda_intel snd_hda_codec snd_hwdep snd_pcm snd_seq 
-microcode serio_raw pcspkr i2c_i801 snd_timer snd_seq_device uvcvideo 
-videobuf2_core sg videodev videobuf2_vmalloc videobuf2_memops lpc_ich 
-mfd_core arc4 joydev snd ath9k rts_pstor(C) mac80211 ath9k_common 
-ath9k_hw ath cfg80211 rfkill r8169 soundcore snd_page_alloc wmi ac 
-battery button autofs4 gma500_gfx drm_kms_helper drm i2c_algo_bit video 
-thermal processor thermal_sys scsi_dh_rdac scsi_dh_emc scsi_dh_alua 
-scsi_dh_hp_sw scsi_dh
-[ 24.800687] Pid: 64, comm: kworker/u:3 Tainted: G C 3.7.10-1.1-desktop 
-#1
-[ 24.800690] Call Trace:
-[ 24.800713] [<c0205779>] try_stack_unwind+0x199/0x1b0
-[ 24.800729] [<c0204487>] dump_trace+0x47/0xf0
-[ 24.800740] [<c02057db>] show_trace_log_lvl+0x4b/0x60
-[ 24.800749] [<c0205808>] show_trace+0x18/0x20
-[ 24.800760] [<c06fbeeb>] dump_stack+0x6d/0x72
-[ 24.800812] [<c0238cb8>] warn_slowpath_common+0x78/0xb0
-[ 24.800855] [<c0238d0b>] warn_slowpath_null+0x1b/0x20
-[ 24.800897] [<f7c84448>] ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]
-[ 24.800941] [<f7b2d2b8>] ath_hw_pll_work+0x48/0xc0 [ath9k]
-[ 24.801012] [<c02527dc>] process_one_work+0x10c/0x400
-[ 24.801038] [<c0253e89>] worker_thread+0x119/0x3b0
-[ 24.801055] [<c02584f2>] kthread+0x92/0xa0
-[ 24.801076] [<c070dc67>] ret_from_kernel_thread+0x1b/0x28
-[ 24.801093] [<c0258460>] kthread_create_on_node+0xd0/0xd0
-[ 24.808339] DWARF2 unwinder stuck at kthread+0x0/0xa0
-[ 24.808346]
-[ 24.808350] Leftover inexact backtrace:
-[ 24.808350]
-[ 24.808361] ---[ end trace 33960a031f166c71 ]---
+Right, but same deal - if it asserts the line, it should stomp wifi
+transmission in your particular scheme.
 
 
+
+adrian
+
+
+On 9 April 2013 19:37, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
+> Hello Mr.Adrian,
+>     Thanks for your response. During googling, I had come across the
+> following 2-wire coexistence solution from owl modules.
+>
+> http://support.connectblue.com/display/PRODWLAN/cB-OWL22x+Bluetooth+co-existence+application+note
+> According to this application note, for 2-wire coexistence, WLAN_ACTIVE and
+> BT_PRIORITY signals are used rather than WLAN_ACTIVE and BT_ACTIVE.  What is
+> your opinion on this? And as I understand owl modules are based on Atheros
+> chipsets.
+>
+> Regards
+> Sandeep.
+>
+> From: Adrian Chadd <adrian@freebsd.org>
+> To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+> Cc: Sujith Manoharan <sujith@msujith.org>; ath9k-devel
+> <ath9k-devel@lists.ath9k.org>; "linux-wireless@vger.kernel.org"
+> <linux-wireless@vger.kernel.org>
+> Sent: Wednesday, 10 April 2013 4:30 AM
+>
+> Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
+>
+> Hi,
+>
+> Yes, "WLAN_ACTIVE" here is just both TX and RX activity.
+>
+> So if it were working, that would stay low.
+>
+>
+>
+> adrian
+>
+>
