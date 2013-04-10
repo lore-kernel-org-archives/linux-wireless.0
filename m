@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43055 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967423Ab3DRPqr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 11:46:47 -0400
-Content-Type: text/plain; charset=US-ASCII
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CAMcMvsiW5KQmZq9VgdNOOG+7y-ZWO1yCsv4BD7iFQrR+wcHQ3w@mail.gmail.com>
-Date: Thu, 18 Apr 2013 08:46:40 -0700
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Bing Zhao <bzhao@marvell.com>, linux-netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Message-Id: <05ECA628-AE4D-48A2-A743-4C800052F439@holtmann.org> (sfid-20130418_174703_972000_5BFB63EE)
-References: <1366236369-543-1-git-send-email-bzhao@marvell.com> <1366236590.8217.64.camel@jlt4.sipsolutions.net> <516F8F4B.1000504@lri.fr> <BF64DFEC-CFE7-4A89-B251-8E9AF3E44642@holtmann.org> <CAMcMvsiW5KQmZq9VgdNOOG+7y-ZWO1yCsv4BD7iFQrR+wcHQ3w@mail.gmail.com>
-To: Paul Stewart <pstew@chromium.org>
+Received: from www.piware.de ([213.9.93.70]:48584 "EHLO www.piware.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932468Ab3DJQjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Apr 2013 12:39:03 -0400
+Date: Wed, 10 Apr 2013 18:38:59 +0200
+From: Martin Pitt <martin.pitt@ubuntu.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [mac80211-next:wip 107/122]
+ drivers/net/wireless/mac80211_hwsim.c:2198:17: warning: ignoring return
+ value of 'driver_register', declared with attribute warn_unused_result
+Message-ID: <20130410163859.GA2884@piware.de> (sfid-20130410_183911_806816_AC6AEEF8)
+References: <51658900.3wb5UKoIEe45MUXS%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+In-Reply-To: <51658900.3wb5UKoIEe45MUXS%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
 
-> The original reason to request this change was simple: to figure out
-> what type of interface we are looking at, since now some wireless
-> drivers can simultaneously create managed, p2p and ap interfaces.
-> Knowing that, from a simple front-end (let's even say a shell script)
-> we can decide what arguments to use with wpa_supplicant (or indeed if
-> we want to start it on this interface).  wpa_supplicant, of course,
-> knows how to manipulate the device further using nl80211.  I thought
-> it was a bit onerous to force userspace all the way through nl80211
-> just to get this trivial piece of information, but apparently this
-> doesn't seem to be the common point of view.
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-quite frankly this is a design issue with wpa_supplicant since it refuses to manage the wireless devices and interfaces. If you would have a real daemon that manages the wireless device via nl80211, then you would never ever have this problem. All the information are available via nl80211.
+Hello Johannes,
 
-However my point is that you can not just base this around netdev exposed interfaces. The netdev interface might not even be present. Especially when talking about P2P you might not have a netdev in the first place. You only have a wdev.
+kbuild test robot [2013-04-10 23:45 +0800]:
+>    drivers/net/wireless/mac80211_hwsim.c: In function 'init_mac80211_hwsi=
+m':
+> >> drivers/net/wireless/mac80211_hwsim.c:2198:17: warning: ignoring retur=
+n value of 'driver_register', declared with attribute warn_unused_result [-=
+Wunused-result]
 
-Regards
+Argh, I wish I could see these warnings with the standard make
+command, sorry about that. Sending a patch for this.
 
-Marcel
+Martin
+--=20
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
 
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRZZWfAAoJEPmIJawmtHufyGEP/isrUd0oGO1Y2HVr95H4FiZY
+H8aNxdj1wn4f31IjPckzIrNrWc4eHc+lfe+MTsZ6RW3U/2PMuFy7iiHalp69xnvt
+LzVC1sHyu5Nisl/8QG5dZ4WmmYZ2f6qtrdDmLrej7HuMVD2ynkEM76YaHrIPDQDf
+X2BeofoHnT9Y3Kf9cejXST7e4SawSpceAHCElP8fI0zPnN38zS/IVAu9MkL8NU1n
+IngLVlysTm/AiGjohkMIB7OJmvlFrEbZ5j/ku9HwHG1TsI0iFudPiTP1gzgdiehO
+ZsMQGdkseqrzOk18N9MsVZ7pk/qzMSc4upAFFP9Tb3jN3ITNkOzIQCpEM8SmvwEP
+kJCHhkbwj/yTBmBShu6+7itUqajnq+QBeJleGxc4j1+13Hgc67CLqIhivGmKvGfX
+Pnz10W0kwDV1vTe6QaAm+IuSal+uyMnwySMkf0yTyWYQz41bENXXJZT6XozcUPJn
+c6WgY1a6LGiWj7NtNGawfqAxmKshz3IgxP80DhRv/Vc/MYgJLXZdQ6wPzSAIk+P9
+MqkPYrx7008lOATAT5XEZZRr4ZkKG3maB4i2BqOkkV/mzWIJhzaqkUcpcp8iSCNu
+55BobZRnzOzKMGOVAVyPSUtUpSlrbnHUXZi3MNex7jqFVstaIr5iSm8V7vsC4Z7Y
+Sj6wHcoYzNyTW4ubjMTF
+=15i9
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
