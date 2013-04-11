@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53220 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755082Ab3DPOGX (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:48403 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab3DKTGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 10:06:23 -0400
-Message-ID: <1366121174.8244.18.camel@jlt4.sipsolutions.net> (sfid-20130416_160633_718456_3CA57571)
-Subject: Re: [PATCH 1/2] mac80211: VHT off-by-one NSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Tue, 16 Apr 2013 16:06:14 +0200
-In-Reply-To: <1366038570-12457-1-git-send-email-karl.beldan@gmail.com> (sfid-20130415_171410_156381_380D60DE)
-References: <1366038570-12457-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20130415_171410_156381_380D60DE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 11 Apr 2013 15:06:35 -0400
+Received: by mail-pb0-f41.google.com with SMTP id mc17so1013255pbc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 12:06:35 -0700 (PDT)
+Date: Thu, 11 Apr 2013 12:06:33 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	viro@ZenIV.linux.org.uk, netdev@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 17/26] hostap: Don't use create_proc_read_entry() [RFC]
+Message-ID: <20130411190633.GB32045@kroah.com> (sfid-20130411_210641_748832_FA42C58E)
+References: <20130411132739.32763.82609.stgit@warthog.procyon.org.uk>
+ <20130411132952.32763.3184.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130411132952.32763.3184.stgit@warthog.procyon.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-15 at 17:09 +0200, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Thu, Apr 11, 2013 at 02:29:52PM +0100, David Howells wrote:
+> Don't use create_proc_read_entry() as that is deprecated, but rather use
+> proc_create_data() and seq_file instead.
 > 
-> The number of VHT spatial streams (NSS) is found in:
-> - s8 ieee80211_tx_rate.rate.idx[6:4] (tx - filled by rate control)
-> - u8 ieee80211_rx_status.vht_nss     (rx - filled by driver)
-> Tx discriminates valid rates indexes with the sign bit and encodes NSS
-> starting from 0 to 7 (note this matches some hw encodings e.g IWLMVM).
-> Rx does not have the same constraints, and encodes NSS starting from 1
-> to 8 (note this matches what wireshark expects in the radiotap header).
-> 
-> To handle ieee80211_tx_rate.rate.idx[6:4] ieee80211_rate_set_vht() and
-> ieee80211_rate_get_vht_nss() assume their nss parameter and return value
-> respectively runs from 0 to 7.
-> ATM, there are only 2 users of these: cfg.c:sta_set_rate_info_t() and
-> iwlwifi/mvm/tx.c:iwl_mvm_hwrate_to_tx_control(), but both assume nss
-> runs from 1 to 8.
-> This patch fixes this inconsistency by making ieee80211_rate_set_vht()
-> and ieee80211_rate_get_vht_nss() handle an nss running from 1 to 8.
-> 
-> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> ---
-> This might feel very verbose for such a trivial thing.
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Jouni Malinen <j@w1.fi>
+> cc: John W. Linville <linville@tuxdriver.com>
+> cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> cc: Johannes Berg <johannes@sipsolutions.net>
+> cc: linux-wireless@vger.kernel.org
+> cc: netdev@vger.kernel.org
+> cc: devel@driverdev.osuosl.org
 
-I think it's good, it's clearly a tricky area :-)
-
-Applied both.
-
-Btw, it seems we're missing VHT rates in net/mac80211/status.c, I was
-wondering why that wasn't wrong but it's simply not there, heh. In fact
-we probably mess it up when using VHT ...
-
-johannes
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
