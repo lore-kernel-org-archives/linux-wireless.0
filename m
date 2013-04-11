@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:47798 "EHLO
-	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755021Ab3DVTBQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643Ab3DKKCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 15:01:16 -0400
-Date: Mon, 22 Apr 2013 14:59:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-04-22
-Message-ID: <20130422185928.GF2055@tuxdriver.com> (sfid-20130422_210131_099662_95E0C5C7)
-References: <1366640761.8637.30.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1366640761.8637.30.camel@jlt4.sipsolutions.net>
+	Thu, 11 Apr 2013 06:02:36 -0400
+Message-ID: <1365674551.8272.39.camel@jlt4.sipsolutions.net> (sfid-20130411_120239_600910_7B62C701)
+Subject: Re: [PATCH] mac80211: always pick a basic rate to tx RTS/CTS for
+ pre-HT rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 11 Apr 2013 12:02:31 +0200
+In-Reply-To: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com> (sfid-20130405_121029_391208_2FD323E8)
+References: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130405_121029_391208_2FD323E8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 22, 2013 at 04:26:01PM +0200, Johannes Berg wrote:
-> Hi John,
+On Fri, 2013-04-05 at 12:06 +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
 > 
-> One more and probably last pull request for -next. Still pretty big,
-> mostly because I had some catching up to do wrt. merging.
-> 
-> This time I have a relatively large number of fixes and small
-> improvements, the most important one being Bob's RCU fix. The two big
-> things are Felix's work on rate scaling tables (with a big thanks to
-> Karl too) and my own work on CSA handling to finally properly handle HT
-> (and some VHT.)
-> 
-> Oh, I merged wireless-next once to resolve some conflicts.
-> 
-> Please pull.
-> 
-> Thanks,
-> johannes
-> 
-> The following changes since commit 9b383672452bb1097124c76fcb4903e0021f6baf:
-> 
->   b43: use bcma_pmu_spuravoid_pllupdate() (2013-04-12 15:29:14 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to 1eb32179f0593051e7536378a879f5bdd108416a:
-> 
->   mac80211_hwsim: handle IEEE80211_HW_SUPPORTS_RC_TABLE (2013-04-22 16:19:16 +0200)
+> When the 1st rate control entry is a pre-HT rate we want to set
+> rts_cts_rate_idx "as the fastest basic rate that is not faster than the
+> data rate"(code comments).
+> But in case some bss allowed rate indexes are lower than the lowest bss
+> basic rate, if the rate control selects a rate among the formers for its
+> 1st rate control entry, rts_cts_rate_idx remains 0 and is not a basic
+> rate index.
+> This commit sets rts_cts_rate_idx to the lowest bss basic rate index in
+> this situation.
 
-Pulling now...
+Ok after reviewing this again I applied it.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+>  	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
+> -		s8 baserate = 0;
+> +		u32 basic_rates = tx->sdata->vif.bss_conf.basic_rates;
+> +		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
+
+Note that this also assumes that rate 0 is a mandatory rate, which
+presumably will always be true.
+
+johannes
+
