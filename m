@@ -1,80 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp29.msg.oleane.net ([62.161.4.29]:50279 "EHLO
-	smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206Ab3D2JlQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:41:16 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Thomas Pedersen'" <thomas@cozybit.com>
-Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local> <CAG6hwVN5LRVgchuX7QQWKEioBxTz3WXO5JUVv7fE3_X5LKXayg@mail.gmail.com> <00ad01ce3f30$7ba5da10$72f18e30$@acksys.fr> <CAG6hwVNrPdCtfdA3xDHAAqz=i_GegVReba9HOxYrw0VOgdcP+g@mail.gmail.com>
-In-Reply-To: <CAG6hwVNrPdCtfdA3xDHAAqz=i_GegVReba9HOxYrw0VOgdcP+g@mail.gmail.com>
-Subject: RE: Mutli vif in mesh mode
-Date: Mon, 29 Apr 2013 11:41:13 +0200
-Message-ID: <015101ce44bd$b0026de0$100749a0$@acksys.fr> (sfid-20130429_114120_188227_38210760)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48117 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750950Ab3DKMjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 08:39:25 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] b43: use bcma_pmu_spuravoid_pllupdate()
+Date: Thu, 11 Apr 2013 14:39:13 +0200
+Message-Id: <1365683953-3430-1-git-send-email-hauke@hauke-m.de> (sfid-20130411_143929_113631_43624BD6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Hi Thomas, 
+Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
 
-	I do not know if I will have a time this week to test it. 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/phy_n.c |   86 +++++++-------------------------------
+ 1 file changed, 14 insertions(+), 72 deletions(-)
 
-	I come back to you when I have tested this modification.
-
-	Thanks for your help.
-
-Cedric Voncken | R&d Engineer
-----------------------------------------------------------------------------
-------------------------------
-T : +33 1 30 56 46 52 
-cedric.voncken@acksys.fr | www.acksys.fr
-----------------------------------------------------------------------------
-------------------------------
-
-           
-ZA Val Joyeux - 10 rue des Entrepreneurs - 78450 VILLEPREUX - France
-----------------------------------------------------------------------------
-----------
-
-
------Message d'origine-----
-De : linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] De la part de Thomas Pedersen
-Envoyé : vendredi 26 avril 2013 18:07
-À : voncken
-Cc : linux-wireless
-Objet : Re: Mutli vif in mesh mode
-
-Hi Cedric,
-
-On Mon, Apr 22, 2013 at 1:07 AM, voncken <cedric.voncken@acksys.fr> wrote:
->         Thanks Thomas for your answer,
->
->         In ath9k_hw_beaconinit() the mesh mode use the hadhoc beacon 
-> mode. I try to change it, and  ath9k_set_beacon in 
-> driver/net/Wireless/ath/ath9k/beacon.c, but after these modifications, 
-> no beacon are sent (I think my change are wrong).
->
->         Could you give me the old patch, I can try to update it with 
-> the latest compat, and I will send to you an updated patch.
-
-Sorry for the late response.
-
-You need to change the hardware operating mode in
-ath9k_hw_set_operating_mode() to AP as well. See [1] and please let me know
-if that helps.
-
-[1]
-https://github.com/cozybit/open80211s/commit/380bf3ad4c2ccd92658943e978f8d94
-2611a3d6d
-
---
-Thomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org More majordomo info at
-http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 7b557ad..05945da 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -5097,77 +5097,6 @@ static void b43_chantab_phy_upload(struct b43_wldev *dev,
+ 	b43_phy_write(dev, B43_NPHY_BW6, e->phy_bw6);
+ }
+ 
+-/* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+-static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+-{
+-	struct bcma_drv_cc __maybe_unused *cc;
+-	u32 __maybe_unused pmu_ctl;
+-
+-	switch (dev->dev->bus_type) {
+-#ifdef CONFIG_B43_BCMA
+-	case B43_BUS_BCMA:
+-		cc = &dev->dev->bdev->bus->drv_cc;
+-		if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
+-			if (avoid) {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11500010);
+-				bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			} else {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11100010);
+-				bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			}
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-		} else if (dev->dev->chip_id == 0x4716) {
+-			if (avoid) {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11500060);
+-				bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			} else {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11100060);
+-				bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x03000000);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			}
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD |
+-				  BCMA_CC_PMU_CTL_NOILPONW;
+-		} else if (dev->dev->chip_id == 0x4322 ||
+-			   dev->dev->chip_id == 0x4340 ||
+-			   dev->dev->chip_id == 0x4341) {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11100070);
+-			bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888854);
+-			if (avoid)
+-				bcma_chipco_pll_write(cc, 0x2, 0x05201828);
+-			else
+-				bcma_chipco_pll_write(cc, 0x2, 0x05001828);
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-		} else {
+-			return;
+-		}
+-		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
+-		break;
+-#endif
+-#ifdef CONFIG_B43_SSB
+-	case B43_BUS_SSB:
+-		ssb_pmu_spuravoid_pllupdate(&dev->dev->sdev->bus->chipco,
+-					    avoid);
+-		break;
+-#endif
+-	}
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
+ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 				const struct b43_phy_n_sfo_cfg *e,
+@@ -5229,7 +5158,20 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 				avoid = dev->dev->chip_id == 0x4716;
+ 		}
+ 
+-		b43_nphy_pmu_spur_avoid(dev, avoid);
++		switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++		case B43_BUS_BCMA:
++			bcma_pmu_spuravoid_pllupdate(&dev->dev->bdev->bus->drv_cc,
++						     avoid);
++			break;
++#endif
++#ifdef CONFIG_B43_SSB
++		case B43_BUS_SSB:
++			ssb_pmu_spuravoid_pllupdate(&dev->dev->sdev->bus->chipco,
++						    avoid);
++			break;
++#endif
++		}
+ 
+ 		if (dev->dev->chip_id == 43222 || dev->dev->chip_id == 43224 ||
+ 		    dev->dev->chip_id == 43225) {
+-- 
+1.7.10.4
 
