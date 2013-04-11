@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f178.google.com ([209.85.210.178]:49124 "EHLO
-	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756224Ab3DXQrS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787Ab3DKOWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 12:47:18 -0400
-Received: by mail-ia0-f178.google.com with SMTP id j38so1801066iad.37
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 09:47:17 -0700 (PDT)
-Message-ID: <51780C92.4000208@lwfinger.net> (sfid-20130424_184721_962417_9602E9AF)
-Date: Wed, 24 Apr 2013 11:47:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Stahn <michael.stahn.42@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Realtek 8192CU not working
-References: <CALvqYaTZrtSsP9GQzH4B988KjPg+LRCcyREKZ1zkjoaEDKPHNA@mail.gmail.com> <CALvqYaTSYR43rS-pptFKCfsgvsatrUSz4v+AFBPQ0UrHC4WkXA@mail.gmail.com> <5177F100.1070803@lwfinger.net> <CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com>
-In-Reply-To: <CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 11 Apr 2013 10:22:14 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] ath5k: use more idiomatic tracing include style
+Date: Thu, 11 Apr 2013 16:22:08 +0200
+Message-Id: <1365690128-25084-1-git-send-email-johannes@sipsolutions.net> (sfid-20130411_162218_107597_C8ECD596)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2013 11:20 AM, Michael Stahn wrote:
-> I've just recompiled the kernel and executed the following procedure:
-> modprobe rtl8192cu -> plugin in Wlan-Stick -> connect wlan via
-> Networkmanager (no connection was established, credentials are
-> correct) -> unplug Stick. Attachment contains the dmes-output.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Please do not drop the Cc to the Linux wireless mailing list unless you are 
-requested to send something of a sensitive nature. Always use "Reply to all".
+Pretty much everywhere that uses a trace definition
+header that's not in include/trace/events/ uses the
+make system for the include path rather than putting
+it into the sources, so do that in ath5k as well.
 
-[  448.211707] rtl8192cu: MAC auto ON okay!
-[  448.248820] rtl8192cu: Tx queue select: 0x05
-[  448.615206] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  464.990166] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 1
-[  464.990540] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 2
-[  464.990613] hub 3-0:1.0: state 7 ports 4 chg 0000 evt 0004
-[  464.990642] ehci_hcd 0000:00:16.2: GetStatus port:2 status 001002 0  ACK 
-POWER sig=se0 CSC
-[  464.990661] hub 3-0:1.0: port 2, status 0100, change 0001, 12 Mb/s
-[  464.990672] usb 3-2: USB disconnect, device number 3
+This came up during backporting work (where this is
+required), but since all other drivers do it this
+way upstream it seemed applicable.
 
-That error is something in the USB hub driver. What is your architecture?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath5k/Makefile | 1 +
+ drivers/net/wireless/ath/ath5k/trace.h  | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-To get a little more detail, please rebuild your kernel with CONFIG_USB_DEBUG 
-set and post the full log on some paste site. I will likely need to have the 
-help of the USB expert on this matter, but we need more details first.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+index f60b389..1b3a34f 100644
+--- a/drivers/net/wireless/ath/ath5k/Makefile
++++ b/drivers/net/wireless/ath/ath5k/Makefile
+@@ -10,6 +10,7 @@ ath5k-y				+= phy.o
+ ath5k-y				+= reset.o
+ ath5k-y				+= attach.o
+ ath5k-y				+= base.o
++CFLAGS_base.o			+= -I$(src)
+ ath5k-y				+= led.o
+ ath5k-y				+= rfkill.o
+ ath5k-y				+= ani.o
+diff --git a/drivers/net/wireless/ath/ath5k/trace.h b/drivers/net/wireless/ath/ath5k/trace.h
+index 00f0158..c6eef51 100644
+--- a/drivers/net/wireless/ath/ath5k/trace.h
++++ b/drivers/net/wireless/ath/ath5k/trace.h
+@@ -97,7 +97,7 @@ TRACE_EVENT(ath5k_tx_complete,
+ #if defined(CONFIG_ATH5K_TRACER) && !defined(__CHECKER__)
+ 
+ #undef TRACE_INCLUDE_PATH
+-#define TRACE_INCLUDE_PATH ../../drivers/net/wireless/ath/ath5k
++#define TRACE_INCLUDE_PATH .
+ #undef TRACE_INCLUDE_FILE
+ #define TRACE_INCLUDE_FILE trace
+ 
+-- 
+1.8.0
 
