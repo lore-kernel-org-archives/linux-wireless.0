@@ -1,146 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39438 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965164Ab3DPS0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 14:26:45 -0400
-Subject: [PATCH 13/28] airo: Use remove_proc_subtree() [RFC]
-To: linux-kernel@vger.kernel.org
-From: David Howells <dhowells@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	viro@zeniv.linux.org.uk
-Date: Tue, 16 Apr 2013 19:26:43 +0100
-Message-ID: <20130416182643.27773.14779.stgit@warthog.procyon.org.uk> (sfid-20130416_203205_422676_E5C4B665)
-In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from senator.holtmann.net ([87.106.208.187]:39943 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934932Ab3DKR2n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 13:28:43 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: [RFC] [PATCH 1/2 v2] rfkill: Add NFC to the list of supported radios
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1365678562-5583-2-git-send-email-sameo@linux.intel.com>
+Date: Thu, 11 Apr 2013 10:28:39 -0700
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Linux NFC" <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Message-Id: <58CA667F-478E-4D09-BD42-396D4DAF34F6@holtmann.org> (sfid-20130411_192853_091847_28703F96)
+References: <1365678562-5583-1-git-send-email-sameo@linux.intel.com> <1365678562-5583-2-git-send-email-sameo@linux.intel.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use remove_proc_subtree() to remove the airo device subdir and all its
-children instead of doing it manually.
+Hi Samuel,
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: linux-wireless@vger.kernel.org
----
+> And return the proper string for it.
+> 
+> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+> ---
+> include/uapi/linux/rfkill.h |    2 ++
+> net/rfkill/core.c           |    4 +++-
+> 2 files changed, 5 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/airo.c |   49 +++++++++++--------------------------------
- 1 file changed, 13 insertions(+), 36 deletions(-)
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 21d0233..6125adb 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -4506,98 +4506,75 @@ static int setup_proc_entry( struct net_device *dev,
- 	apriv->proc_entry = proc_mkdir_mode(apriv->proc_name, airo_perm,
- 					    airo_entry);
- 	if (!apriv->proc_entry)
--		goto fail;
-+		return -ENOMEM;
- 	proc_set_user(apriv->proc_entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the StatsDelta */
- 	entry = proc_create_data("StatsDelta", S_IRUGO & proc_perm,
- 				 apriv->proc_entry, &proc_statsdelta_ops, dev);
- 	if (!entry)
--		goto fail_stats_delta;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the Stats */
- 	entry = proc_create_data("Stats", S_IRUGO & proc_perm,
- 				 apriv->proc_entry, &proc_stats_ops, dev);
- 	if (!entry)
--		goto fail_stats;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the Status */
- 	entry = proc_create_data("Status", S_IRUGO & proc_perm,
- 				 apriv->proc_entry, &proc_status_ops, dev);
- 	if (!entry)
--		goto fail_status;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the Config */
- 	entry = proc_create_data("Config", proc_perm,
- 				 apriv->proc_entry, &proc_config_ops, dev);
- 	if (!entry)
--		goto fail_config;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the SSID */
- 	entry = proc_create_data("SSID", proc_perm,
- 				 apriv->proc_entry, &proc_SSID_ops, dev);
- 	if (!entry)
--		goto fail_ssid;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the APList */
- 	entry = proc_create_data("APList", proc_perm,
- 				 apriv->proc_entry, &proc_APList_ops, dev);
- 	if (!entry)
--		goto fail_aplist;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the BSSList */
- 	entry = proc_create_data("BSSList", proc_perm,
- 				 apriv->proc_entry, &proc_BSSList_ops, dev);
- 	if (!entry)
--		goto fail_bsslist;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 
- 	/* Setup the WepKey */
- 	entry = proc_create_data("WepKey", proc_perm,
- 				 apriv->proc_entry, &proc_wepkey_ops, dev);
- 	if (!entry)
--		goto fail_wepkey;
-+		goto fail;
- 	proc_set_user(entry, proc_kuid, proc_kgid);
- 	return 0;
- 
--fail_wepkey:
--	remove_proc_entry("BSSList", apriv->proc_entry);
--fail_bsslist:
--	remove_proc_entry("APList", apriv->proc_entry);
--fail_aplist:
--	remove_proc_entry("SSID", apriv->proc_entry);
--fail_ssid:
--	remove_proc_entry("Config", apriv->proc_entry);
--fail_config:
--	remove_proc_entry("Status", apriv->proc_entry);
--fail_status:
--	remove_proc_entry("Stats", apriv->proc_entry);
--fail_stats:
--	remove_proc_entry("StatsDelta", apriv->proc_entry);
--fail_stats_delta:
--	remove_proc_entry(apriv->proc_name, airo_entry);
- fail:
-+	remove_proc_subtree(apriv->proc_name, airo_entry);
- 	return -ENOMEM;
- }
- 
- static int takedown_proc_entry( struct net_device *dev,
--				struct airo_info *apriv ) {
--	if ( !apriv->proc_entry->namelen ) return 0;
--	remove_proc_entry("Stats",apriv->proc_entry);
--	remove_proc_entry("StatsDelta",apriv->proc_entry);
--	remove_proc_entry("Status",apriv->proc_entry);
--	remove_proc_entry("Config",apriv->proc_entry);
--	remove_proc_entry("SSID",apriv->proc_entry);
--	remove_proc_entry("APList",apriv->proc_entry);
--	remove_proc_entry("BSSList",apriv->proc_entry);
--	remove_proc_entry("WepKey",apriv->proc_entry);
--	remove_proc_entry(apriv->proc_name,airo_entry);
-+				struct airo_info *apriv )
-+{
-+	remove_proc_subtree(apriv->proc_name, airo_entry);
- 	return 0;
- }
- 
+Regards
+
 
