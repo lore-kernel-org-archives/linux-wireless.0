@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:50101 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757515Ab3DXLIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 07:08:34 -0400
-Message-ID: <1366801257.11111.21.camel@jlt4.sipsolutions.net> (sfid-20130424_130836_341933_425BD68E)
-Subject: Re: How to find ESSID & signal strength
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Arend van Spriel <arend@broadcom.com>, Kai Hendry <hendry@iki.fi>,
-	Schrober <franzschrober@yahoo.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <87ip3c5iwi.fsf@purkki.adurom.net> (sfid-20130424_122118_008545_0C115C76)
-References: <CAF8XF0cS0kY96ubMisvsm--UE1PHCzrFmRC0b1Wd5-d164EdNg@mail.gmail.com>
-	 <2075657.YTpB93Bl1M@bentobox>
-	 <CAF8XF0dqL_vQrGU+WYq6oa7dUt4MtN=6eGCVjBZayQqnssXS0w@mail.gmail.com>
-	 <51766C1F.5010102@broadcom.com> <87ip3c5iwi.fsf@purkki.adurom.net>
-	 (sfid-20130424_122118_008545_0C115C76)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Apr 2013 13:00:57 +0200
-Mime-Version: 1.0
+Received: from mail-ia0-f202.google.com ([209.85.210.202]:60495 "EHLO
+	mail-ia0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302Ab3DKSCy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 14:02:54 -0400
+Received: by mail-ia0-f202.google.com with SMTP id h8so444552iaa.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 11:02:53 -0700 (PDT)
+From: Han Shen <shenhan@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	Han Shen <shenhan@google.com>
+Subject: [PATCH] Fix uninitialized-variable warnings.
+Date: Thu, 11 Apr 2013 11:02:27 -0700
+Message-Id: <1365703360-19982-1-git-send-email-shenhan@google.com> (sfid-20130411_200300_083288_F8EF6995)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-24 at 13:21 +0300, Kalle Valo wrote:
+GCC 4.8 is spitting out uninitialized-varaible warnings against "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".
+This trivial patch just adds initialization to the variable.
 
-> I think someone should fork iw which would only provide tabular output
-> for shell scripts. Shouldn't be too hard, the most difficult part is to
-> make sure that the output format is extensible when adding new features.
+Signed-off-by: Han Shen  (shenhan@google.com)
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-You don't even need to fork, just send me patches :-)
-
-Something like a --batch or --script option (to iw) would probably do
-it. We'd have to teach each command to be able to do it though, so we'd
-want to have some registration about whether a command is already
-converted and disallow the other ones, I guess.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index b793a65..875e36f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -669,7 +669,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+ 	u8 thermalvalue, delta, delta_lck, delta_iqk;
+ 	long ele_a, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c = 0;
+-	u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
++	u8 ofdm_index[2], ofdm_index_old[2] = {0, 0}, cck_index_old = 0;
+ 	s8 cck_index = 0;
+ 	int i;
+ 	bool is2t = IS_92C_SERIAL(rtlhal->version);
+-- 
+1.8.1.3
 
