@@ -1,90 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:50664 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450Ab3DERXy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 13:23:54 -0400
-MIME-Version: 1.0
-In-Reply-To: <201304051903.11215.chunkeey@googlemail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
-	<201304051903.11215.chunkeey@googlemail.com>
-Date: Fri, 5 Apr 2013 19:23:54 +0200
-Message-ID: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com> (sfid-20130405_192426_238084_3F906473)
-Subject: Re: Version number policy!
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Adrian Chadd <adrian@freebsd.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:62220 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751315Ab3DKLKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 07:10:32 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"Linux NFC" <linux-nfc@lists.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [RFC] [PATCH 0/2 v2] NFC RFKILL support
+Date: Thu, 11 Apr 2013 13:09:20 +0200
+Message-Id: <1365678562-5583-1-git-send-email-sameo@linux.intel.com> (sfid-20130411_131035_928361_FC7FDDA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good point regarding timestamp.
+This is a RFC for adding RFKILL support to NFC>
+As I said in v1, I'd like to pass this one through my next NFC pull request,
+I'm looking for Johannes and/or Marcel ACKs before doing so.
 
-When it comes to feature bitmap do you have an example of such a
-bitmap from carl9170? Why not to rely always on major version?
+v2:
+	* Split the initial patch into 2: One for the core rfkill parts,
+	  another one for the NFC bits.
+	* Added a comment line for RFKILL_TYPE_NFC in rfkill.h
 
-2013/4/5 Christian Lamparter <chunkeey@googlemail.com>:
-> On Friday 05 April 2013 10:19:00 Luis R. Rodriguez wrote:
->> On Thu, Apr 4, 2013 at 11:27 AM, Adrian Chadd <adrian@freebsd.org> wrote:
->> > Here's my first take on the version number policy:
->> >
->> > https://github.com/qca/open-ath9k-htc-firmware/wiki/VersionPolicy
->> > The summary:
->> >
->> > * major version number changes are for firmware API / behaviour
->> > changes that aren't backwards compatible;
->> > * minor version number changes are for firmware API / behaviour
->> > changes that are incremental and default to the old behaviour (eg, new
->> > optional commands);
->> > * the driver should check the minor version number before using any
->> > optional features with that version.
->> >
->> > What's TODO:
->> >
->> > * Add a new WMI command to get the build number, git string, etc.
->> > * add it as our first optional minor version command :-)
->>
->> This is better than anything we had drafted before for 802.11 open
->> firmware design rules. Cc'ing a few lists for wider review given that
->> what we had written before for rules was for 802.11 and Bluetooth [0]
->> and it was very Linux specific. We are striving for open firmware here
->> for the community, for BSD / Linux. Christian would have dealt with
->> more of the support on open firmware design so far due to carl9170.fw
->> [1] so curious if he has any input.
-> Based on my experience with carl9170, I can tell you that
-> new stuff (new wmi commands, or advanced offload caps, features
-> and bugfixes) should be advised via feature flags in bitmaps
-> and not firmware versions. [Just make it long enough...]
->
-> Otherwise you'll have to write endless checks like:
-> if ((fw_minor == 1 && fw_patch > 30) ||
->     (fw_minor == 2 && fw_patch > 7) ||
->     (fw_minor == 3 && fw_patch > 3) ||
->     (fw_minor > 4))
->                 feature_supported = true;
->
-> everytime you backport features and bugfixes to older firmwares.
->
-> Also, firmware dates are more important than you think.
-> They allow some way of syncing the firmware->driver and
-> your inbox.
->
-> Regards,
->         Christian
->
-> _______________________________________________
-> Ath9k_htc_fw mailing list
-> Ath9k_htc_fw@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath9k_htc_fw
+Samuel Ortiz (2):
+  rfkill: Add NFC to the list of supported radios
+  NFC: RFKILL support
 
-
+ include/net/nfc/nfc.h       |    2 ++
+ include/uapi/linux/rfkill.h |    2 ++
+ net/nfc/core.c              |   38 ++++++++++++++++++++++++++++++++++++++
+ net/rfkill/core.c           |    4 +++-
+ 4 files changed, 45 insertions(+), 1 deletion(-)
 
 -- 
-Best regards,
-Eugene
+1.7.10.4
+
