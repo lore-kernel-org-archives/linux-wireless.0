@@ -1,83 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56112 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932110Ab3DIRyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 13:54:25 -0400
-Message-ID: <516455CA.6070504@candelatech.com> (sfid-20130409_195429_657963_27AC6895)
-Date: Tue, 09 Apr 2013 10:54:18 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:31630 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751238Ab3DKN3y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 09:29:54 -0400
+Subject: [PATCH 16/26] atmel: Don't use create_proc_read_entry() [RFC]
+To: linux-kernel@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Cc: Simon Kelley <simon@thekelleys.org.uk>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, viro@ZenIV.linux.org.uk,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 11 Apr 2013 14:29:45 +0100
+Message-ID: <20130411132944.32763.85351.stgit@warthog.procyon.org.uk> (sfid-20130411_153029_199837_0F377FC3)
+In-Reply-To: <20130411132739.32763.82609.stgit@warthog.procyon.org.uk>
+References: <20130411132739.32763.82609.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX performance.
-References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>  (sfid-20130403_184908_772897_29241D1E) <1365501478.8465.17.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1365501478.8465.17.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2013 02:57 AM, Johannes Berg wrote:
-> On Wed, 2013-04-03 at 09:48 -0700, greearb@candelatech.com wrote:
+Don't use create_proc_read_entry() as that is deprecated, but rather use
+proc_create_data() and seq_file instead.
 
->> +++ b/net/mac80211/sta_info.c
->> @@ -77,19 +77,42 @@ static int sta_info_hash_del(struct ieee80211_local *local,
->>   	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
->>   				      lockdep_is_held(&local->sta_mtx));
->>   	if (!s)
->> -		return -ENOENT;
->> +		goto try_lhash;
->
-> Does this make sense? If the station doesn't exist in the regular hash,
-> it really shouldn't be in the vif hash either, no?
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Simon Kelley <simon@thekelleys.org.uk>
+cc: John W. Linville <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
 
-It shouldn't be in the new vif hash, so I could add a short-cut
-as you suggest.  I had left it in for reasons of paranoia.
+ drivers/net/wireless/atmel.c |   69 +++++++++++++++++++-----------------------
+ 1 file changed, 31 insertions(+), 38 deletions(-)
 
->> +	s = rcu_dereference_protected(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
->> +				      lockdep_is_held(&local->sta_mtx));
->> +	if (!s)
->> +		return -ENONET;
->
-> You probably want -ENOENT, not -ENONET.
-
-Yes, and in fact, I need to return just the rv from the old
-hash logic since otherwise we get false failure results since
-the new hash only has vifs.  This was the cause of that splat
-I posted a week or two ago...
-
->> +struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
->> +				     const u8 *vif_addr, const u8 * sta_addr) {
->> +	struct sta_info *sta;
->> +
->> +	sta = rcu_dereference_check(local->sta_vhash[STA_HASH(vif_addr)],
->> +				    lockdep_is_held(&local->sta_mtx));
->> +	while (sta) {
->> +		if (ether_addr_equal(sta->sdata->vif.addr, vif_addr) &&
->> +		    ether_addr_equal(sta->sta.addr, sta_addr))
->> +			break;
->> +		sta = rcu_dereference_check(sta->vnext,
->> +					    lockdep_is_held(&local->sta_mtx));
->
-> Almost all of your rcu_dereference_check() invocations should be
-> rcu_dereference_protected(). See include/linux/rcupdate.h :)
-
-Now this, I'm not so sure of.  That rcu_dereference_protected seems to
-be only used for the 'update-side' use.  I was under the impression
-that when the mac80211 rx logic is called we are only protected by rcu,
-not the update mutex.
-
-I also struggle to understand RCU properly...so maybe I'm just
-wrong about all that...
-
-The other methods to get sta_info around that code use the _check() variant,
-by the way...
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 4374079..23a3498 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -63,6 +63,7 @@
+ #include <net/iw_handler.h>
+ #include <linux/crc32.h>
+ #include <linux/proc_fs.h>
++#include <linux/seq_file.h>
+ #include <linux/device.h>
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+@@ -1409,30 +1410,28 @@ static int atmel_validate_channel(struct atmel_private *priv, int channel)
+ 	return 0;
+ }
+ 
+-static int atmel_proc_output (char *buf, struct atmel_private *priv)
++static int atmel_proc_show(struct seq_file *m, void *v)
+ {
++	struct atmel_private *priv = m->private;
+ 	int i;
+-	char *p = buf;
+ 	char *s, *r, *c;
+ 
+-	p += sprintf(p, "Driver version:\t\t%d.%d\n",
+-		     DRIVER_MAJOR, DRIVER_MINOR);
++	seq_printf(m, "Driver version:\t\t%d.%d\n", DRIVER_MAJOR, DRIVER_MINOR);
+ 
+ 	if (priv->station_state != STATION_STATE_DOWN) {
+-		p += sprintf(p, "Firmware version:\t%d.%d build %d\n"
+-				"Firmware location:\t",
+-			     priv->host_info.major_version,
+-			     priv->host_info.minor_version,
+-			     priv->host_info.build_version);
++		seq_printf(m,
++			   "Firmware version:\t%d.%d build %d\n"
++			   "Firmware location:\t",
++			   priv->host_info.major_version,
++			   priv->host_info.minor_version,
++			   priv->host_info.build_version);
+ 
+ 		if (priv->card_type != CARD_TYPE_EEPROM)
+-			p += sprintf(p, "on card\n");
++			seq_puts(m, "on card\n");
+ 		else if (priv->firmware)
+-			p += sprintf(p, "%s loaded by host\n",
+-				     priv->firmware_id);
++			seq_printf(m, "%s loaded by host\n", priv->firmware_id);
+ 		else
+-			p += sprintf(p, "%s loaded by hotplug\n",
+-				     priv->firmware_id);
++			seq_printf(m, "%s loaded by hotplug\n", priv->firmware_id);
+ 
+ 		switch (priv->card_type) {
+ 		case CARD_TYPE_PARALLEL_FLASH:
+@@ -1453,12 +1452,12 @@ static int atmel_proc_output (char *buf, struct atmel_private *priv)
+ 			if (priv->reg_domain == channel_table[i].reg_domain)
+ 				r = channel_table[i].name;
+ 
+-		p += sprintf(p, "MAC memory type:\t%s\n", c);
+-		p += sprintf(p, "Regulatory domain:\t%s\n", r);
+-		p += sprintf(p, "Host CRC checking:\t%s\n",
+-			     priv->do_rx_crc ? "On" : "Off");
+-		p += sprintf(p, "WPA-capable firmware:\t%s\n",
+-			     priv->use_wpa ? "Yes" : "No");
++		seq_printf(m, "MAC memory type:\t%s\n", c);
++		seq_printf(m, "Regulatory domain:\t%s\n", r);
++		seq_printf(m, "Host CRC checking:\t%s\n",
++			 priv->do_rx_crc ? "On" : "Off");
++		seq_printf(m, "WPA-capable firmware:\t%s\n",
++			 priv->use_wpa ? "Yes" : "No");
+ 	}
+ 
+ 	switch (priv->station_state) {
+@@ -1490,26 +1489,22 @@ static int atmel_proc_output (char *buf, struct atmel_private *priv)
+ 		s = "<unknown>";
+ 	}
+ 
+-	p += sprintf(p, "Current state:\t\t%s\n", s);
+-	return p - buf;
++	seq_printf(m, "Current state:\t\t%s\n", s);
++	return 0;
+ }
+ 
+-static int atmel_read_proc(char *page, char **start, off_t off,
+-			   int count, int *eof, void *data)
++static int atmel_proc_open(struct inode *inode, struct file *file)
+ {
+-	struct atmel_private *priv = data;
+-	int len = atmel_proc_output (page, priv);
+-	if (len <= off+count)
+-		*eof = 1;
+-	*start = page + off;
+-	len -= off;
+-	if (len > count)
+-		len = count;
+-	if (len < 0)
+-		len = 0;
+-	return len;
++	return single_open(file, atmel_proc_show, PDE_DATA(inode));
+ }
+ 
++static const struct file_operations atmel_proc_fops = {
++	.open		= atmel_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= seq_release,
++};
++
+ static const struct net_device_ops atmel_netdev_ops = {
+ 	.ndo_open 		= atmel_open,
+ 	.ndo_stop		= atmel_close,
+@@ -1525,7 +1520,6 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 				   struct device *sys_dev,
+ 				   int (*card_present)(void *), void *card)
+ {
+-	struct proc_dir_entry *ent;
+ 	struct net_device *dev;
+ 	struct atmel_private *priv;
+ 	int rc;
+@@ -1630,8 +1624,7 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 
+ 	netif_carrier_off(dev);
+ 
+-	ent = create_proc_read_entry ("driver/atmel", 0, NULL, atmel_read_proc, priv);
+-	if (!ent)
++	if (!proc_create_data("driver/atmel", 0, NULL, &atmel_proc_fops, priv));
+ 		printk(KERN_WARNING "atmel: unable to create /proc entry.\n");
+ 
+ 	printk(KERN_INFO "%s: Atmel at76c50x. Version %d.%d. MAC %pM\n",
 
