@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33269 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34952 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936446Ab3DRVq5 (ORCPT
+	with ESMTP id S1754066Ab3DKJPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 17:46:57 -0400
+	Thu, 11 Apr 2013 05:15:14 -0400
+Message-ID: <1365671709.8272.31.camel@jlt4.sipsolutions.net> (sfid-20130411_111519_684774_1419C804)
+Subject: Re: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: david.spinadel@intel.com, arend@broadcom.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix P2P-Device management frame RX
-Date: Thu, 18 Apr 2013 23:46:46 +0200
-Message-Id: <1366321606-10967-1-git-send-email-johannes@sipsolutions.net> (sfid-20130418_234701_386587_D5A8A956)
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 11 Apr 2013 11:15:09 +0200
+In-Reply-To: <5164517C.1050304@candelatech.com>
+References: <1364572823-28071-1-git-send-email-greearb@candelatech.com>
+	  (sfid-20130329_170033_026763_9F6C74DD) <1365501048.8465.13.camel@jlt4.sipsolutions.net>
+	 <5164517C.1050304@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2013-04-09 at 10:35 -0700, Ben Greear wrote:
+> On 04/09/2013 02:50 AM, Johannes Berg wrote:
+> > On Fri, 2013-03-29 at 09:00 -0700, greearb@candelatech.com wrote:
+> >> From: Ben Greear <greearb@candelatech.com>
+> >>
+> >> The sta_info hash is designed to deal with an AP
+> >> with lots of stations associated, or a station interface
+> >> connected to a single AP.
+> >
+> > Given your other hash patches, does this even make sense still?
+> 
+> This handles the TX side for station VIFs.  The more complicated
+> hashing handles the rx logic.  I could use the hash
+> for the tx side, though performance is likely a small bit
+> worse since you have to deal with the hash logic.
 
-There's an issue in receiving broadcast management frames
-on P2P Device virtual interfaces, such frames have the RX
-flag IEEE80211_RX_RA_MATCH cleared and are thus dropped
-in ieee80211_rx_h_mgmt_check(). They should be let through
-to make it to ieee80211_rx_h_userspace_mgmt() and then to
-userspace.
+Well, for the TX side in your particular case the vhash should always
+just find the right station first, so basically it's the same, no? I
+mean, if you used the new hash in the TX code, it would basically do the
+same the some_sta thing does, assuming your hash spreads well, no?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> And, if the more complicated RFC hashing patch has no upstream
+> chance anyway, then if the 'some-sta' patch is acceptable,
+> I'd still be interested in seeing it upstream.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 643fcf7..14b32a4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3043,7 +3043,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 		    !ieee80211_is_probe_resp(hdr->frame_control) &&
- 		    !ieee80211_is_beacon(hdr->frame_control))
- 			return 0;
--		if (!ether_addr_equal(sdata->vif.addr, hdr->addr1))
-+		if (!ether_addr_equal(sdata->vif.addr, hdr->addr1) &&
-+		    !multicast)
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		break;
- 	default:
--- 
-1.8.0
+Well I'm debating (with myself mostly) ... The some_sta seems
+reasonable, but still a big ugly and like a special case. I'd rather not
+merge the vhash because of the various overheads, so you'd probably want
+to maintain that out of tree anyway. It seems to me that the vhash
+should address your other case pretty much just as well, so then if you
+maintain that anyway I wouldn't have to merge the some_sta patch ... I
+guess I'd kinda prefer that :-)
+
+johannes
 
