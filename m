@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sipsolutions.net ([144.76.43.152]:50095 "EHLO sipsolutions.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:4956 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754072Ab3DXLIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 07:08:24 -0400
-Message-ID: <1366801278.11111.23.camel@jlt4.sipsolutions.net> (sfid-20130424_130828_072984_F618248B)
-Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX
- performance.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <517705E0.4070304@candelatech.com>
-References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20130403_184908_772897_29241D1E) <1365501478.8465.17.camel@jlt4.sipsolutions.net>
-	 <516455CA.6070504@candelatech.com>
-	 <1365671968.8272.35.camel@jlt4.sipsolutions.net>
-	 <5176E442.7070907@candelatech.com> <517705E0.4070304@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Apr 2013 13:01:18 +0200
-Mime-Version: 1.0
+	id S1754654Ab3DKL3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 07:29:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 13/15] brcmfmac: pass ifp pointer in
+ brcmf_fws_find_mac_desc()
+Date: Thu, 11 Apr 2013 13:28:58 +0200
+Message-ID: <1365679740-25679-14-git-send-email-arend@broadcom.com> (sfid-20130411_132935_560922_FFF59EF6)
+In-Reply-To: <1365679740-25679-1-git-send-email-arend@broadcom.com>
+References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-23 at 15:06 -0700, Ben Greear wrote:
+Instead of passing the ifidx and lookup the ifp inside the
+function brcmf_fws_find_mac_desc() simply pass the ifp as
+parameter.
 
-> > This idea suddenly looks a lot more interesting.  The ieee80211_tx_status method needs
-> > to find the remote station & sdata, but in the AP case, the station hash works best,
-> > and in my many-sta-vif case, the VIF hash works best.  I don't see any way to guess
-> > which hash to use in this case.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-Indeed, that'd be tricky.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index f8ee4dc..e26bbfd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -681,19 +681,16 @@ brcmf_fws_mac_descriptor_lookup(struct brcmf_fws_info *fws, u8 *ea)
+ }
+ 
+ static struct brcmf_fws_mac_descriptor*
+-brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, int ifidx, u8 *da)
++brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, struct brcmf_if *ifp,
++			u8 *da)
+ {
+ 	struct brcmf_fws_mac_descriptor *entry = &fws->desc.other;
+-	struct brcmf_if *ifp;
+ 	bool multicast;
+ 	enum nl80211_iftype iftype;
+-	brcmf_dbg(TRACE, "enter: ifidx=%d\n", ifidx);
+ 
+-	multicast = is_multicast_ether_addr(da);
+-	ifp = fws->drvr->iflist[ifidx ? ifidx + 1 : 0];
+-	if (WARN_ON(!ifp))
+-		goto done;
++	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
+ 
++	multicast = is_multicast_ether_addr(da);
+ 	iftype = brcmf_cfg80211_get_iftype(ifp);
+ 
+ 	/* Multicast destination and P2P clients get the interface entry.
+@@ -1750,7 +1747,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 
+ 	/* set control buffer information */
+ 	skcb->if_flags = 0;
+-	skcb->mac = brcmf_fws_find_mac_desc(drvr->fws, ifidx, eh->h_dest);
++	skcb->mac = brcmf_fws_find_mac_desc(drvr->fws, ifp, eh->h_dest);
+ 	skcb->state = BRCMF_FWS_SKBSTATE_NEW;
+ 	brcmf_skb_if_flags_set_field(skb, INDEX, ifidx);
+ 	if (!multicast)
+-- 
+1.7.10.4
 
-> > But, if we first hashed to find sdata, and then had a vif hash in the sdata
-> > object, the lookup should be fast for cases where the hash function works
-> > well.
-> >
-> > I'll give this a try...
-> 
-> Seems to mostly be working, but I've a few questions.
-> 
-> First, if we are hashing sdata on sdata->vif.addr, then we must
-> assume that everything in that hash has a unique MAC.  I'm
-> thinking that I would just never put monitor devices in
-> the hash.  Is there anything else that would cause problems
-> with this?
-
-Monitor interfaces won't have stations, so they're not needed anyway.
-
-> Second, the sta_info_get_bss call is found fairly often.  It
-> talks about finding a station on sdata or associated vlan.
-> Does this indicate that the there are VLAN sdata objects
-> with duplicate MACs?
-
-Yes. See net/mac80211/iface.c identical_mac_addr_allowed().
-
-> I was hoping I could replace at least most calls to sta_info_get_bss
-> with one that just searched the new sdata->sta_hash hash table...
-
-I have no idea how my answer affects this :)
-
-johannes
 
