@@ -1,53 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:33555 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935720Ab3DJRin (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 13:38:43 -0400
-Received: by mail-bk0-f50.google.com with SMTP id jg1so379438bkc.23
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 10:38:41 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2541 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756084Ab3DKPKT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 11:10:19 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 12/15] brcmfmac: obtain iftype for firmware-signal
+ descriptor lookup
+Date: Thu, 11 Apr 2013 17:08:37 +0200
+Message-ID: <1365692918-2980-1-git-send-email-arend@broadcom.com> (sfid-20130411_171043_440174_D78331C6)
+In-Reply-To: <1365679740-25679-13-git-send-email-arend@broadcom.com>
+References: <1365679740-25679-13-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1365500525.8465.8.camel@jlt4.sipsolutions.net>
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
- <1365444377-9959-6-git-send-email-thomas@cozybit.com> <1365500301.8465.6.camel@jlt4.sipsolutions.net>
- <1365500525.8465.8.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 10 Apr 2013 10:38:21 -0700
-Message-ID: <CAG6hwVM5qmQ=mk6hR7-uioz7vEZdRNH8Z1cTgf4FT=9kBnxKKQ@mail.gmail.com> (sfid-20130410_193848_185441_E1EF7A74)
-Subject: Re: [PATCH 6/6] mac80211: avoid mesh peer rate update warning
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 9, 2013 at 2:42 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-04-09 at 11:38 +0200, Johannes Berg wrote:
->> On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
->> > Some drivers (like ath9k_htc) will take a mutex in
->> > rate_control_rate_update(), so drop the sta lock before we
->> > get there.
->>
->> That driver is broken then. rate_control_rate_update() can be called
->> from the RX path where this also isn't allowed.
->
->  * @sta_rc_update: Notifies the driver of changes to the bitrates that
-> can be
->  *      used to transmit to the station. The changes are advertised with
-> bits
->  *      from &enum ieee80211_rate_control_changed and the values are
-> reflected
->  *      in the station data. This callback should only be used when the
-> driver
->  *      uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL)
-> since
->  *      otherwise the rate control algorithm is notified directly.
->  *      Must be atomic.
->
-> (note last line)
+The function brcmf_fws_find_mac_desc() determines the descriptor
+associated with a sk_buff for firmware-signalling. It needs the
+interface type to do that. For this a helper function is added in
+wl_cfg80211.c.
 
-Ah alright. Thanks.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John
 
+I did it again. It did not compile after resolving a merge conflict
+preparing the patch series. This patch fixes that.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c    |   12 +++++++++---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    7 +++++++
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h |    1 +
+ 3 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index b3c608e..19d6952 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -31,8 +31,11 @@
+ #include "dhd_dbg.h"
+ #include "dhd_bus.h"
+ #include "fwil.h"
++#include "fwil_types.h"
+ #include "fweh.h"
+ #include "fwsignal.h"
++#include "p2p.h"
++#include "wl_cfg80211.h"
+ 
+ /**
+  * DOC: Firmware Signalling
+@@ -683,7 +686,7 @@ brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, int ifidx, u8 *da)
+ 	struct brcmf_fws_mac_descriptor *entry = &fws->desc.other;
+ 	struct brcmf_if *ifp;
+ 	bool multicast;
+-
++	enum nl80211_iftype iftype;
+ 	brcmf_dbg(TRACE, "enter: ifidx=%d\n", ifidx);
+ 
+ 	multicast = is_multicast_ether_addr(da);
+@@ -691,15 +694,18 @@ brcmf_fws_find_mac_desc(struct brcmf_fws_info *fws, int ifidx, u8 *da)
+ 	if (WARN_ON(!ifp))
+ 		goto done;
+ 
++	iftype = brcmf_cfg80211_get_iftype(ifp);
++
+ 	/* Multicast destination and P2P clients get the interface entry.
+ 	 * STA gets the interface entry if there is no exact match. For
+ 	 * example, TDLS destinations have their own entry.
+ 	 */
+ 	entry = NULL;
+-	if (multicast && ifp->fws_desc)
++	if ((multicast || iftype == NL80211_IFTYPE_STATION ||
++	     iftype == NL80211_IFTYPE_P2P_CLIENT) && ifp->fws_desc)
+ 		entry = ifp->fws_desc;
+ 
+-	if (entry != NULL && multicast)
++	if (entry != NULL && iftype != NL80211_IFTYPE_STATION)
+ 		goto done;
+ 
+ 	entry = brcmf_fws_mac_descriptor_lookup(fws, da);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 6c06d0d..3b3eb94 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -5237,6 +5237,13 @@ s32 brcmf_cfg80211_down(struct net_device *ndev)
+ 	return err;
+ }
+ 
++enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp)
++{
++	struct wireless_dev *wdev = &ifp->vif->wdev;
++
++	return wdev->iftype;
++}
++
+ u32 wl_get_vif_state_all(struct brcmf_cfg80211_info *cfg, unsigned long state)
+ {
+ 	struct brcmf_cfg80211_vif *vif;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 3e474c2..0b9263e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -478,6 +478,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg);
+ s32 brcmf_cfg80211_up(struct net_device *ndev);
+ s32 brcmf_cfg80211_down(struct net_device *ndev);
++enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp);
+ 
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+ 					   enum nl80211_iftype type,
 -- 
-Thomas
+1.7.10.4
+
+
