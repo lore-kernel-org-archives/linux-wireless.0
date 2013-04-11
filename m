@@ -1,39 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:46438 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756543Ab3DCSVf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 14:21:35 -0400
-Received: by mail-qa0-f47.google.com with SMTP id hu16so2208232qab.13
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 11:21:35 -0700 (PDT)
-Message-ID: <515C732C.1010805@gmail.com> (sfid-20130403_202142_121337_A7F692D8)
-Date: Wed, 03 Apr 2013 14:21:32 -0400
-From: Jonathan Bither <jonbither@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1823 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752379Ab3DKPNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 11:13:47 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 14/15] brcmfmac: rename brcmf_fws_mac_desc_ready()
+Date: Thu, 11 Apr 2013 17:12:04 +0200
+Message-ID: <1365693124-3043-1-git-send-email-arend@broadcom.com> (sfid-20130411_171351_107261_2C9C076F)
+In-Reply-To: <1365679740-25679-15-git-send-email-arend@broadcom.com>
+References: <1365679740-25679-15-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmljYXJkbyBUdWLDrW8=?= <rtpardavila@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [ath5k][802.11p] Deactivate beacon
-References: <loom.20130403T092722-24@post.gmane.org>
-In-Reply-To: <loom.20130403T092722-24@post.gmane.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ricardo,
-	I have not looked at the GCDC patches yet, but it would probably be 
-best to implement another nl80211_iftype as "NL80211_IFTYPE_WAVE" for 
-example.
+Replace the function by brcmf_fws_mac_desc_closed(). The new function
+is used in the transmit path and in the dequeue worker.
 
-On 04/03/2013 03:30 AM, Ricardo Tubío wrote:
-> My name is Ricardo Tubío and I am currently trying to use GCDC patches for the
-> 'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would
-> like to know if somebody has either a patch for deactivating the beacon or can
-> help me in locating the code where the beacon is implemented.
->
-> Thank you very much in advance.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John,
+
+Can not blame merging this time. The original patch has some checkpatch
+warnings that this patch fixes. Sorry about that.
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   31 ++++++++------------
+ 1 file changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index d9572fb..1234de3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -714,26 +714,19 @@ done:
+ 	return entry;
+ }
+ 
+-static bool brcmf_fws_mac_desc_ready(struct brcmf_fws_mac_descriptor *entry,
+-				     int fifo)
++static bool brcmf_fws_mac_desc_closed(struct brcmf_fws_mac_descriptor *entry,
++				      int fifo)
+ {
+-	bool ready;
++	bool closed;
+ 
+-	/*
+-	 * destination entry is ready when firmware says it is OPEN
+-	 * and there are no packets enqueued for it.
++	/* an entry is closed when the state is closed and
++	 * the firmware did not request anything.
+ 	 */
+-	ready = entry->state == BRCMF_FWS_STATE_OPEN &&
+-		!entry->suppressed &&
+-		brcmu_pktq_mlen(&entry->psq, 3 << (fifo * 2)) == 0;
++	closed = entry->state == BRCMF_FWS_STATE_CLOSE &&
++		 !entry->requested_credit && !entry->requested_packet;
+ 
+-	/*
+-	 * Or when the destination entry is CLOSED, but firmware has
+-	 * specifically requested packets for this entry.
+-	 */
+-	ready = ready || (entry->state == BRCMF_FWS_STATE_CLOSE &&
+-		(entry->requested_credit + entry->requested_packet));
+-	return ready;
++	/* Or firmware does not allow traffic for given fifo */
++	return closed || !(entry->ac_bitmap & BIT(fifo));
+ }
+ 
+ static void brcmf_fws_mac_desc_cleanup(struct brcmf_fws_info *fws,
+@@ -1086,7 +1079,7 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
+ 
+ 	for (i = 0; i < num_nodes; i++) {
+ 		entry = &table[(node_pos + i) % num_nodes];
+-		if (!entry->occupied)
++		if (!entry->occupied || brcmf_fws_mac_desc_closed(entry, fifo))
+ 			continue;
+ 
+ 		if (entry->suppressed)
+@@ -1758,7 +1751,9 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		  multicast, fifo);
+ 
+ 	brcmf_fws_lock(drvr, flags);
+-	if (!brcmf_fws_mac_desc_ready(skcb->mac, fifo) ||
++	if (skcb->mac->suppressed ||
++	    brcmf_fws_mac_desc_closed(skcb->mac, fifo) ||
++	    brcmu_pktq_mlen(&skcb->mac->psq, 3 << (fifo * 2)) ||
+ 	    (!multicast &&
+ 	     brcmf_fws_consume_credit(drvr->fws, fifo, skb) < 0)) {
+ 		/* enqueue the packet in delayQ */
+-- 
+1.7.10.4
+
+
