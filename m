@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:63556 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752655Ab3D1ONR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 10:13:17 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M4UOQ-1UgZAz0MIe-00yfap for
- <linux-wireless@vger.kernel.org>; Sun, 28 Apr 2013 16:13:13 +0200
-Message-ID: <517D2E77.8000104@rempel-privat.de> (sfid-20130428_161331_044718_8642C42B)
-Date: Sun, 28 Apr 2013 16:13:11 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:52839 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759700Ab3DKSnB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 14:43:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"daniel@zonque.org" <daniel@zonque.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Thu, 11 Apr 2013 11:42:48 -0700
+Subject: RE: [PATCH 1/2] mwifiex: replace ra_list_curr by list rotation.
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9DE96B5F@SC-VEXCH1.marvell.com> (sfid-20130411_204315_401374_AE2ECA5A)
+References: <477F20668A386D41ADCC57781B1F70430D9DE96073@SC-VEXCH1.marvell.com>
+ <1365681068-27820-1-git-send-email-andreas.fenkart@streamunlimited.com>
+ <1365681068-27820-2-git-send-email-andreas.fenkart@streamunlimited.com>
+In-Reply-To: <1365681068-27820-2-git-send-email-andreas.fenkart@streamunlimited.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC] ath9k: collect statistics about Rx-Dup and Rx-STBC
- packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org>
-In-Reply-To: <517D1B45.9020302@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.04.2013 14:51, schrieb Felix Fietkau:
-> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->> Collect statistics about recived duplicate and STBC packets.
->> This information should help see if STBC is actually working.
->>
->> Tested on ar9285;
->>
->> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-> I thought about this patch some more, and I'm wondering what's the point
-> in doing this? These statistics are going to be completely useless for
-> most people and they'll waste some memory/cpu cycles, especially on
-> small-cache devices. I think it's much more useful to simply pass the
-> information to mac80211 via rx flags and get them added to the radiotap
-> header.
+Hi Andi,
 
-Sure.
+Thanks for the patch.
 
-> I'd like to keep the number of 'poor man's debug hacks' in the driver to
-> a minimum,
+> After a packet is successfully transmitted, ra list is rotated, so the ra
+> next to the one transmitted, will be the first in the list. This way we
+> pick the ra' in a round robin fashion. This significantly simplifies
+> iteration in  mwifiex_wmm_get_highest_priolist_ptr to a call to
+> list_for_each_entry.
+> List rotation is done via list_move, where the head itself is temporarily
+> removed and then re-inserted after the item just transferred.
+> 
+> Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 
-well, i'll prefer it to call with my name: lazy man's hack ;)
+Acked-by: Bing Zhao <bzhao@marvell.com>
 
-> and there are some other things that I think should be
-> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
-> sampling hack, and pretty much anything else that can be just as easily
-> accessed from mac80211 through regular interfaces.
+Thanks,
+Bing
 
-I think there is more things to do in ath9k. Create the list and we can 
-talk about it. For example one of it: I needed some time to understand 
-how some parts of code relate to the hardware. Especially Rx and Tx 
-descriptors. Some comments in header will help... I can add some of them 
-(may be it will help other beginners), but i afraid that i spend time 
-but my patches wont be included.
--- 
-Regards,
-Oleksij
+> ---
+>  drivers/net/wireless/mwifiex/11n_aggr.c |    8 +--
+>  drivers/net/wireless/mwifiex/main.h     |    1 -
+>  drivers/net/wireless/mwifiex/wmm.c      |   97 ++++++++++++-------------------
+>  drivers/net/wireless/mwifiex/wmm.h      |    3 +
+>  4 files changed, 40 insertions(+), 69 deletions(-)
+
