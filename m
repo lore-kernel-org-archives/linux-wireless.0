@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1596 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967931Ab3DSILp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 04:11:45 -0400
-Message-ID: <5170FBFC.8070403@broadcom.com> (sfid-20130419_101153_509530_52D06C45)
-Date: Fri, 19 Apr 2013 10:10:36 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Wei Yongjun" <weiyj.lk@gmail.com>
-cc: brudley@broadcom.com, frankyl@broadcom.com, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, phaber@broadcom.com,
-	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH -next] brcmfmac: fix error return code in
- brcmf_fws_init()
-References: <CAPgLHd8GkC50rYFD0zDRuE3o0JUHBCnSGXQi2jNL9DdK+8pNDA@mail.gmail.com>
-In-Reply-To: <CAPgLHd8GkC50rYFD0zDRuE3o0JUHBCnSGXQi2jNL9DdK+8pNDA@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:34697 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750806Ab3DKSfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 14:35:31 -0400
+Message-ID: <1365705330.1929.30.camel@joe-AO722> (sfid-20130411_203535_327456_D565AAAD)
+Subject: Re: [PATCH] Fix uninitialized-variable warnings.
+From: Joe Perches <joe@perches.com>
+To: Han Shen <shenhan@google.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	chaoming_li@realsil.com.cn
+Date: Thu, 11 Apr 2013 11:35:30 -0700
+In-Reply-To: <1365703360-19982-1-git-send-email-shenhan@google.com>
+References: <1365703360-19982-1-git-send-email-shenhan@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2013 04:10 AM, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> Fix to return a negative error code from the error handling
-> case instead of 0, as done elsewhere in this function.
->
+On Thu, 2013-04-11 at 11:02 -0700, Han Shen wrote:
+> GCC 4.8 is spitting out uninitialized-varaible warnings against "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".
+> This trivial patch just adds initialization to the variable.
 
-Thanks for the patch. However, I would like to solve it differently. I 
-will sent out a patch for handling this.
+Not sure this is correct.
+I think the logic should be inspected instead.
 
-Regards,
-Arend
+ofdm_index_old[1] _is_ used uninitialized.
 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> index 1bcd58c..df2ac2f 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> @@ -1875,8 +1875,9 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
->   		goto fail;
->   	}
->
-> -	if (brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
-> -				brcmf_fws_notify_credit_map)) {
-> +	rc = brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
-> +				 brcmf_fws_notify_credit_map);
-> +	if (rc) {
->   		brcmf_err("register credit map handler failed\n");
->   		goto fail;
->   	}
->
->
+It appears there might be a missing
+
+	ofdm_index_old[1] = (u8) i;
+
+as that's the same style test done in the
+section above.
+
+Maybe this:
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index b793a65..56b2b2f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -717,6 +717,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+ 			for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
+ 				if (ele_d == (ofdmswing_table[i] &
+ 				    MASKOFDM_D)) {
++					ofdm_index_old[1] = (u8) i;
+ 
+ 					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
+ 						 DBG_LOUD,
 
 
