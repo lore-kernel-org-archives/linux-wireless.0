@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:60346 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177Ab3DHJAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 05:00:24 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so5434552wgg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 02:00:23 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49517 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932987Ab3DKXQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 19:16:10 -0400
+Message-ID: <5167440A.3040205@hauke-m.de> (sfid-20130412_011616_996667_4F27DA5A)
+Date: Fri, 12 Apr 2013 01:15:22 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-References: <CAJ-VmomdLY-APqZKTcW9GpfokkrPqDGVoTavj=wwjZpj_yL14A@mail.gmail.com>
-	<515A0847.7000306@gmail.com>
-	<1365088789.89181.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-	<CAJ-VmoksRR8Xd4wEM_obENyP1mFqbgKDm+DEjLS=W8WAPBPLRg@mail.gmail.com>
-	<1365131280.68622.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<CAJ-VmokqjXqkJEN1cwgsOcJ7p8cvCsRxUG8Qc9gE8fWXaq+E0g@mail.gmail.com>
-	<1365148844.61162.YahooMailNeo@web193503.mail.sg3.yahoo.com>
-	<CAJ-VmonhbW06GU30S9oKYTEvbum2WbY63Y07tvS=ZQJcB6o+Dg@mail.gmail.com>
-	<1365152761.13005.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<20830.46610.23754.783231@gargle.gargle.HOWL>
-	<1365175482.75704.YahooMailNeo@web193505.mail.sg3.yahoo.com>
-	<CAJ-VmomFi1fq6GY2dCpJCGN-sfmaH+FEu0V1nCjc7MymT6f3Rg@mail.gmail.com>
-	<CAJ-Vmo=uvZbUtKE5Pk=saipVLRfmrU6jQeEvCg2kULP6F+d6cg@mail.gmail.com>
-	<CAJ-VmomYF3ziqhykXMK5U+SJPYiNWmijdf0VhKDK33BVbSKNrQ@mail.gmail.com>
-	<1365346495.79596.YahooMailNeo@web193506.mail.sg3.yahoo.com>
-	<CAJ-VmomAYEXiDxC=RinVU-Ze85iESomT4Z+iOEErWkmc9Tw4SA@mail.gmail.com>
-	<1365398445.32740.YahooMailNeo@web193504.mail.sg3.yahoo.com>
-Date: Mon, 8 Apr 2013 02:00:23 -0700
-Message-ID: <CAJ-VmomGT4grPwA0dSGqPD=Zi=dZk6WwpqKEXXDvfLUqr08o0w@mail.gmail.com> (sfid-20130408_110027_103900_7361F3BA)
-Subject: Re: [ath9k-devel] AR9287 ; 2-wire coexistence expected behavior
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 11/15] brcmfmac: define and use platform specific data
+ for SDIO.
+References: <1365679740-25679-1-git-send-email-arend@broadcom.com> <1365679740-25679-12-git-send-email-arend@broadcom.com> <5166A745.9080709@hauke-m.de> <5166B608.8030803@broadcom.com>
+In-Reply-To: <5166B608.8030803@broadcom.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, I don't know why you're writing both config values out to
-BTCOEX_MODE and BTCOEX_MODE2.
+On 04/11/2013 03:09 PM, Arend van Spriel wrote:
+> On 04/11/2013 02:06 PM, Hauke Mehrtens wrote:
+>> On 04/11/2013 01:28 PM, Arend van Spriel wrote:
+>>> From: Hante Meuleman <meuleman@broadcom.com>
+>>>
+>>> This patch adds support for platform specific data for SDIO
+>>> fullmac devices. Currently OOB interrupts are configured by Kconfig
+>>> BRCMFMAC_SDIO_OOB but that is now determined dynamically by checking
+>>> availibility of platform data.
+>>>
+>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Reviewed-by: Piotr Haber <phaber@broadcom.com>
+>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>> ---
+>>>   drivers/net/wireless/brcm80211/Kconfig             |    9 --
+>>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  155
+>>> ++++++++++----------
+>>>   .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  114
+>>> ++++----------
+>>>   drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++--
+>>>   .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    6 +-
+>>>   include/linux/brcmfmac_platform.h                  |  125
+>>> ++++++++++++++++
+>>>   6 files changed, 251 insertions(+), 187 deletions(-)
+>>>   create mode 100644 include/linux/brcmfmac_platform.h
+>>>
+>>
+>> ....
+>>
+>>> --- /dev/null
+>>> +++ b/include/linux/brcmfmac_platform.h
+>>
+>> This should be placed into include/linux/platform_data/
+>>
+> 
+> Are you sure. This file specifies the platform data API so it does not
+> contain actual platform_data. At first glance this folder seems to
+> contain board specific platform data, but did not look closely.
 
-MODE2 has a _totally_ different register layout to AR_BT_COEX_MODE.
+I think, all the files in include/linux/platform_data/*.h are defining
+some struct used in pdev->dev.platform_data in various drivers. The
+content of such structs is mostly located in the arch code where the SoC
+gets initialized, but I am not sure about this.
 
-Please make sure you read the register definitions in the header
-file(s) before you write values out. :-)
-
-
-
-Adrian
+Hauke
