@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:57563 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab3D0MCr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 08:02:47 -0400
-Received: by mail-lb0-f169.google.com with SMTP id p10so564224lbi.28
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 05:02:46 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2170 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752954Ab3DLHoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Apr 2013 03:44:46 -0400
+Message-ID: <5167BB62.1060405@broadcom.com> (sfid-20130412_094450_058532_740408E7)
+Date: Fri, 12 Apr 2013 09:44:34 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CABH51ZYepRMcmW4wFUmOf9dcnB4X0X377mmwSXNo9AQGbsNAxA@mail.gmail.com>
-References: <CABH51ZYepRMcmW4wFUmOf9dcnB4X0X377mmwSXNo9AQGbsNAxA@mail.gmail.com>
-Date: Sat, 27 Apr 2013 05:02:46 -0700
-Message-ID: <CABH51ZbDsx9hg9NtafyOk__62O=yO1sKkW2bf_DHEghSwSd=EQ@mail.gmail.com> (sfid-20130427_140300_619736_D93F42FA)
-Subject: Fwd: RTL8192CU / Kconfig
-From: Kris Reeves <myndzi@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>
+Subject: Re: [PATCH 11/15] brcmfmac: define and use platform specific
+ data for SDIO.
+References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
+ <1365679740-25679-12-git-send-email-arend@broadcom.com>
+ <5166A745.9080709@hauke-m.de> <5166B608.8030803@broadcom.com>
+ <5167440A.3040205@hauke-m.de>
+In-Reply-To: <5167440A.3040205@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okay, please pardon me if I'm sending this to the wrong place, but
-apparently people in no less than three channels on IRC are either
-arrogant twats or I'm missing something extremely big that nobody felt
-up to rubbing in my face...
+On 04/12/2013 01:15 AM, Hauke Mehrtens wrote:
+> On 04/11/2013 03:09 PM, Arend van Spriel wrote:
+>> On 04/11/2013 02:06 PM, Hauke Mehrtens wrote:
+>>> On 04/11/2013 01:28 PM, Arend van Spriel wrote:
+>>>> From: Hante Meuleman <meuleman@broadcom.com>
+>>>>
+>>>> This patch adds support for platform specific data for SDIO
+>>>> fullmac devices. Currently OOB interrupts are configured by Kconfig
+>>>> BRCMFMAC_SDIO_OOB but that is now determined dynamically by checking
+>>>> availibility of platform data.
+>>>>
+>>>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>>> Reviewed-by: Piotr Haber <phaber@broadcom.com>
+>>>> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+>>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>>> ---
+>>>>    drivers/net/wireless/brcm80211/Kconfig             |    9 --
+>>>>    drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  155
+>>>> ++++++++++----------
+>>>>    .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  114
+>>>> ++++----------
+>>>>    drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   29 ++--
+>>>>    .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    6 +-
+>>>>    include/linux/brcmfmac_platform.h                  |  125
+>>>> ++++++++++++++++
+>>>>    6 files changed, 251 insertions(+), 187 deletions(-)
+>>>>    create mode 100644 include/linux/brcmfmac_platform.h
+>>>>
+>>>
+>>> ....
+>>>
+>>>> --- /dev/null
+>>>> +++ b/include/linux/brcmfmac_platform.h
+>>>
+>>> This should be placed into include/linux/platform_data/
+>>>
+>>
+>> Are you sure. This file specifies the platform data API so it does not
+>> contain actual platform_data. At first glance this folder seems to
+>> contain board specific platform data, but did not look closely.
+>
+> I think, all the files in include/linux/platform_data/*.h are defining
+> some struct used in pdev->dev.platform_data in various drivers. The
+> content of such structs is mostly located in the arch code where the SoC
+> gets initialized, but I am not sure about this.
 
-This file:
-https://github.com/raspberrypi/linux/blob/rpi-3.6.y/drivers/net/wireless/rtl8192cu/Kconfig
+Hi Hauke,
 
-Should, I believe, include select statements for WIRELESS_EXT,
-WEXT_PRIV, and (maybe?) WEXT_SPY (I added it preemptively after the
-first two stopped compilation...)
+I did some more digging in there and I think you are right. I will send 
+a replacement patch to John.
 
-The drivers won't compile without those options, but can be enabled in
-situations where they are not set.
+Thanks & Regards,
+Arend
 
-I realize this is the raspberry pi github page, but from what I can
-tell, these files didn't originate there and this driver is in staging
-on its way to mainline(?)
-
-This file:
-https://github.com/torvalds/linux/blob/master/drivers/net/wireless/rtlwifi/Kconfig
-
-appears to be the equivalent and it doesn't look like it contains the
-relevant lines. I'm uncertain if they are necessary here.
-
-If you would, please inform me of the correct way to determine who I
-should report something like this to and how! I know there are various
-bugtrackers about but I can't seem to work out where I should go with
-it.
-
-Thanks for your time.
