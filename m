@@ -1,32 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754240Ab3DIJiZ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:52498 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753307Ab3DLNvi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 05:38:25 -0400
-Message-ID: <1365500301.8465.6.camel@jlt4.sipsolutions.net> (sfid-20130409_113828_957604_9F52C1F0)
-Subject: Re: [PATCH 6/6] mac80211: avoid mesh peer rate update warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Tue, 09 Apr 2013 11:38:21 +0200
-In-Reply-To: <1365444377-9959-6-git-send-email-thomas@cozybit.com> (sfid-20130408_200821_359359_9CD5C99F)
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
-	 <1365444377-9959-6-git-send-email-thomas@cozybit.com>
-	 (sfid-20130408_200821_359359_9CD5C99F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 12 Apr 2013 09:51:38 -0400
+From: Luis Henriques <luis.henriques@canonical.com>
+To: Tim Gardner <tim.gardner@canonical.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org,
+	Luis Henriques <luis.henriques@canonical.com>,
+	kernel-team@lists.ubuntu.com
+Subject: [ 3.5.y.z extended stable ] Patch "rt2x00: rt2x00pci_regbusy_read() - only print register access" has been added to staging queue
+Date: Fri, 12 Apr 2013 14:51:32 +0100
+Message-Id: <1365774692-13156-1-git-send-email-luis.henriques@canonical.com> (sfid-20130412_155144_565137_86CA68E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
-> Some drivers (like ath9k_htc) will take a mutex in
-> rate_control_rate_update(), so drop the sta lock before we
-> get there.
+This is a note to let you know that I have just added a patch titled
 
-That driver is broken then. rate_control_rate_update() can be called
-from the RX path where this also isn't allowed.
+    rt2x00: rt2x00pci_regbusy_read() - only print register access
 
-johannes
+to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
+which can be found at:
+
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.5.y.z tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+>From 60436d8318044c7edbf8c86446712b2b1cb835b4 Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Mon, 18 Feb 2013 12:56:28 -0700
+Subject: [PATCH] rt2x00: rt2x00pci_regbusy_read() - only print register access
+ failure once
+
+commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
+
+BugLink: http://bugs.launchpad.net/bugs/1128840
+
+It appears that when this register read fails it never recovers, so
+I think there is no need to repeat the same error message ad infinitum.
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 0a4653a..1ea98a8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 		udelay(REGISTER_BUSY_DELAY);
+ 	}
+
+-	ERROR(rt2x00dev, "Indirect register access failed: "
+-	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
++	printk_once(KERN_ERR "%s() Indirect register access failed: "
++	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
+ 	*reg = ~0;
+
+ 	return 0;
+--
+1.8.1.2
 
