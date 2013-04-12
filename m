@@ -1,122 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64305 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965025Ab3DPS0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 14:26:54 -0400
-Subject: [PATCH 14/28] proc: Supply an accessor for getting the data from a
- PDE's parent [RFC]
-To: linux-kernel@vger.kernel.org
-From: David Howells <dhowells@redhat.com>
-Cc: devel@driverdev.osuosl.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-scsi@vger.kernel.org,
-	Jerry Chuang <jerry-chuang@realtek.com>,
-	linux-wireless@vger.kernel.org,
-	YAMANE Toshiaki <yamanetoshi@gmail.com>,
-	Maxim Mikityanskiy <maxtram95@gmail.com>,
-	viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
-Date: Tue, 16 Apr 2013 19:26:46 +0100
-Message-ID: <20130416182646.27773.40149.stgit@warthog.procyon.org.uk> (sfid-20130416_203246_790612_628E0C55)
-In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51553 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753111Ab3DLPJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Apr 2013 11:09:07 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3] b43: use bcma_pmu_spuravoid_pllupdate()
+Date: Fri, 12 Apr 2013 17:08:58 +0200
+Message-Id: <1365779338-8224-1-git-send-email-hauke@hauke-m.de> (sfid-20130412_170911_341214_1C0494DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Supply an accessor function for getting the private data from the parent
-proc_dir_entry struct of the proc_dir_entry struct associated with an inode.
+Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
 
-ReiserFS, for instance, stores the super_block pointer in the proc directory
-it makes for that super_block, and a pointer to the respective seq_file show
-function in each of the proc files in that directory.
-
-This allows a reduction in the number of file_operations structs, open
-functions and seq_operations structs required.  The problem otherwise is that
-each show function requires two pieces of data but only has storage for one
-per PDE (and this has no release function).
-
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Jerry Chuang <jerry-chuang@realtek.com>
-cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-cc: YAMANE Toshiaki <yamanetoshi@gmail.com>
-cc: linux-wireless@vger.kernel.org
-cc: linux-scsi@vger.kernel.org
-cc: devel@driverdev.osuosl.org
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
+ drivers/net/wireless/b43/phy_n.c |   56 ++------------------------------------
+ 1 file changed, 2 insertions(+), 54 deletions(-)
 
- drivers/scsi/megaraid.c                |    2 +-
- drivers/staging/rtl8187se/r8180_core.c |    2 +-
- drivers/staging/rtl8192u/r8192U_core.c |    2 +-
- fs/proc/generic.c                      |    7 +++++++
- include/linux/proc_fs.h                |    1 +
- 5 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index ef3384d..7373255 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -2760,7 +2760,7 @@ proc_show_rdrv_40(struct seq_file *m, void *v)
-  */
- static int mega_proc_open(struct inode *inode, struct file *file)
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 7b557ad..7ed39e9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -5100,63 +5100,11 @@ static void b43_chantab_phy_upload(struct b43_wldev *dev,
+ /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
  {
--	adapter_t *adapter = PDE(inode)->parent->data;
-+	adapter_t *adapter = proc_get_parent_data(inode);
- 	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
- 
- 	return single_open(file, show, adapter);
-diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
-index ab469ce..f7c1d99 100644
---- a/drivers/staging/rtl8187se/r8180_core.c
-+++ b/drivers/staging/rtl8187se/r8180_core.c
-@@ -296,7 +296,7 @@ void rtl8180_proc_remove_one(struct net_device *dev)
-  */
- static int rtl8180_proc_open(struct inode *inode, struct file *file)
- {
--	struct net_device *dev = PDE(inode)->parent->data;
-+	struct net_device *dev = proc_get_parent_data(inode);
- 	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
- 
- 	return single_open(file, show, dev);
-diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
-index 27ba2a3..1459233 100644
---- a/drivers/staging/rtl8192u/r8192U_core.c
-+++ b/drivers/staging/rtl8192u/r8192U_core.c
-@@ -637,7 +637,7 @@ void rtl8192_proc_module_remove(void)
-  */
- static int rtl8192_proc_open(struct inode *inode, struct file *file)
- {
--	struct net_device *dev = PDE(inode)->parent->data;
-+	struct net_device *dev = proc_get_parent_data(inode);
- 	int (*show)(struct seq_file *, void *) = PDE_DATA(inode);
- 
- 	return single_open(file, show, dev);
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 4074da5..75e08d3 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -617,3 +617,10 @@ int remove_proc_subtree(const char *name, struct proc_dir_entry *parent)
- 	return 0;
- }
- EXPORT_SYMBOL(remove_proc_subtree);
-+
-+void *proc_get_parent_data(const struct inode *inode)
-+{
-+	struct proc_dir_entry *de = PDE(inode);
-+	return de->parent->data;
-+}
-+EXPORT_SYMBOL_GPL(proc_get_parent_data);
-diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index e5d8f69..12694ef 100644
---- a/include/linux/proc_fs.h
-+++ b/include/linux/proc_fs.h
-@@ -86,6 +86,7 @@ static inline struct proc_dir_entry *proc_create(const char *name, umode_t mode,
-  
- extern void proc_set_size(struct proc_dir_entry *, loff_t);
- extern void proc_set_user(struct proc_dir_entry *, kuid_t, kgid_t);
-+extern void *proc_get_parent_data(const struct inode *);
- #else
- 
- static inline void proc_flush_task(struct task_struct *task)
+-	struct bcma_drv_cc __maybe_unused *cc;
+-	u32 __maybe_unused pmu_ctl;
+-
+ 	switch (dev->dev->bus_type) {
+ #ifdef CONFIG_B43_BCMA
+ 	case B43_BUS_BCMA:
+-		cc = &dev->dev->bdev->bus->drv_cc;
+-		if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
+-			if (avoid) {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11500010);
+-				bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			} else {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11100010);
+-				bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			}
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-		} else if (dev->dev->chip_id == 0x4716) {
+-			if (avoid) {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11500060);
+-				bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			} else {
+-				bcma_chipco_pll_write(cc, 0x0, 0x11100060);
+-				bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
+-				bcma_chipco_pll_write(cc, 0x2, 0x03000000);
+-				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-			}
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD |
+-				  BCMA_CC_PMU_CTL_NOILPONW;
+-		} else if (dev->dev->chip_id == 0x4322 ||
+-			   dev->dev->chip_id == 0x4340 ||
+-			   dev->dev->chip_id == 0x4341) {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11100070);
+-			bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888854);
+-			if (avoid)
+-				bcma_chipco_pll_write(cc, 0x2, 0x05201828);
+-			else
+-				bcma_chipco_pll_write(cc, 0x2, 0x05001828);
+-			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-		} else {
+-			return;
+-		}
+-		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
++		bcma_pmu_spuravoid_pllupdate(&dev->dev->bdev->bus->drv_cc,
++					     avoid);
+ 		break;
+ #endif
+ #ifdef CONFIG_B43_SSB
+-- 
+1.7.10.4
 
