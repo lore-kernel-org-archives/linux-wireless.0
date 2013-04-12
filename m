@@ -1,53 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:33180 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161499Ab3DEDEV (ORCPT
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46111 "EHLO
+	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752264Ab3DLAx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 23:04:21 -0400
+	Thu, 11 Apr 2013 20:53:27 -0400
 From: Bing Zhao <bzhao@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: "John W. Linville" <linville@tuxdriver.com>,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
-	<daniel@zonque.org>, Avinash Patil <patila@marvell.com>,
+	Doug Anderson <dianders@chromium.org>,
+	Paul Stewart <pstew@chromium.org>,
 	Yogesh Powar <yogeshp@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v3 1/4] mwifiex: correct wrong list in list_empty check
-Date: Thu, 4 Apr 2013 20:03:50 -0700
-Message-ID: <1365131033-7417-2-git-send-email-bzhao@marvell.com> (sfid-20130405_050430_009019_D36AC629)
-In-Reply-To: <1365131033-7417-1-git-send-email-bzhao@marvell.com>
-References: <1365131033-7417-1-git-send-email-bzhao@marvell.com>
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: fix use-after-free in beacon_ie processing
+Date: Thu, 11 Apr 2013 17:53:12 -0700
+Message-ID: <1365727993-20941-1-git-send-email-bzhao@marvell.com> (sfid-20130412_025332_356635_C35AC54D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+beacon_ie buffer is allocated in mwifiex_fill_new_bss_desc()
+and the buffer pointer is saved in bss_desc->beacon_buf.
+beacon_ie is freed before the function returns. However,
+bss_desc->beacon_buf is still being accessed afterwards.
 
-adapter->bss_prio_tbl list has already been checked in outer loop.
-The inner loop works with priv_tmp->wmm.tid_tbl_ptr list. Also the
-lock taken, gives hint that this is likely a copy-paste error.
+Fix it by freeing beacon_ie (bss_desc->beacon_buf) in
+caller's scope.
 
-Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Reviewed-by: Doug Anderson <dianders@chromium.org>
+Reviewed-by: Paul Stewart <pstew@chromium.org>
 Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mwifiex/wmm.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/scan.c      |    8 ++++++++
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   14 +++++++++-----
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 3ddae52..1b039ba 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -930,8 +930,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
- 						  flags);
- 				is_list_empty =
--					list_empty(&adapter->bss_prio_tbl[j]
--						   .bss_prio_head);
-+					list_empty(&tid_ptr->ra_list);
- 				spin_unlock_irqrestore(&tid_ptr->tid_tbl_lock,
- 						       flags);
- 				if (is_list_empty)
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index e7f6dea..37b24e8 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1533,10 +1533,18 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
+ 	/* Make a copy of current BSSID descriptor */
+ 	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
+ 	       sizeof(priv->curr_bss_params.bss_descriptor));
++
++	/* The contents of beacon_ie will be copied to its own buffer
++	 * in mwifiex_save_curr_bcn()
++	 */
+ 	mwifiex_save_curr_bcn(priv);
+ 	spin_unlock_irqrestore(&priv->curr_bcn_buf_lock, flags);
+ 
+ done:
++	/* beacon_ie buffer was allocated in function
++	 * mwifiex_fill_new_bss_desc(). Free it now.
++	 */
++	kfree(bss_desc->beacon_buf);
+ 	kfree(bss_desc);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index e6c9b2a..27729cf 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -140,12 +140,13 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
+ /*
+  * This function fills bss descriptor structure using provided
+  * information.
++ * beacon_ie buffer is allocated in this function. It is caller's
++ * responsibility to free the memory.
+  */
+ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 			      struct cfg80211_bss *bss,
+ 			      struct mwifiex_bssdescriptor *bss_desc)
+ {
+-	int ret;
+ 	u8 *beacon_ie;
+ 	size_t beacon_ie_len;
+ 	struct mwifiex_bss_priv *bss_priv = (void *)bss->priv;
+@@ -165,6 +166,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 
+ 	memcpy(bss_desc->mac_address, bss->bssid, ETH_ALEN);
+ 	bss_desc->rssi = bss->signal;
++	/* The caller of this function will free beacon_ie */
+ 	bss_desc->beacon_buf = beacon_ie;
+ 	bss_desc->beacon_buf_size = beacon_ie_len;
+ 	bss_desc->beacon_period = bss->beacon_interval;
+@@ -182,10 +184,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
+ 	else
+ 		bss_desc->bss_mode = NL80211_IFTYPE_STATION;
+ 
+-	ret = mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
+-
+-	kfree(beacon_ie);
+-	return ret;
++	return mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
+ }
+ 
+ static int mwifiex_process_country_ie(struct mwifiex_private *priv,
+@@ -349,6 +348,11 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 	}
+ 
+ done:
++	/* beacon_ie buffer was allocated in function
++	 * mwifiex_fill_new_bss_desc(). Free it now.
++	 */
++	if (bss_desc)
++		kfree(bss_desc->beacon_buf);
+ 	kfree(bss_desc);
+ 	return ret;
+ }
 -- 
 1.7.0.2
 
