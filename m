@@ -1,31 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:62462 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757681Ab3DBMDp (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:64826 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab3DLQTr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 08:03:45 -0400
-Received: by mail-wg0-f42.google.com with SMTP id k13so3037725wgh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Apr 2013 05:03:44 -0700 (PDT)
+	Fri, 12 Apr 2013 12:19:47 -0400
+Received: by mail-ob0-f175.google.com with SMTP id va7so2557209obc.34
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2013 09:19:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5159C697.4040609@openwrt.org>
-References: <CAMgrJ3b0EUUae8k1Z2RR92eLbFyPGpqA5px1J_gALDTJ+rmAnA@mail.gmail.com>
- <5159C697.4040609@openwrt.org>
-From: Robert Shade <robert.shade@gmail.com>
-Date: Tue, 2 Apr 2013 08:03:24 -0400
-Message-ID: <CAMgrJ3YFCY1gFp6sT5HJw-KVpvGpx82_HiZkWBDQj1Me96Bw=w@mail.gmail.com> (sfid-20130402_140349_985811_1BE6A863)
-Subject: Re: [PATCH] ath9k: Re-enable interrupts after a channel change failure
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Adrian Chadd <adrian@freebsd.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1365779338-8224-1-git-send-email-hauke@hauke-m.de>
+References: <1365779338-8224-1-git-send-email-hauke@hauke-m.de>
+Date: Fri, 12 Apr 2013 18:19:46 +0200
+Message-ID: <CACna6ryALXd6-=UciKJrMJ8PjmPyTXjPL1vJdWOmtBRSciO8Ew@mail.gmail.com> (sfid-20130412_181950_757407_FC29464A)
+Subject: Re: [PATCH v3] b43: use bcma_pmu_spuravoid_pllupdate()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 1, 2013 at 1:40 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Your patch is badly whitespace damaged.
+2013/4/12 Hauke Mehrtens <hauke@hauke-m.de>:
+> Do not implement this in b43, but use bcma_pmu_spuravoid_pllupdate().
 
-Ouch, must be the gmail web client.  I'll resubmit a fixed one.
+Ack
 
-> Why the call to ath9k_hw_set_interrupts here?
-
-Simply because that's what ath_complete_reset does
+-- 
+Rafał
