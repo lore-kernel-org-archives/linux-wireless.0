@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:32828 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323Ab3DEMLo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 08:11:44 -0400
-Message-ID: <515EBF78.5020006@neratec.com> (sfid-20130405_141148_061562_18A1D021)
-Date: Fri, 05 Apr 2013 14:11:36 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65347 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab3DLBBv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Apr 2013 21:01:51 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rp8so1137343pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 18:01:51 -0700 (PDT)
+Message-ID: <51675CFD.8030603@boundarydevices.com> (sfid-20130412_030237_804062_3249E796)
+Date: Thu, 11 Apr 2013 18:01:49 -0700
+From: Troy Kisky <troy.kisky@boundarydevices.com>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
-References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de> <1364993200.8351.35.camel@jlt4.sipsolutions.net> <515D8259.1030208@neratec.com> <20130404182219.GA24704@pandem0nium> <515EA285.5010004@neratec.com> <20130405112921.GA29188@pandem0nium>
-In-Reply-To: <20130405112921.GA29188@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+To: Bing Zhao <bzhao@marvell.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Doug Anderson <dianders@chromium.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH 2/2] mwifiex: remove redundant initialization for bss_descriptor
+References: <1365727993-20941-1-git-send-email-bzhao@marvell.com> <1365727993-20941-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1365727993-20941-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2013 01:29 PM, Simon Wunderlich wrote:
-> Hello Zefir,
-> 
-> 
-> Thanks for explaining, I could now see what's happening. I've added another
-> debug messages for "DFS not enabled" in the other case. What I get when running
-> your example (and with my patch applied) is:
-> 
-> NOTE: hostapd started
-> [  668.576380] ath: phy0: DFS not enabled at freq 5540
-> [  668.594108] ath: phy0: DFS enabled at freq 5540
-> [  672.607996] ath: phy0: DFS enabled at freq 5540
-> [  672.928911] ath: phy0: DFS enabled at freq 5540
-> [  672.939416] ath: phy0: DFS enabled at freq 5540
-> [  704.128876] ath: phy0: DFS enabled at freq 5540
-> NOTE: radar triggered here
-> [  704.138482] ath: phy0: DFS enabled at freq 5240
-> [  704.149684] ath: phy0: DFS not enabled at freq 5240
-> 
-> Now what happens is:
-> 1. vif_use_channel() calls ieee80211_new_chanctx(), which calls ieee80211_hw_config().
->    radar flags are not "recalc"d, so the previous value is used
-> 2. Later in vif_use_channel(), ieee80211_recalc_radar_chanctx() is called, which
->    sets the radar flag and calls ieee80211_hw_config() again.
-> 
-> As you can see in the output, the right value is applied ~10 - 20ms after the wrong
-> value, at least with the patch originally posted here.
-> 
-> Of course this is not beautiful, but should work in practice.
-> 
-> We could consider changing this by already applying the correct radar flag in
-> ieee80211_new_chanctx()? If you want, I can post a patch for that. SMPS probably
-> has a similar problem to have the wrong value you set for a short time ...
-> 
-> 
-Thanks for double-checking, Simon.
+On 4/11/2013 5:53 PM, Bing Zhao wrote:
+> Initialization of bss_descriptor is unnecessary as the entire
+> structure will be overwritten by a memcpy.
+>
+> Reported-by: Doug Anderson <dianders@chromium.org>
+> Reviewed-by: Doug Anderson <dianders@chromium.org>
+> Reviewed-by: Paul Stewart <pstew@chromium.org>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> ---
+>   drivers/net/wireless/mwifiex/scan.c |   29 -----------------------------
+>   1 files changed, 0 insertions(+), 29 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index 37b24e8..9cf5d8f 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -1500,36 +1500,7 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
+>   	if (ret)
+>   		goto done;
+>   
+> -	/* Update current bss descriptor parameters */
+>   	spin_lock_irqsave(&priv->curr_bcn_buf_lock, flags);
+> -	priv->curr_bss_params.bss_descriptor.bcn_wpa_ie = NULL;
+> -	priv->curr_bss_params.bss_descriptor.wpa_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_rsn_ie = NULL;
+> -	priv->curr_bss_params.bss_descriptor.rsn_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
+> -	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
+> -	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_ht_oper = NULL;
+> -	priv->curr_bss_params.bss_descriptor.ht_info_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 = NULL;
+> -	priv->curr_bss_params.bss_descriptor.bss_co_2040_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_ext_cap = NULL;
+> -	priv->curr_bss_params.bss_descriptor.ext_cap_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.beacon_buf = NULL;
+> -	priv->curr_bss_params.bss_descriptor.beacon_buf_size = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_vht_cap = NULL;
+> -	priv->curr_bss_params.bss_descriptor.vht_cap_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.bcn_vht_oper = NULL;
+> -	priv->curr_bss_params.bss_descriptor.vht_info_offset = 0;
+> -	priv->curr_bss_params.bss_descriptor.oper_mode = NULL;
+> -	priv->curr_bss_params.bss_descriptor.oper_mode_offset = 0;
+> -
+> -	/* Disable 11ac by default. Enable it only where there
+> -	 * exist VHT_CAP IE in AP beacon
+> -	 */
+> -	priv->curr_bss_params.bss_descriptor.disable_11ac = true;
+> -
 
-I failed to see the obvious (that ath_config() is called immediately again with
-the correct DFS flag), sorry for raising dust.
+Should the = true line be moved below the memcpy?  Your way produces
+the same behavior, but was it buggy before?
+>   	/* Make a copy of current BSSID descriptor */
+>   	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
+>   	       sizeof(priv->curr_bss_params.bss_descriptor));
 
-Whether fix it or not, I'd say it is good enough for ath9k. Might be different for
-other chips that don't allow enabling radar detection on non-DFS channels (even if
-it is only for some ms).
-
-
-Cheers,
-Zefir
