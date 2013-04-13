@@ -1,86 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f176.google.com ([209.85.210.176]:55447 "EHLO
-	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760313Ab3DJOV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 10:21:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <8701347.YaW7b4Fxgt@uw000953>
-References: <CAFSJ42ZZH7Y+MPUURG_hQRuwhv8UKkF5sQQebsTjhH0uT07rjA@mail.gmail.com>
-	<8701347.YaW7b4Fxgt@uw000953>
-Date: Wed, 10 Apr 2013 16:21:57 +0200
-Message-ID: <CAFSJ42a5PsnbhgEaWWWZTBDVKhKUGR4xWY1pEXPc-UaQcC9AFA@mail.gmail.com> (sfid-20130410_162201_754829_785BF335)
-Subject: Re: include/linux/device.h:715:38: error: 'THIS_MODULE' undeclared
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Szymon Janc <szymon.janc@tieto.com>
-Cc: "backports@vger.kernel.org" <backports@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:40918 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab3DMWDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Apr 2013 18:03:50 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/5] mac80211: fix and optimize MCS mask handling
+Date: Sun, 14 Apr 2013 00:03:42 +0200
+Message-Id: <1365890626-86895-1-git-send-email-nbd@openwrt.org> (sfid-20130414_000402_432801_E78CA1D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanx for reply. That also works.
-But is it a solution or workaround? May be there should be smarter
-check than just a kernel version?
+Currently the code always copies the configured MCS mask (even if it is
+set to default), but only uses it if legacy rates were also masked out.
+Fix this by adding a flag that tracks whether the configured MCS mask is
+set to default or not.
+Optimize the code further by storing a pointer to the configured rate
+mask in txrc instead of using memcpy.
 
-2013/4/10 Szymon Janc <szymon.janc@tieto.com>:
-> On Wednesday 10 of April 2013 12:20:37 Eugene Krasnikov wrote:
-> Hi Eugene,
->
->> I have tried to build latest compat-drivers for android/cyanogenmod
->> kernel version 3.0.60 but it fails with the following error:
->>
->> /cyanogenmod/kernel/sony/msm8x60/include/linux/device.h: In function
->> 'root_device_register':
->> /cyanogenmod/kernel/sony/msm8x60/include/linux/device.h:715:38: error:
->> 'THIS_MODULE' undeclared (first use in this function)
->>
->> Command line that is used to build compat-drivers is:
->>
->> make KLIB=/cyanogenmod/out/target/product/mint/obj/KERNEL_OBJ
->> KLIB_BUILD=/cyanogenmod/out/target/product/mint/obj/KERNEL_OBJ
->> ARCH=arm CROSS_COMPILE=/cyanogenmod/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin/arm-eabi-
->>
->> Did anybody meet such an error?
->> Patch bellow was used as a workaround to this error, but i would like
->> to find a proper solution.
->
-> I had similar issue with grouper (nexus7) 3.1 kernel. This was due to DMA_BUF
-> stuff being backported to that kernel (and that pulled also export.h change).
-> Maybe it is same with CM kernel?
->
-> This fixed build for me:
-> ---
->  include/linux/export.h |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/include/linux/export.h b/include/linux/export.h
-> index f7842b7..5ef58c5 100644
-> --- a/include/linux/export.h
-> +++ b/include/linux/export.h
-> @@ -3,10 +3,10 @@
->
->  #include <linux/version.h>
->
-> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0))
-> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
->  #include_next <linux/export.h>
->  #else
->  #include <linux/module.h>
-> -#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)) */
-> +#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)) */
->
->  #endif /* _COMPAT_LINUX_EXPORT_H */
->
->
-> You can check if enabling this for kernel >=3.0.0 works for you:)
->
-> --
-> BR
-> Szymon Janc
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h     |  4 ++--
+ net/mac80211/cfg.c         | 13 +++++++++++++
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/rate.c        |  9 ++++++---
+ net/mac80211/tx.c          | 10 +++++-----
+ 5 files changed, 28 insertions(+), 10 deletions(-)
 
-
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 64faf01..96cb507 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4107,7 +4107,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
+  *	(deprecated; this will be removed once drivers get updated to use
+  *	rate_idx_mask)
+  * @rate_idx_mask: user-requested (legacy) rate mask
+- * @rate_idx_mcs_mask: user-requested MCS rate mask
++ * @rate_idx_mcs_mask: user-requested MCS rate mask (NULL if not in use)
+  * @bss: whether this frame is sent out in AP or IBSS mode
+  */
+ struct ieee80211_tx_rate_control {
+@@ -4119,7 +4119,7 @@ struct ieee80211_tx_rate_control {
+ 	bool rts, short_preamble;
+ 	u8 max_rate_idx;
+ 	u32 rate_idx_mask;
+-	u8 rate_idx_mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	u8 *rate_idx_mcs_mask;
+ 	bool bss;
+ };
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 764dd9a..1d8c66c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2416,9 +2416,22 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		struct ieee80211_supported_band *sband = wiphy->bands[i];
++		int j;
++
+ 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+ 		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].mcs,
+ 		       sizeof(mask->control[i].mcs));
++
++		sdata->rc_has_mcs_mask[i] = false;
++		if (!sband)
++			continue;
++
++		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++)
++			if (~sdata->rc_rateidx_mcs_mask[i][j]) {
++				sdata->rc_has_mcs_mask[i] = true;
++				break;
++			}
+ 	}
+ 
+ 	return 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 135ab46..4f4a40e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -740,6 +740,8 @@ struct ieee80211_sub_if_data {
+ 
+ 	/* bitmap of allowed (non-MCS) rate indexes for rate control */
+ 	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
++
++	bool rc_has_mcs_mask[IEEE80211_NUM_BANDS];
+ 	u8  rc_rateidx_mcs_mask[IEEE80211_NUM_BANDS][IEEE80211_HT_MCS_MASK_LEN];
+ 
+ 	union {
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index dd88381..5d545dd 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -460,9 +460,12 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	 * the common case.
+ 	 */
+ 	mask = sdata->rc_rateidx_mask[info->band];
+-	memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
+-	       sizeof(mcs_mask));
+-	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
++	if (mask != (1 << txrc->sband->n_bitrates) - 1 || txrc->rate_idx_mcs_mask) {
++		if (txrc->rate_idx_mcs_mask)
++			memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
++		else
++			memset(mcs_mask, 0xff, sizeof(mcs_mask));
++
+ 		if (sta) {
+ 			/* Filter out rates that the STA does not support */
+ 			mask &= sta->sta.supp_rates[info->band];
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index aad0bf5..c3f3ff6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -642,9 +642,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		txrc.max_rate_idx = -1;
+ 	else
+ 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+-	memcpy(txrc.rate_idx_mcs_mask,
+-	       tx->sdata->rc_rateidx_mcs_mask[info->band],
+-	       sizeof(txrc.rate_idx_mcs_mask));
++
++	if (tx->sdata->rc_has_mcs_mask[info->band])
++		txrc.rate_idx_mcs_mask =
++			tx->sdata->rc_rateidx_mcs_mask[info->band];
++
+ 	txrc.bss = (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
+ 		    tx->sdata->vif.type == NL80211_IFTYPE_ADHOC);
+@@ -2502,8 +2504,6 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		txrc.max_rate_idx = -1;
+ 	else
+ 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+-	memcpy(txrc.rate_idx_mcs_mask, sdata->rc_rateidx_mcs_mask[band],
+-	       sizeof(txrc.rate_idx_mcs_mask));
+ 	txrc.bss = true;
+ 	rate_control_get_rate(sdata, NULL, &txrc);
+ 
 -- 
-Best regards,
-Eugene
+1.8.0.2
+
