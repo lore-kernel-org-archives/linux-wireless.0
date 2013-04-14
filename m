@@ -1,82 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55483 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885Ab3DIGva (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:40733 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339Ab3DNURa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 02:51:30 -0400
-Message-ID: <1365490278.8465.1.camel@jlt4.sipsolutions.net> (sfid-20130409_085133_634901_B72A0BBF)
-Subject: Re: [wireless-regdb] [PATCH 2/3] wireless-regdb: enable VHT80 when
- world roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, wireless-regdb@lists.infradead.org,
-	kandala@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	qca_vkondrat@qca.qualcomm.com, green@qca.qualcomm.com,
-	yunsenw@qca.qualcomm.com
-Date: Tue, 09 Apr 2013 08:51:18 +0200
-In-Reply-To: <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
-References: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1365486778-2336-3-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 14 Apr 2013 16:17:30 -0400
+Received: by mail-ee0-f54.google.com with SMTP id e51so1984482eek.13
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 13:17:28 -0700 (PDT)
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl> <1365519930-3230-7-git-send-email-stf_xl@wp.pl> <66918CCA-AAE0-47BF-B989-58A019810AC7@gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <66918CCA-AAE0-47BF-B989-58A019810AC7@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <AB418DC3-9910-45D9-9F73-CC49FEAA5D00@gmail.com> (sfid-20130414_221732_979439_F81401CD)
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 06/11] rt2800: move RFCSR6_R2 & LDO_CFG0 setup to 3572 specific rfcsr init
+Date: Sun, 14 Apr 2013 22:17:27 +0200
+To: "stf_xl@wp.pl" <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-08 at 22:52 -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+(Resending as the message didn't seem to end up on the mailing list)
+
+> Hi Stanislaw,
 > 
-> For VHT, the wider bandwidths (up to 160 MHz) need
-> to be allowed. Since world roaming only covers the
-> case of connecting to an AP, it can be opened up
-> there, we will rely on the AP to know the local
-> regulations.
+> Looks good to me. When you repost the series with all comments fixed, you can add my acked-by.
 > 
-> Based on a patch by Johannes Berg for upstream Linux.
-
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -6,10 +6,10 @@ country 00:
->  	# Channel 14. Only JP enables this and for 802.11b only
->  	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
->  	# Channel 36 - 48
-> -	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-> +	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
->  	# NB: 5260 MHz - 5700 MHz requies DFS
->  	# Channel 149 - 165
-> -	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-> +	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-
-I also have a separate upstream patch that I haven't sent here yet to
-enable 160 MHz by enabling the radar channels (passively), see below;
-any thoughts on that?
-
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -184,11 +184,21 @@ static const struct ieee80211_regdomain
-world_regdom = {
-                        NL80211_RRF_NO_IBSS |
-                        NL80211_RRF_NO_OFDM),
-                /* IEEE 802.11a, channel 36..48 */
--               REG_RULE(5180-10, 5240+10, 80, 6, 20,
-+               REG_RULE(5180-10, 5240+10, 160, 6, 20,
-                         NL80211_RRF_PASSIVE_SCAN |
-                         NL80211_RRF_NO_IBSS),
- 
--               /* NB: 5260 MHz - 5700 MHz requires DFS */
-+               /* IEEE 802.11a, channel 52..64 - DFS required */
-+               REG_RULE(5260-10, 5320+10, 160, 6, 20,
-+                       NL80211_RRF_PASSIVE_SCAN |
-+                       NL80211_RRF_NO_IBSS |
-+                       NL80211_RRF_DFS),
-+
-+               /* IEEE 802.11a, channel 100..144 - DFS required */
-+               REG_RULE(5500-10, 5720+10, 160, 6, 20,
-+                       NL80211_RRF_PASSIVE_SCAN |
-+                       NL80211_RRF_NO_IBSS |
-+                       NL80211_RRF_DFS),
- 
-                /* IEEE 802.11a, channel 149..165 */
-                REG_RULE(5745-10, 5825+10, 80, 6, 20,
-
-johannes
-
+> Sent from my iPad
+> 
+> On 9 apr. 2013, at 17:05, stf_xl@wp.pl wrote:
+> 
+>> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>> 
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2800lib.c |   34 +++++++++++++++---------------
+>> 1 files changed, 17 insertions(+), 17 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 83554da..7130040 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -4710,6 +4710,9 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+>> 
+>> static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+>> {
+>> +    u8 rfcsr;
+>> +    u32 reg;
+>> +
+>>   rt2800_rfcsr_write(rt2x00dev, 0, 0x70);
+>>   rt2800_rfcsr_write(rt2x00dev, 1, 0x81);
+>>   rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
+>> @@ -4741,6 +4744,20 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 29, 0x9b);
+>>   rt2800_rfcsr_write(rt2x00dev, 30, 0x09);
+>>   rt2800_rfcsr_write(rt2x00dev, 31, 0x10);
+>> +
+>> +    rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+>> +    rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
+>> +    rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+>> +
+>> +    rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+>> +    rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
+>> +    rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+>> +    rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>> +    msleep(1);
+>> +    rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+>> +    rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
+>> +    rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+>> +    rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+>> @@ -4990,23 +5007,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>       return 0;
+>>   }
+>> 
+>> -
+>> -    if (rt2x00_rt(rt2x00dev, RT3572)) {
+>> -        rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+>> -        rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
+>> -        rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+>> -
+>> -        rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+>> -        rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
+>> -        rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+>> -        rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>> -        msleep(1);
+>> -        rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+>> -        rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
+>> -        rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+>> -        rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>> -    }
+>> -
+>>   /*
+>>    * Set RX Filter calibration for 20MHz and 40MHz
+>>    */
+>> -- 
+>> 1.7.4.4
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
