@@ -1,67 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51696 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755120Ab3DVOa1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 10:30:27 -0400
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-CC: akpm@linux-foundation.org,
-	"Gertjan van Wingerde" <gwingerde@gmail.com>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>,
-	"Ivo van Doorn" <IvDoorn@gmail.com>, netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from mx3.wp.pl ([212.77.101.7]:33405 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751485Ab3DNNwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Apr 2013 09:52:19 -0400
+Date: Sun, 14 Apr 2013 15:53:16 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: minimumlaw@rambler.ru
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org,
 	users@rt2x00.serialmonkey.com
-Date: Mon, 22 Apr 2013 15:25:59 +0100
-Message-ID: <lsq.1366640759.619028946@decadent.org.uk> (sfid-20130422_163218_412234_E855702A)
-Subject: [19/75] rt2x00: rt2x00pci_regbusy_read() - only print register
- access failure once
-In-Reply-To: <lsq.1366640759.151900666@decadent.org.uk>
+Subject: Re: [PATCH] Fix transmit power troubles on some Ralink RT30xx cards
+Message-ID: <20130414135316.GA14248@localhost.localdomain> (sfid-20130414_155223_957025_DBCF2C52)
+References: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.2.44-rc1 review patch.  If anyone has any objections, please let me know.
+On Sun, Apr 14, 2013 at 02:54:43PM +0400, minimumlaw@rambler.ru wrote:
+> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+> 
+> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> value in them EEPROM/EFUSE. In this case, we must use default value,
+> but always used EEPROM/EFUSE value. As result we have tranmitt power
+> range from -10dBm to +6dBm instead 0dBm to +16dBm.
 
-------------------
+Thanks for great work on debugging this!
+> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
+> more for other RT30xx chips.
+>
+> Testen on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
+> embedded Wi-Fi module.
 
-From: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+Cc: stable@vger.kernel.org
 
-commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-BugLink: http://bugs.launchpad.net/bugs/1128840
-
-It appears that when this register read fails it never recovers, so
-I think there is no need to repeat the same error message ad infinitum.
-
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/net/wireless/rt2x00/rt2x00pci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00
- 		udelay(REGISTER_BUSY_DELAY);
- 	}
- 
--	ERROR(rt2x00dev, "Indirect register access failed: "
--	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
-+	printk_once(KERN_ERR "%s() Indirect register access failed: "
-+	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
- 	*reg = ~0;
- 
- 	return 0;
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index a658b4b..92849e5 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -4436,6 +4436,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>  
+>  	if (!rt2x00_rt(rt2x00dev, RT5390) &&
+>  	    !rt2x00_rt(rt2x00dev, RT5392)) {
+> +		u8 min_gain = rt2x00_rt(rt2x00dev, RT3070) ? 1 : 2;
+> +
+>  		rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+>  		rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
+>  		if (rt2x00_rt(rt2x00dev, RT3070) ||
+> @@ -4446,8 +4448,10 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>  				      &rt2x00dev->cap_flags))
+>  				rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
+>  		}
+> -		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+> -				  drv_data->txmixer_gain_24g);
+> +		if (drv_data->txmixer_gain_24g >= min_gain) {
+> +			rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+> +					  drv_data->txmixer_gain_24g);
+> +		}
+>  		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+>  	}
+>  
+> -- 
+> 1.8.1.5
+> 
+> 
