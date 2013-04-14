@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:35448 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757874Ab3DCNwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 09:52:07 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: johannes@sipsolutions.net, rodrigue@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] crda: display DFS regulatory domain in regdbdump
-Date: Wed,  3 Apr 2013 15:51:58 +0200
-Message-Id: <1364997118-14072-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130403_155212_791461_B643FC61)
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:34151 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446Ab3DNN6G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Apr 2013 09:58:06 -0400
+Received: by mail-pb0-f52.google.com with SMTP id mc8so2087477pbc.25
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 06:58:05 -0700 (PDT)
+Date: Sun, 14 Apr 2013 06:58:03 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: minimumlaw@rambler.ru, linux-wireless@vger.kernel.org,
+	stable@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] Fix transmit power troubles on some Ralink RT30xx cards
+Message-ID: <20130414135803.GC13694@kroah.com> (sfid-20130414_155811_137261_AA47059B)
+References: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
+ <20130414135316.GA14248@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130414135316.GA14248@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- print-regdom.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+On Sun, Apr 14, 2013 at 03:53:16PM +0200, Stanislaw Gruszka wrote:
+> On Sun, Apr 14, 2013 at 02:54:43PM +0400, minimumlaw@rambler.ru wrote:
+> > From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+> > 
+> > Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> > value in them EEPROM/EFUSE. In this case, we must use default value,
+> > but always used EEPROM/EFUSE value. As result we have tranmitt power
+> > range from -10dBm to +6dBm instead 0dBm to +16dBm.
+> 
+> Thanks for great work on debugging this!
+> > Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
+> > more for other RT30xx chips.
+> >
+> > Testen on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
+> > embedded Wi-Fi module.
+> 
+> Signed-off-by: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
 
-diff --git a/print-regdom.c b/print-regdom.c
-index 075eea8..9c65872 100644
---- a/print-regdom.c
-+++ b/print-regdom.c
-@@ -7,6 +7,22 @@
- 
- #include "reglib.h"
- 
-+static const char *dfs_domain_name(enum nl80211_dfs_regions region)
-+{
-+	switch (region) {
-+	case NL80211_DFS_UNSET:
-+		return "DFS-UNSET";
-+	case NL80211_DFS_FCC:
-+		return "DFS-FCC";
-+	case NL80211_DFS_ETSI:
-+		return "DFS-ETSI";
-+	case NL80211_DFS_JP:
-+		return "DFS-JP";
-+	default:
-+		return "DFS-invalid";
-+	}
-+}
-+
- static void print_reg_rule(struct ieee80211_reg_rule *rule)
- {
- 	struct ieee80211_freq_range *freq;
-@@ -57,7 +73,8 @@ static void print_reg_rule(struct ieee80211_reg_rule *rule)
- void print_regdom(struct ieee80211_regdomain *rd)
- {
- 	unsigned int i;
--	printf("country %.2s:\n", rd->alpha2);
-+	printf("country %.2s: %s\n", rd->alpha2,
-+	       dfs_domain_name(rd->dfs_region));
- 	for (i = 0; i < rd->n_reg_rules; i++)
- 		print_reg_rule(&rd->reg_rules[i]);
- 	printf("\n");
--- 
-1.7.4.1
+You can not just add someone else's Signed-off-by: to a patch, please go
+read Documentation/SubmittingPatches for what it is (hint, a legal
+statement).  Never do that.  Ever.
 
