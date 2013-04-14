@@ -1,51 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:51503 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762581Ab3DHUsT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 16:48:19 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wn14so5313176obc.32
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 13:48:18 -0700 (PDT)
-Message-ID: <51632D10.8010401@lwfinger.net> (sfid-20130408_224823_472604_C2AF8D2A)
-Date: Mon, 08 Apr 2013 15:48:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Vasiliy Tolstov <v.tolstov@selfip.ru>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: bcm43228 support
-References: <CACaajQsp-UFjn4odRWZMdjrijhhqcO1Y6F9m5QrJMBzvZjgtVA@mail.gmail.com> <5162E4E3.3040702@lwfinger.net> <CACaajQsBNxMsac85fJ_3hDW_f9W1vePRY5S=O1ykX2+ekWs+vg@mail.gmail.com>
-In-Reply-To: <CACaajQsBNxMsac85fJ_3hDW_f9W1vePRY5S=O1ykX2+ekWs+vg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail.nanl.de ([217.115.11.12]:52893 "EHLO mail.nanl.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751355Ab3DNMNe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Apr 2013 08:13:34 -0400
+From: Jonas Gorski <jogo@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mwl8k: remove nonstandard rate 72 Mbps
+Date: Sun, 14 Apr 2013 14:11:58 +0200
+Message-Id: <1365941518-4963-1-git-send-email-jogo@openwrt.org> (sfid-20130414_141346_740464_E0A058E9)
+In-Reply-To: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
+References: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2013 01:46 PM, Vasiliy Tolstov wrote:
-> 2013/4/8 Larry Finger <Larry.Finger@lwfinger.net>:
->> According to
->> http://wireless.kernel.org/en/users/Drivers/b43#Supported_devices, the only
->> driver that supports the BCM43228 is the closed-source wl. If your device
->> has PCI ID 14e4:4359, then neither brcmsmac nor b43 support it.
->>
->> The number of devices supported by b43 is limited by the time that we have
->> to reverse engineer devices, and a need for an open-source driver. Your
->> device is not widely distributed. The Broadcom people will need to say why
->> they choose not to implement this device.
->>
->> If you need a wireless adapter for use with a Live CD, I suggest one of the
->> popular USB devices.
->
->
-> I'm already read this link, but may be info is outdated and opensource
-> drivers for 43228 is available. Now broadcom-sta wl river works very
-> bad on my acer aspire v5.
+This rate causes an overflow in the extended rates IE's data rate field,
+with the overflowing bit setting the Basic Rate Set membership. This
+results in a bogus 8 Mpbs basic rate, making clients checking them refuse
+association.
 
-The only way to know is to search the kernel source for the appropriate PCI ID. 
-As you did not provide that for your device, I had to guess. I might have done 
-that incorrectly, but if I tried the correct one, the current wireless-testing 
-does not support your device.
+Since the rate is likely unused anyway (HT will yield better rates between
+supporting chips), we can just remove it.
 
-Sorry about faulty operation of wl, but there is nothing we can do about that.
+This fixes association from wpa_supplicant and Android 4.x and newer.
 
-Larry
+Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+---
+Changes from RFC -> v1
+ * only remove 72 Mbps, as that's the problematic one
+ * reword everything, add real cause
 
+ drivers/net/wireless/mwl8k.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index ee1778c..6820fce 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -193,10 +193,10 @@ struct mwl8k_priv {
+ 	struct rxd_ops *rxd_ops;
+ 	struct ieee80211_supported_band band_24;
+ 	struct ieee80211_channel channels_24[14];
+-	struct ieee80211_rate rates_24[14];
++	struct ieee80211_rate rates_24[13];
+ 	struct ieee80211_supported_band band_50;
+ 	struct ieee80211_channel channels_50[4];
+-	struct ieee80211_rate rates_50[9];
++	struct ieee80211_rate rates_50[8];
+ 	u32 ap_macids_supported;
+ 	u32 sta_macids_supported;
+ 
+@@ -366,7 +366,6 @@ static const struct ieee80211_rate mwl8k_rates_24[] = {
+ 	{ .bitrate = 360, .hw_value = 72, },
+ 	{ .bitrate = 480, .hw_value = 96, },
+ 	{ .bitrate = 540, .hw_value = 108, },
+-	{ .bitrate = 720, .hw_value = 144, },
+ };
+ 
+ static const struct ieee80211_channel mwl8k_channels_50[] = {
+@@ -385,7 +384,6 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
+ 	{ .bitrate = 360, .hw_value = 72, },
+ 	{ .bitrate = 480, .hw_value = 96, },
+ 	{ .bitrate = 540, .hw_value = 108, },
+-	{ .bitrate = 720, .hw_value = 144, },
+ };
+ 
+ /* Set or get info from Firmware */
+@@ -3083,11 +3081,11 @@ static void legacy_rate_mask_to_array(u8 *rates, u32 mask)
+ 	int j;
+ 
+ 	/*
+-	 * Clear nonstandard rates 4 and 13.
++	 * Clear nonstandard rate 4.
+ 	 */
+ 	mask &= 0x1fef;
+ 
+-	for (i = 0, j = 0; i < 14; i++) {
++	for (i = 0, j = 0; i < 13; i++) {
+ 		if (mask & (1 << i))
+ 			rates[j++] = mwl8k_rates_24[i].hw_value;
+ 	}
+-- 
+1.7.10.4
 
