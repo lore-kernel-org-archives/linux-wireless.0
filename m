@@ -1,89 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55359 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752344Ab3D1PPd (ORCPT
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:47382 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339Ab3DNURC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 11:15:33 -0400
-Message-ID: <517D3D0A.1080505@candelatech.com> (sfid-20130428_171548_489110_BBC9CDD7)
-Date: Sun, 28 Apr 2013 08:15:22 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D3840.2060000@candelatech.com> <517D3B50.6070806@openwrt.org>
-In-Reply-To: <517D3B50.6070806@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 14 Apr 2013 16:17:02 -0400
+Received: by mail-ee0-f50.google.com with SMTP id e53so1979628eek.23
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 13:17:00 -0700 (PDT)
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl> <1365519930-3230-6-git-send-email-stf_xl@wp.pl> <5FA86BE2-7773-4D09-B891-6B1C80DCED72@gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <5FA86BE2-7773-4D09-B891-6B1C80DCED72@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <E77B5173-475B-4218-8C16-9B3249B376C5@gmail.com> (sfid-20130414_221706_542365_E3EE0019)
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 05/11] rt2800: move GPIO_SWITCH setup to 3390 specific rfcsr init
+Date: Sun, 14 Apr 2013 22:16:58 +0200
+To: "stf_xl@wp.pl" <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/28/2013 08:08 AM, Felix Fietkau wrote:
-> On 2013-04-28 4:54 PM, Ben Greear wrote:
->> On 04/28/2013 05:51 AM, Felix Fietkau wrote:
->>> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->>>> Collect statistics about recived duplicate and STBC packets.
->>>> This information should help see if STBC is actually working.
->>>>
->>>> Tested on ar9285;
->>>>
->>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->>> I thought about this patch some more, and I'm wondering what's the point
->>> in doing this? These statistics are going to be completely useless for
->>> most people and they'll waste some memory/cpu cycles, especially on
->>> small-cache devices. I think it's much more useful to simply pass the
->>> information to mac80211 via rx flags and get them added to the radiotap
->>> header.
->>> I'd like to keep the number of 'poor man's debug hacks' in the driver to
->>> a minimum, and there are some other things that I think should be
->>> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
->>> sampling hack, and pretty much anything else that can be just as easily
->>> accessed from mac80211 through regular interfaces.
->>
->> Does that mean we can just put the stats in mac80211, or do we have
->> to be running a sniffer to gather the stats?
-> Right now you'd have to use a sniffer, but if you really care about
-> getting specific stats it might make sense to write a kernel module that
-> attaches to a monitor interface and gathers them (maybe even with
-> support for gathering arbitrary stats by attaching bpf filters).
-
-I'd like ongoing stats w/out a monitor interface or sniffer, though
-it would be fine to add it to the sniffer path as well.  Maybe we can
-have compile-time flag to enable the extra and mostly useless
-stats so only the 1% that cares pays the overhead.
-
-> The problem I have with the current stats is they're just an arbitrary
-> collection of random stuff that is probably useless for 99% of all
-> users. In many cases the way the stats are collected also makes the data
-> completely meaningless (e.g. because the source/destination address is
-> not taken into account).
->
-> Why care about the number of packets on the air that were sent with a
-> specific rate flag? Why care about the number of beacons on the air
-> (with no filter on a set of APs or anything)? Or what about the number
-> of fragments received? To me it just looks like an incoherent set of
-> useless facts.
-
-I think having lots of stats allows for the possibility of seeing a pattern
-that might otherwise be missed, and when testing in an isolated environment,
-you don't have to care about who is sending what being reported..you already
-know.
-
-One thing I'd like to do, for instance, is to figure out how to get some
-average MPDU lengths calculated in hopes that would correlate with decreased
-performance in cases were we have lots of stations....
-
-Thanks,
-Ben
-
->
-> - Felix
->
+(Resending as the message didn't seem to end up on the mailing list)
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
-
+> Hi Stanislaw,
+> 
+> Looks good to me. When you repost the series with all comments fixed, you can add my acked-by.
+> 
+> Sent from my iPad
+> 
+> On 9 apr. 2013, at 17:05, stf_xl@wp.pl wrote:
+> 
+>> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>> 
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2800lib.c |   12 +++++++-----
+>> 1 files changed, 7 insertions(+), 5 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 216ceb6..83554da 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -4668,6 +4668,8 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+>> 
+>> static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+>> {
+>> +    u32 reg;
+>> +
+>>   rt2800_rfcsr_write(rt2x00dev, 0, 0xa0);
+>>   rt2800_rfcsr_write(rt2x00dev, 1, 0xe1);
+>>   rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
+>> @@ -4700,6 +4702,10 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+>>   rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+>>   rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
+>> +
+>> +    rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
+>> +    rt2x00_set_field32(&reg, GPIO_SWITCH_5, 0);
+>> +    rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+>> @@ -4985,11 +4991,7 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>   }
+>> 
+>> 
+>> -    if (rt2x00_rt(rt2x00dev, RT3390)) {
+>> -        rt2800_register_read(rt2x00dev, GPIO_SWITCH, &reg);
+>> -        rt2x00_set_field32(&reg, GPIO_SWITCH_5, 0);
+>> -        rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+>> -    } else if (rt2x00_rt(rt2x00dev, RT3572)) {
+>> +    if (rt2x00_rt(rt2x00dev, RT3572)) {
+>>       rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+>>       rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
+>>       rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+>> -- 
+>> 1.7.4.4
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
