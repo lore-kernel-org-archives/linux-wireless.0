@@ -1,45 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:58800 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396Ab3DZQH3 (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:62900 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339Ab3DNUPV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 12:07:29 -0400
-Received: by mail-bk0-f49.google.com with SMTP id w5so1843833bku.22
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 09:07:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <00ad01ce3f30$7ba5da10$72f18e30$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local>
- <CAG6hwVN5LRVgchuX7QQWKEioBxTz3WXO5JUVv7fE3_X5LKXayg@mail.gmail.com> <00ad01ce3f30$7ba5da10$72f18e30$@acksys.fr>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Fri, 26 Apr 2013 09:07:08 -0700
-Message-ID: <CAG6hwVNrPdCtfdA3xDHAAqz=i_GegVReba9HOxYrw0VOgdcP+g@mail.gmail.com> (sfid-20130426_180733_414622_EA9FA6A0)
-Subject: Re: Mutli vif in mesh mode
-To: voncken <cedric.voncken@acksys.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 14 Apr 2013 16:15:21 -0400
+Received: by mail-ea0-f178.google.com with SMTP id o10so1963226eaj.9
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 13:15:20 -0700 (PDT)
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl> <1365519930-3230-4-git-send-email-stf_xl@wp.pl> <413EC3EA-0BB4-42CC-A95A-52468DC35C67@gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <413EC3EA-0BB4-42CC-A95A-52468DC35C67@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <8CC8DB9F-51C2-4C0A-88FA-0193000D011A@gmail.com> (sfid-20130414_221526_161438_947863D8)
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 03/11] rt2800: move RFCSR29_RSSI_GAIN to 3290 specific rfcsr init
+Date: Sun, 14 Apr 2013 22:15:18 +0200
+To: "stf_xl@wp.pl" <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cedric,
+(Resending as the message didn't seem to end up on the mailing list)
 
-On Mon, Apr 22, 2013 at 1:07 AM, voncken <cedric.voncken@acksys.fr> wrote:
->         Thanks Thomas for your answer,
->
->         In ath9k_hw_beaconinit() the mesh mode use the hadhoc beacon mode. I
-> try to change it, and  ath9k_set_beacon in
-> driver/net/Wireless/ath/ath9k/beacon.c, but after these modifications, no
-> beacon are sent (I think my change are wrong).
->
->         Could you give me the old patch, I can try to update it with the
-> latest compat, and I will send to you an updated patch.
 
-Sorry for the late response.
-
-You need to change the hardware operating mode in
-ath9k_hw_set_operating_mode() to AP as well. See [1] and please let me
-know if that helps.
-
-[1] https://github.com/cozybit/open80211s/commit/380bf3ad4c2ccd92658943e978f8d942611a3d6d
-
---
-Thomas
+> Hi Stanislaw,
+> 
+> Looks good to me. When you repost the series with all comments fixed, you can add my acked-by.
+> 
+> Sent from my iPad
+> 
+> On 9 apr. 2013, at 17:05, stf_xl@wp.pl wrote:
+> 
+>> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>> 
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++------
+>> 1 files changed, 6 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 334973a..085b60c 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -4511,6 +4511,8 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+>> 
+>> static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+>> {
+>> +    u8 rfcsr;
+>> +
+>>   rt2800_rf_init_calibration_53xx(rt2x00dev);
+>> 
+>>   rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
+>> @@ -4559,6 +4561,10 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 59, 0x09);
+>>   rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+>>   rt2800_rfcsr_write(rt2x00dev, 61, 0xc1);
+>> +
+>> +    rt2800_rfcsr_read(rt2x00dev, 29, &rfcsr);
+>> +    rt2x00_set_field8(&rfcsr, RFCSR29_RSSI_GAIN, 3);
+>> +    rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+>> @@ -5103,12 +5109,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>       rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
+>>   }
+>> 
+>> -    if (rt2x00_rt(rt2x00dev, RT3290)) {
+>> -        rt2800_rfcsr_read(rt2x00dev, 29, &rfcsr);
+>> -        rt2x00_set_field8(&rfcsr, RFCSR29_RSSI_GAIN, 3);
+>> -        rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+>> -    }
+>> -
+>>   return 0;
+>> }
+>> 
+>> -- 
+>> 1.7.4.4
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
