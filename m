@@ -1,56 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:63706 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968346Ab3DSMwL (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:56243 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339Ab3DNUTB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 08:52:11 -0400
-Received: by mail-wi0-f180.google.com with SMTP id h11so763183wiv.7
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 05:52:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
-References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
- <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
- <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
- <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com> <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 19 Apr 2013 22:51:49 +1000
-Message-ID: <CAGRGNgU-NcBNA0e3X7WyV3f597n_X06J3pshQNr5gDN-k45Ang@mail.gmail.com> (sfid-20130419_145215_551493_418BFE7C)
-Subject: Re: very bad work of wl (bcm 43228)
-To: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	Arend van Spriel <arend@broadcom.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	Larry Finger <larry.finger@lwfinger.net>
-Content-Type: text/plain; charset=KOI8-R
+	Sun, 14 Apr 2013 16:19:01 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d4so1902551eek.15
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 13:19:00 -0700 (PDT)
+References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl> <1365519930-3230-10-git-send-email-stf_xl@wp.pl> <0E1FF2EE-1777-42C7-9052-51895C784968@gmail.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <0E1FF2EE-1777-42C7-9052-51895C784968@gmail.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <CDF4806D-4662-4E6A-A58E-E9380A77F25E@gmail.com> (sfid-20130414_221911_315901_C6678984)
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 09/11] rt2800: add rt2800_led_open_drain_enable subroutine
+Date: Sun, 14 Apr 2013 22:18:58 +0200
+To: "stf_xl@wp.pl" <stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vasiliy,
+(Resending as the message didn't seem to end up on the mailing list)
 
-On Fri, Apr 19, 2013 at 9:20 PM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
-> 2013/4/19 Julian Calaby <julian.calaby@gmail.com>:
->> If you're desperate for a good wireless connection on that laptop
->> right now, your best bet is to buy yourself a cheap USB card, I
->> personally recommend ones with Atheros chipsets as they're very well
->> supported and tend to work well. TP-Link make some cheap  and good
->> ones like the TL-WN821N and TL-WN822N.
->
-> Thanks. But IMHO i have adapter with bluetooth and wifi integrated (as
-> i think) and buy wifi+bluetooth in russia not very simple =)
-
-If I'm not mistaken, the bluetooth in your laptop is completely
-separate from the Broadcom card. It may be based on a Broadcom
-chipset, but it will work with a different driver (which hopefully
-works correctly.)
-
-If you buy a USB wireless card, you don't need to buy a new bluetooth card.
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+> Hi Stanislaw,
+> 
+> Looks good to me. When you repost the series with all comments fixed, you can add my acked-by.
+> 
+> Sent from my iPad
+> 
+> On 9 apr. 2013, at 17:05, stf_xl@wp.pl wrote:
+> 
+>> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>> 
+>> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2800lib.c |   29 +++++++++++++++++++++++++----
+>> 1 files changed, 25 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index fe0df88..009fe47 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -4332,6 +4332,15 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>   return 0;
+>> }
+>> 
+>> +static void rt2800_led_open_drain_enable(struct rt2x00_dev *rt2x00dev)
+>> +{
+>> +    u32 reg;
+>> +
+>> +    rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
+>> +    rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
+>> +    rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
+>> +}
+>> +
+>> static u8 rt2800_init_rx_filter(struct rt2x00_dev *rt2x00dev, bool bw40,
+>>               u8 filter_target)
+>> {
+>> @@ -4593,6 +4602,8 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+>>       rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
+>>       rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E))
+>>       rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+>> @@ -4653,6 +4664,8 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+>> 
+>>   rt2800_rx_filter_calibration(rt2x00dev);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+>> @@ -4722,6 +4735,8 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
+>> 
+>>   rt2800_rx_filter_calibration(rt2x00dev);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+>> @@ -4769,6 +4784,8 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+>> 
+>>   if (rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E))
+>>       rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+>> @@ -4823,6 +4840,8 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+>> 
+>>   rt2800_rx_filter_calibration(rt2x00dev);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+>> @@ -4911,6 +4930,8 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
+>> 
+>>   rt2800_normal_mode_setup_5xxx(rt2x00dev);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
+>> @@ -4978,6 +4999,8 @@ static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
+>>   rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
+>> 
+>>   rt2800_normal_mode_setup_5xxx(rt2x00dev);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+>> @@ -5018,6 +5041,8 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+>> 
+>>   if (rt2x00_rt_rev_lt(rt2x00dev, RT5592, REV_RT5592C))
+>>       rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+>> +
+>> +    rt2800_led_open_drain_enable(rt2x00dev);
+>> }
+>> 
+>> static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>> @@ -5074,10 +5099,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>       return 0;
+>>   }
+>> 
+>> -    rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
+>> -    rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
+>> -    rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
+>> -
+>>   if (!rt2x00_rt(rt2x00dev, RT5390) &&
+>>       !rt2x00_rt(rt2x00dev, RT5392)) {
+>>       rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+>> -- 
+>> 1.7.4.4
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
