@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55954 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753544Ab3D1OzM (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:52748 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934768Ab3DOW66 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 10:55:12 -0400
-Message-ID: <517D3840.2060000@candelatech.com> (sfid-20130428_165518_091074_A137AC26)
-Date: Sun, 28 Apr 2013 07:54:56 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 15 Apr 2013 18:58:58 -0400
+Received: by mail-wg0-f44.google.com with SMTP id a12so1816541wgh.11
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 15:58:57 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org>
-In-Reply-To: <517D1B45.9020302@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
+References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
+	<20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
+Date: Mon, 15 Apr 2013 15:58:57 -0700
+Message-ID: <CAJ-Vmo=-6yYbX_JnH6bO=ywjHar6SZ+HeCCMhyOSNNS8-j53PA@mail.gmail.com> (sfid-20130416_005901_669474_7DF3E849)
+Subject: Re: ath10k: mac80211 driver for QCA9880
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/28/2013 05:51 AM, Felix Fietkau wrote:
-> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->> Collect statistics about recived duplicate and STBC packets.
->> This information should help see if STBC is actually working.
->>
->> Tested on ar9285;
->>
->> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
-> I thought about this patch some more, and I'm wondering what's the point
-> in doing this? These statistics are going to be completely useless for
-> most people and they'll waste some memory/cpu cycles, especially on
-> small-cache devices. I think it's much more useful to simply pass the
-> information to mac80211 via rx flags and get them added to the radiotap
-> header.
-> I'd like to keep the number of 'poor man's debug hacks' in the driver to
-> a minimum, and there are some other things that I think should be
-> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
-> sampling hack, and pretty much anything else that can be just as easily
-> accessed from mac80211 through regular interfaces.
-
-Does that mean we can just put the stats in mac80211, or do we have
-to be running a sniffer to gather the stats?
-
-Thanks,
-Ben
-
+On 15 April 2013 11:40, Denis 'GNUtoo' Carikli <GNUtoo@no-log.org> wrote:
+> Hi,
 >
-> - Felix
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+> On Mon, 15 Apr 2013 15:20:54 +0300
+> Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>>The biggest difference is that there's now firmware running on the
+>>chip.
+> Will the firmware be released as free software at some point?
+
+There's currently no plans to open source the firmware for ath10k chips.
+
+So it's best to assume the answer is "no".
+
+We'll be sure to tell people if this ever changes.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
-
+Adrian
