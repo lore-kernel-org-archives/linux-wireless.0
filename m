@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4666 "EHLO mms2.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:43578 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162957Ab3DEUum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 16:50:42 -0400
-Message-ID: <515F3918.7090306@broadcom.com> (sfid-20130405_225046_679038_353628DF)
-Date: Fri, 5 Apr 2013 22:50:32 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1750911Ab3DOO1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 10:27:24 -0400
+Message-ID: <516C0E40.3020502@openwrt.org> (sfid-20130415_162727_416971_E76F39A5)
+Date: Mon, 15 Apr 2013 16:27:12 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Ben Greear" <greearb@candelatech.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC V4] cfg80211: introduce critical protocol indication
- from user-space
-References: <1365168312-14780-1-git-send-email-arend@broadcom.com>
- <515ED9BF.20203@candelatech.com> <515F23A4.3040906@broadcom.com>
- <515F2627.4050908@candelatech.com>
-In-Reply-To: <515F2627.4050908@candelatech.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5] mac80211: improve the rate control API
+References: <1365890626-86895-1-git-send-email-nbd@openwrt.org>  <1365890626-86895-2-git-send-email-nbd@openwrt.org>  <1365890626-86895-3-git-send-email-nbd@openwrt.org> <1366033473.8361.26.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366033473.8361.26.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2013 09:29 PM, Ben Greear wrote:
-> Or just require that the driver not fail this operation ever and always
-> set crit_proto_started to false.
+On 2013-04-15 3:44 PM, Johannes Berg wrote:
+> On Sun, 2013-04-14 at 00:03 +0200, Felix Fietkau wrote:
+> 
+>> +EXPORT_SYMBOL(rate_control_set_rates);
+> 
+> I don't think that needs to be exported (at least not now)?
+Just thought I'd let driver-implemented rate control modules access it
+as well if they want to.
 
-I tend to go for this option.
+> I suspect that the answer to my question in patch 2 lies here, if the
+> rate control updates the table then would it not just update the table
+> when the protection mechanism needs to be changed? There should be
+> triggers for that, rather than having to check the "use_cts" variables
+> on every packet, and if they aren't complete that should be fixed?
+I guess we could do some further work on that, but for now I wanted to
+keep things simple by having only the rate control module touch the
+table (and not have it care about CTS protection).
 
-Gr. AvS
-
+- Felix
