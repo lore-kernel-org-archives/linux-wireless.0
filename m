@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:62691 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757381Ab3DZT1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 15:27:07 -0400
-Received: from mailout-de.gmx.net ([10.1.76.24]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MeNJB-1U8MAH09kN-00QA8a for
- <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 21:27:06 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] ath9k_htc: add STBC TX support
-Date: Fri, 26 Apr 2013 21:26:53 +0200
-Message-Id: <1367004413-6871-1-git-send-email-linux@rempel-privat.de> (sfid-20130426_212712_181660_C96647E5)
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:37909 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190Ab3DOUGi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 16:06:38 -0400
+Received: by mail-wg0-f53.google.com with SMTP id z11so1248165wgg.8
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 13:06:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGmUV-tU6uSS2dW4vuNN7Zbm1qWk_0r3vkJ8crRAvygQ-+NuAA@mail.gmail.com>
+References: <CAGmUV-ugMOOv_OhG4+0CcQqJF1-nfRPUNwGtnzNRodXMOqS-bA@mail.gmail.com>
+ <CAGmUV-vhBavw5=fM=Xt-bJVLp2zZSghrfOcWgHsYt_97_wy+4Q@mail.gmail.com>
+ <CAGmUV-v9Bpn53JNYvmLpChtK_1Zj+ms0JGZC0=Tyc96SGfngLw@mail.gmail.com>
+ <515392AF.8070809@lwfinger.net> <CAGmUV-tCwDd7+g1k0=xnAx03bjxVnPXhf6uSU+Fa4Oo2EQPizA@mail.gmail.com>
+ <20130328090323.GA1384@redhat.com> <CA+icZUVzdxoDvontxSR99Jxu1UY88OG4xCCjsKErXBpmLzH_+g@mail.gmail.com>
+ <CAGmUV-tU6uSS2dW4vuNN7Zbm1qWk_0r3vkJ8crRAvygQ-+NuAA@mail.gmail.com>
+From: Ali Ustek <aliustek@gmail.com>
+Date: Mon, 15 Apr 2013 21:05:56 +0100
+Message-ID: <CAGmUV-tdNzLHqtxHEa_9Z2xLpSw9w4aA_ujk=oT3qm2aKh8_xg@mail.gmail.com> (sfid-20130415_220649_297779_EE3D082E)
+Subject: Re: Fwd: Ralink RT3290 card not supported
+To: sedat.dilek@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-current firmware will enable STBC_TX, only if other peer support it.
-This patch provide ht_peer_caps to firmware.
-FW versions 1.3, 1.4 should be able to work with it.
-Tested on ar7010+ar9280 and ar7010+ar9287.
+I have checked the Ubuntu kernel config on my laptop and it has
+$ grep -i RT2800PCI /boot/config-3.8.0-18-generic
+CONFIG_RT2800PCI=m
+CONFIG_RT2800PCI_RT33XX=y
+CONFIG_RT2800PCI_RT35XX=y
+CONFIG_RT2800PCI_RT53XX=y
+CONFIG_RT2800PCI_RT3290=y
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/htc.h          | 2 ++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
- 3 files changed, 9 insertions(+)
+and I tried to compile the kernel myself to no avail.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index d3b099d..db4a793 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -142,6 +142,8 @@ struct ath9k_htc_target_aggr {
- #define WLAN_RC_40_FLAG  0x02
- #define WLAN_RC_SGI_FLAG 0x04
- #define WLAN_RC_HT_FLAG  0x08
-+#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
-+#define WLAN_RC_RX_STBC_FLAG 0xC0 /* RX STBC ,2 bits */
- 
- struct ath9k_htc_rateset {
- 	u8 rs_nrates;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a47f5e0..c79c5ac 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -517,6 +517,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
- 		tx_streams, rx_streams);
- 
-+	if (tx_streams >= 2)
-+		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-+
- 	if (tx_streams != rx_streams) {
- 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
- 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0743a47..af08b4a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -623,6 +623,10 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
- 		trate->rates.ht_rates.rs_nrates = j;
- 
- 		caps = WLAN_RC_HT_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
-+			caps |= WLAN_RC_RX_STBC_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
-+			caps |= WLAN_RC_TX_STBC_FLAG;
- 		if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
- 		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
--- 
-1.8.1.2
+any ideas?
 
+On Thu, Mar 28, 2013 at 12:18 PM, Ali Ustek <aliustek@gmail.com> wrote:
+> Hi Sedat,
+>
+> The kernel I am using is from Ubuntu and I am using NM.
+>
+> All the other logs I have attached on to launchpad bug
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1156363
+> if that's any help at all.
+>
+> Thanks
+>
+> On Thu, Mar 28, 2013 at 9:19 AM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>> On Thu, Mar 28, 2013 at 10:03 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>> On Thu, Mar 28, 2013 at 08:18:37AM +0000, Ali Ustek wrote:
+>>>> >> The wi-fi chip Ralink RT3290 is common in notebooks but is not
+>>>> >> supported by linux-kernel
+>>>
+>>> This device is supported since 3.7 . You most likely compile kernel
+>>> without CONFIG_RT2800PCI_RT3290.
+>>>
+>>
+>> Hi Ali,
+>>
+>> your kernel-config (self-compiled or the one of your $distro) and
+>> dmesg logs are always helpful, the same to lspci/lsusb outputs.
+>> And... informations to your $distro plus used your
+>> $network-userspace-apps like network-manager (NM), wpa-supplicant etc.
+>> are helpful... if you want your issue be tracked... successfully :-).
+>>
+>> Check also docs section for debugging the different wifi-drivers on
+>> <wireless.kernel.org>.
+>>
+>> Hope this helps you!
+>>
+>> Regards,
+>> - Sedat -
+>>
+>>> Stanislaw
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
