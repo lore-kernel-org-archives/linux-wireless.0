@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:48669 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936502Ab3DIA6I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 20:58:08 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, marcel@holtmann.org, gustavo@padovan.org,
-	johan.hedberg@gmail.com, linux-bluetooth@vger.kernel.org,
-	champion_chen@realsil.com.cn
-Subject: [RFC/RFT PATCH 0/2 V2] Adding a new bluetooth driver to the kernel
-Date: Mon,  8 Apr 2013 19:57:46 -0500
-Message-Id: <1365469068-4548-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130409_025821_452499_0FF8F0DA)
+Received: from purkki.adurom.net ([80.68.90.206]:56905 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081Ab3DORIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 13:08:43 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: minimumlaw@rambler.ru
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] Fix transmit power troubles on some Ralink RT30xx cards
+References: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
+Date: Mon, 15 Apr 2013 20:08:42 +0300
+In-Reply-To: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru>
+	(minimumlaw@rambler.ru's message of "Sun, 14 Apr 2013 14:54:43 +0400")
+Message-ID: <87a9oz7mcl.fsf@purkki.adurom.net> (sfid-20130415_190847_626686_EF76D9E8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches supply the code needed to operate the bluetooth portion of
-the Realtek RTL8723AE chip. Much of the necessary code is already present
-in btusb, thus that driver is changed to export the necessary routines.
-The second patch implements the routines that differ from the standard
-driver.
+minimumlaw@rambler.ru writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+>
+> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> value in them EEPROM/EFUSE. In this case, we must use default value,
+> but always used EEPROM/EFUSE value. As result we have tranmitt power
+> range from -10dBm to +6dBm instead 0dBm to +16dBm.
+>
+> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
+> more for other RT30xx chips.
+>
+> Testen on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
+> embedded Wi-Fi module.
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 
-
-Larry Finger (2):
-  btusb: Modify code for use with a similar driver
-  rtk_btusb: A new driver for the Bluetooth portion of the Realtek
-    RTL8723AE chip
-
- drivers/bluetooth/Kconfig     |  10 +
- drivers/bluetooth/Makefile    |   1 +
- drivers/bluetooth/btusb.c     |  79 +---
- drivers/bluetooth/btusb.h     |  88 ++++
- drivers/bluetooth/rtk_btusb.c | 974 ++++++++++++++++++++++++++++++++++++++++++
- drivers/bluetooth/rtk_btusb.h | 102 +++++
- 6 files changed, 1194 insertions(+), 60 deletions(-)
- create mode 100644 drivers/bluetooth/btusb.h
- create mode 100644 drivers/bluetooth/rtk_btusb.c
- create mode 100644 drivers/bluetooth/rtk_btusb.h
+The subject should have "rt2x00: " prefix.
 
 -- 
-1.8.1.4
-
+Kalle Valo
