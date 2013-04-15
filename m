@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:56895 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830Ab3DQBAf (ORCPT
+Received: from 6.mo3.mail-out.ovh.net ([188.165.43.173]:43573 "EHLO
+	mo3.mail-out.ovh.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934863Ab3DOW5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 21:00:35 -0400
-Received: by mail-pa0-f42.google.com with SMTP id kq13so626901pab.29
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:00:35 -0700 (PDT)
-Date: Tue, 16 Apr 2013 18:00:29 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Jerry Chuang <jerry-chuang@realtek.com>,
-	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 12/28] rtl8192u: Don't need to save device proc dir PDE
- [RFC]
-Message-ID: <20130417010029.GE11541@kroah.com> (sfid-20130417_030039_804034_D9DE5BEE)
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
- <20130416182639.27773.60503.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130416182639.27773.60503.stgit@warthog.procyon.org.uk>
+	Mon, 15 Apr 2013 18:57:19 -0400
+Received: from mail607.ha.ovh.net (b7.ovh.net [213.186.33.57])
+	by mo3.mail-out.ovh.net (Postfix) with SMTP id 1B729FF8B5A
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 20:40:44 +0200 (CEST)
+Date: Mon, 15 Apr 2013 20:40:30 +0200
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath10k-devel@qca.qualcomm.com>
+Subject: Re: ath10k: mac80211 driver for QCA9880
+Message-ID: <20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup> (sfid-20130416_005726_067729_4382A8CD)
+In-Reply-To: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
+References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 07:26:39PM +0100, David Howells wrote:
-> Don't need to save the PDE of a directory created under /proc/net/rtl8192/ as
-> we can use proc subtree deletion to get rid of it and all its children.
-> 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: Jerry Chuang <jerry-chuang@realtek.com>
-> cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> cc: linux-wireless@vger.kernel.org
-> cc: devel@driverdev.osuosl.org
+Hi,
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Mon, 15 Apr 2013 15:20:54 +0300
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>The biggest difference is that there's now firmware running on the
+>chip.
+Will the firmware be released as free software at some point?
+
+Denis.
