@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxb.rambler.ru ([81.19.66.14]:61815 "EHLO mxb.rambler.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744Ab3DNLEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 07:04:11 -0400
-From: minimumlaw@rambler.ru
-To: linux-wireless@vger.kernel.org
-Cc: stable@vger.kernel.org, "Alex A. Mihaylov" <minimumlaw@rambler.ru>
-Subject: [PATCH] Fix transmit power troubles on some Ralink RT30xx cards
-Date: Sun, 14 Apr 2013 14:54:43 +0400
-Message-Id: <1365936883-19033-1-git-send-email-minimumlaw@rambler.ru> (sfid-20130414_130417_652852_C81D39AD)
+Received: from he.sipsolutions.net ([78.46.109.217]:49515 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933959Ab3DOMsB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 08:48:01 -0400
+Message-ID: <1366030075.8361.16.camel@jlt4.sipsolutions.net> (sfid-20130415_144806_490247_2D2A410E)
+Subject: Re: vht off-by-one nss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 15 Apr 2013 14:47:55 +0200
+In-Reply-To: <20130415123358.GA13843@magnum.frso.rivierawaves.com> (sfid-20130415_143825_436346_0083300D)
+References: <20130415100909.GA29924@magnum.frso.rivierawaves.com>
+	 <1366021975.8361.10.camel@jlt4.sipsolutions.net>
+	 <20130415123358.GA13843@magnum.frso.rivierawaves.com>
+	 (sfid-20130415_143825_436346_0083300D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+On Mon, 2013-04-15 at 14:33 +0200, Karl Beldan wrote:
 
-Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
-value in them EEPROM/EFUSE. In this case, we must use default value,
-but always used EEPROM/EFUSE value. As result we have tranmitt power
-range from -10dBm to +6dBm instead 0dBm to +16dBm.
+> > > +++ b/net/mac80211/cfg.c
+> > > @@ -389,7 +389,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
+> > >  	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
+> > >  		rinfo->flags |= RATE_INFO_FLAGS_VHT_MCS;
+> > >  		rinfo->mcs = ieee80211_rate_get_vht_mcs(rate);
+> > > -		rinfo->nss = ieee80211_rate_get_vht_nss(rate);
+> > > +		rinfo->nss = ieee80211_rate_get_vht_nss(rate) + 1;
+> > >  	} else {
+> > >  		struct ieee80211_supported_band *sband;
+> > >  		sband = sta->local->hw.wiphy->bands[
+> > > }
+> > 
+> > 
+> > Wouldn't this one also require an update for VHT radiotap in
+> > net/mac80211/rx.c around line 320 (RX_FLAG_VHT)?
+> > 
+> The radiotap field is set with ieee80211_rx_status.vht_nss, so no need.
 
-Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
-more for other RT30xx chips.
+And that's properly 1-based, rather than 0-based like in TX info? I
+guess I forgot all of this already, heh.
 
-Testen on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
-embedded Wi-Fi module.
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index a658b4b..92849e5 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4436,6 +4436,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 
- 	if (!rt2x00_rt(rt2x00dev, RT5390) &&
- 	    !rt2x00_rt(rt2x00dev, RT5392)) {
-+		u8 min_gain = rt2x00_rt(rt2x00dev, RT3070) ? 1 : 2;
-+
- 		rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
- 		if (rt2x00_rt(rt2x00dev, RT3070) ||
-@@ -4446,8 +4448,10 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 				      &rt2x00dev->cap_flags))
- 				rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
- 		}
--		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
--				  drv_data->txmixer_gain_24g);
-+		if (drv_data->txmixer_gain_24g >= min_gain) {
-+			rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
-+					  drv_data->txmixer_gain_24g);
-+		}
- 		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
- 	}
- 
--- 
-1.8.1.5
+johannes
 
