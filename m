@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59348 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755554Ab3DJI4A (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:48754 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751717Ab3DOKgH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 04:56:00 -0400
-Message-ID: <1365584151.8388.0.camel@jlt4.sipsolutions.net> (sfid-20130410_105607_589466_0149C2C9)
-Subject: Re: [Patch] mac80211: SMPS for AP Mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivekananda Holla <vivekanandah@posedge.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Apr 2013 10:55:51 +0200
-In-Reply-To: <516528C8.90509@posedge.com> (sfid-20130410_105443_117821_9F07C071)
-References: <516528C8.90509@posedge.com>
-	 (sfid-20130410_105443_117821_9F07C071)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 15 Apr 2013 06:36:07 -0400
+Received: by mail-oa0-f47.google.com with SMTP id n9so25058oag.20
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 03:36:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5168AFF8.2090808@lwfinger.net>
+References: <20130411082543.GA346@ArchPC.zedat.fu-berlin.de>
+	<5168AFF8.2090808@lwfinger.net>
+Date: Mon, 15 Apr 2013 12:36:06 +0200
+Message-ID: <CACna6rwAK_nTqg=kXb-0PwjD41Cv0VX1=Ey3jTj7ZECA-C7p_w@mail.gmail.com> (sfid-20130415_123612_240880_99D58BC2)
+Subject: Re: GSoC 2013 - b43 driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Patrick Steinhardt <steinhardt.ptk@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-10 at 14:24 +0530, Vivekananda Holla wrote:
-> Patch for SMPS mode for AP. This is to define a new ieee80211_tx_info flag to allow a lower AP driver to set RTS/CTS protection for a dynamic SMPS station
-> 
-> Signed-off-by: Vivekananda Holla <vivekanandah@posedge.com>
-> ---
->  include/net/mac80211.h             |    4 ++++
->  net/mac80211/rc80211_minstrel_ht.c |    3 +++
->  2 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 64faf01..48a950c 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -458,6 +458,9 @@ struct ieee80211_bss_conf {
->   * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
->   *    would be fragmented by size (this is optional, only used for
->   *    monitor injection).
-> + * @IEEE80211_TX_CTL_SMPS_SET_RTS: set the RTS/CTS protection mechanism
-> + *    for the packet at AP when SMPS mode at the station is 
-> + *    dynamic SMPS.
+2013/4/13 Larry Finger <Larry.Finger@lwfinger.net>:
+> I think that your coding experience makes you qualified to undertake the
+> coding necessary to improve the performance of b43 on the 14e4:432b device;
+> however, I recommend that you not attempt it as a GSoC project. The reason
+> is that those projects are highly visible, and what you are trying to do is
+> very difficult. The actual coding is likely not a problem, but knowing what
+> to code is not trivial. I would hate for you to fail in a way that would be
+> so completely obvious.
+>
+> As you probably know, b43 has been developed using reverse engineering (RE)
+> techniques. We have no knowledge of the internal workings of the chips.
+> Since the LP-PHY, more and more has been required by the driver. Earlier PHY
+> models did quite a lot in the firmware. With the N PHYs such as your device
+> has, the problem got even worse. and the implementation is more incomplete.
+> For instance, implementation of power regulation in the wireless chip has
+> barely been touched.
+>
+> At the moment, I am the only person doing any of the RE work, and I have
+> relatively little time to work on that. Much of the more recent development
+> has come from comparing MMIO dumps between wl and b43 to see what parts are
+> missing from b43. That requires an extremely good knowledge of the existing
+> driver, and that would take a long time to acquire.
+>
+> The b43 project welcomes your interest, and I hope you pursue it eventually,
+> but I still think you should find another project for the GSoC.
 
-Huh? No ... There are perfectly usable flags already inside each rate.
+I would love to see extra developer in b43 project, but I have to
+confirm what Larry has said. It's hard task and we're really missing
+specifications for the hardware.
 
-johannes
+There are few things that should be easy to add, like 5GHz support
+(most of the code is already there, it just needs enabling & testing)
+or maybe even (some) 802.11n features.
 
+Further improvements unfortunately are much more complicated or even
+impossible due to lack of documentation.
+
+You can try doing MMIO tracking and comparing with closed source
+driver, but it's not trivial and doesn't guarantee you'll notice
+important differences (not to mention understanding them).
+
+-- 
+Rafał
