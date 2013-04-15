@@ -1,165 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:40970 "EHLO mx3.wp.pl"
+Received: from mail.neratec.com ([80.75.119.105]:33101 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966255Ab3DQMH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:07:29 -0400
-From: stf_xl@wp.pl
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: [PATCH v2 02/11] rt2800: move rf init calibration code
-Date: Wed, 17 Apr 2013 14:08:11 +0200
-Message-Id: <1366200500-4661-3-git-send-email-stf_xl@wp.pl> (sfid-20130417_140807_156909_68C05977)
-In-Reply-To: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
-References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+	id S933959Ab3DOJ3S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 05:29:18 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: change DFS logging to use ath_dbg()
+Date: Mon, 15 Apr 2013 11:29:06 +0200
+Message-Id: <1366018146-4175-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130415_112923_220395_F48C2421)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <stf_xl@wp.pl>
+The DFS pattern detector was initially planned to reside on
+a higher layer and used generic pr_*() logging functions.
 
-Add separate function for rf init calibration code and use it
-on all init rf subroutines.
+Being part of ath9k, use ath_dbg() instead and make DFS log
+ouput selectable via ATH_DBG_DFS (0x20000) at runtime.
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+This patch does not contain functional modifications.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   54 ++++++++++++++++++------------
- 1 files changed, 32 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath9k/dfs.c               |    6 ---
+ .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |   43 ++++++++++--------
+ .../net/wireless/ath/ath9k/dfs_pattern_detector.h  |    6 ++-
+ drivers/net/wireless/ath/ath9k/dfs_pri_detector.c  |   46 ++++----------------
+ drivers/net/wireless/ath/ath9k/dfs_pri_detector.h  |   27 +++++++++++-
+ drivers/net/wireless/ath/ath9k/init.c              |    2 +-
+ 6 files changed, 63 insertions(+), 67 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 22c10e1..6e9ca3e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4396,6 +4396,19 @@ static u8 rt2800_init_rx_filter(struct rt2x00_dev *rt2x00dev,
- 	return rfcsr24;
+diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+index 508f8b3..7187d36 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs.c
++++ b/drivers/net/wireless/ath/ath9k/dfs.c
+@@ -55,12 +55,6 @@ ath9k_postprocess_radar_event(struct ath_softc *sc,
+ 	u8 rssi;
+ 	u16 dur;
+ 
+-	ath_dbg(ath9k_hw_common(sc->sc_ah), DFS,
+-		"pulse_bw_info=0x%x, pri,ext len/rssi=(%u/%u, %u/%u)\n",
+-		ard->pulse_bw_info,
+-		ard->pulse_length_pri, ard->rssi,
+-		ard->pulse_length_ext, ard->ext_rssi);
+-
+ 	/*
+ 	 * Only the last 2 bits of the BW info are relevant, they indicate
+ 	 * which channel the radar was detected in.
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+index 73fe8d6..491305c 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
+@@ -19,6 +19,7 @@
+ 
+ #include "dfs_pattern_detector.h"
+ #include "dfs_pri_detector.h"
++#include "ath9k.h"
+ 
+ /*
+  * tolerated deviation of radar time stamp in usecs on both sides
+@@ -142,6 +143,7 @@ channel_detector_create(struct dfs_pattern_detector *dpd, u16 freq)
+ {
+ 	u32 sz, i;
+ 	struct channel_detector *cd;
++	struct ath_common *common = ath9k_hw_common(dpd->ah);
+ 
+ 	cd = kmalloc(sizeof(*cd), GFP_ATOMIC);
+ 	if (cd == NULL)
+@@ -165,7 +167,8 @@ channel_detector_create(struct dfs_pattern_detector *dpd, u16 freq)
+ 	return cd;
+ 
+ fail:
+-	pr_err("failed to allocate channel_detector for freq=%d\n", freq);
++	ath_dbg(common, DFS,
++		"failed to allocate channel_detector for freq=%d\n", freq);
+ 	channel_detector_exit(dpd, cd);
+ 	return NULL;
+ }
+@@ -216,34 +219,34 @@ static bool
+ dpd_add_pulse(struct dfs_pattern_detector *dpd, struct pulse_event *event)
+ {
+ 	u32 i;
+-	bool ts_wraparound;
+ 	struct channel_detector *cd;
+ 
+-	if (dpd->region == NL80211_DFS_UNSET) {
+-		/*
+-		 * pulses received for a non-supported or un-initialized
+-		 * domain are treated as detected radars
+-		 */
++	/*
++	 * pulses received for a non-supported or un-initialized
++	 * domain are treated as detected radars for fail-safety
++	 */
++	if (dpd->region == NL80211_DFS_UNSET)
+ 		return true;
+-	}
+ 
+ 	cd = channel_detector_get(dpd, event->freq);
+ 	if (cd == NULL)
+ 		return false;
+ 
+-	ts_wraparound = (event->ts < dpd->last_pulse_ts);
+ 	dpd->last_pulse_ts = event->ts;
+-	if (ts_wraparound) {
+-		/*
+-		 * reset detector on time stamp wraparound
+-		 * with monotonic time stamps, this should never happen
+-		 */
+-		pr_warn("DFS: time stamp wraparound detected, resetting\n");
++	/* reset detector on time stamp wraparound, caused by TSF reset */
++	if (event->ts < dpd->last_pulse_ts)
+ 		dpd_reset(dpd);
+-	}
++
+ 	/* do type individual pattern matching */
+ 	for (i = 0; i < dpd->num_radar_types; i++) {
+-		if (cd->detectors[i]->add_pulse(cd->detectors[i], event) != 0) {
++		struct pri_detector *pd = cd->detectors[i];
++		struct pri_sequence *ps = pd->add_pulse(pd, event);
++		if (ps != NULL) {
++			ath_dbg(ath9k_hw_common(dpd->ah), DFS,
++				"DFS: radar found on freq=%d: id=%d, pri=%d, "
++				"count=%d, count_false=%d\n",
++				event->freq, pd->rs->type_id,
++				ps->pri, ps->count, ps->count_falses);
+ 			channel_detector_reset(dpd, cd);
+ 			return true;
+ 		}
+@@ -285,9 +288,10 @@ static struct dfs_pattern_detector default_dpd = {
+ };
+ 
+ struct dfs_pattern_detector *
+-dfs_pattern_detector_init(enum nl80211_dfs_regions region)
++dfs_pattern_detector_init(struct ath_hw *ah, enum nl80211_dfs_regions region)
+ {
+ 	struct dfs_pattern_detector *dpd;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	dpd = kmalloc(sizeof(*dpd), GFP_KERNEL);
+ 	if (dpd == NULL)
+@@ -296,10 +300,11 @@ dfs_pattern_detector_init(enum nl80211_dfs_regions region)
+ 	*dpd = default_dpd;
+ 	INIT_LIST_HEAD(&dpd->channel_detectors);
+ 
++	dpd->ah = ah;
+ 	if (dpd->set_dfs_domain(dpd, region))
+ 		return dpd;
+ 
+-	pr_err("Could not set DFS domain to %d. ", region);
++	ath_dbg(common, DFS,"Could not set DFS domain to %d", region);
+ 	kfree(dpd);
+ 	return NULL;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.h b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.h
+index cda52f3..90a5abc 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.h
++++ b/drivers/net/wireless/ath/ath9k/dfs_pattern_detector.h
+@@ -80,6 +80,8 @@ struct dfs_pattern_detector {
+ 	enum nl80211_dfs_regions region;
+ 	u8 num_radar_types;
+ 	u64 last_pulse_ts;
++	/* needed for ath_dbg() */
++	struct ath_hw *ah;
+ 
+ 	const struct radar_detector_specs *radar_spec;
+ 	struct list_head channel_detectors;
+@@ -92,10 +94,10 @@ struct dfs_pattern_detector {
+  */
+ #if defined(CONFIG_ATH9K_DFS_CERTIFIED)
+ extern struct dfs_pattern_detector *
+-dfs_pattern_detector_init(enum nl80211_dfs_regions region);
++dfs_pattern_detector_init(struct ath_hw *ah, enum nl80211_dfs_regions region);
+ #else
+ static inline struct dfs_pattern_detector *
+-dfs_pattern_detector_init(enum nl80211_dfs_regions region)
++dfs_pattern_detector_init(struct ath_hw *ah, enum nl80211_dfs_regions region)
+ {
+ 	return NULL;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
+index 5e48c55..9447be5 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
++++ b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
+@@ -23,28 +23,6 @@
+ #include "dfs_debug.h"
+ 
+ /**
+- * struct pri_sequence - sequence of pulses matching one PRI
+- * @head: list_head
+- * @pri: pulse repetition interval (PRI) in usecs
+- * @dur: duration of sequence in usecs
+- * @count: number of pulses in this sequence
+- * @count_falses: number of not matching pulses in this sequence
+- * @first_ts: time stamp of first pulse in usecs
+- * @last_ts: time stamp of last pulse in usecs
+- * @deadline_ts: deadline when this sequence becomes invalid (first_ts + dur)
+- */
+-struct pri_sequence {
+-	struct list_head head;
+-	u32 pri;
+-	u32 dur;
+-	u32 count;
+-	u32 count_falses;
+-	u64 first_ts;
+-	u64 last_ts;
+-	u64 deadline_ts;
+-};
+-
+-/**
+  * struct pulse_elem - elements in pulse queue
+  * @ts: time stamp in usecs
+  */
+@@ -393,8 +371,8 @@ static void pri_detector_exit(struct pri_detector *de)
+ 	kfree(de);
  }
  
-+static void rt2800_rf_init_calibration(struct rt2x00_dev *rt2x00dev,
-+				       const unsigned int rf_reg)
-+{
-+	u8 rfcsr;
-+
-+	rt2800_rfcsr_read(rt2x00dev, rf_reg, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, FIELD8(0x80), 1);
-+	rt2800_rfcsr_write(rt2x00dev, rf_reg, rfcsr);
-+	msleep(1);
-+	rt2x00_set_field8(&rfcsr, FIELD8(0x80), 0);
-+	rt2800_rfcsr_write(rt2x00dev, rf_reg, rfcsr);
-+}
-+
- static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
+-static bool pri_detector_add_pulse(struct pri_detector *de,
+-				   struct pulse_event *event)
++static struct pri_sequence *pri_detector_add_pulse(struct pri_detector *de,
++						   struct pulse_event *event)
  {
- 	u8 reg;
-@@ -4427,6 +4440,8 @@ static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
+ 	u32 max_updated_seq;
+ 	struct pri_sequence *ps;
+@@ -403,35 +381,29 @@ static bool pri_detector_add_pulse(struct pri_detector *de,
  
- static void rt2800_init_rfcsr_305x_soc(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-@@ -4463,6 +4478,9 @@ static void rt2800_init_rfcsr_305x_soc(struct rt2x00_dev *rt2x00dev)
+ 	/* ignore pulses not within width range */
+ 	if ((rs->width_min > event->width) || (rs->width_max < event->width))
+-		return false;
++		return NULL;
  
- static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
- {
-+	/* XXX vendor driver do this only for 3070 */
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
- 	rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
- 	rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-@@ -4486,6 +4504,8 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+ 	if ((ts - de->last_ts) < rs->max_pri_tolerance)
+ 		/* if delta to last pulse is too short, don't use this pulse */
+-		return false;
++		return NULL;
+ 	de->last_ts = ts;
  
- static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 2);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
-@@ -4536,6 +4556,8 @@ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+ 	max_updated_seq = pseq_handler_add_to_existing_seqs(de, ts);
  
- static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 0, 0xf0);
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x23);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
-@@ -4603,6 +4625,8 @@ static void rt2800_init_rfcsr_3352(struct rt2x00_dev *rt2x00dev)
+ 	if (!pseq_handler_create_sequences(de, ts, max_updated_seq)) {
+-		pr_err("failed to create pulse sequences\n");
+ 		pri_detector_reset(de, ts);
+ 		return false;
+ 	}
  
- static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 0, 0xa0);
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0xe1);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
-@@ -4639,6 +4663,8 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ 	ps = pseq_handler_check_detection(de);
  
- static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 0, 0x70);
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x81);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
-@@ -4674,6 +4700,8 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 2);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x0f);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
-@@ -4760,6 +4788,8 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 2);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
-@@ -4825,6 +4855,8 @@ static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
- {
-+	rt2800_rf_init_calibration(rt2x00dev, 30);
-+
- 	rt2800_rfcsr_write(rt2x00dev, 1, 0x3F);
- 	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
- 	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
-@@ -4882,28 +4914,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	    !rt2800_is_305x_soc(rt2x00dev))
- 		return 0;
- 
--	/*
--	 * Init RF calibration.
--	 */
--
--	if (rt2x00_rt(rt2x00dev, RT3290) ||
--	    rt2x00_rt(rt2x00dev, RT5390) ||
--	    rt2x00_rt(rt2x00dev, RT5392)) {
--		rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
--		rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
--		rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
--		msleep(1);
--		rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 0);
--		rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
--	} else {
--		rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
--		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
--		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
--		msleep(1);
--		rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
--		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+-	if (ps != NULL) {
+-		pr_info("DFS: radar found: pri=%d, count=%d, count_false=%d\n",
+-			 ps->pri, ps->count, ps->count_falses);
+-		pri_detector_reset(de, ts);
+-		return true;
 -	}
--
- 	if (rt2800_is_305x_soc(rt2x00dev)) {
- 		rt2800_init_rfcsr_305x_soc(rt2x00dev);
- 		return 0;
+-	pulse_queue_enqueue(de, ts);
+-	return false;
++	if (ps == NULL)
++		pulse_queue_enqueue(de, ts);
++
++	return ps;
+ }
+ 
+-struct pri_detector *
+-pri_detector_init(const struct radar_detector_specs *rs)
++struct pri_detector *pri_detector_init(const struct radar_detector_specs *rs)
+ {
+ 	struct pri_detector *de;
+ 	de = kzalloc(sizeof(*de), GFP_KERNEL);
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.h b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.h
+index 81cde9f..723962d 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.h
++++ b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.h
+@@ -20,9 +20,31 @@
+ #include <linux/list.h>
+ 
+ /**
++ * struct pri_sequence - sequence of pulses matching one PRI
++ * @head: list_head
++ * @pri: pulse repetition interval (PRI) in usecs
++ * @dur: duration of sequence in usecs
++ * @count: number of pulses in this sequence
++ * @count_falses: number of not matching pulses in this sequence
++ * @first_ts: time stamp of first pulse in usecs
++ * @last_ts: time stamp of last pulse in usecs
++ * @deadline_ts: deadline when this sequence becomes invalid (first_ts + dur)
++ */
++struct pri_sequence {
++	struct list_head head;
++	u32 pri;
++	u32 dur;
++	u32 count;
++	u32 count_falses;
++	u64 first_ts;
++	u64 last_ts;
++	u64 deadline_ts;
++};
++
++/**
+  * struct pri_detector - PRI detector element for a dedicated radar type
+  * @exit(): destructor
+- * @add_pulse(): add pulse event, returns true if pattern was detected
++ * @add_pulse(): add pulse event, returns pri_sequence if pattern was detected
+  * @reset(): clear states and reset to given time stamp
+  * @rs: detector specs for this detector element
+  * @last_ts: last pulse time stamp considered for this element in usecs
+@@ -34,7 +56,8 @@
+  */
+ struct pri_detector {
+ 	void (*exit)     (struct pri_detector *de);
+-	bool (*add_pulse)(struct pri_detector *de, struct pulse_event *e);
++	struct pri_sequence *
++	     (*add_pulse)(struct pri_detector *de, struct pulse_event *e);
+ 	void (*reset)    (struct pri_detector *de, u64 ts);
+ 
+ /* private: internal use only */
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 3be2eb0..6b275e0 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -577,7 +577,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	atomic_set(&ah->intr_ref_cnt, -1);
+ 	sc->sc_ah = ah;
+ 
+-	sc->dfs_detector = dfs_pattern_detector_init(NL80211_DFS_UNSET);
++	sc->dfs_detector = dfs_pattern_detector_init(ah, NL80211_DFS_UNSET);
+ 
+ 	if (!pdata) {
+ 		ah->ah_flags |= AH_USE_EEPROM;
 -- 
-1.7.4.4
+1.7.4.1
 
