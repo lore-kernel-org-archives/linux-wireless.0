@@ -1,117 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:46111 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752264Ab3DLAx1 (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:41580 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab3DOQcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 20:53:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Doug Anderson <dianders@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: fix use-after-free in beacon_ie processing
-Date: Thu, 11 Apr 2013 17:53:12 -0700
-Message-ID: <1365727993-20941-1-git-send-email-bzhao@marvell.com> (sfid-20130412_025332_356635_C35AC54D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 15 Apr 2013 12:32:36 -0400
+Received: by mail-wg0-f48.google.com with SMTP id f11so355391wgh.15
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 09:32:34 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH] mac80211: fix rate control tx handler for VHT rates
+Date: Mon, 15 Apr 2013 18:28:21 +0200
+Message-Id: <1366043301-6681-1-git-send-email-karl.beldan@gmail.com> (sfid-20130415_183241_816873_BA42B517)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-beacon_ie buffer is allocated in mwifiex_fill_new_bss_desc()
-and the buffer pointer is saved in bss_desc->beacon_buf.
-beacon_ie is freed before the function returns. However,
-bss_desc->beacon_buf is still being accessed afterwards.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Fix it by freeing beacon_ie (bss_desc->beacon_buf) in
-caller's scope.
+Handle VHT rates like HT ones, otherwise we easily trigger the pre-HT
+rates WARN_ON(rc_rate->idx >= sband->n_bitrates) which will set
+rc_rate->idx to -1.
 
-Reviewed-by: Doug Anderson <dianders@chromium.org>
-Reviewed-by: Paul Stewart <pstew@chromium.org>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/mwifiex/scan.c      |    8 ++++++++
- drivers/net/wireless/mwifiex/sta_ioctl.c |   14 +++++++++-----
- 2 files changed, 17 insertions(+), 5 deletions(-)
+I dared some reformatting to fit the WARN_ON for the VHT idx.
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index e7f6dea..37b24e8 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1533,10 +1533,18 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 	/* Make a copy of current BSSID descriptor */
- 	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
- 	       sizeof(priv->curr_bss_params.bss_descriptor));
-+
-+	/* The contents of beacon_ie will be copied to its own buffer
-+	 * in mwifiex_save_curr_bcn()
-+	 */
- 	mwifiex_save_curr_bcn(priv);
- 	spin_unlock_irqrestore(&priv->curr_bcn_buf_lock, flags);
- 
- done:
-+	/* beacon_ie buffer was allocated in function
-+	 * mwifiex_fill_new_bss_desc(). Free it now.
-+	 */
-+	kfree(bss_desc->beacon_buf);
- 	kfree(bss_desc);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index e6c9b2a..27729cf 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -140,12 +140,13 @@ int mwifiex_request_set_multicast_list(struct mwifiex_private *priv,
- /*
-  * This function fills bss descriptor structure using provided
-  * information.
-+ * beacon_ie buffer is allocated in this function. It is caller's
-+ * responsibility to free the memory.
-  */
- int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 			      struct cfg80211_bss *bss,
- 			      struct mwifiex_bssdescriptor *bss_desc)
- {
--	int ret;
- 	u8 *beacon_ie;
- 	size_t beacon_ie_len;
- 	struct mwifiex_bss_priv *bss_priv = (void *)bss->priv;
-@@ -165,6 +166,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 
- 	memcpy(bss_desc->mac_address, bss->bssid, ETH_ALEN);
- 	bss_desc->rssi = bss->signal;
-+	/* The caller of this function will free beacon_ie */
- 	bss_desc->beacon_buf = beacon_ie;
- 	bss_desc->beacon_buf_size = beacon_ie_len;
- 	bss_desc->beacon_period = bss->beacon_interval;
-@@ -182,10 +184,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- 	else
- 		bss_desc->bss_mode = NL80211_IFTYPE_STATION;
- 
--	ret = mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
--
--	kfree(beacon_ie);
--	return ret;
-+	return mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
- }
- 
- static int mwifiex_process_country_ie(struct mwifiex_private *priv,
-@@ -349,6 +348,11 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ net/mac80211/tx.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c93483f..cf522a2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -742,16 +742,17 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
  	}
  
- done:
-+	/* beacon_ie buffer was allocated in function
-+	 * mwifiex_fill_new_bss_desc(). Free it now.
-+	 */
-+	if (bss_desc)
-+		kfree(bss_desc->beacon_buf);
- 	kfree(bss_desc);
- 	return ret;
- }
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		struct ieee80211_tx_rate *rc_rate = &info->control.rates[i];
+ 		/*
+ 		 * make sure there's no valid rate following
+ 		 * an invalid one, just in case drivers don't
+ 		 * take the API seriously to stop at -1.
+ 		 */
+ 		if (inval) {
+-			info->control.rates[i].idx = -1;
++			rc_rate->idx = -1;
+ 			continue;
+ 		}
+-		if (info->control.rates[i].idx < 0) {
++		if (rc_rate->idx < 0) {
+ 			inval = true;
+ 			continue;
+ 		}
+@@ -760,36 +761,37 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		 * For now assume MCS is already set up correctly, this
+ 		 * needs to be fixed.
+ 		 */
+-		if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
+-			WARN_ON(info->control.rates[i].idx > 76);
++		if (rc_rate->flags & IEEE80211_TX_RC_MCS) {
++			WARN_ON(rc_rate->idx > 76);
++			continue;
++		}
++
++		if (rc_rate->flags & IEEE80211_TX_RC_VHT_MCS) {
++			WARN_ON(ieee80211_rate_get_vht_mcs(rc_rate) > 9);
+ 			continue;
+ 		}
+ 
+ 		/* set up RTS protection if desired */
+ 		if (rts)
+-			info->control.rates[i].flags |=
+-				IEEE80211_TX_RC_USE_RTS_CTS;
++			rc_rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
+ 
+ 		/* RC is busted */
+-		if (WARN_ON_ONCE(info->control.rates[i].idx >=
+-				 sband->n_bitrates)) {
+-			info->control.rates[i].idx = -1;
++		if (WARN_ON_ONCE(rc_rate->idx >= sband->n_bitrates)) {
++			rc_rate->idx = -1;
+ 			continue;
+ 		}
+ 
+-		rate = &sband->bitrates[info->control.rates[i].idx];
++		rate = &sband->bitrates[rc_rate->idx];
+ 
+ 		/* set up short preamble */
+ 		if (short_preamble &&
+ 		    rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+-			info->control.rates[i].flags |=
+-				IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
++			rc_rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
+ 
+ 		/* set up G protection */
+ 		if (!rts && tx->sdata->vif.bss_conf.use_cts_prot &&
+ 		    rate->flags & IEEE80211_RATE_ERP_G)
+-			info->control.rates[i].flags |=
+-				IEEE80211_TX_RC_USE_CTS_PROTECT;
++			rc_rate->flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+ 	}
+ 
+ 	return TX_CONTINUE;
 -- 
-1.7.0.2
+1.8.2
 
