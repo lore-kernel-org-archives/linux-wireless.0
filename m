@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from x1.w4w.guest.it ([77.95.174.1]:51935 "EHLO x1.w4w.guest.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935225Ab3DJKYP convert rfc822-to-8bit (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:52278 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969Ab3DOOAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 06:24:15 -0400
-Received: from [46.182.93.144] (helo=[192.168.1.33])
-	by x1.w4w.guest.it with esmtpa (Exim 4.80.1)
-	(envelope-from <danjde@msw.it>)
-	id 1UPrw6-0001mQ-0c
-	for linux-wireless@vger.kernel.org; Wed, 10 Apr 2013 12:07:26 +0200
-Message-ID: <516539DC.8060004@msw.it> (sfid-20130410_122424_229038_BFE71355)
-Date: Wed, 10 Apr 2013 12:07:24 +0200
-From: Davide Marchi <danjde@msw.it>
+	Mon, 15 Apr 2013 10:00:33 -0400
+Received: from smtp06.msg.oleane.net (smtp06.mail.priv [172.17.20.115])
+	by smtp-out06.msg.oleane.net with ESMTP id r3FE0VQl011315
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 16:00:31 +0200
+Received: from RD9 ([195.6.104.67])
+	by smtp06.msg.oleane.net (MTA) with ESMTP id r3FDdlH2028203
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 15:39:47 +0200
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
+Subject: mesh questions/suggestion about airtime metric and device constant in mesh_hwmp.c
+Date: Mon, 15 Apr 2013 15:39:47 +0200
+Message-ID: <000601ce39de$b26e2950$174a7bf0$@acksys.fr> (sfid-20130415_160038_072047_2BA4F555)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: realtek usb wifi based on "rtl8192cu"
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi friends,
-on realtek usb wifi based on "rtl8192cu",
-using kernel 3.8.3.x or 3.8.6 the device seem work good, but is unable 
-to connect. Infinitely it ask me the wep/wpa key..
+Hi all,
 
-I've tested using kernel "Linux  3.8.3-103.fc17.x86_64 #1 SMP Mon Mar 18 
-15:46:01 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux"
-and 3.8.6 vanilla (from kernel.org)
+The airtime_link_metric_get()  function follows closely section 13.9 of the
+standard, except for the "channel access overhead" which is said to depend
+on the PHY, headers, etc. 
+Hence I understand that a complete implementation is not trivial.
 
-Asking to Larry Finger he says that from kernel 3.8.5 this issues is 
-fixed, but is not so, for my experience.
+The 'device_constant' variable is given the constant value '1<<ARITH_SHIFT',
+which means 1 microsecond if I am correct. But the smallest possible
+duration for the PPDU header is 20 microseconds in non-HT or 24 us in HT, as
+shown in section 20.3.2
 
-lsusb:
-Bus 001 Device 003: ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 
-802.11n WLAN Adapter
+For the test frame of 8192 bits, say at 300Mbps (MCS15), Bt/r = the
+currently computed airtime is 28 instead of 51, underevaluated by -45% !
+Since the value accumulates on the mesh path, it may make a big difference
+for the path selection.
+
+Questions:
+Even if device_constant is kept as a constant, shouldn't we set it to
+something more realistic, like 20 or 24 ?
+(I mean 20<<ARITH_SHIFT)
+Does the standard really mean to include the PPDU header ?
+
+(By the way, I understand that this value should also include the DIFS, and
+maybe the ACK, so it should be much greater than 20)
+
+Regards,
+
+Jean-Pierre Tosoni
 
 
-many thanks
-
-Davide
-Italy
-
-
-
--- 
-cosmogoniA
-cosmogoniA<http://www.cosmogonia.org/>
-noprovarenofareononfarenonc'èprovare
 
