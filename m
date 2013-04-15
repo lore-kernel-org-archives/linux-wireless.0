@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:37120 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967984Ab3DSLNe (ORCPT
+Received: from mxout1.rambler.ru ([81.19.67.58]:2845 "EHLO mxout1.rambler.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932124Ab3DOIXq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 07:13:34 -0400
-Received: by mail-ie0-f178.google.com with SMTP id aq17so3011007iec.37
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 04:13:34 -0700 (PDT)
+	Mon, 15 Apr 2013 04:23:46 -0400
+From: "Alex Mihaylov" <minimumlaw@rambler.ru>
+To: "Gertjan van Wingerde" <gwingerde@gmail.com>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org
+Reply-To: "Alex Mihaylov" <minimumlaw@rambler.ru>
+Subject: RE: Re: [PATCH v2] rt2x00: Fix transmit power troubles on some Ralink RT30xx cards
+Date: Mon, 15 Apr 2013 12:18:32 +0400
 MIME-Version: 1.0
-In-Reply-To: <CAL1gcdNQMRyiR+dyuPWYFCfokG9azoZugFQOqAZqt2x4UbKoLA@mail.gmail.com>
-References: <1366201848-18009-1-git-send-email-stf_xl@wp.pl>
-	<1366201848-18009-3-git-send-email-stf_xl@wp.pl>
-	<CAL1gcdNQMRyiR+dyuPWYFCfokG9azoZugFQOqAZqt2x4UbKoLA@mail.gmail.com>
-Date: Fri, 19 Apr 2013 13:13:34 +0200
-Message-ID: <CAGXE3d-a00=4edmbpEgjkDEuax+bnkqJJ70osDhUMe__Jx_0=w@mail.gmail.com> (sfid-20130419_131341_865087_5B0AF999)
-Subject: Re: [rt2x00-users] [PATCH 2/2] rt2800: nulify all last words of TXWI
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+In-Reply-To: <CAL1gcdP90HGCPxw_L6mph3D5GoJevg_oJyuBUW9Uxg6N8AfxvA@mail.gmail.com>
+Message-Id: <1366013912.676272.13358.5267@saddam4.rambler.ru> (sfid-20130415_102350_662557_9BA3B0F9)
+References: <CAL1gcdP90HGCPxw_L6mph3D5GoJevg_oJyuBUW9Uxg6N8AfxvA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gertjan,
 
-On Fri, Apr 19, 2013 at 11:49 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Wouldn't it be easier / better to simply clear the whole descriptor at
-> the start, instead of selective clearing parts of it after everything
-> has been written already?
+Good day!
+> > From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+> > Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> > value in them EEPROM/EFUSE. In this case, we must use default value,
+> > but always used EEPROM/EFUSE value. As result we have tranmitt power
+> > range from -10dBm to +6dBm instead 0dBm to +16dBm.
 
-This would add a number of unneeded writes to DMA coherent memory.
-And since the descriptor is initialized word by word Stanislaw's approach
-looks reasonable to me.
+> > Signed-off-by: Alex A. Mihaylov <minimumlaw@rambler.ru>
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+ 
+> Could you explain how you have come to this patch?
+> Is this behavior of the Ralink provided driver that you replicated
+> here, or have you come to this approach in an other way?
 
-Helmut
+Yes, vendor driver have this code in chips/rt3070.c (function NICInitRT3070RFRegisters) and chips/rt30xx.c (function RT30xxLoadRFNormalModeSetup) files.
+Look like this:
+[skipped]
+if (pAd->TxMixerGain24G >= 2)
+{
+      RFValue &= (~0x7);  /* clean bit [2:0]*/
+      RFValue |= pAd->TxMixerGain24G;
+}
+RT30xxWriteRFRegister(pAd, RF_R17, RFValue);
+[skipped]
+and have differents only in constants (2 in rt30xx.c and one in tr3070.c). TxPower i messaurment on power detector, connected directly to module.
