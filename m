@@ -1,210 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58852 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760227Ab3DCQsr (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:60009 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467Ab3DOPOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 12:48:47 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 1/2] mac80211:  Add vif hash for multi-station RX performance.
-Date: Wed,  3 Apr 2013 09:48:17 -0700
-Message-Id: <1365007698-25295-1-git-send-email-greearb@candelatech.com> (sfid-20130403_184908_772897_29241D1E)
+	Mon, 15 Apr 2013 11:14:10 -0400
+Received: by mail-we0-f170.google.com with SMTP id z2so3744370wey.15
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 08:14:08 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH 1/2] mac80211: VHT off-by-one NSS
+Date: Mon, 15 Apr 2013 17:09:29 +0200
+Message-Id: <1366038570-12457-1-git-send-email-karl.beldan@gmail.com> (sfid-20130415_171419_407874_4CB69D2B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-When one has multiple station VIFS all connected to the same
-AP, the rx logic becomes a linear walk of all stations.  To
-improve performance in this case, hash the station VIFs on
-the VIF MAC.  This significantly improves performance:  70Mbps
-without the patch, 190Mbps with patch, when using 50 stations
-receiving TCP traffic.
+The number of VHT spatial streams (NSS) is found in:
+- s8 ieee80211_tx_rate.rate.idx[6:4] (tx - filled by rate control)
+- u8 ieee80211_rx_status.vht_nss     (rx - filled by driver)
+Tx discriminates valid rates indexes with the sign bit and encodes NSS
+starting from 0 to 7 (note this matches some hw encodings e.g IWLMVM).
+Rx does not have the same constraints, and encodes NSS starting from 1
+to 8 (note this matches what wireshark expects in the radiotap header).
 
-Probably not many people doing this, so not worth pushing upstream
-at this time.
+To handle ieee80211_tx_rate.rate.idx[6:4] ieee80211_rate_set_vht() and
+ieee80211_rate_get_vht_nss() assume their nss parameter and return value
+respectively runs from 0 to 7.
+ATM, there are only 2 users of these: cfg.c:sta_set_rate_info_t() and
+iwlwifi/mvm/tx.c:iwl_mvm_hwrate_to_tx_control(), but both assume nss
+runs from 1 to 8.
+This patch fixes this inconsistency by making ieee80211_rate_set_vht()
+and ieee80211_rate_get_vht_nss() handle an nss running from 1 to 8.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
+This might feel very verbose for such a trivial thing.
 
-Think I fixed the station matching issues Johannes mentioned.
+ include/net/mac80211.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-:100644 100644 b985722... 84f1b73... M	net/mac80211/ieee80211_i.h
-:100644 100644 c6844ad... a23a103... M	net/mac80211/rx.c
-:100644 100644 c465b1d... 34351dd... M	net/mac80211/sta_info.c
-:100644 100644 4947341... 227fce7... M	net/mac80211/sta_info.h
- net/mac80211/ieee80211_i.h |    3 +-
- net/mac80211/rx.c          |   15 +++++++++++++
- net/mac80211/sta_info.c    |   51 +++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/sta_info.h    |    7 +++++-
- 4 files changed, 71 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b985722..84f1b73 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -985,7 +985,8 @@ struct ieee80211_local {
- 	spinlock_t tim_lock;
- 	unsigned long num_sta;
- 	struct list_head sta_list;
--	struct sta_info __rcu *sta_hash[STA_HASH_SIZE];
-+	struct sta_info __rcu *sta_hash[STA_HASH_SIZE]; /* By station addr */
-+	struct sta_info __rcu *sta_vhash[STA_HASH_SIZE]; /* By VIF mac addr */
- 	struct timer_list sta_cleanup;
- 	int sta_generation;
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c6844ad..a23a103 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3152,6 +3152,20 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	if (ieee80211_is_data(fc)) {
- 		prev_sta = NULL;
- 
-+		/* Check for Station VIFS by hashing on the destination MAC
-+		 * (ie, local sdata MAC).  This changes 'promisc' behaviour,
-+		 * but not sure that is a bad thing.
-+		 */
-+		if ((!is_multicast_ether_addr(hdr->addr1)) &&
-+		    (local->monitors == 0) && (local->cooked_mntrs == 0)) {
-+			sta = sta_info_get_by_vif(local, hdr->addr1, hdr->addr2);
-+			if (sta) {
-+				rx.sta = sta;
-+				rx.sdata = sta->sdata;
-+				goto rx_and_done;
-+			}
-+		}
-+
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
- 			if (!prev_sta) {
- 				prev_sta = sta;
-@@ -3169,6 +3183,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 			rx.sta = prev_sta;
- 			rx.sdata = prev_sta->sdata;
- 
-+		rx_and_done:
- 			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
- 				return;
- 			goto out;
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c465b1d..34351dd 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -77,19 +77,42 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
- 				      lockdep_is_held(&local->sta_mtx));
- 	if (!s)
--		return -ENOENT;
-+		goto try_lhash;
-+	
- 	if (s == sta) {
- 		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
- 				   s->hnext);
--		return 0;
-+		goto try_lhash;
- 	}
- 
- 	while (rcu_access_pointer(s->hnext) &&
- 	       rcu_access_pointer(s->hnext) != sta)
- 		s = rcu_dereference_protected(s->hnext,
--					lockdep_is_held(&local->sta_mtx));
-+					      lockdep_is_held(&local->sta_mtx));
- 	if (rcu_access_pointer(s->hnext)) {
- 		rcu_assign_pointer(s->hnext, sta->hnext);
-+		goto try_lhash;
-+	}
-+
-+	/* Remove from the local VIF addr hash */
-+try_lhash:
-+	s = rcu_dereference_protected(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
-+				      lockdep_is_held(&local->sta_mtx));
-+	if (!s)
-+		return -ENONET;
-+	
-+	if (s == sta) {
-+		rcu_assign_pointer(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)],
-+				   s->vnext);
-+		return 0;
-+	}
-+
-+	while (rcu_access_pointer(s->vnext) &&
-+	       rcu_access_pointer(s->vnext) != sta)
-+		s = rcu_dereference_protected(s->vnext,
-+					      lockdep_is_held(&local->sta_mtx));
-+	if (rcu_access_pointer(s->vnext)) {
-+		rcu_assign_pointer(s->vnext, sta->vnext);
- 		return 0;
- 	}
- 
-@@ -251,6 +274,23 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 	return sta;
- }
- 
-+struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
-+				     const u8 *vif_addr, const u8 * sta_addr) {
-+	struct sta_info *sta;
-+
-+	sta = rcu_dereference_check(local->sta_vhash[STA_HASH(vif_addr)],
-+				    lockdep_is_held(&local->sta_mtx));
-+	while (sta) {
-+		if (ether_addr_equal(sta->sdata->vif.addr, vif_addr) &&
-+		    ether_addr_equal(sta->sta.addr, sta_addr))
-+			break;
-+		sta = rcu_dereference_check(sta->vnext,
-+					    lockdep_is_held(&local->sta_mtx));
-+	}
-+	return sta;
-+}
-+
-+
- struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
- 				     int idx)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0dde213..2317ca9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -601,8 +601,8 @@ static inline void ieee80211_rate_set_vht(struct ieee80211_tx_rate *rate,
+ 					  u8 mcs, u8 nss)
  {
-@@ -300,6 +340,11 @@ static void sta_info_hash_add(struct ieee80211_local *local,
- 	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
- 	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
- 
-+	if (sta->sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		sta->vnext = local->sta_vhash[STA_HASH(sta->sdata->vif.addr)];
-+		rcu_assign_pointer(local->sta_vhash[STA_HASH(sta->sdata->vif.addr)], sta);
-+	}
-+
- 	rcu_assign_pointer(sta->sdata->some_sta, sta);
+ 	WARN_ON(mcs & ~0xF);
+-	WARN_ON(nss & ~0x7);
+-	rate->idx = (nss << 4) | mcs;
++	WARN_ON((nss - 1) & ~0x7);
++	rate->idx = ((nss - 1) << 4) | mcs;
  }
  
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 4947341..227fce7 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -227,7 +227,8 @@ struct sta_ampdu_mlme {
-  * mac80211 is communicating with.
-  *
-  * @list: global linked list entry
-- * @hnext: hash table linked list pointer
-+ * @hnext: hash table linked list pointer, by (remote) station MAC
-+ * @vnext: hash table linked list pointer, by VIF MAC
-  * @local: pointer to the global information
-  * @sdata: virtual interface this station belongs to
-  * @ptk: peer key negotiated with this station, if any
-@@ -304,6 +305,7 @@ struct sta_info {
- 	struct list_head list;
- 	struct rcu_head rcu_head;
- 	struct sta_info __rcu *hnext;
-+	struct sta_info __rcu *vnext;
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
-@@ -507,6 +509,9 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 				  const u8 *addr);
+ static inline u8
+@@ -614,7 +614,7 @@ ieee80211_rate_get_vht_mcs(const struct ieee80211_tx_rate *rate)
+ static inline u8
+ ieee80211_rate_get_vht_nss(const struct ieee80211_tx_rate *rate)
+ {
+-	return rate->idx >> 4;
++	return (rate->idx >> 4) + 1;
+ }
  
-+struct sta_info *sta_info_get_by_vif(struct ieee80211_local *local,
-+				     const u8 *vif_addr, const u8 *sta_addr);
-+
- static inline
- void for_each_sta_info_type_check(struct ieee80211_local *local,
- 				  const u8 *addr,
+ /**
 -- 
-1.7.3.4
+1.8.2
 
