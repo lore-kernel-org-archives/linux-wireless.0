@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63545 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755538Ab3DWOZt convert rfc822-to-8bit (ORCPT
+Received: from hub022-ca-1.exch022.serverdata.net ([64.78.56.53]:16521 "EHLO
+	HUB022-ca-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753317Ab3DOKnj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 10:25:49 -0400
-Message-ID: <1366727135.7932.133.camel@smile> (sfid-20130423_163407_717193_D501A18F)
-Subject: Re: [PATCH] wireless: ath6kl: re-use native helper to parse MAC
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 23 Apr 2013 17:25:35 +0300
-In-Reply-To: <1366723941-23920-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1366723941-23920-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	Mon, 15 Apr 2013 06:43:39 -0400
+Message-ID: <516BD9D7.3060804@posedge.com> (sfid-20130415_124343_618919_2D15DB9F)
+Date: Mon, 15 Apr 2013 16:13:35 +0530
+From: Vivekananda Holla <vivekanandah@posedge.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Patch] mac80211: add rts-cts for dynamic SMPS stations
+References: <516B9F21.2080304@posedge.com> <1366017844.8361.7.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366017844.8361.7.camel@jlt4.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-23 at 16:32 +0300, Andy Shevchenko wrote: 
-> There is native mac_pton() function which helps to parse MAC.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/debug.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-> index fe38b83..9824cb0 100644
-> --- a/drivers/net/wireless/ath/ath6kl/debug.c
-> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
-> @@ -1241,19 +1241,14 @@ static ssize_t ath6kl_force_roam_write(struct file *file,
->  	size_t len;
->  	u8 bssid[ETH_ALEN];
->  	int i;
+Hi Johannes,
 
-It seems i shall be removed as well.
+I ran checkpatch.pl script and found some trailing white spaces in the patch which i have now
+corrected.
+ 
+Also,i had initially placed my code in minstrel_ht_get_rate but saw that the minstrel code is being
+changed.
+hence, moved the code in to ieee80211_tx_h_rate_ctrl function.
 
-> -	int addr[ETH_ALEN];
->  
->  	len = min(count, sizeof(buf) - 1);
->  	if (copy_from_user(buf, user_buf, len))
->  		return -EFAULT;
->  	buf[len] = '\0';
->  
-> -	if (sscanf(buf, "%02x:%02x:%02x:%02x:%02x:%02x",
-> -		   &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5])
-> -	    != ETH_ALEN)
-> +	if (!mac_pton(buf, bssid))
->  		return -EINVAL;
-> -	for (i = 0; i < ETH_ALEN; i++)
-> -		bssid[i] = addr[i];
->  
->  	ret = ath6kl_wmi_force_roam_cmd(ar->wmi, bssid);
->  	if (ret)
+there is a check in this function
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+        if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
+            WARN_ON(info->control.rates[i].idx > 76);
+            continue;
+        }
+ 
+I feel it would be okay to move  the code for dyn_smps within this loop as
+this would solve the check for MCS rates.
+
+however i am not sure whether all ht rates flag settings need to be handled within minstrel_ht?
+
+        if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
+            WARN_ON(info->control.rates[i].idx > 76);
+
++        if (dyn_smps) {
++            if ((info->control.rates[i].idx > 7) &&
++                (info->control.rates[i].idx != 32))
++                info->control.rates[i].flags |=
++                    IEEE80211_TX_RC_USE_RTS_CTS;    
+
+
+            continue;
+        }
+
+awaiting your inputs
+
+thanks and regards
+Vivek
+
+On 04/15/2013 02:54 PM, Johannes Berg wrote:
+> Vivek,
+>
+> Please work with some of your colleagues at posedge to submit a proper
+> patch. This is formatted completely wrongly in many ways.
+>
+>> +        if (dyn_smps) {
+>> +            if ((info->control.rates[i].idx > 7) &&
+>> +                (info->control.rates[i].idx != 32))
+> This is also completely wrong. (hint, there are non-HT bitrates still)
+>
+> johannes
+>
+
