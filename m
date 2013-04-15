@@ -1,42 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto-hs-216-138-233-67.s-ip.magma.ca ([216.138.233.67]:51402
-	"HELO yow.sam-i-am.me" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S934972Ab3DHWw7 (ORCPT
+Received: from smtpout1.wanadoo.co.uk ([80.12.242.29]:28483 "EHLO
+	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933210Ab3DOKUK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 18:52:59 -0400
-Date: Mon, 8 Apr 2013 18:46:15 -0400
-From: Sean MacLennan <seanm@seanm.ca>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Howells <dhowells@redhat.com>, gregkh@suse.de,
-	viro@ZenIV.linux.org.uk, awong1@novell.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: The rtl8192e procfs-based debug interface seems very broken
-Message-ID: <20130408184615.38b20264@lappy.seanm.ca> (sfid-20130409_005313_492633_59354436)
-In-Reply-To: <51634550.3090300@lwfinger.net>
-References: <17570.1365415364@warthog.procyon.org.uk>
-	<51634550.3090300@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 15 Apr 2013 06:20:10 -0400
+Date: Mon, 15 Apr 2013 12:20:06 +0200 (CEST)
+From: nick@nhthomas.freeserve.co.uk
+Reply-To: nick@nhthomas.freeserve.co.uk
+To: Mohammed Shafi <shafi.wireless@gmail.com>,
+	nick@nhthomas.freeserve.co.uk
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <20061237.18971366021207041.JavaMail.www@wwinf3719> (sfid-20130415_122014_898541_86CA98B8)
+In-Reply-To: <CAD2nsn3GicfGbmwNOpdFP8kKgO0X6HU1bcRBHiP89p2UaLsxxg@mail.gmail.com>
+Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 08 Apr 2013 17:31:44 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-> David,
+Hi Mohammed, did you get chance to look at the corrupted MAC address problem?
+
+Regards
+
+Nick Thomas
+
+
+> Message Received: Mar 22 2013, 05:28 AM
+> From: "Mohammed Shafi" 
+> To: nick@nhthomas.freeserve.co.uk
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
 > 
-> That whole driver is quite broken.
+> On Thu, Mar 21, 2013 at 7:55 PM,  wrote:
+> > Hi Mohammed,
+> >
+> > OK, so I added the same printks further down in that function.
+> > There is a memcpy in there, and I added the same debug just after the memcpy.
+> >
+> > And, the eth_hdr->h_dest has been changed to a wrong MAC address - by something.
+> >
+> > And, it must be something wrong in skb_push .
 > 
-> My initial response would be to delete the whole procfs structure. I
-> have one of those devices, but I never use it. At the moment, I do
-> not have time to add locking and test the changes.
+> good Nick, I' ll try to analyze this.
+> what platform are you using ? (is it a big/little endian)
+> 
+> >
+> >
+> > Regards
+> >
+> > Nick
+> >
+> >
+> >
+> >
+> >> Message Received: Mar 21 2013, 02:09 PM
+> >> From: nick@nhthomas.freeserve.co.uk
+> >> To: "Mohammed Shafi"
+> >> Cc: linux-wireless@vger.kernel.org
+> >> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >>
+> >>
+> >> Hi Mohammed,
+> >>
+> >> I've added some debug at the top of ath6kl_wmi_dix_2_dot3 function.
+> >>
+> >> Just after:
+> >>
+> >> eth_hdr = (struct ethhdr *) skb->data;
+> >> type = eth_hdr->h_proto;
+> >>
+> >> I added some debug to print all the values of eth_hdr->h_dest and eth_hdr->h_source .
+> >> And, all look correct at that point.
+> >>
+> >> Regards
+> >>
+> >> Nick
+> >>
+> >>
+> >> > Message Received: Mar 21 2013, 01:35 PM
+> >> > From: nick@nhthomas.freeserve.co.uk
+> >> > To: "Mohammed Shafi"
+> >> > Cc: linux-wireless@vger.kernel.org
+> >> > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >> >
+> >> > Hi Mohammed,
+> >> >
+> >> > What do you need to me to do on this?
+> >> > I see that function in the wmi.c file.
+> >> >
+> >> > Do you want me to add some debug printk's in there somewhere?
+> >> >
+> >> > Regards
+> >> >
+> >> > Nick
+> >> >
+> >> > > Message Received: Mar 21 2013, 11:42 AM
+> >> > > From: "Mohammed Shafi"
+> >> > > To: nick@nhthomas.freeserve.co.uk
+> >> > > Cc: linux-wireless@vger.kernel.org
+> >> > > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+> >> > >
+> >> > > On Wed, Mar 20, 2013 at 10:33 PM, wrote:
+> >> > > >
+> >> > > > Here is another example, taken from Wireshark.
+> >> > > > It's an ARP response, effectively saying IP address 192.168.0.107 is at 00:03:7f:20:50:59
+> >> > > >
+> >> > > > This is a message coming out of the wifi adaptor, and the above numbers are the IP address, and MAC address of the wifi device.
+> >> > > >
+> >> > > > 7f 20 50 59 00 24 00 03 7f 20 50 59 08 06 00 01
+> >> > > > 08 00 06 04 00 02 00 03 7f 20 50 59 c0 a8 00 07
+> >> > > > 20 cf 30 94 83 7b c0 a8 00 65
+> >> > > >
+> >> > > > What we see here is the Destination MAC address is 7f:20:50:59:00:24 (first 6 bytes).
+> >> > > > But that's wrong. It should be 20:cf:30:94:83:7b .
+> >> > > >
+> >> > > > The other parts look right though:
+> >> > > > 00:03:7f:20:50:59 is the MAC of the wifi device.
+> >> > > > c0 a8 00 65 is 192.168.0.101 which is the IP address of the destination.
+> >> > > > c0 a8 00 07 is the IP address of the wifi adaptor itself.
+> >> > >
+> >> > > let us check in ath6kl_wmi_dix_2_dot3, that should give us some clue.
+> >> > >
+> >> > > >
+> >> > > > So, where in the code is the first 6 bytes generated ?
+> >> > > >
+> >> > > >
+> >> > > > Regards
+> >> > > >
+> >> > > > Nick
+> >> > >
+> >> > >
+> >> > >
+> >> > > --
+> >> > > thanks,
+> >> > > shafi
+> >> > > --
+> >> > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> > > the body of a message to majordomo@vger.kernel.org
+> >> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >> > >
+> >> >
+> >> > --
+> >> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> > the body of a message to majordomo@vger.kernel.org
+> >> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >> >
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >>
+> >
+> 
+> 
+> 
+> -- 
+> thanks,
+> shafi
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> 
 
-The driver isn't optimal, but I use it daily in one laptop. So it does
-work, it just has a few quirks :D
-
-Is the procfs structure only used for debugging? Unless it is used by
-user mode tools, I have never used it. I may try quickly commenting it
-out and see if things still work.
-
-Cheers,
-   Sean
