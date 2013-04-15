@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:45074 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753870Ab3DMBIM (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:37954 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942Ab3DOHeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 21:08:12 -0400
-Received: by mail-qa0-f43.google.com with SMTP id i13so74592qae.2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2013 18:08:10 -0700 (PDT)
-Message-ID: <5168AFF8.2090808@lwfinger.net> (sfid-20130413_030816_189759_9641952B)
-Date: Fri, 12 Apr 2013 20:08:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Apr 2013 03:34:36 -0400
 MIME-Version: 1.0
-To: Patrick Steinhardt <steinhardt.ptk@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: GSoC 2013 - b43 driver
-References: <20130411082543.GA346@ArchPC.zedat.fu-berlin.de>
-In-Reply-To: <20130411082543.GA346@ArchPC.zedat.fu-berlin.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
+References: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
+Date: Mon, 15 Apr 2013 09:34:35 +0200
+Message-ID: <CAL1gcdP90HGCPxw_L6mph3D5GoJevg_oJyuBUW9Uxg6N8AfxvA@mail.gmail.com> (sfid-20130415_093445_106999_453C0410)
+Subject: Re: [PATCH v2] rt2x00: Fix transmit power troubles on some Ralink
+ RT30xx cards
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: minimumlaw@rambler.ru
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick,
+On Mon, Apr 15, 2013 at 5:29 AM,  <minimumlaw@rambler.ru> wrote:
+> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+>
+> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> value in them EEPROM/EFUSE. In this case, we must use default value,
+> but always used EEPROM/EFUSE value. As result we have tranmitt power
+> range from -10dBm to +6dBm instead 0dBm to +16dBm.
+>
+> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
+> more for other RT30xx chips.
+>
+> Tested on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
+> embedded Wi-Fi module.
+>
+> Signed-off-by: Alex A. Mihaylov <minimumlaw@rambler.ru>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index a658b4b..92849e5 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -4436,6 +4436,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>
+>         if (!rt2x00_rt(rt2x00dev, RT5390) &&
+>             !rt2x00_rt(rt2x00dev, RT5392)) {
+> +               u8 min_gain = rt2x00_rt(rt2x00dev, RT3070) ? 1 : 2;
+> +
+>                 rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+>                 rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
+>                 if (rt2x00_rt(rt2x00dev, RT3070) ||
+> @@ -4446,8 +4448,10 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>                                       &rt2x00dev->cap_flags))
+>                                 rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
+>                 }
+> -               rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+> -                                 drv_data->txmixer_gain_24g);
+> +               if (drv_data->txmixer_gain_24g >= min_gain) {
+> +                       rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+> +                                         drv_data->txmixer_gain_24g);
+> +               }
+>                 rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+>         }
+>
 
-I think that your coding experience makes you qualified to undertake the coding 
-necessary to improve the performance of b43 on the 14e4:432b device; however, I 
-recommend that you not attempt it as a GSoC project. The reason is that those 
-projects are highly visible, and what you are trying to do is very difficult. 
-The actual coding is likely not a problem, but knowing what to code is not 
-trivial. I would hate for you to fail in a way that would be so completely obvious.
+Could you explain how you have come to this patch?
+Is this behavior of the Ralink provided driver that you replicated
+here, or have you come to this approach in an other way?
 
-As you probably know, b43 has been developed using reverse engineering (RE) 
-techniques. We have no knowledge of the internal workings of the chips. Since 
-the LP-PHY, more and more has been required by the driver. Earlier PHY models 
-did quite a lot in the firmware. With the N PHYs such as your device has, the 
-problem got even worse. and the implementation is more incomplete. For instance, 
-implementation of power regulation in the wireless chip has barely been touched.
-
-At the moment, I am the only person doing any of the RE work, and I have 
-relatively little time to work on that. Much of the more recent development has 
-come from comparing MMIO dumps between wl and b43 to see what parts are missing 
-from b43. That requires an extremely good knowledge of the existing driver, and 
-that would take a long time to acquire.
-
-The b43 project welcomes your interest, and I hope you pursue it eventually, but 
-I still think you should find another project for the GSoC.
-
-Larry
-
+---
+Gertjan
