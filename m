@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2720 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932087Ab3DYUQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Apr 2013 16:16:10 -0400
-Message-ID: <51798EF9.9020803@broadcom.com> (sfid-20130425_221614_498274_48755A53)
-Date: Thu, 25 Apr 2013 22:15:53 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Piotr Haber" <phaber@broadcom.com>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.9] brcmsmac: Fix merge issue
-References: <1366885629-11382-1-git-send-email-phaber@broadcom.com>
-In-Reply-To: <1366885629-11382-1-git-send-email-phaber@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:49542 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716Ab3DONGb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Apr 2013 09:06:31 -0400
+Message-ID: <1366031187.8361.17.camel@jlt4.sipsolutions.net> (sfid-20130415_150636_087408_DD3E4E95)
+Subject: Re: vht off-by-one nss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 15 Apr 2013 15:06:27 +0200
+In-Reply-To: <20130415125325.GB13843@magnum.frso.rivierawaves.com> (sfid-20130415_145757_278426_FC740E24)
+References: <20130415100909.GA29924@magnum.frso.rivierawaves.com>
+	 <1366021975.8361.10.camel@jlt4.sipsolutions.net>
+	 <20130415123358.GA13843@magnum.frso.rivierawaves.com>
+	 <1366030075.8361.16.camel@jlt4.sipsolutions.net>
+	 <20130415125325.GB13843@magnum.frso.rivierawaves.com>
+	 (sfid-20130415_145757_278426_FC740E24)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/25/2013 12:27 PM, Piotr Haber wrote:
-> Commit 7088f4835aa353f7226e57e73fd9e6564a4dfb75
-> "Merge branch 'master' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless"
-> ramoved call to brcms_led_unregister in mac80211_if.c
->
+On Mon, 2013-04-15 at 14:53 +0200, Karl Beldan wrote:
 
-Hi Piotr,
+> > > The radiotap field is set with ieee80211_rx_status.vht_nss, so no need.
+> > 
+> > And that's properly 1-based, rather than 0-based like in TX info? I
+> > guess I forgot all of this already, heh.
+> > 
+> ieee80211_rx_status.vht_nss asks for a 1-based field but it is set by
+> drivers .. and since no driver report any (yet) .. anyways, I'll send a
+> patch along with it for mac80211_hwsim .. that can serve as a reminder ;).
 
-After we discussed this, I realized that the led support was added to 
-wireless-next, ie. for v3.10 kernel.
+I think our driver reports it already.
 
-John,
+Anyway, looking forward to your patch :)
 
-Can you take it in wireless-next repository this close to the merge 
-window? It applies without issues to that.
-
-Regards,
-Arend
-
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Piotr Haber <phaber@broadcom.com>
-> ---
->   .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> index 2346821..3a65447 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> @@ -336,6 +336,7 @@ static void brcms_remove(struct bcma_device *pdev)
->   	struct brcms_info *wl = hw->priv;
->
->   	if (wl->wlc) {
-> +		brcms_led_unregister(wl);
->   		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
->   		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
->   		ieee80211_unregister_hw(hw);
->
-
+johannes
 
