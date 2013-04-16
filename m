@@ -1,116 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:46308 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763192Ab3DCTTJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 15:19:09 -0400
-Message-ID: <515C80AA.6090409@iki.fi> (sfid-20130403_211916_093251_9623567D)
-Date: Wed, 03 Apr 2013 22:19:06 +0300
-From: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Received: from mms3.broadcom.com ([216.31.210.19]:2667 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965219Ab3DPVTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 17:19:20 -0400
+Message-ID: <516DC04D.9090204@broadcom.com> (sfid-20130416_231924_724087_ACAA5AED)
+Date: Tue, 16 Apr 2013 23:19:09 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/4] rtlwifi: usb: improve RX performance and lower CPU
- usage
-References: <20130317095831.24983.97107.stgit@localhost6.localdomain6> <515C63E4.7020506@iki.fi> <20130403173248.GA14611@tuxdriver.com>
-In-Reply-To: <20130403173248.GA14611@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V6] cfg80211: introduce critical protocol indication
+ from user-space
+References: <1365412173-7428-1-git-send-email-arend@broadcom.com>
+ <1365676794-24717-1-git-send-email-arend@broadcom.com>
+ <1366121523.8244.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366121523.8244.23.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03.04.2013 20:32, John W. Linville wrote:
-> They are in wireless-next...
-
-Ah, thanks!
-
--Jussi
-
-> 
-> commit 657e27656dfb3a99e81c99df6e78e770d7fe0d48
-> Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-> Date:   Sun Mar 17 11:59:29 2013 +0200
-> 
->     rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
->     
->     Add proper alignment at first packet copy, to avoid extra copies made later
->     in networking stack.
->     
->     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> commit 29bb7013a53d8fc43f79f39d22a15ba8d3e77d9b
-> Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-> Date:   Sun Mar 17 11:59:24 2013 +0200
-> 
->     rtlwifi: usb: defer rx processing to tasklet
->     
->     Move processing of received packets to tasklet from hard-irq context.
->     
->     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> commit d7d0f081c48951018133cac38c8c0796f37db727
-> Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-> Date:   Sun Mar 17 11:59:18 2013 +0200
-> 
->     rtlwifi: usb: remove extra skb copy on RX path
->     
->     RX path has extra copying of packets, that can be avoided.
->     
->     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> commit 872de8ff04922e4ad95c5af39131ae9fbefe6ac5
-> Author: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-> Date:   Sun Mar 17 11:59:13 2013 +0200
-> 
->     rtlwifi: usb: use usb_alloc_coherent for RX buffers
->     
->     Use dedicated DMA coherent buffers for RX urbs, to avoid allocation of large
->     skbuffs in hard-irq context and improve performance.
->     
->     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@iki.fi>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> On Wed, Apr 03, 2013 at 08:16:20PM +0300, Jussi Kivilinna wrote:
->> Any comments on this patchset?
+On 04/16/2013 04:12 PM, Johannes Berg wrote:
+>
+>
+>> I reworked the patch based on your comment in this V6. It
+>> applies to the master branch on top of commit:
 >>
->> On 17.03.2013 11:59, Jussi Kivilinna wrote:
->>> Patchset improves RX path handling in rtlwifi/usb.c by:
->>>  - change to use preallocated DMA coherent URB buffers.
->>>  - kill unnessasary skbuff copies.
->>>  - defer RX processing to tasklet.
->>>  - add proper alignment of skbuff early on.
->>>
->>> With this patchset IRQ CPU usage drops from 37% to 25% on ARM system with
->>> 1Ghz Cortex-A8, when doing large transfer with rtl8192cu. Tranfer speed
->>> appears to be slightly improved too, from 29Mbit to 31Mbit.
->>>
->>> ---
->>>
->>> Jussi Kivilinna (4):
->>>       rtlwifi: usb: use usb_alloc_coherent for RX buffers
->>>       rtlwifi: usb: remove extra skb copy on RX path
->>>       rtlwifi: usb: defer rx processing to tasklet
->>>       rtlwifi: usb: add NET_IP_ALIGN padding to RX skb when needed
->>>
->>>
->>>  drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2
->>>  drivers/net/wireless/rtlwifi/usb.c           |  220 ++++++++++++++++++--------
->>>  drivers/net/wireless/rtlwifi/usb.h           |    5 -
->>>  3 files changed, 156 insertions(+), 71 deletions(-)
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
+>> 5253ffb mac80211: always pick a basic rate to tx RTS/CTS for pre-HT rates
+>
+> Yep, applies, thanks. I think you missed something, I can fix it but
+> wanted to ask:
+>
+>
+>> + * @crit_proto_started: true if crit_proto_start() has been done.
+>>    */
+>>   struct wireless_dev {
+>
+>> +	bool crit_proto_started;
+>
+> This is no longer needed, right?
+>
+
+oops. That should go indeed.
+
+>> +	NL80211_CMD_CRIT_PROTOCOL_START,
+>> +	NL80211_CMD_CRIT_PROTOCOL_STOP,
+>> +	NL80211_CMD_CRIT_PROTOCOL_STOPPED_EVENT,
+>
+> Why use a separate command ID? Usually we use the same _STOP for the
+> event as well, I think? Except maybe scan which you can't stop? Not
+> sure ... Anyway I don't mind, just wondering if there was a special
+> reason to do this.
+>
+
+This is my first nl80211 event :-) I looked at the ft_event thingy. I am 
+fine using the _STOP instead.
+
+>> + nla_put_failure:
+>> +	if (hdr)
+>> +		genlmsg_cancel(msg, hdr);
+>
+> There's not really a reason to cancel, but we still do most of the time.
+> I guess we can keep it, but it doesn't matter :)
+
+If it not really needed it may call for separate patch removing all 
+occurrences?
+
+>> --- a/net/wireless/rdev-ops.h
+>> +++ b/net/wireless/rdev-ops.h
+>> @@ -875,7 +875,7 @@ static inline void rdev_stop_p2p_device(struct cfg80211_registered_device *rdev,
+>>   	trace_rdev_stop_p2p_device(&rdev->wiphy, wdev);
+>>   	rdev->ops->stop_p2p_device(&rdev->wiphy, wdev);
+>>   	trace_rdev_return_void(&rdev->wiphy);
+>> -}					
+>> +}
+>
+> Heh, thanks.
+
+Have to thank my editor, I guess. Trailing whitespace?
+
+Gr. AvS
 
