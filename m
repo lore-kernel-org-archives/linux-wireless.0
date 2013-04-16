@@ -1,67 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:42885 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751722Ab3DLBrB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 21:47:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yogesh Powar <yogeshp@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Doug Anderson <dianders@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 11 Apr 2013 18:45:21 -0700
-Subject: RE: [PATCH 2/2] mwifiex: remove redundant initialization for
- bss_descriptor
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9DE96CDC@SC-VEXCH1.marvell.com> (sfid-20130412_034717_897752_F3B4F885)
-References: <1365727993-20941-1-git-send-email-bzhao@marvell.com>
- <1365727993-20941-2-git-send-email-bzhao@marvell.com>
- <51675CFD.8030603@boundarydevices.com>
-In-Reply-To: <51675CFD.8030603@boundarydevices.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:57260 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965056Ab3DPS0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 14:26:40 -0400
+Subject: [PATCH 11/28] rtl8187se: Use a dir under /proc/net/r8180/ [RFC]
+To: linux-kernel@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	YAMANE Toshiaki <yamanetoshi@gmail.com>,
+	Maxim Mikityanskiy <maxtram95@gmail.com>,
+	viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
+Date: Tue, 16 Apr 2013 19:26:35 +0100
+Message-ID: <20130416182635.27773.93633.stgit@warthog.procyon.org.uk> (sfid-20130416_203332_797193_C5562FC6)
+In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Troy,
+Create a dir under /proc/net/r8180/ named for the device and create that
+device's files under there.  This means that there won't be a problem for
+multiple devices in the system (if such is possible) and it means we don't
+need to save the 'device directory' PDE any more as we can just do a proc
+subtree removal.
 
-Thanks for reviewing.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Maxim Mikityanskiy <maxtram95@gmail.com>
+cc: YAMANE Toshiaki <yamanetoshi@gmail.com>
+cc: linux-wireless@vger.kernel.org
+cc: devel@driverdev.osuosl.org
+---
 
-> > -	priv->curr_bss_params.bss_descriptor.disable_11ac = true;
-> > -
-> 
-> Should the = true line be moved below the memcpy?  Your way produces 
-> the same behavior, but was it buggy before?
+ drivers/staging/rtl8187se/r8180.h      |    1 -
+ drivers/staging/rtl8187se/r8180_core.c |   26 ++++++++------------------
+ 2 files changed, 8 insertions(+), 19 deletions(-)
 
-"bss_descriptor.disable_11ac = true" shouldn't be set after memcpy, because bss_desc->disable_11ac reflects the associated AP's 11ac setting here.
-
-Perhaps we should set "bss_desc->disable_11ac = true" earlier before parsing AP's beacon IE?
-
-@@ -184,6 +184,8 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
-        else
-                bss_desc->bss_mode = NL80211_IFTYPE_STATION;
-
-+       bss_desc->disable_11ac = true;
-+
-        return mwifiex_update_bss_desc_with_ie(priv->adapter, bss_desc);
+diff --git a/drivers/staging/rtl8187se/r8180.h b/drivers/staging/rtl8187se/r8180.h
+index 70ea414..edacc80 100644
+--- a/drivers/staging/rtl8187se/r8180.h
++++ b/drivers/staging/rtl8187se/r8180.h
+@@ -372,7 +372,6 @@ typedef struct r8180_priv
+ 	struct Stats stats;
+ 	struct _link_detect_t link_detect;  //YJ,add,080828
+ 	struct iw_statistics wstats;
+-	struct proc_dir_entry *dir_dev;
+ 
+ 	/*RX stuff*/
+ 	u32 *rxring;
+diff --git a/drivers/staging/rtl8187se/r8180_core.c b/drivers/staging/rtl8187se/r8180_core.c
+index 448da77..ab469ce 100644
+--- a/drivers/staging/rtl8187se/r8180_core.c
++++ b/drivers/staging/rtl8187se/r8180_core.c
+@@ -288,14 +288,7 @@ void rtl8180_proc_module_remove(void)
+ 
+ void rtl8180_proc_remove_one(struct net_device *dev)
+ {
+-	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
+-	if (priv->dir_dev) {
+-		remove_proc_entry("stats-hw", priv->dir_dev);
+-		remove_proc_entry("stats-tx", priv->dir_dev);
+-		remove_proc_entry("stats-rx", priv->dir_dev);
+-		remove_proc_entry("registers", priv->dir_dev);
+-		priv->dir_dev = NULL;
+-	}
++	remove_proc_subtree(dev->name, rtl8180_proc);
  }
-
-This flag can be reset to false if AP's beacon does advertise 11ac support.
-
-Yogesh, any thoughts?
-
-We had offline discussion on replacing disable_11ac with existing VHT flags.
-Maybe initializing it in mwifiex_fill_new_bss_desc() is way to go?
-
-Thanks,
-Bing
-
-> >   	/* Make a copy of current BSSID descriptor */
-> >   	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
-> >   	       sizeof(priv->curr_bss_params.bss_descriptor));
+ 
+ /*
+@@ -335,22 +328,19 @@ static const struct rtl8180_proc_file rtl8180_proc_files[] = {
+ void rtl8180_proc_init_one(struct net_device *dev)
+ {
+ 	const struct rtl8180_proc_file *f;
+-	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
++	struct proc_dir_entry *dir;
+ 
+-	priv->dir_dev = rtl8180_proc;
+-	if (!priv->dir_dev) {
+-		DMESGE("Unable to initialize /proc/net/r8180/%s\n",
+-		      dev->name);
++	dir = proc_mkdir_data(dev->name, 0, rtl8180_proc, dev);
++	if (!dir) {
++		DMESGE("Unable to initialize /proc/net/r8180/%s\n", dev->name);
+ 		return;
+ 	}
+-	priv->dir_dev->data = dev;
+ 
+ 	for (f = rtl8180_proc_files; f->name[0]; f++) {
+-		if (!proc_create_data(f->name, S_IFREG | S_IRUGO,
+-				      priv->dir_dev,
++		if (!proc_create_data(f->name, S_IFREG | S_IRUGO, dir,
+ 				      &rtl8180_proc_fops, f->show)) {
+-			DMESGE("Unable to initialize /proc/net/r8180/%s\n",
+-			       f->name);
++			DMESGE("Unable to initialize /proc/net/r8180/%s/%s\n",
++			       dev->name, f->name);
+ 			return;
+ 		}
+ 	}
 
