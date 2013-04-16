@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18156 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756959Ab3DPHwV (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34206 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935382Ab3DPD4O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 03:52:21 -0400
-Date: Tue, 16 Apr 2013 10:51:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] ath9k: use GFP_ATOMIC under spinlock
-Message-ID: <20130416075128.GB1571@elgon.mountain> (sfid-20130416_095231_478960_8A0F8F32)
+	Mon, 15 Apr 2013 23:56:14 -0400
+Message-ID: <516CCBDA.6070409@candelatech.com> (sfid-20130416_055622_407200_5C4EEF66)
+Date: Mon, 15 Apr 2013 20:56:10 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k-devel@qca.qualcomm.com
+Subject: Re: ath10k: mac80211 driver for QCA9880
+References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is called with spinlocks held so we have to use GFP_ATOMIC.  It's
-the sc_pcu_lock in ath9k_stop() that's the issue.  The call tree looks
-like this:
+On 04/15/2013 05:20 AM, Kalle Valo wrote:
+> Hi,
+>
+> I just pushed initial version of ath10k, our new driver for QCA9880 &
+> co, to github.com:
+>
+> https://github.com/kvalo/ath10k
+>
+> The driver is pretty small, roughly 14 kLOC. Even if the name implies
+> that this is an evolution from ath9k, the drivers are actually very
+> different. The biggest difference is that there's now firmware running
+> on the chip.
+>
+> Once ath10k is ready I will send it for proper review. But we are not
+> quite there yet.
 
-ath9k_stop()
-ath_prepare_reset()
-ath_stoprecv()
-ath_flushrecv()
-ath_rx_tasklet()
-ath9k_dfs_process_phyerr()
-pd->add_pulse() => dpd_add_pulse()
-channel_detector_get()
-channel_detector_create()
-pri_detector_init()
+Is there any info on it's expected support for virtual stations, APs, etc?
 
-channel_detector_create() uses GFP_ATOMIC as well.
+Hardware is still hard to come by it seems..hope that changes soon!
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Static analysis stuff.  I haven't tested this but it looks like a real
-bug to me.
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-index 5e48c55..e056c73 100644
---- a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-@@ -434,7 +434,8 @@ struct pri_detector *
- pri_detector_init(const struct radar_detector_specs *rs)
- {
- 	struct pri_detector *de;
--	de = kzalloc(sizeof(*de), GFP_KERNEL);
-+
-+	de = kzalloc(sizeof(*de), GFP_ATOMIC);
- 	if (de == NULL)
- 		return NULL;
- 	de->exit = pri_detector_exit;
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
