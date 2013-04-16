@@ -1,52 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:40136 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765997Ab3DEK4z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 06:56:55 -0400
-Received: by mail-wg0-f45.google.com with SMTP id x12so3741077wgg.24
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 03:56:53 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 5 Apr 2013 07:56:53 -0300
-Message-ID: <CAJ6uix7giXd1oUEc1MYo7=nGEVPPOR8_MMmT5zY3AWFYPpi4=A@mail.gmail.com> (sfid-20130405_125717_052715_753891EE)
-Subject: Problems with Intel 6200/iwlwifi, WEP, and HT/VHT
-From: Leonardo Boiko <leoboiko@namakajiri.net>
+Received: from nbd.name ([46.4.11.11]:58594 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753902Ab3DPLi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 07:38:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
+Subject: [PATCH v2 2/5] mac80211: fix CTS protection handling
+Date: Tue, 16 Apr 2013 13:38:43 +0200
+Message-Id: <1366112326-92981-2-git-send-email-nbd@openwrt.org> (sfid-20130416_133905_979619_57B659E7)
+In-Reply-To: <1366112326-92981-1-git-send-email-nbd@openwrt.org>
+References: <1366112326-92981-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The rates[0] CTS and RTS flags are only set after rate control has been
+called, so minstrel cannot use them to for setting the number of
+retries. This patch adds two new flags to explicitly indicate RTS/CTS use.
 
-I'm sorry if this isn't the right place to report this.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h          | 4 +++-
+ net/mac80211/rc80211_minstrel.c | 6 ++++--
+ net/mac80211/tx.c               | 9 +++++++++
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-I'm having trouble associating with the AP.  The players are:
- - Intel 6200 [8086:4239] (built-in on a Thinkpad X201), iwlwifi,
-kernel 3.9.0-rc4 (Debian wheezy)
- - Linksys WRT54G-TM AP running openwrt, Linux 3.3.8 mips, using WEP
-(don't ask).
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 96cb507..3cef0dd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -655,7 +655,9 @@ struct ieee80211_tx_info {
+ 					struct ieee80211_tx_rate rates[
+ 						IEEE80211_TX_MAX_RATES];
+ 					s8 rts_cts_rate_idx;
+-					/* 3 bytes free */
++					u8 use_rts:1;
++					u8 use_cts_prot:1;
++					/* 2 bytes free */
+ 				};
+ 				/* only needed before rate control */
+ 				unsigned long jiffies;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 1c36c9b..eda290f 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -209,9 +209,9 @@ minstrel_get_retry_count(struct minstrel_rate *mr,
+ {
+ 	unsigned int retry = mr->adjusted_retry_count;
+ 
+-	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
++	if (info->control.use_rts)
+ 		retry = max(2U, min(mr->retry_count_rtscts, retry));
+-	else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
++	else if (info->control.use_cts_prot)
+ 		retry = max(2U, min(mr->retry_count_cts, retry));
+ 	return retry;
+ }
+@@ -460,6 +460,8 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 		} while ((tx_time < mp->segment_size) &&
+ 				(++mr->retry_count < mp->max_retry));
+ 		mr->adjusted_retry_count = mr->retry_count;
++		if (!(sband->bitrates[i].flags & IEEE80211_RATE_ERP_G))
++			mr->retry_count_cts = mr->retry_count;
+ 	}
+ 
+ 	for (i = n; i < sband->n_bitrates; i++) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c3f3ff6..ba2aa23 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -656,6 +656,9 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		txrc.rts = rts = true;
+ 	}
+ 
++	info->control.use_rts = rts;
++	info->control.use_cts_prot = tx->sdata->vif.bss_conf.use_cts_prot;
++
+ 	/*
+ 	 * Use short preamble if the BSS can handle it, but not for
+ 	 * management frames unless we know the receiver can handle
+@@ -761,6 +764,12 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		 */
+ 		if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
+ 			WARN_ON(info->control.rates[i].idx > 76);
++
++			if (!(info->control.rates[i].flags &
++			      IEEE80211_TX_RC_USE_RTS_CTS) &&
++			    tx->sdata->vif.bss_conf.use_cts_prot)
++				info->control.rates[i].flags |=
++					IEEE80211_TX_RC_USE_CTS_PROTECT;
+ 			continue;
+ 		}
+ 
+-- 
+1.8.0.2
 
-When I try to iwconfig it fails like this:
-    wlan0: authenticate with 00:1c:10:3b:b5:a6
-    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 1/3)
-    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 2/3)
-    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 3/3)
-    wlan0: authentication with 00:1c:10:3b:b5:a6 timed out
-    wlan0: authenticate with 00:1c:10:3b:b5:a6
-    wlan0: send auth to 00:1c:10:3b:b5:a6 (try 1/3)
-    wlan0: 00:1c:10:3b:b5:a6 denied authentication (status 13)
-
-Fiddling with parameters and such I found it would ~sometimes~ work,
-unpredictably (signal quality is 60/70).  After a while I noticed I
-could just leave a for loop running, & it would eventually connect.
-It seems that, whenever it suceeds, it's preceded by this message:
-
-    iwlwifi 0000:02:00.0 wlan0: disabling HT/VHT due to WEP/TKIP use
-    wlan0: associate with 00:1c:10:3b:b5:a6 (try 1/3)
-    wlan0: associate with 00:1c:10:3b:b5:a6 (try 2/3)
-    wlan0: RX AssocResp from 00:1c:10:3b:b5:a6 (capab=0x411 status=0 aid=1)
-    wlan0: associated
-    IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-
-But I don't understand what triggers the VHT disable, or why it didn't
-disable it from the start.
