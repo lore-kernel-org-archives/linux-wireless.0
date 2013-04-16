@@ -1,112 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:52942 "EHLO mout.gmx.net"
+Received: from nbd.name ([46.4.11.11]:56797 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757269Ab3D2Jd5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:33:57 -0400
-Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0LxZlV-1UYonf0sbj-017GP4 for
- <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2013 11:33:56 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 2/4] mac80211: add STBC flag for radiotap
-Date: Mon, 29 Apr 2013 11:33:42 +0200
-Message-Id: <1367228024-17936-3-git-send-email-linux@rempel-privat.de> (sfid-20130429_113400_548526_A3E50994)
-In-Reply-To: <1367228024-17936-1-git-send-email-linux@rempel-privat.de>
-References: <1367228024-17936-1-git-send-email-linux@rempel-privat.de>
+	id S1753497Ab3DPKwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 06:52:19 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 1/2] ath: update hardware mac address with bssid mask
+Date: Tue, 16 Apr 2013 12:51:56 +0200
+Message-Id: <1366109517-64645-1-git-send-email-nbd@openwrt.org> (sfid-20130416_125223_471386_61355AAF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- include/net/ieee80211_radiotap.h | 2 ++
- include/net/mac80211.h           | 2 ++
- net/mac80211/main.c              | 3 ++-
- net/mac80211/rx.c                | 2 ++
- net/mac80211/status.c            | 3 ++-
- 5 files changed, 10 insertions(+), 2 deletions(-)
+Preparation for updating common->macaddr along with virtual interface
+MAC address changes.
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index c399963..8d3455b 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -269,6 +269,7 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
- #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
- #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
-+#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 7 +++----
+ drivers/net/wireless/ath/ath9k/reg.h | 3 ---
+ drivers/net/wireless/ath/hw.c        | 6 ++++++
+ drivers/net/wireless/ath/reg.h       | 4 ++++
+ 4 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8a980a4..10eb6ba 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1698,12 +1698,11 @@ static void ath9k_hw_reset_opmode(struct ath_hw *ah,
  
- #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
- #define		IEEE80211_RADIOTAP_MCS_BW_20	0
-@@ -278,6 +279,7 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_SGI		0x04
- #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
- #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
-+#define IEEE80211_RADIOTAP_MCS_STBC		0x20
+ 	ENABLE_REGWRITE_BUFFER(ah);
  
- /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
- #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 04c2d46..76e7977 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -805,6 +805,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	on this subframe
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-+ * @RX_FLAG_STBC: STBC was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -832,6 +833,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80MHZ			= BIT(23),
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
-+	RX_FLAG_STBC			= BIT(26),
- };
+-	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
+-	REG_WRITE(ah, AR_STA_ID1, get_unaligned_le16(common->macaddr + 4)
+-		  | macStaId1
++	REG_RMW(ah, AR_STA_ID1, macStaId1
+ 		  | AR_STA_ID1_RTS_USE_DEF
+ 		  | (ah->config.ack_6mb ? AR_STA_ID1_ACKCTS_6MB : 0)
+-		  | ah->sta_id1_defaults);
++		  | ah->sta_id1_defaults,
++		  ~AR_STA_ID1_SADH_MASK);
+ 	ath_hw_setbssidmask(common);
+ 	REG_WRITE(ah, AR_DEF_ANTENNA, saveDefAntenna);
+ 	ath9k_hw_write_associd(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 5929850..5c4ab50 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1493,9 +1493,6 @@ enum {
+ #define AR9271_RADIO_RF_RST			0x20
+ #define AR9271_GATE_MAC_CTL			0x4000
  
- /**
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8a7bfc4..44191a3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -589,7 +589,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
- 	local->hw.radiotap_mcs_details = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
- 					 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+					 IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+					 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
- 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
- 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
- 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c8447af..fada697 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -267,6 +267,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
- 		if (status->flag & RX_FLAG_HT_GF)
- 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
-+		if (status->flag & RX_FLAG_STBC)
-+			*pos |= IEEE80211_RADIOTAP_MCS_STBC;
- 		pos++;
- 		*pos++ = status->rate_idx;
- 	}
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 4343920..41143f8 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -312,7 +312,8 @@ static void ieee80211_add_tx_radiotap_header(struct ieee80211_supported_band
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
- 		pos[0] = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
- 			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+			 IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+			 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
- 		if (info->status.rates[0].flags & IEEE80211_TX_RC_SHORT_GI)
- 			pos[1] |= IEEE80211_RADIOTAP_MCS_SGI;
- 		if (info->status.rates[0].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+-#define AR_STA_ID0                 0x8000
+-#define AR_STA_ID1                 0x8004
+-#define AR_STA_ID1_SADH_MASK       0x0000FFFF
+ #define AR_STA_ID1_STA_AP          0x00010000
+ #define AR_STA_ID1_ADHOC           0x00020000
+ #define AR_STA_ID1_PWR_SAV         0x00040000
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index 39e8a59..eae9abf 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -118,6 +118,12 @@
+ void ath_hw_setbssidmask(struct ath_common *common)
+ {
+ 	void *ah = common->ah;
++	u32 id1;
++
++	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
++	id1 = REG_READ(ah, AR_STA_ID1) & ~AR_STA_ID1_SADH_MASK;
++	id1 |= get_unaligned_le16(common->macaddr + 4);
++	REG_WRITE(ah, AR_STA_ID1, id1);
+ 
+ 	REG_WRITE(ah, AR_BSSMSKL, get_unaligned_le32(common->bssidmask));
+ 	REG_WRITE(ah, AR_BSSMSKU, get_unaligned_le16(common->bssidmask + 4));
+diff --git a/drivers/net/wireless/ath/reg.h b/drivers/net/wireless/ath/reg.h
+index 298e53f..3ad4c77 100644
+--- a/drivers/net/wireless/ath/reg.h
++++ b/drivers/net/wireless/ath/reg.h
+@@ -23,6 +23,10 @@
+ #define AR_MIBC_CMC		0x00000004
+ #define AR_MIBC_MCS		0x00000008
+ 
++#define AR_STA_ID0		0x8000
++#define AR_STA_ID1		0x8004
++#define AR_STA_ID1_SADH_MASK	0x0000ffff
++
+ /*
+  * BSSID mask registers. See ath_hw_set_bssid_mask()
+  * for detailed documentation about these registers.
 -- 
-1.8.1.2
+1.8.0.2
 
