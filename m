@@ -1,75 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f41.google.com ([209.85.212.41]:36694 "EHLO
-	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307Ab3DOPuX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 11:50:23 -0400
-Received: by mail-vb0-f41.google.com with SMTP id f13so4005232vbg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 08:50:22 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53240 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965050Ab3DPS0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 14:26:39 -0400
+Subject: [PATCH 10/28] proc: Add proc_mkdir_data() [RFC]
+To: linux-kernel@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>,
+	devel@driverdev.osuosl.org,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-scsi@vger.kernel.org,
+	Jerry Chuang <jerry-chuang@realtek.com>,
+	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
+	linux-fsdevel@vger.kernel.org
+Date: Tue, 16 Apr 2013 19:26:30 +0100
+Message-ID: <20130416182630.27773.83021.stgit@warthog.procyon.org.uk> (sfid-20130416_203312_972039_7195E7EA)
+In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <1366039892.8361.29.camel@jlt4.sipsolutions.net>
-References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
-	<1365804259.10342.20.camel@dcbw.foobar.com>
-	<1366032132.8361.19.camel@jlt4.sipsolutions.net>
-	<1366036772.2404.3.camel@dcbw.foobar.com>
-	<1366039892.8361.29.camel@jlt4.sipsolutions.net>
-Date: Mon, 15 Apr 2013 11:50:22 -0400
-Message-ID: <CAPutgu_3tkxZa1Yn67ZxU9m=E=xRHjPiz7b6yv48kSiw_xQnXw@mail.gmail.com> (sfid-20130415_175030_613050_28F07E1C)
-Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
-From: schwaahed <schwaahed@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So I configured a kernel with hp-wmi enabled. It had the unfortunate
-consequence of disabling wireless on the windows side. I also saw that
-some people with different hardware from me were able to resolve their
-problem by blacklisting hp-wmi.
+Add proc_mkdir_data() to allow procfs directories to be created that are
+annotated at the time of creation with private data rather than doing this
+post-creation.  This means no access is then required to the proc_dir_entry
+struct to set this.
 
-rfkill show an additional wifi interface ('hp-wifi' I think), that
-behaves exactly as phy0 did. I still am unable to unblock this
-interface. phy0 doesn't respond to any rfkill commands or the physical
-wifi switch. It is just remains soft and hard blocked.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+cc: Jerry Chuang <jerry-chuang@realtek.com>
+cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+cc: linux-scsi@vger.kernel.org
+cc: devel@driverdev.osuosl.org
+cc: linux-wireless@vger.kernel.org
+---
 
-Dan -- Are there any links/search terms to older conversations on this issue?
+ drivers/message/i2o/i2o_proc.c         |    8 ++------
+ drivers/scsi/megaraid.c                |    4 ++--
+ drivers/staging/rtl8192u/r8192U_core.c |    3 +--
+ fs/proc/generic.c                      |   30 ++++++++++++------------------
+ include/linux/proc_fs.h                |   11 ++++++++---
+ 5 files changed, 25 insertions(+), 31 deletions(-)
 
-Is wifi working on your 2530p?
+diff --git a/drivers/message/i2o/i2o_proc.c b/drivers/message/i2o/i2o_proc.c
+index 70a840f..b7d87cd 100644
+--- a/drivers/message/i2o/i2o_proc.c
++++ b/drivers/message/i2o/i2o_proc.c
+@@ -1913,14 +1913,12 @@ static void i2o_proc_device_add(struct proc_dir_entry *dir,
+ 
+ 	osm_debug("adding device /proc/i2o/%s/%s\n", dev->iop->name, buff);
+ 
+-	devdir = proc_mkdir(buff, dir);
++	devdir = proc_mkdir_data(buff, 0, dir, dev);
+ 	if (!devdir) {
+ 		osm_warn("Could not allocate procdir!\n");
+ 		return;
+ 	}
+ 
+-	devdir->data = dev;
+-
+ 	i2o_proc_create_entries(devdir, generic_dev_entries, dev);
+ 
+ 	/* Inform core that we want updates about this device's status */
+@@ -1954,12 +1952,10 @@ static int i2o_proc_iop_add(struct proc_dir_entry *dir,
+ 
+ 	osm_debug("adding IOP /proc/i2o/%s\n", c->name);
+ 
+-	iopdir = proc_mkdir(c->name, dir);
++	iopdir = proc_mkdir_data(c->name, 0, dir, c);
+ 	if (!iopdir)
+ 		return -1;
+ 
+-	iopdir->data = c;
+-
+ 	i2o_proc_create_entries(iopdir, i2o_proc_generic_iop_entries, c);
+ 
+ 	list_for_each_entry(dev, &c->devices, list)
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index a1c90bd..ef3384d 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2818,12 +2818,12 @@ mega_create_proc_entry(int index, struct proc_dir_entry *parent)
+ 
+ 	sprintf(string, "hba%d", adapter->host->host_no);
+ 
+-	dir = adapter->controller_proc_dir_entry = proc_mkdir(string, parent);
++	dir = adapter->controller_proc_dir_entry =
++		proc_mkdir_data(string, 0, parent, adapter);
+ 	if(!dir) {
+ 		printk(KERN_WARNING "\nmegaraid: proc_mkdir failed\n");
+ 		return;
+ 	}
+-	dir->data = adapter;
+ 
+ 	for (f = mega_proc_files; f->name; f++) {
+ 		de = proc_create_data(f->name, S_IRUSR, dir, &mega_proc_fops,
+diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
+index 433c3df..d81d7d5 100644
+--- a/drivers/staging/rtl8192u/r8192U_core.c
++++ b/drivers/staging/rtl8192u/r8192U_core.c
+@@ -672,13 +672,12 @@ void rtl8192_proc_init_one(struct net_device *dev)
+ 	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
+ 
+ 	if (rtl8192_proc) {
+-		priv->dir_dev = proc_mkdir(dev->name, rtl8192_proc);
++		priv->dir_dev = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
+ 		if (!priv->dir_dev) {
+ 			RT_TRACE(COMP_ERR, "Unable to initialize /proc/net/rtl8192/%s\n",
+ 				 dev->name);
+ 			return;
+ 		}
+-		priv->dir_dev->data = dev;
+ 
+ 		for (f = rtl8192_proc_files; f->name[0]; f++) {
+ 			if (!proc_create_data(f->name, S_IFREG | S_IRUGO,
+diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+index 5f6f6c3..4074da5 100644
+--- a/fs/proc/generic.c
++++ b/fs/proc/generic.c
+@@ -428,13 +428,17 @@ struct proc_dir_entry *proc_symlink(const char *name,
+ }
+ EXPORT_SYMBOL(proc_symlink);
+ 
+-struct proc_dir_entry *proc_mkdir_mode(const char *name, umode_t mode,
+-		struct proc_dir_entry *parent)
++struct proc_dir_entry *proc_mkdir_data(const char *name, umode_t mode,
++		struct proc_dir_entry *parent, void *data)
+ {
+ 	struct proc_dir_entry *ent;
+ 
++	if (mode == 0)
++		mode = S_IRUGO | S_IXUGO;
++
+ 	ent = __proc_create(&parent, name, S_IFDIR | mode, 2);
+ 	if (ent) {
++		ent->data = data;
+ 		if (proc_register(parent, ent) < 0) {
+ 			kfree(ent);
+ 			ent = NULL;
+@@ -442,29 +446,19 @@ struct proc_dir_entry *proc_mkdir_mode(const char *name, umode_t mode,
+ 	}
+ 	return ent;
+ }
+-EXPORT_SYMBOL(proc_mkdir_mode);
++EXPORT_SYMBOL_GPL(proc_mkdir_data);
+ 
+-struct proc_dir_entry *proc_net_mkdir(struct net *net, const char *name,
+-		struct proc_dir_entry *parent)
++struct proc_dir_entry *proc_mkdir_mode(const char *name, umode_t mode,
++				       struct proc_dir_entry *parent)
+ {
+-	struct proc_dir_entry *ent;
+-
+-	ent = __proc_create(&parent, name, S_IFDIR | S_IRUGO | S_IXUGO, 2);
+-	if (ent) {
+-		ent->data = net;
+-		if (proc_register(parent, ent) < 0) {
+-			kfree(ent);
+-			ent = NULL;
+-		}
+-	}
+-	return ent;
++	return proc_mkdir_data(name, mode, parent, NULL);
+ }
+-EXPORT_SYMBOL_GPL(proc_net_mkdir);
++EXPORT_SYMBOL(proc_mkdir_mode);
+ 
+ struct proc_dir_entry *proc_mkdir(const char *name,
+ 		struct proc_dir_entry *parent)
+ {
+-	return proc_mkdir_mode(name, S_IRUGO | S_IXUGO, parent);
++	return proc_mkdir_data(name, 0, parent, NULL);
+ }
+ EXPORT_SYMBOL(proc_mkdir);
+ 
+diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+index 80d9e24..e5d8f69 100644
+--- a/include/linux/proc_fs.h
++++ b/include/linux/proc_fs.h
+@@ -73,6 +73,8 @@ extern int remove_proc_subtree(const char *name, struct proc_dir_entry *parent);
+ extern struct proc_dir_entry *proc_symlink(const char *,
+ 		struct proc_dir_entry *, const char *);
+ extern struct proc_dir_entry *proc_mkdir(const char *,struct proc_dir_entry *);
++extern struct proc_dir_entry *proc_mkdir_data(const char *, umode_t,
++					      struct proc_dir_entry *, void *);
+ extern struct proc_dir_entry *proc_mkdir_mode(const char *name, umode_t mode,
+ 			struct proc_dir_entry *parent);
+ 
+@@ -82,9 +84,6 @@ static inline struct proc_dir_entry *proc_create(const char *name, umode_t mode,
+ 	return proc_create_data(name, mode, parent, proc_fops, NULL);
+ }
+  
+-extern struct proc_dir_entry *proc_net_mkdir(struct net *net, const char *name,
+-	struct proc_dir_entry *parent);
+-
+ extern void proc_set_size(struct proc_dir_entry *, loff_t);
+ extern void proc_set_user(struct proc_dir_entry *, kuid_t, kgid_t);
+ #else
+@@ -153,4 +152,10 @@ static inline void *PDE_DATA(const struct inode *inode)
+ 	return PROC_I(inode)->pde->data;
+ }
+ 
++static inline struct proc_dir_entry *proc_net_mkdir(
++	struct net *net, const char *name, struct proc_dir_entry *parent)
++{
++	return proc_mkdir_data(name, 0, parent, net);
++}
++
+ #endif /* _LINUX_PROC_FS_H */
 
-Thanks
-- Darwin
-
-On Mon, Apr 15, 2013 at 11:31 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-04-15 at 09:39 -0500, Dan Williams wrote:
->
->> > Yeah it seems not loaded, but how then does the soft block affect hard
->> > block? All very odd, but almost certainly a platform rather than a wifi
->> > issue.
->>
->> On my 2530p and a lot of other laptops, blocking the BIOS
->> "switch" (either physically or softblock) hardblocks phy0.  I guess the
->> BIOS twiddles a GPIO that's connected to the mPCI-E module's rfkill
->> line/GPIO?
->
-> Yes, that seems to be the case. Something does, anyway, as the GPIO
-> state is pretty much directly reflected in the hard kill of the "phy0"
-> device.
->
->> Which leads to the problem we've talked about a long time ago; you can't
->> treat phy0 hardblock as a physical block that cannot be soft-unblocked,
->> because some other switch might actually control it's state.  We tried
->> to gray-out the "Enable Wireless" when hardblocked (since logically you
->> can't soft-unblock something that's hardblocked), but it turns out you
->> can't do that because unblocking BIOS switches might un-hardblock the
->> phy0 wifi switch...  (and the kernel doesn't describe these
->> dependencies, because, well, that's laptop-specific and would never be
->> up-to-date).
->
-> Yeah ... best thing you could do is assume that if a bios rfkill exists
-> it controls the phy0 hard kill and in case it doesn't enable when you
-> unblock the bios device you pop up a message saying to switch the
-> physical button?
->
-> johannes
->
