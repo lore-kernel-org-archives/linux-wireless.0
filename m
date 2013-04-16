@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:58498 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759589Ab3DJWQR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 18:16:17 -0400
-Received: by mail-bk0-f49.google.com with SMTP id w12so495169bku.8
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 15:16:16 -0700 (PDT)
+Received: from mta1.parkeon.com ([91.121.43.66]:53544 "EHLO mta1.parkeon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932147Ab3DPITN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 04:19:13 -0400
+Message-ID: <516D097F.7030905@parkeon.com> (sfid-20130416_101918_010201_388456BD)
+Date: Tue, 16 Apr 2013 10:19:11 +0200
+From: Martin Fuzzey <mfuzzey@parkeon.com>
+Reply-To: mfuzzey@parkeon.com
 MIME-Version: 1.0
-In-Reply-To: <1365500869.8465.10.camel@jlt4.sipsolutions.net>
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
- <1365444377-9959-2-git-send-email-thomas@cozybit.com> <1365500869.8465.10.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 10 Apr 2013 15:15:56 -0700
-Message-ID: <CAG6hwVP=awf3t6cQVaJx6PM1xBdTC5JWTJ1TNX8_vkZfWkFB_g@mail.gmail.com> (sfid-20130411_001621_174591_5DC5988F)
-Subject: Re: [PATCH 2/6] mac80211: exclude multicast frames from BA accounting
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bing Zhao <bzhao@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware problems with Lesswire Wibear  11n module using mwifiex
+References: <5155BF92.2020704@parkeon.com> <477F20668A386D41ADCC57781B1F70430D9DCBF173@SC-VEXCH1.marvell.com> <516BF8D0.5070401@parkeon.com> <477F20668A386D41ADCC57781B1F70430D9DF761EC@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DF761EC@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 9, 2013 at 2:47 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Subject should probably say "reordering" rather than "accounting"
->
->> Since multicast aggregation is not currently supported by
->> mac80211, we can safely ignore them when reordering
->> aggregate MPDUs.
->
-> Multicast may have a lower expectation of ordering than unicast, but is
-> this really the right thing to do? It seems better to just fix it?
+Hi Bing,
 
-It appears one of our changes actually introduced this bug!  It is not
-reproducible with mac80211-next. Thanks for making me take a closer
-look at this.
+On 16/04/13 01:41, Bing Zhao wrote:
 
--- 
-Thomas
+> That's right. The host controller and/or its driver need to be 
+> checked. Thanks, Bing 
+
+Ok I've fixed my host controller driver and it works now.
+
+Patch submitted: [http://article.gmane.org/gmane.linux.kernel.mmc/20121]
+
+Thank you for pointing me in the right direction.
+
+Regards,
+
+Martin
+
