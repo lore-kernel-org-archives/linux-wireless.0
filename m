@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762155Ab3DCIqK (ORCPT
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:50457 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935660Ab3DPTzq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 04:46:10 -0400
-Message-ID: <1364978764.8351.6.camel@jlt4.sipsolutions.net> (sfid-20130403_104615_399608_EE058C93)
-Subject: Re: question on SMPS for AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: vivekanandah@posedge.com
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 03 Apr 2013 10:46:04 +0200
-In-Reply-To: <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
-References: <fbef7a2278fe739a398430949087c950@posedge.com>
-	 (sfid-20130403_093709_189406_740B7438) <1364976319.8351.2.camel@jlt4.sipsolutions.net>
-	 <7a1a483e9382db42e8f648c3933bc2cd@posedge.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 16 Apr 2013 15:55:46 -0400
+Received: from smtp02.msg.oleane.net (smtp02.mail.priv [172.17.20.111])
+	by smtp-out05.msg.oleane.net with ESMTP id r3GGl1Fu019859
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:47:01 +0200
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp02.msg.oleane.net (MTA) with ESMTP id r3GGQUa8028129
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:26:30 +0200
+Subject: ath9k null ppointer
+Date: Tue, 16 Apr 2013 18:26:29 +0200
+Message-ID: <773DB8A82AB6A046AE0195C68612A3190152C875@sbs2003.acksys.local> (sfid-20130416_215550_174434_58E8F852)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I tried to use a mesh network with security (meshd/authsae).
+I am using :
+	- openwrt with the latest mac80211 package from openwrt
+(2013-02-22).
+	-  the Thomas Pedersen patch to add the authsae package in my
+openwrt source tree
+(http://permalink.gmane.org/gmane.linux.drivers.mesh.open80211s/2530)
+(Use the latest version, because I sent a patch in meshd this morning,
+without it the HT mode should not correctly enable)
+	- AR9xx wirless card
+	- Kernel 3.3.8 on power PC (mpc 8314)
 
-> i see that the rate_control_rate_update is called with the 
-> IEEE80211_RC_SMPS_CHANGED flag. however, i see that the minstrel_ht code 
-> does not check for SMPS with respect to RTS.
+When I configure the meshd daemon to use the HT mode, I have a null
+pointer in ath9k (That work correctly without HT mode).
 
-It's very well possible that minstrel doesn't implement this correctly.
-I don't care all that much right now about minstrel, so it's up to those
-who do :)
+In the file, drivers/net/wireless/ath/ath9k in the function
+ath_tx_aggr_wakeup the ac pointer is null.
 
-> Also, the code - rate_control_rate_update calls - sta_rc_update 
-> mac80211 op. i was first thinking that i could use this for the AP side 
-> notification to driver layer. however, a comment for sta_rc_update 
-> indicates that it is to be used only when IEEE80211_HW_HAS_RATE_CONTROL 
-> is true.
-> this led to the confusion.
-> 
-> Can this op be used to update the driver about change in station's SMPS 
-> mode for AP ?
+Do you know why this pointer can be null?
 
-Well, in theory it could be, but it doesn't make sense. If you have a
-rate control algorithm in software (like minstrel) then that should
-likely configure the RTS, and rate control is updated via the rate
-control rate_update() callback instead of via the driver.
+Cedric Voncken 
 
-johannes
+
 
