@@ -1,33 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:33267 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936006Ab3DIB2r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 21:28:47 -0400
-Date: Tue, 9 Apr 2013 02:28:37 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Sean MacLennan <seanm@seanm.ca>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	David Howells <dhowells@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: The rtl8192e procfs-based debug interface seems very broken
-Message-ID: <20130409012837.GZ4068@ZenIV.linux.org.uk> (sfid-20130409_032851_290350_FFC60714)
-References: <17570.1365415364@warthog.procyon.org.uk>
- <51634550.3090300@lwfinger.net>
- <20130408184615.38b20264@lappy.seanm.ca>
- <51634BCD.3060304@lwfinger.net>
- <20130408211806.3c5b800b@opus.seanm.ca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130408211806.3c5b800b@opus.seanm.ca>
+Received: from nbd.name ([46.4.11.11]:58592 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753090Ab3DPLi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 07:38:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
+Subject: [PATCH v2 1/5] mac80211: fix and optimize MCS mask handling
+Date: Tue, 16 Apr 2013 13:38:42 +0200
+Message-Id: <1366112326-92981-1-git-send-email-nbd@openwrt.org> (sfid-20130416_133908_284146_8D6779EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 08, 2013 at 09:18:06PM -0400, Sean MacLennan wrote:
-> The procfs debug code in rtl_debug.c is, ironically, very buggy: it lacks proper locking.
-> Since the most useful part of the code (the stats) are available through more
-> standard APIs, I think it is best to just delete the whole mess.
+Currently the code always copies the configured MCS mask (even if it is
+set to default), but only uses it if legacy rates were also masked out.
+Fix this by adding a flag that tracks whether the configured MCS mask is
+set to default or not.
+Optimize the code further by storing a pointer to the configured rate
+mask in txrc instead of using memcpy.
 
-OK...  Seeing that I've ended up collecting procfs-related fixes all over
-the place this cycle, applied.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h     |  4 ++--
+ net/mac80211/cfg.c         | 13 +++++++++++++
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/rate.c        |  9 ++++++---
+ net/mac80211/tx.c          | 10 +++++-----
+ 5 files changed, 28 insertions(+), 10 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 64faf01..96cb507 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4107,7 +4107,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
+  *	(deprecated; this will be removed once drivers get updated to use
+  *	rate_idx_mask)
+  * @rate_idx_mask: user-requested (legacy) rate mask
+- * @rate_idx_mcs_mask: user-requested MCS rate mask
++ * @rate_idx_mcs_mask: user-requested MCS rate mask (NULL if not in use)
+  * @bss: whether this frame is sent out in AP or IBSS mode
+  */
+ struct ieee80211_tx_rate_control {
+@@ -4119,7 +4119,7 @@ struct ieee80211_tx_rate_control {
+ 	bool rts, short_preamble;
+ 	u8 max_rate_idx;
+ 	u32 rate_idx_mask;
+-	u8 rate_idx_mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	u8 *rate_idx_mcs_mask;
+ 	bool bss;
+ };
+ 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 764dd9a..1d8c66c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2416,9 +2416,22 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		struct ieee80211_supported_band *sband = wiphy->bands[i];
++		int j;
++
+ 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+ 		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].mcs,
+ 		       sizeof(mask->control[i].mcs));
++
++		sdata->rc_has_mcs_mask[i] = false;
++		if (!sband)
++			continue;
++
++		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++)
++			if (~sdata->rc_rateidx_mcs_mask[i][j]) {
++				sdata->rc_has_mcs_mask[i] = true;
++				break;
++			}
+ 	}
+ 
+ 	return 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 135ab46..4f4a40e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -740,6 +740,8 @@ struct ieee80211_sub_if_data {
+ 
+ 	/* bitmap of allowed (non-MCS) rate indexes for rate control */
+ 	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
++
++	bool rc_has_mcs_mask[IEEE80211_NUM_BANDS];
+ 	u8  rc_rateidx_mcs_mask[IEEE80211_NUM_BANDS][IEEE80211_HT_MCS_MASK_LEN];
+ 
+ 	union {
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index dd88381..5d545dd 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -460,9 +460,12 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	 * the common case.
+ 	 */
+ 	mask = sdata->rc_rateidx_mask[info->band];
+-	memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
+-	       sizeof(mcs_mask));
+-	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
++	if (mask != (1 << txrc->sband->n_bitrates) - 1 || txrc->rate_idx_mcs_mask) {
++		if (txrc->rate_idx_mcs_mask)
++			memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
++		else
++			memset(mcs_mask, 0xff, sizeof(mcs_mask));
++
+ 		if (sta) {
+ 			/* Filter out rates that the STA does not support */
+ 			mask &= sta->sta.supp_rates[info->band];
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index aad0bf5..c3f3ff6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -642,9 +642,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 		txrc.max_rate_idx = -1;
+ 	else
+ 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+-	memcpy(txrc.rate_idx_mcs_mask,
+-	       tx->sdata->rc_rateidx_mcs_mask[info->band],
+-	       sizeof(txrc.rate_idx_mcs_mask));
++
++	if (tx->sdata->rc_has_mcs_mask[info->band])
++		txrc.rate_idx_mcs_mask =
++			tx->sdata->rc_rateidx_mcs_mask[info->band];
++
+ 	txrc.bss = (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 		    tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
+ 		    tx->sdata->vif.type == NL80211_IFTYPE_ADHOC);
+@@ -2502,8 +2504,6 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		txrc.max_rate_idx = -1;
+ 	else
+ 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
+-	memcpy(txrc.rate_idx_mcs_mask, sdata->rc_rateidx_mcs_mask[band],
+-	       sizeof(txrc.rate_idx_mcs_mask));
+ 	txrc.bss = true;
+ 	rate_control_get_rate(sdata, NULL, &txrc);
+ 
+-- 
+1.8.0.2
+
