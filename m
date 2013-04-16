@@ -1,136 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:39218 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934426Ab3DGWVv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Apr 2013 18:21:51 -0400
-Received: by mail-wi0-f169.google.com with SMTP id c10so3286785wiw.0
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Apr 2013 15:21:49 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:1707 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755152Ab3DPK2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 06:28:22 -0400
+Date: Tue, 16 Apr 2013 12:29:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: minimumlaw@rambler.ru
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: Fix transmit power troubles on some Ralink
+ RT30xx cards
+Message-ID: <20130416102910.GA1163@redhat.com> (sfid-20130416_122826_407009_94FAA0E9)
+References: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
 MIME-Version: 1.0
-In-Reply-To: <1365372253-32782-7-git-send-email-nbd@openwrt.org>
-References: <1365372253-32782-1-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-2-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-3-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-4-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-5-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-6-git-send-email-nbd@openwrt.org>
-	<1365372253-32782-7-git-send-email-nbd@openwrt.org>
-Date: Sun, 7 Apr 2013 15:21:49 -0700
-Message-ID: <CAJ-VmokPT5orM5zgZkZYnhFsMC9KKjzMXvRn-isNhtCLMSCquw@mail.gmail.com> (sfid-20130408_002156_171499_7B64B171)
-Subject: Re: [PATCH 7/7] ath9k: implement buffer holding handling for EDMA FIFO
-From: Adrian Chadd <adrian@freebsd.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For what it's worth, I've verified this DMA behaviour with the MAC
-team and tested a similar fix for FreeBSD's EDMA code.
+On Mon, Apr 15, 2013 at 07:29:35AM +0400, minimumlaw@rambler.ru wrote:
+> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
+> 
+> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
+> value in them EEPROM/EFUSE. In this case, we must use default value,
+> but always used EEPROM/EFUSE value. As result we have tranmitt power
+> range from -10dBm to +6dBm instead 0dBm to +16dBm.
+> 
+> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
+> more for other RT30xx chips.
+> 
+> Tested on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
+> embedded Wi-Fi module.
+> 
+> Signed-off-by: Alex A. Mihaylov <minimumlaw@rambler.ru>
+> Cc: stable@vger.kernel.org
 
-(They were confused as to why were doing this in the first place,
-until I pointed out how we do CABQ.)
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-I'm happy to provide more background into the issue if people care.
-
-Thanks,
-
-
-
-Adrian
-
-On 7 April 2013 15:04, Felix Fietkau <nbd@openwrt.org> wrote:
-> Inside one FIFO slot queue, EDMA chipsets have the same link pointer
-> re-read race condition as older chipsets, so the same buffer holding
-> logic needs to be used in order to avoid use-after-free bugs.
-> Unlike on older chips, it can be skipped for the end of the queue.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/xmit.c | 30 +++++++++++++++++++-----------
->  1 file changed, 19 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 94b2ee1..5bc5802 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -516,8 +516,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->                  * not a holding desc.
->                  */
->                 INIT_LIST_HEAD(&bf_head);
-> -               if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) ||
-> -                   bf_next != NULL || !bf_last->bf_stale)
-> +               if (bf_next != NULL || !bf_last->bf_stale)
->                         list_move_tail(&bf->list, &bf_head);
->
->                 if (!txpending || (tid->state & AGGR_CLEANUP)) {
-> @@ -537,8 +536,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->                                 !txfail);
->                 } else {
->                         /* retry the un-acked ones */
-> -                       if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-> -                           bf->bf_next == NULL && bf_last->bf_stale) {
-> +                       if (bf->bf_next == NULL && bf_last->bf_stale) {
->                                 struct ath_buf *tbf;
->
->                                 tbf = ath_clone_txbuf(sc, bf_last);
-> @@ -2264,6 +2262,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
->         struct ath_txq *txq;
->         struct ath_buf *bf, *lastbf;
->         struct list_head bf_head;
-> +       struct list_head *fifo_list;
->         int status;
->
->         for (;;) {
-> @@ -2291,20 +2290,24 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
->
->                 TX_STAT_INC(txq->axq_qnum, txprocdesc);
->
-> -               if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
-> +               fifo_list = &txq->txq_fifo[txq->txq_tailidx];
-> +               if (list_empty(fifo_list)) {
->                         ath_txq_unlock(sc, txq);
->                         return;
->                 }
->
-> -               bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
-> -                                     struct ath_buf, list);
-> +               bf = list_first_entry(fifo_list, struct ath_buf, list);
-> +               if (bf->bf_stale) {
-> +                       list_del(&bf->list);
-> +                       ath_tx_return_buffer(sc, bf);
-> +                       bf = list_first_entry(fifo_list, struct ath_buf, list);
-> +               }
-> +
->                 lastbf = bf->bf_lastbf;
->
->                 INIT_LIST_HEAD(&bf_head);
-> -               list_cut_position(&bf_head, &txq->txq_fifo[txq->txq_tailidx],
-> -                                 &lastbf->list);
-> -
-> -               if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
-> +               if (list_is_last(&lastbf->list, fifo_list)) {
-> +                       list_splice_tail_init(fifo_list, &bf_head);
->                         INCR(txq->txq_tailidx, ATH_TXFIFO_DEPTH);
->
->                         if (!list_empty(&txq->axq_q)) {
-> @@ -2315,6 +2318,11 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
->                                 list_splice_tail_init(&txq->axq_q, &bf_q);
->                                 ath_tx_txqaddbuf(sc, txq, &bf_q, true);
->                         }
-> +               } else {
-> +                       lastbf->bf_stale = true;
-> +                       if (bf != lastbf)
-> +                               list_cut_position(&bf_head, fifo_list,
-> +                                                 lastbf->list.prev);
->                 }
->
->                 ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
-> --
-> 1.8.0.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
