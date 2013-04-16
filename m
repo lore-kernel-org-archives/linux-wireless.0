@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61143 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756079Ab3DQBBP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53213 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964921Ab3DPOBt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 21:01:15 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so585526pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 18:01:15 -0700 (PDT)
-Date: Tue, 16 Apr 2013 18:01:04 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-scsi@vger.kernel.org,
-	Jerry Chuang <jerry-chuang@realtek.com>,
-	linux-wireless@vger.kernel.org,
-	YAMANE Toshiaki <yamanetoshi@gmail.com>,
-	Maxim Mikityanskiy <maxtram95@gmail.com>,
-	viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 14/28] proc: Supply an accessor for getting the data from
- a PDE's parent [RFC]
-Message-ID: <20130417010104.GF11541@kroah.com> (sfid-20130417_030130_970649_F0AB27CF)
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
- <20130416182646.27773.40149.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130416182646.27773.40149.stgit@warthog.procyon.org.uk>
+	Tue, 16 Apr 2013 10:01:49 -0400
+Message-ID: <1366120905.8244.16.camel@jlt4.sipsolutions.net> (sfid-20130416_160154_285317_6965D803)
+Subject: Re: [PATCH] mac80211: adjust initial chandefs assignments in
+ ieee80211_register_hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Tue, 16 Apr 2013 16:01:45 +0200
+In-Reply-To: <1366045446-11286-1-git-send-email-karl.beldan@gmail.com> (sfid-20130415_190820_657181_2AA6CD9F)
+References: <1366045446-11286-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130415_190820_657181_2AA6CD9F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 07:26:46PM +0100, David Howells wrote:
-> Supply an accessor function for getting the private data from the parent
-> proc_dir_entry struct of the proc_dir_entry struct associated with an inode.
+On Mon, 2013-04-15 at 19:04 +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
 > 
-> ReiserFS, for instance, stores the super_block pointer in the proc directory
-> it makes for that super_block, and a pointer to the respective seq_file show
-> function in each of the proc files in that directory.
-> 
-> This allows a reduction in the number of file_operations structs, open
-> functions and seq_operations structs required.  The problem otherwise is that
-> each show function requires two pieces of data but only has storage for one
-> per PDE (and this has no release function).
-> 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: Jerry Chuang <jerry-chuang@realtek.com>
-> cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-> cc: Maxim Mikityanskiy <maxtram95@gmail.com>
-> cc: YAMANE Toshiaki <yamanetoshi@gmail.com>
-> cc: linux-wireless@vger.kernel.org
-> cc: linux-scsi@vger.kernel.org
-> cc: devel@driverdev.osuosl.org
+> I noticed that monitor interfaces by default would start on 5GHz
+> while STA/AP ones would start 2GHZ - It stems from the fact that
+> ieee80211_register_hw unnecessarily adjusts the local->monitor_chandef
+> for each band.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Applied.
+
+johannes
+
