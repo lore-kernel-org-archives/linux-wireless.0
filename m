@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:61950 "EHLO mout.gmx.net"
+Received: from nbd.name ([46.4.11.11]:56497 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476Ab3D0Sx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 14:53:56 -0400
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MJqSQ-1UV3nL10fU-001EM3 for
- <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 20:53:55 +0200
-Message-ID: <517C1EC1.8060808@rempel-privat.de> (sfid-20130427_205359_157650_A0199073)
-Date: Sat, 27 Apr 2013 20:53:53 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+	id S934017Ab3DPKo2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 06:44:28 -0400
+Message-ID: <516D2B80.70704@openwrt.org> (sfid-20130416_124433_647619_B148B05A)
+Date: Tue, 16 Apr 2013 12:44:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k: collect statistics about Rx-Dup and Rx-STBC
- packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <1367087995-8960-1-git-send-email-linux@rempel-privat.de> <CAJ-VmonF9XaVZ6MkP-T3cdfGNjXaroM-rXYcA=TUndicp77UnQ@mail.gmail.com>
-In-Reply-To: <CAJ-VmonF9XaVZ6MkP-T3cdfGNjXaroM-rXYcA=TUndicp77UnQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH 3/5] mac80211: improve the rate control API
+References: <1365890626-86895-1-git-send-email-nbd@openwrt.org> <1365890626-86895-2-git-send-email-nbd@openwrt.org> <1365890626-86895-3-git-send-email-nbd@openwrt.org> <20130416095949.GA14259@magnum.frso.rivierawaves.com>
+In-Reply-To: <20130416095949.GA14259@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 27.04.2013 20:51, schrieb Adrian Chadd:
-> Hiya,
->
-> Why not just bump rs_flags to be a u16, rather than a u8? then you
-> don't need an rs_flags_2.
+On 2013-04-16 12:03 PM, Karl Beldan wrote:
+> On Sun, Apr 14, 2013 at 12:03:44AM +0200, Felix Fietkau wrote:
+>> Allow rate control modules to pass a rate selection table to mac80211
+>> and the driver. This allows drivers to fetch the most recent rate
+>> selection from the sta pointer for already buffered frames. This allows
+>> rate control to respond faster to sudden link changes and it is also a
+>> step towards adding minstrel_ht support to drivers like iwlwifi.
+>> 
+>> When a driver sets IEEE80211_HW_SUPPORTS_RC_TABLE, mac80211 will not
+>> fill info->control.rates with rates from the rate table (to preserve
+>> explicit overrides by the rate control module). The driver then
+>> explicitly calls ieee80211_get_tx_rates to merge overrides from
+>> info->control.rates with defaults from the sta rate table.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> 
+> I gave it a try, I hope you won't mind the feedback for the typos.
+> It does not compile:
+> error: âstruct ieee80211_tx_dataâ has no member named ârateâ
+> it likely misses the diff for ieee80211_i.h, however that's what I did
+> to quickly run without IEEE80211_HW_SUPPORTS_RC_TABLE so far.
+Thanks. Will fix and send v2 later today.
 
-ok
+- Felix
 
-> (And then go and re-align things inside that struct so you don't waste space.)
-
-hmm.. what do you mean here?
--- 
-Regards,
-Oleksij
