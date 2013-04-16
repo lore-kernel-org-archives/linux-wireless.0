@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37944 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753785Ab3DMO3X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749Ab3DPNeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Apr 2013 10:29:23 -0400
-Received: by mail-wg0-f44.google.com with SMTP id a12so126141wgh.11
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Apr 2013 07:29:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
-References: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
-Date: Sat, 13 Apr 2013 07:29:22 -0700
-Message-ID: <CAJ-VmokacZUw1Wru_0w1XaVRoZWP6nOMcdKo=1yhP-C9rbifHg@mail.gmail.com> (sfid-20130413_162928_260950_E23BA078)
-Subject: Re: [RFC/RFT] mwl8k: don't expose non-standard rates
-From: Adrian Chadd <adrian@freebsd.org>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Apr 2013 09:34:37 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH] mac80211: indicate admission control in TX queue parameters
+Date: Tue, 16 Apr 2013 15:34:32 +0200
+Message-Id: <1366119272-32666-1-git-send-email-johannes@sipsolutions.net> (sfid-20130416_153441_163732_656B5A95)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-On 13 April 2013 03:31, Jonas Gorski <jogo@openwrt.org> wrote:
-> Do not advertise the non standard rates 22 Mbps and 72 Mbps to mac80211,
-> they will make it into the probe responses and cause clients checking them
-> to refuse association, e.g. wpa_supplicant says:
+Some driver implementations need to know whether mandatory
+admission control is required by the AP for some ACs. Add
+a parameter to the TX queue parameters indicating this.
 
-Are these "turbo" mode rates? ie, 40MHz wide channels with pre-11n
-rates on them?
+As there's currently no support for admission control in
+mac80211's AP implementation, it's only ever set for the
+client implementation.
 
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 2 ++
+ net/mac80211/mlme.c    | 1 +
+ 2 files changed, 3 insertions(+)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9ff10b3..28960f8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -128,6 +128,7 @@ enum ieee80211_ac_numbers {
+  *	2^n-1 in the range 1..32767]
+  * @cw_max: maximum contention window [like @cw_min]
+  * @txop: maximum burst time in units of 32 usecs, 0 meaning disabled
++ * @acm: is mandatory admission control required for the access category
+  * @uapsd: is U-APSD mode enabled for the queue
+  */
+ struct ieee80211_tx_queue_params {
+@@ -135,6 +136,7 @@ struct ieee80211_tx_queue_params {
+ 	u16 cw_min;
+ 	u16 cw_max;
+ 	u8 aifs;
++	bool acm;
+ 	bool uapsd;
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c7860d0..49caec9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1661,6 +1661,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+ 		params.cw_min = ecw2cw(pos[1] & 0x0f);
+ 		params.txop = get_unaligned_le16(pos + 2);
++		params.acm = acm;
+ 		params.uapsd = uapsd;
+ 
+ 		mlme_dbg(sdata,
+-- 
+1.8.0
 
-Adrian
