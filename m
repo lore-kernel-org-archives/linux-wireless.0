@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([86.59.21.13]:49741 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756712Ab3DXPSx (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:18156 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756959Ab3DPHwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 11:18:53 -0400
-Message-ID: <5177F7D6.2020800@einfach.org> (sfid-20130424_171857_836844_462EA8BD)
-Date: Wed, 24 Apr 2013 16:18:46 +0100
-From: Bruno Randolf <br1@einfach.org>
+	Tue, 16 Apr 2013 03:52:21 -0400
+Date: Tue, 16 Apr 2013 10:51:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] ath9k: use GFP_ATOMIC under spinlock
+Message-ID: <20130416075128.GB1571@elgon.mountain> (sfid-20130416_095231_478960_8A0F8F32)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
-	meuleman@broadcom.com, brudley@broadcom.com,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?B?5rW36Je75pWs5LmL?= <tkaiso@thinktube.com>
-Subject: Re: Broadcom brcmfmac vs bcmdhd on Android
-References: <5176ABB1.2070506@einfach.org> <5176F8C2.7050502@broadcom.com>
-In-Reply-To: <5176F8C2.7050502@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/2013 10:10 PM, Arend van Spriel wrote:
-> I am working mainly on brcmfmac. IBSS should work, but reading the
-> commit message of your patch I guess it may be a firmware issue so using
-> brcmfmac will not make a difference.
+This is called with spinlocks held so we have to use GFP_ATOMIC.  It's
+the sc_pcu_lock in ath9k_stop() that's the issue.  The call tree looks
+like this:
 
-I would like to try that to confirm it. And from your message I conclude 
-the brcmfmac is the way to go forward...
+ath9k_stop()
+ath_prepare_reset()
+ath_stoprecv()
+ath_flushrecv()
+ath_rx_tasklet()
+ath9k_dfs_process_phyerr()
+pd->add_pulse() => dpd_add_pulse()
+channel_detector_get()
+channel_detector_create()
+pri_detector_init()
 
->> I succeeded to compile brcmfmac from recent compat-drivers against the
->> "tuna" (Galaxy Nexus) kernel, the modules load, but no device is
->> recognized. Has anyone succeeded doing this? Is there any chance it can
->> work?
->
-> That is how we did it and with success. What do you mean by 'no device
-> is recognized'? Do you have any traces to look at?
+channel_detector_create() uses GFP_ATOMIC as well.
 
-Good to know. What I did is I compiled the "tuna" kernel (3.0.31) 
-without bcmdhd, then brcmfmac from compat-drivers, loaded the brcmfmac 
-module (+ dependencies), but then nothing happens. It looks like the 
-device is not recognized on SDIO. Is there anything special I need to do 
-to activate the chip?
-Anyhow I'll debug this further and send you more info later.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static analysis stuff.  I haven't tested this but it looks like a real
+bug to me.
 
-Thanks,
-bruno
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
+index 5e48c55..e056c73 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
++++ b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
+@@ -434,7 +434,8 @@ struct pri_detector *
+ pri_detector_init(const struct radar_detector_specs *rs)
+ {
+ 	struct pri_detector *de;
+-	de = kzalloc(sizeof(*de), GFP_KERNEL);
++
++	de = kzalloc(sizeof(*de), GFP_ATOMIC);
+ 	if (de == NULL)
+ 		return NULL;
+ 	de->exit = pri_detector_exit;
