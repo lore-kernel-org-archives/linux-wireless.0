@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:33373 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765254Ab3DDXvw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755443Ab3DPNaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 19:51:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130404160130.GA2577@udknight>
-References: <20130404160130.GA2577@udknight>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 5 Apr 2013 10:51:30 +1100
-Message-ID: <CAGRGNgXj7mSF0Fgyjek4Xcc34N26WHtt4HMmHk7DOopaEPrYFw@mail.gmail.com> (sfid-20130405_015215_911581_5FCA67D3)
-Subject: Re: [PATCH] lib80211: make lib80211 can be enabled independently
-To: Wang YanQing <udknight@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Apr 2013 09:30:10 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1US5xX-0003vy-Ka
+	for linux-wireless@vger.kernel.org; Tue, 16 Apr 2013 15:30:08 +0200
+Message-ID: <1366119003.8244.12.camel@jlt4.sipsolutions.net> (sfid-20130416_153015_603749_F3C420E2)
+Subject: Re: [PATCH 0/8] mac80211: improve channel switch handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Tue, 16 Apr 2013 15:30:03 +0200
+In-Reply-To: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net> (sfid-20130410_144351_624560_74A574BC)
+References: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130410_144351_624560_74A574BC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wang,
+On Wed, 2013-04-10 at 14:43 +0200, Johannes Berg wrote:
+> This improves channel switch handling to actually parse a lot of
+> the newer messages and the new bandwidth (including VHT.)
 
-On Fri, Apr 5, 2013 at 3:01 AM, Wang YanQing <udknight@gmail.com> wrote:
->
-> Current we can only enable lib80211 by enable a driver
-> in tree use it which will select it, but some out tree's
-> drivers also use it, so I think it has sense to make lib80211
-> can be enabled independently.
+Applied.
 
-Just as a bit of explanation for Johannes' NACK:
+johannes
 
-1. The only reason lib80211 still exists is because a couple of
-in-tree drivers still use it. If this weren't the case, the code would
-have been removed a long time ago as it's been completely replaced by
-mac80211 and cfg80211. All modern drivers _must_ use mac80211 or
-cfg80211 without exception.
-2. In general, there is no official in-kernel support for
-out-of-kernel drivers, regardless of quality, status or importance.
-3. I believe that the in-tree brcmsmac driver already supports the
-Broadcom card you reference.
-
-Thanks,
-
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
