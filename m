@@ -1,69 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36491 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755527Ab3DWWGh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 18:06:37 -0400
-Message-ID: <517705E0.4070304@candelatech.com> (sfid-20130424_000645_677333_CE149D50)
-Date: Tue, 23 Apr 2013 15:06:24 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39438 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965164Ab3DPS0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Apr 2013 14:26:45 -0400
+Subject: [PATCH 13/28] airo: Use remove_proc_subtree() [RFC]
+To: linux-kernel@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	viro@zeniv.linux.org.uk
+Date: Tue, 16 Apr 2013 19:26:43 +0100
+Message-ID: <20130416182643.27773.14779.stgit@warthog.procyon.org.uk> (sfid-20130416_203205_422676_E5C4B665)
+In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX performance.
-References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>   (sfid-20130403_184908_772897_29241D1E) <1365501478.8465.17.camel@jlt4.sipsolutions.net>  <516455CA.6070504@candelatech.com> <1365671968.8272.35.camel@jlt4.sipsolutions.net> <5176E442.7070907@candelatech.com>
-In-Reply-To: <5176E442.7070907@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/2013 12:42 PM, Ben Greear wrote:
-> On 04/11/2013 02:19 AM, Johannes Berg wrote:
+Use remove_proc_subtree() to remove the airo device subdir and all its
+children instead of doing it manually.
 
->> Another question: Have you thought about hashing the virtual interfaces
->> instead of the stations, and then hashing the stations inside each
->> virtual interface? That would make it a bit of a two-level thing:
->>
->> A1 (in the frame) -> virtual interface
->>      A2 (frame) -> station
->>
->> But it would address the TX side efficiently without "some_sta" since
->> you know the virtual interface there already, and could potentially have
->> less impact on the code? On TX it'd actually even be more efficient if
->> you have more than 1 station per interface (right now you don't though)
->
-> This idea suddenly looks a lot more interesting.  The ieee80211_tx_status method needs
-> to find the remote station & sdata, but in the AP case, the station hash works best,
-> and in my many-sta-vif case, the VIF hash works best.  I don't see any way to guess
-> which hash to use in this case.
->
-> But, if we first hashed to find sdata, and then had a vif hash in the sdata
-> object, the lookup should be fast for cases where the hash function works
-> well.
->
-> I'll give this a try...
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: linux-wireless@vger.kernel.org
+---
 
-Seems to mostly be working, but I've a few questions.
+ drivers/net/wireless/airo.c |   49 +++++++++++--------------------------------
+ 1 file changed, 13 insertions(+), 36 deletions(-)
 
-First, if we are hashing sdata on sdata->vif.addr, then we must
-assume that everything in that hash has a unique MAC.  I'm
-thinking that I would just never put monitor devices in
-the hash.  Is there anything else that would cause problems
-with this?
-
-Second, the sta_info_get_bss call is found fairly often.  It
-talks about finding a station on sdata or associated vlan.
-Does this indicate that the there are VLAN sdata objects
-with duplicate MACs?
-
-I was hoping I could replace at least most calls to sta_info_get_bss
-with one that just searched the new sdata->sta_hash hash table...
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 21d0233..6125adb 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -4506,98 +4506,75 @@ static int setup_proc_entry( struct net_device *dev,
+ 	apriv->proc_entry = proc_mkdir_mode(apriv->proc_name, airo_perm,
+ 					    airo_entry);
+ 	if (!apriv->proc_entry)
+-		goto fail;
++		return -ENOMEM;
+ 	proc_set_user(apriv->proc_entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the StatsDelta */
+ 	entry = proc_create_data("StatsDelta", S_IRUGO & proc_perm,
+ 				 apriv->proc_entry, &proc_statsdelta_ops, dev);
+ 	if (!entry)
+-		goto fail_stats_delta;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the Stats */
+ 	entry = proc_create_data("Stats", S_IRUGO & proc_perm,
+ 				 apriv->proc_entry, &proc_stats_ops, dev);
+ 	if (!entry)
+-		goto fail_stats;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the Status */
+ 	entry = proc_create_data("Status", S_IRUGO & proc_perm,
+ 				 apriv->proc_entry, &proc_status_ops, dev);
+ 	if (!entry)
+-		goto fail_status;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the Config */
+ 	entry = proc_create_data("Config", proc_perm,
+ 				 apriv->proc_entry, &proc_config_ops, dev);
+ 	if (!entry)
+-		goto fail_config;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the SSID */
+ 	entry = proc_create_data("SSID", proc_perm,
+ 				 apriv->proc_entry, &proc_SSID_ops, dev);
+ 	if (!entry)
+-		goto fail_ssid;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the APList */
+ 	entry = proc_create_data("APList", proc_perm,
+ 				 apriv->proc_entry, &proc_APList_ops, dev);
+ 	if (!entry)
+-		goto fail_aplist;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the BSSList */
+ 	entry = proc_create_data("BSSList", proc_perm,
+ 				 apriv->proc_entry, &proc_BSSList_ops, dev);
+ 	if (!entry)
+-		goto fail_bsslist;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 
+ 	/* Setup the WepKey */
+ 	entry = proc_create_data("WepKey", proc_perm,
+ 				 apriv->proc_entry, &proc_wepkey_ops, dev);
+ 	if (!entry)
+-		goto fail_wepkey;
++		goto fail;
+ 	proc_set_user(entry, proc_kuid, proc_kgid);
+ 	return 0;
+ 
+-fail_wepkey:
+-	remove_proc_entry("BSSList", apriv->proc_entry);
+-fail_bsslist:
+-	remove_proc_entry("APList", apriv->proc_entry);
+-fail_aplist:
+-	remove_proc_entry("SSID", apriv->proc_entry);
+-fail_ssid:
+-	remove_proc_entry("Config", apriv->proc_entry);
+-fail_config:
+-	remove_proc_entry("Status", apriv->proc_entry);
+-fail_status:
+-	remove_proc_entry("Stats", apriv->proc_entry);
+-fail_stats:
+-	remove_proc_entry("StatsDelta", apriv->proc_entry);
+-fail_stats_delta:
+-	remove_proc_entry(apriv->proc_name, airo_entry);
+ fail:
++	remove_proc_subtree(apriv->proc_name, airo_entry);
+ 	return -ENOMEM;
+ }
+ 
+ static int takedown_proc_entry( struct net_device *dev,
+-				struct airo_info *apriv ) {
+-	if ( !apriv->proc_entry->namelen ) return 0;
+-	remove_proc_entry("Stats",apriv->proc_entry);
+-	remove_proc_entry("StatsDelta",apriv->proc_entry);
+-	remove_proc_entry("Status",apriv->proc_entry);
+-	remove_proc_entry("Config",apriv->proc_entry);
+-	remove_proc_entry("SSID",apriv->proc_entry);
+-	remove_proc_entry("APList",apriv->proc_entry);
+-	remove_proc_entry("BSSList",apriv->proc_entry);
+-	remove_proc_entry("WepKey",apriv->proc_entry);
+-	remove_proc_entry(apriv->proc_name,airo_entry);
++				struct airo_info *apriv )
++{
++	remove_proc_subtree(apriv->proc_name, airo_entry);
+ 	return 0;
+ }
+ 
 
