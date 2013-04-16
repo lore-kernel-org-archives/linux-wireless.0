@@ -1,118 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35355 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761355Ab3DCMZ1 (ORCPT
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:65019 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147Ab3DPIRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 08:25:27 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: destroy virtual monitor interface across suspend
-Date: Wed,  3 Apr 2013 14:25:19 +0200
-Message-Id: <1364991920-11712-3-git-send-email-johannes@sipsolutions.net> (sfid-20130403_142533_709799_CB9A359A)
-In-Reply-To: <1364991920-11712-1-git-send-email-johannes@sipsolutions.net>
-References: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
- <1364991920-11712-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 16 Apr 2013 04:17:41 -0400
+Received: by mail-bk0-f50.google.com with SMTP id jg1so108002bkc.23
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 01:17:39 -0700 (PDT)
+Date: Tue, 16 Apr 2013 10:19:38 +0200
+From: Patrick Steinhardt <steinhardt.ptk@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: GSoC 2013 - b43 driver
+Message-ID: <20130416081938.GA282@ArchPC.zedat.fu-berlin.de> (sfid-20130416_101748_709262_D8203D81)
+References: <20130411082543.GA346@ArchPC.zedat.fu-berlin.de>
+ <5168AFF8.2090808@lwfinger.net>
+ <CACna6rwAK_nTqg=kXb-0PwjD41Cv0VX1=Ey3jTj7ZECA-C7p_w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwAK_nTqg=kXb-0PwjD41Cv0VX1=Ey3jTj7ZECA-C7p_w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-It has to be removed from the driver, but completely
-destroying it helps handle unplug of a device during
-suspend since then the channel context handling etc.
-doesn't have to happen later when it's removed.
+thanks for your insights, I'll stay away from GSoC with that
+idea, then.
+I'd still be interested in doing some work but got no idea where
+to start. Any recommendations for some resources I might
+investigate to get going?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h | 2 ++
- net/mac80211/iface.c       | 4 ++--
- net/mac80211/pm.c          | 6 ++----
- net/mac80211/util.c        | 5 +++++
- 4 files changed, 11 insertions(+), 6 deletions(-)
+Regards,
+Patrick
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 693c181..55fb382 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1336,6 +1336,8 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
- 				    const int offset);
- int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up);
- void ieee80211_sdata_stop(struct ieee80211_sub_if_data *sdata);
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
- 
- bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index aadb471..5ec9c02 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -346,7 +346,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
- }
- 
--static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret = 0;
-@@ -400,7 +400,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	return ret;
- }
- 
--static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index b98d927..d1c021b 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -21,6 +21,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	ieee80211_roc_purge(local, NULL);
- 
-+	ieee80211_del_virtual_monitor(local);
-+
- 	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
- 		mutex_lock(&local->sta_mtx);
- 		list_for_each_entry(sta, &local->sta_list, list) {
-@@ -103,10 +105,6 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		drv_remove_interface(local, sdata);
- 	}
- 
--	sdata = rtnl_dereference(local->monitor_sdata);
--	if (sdata)
--		drv_remove_interface(local, sdata);
--
- 	/*
- 	 * We disconnected on all interfaces before suspend, all channel
- 	 * contexts should be released.
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index f9581c6..43465b6 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1461,6 +1461,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	/* add interfaces */
- 	sdata = rtnl_dereference(local->monitor_sdata);
- 	if (sdata) {
-+		/* in HW restart it exists already */
-+		WARN_ON(local->resuming);
- 		res = drv_add_interface(local, sdata);
- 		if (WARN_ON(res)) {
- 			rcu_assign_pointer(local->monitor_sdata, NULL);
-@@ -1650,6 +1652,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	local->in_reconfig = false;
- 	barrier();
- 
-+	if (local->monitors == local->open_count && local->monitors > 0)
-+		ieee80211_add_virtual_monitor(local);
-+
- 	/*
- 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
- 	 * sessions can be established after a resume.
--- 
-1.8.0
-
+On Mon, Apr 15, 2013 at 12:36:06PM +0200, Rafał Miłecki wrote:
+> 2013/4/13 Larry Finger <Larry.Finger@lwfinger.net>:
+> > I think that your coding experience makes you qualified to undertake the
+> > coding necessary to improve the performance of b43 on the 14e4:432b device;
+> > however, I recommend that you not attempt it as a GSoC project. The reason
+> > is that those projects are highly visible, and what you are trying to do is
+> > very difficult. The actual coding is likely not a problem, but knowing what
+> > to code is not trivial. I would hate for you to fail in a way that would be
+> > so completely obvious.
+> >
+> > As you probably know, b43 has been developed using reverse engineering (RE)
+> > techniques. We have no knowledge of the internal workings of the chips.
+> > Since the LP-PHY, more and more has been required by the driver. Earlier PHY
+> > models did quite a lot in the firmware. With the N PHYs such as your device
+> > has, the problem got even worse. and the implementation is more incomplete.
+> > For instance, implementation of power regulation in the wireless chip has
+> > barely been touched.
+> >
+> > At the moment, I am the only person doing any of the RE work, and I have
+> > relatively little time to work on that. Much of the more recent development
+> > has come from comparing MMIO dumps between wl and b43 to see what parts are
+> > missing from b43. That requires an extremely good knowledge of the existing
+> > driver, and that would take a long time to acquire.
+> >
+> > The b43 project welcomes your interest, and I hope you pursue it eventually,
+> > but I still think you should find another project for the GSoC.
+> 
+> I would love to see extra developer in b43 project, but I have to
+> confirm what Larry has said. It's hard task and we're really missing
+> specifications for the hardware.
+> 
+> There are few things that should be easy to add, like 5GHz support
+> (most of the code is already there, it just needs enabling & testing)
+> or maybe even (some) 802.11n features.
+> 
+> Further improvements unfortunately are much more complicated or even
+> impossible due to lack of documentation.
+> 
+> You can try doing MMIO tracking and comparing with closed source
+> driver, but it's not trivial and doesn't guarantee you'll notice
+> important differences (not to mention understanding them).
+> 
+> -- 
+> Rafał
