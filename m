@@ -1,67 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:46812 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933562Ab3DILVM (ORCPT
+Received: from mail-vc0-f175.google.com ([209.85.220.175]:52858 "EHLO
+	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934799Ab3DPBRJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 07:21:12 -0400
-Received: by mail-wg0-f54.google.com with SMTP id a12so6684371wgh.33
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 04:21:11 -0700 (PDT)
-Date: Tue, 9 Apr 2013 13:10:28 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH] mac80211: always pick a basic rate to tx RTS/CTS for
- pre-HT rates
-Message-ID: <20130409111028.GB27875@magnum.frso.rivierawaves.com> (sfid-20130409_132117_284408_00536FD3)
-References: <1365156384-6699-1-git-send-email-karl.beldan@gmail.com>
- <1365503356.8465.37.camel@jlt4.sipsolutions.net>
- <20130409105535.GA27875@magnum.frso.rivierawaves.com>
- <1365505512.8465.40.camel@jlt4.sipsolutions.net>
+	Mon, 15 Apr 2013 21:17:09 -0400
+Received: by mail-vc0-f175.google.com with SMTP id ib11so4374467vcb.6
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 18:17:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1365505512.8465.40.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366043660.5649.4.camel@dcbw.foobar.com>
+References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
+	<1365804259.10342.20.camel@dcbw.foobar.com>
+	<1366032132.8361.19.camel@jlt4.sipsolutions.net>
+	<1366036772.2404.3.camel@dcbw.foobar.com>
+	<1366039892.8361.29.camel@jlt4.sipsolutions.net>
+	<CAPutgu_3tkxZa1Yn67ZxU9m=E=xRHjPiz7b6yv48kSiw_xQnXw@mail.gmail.com>
+	<1366043660.5649.4.camel@dcbw.foobar.com>
+Date: Mon, 15 Apr 2013 21:17:04 -0400
+Message-ID: <CAPutgu8vx8BxNm-vAGuvQDRqqo+cauayy2Gs4g_i9e-=7kkK+A@mail.gmail.com> (sfid-20130416_031714_829333_746B0017)
+Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
+From: schwaahed <schwaahed@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 09, 2013 at 01:05:12PM +0200, Johannes Berg wrote:
-> On Tue, 2013-04-09 at 12:55 +0200, Karl Beldan wrote:
-> > On Tue, Apr 09, 2013 at 12:29:16PM +0200, Johannes Berg wrote:
-> > > On Fri, 2013-04-05 at 12:06 +0200, Karl Beldan wrote:
-> > > > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> > > > 
-> > > > When the 1st rate control entry is a pre-HT rate we want to set
-> > > > rts_cts_rate_idx "as the fastest basic rate that is not faster than the
-> > > > data rate"(code comments).
-> > > > But in case some bss allowed rate indexes are lower than the lowest bss
-> > > > basic rate, if the rate control selects a rate among the formers for its
-> > > > 1st rate control entry, rts_cts_rate_idx remains 0 and is not a basic
-> > > > rate index.
-> > > > This commit sets rts_cts_rate_idx to the lowest bss basic rate index in
-> > > > this situation.
-> > > 
-> > > I guess it's a good thing you're looking at this code. However, I'm not
-> > > sure what you're doing here is correct. In this case, the PHY mandatory
-> > > rates should be used. See 9.7.6.5.2 "Selection of a rate or MCS":
-> > > 
-> > Thanks for looking at this.
-> > 
-> > You are quoting the chapter for "control _response_ frames" which does
-> > not apply here (even CTS-to-self are not control response frames).
-> 
-> Oh, oops, confused. But then you look at 9.7.6.2 "Rate selection for
-> control frames that initiate a TXOP", which just mandates that you use
-> any rate that the receiver supports, so why bother doing basic rates
-> etc. at all?
-> 
+On Mon, Apr 15, 2013 at 12:34 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2013-04-15 at 11:50 -0400, schwaahed wrote:
+>> So I configured a kernel with hp-wmi enabled. It had the unfortunate
+>> consequence of disabling wireless on the windows side. I also saw that
+>> some people with different hardware from me were able to resolve their
+>> problem by blacklisting hp-wmi.
+>
+> Ok, so that means that perhaps the airplane mode interface changed on
+> your machine from earlier models in the Elitebook series.  You'll need
+> to talk to the hp-wmi maintainers about how to handle your device then,
+> at this point it's not a wifi issue, it's the BIOS telling the wifi
+> hardware to enable/disable itself and that's causing your issues when
+> trying to unblock stuff.
+>
 
-This chapter precisely, however it reads:
-{
-"If a control frame other than a Basic BlockAckReq or Basic BlockAck is
-carried in a non-HT PPDU, the transmitting STA shall transmit the frame
-using one of the rates in the BSSBasicRateSet parameter or a rate from
-the mandatory rate set of the attached PHY if the BSSBasicRateSet is
-empty."
-}
- 
-Karl
+Thanks I will look for the maintainer. It seems like a few years ago
+there was a Matthew Garrett dealing with some of the *-wmi modules.
+
+Where would I go to find the present maintainer?
+
+
+>> rfkill show an additional wifi interface ('hp-wifi' I think), that
+>> behaves exactly as phy0 did. I still am unable to unblock this
+>> interface. phy0 doesn't respond to any rfkill commands or the physical
+>> wifi switch. It is just remains soft and hard blocked.
+>
+> Yeah, kernel driver issue for hp-wmi, of if HP isn't using WMI anymore
+> then a different module.  One question though, any idea if your laptop
+> uses UEFI instead of traditional BIOS?
+>
+
+I think it is UEFI but I'm not sure exactly what that means.
+
+
+>> Dan -- Are there any links/search terms to older conversations on this issue?
+>
+> Not your specific issue that I know of, but the rfkill + BIOS
+> interaction issue has been going on for years; every time the OEMs
+> change the way BIOS talks to the OS and the wifi card, we need a kernel
+> update of the various laptop drivers like acer-wmi, hp-wmi,
+> thinkpad-acpi, etc to handle it.
+>
+>> Is wifi working on your 2530p?
+>
+> Yeah, but it's probably not relevant for your machine, since the 2530p
+> is from 2009.  HP has likely changed the BIOS <-> OS interface since
+> then.
+>
+> Dan
+>
+
+Thank you for these suggestions. It would make sense that these are
+hardware issues.
+
+-Darwin
+
+
+
+>> Thanks
+>> - Darwin
+>>
+>> On Mon, Apr 15, 2013 at 11:31 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2013-04-15 at 09:39 -0500, Dan Williams wrote:
+>> >
+>> >> > Yeah it seems not loaded, but how then does the soft block affect hard
+>> >> > block? All very odd, but almost certainly a platform rather than a wifi
+>> >> > issue.
+>> >>
+>> >> On my 2530p and a lot of other laptops, blocking the BIOS
+>> >> "switch" (either physically or softblock) hardblocks phy0.  I guess the
+>> >> BIOS twiddles a GPIO that's connected to the mPCI-E module's rfkill
+>> >> line/GPIO?
+>> >
+>> > Yes, that seems to be the case. Something does, anyway, as the GPIO
+>> > state is pretty much directly reflected in the hard kill of the "phy0"
+>> > device.
+>> >
+>> >> Which leads to the problem we've talked about a long time ago; you can't
+>> >> treat phy0 hardblock as a physical block that cannot be soft-unblocked,
+>> >> because some other switch might actually control it's state.  We tried
+>> >> to gray-out the "Enable Wireless" when hardblocked (since logically you
+>> >> can't soft-unblock something that's hardblocked), but it turns out you
+>> >> can't do that because unblocking BIOS switches might un-hardblock the
+>> >> phy0 wifi switch...  (and the kernel doesn't describe these
+>> >> dependencies, because, well, that's laptop-specific and would never be
+>> >> up-to-date).
+>> >
+>> > Yeah ... best thing you could do is assume that if a bios rfkill exists
+>> > it controls the phy0 hard kill and in case it doesn't enable when you
+>> > unblock the bios device you pop up a message saying to switch the
+>> > physical button?
+>> >
+>> > johannes
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
