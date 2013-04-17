@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:63697 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753983Ab3DKLvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 07:51:33 -0400
-Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0MdY5y-1UEG080aWC-00PMXY for
- <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 13:51:32 +0200
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-To: bzhao@marvell.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	daniel@zonque.org, yogeshp@marvell.com, patila@marvell.com,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-Subject: [PATCH v3 0/2] wmm queues handling simplificatons
-Date: Thu, 11 Apr 2013 13:51:06 +0200
-Message-Id: <1365681068-27820-1-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130411_135138_982319_88D2CE82)
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DE96073@SC-VEXCH1.marvell.com>
-References: <477F20668A386D41ADCC57781B1F70430D9DE96073@SC-VEXCH1.marvell.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:58019 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966840Ab3DQWJz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 18:09:55 -0400
+Message-ID: <1366236590.8217.64.camel@jlt4.sipsolutions.net> (sfid-20130418_001014_392681_2C908D68)
+Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Paul Stewart <pstew@chromium.org>
+Date: Thu, 18 Apr 2013 00:09:50 +0200
+In-Reply-To: <1366236369-543-1-git-send-email-bzhao@marvell.com> (sfid-20130418_000709_842159_3005786A)
+References: <1366236369-543-1-git-send-email-bzhao@marvell.com>
+	 (sfid-20130418_000709_842159_3005786A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-v3: minor cleanups for coding style; checkpatch.pl --strict 
-v2: split 6 patches into 2 patchsets. This is the set 2.
+On Wed, 2013-04-17 at 15:06 -0700, Bing Zhao wrote:
+> Add a "wireless/nl80211_iftype" entry in the net device sysfs
+> file structure to indicate the mode of the wireless device so
+> it can be discovered easily from userspace.
 
-Andreas Fenkart (2):
-  mwifiex: replace ra_list_curr by list rotation.
-  mwifiex: rework round robin scheduling of bss nodes.
+What's wrong with "iw dev", i.e. netlink/nl80211?
 
- drivers/net/wireless/mwifiex/11n_aggr.c |   14 +--
- drivers/net/wireless/mwifiex/init.c     |   21 ++--
- drivers/net/wireless/mwifiex/main.h     |    1 -
- drivers/net/wireless/mwifiex/wmm.c      |  160 ++++++++++---------------------
- drivers/net/wireless/mwifiex/wmm.h      |    3 +
- 5 files changed, 61 insertions(+), 138 deletions(-)
-
--- 
-1.7.10.4
+johannes
 
