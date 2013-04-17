@@ -1,57 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:33053 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264Ab3DUXXB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Apr 2013 19:23:01 -0400
-Received: by mail-wi0-f174.google.com with SMTP id m6so3395025wiv.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Apr 2013 16:23:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20130421T145410-125@post.gmane.org>
-References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com> <20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
- <loom.20130421T145410-125@post.gmane.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 22 Apr 2013 09:22:40 +1000
-Message-ID: <CAGRGNgVUNP-qp-1kNmy6_OrZLi5CuR2GShxt-M7idxVKmMhKMw@mail.gmail.com> (sfid-20130422_012324_499619_05F320BF)
-Subject: Re: ath10k: mac80211 driver for QCA9880
-To: Edward <eliasacorn@yahoo.com.sg>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from plane.gmane.org ([80.91.229.3]:57745 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965236Ab3DQPnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 11:43:02 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1USUVh-00085g-6w
+	for linux-wireless@vger.kernel.org; Wed, 17 Apr 2013 17:43:01 +0200
+Received: from 69-165-152-163.dsl.teksavvy.com ([69.165.152.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 17:43:01 +0200
+Received: from JoelleEmmily by 69-165-152-163.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 17:43:01 +0200
+To: linux-wireless@vger.kernel.org
+From: Joelle <JoelleEmmily@gmail.com>
+Subject: Re: RTL8187 in master mode with hostapd
+Date: Wed, 17 Apr 2013 15:42:47 +0000 (UTC)
+Message-ID: <loom.20130417T174126-534@post.gmane.org> (sfid-20130417_174307_227938_F2E4CA83)
+References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow> <5016A5D3.10301@lwfinger.net> <loom.20130417T144556-632@post.gmane.org> <516EB581.9080602@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Edward,
+> I did not say that the RTL8187{B,L} cannot be used as an AP! I said that
+rtl8187 
+> cannot. The capitalization is important. With caps, it refers to a device; 
+> without implies a driver.
+> 
+> I am not sure how well an RTL8187L would work as it only has a single
+transmit 
+> queue, but perhaps it would work.
+> 
+> If you think there is a "crime against technology", then you need to be
+the one 
+> to make the necessary changes to rtl8187. After all, the source is open.
+> 
+> Larry
+> 
 
-On Sun, Apr 21, 2013 at 10:59 PM, Edward <eliasacorn@yahoo.com.sg> wrote:
-> Denis 'GNUtoo' Carikli <GNUtoo@...> writes:
->> On Mon, 15 Apr 2013 15:20:54 +0300
->> Kalle Valo <kvalo@...> wrote:
->> >The biggest difference is that there's now firmware running on the
->> >chip.
->> Will the firmware be released as free software at some point?
->
-> Does it matter? The firmware is just a binary logic black box. It's not
-> likely to even see more than a handful of revisions after the actual
-> products hit the market.
+The driver as distributed with the distros cannot provided AP functionality,
+this is true. However one only needs to patch in the proper call functions
+for AP functionality to work, which is what I did with the power functions.
+The patch is available on the Realtek site but is formatted for kernal ver
+2.something and thus most be painstakingly edited in. This means that the
+driver as provided by the manufacturer, which was also provided as open
+source, utilized these functions and more. But as this chipset is now
+considered legacy by the manufacturer they no longer update the driver, thus
+breaking compatibility with new generations of linux.
 
-I believe the question was asked as Atheros / Qualcomm has a history
-of releasing firmware for their devices, i.e. the ar9170 and ar7010 /
-ar9271 chips, I believe Denis was wondering if this practise would
-continue.
+I see this as a "crime against technology", and the comment that
+compatibility will 'never' come because the ability is and was available in
+these prior versions, all be it patched. This means that very little work
+needs to be done by someone who knows what they are doing. As for myself, I
+only 'almost' know what I'm doing and can't provide the technical expertise
+required to build a reliable enough driver to be given to the distros, nor
+do I have the repute to suggest an integration.
 
-> As long as the driver remains open I don't see any problems with the
-> open-driver-closed-firmware combination. Intel and Ralink has adopted this
-> practice to great success, and I don't see any reason why Atheros can't do
-> the same.
+It's also a crime that the windows drivers continue to be updated, at the
+least a newish win 7 is available, but the linux community does not wish to
+peruse greater functionality. While I can't substantiate this with any
+degree of certainty I do recall an Ubuntu mod saying that they will never
+provider greater support because the primary use for the Alfa adapters,
+which was the primary purchaser of said chipsets, is for hacking purposes.
+This is a tragedy as the rtl8187, or any in that series, as well as the Alfa
+adapters can and do provide an excellent platform for many wifi needs.
 
-I don't believe anyone has problems with things being done this way,
-we'd just like to know if there's a release scheduled.
+I also should address the transmit issue as well if I'm to maintain any
+credibility. High priority kernal patches can be used to provide one's
+software router with appropriate timing. In fact there were, perhaps are, a
+lot of 'very cheep' wifi router which had limited capabilities in their
+chipsets but made up for those deficiencies with software 'cheats'. At this
+moment I'm serving my 'very' small town with free wifi internet through a
+Windows XP Aspire One, with routing provided by my dedicated linux soft
+router. Despite the slowness of the laptop, idiocies of windows, and other
+drawbacks with my setup I've had up to 30 people surfing at once with a peek
+of 50 or so sitting authenticated.
 
-Thanks,
+It's a shame I can't integrate my soft-router and my soft-AP into one unit
+without having to downgrade to an earlier release or having an aneurysm
+because I'm staring at code during my few free time hours.
 
---
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
