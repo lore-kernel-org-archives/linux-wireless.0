@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:57716 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755309Ab3DSHXS (ORCPT
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:36765 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965558Ab3DQWGw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 03:23:18 -0400
-Date: Fri, 19 Apr 2013 10:23:09 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Gustavo Padovan <gustavo@padovan.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	marcel@holtmann.org, linux-bluetooth@vger.kernel.org,
-	champion_chen@realsil.com.cn
-Subject: Re: [RFC/RFT PATCH 2/2] rtk_btusb: A new driver for the Bluetooth
- portion of the Realtek RTL8723AE chip
-Message-ID: <20130419072309.GB3214@x220> (sfid-20130419_092330_169981_4BB61AD1)
-References: <1365469068-4548-1-git-send-email-Larry.Finger@lwfinger.net>
- <1365469068-4548-3-git-send-email-Larry.Finger@lwfinger.net>
- <20130418222221.GA15279@joana>
- <51709E57.7020402@lwfinger.net>
+	Wed, 17 Apr 2013 18:06:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Paul Stewart <pstew@chromium.org>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] net-sysfs: Add entry for nl80211 interface type
+Date: Wed, 17 Apr 2013 15:06:09 -0700
+Message-ID: <1366236369-543-1-git-send-email-bzhao@marvell.com> (sfid-20130418_000709_842159_3005786A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51709E57.7020402@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+Add a "wireless/nl80211_iftype" entry in the net device sysfs
+file structure to indicate the mode of the wireless device so
+it can be discovered easily from userspace.
 
-On Thu, Apr 18, 2013, Larry Finger wrote:
-> On 04/18/2013 05:22 PM, Gustavo Padovan wrote:
-> >We recently added a setup callback to btusb to run device specific
-> >initialization, take a look in bluetooth-next to check how that can help you
-> >avoid duplicate a lot of code.
-> 
-> Thanks for the tip. I knew something was in the planning stage.
-> 
-> Is there any documentation on using the new facility?
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ net/core/net-sysfs.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-Not really, but you can take a look at the "Bluetooth: Add support for
-Intel Bluetooth device [[8087:07dc]" patch that's currently going
-through some feedback rounds on linux-bluetooth. It's one of the first
-users of this new API.
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index 7427ab5..454bd7f 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -17,6 +17,7 @@
+ #include <linux/nsproxy.h>
+ #include <net/sock.h>
+ #include <net/net_namespace.h>
++#include <net/cfg80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/vmalloc.h>
+ #include <linux/export.h>
+@@ -448,7 +449,24 @@ static struct attribute_group netstat_group = {
+ };
+ 
+ #if IS_ENABLED(CONFIG_WIRELESS_EXT) || IS_ENABLED(CONFIG_CFG80211)
++static ssize_t show_nl80211_iftype(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	const struct net_device *netdev = to_net_dev(dev);
++	ssize_t ret = 0;
++
++	if (!rtnl_trylock())
++		return restart_syscall();
++	if (netdev->ieee80211_ptr)
++		ret = sprintf(buf, "%d\n", netdev->ieee80211_ptr->iftype);
++	rtnl_unlock();
++
++	return ret;
++}
++static DEVICE_ATTR(nl80211_iftype, S_IRUGO, show_nl80211_iftype, NULL);
++
+ static struct attribute *wireless_attrs[] = {
++	&dev_attr_nl80211_iftype.attr,
+ 	NULL
+ };
+ 
+-- 
+1.7.0.2
 
-Basically what you have is the new setup() callback for HCI drivers and
-then a new __hci_cmd_sync() function that can be used from within the
-setup() callback to synchronously send whatever HCI commands you need to
-send before proceeding with the normal HCI init sequence within the HCI
-core.
-
-To my understanding Marcel has planned to move the vendor specific btusb
-routines into their own files in the long run (I believe he's used a
-term "mini driver" for this) but for now the changes are expected to go
-to the main btusb.c file.
-
-Johan
