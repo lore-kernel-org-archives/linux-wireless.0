@@ -1,106 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:40733 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339Ab3DNURa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 16:17:30 -0400
-Received: by mail-ee0-f54.google.com with SMTP id e51so1984482eek.13
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 13:17:28 -0700 (PDT)
-References: <1365519930-3230-1-git-send-email-stf_xl@wp.pl> <1365519930-3230-7-git-send-email-stf_xl@wp.pl> <66918CCA-AAE0-47BF-B989-58A019810AC7@gmail.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <66918CCA-AAE0-47BF-B989-58A019810AC7@gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <AB418DC3-9910-45D9-9F73-CC49FEAA5D00@gmail.com> (sfid-20130414_221732_979439_F81401CD)
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 06/11] rt2800: move RFCSR6_R2 & LDO_CFG0 setup to 3572 specific rfcsr init
-Date: Sun, 14 Apr 2013 22:17:27 +0200
-To: "stf_xl@wp.pl" <stf_xl@wp.pl>
+Received: from mx4.wp.pl ([212.77.101.8]:31036 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966251Ab3DQMH1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 08:07:27 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH v2 01/11] rt2800: merge 5xxx normal mode setup
+Date: Wed, 17 Apr 2013 14:08:10 +0200
+Message-Id: <1366200500-4661-2-git-send-email-stf_xl@wp.pl> (sfid-20130417_140804_685978_51155EC7)
+In-Reply-To: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Resending as the message didn't seem to end up on the mailing list)
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> Hi Stanislaw,
-> 
-> Looks good to me. When you repost the series with all comments fixed, you can add my acked-by.
-> 
-> Sent from my iPad
-> 
-> On 9 apr. 2013, at 17:05, stf_xl@wp.pl wrote:
-> 
->> From: Stanislaw Gruszka <stf_xl@wp.pl>
->> 
->> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
->> ---
->> drivers/net/wireless/rt2x00/rt2800lib.c |   34 +++++++++++++++---------------
->> 1 files changed, 17 insertions(+), 17 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 83554da..7130040 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -4710,6 +4710,9 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
->> 
->> static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
->> {
->> +    u8 rfcsr;
->> +    u32 reg;
->> +
->>   rt2800_rfcsr_write(rt2x00dev, 0, 0x70);
->>   rt2800_rfcsr_write(rt2x00dev, 1, 0x81);
->>   rt2800_rfcsr_write(rt2x00dev, 2, 0xf1);
->> @@ -4741,6 +4744,20 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
->>   rt2800_rfcsr_write(rt2x00dev, 29, 0x9b);
->>   rt2800_rfcsr_write(rt2x00dev, 30, 0x09);
->>   rt2800_rfcsr_write(rt2x00dev, 31, 0x10);
->> +
->> +    rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
->> +    rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
->> +    rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
->> +
->> +    rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
->> +    rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
->> +    rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
->> +    rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->> +    msleep(1);
->> +    rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
->> +    rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
->> +    rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
->> +    rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->> }
->> 
->> static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
->> @@ -4990,23 +5007,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->>       return 0;
->>   }
->> 
->> -
->> -    if (rt2x00_rt(rt2x00dev, RT3572)) {
->> -        rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
->> -        rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
->> -        rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
->> -
->> -        rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
->> -        rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
->> -        rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
->> -        rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->> -        msleep(1);
->> -        rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
->> -        rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
->> -        rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
->> -        rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
->> -    }
->> -
->>   /*
->>    * Set RX Filter calibration for 20MHz and 40MHz
->>    */
->> -- 
->> 1.7.4.4
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Merge code which program the same registes at the end of rfcsr
+initialization for 5592, 5392 and 5390 chips.
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   84 +++++++++++++-----------------
+ 1 files changed, 36 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6a167a2..22c10e1 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4396,6 +4396,35 @@ static u8 rt2800_init_rx_filter(struct rt2x00_dev *rt2x00dev,
+ 	return rfcsr24;
+ }
+ 
++static void rt2800_normal_mode_setup_5xxx(struct rt2x00_dev *rt2x00dev)
++{
++	u8 reg;
++	u16 eeprom;
++
++	/*  Turn off unused DAC1 and ADC1 to reduce power consumption */
++	rt2800_bbp_read(rt2x00dev, 138, &reg);
++	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
++	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH) == 1)
++		rt2x00_set_field8(&reg, BBP138_RX_ADC1, 0);
++	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) == 1)
++		rt2x00_set_field8(&reg, BBP138_TX_DAC1, 1);
++	rt2800_bbp_write(rt2x00dev, 138, reg);
++
++	rt2800_rfcsr_read(rt2x00dev, 38, &reg);
++	rt2x00_set_field8(&reg, RFCSR38_RX_LO1_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 38, reg);
++
++	rt2800_rfcsr_read(rt2x00dev, 39, &reg);
++	rt2x00_set_field8(&reg, RFCSR39_RX_LO2_EN, 0);
++	rt2800_rfcsr_write(rt2x00dev, 39, reg);
++
++	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
++
++	rt2800_rfcsr_read(rt2x00dev, 30, &reg);
++	rt2x00_set_field8(&reg, RFCSR30_RX_VCM, 2);
++	rt2800_rfcsr_write(rt2x00dev, 30, reg);
++}
++
+ static void rt2800_init_rfcsr_305x_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+@@ -4725,6 +4754,8 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
+ 	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
++
++	rt2800_normal_mode_setup_5xxx(rt2x00dev);
+ }
+ 
+ static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
+@@ -4788,13 +4819,12 @@ static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 61, 0x91);
+ 	rt2800_rfcsr_write(rt2x00dev, 62, 0x39);
+ 	rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
++
++	rt2800_normal_mode_setup_5xxx(rt2x00dev);
+ }
+ 
+ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+ {
+-	u8 reg;
+-	u16 eeprom;
+-
+ 	rt2800_rfcsr_write(rt2x00dev, 1, 0x3F);
+ 	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
+ 	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
+@@ -4823,34 +4853,11 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_adjust_freq_offset(rt2x00dev);
+ 
+-	rt2800_bbp_read(rt2x00dev, 138, &reg);
+-
+-	/*  Turn off unused DAC1 and ADC1 to reduce power consumption */
+-	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
+-	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH) == 1)
+-		rt2x00_set_field8(&reg, BBP138_RX_ADC1, 0);
+-	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) == 1)
+-		rt2x00_set_field8(&reg, BBP138_TX_DAC1, 1);
+-
+-	rt2800_bbp_write(rt2x00dev, 138, reg);
+-
+ 	/* Enable DC filter */
+ 	if (rt2x00_rt_rev_gte(rt2x00dev, RT5592, REV_RT5592C))
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ 
+-	rt2800_rfcsr_read(rt2x00dev, 38, &reg);
+-	rt2x00_set_field8(&reg, RFCSR38_RX_LO1_EN, 0);
+-	rt2800_rfcsr_write(rt2x00dev, 38, reg);
+-
+-	rt2800_rfcsr_read(rt2x00dev, 39, &reg);
+-	rt2x00_set_field8(&reg, RFCSR39_RX_LO2_EN, 0);
+-	rt2800_rfcsr_write(rt2x00dev, 39, reg);
+-
+-	rt2800_bbp4_mac_if_ctrl(rt2x00dev);
+-
+-	rt2800_rfcsr_read(rt2x00dev, 30, &reg);
+-	rt2x00_set_field8(&reg, RFCSR30_RX_VCM, 2);
+-	rt2800_rfcsr_write(rt2x00dev, 30, reg);
++	rt2800_normal_mode_setup_5xxx(rt2x00dev);
+ }
+ 
+ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+@@ -5055,17 +5062,14 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3090) ||
+-	    rt2x00_rt(rt2x00dev, RT5592)) {
+-		rt2800_bbp_read(rt2x00dev, 138, &bbp);
+-
++	if (rt2x00_rt(rt2x00dev, RT3090)) {
+ 		/*  Turn off unused DAC1 and ADC1 to reduce power consumption */
++		rt2800_bbp_read(rt2x00dev, 138, &bbp);
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
+ 		if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH) == 1)
+ 			rt2x00_set_field8(&bbp, BBP138_RX_ADC1, 0);
+ 		if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) == 1)
+ 			rt2x00_set_field8(&bbp, BBP138_TX_DAC1, 1);
+-
+ 		rt2800_bbp_write(rt2x00dev, 138, bbp);
+ 	}
+ 
+@@ -5111,22 +5115,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 29, rfcsr);
+ 	}
+ 
+-	if (rt2x00_rt(rt2x00dev, RT5390) ||
+-	    rt2x00_rt(rt2x00dev, RT5392) ||
+-	    rt2x00_rt(rt2x00dev, RT5592)) {
+-		rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
+-		rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
+-
+-		rt2800_rfcsr_read(rt2x00dev, 39, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR39_RX_LO2_EN, 0);
+-		rt2800_rfcsr_write(rt2x00dev, 39, rfcsr);
+-
+-		rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR30_RX_VCM, 2);
+-		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+-	}
+-
+ 	return 0;
+ }
+ 
+-- 
+1.7.4.4
+
