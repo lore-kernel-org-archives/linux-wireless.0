@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3943 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4194 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751823Ab3DRTTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 15:19:06 -0400
-Message-ID: <51704721.2020001@broadcom.com> (sfid-20130418_211910_298945_F0A5E311)
-Date: Thu, 18 Apr 2013 21:18:57 +0200
+	id S966477Ab3DQT0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 15:26:13 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/10] brcmfmac: destination mac closed when interface
+ is closed
+Date: Wed, 17 Apr 2013 21:25:53 +0200
+Message-ID: <1366226758-20641-6-git-send-email-arend@broadcom.com> (sfid-20130417_212620_437498_AE4347B2)
+In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
+References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "Marcel Holtmann" <marcel@holtmann.org>
-cc: "Bing Zhao" <bzhao@marvell.com>,
-	"linux-netdev@vger.kernel.org" <linux-netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Paul Stewart" <pstew@chromium.org>
-Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
-References: <1366236369-543-1-git-send-email-bzhao@marvell.com>
- <0156C538-4175-47E9-B667-C2127CBEF3EB@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430D9E05713A@SC-VEXCH1.marvell.com>
- <CD07F4FD-7136-44EA-A39C-5AB660726BDE@holtmann.org>
-In-Reply-To: <CD07F4FD-7136-44EA-A39C-5AB660726BDE@holtmann.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2013 09:10 PM, Marcel Holtmann wrote:
-> Hi Bing,
->
->>>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
->>>> file structure to indicate the mode of the wireless device so
->>>> it can be discovered easily from userspace.
->>>
->>> I do question a little bit the usefulness for this one.
->>> It would only work on netdev and on wdev devices.
->>
->> It's true. That's why the new sysfs entry is added in the 'wireless' placeholder.
->>
->> /sys/class/net/ethX/wireless/
->>
->> For non-wireless dev, this won't apply.
->
-> I have to correct myself. I meant it does NOT work for wdev. Please just go with nl80211 for this kind of information. It is the right way to handle it. Not some sysfs file.
->
+Firmware signals a destination is closed as well as an interface. A
+destination is associated with an interface. When an interface is
+closed consequently the destination should be considered closed as
+well.
 
-I wanted to correct you on P2P but that would be diverging from the real 
-message. Totally agreeing. Why add another user-space API when the 
-nl80211 API can provide the information.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 9dae8fc..0d2ff60 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -714,11 +714,21 @@ done:
+ 	return entry;
+ }
+ 
+-static bool brcmf_fws_mac_desc_closed(struct brcmf_fws_mac_descriptor *entry,
++static bool brcmf_fws_mac_desc_closed(struct brcmf_fws_info *fws,
++				      struct brcmf_fws_mac_descriptor *entry,
+ 				      int fifo)
+ {
++	struct brcmf_fws_mac_descriptor *if_entry;
+ 	bool closed;
+ 
++	/* for unique destination entries the related interface
++	 * may be closed.
++	 */
++	if (entry->mac_handle) {
++		if_entry = &fws->desc.iface[entry->interface_id];
++		if (if_entry->state == BRCMF_FWS_STATE_CLOSE)
++			return true;
++	}
+ 	/* an entry is closed when the state is closed and
+ 	 * the firmware did not request anything.
+ 	 */
+@@ -1079,7 +1089,8 @@ static struct sk_buff *brcmf_fws_deq(struct brcmf_fws_info *fws, int fifo)
+ 
+ 	for (i = 0; i < num_nodes; i++) {
+ 		entry = &table[(node_pos + i) % num_nodes];
+-		if (!entry->occupied || brcmf_fws_mac_desc_closed(entry, fifo))
++		if (!entry->occupied ||
++		    brcmf_fws_mac_desc_closed(fws, entry, fifo))
+ 			continue;
+ 
+ 		if (entry->suppressed)
+@@ -1753,7 +1764,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 
+ 	brcmf_fws_lock(drvr, flags);
+ 	if (skcb->mac->suppressed ||
+-	    brcmf_fws_mac_desc_closed(skcb->mac, fifo) ||
++	    brcmf_fws_mac_desc_closed(drvr->fws, skcb->mac, fifo) ||
+ 	    brcmu_pktq_mlen(&skcb->mac->psq, 3 << (fifo * 2)) ||
+ 	    (!multicast &&
+ 	     brcmf_fws_consume_credit(drvr->fws, fifo, skb) < 0)) {
+-- 
+1.7.10.4
 
 
