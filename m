@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:62096 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932705Ab3DFHIg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Apr 2013 03:08:36 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:4302 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966698Ab3DQT0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 15:26:15 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 07/10] brcmfmac: use lock in brcmf_fws_del_interface()
+Date: Wed, 17 Apr 2013 21:25:55 +0200
+Message-ID: <1366226758-20641-8-git-send-email-arend@broadcom.com> (sfid-20130417_212621_201475_6957B761)
+In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
+References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <8762008auk.fsf@purkki.adurom.net>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
-	<201304051903.11215.chunkeey@googlemail.com>
-	<CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-	<8762008auk.fsf@purkki.adurom.net>
-Date: Sat, 6 Apr 2013 00:08:34 -0700
-Message-ID: <CAJ-VmomQaYFMR0G1DM+dno6qB+AdXUom8=kWPzJoOjuzQj81bw@mail.gmail.com> (sfid-20130406_090851_654494_C7E18EB7)
-Subject: Re: Version number policy!
-From: Adrian Chadd <adrian@freebsd.org>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 April 2013 22:52, Kalle Valo <kvalo@adurom.com> wrote:
-> Eugene Krasnikov <k.eugene.e@gmail.com> writes:
->
->> Good point regarding timestamp.
->>
->> When it comes to feature bitmap do you have an example of such a
->> bitmap from carl9170? Why not to rely always on major version?
->
-> I'm with Christian here. In ath6kl we switched to firmware advertising
-> feature capabilities and I have never looked back, it's so much easier.
-> You don't need to do any mapping between firmware versions and features,
-> you just deal one feature at a time.
+When deleting an interface in firmware-signalling module it will
+clear any destination descriptors. To avoid concurrency issues it
+should take the lock using brcmf_fws_lock().
 
-Ok. Well, we've got plenty of time to finalise this before things get
-established. There's still plenty of tidying up to do before we start
-pushing in new features.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Thanks for all your feedback so far!
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 648f9bd..1cfec56 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1821,14 +1821,17 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp)
+ void brcmf_fws_del_interface(struct brcmf_if *ifp)
+ {
+ 	struct brcmf_fws_mac_descriptor *entry = ifp->fws_desc;
++	ulong flags;
+ 
+ 	brcmf_dbg(TRACE, "enter: idx=%d\n", ifp->bssidx);
+ 	if (!entry)
+ 		return;
+ 
++	brcmf_fws_lock(ifp->drvr, flags);
+ 	ifp->fws_desc = NULL;
+ 	brcmf_fws_clear_mac_descriptor(entry);
+ 	brcmf_fws_cleanup(ifp->drvr->fws, ifp->ifidx);
++	brcmf_fws_unlock(ifp->drvr, flags);
+ }
+ 
+ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
+-- 
+1.7.10.4
 
 
-
-Adrian
