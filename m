@@ -1,43 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39969 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935480Ab3DKRal convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 13:30:41 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [RFC] [PATCH 2/2 v2] NFC: RFKILL support
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1365678562-5583-3-git-send-email-sameo@linux.intel.com>
-Date: Thu, 11 Apr 2013 10:30:38 -0700
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Linux NFC" <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Message-Id: <737A0683-68F6-4088-8F40-B84C496EACBA@holtmann.org> (sfid-20130411_193056_881726_4E7D0E64)
-References: <1365678562-5583-1-git-send-email-sameo@linux.intel.com> <1365678562-5583-3-git-send-email-sameo@linux.intel.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
+Received: from mx3.wp.pl ([212.77.101.7]:9259 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966244Ab3DQMHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 08:07:37 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH v2 06/11] rt2800: move RFCSR6_R2 & LDO_CFG0 setup to 3572 specific rfcsr init
+Date: Wed, 17 Apr 2013 14:08:15 +0200
+Message-Id: <1366200500-4661-7-git-send-email-stf_xl@wp.pl> (sfid-20130417_140749_049502_C7DDF4F3)
+In-Reply-To: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-> All NFC devices will now get proper RFKILL support as long as they provide
-> some dev_up and dev_down hooks. Rfkilling an NFC device will bring it down
-> while it is left to userspace to bring it back up when being rfkill unblocked.
-> This is very similar to what Bluetooth does.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   34 +++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 17 deletions(-)
 
-this is almost a literal copy of my Bluetooth RFKILL patch ;)
-
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> ---
-> include/net/nfc/nfc.h |    2 ++
-> net/nfc/core.c        |   38 ++++++++++++++++++++++++++++++++++++++
-> 2 files changed, 40 insertions(+)
-
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 102e50c..6907cd3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4709,6 +4709,9 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+ {
++	u8 rfcsr;
++	u32 reg;
++
+ 	rt2800_rf_init_calibration(rt2x00dev, 30);
+ 
+ 	rt2800_rfcsr_write(rt2x00dev, 0, 0x70);
+@@ -4742,6 +4745,20 @@ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 29, 0x9b);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, 0x09);
+ 	rt2800_rfcsr_write(rt2x00dev, 31, 0x10);
++
++	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
++	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
++
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
++	rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++	msleep(1);
++	rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++	rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
++	rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++	rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ }
+ 
+ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+@@ -4994,23 +5011,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		return 0;
+ 	}
+ 
+-
+-	if (rt2x00_rt(rt2x00dev, RT3572)) {
+-		rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
+-		rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+-
+-		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+-		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
+-		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+-		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+-		msleep(1);
+-		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
+-		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
+-		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+-		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+-	}
+-
+ 	/*
+ 	 * Set RX Filter calibration for 20MHz and 40MHz
+ 	 */
+-- 
+1.7.4.4
 
