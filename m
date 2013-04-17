@@ -1,103 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39489 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778Ab3DXEOv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 00:14:51 -0400
-Message-ID: <51775C01.20807@oracle.com> (sfid-20130424_061538_308440_FEB00AA4)
-Date: Wed, 24 Apr 2013 00:13:53 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4302 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966751Ab3DQT0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 15:26:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/10] brcmutil: simplify brcmu_pkt_free_skb()
+Date: Wed, 17 Apr 2013 21:25:52 +0200
+Message-ID: <1366226758-20641-5-git-send-email-arend@broadcom.com> (sfid-20130417_212628_686076_C6968C43)
+In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
+References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Martin Pitt <martin.pitt@ubuntu.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH v2] mac80211_hwsim: Register and bind to driver
-References: <20130408093001.GE2818@piware.de> <1365431569.25475.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1365431569.25475.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2013 10:32 AM, Johannes Berg wrote:
-> On Mon, 2013-04-08 at 11:30 +0200, Martin Pitt wrote:
->> Properly register our mac80211_hwsim_driver, attach it to the platform bus.
->> Bind newly created hwsim devices to that driver, so that our wlan devices get
->> a proper "driver" sysfs attribute.
->>
->> This makes mac80211_hwsim interfaces work with NetworkManager.
-> 
-> Applied.
+The function brcmu_pkt_free_skb() use skb->destructor to decide
+how the sk_buff should be freed. However, when running AP mode
+with iptables configured this results in a kernel warning.
 
-Hi guys,
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmutil/utils.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-The registration of the driver here is somewhat odd.
-
-You're trying to register a platform driver, but are not actually creating
-a struct platform_driver at any point. This makes registration do the wrong
-thing.
-
-Simply booting a kernel with that patch would cause it to blow up because
-running to_platform_driver() on the device_driver object would point to garbage:
-
-[   25.349569] BUG: unable to handle kernel NULL pointer dereference at 0000000000000001
-[   25.350254] IP: [<ffffffff81f39fa5>] platform_match+0x45/0xc0
-[   25.350886] PGD 0
-[   25.351141] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-[   25.351775] Dumping ftrace buffer:
-[   25.352174]    (ftrace buffer empty)
-[   25.352581] Modules linked in:
-[   25.352949] CPU: 3 PID: 1 Comm: swapper/0 Tainted: G        W    3.9.0-rc8-next-20130423-sasha-00013-gff425d3-dirty #350
-[   25.353905] task: ffff8800b9f08000 ti: ffff8800b9f10000 task.ti: ffff8800b9f10000
-[   25.354577] RIP: 0010:[<ffffffff81f39fa5>]  [<ffffffff81f39fa5>] platform_match+0x45/0xc0
-[   25.355485] RSP: 0000:ffff8800b9f11c98  EFLAGS: 00010202
-[   25.356307] RAX: 000000000000000e RBX: ffff8800b9ad9be8 RCX: 00000000f4b5f4b4
-[   25.357184] RDX: ffff8800b9f08000 RSI: 0000000000000001 RDI: 0000000000000282
-[   25.357939] RBP: ffff8800b9f11cb8 R08: 0000000000000002 R09: 0000000000000000
-[   25.358791] R10: 0000000000000000 R11: 0000000000000000 R12: ffffffff86083640
-[   25.359134] R13: 0000000000000001 R14: 0000000000000000 R15: ffffffff85f963c0
-[   25.359134] FS:  0000000000000000(0000) GS:ffff8800bba00000(0000) knlGS:0000000000000000
-[   25.359134] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   25.359134] CR2: 0000000000000001 CR3: 0000000005826000 CR4: 00000000000406e0
-[   25.359134] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   25.359134] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[   25.359134] Stack:
-[   25.359134]  ffff8800b9f11cd8 ffff8800b9ad9be8 ffffffff86083640 ffffffff81f37f90
-[   25.359134]  ffff8800b9f11ce8 ffffffff81f37fca 0000000000000000 0000000000000000
-[   25.359134]  ffffffff86083640 ffffffff81f37f90 ffff8800b9f11d28 ffffffff81f35ca1
-[   25.359134] Call Trace:
-[   25.359134]  [<ffffffff81f37f90>] ? driver_probe_device+0x340/0x340
-[   25.359134]  [<ffffffff81f37fca>] __driver_attach+0x3a/0xb0
-[   25.359134]  [<ffffffff81f37f90>] ? driver_probe_device+0x340/0x340
-[   25.359134]  [<ffffffff81f35ca1>] bus_for_each_dev+0x61/0xa0
-[   25.359134]  [<ffffffff81f37629>] driver_attach+0x19/0x20
-[   25.359134]  [<ffffffff81f37198>] bus_add_driver+0x118/0x2a0
-[   25.359134]  [<ffffffff8668694e>] ? wil6210_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff81f38778>] driver_register+0xa8/0x170
-[   25.359134]  [<ffffffff8668694e>] ? wil6210_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff8668694e>] ? wil6210_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff86686a3e>] init_mac80211_hwsim+0xf0/0xaaa
-[   25.359134]  [<ffffffff86686933>] ? ar5523_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff86686933>] ? ar5523_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff8668694e>] ? wil6210_driver_init+0x1b/0x1b
-[   25.359134]  [<ffffffff810020f2>] do_one_initcall+0xb2/0x1b0
-[   25.359134]  [<ffffffff865f3021>] kernel_init_freeable+0x15d/0x1ef
-[   25.359134]  [<ffffffff865f2801>] ? loglevel+0x31/0x31
-[   25.359134]  [<ffffffff83f8ebd0>] ? rest_init+0x140/0x140
-[   25.359134]  [<ffffffff83f8ebd9>] kernel_init+0x9/0xf0
-[   25.359134]  [<ffffffff83fff1fc>] ret_from_fork+0x7c/0xb0
-[   25.359134]  [<ffffffff83f8ebd0>] ? rest_init+0x140/0x140
-[   25.359134] Code: 48 8b 7e 30 48 89 de e8 5d d7 c5 ff 48 85 c0 75 75 48 8b 73 f0 48 c7 c7 fa a0 20 85 e8 74 01 07 02 4d 8b 6c
-24 78 4d 85 ed 74 43 <41> 80 7d 00 00 74 2f 4c 8b 63 f0 4c 89 ee 4c 89 e7 e8 35 1e ae
-[   25.359134] RIP  [<ffffffff81f39fa5>] platform_match+0x45/0xc0
-[   25.359134]  RSP <ffff8800b9f11c98>
-[   25.359134] CR2: 0000000000000001
-[   25.386186] ---[ end trace 6293fa4fd2b61873 ]---
-
-I don't have the hardware to test out any changes I do, but I'll send out a patch
-tomorrow to try and fix that unless someone beats me to it.
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+index bf5e50f..0f7e1c7 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
++++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+@@ -45,17 +45,9 @@ void brcmu_pkt_buf_free_skb(struct sk_buff *skb)
+ {
+ 	if (!skb)
+ 		return;
++
+ 	WARN_ON(skb->next);
+-	if (skb->destructor)
+-		/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
+-		 * destructor exists
+-		 */
+-		dev_kfree_skb_any(skb);
+-	else
+-		/* can free immediately (even in_irq()) if destructor
+-		 * does not exist
+-		 */
+-		dev_kfree_skb(skb);
++	dev_kfree_skb_any(skb);
+ }
+ EXPORT_SYMBOL(brcmu_pkt_buf_free_skb);
+ 
+-- 
+1.7.10.4
 
 
-Thanks,
-Sasha
