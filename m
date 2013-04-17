@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:60185 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804Ab3DNOPH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Apr 2013 10:15:07 -0400
-Received: by mail-qc0-f174.google.com with SMTP id z24so1236020qcq.33
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Apr 2013 07:15:05 -0700 (PDT)
-Message-ID: <516AB9E7.1010701@lwfinger.net> (sfid-20130414_161513_491147_72AB9BB6)
-Date: Sun, 14 Apr 2013 09:15:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Davide Marchi <danjde@msw.it>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: realtek usb wifi based on "rtl8192cu"
-References: <516539DC.8060004@msw.it> <51657D84.2080308@lwfinger.net> <5166E8CB.3040802@msw.it> <516A86DF.6020605@msw.it>
-In-Reply-To: <516A86DF.6020605@msw.it>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from mx3.wp.pl ([212.77.101.7]:9164 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966244Ab3DQMHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 08:07:41 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH v2 08/11] rt2800: move RF_R27 setup to individual rfcsr init subroutines
+Date: Wed, 17 Apr 2013 14:08:17 +0200
+Message-Id: <1366200500-4661-9-git-send-email-stf_xl@wp.pl> (sfid-20130417_140750_579825_29DDB0E6)
+In-Reply-To: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/14/2013 05:37 AM, Davide Marchi wrote:
-> On 04/10/2013  04:56 PM,Larry Finger wrote:
->> If 3.8.6 does not fix it, then try the kernel from the wireless-testing git tree.
-> ok, i've tryed the wireless-testing git tree kernel (3.9.0-rc6 #1 SMP x86_64
-> GNU/Linux), and doesn't work.
-> Infinitely it ask me the wep/wpa key..
->
-> any other suggestion? Module loading options?
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-That particular module has very few options - only "swenc=1" to force software 
-encryption, and "debug=X" to set the debug level. I doubt that either would help.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-What are the details of your connection? You have never told what encryption you 
-are trying to use. I have no details of your AP make/model, and what firmware 
-you are using in it. Are you using NetworkManager, or some other means to 
-control the connection? If NM, what does the NM log show?
-
-Does Fedora allow you to set the debug level in wpa-supplicant? If so, set it to 
--ddd and post that log.
-
-The final thing would be to capture the over-the-air traffic with wireshark or 
-kismet. The best results would be to use a third computer to capture the 
-encryption handshaking.
-
-Larry
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ad83bcd..cf757ca 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4583,6 +4583,11 @@ static void rt2800_init_rfcsr_30xx(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	rt2800_rx_filter_calibration(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
++	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
++	    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static void rt2800_init_rfcsr_3290(struct rt2x00_dev *rt2x00dev)
+@@ -4758,6 +4763,9 @@ static void rt2800_init_rfcsr_3390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_write(rt2x00dev, GPIO_SWITCH, reg);
+ 
+ 	rt2800_rx_filter_calibration(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static void rt2800_init_rfcsr_3572(struct rt2x00_dev *rt2x00dev)
+@@ -5008,6 +5016,9 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ 
+ 	rt2800_normal_mode_setup_5xxx(rt2x00dev);
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT5592, REV_RT5592C))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ }
+ 
+ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+@@ -5066,13 +5077,6 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		return 0;
+ 	}
+ 
+-	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3090, REV_RT3090E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT3390, REV_RT3390E) ||
+-	    rt2x00_rt_rev_lt(rt2x00dev, RT5592, REV_RT5592C))
+-		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+-
+ 	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
+ 	rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
+ 	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
+-- 
+1.7.4.4
 
