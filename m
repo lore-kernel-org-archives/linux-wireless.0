@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32477 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab3D3H5d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Apr 2013 03:57:33 -0400
-Date: Tue, 30 Apr 2013 10:57:05 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Simon Kelley <simon@thekelleys.org.uk>,
-	David Howells <dhowells@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] atmel: printing bogus information
-Message-ID: <20130430075704.GH7237@elgon.mountain> (sfid-20130430_095738_928995_CD32B50D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx4.wp.pl ([212.77.101.8]:40241 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966175Ab3DQM3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 08:29:55 -0400
+From: stf_xl@wp.pl
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: [PATCH 2/2] rt2800: nulify all last words of TXWI
+Date: Wed, 17 Apr 2013 14:30:48 +0200
+Message-Id: <1366201848-18009-3-git-send-email-stf_xl@wp.pl> (sfid-20130417_142959_212274_A2C52382)
+In-Reply-To: <1366201848-18009-1-git-send-email-stf_xl@wp.pl>
+References: <1366201848-18009-1-git-send-email-stf_xl@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was an extra ';' character added to the end of the if statement
-which means that it always prints that the /proc entry wasn't created
-even though it was.
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index 23a3498..2876b90 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -1624,7 +1624,7 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 5c20e98..35f58bb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -542,6 +542,7 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ {
+ 	__le32 *txwi = rt2800_drv_get_txwi(entry);
+ 	u32 word;
++	int i;
  
- 	netif_carrier_off(dev);
+ 	/*
+ 	 * Initialize TX Info descriptor
+@@ -584,14 +585,16 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ 	rt2x00_desc_write(txwi, 1, word);
  
--	if (!proc_create_data("driver/atmel", 0, NULL, &atmel_proc_fops, priv));
-+	if (!proc_create_data("driver/atmel", 0, NULL, &atmel_proc_fops, priv))
- 		printk(KERN_WARNING "atmel: unable to create /proc entry.\n");
+ 	/*
+-	 * Always write 0 to IV/EIV fields, hardware will insert the IV
+-	 * from the IVEIV register when TXD_W3_WIV is set to 0.
++	 * Always write 0 to IV/EIV fields (word 2 and 3), hardware will insert
++	 * the IV from the IVEIV register when TXD_W3_WIV is set to 0.
+ 	 * When TXD_W3_WIV is set to 1 it will use the IV data
+ 	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
+ 	 * crypto entry in the registers should be used to encrypt the frame.
++	 *
++	 * Nulify all remaining words as well, we don't know how to program them.
+ 	 */
+-	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
+-	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
++	for (i = 2; i < entry->queue->winfo_size / sizeof(__le32); i++)
++		_rt2x00_desc_write(txwi, i, 0);
+ }
+ EXPORT_SYMBOL_GPL(rt2800_write_tx_data);
  
- 	printk(KERN_INFO "%s: Atmel at76c50x. Version %d.%d. MAC %pM\n",
+-- 
+1.7.4.4
+
