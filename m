@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38190 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935157Ab3DJRqG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56073 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965775Ab3DQJmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 13:46:06 -0400
-Date: Wed, 10 Apr 2013 13:31:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-04-08
-Message-ID: <20130410173107.GC15428@tuxdriver.com> (sfid-20130410_194612_786620_1BDC5A13)
-References: <1365421170.25475.9.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365421170.25475.9.camel@jlt4.sipsolutions.net>
+	Wed, 17 Apr 2013 05:42:14 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix station entry leak/warning while suspending
+Date: Wed, 17 Apr 2013 11:42:07 +0200
+Message-Id: <1366191727-12395-1-git-send-email-johannes@sipsolutions.net> (sfid-20130417_114220_627188_D0004181)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 08, 2013 at 01:39:30PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Here's another big pull request for the -next stream. This one has a ton
-> of driver updates, which hopefully addresses all drivers, but maybe you
-> have more new drivers than I have in my tree? Not entirely sure, let me
-> know if this is the case and then I can merge wireless-next.
-> 
-> I'm including a large number of small changes, see the shortlog. The two
-> bigger things are making VHT compatible with not using channel contexts
-> (from Karl) and the stop-while-suspended fixes I developed together with
-> Stanislaw.
-> 
-> Let me know if there are any problems.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit f00f188f8212fec9976394976c4fd5d4a3bc4dcf:
-> 
->   cfg80211: fix error return code in cfg80211_init() (2013-03-20 14:09:56 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to ddc4db2e3d5393ede7a9222bb3b7522a603a4678:
-> 
->   mac80211: make ieee802_11_parse_elems an inline (2013-04-08 11:08:32 +0200)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Pulling now...
+Since Stanislaw's patches, when suspending while connected,
+cfg80211 will disconnect. This causes the AP station to be
+removed, which uses call_rcu() to clean up. Due to needing
+process context, this queues a work struct on the mac80211
+workqueue. This will warn and fail when already suspended,
+which can happen if the rcu call doesn't happen quickly.
 
+To fix this, replace the synchronize_net() which is really
+just synchronize_rcu_expedited() with rcu_barrier(), which
+unlike synchronize_rcu() waits until RCU callback have run
+and thus avoids this issue.
+
+In theory, this can even happen without Stanislaw's change
+to disconnect on suspend since userspace might disconnect
+just before suspending, though then it's unlikely that the
+call_rcu() will be delayed long enough.
+
+Cc: stable@vger.kernel.org [3.7+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/pm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index d1c021b..4431f0f 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -37,8 +37,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 					IEEE80211_MAX_QUEUE_MAP,
+ 					IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
+-	/* flush out all packets */
+-	synchronize_net();
++	/* flush out all packets and station cleanup call_rcu()s */
++	rcu_barrier();
+ 
+ 	ieee80211_flush_queues(local, NULL);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
