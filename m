@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60009 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760269Ab3DJNKK (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:63019 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab3DQMlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 09:10:10 -0400
-Message-ID: <1365599399.8388.13.camel@jlt4.sipsolutions.net> (sfid-20130410_151014_956420_5BEA4300)
-Subject: Re: [PATCH v2] mac80211: provide SSID for IBSS vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Wed, 10 Apr 2013 15:09:59 +0200
-In-Reply-To: <1365592753-5404-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1365592753-5404-1-git-send-email-marek.puzyniak@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 17 Apr 2013 08:41:14 -0400
+Received: by mail-ie0-f179.google.com with SMTP id 16so1823201iea.10
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:41:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1366200500-4661-8-git-send-email-stf_xl@wp.pl>
+References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+	<1366200500-4661-8-git-send-email-stf_xl@wp.pl>
+Date: Wed, 17 Apr 2013 14:41:14 +0200
+Message-ID: <CAL1gcdMcoam5m4aVpAkKBtOoLhXf2VVAjrL2FAxE9XAWx6YJpg@mail.gmail.com> (sfid-20130417_144119_223650_4D314A0D)
+Subject: Re: [PATCH v2 07/11] rt2800: add rt2800_rx_filter_calibration procedure
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-10 at 13:19 +0200, Marek Puzyniak wrote:
-> Some drivers need SSID in AP and IBSS mode. AP SSID is provided
-> through BSS_CHANGED_SSID notification. There was no easy way
-> to do the same for IBSS. In IBSS mode SSID is known but was
-> not stored in BSS configuration. This patch provides functionality
-> which stores IBSS ssid in BSS conf and expands BSS_CHANGED_SSID
-> notification to cover also IBSS mode.
+On Wed, Apr 17, 2013 at 2:08 PM,  <stf_xl@wp.pl> wrote:
+> From: Stanislaw Gruszka <stf_xl@wp.pl>
+>
+> Add procedure for both bands filter calibration and use it on individual
+> chipset init rfcsr subroutines.
+>
+> Remove "Set back to initial state" code for 3290 since vendor driver
+> DPO_RT3290_LinuxSTA_V2600_20120508 does not include it.
+>
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Applied, I also removed the memset here.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-johannes
-
+---
+Gertjan
