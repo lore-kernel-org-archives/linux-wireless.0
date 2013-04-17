@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60275 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756584Ab3DWXvr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 19:51:47 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.10 3/4] mwifiex: Do not kfree cmd buf while unregistering PCIe
-Date: Tue, 23 Apr 2013 16:49:49 -0700
-Message-ID: <1366760990-15748-4-git-send-email-bzhao@marvell.com> (sfid-20130424_015152_393403_D58801EB)
-In-Reply-To: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
-References: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:33259 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965626Ab3DQMzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Apr 2013 08:55:05 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1USRt9-0006m6-Ft
+	for linux-wireless@vger.kernel.org; Wed, 17 Apr 2013 14:55:03 +0200
+Received: from 69-165-152-163.dsl.teksavvy.com ([69.165.152.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 14:55:03 +0200
+Received: from JoelleEmmily by 69-165-152-163.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 14:55:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Joelle <JoelleEmmily@gmail.com>
+Subject: Re: RTL8187 in master mode with hostapd
+Date: Wed, 17 Apr 2013 12:51:32 +0000 (UTC)
+Message-ID: <loom.20130417T144556-632@post.gmane.org> (sfid-20130417_145512_125729_1E5F89B6)
+References: <20120727171137.4a1d1ce7@homerow> <501405FA.3070504@lwfinger.net> <20120728211613.45ca10fa@homerow> <5016A5D3.10301@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Larry Finger <Larry.Finger@...> writes:
 
-All the command buffers are freed in mwifiex_free_cmd_buffer()
-and hence there is no need to kfree the current command buffer
-again. This might ends up freeing memory allocated by some other
-kernel code.
+> 
+> As far as I know, there are no USB devices that meet all of your
+requirements. 
+> If you relax the one about external firmware, then any of the USB devices
+that 
+> run rt2800usb (Ralink) should support master mode. I'm not at home now and do 
+> not have mine with me, thus I cannot give you a make/model. An older
+dual-band 
+> model is the Dell 1450U. These are available new on E-bay for $10. Perhaps 
+> someone else on this list can suggest other specific models. I am quite
+certain 
+> that Atheros also has such devices.
+> 
+> Larry
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index b924e1d..eaf93f5 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -863,7 +863,6 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
- 		MWIFIEX_SKB_PACB(card->cmd_buf, &buf_pa);
- 		pci_unmap_single(card->dev, buf_pa, MWIFIEX_SIZE_OF_CMD_BUFFER,
- 				 PCI_DMA_TODEVICE);
--		dev_kfree_skb_any(card->cmd_buf);
- 	}
- 	return 0;
- }
--- 
-1.7.0.2
+The statement that the rtl8187 CANNOT be set as an AP is utterly wrong. Alfa
+networks provides a Windows utility that allows one to setup an AP, I've
+used it and it works(as well as anything on windows). It seems that this is
+a crime against technology that windows can provide a functionality that
+Linux cannot or may never. 
+
 
