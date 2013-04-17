@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34206 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935382Ab3DPD4O (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:37789 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966154Ab3DQMec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 23:56:14 -0400
-Message-ID: <516CCBDA.6070409@candelatech.com> (sfid-20130416_055622_407200_5C4EEF66)
-Date: Mon, 15 Apr 2013 20:56:10 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 17 Apr 2013 08:34:32 -0400
+Received: by mail-ie0-f169.google.com with SMTP id ar20so1843096iec.28
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:34:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k-devel@qca.qualcomm.com
-Subject: Re: ath10k: mac80211 driver for QCA9880
-References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1366200500-4661-3-git-send-email-stf_xl@wp.pl>
+References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
+	<1366200500-4661-3-git-send-email-stf_xl@wp.pl>
+Date: Wed, 17 Apr 2013 14:34:31 +0200
+Message-ID: <CAL1gcdO9z2X5h73K6vgrYQVu6qw80k=zXb9_gR7yX=u3FYHfig@mail.gmail.com> (sfid-20130417_143435_783788_D9C81AB0)
+Subject: Re: [PATCH v2 02/11] rt2800: move rf init calibration code
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Stanislaw Gruszka <stf_xl@wp.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/15/2013 05:20 AM, Kalle Valo wrote:
-> Hi,
+On Wed, Apr 17, 2013 at 2:08 PM,  <stf_xl@wp.pl> wrote:
+> From: Stanislaw Gruszka <stf_xl@wp.pl>
 >
-> I just pushed initial version of ath10k, our new driver for QCA9880 &
-> co, to github.com:
+> Add separate function for rf init calibration code and use it
+> on all init rf subroutines.
 >
-> https://github.com/kvalo/ath10k
->
-> The driver is pretty small, roughly 14 kLOC. Even if the name implies
-> that this is an evolution from ath9k, the drivers are actually very
-> different. The biggest difference is that there's now firmware running
-> on the chip.
->
-> Once ath10k is ready I will send it for proper review. But we are not
-> quite there yet.
+> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Is there any info on it's expected support for virtual stations, APs, etc?
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Hardware is still hard to come by it seems..hope that changes soon!
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+---
+Gertjan
