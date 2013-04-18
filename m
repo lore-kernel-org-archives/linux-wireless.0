@@ -1,26 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58506 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755690Ab3DWHJJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 03:09:09 -0400
-Message-ID: <5176338E.1020305@openwrt.org> (sfid-20130423_090918_045192_F43E9508)
-Date: Tue, 23 Apr 2013 09:09:02 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] ath9k: Remove unused argument "size"
-References: <1366699939-14076-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1366699939-14076-1-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from senator.holtmann.net ([87.106.208.187]:51312 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934Ab3DRTLC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 15:11:02 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9E05713A@SC-VEXCH1.marvell.com>
+Date: Thu, 18 Apr 2013 12:10:59 -0700
+Cc: "linux-netdev@vger.kernel.org" <linux-netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Paul Stewart <pstew@chromium.org>
+Message-Id: <CD07F4FD-7136-44EA-A39C-5AB660726BDE@holtmann.org> (sfid-20130418_211107_894379_42867944)
+References: <1366236369-543-1-git-send-email-bzhao@marvell.com> <0156C538-4175-47E9-B667-C2127CBEF3EB@holtmann.org> <477F20668A386D41ADCC57781B1F70430D9E05713A@SC-VEXCH1.marvell.com>
+To: Bing Zhao <bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-23 8:52 AM, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi Bing,
+
+>>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
+>>> file structure to indicate the mode of the wireless device so
+>>> it can be discovered easily from userspace.
+>> 
+>> I do question a little bit the usefulness for this one.
+>> It would only work on netdev and on wdev devices.
 > 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-For the whole series:
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+> It's true. That's why the new sysfs entry is added in the 'wireless' placeholder.
+> 
+> /sys/class/net/ethX/wireless/
+> 
+> For non-wireless dev, this won't apply.
+
+I have to correct myself. I meant it does NOT work for wdev. Please just go with nl80211 for this kind of information. It is the right way to handle it. Not some sysfs file.
+
+Regards
+
+Marcel
 
