@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33839 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755080Ab3DWGye (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47319 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965638Ab3DRGoG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 02:54:34 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] ath9k: Remove unused argument "size"
-Date: Tue, 23 Apr 2013 12:22:16 +0530
-Message-Id: <1366699939-14076-1-git-send-email-sujith@msujith.org> (sfid-20130423_085436_518779_D5D01A3B)
+	Thu, 18 Apr 2013 02:44:06 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <516F8F4B.1000504@lri.fr>
+Date: Wed, 17 Apr 2013 23:43:59 -0700
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bing Zhao <bzhao@marvell.com>, linux-netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Paul Stewart <pstew@chromium.org>
+Message-Id: <BF64DFEC-CFE7-4A89-B251-8E9AF3E44642@holtmann.org> (sfid-20130418_084428_824906_613236C5)
+References: <1366236369-543-1-git-send-email-bzhao@marvell.com>  (sfid-20130418_000709_842159_3005786A) <1366236590.8217.64.camel@jlt4.sipsolutions.net> <516F8F4B.1000504@lri.fr>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi Nicolas,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+>>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
+>>> file structure to indicate the mode of the wireless device so
+>>> it can be discovered easily from userspace.
+>> 
+>> What's wrong with "iw dev", i.e. netlink/nl80211?
+> 
+> "Do NOT screenscrape this tool, we don't consider its output stable."
+> 
+> So if you are in a shell script, you're basically screwed.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ebb8d36..d13faa4 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -130,7 +130,7 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
- }
- 
- static void ath_rx_addbuffer_edma(struct ath_softc *sc,
--				  enum ath9k_rx_qtype qtype, int size)
-+				  enum ath9k_rx_qtype qtype)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_buf *bf, *tbf;
-@@ -250,15 +250,9 @@ rx_init_fail:
- static void ath_edma_start_recv(struct ath_softc *sc)
- {
- 	ath9k_hw_rxena(sc->sc_ah);
--
--	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_HP,
--			      sc->rx.rx_edma[ATH9K_RX_QUEUE_HP].rx_fifo_hwsize);
--
--	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_LP,
--			      sc->rx.rx_edma[ATH9K_RX_QUEUE_LP].rx_fifo_hwsize);
--
-+	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_HP);
-+	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_LP);
- 	ath_opmode_init(sc);
--
- 	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
- }
- 
--- 
-1.8.2.1
+if you are in a shell script, you are screwed no matter what. So what is your point?
+
+Regards
+
+Marcel
+
 
