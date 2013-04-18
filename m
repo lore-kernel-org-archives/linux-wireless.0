@@ -1,186 +1,335 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4465 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760498Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:41:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 14/25] brcmfmac: add flow-control mode to firmware
- signalling
-Date: Wed, 3 Apr 2013 12:40:39 +0200
-Message-ID: <1364985650-11719-15-git-send-email-arend@broadcom.com> (sfid-20130403_124132_058538_40655DD7)
-In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:47285 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624Ab3DRQnL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 12:43:11 -0400
+Received: by mail-ob0-f173.google.com with SMTP id wn14so2651538obc.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 09:43:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20130416182606.27773.55054.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk> <20130416182606.27773.55054.stgit@warthog.procyon.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Apr 2013 10:42:50 -0600
+Message-ID: <CAErSpo5RV_A+EoiLOzZ05VOQk54a0k_C-iJku72UjkVHH0eY7A@mail.gmail.com> (sfid-20130418_184334_584448_720AE099)
+Subject: Re: [PATCH 04/28] proc: Supply PDE attribute setting accessor
+ functions [RFC]
+To: David Howells <dhowells@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	alsa-devel <alsa-devel@alsa-project.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netfilter-devel <netfilter-devel@vger.kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-media@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upcoming patches will add firmware signalled flow control. Prepare
-by adding the mode, which defaults to disable it. The mode can be
-queried by brcmf_fws_fc_active() and set by a module parameter.
+On Tue, Apr 16, 2013 at 12:26 PM, David Howells <dhowells@redhat.com> wrote:
+> Supply accessor functions to set attributes in proc_dir_entry structs.
+>
+> The following are supplied: proc_set_size() and proc_set_user().
+>
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: linuxppc-dev@lists.ozlabs.org
+> cc: linux-media@vger.kernel.org
+> cc: netdev@vger.kernel.org
+> cc: linux-wireless@vger.kernel.org
+> cc: linux-pci@vger.kernel.org
+> cc: netfilter-devel@vger.kernel.org
+> cc: alsa-devel@alsa-project.org
+> ---
+>
+>  arch/powerpc/kernel/proc_powerpc.c        |    2 +-
+>  arch/powerpc/platforms/pseries/reconfig.c |    2 +-
+>  drivers/media/pci/ttpci/av7110_ir.c       |    2 +-
+>  drivers/net/irda/vlsi_ir.c                |    2 +-
+>  drivers/net/wireless/airo.c               |   34 +++++++++--------------------
+>  drivers/pci/proc.c                        |    2 +-
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 ++
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   23 +++++++++++------
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   26 +++++++++++++++++---
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h |    1 +
- 4 files changed, 41 insertions(+), 11 deletions(-)
+For the drivers/pci part:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index af307c1..ef5e3a9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -623,5 +623,7 @@ extern void brcmf_del_if(struct brcmf_pub *drvr, s32 bssidx);
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
- extern u32 brcmf_get_chip_info(struct brcmf_if *ifp);
-+extern void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp,
-+			     bool success);
- 
- #endif				/* _BRCMF_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 3ba9e104..05c8840 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -363,21 +363,20 @@ void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
- 	}
- }
- 
--void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
-+void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp,
-+		      bool success)
- {
--	u8 ifidx;
-+	struct brcmf_if *ifp;
- 	struct ethhdr *eh;
-+	u8 ifidx;
- 	u16 type;
--	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_pub *drvr = bus_if->drvr;
--	struct brcmf_if *ifp;
- 	int res;
- 
- 	res = brcmf_proto_hdrpull(drvr, false, &ifidx, txp);
- 
- 	ifp = drvr->iflist[ifidx];
- 	if (!ifp)
--		goto done;
-+		return;
- 
- 	if (res == 0) {
- 		eh = (struct ethhdr *)(txp->data);
-@@ -391,8 +390,18 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
- 	}
- 	if (!success)
- 		ifp->stats.tx_errors++;
-+}
- 
--done:
-+void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
-+
-+	/* await txstatus signal for firmware is active */
-+	if (success && brcmf_fws_fc_active(drvr->fws))
-+		return;
-+
-+	brcmf_txfinalize(drvr, txp, success);
- 	brcmu_pkt_buf_free_skb(txp);
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 2afd850..cb1414d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -14,6 +14,7 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- #include <linux/types.h>
-+#include <linux/module.h>
- #include <linux/if_ether.h>
- #include <linux/spinlock.h>
- #include <linux/skbuff.h>
-@@ -124,10 +125,6 @@ static const char *brcmf_fws_get_tlv_name(enum brcmf_fws_tlv_type id)
- #define BRCMF_FWS_STATE_OPEN				1
- #define BRCMF_FWS_STATE_CLOSE				2
- 
--#define BRCMF_FWS_FCMODE_NONE				0
--#define BRCMF_FWS_FCMODE_IMPLIED_CREDIT			1
--#define BRCMF_FWS_FCMODE_EXPLICIT_CREDIT		2
--
- #define BRCMF_FWS_MAC_DESC_TABLE_SIZE			32
- #define BRCMF_FWS_MAX_IFNUM				16
- #define BRCMF_FWS_MAC_DESC_ID_INVALID			0xff
-@@ -245,6 +242,12 @@ struct brcmf_skbuff_cb {
- 			BRCMF_SKB_HTOD_TAG_ ## field ## _MASK, \
- 			BRCMF_SKB_HTOD_TAG_ ## field ## _SHIFT)
- 
-+enum brcmf_fws_fcmode {
-+	BRCMF_FWS_FCMODE_NONE,
-+	BRCMF_FWS_FCMODE_IMPLIED_CREDIT,
-+	BRCMF_FWS_FCMODE_EXPLICIT_CREDIT
-+};
-+
- /**
-  * struct brcmf_fws_mac_descriptor - firmware signalling data per node/interface
-  *
-@@ -328,9 +331,14 @@ struct brcmf_fws_info {
- 	struct brcmf_fws_hanger hanger;
- 	struct brcmf_fws_mac_descriptor nodes[BRCMF_FWS_MAC_DESC_TABLE_SIZE];
- 	struct brcmf_fws_mac_descriptor other;
-+	enum brcmf_fws_fcmode fcmode;
- 	int fifo_credit[NL80211_NUM_ACS+1+1];
- };
- 
-+static int fcmode;
-+module_param(fcmode, int, S_IRUSR);
-+MODULE_PARM_DESC(fcmode, "mode of firmware signalled flow control");
-+
- /**
-  * brcmf_fws_get_tlv_len() - returns defined length for given tlv id.
-  */
-@@ -745,6 +753,7 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 
- 	/* set linkage back */
- 	drvr->fws->drvr = drvr;
-+	drvr->fws->fcmode = fcmode;
- 
- 	/* TODO: remove upon feature delivery */
- 	brcmf_err("%s bdcv2 tlv signaling [%x]\n",
-@@ -920,3 +929,12 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp)
- 	brcmf_fws_cleanup(ifp->drvr->fws, ifp->ifidx);
- 	kfree(entry);
- }
-+
-+bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
-+{
-+	if (!fws)
-+		return false;
-+
-+	brcmf_dbg(TRACE, "enter: mode=%d\n", fws->fcmode);
-+	return fws->fcmode != BRCMF_FWS_FCMODE_NONE;
-+}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h
-index 38a75e4..1566f4d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.h
-@@ -20,6 +20,7 @@
- 
- int brcmf_fws_init(struct brcmf_pub *drvr);
- void brcmf_fws_deinit(struct brcmf_pub *drvr);
-+bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
- int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 		      struct sk_buff *skb);
- 
--- 
-1.7.10.4
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-
+>  fs/proc/generic.c                         |   13 +++++++++++
+>  include/linux/proc_fs.h                   |    5 ++++
+>  kernel/configs.c                          |    2 +-
+>  kernel/profile.c                          |    2 +-
+>  net/netfilter/xt_recent.c                 |    3 +--
+>  sound/core/info.c                         |    2 +-
+>  12 files changed, 38 insertions(+), 33 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/proc_powerpc.c b/arch/powerpc/kernel/proc_powerpc.c
+> index 41d8ee9..feb8580 100644
+> --- a/arch/powerpc/kernel/proc_powerpc.c
+> +++ b/arch/powerpc/kernel/proc_powerpc.c
+> @@ -83,7 +83,7 @@ static int __init proc_ppc64_init(void)
+>                                &page_map_fops, vdso_data);
+>         if (!pde)
+>                 return 1;
+> -       pde->size = PAGE_SIZE;
+> +       proc_set_size(pde, PAGE_SIZE);
+>
+>         return 0;
+>  }
+> diff --git a/arch/powerpc/platforms/pseries/reconfig.c b/arch/powerpc/platforms/pseries/reconfig.c
+> index d6491bd..f93cdf5 100644
+> --- a/arch/powerpc/platforms/pseries/reconfig.c
+> +++ b/arch/powerpc/platforms/pseries/reconfig.c
+> @@ -452,7 +452,7 @@ static int proc_ppc64_create_ofdt(void)
+>
+>         ent = proc_create("powerpc/ofdt", S_IWUSR, NULL, &ofdt_fops);
+>         if (ent)
+> -               ent->size = 0;
+> +               proc_set_size(ent, 0);
+>
+>         return 0;
+>  }
+> diff --git a/drivers/media/pci/ttpci/av7110_ir.c b/drivers/media/pci/ttpci/av7110_ir.c
+> index eb82286..0e763a7 100644
+> --- a/drivers/media/pci/ttpci/av7110_ir.c
+> +++ b/drivers/media/pci/ttpci/av7110_ir.c
+> @@ -375,7 +375,7 @@ int av7110_ir_init(struct av7110 *av7110)
+>         if (av_cnt == 1) {
+>                 e = proc_create("av7110_ir", S_IWUSR, NULL, &av7110_ir_proc_fops);
+>                 if (e)
+> -                       e->size = 4 + 256 * sizeof(u16);
+> +                       proc_set_size(e, 4 + 256 * sizeof(u16));
+>         }
+>
+>         tasklet_init(&av7110->ir.ir_tasklet, av7110_emit_key, (unsigned long) &av7110->ir);
+> diff --git a/drivers/net/irda/vlsi_ir.c b/drivers/net/irda/vlsi_ir.c
+> index e22cd4e..5f47584 100644
+> --- a/drivers/net/irda/vlsi_ir.c
+> +++ b/drivers/net/irda/vlsi_ir.c
+> @@ -1678,7 +1678,7 @@ vlsi_irda_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>                         IRDA_WARNING("%s: failed to create proc entry\n",
+>                                      __func__);
+>                 } else {
+> -                       ent->size = 0;
+> +                       proc_set_size(ent, 0);
+>                 }
+>                 idev->proc_entry = ent;
+>         }
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index 66e398d..21d0233 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -4507,73 +4507,63 @@ static int setup_proc_entry( struct net_device *dev,
+>                                             airo_entry);
+>         if (!apriv->proc_entry)
+>                 goto fail;
+> -       apriv->proc_entry->uid = proc_kuid;
+> -       apriv->proc_entry->gid = proc_kgid;
+> +       proc_set_user(apriv->proc_entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the StatsDelta */
+>         entry = proc_create_data("StatsDelta", S_IRUGO & proc_perm,
+>                                  apriv->proc_entry, &proc_statsdelta_ops, dev);
+>         if (!entry)
+>                 goto fail_stats_delta;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the Stats */
+>         entry = proc_create_data("Stats", S_IRUGO & proc_perm,
+>                                  apriv->proc_entry, &proc_stats_ops, dev);
+>         if (!entry)
+>                 goto fail_stats;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the Status */
+>         entry = proc_create_data("Status", S_IRUGO & proc_perm,
+>                                  apriv->proc_entry, &proc_status_ops, dev);
+>         if (!entry)
+>                 goto fail_status;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the Config */
+>         entry = proc_create_data("Config", proc_perm,
+>                                  apriv->proc_entry, &proc_config_ops, dev);
+>         if (!entry)
+>                 goto fail_config;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the SSID */
+>         entry = proc_create_data("SSID", proc_perm,
+>                                  apriv->proc_entry, &proc_SSID_ops, dev);
+>         if (!entry)
+>                 goto fail_ssid;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the APList */
+>         entry = proc_create_data("APList", proc_perm,
+>                                  apriv->proc_entry, &proc_APList_ops, dev);
+>         if (!entry)
+>                 goto fail_aplist;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the BSSList */
+>         entry = proc_create_data("BSSList", proc_perm,
+>                                  apriv->proc_entry, &proc_BSSList_ops, dev);
+>         if (!entry)
+>                 goto fail_bsslist;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>
+>         /* Setup the WepKey */
+>         entry = proc_create_data("WepKey", proc_perm,
+>                                  apriv->proc_entry, &proc_wepkey_ops, dev);
+>         if (!entry)
+>                 goto fail_wepkey;
+> -       entry->uid = proc_kuid;
+> -       entry->gid = proc_kgid;
+> -
+> +       proc_set_user(entry, proc_kuid, proc_kgid);
+>         return 0;
+>
+>  fail_wepkey:
+> @@ -5695,10 +5685,8 @@ static int __init airo_init_module( void )
+>
+>         airo_entry = proc_mkdir_mode("driver/aironet", airo_perm, NULL);
+>
+> -       if (airo_entry) {
+> -               airo_entry->uid = proc_kuid;
+> -               airo_entry->gid = proc_kgid;
+> -       }
+> +       if (airo_entry)
+> +               proc_set_user(airo_entry, proc_kuid, proc_kgid);
+>
+>         for (i = 0; i < 4 && io[i] && irq[i]; i++) {
+>                 airo_print_info("", "Trying to configure ISA adapter at irq=%d "
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index 12e4fb5..7cde7c1 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -419,7 +419,7 @@ int pci_proc_attach_device(struct pci_dev *dev)
+>                              &proc_bus_pci_operations, dev);
+>         if (!e)
+>                 return -ENOMEM;
+> -       e->size = dev->cfg_size;
+> +       proc_set_size(e, dev->cfg_size);
+>         dev->procent = e;
+>
+>         return 0;
+> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+> index 1c07cad..5f6f6c3 100644
+> --- a/fs/proc/generic.c
+> +++ b/fs/proc/generic.c
+> @@ -498,6 +498,19 @@ out:
+>         return NULL;
+>  }
+>  EXPORT_SYMBOL(proc_create_data);
+> +
+> +void proc_set_size(struct proc_dir_entry *de, loff_t size)
+> +{
+> +       de->size = size;
+> +}
+> +EXPORT_SYMBOL(proc_set_size);
+> +
+> +void proc_set_user(struct proc_dir_entry *de, kuid_t uid, kgid_t gid)
+> +{
+> +       de->uid = uid;
+> +       de->gid = gid;
+> +}
+> +EXPORT_SYMBOL(proc_set_user);
+>
+>  static void free_proc_entry(struct proc_dir_entry *de)
+>  {
+> diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+> index 805edac..28a4d7e 100644
+> --- a/include/linux/proc_fs.h
+> +++ b/include/linux/proc_fs.h
+> @@ -130,6 +130,9 @@ static inline struct proc_dir_entry *proc_create(const char *name, umode_t mode,
+>  extern struct proc_dir_entry *proc_net_mkdir(struct net *net, const char *name,
+>         struct proc_dir_entry *parent);
+>
+> +extern void proc_set_size(struct proc_dir_entry *, loff_t);
+> +extern void proc_set_user(struct proc_dir_entry *, kuid_t, kgid_t);
+> +
+>  extern struct file *proc_ns_fget(int fd);
+>  extern bool proc_ns_inode(struct inode *inode);
+>
+> @@ -158,6 +161,8 @@ static inline struct proc_dir_entry *proc_mkdir(const char *name,
+>         struct proc_dir_entry *parent) {return NULL;}
+>  static inline struct proc_dir_entry *proc_mkdir_mode(const char *name,
+>         umode_t mode, struct proc_dir_entry *parent) { return NULL; }
+> +static inline void proc_set_size(struct proc_dir_entry *de, loff_t size) {}
+> +static inline void proc_set_user(struct proc_dir_entry *de, kuid_t uid, kgid_t gid) {}
+>
+>  struct tty_driver;
+>  static inline void proc_tty_register_driver(struct tty_driver *driver) {};
+> diff --git a/kernel/configs.c b/kernel/configs.c
+> index 42e8fa0..c18b1f1 100644
+> --- a/kernel/configs.c
+> +++ b/kernel/configs.c
+> @@ -79,7 +79,7 @@ static int __init ikconfig_init(void)
+>         if (!entry)
+>                 return -ENOMEM;
+>
+> -       entry->size = kernel_config_data_size;
+> +       proc_set_size(entry, kernel_config_data_size);
+>
+>         return 0;
+>  }
+> diff --git a/kernel/profile.c b/kernel/profile.c
+> index 524ce5e..0bf4007 100644
+> --- a/kernel/profile.c
+> +++ b/kernel/profile.c
+> @@ -600,7 +600,7 @@ int __ref create_proc_profile(void) /* false positive from hotcpu_notifier */
+>                             NULL, &proc_profile_operations);
+>         if (!entry)
+>                 return 0;
+> -       entry->size = (1+prof_len) * sizeof(atomic_t);
+> +       proc_set_size(entry, (1 + prof_len) * sizeof(atomic_t));
+>         hotcpu_notifier(profile_cpu_callback, 0);
+>         return 0;
+>  }
+> diff --git a/net/netfilter/xt_recent.c b/net/netfilter/xt_recent.c
+> index 3db2d38..1e657cf 100644
+> --- a/net/netfilter/xt_recent.c
+> +++ b/net/netfilter/xt_recent.c
+> @@ -401,8 +401,7 @@ static int recent_mt_check(const struct xt_mtchk_param *par,
+>                 ret = -ENOMEM;
+>                 goto out;
+>         }
+> -       pde->uid = uid;
+> -       pde->gid = gid;
+> +       proc_set_user(pde, uid, gid);
+>  #endif
+>         spin_lock_bh(&recent_lock);
+>         list_add_tail(&t->list, &recent_net->tables);
+> diff --git a/sound/core/info.c b/sound/core/info.c
+> index 3aa8864..c7f41c3 100644
+> --- a/sound/core/info.c
+> +++ b/sound/core/info.c
+> @@ -970,7 +970,7 @@ int snd_info_register(struct snd_info_entry * entry)
+>                         mutex_unlock(&info_mutex);
+>                         return -ENOMEM;
+>                 }
+> -               p->size = entry->size;
+> +               proc_set_size(p, entry->size);
+>         }
+>         entry->p = p;
+>         if (entry->parent)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
