@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934912Ab3DRNgp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 09:36:45 -0400
-Message-ID: <1366292199.8336.2.camel@jlt4.sipsolutions.net> (sfid-20130418_153649_039342_9A0471CB)
-Subject: Re: [PATCH v2 2/2] mac80211: minstrel_ht: initialize rates selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Thu, 18 Apr 2013 15:36:39 +0200
-In-Reply-To: <20130418124050.GD8638@magnum.frso.rivierawaves.com> (sfid-20130418_144515_033765_E15A74DB)
-References: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com>
-	 <1366287981-24134-2-git-send-email-karl.beldan@gmail.com>
-	 <20130418124050.GD8638@magnum.frso.rivierawaves.com>
-	 (sfid-20130418_144515_033765_E15A74DB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp1.u-psud.fr ([129.175.33.41]:60306 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754813Ab3DRGPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 02:15:17 -0400
+Message-ID: <516F8F4B.1000504@lri.fr> (sfid-20130418_081537_224757_0858D371)
+Date: Thu, 18 Apr 2013 08:14:35 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bing Zhao <bzhao@marvell.com>, linux-netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Paul Stewart <pstew@chromium.org>
+Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
+References: <1366236369-543-1-git-send-email-bzhao@marvell.com>  (sfid-20130418_000709_842159_3005786A) <1366236590.8217.64.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366236590.8217.64.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-04-18 at 14:40 +0200, Karl Beldan wrote:
-> Johannes, Felix,
+On 18/04/2013 00:09, Johannes Berg wrote:
+> On Wed, 2013-04-17 at 15:06 -0700, Bing Zhao wrote:
+>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
+>> file structure to indicate the mode of the wireless device so
+>> it can be discovered easily from userspace.
 > 
-> This seems to me like an important enough issue to IMHO, make it into
-> 3.9/-stable. But since we only have a few days before Linus tags the 3.9
-> I understand the boldness of the thought.
+> What's wrong with "iw dev", i.e. netlink/nl80211?
 
-I'm not going to try for 3.9, it wouldn't happen anyway, but if you want
-to tag them as Cc stable it's your call. I'm not familiar enough with
-the code to really be able to judge the impact I guess. It seems
-unlikely to me though that some device would support MCS 1 but not MCS
-0, or MCS 9 but not 8, etc.?
+"Do NOT screenscrape this tool, we don't consider its output stable."
 
-johannes
-
+So if you are in a shell script, you're basically screwed.
