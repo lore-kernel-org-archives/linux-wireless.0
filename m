@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754447Ab3DOPbj (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:59727 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753903Ab3DRM3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 11:31:39 -0400
-Message-ID: <1366039892.8361.29.camel@jlt4.sipsolutions.net> (sfid-20130415_173143_983740_76981102)
-Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: schwaahed <schwaahed@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 15 Apr 2013 17:31:32 +0200
-In-Reply-To: <1366036772.2404.3.camel@dcbw.foobar.com>
-References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
-	 <1365804259.10342.20.camel@dcbw.foobar.com>
-	 (sfid-20130413_000245_000077_30E72639) <1366032132.8361.19.camel@jlt4.sipsolutions.net>
-	 <1366036772.2404.3.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 18 Apr 2013 08:29:00 -0400
+Received: by mail-ea0-f178.google.com with SMTP id o10so1256512eaj.37
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:28:59 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 1/2] mac80211: minstrel_ht: pick only supported rates for sta and group max*rates
+Date: Thu, 18 Apr 2013 14:24:42 +0200
+Message-Id: <1366287883-24054-1-git-send-email-karl.beldan@gmail.com> (sfid-20130418_142905_253861_681CEFE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-15 at 09:39 -0500, Dan Williams wrote:
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-> > Yeah it seems not loaded, but how then does the soft block affect hard
-> > block? All very odd, but almost certainly a platform rather than a wifi
-> > issue. 
-> 
-> On my 2530p and a lot of other laptops, blocking the BIOS
-> "switch" (either physically or softblock) hardblocks phy0.  I guess the
-> BIOS twiddles a GPIO that's connected to the mPCI-E module's rfkill
-> line/GPIO?
+minstrel_ht initializes max_tp_rate max_tp_rate2 and max_prob_rate to
+zero both for minstrel_ht_sta and minstrel_mcs_group_data.
+This is wrong since there is no guarantee that the 1st rate of any
+group is supported.
 
-Yes, that seems to be the case. Something does, anyway, as the GPIO
-state is pretty much directly reflected in the hard kill of the "phy0"
-device.
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-> Which leads to the problem we've talked about a long time ago; you can't
-> treat phy0 hardblock as a physical block that cannot be soft-unblocked,
-> because some other switch might actually control it's state.  We tried
-> to gray-out the "Enable Wireless" when hardblocked (since logically you
-> can't soft-unblock something that's hardblocked), but it turns out you
-> can't do that because unblocking BIOS switches might un-hardblock the
-> phy0 wifi switch...  (and the kernel doesn't describe these
-> dependencies, because, well, that's laptop-specific and would never be
-> up-to-date).
-
-Yeah ... best thing you could do is assume that if a bios rfkill exists
-it controls the phy0 hard kill and in case it doesn't enable when you
-unblock the bios device you pop up a message saying to switch the
-physical button?
-
-johannes
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index d2b264d..eb6dc3f 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -244,6 +244,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	struct minstrel_rate_stats *mr;
+ 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
+ 	int group, i, index;
++	bool mi_rates_valid = false;
+ 
+ 	if (mi->ampdu_packets > 0) {
+ 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
+@@ -254,11 +255,10 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 
+ 	mi->sample_slow = 0;
+ 	mi->sample_count = 0;
+-	mi->max_tp_rate = 0;
+-	mi->max_tp_rate2 = 0;
+-	mi->max_prob_rate = 0;
+ 
+ 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
++		bool mg_rates_valid = false;
++
+ 		cur_prob = 0;
+ 		cur_prob_tp = 0;
+ 		cur_tp = 0;
+@@ -268,15 +268,24 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		if (!mg->supported)
+ 			continue;
+ 
+-		mg->max_tp_rate = 0;
+-		mg->max_tp_rate2 = 0;
+-		mg->max_prob_rate = 0;
+ 		mi->sample_count++;
+ 
+ 		for (i = 0; i < MCS_GROUP_RATES; i++) {
+ 			if (!(mg->supported & BIT(i)))
+ 				continue;
+ 
++			/* initialize rates selections starting indexes */
++			if (!mg_rates_valid) {
++				mg->max_tp_rate = mg->max_tp_rate2 =
++					mg->max_prob_rate = i;
++				if (!mi_rates_valid) {
++					mi->max_tp_rate = mi->max_tp_rate2 =
++						mi->max_prob_rate = i;
++					mi_rates_valid = true;
++				}
++				mg_rates_valid = true;
++			}
++
+ 			mr = &mg->rates[i];
+ 			mr->retry_updated = false;
+ 			index = MCS_GROUP_RATES * group + i;
+-- 
+1.8.2
 
