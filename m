@@ -1,41 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:46417 "EHLO mail.neratec.com"
+Received: from nbd.name ([46.4.11.11]:35611 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580Ab3D2JGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:06:18 -0400
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux@rempel-privat.de,
-	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH 0/2] Add STBC rx flag for radiotap using ath9k driver
-Date: Mon, 29 Apr 2013 11:04:17 +0200
-Message-Id: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110624_031149_52467A75)
+	id S932077Ab3DRSWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 14:22:35 -0400
+Message-ID: <517039E4.4010707@openwrt.org> (sfid-20130418_202239_021041_7D455FC1)
+Date: Thu, 18 Apr 2013 20:22:28 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v2 5/5] mac80211/minstrel: use the new rate control API
+References: <1366112326-92981-1-git-send-email-nbd@openwrt.org> <1366112326-92981-5-git-send-email-nbd@openwrt.org> <20130418161748.GH8638@magnum.frso.rivierawaves.com>
+In-Reply-To: <20130418161748.GH8638@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add STBC rx flag for radiotap. They are based on
-proposed field structure from radiotap.org. Only one STBC stream
-is supported.
+On 2013-04-18 6:17 PM, Karl Beldan wrote:
+> 
+> I can post a change to mac80211_hwsim using it unless you already have
+> one ?
+Sure, I don't use mac80211_hwsim, I always test on real hardware :)
 
-TODO: Implement mechanism for passing the number of STBC streams
-being used. We could use mac80211_rx_flags to point number of
-streams which would require 3 precious bits or use a separate structure.
-
-Wojciech Dubowik (2):
-  mac80211: Add STBC RX flag to radiotap
-  ath9k: Add STBC flag to rx status
-
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
- drivers/net/wireless/ath/ath9k/mac.c        |    2 ++
- drivers/net/wireless/ath/ath9k/mac.h        |    1 +
- drivers/net/wireless/ath/ath9k/recv.c       |    2 ++
- include/net/ieee80211_radiotap.h            |    6 ++++++
- include/net/mac80211.h                      |    2 ++
- net/mac80211/main.c                         |    3 ++-
- net/mac80211/rx.c                           |    2 ++
- 8 files changed, 18 insertions(+), 1 deletion(-)
-
--- 
-1.7.10.4
+- Felix
 
