@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758541Ab3DCMsy (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:60659 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964925Ab3DRCbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 08:48:54 -0400
-Message-ID: <1364993329.8351.37.camel@jlt4.sipsolutions.net> (sfid-20130403_144857_567435_EA97E9CC)
-Subject: Re: problems with iwlwifi - intel 5300 - 5GHz - all versions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Wed, 03 Apr 2013 14:48:49 +0200
-In-Reply-To: <alpine.DEB.2.00.1304011908390.23668@uplift.swm.pp.se> (sfid-20130401_191237_181984_A9EDAC20)
-References: <alpine.DEB.2.00.1303291240580.11255@uplift.swm.pp.se>
-	 <alpine.DEB.2.00.1304011908390.23668@uplift.swm.pp.se>
-	 (sfid-20130401_191237_181984_A9EDAC20)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 17 Apr 2013 22:31:18 -0400
+Received: by mail-we0-f181.google.com with SMTP id r6so1729141wey.40
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 19:31:16 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 18 Apr 2013 10:31:16 +0800
+Message-ID: <CAPgLHd-cTe_+yhaYCDjsqm3Dr+O_VPEB9ansvYb-GVzJXgQfQA@mail.gmail.com> (sfid-20130418_043124_589471_857A8D24)
+Subject: [PATCH] net: rfkill: fix error return code in rfkill_gpio_probe()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-01 at 19:12 +0200, Mikael Abrahamsson wrote:
-> On Fri, 29 Mar 2013, Mikael Abrahamsson wrote:
-> 
-> Another data point.
-> 
-> With 3.2.0-39 with backported 3.6 drivers 
-> (linux-backports-modules-cw-3.6-3.2.0-39-generic-pae).
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-I really have no idea what your distro (Ubuntu?) backports into
-everything, sorry.
+Fix to return a negative error code from the error handling
+case instead of 0, as returned elsewhere in this function.
 
-If you can't connect, this might be related:
-http://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=b8730b403aee94db4631bfefb546a6ce8c287dc2
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ net/rfkill/rfkill-gpio.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-johannes
-
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 78fc093..6d75e73 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -131,6 +131,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		rfkill->pwr_clk = clk_get(&pdev->dev, pdata->power_clk_name);
+ 		if (IS_ERR(rfkill->pwr_clk)) {
+ 			pr_warn("%s: can't find pwr_clk.\n", __func__);
++			ret = PTR_ERR(rfkill->pwr_clk);
+ 			goto fail_shutdown_name;
+ 		}
+ 	}
+@@ -153,8 +154,10 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 
+ 	rfkill->rfkill_dev = rfkill_alloc(pdata->name, &pdev->dev, pdata->type,
+ 				&rfkill_gpio_ops, rfkill);
+-	if (!rfkill->rfkill_dev)
++	if (!rfkill->rfkill_dev) {
++		ret = -ENOMEM;
+ 		goto fail_shutdown;
++	}
+ 
+ 	ret = rfkill_register(rfkill->rfkill_dev);
+ 	if (ret < 0)
 
