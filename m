@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49248 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560Ab3DXQjp (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:46852 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314Ab3DRHDb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 12:39:45 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 18 Apr 2013 03:03:31 -0400
+Received: by mail-ob0-f176.google.com with SMTP id wd20so2164820obb.7
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 00:03:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20856.2640.90900.299786@gargle.gargle.HOWL> (sfid-20130424_183949_428654_0A6D2641)
-Date: Wed, 24 Apr 2013 22:07:36 +0530
-To: Gerry Gavigan <gerry@gavigan.f9.co.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k problems on openSUSE 12.3
-In-Reply-To: <7429859.PV3GUgURoz@linux-zd5t.site>
-References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net>
-	<2687000.szPz826eEU@linux-zd5t.site>
-	<20854.23253.514263.467205@gargle.gargle.HOWL>
-	<7429859.PV3GUgURoz@linux-zd5t.site>
+In-Reply-To: <BF64DFEC-CFE7-4A89-B251-8E9AF3E44642@holtmann.org>
+References: <1366236369-543-1-git-send-email-bzhao@marvell.com>
+	<1366236590.8217.64.camel@jlt4.sipsolutions.net>
+	<516F8F4B.1000504@lri.fr>
+	<BF64DFEC-CFE7-4A89-B251-8E9AF3E44642@holtmann.org>
+Date: Thu, 18 Apr 2013 00:03:30 -0700
+Message-ID: <CAMcMvsiW5KQmZq9VgdNOOG+7y-ZWO1yCsv4BD7iFQrR+wcHQ3w@mail.gmail.com> (sfid-20130418_090351_006141_D0CDBC6E)
+Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
+From: Paul Stewart <pstew@chromium.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Bing Zhao <bzhao@marvell.com>, linux-netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gerry Gavigan wrote:
-> I can't find the kernel log file - it's not (obviously) in /var/log (and Google 
-> is not proving to be my friend) 
-> 
-> after 
-> 
-> modprobe ath9k debug=0x8f49
-> 
-> dmesg only contains entries relating to power_supply BAT1
+The original reason to request this change was simple: to figure out
+what type of interface we are looking at, since now some wireless
+drivers can simultaneously create managed, p2p and ap interfaces.
+Knowing that, from a simple front-end (let's even say a shell script)
+we can decide what arguments to use with wpa_supplicant (or indeed if
+we want to start it on this interface).  wpa_supplicant, of course,
+knows how to manipulate the device further using nl80211.  I thought
+it was a bit onerous to force userspace all the way through nl80211
+just to get this trivial piece of information, but apparently this
+doesn't seem to be the common point of view.
 
-You can use the latest compat-drivers release:
-https://www.kernel.org/pub/linux/kernel/projects/backports/2013/03/28/compat-drivers-2013-03-28-5.tar.bz2
+--
+Paul
 
-See: https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers
-
-But, before compiling, uncomment and set "export CONFIG_ATH_DEBUG=y" in config.mk
-
-Sujith
+On Wed, Apr 17, 2013 at 11:43 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Nicolas,
+>
+>>>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
+>>>> file structure to indicate the mode of the wireless device so
+>>>> it can be discovered easily from userspace.
+>>>
+>>> What's wrong with "iw dev", i.e. netlink/nl80211?
+>>
+>> "Do NOT screenscrape this tool, we don't consider its output stable."
+>>
+>> So if you are in a shell script, you're basically screwed.
+>
+> if you are in a shell script, you are screwed no matter what. So what is your point?
+>
+> Regards
+>
+> Marcel
+>
+>
