@@ -1,143 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from avasout08.plus.net ([212.159.14.20]:48441 "EHLO
-	avasout08.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320Ab3DVXfp (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53067 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965622Ab3DRLeU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 19:35:45 -0400
-From: Gerry Gavigan <gerry@gavigan.f9.co.uk>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k problems on openSUSE 12.3
-Date: Tue, 23 Apr 2013 00:35:37 +0100
-Message-ID: <2356110.PbBN8nvqFd@linux-zd5t.site> (sfid-20130423_013549_973071_73C4D2B0)
-In-Reply-To: <CAJ-VmonDtOW8_W1z04rjR_8ubwQNvVWiDqC-m+gULmwi3HRcEw@mail.gmail.com>
-References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net> <CAJ-Vmonm78MF=3jO19MESsmfizCTti-CHMaZTn7cNUKDSNH32g@mail.gmail.com> <CAJ-VmonDtOW8_W1z04rjR_8ubwQNvVWiDqC-m+gULmwi3HRcEw@mail.gmail.com>
+	Thu, 18 Apr 2013 07:34:20 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 4/4] wil6210: more Rx descriptor accessor functions
+Date: Thu, 18 Apr 2013 14:33:53 +0300
+Message-ID: <1366284834-540-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130418_133424_446169_72741A8E)
+In-Reply-To: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for replying
+Helpers to fetch various fields from the Rx descriptor
 
-Unfortunately while I understood every word I don't understand what to do
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.h |   42 ++++++++++++++++++++++++++-----
+ 1 file changed, 36 insertions(+), 6 deletions(-)
 
-For example by "once-only" do you mean that once written that's it forever or 
-do you mean once during install
-
-For example I'm fairly sure everything was reasonably fine with 3.7.10 but when 
-I ugraded to 3.8.7 for better gma500 graphics chip compatibility things went 
-wrong for wifi but a revert has achieved nothing
-
-Should I remove the battery from the netbook then do an fresh install of 
-openSUSE 12.3 with 3.7.10? 
-
-or something else?
-
-Sorry to take up your time 
-
-Gerry
-
-
-On Monday 22 Apr 2013 10:31:02 Adrian Chadd wrote:
-> .. and make sure you do a full hardware reset (power off, wait, power
-> on) when you downgrade or upgrade.
-> 
-> Some of the register settings may be once-only and require a power
-> cycle to change.
-
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index f0cc48a..adef12f 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -339,19 +339,19 @@ union vring_desc {
+ 	struct vring_rx_desc rx;
+ } __packed;
  
-> 
-> 
-> 
-> adrian
-> 
-> On 22 April 2013 10:30, Adrian Chadd <adrian@freebsd.org> wrote:
-> > Wasn't there a recent change to ath9k which reverted an initval
-> > change? Specifically for the AR9485?
-> > 
-> > The problem was an unstable PLL that shows up when you do aggressive
-> > PCIe PHY power save.
-> > 
-> > The change was to go back to the previous PCIe initval array.
-> > 
-> > 
-> > 
-> > Adrian
-> > 
-> > On 22 April 2013 05:30, Gerry Gavigan <gerry@gavigan.f9.co.uk> wrote:
-> >> After some discussion :
-> >> 
-> >> https://forums.opensuse.org/english/get-technical-help-here/wireless/4846
-> >> 86-advanced-atheros-issue-12-3-ath9k-64bit-frequent-random-de-auths-2.htm
-> >> l
-> >> 
-> >> I have been advised to seek help here as the phase lock loop is not
-> >> working.
-> >> 
-> >> In case it's relevant:
-> >> 
-> >> - the wifi was working if possibly slightly unstable until I upgraded to
-> >> 3.8.7
-> >> 
-> >>   (to cure suspend and resume on a gma500 in an AAO)
-> >> 
-> >> - Downgrading didn't work
-> >> 
-> >> lspci -nn returns
-> >> 
-> >> 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9485
-> >> Wireless Network Adapter [168c:0032] (rev 01)
-> >> 
-> >> dmesg reports
-> >> 
-> >> [ 24.800514] ------------[ cut here ]------------
-> >> [ 24.800563] WARNING: at
-> >> /home/abuild/rpmbuild/BUILD/kernel-desktop-3.7.10/linux-3.7/drivers/net/w
-> >> ireless/ath/ath9k/hw.c:794 ar9003_get_pll_sqsum_dvc+0xa8/0xc0
-> >> [ath9k_hw]()
-> >> [ 24.800567] Hardware name: AOD270
-> >> [ 24.800571] Modules linked in: xt_tcpudp xt_pkttype xt_LOG xt_limit
-> >> af_packet bnep bluetooth ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6
-> >> ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle
-> >> nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4
-> >> nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack ip6table_filter
-> >> ip6_tables x_tables cpufreq_conservative cpufreq_userspace
-> >> cpufreq_powersave acpi_cpufreq mperf coretemp iTCO_wdt
-> >> iTCO_vendor_support acer_wmi
-> >> sparse_keymap snd_hda_codec_realtek snd_hda_codec_hdmi snd_hda_intel
-> >> snd_hda_codec snd_hwdep snd_pcm snd_seq microcode serio_raw pcspkr
-> >> i2c_i801
-> >> snd_timer snd_seq_device uvcvideo videobuf2_core sg videodev
-> >> videobuf2_vmalloc videobuf2_memops lpc_ich mfd_core arc4 joydev snd ath9k
-> >> rts_pstor(C) mac80211 ath9k_common ath9k_hw ath cfg80211 rfkill r8169
-> >> soundcore snd_page_alloc wmi ac battery button autofs4 gma500_gfx
-> >> drm_kms_helper drm i2c_algo_bit video thermal processor thermal_sys
-> >> scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_dh_hp_sw scsi_dh
-> >> [ 24.800687] Pid: 64, comm: kworker/u:3 Tainted: G C 3.7.10-1.1-desktop
-> >> #1
-> >> [ 24.800690] Call Trace:
-> >> [ 24.800713] [<c0205779>] try_stack_unwind+0x199/0x1b0
-> >> [ 24.800729] [<c0204487>] dump_trace+0x47/0xf0
-> >> [ 24.800740] [<c02057db>] show_trace_log_lvl+0x4b/0x60
-> >> [ 24.800749] [<c0205808>] show_trace+0x18/0x20
-> >> [ 24.800760] [<c06fbeeb>] dump_stack+0x6d/0x72
-> >> [ 24.800812] [<c0238cb8>] warn_slowpath_common+0x78/0xb0
-> >> [ 24.800855] [<c0238d0b>] warn_slowpath_null+0x1b/0x20
-> >> [ 24.800897] [<f7c84448>] ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]
-> >> [ 24.800941] [<f7b2d2b8>] ath_hw_pll_work+0x48/0xc0 [ath9k]
-> >> [ 24.801012] [<c02527dc>] process_one_work+0x10c/0x400
-> >> [ 24.801038] [<c0253e89>] worker_thread+0x119/0x3b0
-> >> [ 24.801055] [<c02584f2>] kthread+0x92/0xa0
-> >> [ 24.801076] [<c070dc67>] ret_from_kernel_thread+0x1b/0x28
-> >> [ 24.801093] [<c0258460>] kthread_create_on_node+0xd0/0xd0
-> >> [ 24.808339] DWARF2 unwinder stuck at kthread+0x0/0xa0
-> >> [ 24.808346]
-> >> [ 24.808350] Leftover inexact backtrace:
-> >> [ 24.808350]
-> >> [ 24.808361] ---[ end trace 33960a031f166c71 ]---
-> >> 
-> >> 
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> >> in the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-static inline int wil_rxdesc_phy_length(struct vring_rx_desc *d)
++static inline int wil_rxdesc_tid(struct vring_rx_desc *d)
+ {
+-	return WIL_GET_BITS(d->dma.d0, 16, 29);
++	return WIL_GET_BITS(d->mac.d0, 0, 3);
+ }
+ 
+-static inline int wil_rxdesc_mcs(struct vring_rx_desc *d)
++static inline int wil_rxdesc_cid(struct vring_rx_desc *d)
+ {
+-	return WIL_GET_BITS(d->mac.d1, 21, 24);
++	return WIL_GET_BITS(d->mac.d0, 4, 6);
+ }
+ 
+-static inline int wil_rxdesc_ds_bits(struct vring_rx_desc *d)
++static inline int wil_rxdesc_mid(struct vring_rx_desc *d)
+ {
+-	return WIL_GET_BITS(d->mac.d1, 8, 9);
++	return WIL_GET_BITS(d->mac.d0, 8, 9);
+ }
+ 
+ static inline int wil_rxdesc_ftype(struct vring_rx_desc *d)
+@@ -359,6 +359,36 @@ static inline int wil_rxdesc_ftype(struct vring_rx_desc *d)
+ 	return WIL_GET_BITS(d->mac.d0, 10, 11);
+ }
+ 
++static inline int wil_rxdesc_subtype(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d0, 12, 15);
++}
++
++static inline int wil_rxdesc_seq(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d0, 16, 27);
++}
++
++static inline int wil_rxdesc_ext_subtype(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d0, 28, 31);
++}
++
++static inline int wil_rxdesc_ds_bits(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d1, 8, 9);
++}
++
++static inline int wil_rxdesc_mcs(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->mac.d1, 21, 24);
++}
++
++static inline int wil_rxdesc_phy_length(struct vring_rx_desc *d)
++{
++	return WIL_GET_BITS(d->dma.d0, 16, 29);
++}
++
+ static inline struct vring_rx_desc *wil_skb_rxdesc(struct sk_buff *skb)
+ {
+ 	return (void *)skb->cb;
+-- 
+1.7.10.4
+
