@@ -1,178 +1,717 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:58168 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621Ab3DWTpV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 15:45:21 -0400
-Received: by mail-la0-f51.google.com with SMTP id fh20so889668lab.24
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Apr 2013 12:45:19 -0700 (PDT)
-Date: Tue, 23 Apr 2013 21:45:11 +0200 (CEST)
-From: Thommy Jakobsson <thommyj@gmail.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	m@bues.ch, piotras@gmail.com, Larry.Finger@lwfinger.net
-Subject: [PATCH] B43: Handle DMA RX descriptor underrun
-Message-ID: <alpine.DEB.2.02.1304231851040.1513@kelly.ryd.net> (sfid-20130423_235839_935399_84D79866)
+Received: from mms1.broadcom.com ([216.31.210.17]:2450 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756151Ab3DRNtU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 09:49:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 3/3] brcmfmac: support critical protocol API for DHCP
+Date: Thu, 18 Apr 2013 15:49:02 +0200
+Message-ID: <1366292942-21038-3-git-send-email-arend@broadcom.com> (sfid-20130418_154926_290097_8614CE9E)
+In-Reply-To: <1366292942-21038-1-git-send-email-arend@broadcom.com>
+References: <1366292942-21038-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thommy Jakobsson <thommyj@gmail.com>
+From: Piotr Haber <phaber@broadcom.com>
 
-Add handling of rx descriptor underflow. This fixes a fault that could
-happen on slow machines, where data is received faster than the CPU can
-handle. In such a case the device will use up all rx descriptors and
-refuse to send any more data before confirming that it is ok. This
-patch enables necessary interrupt to discover such a situation and will
-handle them by dropping everything in the ring buffer.
+Adds support for the critical protocol API provided by nl80211
+which gives Wifi traffic priority over a Bluetooth (e)SCO connection
+and disables scanning during DCHP negotiation.
 
-Reviewed-by: Michael Buesch <m@bues.ch>
-Signed-off-by: Thommy Jakobsson <thommyj@gmail.com>
-Cc: stable <stable@vger.kernel.org>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Hi John,
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |  498 ++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.h   |   29 ++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   46 ++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 +
+ 5 files changed, 577 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
 
-patch for fixing problems seen on slow hardware and b43. Discussed at b43 
-mailinglist and openwrt ticket system 
-(https://dev.openwrt.org/ticket/7552)
-
-BR,
-Thommy Jakobsson
----
- drivers/net/wireless/b43/dma.c  |   19 +++++++++++++++++
- drivers/net/wireless/b43/dma.h  |    4 +++-
- drivers/net/wireless/b43/main.c |   43 ++++++++++++++++-----------------------
- 3 files changed, 40 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 1221469..ee3d640 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1733,6 +1733,25 @@ drop_recycle_buffer:
- 	sync_descbuffer_for_device(ring, dmaaddr, ring->rx_buffersize);
- }
- 
-+void b43_dma_handle_rx_overflow(struct b43_dmaring *ring)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 756e19f..73112e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -29,7 +29,8 @@ brcmfmac-objs += \
+ 		p2p.o \
+ 		dhd_cdc.o \
+ 		dhd_common.o \
+-		dhd_linux.o
++		dhd_linux.o \
++		btcoex.o
+ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+ 		dhd_sdio.o \
+ 		bcmsdh.o \
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+new file mode 100644
+index 0000000..1a21736
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+@@ -0,0 +1,498 @@
++/*
++ * Copyright (c) 2013 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/slab.h>
++#include <linux/netdevice.h>
++#include <net/cfg80211.h>
++
++#include <brcmu_wifi.h>
++#include <brcmu_utils.h>
++#include <defs.h>
++#include <dhd.h>
++#include <dhd_dbg.h>
++#include "fwil.h"
++#include "fwil_types.h"
++#include "btcoex.h"
++#include "p2p.h"
++#include "wl_cfg80211.h"
++
++/* T1 start SCO/eSCO priority suppression */
++#define BRCMF_BTCOEX_OPPR_WIN_TIME   2000
++
++/* BT registers values during DHCP */
++#define BRCMF_BT_DHCP_REG50 0x8022
++#define BRCMF_BT_DHCP_REG51 0
++#define BRCMF_BT_DHCP_REG64 0
++#define BRCMF_BT_DHCP_REG65 0
++#define BRCMF_BT_DHCP_REG71 0
++#define BRCMF_BT_DHCP_REG66 0x2710
++#define BRCMF_BT_DHCP_REG41 0x33
++#define BRCMF_BT_DHCP_REG68 0x190
++
++/* number of samples for SCO detection */
++#define BRCMF_BT_SCO_SAMPLES 12
++
++/**
++* enum brcmf_btcoex_state - BT coex DHCP state machine states
++* @BRCMF_BT_DHCP_IDLE: DCHP is idle
++* @BRCMF_BT_DHCP_START: DHCP started, wait before
++*	boosting wifi priority
++* @BRCMF_BT_DHCP_OPPR_WIN: graceful DHCP opportunity ended,
++*	boost wifi priority
++* @BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT: wifi priority boost end,
++*	restore defaults
++*/
++enum brcmf_btcoex_state {
++	BRCMF_BT_DHCP_IDLE,
++	BRCMF_BT_DHCP_START,
++	BRCMF_BT_DHCP_OPPR_WIN,
++	BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT
++};
++
++/**
++ * struct brcmf_btcoex_info - BT coex related information
++ * @vif: interface for which request was done.
++ * @timer: timer for DHCP state machine
++ * @timeout: configured timeout.
++ * @timer_on:  DHCP timer active
++ * @dhcp_done: DHCP finished before T1/T2 timer expiration
++ * @bt_state: DHCP state machine state
++ * @work: DHCP state machine work
++ * @cfg: driver private data for cfg80211 interface
++ * @reg66: saved value of btc_params 66
++ * @reg41: saved value of btc_params 41
++ * @reg68: saved value of btc_params 68
++ * @saved_regs_part1: flag indicating regs 66,41,68
++ *	have been saved
++ * @reg51: saved value of btc_params 51
++ * @reg64: saved value of btc_params 64
++ * @reg65: saved value of btc_params 65
++ * @reg71: saved value of btc_params 71
++ * @saved_regs_part1: flag indicating regs 50,51,64,65,71
++ *	have been saved
++ */
++struct brcmf_btcoex_info {
++	struct brcmf_cfg80211_vif *vif;
++	struct timer_list timer;
++	u16 timeout;
++	bool timer_on;
++	bool dhcp_done;
++	enum brcmf_btcoex_state bt_state;
++	struct work_struct work;
++	struct brcmf_cfg80211_info *cfg;
++	u32 reg66;
++	u32 reg41;
++	u32 reg68;
++	bool saved_regs_part1;
++	u32 reg50;
++	u32 reg51;
++	u32 reg64;
++	u32 reg65;
++	u32 reg71;
++	bool saved_regs_part2;
++};
++
++/**
++ * brcmf_btcoex_params_write() - write btc_params firmware variable
++ * @ifp: interface
++ * @addr: btc_params register number
++ * @data: data to write
++ */
++static s32 brcmf_btcoex_params_write(struct brcmf_if *ifp, u32 addr, u32 data)
 +{
-+	int current_slot, previous_slot;
++	struct {
++		__le32 addr;
++		__le32 data;
++	} reg_write;
 +
-+	B43_WARN_ON(ring->tx);
-+
-+	/* Device has filled all buffers, drop all packets and let TCP
-+	 * decrease speed.
-+	 * Decrement RX index by one will let the device to see all slots
-+	 * as free again
-+	 */
-+	/*
-+	*TODO: How to increase rx_drop in mac80211?
-+	*/
-+	current_slot = ring->ops->get_current_rxslot(ring);
-+	previous_slot = prev_slot(ring, current_slot);
-+	ring->ops->set_current_rxslot(ring, previous_slot);
++	reg_write.addr = cpu_to_le32(addr);
++	reg_write.data = cpu_to_le32(data);
++	return brcmf_fil_iovar_data_set(ifp, "btc_params",
++					&reg_write, sizeof(reg_write));
 +}
 +
- void b43_dma_rx(struct b43_dmaring *ring)
- {
- 	const struct b43_dma_ops *ops = ring->ops;
-diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
-index 9fdd198..df8c8cd 100644
---- a/drivers/net/wireless/b43/dma.h
-+++ b/drivers/net/wireless/b43/dma.h
-@@ -9,7 +9,7 @@
- /* DMA-Interrupt reasons. */
- #define B43_DMAIRQ_FATALMASK	((1 << 10) | (1 << 11) | (1 << 12) \
- 					 | (1 << 14) | (1 << 15))
--#define B43_DMAIRQ_NONFATALMASK	(1 << 13)
-+#define B43_DMAIRQ_RDESC_UFLOW		(1 << 13)
- #define B43_DMAIRQ_RX_DONE		(1 << 16)
- 
- /*** 32-bit DMA Engine. ***/
-@@ -295,6 +295,8 @@ int b43_dma_tx(struct b43_wldev *dev,
- void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 			     const struct b43_txstatus *status);
- 
-+void b43_dma_handle_rx_overflow(struct b43_dmaring *ring);
++/**
++ * brcmf_btcoex_params_read() - read btc_params firmware variable
++ * @ifp: interface
++ * @addr: btc_params register number
++ * @data: read data
++ */
++static s32 brcmf_btcoex_params_read(struct brcmf_if *ifp, u32 addr, u32 *data)
++{
++	*data = addr;
 +
- void b43_dma_rx(struct b43_dmaring *ring);
- 
- void b43_dma_direct_fifo_rx(struct b43_wldev *dev,
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index d377f77..6dd07e2 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1902,30 +1902,18 @@ static void b43_do_interrupt_thread(struct b43_wldev *dev)
- 		}
- 	}
- 
--	if (unlikely(merged_dma_reason & (B43_DMAIRQ_FATALMASK |
--					  B43_DMAIRQ_NONFATALMASK))) {
--		if (merged_dma_reason & B43_DMAIRQ_FATALMASK) {
--			b43err(dev->wl, "Fatal DMA error: "
--			       "0x%08X, 0x%08X, 0x%08X, "
--			       "0x%08X, 0x%08X, 0x%08X\n",
--			       dma_reason[0], dma_reason[1],
--			       dma_reason[2], dma_reason[3],
--			       dma_reason[4], dma_reason[5]);
--			b43err(dev->wl, "This device does not support DMA "
-+	if (unlikely(merged_dma_reason & (B43_DMAIRQ_FATALMASK))) {
-+		b43err(dev->wl,
-+			"Fatal DMA error: 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X\n",
-+			dma_reason[0], dma_reason[1],
-+			dma_reason[2], dma_reason[3],
-+			dma_reason[4], dma_reason[5]);
-+		b43err(dev->wl, "This device does not support DMA "
- 			       "on your system. It will now be switched to PIO.\n");
--			/* Fall back to PIO transfers if we get fatal DMA errors! */
--			dev->use_pio = true;
--			b43_controller_restart(dev, "DMA error");
--			return;
--		}
--		if (merged_dma_reason & B43_DMAIRQ_NONFATALMASK) {
--			b43err(dev->wl, "DMA error: "
--			       "0x%08X, 0x%08X, 0x%08X, "
--			       "0x%08X, 0x%08X, 0x%08X\n",
--			       dma_reason[0], dma_reason[1],
--			       dma_reason[2], dma_reason[3],
--			       dma_reason[4], dma_reason[5]);
--		}
-+		/* Fall back to PIO transfers if we get fatal DMA errors! */
-+		dev->use_pio = true;
-+		b43_controller_restart(dev, "DMA error");
-+		return;
- 	}
- 
- 	if (unlikely(reason & B43_IRQ_UCODE_DEBUG))
-@@ -1944,6 +1932,11 @@ static void b43_do_interrupt_thread(struct b43_wldev *dev)
- 		handle_irq_noise(dev);
- 
- 	/* Check the DMA reason registers for received data. */
-+	if (dma_reason[0] & B43_DMAIRQ_RDESC_UFLOW) {
-+		if (B43_DEBUG)
-+			b43warn(dev->wl, "RX descriptor underrun\n");
-+		b43_dma_handle_rx_overflow(dev->dma.rx_ring);
++	return brcmf_fil_iovar_int_get(ifp, "btc_params", data);
++}
++
++/**
++ * brcmf_btcoex_boost_wifi() - control BT SCO/eSCO parameters
++ * @btci: BT coex info
++ * @trump_sco:
++ *	true - set SCO/eSCO parameters for compatibility
++ *		during DHCP window
++ *	false - restore saved parameter values
++ *
++ * Enhanced BT COEX settings for eSCO compatibility during DHCP window
++ */
++static void brcmf_btcoex_boost_wifi(struct brcmf_btcoex_info *btci,
++				    bool trump_sco)
++{
++	struct brcmf_if *ifp = btci->cfg->pub->iflist[0];
++
++	if (trump_sco && !btci->saved_regs_part2) {
++		/* this should reduce eSCO agressive
++		 * retransmit w/o breaking it
++		 */
++
++		/* save current */
++		brcmf_dbg(TRACE, "new SCO/eSCO coex algo {save & override}\n");
++		brcmf_btcoex_params_read(ifp, 50, &btci->reg50);
++		brcmf_btcoex_params_read(ifp, 51, &btci->reg51);
++		brcmf_btcoex_params_read(ifp, 64, &btci->reg64);
++		brcmf_btcoex_params_read(ifp, 65, &btci->reg65);
++		brcmf_btcoex_params_read(ifp, 71, &btci->reg71);
++
++		btci->saved_regs_part2 = true;
++		brcmf_dbg(TRACE,
++			  "saved bt_params[50,51,64,65,71]: 0x%x 0x%x 0x%x 0x%x 0x%x\n",
++			  btci->reg50, btci->reg51, btci->reg64,
++			  btci->reg65, btci->reg71);
++
++		/* pacify the eSco   */
++		brcmf_btcoex_params_write(ifp, 50, BRCMF_BT_DHCP_REG50);
++		brcmf_btcoex_params_write(ifp, 51, BRCMF_BT_DHCP_REG51);
++		brcmf_btcoex_params_write(ifp, 64, BRCMF_BT_DHCP_REG64);
++		brcmf_btcoex_params_write(ifp, 65, BRCMF_BT_DHCP_REG65);
++		brcmf_btcoex_params_write(ifp, 71, BRCMF_BT_DHCP_REG71);
++
++	} else if (btci->saved_regs_part2) {
++		/* restore previously saved bt params */
++		brcmf_dbg(TRACE, "Do new SCO/eSCO coex algo {restore}\n");
++		brcmf_btcoex_params_write(ifp, 50, btci->reg50);
++		brcmf_btcoex_params_write(ifp, 51, btci->reg51);
++		brcmf_btcoex_params_write(ifp, 64, btci->reg64);
++		brcmf_btcoex_params_write(ifp, 65, btci->reg65);
++		brcmf_btcoex_params_write(ifp, 71, btci->reg71);
++
++		brcmf_dbg(TRACE,
++			  "restored bt_params[50,51,64,65,71]: 0x%x 0x%x 0x%x 0x%x 0x%x\n",
++			  btci->reg50, btci->reg51, btci->reg64,
++			  btci->reg65, btci->reg71);
++
++		btci->saved_regs_part2 = false;
++	} else {
++		brcmf_err("attempted to restore not saved BTCOEX params\n");
 +	}
- 	if (dma_reason[0] & B43_DMAIRQ_RX_DONE) {
- 		if (b43_using_pio_transfers(dev))
- 			b43_pio_rx(dev->pio.rx_queue);
-@@ -2001,7 +1994,7 @@ static irqreturn_t b43_do_interrupt(struct b43_wldev *dev)
- 		return IRQ_NONE;
++}
++
++/**
++ * brcmf_btcoex_is_sco_active() - check if SCO/eSCO is active
++ * @ifp: interface
++ *
++ * return: true if SCO/eSCO session is active
++ */
++static bool brcmf_btcoex_is_sco_active(struct brcmf_if *ifp)
++{
++	int ioc_res = 0;
++	bool res = false;
++	int sco_id_cnt = 0;
++	u32 param27;
++	int i;
++
++	for (i = 0; i < BRCMF_BT_SCO_SAMPLES; i++) {
++		ioc_res = brcmf_btcoex_params_read(ifp, 27, &param27);
++
++		if (ioc_res < 0) {
++			brcmf_err("ioc read btc params error\n");
++			break;
++		}
++
++		brcmf_dbg(TRACE, "sample[%d], btc_params 27:%x\n", i, param27);
++
++		if ((param27 & 0x6) == 2) { /* count both sco & esco  */
++			sco_id_cnt++;
++		}
++
++		if (sco_id_cnt > 2) {
++			brcmf_dbg(TRACE,
++				  "sco/esco detected, pkt id_cnt:%d samples:%d\n",
++				  sco_id_cnt, i);
++			res = true;
++			break;
++		}
++	}
++	brcmf_dbg(TRACE, "exit: result=%d\n", res);
++	return res;
++}
++
++/**
++ * btcmf_btcoex_save_part1() - save first step parameters.
++ */
++static void btcmf_btcoex_save_part1(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp = btci->vif->ifp;
++
++	if (!btci->saved_regs_part1) {
++		/* Retrieve and save original reg value */
++		brcmf_btcoex_params_read(ifp, 66, &btci->reg66);
++		brcmf_btcoex_params_read(ifp, 41, &btci->reg41);
++		brcmf_btcoex_params_read(ifp, 68, &btci->reg68);
++		btci->saved_regs_part1 = true;
++		brcmf_dbg(TRACE,
++			  "saved btc_params regs (66,41,68) 0x%x 0x%x 0x%x\n",
++			  btci->reg66, btci->reg41,
++			  btci->reg68);
++	}
++}
++
++/**
++ * brcmf_btcoex_restore_part1() - restore first step parameters.
++ */
++static void brcmf_btcoex_restore_part1(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp;
++
++	if (btci->saved_regs_part1) {
++		btci->saved_regs_part1 = false;
++		ifp = btci->vif->ifp;
++		brcmf_btcoex_params_write(ifp, 66, btci->reg66);
++		brcmf_btcoex_params_write(ifp, 41, btci->reg41);
++		brcmf_btcoex_params_write(ifp, 68, btci->reg68);
++		brcmf_dbg(TRACE,
++			  "restored btc_params regs {66,41,68} 0x%x 0x%x 0x%x\n",
++			  btci->reg66, btci->reg41,
++			  btci->reg68);
++	}
++}
++
++/**
++ * brcmf_btcoex_timerfunc() - BT coex timer callback
++ */
++static void brcmf_btcoex_timerfunc(ulong data)
++{
++	struct brcmf_btcoex_info *bt_local = (struct brcmf_btcoex_info *)data;
++	brcmf_dbg(TRACE, "enter\n");
++
++	bt_local->timer_on = false;
++	schedule_work(&bt_local->work);
++}
++
++/**
++ * brcmf_btcoex_handler() - BT coex state machine work handler
++ * @work: work
++ */
++static void brcmf_btcoex_handler(struct work_struct *work)
++{
++	struct brcmf_btcoex_info *btci;
++	btci = container_of(work, struct brcmf_btcoex_info, work);
++	if (btci->timer_on) {
++		btci->timer_on = false;
++		del_timer_sync(&btci->timer);
++	}
++
++	switch (btci->bt_state) {
++	case BRCMF_BT_DHCP_START:
++		/* DHCP started provide OPPORTUNITY window
++		   to get DHCP address
++		*/
++		brcmf_dbg(TRACE, "DHCP started\n");
++		btci->bt_state = BRCMF_BT_DHCP_OPPR_WIN;
++		if (btci->timeout < BRCMF_BTCOEX_OPPR_WIN_TIME) {
++			mod_timer(&btci->timer, btci->timer.expires);
++		} else {
++			btci->timeout -= BRCMF_BTCOEX_OPPR_WIN_TIME;
++			mod_timer(&btci->timer,
++				  jiffies +
++				  msecs_to_jiffies(BRCMF_BTCOEX_OPPR_WIN_TIME));
++		}
++		btci->timer_on = true;
++		break;
++
++	case BRCMF_BT_DHCP_OPPR_WIN:
++		if (btci->dhcp_done) {
++			brcmf_dbg(TRACE, "DHCP done before T1 expiration\n");
++			goto idle;
++		}
++
++		/* DHCP is not over yet, start lowering BT priority */
++		brcmf_dbg(TRACE, "DHCP T1:%d expired\n",
++			  BRCMF_BTCOEX_OPPR_WIN_TIME);
++		brcmf_btcoex_boost_wifi(btci, true);
++
++		btci->bt_state = BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT;
++		mod_timer(&btci->timer,
++			  jiffies + msecs_to_jiffies(btci->timeout));
++		btci->timer_on = true;
++		break;
++
++	case BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT:
++		if (btci->dhcp_done)
++			brcmf_dbg(TRACE, "DHCP done before T2 expiration\n");
++		else
++			brcmf_dbg(TRACE, "DHCP T2:%d expired\n",
++				  BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT);
++
++		goto idle;
++
++	default:
++		brcmf_err("invalid state=%d !!!\n", btci->bt_state);
++		goto idle;
++	}
++
++	return;
++
++idle:
++	btci->bt_state = BRCMF_BT_DHCP_IDLE;
++	btci->timer_on = false;
++	brcmf_btcoex_boost_wifi(btci, false);
++	cfg80211_crit_proto_stopped(&btci->vif->wdev, GFP_KERNEL);
++	brcmf_btcoex_restore_part1(btci);
++	btci->vif = NULL;
++}
++
++/**
++ * brcmf_btcoex_attach() - initialize BT coex data
++ * @cfg: driver private cfg80211 data
++ *
++ * return: 0 on success
++ */
++int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
++{
++	struct brcmf_btcoex_info *btci = NULL;
++	brcmf_dbg(TRACE, "enter\n");
++
++	btci = kmalloc(sizeof(struct brcmf_btcoex_info), GFP_KERNEL);
++	if (!btci)
++		return -ENOMEM;
++
++	btci->bt_state = BRCMF_BT_DHCP_IDLE;
++
++	/* Set up timer for BT  */
++	btci->timer_on = false;
++	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
++	init_timer(&btci->timer);
++	btci->timer.data = (ulong)btci;
++	btci->timer.function = brcmf_btcoex_timerfunc;
++	btci->cfg = cfg;
++	btci->saved_regs_part1 = false;
++	btci->saved_regs_part2 = false;
++
++	INIT_WORK(&btci->work, brcmf_btcoex_handler);
++
++	cfg->btcoex = btci;
++	return 0;
++}
++
++/**
++ * brcmf_btcoex_detach - clean BT coex data
++ * @cfg: driver private cfg80211 data
++ */
++void brcmf_btcoex_detach(struct brcmf_cfg80211_info *cfg)
++{
++	brcmf_dbg(TRACE, "enter\n");
++
++	if (!cfg->btcoex)
++		return;
++
++	if (cfg->btcoex->timer_on) {
++		cfg->btcoex->timer_on = false;
++		del_timer_sync(&cfg->btcoex->timer);
++	}
++
++	cancel_work_sync(&cfg->btcoex->work);
++
++	brcmf_btcoex_boost_wifi(cfg->btcoex, false);
++	brcmf_btcoex_restore_part1(cfg->btcoex);
++
++	kfree(cfg->btcoex);
++	cfg->btcoex = NULL;
++}
++
++static void brcmf_btcoex_dhcp_start(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp = btci->vif->ifp;
++
++	btcmf_btcoex_save_part1(btci);
++	/* set new regs values */
++	brcmf_btcoex_params_write(ifp, 66, BRCMF_BT_DHCP_REG66);
++	brcmf_btcoex_params_write(ifp, 41, BRCMF_BT_DHCP_REG41);
++	brcmf_btcoex_params_write(ifp, 68, BRCMF_BT_DHCP_REG68);
++	btci->dhcp_done = false;
++	btci->bt_state = BRCMF_BT_DHCP_START;
++	schedule_work(&btci->work);
++	brcmf_dbg(TRACE, "enable BT DHCP Timer\n");
++}
++
++static void brcmf_btcoex_dhcp_end(struct brcmf_btcoex_info *btci)
++{
++	/* Stop any bt timer because DHCP session is done */
++	btci->dhcp_done = true;
++	if (btci->timer_on) {
++		brcmf_dbg(TRACE, "disable BT DHCP Timer\n");
++		btci->timer_on = false;
++		del_timer_sync(&btci->timer);
++
++		/* schedule worker if transition to IDLE is needed */
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE) {
++			brcmf_dbg(TRACE, "bt_state:%d\n",
++				  btci->bt_state);
++			schedule_work(&btci->work);
++		}
++	} else {
++		/* Restore original values */
++		brcmf_btcoex_restore_part1(btci);
++	}
++}
++
++/**
++ * brcmf_btcoex_set_mode - set BT coex mode
++ * @cfg: driver private cfg80211 data
++ * @mode: Wifi-Bluetooth coexistence mode
++ *
++ * return: 0 on success
++ */
++int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
++			  enum brcmf_btcoex_mode mode, u16 duration)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_priv(vif->wdev.wiphy);
++	struct brcmf_btcoex_info *btci = cfg->btcoex;
++	struct brcmf_if *ifp = cfg->pub->iflist[0];
++
++	switch (mode) {
++	case BRCMF_BTCOEX_DISABLED:
++		brcmf_dbg(TRACE, "DHCP session starts\n");
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE)
++			return -EBUSY;
++		/* Start BT timer only for SCO connection */
++		if (brcmf_btcoex_is_sco_active(ifp)) {
++			btci->timeout = duration;
++			btci->vif = vif;
++			brcmf_btcoex_dhcp_start(btci);
++		}
++		break;
++
++	case BRCMF_BTCOEX_ENABLED:
++		brcmf_dbg(TRACE, "DHCP session ends\n");
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE &&
++		    vif == btci->vif) {
++			brcmf_btcoex_dhcp_end(btci);
++		}
++		break;
++	default:
++		brcmf_dbg(TRACE, "Unknown mode, ignored\n");
++	}
++	return 0;
++}
++
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
+new file mode 100644
+index 0000000..19647c6
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2013 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef WL_BTCOEX_H_
++#define WL_BTCOEX_H_
++
++enum brcmf_btcoex_mode {
++	BRCMF_BTCOEX_DISABLED,
++	BRCMF_BTCOEX_ENABLED
++};
++
++int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg);
++void brcmf_btcoex_detach(struct brcmf_cfg80211_info *cfg);
++int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
++			  enum brcmf_btcoex_mode mode, u16 duration);
++
++#endif /* WL_BTCOEX_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index ccf47a1..7f73cc4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -28,6 +28,7 @@
+ #include "dhd_dbg.h"
+ #include "fwil_types.h"
+ #include "p2p.h"
++#include "btcoex.h"
+ #include "wl_cfg80211.h"
+ #include "fwil.h"
  
- 	dev->dma_reason[0] = b43_read32(dev, B43_MMIO_DMA0_REASON)
--	    & 0x0001DC00;
-+	    & 0x0001FC00;
- 	dev->dma_reason[1] = b43_read32(dev, B43_MMIO_DMA1_REASON)
- 	    & 0x0000DC00;
- 	dev->dma_reason[2] = b43_read32(dev, B43_MMIO_DMA2_REASON)
-@@ -3130,7 +3123,7 @@ static int b43_chip_init(struct b43_wldev *dev)
- 		b43_write32(dev, 0x018C, 0x02000000);
+@@ -1102,6 +1103,7 @@ static void brcmf_init_prof(struct brcmf_cfg80211_profile *prof)
+ 
+ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(vif->wdev.wiphy);
+ 	s32 err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1115,6 +1117,8 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
+ 		clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
  	}
- 	b43_write32(dev, B43_MMIO_GEN_IRQ_REASON, 0x00004000);
--	b43_write32(dev, B43_MMIO_DMA0_IRQ_MASK, 0x0001DC00);
-+	b43_write32(dev, B43_MMIO_DMA0_IRQ_MASK, 0x0001FC00);
- 	b43_write32(dev, B43_MMIO_DMA1_IRQ_MASK, 0x0000DC00);
- 	b43_write32(dev, B43_MMIO_DMA2_IRQ_MASK, 0x0000DC00);
- 	b43_write32(dev, B43_MMIO_DMA3_IRQ_MASK, 0x0001DC00);
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
++	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
+ 	brcmf_dbg(TRACE, "Exit\n");
+ }
+ 
+@@ -4051,6 +4055,39 @@ exit:
+ 	return err;
+ }
+ 
++static int brcmf_cfg80211_crit_proto_start(struct wiphy *wiphy,
++					   struct wireless_dev *wdev,
++					   enum nl80211_crit_proto_id proto,
++					   u16 duration)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_cfg80211_vif *vif;
++
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++
++	/* only DHCP support for now */
++	if (proto != NL80211_CRIT_PROTO_DHCP)
++		return -EINVAL;
++
++	/* suppress and abort scanning */
++	set_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++	brcmf_abort_scanning(cfg);
++
++	return brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_DISABLED, duration);
++}
++
++static void brcmf_cfg80211_crit_proto_stop(struct wiphy *wiphy,
++					   struct wireless_dev *wdev)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_cfg80211_vif *vif;
++
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++
++	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
++	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++}
++
+ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.add_virtual_intf = brcmf_cfg80211_add_iface,
+ 	.del_virtual_intf = brcmf_cfg80211_del_iface,
+@@ -4085,6 +4122,8 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.mgmt_tx = brcmf_cfg80211_mgmt_tx,
+ 	.remain_on_channel = brcmf_p2p_remain_on_channel,
+ 	.cancel_remain_on_channel = brcmf_cfg80211_cancel_remain_on_channel,
++	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
++	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	.testmode_cmd = brcmf_cfg80211_testmode
+ #endif
+@@ -4823,6 +4862,12 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		brcmf_err("P2P initilisation failed (%d)\n", err);
+ 		goto cfg80211_p2p_attach_out;
+ 	}
++	err = brcmf_btcoex_attach(cfg);
++	if (err) {
++		brcmf_err("BT-coex initialisation failed (%d)\n", err);
++		brcmf_p2p_detach(&cfg->p2p);
++		goto cfg80211_p2p_attach_out;
++	}
+ 
+ 	return cfg;
+ 
+@@ -4841,6 +4886,7 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 	struct brcmf_cfg80211_vif *tmp;
+ 
+ 	wl_deinit_priv(cfg);
++	brcmf_btcoex_detach(cfg);
+ 	list_for_each_entry_safe(vif, tmp, &cfg->vif_list, list) {
+ 		brcmf_free_vif(vif);
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index db531e1..20dbed1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -349,6 +349,7 @@ struct brcmf_cfg80211_vif_event {
+  * @wiphy: wiphy object for cfg80211 interface.
+  * @conf: dongle configuration.
+  * @p2p: peer-to-peer specific information.
++ * @btcoex: Bluetooth coexistence information.
+  * @scan_request: cfg80211 scan request object.
+  * @usr_sync: mainly for dongle up/down synchronization.
+  * @bss_list: bss_list holding scanned ap information.
+@@ -382,6 +383,7 @@ struct brcmf_cfg80211_info {
+ 	struct wiphy *wiphy;
+ 	struct brcmf_cfg80211_conf *conf;
+ 	struct brcmf_p2p_info p2p;
++	struct brcmf_btcoex_info *btcoex;
+ 	struct cfg80211_scan_request *scan_request;
+ 	struct mutex usr_sync;
+ 	struct brcmf_scan_results *bss_list;
 -- 
-1.7.9.5
+1.7.10.4
+
 
