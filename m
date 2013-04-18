@@ -1,36 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:37789 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966154Ab3DQMec (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967300Ab3DRMRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:34:32 -0400
-Received: by mail-ie0-f169.google.com with SMTP id ar20so1843096iec.28
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:34:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1366200500-4661-3-git-send-email-stf_xl@wp.pl>
-References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
-	<1366200500-4661-3-git-send-email-stf_xl@wp.pl>
-Date: Wed, 17 Apr 2013 14:34:31 +0200
-Message-ID: <CAL1gcdO9z2X5h73K6vgrYQVu6qw80k=zXb9_gR7yX=u3FYHfig@mail.gmail.com> (sfid-20130417_143435_783788_D9C81AB0)
-Subject: Re: [PATCH v2 02/11] rt2800: move rf init calibration code
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Apr 2013 08:17:51 -0400
+Message-ID: <1366287462.8336.0.camel@jlt4.sipsolutions.net> (sfid-20130418_141755_197993_16A52C1F)
+Subject: Re: [PATCH 1/2] mac80211: minstrel_ht: pick only supported rates
+ for sta and group max*rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Thu, 18 Apr 2013 14:17:42 +0200
+In-Reply-To: <1366285887-23416-1-git-send-email-karl.beldan@gmail.com> (sfid-20130418_135545_662796_FFEAEFAA)
+References: <1366285887-23416-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130418_135545_662796_FFEAEFAA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 2:08 PM,  <stf_xl@wp.pl> wrote:
-> From: Stanislaw Gruszka <stf_xl@wp.pl>
->
-> Add separate function for rf init calibration code and use it
-> on all init rf subroutines.
->
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+On Thu, 2013-04-18 at 13:51 +0200, Karl Beldan wrote:
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> +			// initialize {mg,mi}->max_rates indexes
 
----
-Gertjan
+Please don't use C99 comments (both here and the other patch)
+
+johannes
+
