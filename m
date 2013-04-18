@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab3DVNwx (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33910 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965622Ab3DRLeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 09:52:53 -0400
-Message-ID: <1366638766.8637.16.camel@jlt4.sipsolutions.net> (sfid-20130422_155256_694895_0728FBF1)
-Subject: Re: [PATCH v5 1/3] mac80211: improve the rate control API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
-Date: Mon, 22 Apr 2013 15:52:46 +0200
-In-Reply-To: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
-References: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 18 Apr 2013 07:34:17 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: "John W . Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3/4] wil6210: Use cached copy of Tx descriptor
+Date: Thu, 18 Apr 2013 14:33:52 +0300
+Message-ID: <1366284834-540-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130418_133422_242876_EA204B6F)
+In-Reply-To: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1366284834-540-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-22 at 12:09 +0200, Felix Fietkau wrote:
+Original Tx descriptor stored is in non-cached area for DMA;
+copy it to the cached memory to speed-up access
 
-> @@ -692,16 +692,38 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->  	 */
->  	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
->  
-> -	if (unlikely(info->control.rates[0].idx < 0))
-> -		return TX_DROP;
-> +	if (tx->sta && !info->control.skip_table)
-> +		ratetbl = rcu_dereference(tx->sta->sta.rates);
-> +
-> +	if (unlikely(info->control.rates[0].idx < 0)) {
-> +		if (ratetbl) {
-> +			struct ieee80211_tx_rate rate = {
-> +				.idx = ratetbl->rate[0].idx,
-> +				.flags = ratetbl->rate[0].flags,
-> +				.count = ratetbl->rate[0].count
-> +			};
-> +
-> +			if (ratetbl->rate[0].idx < 0)
-> +				return TX_DROP;
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-This can't happen, idx is unsigned. Did you intend idx to be signed?
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 3d9afc5..91454a4 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -789,9 +789,14 @@ void wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 	wil_dbg_txrx(wil, "%s(%d)\n", __func__, ringid);
+ 
+ 	while (!wil_vring_is_empty(vring)) {
+-		volatile struct vring_tx_desc *d = &vring->va[vring->swtail].tx;
++		volatile struct vring_tx_desc *d1 =
++					      &vring->va[vring->swtail].tx;
++		struct vring_tx_desc dd, *d = &dd;
+ 		dma_addr_t pa;
+ 		struct sk_buff *skb;
++
++		dd = *d1;
++
+ 		if (!(d->dma.status & TX_DMA_STATUS_DU))
+ 			break;
+ 
+-- 
+1.7.10.4
 
