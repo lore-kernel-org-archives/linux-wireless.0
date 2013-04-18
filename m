@@ -1,49 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58492 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762694Ab3DDAKN (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:37249 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500Ab3DRMao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 20:10:13 -0400
-Message-ID: <515CC4E0.5010706@candelatech.com> (sfid-20130404_021024_931600_92A0486C)
-Date: Wed, 03 Apr 2013 17:10:08 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Thu, 18 Apr 2013 08:30:44 -0400
+Received: by mail-ee0-f43.google.com with SMTP id e50so1281638eek.16
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:30:43 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: sta_info_flush_defer:  Splat in 3.9.0-rc5+
-References: <515CB8A3.50805@candelatech.com>  (sfid-20130404_011800_128781_8C70A056) <1365032488.8351.68.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1365032488.8351.68.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 1/2] mac80211: minstrel_ht: pick only supported rates for sta and group max*rates
+Date: Thu, 18 Apr 2013 14:26:20 +0200
+Message-Id: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com> (sfid-20130418_143047_427225_AC5A82E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/2013 04:41 PM, Johannes Berg wrote:
-> On Wed, 2013-04-03 at 16:17 -0700, Ben Greear wrote:
->> I'm getting started on testing 3.9.0-rc5+ a bit more seriously.  This is on
->> a tree with some additional patches:
->>
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.9.dev.y/.git;a=summary
->>
->>
->> The splat below comes from this.  I see lots of these on both station and AP system when
->> bouncing 50 or so stations.
->
-> I might be interested if you can reproduce without your hashing patches,
-> but with those I suspect you just return an error there that shouldn't
-> be returned.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Ahh, yes...I was returning false errors from the sta_info_hash_del.
-I just need to ignore vhash remove errors because the vhash is only
-populated for station vifs.
+minstrel_ht initializes max_tp_rate max_tp_rate2 and max_prob_rate to
+zero both for minstrel_ht_sta and minstrel_mcs_group_data.
+This is wrong since there is no guarantee that the 1st rate of any
+group is supported.
 
-Seems to be working better now.
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-Thanks for the suggestion!
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index d2b264d..eb6dc3f 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -244,6 +244,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	struct minstrel_rate_stats *mr;
+ 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
+ 	int group, i, index;
++	bool mi_rates_valid = false;
+ 
+ 	if (mi->ampdu_packets > 0) {
+ 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
+@@ -254,11 +255,10 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 
+ 	mi->sample_slow = 0;
+ 	mi->sample_count = 0;
+-	mi->max_tp_rate = 0;
+-	mi->max_tp_rate2 = 0;
+-	mi->max_prob_rate = 0;
+ 
+ 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
++		bool mg_rates_valid = false;
++
+ 		cur_prob = 0;
+ 		cur_prob_tp = 0;
+ 		cur_tp = 0;
+@@ -268,15 +268,24 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		if (!mg->supported)
+ 			continue;
+ 
+-		mg->max_tp_rate = 0;
+-		mg->max_tp_rate2 = 0;
+-		mg->max_prob_rate = 0;
+ 		mi->sample_count++;
+ 
+ 		for (i = 0; i < MCS_GROUP_RATES; i++) {
+ 			if (!(mg->supported & BIT(i)))
+ 				continue;
+ 
++			/* initialize rates selections starting indexes */
++			if (!mg_rates_valid) {
++				mg->max_tp_rate = mg->max_tp_rate2 =
++					mg->max_prob_rate = i;
++				if (!mi_rates_valid) {
++					mi->max_tp_rate = mi->max_tp_rate2 =
++						mi->max_prob_rate = i;
++					mi_rates_valid = true;
++				}
++				mg_rates_valid = true;
++			}
++
+ 			mr = &mg->rates[i];
+ 			mr->retry_updated = false;
+ 			index = MCS_GROUP_RATES * group + i;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.2
 
