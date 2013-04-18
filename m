@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f51.google.com ([209.85.210.51]:62602 "EHLO
-	mail-da0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756317Ab3DIFxF (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:59031 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500Ab3DRM3C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 01:53:05 -0400
-Received: by mail-da0-f51.google.com with SMTP id g27so2911474dan.24
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 22:53:05 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: qca_vkondrat@qca.qualcomm.com, yunsenw@qca.qualcomm.com,
-	kandala@qca.qualcomm.com, wireless-regdb@lists.infradead.org,
-	green@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/3] wireless-regdb: a few regulatory updates
-Date: Mon,  8 Apr 2013 22:52:55 -0700
-Message-Id: <1365486778-2336-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130409_075310_439152_BE8B88ED)
+	Thu, 18 Apr 2013 08:29:02 -0400
+Received: by mail-ea0-f180.google.com with SMTP id d10so1212592eaj.39
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:29:00 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 2/2] mac80211: minstrel_ht: initialize rates selection
+Date: Thu, 18 Apr 2013 14:24:43 +0200
+Message-Id: <1366287883-24054-2-git-send-email-karl.beldan@gmail.com> (sfid-20130418_142907_149835_F0D27568)
+In-Reply-To: <1366287883-24054-1-git-send-email-karl.beldan@gmail.com>
+References: <1366287883-24054-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-John, here's as few pending regulatory updates.
+Initialize {mp,mi}->{max_tp_rate,max_tp_rate2,max_prob_rate} in
+minstrel_ht's rate_init and rate_update.
 
-Luis R. Rodriguez (3):
-  wireless-regdb: enable HT40 in RU - Russian Federation
-  wireless-regdb: enable VHT80 when world roaming
-  wireless-regdb: add VHT channels 1..3 to world regdom
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
- db.txt |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index eb6dc3f..5768cc0 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -907,6 +907,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	if (!n_supported)
+ 		goto use_legacy;
+ 
++	/* init {mi,mi->groups[*]}->{max_tp_rate,max_tp_rate2,max_prob_rate} */
++	minstrel_ht_update_stats(mp, mi);
++
+ 	return;
+ 
+ use_legacy:
 -- 
-1.7.10.4
+1.8.2
 
