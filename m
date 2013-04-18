@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:42482 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761784Ab3DCU4s convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40170 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757665Ab3DRJSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 16:56:48 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hr17so4067806wib.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 13:56:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20130403T092722-24@post.gmane.org>
-References: <loom.20130403T092722-24@post.gmane.org>
-Date: Wed, 3 Apr 2013 13:56:46 -0700
-Message-ID: <CAJ-Vmomn8A77jEvR2c312QukWy7Zozs4T2NQuiYMForr5+DthQ@mail.gmail.com> (sfid-20130403_225653_494512_4CF97FCE)
-Subject: Re: [ath5k][802.11p] Deactivate beacon
-From: Adrian Chadd <adrian@freebsd.org>
-To: =?ISO-8859-1?Q?Ricardo_Tub=EDo?= <rtpardavila@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Apr 2013 05:18:00 -0400
+From: Luis Henriques <luis.henriques@canonical.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	kernel-team@lists.ubuntu.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>,
+	Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 37/72] rt2x00: rt2x00pci_regbusy_read() - only print register access failure once
+Date: Thu, 18 Apr 2013 10:16:22 +0100
+Message-Id: <1366276617-3553-38-git-send-email-luis.henriques@canonical.com> (sfid-20130418_112839_960565_A7B7C3FC)
+In-Reply-To: <1366276617-3553-1-git-send-email-luis.henriques@canonical.com>
+References: <1366276617-3553-1-git-send-email-luis.henriques@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 April 2013 00:30, Ricardo Tubío <rtpardavila@gmail.com> wrote:
-> My name is Ricardo Tubío and I am currently trying to use GCDC patches for the
-> 'ath5k' driver in order to meet IEEE 802.11p automotive requirements. I would
-> like to know if somebody has either a patch for deactivating the beacon or can
-> help me in locating the code where the beacon is implemented.
+3.5.7.11 -stable review patch.  If anyone has any objections, please let me know.
 
-Where are these patches hiding?
+------------------
 
-I've just been sent a couple of unex cards to implement 802.11p on FreeBSD.
-So I'd like to see what the current state of the art with ath5k is.
+From: Tim Gardner <tim.gardner@canonical.com>
 
-Thanks!
+commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
 
+BugLink: http://bugs.launchpad.net/bugs/1128840
 
+It appears that when this register read fails it never recovers, so
+I think there is no need to repeat the same error message ad infinitum.
 
-Adrian
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 0a4653a..1ea98a8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
+ 		udelay(REGISTER_BUSY_DELAY);
+ 	}
+ 
+-	ERROR(rt2x00dev, "Indirect register access failed: "
+-	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
++	printk_once(KERN_ERR "%s() Indirect register access failed: "
++	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
+ 	*reg = ~0;
+ 
+ 	return 0;
+-- 
+1.8.1.2
+
