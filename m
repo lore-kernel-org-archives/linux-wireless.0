@@ -1,30 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55921 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933110Ab3DIJsZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 05:48:25 -0400
-Message-ID: <1365500902.8465.11.camel@jlt4.sipsolutions.net> (sfid-20130409_114827_985709_9441D54A)
-Subject: Re: [PATCH 5/6] mac80211: stringify another plink state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Date: Tue, 09 Apr 2013 11:48:22 +0200
-In-Reply-To: <1365444377-9959-5-git-send-email-thomas@cozybit.com> (sfid-20130408_200803_127599_58724FE4)
-References: <1365444377-9959-1-git-send-email-thomas@cozybit.com>
-	 <1365444377-9959-5-git-send-email-thomas@cozybit.com>
-	 (sfid-20130408_200803_127599_58724FE4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2449 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756142Ab3DRNtU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Apr 2013 09:49:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/3] brcmfmac: allow scanning to be suppressed in the
+ driver
+Date: Thu, 18 Apr 2013 15:49:01 +0200
+Message-ID: <1366292942-21038-2-git-send-email-arend@broadcom.com> (sfid-20130418_154924_459348_47834CF5)
+In-Reply-To: <1366292942-21038-1-git-send-email-arend@broadcom.com>
+References: <1366292942-21038-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-08 at 11:06 -0700, Thomas Pedersen wrote:
-> The patch "mac80211: stringify mesh peering events" missed
-> an opportunity to print the peering state as a string.
+During the DHCP protocol exchange it is benificial to suppress
+scan requests which may decrease time to complete DHCP protocol.
 
-Applied.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |   10 ++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h |    4 +++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 2af9c0f..ccf47a1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -904,6 +904,11 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct net_device *ndev,
+ 			  cfg->scan_status);
+ 		return -EAGAIN;
+ 	}
++	if (test_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status)) {
++		brcmf_err("Scanning suppressed: status (%lu)\n",
++			  cfg->scan_status);
++		return -EAGAIN;
++	}
+ 	if (test_bit(BRCMF_VIF_STATUS_CONNECTING, &ifp->vif->sme_state)) {
+ 		brcmf_err("Connecting: status (%lu)\n", ifp->vif->sme_state);
+ 		return -EAGAIN;
+@@ -3058,6 +3063,11 @@ brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
+ 		brcmf_err("Scanning already: status (%lu)\n", cfg->scan_status);
+ 		return -EAGAIN;
+ 	}
++	if (test_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status)) {
++		brcmf_err("Scanning suppressed: status (%lu)\n",
++			  cfg->scan_status);
++		return -EAGAIN;
++	}
+ 
+ 	if (!request || !request->n_ssids || !request->n_match_sets) {
+ 		brcmf_err("Invalid sched scan req!! n_ssids:%d\n",
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index 8b5d498..db531e1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -74,14 +74,16 @@
+ 
+ 
+ /**
+- * enum brcmf_scan_status - dongle scan status
++ * enum brcmf_scan_status - scan engine status
+  *
+  * @BRCMF_SCAN_STATUS_BUSY: scanning in progress on dongle.
+  * @BRCMF_SCAN_STATUS_ABORT: scan being aborted on dongle.
++ * @BRCMF_SCAN_STATUS_SUPPRESS: scanning is suppressed in driver.
+  */
+ enum brcmf_scan_status {
+ 	BRCMF_SCAN_STATUS_BUSY,
+ 	BRCMF_SCAN_STATUS_ABORT,
++	BRCMF_SCAN_STATUS_SUPPRESS,
+ };
+ 
+ /**
+-- 
+1.7.10.4
+
 
