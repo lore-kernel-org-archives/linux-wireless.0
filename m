@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:45424 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762266Ab3DHWbr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 18:31:47 -0400
-Received: by mail-oa0-f42.google.com with SMTP id i18so6879740oag.29
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Apr 2013 15:31:46 -0700 (PDT)
-Message-ID: <51634550.3090300@lwfinger.net> (sfid-20130409_003150_424430_80DB1D2A)
-Date: Mon, 08 Apr 2013 17:31:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:53553 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030421Ab3DSOPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 10:15:19 -0400
+Message-ID: <51715174.8000105@openwrt.org> (sfid-20130419_161524_200671_67C2E298)
+Date: Fri, 19 Apr 2013 16:15:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: David Howells <dhowells@redhat.com>
-CC: seanm@seanm.ca, gregkh@suse.de, viro@ZenIV.linux.org.uk,
-	awong1@novell.com, linux-wireless@vger.kernel.org
-Subject: Re: The rtl8192e procfs-based debug interface seems very broken
-References: <17570.1365415364@warthog.procyon.org.uk>
-In-Reply-To: <17570.1365415364@warthog.procyon.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v3 1/3] mac80211: improve the rate control API
+References: <1366376477-29376-1-git-send-email-nbd@openwrt.org> <20130419140653.GB8341@magnum.frso.rivierawaves.com>
+In-Reply-To: <20130419140653.GB8341@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2013 05:02 AM, David Howells wrote:
-> The procfs-based debug interface in:
->
-> 	drivers/staging/rtl8192e/rtl8192e/rtl_debug.c
->
-> seems to be very broken because:
->
->   (1) proc_get_stats_ap() walks ieee->network_list with no locking.
->
->   (2) There is no locking against normal driver operations whilst we wangle the
->       device registers.  Admittedly, this may not modify the device state since
->       all the pages appear memory-mapped rather than bank-swapped - but if
->       there are any read-to-ack type regs, then this is bad.
->
->   (3) We send the device commands and await replies - again without locking
->       against the normal driver (eg. proc_get_cam_register_*()).
+On 2013-04-19 4:06 PM, Karl Beldan wrote:
+> On Fri, Apr 19, 2013 at 03:01:15PM +0200, Felix Fietkau wrote:
+>> +	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
+>> +		s8 baserate = 0;
+>> +
+>> +		rate = &sband->bitrates[rates[0].idx];
+>> +
+>> +		for (i = 0; i < sband->n_bitrates; i++) {
+>> +			/* must be a basic rate */
+>> +			if (!(vif->bss_conf.basic_rates & BIT(i)))
+>> +				continue;
+> [...]
+>> -	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
+>> -		u32 basic_rates = tx->sdata->vif.bss_conf.basic_rates;
+>> -		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
+>> -
+>> -		rate = &sband->bitrates[info->control.rates[0].idx];
+>> -
+>> -		for (i = 0; i < sband->n_bitrates; i++) {
+>> -			/* must be a basic rate */
+>> -			if (!(basic_rates & BIT(i)))
+>> -				continue;
+> 
+> The moved code doesn't match, missing 5253ffb.
+Oh, I must have overlooked it during the merge. Will send v4, thanks.
 
-David,
-
-That whole driver is quite broken.
-
-My initial response would be to delete the whole procfs structure. I have one of 
-those devices, but I never use it. At the moment, I do not have time to add 
-locking and test the changes.
-
-Larry
+- Felix
 
