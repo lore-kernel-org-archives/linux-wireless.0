@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4469 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760465Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:41:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/25] brcmfmac: use skb_cow() in brcmf_sdbrcm_txpkt()
- to assure alignment
-Date: Wed, 3 Apr 2013 12:40:28 +0200
-Message-ID: <1364985650-11719-4-git-send-email-arend@broadcom.com> (sfid-20130403_124303_948487_2CF84587)
-In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:60218 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754522Ab3DSQOi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 12:14:38 -0400
+Received: by mail-bk0-f45.google.com with SMTP id j10so1773074bkw.4
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 09:14:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Fri, 19 Apr 2013 18:14:17 +0200
+Message-ID: <CAG6hwVN5LRVgchuX7QQWKEioBxTz3WXO5JUVv7fE3_X5LKXayg@mail.gmail.com> (sfid-20130419_181442_827594_B491AB01)
+Subject: Re: Mutli vif in mesh mode
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_sdbrcm_txpkt() a new packet is allocated and used to transmit
-to firmware freeing up the original packet. However, that packet is
-still referenced in firmware-signalling so this would result in a
-double free. Using skb_cow() avoids this as the packet reference is
-unchanged.
+On Fri, Apr 19, 2013 at 5:04 PM, Cedric VONCKEN
+<cedric.voncken@acksys.fr> wrote:
+> I try to setup 2 mesh node on the same wireless card.
+> I am using the ath9k driver from Compat 2013-02-22 (openwrt package).
+>
+> The command line sequence is
+> Create mesh node 1
+>         iw phy0 interface add wlan0 type mp
+>         iw wlan0 set channel 44 HT20
+>         ifconfig wlan0 up
+>         iw wlan0 mesh join test
+>
+> Create mesh node 2
+> iw phy0 interface add wlan1 type mp
+> iw wlan1 set channel 44 HT20
+> ifconfig wlan1 hw ether 00:09:90:aa:11:22 up
+> iw wlan1 mesh join test2
+>
+> With wireshark and air pcap adapter, I cannot see the beacon for the
+> second mesh node.
+> If I  execute each mesh node separately, it works correctly (I see the
+> beacon on wireshark)
+>
+> Is it possible to execute 2 mesh node on one ath9k wireless card?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   25 +++++---------------
- 1 file changed, 6 insertions(+), 19 deletions(-)
+This is because ath9k currently uses the hardware's adhoc beaconing
+mode for mesh. See ath9k_hw_beaconinit() in
+drivers/net/wireless/ath/ath9k/hw.c. This is probably wrong, and we
+have a patch to beacon with AP mode, but I'll have to dig it up.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 4fa19b9..f5f04ba 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1781,7 +1781,6 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 	u8 *frame;
- 	u16 len, pad = 0;
- 	u32 swheader;
--	struct sk_buff *new;
- 	int i;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
-@@ -1795,26 +1794,14 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 			brcmf_dbg(INFO, "insufficient headroom %d for %d pad\n",
- 				  skb_headroom(pkt), pad);
- 			bus->sdiodev->bus_if->tx_realloc++;
--			new = brcmu_pkt_buf_get_skb(pkt->len + BRCMF_SDALIGN);
--			if (!new) {
--				brcmf_err("couldn't allocate new %d-byte packet\n",
--					  pkt->len + BRCMF_SDALIGN);
--				ret = -ENOMEM;
-+			ret = skb_cow(pkt, BRCMF_SDALIGN);
-+			if (ret)
- 				goto done;
--			}
--
--			pkt_align(new, pkt->len, BRCMF_SDALIGN);
--			memcpy(new->data, pkt->data, pkt->len);
--			brcmu_pkt_buf_free_skb(pkt);
--			pkt = new;
--			frame = (u8 *) (pkt->data);
--			/* precondition: (frame % BRCMF_SDALIGN) == 0) */
--			pad = 0;
--		} else {
--			skb_push(pkt, pad);
--			frame = (u8 *) (pkt->data);
--			memset(frame + SDPCM_HDRLEN, 0, pad);
-+			pad = ((unsigned long)frame % BRCMF_SDALIGN);
- 		}
-+		skb_push(pkt, pad);
-+		frame = (u8 *) (pkt->data);
-+		memset(frame, 0, pad + SDPCM_HDRLEN);
- 	}
- 	/* precondition: pad < BRCMF_SDALIGN */
- 
--- 
-1.7.10.4
-
-
+--
+Thomas
