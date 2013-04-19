@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4884 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3986 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966751Ab3DQT03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 15:26:29 -0400
+	id S967935Ab3DSINJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 04:13:09 -0400
+Message-ID: <5170FC8A.5020306@broadcom.com> (sfid-20130419_101314_796191_B5FDB6EF)
+Date: Fri, 19 Apr 2013 10:12:58 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/10] brcmfmac: stop dequeue upon sk_buff commit
- failure
-Date: Wed, 17 Apr 2013 21:25:58 +0200
-Message-ID: <1366226758-20641-11-git-send-email-arend@broadcom.com> (sfid-20130417_212633_807323_03D1F8FC)
-In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
-References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Wei Yongjun" <weiyj.lk@gmail.com>
+cc: brudley@broadcom.com, frankyl@broadcom.com, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, phaber@broadcom.com,
+	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH -next] brcmfmac: fix potential NULL pointer
+ dereference in brcmf_fws_flow_control_check()
+References: <CAPgLHd8KiH+BGZJ704yk2ZsiVQC8GH4FUZhC-_rstdoaA4BOaA@mail.gmail.com>
+In-Reply-To: <CAPgLHd8KiH+BGZJ704yk2ZsiVQC8GH4FUZhC-_rstdoaA4BOaA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the dequeue worker the function brcmf_commit_skb() is called.
-However, instead of increment the credit count upon success it
-should break the for loop upon failure. Otherwise, it will result
-in an endless loop.
+On 04/19/2013 04:14 AM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> The dereference to 'ifp' in debug code should be moved below the NULL test.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 25eaa13..8ae7da8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1850,10 +1850,9 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
- 			  fws->fifo_credit[fifo]);
- 		for (credit = 0; credit < fws->fifo_credit[fifo]; /* nop */) {
- 			skb = brcmf_fws_deq(fws, fifo);
--			if (!skb)
-+			if (!skb || brcmf_fws_commit_skb(fws, fifo, skb))
- 				break;
--			if (!brcmf_fws_commit_skb(fws, fifo, skb) &&
--			    brcmf_skbcb(skb)->if_flags &
-+			if (brcmf_skbcb(skb)->if_flags &
- 			    BRCMF_SKB_IF_FLAGS_CREDITCHECK_MASK)
- 				credit++;
- 		}
--- 
-1.7.10.4
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> index 1bcd58c..69d5ad2 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> @@ -821,11 +821,12 @@ brcmf_fws_flow_control_check(struct brcmf_fws_info *fws, struct pktq *pq,
+>   {
+>   	struct brcmf_if *ifp = fws->drvr->iflist[if_id];
+>
+> -	brcmf_dbg(TRACE,
+> -		  "enter: bssidx=%d, ifidx=%d\n", ifp->bssidx, ifp->ifidx);
+>   	if (WARN_ON(!ifp))
+>   		return;
+>
+> +	brcmf_dbg(TRACE,
+> +		  "enter: bssidx=%d, ifidx=%d\n", ifp->bssidx, ifp->ifidx);
+> +
+>   	if ((ifp->netif_stop & BRCMF_NETIF_STOP_REASON_FWS_FC) &&
+>   	    pq->len <= BRCMF_FWS_FLOWCONTROL_LOWATER)
+>   		brcmf_txflowblock_if(ifp,
+>
+>
 
 
