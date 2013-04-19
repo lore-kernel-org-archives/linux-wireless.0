@@ -1,177 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4871 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966744Ab3DQT0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 15:26:19 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/10] brcmfmac: schedule dequeue upon firmware-signal
- reception
-Date: Wed, 17 Apr 2013 21:25:54 +0200
-Message-ID: <1366226758-20641-7-git-send-email-arend@broadcom.com> (sfid-20130417_214304_294399_10DDECA0)
-In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
-References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:58649 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968316Ab3DSMtQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 08:49:16 -0400
+Received: by mail-wi0-f176.google.com with SMTP id hj19so757766wib.9
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 05:49:15 -0700 (PDT)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@gmail.com>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211_hwsim: handle IEEE80211_HW_SUPPORTS_RC_TABLE
+Date: Fri, 19 Apr 2013 14:44:52 +0200
+Message-Id: <1366375492-10979-1-git-send-email-karl.beldan@gmail.com> (sfid-20130419_144921_550151_0DC5BA43)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several firmware signals should be considered as opportunity to
-send packets to the firmware. This patch adds conditional scheduling
-of the dequeue worker thread while handling those signals.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   36 +++++++++++++-------
- 1 file changed, 24 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 0d2ff60..648f9bd 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -147,6 +147,9 @@ static const char *brcmf_fws_get_tlv_name(enum brcmf_fws_tlv_type id)
- #define BRCMF_FWS_HTOD_FLAG_PKTFROMHOST			0x01
- #define BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED		0x02
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b5117f5..fd30beb7 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -53,6 +53,10 @@ static bool paged_rx = false;
+ module_param(paged_rx, bool, 0644);
+ MODULE_PARM_DESC(paged_rx, "Use paged SKBs for RX instead of linear ones");
  
-+#define BRCMF_FWS_RET_OK_NOSCHEDULE	0
-+#define BRCMF_FWS_RET_OK_SCHEDULE	1
++static bool rctbl = false;
++module_param(rctbl, bool, 0444);
++MODULE_PARM_DESC(rctbl, "Handle rate control table");
 +
  /**
-  * enum brcmf_fws_skb_state - indicates processing state of skb.
+  * enum hwsim_regtest - the type of regulatory tests we offer
   *
-@@ -920,12 +923,13 @@ static int brcmf_fws_macdesc_state_indicate(struct brcmf_fws_info *fws,
- 	entry->requested_credit = 0;
- 	if (type == BRCMF_FWS_TYPE_MAC_OPEN) {
- 		entry->state = BRCMF_FWS_STATE_OPEN;
-+		return BRCMF_FWS_RET_OK_SCHEDULE;
- 	} else {
- 		entry->state = BRCMF_FWS_STATE_CLOSE;
- 		for (i = BRCMF_FWS_FIFO_AC_BE; i < NL80211_NUM_ACS; i++)
- 			brcmf_fws_tim_update(fws, entry, i);
- 	}
--	return 0;
-+	return BRCMF_FWS_RET_OK_NOSCHEDULE;
- }
+@@ -887,8 +891,12 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	if (control->sta)
+ 		hwsim_check_sta_magic(control->sta);
  
- static int brcmf_fws_interface_state_indicate(struct brcmf_fws_info *fws,
-@@ -952,10 +956,10 @@ static int brcmf_fws_interface_state_indicate(struct brcmf_fws_info *fws,
- 	switch (type) {
- 	case BRCMF_FWS_TYPE_INTERFACE_OPEN:
- 		entry->state = BRCMF_FWS_STATE_OPEN;
--		return 0;
-+		return BRCMF_FWS_RET_OK_SCHEDULE;
- 	case BRCMF_FWS_TYPE_INTERFACE_CLOSE:
- 		entry->state = BRCMF_FWS_STATE_CLOSE;
--		return 0;
-+		return BRCMF_FWS_RET_OK_NOSCHEDULE;
- 	default:
- 		ret = -EINVAL;
- 		break;
-@@ -985,7 +989,7 @@ static int brcmf_fws_request_indicate(struct brcmf_fws_info *fws, u8 type,
- 		entry->requested_packet = data[0];
+-	txi->rate_driver_data[0] = channel;
++	if (rctbl)
++		ieee80211_get_tx_rates(txi->control.vif, control->sta, skb,
++				       txi->control.rates,
++				       ARRAY_SIZE(txi->control.rates));
  
- 	entry->ac_bitmap = data[2];
--	return 0;
-+	return BRCMF_FWS_RET_OK_SCHEDULE;
- }
++	txi->rate_driver_data[0] = channel;
+ 	mac80211_hwsim_monitor_rx(hw, skb, channel);
  
- static void brcmf_fws_return_credits(struct brcmf_fws_info *fws,
-@@ -1259,7 +1263,7 @@ static int brcmf_fws_fifocreditback_indicate(struct brcmf_fws_info *fws,
+ 	/* wmediumd mode check */
+@@ -990,6 +998,13 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ {
+ 	u32 _pid = ACCESS_ONCE(wmediumd_portid);
  
- 	if (fws->fcmode != BRCMF_FWS_FCMODE_EXPLICIT_CREDIT) {
- 		brcmf_dbg(INFO, "ignored\n");
--		return 0;
-+		return BRCMF_FWS_RET_OK_NOSCHEDULE;
- 	}
- 
- 	brcmf_dbg(TRACE, "enter: data %pM\n", data);
-@@ -1268,8 +1272,7 @@ static int brcmf_fws_fifocreditback_indicate(struct brcmf_fws_info *fws,
- 
- 	brcmf_dbg(INFO, "map: credit %x delay %x\n", fws->fifo_credit_map,
- 		  fws->fifo_delay_map);
--	brcmf_fws_schedule_deq(fws);
--	return 0;
-+	return BRCMF_FWS_RET_OK_SCHEDULE;
- }
- 
- static int brcmf_fws_txstatus_indicate(struct brcmf_fws_info *fws, u8 *data)
-@@ -1353,6 +1356,8 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 	u8 type;
- 	u8 len;
- 	u8 *data;
-+	s32 status;
-+	s32 err;
- 
- 	brcmf_dbg(TRACE, "enter: ifidx %d, skblen %u, sig %d\n",
- 		  ifidx, skb->len, signal_len);
-@@ -1372,6 +1377,7 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 	data_len = signal_len;
- 	signal_data = skb->data;
- 
-+	status = BRCMF_FWS_RET_OK_NOSCHEDULE;
- 	while (data_len > 0) {
- 		/* extract tlv info */
- 		type = signal_data[0];
-@@ -1397,6 +1403,7 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 		if (len != brcmf_fws_get_tlv_len(fws, type))
- 			break;
- 
-+		err = BRCMF_FWS_RET_OK_NOSCHEDULE;
- 		switch (type) {
- 		case BRCMF_FWS_TYPE_HOST_REORDER_RXPKTS:
- 		case BRCMF_FWS_TYPE_COMP_TXSTATUS:
-@@ -1407,21 +1414,22 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 			break;
- 		case BRCMF_FWS_TYPE_MAC_OPEN:
- 		case BRCMF_FWS_TYPE_MAC_CLOSE:
--			brcmf_fws_macdesc_state_indicate(fws, type, data);
-+			err = brcmf_fws_macdesc_state_indicate(fws, type, data);
- 			break;
- 		case BRCMF_FWS_TYPE_INTERFACE_OPEN:
- 		case BRCMF_FWS_TYPE_INTERFACE_CLOSE:
--			brcmf_fws_interface_state_indicate(fws, type, data);
-+			err = brcmf_fws_interface_state_indicate(fws, type,
-+								 data);
- 			break;
- 		case BRCMF_FWS_TYPE_MAC_REQUEST_CREDIT:
- 		case BRCMF_FWS_TYPE_MAC_REQUEST_PACKET:
--			brcmf_fws_request_indicate(fws, type, data);
-+			err = brcmf_fws_request_indicate(fws, type, data);
- 			break;
- 		case BRCMF_FWS_TYPE_TXSTATUS:
- 			brcmf_fws_txstatus_indicate(fws, data);
- 			break;
- 		case BRCMF_FWS_TYPE_FIFO_CREDITBACK:
--			brcmf_fws_fifocreditback_indicate(fws, data);
-+			err = brcmf_fws_fifocreditback_indicate(fws, data);
- 			break;
- 		case BRCMF_FWS_TYPE_RSSI:
- 			brcmf_fws_rssi_indicate(fws, *data);
-@@ -1435,7 +1443,8 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 			fws->stats.tlv_invalid_type++;
- 			break;
- 		}
--
-+		if (err == BRCMF_FWS_RET_OK_SCHEDULE)
-+			status = BRCMF_FWS_RET_OK_SCHEDULE;
- 		signal_data += len + 2;
- 		data_len -= len + 2;
- 	}
-@@ -1443,6 +1452,9 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
- 	if (data_len != 0)
- 		fws->stats.tlv_parse_failed++;
- 
-+	if (status == BRCMF_FWS_RET_OK_SCHEDULE)
-+		brcmf_fws_schedule_deq(fws);
++	if (rctbl) {
++		struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
++		ieee80211_get_tx_rates(txi->control.vif, NULL, skb,
++				       txi->control.rates,
++				       ARRAY_SIZE(txi->control.rates));
++	}
 +
- 	/* signalling processing result does
- 	 * not affect the actual ethernet packet.
- 	 */
+ 	mac80211_hwsim_monitor_rx(hw, skb, chan);
+ 
+ 	if (_pid)
+@@ -1020,6 +1035,11 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 	if (skb == NULL)
+ 		return;
+ 	info = IEEE80211_SKB_CB(skb);
++	if (rctbl)
++		ieee80211_get_tx_rates(vif, NULL, skb,
++				       info->control.rates,
++				       ARRAY_SIZE(info->control.rates));
++
+ 	txrate = ieee80211_get_tx_rate(hw, info);
+ 
+ 	mgmt = (struct ieee80211_mgmt *) skb->data;
+@@ -2277,6 +2297,8 @@ static int __init init_mac80211_hwsim(void)
+ 			    IEEE80211_HW_AMPDU_AGGREGATION |
+ 			    IEEE80211_HW_WANT_MONITOR_VIF |
+ 			    IEEE80211_HW_QUEUE_CONTROL;
++		if (rctbl)
++			hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
+ 
+ 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
 -- 
-1.7.10.4
-
+1.8.2
 
