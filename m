@@ -1,56 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:43494 "EHLO plane.gmane.org"
+Received: from nbd.name ([46.4.11.11]:56439 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753091Ab3DUNFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Apr 2013 09:05:09 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UTtx1-0006Fp-6o
-	for linux-wireless@vger.kernel.org; Sun, 21 Apr 2013 15:05:04 +0200
-Received: from cm227.omega17.maxonline.com.sg ([218.186.17.227])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Apr 2013 15:05:03 +0200
-Received: from eliasacorn by cm227.omega17.maxonline.com.sg with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Apr 2013 15:05:03 +0200
+	id S1030594Ab3DSP2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 11:28:52 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-From: Edward <eliasacorn@yahoo.com.sg>
-Subject: Re: ath10k: mac80211 driver for QCA9880
-Date: Sun, 21 Apr 2013 12:59:14 +0000 (UTC)
-Message-ID: <loom.20130421T145410-125@post.gmane.org> (sfid-20130421_150514_505512_85A71456)
-References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com> <20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
+Subject: [PATCH v4 2/3] mac80211/minstrel_ht: use the new rate control API
+Date: Fri, 19 Apr 2013 17:28:48 +0200
+Message-Id: <1366385329-42690-2-git-send-email-nbd@openwrt.org> (sfid-20130419_172857_106966_981EF43D)
+In-Reply-To: <1366385329-42690-1-git-send-email-nbd@openwrt.org>
+References: <1366385329-42690-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Denis 'GNUtoo' Carikli <GNUtoo@...> writes:
+Pass the rate selection table to mac80211 from minstrel_ht_update_stats.
+Only rates for sample attempts are set in info->control.rates.
 
-> 
-> Hi,
-> 
-> On Mon, 15 Apr 2013 15:20:54 +0300
-> Kalle Valo <kvalo@...> wrote:
-> >The biggest difference is that there's now firmware running on the
-> >chip.
-> Will the firmware be released as free software at some point?
-> 
-> Denis.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel_ht.c | 149 ++++++++++++++++++++-----------------
+ net/mac80211/rc80211_minstrel_ht.h |   2 +
+ 2 files changed, 82 insertions(+), 69 deletions(-)
 
-
-Does it matter? The firmware is just a binary logic black box. It's not
-likely to even see more than a handful of revisions after the actual
-products hit the market.
-
-As long as the driver remains open I don't see any problems with the
-open-driver-closed-firmware combination. Intel and Ralink has adopted this
-practice to great success, and I don't see any reason why Atheros can't do
-the same.
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index a8e979e..513cba5 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -126,6 +126,9 @@ const struct mcs_group minstrel_mcs_groups[] = {
+ 
+ static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES];
+ 
++static void
++minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
++
+ /*
+  * Look up an MCS group index based on mac80211 rate information
+  */
+@@ -465,7 +468,7 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ieee80211_tx_rate *ar = info->status.rates;
+ 	struct minstrel_rate_stats *rate, *rate2;
+ 	struct minstrel_priv *mp = priv;
+-	bool last;
++	bool last, update = false;
+ 	int i;
+ 
+ 	if (!msp->is_ht)
+@@ -514,21 +517,29 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	rate = minstrel_get_ratestats(mi, mi->max_tp_rate);
+ 	if (rate->attempts > 30 &&
+ 	    MINSTREL_FRAC(rate->success, rate->attempts) <
+-	    MINSTREL_FRAC(20, 100))
++	    MINSTREL_FRAC(20, 100)) {
+ 		minstrel_downgrade_rate(mi, &mi->max_tp_rate, true);
++		update = true;
++	}
+ 
+ 	rate2 = minstrel_get_ratestats(mi, mi->max_tp_rate2);
+ 	if (rate2->attempts > 30 &&
+ 	    MINSTREL_FRAC(rate2->success, rate2->attempts) <
+-	    MINSTREL_FRAC(20, 100))
++	    MINSTREL_FRAC(20, 100)) {
+ 		minstrel_downgrade_rate(mi, &mi->max_tp_rate2, false);
++		update = true;
++	}
+ 
+ 	if (time_after(jiffies, mi->stats_update + (mp->update_interval / 2 * HZ) / 1000)) {
++		update = true;
+ 		minstrel_ht_update_stats(mp, mi);
+ 		if (!(info->flags & IEEE80211_TX_CTL_AMPDU) &&
+ 		    mi->max_prob_rate / MCS_GROUP_RATES != MINSTREL_CCK_GROUP)
+ 			minstrel_aggr_check(sta, skb);
+ 	}
++
++	if (update)
++		minstrel_ht_update_rates(mp, mi);
+ }
+ 
+ static void
+@@ -589,39 +600,73 @@ minstrel_calc_retransmit(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	         (++mr->retry_count < mp->max_retry));
+ }
+ 
+-
+ static void
+ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+-                     struct ieee80211_tx_rate *rate, int index,
+-                     bool sample, bool rtscts)
++                     struct ieee80211_sta_rates *ratetbl, int offset, int index)
+ {
+ 	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
+ 	struct minstrel_rate_stats *mr;
++	u8 idx;
++	u16 flags;
+ 
+ 	mr = minstrel_get_ratestats(mi, index);
+ 	if (!mr->retry_updated)
+ 		minstrel_calc_retransmit(mp, mi, index);
+ 
+-	if (sample)
+-		rate->count = 1;
+-	else if (mr->probability < MINSTREL_FRAC(20, 100))
+-		rate->count = 2;
+-	else if (rtscts)
+-		rate->count = mr->retry_count_rtscts;
+-	else
+-		rate->count = mr->retry_count;
+-
+-	rate->flags = 0;
+-	if (rtscts)
+-		rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
++	if (mr->probability < MINSTREL_FRAC(20, 100) || !mr->retry_count) {
++		ratetbl->rate[offset].count = 2;
++		ratetbl->rate[offset].count_rts = 2;
++		ratetbl->rate[offset].count_cts = 2;
++	} else {
++		ratetbl->rate[offset].count = mr->retry_count;
++		ratetbl->rate[offset].count_cts = mr->retry_count;
++		ratetbl->rate[offset].count_rts = mr->retry_count_rtscts;
++	}
+ 
+ 	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
+-		rate->idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
++		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
++		flags = 0;
++	} else {
++		idx = index % MCS_GROUP_RATES +
++		      (group->streams - 1) * MCS_GROUP_RATES;
++		flags = IEEE80211_TX_RC_MCS | group->flags;
++	}
++
++	if (offset > 0) {
++		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
++		flags |= IEEE80211_TX_RC_USE_RTS_CTS;
++	}
++
++	ratetbl->rate[offset].idx = idx;
++	ratetbl->rate[offset].flags = flags;
++}
++
++static void
++minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
++{
++	struct ieee80211_sta_rates *rates;
++	int i = 0;
++
++	rates = kzalloc(sizeof(*rates), GFP_ATOMIC);
++	if (!rates)
+ 		return;
++
++	/* Start with max_tp_rate */
++	minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate);
++
++	if (mp->hw->max_rates >= 3) {
++		/* At least 3 tx rates supported, use max_tp_rate2 next */
++		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_tp_rate2);
++	}
++
++	if (mp->hw->max_rates >= 2) {
++		/*
++		 * At least 2 tx rates supported, use max_prob_rate next */
++		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
+ 	}
+ 
+-	rate->flags |= IEEE80211_TX_RC_MCS | group->flags;
+-	rate->idx = index % MCS_GROUP_RATES + (group->streams - 1) * MCS_GROUP_RATES;
++	rates->rate[i].idx = -1;
++	rate_control_set_rates(mp->hw, mi->sta, rates);
+ }
+ 
+ static inline int
+@@ -711,13 +756,13 @@ static void
+ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+                      struct ieee80211_tx_rate_control *txrc)
+ {
++	const struct mcs_group *sample_group;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+-	struct ieee80211_tx_rate *ar = info->status.rates;
++	struct ieee80211_tx_rate *rate = &info->status.rates[0];
+ 	struct minstrel_ht_sta_priv *msp = priv_sta;
+ 	struct minstrel_ht_sta *mi = &msp->ht;
+ 	struct minstrel_priv *mp = priv;
+ 	int sample_idx;
+-	bool sample = false;
+ 
+ 	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+@@ -745,51 +790,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	}
+ #endif
+ 
+-	if (sample_idx >= 0) {
+-		sample = true;
+-		minstrel_ht_set_rate(mp, mi, &ar[0], sample_idx,
+-			true, false);
+-		info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-	} else {
+-		minstrel_ht_set_rate(mp, mi, &ar[0], mi->max_tp_rate,
+-			false, false);
+-	}
+-
+-	if (mp->hw->max_rates >= 3) {
+-		/*
+-		 * At least 3 tx rates supported, use
+-		 * sample_rate -> max_tp_rate -> max_prob_rate for sampling and
+-		 * max_tp_rate -> max_tp_rate2 -> max_prob_rate by default.
+-		 */
+-		if (sample_idx >= 0)
+-			minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate,
+-				false, false);
+-		else
+-			minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate2,
+-				false, true);
+-
+-		minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate,
+-				     false, !sample);
+-
+-		ar[3].count = 0;
+-		ar[3].idx = -1;
+-	} else if (mp->hw->max_rates == 2) {
+-		/*
+-		 * Only 2 tx rates supported, use
+-		 * sample_rate -> max_prob_rate for sampling and
+-		 * max_tp_rate -> max_prob_rate by default.
+-		 */
+-		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_prob_rate,
+-				     false, !sample);
+-
+-		ar[2].count = 0;
+-		ar[2].idx = -1;
+-	} else {
+-		/* Not using MRR, only use the first rate */
+-		ar[1].count = 0;
+-		ar[1].idx = -1;
+-	}
+-
+ 	mi->total_packets++;
+ 
+ 	/* wraparound */
+@@ -797,6 +797,16 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		mi->total_packets = 0;
+ 		mi->sample_packets = 0;
+ 	}
++
++	if (sample_idx < 0)
++		return;
++
++	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
++	info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
++	rate->idx = sample_idx % MCS_GROUP_RATES +
++		    (sample_group->streams - 1) * MCS_GROUP_RATES;
++	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
++	rate->count = 1;
+ }
+ 
+ static void
+@@ -846,6 +856,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 	msp->is_ht = true;
+ 	memset(mi, 0, sizeof(*mi));
++
++	mi->sta = sta;
+ 	mi->stats_update = jiffies;
+ 
+ 	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1);
+@@ -907,7 +919,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	if (!n_supported)
+ 		goto use_legacy;
+ 
+-	/* init {mi,mi->groups[*]}->{max_tp_rate,max_tp_rate2,max_prob_rate} */
+ 	minstrel_ht_update_stats(mp, mi);
+ 
+ 	return;
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index 9b16e9d..d655586 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -65,6 +65,8 @@ struct minstrel_mcs_group_data {
+ };
+ 
+ struct minstrel_ht_sta {
++	struct ieee80211_sta *sta;
++
+ 	/* ampdu length (average, per sampling interval) */
+ 	unsigned int ampdu_len;
+ 	unsigned int ampdu_packets;
+-- 
+1.8.0.2
 
