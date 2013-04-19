@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52183 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934555Ab3DHJE4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 05:04:56 -0400
-Message-ID: <1365411891.25475.0.camel@jlt4.sipsolutions.net> (sfid-20130408_110503_073715_9D5445FA)
-Subject: Re: [PATCH] mac80211: disable uAPSD if all ACs are under ACM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Date: Mon, 08 Apr 2013 11:04:51 +0200
-In-Reply-To: <1365167071-2450-1-git-send-email-johannes@sipsolutions.net> (sfid-20130405_150446_432380_9604795F)
-References: <1365167071-2450-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130405_150446_432380_9604795F)
+Received: from perches-mx.perches.com ([206.117.179.246]:39835 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964912Ab3DSX2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 19:28:22 -0400
+Message-ID: <1366414100.3901.71.camel@joe-AO722> (sfid-20130420_012826_229697_46BCD105)
+Subject: Re: [PATCH] Fix uninitialized-variable warnings.
+From: Joe Perches <joe@perches.com>
+To: Han =?UTF-8?Q?Shen=28=E6=B2=88=E6=B6=B5=29?= <shenhan@google.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn
+Date: Fri, 19 Apr 2013 16:28:20 -0700
+In-Reply-To: <CACkGtrg9bUFTQOMCK671a26A=tznMHrswQc8qDSMAcB29xy-xA@mail.gmail.com>
+References: <1365703360-19982-1-git-send-email-shenhan@google.com>
+	 <1365705330.1929.30.camel@joe-AO722> <51671663.3070707@lwfinger.net>
+	 <CACkGtri5R2sgFZd9-M+UCNJ1NOwFS769NJqHUTgWUgtgRnDWow@mail.gmail.com>
+	 <CACkGtrg9bUFTQOMCK671a26A=tznMHrswQc8qDSMAcB29xy-xA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-04-05 at 15:04 +0200, Johannes Berg wrote:
-> From: Alexander Bondar <alexander.bondar@intel.com>
+On Fri, 2013-04-19 at 13:43 -0700, Han Shen(沈涵) wrote:
+> I've prepared below (simple) patch just adding
+> initialization list and what Joe's patch does.
 > 
-> It's unlikely that an AP requires WMM mandatory admission control
-> for all access categories, and if it does then we still transmit
-> on the background AC without requesting admission. However, avoid
-> using uAPSD in this case since the implementation could run into
-> issues and might use other ACs etc.
+> Is this ok?
 
-Applied.
+No.  It's whitespace damaged.
 
-johannes
+Try to make sure your patch applies
+by first sending it to yourself and
+then check to see if git am accepts it
+without warnings or errors.
 
