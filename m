@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:58547 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751717Ab3DOKar convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 06:30:47 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n1so4284491oag.9
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Apr 2013 03:30:47 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1076 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753445Ab3DSTZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 15:25:30 -0400
+Message-ID: <517199D4.9070702@broadcom.com> (sfid-20130419_212537_333305_A2EF132F)
+Date: Fri, 19 Apr 2013 21:24:04 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKUzqopKB5h-NFoEPkMqakk5_90T8RYn5JVeF64GK76t15n2dQ@mail.gmail.com>
-References: <CAKUzqopKB5h-NFoEPkMqakk5_90T8RYn5JVeF64GK76t15n2dQ@mail.gmail.com>
-Date: Mon, 15 Apr 2013 12:30:47 +0200
-Message-ID: <CACna6rwmwTE9e_kj=BFb54g8R=YzfcpQYE8eYdLS_xedg+wTxA@mail.gmail.com> (sfid-20130415_123051_431005_8A08413C)
-Subject: Re:
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Callum Hutchinson <callumhutchinson1@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Vasiliy Tolstov" <v.tolstov@selfip.ru>
+cc: "Julian Calaby" <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Larry Finger" <larry.finger@lwfinger.net>
+Subject: Re: very bad work of wl (bcm 43228)
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+In-Reply-To: <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/4/12 Callum Hutchinson <callumhutchinson1@gmail.com>:
-> Tried to report this properly via email but got some formatting issues
-> coming back, I've attached the content of the original email report as
-> 'Report.txt'.
+On 04/19/2013 01:20 PM, Vasiliy Tolstov wrote:
+> 2013/4/19 Julian Calaby <julian.calaby@gmail.com>:
+>> There are two ways that support for your card will happen:
+>> 1. The b43 developers will finish reverse engineering it and release
+>> support for it.
+>> 2. Broadcom will release support through the brcmsmac driver.
+>>
+>>
+>> Option 2 may take some time as we're waiting for Broadcom. Arend is
+>> their main person here, I've also CC'd him.
+>>
 >
-> It is the same file as found on comment 12 on Launchpad bug.
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1142385
+> Hmm , as i see broadcom not very interesting with opensource =( (i
+> have broadcom cardreader in my
+> notebook and its not respond when insert card..., bug stays open...)
+
+Hmm, I see things differently, but I may be biased ;-) Broadcom is a 
+sizeable company with different business units. I was not even aware we 
+were providing cardreaders. My focus is on wireless devices.
+
+Option 2 is on our todo list, but other tasks (brcmfmac) have taken 
+priority and still are.
+
+>> If you're desperate for a good wireless connection on that laptop
+>> right now, your best bet is to buy yourself a cheap USB card, I
+>> personally recommend ones with Atheros chipsets as they're very well
+>> supported and tend to work well. TP-Link make some cheap  and good
+>> ones like the TL-WN821N and TL-WN822N.
 >
-> Apologies for any missing information or lack of reporting experience :)
+> Thanks. But IMHO i have adapter with bluetooth and wifi integrated (as
+> i think) and buy wifi+bluetooth in russia not very simple =)
 
-Sending e-mail with empty subject and without direct information about
-the hardware isn't a good idea.
+I have no quick solution so need to more detailed info. For these kind 
+of questions it always helps to provide kernel log and output from 
+commands like lspci and lsusb.
 
-It's most probably another result of regression I've tracked and reported in:
-Scanning regression since "cfg80211: use DS or HT operation IEs to
-determine BSS channel"
+Regards,
+Arend
 
-http://www.spinics.net/lists/linux-wireless/msg105359.html
-http://marc.info/?t=136431795000003&r=1&w=4
 
-I didn't have enough time to debug it further and fix yet.
-
--- 
-Rafał
