@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:46930 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756014Ab3CaX0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Mar 2013 19:26:17 -0400
-Date: Mon, 1 Apr 2013 01:26:10 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux NFC <linux-nfc@lists.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [GIT] [3.9] NFC fixes
-Message-ID: <20130331232610.GQ2153@zurbaran> (sfid-20130401_012629_677408_C45270B8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:35022 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757449Ab3DSK0M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 06:26:12 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] cfg80211: fix P2P-Device stop locking
+Date: Fri, 19 Apr 2013 12:26:06 +0200
+Message-Id: <1366367167-17619-1-git-send-email-johannes@sipsolutions.net> (sfid-20130419_122615_660843_088ACB74)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is the 2nd batch of NFC fixes for 3.9. This time we have:
+cfg80211_stop_p2p_device() requires the devlist_mtx to
+be held, but nl80211_stop_p2p_device() doesn't acquire
+it which is a locking error and causes a warning (when
+lockdep is enabled). Fix this.
 
-- A crash fix for when a DGRAM LLCP socket is listening while the NFC adapter
-  is physically removed.
-- A potential double skb free when the LLCP socket receive queue is full.
-- A fix for properly handling multiple and consecutive LLCP connections, and
-  not trash the socket ack log.
-- A build failure for the MEI microread physical layer, now that the MEI bus
-  APIs have been merged into char-misc-next.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The following changes since commit 36ef0b473fbf43d5db23eea4616cc1d18cec245f:
-
-  rtlwifi: usb: add missing freeing of skbuff (2013-03-18 15:20:38 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-fixes.git tags/nfc-fixes-3.9-2
-
-for you to fetch changes up to 9593b0b1179c526436f14849a9587fd2aae12040:
-
-  NFC: microread: Fix build failure due to a new MEI bus API (2013-04-01 00:52:42 +0200)
-
-----------------------------------------------------------------
-Samuel Ortiz (3):
-      NFC: llcp: Detach socket from process context only when releasing the socket
-      NFC: llcp: Keep the connected socket parent pointer alive
-      NFC: microread: Fix build failure due to a new MEI bus API
-
-Thierry Escande (1):
-      NFC: llcp: Remove possible double call to kfree_skb
-
- drivers/nfc/microread/mei.c |   38 +++++++++++++++++---------------------
- net/nfc/llcp/llcp.c         |    8 --------
- net/nfc/llcp/sock.c         |    6 +++---
- 3 files changed, 20 insertions(+), 32 deletions(-)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 212d2aa..3abcbba 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8159,9 +8159,11 @@ static int nl80211_stop_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->stop_p2p_device)
+ 		return -EOPNOTSUPP;
+ 
++	mutex_lock(&rdev->devlist_mtx);
+ 	mutex_lock(&rdev->sched_scan_mtx);
+ 	cfg80211_stop_p2p_device(rdev, wdev);
+ 	mutex_unlock(&rdev->sched_scan_mtx);
++	mutex_unlock(&rdev->devlist_mtx);
+ 
+ 	return 0;
+ }
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.8.0
+
