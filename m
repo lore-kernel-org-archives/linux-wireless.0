@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1822 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162012Ab3DEI6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 04:58:09 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 15/16] brcmfmac: obtain wdev using vif object in action
- frame rx
-Date: Fri, 5 Apr 2013 10:57:53 +0200
-Message-ID: <1365152274-4252-16-git-send-email-arend@broadcom.com> (sfid-20130405_111304_618910_04ECB99A)
-In-Reply-To: <1365152274-4252-1-git-send-email-arend@broadcom.com>
-References: <1365152274-4252-1-git-send-email-arend@broadcom.com>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:43643 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030503Ab3DSOLF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 10:11:05 -0400
+Received: by mail-we0-f178.google.com with SMTP id z53so3779369wey.9
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 07:11:03 -0700 (PDT)
+Date: Fri, 19 Apr 2013 16:06:53 +0200
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v3 1/3] mac80211: improve the rate control API
+Message-ID: <20130419140653.GB8341@magnum.frso.rivierawaves.com> (sfid-20130419_161109_399635_CE27FA2E)
+References: <1366376477-29376-1-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1366376477-29376-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_p2p_notify_action_frame_rx() the wireless_dev
-is needed to pass the action frame to cfg80211. The wireless_dev
-is held in brcmf_cfg80211_vif object. Use that instead of the
-ieee80211_ptr in net_device as P2P_DEVICE interface does not have
-a net_device associated with it.
+On Fri, Apr 19, 2013 at 03:01:15PM +0200, Felix Fietkau wrote:
+> +	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
+> +		s8 baserate = 0;
+> +
+> +		rate = &sband->bitrates[rates[0].idx];
+> +
+> +		for (i = 0; i < sband->n_bitrates; i++) {
+> +			/* must be a basic rate */
+> +			if (!(vif->bss_conf.basic_rates & BIT(i)))
+> +				continue;
+[...]
+> -	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
+> -		u32 basic_rates = tx->sdata->vif.bss_conf.basic_rates;
+> -		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
+> -
+> -		rate = &sband->bitrates[info->control.rates[0].idx];
+> -
+> -		for (i = 0; i < sband->n_bitrates; i++) {
+> -			/* must be a basic rate */
+> -			if (!(basic_rates & BIT(i)))
+> -				continue;
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index 6f16556..94ff045 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -1431,7 +1431,8 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 					      CHSPEC_IS2G(chanspec) ?
- 					      IEEE80211_BAND_2GHZ :
- 					      IEEE80211_BAND_5GHZ);
--	wdev = ifp->ndev->ieee80211_ptr;
-+
-+	wdev = &ifp->vif->wdev;
- 	cfg80211_rx_mgmt(wdev, freq, 0, (u8 *)mgmt_frame, mgmt_frame_len,
- 			 GFP_ATOMIC);
+The moved code doesn't match, missing 5253ffb.
  
--- 
-1.7.10.4
-
-
+Karl
