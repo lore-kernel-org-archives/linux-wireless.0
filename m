@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sapphire.tuxdriver.com ([70.61.120.61]:47782 "EHLO
-	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754579Ab3DVS4A (ORCPT
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:34329 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757162Ab3DSLUn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 14:56:00 -0400
-Date: Mon, 22 Apr 2013 14:55:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux NFC <linux-nfc@ml01.01.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [GIT] [3.10] NFC pull request
-Message-ID: <20130422185537.GD2055@tuxdriver.com> (sfid-20130422_205617_562959_EA9DEFDD)
-References: <20130415230508.GL8798@zurbaran>
+	Fri, 19 Apr 2013 07:20:43 -0400
+Received: by mail-qc0-f178.google.com with SMTP id d10so92237qca.37
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 04:20:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130415230508.GL8798@zurbaran>
+In-Reply-To: <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com> <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Fri, 19 Apr 2013 15:20:27 +0400
+Message-ID: <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com> (sfid-20130419_132047_810858_F41CCC74)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 01:05:08AM +0200, Samuel Ortiz wrote:
-> Hi John,
-> 
-> A bit late, but this is the 2nd NFC pull request for 3.10.
-> 
-> With this one we have:
-> 
-> - A major pn533 update. The pn533 framing support has been changed in order to
->   easily support all pn533 derivatives. For example we now support the ACR122
->   USB dongle.
-> 
-> - An NFC MEI physical layer code factorization through the mei_phy NFC API.
->   Both the microread and the pn544 drivers now use it.
-> 
-> - LLCP aggregation support. This allows NFC p2p devices to send aggregated
->   frames containing all sort of LLCP frames except SYMM and aggregation
->   frames.
-> 
-> - More LLCP socket options for getting the remote device link parameters.
-> 
-> - Fixes for the LLCP socket option code added with the first pull request for
->   3.10.
-> 
-> - Some support for LLCP corner cases like 0 length SDUs and general DISC
->   (tagged with a 0,0 dsap ssap couple) handling.
-> 
-> - RFKILL support for NFC.
-> 
-> Thanks in advance for pulling them in.
-> 
-> The following changes since commit fe29f54cd574eab7b521445419f355c0ecd995cc:
-> 
->   ipw2x00: move to kstrto* functions (2013-04-10 14:10:34 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.10-2
-> 
-> for you to fetch changes up to bb03dceb83852614ae3ad6b3731a31422890b0b9:
-> 
->   NFC: pn544: Add MEI physical layer (2013-04-16 00:39:41 +0200)
+2013/4/19 Julian Calaby <julian.calaby@gmail.com>:
+> I was certain I'd heard about support going in, clearly my memory is
+> wrong. Searching around, you asked this question before. Sorry to
+> mislead you.
+>
 
-Pulling now...
+Not worry. Thanks for answers.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> There are two ways that support for your card will happen:
+> 1. The b43 developers will finish reverse engineering it and release
+> support for it.
+> 2. Broadcom will release support through the brcmsmac driver.
+>
+> Option 1 will take some time, this is not easy work, you might be able
+> to help with the development, but it's _very_ technical work. That
+> said, if you can compile a kernel, you can help with the testing once
+> all the code starts to get together. I believe that Rafał is working
+> on this and have CC'd him.
+
+If somebody provide me steps that i need to to - i'm ready to help.
+
+>
+> Option 2 may take some time as we're waiting for Broadcom. Arend is
+> their main person here, I've also CC'd him.
+>
+
+Hmm , as i see broadcom not very interesting with opensource =( (i
+have broadcom cardreader in my
+notebook and its not respond when insert card..., bug stays open...)
+
+> If you're desperate for a good wireless connection on that laptop
+> right now, your best bet is to buy yourself a cheap USB card, I
+> personally recommend ones with Atheros chipsets as they're very well
+> supported and tend to work well. TP-Link make some cheap  and good
+> ones like the TL-WN821N and TL-WN822N.
+
+Thanks. But IMHO i have adapter with bluetooth and wifi integrated (as
+i think) and buy wifi+bluetooth in russia not very simple =)
+
+
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
