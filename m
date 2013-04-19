@@ -1,41 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62601 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760575Ab3DCKEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:04:32 -0400
-Date: Wed, 3 Apr 2013 12:05:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Laurens <laurens.nikolaisen@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: =?iso-8859-1?Q?Intel?= =?iso-8859-1?Q?=AE?= PRO/Wireless 3945ABG
- seems to cause system freeze
-Message-ID: <20130403100528.GB1575@redhat.com> (sfid-20130403_120436_674372_76229303)
-References: <51558D37.7040508@gmx.de>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:45406 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157Ab3DSUnP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 16:43:15 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k18so4177884oag.39
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 13:43:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51558D37.7040508@gmx.de>
+In-Reply-To: <5168A9FE.7070506@lwfinger.net>
+References: <1365703360-19982-1-git-send-email-shenhan@google.com>
+	<1365705330.1929.30.camel@joe-AO722>
+	<51671663.3070707@lwfinger.net>
+	<CACkGtri5R2sgFZd9-M+UCNJ1NOwFS769NJqHUTgWUgtgRnDWow@mail.gmail.com>
+	<5168A9FE.7070506@lwfinger.net>
+Date: Fri, 19 Apr 2013 13:43:14 -0700
+Message-ID: <CACkGtrg9bUFTQOMCK671a26A=tznMHrswQc8qDSMAcB29xy-xA@mail.gmail.com> (sfid-20130419_224319_761938_97732333)
+Subject: Re: [PATCH] Fix uninitialized-variable warnings.
+From: =?GB2312?B?SGFuIFNoZW4oyfK6rSk=?= <shenhan@google.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	chaoming_li@realsil.com.cn
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 29, 2013 at 01:46:47PM +0100, Laurens wrote:
-> it seems like if the Intel 3945BG causes freezes to my computer
-> system under Xubuntu 12.04.2. Though I am not very sure about it I'd
-> like to ask you to go through my dmesg log. If you can point out if
-> it's the wireless card which causes trouble please let me know. Also
-> if you know how to fix that I would much appreciate that!
-> 
-> There is one log called dmesg, including the whole log, and one with
-> this request:
-> 
-> dmesg_wifi.txt
-> 
-> dmesg | egrep 'net|eth|sky|sis|via|3c3|3c5|e100|8139|8169|acx|air|ath|atl|ar9|carl|atme|at7|herm|iwl|ipw|rtl8|r81|rt2|rt3|rt6|rt7|tg3|ssb|wl|b43|b44|ori|pri|p5|zd|ndis|wmi|ns8|FW'
-> 
-> ...called dmesg wifi.
+Hi Larry, thanks. I've prepared below (simple) patch just adding
+initialization list and what Joe's patch does.
 
-Dmesg's do not show much, beside that you use old 3.2 kernel.
-What make you think iwl3945 cause freezes on your system?
-If you blacklist that module freezes do not happen ?
+Is this ok?
 
-Stanislaw
+H.
 
+Signed-off-by: Han Shen  (shenhan@google.com)
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index b793a65..34150de 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -669,7 +669,7 @@ static void
+rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+  u8 thermalvalue, delta, delta_lck, delta_iqk;
+  long ele_a, ele_d, temp_cck, val_x, value32;
+  long val_y, ele_c = 0;
+- u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
++ u8 ofdm_index[2], ofdm_index_old[2] = {0, 0}, cck_index_old = 0;
+  s8 cck_index = 0;
+  int i;
+  bool is2t = IS_92C_SERIAL(rtlhal->version);
+@@ -717,7 +717,7 @@ static void
+rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+  for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
+  if (ele_d == (ofdmswing_table[i] &
+     MASKOFDM_D)) {
+-
++ ofdm_index_old[1] = (u8) i;
+  RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
+  DBG_LOUD,
+  "Initial pathB ele_d reg0x%x = 0x%lx, ofdm_index=0x%x\n",
+--
+1.8.2.1
+
+On Fri, Apr 12, 2013 at 5:42 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 04/12/2013 05:20 PM, Han Shen(Éòº­) wrote:
+>>
+>> Hi, Joe's patch (the 1-line fix) does not work for me. The assignment
+>> is in a conditional block, when refer to this ofdm_index_old later, I
+>> still get error -
+>>
+>>
+>> /mnt/host/source/src/third_party/kernel/files/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:771:31:
+>> error: 'ofdm_index_old[1]' may be used uninitialized in this function
+>> [-Werror=maybe-uninitialized]
+>>       rtlpriv->dm.ofdm_index[i] = ofdm_index_old[i];
+>>
+>> (I'm working on 3.4 branch.)
+>
+>
+> I would get rid of the -Werror=maybe-unitialized. Sometimes gcc generates a
+> false warning, and you really should not error the build in that case.
+>
+> The correct patch needs to initialize the array to 0, and set the element
+> the way Joe's patch does.
+>
+> Larry
+>
+>
+
+
+
+-- 
+Han Shen |  Software Engineer |  shenhan@google.com |  +1-650-440-3330
