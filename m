@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:52839 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759700Ab3DKSnB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 14:43:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"daniel@zonque.org" <daniel@zonque.org>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Date: Thu, 11 Apr 2013 11:42:48 -0700
-Subject: RE: [PATCH 1/2] mwifiex: replace ra_list_curr by list rotation.
-Message-ID: <477F20668A386D41ADCC57781B1F70430D9DE96B5F@SC-VEXCH1.marvell.com> (sfid-20130411_204315_401374_AE2ECA5A)
-References: <477F20668A386D41ADCC57781B1F70430D9DE96073@SC-VEXCH1.marvell.com>
- <1365681068-27820-1-git-send-email-andreas.fenkart@streamunlimited.com>
- <1365681068-27820-2-git-send-email-andreas.fenkart@streamunlimited.com>
-In-Reply-To: <1365681068-27820-2-git-send-email-andreas.fenkart@streamunlimited.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:37120 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967984Ab3DSLNe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 07:13:34 -0400
+Received: by mail-ie0-f178.google.com with SMTP id aq17so3011007iec.37
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 04:13:34 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAL1gcdNQMRyiR+dyuPWYFCfokG9azoZugFQOqAZqt2x4UbKoLA@mail.gmail.com>
+References: <1366201848-18009-1-git-send-email-stf_xl@wp.pl>
+	<1366201848-18009-3-git-send-email-stf_xl@wp.pl>
+	<CAL1gcdNQMRyiR+dyuPWYFCfokG9azoZugFQOqAZqt2x4UbKoLA@mail.gmail.com>
+Date: Fri, 19 Apr 2013 13:13:34 +0200
+Message-ID: <CAGXE3d-a00=4edmbpEgjkDEuax+bnkqJJ70osDhUMe__Jx_0=w@mail.gmail.com> (sfid-20130419_131341_865087_5B0AF999)
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2800: nulify all last words of TXWI
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andi,
+Hi Gertjan,
 
-Thanks for the patch.
+On Fri, Apr 19, 2013 at 11:49 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Wouldn't it be easier / better to simply clear the whole descriptor at
+> the start, instead of selective clearing parts of it after everything
+> has been written already?
 
-> After a packet is successfully transmitted, ra list is rotated, so the ra
-> next to the one transmitted, will be the first in the list. This way we
-> pick the ra' in a round robin fashion. This significantly simplifies
-> iteration in  mwifiex_wmm_get_highest_priolist_ptr to a call to
-> list_for_each_entry.
-> List rotation is done via list_move, where the head itself is temporarily
-> removed and then re-inserted after the item just transferred.
-> 
-> Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+This would add a number of unneeded writes to DMA coherent memory.
+And since the descriptor is initialized word by word Stanislaw's approach
+looks reasonable to me.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/11n_aggr.c |    8 +--
->  drivers/net/wireless/mwifiex/main.h     |    1 -
->  drivers/net/wireless/mwifiex/wmm.c      |   97 ++++++++++++-------------------
->  drivers/net/wireless/mwifiex/wmm.h      |    3 +
->  4 files changed, 40 insertions(+), 69 deletions(-)
-
+Helmut
