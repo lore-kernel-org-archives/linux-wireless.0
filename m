@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:50901 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162274Ab3DESIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 14:08:21 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: Re: Version number policy!
-Date: Fri, 5 Apr 2013 20:08:14 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-bluetooth" <linux-bluetooth@vger.kernel.org>,
-	Adrian Chadd <adrian@freebsd.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com> <201304051903.11215.chunkeey@googlemail.com> <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-In-Reply-To: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201304052008.15412.chunkeey@googlemail.com> (sfid-20130405_200840_883971_7352A514)
+Received: from perches-mx.perches.com ([206.117.179.246]:56256 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S967950Ab3DSJwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 05:52:31 -0400
+Message-ID: <1366365149.3901.15.camel@joe-AO722> (sfid-20130419_115308_989580_92778ADD)
+Subject: Re: [PATCH wireless-next] rt2x00: Use more current logging styles,
+ shrink object size
+From: Joe Perches <joe@perches.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Fri, 19 Apr 2013 02:52:29 -0700
+In-Reply-To: <CAL1gcdOMtbzxCVLNvDK_CD-M+_SdAeL3Sja9khO9+G2bNOCz1g@mail.gmail.com>
+References: <1366360406.3901.10.camel@joe-AO722>
+	 <CAL1gcdOMtbzxCVLNvDK_CD-M+_SdAeL3Sja9khO9+G2bNOCz1g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 05 April 2013 19:23:54 Eugene Krasnikov wrote:
-> When it comes to feature bitmap do you have an example of such a
-> bitmap from carl9170? 
-That's a weird way of asking. No, I don't have an example?!
-But carl9170fw_feature_list is used in "production".
+On Fri, 2013-04-19 at 11:45 +0200, Gertjan van Wingerde wrote:
+> Hi Joe,
 
-Anyway, there is one defined in:
-<https://github.com/chunkeey/carl9170fw/blob/master/include/shared/fwdesc.h#L26>
+Hello Gertjan.
 
-It's packed into the OTUS firmware descriptor:
-<https://github.com/chunkeey/carl9170fw/blob/master/include/shared/fwdesc.h#L118>
+> On Fri, Apr 19, 2013 at 10:33 AM, Joe Perches <joe@perches.com> wrote:
+> > Reduce object size ~2% using more current logging styles.
+[]
+> > +/* Utility printing macros */
+> > +#define rt2x00_err(dev, fmt, ...)                                      \
+> > +       wiphy_err((dev)->hw->wiphy, "%s: Error - " fmt,                 \
+> > +                 __func__, ##__VA_ARGS__)
+> > +#define rt2x00_warn(dev, fmt, ...)                                     \
+> > +       wiphy_err((dev)->hw->wiphy, "%s: Warning - " fmt,               \
+> > +                 __func__, ##__VA_ARGS__)
+> 
+> Shouldn't this use wiphy_warn instead of wiphy_err?
+> 
+> > +#define rt2x00_info(dev, fmt, ...)                                     \
+> > +       wiphy_err((dev)->hw->wiphy, "%s: Info - " fmt,                  \
+> > +                 __func__, ##__VA_ARGS__)
+> 
+> Shouldn't this use wiphy_info instead of wiphy_err?
 
-And the descriptor is filled in:
-<https://github.com/chunkeey/carl9170fw/blob/master/carlfw/src/fw.c>
+Gah, of course you're right, copy/paste dumbness.
 
-[Basically, a bit for every feature in kconfig.]
+> > +#define rt2x00_eeprom_dbg(dev, fmt, ...)                               \
+> > +       wiphy_dbg((dev)->hw->wiphy, "%s: %s - " fmt,                    \
+> > +                 __func__, "EEPROM recovery", ##__VA_ARGS__)
 
-Of course, the nice thing is, if you have something like
-kconfig (carl9170fw.git uses a pretty much the vanilla kernel
-kconfig. Everything apart from the cmake scripts for gperf
-(which is in extra/) is packed into the conf/ directory.
+> Why do you give the "EEPROM recovery" string as extra argument instead
+> of embedding it in the format string, like you do in the rt2x00_dbg
+> macro for the "Debug" string?
 
-And it has the necessary cmake files. So it should integrate 
-well into the "new" ath9k_htc cmake build system Felix made.
+Trivial space reduction on x86/32.
+It's just a few bytes.  It may not be
+a savings at all for x86/64.
 
-> Why not to rely always on major version?
-Ok, let's do the same with major version...
+I'd actually prefer to remove all the
+extra "INFO/ERR/WARNING" bits from the
+messages as it's a simple duplication of
+the KERN_<LEVEL> and I think not useful.
 
-if  ((fw_major == 1 && fw_minor > 30) ||
-     (fw_major == 2 && fw_minor > 7) ||
-     (fw_major == 3 && fw_minor > 3) ||
-     (fw_major > 4))
-      feature_supported = true;
+> Also, please put all rt2x00_<level> next to each other, instead of
+> scattering them around with the "#define DEBUG" in between them.
 
-Nope, I think it looks just as bad.
-[Please, explain what you meant to say...
-Because the new versioning draft stats that very
-major release is incompatible with the old one and
-clearly, having to support a ton of different firmware
-trees is no joy.... and not necessary]
+I'll resubmit tomorrow.
 
-BTW: Instead of a GET_BUILD command, why not make a add a
-firmware header or pack the information into the tail... 
-
-This way, it can be read and parsed by tools, without having
-to upload it to the device first.
-
-carl9170fw already such a tool, it's called: fwinfo and it is located in: 
-<https://github.com/chunkeey/carl9170fw/blob/master/tools/src/fwinfo.c>
-
-Regards,
-	Christian
