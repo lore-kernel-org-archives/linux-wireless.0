@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35592 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759966Ab3DCNnB (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:61348 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757934Ab3DSKlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 09:43:01 -0400
-Message-ID: <1364996574.8351.43.camel@jlt4.sipsolutions.net> (sfid-20130403_154305_560059_1158F383)
-Subject: Re: mac80211_hwsim driver attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Martin Pitt <martin.pitt@ubuntu.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, dcbw@redhat.com
-Date: Wed, 03 Apr 2013 15:42:54 +0200
-In-Reply-To: <20130403133802.GK2960@piware.de>
-References: <20130403133802.GK2960@piware.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Apr 2013 06:41:52 -0400
+Received: by mail-wi0-f181.google.com with SMTP id c10so590973wiw.8
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 03:41:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 19 Apr 2013 20:41:31 +1000
+Message-ID: <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com> (sfid-20130419_124156_010612_D8D5E6E3)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-03 at 13:38 +0000, Martin Pitt wrote:
-> Hello John, hello Johannes,
-> 
-> first, many thanks for this great mac80211_hwsim module! I am
-> currently working on automatic test cases for the Linux network stack
-> (wpa_supplicant, dhclient, NetworkManager, etc.), and this is of great
-> help.
-> 
-> One issue is that NetworkManager does not get along with these
-> simulated interfaces:
-> 
-> NetworkManager[24027]: <warn> /sys/devices/virtual/mac80211_hwsim/hwsim0/net/wlan1: couldn't determine device driver; ignoring...
-> 
-> It calls udev_device_get_driver() on the net device (wlan0) (and
-> failing that, on its parent), but that fails because hwsim doesn't
-> have a driver attribute. My real intel wifi does:
-> 
-> lrwxrwxrwx 1 root root 0 Apr  3 06:19 /sys/class/net/wlan0/device/driver -> ../../../../bus/pci/drivers/iwlwifi
-> 
-> But /sys/class/net/wlan1/device/ only has the default "uevent" and
-> subsystem link.
-> 
-> Other drivers call something like pci_register_driver() or
-> usb_register(), I figure those will register the driver symlink in
-> sysfs? But admittedly I'm a kernel n00b, so I'd appreciate a hint
-> where to look for.
-> 
-> Thank you in advance!
-> 
-> Martin
+Hi Vasiliy,
 
+On Fri, Apr 19, 2013 at 6:27 PM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
+> Hello. Sorry for my email. But sometimes ago i bought acer aspire
+> v5-171 with broadcom wireless =(.
+> After two weeks i have many slowdons and unstable network speed with
+> my wifi. Signal of wifi hotspot high. Other notebook (dell 1501 with
+> b43 driver - very big thanks to reverse ingenering it!!) i have stable
+> speed.
+>
+> What i need to provide to solve my problems?
+> I'm use ubuntu 12.04 with broadcom-sta-source (5.100.82.112-4)
 
+I'm not completely sure, but I believe your card is supported in the
+latest kernel, however I'm not sure exactly how to install it for your
+version of Ubuntu. The alternative is to install the compat-wireless
+package - it'll be called something like
+linux-backports-modules-cw-3.6-3.6-3.2.0-40-generic. If you use either
+of these methods, your card should work without the
+broadcom-sta-source driver.
+
+Thanks,
+
+--
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
