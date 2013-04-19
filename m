@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:51312 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab3DRTLC convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:54749 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753655Ab3DSSga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 15:11:02 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [PATCH] net-sysfs: Add entry for nl80211 interface type
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9E05713A@SC-VEXCH1.marvell.com>
-Date: Thu, 18 Apr 2013 12:10:59 -0700
-Cc: "linux-netdev@vger.kernel.org" <linux-netdev@vger.kernel.org>,
+	Fri, 19 Apr 2013 14:36:30 -0400
+Message-ID: <51718D24.3020902@gmail.com> (sfid-20130419_203655_932069_99AD87DC)
+Date: Fri, 19 Apr 2013 20:29:56 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Paul Stewart <pstew@chromium.org>
-Message-Id: <CD07F4FD-7136-44EA-A39C-5AB660726BDE@holtmann.org> (sfid-20130418_211107_894379_42867944)
-References: <1366236369-543-1-git-send-email-bzhao@marvell.com> <0156C538-4175-47E9-B667-C2127CBEF3EB@holtmann.org> <477F20668A386D41ADCC57781B1F70430D9E05713A@SC-VEXCH1.marvell.com>
-To: Bing Zhao <bzhao@marvell.com>
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH wireless-next V2] rt2x00: Use more current logging styles,
+ shrink object size
+References: <1366360406.3901.10.camel@joe-AO722>  <CAL1gcdOMtbzxCVLNvDK_CD-M+_SdAeL3Sja9khO9+G2bNOCz1g@mail.gmail.com>  <1366365149.3901.15.camel@joe-AO722> <1366385620.3901.28.camel@joe-AO722>
+In-Reply-To: <1366385620.3901.28.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
-
->>> Add a "wireless/nl80211_iftype" entry in the net device sysfs
->>> file structure to indicate the mode of the wireless device so
->>> it can be discovered easily from userspace.
->> 
->> I do question a little bit the usefulness for this one.
->> It would only work on netdev and on wdev devices.
+On 04/19/13 17:33, Joe Perches wrote:
+> Reduce object space ~2% using more current logging styles.
 > 
-> It's true. That's why the new sysfs entry is added in the 'wireless' placeholder.
+> Neaten and simplify logging macros.
+> Use wiphy_<level> where appropriate.
+> Coalesce formats.
 > 
-> /sys/class/net/ethX/wireless/
+> Convert ERROR/WARNING/INFO macros to rt2x00_<level>
+> Convert EEPROM to rt2x00_eeprom_dbg
+> Convert PROBE_ERROR to rt2x00_probe_err
+> Convert DEBUG to rt2x00_dbg
+> Convert EEPROM to rt2x00_eeprom_dbg
 > 
-> For non-wireless dev, this won't apply.
+> $ size drivers/net/wireless/rt2x00/built-in.o*
+>    text	   data	    bss	    dec	    hex	filename
+>  245639	  71696	  69584	 386919	  5e767	drivers/net/wireless/rt2x00/built-in.o.new
+>  240609	  70096	  68944	 379649	  5cb01	drivers/net/wireless/rt2x00/built-in.o.new.nodyndbg
+>  240609	  70096	  68944	 379649	  5cb01	drivers/net/wireless/rt2x00/built-in.o.new.no_rt2x00_debug
+>  249198	  70096	  70352	 389646	  5f20e	drivers/net/wireless/rt2x00/built-in.o.old
+>  249198	  70096	  70352	 389646	  5f20e	drivers/net/wireless/rt2x00/built-in.o.old.nodyndbg
+>  244222	  70096	  69712	 384030	  5dc1e	drivers/net/wireless/rt2x00/built-in.o.old.no_rt2x00_debug
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-I have to correct myself. I meant it does NOT work for wdev. Please just go with nl80211 for this kind of information. It is the right way to handle it. Not some sysfs file.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Regards
-
-Marcel
-
+> ---
+> V2 differences:
+> 
+> Correct copy/paste error in rt2x00_info/warn macros
+> Reorder macro definitions
+> Use embedded prefix in rt2x00_eeprom_dbg
+> 
+> Object size increased from v1 ~100 bytes x86/32.
+> Object size may be slightly smaller this way for x86/64
+> 
+>
+---
+Gertjan
