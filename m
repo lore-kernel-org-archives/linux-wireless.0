@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56023 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937594Ab3DIKZT (ORCPT
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:46394 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967957Ab3DSKon (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 06:25:19 -0400
-Message-ID: <1365503108.8465.34.camel@jlt4.sipsolutions.net> (sfid-20130409_122524_772605_92D4425C)
-Subject: Re: [PATCH 1/3] cfg80211: add get_max_tp() API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@open-mesh.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 09 Apr 2013 12:25:08 +0200
-In-Reply-To: <20130406073309.GB14463@open-mesh.com>
-References: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
-	 <CAGXE3d98a4pBG=gWKUm9A2RJRN+eic4Zi8dh4grTuqQmW3GOsg@mail.gmail.com>
-	 <20130405083956.GA14463@open-mesh.com>
-	 <1365168001.8515.28.camel@jlt4.sipsolutions.net>
-	 <20130406073309.GB14463@open-mesh.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Apr 2013 06:44:43 -0400
+Received: by mail-qc0-f171.google.com with SMTP id q2so1917776qch.16
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 03:44:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Fri, 19 Apr 2013 14:44:26 +0400
+Message-ID: <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com> (sfid-20130419_124448_630226_82204ACF)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013/4/19 Julian Calaby <julian.calaby@gmail.com>:
+> I'm not completely sure, but I believe your card is supported in the
+> latest kernel, however I'm not sure exactly how to install it for your
+> version of Ubuntu. The alternative is to install the compat-wireless
+> package - it'll be called something like
+> linux-backports-modules-cw-3.6-3.6-3.2.0-40-generic. If you use either
+> of these methods, your card should work without the
+> broadcom-sta-source driver.
 
-> But the reported_rate field would just contain the index of the selected rate,
-> not the throughput. As far as I can tell the latter is an RC private information
-> (it not exported anywhere outside of the RC algorithm) and that is why I made
-> this API which would directly talk to minstrel and get this value.
 
-Actually it would contain the entire rate configuration.
+I'm already get answers on wireless list that my card not supported =(
 
-Anyway my concern is that you're adding something that's rather minstrel
-specific. It's not really usable by any other algorithm, you're
-reporting minstrel's estimation of the throughput. If you report the
-current "best" rate, that'll probably get you pretty much the same
-behaviour overall, but be more portable to other algorithms I think.
-
-johannes
-
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
