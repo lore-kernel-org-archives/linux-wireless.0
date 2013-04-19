@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37605 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675Ab3DJWOW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 18:14:22 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
-Subject: Re: [linux-nfc] [RFC] [PATCH] NFC: RFKILL support
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20130410220920.GA10780@zurbaran>
-Date: Wed, 10 Apr 2013 15:14:18 -0700
-Cc: "Berg, Johannes" <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>,
-	Marcel Holtmann <marcel.holtmann@intel.com>
-Message-Id: <FA7B2F3C-4D90-407A-999B-44B87BC851F9@holtmann.org> (sfid-20130411_001425_320870_F958B0DD)
-References: <20130410220920.GA10780@zurbaran>
-To: Samuel Ortiz <sameo@linux.intel.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:39499 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967965Ab3DSKKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 06:10:03 -0400
+Message-ID: <517117F8.1030009@openwrt.org> (sfid-20130419_121008_859839_23D63D98)
+Date: Fri, 19 Apr 2013 12:10:00 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800lib: rename rt2800_init_bbb_early
+ to rt2800_init_bbp_early
+References: <1366359232-31513-1-git-send-email-juhosg@openwrt.org> <CAL1gcdM_AcacVyYTrE0EiY5b3Pw7i3ZXadLGYZOsvJDLrOhdcA@mail.gmail.com>
+In-Reply-To: <CAL1gcdM_AcacVyYTrE0EiY5b3Pw7i3ZXadLGYZOsvJDLrOhdcA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
-
-> All NFC devices will now get proper RFKILL support as long as they provide
-> some dev_up and dev_down hooks. Rfkilling an NFC device will bring it down
-> while it is left to userspace to bring it back up when being rfkill unblocked.
-> This is very similar to what Bluetooth does.
+2013.04.19. 11:32 keltezéssel, Gertjan van Wingerde írta:
+> On Fri, Apr 19, 2013 at 10:13 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> The function is used for BBP register initialization,
+>> fix the typo in the function name to reflect that.
+>>
+>> The patch contains no functional changes.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 > 
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> ---
-> include/net/nfc/nfc.h       |    2 ++
-> include/uapi/linux/rfkill.h |    1 +
-> net/nfc/core.c              |   38 ++++++++++++++++++++++++++++++++++++++
-> net/rfkill/core.c           |    4 +++-
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-you might want to split this into 2 patches. One for adding the RFKILL pieces and the other for adding RFKILL support to the NFC subsystem.
+Thanks!
 
-Regards
+> Thanks Gabor. Interesting that no-one has noticed this thus far.
 
-Marcel
+Probably because the function is quite new. I have noticed the typo accidentally
+when I have looked at something else.
 
+
+-Gabor
