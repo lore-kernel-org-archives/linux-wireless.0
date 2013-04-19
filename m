@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:58677 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639Ab3DISD2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 14:03:28 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n1so7836177oag.9
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Apr 2013 11:03:28 -0700 (PDT)
-Message-ID: <516457ED.2070406@lwfinger.net> (sfid-20130409_200332_691689_04E49D6D)
-Date: Tue, 09 Apr 2013 13:03:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:1596 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967931Ab3DSILp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Apr 2013 04:11:45 -0400
+Message-ID: <5170FBFC.8070403@broadcom.com> (sfid-20130419_101153_509530_52D06C45)
+Date: Fri, 19 Apr 2013 10:10:36 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Vincent Brillault <gentoo@lerya.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Warnings with ASUS PCE-N15 (RTL8188CE)
-References: <513B7E58.9000505@lwfinger.net> <20130311183825.GG3009@Fea.lerya.net> <20130313080048.GB3484@Fea.lerya.net> <20130317141201.GA2557@Fea.lerya.net> <20130325182910.GA10274@Fea.lerya.net> <5150A15F.20600@lwfinger.net> <20130325195104.GA11212@Fea.lerya.net> <5150AE0F.2040306@lwfinger.net> <20130409094542.GA26503@Fea.lerya.net> <51643491.80302@lwfinger.net> <20130409160431.GA13599@Fea.lerya.net>
-In-Reply-To: <20130409160431.GA13599@Fea.lerya.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Wei Yongjun" <weiyj.lk@gmail.com>
+cc: brudley@broadcom.com, frankyl@broadcom.com, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, phaber@broadcom.com,
+	yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH -next] brcmfmac: fix error return code in
+ brcmf_fws_init()
+References: <CAPgLHd8GkC50rYFD0zDRuE3o0JUHBCnSGXQi2jNL9DdK+8pNDA@mail.gmail.com>
+In-Reply-To: <CAPgLHd8GkC50rYFD0zDRuE3o0JUHBCnSGXQi2jNL9DdK+8pNDA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2013 11:04 AM, Vincent Brillault wrote:
-> On Tue  9.Apr'13 at 10:32:33 -0500, Larry Finger wrote:
->> On 04/09/2013 04:47 AM, Vincent Brillault wrote:
->>> I still have the deconnection/reconnection issue. After looking on the
->>> reason, I think I have found a bug. Please look at the patched included
->>> in this mail: I think the rtlpriv->link_info.num_rx_inperiod is set to 0
->>> too early, as the '/* <4> roaming */' part uses it to see if the AP is
->>> still alive. What do you think ?
->>
->> Does that change help your issue?
-> I cannot say for sure that it helped. I have now disactivated the
-> powersave features of the driver and all my problems disappeared.
-> The only thing I can say for sure is that my deconnections were detected
-> by this part of the code, as the error message was
-> "rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to reconnect now",
-> and that this bugs seems to increase the probability to take the 'wrong'
-> branch.
+On 04/19/2013 04:10 AM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 >
-> Anyway, I think this line is missplaced: why would lines 1433-1434 use
-> rtlpriv->link_info.num_rx_inperiod if its value is always 0 ?
+> Fix to return a negative error code from the error handling
+> case instead of 0, as done elsewhere in this function.
+>
 
-As all of the disconnects disappeared in my system with the latest fixes that 
-will be in kernel 3.10, I am reluctant to make any changes in the code *unless* 
-you can prove that they fix a particular issue.
+Thanks for the patch. However, I would like to solve it differently. I 
+will sent out a patch for handling this.
 
-I agree that the code looks strange, but I did not write it.
+Regards,
+Arend
 
-In any case, it seems that power save is your problem.
-
-Larry
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> index 1bcd58c..df2ac2f 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+> @@ -1875,8 +1875,9 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
+>   		goto fail;
+>   	}
+>
+> -	if (brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
+> -				brcmf_fws_notify_credit_map)) {
+> +	rc = brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
+> +				 brcmf_fws_notify_credit_map);
+> +	if (rc) {
+>   		brcmf_err("register credit map handler failed\n");
+>   		goto fail;
+>   	}
+>
+>
 
 
