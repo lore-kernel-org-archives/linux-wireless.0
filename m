@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:37249 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500Ab3DRMao (ORCPT
+Received: from mail-yh0-f74.google.com ([209.85.213.74]:59873 "EHLO
+	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753980Ab3DSUBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 08:30:44 -0400
-Received: by mail-ee0-f43.google.com with SMTP id e50so1281638eek.16
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:30:43 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 1/2] mac80211: minstrel_ht: pick only supported rates for sta and group max*rates
-Date: Thu, 18 Apr 2013 14:26:20 +0200
-Message-Id: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com> (sfid-20130418_143047_427225_AC5A82E5)
+	Fri, 19 Apr 2013 16:01:03 -0400
+Received: by mail-yh0-f74.google.com with SMTP id q10so469746yhf.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 13:01:01 -0700 (PDT)
+Received: from clearcreek.mtv.corp.google.com (clearcreek.mtv.corp.google.com [172.22.73.104])
+	by corp2gmr1-1.hot.corp.google.com (Postfix) with ESMTP id 0CB0E31C0F7
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 12:53:14 -0700 (PDT)
+From: Paul Stewart <pstew@chromium.org>
+Date: Fri, 19 Apr 2013 08:37:46 -0700
+Subject: [PATCH] mwifiex: Start P2P devices in P2P mode
+To: linux-wireless@vger.kernel.org
+Message-Id: <20130419195313.9C63F200742@clearcreek.mtv.corp.google.com> (sfid-20130419_220109_751206_64093224)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+p2p devices should identify themselves as such to userspace at
+startup, so the connection manager can decide which interface
+to start wpa_supplicant instances on.
 
-minstrel_ht initializes max_tp_rate max_tp_rate2 and max_prob_rate to
-zero both for minstrel_ht_sta and minstrel_mcs_group_data.
-This is wrong since there is no guarantee that the 1st rate of any
-group is supported.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+Reviewed-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index d2b264d..eb6dc3f 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -244,6 +244,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	struct minstrel_rate_stats *mr;
- 	int cur_prob, cur_prob_tp, cur_tp, cur_tp2;
- 	int group, i, index;
-+	bool mi_rates_valid = false;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 4701294..8c468c3 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2136,10 +2136,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
  
- 	if (mi->ampdu_packets > 0) {
- 		mi->avg_ampdu_len = minstrel_ewma(mi->avg_ampdu_len,
-@@ -254,11 +255,10 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 		/* At start-up, wpa_supplicant tries to change the interface
+ 		 * to NL80211_IFTYPE_STATION if it is not managed mode.
+-		 * So, we initialize it to STA mode.
+ 		 */
+-		wdev->iftype = NL80211_IFTYPE_STATION;
+-		priv->bss_mode = NL80211_IFTYPE_STATION;
++		wdev->iftype = NL80211_IFTYPE_P2P_CLIENT;
++		priv->bss_mode = NL80211_IFTYPE_P2P_CLIENT;
  
- 	mi->sample_slow = 0;
- 	mi->sample_count = 0;
--	mi->max_tp_rate = 0;
--	mi->max_tp_rate2 = 0;
--	mi->max_prob_rate = 0;
- 
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
-+		bool mg_rates_valid = false;
-+
- 		cur_prob = 0;
- 		cur_prob_tp = 0;
- 		cur_tp = 0;
-@@ -268,15 +268,24 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		if (!mg->supported)
- 			continue;
- 
--		mg->max_tp_rate = 0;
--		mg->max_tp_rate2 = 0;
--		mg->max_prob_rate = 0;
- 		mi->sample_count++;
- 
- 		for (i = 0; i < MCS_GROUP_RATES; i++) {
- 			if (!(mg->supported & BIT(i)))
- 				continue;
- 
-+			/* initialize rates selections starting indexes */
-+			if (!mg_rates_valid) {
-+				mg->max_tp_rate = mg->max_tp_rate2 =
-+					mg->max_prob_rate = i;
-+				if (!mi_rates_valid) {
-+					mi->max_tp_rate = mi->max_tp_rate2 =
-+						mi->max_prob_rate = i;
-+					mi_rates_valid = true;
-+				}
-+				mg_rates_valid = true;
-+			}
-+
- 			mr = &mg->rates[i];
- 			mr->retry_updated = false;
- 			index = MCS_GROUP_RATES * group + i;
+ 		/* Setting bss_type to P2P tells firmware that this interface
+ 		 * is receiving P2P peers found during find phase and doing
 -- 
-1.8.2
+1.8.2.1
 
