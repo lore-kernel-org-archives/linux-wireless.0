@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252Ab3DVNdC (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44103 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965144Ab3DTApG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 09:33:02 -0400
-Message-ID: <1366637575.8637.8.camel@jlt4.sipsolutions.net> (sfid-20130422_153306_232757_1FBBEC4B)
-Subject: Re: [PATCH] mac80211: indicate admission control in TX queue
- parameters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Date: Mon, 22 Apr 2013 15:32:55 +0200
-In-Reply-To: <1366119272-32666-1-git-send-email-johannes@sipsolutions.net> (sfid-20130416_153441_163732_656B5A95)
-References: <1366119272-32666-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20130416_153441_163732_656B5A95)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 19 Apr 2013 20:45:06 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: use PCI_DMA_FROMDEVICE for RX queue de-init
+Date: Fri, 19 Apr 2013 17:44:42 -0700
+Message-ID: <1366418684-6148-2-git-send-email-bzhao@marvell.com> (sfid-20130420_024529_363291_504A7DB7)
+In-Reply-To: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
+References: <1366418684-6148-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-04-16 at 15:34 +0200, Johannes Berg wrote:
-> From: Alexander Bondar <alexander.bondar@intel.com>
-> 
-> Some driver implementations need to know whether mandatory
-> admission control is required by the AP for some ACs. Add
-> a parameter to the TX queue parameters indicating this.
-> 
-> As there's currently no support for admission control in
-> mac80211's AP implementation, it's only ever set for the
-> client implementation.
+From: Avinash Patil <patila@marvell.com>
 
-Applied.
+There is a typo in mwifiex_cleanup_rxq_ring() which uses
+PCI_DMA_TODEVICE while unmapping PCI memory.
+We should actually use PCI_DMA_FROMDEVICE.
 
-johannes
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 856959b..80f282c 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -572,7 +572,7 @@ static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
+ 			if (card->rx_buf_list[i]) {
+ 				skb = card->rx_buf_list[i];
+ 				pci_unmap_single(card->dev, desc2->paddr,
+-						 skb->len, PCI_DMA_TODEVICE);
++						 skb->len, PCI_DMA_FROMDEVICE);
+ 				dev_kfree_skb_any(skb);
+ 			}
+ 			memset(desc2, 0, sizeof(*desc2));
+@@ -581,7 +581,7 @@ static void mwifiex_cleanup_rxq_ring(struct mwifiex_adapter *adapter)
+ 			if (card->rx_buf_list[i]) {
+ 				skb = card->rx_buf_list[i];
+ 				pci_unmap_single(card->dev, desc->paddr,
+-						 skb->len, PCI_DMA_TODEVICE);
++						 skb->len, PCI_DMA_FROMDEVICE);
+ 				dev_kfree_skb_any(skb);
+ 			}
+ 			memset(desc, 0, sizeof(*desc));
+-- 
+1.7.0.2
 
