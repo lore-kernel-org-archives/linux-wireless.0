@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:41470 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761807Ab3DDQBm (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:60259 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750891Ab3DTEEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 12:01:42 -0400
-Date: Fri, 5 Apr 2013 00:01:30 +0800
-From: Wang YanQing <udknight@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] lib80211: make lib80211 can be enabled independently
-Message-ID: <20130404160130.GA2577@udknight> (sfid-20130404_180206_538872_3AFFD805)
+	Sat, 20 Apr 2013 00:04:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: don't try to associate when bss_mode is not STA
+Date: Fri, 19 Apr 2013 21:00:44 -0700
+Message-ID: <1366430444-7237-1-git-send-email-bzhao@marvell.com> (sfid-20130420_060426_052297_FF203B3D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current we can only enable lib80211 by enable a driver
-in tree use it which will select it, but some out tree's
-drivers also use it, so I think it has sense to make lib80211
-can be enabled independently.
+We have blocked association attempts on interfaces configured in
+AP and AD-HOC modes. P2P mode should be blocked too.
 
-A example of the out tree's drivers use lib80211 is:
-hybird driver(wl) for Broadcom Corporation BCM43225 802.11b/g/n
+Furthermore, an error code must be returned if we are unable to
+associate.
 
-Signed-off-by: Wang YanQing <udknight@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/wireless/Kconfig | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   17 ++++++-----------
+ 1 files changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 16d08b3..6e83f0a 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -140,22 +140,34 @@ config CFG80211_WEXT
- 	  extensions with cfg80211-based drivers.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 2a604eb..a0cb077 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1666,17 +1666,13 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			 struct cfg80211_connect_params *sme)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	int ret = 0;
+-
+-	if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
+-		wiphy_err(wiphy, "received infra assoc request "
+-				"when station is in ibss mode\n");
+-		goto done;
+-	}
++	int ret;
  
- config LIB80211
--	tristate
-+	tristate "common routines used by IEEE802.11 wireless LAN drivers"
- 	default n
- 	help
- 	  This options enables a library of common routines used
- 	  by IEEE802.11 wireless LAN drivers.
+-	if (priv->bss_mode == NL80211_IFTYPE_AP) {
+-		wiphy_err(wiphy, "skip association request for AP interface\n");
+-		goto done;
++	if (priv->bss_mode != NL80211_IFTYPE_STATION) {
++		wiphy_err(wiphy,
++			  "%s: reject infra assoc request in non-STA mode\n",
++			  dev->name);
++		return -EINVAL;
+ 	}
  
--	  Drivers should select this themselves if needed.
-+	  Drivers could select this themselves if needed.
+ 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
+@@ -1684,7 +1680,6 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
  
- config LIB80211_CRYPT_WEP
--	tristate
-+	tristate "host-based WEP encryption implementation for lib80211"
-+	depends on LIB80211
-+	default n
-+	---help---
-+	   host-based WEP encryption implementation for lib80211
- 
- config LIB80211_CRYPT_CCMP
--	tristate
-+	tristate "host-based CCMP encryption implementation for lib80211"
-+	depends on LIB80211
-+	default n
-+	---help---
-+	   host-based CCMP encryption implementation for lib80211
- 
- config LIB80211_CRYPT_TKIP
--	tristate
-+	tristate "host-based TKIP encryption implementation for lib80211"
-+	depends on LIB80211
-+	default n
-+	---help---
-+	    host-based TKIP encryption implementation for lib80211
- 
- config LIB80211_DEBUG
- 	bool "lib80211 debugging messages"
+ 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
+ 				     priv->bss_mode, sme->channel, sme, 0);
+-done:
+ 	if (!ret) {
+ 		cfg80211_connect_result(priv->netdev, priv->cfg_bssid, NULL, 0,
+ 					NULL, 0, WLAN_STATUS_SUCCESS,
 -- 
-1.7.12.4.dirty
+1.7.0.2
+
