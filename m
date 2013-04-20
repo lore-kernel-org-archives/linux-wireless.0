@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:64312 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965154Ab3DPU7o (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:38525 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab3DTGvC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 16:59:44 -0400
-Received: by mail-qa0-f41.google.com with SMTP id hg5so1687213qab.7
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 13:59:44 -0700 (PDT)
+	Sat, 20 Apr 2013 02:51:02 -0400
+Received: by mail-ob0-f175.google.com with SMTP id wp18so875099obc.34
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 23:51:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9DDAB9CC@SC-VEXCH1.marvell.com>
-References: <CAMLZHHRpPghm0tWTksFiD-zxUUM1dSbgPbj6doMck1jqv-yokw@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9DAD431B@SC-VEXCH1.marvell.com>
-	<CAMLZHHRcTgQ66fucR09SEyjCCRiZixigM=cDwnfKB5yWYk4PQw@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430D9DDAB9CC@SC-VEXCH1.marvell.com>
-Date: Tue, 16 Apr 2013 14:59:43 -0600
-Message-ID: <CAMLZHHTe+9D_XwYHFMbu8bRAD7OHNgf8_0+44ZhM+AwSnwLZBw@mail.gmail.com> (sfid-20130416_225949_114751_31080E56)
-Subject: Re: mwifiex frequent "not allowed while suspended" crash on resume
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Rhodes <jrhodes@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1365703360-19982-1-git-send-email-shenhan@google.com>
+References: <1365703360-19982-1-git-send-email-shenhan@google.com>
+Date: Sat, 20 Apr 2013 08:51:01 +0200
+Message-ID: <CACna6rwUONMQqrT1C5K0qq5qp03fz+ghKpL1x+Rz_9S31TzhNw@mail.gmail.com> (sfid-20130420_085115_022326_68B529CF)
+Subject: Re: [PATCH] Fix uninitialized-variable warnings.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Han Shen <shenhan@google.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	chaoming_li@realsil.com.cn
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 5, 2013 at 5:48 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> Normally TX is blocked until resume handler is called and host sleep handshake between driver and firmware is done.
+2013/4/11 Han Shen <shenhan@google.com>:
+> GCC 4.8 is spitting out uninitialized-varaible warnings against "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".
+> This trivial patch just adds initialization to the variable.
 
-Where is the code that makes such synchronization happen?
+Could you use prefixes for your patches? Like
+rtl8192c: foo
 
-> Does the TX happen before "hs_deactivated" event?
-
-hard_start_xmit is called approximately 1ms after hs_deactivated arrives.
-
-> I'm thinking of releasing IRQ in driver suspend handler and re-claim the IRQ in resume. Of course it needs some changes in sdio_release_irq to skip SDIO_CCCR_IENx disabling, otherwise host may not be woken up by SDIO DAT1.
->
-> Attached is the sample code, not tested.
-
-That patch breaks wake-on-LAN, the suspended system simply doesn't
-respond to incoming packets.
-
-Daniel
+-- 
+Rafał
