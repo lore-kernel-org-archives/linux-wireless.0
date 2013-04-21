@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:38793 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762099Ab3DCQct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 12:32:49 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: siwu@hrz.tu-chemnitz.de, Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [TESTING-QH 1/2] REMOVEME: shorten time for NOP and CAC
-Date: Wed,  3 Apr 2013 18:32:38 +0200
-Message-Id: <1365006759-16779-2-git-send-email-zefir.kurtisi@neratec.com> (sfid-20130403_183255_307256_5A779464)
-In-Reply-To: <1365006759-16779-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1365006759-16779-1-git-send-email-zefir.kurtisi@neratec.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33053 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264Ab3DUXXB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Apr 2013 19:23:01 -0400
+Received: by mail-wi0-f174.google.com with SMTP id m6so3395025wiv.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Apr 2013 16:23:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20130421T145410-125@post.gmane.org>
+References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com> <20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
+ <loom.20130421T145410-125@post.gmane.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 22 Apr 2013 09:22:40 +1000
+Message-ID: <CAGRGNgVUNP-qp-1kNmy6_OrZLi5CuR2GShxt-M7idxVKmMhKMw@mail.gmail.com> (sfid-20130422_012324_499619_05F320BF)
+Subject: Re: ath10k: mac80211 driver for QCA9880
+To: Edward <eliasacorn@yahoo.com.sg>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Hi Edward,
 
-This is for testing only and to save you from waiting half an hour for a NOP.
+On Sun, Apr 21, 2013 at 10:59 PM, Edward <eliasacorn@yahoo.com.sg> wrote:
+> Denis 'GNUtoo' Carikli <GNUtoo@...> writes:
+>> On Mon, 15 Apr 2013 15:20:54 +0300
+>> Kalle Valo <kvalo@...> wrote:
+>> >The biggest difference is that there's now firmware running on the
+>> >chip.
+>> Will the firmware be released as free software at some point?
+>
+> Does it matter? The firmware is just a binary logic black box. It's not
+> likely to even see more than a handful of revisions after the actual
+> products hit the market.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- include/net/cfg80211.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I believe the question was asked as Atheros / Qualcomm has a history
+of releasing firmware for their devices, i.e. the ar9170 and ar7010 /
+ar9271 chips, I believe Denis was wondering if this practise would
+continue.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bdba9b6..6046cf3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -126,8 +126,8 @@ enum ieee80211_channel_flags {
- #define IEEE80211_CHAN_NO_HT40 \
- 	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
- 
--#define IEEE80211_DFS_MIN_CAC_TIME_MS		60000
--#define IEEE80211_DFS_MIN_NOP_TIME_MS		(30 * 60 * 1000)
-+#define IEEE80211_DFS_MIN_CAC_TIME_MS		4000
-+#define IEEE80211_DFS_MIN_NOP_TIME_MS		(6000)
- 
- /**
-  * struct ieee80211_channel - channel definition
--- 
-1.7.4.1
+> As long as the driver remains open I don't see any problems with the
+> open-driver-closed-firmware combination. Intel and Ralink has adopted this
+> practice to great success, and I don't see any reason why Atheros can't do
+> the same.
 
+I don't believe anyone has problems with things being done this way,
+we'd just like to know if there's a release scheduled.
+
+Thanks,
+
+--
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
