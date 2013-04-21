@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49599 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964Ab3DONWR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 09:22:17 -0400
-Message-ID: <1366032132.8361.19.camel@jlt4.sipsolutions.net> (sfid-20130415_152225_366245_D047ABA1)
-Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: schwaahed <schwaahed@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 15 Apr 2013 15:22:12 +0200
-In-Reply-To: <1365804259.10342.20.camel@dcbw.foobar.com> (sfid-20130413_000245_000077_30E72639)
-References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
-	 <1365804259.10342.20.camel@dcbw.foobar.com>
-	 (sfid-20130413_000245_000077_30E72639)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:45053 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752407Ab3DUH5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Apr 2013 03:57:30 -0400
+Message-ID: <51739BE3.9070706@openwrt.org> (sfid-20130421_095743_596885_B737A5E5)
+Date: Sun, 21 Apr 2013 09:57:23 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v4 2/3] mac80211/minstrel_ht: use the new rate control
+ API
+References: <1366385329-42690-1-git-send-email-nbd@openwrt.org> <1366385329-42690-2-git-send-email-nbd@openwrt.org> <20130420174453.GC767@gobelin>
+In-Reply-To: <20130420174453.GC767@gobelin>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-04-12 at 17:04 -0500, Dan Williams wrote:
-> On Thu, 2013-04-11 at 20:03 -0400, schwaahed wrote:
-> > Hello,
-> > 
-> > I have an HP Elitebook 8460w laptop containing a Centrino Ultimate-N
-> > 6300 AGN (linux-3.8.6 iwlwifi module -  firmware version 9.221.4.1
-> > build 25532)
-> 
-> I notice that your 'rfkill list all' dumps below don't contain an entry
-> for hp-wmi.  Is that module loaded on your machine?  It's needed at
-> least for earlier models of the Elitebook, up at least until the xx40
-> series.  Perhaps it needs to be updated for your laptop?  You might ask
-> on the general kernel lists if anyone knows how rfkill is supposed to
-> work for the 8460 and if hp-wmi supports it, or if some other mechanism
-> is used.
+On 2013-04-20 7:44 PM, Karl Beldan wrote:
+> On Fri, Apr 19, 2013 at 05:28:48PM +0200, Felix Fietkau wrote:
+>> @@ -846,6 +856,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>>  
+>>  	msp->is_ht = true;
+>>  	memset(mi, 0, sizeof(*mi));
+>> +
+>> +	mi->sta = sta;
+>>  	mi->stats_update = jiffies;
+>>  
+>>  	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1);
+>> @@ -907,7 +919,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>>  	if (!n_supported)
+>>  		goto use_legacy;
+>>  
+>> -	/* init {mi,mi->groups[*]}->{max_tp_rate,max_tp_rate2,max_prob_rate} */
+>>  	minstrel_ht_update_stats(mp, mi);
+>>  
+> This time you kept minstrel_ht_update_stats but you got rid of the call
+> to minstrel_ht_update_rates you previously had.
+> If you don't minstrel_ht_update_rates, ieee80211_tx_h_rate_ctrl will
+> TX_DROP the frame until minstrel's get_sample_rate returns != -1,
+> Maybe you could pair update_stats with ht_update_rates, e.g move/call
+> ht_update_stats in ht_update_rates ?
+I really should have re-read this in a distraction free environment :)
+Looking at the code again, I see why I kept them separated. In some
+cases the rates change (when quickly switching to a different MCS group
+when the rates fail) but the statistics are not updated yet.
+Calling both functions here is the right thing to do.
 
-Yeah it seems not loaded, but how then does the soft block affect hard
-block? All very odd, but almost certainly a platform rather than a wifi
-issue. 
-
-johannes
+- Felix
 
