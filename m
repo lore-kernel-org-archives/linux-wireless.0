@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:42208 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761256Ab3DJXWS (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51696 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755120Ab3DVOa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 19:22:18 -0400
-Message-ID: <5165F425.5010408@net.t-labs.tu-berlin.de> (sfid-20130411_012220_702161_F61CD147)
-Date: Thu, 11 Apr 2013 01:22:13 +0200
-From: Tobias Steinicke <tobias.steinicke@net.t-labs.tu-berlin.de>
+	Mon, 22 Apr 2013 10:30:27 -0400
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC] ath9k: Respect current txpower setting
-References: <5165E1C2.4020407@net.t-labs.tu-berlin.de>
-In-Reply-To: <5165E1C2.4020407@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org,
+	"Gertjan van Wingerde" <gwingerde@gmail.com>,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"Helmut Schaa" <helmut.schaa@googlemail.com>,
+	"Ivo van Doorn" <IvDoorn@gmail.com>, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com
+Date: Mon, 22 Apr 2013 15:25:59 +0100
+Message-ID: <lsq.1366640759.619028946@decadent.org.uk> (sfid-20130422_163218_412234_E855702A)
+Subject: [19/75] rt2x00: rt2x00pci_regbusy_read() - only print register
+ access failure once
+In-Reply-To: <lsq.1366640759.151900666@decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I fucked the format. Sorry for that.
-I will resend it.
+3.2.44-rc1 review patch.  If anyone has any objections, please let me know.
 
-Tobias Steinicke
+------------------
 
-Am 11.04.2013 00:03, schrieb Tobias Steinicke:
-> In routine ath_tx_fill_desc(), the txpower is only set to
-> MAX_RATE_POWER. Now it respects the txpower from bss_conf and set it if it
-> is (txpower * 2) < MAX_RATE_POWER else set to MAX_RATE_POWER.
-> 
-> Signed-off-by: Tobias Steinicke <tsteinicke@net.t-labs.tu-berlin.de>
-> ---
->   drivers/net/wireless/ath/ath9k/xmit.c |    7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c 
-> b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 5bc5802..90701e4 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -1110,13 +1110,18 @@ static void ath_tx_fill_desc(struct ath_softc 
-> *sc, struct ath_buf *bf,
->   	struct ath_buf *bf_first = bf;
->   	struct ath_tx_info info;
->   	bool aggr = !!(bf->bf_state.bf_type & BUF_AGGR);
-> +	u8 txpower = tx_info->control.vif->bss_conf.txpower * 2;
->    	memset(&info, 0, sizeof(info));
->   	info.is_first = true;
->   	info.is_last = true;
-> -	info.txpower = MAX_RATE_POWER;
->   	info.qcu = txq->axq_qnum;
->   +	if (txpower > MAX_RATE_POWER)
-> +		info.txpower = MAX_RATE_POWER;
-> +	else
-> +		info.txpower = txpower;
-> +
->   	info.flags = ATH9K_TXDESC_INTREQ;
->   	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
->   		info.flags |= ATH9K_TXDESC_NOACK;
-> 
+From: Tim Gardner <tim.gardner@canonical.com>
+
+commit 83589b30f1e1dc9898986293c9336b8ce1705dec upstream.
+
+BugLink: http://bugs.launchpad.net/bugs/1128840
+
+It appears that when this register read fails it never recovers, so
+I think there is no need to repeat the same error message ad infinitum.
+
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -52,8 +52,8 @@ int rt2x00pci_regbusy_read(struct rt2x00
+ 		udelay(REGISTER_BUSY_DELAY);
+ 	}
+ 
+-	ERROR(rt2x00dev, "Indirect register access failed: "
+-	      "offset=0x%.08x, value=0x%.08x\n", offset, *reg);
++	printk_once(KERN_ERR "%s() Indirect register access failed: "
++	      "offset=0x%.08x, value=0x%.08x\n", __func__, offset, *reg);
+ 	*reg = ~0;
+ 
+ 	return 0;
 
