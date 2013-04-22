@@ -1,255 +1,791 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935841Ab3DJMnu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 08:43:50 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:43605 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750861Ab3DVKJ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 06:09:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/8] mac80211: support extended channel switch
-Date: Wed, 10 Apr 2013 14:43:38 +0200
-Message-Id: <1365597822-27660-5-git-send-email-johannes@sipsolutions.net> (sfid-20130410_144404_562360_C67258C7)
-In-Reply-To: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
-References: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net>
+Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
+Subject: [PATCH v5 1/3] mac80211: improve the rate control API
+Date: Mon, 22 Apr 2013 12:09:51 +0200
+Message-Id: <1366625393-11647-1-git-send-email-nbd@openwrt.org> (sfid-20130422_121009_386641_66DE99CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Allow rate control modules to pass a rate selection table to mac80211
+and the driver. This allows drivers to fetch the most recent rate
+selection from the sta pointer for already buffered frames. This allows
+rate control to respond faster to sudden link changes and it is also a
+step towards adding minstrel_ht support to drivers like iwlwifi.
 
-Support extended channel switch when the operating
-class is one of the global operating classes as
-defined in Annex E of 802.11-2012. If it isn't,
-disconnect from the AP instead.
+When a driver sets IEEE80211_HW_SUPPORTS_RC_TABLE, mac80211 will not
+fill info->control.rates with rates from the rate table (to preserve
+explicit overrides by the rate control module). The driver then
+explicitly calls ieee80211_get_tx_rates to merge overrides from
+info->control.rates with defaults from the sta rate table.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/linux/ieee80211.h  | 12 ++++++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 77 ++++++++++++++++++++++++++++++----------------
- net/mac80211/util.c        |  7 +++++
- 4 files changed, 71 insertions(+), 26 deletions(-)
+ include/net/mac80211.h     |  66 +++++++++
+ net/mac80211/ieee80211_i.h |   1 +
+ net/mac80211/rate.c        | 327 +++++++++++++++++++++++++++++++++++++--------
+ net/mac80211/tx.c          | 142 +++++---------------
+ 4 files changed, 369 insertions(+), 167 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 8f80b3a..2a10acc 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -673,6 +673,18 @@ struct ieee80211_channel_sw_ie {
- } __packed;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4f693a5..5ceb19f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -561,6 +561,9 @@ enum mac80211_rate_control_flags {
+ /* maximum number of rate stages */
+ #define IEEE80211_TX_MAX_RATES	4
+ 
++/* maximum number of rate table entries */
++#define IEEE80211_TX_RATE_TABLE_SIZE	4
++
+ /**
+  * struct ieee80211_tx_rate - rate selection/status
+  *
+@@ -657,6 +660,8 @@ struct ieee80211_tx_info {
+ 					s8 rts_cts_rate_idx;
+ 					u8 use_rts:1;
+ 					u8 use_cts_prot:1;
++					u8 short_preamble:1;
++					u8 skip_table:1;
+ 					/* 2 bytes free */
+ 				};
+ 				/* only needed before rate control */
+@@ -678,6 +683,8 @@ struct ieee80211_tx_info {
+ 		struct {
+ 			struct ieee80211_tx_rate driver_rates[
+ 				IEEE80211_TX_MAX_RATES];
++			u8 pad[4];
++
+ 			void *rate_driver_data[
+ 				IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE / sizeof(void *)];
+ 		};
+@@ -1223,6 +1230,24 @@ enum ieee80211_sta_rx_bandwidth {
+ };
  
  /**
-+ * struct ieee80211_ext_chansw_ie
++ * struct ieee80211_sta_rates - station rate selection table
 + *
-+ * This structure represents the "Extended Channel Switch Announcement element"
++ * @rcu_head: RCU head used for freeing the table on update
++ * @rates: transmit rates/flags to be used by default.
++ *	Overriding entries per-packet is possible by using cb tx control.
 + */
-+struct ieee80211_ext_chansw_ie {
-+	u8 mode;
-+	u8 new_operating_class;
-+	u8 new_ch_num;
-+	u8 count;
-+} __packed;
++struct ieee80211_sta_rates {
++	struct rcu_head rcu_head;
++	struct {
++		u8 idx;
++		u8 count;
++		u8 count_cts;
++		u8 count_rts;
++		u16 flags;
++	} rate[IEEE80211_TX_RATE_TABLE_SIZE];
++};
 +
 +/**
-  * struct ieee80211_tim
+  * struct ieee80211_sta - station table entry
   *
-  * This structure refers to "Traffic Indication Map information element"
+  * A station table entry represents a station we are possibly
+@@ -1249,6 +1274,7 @@ enum ieee80211_sta_rx_bandwidth {
+  *	notifications and capabilities. The value is only valid after
+  *	the station moves to associated state.
+  * @smps_mode: current SMPS mode (off, static or dynamic)
++ * @tx_rates: rate control selection table
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+@@ -1262,6 +1288,7 @@ struct ieee80211_sta {
+ 	u8 rx_nss;
+ 	enum ieee80211_sta_rx_bandwidth bandwidth;
+ 	enum ieee80211_smps_mode smps_mode;
++	struct ieee80211_sta_rates __rcu *rates;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+@@ -1417,6 +1444,9 @@ struct ieee80211_tx_control {
+  *	for different virtual interfaces. See the doc section on HW queue
+  *	control for more details.
+  *
++ * @IEEE80211_HW_SUPPORTS_RC_TABLE: The driver supports using a rate
++ *	selection table provided by the rate control algorithm.
++ *
+  * @IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF: Use the P2P Device address for any
+  *	P2P Interface. This will be honoured even if more than one interface
+  *	is supported.
+@@ -1449,6 +1479,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
+ 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
+ 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
++	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
+ 	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
+ 	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
+ };
+@@ -3135,6 +3166,25 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *sta,
+ 				u8 tid, bool buffered);
+ 
+ /**
++ * ieee80211_get_tx_rates - get the selected transmit rates for a packet
++ *
++ * Call this function in a driver with per-packet rate selection support
++ * to combine the rate info in the packet tx info with the most recent
++ * rate selection table for the station entry.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @sta: the receiver station to which this packet is sent.
++ * @skb: the frame to be transmitted.
++ * @dest: buffer for extracted rate/retry information
++ * @max_rates: maximum number of rates to fetch
++ */
++void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta,
++			    struct sk_buff *skb,
++			    struct ieee80211_tx_rate *dest,
++			    int max_rates);
++
++/**
+  * ieee80211_tx_status - transmit status callback
+  *
+  * Call this function for all transmitted frames after they have been
+@@ -4210,6 +4260,22 @@ bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
+ 	return false;
+ }
+ 
++/**
++ * rate_control_set_rates - pass the sta rate selection to mac80211/driver
++ *
++ * When not doing a rate control probe to test rates, rate control should pass
++ * its rate selection to mac80211. If the driver supports receiving a station
++ * rate table, it will use it to ensure that frames are always sent based on
++ * the most recent rate control module decision.
++ *
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @pubsta: &struct ieee80211_sta pointer to the target destination.
++ * @rates: new tx rate set to be used for this station.
++ */
++int rate_control_set_rates(struct ieee80211_hw *hw,
++			   struct ieee80211_sta *pubsta,
++			   struct ieee80211_sta_rates *rates);
++
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+ 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 373460f..10c3180 100644
+index af8410e..158e6eb 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -1178,6 +1178,7 @@ struct ieee802_11_elems {
- 	const u8 *perr;
- 	const struct ieee80211_rann_ie *rann;
- 	const struct ieee80211_channel_sw_ie *ch_switch_ie;
-+	const struct ieee80211_ext_chansw_ie *ext_chansw_ie;
- 	const u8 *country_elem;
- 	const u8 *pwr_constr_elem;
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8cdf791..e7b82f9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1025,56 +1025,79 @@ static void
- ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				 u64 timestamp, struct ieee802_11_elems *elems)
+@@ -156,6 +156,7 @@ struct ieee80211_tx_data {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 	struct ieee80211_key *key;
++	struct ieee80211_tx_rate rate;
+ 
+ 	unsigned int flags;
+ };
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 5d545dd..0d51877 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -252,6 +252,25 @@ rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
+ 	return 0;
+ }
+ 
++static void __rate_control_send_low(struct ieee80211_hw *hw,
++				    struct ieee80211_supported_band *sband,
++				    struct ieee80211_sta *sta,
++				    struct ieee80211_tx_info *info)
++{
++	if ((sband->band != IEEE80211_BAND_2GHZ) ||
++	    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
++		info->control.rates[0].idx = rate_lowest_index(sband, sta);
++	else
++		info->control.rates[0].idx =
++			rate_lowest_non_cck_index(sband, sta);
++
++	info->control.rates[0].count =
++		(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
++		1 : hw->max_rate_tries;
++
++	info->control.skip_table = 1;
++}
++
+ 
+ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 			   void *priv_sta,
+@@ -262,16 +281,8 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
+ 	int mcast_rate;
+ 
+ 	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
+-		if ((sband->band != IEEE80211_BAND_2GHZ) ||
+-		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
+-			info->control.rates[0].idx =
+-				rate_lowest_index(txrc->sband, sta);
+-		else
+-			info->control.rates[0].idx =
+-				rate_lowest_non_cck_index(txrc->sband, sta);
+-		info->control.rates[0].count =
+-			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+-			1 : txrc->hw->max_rate_tries;
++		__rate_control_send_low(txrc->hw, sband, sta, info);
++
+ 		if (!sta && txrc->bss) {
+ 			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
+ 			if (mcast_rate > 0) {
+@@ -355,7 +366,8 @@ static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
+ 
+ 
+ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+-				struct ieee80211_tx_rate_control *txrc,
++				struct ieee80211_supported_band *sband,
++				enum nl80211_chan_width chan_width,
+ 				u32 mask,
+ 				u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
  {
-+	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct cfg80211_bss *cbss = ifmgd->associated;
- 	struct ieee80211_bss *bss;
- 	struct ieee80211_channel *new_ch;
--	int new_freq;
- 	struct ieee80211_chanctx *chanctx;
-+	enum ieee80211_band new_band;
-+	int new_freq;
-+	u8 new_chan_no;
-+	u8 count;
-+	u8 mode;
+@@ -375,27 +387,17 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+ 				  IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
+ 		alt_rate.count = rate->count;
+ 		if (rate_idx_match_legacy_mask(&alt_rate,
+-					       txrc->sband->n_bitrates,
+-					       mask)) {
++					       sband->n_bitrates, mask)) {
+ 			*rate = alt_rate;
+ 			return;
+ 		}
+ 	} else {
+-		struct sk_buff *skb = txrc->skb;
+-		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-		__le16 fc;
+-
+ 		/* handle legacy rates */
+-		if (rate_idx_match_legacy_mask(rate, txrc->sband->n_bitrates,
+-					       mask))
++		if (rate_idx_match_legacy_mask(rate, sband->n_bitrates, mask))
+ 			return;
  
- 	ASSERT_MGD_MTX(ifmgd);
+ 		/* if HT BSS, and we handle a data frame, also try HT rates */
+-		if (txrc->bss_conf->chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
+-			return;
+-
+-		fc = hdr->frame_control;
+-		if (!ieee80211_is_data(fc))
++		if (chan_width == NL80211_CHAN_WIDTH_20_NOHT)
+ 			return;
  
- 	if (!cbss)
- 		return;
+ 		alt_rate.idx = 0;
+@@ -408,7 +410,7 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
  
--	if (sdata->local->scanning)
-+	if (local->scanning)
- 		return;
+ 		alt_rate.flags |= IEEE80211_TX_RC_MCS;
  
- 	/* disregard subsequent announcements if we are already processing */
- 	if (ifmgd->flags & IEEE80211_STA_CSA_RECEIVED)
- 		return;
+-		if (txrc->bss_conf->chandef.width == NL80211_CHAN_WIDTH_40)
++		if (chan_width == NL80211_CHAN_WIDTH_40)
+ 			alt_rate.flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
  
--	if (!elems->ch_switch_ie)
-+	if (elems->ext_chansw_ie) {
-+		if (!ieee80211_operating_class_to_band(
-+				elems->ext_chansw_ie->new_operating_class,
-+				&new_band)) {
-+			sdata_info(sdata,
-+				   "cannot understand ECSA IE operating class %d, disconnecting\n",
-+				   elems->ext_chansw_ie->new_operating_class);
-+			ieee80211_queue_work(&local->hw,
-+					     &ifmgd->csa_connection_drop_work);
+ 		if (rate_idx_match_mcs_mask(&alt_rate, mcs_mask)) {
+@@ -426,6 +428,228 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
+ 	 */
+ }
+ 
++static void rate_fixup_ratelist(struct ieee80211_vif *vif,
++				struct ieee80211_supported_band *sband,
++				struct ieee80211_tx_info *info,
++				struct ieee80211_tx_rate *rates,
++				int max_rates)
++{
++	struct ieee80211_rate *rate;
++	bool inval = false;
++	int i;
++
++	/*
++	 * Set up the RTS/CTS rate as the fastest basic rate
++	 * that is not faster than the data rate unless there
++	 * is no basic rate slower than the data rate, in which
++	 * case we pick the slowest basic rate
++	 *
++	 * XXX: Should this check all retry rates?
++	 */
++	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
++		u32 basic_rates = vif->bss_conf.basic_rates;
++		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
++
++		rate = &sband->bitrates[rates[0].idx];
++
++		for (i = 0; i < sband->n_bitrates; i++) {
++			/* must be a basic rate */
++			if (!(basic_rates & BIT(i)))
++				continue;
++			/* must not be faster than the data rate */
++			if (sband->bitrates[i].bitrate > rate->bitrate)
++				continue;
++			/* maximum */
++			if (sband->bitrates[baserate].bitrate <
++			     sband->bitrates[i].bitrate)
++				baserate = i;
 +		}
-+		new_chan_no = elems->ext_chansw_ie->new_ch_num;
-+		count = elems->ext_chansw_ie->count;
-+		mode = elems->ext_chansw_ie->mode;
-+	} else if (elems->ch_switch_ie) {
-+		new_band = cbss->channel->band;
-+		new_chan_no = elems->ch_switch_ie->new_ch_num;
-+		count = elems->ch_switch_ie->count;
-+		mode = elems->ch_switch_ie->mode;
++
++		info->control.rts_cts_rate_idx = baserate;
++	}
++
++	for (i = 0; i < max_rates; i++) {
++		/*
++		 * make sure there's no valid rate following
++		 * an invalid one, just in case drivers don't
++		 * take the API seriously to stop at -1.
++		 */
++		if (inval) {
++			rates[i].idx = -1;
++			continue;
++		}
++		if (rates[i].idx < 0) {
++			inval = true;
++			continue;
++		}
++
++		/*
++		 * For now assume MCS is already set up correctly, this
++		 * needs to be fixed.
++		 */
++		if (rates[i].flags & IEEE80211_TX_RC_MCS) {
++			WARN_ON(rates[i].idx > 76);
++
++			if (!(rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) &&
++			    info->control.use_cts_prot)
++				rates[i].flags |=
++					IEEE80211_TX_RC_USE_CTS_PROTECT;
++			continue;
++		}
++
++		if (rates[i].flags & IEEE80211_TX_RC_VHT_MCS) {
++			WARN_ON(ieee80211_rate_get_vht_mcs(&rates[i]) > 9);
++			continue;
++		}
++
++		/* set up RTS protection if desired */
++		if (info->control.use_rts) {
++			rates[i].flags |= IEEE80211_TX_RC_USE_RTS_CTS;
++			info->control.use_cts_prot = false;
++		}
++
++		/* RC is busted */
++		if (WARN_ON_ONCE(rates[i].idx >= sband->n_bitrates)) {
++			rates[i].idx = -1;
++			continue;
++		}
++
++		rate = &sband->bitrates[rates[i].idx];
++
++		/* set up short preamble */
++		if (info->control.short_preamble &&
++		    rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
++			rates[i].flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
++
++		/* set up G protection */
++		if (!(rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) &&
++		    info->control.use_cts_prot &&
++		    rate->flags & IEEE80211_RATE_ERP_G)
++			rates[i].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
++	}
++}
++
++
++static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
++					struct ieee80211_tx_info *info,
++					struct ieee80211_tx_rate *rates,
++					int max_rates)
++{
++	struct ieee80211_sta_rates *ratetbl = NULL;
++	int i;
++
++	if (sta && !info->control.skip_table)
++		ratetbl = rcu_dereference(sta->rates);
++
++	/* Fill remaining rate slots with data from the sta rate table. */
++	max_rates = min_t(int, max_rates, IEEE80211_TX_RATE_TABLE_SIZE);
++	for (i = 0; i < max_rates; i++) {
++		if (i < ARRAY_SIZE(info->control.rates) &&
++		    info->control.rates[i].idx >= 0 &&
++		    info->control.rates[i].count) {
++			if (rates != info->control.rates)
++				rates[i] = info->control.rates[i];
++		} else if (ratetbl) {
++			rates[i].idx = ratetbl->rate[i].idx;
++			rates[i].flags = ratetbl->rate[i].flags;
++			if (info->control.use_rts)
++				rates[i].count = ratetbl->rate[i].count_rts;
++			else if (info->control.use_cts_prot)
++				rates[i].count = ratetbl->rate[i].count_cts;
++			else
++				rates[i].count = ratetbl->rate[i].count;
++		} else {
++			rates[i].idx = -1;
++			rates[i].count = 0;
++		}
++
++		if (rates[i].idx < 0 || !rates[i].count)
++			break;
++	}
++}
++
++static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
++				    struct ieee80211_sta *sta,
++				    struct ieee80211_supported_band *sband,
++				    struct ieee80211_tx_info *info,
++				    struct ieee80211_tx_rate *rates,
++				    int max_rates)
++{
++	enum nl80211_chan_width chan_width;
++	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
++	bool has_mcs_mask;
++	u32 mask;
++	int i;
++
++	/*
++	 * Try to enforce the rateidx mask the user wanted. skip this if the
++	 * default mask (allow all rates) is used to save some processing for
++	 * the common case.
++	 */
++	mask = sdata->rc_rateidx_mask[info->band];
++	has_mcs_mask = sdata->rc_has_mcs_mask[info->band];
++	if (mask == (1 << sband->n_bitrates) - 1 && !has_mcs_mask)
++		return;
++
++	if (has_mcs_mask)
++		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
++		       sizeof(mcs_mask));
++	else
++		memset(mcs_mask, 0xff, sizeof(mcs_mask));
++
++	if (sta) {
++		/* Filter out rates that the STA does not support */
++		mask &= sta->supp_rates[info->band];
++		for (i = 0; i < sizeof(mcs_mask); i++)
++			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
++	}
++
++	/*
++	 * Make sure the rate index selected for each TX rate is
++	 * included in the configured mask and change the rate indexes
++	 * if needed.
++	 */
++	chan_width = sdata->vif.bss_conf.chandef.width;
++	for (i = 0; i < max_rates; i++) {
++		/* Skip invalid rates */
++		if (rates[i].idx < 0)
++			break;
++
++		rate_idx_match_mask(&rates[i], sband, mask, chan_width,
++				    mcs_mask);
++	}
++}
++
++void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta,
++			    struct sk_buff *skb,
++			    struct ieee80211_tx_rate *dest,
++			    int max_rates)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_supported_band *sband;
++
++	rate_control_fill_sta_table(sta, info, dest, max_rates);
++
++	if (!vif)
++		return;
++
++	sdata = vif_to_sdata(vif);
++	sband = sdata->local->hw.wiphy->bands[info->band];
++
++	if (ieee80211_is_data(hdr->frame_control))
++		rate_control_apply_mask(sdata, sta, sband, info, dest, max_rates);
++
++	if (dest[0].idx < 0)
++		__rate_control_send_low(&sdata->local->hw, sband, sta, info);
++
++	if (sta)
++		rate_fixup_ratelist(vif, sband, info, dest, max_rates);
++}
++EXPORT_SYMBOL(ieee80211_get_tx_rates);
++
+ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_tx_rate_control *txrc)
+@@ -435,8 +659,6 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_sta *ista = NULL;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
+ 	int i;
+-	u32 mask;
+-	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
+ 
+ 	if (sta && test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
+ 		ista = &sta->sta;
+@@ -454,40 +676,27 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
+ 
+-	/*
+-	 * Try to enforce the rateidx mask the user wanted. skip this if the
+-	 * default mask (allow all rates) is used to save some processing for
+-	 * the common case.
+-	 */
+-	mask = sdata->rc_rateidx_mask[info->band];
+-	if (mask != (1 << txrc->sband->n_bitrates) - 1 || txrc->rate_idx_mcs_mask) {
+-		if (txrc->rate_idx_mcs_mask)
+-			memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
+-		else
+-			memset(mcs_mask, 0xff, sizeof(mcs_mask));
+-
+-		if (sta) {
+-			/* Filter out rates that the STA does not support */
+-			mask &= sta->sta.supp_rates[info->band];
+-			for (i = 0; i < sizeof(mcs_mask); i++)
+-				mcs_mask[i] &= sta->sta.ht_cap.mcs.rx_mask[i];
+-		}
+-		/*
+-		 * Make sure the rate index selected for each TX rate is
+-		 * included in the configured mask and change the rate indexes
+-		 * if needed.
+-		 */
+-		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+-			/* Skip invalid rates */
+-			if (info->control.rates[i].idx < 0)
+-				break;
+-			rate_idx_match_mask(&info->control.rates[i], txrc,
+-					    mask, mcs_mask);
+-		}
+-	}
++	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
++		return;
++
++	ieee80211_get_tx_rates(&sdata->vif, ista, txrc->skb,
++			       info->control.rates,
++			       ARRAY_SIZE(info->control.rates));
++}
+ 
+-	BUG_ON(info->control.rates[0].idx < 0);
++int rate_control_set_rates(struct ieee80211_hw *hw,
++			   struct ieee80211_sta *pubsta,
++			   struct ieee80211_sta_rates *rates)
++{
++	struct ieee80211_sta_rates *old = rcu_dereference(pubsta->rates);
++
++	rcu_assign_pointer(pubsta->rates, rates);
++	if (old)
++		kfree_rcu(old, rcu_head);
++
++	return 0;
+ }
++EXPORT_SYMBOL(rate_control_set_rates);
+ 
+ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ 				 const char *name)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6ca857f..4a5fbf8 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -48,15 +48,15 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 	/* assume HW handles this */
+-	if (info->control.rates[0].flags & IEEE80211_TX_RC_MCS)
++	if (tx->rate.flags & IEEE80211_TX_RC_MCS)
+ 		return 0;
+ 
+ 	/* uh huh? */
+-	if (WARN_ON_ONCE(info->control.rates[0].idx < 0))
++	if (WARN_ON_ONCE(tx->rate.idx < 0))
+ 		return 0;
+ 
+ 	sband = local->hw.wiphy->bands[info->band];
+-	txrate = &sband->bitrates[info->control.rates[0].idx];
++	txrate = &sband->bitrates[tx->rate.idx];
+ 
+ 	erp = txrate->flags & IEEE80211_RATE_ERP_G;
+ 
+@@ -617,11 +617,9 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	struct ieee80211_hdr *hdr = (void *)tx->skb->data;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate;
+-	int i;
+ 	u32 len;
+-	bool inval = false, rts = false, short_preamble = false;
+ 	struct ieee80211_tx_rate_control txrc;
++	struct ieee80211_sta_rates *ratetbl = NULL;
+ 	bool assoc = false;
+ 
+ 	memset(&txrc, 0, sizeof(txrc));
+@@ -653,10 +651,10 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 
+ 	/* set up RTS protection if desired */
+ 	if (len > tx->local->hw.wiphy->rts_threshold) {
+-		txrc.rts = rts = true;
++		txrc.rts = true;
+ 	}
+ 
+-	info->control.use_rts = rts;
++	info->control.use_rts = txrc.rts;
+ 	info->control.use_cts_prot = tx->sdata->vif.bss_conf.use_cts_prot;
+ 
+ 	/*
+@@ -668,7 +666,9 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	if (tx->sdata->vif.bss_conf.use_short_preamble &&
+ 	    (ieee80211_is_data(hdr->frame_control) ||
+ 	     (tx->sta && test_sta_flag(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
+-		txrc.short_preamble = short_preamble = true;
++		txrc.short_preamble = true;
++
++	info->control.short_preamble = txrc.short_preamble;
+ 
+ 	if (tx->sta)
+ 		assoc = test_sta_flag(tx->sta, WLAN_STA_ASSOC);
+@@ -692,16 +692,38 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	 */
+ 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+ 
+-	if (unlikely(info->control.rates[0].idx < 0))
+-		return TX_DROP;
++	if (tx->sta && !info->control.skip_table)
++		ratetbl = rcu_dereference(tx->sta->sta.rates);
++
++	if (unlikely(info->control.rates[0].idx < 0)) {
++		if (ratetbl) {
++			struct ieee80211_tx_rate rate = {
++				.idx = ratetbl->rate[0].idx,
++				.flags = ratetbl->rate[0].flags,
++				.count = ratetbl->rate[0].count
++			};
++
++			if (ratetbl->rate[0].idx < 0)
++				return TX_DROP;
++
++			tx->rate = rate;
++		} else {
++			return TX_DROP;
++		}
 +	} else {
-+		/* nothing here we understand */
- 		return;
++		tx->rate = info->control.rates[0];
 +	}
  
- 	bss = (void *)cbss->priv;
+ 	if (txrc.reported_rate.idx < 0) {
+-		txrc.reported_rate = info->control.rates[0];
++		txrc.reported_rate = tx->rate;
+ 		if (tx->sta && ieee80211_is_data(hdr->frame_control))
+ 			tx->sta->last_tx_rate = txrc.reported_rate;
+ 	} else if (tx->sta)
+ 		tx->sta->last_tx_rate = txrc.reported_rate;
  
--	new_freq = ieee80211_channel_to_frequency(
--			elems->ch_switch_ie->new_ch_num,
--			cbss->channel->band);
--	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
-+	new_ch = ieee80211_get_channel(local->hw.wiphy, new_freq);
- 	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
- 		sdata_info(sdata,
- 			   "AP %pM switches to unsupported channel (%d MHz), disconnecting\n",
- 			   ifmgd->associated->bssid, new_freq);
--		ieee80211_queue_work(&sdata->local->hw,
-+		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
- 		return;
- 	}
++	if (ratetbl)
++		return TX_CONTINUE;
++
+ 	if (unlikely(!info->control.rates[0].count))
+ 		info->control.rates[0].count = 1;
  
- 	ifmgd->flags |= IEEE80211_STA_CSA_RECEIVED;
+@@ -709,102 +731,6 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 			 (info->flags & IEEE80211_TX_CTL_NO_ACK)))
+ 		info->control.rates[0].count = 1;
  
--	if (sdata->local->use_chanctx) {
-+	if (local->use_chanctx) {
- 		sdata_info(sdata,
- 			   "not handling channel switch with channel contexts\n");
--		ieee80211_queue_work(&sdata->local->hw,
-+		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
- 		return;
- 	}
- 
--	mutex_lock(&sdata->local->chanctx_mtx);
-+	mutex_lock(&local->chanctx_mtx);
- 	if (WARN_ON(!rcu_access_pointer(sdata->vif.chanctx_conf))) {
--		mutex_unlock(&sdata->local->chanctx_mtx);
-+		mutex_unlock(&local->chanctx_mtx);
- 		return;
- 	}
- 	chanctx = container_of(rcu_access_pointer(sdata->vif.chanctx_conf),
-@@ -1082,40 +1105,39 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	if (chanctx->refcount > 1) {
- 		sdata_info(sdata,
- 			   "channel switch with multiple interfaces on the same channel, disconnecting\n");
--		ieee80211_queue_work(&sdata->local->hw,
-+		ieee80211_queue_work(&local->hw,
- 				     &ifmgd->csa_connection_drop_work);
--		mutex_unlock(&sdata->local->chanctx_mtx);
-+		mutex_unlock(&local->chanctx_mtx);
- 		return;
- 	}
--	mutex_unlock(&sdata->local->chanctx_mtx);
-+	mutex_unlock(&local->chanctx_mtx);
- 
--	sdata->local->csa_channel = new_ch;
-+	local->csa_channel = new_ch;
- 
--	if (elems->ch_switch_ie->mode)
--		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+	if (mode)
-+		ieee80211_stop_queues_by_reason(&local->hw,
- 				IEEE80211_MAX_QUEUE_MAP,
- 				IEEE80211_QUEUE_STOP_REASON_CSA);
- 
--	if (sdata->local->ops->channel_switch) {
-+	if (local->ops->channel_switch) {
- 		/* use driver's channel switch callback */
- 		struct ieee80211_channel_switch ch_switch = {
- 			.timestamp = timestamp,
--			.block_tx = elems->ch_switch_ie->mode,
-+			.block_tx = mode,
- 			.channel = new_ch,
--			.count = elems->ch_switch_ie->count,
-+			.count = count,
- 		};
- 
--		drv_channel_switch(sdata->local, &ch_switch);
-+		drv_channel_switch(local, &ch_switch);
- 		return;
- 	}
- 
- 	/* channel switch handled in software */
--	if (elems->ch_switch_ie->count <= 1)
--		ieee80211_queue_work(&sdata->local->hw, &ifmgd->chswitch_work);
-+	if (count <= 1)
-+		ieee80211_queue_work(&local->hw, &ifmgd->chswitch_work);
- 	else
- 		mod_timer(&ifmgd->chswitch_timer,
--			  TU_TO_EXP_TIME(elems->ch_switch_ie->count *
--					 cbss->beacon_interval));
-+			  TU_TO_EXP_TIME(count * cbss->beacon_interval));
+-	if (is_multicast_ether_addr(hdr->addr1)) {
+-		/*
+-		 * XXX: verify the rate is in the basic rateset
+-		 */
+-		return TX_CONTINUE;
+-	}
+-
+-	/*
+-	 * Set up the RTS/CTS rate as the fastest basic rate
+-	 * that is not faster than the data rate unless there
+-	 * is no basic rate slower than the data rate, in which
+-	 * case we pick the slowest basic rate
+-	 *
+-	 * XXX: Should this check all retry rates?
+-	 */
+-	if (!(info->control.rates[0].flags & IEEE80211_TX_RC_MCS)) {
+-		u32 basic_rates = tx->sdata->vif.bss_conf.basic_rates;
+-		s8 baserate = basic_rates ? ffs(basic_rates - 1) : 0;
+-
+-		rate = &sband->bitrates[info->control.rates[0].idx];
+-
+-		for (i = 0; i < sband->n_bitrates; i++) {
+-			/* must be a basic rate */
+-			if (!(basic_rates & BIT(i)))
+-				continue;
+-			/* must not be faster than the data rate */
+-			if (sband->bitrates[i].bitrate > rate->bitrate)
+-				continue;
+-			/* maximum */
+-			if (sband->bitrates[baserate].bitrate <
+-			     sband->bitrates[i].bitrate)
+-				baserate = i;
+-		}
+-
+-		info->control.rts_cts_rate_idx = baserate;
+-	}
+-
+-	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+-		struct ieee80211_tx_rate *rc_rate = &info->control.rates[i];
+-
+-		/*
+-		 * make sure there's no valid rate following
+-		 * an invalid one, just in case drivers don't
+-		 * take the API seriously to stop at -1.
+-		 */
+-		if (inval) {
+-			rc_rate->idx = -1;
+-			continue;
+-		}
+-		if (rc_rate->idx < 0) {
+-			inval = true;
+-			continue;
+-		}
+-
+-		/*
+-		 * For now assume MCS is already set up correctly, this
+-		 * needs to be fixed.
+-		 */
+-		if (rc_rate->flags & IEEE80211_TX_RC_MCS) {
+-			WARN_ON(rc_rate->idx > 76);
+-
+-			if (!(rc_rate->flags & IEEE80211_TX_RC_USE_RTS_CTS) &&
+-			    tx->sdata->vif.bss_conf.use_cts_prot)
+-				rc_rate->flags |=
+-					IEEE80211_TX_RC_USE_CTS_PROTECT;
+-			continue;
+-		}
+-
+-		if (rc_rate->flags & IEEE80211_TX_RC_VHT_MCS) {
+-			WARN_ON(ieee80211_rate_get_vht_mcs(rc_rate) > 9);
+-			continue;
+-		}
+-
+-		/* set up RTS protection if desired */
+-		if (rts)
+-			rc_rate->flags |= IEEE80211_TX_RC_USE_RTS_CTS;
+-
+-		/* RC is busted */
+-		if (WARN_ON_ONCE(rc_rate->idx >= sband->n_bitrates)) {
+-			rc_rate->idx = -1;
+-			continue;
+-		}
+-
+-		rate = &sband->bitrates[rc_rate->idx];
+-
+-		/* set up short preamble */
+-		if (short_preamble &&
+-		    rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+-			rc_rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
+-
+-		/* set up G protection */
+-		if (!rts && tx->sdata->vif.bss_conf.use_cts_prot &&
+-		    rate->flags & IEEE80211_RATE_ERP_G)
+-			rc_rate->flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+-	}
+-
+ 	return TX_CONTINUE;
  }
  
- static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-@@ -2630,6 +2652,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_channel *channel;
- 	bool need_ps = false;
- 
-+	lockdep_assert_held(&sdata->u.mgd.mtx);
-+
- 	if ((sdata->u.mgd.associated &&
- 	     ether_addr_equal(mgmt->bssid, sdata->u.mgd.associated->bssid)) ||
- 	    (sdata->u.mgd.assoc_data &&
-@@ -2671,6 +2695,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime, elems);
-+
- }
- 
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 447e665..7b0f2c7 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -862,6 +862,13 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			}
- 			elems->ch_switch_ie = (void *)pos;
- 			break;
-+		case WLAN_EID_EXT_CHANSWITCH_ANN:
-+			if (elen != sizeof(struct ieee80211_ext_chansw_ie)) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			elems->ext_chansw_ie = (void *)pos;
-+			break;
- 		case WLAN_EID_COUNTRY:
- 			elems->country_elem = pos;
- 			elems->country_elem_len = elen;
 -- 
-1.8.0
+1.8.0.2
 
