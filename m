@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:36767 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764374Ab3DDSW3 (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:42188 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab3DVVoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 14:22:29 -0400
-Date: Thu, 4 Apr 2013 20:22:19 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	mathias.kretschmer@fokus.fraunhofer.de,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH] mac80211: fix recalc_radar hwconf sync problem
-Message-ID: <20130404182219.GA24704@pandem0nium> (sfid-20130404_202233_898049_86C7B214)
-References: <1364920789-14629-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1364993200.8351.35.camel@jlt4.sipsolutions.net>
- <515D8259.1030208@neratec.com>
+	Mon, 22 Apr 2013 17:44:32 -0400
+Received: by mail-oa0-f49.google.com with SMTP id j1so3964272oag.8
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2013 14:44:30 -0700 (PDT)
+Message-ID: <5175AF3C.30804@lwfinger.net> (sfid-20130422_234437_907439_BE0C8B3F)
+Date: Mon, 22 Apr 2013 16:44:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
-In-Reply-To: <515D8259.1030208@neratec.com>
+To: Han Shen <shenhan@google.com>
+CC: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	joe@perches.com, zajec5@gmail.com
+Subject: Re: [PATCH v2] rtl8192c:dm: Properly initialize local array and set
+ value.
+References: <1366662911-4143-1-git-send-email-shenhan@google.com>
+In-Reply-To: <1366662911-4143-1-git-send-email-shenhan@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/22/2013 03:35 PM, Han Shen wrote:
+> GCC 4.8 is spitting out uninitialized-variable warnings against
+> "drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".  This patch adds
+> initialization to the variable and properly sets its value.
+>
+> Signed-off-by: Han Shen  (shenhan@google.com)
+>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 
---T4sUOijqQbZv57TR
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-On Thu, Apr 04, 2013 at 03:38:33PM +0200, Zefir Kurtisi wrote:
-> On 04/03/2013 02:46 PM, Johannes Berg wrote:
-> > On Tue, 2013-04-02 at 18:39 +0200, Simon Wunderlich wrote:
-> >> local->hw.conf maybe not be synced when recalcing whether radar is
-> >> enabled, sometimes leaving radar enabled even if it's not neccesary
-> >> anymore.
-> >=20
-> > I don't really see how, can you explain more?
+Thanks,
 
-As far as I see, the problem happens when changing from a DFS to a non-DFS
-channel. local->hw.conf.radar_enabled is true from the last (DFS) channel,
-but the channel gets released when stopping the AP, and the channel context
-is freed. Then when changing to the new channel, what happens is:
+Larry
 
-1. ieee80211_vif_use_channel() creates a new channel context. This channel
-contxt has chanctx->conf.radar_enabled =3D false by default.
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+> index b793a65..34150de 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+> @@ -669,7 +669,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+>   	u8 thermalvalue, delta, delta_lck, delta_iqk;
+>   	long ele_a, ele_d, temp_cck, val_x, value32;
+>   	long val_y, ele_c = 0;
+> -	u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
+> +	u8 ofdm_index[2], ofdm_index_old[2] = {0, 0}, cck_index_old = 0;
+>   	s8 cck_index = 0;
+>   	int i;
+>   	bool is2t = IS_92C_SERIAL(rtlhal->version);
+> @@ -717,7 +717,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+>   			for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
+>   				if (ele_d == (ofdmswing_table[i] &
+>   				    MASKOFDM_D)) {
+> -
+> +					ofdm_index_old[1] = (u8) i;
+>   					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
+>   						 DBG_LOUD,
+>   						 "Initial pathB ele_d reg0x%x = 0x%lx, ofdm_index=0x%x\n",
+>
 
-2. ieee80211_recalc_radar_chanctx() is called, and finds that no radar is
-currently enabled =3D> local radar_enabled =3D false
-
-3. ieee80211_recalc_radar_chanctx() checks if=20
-chanctx->conf.radar_enabled =3D=3D radar_enabled and both are false, and
-returns
- =3D> but local->hw.conf.radar_enabled would be changed later in this funct=
-ion
-    and is therefore not updated.
-
-Therefore I'm removing the check to always update the hw.conf.radar_enabled
-field, to be safe in any case.
-
-> >=20
-> > johannes
-> >=20
->=20
-> You seem to be right, the patch does not resolve the observed problem.
->=20
-> I am not deep enough in the DFS master code and its integration to resolv=
-e it
-> myself. What I see is that ath9k_config() is called with a non-DFS channe=
-l but
-> with ieee80211_hw->conf.radar_enabled set. For ath9k that's no problem at=
- all
-> (radar pulse detection can be enabled on any channel), but indicates a pr=
-oblem in
-> the channel context handling for DFS.
->=20
-> To reproduce, start an AP on a DFS channel, wait until CAC is finished an=
-d fire a
-> radar. hostapd will switch to a non-DFS channel with the radar_enabled fl=
-ag set.
-
-So the patch does not resolve the problem for you? I've checked it again wi=
-th
-a little printk in ath9ks config function.
-
-With the patch the radar_enabled flag gets disabled when changing the chann=
-el (5500 -> 5200).
-If I don't apply the patch, it stays enabled. I did the same thing (start h=
-ostapd on
-channel 5500, wait for CAC, echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k=
-/simulate_radar).
-
-Maybe I'm missing something?
-
-Cheers,
-	Simon
-
-
-
---T4sUOijqQbZv57TR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAlFdxNsACgkQrzg/fFk7axYihACePihpZxQPDg/moF0vbFuc69HW
-/2sAn2FqfBoMhIVjW/kii7/y5c0dMgnN
-=xKnU
------END PGP SIGNATURE-----
-
---T4sUOijqQbZv57TR--
