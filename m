@@ -1,28 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59926 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45990 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934852Ab3DJMnr (ORCPT
+	with ESMTP id S1751837Ab3DVOVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 08:43:47 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UPuNN-0001Tx-Lr
-	for linux-wireless@vger.kernel.org; Wed, 10 Apr 2013 14:43:46 +0200
+	Mon, 22 Apr 2013 10:21:04 -0400
+Message-ID: <1366640459.8637.26.camel@jlt4.sipsolutions.net> (sfid-20130422_162108_889804_804C3806)
+Subject: Re: [PATCH] mac80211_hwsim: handle IEEE80211_HW_SUPPORTS_RC_TABLE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] mac80211: improve channel switch handling
-Date: Wed, 10 Apr 2013 14:43:34 +0200
-Message-Id: <1365597822-27660-1-git-send-email-johannes@sipsolutions.net> (sfid-20130410_144351_624560_74A574BC)
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Mon, 22 Apr 2013 16:20:59 +0200
+In-Reply-To: <1366375492-10979-1-git-send-email-karl.beldan@gmail.com> (sfid-20130419_144931_997658_9283A7DF)
+References: <1366375492-10979-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130419_144931_997658_9283A7DF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves channel switch handling to actually parse a lot of
-the newer messages and the new bandwidth (including VHT.)
+On Fri, 2013-04-19 at 14:44 +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-I haven't really been able to test it well, but given how broken
-the code clearly is now (e.g. not handling new bandwidth) it can
-hardly make it works :-)
+Also applied, nice work guys :)
 
 johannes
 
