@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39792 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752155Ab3D1PIF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Apr 2013 11:08:05 -0400
-Message-ID: <517D3B50.6070806@openwrt.org> (sfid-20130428_170809_219506_DDC76AE6)
-Date: Sun, 28 Apr 2013 17:08:00 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Oleksij Rempel <linux@rempel-privat.de>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
- and Rx-STBC packets
-References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D3840.2060000@candelatech.com>
-In-Reply-To: <517D3840.2060000@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-yh0-f74.google.com ([209.85.213.74]:61083 "EHLO
+	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755089Ab3DVUfT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 16:35:19 -0400
+Received: by mail-yh0-f74.google.com with SMTP id q10so737104yhf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2013 13:35:19 -0700 (PDT)
+From: Han Shen <shenhan@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	joe@perches.com, zajec5@gmail.com, shenhan@google.com
+Subject: [PATCH v2] rtl8192c:dm: Properly initialize local array and set value.
+Date: Mon, 22 Apr 2013 13:35:07 -0700
+Message-Id: <1366662911-4143-1-git-send-email-shenhan@google.com> (sfid-20130422_223525_320430_17659645)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-28 4:54 PM, Ben Greear wrote:
-> On 04/28/2013 05:51 AM, Felix Fietkau wrote:
->> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
->>> Collect statistics about recived duplicate and STBC packets.
->>> This information should help see if STBC is actually working.
->>>
->>> Tested on ar9285;
->>>
->>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->> I thought about this patch some more, and I'm wondering what's the point
->> in doing this? These statistics are going to be completely useless for
->> most people and they'll waste some memory/cpu cycles, especially on
->> small-cache devices. I think it's much more useful to simply pass the
->> information to mac80211 via rx flags and get them added to the radiotap
->> header.
->> I'd like to keep the number of 'poor man's debug hacks' in the driver to
->> a minimum, and there are some other things that I think should be
->> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
->> sampling hack, and pretty much anything else that can be just as easily
->> accessed from mac80211 through regular interfaces.
-> 
-> Does that mean we can just put the stats in mac80211, or do we have
-> to be running a sniffer to gather the stats?
-Right now you'd have to use a sniffer, but if you really care about
-getting specific stats it might make sense to write a kernel module that
-attaches to a monitor interface and gathers them (maybe even with
-support for gathering arbitrary stats by attaching bpf filters).
+GCC 4.8 is spitting out uninitialized-variable warnings against
+"drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c".  This patch adds
+initialization to the variable and properly sets its value.
 
-The problem I have with the current stats is they're just an arbitrary
-collection of random stuff that is probably useless for 99% of all
-users. In many cases the way the stats are collected also makes the data
-completely meaningless (e.g. because the source/destination address is
-not taken into account).
+Signed-off-by: Han Shen  (shenhan@google.com)
 
-Why care about the number of packets on the air that were sent with a
-specific rate flag? Why care about the number of beacons on the air
-(with no filter on a set of APs or anything)? Or what about the number
-of fragments received? To me it just looks like an incoherent set of
-useless facts.
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index b793a65..34150de 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -669,7 +669,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+ 	u8 thermalvalue, delta, delta_lck, delta_iqk;
+ 	long ele_a, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c = 0;
+-	u8 ofdm_index[2], ofdm_index_old[2], cck_index_old = 0;
++	u8 ofdm_index[2], ofdm_index_old[2] = {0, 0}, cck_index_old = 0;
+ 	s8 cck_index = 0;
+ 	int i;
+ 	bool is2t = IS_92C_SERIAL(rtlhal->version);
+@@ -717,7 +717,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
+ 			for (i = 0; i < OFDM_TABLE_LENGTH; i++) {
+ 				if (ele_d == (ofdmswing_table[i] &
+ 				    MASKOFDM_D)) {
+-
++					ofdm_index_old[1] = (u8) i;
+ 					RT_TRACE(rtlpriv, COMP_POWER_TRACKING,
+ 						 DBG_LOUD,
+ 						 "Initial pathB ele_d reg0x%x = 0x%lx, ofdm_index=0x%x\n",
+-- 
+1.8.2.1
+
