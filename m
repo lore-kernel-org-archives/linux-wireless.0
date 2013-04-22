@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:64473 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161150Ab3DEITW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45902 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738Ab3DVN7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 04:19:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 5 Apr 2013 01:19:00 -0700
-Message-ID: <CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com> (sfid-20130405_101944_883584_CBD98868)
-Subject: Re: Version number policy!
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 22 Apr 2013 09:59:19 -0400
+Message-ID: <1366639154.8637.18.camel@jlt4.sipsolutions.net> (sfid-20130422_155922_225747_8DC02AA7)
+Subject: Re: [PATCHv2] iw: Deocde some more IEs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joerg Mayer <jmayer@loplof.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 22 Apr 2013 15:59:14 +0200
+In-Reply-To: <20130419203905.GA15678@rhrk.uni-kl.de>
+References: <20130419203905.GA15678@rhrk.uni-kl.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 11:27 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
->
-> Here's my first take on the version number policy:
->
-> https://github.com/qca/open-ath9k-htc-firmware/wiki/VersionPolicy
->
-> The summary:
->
-> * major version number changes are for firmware API / behaviour
-> changes that aren't backwards compatible;
-> * minor version number changes are for firmware API / behaviour
-> changes that are incremental and default to the old behaviour (eg, new
-> optional commands);
-> * the driver should check the minor version number before using any
-> optional features with that version.
->
-> What's TODO:
->
-> * Add a new WMI command to get the build number, git string, etc.
-> * add it as our first optional minor version command :-)
+On Fri, 2013-04-19 at 22:39 +0200, Joerg Mayer wrote:
+> Small update, found while verifying against the standard.
+> 
+> Thanks
+>     Jörg
+> 
+> The results of a boring train ride:
+> - Decode some IEs sent by other traveller's devices
+>   + IBSS ATIM window
+>   + TPC report
+>   + Old ERP IE (802.11g D4.0)
+> - Tiny whitespace fix
+> - Add Unit 'TUs' to beacon interval.
 
-This is better than anything we had drafted before for 802.11 open
-firmware design rules. Cc'ing a few lists for wider review given that
-what we had written before for rules was for 802.11 and Bluetooth [0]
-and it was very Linux specific. We are striving for open firmware here
-for the community, for BSD / Linux. Christian would have dealt with
-more of the support on open firmware design so far due to carl9170.fw
-[1] so curious if he has any input.
+Nice, thanks. I changed the unit to just "TU" though :)
 
-As for 802.11 the rules we defined were pretty silly about firmware
-file names but should be considered. Here's the key thing I think we
-should keep from those old guidelines:
+johannes
 
-"In general if you are just providing bug fixes you do not need to
-provide a new firmware filename for the module, using the old filename
-is fine so long as the same API was kept."
-
-The rest I think your specification details better what we should do
-in terms of API changes for versioning.
-
-[0] http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-[1] http://wireless.kernel.org/en/users/Drivers/carl9170.fw
-
-  Luis
