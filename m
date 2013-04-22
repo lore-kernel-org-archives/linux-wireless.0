@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60067 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45871 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496Ab3DJNVJ (ORCPT
+	with ESMTP id S1751683Ab3DVNru (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 09:21:09 -0400
-Message-ID: <1365600063.4235.3.camel@jlt4.sipsolutions.net> (sfid-20130410_152113_065543_7AE819B6)
-Subject: Re: [PATCH] cfg80211: introduce critical protocol indication from
- user-space
+	Mon, 22 Apr 2013 09:47:50 -0400
+Message-ID: <1366638465.8637.14.camel@jlt4.sipsolutions.net> (sfid-20130422_154754_412324_78E998A8)
+Subject: Re: [PATCH v2 1/2] mac80211: minstrel_ht: pick only supported rates
+ for sta and group max*rates
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Apr 2013 15:21:03 +0200
-In-Reply-To: <516551D7.30302@broadcom.com>
-References: <1365412173-7428-1-git-send-email-arend@broadcom.com>
-	 <1365501997.8465.23.camel@jlt4.sipsolutions.net>
-	 <516471FC.6000209@broadcom.com>
-	 <1365540154.8465.51.camel@jlt4.sipsolutions.net>
-	 <516551D7.30302@broadcom.com>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Mon, 22 Apr 2013 15:47:45 +0200
+In-Reply-To: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com> (sfid-20130418_143103_744723_2BA10740)
+References: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20130418_143103_744723_2BA10740)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-10 at 13:49 +0200, Arend van Spriel wrote:
-
-> >> I am a dark-ages guy :-p I think I will rename the BOOTP one and
-> >> indicate it should be used for BOOTP and DHCPv6.
-> >
-> > Might also be worth it to rename ARP to APIPA since ARP is ... well
-> > often done :-)
+On Thu, 2013-04-18 at 14:26 +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
 > 
-> I chose ARP because APIPA is essentially not a protocol. As far as I 
-> understand it makes use of ARP to make sure the address in unique. I see 
-> your point and will change it. Then again it all may go away :-)
+> minstrel_ht initializes max_tp_rate max_tp_rate2 and max_prob_rate to
+> zero both for minstrel_ht_sta and minstrel_mcs_group_data.
+> This is wrong since there is no guarantee that the 1st rate of any
+> group is supported.
 
-I see your point too, but I'd argue that APIPA is really more of a
-higher-level protocol that uses ARP for its implementation?
-
-> > Well you have to store the nlportid (rather than crit_proto_started) and
-> > then check it.
-> 
-> Yeah, I surmised that already. If I would drop crit_proto_started and 
-> use the portid as a flag as well, I need an invalid portid. Is there a 
-> definition for that?
-
-I'm pretty sure 0 is invalid for userspace because it means "kernel".
+Applied both.
 
 johannes
 
