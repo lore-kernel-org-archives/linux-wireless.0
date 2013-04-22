@@ -1,194 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:49733 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761022Ab3DBN6W (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 2 Apr 2013 09:58:22 -0400
-From: "Chen, Chien-Chia" <machen@suse.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, zhiyuan_yang@realsil.com.cn,
-	page_he@realsil.com.cn, Larry.Finger@lwfinger.net
-Subject: [PATCH] rtlwifi: rtl8188ee: Fix wrong header patch
-Date: Tue,  2 Apr 2013 22:01:55 +0800
-Message-Id: <1364911315-3601-1-git-send-email-machen@suse.com> (sfid-20130402_155829_416330_1B6776C1)
+Received: from nbd.name ([46.4.11.11]:52596 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751498Ab3DVOIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 10:08:23 -0400
+Message-ID: <51754455.40804@openwrt.org> (sfid-20130422_160826_746517_0CEFBB43)
+Date: Mon, 22 Apr 2013 16:08:21 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
+Subject: Re: [PATCH v5 1/3] mac80211: improve the rate control API
+References: <1366625393-11647-1-git-send-email-nbd@openwrt.org> <1366638766.8637.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1366638766.8637.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Chen, Chien-Chia" <machen@suse.com>
+On 2013-04-22 3:52 PM, Johannes Berg wrote:
+> On Mon, 2013-04-22 at 12:09 +0200, Felix Fietkau wrote:
+> 
+>> @@ -692,16 +692,38 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+>>  	 */
+>>  	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+>>  
+>> -	if (unlikely(info->control.rates[0].idx < 0))
+>> -		return TX_DROP;
+>> +	if (tx->sta && !info->control.skip_table)
+>> +		ratetbl = rcu_dereference(tx->sta->sta.rates);
+>> +
+>> +	if (unlikely(info->control.rates[0].idx < 0)) {
+>> +		if (ratetbl) {
+>> +			struct ieee80211_tx_rate rate = {
+>> +				.idx = ratetbl->rate[0].idx,
+>> +				.flags = ratetbl->rate[0].flags,
+>> +				.count = ratetbl->rate[0].count
+>> +			};
+>> +
+>> +			if (ratetbl->rate[0].idx < 0)
+>> +				return TX_DROP;
+> 
+> This can't happen, idx is unsigned. Did you intend idx to be signed?
+Right, shouldn't the compiler warn about this? Will send v6.
 
-This patch is to fix some wrong header file path.
-It has caused the build failed.
-
-Signed-off-by: Chen, Chien-Chia <machen@suse.com>
-Cc: larry.finger@lwfinger.net
-Cc: zhiyuan_yang@realsil.com.cn
-Cc: page_he@realsil.com.cn
-Cc: mmarek@suse.cz
----
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/fw.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c        |   14 +++++++-------
- drivers/net/wireless/rtlwifi/rtl8188ee/led.c       |    4 ++--
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h |    2 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.c        |    2 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |    6 +++---
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c       |    8 ++++----
- 9 files changed, 27 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-index 0a338cc..21a5cf0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "base.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../base.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-index 66ff30b..57e4cc5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/fw.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "base.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../base.h"
- #include "reg.h"
- #include "def.h"
- #include "fw.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-index d734d19..0f464d0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-@@ -27,13 +27,13 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "efuse.h"
--#include "base.h"
--#include "regd.h"
--#include "cam.h"
--#include "ps.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../efuse.h"
-+#include "../base.h"
-+#include "../regd.h"
-+#include "../cam.h"
-+#include "../ps.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-index 95d42af..c81a9cb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/led.c
-@@ -27,8 +27,8 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "led.h"
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-index c285631..224f801 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "ps.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../ps.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-index 622ea7e..70456ab 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/pwrseqcmd.h
-@@ -30,7 +30,7 @@
- #ifndef __RTL8723E_PWRSEQCMD_H__
- #define __RTL8723E_PWRSEQCMD_H__
- 
--#include "wifi.h"
-+#include "../wifi.h"
- /*---------------------------------------------*/
- /* The value of cmd: 4 bits */
- /*---------------------------------------------*/
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-index e62bcab..4faafdb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.c
-@@ -27,7 +27,7 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
-+#include "../wifi.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-index e8ce189..c254693 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/sw.c
-@@ -27,9 +27,9 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "core.h"
--#include "pci.h"
-+#include "../wifi.h"
-+#include "../core.h"
-+#include "../pci.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-index 2518531..d075237 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -27,10 +27,10 @@
-  *
-  *****************************************************************************/
- 
--#include "wifi.h"
--#include "pci.h"
--#include "base.h"
--#include "stats.h"
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "../base.h"
-+#include "../stats.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
--- 
-1.7.7
+- Felix
 
