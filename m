@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:53536 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045Ab3DMS7k (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:47782 "EHLO
+	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754579Ab3DVS4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Apr 2013 14:59:40 -0400
-Received: by mail-we0-f174.google.com with SMTP id u12so2780209wey.5
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Apr 2013 11:59:39 -0700 (PDT)
+	Mon, 22 Apr 2013 14:56:00 -0400
+Date: Mon, 22 Apr 2013 14:55:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux NFC <linux-nfc@ml01.01.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [GIT] [3.10] NFC pull request
+Message-ID: <20130422185537.GD2055@tuxdriver.com> (sfid-20130422_205617_562959_EA9DEFDD)
+References: <20130415230508.GL8798@zurbaran>
 MIME-Version: 1.0
-In-Reply-To: <1365869899.1089.0.camel@jlt4.sipsolutions.net>
-References: <1365849071-2389-1-git-send-email-jogo@openwrt.org>
-	<CAJ-VmokacZUw1Wru_0w1XaVRoZWP6nOMcdKo=1yhP-C9rbifHg@mail.gmail.com>
-	<1365869899.1089.0.camel@jlt4.sipsolutions.net>
-Date: Sat, 13 Apr 2013 11:59:39 -0700
-Message-ID: <CAJ-Vmo=bwcxRHB2vESVAy-3_svM+7dDj3o5D=bWgAedMV0ZsBA@mail.gmail.com> (sfid-20130413_205944_520924_DAD587C5)
-Subject: Re: [RFC/RFT] mwl8k: don't expose non-standard rates
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jonas Gorski <jogo@openwrt.org>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130415230508.GL8798@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 April 2013 09:18, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Tue, Apr 16, 2013 at 01:05:08AM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> A bit late, but this is the 2nd NFC pull request for 3.10.
+> 
+> With this one we have:
+> 
+> - A major pn533 update. The pn533 framing support has been changed in order to
+>   easily support all pn533 derivatives. For example we now support the ACR122
+>   USB dongle.
+> 
+> - An NFC MEI physical layer code factorization through the mei_phy NFC API.
+>   Both the microread and the pn544 drivers now use it.
+> 
+> - LLCP aggregation support. This allows NFC p2p devices to send aggregated
+>   frames containing all sort of LLCP frames except SYMM and aggregation
+>   frames.
+> 
+> - More LLCP socket options for getting the remote device link parameters.
+> 
+> - Fixes for the LLCP socket option code added with the first pull request for
+>   3.10.
+> 
+> - Some support for LLCP corner cases like 0 length SDUs and general DISC
+>   (tagged with a 0,0 dsap ssap couple) handling.
+> 
+> - RFKILL support for NFC.
+> 
+> Thanks in advance for pulling them in.
+> 
+> The following changes since commit fe29f54cd574eab7b521445419f355c0ecd995cc:
+> 
+>   ipw2x00: move to kstrto* functions (2013-04-10 14:10:34 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.10-2
+> 
+> for you to fetch changes up to bb03dceb83852614ae3ad6b3731a31422890b0b9:
+> 
+>   NFC: pn544: Add MEI physical layer (2013-04-16 00:39:41 +0200)
 
->> Are these "turbo" mode rates? ie, 40MHz wide channels with pre-11n
->> rates on them?
->
-> 22 actually *is* a standard rate, it's just that almost nobody
-> implements it.
+Pulling now...
 
-Well, is it the 20mhz rate or a 40mhz turbo rate?
-
-> The original problem seems a bit strange though, seems those should just
-> not be marked basic?
-
-Again, if its a custom rate for 11a/11g 40MHz static turbo style
-configurations, it should only be exposed when the AP is running in
-that particular mode.
-
-And yes, if the hardware does support it, then it should really only
-not be configured for basic rates. That way mwl8k<->mwl8k hardware can
-take advantage of it when those stations are talking to each other.
-
-(Yeah, I come from a world where FreeBSD users still want to run
-Turbo/Static-40MHz operation with things like fast frames and turbo
-rates.. damned legacy hardware. :-)
-
-
-
-Adrian
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
