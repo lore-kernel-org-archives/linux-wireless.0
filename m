@@ -1,146 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:59708 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755192Ab3DWGye (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 02:54:34 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] ath9k: Reduce deep indentation
-Date: Tue, 23 Apr 2013 12:22:17 +0530
-Message-Id: <1366699939-14076-2-git-send-email-sujith@msujith.org> (sfid-20130423_085438_574452_84199BD8)
-In-Reply-To: <1366699939-14076-1-git-send-email-sujith@msujith.org>
-References: <1366699939-14076-1-git-send-email-sujith@msujith.org>
+Received: from nbd.name ([46.4.11.11]:53673 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422Ab3DVO3d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 10:29:33 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 1/2] cfg80211: add support for per-chain signal strength reporting
+Date: Mon, 22 Apr 2013 16:29:30 +0200
+Message-Id: <1366640971-12872-1-git-send-email-nbd@openwrt.org> (sfid-20130422_164957_842188_FC533599)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-The EDMA case is handled first, so the else condition
-can be removed.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/recv.c | 90 +++++++++++++++++------------------
- 1 file changed, 44 insertions(+), 46 deletions(-)
+ include/net/cfg80211.h       | 14 ++++++++++++++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       | 38 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d13faa4..c8265a7 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -274,49 +274,47 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	common->rx_bufsize = IEEE80211_MAX_MPDU_LEN / 2 +
- 			     sc->sc_ah->caps.rx_status_len;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index dff96d8..0c51500 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -753,6 +753,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+  * @STATION_INFO_LOCAL_PM: @local_pm filled
+  * @STATION_INFO_PEER_PM: @peer_pm filled
+  * @STATION_INFO_NONPEER_PM: @nonpeer_pm filled
++ * @STATION_INFO_CHAIN_SIGNAL: @chain_signal filled
++ * @STATION_INFO_CHAIN_SIGNAL_AVG: @chain_signal_avg filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -781,6 +783,8 @@ enum station_info_flags {
+ 	STATION_INFO_NONPEER_PM		= 1<<23,
+ 	STATION_INFO_RX_BYTES64		= 1<<24,
+ 	STATION_INFO_TX_BYTES64		= 1<<25,
++	STATION_INFO_CHAIN_SIGNAL	= 1<<26,
++	STATION_INFO_CHAIN_SIGNAL_AVG	= 1<<27,
+ };
  
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		return ath_rx_edma_init(sc, nbufs);
--	} else {
--		ath_dbg(common, CONFIG, "cachelsz %u rxbufsize %u\n",
--			common->cachelsz, common->rx_bufsize);
+ /**
+@@ -857,6 +861,8 @@ struct sta_bss_parameters {
+ 	u16 beacon_interval;
+ };
  
--		/* Initialize rx descriptors */
-+	ath_dbg(common, CONFIG, "cachelsz %u rxbufsize %u\n",
-+		common->cachelsz, common->rx_bufsize);
- 
--		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
--				"rx", nbufs, 1, 0);
--		if (error != 0) {
--			ath_err(common,
--				"failed to allocate rx descriptors: %d\n",
--				error);
-+	/* Initialize rx descriptors */
++#define IEEE80211_MAX_CHAINS	4
 +
-+	error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
-+				  "rx", nbufs, 1, 0);
-+	if (error != 0) {
-+		ath_err(common,
-+			"failed to allocate rx descriptors: %d\n",
-+			error);
-+		goto err;
-+	}
+ /**
+  * struct station_info - station information
+  *
+@@ -874,6 +880,9 @@ struct sta_bss_parameters {
+  *	For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
+  * @signal_avg: Average signal strength, type depends on the wiphy's signal_type.
+  *	For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
++ * @chains: bitmask for filled values in @chain_signal, @chain_signal_avg
++ * @chain_signal: per-chain signal strength of last received packet in dBm
++ * @chain_signal_avg: per-chain signal strength average in dBm
+  * @txrate: current unicast bitrate from this station
+  * @rxrate: current unicast bitrate to this station
+  * @rx_packets: packets received from this station
+@@ -909,6 +918,11 @@ struct station_info {
+ 	u8 plink_state;
+ 	s8 signal;
+ 	s8 signal_avg;
 +
-+	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
-+		skb = ath_rxbuf_alloc(common, common->rx_bufsize,
-+				      GFP_KERNEL);
-+		if (skb == NULL) {
-+			error = -ENOMEM;
- 			goto err;
- 		}
++	u8 chains;
++	s8 chain_signal[IEEE80211_MAX_CHAINS];
++	s8 chain_signal_avg[IEEE80211_MAX_CHAINS];
++
+ 	struct rate_info txrate;
+ 	struct rate_info rxrate;
+ 	u32 rx_packets;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 79da871..2f9c380 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1973,6 +1973,10 @@ enum nl80211_sta_bss_param {
+  * @NL80211_STA_INFO_PEER_PM: peer mesh STA link-specific power mode
+  * @NL80211_STA_INFO_NONPEER_PM: neighbor mesh STA power save mode towards
+  *	non-peer STA
++ * @NL80211_STA_INFO_CHAIN_SIGNAL: per-chain signal strength of last PPDU
++ *	Contains a nested array of signal strength attributes (u8, dBm)
++ * @NL80211_STA_INFO_CHAIN_SIGNAL_AVG: per-chain signal strength average
++ *	Same format as NL80211_STA_INFO_CHAIN_SIGNAL.
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2002,6 +2006,8 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_NONPEER_PM,
+ 	NL80211_STA_INFO_RX_BYTES64,
+ 	NL80211_STA_INFO_TX_BYTES64,
++	NL80211_STA_INFO_CHAIN_SIGNAL,
++	NL80211_STA_INFO_CHAIN_SIGNAL_AVG,
  
--		list_for_each_entry(bf, &sc->rx.rxbuf, list) {
--			skb = ath_rxbuf_alloc(common, common->rx_bufsize,
--					      GFP_KERNEL);
--			if (skb == NULL) {
--				error = -ENOMEM;
--				goto err;
--			}
--
--			bf->bf_mpdu = skb;
--			bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
--					common->rx_bufsize,
--					DMA_FROM_DEVICE);
--			if (unlikely(dma_mapping_error(sc->dev,
--							bf->bf_buf_addr))) {
--				dev_kfree_skb_any(skb);
--				bf->bf_mpdu = NULL;
--				bf->bf_buf_addr = 0;
--				ath_err(common,
--					"dma_mapping_error() on RX init\n");
--				error = -ENOMEM;
--				goto err;
--			}
-+		bf->bf_mpdu = skb;
-+		bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
-+						 common->rx_bufsize,
-+						 DMA_FROM_DEVICE);
-+		if (unlikely(dma_mapping_error(sc->dev,
-+					       bf->bf_buf_addr))) {
-+			dev_kfree_skb_any(skb);
-+			bf->bf_mpdu = NULL;
-+			bf->bf_buf_addr = 0;
-+			ath_err(common,
-+				"dma_mapping_error() on RX init\n");
-+			error = -ENOMEM;
-+			goto err;
- 		}
--		sc->rx.rxlink = NULL;
- 	}
--
-+	sc->rx.rxlink = NULL;
- err:
- 	if (error)
- 		ath_rx_cleanup(sc);
-@@ -334,17 +332,17 @@ void ath_rx_cleanup(struct ath_softc *sc)
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
- 		ath_rx_edma_cleanup(sc);
- 		return;
--	} else {
--		list_for_each_entry(bf, &sc->rx.rxbuf, list) {
--			skb = bf->bf_mpdu;
--			if (skb) {
--				dma_unmap_single(sc->dev, bf->bf_buf_addr,
--						common->rx_bufsize,
--						DMA_FROM_DEVICE);
--				dev_kfree_skb(skb);
--				bf->bf_buf_addr = 0;
--				bf->bf_mpdu = NULL;
--			}
-+	}
-+
-+	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
-+		skb = bf->bf_mpdu;
-+		if (skb) {
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
-+					 common->rx_bufsize,
-+					 DMA_FROM_DEVICE);
-+			dev_kfree_skb(skb);
-+			bf->bf_buf_addr = 0;
-+			bf->bf_mpdu = NULL;
- 		}
- 	}
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 671b69a..c09a84e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3365,6 +3365,32 @@ static bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
+ 	return true;
  }
+ 
++static bool nl80211_put_signal(struct sk_buff *msg, u8 mask, s8 *signal,
++			       int id)
++{
++	void *attr;
++	int i = 0;
++
++	if (!mask)
++		return true;
++
++	attr = nla_nest_start(msg, id);
++	if (!attr)
++		return false;
++
++	for (i = 0; i < IEEE80211_MAX_CHAINS; i++) {
++		if (!(mask & BIT(i)))
++			continue;
++
++		if (nla_put_u8(msg, i, signal[i]))
++			return false;
++	}
++
++	nla_nest_end(msg, attr);
++
++	return true;
++}
++
+ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+ 				int flags,
+ 				struct cfg80211_registered_device *rdev,
+@@ -3436,6 +3462,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 portid, u32 seq,
+ 	default:
+ 		break;
+ 	}
++	if (sinfo->filled & STATION_INFO_CHAIN_SIGNAL) {
++		if (!nl80211_put_signal(msg, sinfo->chains,
++					sinfo->chain_signal,
++					NL80211_STA_INFO_CHAIN_SIGNAL))
++			goto nla_put_failure;
++	}
++	if (sinfo->filled & STATION_INFO_CHAIN_SIGNAL_AVG) {
++		if (!nl80211_put_signal(msg, sinfo->chains,
++					sinfo->chain_signal_avg,
++					NL80211_STA_INFO_CHAIN_SIGNAL_AVG))
++			goto nla_put_failure;
++	}
+ 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
+ 		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
+ 					  NL80211_STA_INFO_TX_BITRATE))
 -- 
-1.8.2.1
+1.8.0.2
 
