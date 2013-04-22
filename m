@@ -1,78 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42428 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932689Ab3DBPvJ (ORCPT
+Received: from smtp04.msg.oleane.net ([62.161.4.4]:50667 "EHLO
+	smtp04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039Ab3DVOJr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 11:51:09 -0400
-Message-ID: <515AFE62.1080300@candelatech.com> (sfid-20130402_175119_582480_6F2F2253)
-Date: Tue, 02 Apr 2013 08:50:58 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 22 Apr 2013 10:09:47 -0400
+Received: from RD8 ([195.6.104.67])
+	by smtp04.msg.oleane.net (MTA) with ESMTP id r3ME9jJT011817
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2013 16:09:46 +0200
+From: "voncken" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
+References: <1366363242-29481-1-git-send-email-cedric.voncken@acksys.fr>
+In-Reply-To: <1366363242-29481-1-git-send-email-cedric.voncken@acksys.fr>
+Subject: RE: [PATCH] mac80211: Fix driver crash when STA_NOTIFY_AWAKE occures
+Date: Mon, 22 Apr 2013 16:09:45 +0200
+Message-ID: <00c701ce3f63$0b115300$2133f900$@acksys.fr> (sfid-20130422_160952_109058_8B5EFEAC)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC V3] cfg80211: introduce critical protocol indication from
- user-space
-References: <1364911454-3651-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1364911454-3651-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/02/2013 07:04 AM, Arend van Spriel wrote:
-> Some protocols need a more reliable connection to complete
-> successful in reasonable time. This patch adds a user-space
-> API to indicate the wireless driver that a critical protocol
-> is about to commence and when it is done, using nl80211 primitives
-> NL80211_CMD_CRIT_PROTOCOL_START and NL80211_CRIT_PROTOCOL_STOP.
->
-> The driver can support this by implementing the cfg80211 callbacks
-> .crit_proto_start() and .crit_proto_stop(). Examples of protocols
-> that can benefit from this are DHCP, EAPOL, APIPA. Exactly how the
-> link can/should be made more reliable is up to the driver. Things
-> to consider are avoid scanning, no multi-channel operations, and
-> alter coexistence schemes.
->
-> Cc: Ben Greear <greearb@candelatech.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Here is version 3. I tried to deal with all the review comments
-> I received, except for the one below:
->
-> Ben Greear said: "
-> Also, you would probably need to enforce in the kernel that only
-> x out of y time in any given period can be locked, otherwise lots
-> of different dhclient processes (perhaps erroneously spawned..or
-> running on lots of different VIFs) could basically disable scanning
-> or channel changes..."
->
-> Not sure how or even if we should deal with this. Any thoughts?
-
-I think you could treat the start-critical-section as requests that may be
-silently (or otherwise) ignored by the driver.
-
-At a minimum, you could keep a timestamp of the last 'stop' time, and
-ignore any requests that come in too soon after that stop.
-
-Or to be more clever, keep last 5 or so start/stop times and
-make sure the system is on average available for non-critical
-stuff at least XX% of the time.
-
-I can imagine wanting to support this in ath9k (or mac80211)
-with lots of virtual interfaces, and in this case we would
-definitely need some constraints to keep the system from constantly
-being in critical section.  I guess this could be a driver
-issue, however...NICs that support only a single interface may
-not care about this...
-
-Thanks,
-Ben
+	Any comment on my patch ?
+	
+Cedric Voncken 
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+-----Message d'origine-----
+De : linux-wireless-owner@vger.kernel.org
+[mailto:linux-wireless-owner@vger.kernel.org] De la part de cedric voncken
+Envoyé : vendredi 19 avril 2013 11:21
+À : linux-wireless@vger.kernel.org
+Cc : cedric voncken
+Objet : [PATCH] mac80211: Fix driver crash when STA_NOTIFY_AWAKE occures
+
+If the device uses the HT mode and receives a frame from a sta whith state <
+IEEE80211_STA_ASSOC then the null pointer exception crashes the Linnux
+kernel.
+
+In the case of ath9k, the function ath_tx_node_init is indirectly called by
+drv_sta_state (in net/mac80211/driver-ops.h) only when the sta_state goes to
+IEEE80211_STA_ASSOC from IEEE80211_STA_AUTH.
+
+Signed-off-by: cedric VONCKEN <cedric.voncken@acksys.fr>
+---
+ net/mac80211/sta_info.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c index
+11216bc..bcfd7b0 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1040,7 +1040,8 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info
+*sta)
+ 	BUILD_BUG_ON(BITS_TO_LONGS(IEEE80211_NUM_TIDS) > 1);
+ 	sta->driver_buffered_tids = 0;
+ 
+-	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
++	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS &&
++			sta->sta_state >= IEEE80211_STA_ASSOC))
+ 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
+ 
+ 	skb_queue_head_init(&pending);
+--
+1.7.2.5
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
 
