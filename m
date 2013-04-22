@@ -1,107 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:46407 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752444Ab3D2JGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:06:19 -0400
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux@rempel-privat.de,
-	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap
-Date: Mon, 29 Apr 2013 11:04:18 +0200
-Message-Id: <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110625_498196_82A8FB5B)
-In-Reply-To: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:47795 "EHLO
+	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754646Ab3DVS7Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 14:59:25 -0400
+Date: Mon, 22 Apr 2013 14:52:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: pull request: b43-next 2013-04-13
+Message-ID: <20130422185256.GC2055@tuxdriver.com> (sfid-20130422_205931_400379_BFFC9257)
+References: <CACna6rxduYfWw2B+tHLSGTC-m0hDf3=dTWCFq6twjK2kpCuqwg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rxduYfWw2B+tHLSGTC-m0hDf3=dTWCFq6twjK2kpCuqwg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add rx flag to radiotap header which tells whether
-Space-Time Block Code was used. At the moment only
-1 stream STBC is supported.
+On Sat, Apr 13, 2013 at 02:12:02AM +0200, Rafał Miłecki wrote:
+> John,
+> 
+> I wanted to ask you for pulling b43 changes queued for 3.10. They are all
+> sitting in my git repo at infradead I've announced a few weeks ago.
+> 
+> Changes include:
+> 1) Minor improvements for HT-PHY code (BCM4331)
+> 2) Code cleaning for HT-PHY and N-PHY
+> They are mostly coming from me, but I've also included Hauke's minor cleanup.
+> 
+> All patches were posted (and I believe all of them reviewed) on b43-dev ML.
+> 
+> I've used various hardware to cover and test all code paths that has been
+> touched. That included BCM4321, BCM4322 and BCM43224. No regressions spotted.
+> I've also built b43 for my Broadcom SoC based router to test HT-PHY code on
+> BCM4331.
+> 
+> Please let me know if that looks OK and if you can pull this tree, or if there
+> are any problems.
+> 
+> 
+> The following changes since commit 9cc04d692c031bf2113338b03974511670ac5cc9:
+> 
+>   Merge branch 'master' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
+> (2013-03-27 17:33:52 -0400)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.infradead.org/users/rafal/b43-next.git master
+> 
+> for you to fetch changes up to adca58e2b4f350e9a93ca6c953be3f8e76ed541e:
+> 
+>   b43: N-PHY: don't use deprecated b43_radio_foo16 (2013-04-13 01:32:48 +0200)
 
-TODO: Pass information from the driver on how many STBC
-streams have been received.
+When I pull this, I get a bunch of non-b43 (even non-wireless) crap.
+My guess is that your tree is not based off wireless-next.
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- include/net/ieee80211_radiotap.h |    6 ++++++
- include/net/mac80211.h           |    2 ++
- net/mac80211/main.c              |    3 ++-
- net/mac80211/rx.c                |    2 ++
- 4 files changed, 12 insertions(+), 1 deletion(-)
+If you want me to pull from your tree, then it needs to be based off
+wireless-next (or possible some ancestor tree) so that all I pull
+from you is your specific changes.
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index e07d7d7..0254cbd 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -271,6 +271,7 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
- #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
- #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
-+#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
- 
- #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
- #define		IEEE80211_RADIOTAP_MCS_BW_20	0
-@@ -280,6 +281,11 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_MCS_SGI		0x04
- #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
- #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
-+#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
-+#define		IEEE80211_RADIOTAP_MCS_STBC_0	0
-+#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
-+#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
-+#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
- 
- /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
- #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1fe1844..efa9fb1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -808,6 +808,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	on this subframe
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-+ * @RX_FLAG_STBC: Space-Time Block Code was used
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -835,6 +836,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_80MHZ			= BIT(23),
- 	RX_FLAG_80P80MHZ		= BIT(24),
- 	RX_FLAG_160MHZ			= BIT(25),
-+	RX_FLAG_STBC			= BIT(26),
- };
- 
- /**
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8a7bfc4..44191a3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -589,7 +589,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
- 	local->hw.radiotap_mcs_details = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
- 					 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+					 IEEE80211_RADIOTAP_MCS_HAVE_BW |
-+					 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
- 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
- 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
- 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c8447af..955a70f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -267,6 +267,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
- 		if (status->flag & RX_FLAG_HT_GF)
- 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
-+		if (status->flag & RX_FLAG_STBC)
-+			*pos |= IEEE80211_RADIOTAP_MCS_STBC_1;
- 		pos++;
- 		*pos++ = status->rate_idx;
- 	}
+With time running short before the 3.10 merge window, perhaps you
+should resend this batch as a series of patches?  We can work more
+on pull requests after the merge window?
+
+John
 -- 
-1.7.10.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
