@@ -1,205 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58104 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761097Ab3D2Tp4 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:44869 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080Ab3DVRbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 15:45:56 -0400
-Date: Mon, 29 Apr 2013 15:45:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-next 2013-04-29
-Message-ID: <20130429194550.GC4590@tuxdriver.com> (sfid-20130429_214623_588429_F73D615E)
+	Mon, 22 Apr 2013 13:31:04 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hm14so1652374wib.11
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2013 10:31:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2oS5YaxWCcQjTEyO"
+In-Reply-To: <CAJ-Vmonm78MF=3jO19MESsmfizCTti-CHMaZTn7cNUKDSNH32g@mail.gmail.com>
+References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net>
+	<CAJ-Vmonm78MF=3jO19MESsmfizCTti-CHMaZTn7cNUKDSNH32g@mail.gmail.com>
+Date: Mon, 22 Apr 2013 10:31:02 -0700
+Message-ID: <CAJ-VmonDtOW8_W1z04rjR_8ubwQNvVWiDqC-m+gULmwi3HRcEw@mail.gmail.com> (sfid-20130422_193108_252779_035F9D60)
+Subject: Re: ath9k problems on openSUSE 12.3
+From: Adrian Chadd <adrian@freebsd.org>
+To: Gerry Gavigan <gerry@gavigan.f9.co.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+.. and make sure you do a full hardware reset (power off, wait, power
+on) when you downgrade or upgrade.
 
---2oS5YaxWCcQjTEyO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Some of the register settings may be once-only and require a power
+cycle to change.
 
-Dave,
 
-A few more stragglers intended for 3.10...
 
-For the Bluetooth bits, Gustavo says:
 
-"A few more patches intended for 3.10, the most important one is the suppor=
-t in
-btusb for fw loading for the Intel Bluetooth device. Other than that we have
-only fixes and clean ups."
+adrian
 
-For the iwlwifi bits, Johannes says:
 
-"Here are a few more changes for the 3.10 stream, some bugfixes,
-adjustments to some powersave parameters and a new device ID."
-
-For the NFC bits, Samuel says:
-
-"This pull request includes Marcel's Kconfig dependency fix on top of the L=
-LCP
-code move to net/nfc."
-
-On top of that...Yogesh Ashok Powar provides a few PCI-related mwifiex
-updates, Hauke Mehrtens provides a small ssb feature for spurious
-tone avoidance on a specific chip, and Larry Finger provides a small
-rtlwifi fix related to avoiding false detection of AP loss.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-The following changes since commit 94dace10142790ddeb0a3a7b8b33d9540d30c79f:
-
-  cxgb4vf: Support CPL_SGE_EGR_UPDATEs encapsulated in a CPL_FW4_MSG (2013-=
-04-29 15:24:44 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
-for-davem
-
-for you to fetch changes up to 17a2911f3395d66694fcbd2e8970015904d9b034:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless-next into for-davem (2013-04-29 15:31:57 -0400)
-
-----------------------------------------------------------------
-
-Alexander Bondar (2):
-      iwlwifi: mvm: change TX/RX AM-to-PSM transition time for LP mode
-      iwlwifi: mvm: remove usage of power_save module parameter
-
-Andreas Fenkart (2):
-      Bluetooth: btmrvl: release lock while waiting for fw download complete
-      Bluetooth: btmrvl: report error if verify_fw_download times out
-
-Andy Shevchenko (1):
-      Bluetooth: btmrvl: use native helpers for debugfs
-
-Emmanuel Grumbach (4):
-      iwlwifi: mvm: remove TODO which has been addressed
-      iwlwifi: mvm: fix first_antenna
-      iwlwifi: dvm: don't send zeroed LQ cmd
-      iwlwifi: add a subdevice ID for 7000 series
-
-Fengguang Wu (1):
-      Bluetooth: hci_get_cmd_complete() can be static
-
-Gustavo Padovan (1):
-      Bluetooth: remove unneeded var initialization in btmrvl
-
-Hauke Mehrtens (1):
-      ssb: implement ssb spuravoid for chipid BCM43222
-
-Johan Hedberg (2):
-      Bluetooth: Fix HCI command send functions to use const specifier
-      Bluetooth: Fix sending write_le_host_supporte for LE-only controllers
-
-John W. Linville (4):
-      Merge branch 'for-upstream' of git://git.kernel.org/.../bluetooth/blu=
-etooth-next
-      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-n=
-ext
-      Merge tag 'nfc-next-3.10-4' of git://git.kernel.org/.../sameo/nfc-next
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
-ext into for-davem
-
-Larry Finger (1):
-      rtlwifi: rtl8192cu: Fix false loss of AP indication
-
-Marcel Holtmann (2):
-      Bluetooth: Remove unneeded parameter from L2CAP ATT channel handling
-      NFC: Add missing RFKILL dependency for Kconfig
-
-Piotr Haber (1):
-      brcmsmac: Fix merge issue
-
-Samuel Ortiz (1):
-      NFC: Move LLCP code to the NFC top level diirectory
-
-Stanislaw Gruszka (3):
-      iwlwifi: fix freeing uninitialized pointer
-      iwlwifi: remove redundant argument from iwl_dump_nic_event_log
-      iwlwifi: remove unneeded goto from iwl_dbgfs_log_event_read
-
-Tedd Ho-Jeong An (1):
-      Bluetooth: Add support for Intel Bluetooth device [8087:07dc]
-
-Yogesh Ashok Powar (4):
-      mwifiex: Use pci_release_region() instead of a pci_release_regions()
-      mwifiex: Call pci_release_region after calling pci_disable_device
-      mwifiex: Do not kfree cmd buf while unregistering PCIe
-      mwifiex: Correct pci_unmap_single's size
-
- drivers/bluetooth/btmrvl_debugfs.c                 | 266 ++-------------
- drivers/bluetooth/btmrvl_sdio.c                    |  41 ++-
- drivers/bluetooth/btusb.c                          | 377 +++++++++++++++++=
-++++
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   1 +
- drivers/net/wireless/iwlwifi/dvm/agn.h             |   2 +-
- drivers/net/wireless/iwlwifi/dvm/debugfs.c         |  16 +-
- drivers/net/wireless/iwlwifi/dvm/main.c            |   6 +-
- drivers/net/wireless/iwlwifi/dvm/sta.c             |   5 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c        |   2 +-
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c        |   5 -
- drivers/net/wireless/iwlwifi/mvm/power.c           |  16 +-
- drivers/net/wireless/iwlwifi/mvm/utils.c           |   5 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c            |   1 +
- drivers/net/wireless/mwifiex/pcie.c                |   9 +-
- drivers/net/wireless/rtlwifi/usb.c                 |   3 +
- drivers/ssb/driver_chipcommon_pmu.c                |  19 +-
- include/net/bluetooth/hci_core.h                   |  14 +-
- net/bluetooth/hci_core.c                           |  29 +-
- net/bluetooth/l2cap_core.c                         |   7 +-
- net/bluetooth/mgmt.c                               |   8 +-
- net/nfc/Kconfig                                    |   2 +-
- net/nfc/Makefile                                   |   6 +-
- net/nfc/{llcp =3D> }/llcp.h                          |   0
- net/nfc/llcp/Kconfig                               |   7 -
- net/nfc/{llcp/commands.c =3D> llcp_commands.c}       |   2 +-
- net/nfc/{llcp/llcp.c =3D> llcp_core.c}               |   2 +-
- net/nfc/{llcp/sock.c =3D> llcp_sock.c}               |   2 +-
- net/nfc/netlink.c                                  |   3 +-
- net/nfc/nfc.h                                      |  64 ----
- 29 files changed, 520 insertions(+), 400 deletions(-)
- rename net/nfc/{llcp =3D> }/llcp.h (100%)
- delete mode 100644 net/nfc/llcp/Kconfig
- rename net/nfc/{llcp/commands.c =3D> llcp_commands.c} (99%)
- rename net/nfc/{llcp/llcp.c =3D> llcp_core.c} (99%)
- rename net/nfc/{llcp/sock.c =3D> llcp_sock.c} (99%)
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---2oS5YaxWCcQjTEyO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRfs3uAAoJEJctW/TcYTgGYI8P/jpSxEDxYnQ6eVJemhS9ikby
-v/5avSc5Awd5iZNRLAb8Ita0dV9F3ktXN2xmXvKbhjdPn7/+i2ghUyHzxOwrD0wc
-2KTr0z7UvNCTYbrhSsrdwYoEaAsUJh0a9lQCgW1QqhLmnOo3YcxtDyr/17FEgpbC
-+FC5KLltntE5vVfGI64qQhr6r9mloHVCaPKGJwM7/qk14Iz4exyJF3Ti0zDqE6p5
-o8G5SvQ9Etz6qPZvuc+A4f/T6aYGpzXS3DsOE2HCYJIGO1+LX7xtHJ+HuOss53fn
-Sl8Hi4sUBpSkD9PKPsStsd35qX3oSbmCWVEhPVRE7N4jdqTKQGcOON8CcXlhyboc
-mu/6JqFEohNKc8M1UtqG22DouVweGYBDU4tsRBhOyj3jeorTjTSEp2wbf+Q+6Rd7
-qygmkdVpQNYXJkbqvKeI+3KInX0q1XwcP1b5ZfB7/2sd7qSPi7lXSfSVO9IYhMuM
-k2MEiI9J6qTE3N1nOs6wsv1bM4hd7uIYFKnHJHYbqAZAEIm2U9+UANj8EeOxjK4G
-WI5giEfYdjxxrVm/UbmYvc/pgnPmu1TXNHLEDTVNQ6Jvp0nAfZooUvqSmL6krulC
-lQ9VfcU07TRcCw/Q11iVQVCJ8apNJP+wLgusVs+cDNLRo5+S80sBpRvkb9hPpvsz
-+MIed1OqH12EywncFOvR
-=OluY
------END PGP SIGNATURE-----
-
---2oS5YaxWCcQjTEyO--
+On 22 April 2013 10:30, Adrian Chadd <adrian@freebsd.org> wrote:
+> Wasn't there a recent change to ath9k which reverted an initval
+> change? Specifically for the AR9485?
+>
+> The problem was an unstable PLL that shows up when you do aggressive
+> PCIe PHY power save.
+>
+> The change was to go back to the previous PCIe initval array.
+>
+>
+>
+> Adrian
+>
+>
+> On 22 April 2013 05:30, Gerry Gavigan <gerry@gavigan.f9.co.uk> wrote:
+>> After some discussion :
+>>
+>> https://forums.opensuse.org/english/get-technical-help-here/wireless/484686-advanced-atheros-issue-12-3-ath9k-64bit-frequent-random-de-auths-2.html
+>>
+>> I have been advised to seek help here as the phase lock loop is not working.
+>>
+>> In case it's relevant:
+>>
+>> - the wifi was working if possibly slightly unstable until I upgraded to
+>> 3.8.7
+>>   (to cure suspend and resume on a gma500 in an AAO)
+>>
+>> - Downgrading didn't work
+>>
+>> lspci -nn returns
+>>
+>> 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9485
+>> Wireless Network Adapter [168c:0032] (rev 01)
+>>
+>> dmesg reports
+>>
+>> [ 24.800514] ------------[ cut here ]------------
+>> [ 24.800563] WARNING: at
+>> /home/abuild/rpmbuild/BUILD/kernel-desktop-3.7.10/linux-3.7/drivers/net/wireless/ath/ath9k/hw.c:794
+>> ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]()
+>> [ 24.800567] Hardware name: AOD270
+>> [ 24.800571] Modules linked in: xt_tcpudp xt_pkttype xt_LOG xt_limit
+>> af_packet bnep bluetooth ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6
+>> ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle
+>> nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4
+>> nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack ip6table_filter
+>> ip6_tables x_tables cpufreq_conservative cpufreq_userspace cpufreq_powersave
+>> acpi_cpufreq mperf coretemp iTCO_wdt iTCO_vendor_support acer_wmi
+>> sparse_keymap snd_hda_codec_realtek snd_hda_codec_hdmi snd_hda_intel
+>> snd_hda_codec snd_hwdep snd_pcm snd_seq microcode serio_raw pcspkr i2c_i801
+>> snd_timer snd_seq_device uvcvideo videobuf2_core sg videodev
+>> videobuf2_vmalloc videobuf2_memops lpc_ich mfd_core arc4 joydev snd ath9k
+>> rts_pstor(C) mac80211 ath9k_common ath9k_hw ath cfg80211 rfkill r8169
+>> soundcore snd_page_alloc wmi ac battery button autofs4 gma500_gfx
+>> drm_kms_helper drm i2c_algo_bit video thermal processor thermal_sys
+>> scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_dh_hp_sw scsi_dh
+>> [ 24.800687] Pid: 64, comm: kworker/u:3 Tainted: G C 3.7.10-1.1-desktop #1
+>> [ 24.800690] Call Trace:
+>> [ 24.800713] [<c0205779>] try_stack_unwind+0x199/0x1b0
+>> [ 24.800729] [<c0204487>] dump_trace+0x47/0xf0
+>> [ 24.800740] [<c02057db>] show_trace_log_lvl+0x4b/0x60
+>> [ 24.800749] [<c0205808>] show_trace+0x18/0x20
+>> [ 24.800760] [<c06fbeeb>] dump_stack+0x6d/0x72
+>> [ 24.800812] [<c0238cb8>] warn_slowpath_common+0x78/0xb0
+>> [ 24.800855] [<c0238d0b>] warn_slowpath_null+0x1b/0x20
+>> [ 24.800897] [<f7c84448>] ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]
+>> [ 24.800941] [<f7b2d2b8>] ath_hw_pll_work+0x48/0xc0 [ath9k]
+>> [ 24.801012] [<c02527dc>] process_one_work+0x10c/0x400
+>> [ 24.801038] [<c0253e89>] worker_thread+0x119/0x3b0
+>> [ 24.801055] [<c02584f2>] kthread+0x92/0xa0
+>> [ 24.801076] [<c070dc67>] ret_from_kernel_thread+0x1b/0x28
+>> [ 24.801093] [<c0258460>] kthread_create_on_node+0xd0/0xd0
+>> [ 24.808339] DWARF2 unwinder stuck at kthread+0x0/0xa0
+>> [ 24.808346]
+>> [ 24.808350] Leftover inexact backtrace:
+>> [ 24.808350]
+>> [ 24.808361] ---[ end trace 33960a031f166c71 ]---
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
