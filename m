@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:61847 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556Ab3DRNOr (ORCPT
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:47786 "EHLO
+	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754579Ab3DVS5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 09:14:47 -0400
-Received: by mail-ea0-f173.google.com with SMTP id k11so1227169eaj.4
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 06:14:46 -0700 (PDT)
-Date: Thu, 18 Apr 2013 15:10:37 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2 2/2] mac80211: minstrel_ht: initialize rates selection
-Message-ID: <20130418131037.GE8638@magnum.frso.rivierawaves.com> (sfid-20130418_151452_596232_9CA1C948)
-References: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com>
- <1366287981-24134-2-git-send-email-karl.beldan@gmail.com>
- <20130418124050.GD8638@magnum.frso.rivierawaves.com>
- <516FEF43.2030404@openwrt.org>
+	Mon, 22 Apr 2013 14:57:16 -0400
+Date: Mon, 22 Apr 2013 14:57:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-04-18
+Message-ID: <20130422185713.GE2055@tuxdriver.com> (sfid-20130422_205736_509999_6D4A16DD)
+References: <20130418044836.GB29635@joana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <516FEF43.2030404@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130418044836.GB29635@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 03:04:03PM +0200, Felix Fietkau wrote:
-> On 2013-04-18 2:40 PM, Karl Beldan wrote:
-> > Johannes, Felix,
-> > 
-> > This seems to me like an important enough issue to IMHO, make it into
-> > 3.9/-stable. But since we only have a few days before Linus tags the 3.9
-> > I understand the boldness of the thought.
-> I'm not sure it's important enough for 3.9. Is disabling MCS0 really
-> that common?
+On Thu, Apr 18, 2013 at 01:48:36AM -0300, Gustavo Padovan wrote:
+> Hi John,
 > 
-Right.
- 
-Karl
+> A set of changes intended for 3.10. The biggest changes here are from David
+> Herrmann, he rewrote most of the HIDP layer making it more reliable. Marcel
+> added a driver setup stage for device that need special handling on their
+> early initialization. Other than that we have the usual clean ups, bugfixes
+> and small improvements.
+> 
+> Please pull or let me know of any problems! Thanks!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 84bcc0c3c4b8ca4c0abed2d2dd63b7ce04f8be0e:
+> 
+>   brcmfmac: enable sk_buff queueing when credits deplete (2013-04-03 15:07:09 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
+> 
+> for you to fetch changes up to 76a388beaf92cc75b829d4a0b7d69afaaeaa4b0a:
+> 
+>   Bluetooth: Rename LE_SCANNING_* macros (2013-04-18 01:17:27 -0300)
+
+Pulling now...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
