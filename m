@@ -1,135 +1,311 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277Ab3DHLl1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 07:41:27 -0400
-Message-ID: <1365421282.25475.11.camel@jlt4.sipsolutions.net> (sfid-20130408_134130_299128_AA323E71)
-Subject: pull-request: iwlwifi-next 2013-04-08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 08 Apr 2013 13:41:22 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-nOijQpZpfcBIaBSPuCeS"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:43604 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937Ab3DVKJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 06:09:58 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
+Subject: [PATCH v5 3/3] mac80211/minstrel: use the new rate control API
+Date: Mon, 22 Apr 2013 12:09:53 +0200
+Message-Id: <1366625393-11647-3-git-send-email-nbd@openwrt.org> (sfid-20130422_121006_275476_93DC0C4C)
+In-Reply-To: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
+References: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pass the rate selection table to mac80211 from minstrel_update_stats.
+Only rates for sample attempts are set in info->control.rates, with deferred
+sampling, only the second slot gets changed.
 
---=-nOijQpZpfcBIaBSPuCeS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/rc80211_minstrel.c | 200 ++++++++++++++++++++++------------------
+ net/mac80211/rc80211_minstrel.h |   2 +
+ 2 files changed, 111 insertions(+), 91 deletions(-)
 
-John,
-
-And also another pull request for iwlwifi-next.
-
-The biggest work here is Bluetooth coexistence and power saving. Other
-than that, I have a few small fixes that weren't really needed for 3.9
-and a new PCI ID.
-
-johannes
-
-
-The following changes since commit 64513ef449e3beaacb801d41467f47642683e35a=
-:
-
-  b43: remove warning for LP-PHY with sprom < 8 (2013-03-25 16:47:06 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git fo=
-r-john
-
-for you to fetch changes up to 2d055afdcada4bd8b510e9d2a8566fbded3c9696:
-
-  iwlwifi: dvm: handle FLUSH ampdu actions from mac80211 (2013-04-08 13:32:=
-20 +0200)
-
-----------------------------------------------------------------
-Alexander Bondar (9):
-      iwlwifi: mvm: downgrade to old power management API
-      iwlwifi: mvm: Rename some power management definitions and methods
-      iwlwifi: mvm: don't disable power management due to P2P device
-      iwlwifi: mvm: Fix active-to-powersave transition time units
-      iwlwifi: mvm: always send power table command
-      iwlwifi: mvm: set keepalive period regardless of PM state
-      iwlwifi: mvm: encapsulate power table command log message
-      iwlwifi: mvm: change active-to-powersave transition time for BPS
-      iwlwifi: mvm: remove redundant iwl_power_get_params()
-
-Emmanuel Grumbach (9):
-      iwlwifi: mvm: ignore bt_ch_announce module parameter
-      iwlwifi: mvm: split long debug print
-      iwlwifi: mvm: implement reduced Tx power
-      iwlwifi: mvm: remove BT Coex constraints upon roaming to A band
-      iwlwifi: mvm: beautify code in BT Coex
-      iwlwifi: mvm: clean up invalid station handling
-      iwlwifi: mvm: rename iwl_mvm_new_bt_coex_notif
-      iwlwifi: mvm: remove users of nvm_data->valid_tx_ant
-      iwlwifi: dvm: handle FLUSH ampdu actions from mac80211
-
-Ilan Peer (1):
-      iwlwifi: mvm: Sync FW API time event notification change
-
-Johannes Berg (5):
-      Merge remote-tracking branch 'wireless-next/master' into iwlwifi-next
-      iwlwifi: mvm: add per-interface debugfs with mac_params file
-      iwlwifi: print opmode when firmware is loaded
-      iwlwifi: sleep for at least 10 seconds
-      iwlwifi: print warning on request_module failure
-
-Shuduo Sang (1):
-      iwlwifi: add new pci id for 6x35 series
-
- drivers/net/wireless/iwlwifi/dvm/agn.h          |   6 +-
- drivers/net/wireless/iwlwifi/dvm/lib.c          |  16 +-
- drivers/net/wireless/iwlwifi/dvm/mac80211.c     |   7 +-
- drivers/net/wireless/iwlwifi/dvm/tx.c           |  45 ++++
- drivers/net/wireless/iwlwifi/iwl-drv.c          |  14 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h        |   3 +-
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c      | 333 ++++++++++++++++++++=
-----
- drivers/net/wireless/iwlwifi/mvm/d3.c           |   9 +-
- drivers/net/wireless/iwlwifi/mvm/debugfs.c      | 119 +++++++++
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |  64 ++---
- drivers/net/wireless/iwlwifi/mvm/fw-api.h       |  33 ++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     |  31 ++-
- drivers/net/wireless/iwlwifi/mvm/mvm.h          |  27 +-
- drivers/net/wireless/iwlwifi/mvm/power.c        | 115 ++++----
- drivers/net/wireless/iwlwifi/mvm/rs.c           |  36 +--
- drivers/net/wireless/iwlwifi/mvm/sta.c          |   8 +-
- drivers/net/wireless/iwlwifi/mvm/sta.h          |   2 +
- drivers/net/wireless/iwlwifi/mvm/time-event.c   |  10 +-
- drivers/net/wireless/iwlwifi/mvm/tx.c           |  14 +-
- drivers/net/wireless/iwlwifi/mvm/utils.c        |   2 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c         |   1 +
- drivers/net/wireless/iwlwifi/pcie/tx.c          |   2 +-
- 22 files changed, 678 insertions(+), 219 deletions(-)
-
-
---=-nOijQpZpfcBIaBSPuCeS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJRYqziAAoJEDBSmw7B7bqr+JMP/1rF4fSarp5CloNBWxA03DoC
-wa6dLHu63DAo//B4uk01oV8OO4TBm1bZV+/Zd/O4ioXN5AlwAKx/Cd/IpGF8ohLV
-Dc4PeeDXoTy41LGxHJBmz1fqlkyxNsManRLA0yQdFubWYioaMtA1/hrut+rM4qVj
-qYOmox10P6RvUlgdYVgwnGJv8dq88+00EJrjMh3jYbqGxgXr9+Fsg7WWsoBdnRBa
-uou42+r21rDS6mElaFAU9+Mnpymm16dqGsGHGkbYIQCKbYpPPzeVcyATk+yPGGu8
-8w8O8bYsgi89USSBmLwvcVo6u5zjKlHfaZAu2GNylqutVUqe7XES5595EKjrLS3L
-XaQRyLtySay9IX6gooEuTyE2mCkr4z/EML1/KTm3xJogF1CG5IZvMlVpUwHyaHzg
-1yQ7SA/wzQ8TkhW/zB0ecDNc024LZZFIWxPW/6aQ8TVhFXOsF6EmYEMlj8OOxgbj
-kwaFOTA2GldjH5UfskwyQmnYIfKEIk45vBbRtZVmPJZhk78PFsbDYGz2VWjw5BXu
-x8pohOzjrSQSBxquXa87xoBqtbrVsoEzgayXAUHwEDA2HXjgLcG85tY76YJvzvm/
-5xjwhhr8YuoEGarscyi+8+D20+FE+m4J0BLWimLVM+BHBulYB9sOEtoVLMNszmYC
-9cA6jb+suZQLFoqonR7B
-=oc7b
------END PGP SIGNATURE-----
-
---=-nOijQpZpfcBIaBSPuCeS--
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index eda290f..ac7ef54 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -84,6 +84,50 @@ minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
+ }
+ 
+ static void
++minstrel_set_rate(struct minstrel_sta_info *mi, struct ieee80211_sta_rates *ratetbl,
++		  int offset, int idx)
++{
++	struct minstrel_rate *r = &mi->r[idx];
++
++	ratetbl->rate[offset].idx = r->rix;
++	ratetbl->rate[offset].count = r->adjusted_retry_count;
++	ratetbl->rate[offset].count_cts = r->retry_count_cts;
++	ratetbl->rate[offset].count_rts = r->retry_count_rtscts;
++}
++
++static void
++minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
++{
++	struct ieee80211_sta_rates *ratetbl;
++	int i = 0;
++
++	ratetbl = kzalloc(sizeof(*ratetbl), GFP_ATOMIC);
++	if (!ratetbl)
++		return;
++
++	/* Start with max_tp_rate */
++	minstrel_set_rate(mi, ratetbl, i++, mi->max_tp_rate[0]);
++
++	if (mp->hw->max_rates >= 3) {
++		/* At least 3 tx rates supported, use max_tp_rate2 next */
++		minstrel_set_rate(mi, ratetbl, i++, mi->max_tp_rate[1]);
++	}
++
++	if (mp->hw->max_rates >= 2) {
++		/* At least 2 tx rates supported, use max_prob_rate next */
++		minstrel_set_rate(mi, ratetbl, i++, mi->max_prob_rate);
++	}
++
++	/* Use lowest rate last */
++	ratetbl->rate[i].idx = mi->lowest_rix;
++	ratetbl->rate[i].count = mp->max_retry;
++	ratetbl->rate[i].count_cts = mp->max_retry;
++	ratetbl->rate[i].count_rts = mp->max_retry;
++
++	rate_control_set_rates(mp->hw, mi->sta, ratetbl);
++}
++
++static void
+ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ {
+ 	u8 tmp_tp_rate[MAX_THR_RATES];
+@@ -161,6 +205,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 
+ 	/* Reset update timer */
+ 	mi->stats_update = jiffies;
++
++	minstrel_update_rates(mp, mi);
+ }
+ 
+ static void
+@@ -240,13 +286,12 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	struct minstrel_priv *mp = priv;
+-	struct ieee80211_tx_rate *ar = info->control.rates;
+-	unsigned int ndx, sample_ndx = 0;
++	struct ieee80211_tx_rate *rate = &info->control.rates[0];
++	struct minstrel_rate *msr, *mr;
++	unsigned int ndx;
+ 	bool mrr_capable;
+-	bool indirect_rate_sampling = false;
+-	bool rate_sampling = false;
+-	int i, delta;
+-	int mrr_ndx[3];
++	bool prev_sample = mi->prev_sample;
++	int delta;
+ 	int sampling_ratio;
+ 
+ 	/* management/no-ack frames do not use rate control */
+@@ -262,107 +307,75 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	else
+ 		sampling_ratio = mp->lookaround_rate;
+ 
+-	/* init rateindex [ndx] with max throughput rate */
+-	ndx = mi->max_tp_rate[0];
+-
+ 	/* increase sum packet counter */
+ 	mi->packet_count++;
+ 
+ 	delta = (mi->packet_count * sampling_ratio / 100) -
+ 			(mi->sample_count + mi->sample_deferred / 2);
+ 
+-	/* delta > 0: sampling required */
+-	if ((delta > 0) && (mrr_capable || !mi->prev_sample)) {
+-		struct minstrel_rate *msr;
+-		if (mi->packet_count >= 10000) {
+-			mi->sample_deferred = 0;
+-			mi->sample_count = 0;
+-			mi->packet_count = 0;
+-		} else if (delta > mi->n_rates * 2) {
+-			/* With multi-rate retry, not every planned sample
+-			 * attempt actually gets used, due to the way the retry
+-			 * chain is set up - [max_tp,sample,prob,lowest] for
+-			 * sample_rate < max_tp.
+-			 *
+-			 * If there's too much sampling backlog and the link
+-			 * starts getting worse, minstrel would start bursting
+-			 * out lots of sampling frames, which would result
+-			 * in a large throughput loss. */
+-			mi->sample_count += (delta - mi->n_rates * 2);
+-		}
++	/* delta < 0: no sampling required */
++	mi->prev_sample = false;
++	if (delta < 0 || (!mrr_capable && prev_sample))
++		return;
+ 
+-		/* get next random rate sample */
+-		sample_ndx = minstrel_get_next_sample(mi);
+-		msr = &mi->r[sample_ndx];
+-		rate_sampling = true;
+-
+-		/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
+-		 * rate sampling method should be used.
+-		 * Respect such rates that are not sampled for 20 interations.
+-		 */
+-		if (mrr_capable &&
+-		    msr->perfect_tx_time > mi->r[ndx].perfect_tx_time &&
+-		    msr->sample_skipped < 20)
+-				indirect_rate_sampling = true;
+-
+-		if (!indirect_rate_sampling) {
+-			if (msr->sample_limit != 0) {
+-				ndx = sample_ndx;
+-				mi->sample_count++;
+-				if (msr->sample_limit > 0)
+-					msr->sample_limit--;
+-			} else
+-				rate_sampling = false;
+-		} else {
+-			/* Only use IEEE80211_TX_CTL_RATE_CTRL_PROBE to mark
+-			 * packets that have the sampling rate deferred to the
+-			 * second MRR stage. Increase the sample counter only
+-			 * if the deferred sample rate was actually used.
+-			 * Use the sample_deferred counter to make sure that
+-			 * the sampling is not done in large bursts */
+-			info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+-			mi->sample_deferred++;
+-		}
++	if (mi->packet_count >= 10000) {
++		mi->sample_deferred = 0;
++		mi->sample_count = 0;
++		mi->packet_count = 0;
++	} else if (delta > mi->n_rates * 2) {
++		/* With multi-rate retry, not every planned sample
++		 * attempt actually gets used, due to the way the retry
++		 * chain is set up - [max_tp,sample,prob,lowest] for
++		 * sample_rate < max_tp.
++		 *
++		 * If there's too much sampling backlog and the link
++		 * starts getting worse, minstrel would start bursting
++		 * out lots of sampling frames, which would result
++		 * in a large throughput loss. */
++		mi->sample_count += (delta - mi->n_rates * 2);
++	}
++
++	/* get next random rate sample */
++	ndx = minstrel_get_next_sample(mi);
++	msr = &mi->r[ndx];
++	mr = &mi->r[mi->max_tp_rate[0]];
++
++	/* Decide if direct ( 1st mrr stage) or indirect (2nd mrr stage)
++	 * rate sampling method should be used.
++	 * Respect such rates that are not sampled for 20 interations.
++	 */
++	if (mrr_capable &&
++	    msr->perfect_tx_time > mr->perfect_tx_time &&
++	    msr->sample_skipped < 20) {
++		/* Only use IEEE80211_TX_CTL_RATE_CTRL_PROBE to mark
++		 * packets that have the sampling rate deferred to the
++		 * second MRR stage. Increase the sample counter only
++		 * if the deferred sample rate was actually used.
++		 * Use the sample_deferred counter to make sure that
++		 * the sampling is not done in large bursts */
++		info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
++		rate++;
++		mi->sample_deferred++;
++	} else {
++		if (!msr->sample_limit != 0)
++			return;
++
++		mi->sample_count++;
++		if (msr->sample_limit > 0)
++			msr->sample_limit--;
+ 	}
+-	mi->prev_sample = rate_sampling;
+ 
+ 	/* If we're not using MRR and the sampling rate already
+ 	 * has a probability of >95%, we shouldn't be attempting
+ 	 * to use it, as this only wastes precious airtime */
+-	if (!mrr_capable && rate_sampling &&
++	if (!mrr_capable &&
+ 	   (mi->r[ndx].probability > MINSTREL_FRAC(95, 100)))
+-		ndx = mi->max_tp_rate[0];
+-
+-	/* mrr setup for 1st stage */
+-	ar[0].idx = mi->r[ndx].rix;
+-	ar[0].count = minstrel_get_retry_count(&mi->r[ndx], info);
+-
+-	/* non mrr setup for 2nd stage */
+-	if (!mrr_capable) {
+-		if (!rate_sampling)
+-			ar[0].count = mp->max_retry;
+-		ar[1].idx = mi->lowest_rix;
+-		ar[1].count = mp->max_retry;
+ 		return;
+-	}
+ 
+-	/* mrr setup for 2nd stage */
+-	if (rate_sampling) {
+-		if (indirect_rate_sampling)
+-			mrr_ndx[0] = sample_ndx;
+-		else
+-			mrr_ndx[0] = mi->max_tp_rate[0];
+-	} else {
+-		mrr_ndx[0] = mi->max_tp_rate[1];
+-	}
++	mi->prev_sample = true;
+ 
+-	/* mrr setup for 3rd & 4th stage */
+-	mrr_ndx[1] = mi->max_prob_rate;
+-	mrr_ndx[2] = 0;
+-	for (i = 1; i < 4; i++) {
+-		ar[i].idx = mi->r[mrr_ndx[i - 1]].rix;
+-		ar[i].count = mi->r[mrr_ndx[i - 1]].adjusted_retry_count;
+-	}
++	rate->idx = mi->r[ndx].rix;
++	rate->count = minstrel_get_retry_count(&mi->r[ndx], info);
+ }
+ 
+ 
+@@ -412,12 +425,16 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 	unsigned int i, n = 0;
+ 	unsigned int t_slot = 9; /* FIXME: get real slot time */
+ 
++	mi->sta = sta;
+ 	mi->lowest_rix = rate_lowest_index(sband, sta);
+ 	ctl_rate = &sband->bitrates[mi->lowest_rix];
+ 	mi->sp_ack_dur = ieee80211_frame_duration(sband->band, 10,
+ 				ctl_rate->bitrate,
+ 				!!(ctl_rate->flags & IEEE80211_RATE_ERP_G), 1);
+ 
++	memset(mi->max_tp_rate, 0, sizeof(mi->max_tp_rate));
++	mi->max_prob_rate = 0;
++
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[n];
+ 		unsigned int tx_time = 0, tx_time_cts = 0, tx_time_rtscts = 0;
+@@ -473,6 +490,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 	mi->stats_update = jiffies;
+ 
+ 	init_sample_table(mi);
++	minstrel_update_rates(mp, mi);
+ }
+ 
+ static void *
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index b9f8535..f4301f4 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -63,6 +63,8 @@ struct minstrel_rate {
+ };
+ 
+ struct minstrel_sta_info {
++	struct ieee80211_sta *sta;
++
+ 	unsigned long stats_update;
+ 	unsigned int sp_ack_dur;
+ 	unsigned int rate_avg;
+-- 
+1.8.0.2
 
