@@ -1,181 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:35121 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757803Ab3D2KF7 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:54003 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118Ab3DVKIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 06:05:59 -0400
-Message-ID: <1367229856.30716.22.camel@cumari.coelho.fi> (sfid-20130429_120606_177870_5BCED954)
-Subject: linux-firmware: pull-request TI wireless firmwares 2012-04-29
-From: Luciano Coelho <coelho@ti.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: David Woodhouse <dwmw2@infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Date: Mon, 29 Apr 2013 13:04:16 +0300
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="=-PTbpc5WS+XFV31LzQszW"
+	Mon, 22 Apr 2013 06:08:32 -0400
+Date: Mon, 22 Apr 2013 12:08:18 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	sven@narfation.org, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: Re: [PATCH] ath9k: apply coverage class on slottime too
+Message-ID: <20130422100818.GA8402@pandem0nium> (sfid-20130422_120836_028979_C2655086)
+References: <1351598855-21427-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <508FCB77.9000303@openwrt.org>
+ <50C1E2A5.40206@fokus.fraunhofer.de>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="liOOAslEiF7prFVr"
+In-Reply-To: <50C1E2A5.40206@fokus.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-PTbpc5WS+XFV31LzQszW
-Content-Type: text/plain; charset="UTF-8"
+
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi Ben,
+Hey Felix,
 
-Here are some updates to our wireless firmwares.  Updated the firmwares
-for WiLink 6 and 7 and added a new version of the firmware for WiLink 8
-and a binary configuration file.  Also updated the WHENCE file
-accordingly.
+just wanted to bump on this issue again, as it has not been applied
+yet - the patch seems still valid, and Mathias results appear to show
+that as well. What do you think?
 
-Please let me know if there are any more problems.
+Thanks,
+	Simon
 
+On Fri, Dec 07, 2012 at 01:35:49PM +0100, Mathias Kretschmer wrote:
+> Hi all,
+>=20
+> On 10/30/2012 01:43 PM, Felix Fietkau wrote:
+> >On 2012-10-30 1:07 PM, Simon Wunderlich wrote:
+> >>From: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+> >>
+> >>According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+> >>be increased by 3 us * coverage class. The code only increased the
+> >>ack timeout, which is fixed by this patch.
+> >>
+> >>We have noticed in our long shot scenario that we see less collisions
+> >>with this patch.
+> >At some point I had the slot time increase in the driver, but noticed a
+> >massive throughput degradation on 10-20 km links. Leaving the slot time
+> >alone and changing only the ACK timeout fixed this. What distances did
+> >you test?
+> >
+> >- Felix
+> >
+>=20
+> We've run some tests on a 5km .11a link to verify the proper
+> functioning of this patch (slot time depending on coverage class)
+> and the recent patch to ensure the shorter (9us) slot time is used
+> in .11a adhoc mode.
+>=20
+> According to the standard, the slot time should be calculated as follows:
+>=20
+> slottime =3D 9us + 3 * ah->coverage_class;
+>=20
+> For our link, this would be
+>=20
+> slottime =3D 9 us + 3 * 10 =3D 39 us.   (coverage class 10: up to 4950 m)
+>=20
+> If you look at the below TSFT histogram and try to determine the peaks
+> (first column: diffTime, second column: frameCount), the slot time
+> turns out to be roughly 39us, which fits pretty nicely with the
+> expected result.
+>=20
+> The TCP throughput (wget -O /dev/null) was very constant between 1.7
+> and 1.8 MByte/s. Which, I'd say, is pretty decent for such a link
+> (without TxOp, etc).
+>=20
+> Similar measurements for a 10km link, reveal a slot time of about
+> 71us, which also matches the theoretical figure pretty well:
+>=20
+> slottime =3D 9us + 3 * 21 =3D 72
+>=20
+> Therefore, both patches seem to ensure a proper MAC timing while
+> yielding proper throughput.
+>=20
+> Cheers,
+>=20
+> Mathias
+>=20
+> ------------
+>=20
+> =3D=3D=3D TSFT Histogram (times in us) of 00:00:00:00:00:00, age 66s =3D=
+=3D=3D
+> 411,945
+> 412,5921
+> 413,1534
+> 450,1271
+> 451,4286
+> 452,1804
+> 490,5592
+> 491,731
+> 528,773
+> 529,3482
+> 530,1177
+> 567,693
+> 568,3071
+> 569,1022
+> 599,552
+> 607,3659
+> 608,486
+> 637,266
+> 638,737
+> 639,437
+> 645,782
+> 646,2103
+> 647,929
+> 677,1525
+> 678,560
+> 684,463
+> 685,2337
+> 686,589
+> 715,276
+> 716,1630
+> 717,704
+> 754,424
+> 755,1518
+> 756,889
+> 794,2347
+> 795,796
+> 832,420
+> 833,1800
+> 834,891
+> 975,315
+> 1014,329
+> 1015,257
+>=20
+>=20
+>=20
+>=20
 
-The following changes since commit 120a97ff309b6a20812f13d0f9da231eacc3311a=
-:
-
-  Add Intel Bluetooth firmware patch files (2013-04-29 10:06:34 +0100)
-
-are available in the git repository at:
-
-  git://github.com/TI-OpenLink/firmwares.git linux-firmware
-
-for you to fetch changes up to 07ac844ff005c6c38623db831c27e704b0c709c0:
-
-  wl18xx: add default configuration binary (2013-04-29 12:47:04 +0300)
-
-----------------------------------------------------------------
-Luciano Coelho (3):
-      wl127x/wl128x: update firmwares
-      wl18xx: add version 2 of the wl18xx firmware
-      wl18xx: add default configuration binary
-
- WHENCE                              |   16 ++++++++++------
- ti-connectivity/wl127x-fw-5-mr.bin  |  Bin 348724 -> 354600 bytes
- ti-connectivity/wl127x-fw-5-plt.bin |  Bin 347920 -> 352588 bytes
- ti-connectivity/wl127x-fw-5-sr.bin  |  Bin 366968 -> 370996 bytes
- ti-connectivity/wl128x-fw-5-mr.bin  |  Bin 353248 -> 359140 bytes
- ti-connectivity/wl128x-fw-5-plt.bin |  Bin 358008 -> 360452 bytes
- ti-connectivity/wl128x-fw-5-sr.bin  |  Bin 375884 -> 378988 bytes
- ti-connectivity/wl18xx-conf.bin     |  Bin 0 -> 1221 bytes
- ti-connectivity/wl18xx-fw-2.bin     |  Bin 0 -> 639276 bytes
- 9 files changed, 10 insertions(+), 6 deletions(-)
- create mode 100644 ti-connectivity/wl18xx-conf.bin
- create mode 100644 ti-connectivity/wl18xx-fw-2.bin
-
-diff --git a/WHENCE b/WHENCE
-index 4726742..257f24e 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1681,11 +1681,11 @@ Version: 6.5.2.0.15 (Multi-role)
- File: ti-connectivity/wl127x-fw-4-plt.bin
- Version: 6.3.5.0.98 (PLT-only)
- File: ti-connectivity/wl127x-fw-5-sr.bin
--Version: 6.3.10.2.115 (Single-role)
-+Version: 6.3.10.0.133 (Single-role)
- File: ti-connectivity/wl127x-fw-5-mr.bin
--Version: 6.5.7.0.27 (Multi-role)
-+Version: 6.5.7.0.42 (Multi-role)
- File: ti-connectivity/wl127x-fw-5-plt.bin
--Version: 6.3.10.2.115 (PLT-only)
-+Version: 6.3.10.0.133 (PLT-only)
-=20
- File: ti-connectivity/wl128x-fw.bin
- Version: 7.1.5.50.74 (STA-only)
-@@ -1702,11 +1702,11 @@ Version: 7.5.2.0.15 (Multi-role)
- File: ti-connectivity/wl128x-fw-4-plt.bin
- Version: 7.3.5.0.98 (PLT)
- File: ti-connectivity/wl128x-fw-5-sr.bin
--Version: 7.3.10.2.115 (Single-role)
-+Version: 7.3.10.0.133 (Single-role)
- File: ti-connectivity/wl128x-fw-5-mr.bin
--Version: 7.5.7.0.27 (Multi-role)
-+Version: 7.5.7.0.42 (Multi-role)
- File: ti-connectivity/wl128x-fw-5-plt.bin
--Version: 7.3.10.2.115 (PLT-only)
-+Version: 7.3.10.2.133 (PLT-only)
-=20
- File: ti-connectivity/wl127x-nvs.bin
- File: ti-connectivity/wl128x-nvs.bin
-@@ -1740,6 +1740,10 @@ Driver: wl18xx - Texas Instruments 802.11 WLAN drive=
-r for WiLink8 chips
-=20
- File: ti-connectivity/wl18xx-fw.bin
- Version: 8.2.0.0.100
-+File: ti-connectivity/wl18xx-fw-2.bin
-+Version: 8.5.0.0.55
-+File: ti-connectivity/wl18xx-conf.bin
-+Version: 6/5
-=20
- Licence: See LICENCE.ti-connectivity for details.
-=20
-diff --git a/ti-connectivity/wl127x-fw-5-mr.bin b/ti-connectivity/wl127x-fw=
--5-mr.bin
-index a19fb1e..c953fef 100644
-Binary files a/ti-connectivity/wl127x-fw-5-mr.bin and b/ti-connectivity/wl1=
-27x-fw-5-mr.bin differ
-diff --git a/ti-connectivity/wl127x-fw-5-plt.bin b/ti-connectivity/wl127x-f=
-w-5-plt.bin
-index cd1cf33..1f6249f 100644
-Binary files a/ti-connectivity/wl127x-fw-5-plt.bin and b/ti-connectivity/wl=
-127x-fw-5-plt.bin differ
-diff --git a/ti-connectivity/wl127x-fw-5-sr.bin b/ti-connectivity/wl127x-fw=
--5-sr.bin
-index 829088a..c83d3eb 100644
-Binary files a/ti-connectivity/wl127x-fw-5-sr.bin and b/ti-connectivity/wl1=
-27x-fw-5-sr.bin differ
-diff --git a/ti-connectivity/wl128x-fw-5-mr.bin b/ti-connectivity/wl128x-fw=
--5-mr.bin
-index 0a062a8..14931ed 100644
-Binary files a/ti-connectivity/wl128x-fw-5-mr.bin and b/ti-connectivity/wl1=
-28x-fw-5-mr.bin differ
-diff --git a/ti-connectivity/wl128x-fw-5-plt.bin b/ti-connectivity/wl128x-f=
-w-5-plt.bin
-index d8ac6fa..54232d0 100644
-Binary files a/ti-connectivity/wl128x-fw-5-plt.bin and b/ti-connectivity/wl=
-128x-fw-5-plt.bin differ
-diff --git a/ti-connectivity/wl128x-fw-5-sr.bin b/ti-connectivity/wl128x-fw=
--5-sr.bin
-index 75d5a4f..e10a1ba 100644
-Binary files a/ti-connectivity/wl128x-fw-5-sr.bin and b/ti-connectivity/wl1=
-28x-fw-5-sr.bin differ
-diff --git a/ti-connectivity/wl18xx-conf.bin b/ti-connectivity/wl18xx-conf.=
-bin
-new file mode 100644
-index 0000000..d3d2473
-Binary files /dev/null and b/ti-connectivity/wl18xx-conf.bin differ
-diff --git a/ti-connectivity/wl18xx-fw-2.bin b/ti-connectivity/wl18xx-fw-2.=
-bin
-new file mode 100644
-index 0000000..e2a56f5
-Binary files /dev/null and b/ti-connectivity/wl18xx-fw-2.bin differ
-
---=20
-Cheers,
-Luca.
-
-
---=-PTbpc5WS+XFV31LzQszW
+--liOOAslEiF7prFVr
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Content-Description: Digital signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iQIcBAABAgAGBQJRfkWgAAoJEKFHnKIaPMX6RIAQAJIZBxV7SOwej09KBK2YitSv
-N+ZFQjG9gYpO5j1e00THK31QcZdVZmOIpQ9Og2Qisli6z6XL9qcPZm4s9uWiugWU
-nueNP/GAs80wARgIhW73LnPpbltHxtT6PnU5S96FA5C/Dk0Ci8yvt8208n2uDEX5
-eAnvLxb5KPxZ8x/OSOjS2+89ldLMQ36GfC55TuXU2ya28l5atnu+LzEYYKPL6DCC
-m5x4fHV0hJqtWf2iuiThPpMUlY63S8Q1MNIH0I/782QSqU2ZGoPwk7tmw0jzJ+ZQ
-ggkPam7Uirxso/MMkZ9YcmueDgJTFf10NAG9DLB+LGuxvfjc4RU/yIgiMBIEVBvO
-S9JEtT8upWBe6mrOJq2fnRp3yURmB4cboPgoxRGQwvX/yQZ3s/U+y5tsl7kCVRVl
-VdybN2+XuXyDyPQbSGK704KAGx0i9/LXUqTfiTDfaKd7Br3aL3xmrkrsHpF1qViq
-WbnbpyqGV8WvCBJX5LPHY3eiBk1ddqksObtRsT4OUUkLsAqe6wGQ1fY+Af/JYJ/1
-Me05Sv2tRchtaen/u3fz9ZkHPrOS4At59vlNbc0OVy+qW20jcAudOGcpHY0pqIMz
-RBuhuytRq4NOJZ0/aqGGDyCLY9Z4AnogNgzfPInPUtkMk5pi1D50ePYXld+jx3gE
-+w6Iff86szEUswW69ueD
-=PcbF
+iEYEARECAAYFAlF1DBIACgkQrzg/fFk7axZWQgCcCk/ozOzrrFgAQjGQWPMFlv53
+rkAAn037hodBaX37AGS/IUlTRhnv6wC4
+=NdVF
 -----END PGP SIGNATURE-----
 
---=-PTbpc5WS+XFV31LzQszW--
+--liOOAslEiF7prFVr--
