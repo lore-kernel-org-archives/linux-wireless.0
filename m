@@ -1,308 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33539 "EHLO arrakis.dune.hu"
+Received: from nbd.name ([46.4.11.11]:41211 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161633Ab3DEG0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 02:26:44 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/6] rt2x00: rt2x00mmio: use rt2x00mmio prefix in function names
-Date: Fri,  5 Apr 2013 08:27:00 +0200
-Message-Id: <1365143225-24532-2-git-send-email-juhosg@openwrt.org> (sfid-20130405_082701_019391_44FAC50E)
-In-Reply-To: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
-References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
+	id S1751646Ab3DVVLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Apr 2013 17:11:53 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 2/2] ath9k: add support for the new rate control API
+Date: Mon, 22 Apr 2013 23:11:44 +0200
+Message-Id: <1366665104-28737-2-git-send-email-nbd@openwrt.org> (sfid-20130422_231159_011298_5354087C)
+In-Reply-To: <1366665104-28737-1-git-send-email-nbd@openwrt.org>
+References: <1366665104-28737-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions in the rt2x00mmio module has been
-moved from the rt2x00pci module. Each function
-uses the rt2x00pci prefix which is a bit confusing.
-Use the r2x000mmio prefix for each function to make
-it consistent with the module name.
-
-The renamed functions are used by several modules,
-and updating the names in all of them would result
-in a big patch. In order to keep the patch simple,
-add compatibility defines for the old function
-names. This allows to update the names in each
-module separately. After each module is updated,
-the defines can be removed.
-
-The patch contains no functional changes.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00mmio.c |   48 +++++++++++------------
- drivers/net/wireless/rt2x00/rt2x00mmio.h |   63 ++++++++++++++++++------------
- 2 files changed, 61 insertions(+), 50 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/init.c  |  3 ++-
+ drivers/net/wireless/ath/ath9k/xmit.c  | 23 ++++++++++++++++-------
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.c b/drivers/net/wireless/rt2x00/rt2x00mmio.c
-index d84a680..06c7669 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mmio.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mmio.c
-@@ -34,10 +34,10 @@
- /*
-  * Register access.
-  */
--int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
--			   const unsigned int offset,
--			   const struct rt2x00_field32 field,
--			   u32 *reg)
-+int rt2x00mmio_regbusy_read(struct rt2x00_dev *rt2x00dev,
-+			    const unsigned int offset,
-+			    const struct rt2x00_field32 field,
-+			    u32 *reg)
- {
- 	unsigned int i;
- 
-@@ -45,7 +45,7 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 		return 0;
- 
- 	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2x00pci_register_read(rt2x00dev, offset, reg);
-+		rt2x00mmio_register_read(rt2x00dev, offset, reg);
- 		if (!rt2x00_get_field32(*reg, field))
- 			return 1;
- 		udelay(REGISTER_BUSY_DELAY);
-@@ -57,13 +57,13 @@ int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(rt2x00pci_regbusy_read);
-+EXPORT_SYMBOL_GPL(rt2x00mmio_regbusy_read);
- 
--bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
-+bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue = rt2x00dev->rx;
- 	struct queue_entry *entry;
--	struct queue_entry_priv_pci *entry_priv;
-+	struct queue_entry_priv_mmio *entry_priv;
- 	struct skb_frame_desc *skbdesc;
- 	int max_rx = 16;
- 
-@@ -96,24 +96,24 @@ bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
- 
- 	return !max_rx;
- }
--EXPORT_SYMBOL_GPL(rt2x00pci_rxdone);
-+EXPORT_SYMBOL_GPL(rt2x00mmio_rxdone);
- 
--void rt2x00pci_flush_queue(struct data_queue *queue, bool drop)
-+void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop)
- {
- 	unsigned int i;
- 
- 	for (i = 0; !rt2x00queue_empty(queue) && i < 10; i++)
- 		msleep(10);
- }
--EXPORT_SYMBOL_GPL(rt2x00pci_flush_queue);
-+EXPORT_SYMBOL_GPL(rt2x00mmio_flush_queue);
- 
- /*
-  * Device initialization handlers.
-  */
--static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
--				     struct data_queue *queue)
-+static int rt2x00mmio_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
-+				      struct data_queue *queue)
- {
--	struct queue_entry_priv_pci *entry_priv;
-+	struct queue_entry_priv_mmio *entry_priv;
- 	void *addr;
- 	dma_addr_t dma;
- 	unsigned int i;
-@@ -141,10 +141,10 @@ static int rt2x00pci_alloc_queue_dma(struct rt2x00_dev *rt2x00dev,
- 	return 0;
- }
- 
--static void rt2x00pci_free_queue_dma(struct rt2x00_dev *rt2x00dev,
--				     struct data_queue *queue)
-+static void rt2x00mmio_free_queue_dma(struct rt2x00_dev *rt2x00dev,
-+				      struct data_queue *queue)
- {
--	struct queue_entry_priv_pci *entry_priv =
-+	struct queue_entry_priv_mmio *entry_priv =
- 	    queue->entries[0].priv_data;
- 
- 	if (entry_priv->desc)
-@@ -154,7 +154,7 @@ static void rt2x00pci_free_queue_dma(struct rt2x00_dev *rt2x00dev,
- 	entry_priv->desc = NULL;
- }
- 
--int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
-+int rt2x00mmio_initialize(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 	int status;
-@@ -163,7 +163,7 @@ int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
- 	 * Allocate DMA
- 	 */
- 	queue_for_each(rt2x00dev, queue) {
--		status = rt2x00pci_alloc_queue_dma(rt2x00dev, queue);
-+		status = rt2x00mmio_alloc_queue_dma(rt2x00dev, queue);
- 		if (status)
- 			goto exit;
- 	}
-@@ -184,13 +184,13 @@ int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev)
- 
- exit:
- 	queue_for_each(rt2x00dev, queue)
--		rt2x00pci_free_queue_dma(rt2x00dev, queue);
-+		rt2x00mmio_free_queue_dma(rt2x00dev, queue);
- 
- 	return status;
- }
--EXPORT_SYMBOL_GPL(rt2x00pci_initialize);
-+EXPORT_SYMBOL_GPL(rt2x00mmio_initialize);
- 
--void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
-+void rt2x00mmio_uninitialize(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 
-@@ -203,9 +203,9 @@ void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
- 	 * Free DMA
- 	 */
- 	queue_for_each(rt2x00dev, queue)
--		rt2x00pci_free_queue_dma(rt2x00dev, queue);
-+		rt2x00mmio_free_queue_dma(rt2x00dev, queue);
- }
--EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize);
-+EXPORT_SYMBOL_GPL(rt2x00mmio_uninitialize);
- 
- /*
-  * rt2x00mmio module information.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mmio.h b/drivers/net/wireless/rt2x00/rt2x00mmio.h
-index 4ecaf60..b0396ca 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mmio.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00mmio.h
-@@ -31,37 +31,41 @@
- /*
-  * Register access.
-  */
--static inline void rt2x00pci_register_read(struct rt2x00_dev *rt2x00dev,
--					   const unsigned int offset,
--					   u32 *value)
-+static inline void rt2x00mmio_register_read(struct rt2x00_dev *rt2x00dev,
-+					    const unsigned int offset,
-+					    u32 *value)
- {
- 	*value = readl(rt2x00dev->csr.base + offset);
- }
-+#define rt2x00pci_register_read rt2x00mmio_register_read
- 
--static inline void rt2x00pci_register_multiread(struct rt2x00_dev *rt2x00dev,
--						const unsigned int offset,
--						void *value, const u32 length)
-+static inline void rt2x00mmio_register_multiread(struct rt2x00_dev *rt2x00dev,
-+						 const unsigned int offset,
-+						 void *value, const u32 length)
- {
- 	memcpy_fromio(value, rt2x00dev->csr.base + offset, length);
- }
-+#define rt2x00pci_register_multiread rt2x00mmio_register_multiread
- 
--static inline void rt2x00pci_register_write(struct rt2x00_dev *rt2x00dev,
--					    const unsigned int offset,
--					    u32 value)
-+static inline void rt2x00mmio_register_write(struct rt2x00_dev *rt2x00dev,
-+					     const unsigned int offset,
-+					     u32 value)
- {
- 	writel(value, rt2x00dev->csr.base + offset);
- }
-+#define rt2x00pci_register_write rt2x00mmio_register_write
- 
--static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
--						 const unsigned int offset,
--						 const void *value,
--						 const u32 length)
-+static inline void rt2x00mmio_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-+						  const unsigned int offset,
-+						  const void *value,
-+						  const u32 length)
- {
- 	__iowrite32_copy(rt2x00dev->csr.base + offset, value, length >> 2);
- }
-+#define rt2x00pci_register_multiwrite rt2x00mmio_register_multiwrite
- 
- /**
-- * rt2x00pci_regbusy_read - Read from register with busy check
-+ * rt2x00mmio_regbusy_read - Read from register with busy check
-  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
-  * @offset: Register offset
-  * @field: Field to check if register is busy
-@@ -73,47 +77,54 @@ static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
-  * is not read after a certain timeout, this function will return
-  * FALSE.
-  */
--int rt2x00pci_regbusy_read(struct rt2x00_dev *rt2x00dev,
--			   const unsigned int offset,
--			   const struct rt2x00_field32 field,
--			   u32 *reg);
-+int rt2x00mmio_regbusy_read(struct rt2x00_dev *rt2x00dev,
-+			    const unsigned int offset,
-+			    const struct rt2x00_field32 field,
-+			    u32 *reg);
-+#define rt2x00pci_regbusy_read rt2x00mmio_regbusy_read
- 
- /**
-- * struct queue_entry_priv_pci: Per entry PCI specific information
-+ * struct queue_entry_priv_mmio: Per entry PCI specific information
-  *
-  * @desc: Pointer to device descriptor
-  * @desc_dma: DMA pointer to &desc.
-  * @data: Pointer to device's entry memory.
-  * @data_dma: DMA pointer to &data.
-  */
--struct queue_entry_priv_pci {
-+struct queue_entry_priv_mmio {
- 	__le32 *desc;
- 	dma_addr_t desc_dma;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 1915f12..8a1888d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -234,6 +234,7 @@ struct ath_buf {
+ 	dma_addr_t bf_daddr;		/* physical addr of desc */
+ 	dma_addr_t bf_buf_addr;	/* physical addr of data buffer, for DMA */
+ 	bool bf_stale;
++	struct ieee80211_tx_rate rates[4];
+ 	struct ath_buf_state bf_state;
  };
-+#define queue_entry_priv_pci queue_entry_priv_mmio
  
- /**
-- * rt2x00pci_rxdone - Handle RX done events
-+ * rt2x00mmio_rxdone - Handle RX done events
-  * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
-  *
-  * Returns true if there are still rx frames pending and false if all
-  * pending rx frames were processed.
-  */
--bool rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev);
-+bool rt2x00mmio_rxdone(struct rt2x00_dev *rt2x00dev);
-+#define rt2x00pci_rxdone rt2x00mmio_rxdone
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 6b275e0..0237b28 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -766,7 +766,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+-		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
++		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
++		IEEE80211_HW_SUPPORTS_RC_TABLE;
  
- /**
-- * rt2x00pci_flush_queue - Flush data queue
-+ * rt2x00mmio_flush_queue - Flush data queue
-  * @queue: Data queue to stop
-  * @drop: True to drop all pending frames.
-  *
-  * This will wait for a maximum of 100ms, waiting for the queues
-  * to become empty.
-  */
--void rt2x00pci_flush_queue(struct data_queue *queue, bool drop);
-+void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop);
-+#define rt2x00pci_flush_queue rt2x00mmio_flush_queue
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 108fe5f..eab0fcb 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -157,6 +157,13 @@ static void ath_send_bar(struct ath_atx_tid *tid, u16 seqno)
+ 			   seqno << IEEE80211_SEQ_SEQ_SHIFT);
+ }
  
- /*
-  * Device initialization handlers.
-  */
--int rt2x00pci_initialize(struct rt2x00_dev *rt2x00dev);
--void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev);
-+int rt2x00mmio_initialize(struct rt2x00_dev *rt2x00dev);
-+#define rt2x00pci_initialize rt2x00mmio_initialize
++static void ath_set_rates(struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++			  struct ath_buf *bf)
++{
++	ieee80211_get_tx_rates(vif, sta, bf->bf_mpdu, bf->rates,
++			       ARRAY_SIZE(bf->rates));
++}
 +
-+void rt2x00mmio_uninitialize(struct rt2x00_dev *rt2x00dev);
-+#define rt2x00pci_uninitialize rt2x00mmio_uninitialize
+ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ {
+ 	struct ath_txq *txq = tid->ac->txq;
+@@ -189,6 +196,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
+ 			sendbar = true;
+ 		} else {
++			ath_set_rates(tid->an->vif, tid->an->sta, bf);
+ 			ath_tx_send_normal(sc, txq, NULL, skb);
+ 		}
+ 	}
+@@ -407,7 +415,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
  
- #endif /* RT2X00MMIO_H */
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 
+-	memcpy(rates, tx_info->control.rates, sizeof(rates));
++	memcpy(rates, bf->rates, sizeof(rates));
+ 
+ 	retries = ts->ts_longretry + 1;
+ 	for (i = 0; i < ts->ts_rateindex; i++)
+@@ -736,8 +744,6 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 				  bool first_subfrm)
+ {
+ #define FIRST_DESC_NDELIMS 60
+-	struct sk_buff *skb = bf->bf_mpdu;
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	u32 nsymbits, nsymbols;
+ 	u16 minlen;
+ 	u8 flags, rix;
+@@ -778,8 +784,8 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	if (tid->an->mpdudensity == 0)
+ 		return ndelim;
+ 
+-	rix = tx_info->control.rates[0].idx;
+-	flags = tx_info->control.rates[0].flags;
++	rix = bf->rates[0].idx;
++	flags = bf->rates[0].flags;
+ 	width = (flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ? 1 : 0;
+ 	half_gi = (flags & IEEE80211_TX_RC_SHORT_GI) ? 1 : 0;
+ 
+@@ -858,6 +864,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 			bf_first = bf;
+ 
+ 		if (!rl) {
++			ath_set_rates(tid->an->vif, tid->an->sta, bf);
+ 			aggr_limit = ath_lookup_rate(sc, bf, tid);
+ 			rl = 1;
+ 		}
+@@ -998,14 +1005,14 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 
+ 	skb = bf->bf_mpdu;
+ 	tx_info = IEEE80211_SKB_CB(skb);
+-	rates = tx_info->control.rates;
++	rates = bf->rates;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 	/* set dur_update_en for l-sig computation except for PS-Poll frames */
+ 	info->dur_update = !ieee80211_is_pspoll(hdr->frame_control);
+ 	info->rtscts_rate = fi->rtscts_rate;
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < ARRAY_SIZE(bf->rates); i++) {
+ 		bool is_40, is_sgi, is_sp;
+ 		int phy;
+ 
+@@ -1743,6 +1750,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		return;
+ 	}
+ 
++	ath_set_rates(tid->an->vif, tid->an->sta, bf);
+ 	bf->bf_state.bf_type = BUF_AMPDU;
+ 	INIT_LIST_HEAD(&bf_head);
+ 	list_add(&bf->list, &bf_head);
+@@ -1993,6 +2001,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	if (txctl->paprd)
+ 		bf->bf_state.bfs_paprd_timestamp = jiffies;
+ 
++	ath_set_rates(vif, sta, bf);
+ 	ath_tx_send_normal(sc, txctl->txq, tid, skb);
+ 
+ out:
 -- 
-1.7.10
+1.8.0.2
 
