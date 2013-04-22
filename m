@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:50444 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755559Ab3DXRTf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3DVNwx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 13:19:35 -0400
-Received: by mail-la0-f46.google.com with SMTP id ep20so1844953lab.33
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 10:19:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51780C92.4000208@lwfinger.net>
-References: <CALvqYaTZrtSsP9GQzH4B988KjPg+LRCcyREKZ1zkjoaEDKPHNA@mail.gmail.com>
-	<CALvqYaTSYR43rS-pptFKCfsgvsatrUSz4v+AFBPQ0UrHC4WkXA@mail.gmail.com>
-	<5177F100.1070803@lwfinger.net>
-	<CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com>
-	<51780C92.4000208@lwfinger.net>
-Date: Wed, 24 Apr 2013 19:19:30 +0200
-Message-ID: <CALvqYaRrjMtPE72PGR-Zzuj11CL=E6+ruC+E1wGPO3m5wgdOhg@mail.gmail.com> (sfid-20130424_191940_109283_F651AA68)
-Subject: Re: Fwd: Realtek 8192CU not working
-From: Michael Stahn <michael.stahn.42@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Apr 2013 09:52:53 -0400
+Message-ID: <1366638766.8637.16.camel@jlt4.sipsolutions.net> (sfid-20130422_155256_694895_0728FBF1)
+Subject: Re: [PATCH v5 1/3] mac80211: improve the rate control API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
+Date: Mon, 22 Apr 2013 15:52:46 +0200
+In-Reply-To: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
+References: <1366625393-11647-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm using a i686 Architecture on AMD E2-1800 APU with Radeon(tm) HD
-Graphics AuthenticAMD GNU/Linux with linux 3.7.10. CONFIG_USB_DEBUG
-was allready set. I've used an USB 3.0 port previously and now
-rechecked everything with a USB2.0 port. The result is nearly the
-same: first connection succeeds (ping response), doing a manual
-reconnect to the AP leads to the same error. I've done several
-ifconfig down/ups at the end with no change.
-dmesg gives: http://bpaste.net/show/93912/
+On Mon, 2013-04-22 at 12:09 +0200, Felix Fietkau wrote:
 
-2013/4/24 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 04/24/2013 11:20 AM, Michael Stahn wrote:
->>
->> I've just recompiled the kernel and executed the following procedure:
->> modprobe rtl8192cu -> plugin in Wlan-Stick -> connect wlan via
->> Networkmanager (no connection was established, credentials are
->> correct) -> unplug Stick. Attachment contains the dmes-output.
->
->
-> Please do not drop the Cc to the Linux wireless mailing list unless you are
-> requested to send something of a sensitive nature. Always use "Reply to
-> all".
->
-> [  448.211707] rtl8192cu: MAC auto ON okay!
-> [  448.248820] rtl8192cu: Tx queue select: 0x05
-> [  448.615206] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [  464.990166] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 1
-> [  464.990540] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 2
-> [  464.990613] hub 3-0:1.0: state 7 ports 4 chg 0000 evt 0004
-> [  464.990642] ehci_hcd 0000:00:16.2: GetStatus port:2 status 001002 0  ACK
-> POWER sig=se0 CSC
-> [  464.990661] hub 3-0:1.0: port 2, status 0100, change 0001, 12 Mb/s
-> [  464.990672] usb 3-2: USB disconnect, device number 3
->
-> That error is something in the USB hub driver. What is your architecture?
->
-> To get a little more detail, please rebuild your kernel with
-> CONFIG_USB_DEBUG set and post the full log on some paste site. I will likely
-> need to have the help of the USB expert on this matter, but we need more
-> details first.
->
-> Larry
->
+> @@ -692,16 +692,38 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+>  	 */
+>  	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+>  
+> -	if (unlikely(info->control.rates[0].idx < 0))
+> -		return TX_DROP;
+> +	if (tx->sta && !info->control.skip_table)
+> +		ratetbl = rcu_dereference(tx->sta->sta.rates);
+> +
+> +	if (unlikely(info->control.rates[0].idx < 0)) {
+> +		if (ratetbl) {
+> +			struct ieee80211_tx_rate rate = {
+> +				.idx = ratetbl->rate[0].idx,
+> +				.flags = ratetbl->rate[0].flags,
+> +				.count = ratetbl->rate[0].count
+> +			};
+> +
+> +			if (ratetbl->rate[0].idx < 0)
+> +				return TX_DROP;
+
+This can't happen, idx is unsigned. Did you intend idx to be signed?
+
+johannes
+
