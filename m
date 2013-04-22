@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ht2.myhostedexchange.com ([69.50.2.38]:20962 "EHLO
-	ht1.hostedexchange.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1763426Ab3DDUDy (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40246 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753348Ab3DVVYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 16:03:54 -0400
-From: Antonio Quartulli <antonio@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: [PATCH 3/3] mac80211: implement cfg80211_ops::get_max_tp() API
-Date: Thu, 4 Apr 2013 21:57:22 +0200
-Message-ID: <1365105442-31876-3-git-send-email-antonio@open-mesh.com> (sfid-20130404_220357_360912_0BDECC95)
-In-Reply-To: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
-References: <1365105442-31876-1-git-send-email-antonio@open-mesh.com>
+	Mon, 22 Apr 2013 17:24:37 -0400
+Message-ID: <5175AA87.5020008@candelatech.com> (sfid-20130422_233203_397300_72C837B0)
+Date: Mon, 22 Apr 2013 14:24:23 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 2/2] ath9k: add support for the new rate control API
+References: <1366665104-28737-1-git-send-email-nbd@openwrt.org> <1366665104-28737-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1366665104-28737-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the get_max_tp() API function by asking the
-rate control algorithm for the maximum estimated throughput
+On 04/22/2013 02:11 PM, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>   drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+>   drivers/net/wireless/ath/ath9k/init.c  |  3 ++-
+>   drivers/net/wireless/ath/ath9k/xmit.c  | 23 ++++++++++++++++-------
+>   3 files changed, 19 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 1915f12..8a1888d 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -234,6 +234,7 @@ struct ath_buf {
+>   	dma_addr_t bf_daddr;		/* physical addr of desc */
+>   	dma_addr_t bf_buf_addr;	/* physical addr of data buffer, for DMA */
+>   	bool bf_stale;
+> +	struct ieee80211_tx_rate rates[4];
 
-Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
----
- net/mac80211/cfg.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+Maybe that should be some #define instead of [4]?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index edca2a2..2a78957 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3374,6 +3374,27 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
- 	return ret;
- }
- 
-+int ieee80211_get_max_tp(struct wireless_dev *wdev, const u8 *peer, u32 *tp)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	struct rate_control_ref *ref = sdata->local->rate_ctrl;
-+	struct sta_info *sta;
-+
-+	rcu_read_lock();
-+	sta = sta_info_get(sdata, peer);
-+	rcu_read_unlock();
-+
-+	if (!sta)
-+		return -ENOENT;
-+
-+	if (!ref->ops->get_max_tp)
-+		return -EOPNOTSUPP;
-+
-+	ref->ops->get_max_tp(sta->rate_ctrl_priv, tp);
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_PM
- static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- {
-@@ -3459,4 +3480,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.get_et_strings = ieee80211_get_et_strings,
- 	.get_channel = ieee80211_cfg_get_channel,
- 	.start_radar_detection = ieee80211_start_radar_detection,
-+	.get_max_tp = ieee80211_get_max_tp,
- };
+Or at least a comment describing where 4 came from?
+
+Thanks,
+Ben
+
 -- 
-1.8.1.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
