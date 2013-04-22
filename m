@@ -1,71 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32645 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab3DJHuA (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:38729 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080Ab3DVRaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 03:50:00 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v4 1/2] cfg80211: P2P find phase offload
-Date: Wed, 10 Apr 2013 10:49:37 +0300
-Message-ID: <4688331.yiSjqMZEZk@lx-vladimir> (sfid-20130410_095009_179718_09371582)
-In-Reply-To: <1363863994-32510-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1363863994-32510-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 22 Apr 2013 13:30:13 -0400
+Received: by mail-wi0-f180.google.com with SMTP id h11so4837898wiv.7
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2013 10:30:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net>
+References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net>
+Date: Mon, 22 Apr 2013 10:30:12 -0700
+Message-ID: <CAJ-Vmonm78MF=3jO19MESsmfizCTti-CHMaZTn7cNUKDSNH32g@mail.gmail.com> (sfid-20130422_193019_175288_6B56D23F)
+Subject: Re: ath9k problems on openSUSE 12.3
+From: Adrian Chadd <adrian@freebsd.org>
+To: Gerry Gavigan <gerry@gavigan.f9.co.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, March 21, 2013 01:06:34 PM Vladimir Kondratiev wrote:
-> Allow to implement P2P find phase in the driver/firmware.
-> 
-> Offload scheme designed as follows:
-> 
-> - Driver provide methods start_p2p_find and stop_p2p_find in the cfg80211_ops;
-> - Driver indicate firmware or driver responds to the probe requests by setting
->   feature NL80211_FEATURE_P2P_PROBE_RESP_OFFLOAD
-> - wpa_supplicant analyses methods supported to discover p2p offload support;
-> - wpa_supplicant analyses feature flags to discover p2p probe response
->   offload support;
-> to perform p2p scan, wpa_supplicant:
-> - perform legacy scan, through driver's cfg80211_ops 'scan' method
-> - configure rx management filter to get probe-request and probe-response frames
-> - start p2p find via driver's cfg80211_ops start_p2p_find method
-> - driver start p2p find with hardware and notify wpa_supplicant with
->   cfg80211_p2p_find_notify_start()
-> - driver/firmware toggle search/listen states. Received probe-request and
->   probe-response frames passed to the wpa_supplicant via cfg80211_rx_mgmt
-> - when wpa_supplicant wants to stop p2p find, it calls driver's
->   cfg80211_ops stop_p2p_find method. Alternatively, driver/firmware may decide
->   to stop p2p find. In all cases, driver notifies wpa_supplicant using
->   cfg80211_p2p_find_notify_end()
-> 
-> All driver to user space communication done through nl80211 layer.
-> 
-> Offloaded P2P find does not support variations like progressive scan.
-> 
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> ---
->  include/net/cfg80211.h       |   60 +++++++++++++++
->  include/uapi/linux/nl80211.h |   13 ++++
->  net/wireless/nl80211.c       |  167 ++++++++++++++++++++++++++++++++++++++++++
->  net/wireless/rdev-ops.h      |   19 +++++
->  net/wireless/trace.h         |   34 +++++++++
->  5 files changed, 293 insertions(+)
-> 
+Wasn't there a recent change to ath9k which reverted an initval
+change? Specifically for the AR9485?
 
-Hi Johannes,
+The problem was an unstable PLL that shows up when you do aggressive
+PCIe PHY power save.
 
-Could you please comment on this patch status? I was under impression
-I did all as we discussed and it is going to be merged, but maybe I
-missed something. I was on long vacation.
-
-Do you want me to rebase and resend?
-
-Thanks, Vladimir
+The change was to go back to the previous PCIe initval array.
 
 
+
+Adrian
+
+
+On 22 April 2013 05:30, Gerry Gavigan <gerry@gavigan.f9.co.uk> wrote:
+> After some discussion :
+>
+> https://forums.opensuse.org/english/get-technical-help-here/wireless/484686-advanced-atheros-issue-12-3-ath9k-64bit-frequent-random-de-auths-2.html
+>
+> I have been advised to seek help here as the phase lock loop is not working.
+>
+> In case it's relevant:
+>
+> - the wifi was working if possibly slightly unstable until I upgraded to
+> 3.8.7
+>   (to cure suspend and resume on a gma500 in an AAO)
+>
+> - Downgrading didn't work
+>
+> lspci -nn returns
+>
+> 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9485
+> Wireless Network Adapter [168c:0032] (rev 01)
+>
+> dmesg reports
+>
+> [ 24.800514] ------------[ cut here ]------------
+> [ 24.800563] WARNING: at
+> /home/abuild/rpmbuild/BUILD/kernel-desktop-3.7.10/linux-3.7/drivers/net/wireless/ath/ath9k/hw.c:794
+> ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]()
+> [ 24.800567] Hardware name: AOD270
+> [ 24.800571] Modules linked in: xt_tcpudp xt_pkttype xt_LOG xt_limit
+> af_packet bnep bluetooth ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6
+> ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle
+> nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4
+> nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack ip6table_filter
+> ip6_tables x_tables cpufreq_conservative cpufreq_userspace cpufreq_powersave
+> acpi_cpufreq mperf coretemp iTCO_wdt iTCO_vendor_support acer_wmi
+> sparse_keymap snd_hda_codec_realtek snd_hda_codec_hdmi snd_hda_intel
+> snd_hda_codec snd_hwdep snd_pcm snd_seq microcode serio_raw pcspkr i2c_i801
+> snd_timer snd_seq_device uvcvideo videobuf2_core sg videodev
+> videobuf2_vmalloc videobuf2_memops lpc_ich mfd_core arc4 joydev snd ath9k
+> rts_pstor(C) mac80211 ath9k_common ath9k_hw ath cfg80211 rfkill r8169
+> soundcore snd_page_alloc wmi ac battery button autofs4 gma500_gfx
+> drm_kms_helper drm i2c_algo_bit video thermal processor thermal_sys
+> scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_dh_hp_sw scsi_dh
+> [ 24.800687] Pid: 64, comm: kworker/u:3 Tainted: G C 3.7.10-1.1-desktop #1
+> [ 24.800690] Call Trace:
+> [ 24.800713] [<c0205779>] try_stack_unwind+0x199/0x1b0
+> [ 24.800729] [<c0204487>] dump_trace+0x47/0xf0
+> [ 24.800740] [<c02057db>] show_trace_log_lvl+0x4b/0x60
+> [ 24.800749] [<c0205808>] show_trace+0x18/0x20
+> [ 24.800760] [<c06fbeeb>] dump_stack+0x6d/0x72
+> [ 24.800812] [<c0238cb8>] warn_slowpath_common+0x78/0xb0
+> [ 24.800855] [<c0238d0b>] warn_slowpath_null+0x1b/0x20
+> [ 24.800897] [<f7c84448>] ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]
+> [ 24.800941] [<f7b2d2b8>] ath_hw_pll_work+0x48/0xc0 [ath9k]
+> [ 24.801012] [<c02527dc>] process_one_work+0x10c/0x400
+> [ 24.801038] [<c0253e89>] worker_thread+0x119/0x3b0
+> [ 24.801055] [<c02584f2>] kthread+0x92/0xa0
+> [ 24.801076] [<c070dc67>] ret_from_kernel_thread+0x1b/0x28
+> [ 24.801093] [<c0258460>] kthread_create_on_node+0xd0/0xd0
+> [ 24.808339] DWARF2 unwinder stuck at kthread+0x0/0xa0
+> [ 24.808346]
+> [ 24.808350] Leftover inexact backtrace:
+> [ 24.808350]
+> [ 24.808361] ---[ end trace 33960a031f166c71 ]---
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
