@@ -1,36 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55929 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933110Ab3DIJuX (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:46771 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140Ab3DWGyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 05:50:23 -0400
-Message-ID: <1365501017.8465.12.camel@jlt4.sipsolutions.net> (sfid-20130409_115027_926768_5A6C42DA)
-Subject: Re: [PATCHv4] mac80211: fix recalc_radar hwconf sync problem
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, zefir.kurtisi@neratec.com,
-	mathias.kretschmer@fokus.fraunhofer.de, ordex@autistici.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Tue, 09 Apr 2013 11:50:17 +0200
-In-Reply-To: <1365453796-17572-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130408_224347_713775_388BD8E8)
-References: <20130408175352.GC5938@ritirata.org>
-	 <1365453796-17572-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 (sfid-20130408_224347_713775_388BD8E8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 23 Apr 2013 02:54:37 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 4/4] ath9k: Fix RX DMA mapping
+Date: Tue, 23 Apr 2013 12:22:19 +0530
+Message-Id: <1366699939-14076-4-git-send-email-sujith@msujith.org> (sfid-20130423_085441_841153_7784C3E6)
+In-Reply-To: <1366699939-14076-1-git-send-email-sujith@msujith.org>
+References: <1366699939-14076-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-08 at 22:43 +0200, Simon Wunderlich wrote:
-> local->hw.conf maybe not be synced when recalcing whether radar is
-> enabled, sometimes leaving radar enabled even if it's not neccesary
-> anymore.
-> 
-> Fix this by:
->  * setting radar_enabled when creating the chanctx
->  * turning radar_enabled off before destroying the last channel context
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Applied.
+After the commit "ath9k: improve dma map failure handling", the
+wrong buffer was DMA-unmapped, introducing warnings like the one below.
+This patch fixes the issue.
 
-johannes
+WARNING: at /home/sujith/dev/wireless-testing/lib/dma-debug.c:986 check_sync+0x4bc/0x580()
+Hardware name: LIFEBOOK AH531
+ath9k 0000:02:00.0: DMA-API: device driver tries to sync DMA memory it has not allocated [device address=0x00000000d9012800] [size=48 bytes]
+Pid: 86, comm: kworker/u:5 Tainted: G        W  O 3.9.0-rc8-wl-debug #106
+Call Trace:
+ [<ffffffff810410c0>] warn_slowpath_common+0x70/0xa0
+ [<ffffffff8104113c>] warn_slowpath_fmt+0x4c/0x50
+ [<ffffffff8125432c>] check_sync+0x4bc/0x580
+ [<ffffffff8109e5f7>] ? trace_hardirqs_on_caller+0xa7/0x190
+ [<ffffffff8109e6ed>] ? trace_hardirqs_on+0xd/0x10
+ [<ffffffff81254488>] debug_dma_sync_single_for_device+0x48/0x50
+ [<ffffffffa0a53825>] ? ath9k_iowrite32+0x35/0x90 [ath9k]
+ [<ffffffff812512f0>] ? swiotlb_tbl_sync_single+0x50/0x90
+ [<ffffffff81251350>] ? swiotlb_sync_single+0x20/0x30
+ [<ffffffff8125137f>] ? swiotlb_sync_single_for_device+0xf/0x20
+ [<ffffffffa0a58baf>] ath_rx_edma_buf_link+0xef/0x140 [ath9k]
+ [<ffffffffa0a58c4e>] ath_rx_addbuffer_edma+0x4e/0x90 [ath9k]
+ [<ffffffffa0a59c51>] ath_startrecv+0xf1/0x120 [ath9k]
+ [<ffffffffa0a550e0>] ath_complete_reset+0x20/0x130 [ath9k]
+ [<ffffffffa0a5790d>] ath_reset_internal+0x10d/0x210 [ath9k]
+ [<ffffffffa0a5878c>] ath9k_config+0x47c/0x7b0 [ath9k]
+ [<ffffffffa06d4978>] ieee80211_hw_config+0x88/0x3f0 [mac80211]
+ [<ffffffffa06d4a3f>] ? ieee80211_hw_config+0x14f/0x3f0 [mac80211]
+ [<ffffffffa06dbed1>] __ieee80211_scan_completed+0xc1/0x440 [mac80211]
+ [<ffffffffa06dd002>] ieee80211_scan_work+0x82/0x440 [mac80211]
+ [<ffffffff810606a3>] process_one_work+0x1e3/0x530
+ [<ffffffff81060641>] ? process_one_work+0x181/0x530
+ [<ffffffff8106163f>] worker_thread+0x10f/0x3c0
+ [<ffffffff81061530>] ? manage_workers+0x330/0x330
+ [<ffffffff810665da>] kthread+0xea/0xf0
+ [<ffffffff810664f0>] ? kthread_create_on_node+0x140/0x140
+ [<ffffffff8146085c>] ret_from_fork+0x7c/0xb0
+ [<ffffffff810664f0>] ? kthread_create_on_node+0x140/0x140
+
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 9c0045e..8be2b5d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1279,13 +1279,13 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			goto requeue_drop_frag;
+ 		}
+ 
+-		bf->bf_mpdu = requeue_skb;
+-		bf->bf_buf_addr = new_buf_addr;
+-
+ 		/* Unmap the frame */
+ 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 common->rx_bufsize, dma_type);
+ 
++		bf->bf_mpdu = requeue_skb;
++		bf->bf_buf_addr = new_buf_addr;
++
+ 		skb_put(skb, rs.rs_datalen + ah->caps.rx_status_len);
+ 		if (ah->caps.rx_status_len)
+ 			skb_pull(skb, ah->caps.rx_status_len);
+-- 
+1.8.2.1
 
