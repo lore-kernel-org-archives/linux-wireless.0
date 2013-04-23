@@ -1,503 +1,717 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:45736 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373Ab3DPKIG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 06:08:06 -0400
-Received: by mail-wg0-f54.google.com with SMTP id y10so272787wgg.33
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2013 03:08:04 -0700 (PDT)
-Date: Tue, 16 Apr 2013 12:03:47 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 3/5] mac80211: improve the rate control API
-Message-ID: <20130416095949.GA14259@magnum.frso.rivierawaves.com> (sfid-20130416_120812_611764_8DC574AE)
-References: <1365890626-86895-1-git-send-email-nbd@openwrt.org>
- <1365890626-86895-2-git-send-email-nbd@openwrt.org>
- <1365890626-86895-3-git-send-email-nbd@openwrt.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4542 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755829Ab3DWKxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Apr 2013 06:53:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Piotr Haber" <phaber@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/5] brcmfmac: support critical protocol API for DHCP
+Date: Tue, 23 Apr 2013 12:53:12 +0200
+Message-ID: <1366714395-13416-3-git-send-email-arend@broadcom.com> (sfid-20130423_125343_116917_E63E6A46)
+In-Reply-To: <1366714395-13416-1-git-send-email-arend@broadcom.com>
+References: <1366714395-13416-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1365890626-86895-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 14, 2013 at 12:03:44AM +0200, Felix Fietkau wrote:
-> Allow rate control modules to pass a rate selection table to mac80211
-> and the driver. This allows drivers to fetch the most recent rate
-> selection from the sta pointer for already buffered frames. This allows
-> rate control to respond faster to sudden link changes and it is also a
-> step towards adding minstrel_ht support to drivers like iwlwifi.
-> 
-> When a driver sets IEEE80211_HW_SUPPORTS_RC_TABLE, mac80211 will not
-> fill info->control.rates with rates from the rate table (to preserve
-> explicit overrides by the rate control module). The driver then
-> explicitly calls ieee80211_get_tx_rates to merge overrides from
-> info->control.rates with defaults from the sta rate table.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  include/net/mac80211.h |  65 ++++++++++
->  net/mac80211/rate.c    | 317 ++++++++++++++++++++++++++++++++++++++++---------
->  net/mac80211/tx.c      | 137 ++++++---------------
->  3 files changed, 357 insertions(+), 162 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 3cef0dd..f39e439 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -561,6 +561,9 @@ enum mac80211_rate_control_flags {
->  /* maximum number of rate stages */
->  #define IEEE80211_TX_MAX_RATES	4
->  
-> +/* maximum number of rate table entries */
-> +#define IEEE80211_TX_RATE_TABLE_SIZE	4
-> +
->  /**
->   * struct ieee80211_tx_rate - rate selection/status
->   *
-> @@ -657,6 +660,7 @@ struct ieee80211_tx_info {
->  					s8 rts_cts_rate_idx;
->  					u8 use_rts:1;
->  					u8 use_cts_prot:1;
-> +					u8 short_preamble:1;
->  					/* 2 bytes free */
->  				};
->  				/* only needed before rate control */
-> @@ -678,6 +682,8 @@ struct ieee80211_tx_info {
->  		struct {
->  			struct ieee80211_tx_rate driver_rates[
->  				IEEE80211_TX_MAX_RATES];
-> +			u8 pad[4];
-> +
->  			void *rate_driver_data[
->  				IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE / sizeof(void *)];
->  		};
-> @@ -1223,6 +1229,24 @@ enum ieee80211_sta_rx_bandwidth {
->  };
->  
->  /**
-> + * struct ieee80211_sta_rates - station rate selection table
-> + *
-> + * @rcu_head: RCU head used for freeing the table on update
-> + * @rates: transmit rates/flags to be used by default.
-> + *	Overriding entries per-packet is possible by using cb tx control.
-> + */
-> +struct ieee80211_sta_rates {
-> +	struct rcu_head rcu_head;
-> +	struct {
-> +		u8 idx;
-> +		u8 count;
-> +		u8 count_cts;
-> +		u8 count_rts;
-> +		u16 flags;
-> +	} rate[IEEE80211_TX_RATE_TABLE_SIZE];
-> +};
-> +
-> +/**
->   * struct ieee80211_sta - station table entry
->   *
->   * A station table entry represents a station we are possibly
-> @@ -1249,6 +1273,7 @@ enum ieee80211_sta_rx_bandwidth {
->   *	notifications and capabilities. The value is only valid after
->   *	the station moves to associated state.
->   * @smps_mode: current SMPS mode (off, static or dynamic)
-> + * @tx_rates: rate control selection table
->   */
->  struct ieee80211_sta {
->  	u32 supp_rates[IEEE80211_NUM_BANDS];
-> @@ -1262,6 +1287,7 @@ struct ieee80211_sta {
->  	u8 rx_nss;
->  	enum ieee80211_sta_rx_bandwidth bandwidth;
->  	enum ieee80211_smps_mode smps_mode;
-> +	struct ieee80211_sta_rates __rcu *rates;
->  
->  	/* must be last */
->  	u8 drv_priv[0] __aligned(sizeof(void *));
-> @@ -1417,6 +1443,9 @@ struct ieee80211_tx_control {
->   *	for different virtual interfaces. See the doc section on HW queue
->   *	control for more details.
->   *
-> + * @IEEE80211_HW_SUPPORTS_RC_TABLE: The driver supports using a rate
-> + *	selection table provided by the rate control algorithm.
-> + *
->   * @IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF: Use the P2P Device address for any
->   *	P2P Interface. This will be honoured even if more than one interface
->   *	is supported.
-> @@ -1449,6 +1478,7 @@ enum ieee80211_hw_flags {
->  	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
->  	IEEE80211_HW_AP_LINK_PS				= 1<<22,
->  	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
-> +	IEEE80211_HW_SUPPORTS_RC_TABLE			= 1<<24,
->  	IEEE80211_HW_P2P_DEV_ADDR_FOR_INTF		= 1<<25,
->  	IEEE80211_HW_TIMING_BEACON_ONLY			= 1<<26,
->  };
-> @@ -3135,6 +3165,25 @@ void ieee80211_sta_set_buffered(struct ieee80211_sta *sta,
->  				u8 tid, bool buffered);
->  
->  /**
-> + * ieee80211_get_tx_rates - get the selected transmit rates for a packet
-> + *
-> + * Call this function in a driver with per-packet rate selection support
-> + * to combine the rate info in the packet tx info with the most recent
-> + * rate selection table for the station entry.
-> + *
-> + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-> + * @sta: the receiver station to which this packet is sent.
-> + * @skb: the frame to be transmitted.
-> + * @dest: buffer for extracted rate/retry information
-> + * @max_rates: maximum number of rates to fetch
-> + */
-> +void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
-> +			    struct ieee80211_sta *sta,
-> +			    struct sk_buff *skb,
-> +			    struct ieee80211_tx_rate *dest,
-> +			    int max_rates);
-> +
-> +/**
->   * ieee80211_tx_status - transmit status callback
->   *
->   * Call this function for all transmitted frames after they have been
-> @@ -4210,6 +4259,22 @@ bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
->  	return false;
->  }
->  
-> +/**
-> + * rate_control_set_rates - pass the sta rate selection to mac80211/driver
-> + *
-> + * When not doing a rate control probe to test rates, rate control should pass
-> + * its rate selection to mac80211. If the driver supports receiving a station
-> + * rate table, it will use it to ensure that frames are always sent based on
-> + * the most recent rate control module decision.
-> + *
-> + * @hw: pointer as obtained from ieee80211_alloc_hw()
-> + * @sta: &struct ieee80211_sta pointer to the target destination.
-@pubsta:
+From: Piotr Haber <phaber@broadcom.com>
 
-> + * @rates: new tx rate set to be used for this station.
-> + */
-> +int rate_control_set_rates(struct ieee80211_hw *hw,
-> +			   struct ieee80211_sta *pubsta,
-> +			   struct ieee80211_sta_rates *rates);
-> +
->  int ieee80211_rate_control_register(struct rate_control_ops *ops);
->  void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
->  
-> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-> index 5d545dd..d774751 100644
-> --- a/net/mac80211/rate.c
-> +++ b/net/mac80211/rate.c
-> @@ -252,6 +252,23 @@ rate_lowest_non_cck_index(struct ieee80211_supported_band *sband,
->  	return 0;
->  }
->  
-> +static void __rate_control_send_low(struct ieee80211_hw *hw,
-> +				    struct ieee80211_supported_band *sband,
-> +				    struct ieee80211_sta *sta,
-> +				    struct ieee80211_tx_info *info)
-> +{
-> +	if ((sband->band != IEEE80211_BAND_2GHZ) ||
-> +	    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
-> +		info->control.rates[0].idx = rate_lowest_index(sband, sta);
-> +	else
-> +		info->control.rates[0].idx =
-> +			rate_lowest_non_cck_index(sband, sta);
-> +
-> +	info->control.rates[0].count =
-> +		(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-> +		1 : hw->max_rate_tries;
-> +}
-> +
->  
->  bool rate_control_send_low(struct ieee80211_sta *sta,
->  			   void *priv_sta,
-> @@ -262,16 +279,8 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
->  	int mcast_rate;
->  
->  	if (!sta || !priv_sta || rc_no_data_or_no_ack_use_min(txrc)) {
-> -		if ((sband->band != IEEE80211_BAND_2GHZ) ||
-> -		    !(info->flags & IEEE80211_TX_CTL_NO_CCK_RATE))
-> -			info->control.rates[0].idx =
-> -				rate_lowest_index(txrc->sband, sta);
-> -		else
-> -			info->control.rates[0].idx =
-> -				rate_lowest_non_cck_index(txrc->sband, sta);
-> -		info->control.rates[0].count =
-> -			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-> -			1 : txrc->hw->max_rate_tries;
-> +		__rate_control_send_low(txrc->hw, sband, sta, info);
-> +
->  		if (!sta && txrc->bss) {
->  			mcast_rate = txrc->bss_conf->mcast_rate[sband->band];
->  			if (mcast_rate > 0) {
-> @@ -355,7 +364,8 @@ static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
->  
->  
->  static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
-> -				struct ieee80211_tx_rate_control *txrc,
-> +				struct ieee80211_supported_band *sband,
-> +				enum nl80211_chan_width chan_width,
->  				u32 mask,
->  				u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
->  {
-> @@ -375,27 +385,17 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
->  				  IEEE80211_TX_RC_USE_SHORT_PREAMBLE);
->  		alt_rate.count = rate->count;
->  		if (rate_idx_match_legacy_mask(&alt_rate,
-> -					       txrc->sband->n_bitrates,
-> -					       mask)) {
-> +					       sband->n_bitrates, mask)) {
->  			*rate = alt_rate;
->  			return;
->  		}
->  	} else {
-> -		struct sk_buff *skb = txrc->skb;
-> -		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-> -		__le16 fc;
-> -
->  		/* handle legacy rates */
-> -		if (rate_idx_match_legacy_mask(rate, txrc->sband->n_bitrates,
-> -					       mask))
-> +		if (rate_idx_match_legacy_mask(rate, sband->n_bitrates, mask))
->  			return;
->  
->  		/* if HT BSS, and we handle a data frame, also try HT rates */
-> -		if (txrc->bss_conf->chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
-> -			return;
-> -
-> -		fc = hdr->frame_control;
-> -		if (!ieee80211_is_data(fc))
-> +		if (chan_width == NL80211_CHAN_WIDTH_20_NOHT)
->  			return;
->  
->  		alt_rate.idx = 0;
-> @@ -408,7 +408,7 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
->  
->  		alt_rate.flags |= IEEE80211_TX_RC_MCS;
->  
-> -		if (txrc->bss_conf->chandef.width == NL80211_CHAN_WIDTH_40)
-> +		if (chan_width == NL80211_CHAN_WIDTH_40)
->  			alt_rate.flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
->  
->  		if (rate_idx_match_mcs_mask(&alt_rate, mcs_mask)) {
-> @@ -426,6 +426,220 @@ static void rate_idx_match_mask(struct ieee80211_tx_rate *rate,
->  	 */
->  }
->  
-> +static void rate_fixup_ratelist(struct ieee80211_vif *vif,
-> +				struct ieee80211_supported_band *sband,
-> +				struct ieee80211_tx_info *info,
-> +				struct ieee80211_tx_rate *rates,
-> +				int max_rates)
-> +{
-> +	struct ieee80211_rate *rate;
-> +	bool inval = false;
-> +	int i;
-> +
-> +	/*
-> +	 * set up the RTS/CTS rate as the fastest basic rate
-> +	 * that is not faster than the data rate
-> +	 *
-> +	 * XXX: Should this check all retry rates?
-> +	 */
-> +	if (!(rates[0].flags & IEEE80211_TX_RC_MCS)) {
-> +		s8 baserate = 0;
-> +
-> +		rate = &sband->bitrates[rates[0].idx];
-> +
-> +		for (i = 0; i < sband->n_bitrates; i++) {
-> +			/* must be a basic rate */
-> +			if (!(vif->bss_conf.basic_rates & BIT(i)))
-> +				continue;
-> +			/* must not be faster than the data rate */
-> +			if (sband->bitrates[i].bitrate > rate->bitrate)
-> +				continue;
-> +			/* maximum */
-> +			if (sband->bitrates[baserate].bitrate <
-> +			     sband->bitrates[i].bitrate)
-> +				baserate = i;
-> +		}
-> +
-> +		info->control.rts_cts_rate_idx = baserate;
-> +	}
-> +
-> +	for (i = 0; i < max_rates; i++) {
-> +		/*
-> +		 * make sure there's no valid rate following
-> +		 * an invalid one, just in case drivers don't
-> +		 * take the API seriously to stop at -1.
-> +		 */
-> +		if (inval) {
-> +			rates[i].idx = -1;
-> +			continue;
-> +		}
-> +		if (rates[i].idx < 0) {
-> +			inval = true;
-> +			continue;
-> +		}
-> +
-> +		/*
-> +		 * For now assume MCS is already set up correctly, this
-> +		 * needs to be fixed.
-> +		 */
-> +		if (rates[i].flags & IEEE80211_TX_RC_MCS) {
-> +			WARN_ON(rates[i].idx > 76);
-> +
-> +			if (!(rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) &&
-> +			    info->control.use_cts_prot)
-> +				rates[i].flags |=
-> +					IEEE80211_TX_RC_USE_CTS_PROTECT;
-> +			continue;
-> +		}
-> +
-> +		/* set up RTS protection if desired */
-> +		if (info->control.use_rts) {
-> +			rates[i].flags |= IEEE80211_TX_RC_USE_RTS_CTS;
-> +			info->control.use_cts_prot = false;
-> +		}
-> +
-> +		/* RC is busted */
-> +		if (WARN_ON_ONCE(rates[i].idx >= sband->n_bitrates)) {
-> +			rates[i].idx = -1;
-> +			continue;
-> +		}
-> +
-> +		rate = &sband->bitrates[rates[i].idx];
-> +
-> +		/* set up short preamble */
-> +		if (info->control.short_preamble &&
-> +		    rate->flags & IEEE80211_RATE_SHORT_PREAMBLE)
-> +			rates[i].flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
-> +
-> +		/* set up G protection */
-> +		if (!(rates[i].flags & IEEE80211_TX_RC_USE_RTS_CTS) &&
-> +		    info->control.use_cts_prot &&
-> +		    rate->flags & IEEE80211_RATE_ERP_G)
-> +			rates[i].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
-> +	}
-> +}
-> +
-> +
-> +static void rate_control_fill_sta_table(struct ieee80211_sta *sta,
-> +					struct ieee80211_tx_info *info,
-> +					struct ieee80211_tx_rate *rates,
-> +					int max_rates)
-> +{
-> +	struct ieee80211_sta_rates *ratetbl = NULL;
-> +	int i;
-> +
-> +	if (sta)
-> +		ratetbl = rcu_dereference(sta->rates);
-> +
-> +	/* Fill remaining rate slots with data from the sta rate table. */
-> +	max_rates = min_t(int, max_rates, IEEE80211_TX_RATE_TABLE_SIZE);
-> +	for (i = 0; i < max_rates; i++) {
-> +		if (i < ARRAY_SIZE(info->control.rates) &&
-> +		    info->control.rates[i].idx >= 0 &&
-> +		    info->control.rates[i].count) {
-> +			if (rates != info->control.rates)
-> +				rates[i] = info->control.rates[i];
-> +		} else if (ratetbl) {
-> +			rates[i].idx = ratetbl->rate[i].idx;
-> +			rates[i].flags = ratetbl->rate[i].flags;
-> +			if (info->control.use_rts)
-> +				rates[i].count = ratetbl->rate[i].count_rts;
-> +			else if (info->control.use_cts_prot)
-> +				rates[i].count = ratetbl->rate[i].count_cts;
-> +			else
-> +				rates[i].count = ratetbl->rate[i].count;
-> +		} else {
-> +			rates[i].idx = -1;
-> +			rates[i].count = 0;
-> +		}
-> +
-> +		if (rates[i].idx < 0 || !rates[i].count)
-> +			break;
-> +	}
-> +}
-> +
-> +static void rate_control_apply_mask(struct ieee80211_sub_if_data *sdata,
-> +				    struct ieee80211_sta *sta,
-> +				    struct ieee80211_supported_band *sband,
-> +				    struct ieee80211_tx_info *info,
-> +				    struct ieee80211_tx_rate *rates,
-> +				    int max_rates)
-> +{
-> +	enum nl80211_chan_width chan_width;
-> +	u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
-> +	bool has_mcs_mask;
-> +	u32 mask;
-> +	int i;
-> +
-> +	/*
-> +	 * Try to enforce the rateidx mask the user wanted. skip this if the
-> +	 * default mask (allow all rates) is used to save some processing for
-> +	 * the common case.
-> +	 */
-> +	mask = sdata->rc_rateidx_mask[info->band];
-> +	has_mcs_mask = sdata->rc_has_mcs_mask[info->band];
-> +	if (mask == (1 << sband->n_bitrates) - 1 && !has_mcs_mask)
-> +		return;
-> +
-> +	if (has_mcs_mask)
-> +		memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
-> +		       sizeof(mcs_mask));
-> +	else
-> +		memset(mcs_mask, 0xff, sizeof(mcs_mask));
-> +
-> +	if (sta) {
-> +		/* Filter out rates that the STA does not support */
-> +		mask &= sta->supp_rates[info->band];
-> +		for (i = 0; i < sizeof(mcs_mask); i++)
-> +			mcs_mask[i] &= sta->ht_cap.mcs.rx_mask[i];
-> +	}
-> +
-> +	/*
-> +	 * Make sure the rate index selected for each TX rate is
-> +	 * included in the configured mask and change the rate indexes
-> +	 * if needed.
-> +	 */
-> +	chan_width = sdata->vif.bss_conf.chandef.width;
-> +	for (i = 0; i < max_rates; i++) {
-> +		/* Skip invalid rates */
-> +		if (rates[i].idx < 0)
-> +			break;
-> +
-> +		rate_idx_match_mask(&rates[i], sband, mask, chan_width,
-> +				    mcs_mask);
-> +	}
-> +}
-> +
-> +void ieee80211_get_tx_rates(struct ieee80211_vif *vif,
-> +			    struct ieee80211_sta *sta,
-> +			    struct sk_buff *skb,
-> +			    struct ieee80211_tx_rate *dest,
-> +			    int max_rates)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-> +	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +	struct ieee80211_supported_band *sband;
-> +
-> +	rate_control_fill_sta_table(sta, info, dest, max_rates);
-> +
-> +	if (!vif)
-> +		return;
-> +
-> +	sdata = vif_to_sdata(vif);
-> +	sband = sdata->local->hw.wiphy->bands[info->band];
-> +
-> +	if (ieee80211_is_data(hdr->frame_control))
-> +		rate_control_apply_mask(sdata, sta, sband, info, dest, max_rates);
-> +
-> +	if(dest[0].idx < 0)
-space
+Adds support for the critical protocol API provided by nl80211
+which gives Wifi traffic priority over a Bluetooth (e)SCO connection
+and disables scanning during DCHP negotiation.
 
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Piotr Haber <phaber@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.c   |  498 ++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/btcoex.h   |   29 ++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   46 ++
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |    2 +
+ 5 files changed, 577 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
 
-I gave it a try, I hope you won't mind the feedback for the typos.
-It does not compile:
-error: âstruct ieee80211_tx_dataâ has no member named ârateâ
-it likely misses the diff for ieee80211_i.h, however that's what I did
-to quickly run without IEEE80211_HW_SUPPORTS_RC_TABLE so far.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 598c8e2..8e9b122 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -30,7 +30,8 @@ brcmfmac-objs += \
+ 		p2p.o \
+ 		dhd_cdc.o \
+ 		dhd_common.o \
+-		dhd_linux.o
++		dhd_linux.o \
++		btcoex.o
+ brcmfmac-$(CONFIG_BRCMFMAC_SDIO) += \
+ 		dhd_sdio.o \
+ 		bcmsdh.o \
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+new file mode 100644
+index 0000000..1a21736
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.c
+@@ -0,0 +1,498 @@
++/*
++ * Copyright (c) 2013 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/slab.h>
++#include <linux/netdevice.h>
++#include <net/cfg80211.h>
++
++#include <brcmu_wifi.h>
++#include <brcmu_utils.h>
++#include <defs.h>
++#include <dhd.h>
++#include <dhd_dbg.h>
++#include "fwil.h"
++#include "fwil_types.h"
++#include "btcoex.h"
++#include "p2p.h"
++#include "wl_cfg80211.h"
++
++/* T1 start SCO/eSCO priority suppression */
++#define BRCMF_BTCOEX_OPPR_WIN_TIME   2000
++
++/* BT registers values during DHCP */
++#define BRCMF_BT_DHCP_REG50 0x8022
++#define BRCMF_BT_DHCP_REG51 0
++#define BRCMF_BT_DHCP_REG64 0
++#define BRCMF_BT_DHCP_REG65 0
++#define BRCMF_BT_DHCP_REG71 0
++#define BRCMF_BT_DHCP_REG66 0x2710
++#define BRCMF_BT_DHCP_REG41 0x33
++#define BRCMF_BT_DHCP_REG68 0x190
++
++/* number of samples for SCO detection */
++#define BRCMF_BT_SCO_SAMPLES 12
++
++/**
++* enum brcmf_btcoex_state - BT coex DHCP state machine states
++* @BRCMF_BT_DHCP_IDLE: DCHP is idle
++* @BRCMF_BT_DHCP_START: DHCP started, wait before
++*	boosting wifi priority
++* @BRCMF_BT_DHCP_OPPR_WIN: graceful DHCP opportunity ended,
++*	boost wifi priority
++* @BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT: wifi priority boost end,
++*	restore defaults
++*/
++enum brcmf_btcoex_state {
++	BRCMF_BT_DHCP_IDLE,
++	BRCMF_BT_DHCP_START,
++	BRCMF_BT_DHCP_OPPR_WIN,
++	BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT
++};
++
++/**
++ * struct brcmf_btcoex_info - BT coex related information
++ * @vif: interface for which request was done.
++ * @timer: timer for DHCP state machine
++ * @timeout: configured timeout.
++ * @timer_on:  DHCP timer active
++ * @dhcp_done: DHCP finished before T1/T2 timer expiration
++ * @bt_state: DHCP state machine state
++ * @work: DHCP state machine work
++ * @cfg: driver private data for cfg80211 interface
++ * @reg66: saved value of btc_params 66
++ * @reg41: saved value of btc_params 41
++ * @reg68: saved value of btc_params 68
++ * @saved_regs_part1: flag indicating regs 66,41,68
++ *	have been saved
++ * @reg51: saved value of btc_params 51
++ * @reg64: saved value of btc_params 64
++ * @reg65: saved value of btc_params 65
++ * @reg71: saved value of btc_params 71
++ * @saved_regs_part1: flag indicating regs 50,51,64,65,71
++ *	have been saved
++ */
++struct brcmf_btcoex_info {
++	struct brcmf_cfg80211_vif *vif;
++	struct timer_list timer;
++	u16 timeout;
++	bool timer_on;
++	bool dhcp_done;
++	enum brcmf_btcoex_state bt_state;
++	struct work_struct work;
++	struct brcmf_cfg80211_info *cfg;
++	u32 reg66;
++	u32 reg41;
++	u32 reg68;
++	bool saved_regs_part1;
++	u32 reg50;
++	u32 reg51;
++	u32 reg64;
++	u32 reg65;
++	u32 reg71;
++	bool saved_regs_part2;
++};
++
++/**
++ * brcmf_btcoex_params_write() - write btc_params firmware variable
++ * @ifp: interface
++ * @addr: btc_params register number
++ * @data: data to write
++ */
++static s32 brcmf_btcoex_params_write(struct brcmf_if *ifp, u32 addr, u32 data)
++{
++	struct {
++		__le32 addr;
++		__le32 data;
++	} reg_write;
++
++	reg_write.addr = cpu_to_le32(addr);
++	reg_write.data = cpu_to_le32(data);
++	return brcmf_fil_iovar_data_set(ifp, "btc_params",
++					&reg_write, sizeof(reg_write));
++}
++
++/**
++ * brcmf_btcoex_params_read() - read btc_params firmware variable
++ * @ifp: interface
++ * @addr: btc_params register number
++ * @data: read data
++ */
++static s32 brcmf_btcoex_params_read(struct brcmf_if *ifp, u32 addr, u32 *data)
++{
++	*data = addr;
++
++	return brcmf_fil_iovar_int_get(ifp, "btc_params", data);
++}
++
++/**
++ * brcmf_btcoex_boost_wifi() - control BT SCO/eSCO parameters
++ * @btci: BT coex info
++ * @trump_sco:
++ *	true - set SCO/eSCO parameters for compatibility
++ *		during DHCP window
++ *	false - restore saved parameter values
++ *
++ * Enhanced BT COEX settings for eSCO compatibility during DHCP window
++ */
++static void brcmf_btcoex_boost_wifi(struct brcmf_btcoex_info *btci,
++				    bool trump_sco)
++{
++	struct brcmf_if *ifp = btci->cfg->pub->iflist[0];
++
++	if (trump_sco && !btci->saved_regs_part2) {
++		/* this should reduce eSCO agressive
++		 * retransmit w/o breaking it
++		 */
++
++		/* save current */
++		brcmf_dbg(TRACE, "new SCO/eSCO coex algo {save & override}\n");
++		brcmf_btcoex_params_read(ifp, 50, &btci->reg50);
++		brcmf_btcoex_params_read(ifp, 51, &btci->reg51);
++		brcmf_btcoex_params_read(ifp, 64, &btci->reg64);
++		brcmf_btcoex_params_read(ifp, 65, &btci->reg65);
++		brcmf_btcoex_params_read(ifp, 71, &btci->reg71);
++
++		btci->saved_regs_part2 = true;
++		brcmf_dbg(TRACE,
++			  "saved bt_params[50,51,64,65,71]: 0x%x 0x%x 0x%x 0x%x 0x%x\n",
++			  btci->reg50, btci->reg51, btci->reg64,
++			  btci->reg65, btci->reg71);
++
++		/* pacify the eSco   */
++		brcmf_btcoex_params_write(ifp, 50, BRCMF_BT_DHCP_REG50);
++		brcmf_btcoex_params_write(ifp, 51, BRCMF_BT_DHCP_REG51);
++		brcmf_btcoex_params_write(ifp, 64, BRCMF_BT_DHCP_REG64);
++		brcmf_btcoex_params_write(ifp, 65, BRCMF_BT_DHCP_REG65);
++		brcmf_btcoex_params_write(ifp, 71, BRCMF_BT_DHCP_REG71);
++
++	} else if (btci->saved_regs_part2) {
++		/* restore previously saved bt params */
++		brcmf_dbg(TRACE, "Do new SCO/eSCO coex algo {restore}\n");
++		brcmf_btcoex_params_write(ifp, 50, btci->reg50);
++		brcmf_btcoex_params_write(ifp, 51, btci->reg51);
++		brcmf_btcoex_params_write(ifp, 64, btci->reg64);
++		brcmf_btcoex_params_write(ifp, 65, btci->reg65);
++		brcmf_btcoex_params_write(ifp, 71, btci->reg71);
++
++		brcmf_dbg(TRACE,
++			  "restored bt_params[50,51,64,65,71]: 0x%x 0x%x 0x%x 0x%x 0x%x\n",
++			  btci->reg50, btci->reg51, btci->reg64,
++			  btci->reg65, btci->reg71);
++
++		btci->saved_regs_part2 = false;
++	} else {
++		brcmf_err("attempted to restore not saved BTCOEX params\n");
++	}
++}
++
++/**
++ * brcmf_btcoex_is_sco_active() - check if SCO/eSCO is active
++ * @ifp: interface
++ *
++ * return: true if SCO/eSCO session is active
++ */
++static bool brcmf_btcoex_is_sco_active(struct brcmf_if *ifp)
++{
++	int ioc_res = 0;
++	bool res = false;
++	int sco_id_cnt = 0;
++	u32 param27;
++	int i;
++
++	for (i = 0; i < BRCMF_BT_SCO_SAMPLES; i++) {
++		ioc_res = brcmf_btcoex_params_read(ifp, 27, &param27);
++
++		if (ioc_res < 0) {
++			brcmf_err("ioc read btc params error\n");
++			break;
++		}
++
++		brcmf_dbg(TRACE, "sample[%d], btc_params 27:%x\n", i, param27);
++
++		if ((param27 & 0x6) == 2) { /* count both sco & esco  */
++			sco_id_cnt++;
++		}
++
++		if (sco_id_cnt > 2) {
++			brcmf_dbg(TRACE,
++				  "sco/esco detected, pkt id_cnt:%d samples:%d\n",
++				  sco_id_cnt, i);
++			res = true;
++			break;
++		}
++	}
++	brcmf_dbg(TRACE, "exit: result=%d\n", res);
++	return res;
++}
++
++/**
++ * btcmf_btcoex_save_part1() - save first step parameters.
++ */
++static void btcmf_btcoex_save_part1(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp = btci->vif->ifp;
++
++	if (!btci->saved_regs_part1) {
++		/* Retrieve and save original reg value */
++		brcmf_btcoex_params_read(ifp, 66, &btci->reg66);
++		brcmf_btcoex_params_read(ifp, 41, &btci->reg41);
++		brcmf_btcoex_params_read(ifp, 68, &btci->reg68);
++		btci->saved_regs_part1 = true;
++		brcmf_dbg(TRACE,
++			  "saved btc_params regs (66,41,68) 0x%x 0x%x 0x%x\n",
++			  btci->reg66, btci->reg41,
++			  btci->reg68);
++	}
++}
++
++/**
++ * brcmf_btcoex_restore_part1() - restore first step parameters.
++ */
++static void brcmf_btcoex_restore_part1(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp;
++
++	if (btci->saved_regs_part1) {
++		btci->saved_regs_part1 = false;
++		ifp = btci->vif->ifp;
++		brcmf_btcoex_params_write(ifp, 66, btci->reg66);
++		brcmf_btcoex_params_write(ifp, 41, btci->reg41);
++		brcmf_btcoex_params_write(ifp, 68, btci->reg68);
++		brcmf_dbg(TRACE,
++			  "restored btc_params regs {66,41,68} 0x%x 0x%x 0x%x\n",
++			  btci->reg66, btci->reg41,
++			  btci->reg68);
++	}
++}
++
++/**
++ * brcmf_btcoex_timerfunc() - BT coex timer callback
++ */
++static void brcmf_btcoex_timerfunc(ulong data)
++{
++	struct brcmf_btcoex_info *bt_local = (struct brcmf_btcoex_info *)data;
++	brcmf_dbg(TRACE, "enter\n");
++
++	bt_local->timer_on = false;
++	schedule_work(&bt_local->work);
++}
++
++/**
++ * brcmf_btcoex_handler() - BT coex state machine work handler
++ * @work: work
++ */
++static void brcmf_btcoex_handler(struct work_struct *work)
++{
++	struct brcmf_btcoex_info *btci;
++	btci = container_of(work, struct brcmf_btcoex_info, work);
++	if (btci->timer_on) {
++		btci->timer_on = false;
++		del_timer_sync(&btci->timer);
++	}
++
++	switch (btci->bt_state) {
++	case BRCMF_BT_DHCP_START:
++		/* DHCP started provide OPPORTUNITY window
++		   to get DHCP address
++		*/
++		brcmf_dbg(TRACE, "DHCP started\n");
++		btci->bt_state = BRCMF_BT_DHCP_OPPR_WIN;
++		if (btci->timeout < BRCMF_BTCOEX_OPPR_WIN_TIME) {
++			mod_timer(&btci->timer, btci->timer.expires);
++		} else {
++			btci->timeout -= BRCMF_BTCOEX_OPPR_WIN_TIME;
++			mod_timer(&btci->timer,
++				  jiffies +
++				  msecs_to_jiffies(BRCMF_BTCOEX_OPPR_WIN_TIME));
++		}
++		btci->timer_on = true;
++		break;
++
++	case BRCMF_BT_DHCP_OPPR_WIN:
++		if (btci->dhcp_done) {
++			brcmf_dbg(TRACE, "DHCP done before T1 expiration\n");
++			goto idle;
++		}
++
++		/* DHCP is not over yet, start lowering BT priority */
++		brcmf_dbg(TRACE, "DHCP T1:%d expired\n",
++			  BRCMF_BTCOEX_OPPR_WIN_TIME);
++		brcmf_btcoex_boost_wifi(btci, true);
++
++		btci->bt_state = BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT;
++		mod_timer(&btci->timer,
++			  jiffies + msecs_to_jiffies(btci->timeout));
++		btci->timer_on = true;
++		break;
++
++	case BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT:
++		if (btci->dhcp_done)
++			brcmf_dbg(TRACE, "DHCP done before T2 expiration\n");
++		else
++			brcmf_dbg(TRACE, "DHCP T2:%d expired\n",
++				  BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT);
++
++		goto idle;
++
++	default:
++		brcmf_err("invalid state=%d !!!\n", btci->bt_state);
++		goto idle;
++	}
++
++	return;
++
++idle:
++	btci->bt_state = BRCMF_BT_DHCP_IDLE;
++	btci->timer_on = false;
++	brcmf_btcoex_boost_wifi(btci, false);
++	cfg80211_crit_proto_stopped(&btci->vif->wdev, GFP_KERNEL);
++	brcmf_btcoex_restore_part1(btci);
++	btci->vif = NULL;
++}
++
++/**
++ * brcmf_btcoex_attach() - initialize BT coex data
++ * @cfg: driver private cfg80211 data
++ *
++ * return: 0 on success
++ */
++int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg)
++{
++	struct brcmf_btcoex_info *btci = NULL;
++	brcmf_dbg(TRACE, "enter\n");
++
++	btci = kmalloc(sizeof(struct brcmf_btcoex_info), GFP_KERNEL);
++	if (!btci)
++		return -ENOMEM;
++
++	btci->bt_state = BRCMF_BT_DHCP_IDLE;
++
++	/* Set up timer for BT  */
++	btci->timer_on = false;
++	btci->timeout = BRCMF_BTCOEX_OPPR_WIN_TIME;
++	init_timer(&btci->timer);
++	btci->timer.data = (ulong)btci;
++	btci->timer.function = brcmf_btcoex_timerfunc;
++	btci->cfg = cfg;
++	btci->saved_regs_part1 = false;
++	btci->saved_regs_part2 = false;
++
++	INIT_WORK(&btci->work, brcmf_btcoex_handler);
++
++	cfg->btcoex = btci;
++	return 0;
++}
++
++/**
++ * brcmf_btcoex_detach - clean BT coex data
++ * @cfg: driver private cfg80211 data
++ */
++void brcmf_btcoex_detach(struct brcmf_cfg80211_info *cfg)
++{
++	brcmf_dbg(TRACE, "enter\n");
++
++	if (!cfg->btcoex)
++		return;
++
++	if (cfg->btcoex->timer_on) {
++		cfg->btcoex->timer_on = false;
++		del_timer_sync(&cfg->btcoex->timer);
++	}
++
++	cancel_work_sync(&cfg->btcoex->work);
++
++	brcmf_btcoex_boost_wifi(cfg->btcoex, false);
++	brcmf_btcoex_restore_part1(cfg->btcoex);
++
++	kfree(cfg->btcoex);
++	cfg->btcoex = NULL;
++}
++
++static void brcmf_btcoex_dhcp_start(struct brcmf_btcoex_info *btci)
++{
++	struct brcmf_if *ifp = btci->vif->ifp;
++
++	btcmf_btcoex_save_part1(btci);
++	/* set new regs values */
++	brcmf_btcoex_params_write(ifp, 66, BRCMF_BT_DHCP_REG66);
++	brcmf_btcoex_params_write(ifp, 41, BRCMF_BT_DHCP_REG41);
++	brcmf_btcoex_params_write(ifp, 68, BRCMF_BT_DHCP_REG68);
++	btci->dhcp_done = false;
++	btci->bt_state = BRCMF_BT_DHCP_START;
++	schedule_work(&btci->work);
++	brcmf_dbg(TRACE, "enable BT DHCP Timer\n");
++}
++
++static void brcmf_btcoex_dhcp_end(struct brcmf_btcoex_info *btci)
++{
++	/* Stop any bt timer because DHCP session is done */
++	btci->dhcp_done = true;
++	if (btci->timer_on) {
++		brcmf_dbg(TRACE, "disable BT DHCP Timer\n");
++		btci->timer_on = false;
++		del_timer_sync(&btci->timer);
++
++		/* schedule worker if transition to IDLE is needed */
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE) {
++			brcmf_dbg(TRACE, "bt_state:%d\n",
++				  btci->bt_state);
++			schedule_work(&btci->work);
++		}
++	} else {
++		/* Restore original values */
++		brcmf_btcoex_restore_part1(btci);
++	}
++}
++
++/**
++ * brcmf_btcoex_set_mode - set BT coex mode
++ * @cfg: driver private cfg80211 data
++ * @mode: Wifi-Bluetooth coexistence mode
++ *
++ * return: 0 on success
++ */
++int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
++			  enum brcmf_btcoex_mode mode, u16 duration)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_priv(vif->wdev.wiphy);
++	struct brcmf_btcoex_info *btci = cfg->btcoex;
++	struct brcmf_if *ifp = cfg->pub->iflist[0];
++
++	switch (mode) {
++	case BRCMF_BTCOEX_DISABLED:
++		brcmf_dbg(TRACE, "DHCP session starts\n");
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE)
++			return -EBUSY;
++		/* Start BT timer only for SCO connection */
++		if (brcmf_btcoex_is_sco_active(ifp)) {
++			btci->timeout = duration;
++			btci->vif = vif;
++			brcmf_btcoex_dhcp_start(btci);
++		}
++		break;
++
++	case BRCMF_BTCOEX_ENABLED:
++		brcmf_dbg(TRACE, "DHCP session ends\n");
++		if (btci->bt_state != BRCMF_BT_DHCP_IDLE &&
++		    vif == btci->vif) {
++			brcmf_btcoex_dhcp_end(btci);
++		}
++		break;
++	default:
++		brcmf_dbg(TRACE, "Unknown mode, ignored\n");
++	}
++	return 0;
++}
++
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
+new file mode 100644
+index 0000000..19647c6
+--- /dev/null
++++ b/drivers/net/wireless/brcm80211/brcmfmac/btcoex.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2013 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef WL_BTCOEX_H_
++#define WL_BTCOEX_H_
++
++enum brcmf_btcoex_mode {
++	BRCMF_BTCOEX_DISABLED,
++	BRCMF_BTCOEX_ENABLED
++};
++
++int brcmf_btcoex_attach(struct brcmf_cfg80211_info *cfg);
++void brcmf_btcoex_detach(struct brcmf_cfg80211_info *cfg);
++int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
++			  enum brcmf_btcoex_mode mode, u16 duration);
++
++#endif /* WL_BTCOEX_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 29b4ea4..6d758f2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -29,6 +29,7 @@
+ #include "tracepoint.h"
+ #include "fwil_types.h"
+ #include "p2p.h"
++#include "btcoex.h"
+ #include "wl_cfg80211.h"
+ #include "fwil.h"
  
-Karl
+@@ -1051,6 +1052,7 @@ static void brcmf_init_prof(struct brcmf_cfg80211_profile *prof)
+ 
+ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(vif->wdev.wiphy);
+ 	s32 err = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1064,6 +1066,8 @@ static void brcmf_link_down(struct brcmf_cfg80211_vif *vif)
+ 		clear_bit(BRCMF_VIF_STATUS_CONNECTED, &vif->sme_state);
+ 	}
+ 	clear_bit(BRCMF_VIF_STATUS_CONNECTING, &vif->sme_state);
++	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
+ 	brcmf_dbg(TRACE, "Exit\n");
+ }
+ 
+@@ -4013,6 +4017,39 @@ exit:
+ 	return err;
+ }
+ 
++static int brcmf_cfg80211_crit_proto_start(struct wiphy *wiphy,
++					   struct wireless_dev *wdev,
++					   enum nl80211_crit_proto_id proto,
++					   u16 duration)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_cfg80211_vif *vif;
++
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++
++	/* only DHCP support for now */
++	if (proto != NL80211_CRIT_PROTO_DHCP)
++		return -EINVAL;
++
++	/* suppress and abort scanning */
++	set_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++	brcmf_abort_scanning(cfg);
++
++	return brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_DISABLED, duration);
++}
++
++static void brcmf_cfg80211_crit_proto_stop(struct wiphy *wiphy,
++					   struct wireless_dev *wdev)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_cfg80211_vif *vif;
++
++	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
++
++	brcmf_btcoex_set_mode(vif, BRCMF_BTCOEX_ENABLED, 0);
++	clear_bit(BRCMF_SCAN_STATUS_SUPPRESS, &cfg->scan_status);
++}
++
+ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.add_virtual_intf = brcmf_cfg80211_add_iface,
+ 	.del_virtual_intf = brcmf_cfg80211_del_iface,
+@@ -4049,6 +4086,8 @@ static struct cfg80211_ops wl_cfg80211_ops = {
+ 	.cancel_remain_on_channel = brcmf_cfg80211_cancel_remain_on_channel,
+ 	.start_p2p_device = brcmf_p2p_start_device,
+ 	.stop_p2p_device = brcmf_p2p_stop_device,
++	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
++	.crit_proto_stop = brcmf_cfg80211_crit_proto_stop,
+ #ifdef CONFIG_NL80211_TESTMODE
+ 	.testmode_cmd = brcmf_cfg80211_testmode
+ #endif
+@@ -4786,6 +4825,12 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		brcmf_err("P2P initilisation failed (%d)\n", err);
+ 		goto cfg80211_p2p_attach_out;
+ 	}
++	err = brcmf_btcoex_attach(cfg);
++	if (err) {
++		brcmf_err("BT-coex initialisation failed (%d)\n", err);
++		brcmf_p2p_detach(&cfg->p2p);
++		goto cfg80211_p2p_attach_out;
++	}
+ 
+ 	err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_VERSION,
+ 				    &io_type);
+@@ -4813,6 +4858,7 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 	struct brcmf_cfg80211_vif *tmp;
+ 
+ 	wl_deinit_priv(cfg);
++	brcmf_btcoex_detach(cfg);
+ 	list_for_each_entry_safe(vif, tmp, &cfg->vif_list, list) {
+ 		brcmf_free_vif(vif);
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+index e198346..a71cff8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -351,6 +351,7 @@ struct brcmf_cfg80211_vif_event {
+  * @wiphy: wiphy object for cfg80211 interface.
+  * @conf: dongle configuration.
+  * @p2p: peer-to-peer specific information.
++ * @btcoex: Bluetooth coexistence information.
+  * @scan_request: cfg80211 scan request object.
+  * @usr_sync: mainly for dongle up/down synchronization.
+  * @bss_list: bss_list holding scanned ap information.
+@@ -384,6 +385,7 @@ struct brcmf_cfg80211_info {
+ 	struct wiphy *wiphy;
+ 	struct brcmf_cfg80211_conf *conf;
+ 	struct brcmf_p2p_info p2p;
++	struct brcmf_btcoex_info *btcoex;
+ 	struct cfg80211_scan_request *scan_request;
+ 	struct mutex usr_sync;
+ 	struct brcmf_scan_results *bss_list;
+-- 
+1.7.10.4
+
+
