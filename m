@@ -1,44 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935049Ab3DJJrP (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:39709 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757018Ab3DWTT3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 05:47:15 -0400
-Message-ID: <1365587230.8388.3.camel@jlt4.sipsolutions.net> (sfid-20130410_114718_358085_C164FCF3)
-Subject: Re: [Patch] mac80211: SMPS for AP Mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivekananda Holla <vivekanandah@posedge.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 10 Apr 2013 11:47:10 +0200
-In-Reply-To: <1365587182.8388.2.camel@jlt4.sipsolutions.net> (sfid-20130410_114635_305806_9CD71018)
-References: <516528C8.90509@posedge.com>
-	 (sfid-20130410_105443_117821_9F07C071) <1365584151.8388.0.camel@jlt4.sipsolutions.net>
-	 <5165326C.7010706@posedge.com>
-	 <1365587182.8388.2.camel@jlt4.sipsolutions.net>
-	 (sfid-20130410_114635_305806_9CD71018)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 23 Apr 2013 15:19:29 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v3 1/2 RESEND] mwifiex: replace ra_list_curr by list rotation.
+Date: Tue, 23 Apr 2013 12:16:18 -0700
+Message-ID: <1366744579-14458-1-git-send-email-bzhao@marvell.com> (sfid-20130423_233119_212244_CB4F69D6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-04-10 at 11:46 +0200, Johannes Berg wrote:
-> On Wed, 2013-04-10 at 15:05 +0530, Vivekananda Holla wrote:
-> > hi Johannes,
-> > 
-> > do you mean the IEEE80211_TX_RC_USE_RTS_CTS flag to set RTS/CTS
-> > protection for the packet?
-> > 
-> > I did not use this based on the below understanding
-> > 
-> > my understanding for SMPS is that a station system does not need to
-> > send an RTS packet before frame transmission for SMPS however an AP
-> > system needs to send out an RTS frame.
-> 
-> No? Where did you get that idea? It's wrong, it doesn't matter whether
-> it's AP or not.
+From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
 
-Of course, APs will rarely use SMPS, so stations almost never have to
-deal with an AP that uses it ...
+After a packet is successfully transmitted, ra list is rotated, so the ra
+next to the one transmitted, will be the first in the list. This way we
+pick the ra' in a round robin fashion. This significantly simplifies
+iteration in  mwifiex_wmm_get_highest_priolist_ptr to a call to
+list_for_each_entry.
+List rotation is done via list_move, where the head itself is temporarily
+removed and then re-inserted after the item just transferred.
 
-johannes
+Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Acked-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c |    8 +--
+ drivers/net/wireless/mwifiex/main.h     |    1 -
+ drivers/net/wireless/mwifiex/wmm.c      |   97 +++++++++++-------------------
+ drivers/net/wireless/mwifiex/wmm.h      |    3 +
+ 4 files changed, 40 insertions(+), 69 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index af8fe63..c6d7451 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -296,19 +296,13 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 		break;
+ 	}
+ 	if (ret != -EBUSY) {
+-		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
+-		if (mwifiex_is_ralist_valid(priv, pra_list, ptrindex)) {
+-			priv->wmm.packets_out[ptrindex]++;
+-			priv->wmm.tid_tbl_ptr[ptrindex].ra_list_curr = pra_list;
+-		}
++		mwifiex_rotate_priolists(priv, pra_list, ptrindex);
+ 		/* Now bss_prio_cur pointer points to next node */
+ 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
+ 			list_first_entry(
+ 				&adapter->bss_prio_tbl[priv->bss_priority]
+ 				.bss_prio_cur->list,
+ 				struct mwifiex_bss_prio_node, list);
+-		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+-				       ra_list_flags);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index b7484ef..4ef67fc 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -213,7 +213,6 @@ struct mwifiex_ra_list_tbl {
+ 
+ struct mwifiex_tid_tbl {
+ 	struct list_head ra_list;
+-	struct mwifiex_ra_list_tbl *ra_list_curr;
+ };
+ 
+ #define WMM_HIGHEST_PRIORITY		7
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 2cc81ba..b48e03c 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -191,9 +191,6 @@ mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra)
+ 		}
+ 		list_add_tail(&ra_list->list,
+ 			      &priv->wmm.tid_tbl_ptr[i].ra_list);
+-
+-		if (!priv->wmm.tid_tbl_ptr[i].ra_list_curr)
+-			priv->wmm.tid_tbl_ptr[i].ra_list_curr = ra_list;
+ 	}
+ }
+ 
+@@ -424,7 +421,6 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 			priv->aggr_prio_tbl[i].amsdu = tos_to_tid_inv[i];
+ 			priv->aggr_prio_tbl[i].ampdu_ap = tos_to_tid_inv[i];
+ 			priv->aggr_prio_tbl[i].ampdu_user = tos_to_tid_inv[i];
+-			priv->wmm.tid_tbl_ptr[i].ra_list_curr = NULL;
+ 		}
+ 
+ 		priv->aggr_prio_tbl[6].amsdu
+@@ -530,8 +526,6 @@ static void mwifiex_wmm_delete_all_ralist(struct mwifiex_private *priv)
+ 		}
+ 
+ 		INIT_LIST_HEAD(&priv->wmm.tid_tbl_ptr[i].ra_list);
+-
+-		priv->wmm.tid_tbl_ptr[i].ra_list_curr = NULL;
+ 	}
+ }
+ 
+@@ -883,7 +877,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				     struct mwifiex_private **priv, int *tid)
+ {
+ 	struct mwifiex_private *priv_tmp;
+-	struct mwifiex_ra_list_tbl *ptr, *head;
++	struct mwifiex_ra_list_tbl *ptr;
+ 	struct mwifiex_bss_prio_node *bssprio_node, *bssprio_head;
+ 	struct mwifiex_tid_tbl *tid_ptr;
+ 	atomic_t *hqp;
+@@ -926,51 +920,15 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				tid_ptr = &(priv_tmp)->wmm.
+ 					tid_tbl_ptr[tos_to_tid[i]];
+ 
+-				/* For non-STA ra_list_curr may be NULL */
+-				if (!tid_ptr->ra_list_curr)
+-					goto skip_wmm_queue;
+-
+-				if (list_empty(&tid_ptr->ra_list))
+-					goto skip_wmm_queue;
+-
+-				/*
+-				 * Always choose the next ra we transmitted
+-				 * last time, this way we pick the ra's in
+-				 * round robin fashion.
+-				 */
+-				ptr = list_first_entry(
+-						&tid_ptr->ra_list_curr->list,
+-						struct mwifiex_ra_list_tbl,
+-						list);
++				/* iterate over receiver addresses */
++				list_for_each_entry(ptr, &tid_ptr->ra_list,
++						    list) {
+ 
+-				head = ptr;
+-				if (ptr == (struct mwifiex_ra_list_tbl *)
+-						&tid_ptr->ra_list) {
+-					/* Get next ra */
+-					ptr = list_first_entry(&ptr->list,
+-					    struct mwifiex_ra_list_tbl, list);
+-					head = ptr;
+-				}
+-
+-				do {
+ 					if (!skb_queue_empty(&ptr->skb_head))
+ 						/* holds both locks */
+ 						goto found;
++				}
+ 
+-					/* Get next ra */
+-					ptr = list_first_entry(&ptr->list,
+-						 struct mwifiex_ra_list_tbl,
+-						 list);
+-					if (ptr ==
+-					    (struct mwifiex_ra_list_tbl *)
+-					    &tid_ptr->ra_list)
+-						ptr = list_first_entry(
+-						    &ptr->list,
+-						    struct mwifiex_ra_list_tbl,
+-						    list);
+-				} while (ptr != head);
+-
+-skip_wmm_queue:
+ 				spin_unlock_irqrestore(&priv_tmp->wmm.
+ 						       ra_list_spinlock,
+ 						       flags_ra);
+@@ -1013,6 +971,35 @@ found:
+ 	return ptr;
+ }
+ 
++/* This functions rotates ra lists so packets are picked in round robin
++ * fashion.
++ *
++ * After a packet is successfully transmitted, rotate the ra list, so the ra
++ * next to the one transmitted, will come first in the list. This way we pick
++ * the ra in a round robin fashion.
++ *
++ * Function also increments wmm.packets_out counter.
++ */
++void mwifiex_rotate_priolists(struct mwifiex_private *priv,
++				 struct mwifiex_ra_list_tbl *ra,
++				 int tid)
++{
++	struct mwifiex_tid_tbl *tid_ptr = &priv->wmm.tid_tbl_ptr[tid];
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->wmm.ra_list_spinlock, flags);
++	if (mwifiex_is_ralist_valid(priv, ra, tid)) {
++		priv->wmm.packets_out[tid]++;
++		/*
++		 * dirty trick: we remove 'head' temporarily and reinsert it
++		 * after curr bss node. imagine list to stay fixed while only
++		 * head is moved
++		 */
++		list_move(&tid_ptr->ra_list, &ra->list);
++	}
++	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
++}
++
+ /*
+  * This function checks if 11n aggregation is possible.
+  */
+@@ -1099,11 +1086,7 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
+ 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+ 				       ra_list_flags);
+ 	} else {
+-		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
+-		if (mwifiex_is_ralist_valid(priv, ptr, ptr_index)) {
+-			priv->wmm.packets_out[ptr_index]++;
+-			priv->wmm.tid_tbl_ptr[ptr_index].ra_list_curr = ptr;
+-		}
++		mwifiex_rotate_priolists(priv, ptr, ptr_index);
+ 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
+ 			list_first_entry(
+ 				&adapter->bss_prio_tbl[priv->bss_priority]
+@@ -1111,8 +1094,6 @@ mwifiex_send_single_packet(struct mwifiex_private *priv,
+ 				struct mwifiex_bss_prio_node,
+ 				list);
+ 		atomic_dec(&priv->wmm.tx_pkts_queued);
+-		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+-				       ra_list_flags);
+ 	}
+ }
+ 
+@@ -1216,11 +1197,7 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
+ 		break;
+ 	}
+ 	if (ret != -EBUSY) {
+-		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
+-		if (mwifiex_is_ralist_valid(priv, ptr, ptr_index)) {
+-			priv->wmm.packets_out[ptr_index]++;
+-			priv->wmm.tid_tbl_ptr[ptr_index].ra_list_curr = ptr;
+-		}
++		mwifiex_rotate_priolists(priv, ptr, ptr_index);
+ 		adapter->bss_prio_tbl[priv->bss_priority].bss_prio_cur =
+ 			list_first_entry(
+ 				&adapter->bss_prio_tbl[priv->bss_priority]
+@@ -1228,8 +1205,6 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
+ 				struct mwifiex_bss_prio_node,
+ 				list);
+ 		atomic_dec(&priv->wmm.tx_pkts_queued);
+-		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+-				       ra_list_flags);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index b92f39d..644d6e0 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -85,6 +85,9 @@ mwifiex_wmm_is_ra_list_empty(struct list_head *ra_list_hhead)
+ void mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+ 					struct sk_buff *skb);
+ void mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra);
++void mwifiex_rotate_priolists(struct mwifiex_private *priv,
++			      struct mwifiex_ra_list_tbl *ra,
++			      int tid);
+ 
+ int mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter);
+ void mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter);
+-- 
+1.7.0.2
 
