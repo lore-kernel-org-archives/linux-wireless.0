@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:48291 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932196Ab3DXXIR (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56804 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140Ab3DWGye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 19:08:17 -0400
-Received: by mail-la0-f44.google.com with SMTP id ed20so2091513lab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 16:08:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51786303.3070107@lwfinger.net>
-References: <CALvqYaTZrtSsP9GQzH4B988KjPg+LRCcyREKZ1zkjoaEDKPHNA@mail.gmail.com>
-	<CALvqYaTSYR43rS-pptFKCfsgvsatrUSz4v+AFBPQ0UrHC4WkXA@mail.gmail.com>
-	<5177F100.1070803@lwfinger.net>
-	<CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com>
-	<51780C92.4000208@lwfinger.net>
-	<CALvqYaRrjMtPE72PGR-Zzuj11CL=E6+ruC+E1wGPO3m5wgdOhg@mail.gmail.com>
-	<CALvqYaT==e4U43dxtyX55A9CNgWh9apHMrj89=bBybutyJOoiw@mail.gmail.com>
-	<51781976.3000601@lwfinger.net>
-	<CALvqYaQTQ5=ER=F1-bxnJQKkFjrg6UH+1JWLexUPVZ3cFBG5UQ@mail.gmail.com>
-	<51786303.3070107@lwfinger.net>
-Date: Thu, 25 Apr 2013 01:08:15 +0200
-Message-ID: <CALvqYaQ_z7w6yLeNb=Q7Sm=Et3Rxj+TP6vi=KcyhDpT4AmY4kA@mail.gmail.com> (sfid-20130425_011840_428054_4D5B4151)
-Subject: Re: Fwd: Realtek 8192CU not working
-From: Michael Stahn <michael.stahn.42@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 23 Apr 2013 02:54:34 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] ath9k: Use lockless variants for the RX fifo queue
+Date: Tue, 23 Apr 2013 12:22:18 +0530
+Message-Id: <1366699939-14076-3-git-send-email-sujith@msujith.org> (sfid-20130423_085439_708654_243FBD8C)
+In-Reply-To: <1366699939-14076-1-git-send-email-sujith@msujith.org>
+References: <1366699939-14076-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This kind of error doesn't seem to show up on the USB 2.0 interface. I
-just configured the AP for WPA+TKIP but no change. Now the Adapter
-won't connect anymore even I reload the module..pretty random error.
-I'll try some other ideas in the next days...
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-2013/4/25 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 04/24/2013 05:24 PM, Michael Stahn wrote:
->>
->> I'm using WPA/PSK, attached is the whole kernel dump.
->>
->
-> I don't see the "ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry
-> 1" problem in this dump.
->
-> If you are just having trouble connecting, there is an unknown problem. The
-> driver can connect with WPA2, but not WPA.
->
-> Larry
->
->
+The RX fifo can be accessed from the common tasklet or it can
+be reaped/cleaned when RX is stopped, which is done when doing
+a reset or channel change - this happens in process context.
+
+Since it is ensured that there are no pending tasklets when
+stopping RX and cleaning the FIFO, there is no need to use
+SKB queue functions which take internal locks.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index c8265a7..9c0045e 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -124,7 +124,7 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
+ 
+ 	SKB_CB_ATHBUF(skb) = bf;
+ 	ath9k_hw_addrxbuf_edma(ah, bf->bf_buf_addr, qtype);
+-	skb_queue_tail(&rx_edma->rx_fifo, skb);
++	__skb_queue_tail(&rx_edma->rx_fifo, skb);
+ 
+ 	return true;
+ }
+@@ -155,7 +155,7 @@ static void ath_rx_remove_buffer(struct ath_softc *sc,
+ 
+ 	rx_edma = &sc->rx.rx_edma[qtype];
+ 
+-	while ((skb = skb_dequeue(&rx_edma->rx_fifo)) != NULL) {
++	while ((skb = __skb_dequeue(&rx_edma->rx_fifo)) != NULL) {
+ 		bf = SKB_CB_ATHBUF(skb);
+ 		BUG_ON(!bf);
+ 		list_add_tail(&bf->list, &sc->rx.rxbuf);
+-- 
+1.8.2.1
+
