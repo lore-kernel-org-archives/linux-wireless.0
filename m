@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49422 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752627Ab3DGTK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Apr 2013 15:10:58 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, adrian@freebsd.org
-Subject: [PATCH 3.9] ath9k_htc: accept 1.x firmware newer than 1.3
-Date: Sun,  7 Apr 2013 21:10:48 +0200
-Message-Id: <1365361848-65831-1-git-send-email-nbd@openwrt.org> (sfid-20130407_211103_094237_4671EB26)
+Received: from nm15.bullet.mail.ird.yahoo.com ([77.238.189.68]:33335 "HELO
+	nm15.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755463Ab3DWKF4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Apr 2013 06:05:56 -0400
+From: Schrober <franzschrober@yahoo.de>
+To: Kai Hendry <hendry@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: How to find ESSID & signal strength
+Date: Tue, 23 Apr 2013 12:00:07 +0200
+Message-ID: <2075657.YTpB93Bl1M@bentobox> (sfid-20130423_120605_708496_0E6E2440)
+In-Reply-To: <CAF8XF0cS0kY96ubMisvsm--UE1PHCzrFmRC0b1Wd5-d164EdNg@mail.gmail.com>
+References: <CAF8XF0cS0kY96ubMisvsm--UE1PHCzrFmRC0b1Wd5-d164EdNg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the firmware has been open sourced, the minor version has been
-bumped to 1.4 and the API/ABI will stay compatible across further 1.x
-releases.
+On Tuesday 23 April 2013 10:54:59 Kai Hendry wrote:
+> Since there is no "Contact us" details upon:
+> http://wireless.kernel.org/en/users/Documentation/iw
+> 
+> I'm nervously emailing the mailing list. :}
+> 
+> 
+> 
+> I want to please ask what is the "canonical" way using your suite of
+> tools like `iw`, or preferably /proc, to find the ESSID of the AP I'm
+> connected to and signal strength for my dwm status bar?
+> 
+> https://github.com/kaihendry/Kai-s--HOME/blob/master/bin/dwm_status#L23
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+"Do NOT screenscrape this tool, we don't consider its output stable."
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 716058b..a47f5e0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -796,7 +796,7 @@ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
- 	 * required version.
- 	 */
- 	if (priv->fw_version_major != MAJOR_VERSION_REQ ||
--	    priv->fw_version_minor != MINOR_VERSION_REQ) {
-+	    priv->fw_version_minor < MINOR_VERSION_REQ) {
- 		dev_err(priv->dev, "ath9k_htc: Please upgrade to FW version %d.%d\n",
- 			MAJOR_VERSION_REQ, MINOR_VERSION_REQ);
- 		return -EINVAL;
+Use nl80211
 -- 
-1.8.0.2
-
+Franz Schrober
