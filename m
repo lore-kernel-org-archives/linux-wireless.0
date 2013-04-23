@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54383 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754807Ab3DVOxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 10:53:05 -0400
-Message-ID: <51754ED0.5080106@openwrt.org> (sfid-20130422_165311_436592_285B8162)
-Date: Mon, 22 Apr 2013 16:53:04 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from sapphire.tuxdriver.com ([70.61.120.61]:51412 "EHLO
+	linville-x1.hq.tuxdriver.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756895Ab3DWSRG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Apr 2013 14:17:06 -0400
+Date: Tue, 23 Apr 2013 14:10:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: pull request: b43-next 2013-04-23
+Message-ID: <20130423181044.GA7871@tuxdriver.com> (sfid-20130423_233110_694724_DDCC024C)
+References: <CACna6rxOfr7jWKHfrGWC09Sw6XKShdexpkRKLeVhfuON5d7Bgw@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mac80211: add support for per-chain signal strength
- reporting
-References: <1366640971-12872-1-git-send-email-nbd@openwrt.org>  <1366640971-12872-2-git-send-email-nbd@openwrt.org> <1366641428.8637.31.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1366641428.8637.31.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rxOfr7jWKHfrGWC09Sw6XKShdexpkRKLeVhfuON5d7Bgw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-04-22 4:37 PM, Johannes Berg wrote:
-> On Mon, 2013-04-22 at 16:29 +0200, Felix Fietkau wrote:
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  include/net/mac80211.h  |  5 +++++
->>  net/mac80211/cfg.c      | 13 ++++++++++++-
->>  net/mac80211/rx.c       | 14 ++++++++++++++
->>  net/mac80211/sta_info.c |  2 ++
->>  net/mac80211/sta_info.h |  5 +++++
->>  5 files changed, 38 insertions(+), 1 deletion(-)
->> 
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 4ecff78..aeb4a5c 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -848,6 +848,9 @@ enum mac80211_rx_flags {
->>   * @signal: signal strength when receiving this frame, either in dBm, in dB or
->>   *	unspecified depending on the hardware capabilities flags
->>   *	@IEEE80211_HW_SIGNAL_*
->> + * @chains: bitmask of receive chains for which separate signal strength
->> + *	values were filled.
->> + * @chain_signal: per-chain signal strength, same format as @signal
+On Tue, Apr 23, 2013 at 03:49:51PM +0200, Rafał Miłecki wrote:
+> Hi John,
 > 
-> Oops, sorry, I should've looked at this patch before ... This isn't
-> right, @signal can be in "dB" or "unspec" units, but @chain_signal is
-> required to be dBm. If you want, I'll edit the patch to just say that it
-> must only be provided in dBm?
-OK, sounds good.
+> Let me ask you once again for pulling my b43-next tree. I didn't add any new
+> patches since the last pull request, I just dropped ssb patch you already
+> pushed into your tree.
+> 
+> Let me remind the changes for b43:
+> > Changes include:
+> > 1) Minor improvements for HT-PHY code (BCM4331)
+> > 2) Code cleaning for HT-PHY and N-PHY
+> 
+> Sorry for the problem with the previous pull request. Your wireless-next was
+> slighlty too old for me (nouveau regression in 3.9-rc1) so I've based my tree
+> on wireless-testing. That wasn't too bright idea.
+> 
+> To rebase the tree I've simply used:
+> git rebase --onto wireless-next/master master~21 master
+> 
+> 
+> The following changes since commit c43933e61ea9b630521bf0d5cf06c155478308a7:
+> 
+>   mwifiex: remove redundant initialization for bss_descriptor
+> (2013-04-22 15:38:36 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.infradead.org/users/rafal/b43-next.git master
+> 
+> for you to fetch changes up to 0c201cfbfd47c40ee0cedbcd96e4fbaa85c5fc50:
+> 
+>   b43: N-PHY: don't use deprecated b43_radio_foo16 (2013-04-23 12:27:58 +0200)
 
-- Felix
+Pulling now...
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
