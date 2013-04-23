@@ -1,28 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:40175 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759599Ab3DCVp4 (ORCPT
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:56737 "EHLO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756584Ab3DWXvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 17:45:56 -0400
-Received: by mail-la0-f47.google.com with SMTP id fj20so1890942lab.20
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Apr 2013 14:45:55 -0700 (PDT)
+	Tue, 23 Apr 2013 19:51:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.10 0/4] fix mwifiex_pcie hotplug crash issue
+Date: Tue, 23 Apr 2013 16:49:46 -0700
+Message-ID: <1366760990-15748-1-git-send-email-bzhao@marvell.com> (sfid-20130424_015153_243525_84FDDB72)
 MIME-Version: 1.0
-In-Reply-To: <1364997118-14072-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1364997118-14072-1-git-send-email-zefir.kurtisi@neratec.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Wed, 3 Apr 2013 14:45:34 -0700
-Message-ID: <CAB=NE6XRypWKt9EBdwiOnY5dB8Ogq7D5hqH8S0zNWi31h4a6+Q@mail.gmail.com> (sfid-20130403_234600_154517_4DEEDD77)
-Subject: Re: [PATCH] crda: display DFS regulatory domain in regdbdump
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 3, 2013 at 6:51 AM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+The patch series fixes the crash while testing hotplug with an 8897
+card. They are intended for wireless.git tree. Thanks!
 
-Applied and pushed all, thanks!
+Yogesh Ashok Powar (4):
+  mwifiex: Use pci_release_region() instead of a pci_release_regions()
+  mwifiex: Call pci_release_region after calling pci_disable_device
+  mwifiex: Do not kfree cmd buf while unregistering PCIe
+  mwifiex: Correct pci_unmap_single's size
 
-  Luis
+ drivers/net/wireless/mwifiex/pcie.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
