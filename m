@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65347 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223Ab3DLBBv (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:63545 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755538Ab3DWOZt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 21:01:51 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rp8so1137343pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Apr 2013 18:01:51 -0700 (PDT)
-Message-ID: <51675CFD.8030603@boundarydevices.com> (sfid-20130412_030237_804062_3249E796)
-Date: Thu, 11 Apr 2013 18:01:49 -0700
-From: Troy Kisky <troy.kisky@boundarydevices.com>
-MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Doug Anderson <dianders@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: remove redundant initialization for bss_descriptor
-References: <1365727993-20941-1-git-send-email-bzhao@marvell.com> <1365727993-20941-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1365727993-20941-2-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 23 Apr 2013 10:25:49 -0400
+Message-ID: <1366727135.7932.133.camel@smile> (sfid-20130423_163407_717193_D501A18F)
+Subject: Re: [PATCH] wireless: ath6kl: re-use native helper to parse MAC
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 23 Apr 2013 17:25:35 +0300
+In-Reply-To: <1366723941-23920-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1366723941-23920-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/11/2013 5:53 PM, Bing Zhao wrote:
-> Initialization of bss_descriptor is unnecessary as the entire
-> structure will be overwritten by a memcpy.
->
-> Reported-by: Doug Anderson <dianders@chromium.org>
-> Reviewed-by: Doug Anderson <dianders@chromium.org>
-> Reviewed-by: Paul Stewart <pstew@chromium.org>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+On Tue, 2013-04-23 at 16:32 +0300, Andy Shevchenko wrote: 
+> There is native mac_pton() function which helps to parse MAC.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > ---
->   drivers/net/wireless/mwifiex/scan.c |   29 -----------------------------
->   1 files changed, 0 insertions(+), 29 deletions(-)
->
-> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> index 37b24e8..9cf5d8f 100644
-> --- a/drivers/net/wireless/mwifiex/scan.c
-> +++ b/drivers/net/wireless/mwifiex/scan.c
-> @@ -1500,36 +1500,7 @@ static int mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
->   	if (ret)
->   		goto done;
->   
-> -	/* Update current bss descriptor parameters */
->   	spin_lock_irqsave(&priv->curr_bcn_buf_lock, flags);
-> -	priv->curr_bss_params.bss_descriptor.bcn_wpa_ie = NULL;
-> -	priv->curr_bss_params.bss_descriptor.wpa_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_rsn_ie = NULL;
-> -	priv->curr_bss_params.bss_descriptor.rsn_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_wapi_ie = NULL;
-> -	priv->curr_bss_params.bss_descriptor.wapi_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
-> -	priv->curr_bss_params.bss_descriptor.ht_cap_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_ht_oper = NULL;
-> -	priv->curr_bss_params.bss_descriptor.ht_info_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 = NULL;
-> -	priv->curr_bss_params.bss_descriptor.bss_co_2040_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_ext_cap = NULL;
-> -	priv->curr_bss_params.bss_descriptor.ext_cap_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.beacon_buf = NULL;
-> -	priv->curr_bss_params.bss_descriptor.beacon_buf_size = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_vht_cap = NULL;
-> -	priv->curr_bss_params.bss_descriptor.vht_cap_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.bcn_vht_oper = NULL;
-> -	priv->curr_bss_params.bss_descriptor.vht_info_offset = 0;
-> -	priv->curr_bss_params.bss_descriptor.oper_mode = NULL;
-> -	priv->curr_bss_params.bss_descriptor.oper_mode_offset = 0;
-> -
-> -	/* Disable 11ac by default. Enable it only where there
-> -	 * exist VHT_CAP IE in AP beacon
-> -	 */
-> -	priv->curr_bss_params.bss_descriptor.disable_11ac = true;
-> -
+>  drivers/net/wireless/ath/ath6kl/debug.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+> index fe38b83..9824cb0 100644
+> --- a/drivers/net/wireless/ath/ath6kl/debug.c
+> +++ b/drivers/net/wireless/ath/ath6kl/debug.c
+> @@ -1241,19 +1241,14 @@ static ssize_t ath6kl_force_roam_write(struct file *file,
+>  	size_t len;
+>  	u8 bssid[ETH_ALEN];
+>  	int i;
 
-Should the = true line be moved below the memcpy?  Your way produces
-the same behavior, but was it buggy before?
->   	/* Make a copy of current BSSID descriptor */
->   	memcpy(&priv->curr_bss_params.bss_descriptor, bss_desc,
->   	       sizeof(priv->curr_bss_params.bss_descriptor));
+It seems i shall be removed as well.
 
+> -	int addr[ETH_ALEN];
+>  
+>  	len = min(count, sizeof(buf) - 1);
+>  	if (copy_from_user(buf, user_buf, len))
+>  		return -EFAULT;
+>  	buf[len] = '\0';
+>  
+> -	if (sscanf(buf, "%02x:%02x:%02x:%02x:%02x:%02x",
+> -		   &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5])
+> -	    != ETH_ALEN)
+> +	if (!mac_pton(buf, bssid))
+>  		return -EINVAL;
+> -	for (i = 0; i < ETH_ALEN; i++)
+> -		bssid[i] = addr[i];
+>  
+>  	ret = ath6kl_wmi_force_roam_cmd(ar->wmi, bssid);
+>  	if (ret)
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
