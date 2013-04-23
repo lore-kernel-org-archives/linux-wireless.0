@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4302 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3456 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966751Ab3DQT0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 15:26:20 -0400
+	id S1752544Ab3DWKzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Apr 2013 06:55:13 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
 cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/10] brcmutil: simplify brcmu_pkt_free_skb()
-Date: Wed, 17 Apr 2013 21:25:52 +0200
-Message-ID: <1366226758-20641-5-git-send-email-arend@broadcom.com> (sfid-20130417_212628_686076_C6968C43)
-In-Reply-To: <1366226758-20641-1-git-send-email-arend@broadcom.com>
-References: <1366226758-20641-1-git-send-email-arend@broadcom.com>
+Subject: [PATCH 3/5] brcmfmac: flush queue upon MACDESC_DEL firmware
+ signal
+Date: Tue, 23 Apr 2013 12:53:13 +0200
+Message-ID: <1366714395-13416-4-git-send-email-arend@broadcom.com> (sfid-20130423_125518_502131_9DD25349)
+In-Reply-To: <1366714395-13416-1-git-send-email-arend@broadcom.com>
+References: <1366714395-13416-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmu_pkt_free_skb() use skb->destructor to decide
-how the sk_buff should be freed. However, when running AP mode
-with iptables configured this results in a kernel warning.
+When firmware signals the driver to remove a destination entry
+it may have sk_buff packets queued for it. These should be freed.
 
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmutil/utils.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index bf5e50f..0f7e1c7 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -45,17 +45,9 @@ void brcmu_pkt_buf_free_skb(struct sk_buff *skb)
- {
- 	if (!skb)
- 		return;
-+
- 	WARN_ON(skb->next);
--	if (skb->destructor)
--		/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
--		 * destructor exists
--		 */
--		dev_kfree_skb_any(skb);
--	else
--		/* can free immediately (even in_irq()) if destructor
--		 * does not exist
--		 */
--		dev_kfree_skb(skb);
-+	dev_kfree_skb_any(skb);
- }
- EXPORT_SYMBOL(brcmu_pkt_buf_free_skb);
- 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index 66cdc45..b0591e3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -871,9 +871,10 @@ int brcmf_fws_macdesc_indicate(struct brcmf_fws_info *fws, u8 type, u8 *data)
+ 	entry = &fws->desc.nodes[mac_handle & 0x1F];
+ 	if (type == BRCMF_FWS_TYPE_MACDESC_DEL) {
+ 		brcmf_dbg(TRACE, "deleting mac %pM idx %d\n", addr, ifidx);
+-		if (entry->occupied)
++		if (entry->occupied) {
++			brcmf_fws_mac_desc_cleanup(fws, entry, -1);
+ 			brcmf_fws_clear_mac_descriptor(entry);
+-		else
++		} else
+ 			fws->stats.mac_update_failed++;
+ 		return 0;
+ 	}
 -- 
 1.7.10.4
 
