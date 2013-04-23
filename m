@@ -1,94 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:38427 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755013Ab3DMAMD convert rfc822-to-8bit (ORCPT
+Received: from avasout07.plus.net ([84.93.230.235]:38708 "EHLO
+	avasout07.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752Ab3DWJeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Apr 2013 20:12:03 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wp18so2812415obc.28
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2013 17:12:02 -0700 (PDT)
+	Tue, 23 Apr 2013 05:34:36 -0400
+From: Gerry Gavigan <gerry@gavigan.f9.co.uk>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k problems on openSUSE 12.3
+Date: Tue, 23 Apr 2013 10:28:26 +0100
+Message-ID: <2687000.szPz826eEU@linux-zd5t.site> (sfid-20130423_113441_605456_E294EDD5)
+In-Reply-To: <20854.18866.135251.330099@gargle.gargle.HOWL>
+References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net> <20854.18866.135251.330099@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Date: Sat, 13 Apr 2013 02:12:02 +0200
-Message-ID: <CACna6rxduYfWw2B+tHLSGTC-m0hDf3=dTWCFq6twjK2kpCuqwg@mail.gmail.com> (sfid-20130413_021208_450487_2D97C8BD)
-Subject: pull request: b43-next 2013-04-13
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Tuesday 23 Apr 2013 14:13:30 Sujith Manoharan wrote:
+> Gerry Gavigan wrote:
+> > 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9485
+> > Wireless Network Adapter [168c:0032] (rev 01)
+> 
+> As a first step, can you disable Power Save and see if the issue persists ?
+> ("iw dev wlan# set power_save off" and verify that "iw wlan0 get power_save"
+> shows "off").
 
-I wanted to ask you for pulling b43 changes queued for 3.10. They are all
-sitting in my git repo at infradead I've announced a few weeks ago.
+Thank you 
 
-Changes include:
-1) Minor improvements for HT-PHY code (BCM4331)
-2) Code cleaning for HT-PHY and N-PHY
-They are mostly coming from me, but I've also included Hauke's minor cleanup.
+- turned power save off
+- confirmed
+- shut down
+- restarted
+- power save is on
 
-All patches were posted (and I believe all of them reviewed) on b43-dev ML.
+problem persists 
 
-I've used various hardware to cover and test all code paths that has been
-touched. That included BCM4321, BCM4322 and BCM43224. No regressions spotted.
-I've also built b43 for my Broadcom SoC based router to test HT-PHY code on
-BCM4331.
+dmesg trace
 
-Please let me know if that looks OK and if you can pull this tree, or if there
-are any problems.
+[   15.610198] wlan0: direct probe to 00:1f:33:7a:cf:b4 (try 3/3)
+[   15.811020] wlan0: authentication with 00:1f:33:7a:cf:b4 timed out
+[   15.931895] ------------[ cut here ]------------
+[   15.931944] WARNING: at 
+/home/abuild/rpmbuild/BUILD/kernel-
+desktop-3.7.10/linux-3.7/drivers/net/wireless/ath/ath9k/hw.c:794 
+ar9003_get_pll_sqsum_dvc+0xa8/0xc0 [ath9k_hw]()
+[   15.931948] Hardware name: AOD270
+[   15.931952] Modules linked in: xt_tcpudp xt_pkttype xt_LOG xt_limit 
+af_packet bnep bluetooth ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 
+ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle 
+nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4 
+nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack ip6table_filter 
+ip6_tables x_tables cpufreq_conservative cpufreq_userspace 
+cpufreq_powersave acpi_cpufreq mperf coretemp iTCO_wdt 
+iTCO_vendor_support acer_wmi sparse_keymap snd_hda_codec_realtek 
+snd_hda_codec_hdmi snd_hda_intel snd_hda_codec snd_hwdep snd_pcm 
+microcode snd_seq pcspkr uvcvideo serio_raw videobuf2_core videodev 
+videobuf2_vmalloc videobuf2_memops joydev i2c_i801 snd_timer sg 
+snd_seq_device lpc_ich mfd_core arc4 snd ath9k mac80211 ath9k_common 
+ath9k_hw rts_pstor(C) ath cfg80211 rfkill r8169 soundcore snd_page_alloc 
+ac wmi battery button autofs4 gma500_gfx drm_kms_helper drm i2c_algo_bit 
+thermal video processor thermal_sys scsi_dh_rdac scsi_dh_emc 
+scsi_dh_alua scsi_dh_hp_sw scsi_dh
+[   15.932067] Pid: 63, comm: kworker/u:2 Tainted: G         C   
+3.7.10-1.1-desktop #1
+[   15.932071] Call Trace:
+[   15.932093]  [<c0205779>] try_stack_unwind+0x199/0x1b0
+[   15.932110]  [<c0204487>] dump_trace+0x47/0xf0
+[   15.932121]  [<c02057db>] show_trace_log_lvl+0x4b/0x60
+[   15.932130]  [<c0205808>] show_trace+0x18/0x20
+[   15.932141]  [<c06fbeeb>] dump_stack+0x6d/0x72
+[   15.932151]  [<c0238cb8>] warn_slowpath_common+0x78/0xb0
+[   15.932162]  [<c0238d0b>] warn_slowpath_null+0x1b/0x20
+[   15.932185]  [<f7c78448>] ar9003_get_pll_sqsum_dvc+0xa8/0xc0 
+[ath9k_hw]
+[   15.932215]  [<f7b712b8>] ath_hw_pll_work+0x48/0xc0 [ath9k]
+[   15.932261]  [<c02527dc>] process_one_work+0x10c/0x400
+[   15.932272]  [<c0253e89>] worker_thread+0x119/0x3b0
+[   15.932282]  [<c02584f2>] kthread+0x92/0xa0
+[   15.932294]  [<c070dc67>] ret_from_kernel_thread+0x1b/0x28
+[   15.932304]  [<c0258460>] kthread_create_on_node+0xd0/0xd0
+[   15.939555] DWARF2 unwinder stuck at kthread+0x0/0xa0
+[   15.939561]
+[   15.939565] Leftover inexact backtrace:
+[   15.939565]
+[   15.939577] ---[ end trace bf86f678b93882b1 ]---
 
+should I
 
-The following changes since commit 9cc04d692c031bf2113338b03974511670ac5cc9:
+- turn power save off
+- reinstall 3.7.10 (start again with openSUSE 12.3)?
 
-  Merge branch 'master' of
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next
-(2013-03-27 17:33:52 -0400)
+Grateful people are helping, sorry if I'm being stupid
 
-are available in the git repository at:
-
-
-  git://git.infradead.org/users/rafal/b43-next.git master
-
-for you to fetch changes up to adca58e2b4f350e9a93ca6c953be3f8e76ed541e:
-
-  b43: N-PHY: don't use deprecated b43_radio_foo16 (2013-04-13 01:32:48 +0200)
-
-----------------------------------------------------------------
-Hauke Mehrtens (1):
-      b43: N-PHY: use bcma_pmu_spuravoid_pllupdate()
-
-Rafał Miłecki (21):
-      b43: HT-PHY: rename defines addressing cores on the 2059 radio
-      b43: HT-PHY: tables: don't duplicate core-generic regs
-      b43: HT-PHY: finish calculating values for idle TSSI
-      b43: HT-PHY: do some extra TSSI setup after configuring TX
-      b43: HT-PHY: define regs for power estimation
-      b43: HT-PHY: store TX power state before disabling it
-      b43: HT-PHY: use enum for RSSI types
-      b43: N-PHY: use enum for RAIL type
-      b43: N-PHY: simplify conditions in RSSI offset scale function
-      b43: N-PHY: use more friendly variables names in RSSI code
-      b43: N-PHY: rename RSSI types to be shorter and more accurate
-      b43: N-PHY: use enum for RSSI type everywhere we use it
-      b43: N-PHY: fix "NB" RSSI calibration on PHYs rev2-
-      b43: use defines for board_type
-      b43: N-PHY: define missing registers
-      b43: N-PHY: use enum for INTC override function argument
-      b43: N-PHY: use shortcut "ctl" in functions names
-      b43: N-PHY: use defines for (re)storing VCM config
-      b43: N-PHY: move tables init function to tables file
-      b43: N-PHY: clean init tables
-      b43: N-PHY: don't use deprecated b43_radio_foo16
-
- drivers/net/wireless/b43/phy_ht.c      |  119 ++++--
- drivers/net/wireless/b43/phy_ht.h      |    6 +
- drivers/net/wireless/b43/phy_lp.c      |    4 +-
- drivers/net/wireless/b43/phy_n.c       |  705 ++++++++++++++++----------------
- drivers/net/wireless/b43/phy_n.h       |  146 +++++++
- drivers/net/wireless/b43/radio_2059.c  |   39 +-
- drivers/net/wireless/b43/radio_2059.h  |   14 +-
- drivers/net/wireless/b43/tables_nphy.c |   97 +++--
- drivers/net/wireless/b43/tables_nphy.h |   29 +-
- 9 files changed, 663 insertions(+), 496 deletions(-)
+Gerry
