@@ -1,167 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout1.wanadoo.co.uk ([80.12.242.29]:28483 "EHLO
-	smtpout.wanadoo.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933210Ab3DOKUK (ORCPT
+Received: from postler.einfach.org ([86.59.21.13]:47442 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756077Ab3DWPtm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 06:20:10 -0400
-Date: Mon, 15 Apr 2013 12:20:06 +0200 (CEST)
-From: nick@nhthomas.freeserve.co.uk
-Reply-To: nick@nhthomas.freeserve.co.uk
-To: Mohammed Shafi <shafi.wireless@gmail.com>,
-	nick@nhthomas.freeserve.co.uk
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <20061237.18971366021207041.JavaMail.www@wwinf3719> (sfid-20130415_122014_898541_86CA98B8)
-In-Reply-To: <CAD2nsn3GicfGbmwNOpdFP8kKgO0X6HU1bcRBHiP89p2UaLsxxg@mail.gmail.com>
-Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
+	Tue, 23 Apr 2013 11:49:42 -0400
+Message-ID: <5176ABB1.2070506@einfach.org> (sfid-20130423_175009_358738_46C8679E)
+Date: Tue, 23 Apr 2013 16:41:37 +0100
+From: Bruno Randolf <br1@einfach.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
+	arend@broadcom.com, meuleman@broadcom.com, brudley@broadcom.com,
+	brcm80211-dev-list@broadcom.com
+Subject: Broadcom brcmfmac vs bcmdhd on Android
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello!
 
-Hi Mohammed, did you get chance to look at the corrupted MAC address problem?
+I know this is the Linux kernel wireless list, and not Android, but due 
+to the lack of better places, I'm going to ask here...
 
-Regards
+I am trying to make IBSS mode work on Android. As I'm finding problems 
+with "bcmdhd", I am wondering if using the "brcmfmac" under Android 
+would be the better way to go?
 
-Nick Thomas
+I succeeded to compile brcmfmac from recent compat-drivers against the 
+"tuna" (Galaxy Nexus) kernel, the modules load, but no device is 
+recognized. Has anyone succeeded doing this? Is there any chance it can 
+work?
 
+Also I'm wondering what is the relation between the "bcmdhd" driver on 
+Android and "brcmfmac" in the standard Linux kernel. Is there any 
+official maintainer of "bcmdhd", any place where to submit patches? Will 
+"bcmdhd" and "brcmfmac" merge eventually?
 
-> Message Received: Mar 22 2013, 05:28 AM
-> From: "Mohammed Shafi" 
-> To: nick@nhthomas.freeserve.co.uk
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
-> 
-> On Thu, Mar 21, 2013 at 7:55 PM,  wrote:
-> > Hi Mohammed,
-> >
-> > OK, so I added the same printks further down in that function.
-> > There is a memcpy in there, and I added the same debug just after the memcpy.
-> >
-> > And, the eth_hdr->h_dest has been changed to a wrong MAC address - by something.
-> >
-> > And, it must be something wrong in skb_push .
-> 
-> good Nick, I' ll try to analyze this.
-> what platform are you using ? (is it a big/little endian)
-> 
-> >
-> >
-> > Regards
-> >
-> > Nick
-> >
-> >
-> >
-> >
-> >> Message Received: Mar 21 2013, 02:09 PM
-> >> From: nick@nhthomas.freeserve.co.uk
-> >> To: "Mohammed Shafi"
-> >> Cc: linux-wireless@vger.kernel.org
-> >> Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
-> >>
-> >>
-> >> Hi Mohammed,
-> >>
-> >> I've added some debug at the top of ath6kl_wmi_dix_2_dot3 function.
-> >>
-> >> Just after:
-> >>
-> >> eth_hdr = (struct ethhdr *) skb->data;
-> >> type = eth_hdr->h_proto;
-> >>
-> >> I added some debug to print all the values of eth_hdr->h_dest and eth_hdr->h_source .
-> >> And, all look correct at that point.
-> >>
-> >> Regards
-> >>
-> >> Nick
-> >>
-> >>
-> >> > Message Received: Mar 21 2013, 01:35 PM
-> >> > From: nick@nhthomas.freeserve.co.uk
-> >> > To: "Mohammed Shafi"
-> >> > Cc: linux-wireless@vger.kernel.org
-> >> > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
-> >> >
-> >> > Hi Mohammed,
-> >> >
-> >> > What do you need to me to do on this?
-> >> > I see that function in the wmi.c file.
-> >> >
-> >> > Do you want me to add some debug printk's in there somewhere?
-> >> >
-> >> > Regards
-> >> >
-> >> > Nick
-> >> >
-> >> > > Message Received: Mar 21 2013, 11:42 AM
-> >> > > From: "Mohammed Shafi"
-> >> > > To: nick@nhthomas.freeserve.co.uk
-> >> > > Cc: linux-wireless@vger.kernel.org
-> >> > > Subject: Re: ath6kl_usb - ping problems when compiled for sh4.
-> >> > >
-> >> > > On Wed, Mar 20, 2013 at 10:33 PM, wrote:
-> >> > > >
-> >> > > > Here is another example, taken from Wireshark.
-> >> > > > It's an ARP response, effectively saying IP address 192.168.0.107 is at 00:03:7f:20:50:59
-> >> > > >
-> >> > > > This is a message coming out of the wifi adaptor, and the above numbers are the IP address, and MAC address of the wifi device.
-> >> > > >
-> >> > > > 7f 20 50 59 00 24 00 03 7f 20 50 59 08 06 00 01
-> >> > > > 08 00 06 04 00 02 00 03 7f 20 50 59 c0 a8 00 07
-> >> > > > 20 cf 30 94 83 7b c0 a8 00 65
-> >> > > >
-> >> > > > What we see here is the Destination MAC address is 7f:20:50:59:00:24 (first 6 bytes).
-> >> > > > But that's wrong. It should be 20:cf:30:94:83:7b .
-> >> > > >
-> >> > > > The other parts look right though:
-> >> > > > 00:03:7f:20:50:59 is the MAC of the wifi device.
-> >> > > > c0 a8 00 65 is 192.168.0.101 which is the IP address of the destination.
-> >> > > > c0 a8 00 07 is the IP address of the wifi adaptor itself.
-> >> > >
-> >> > > let us check in ath6kl_wmi_dix_2_dot3, that should give us some clue.
-> >> > >
-> >> > > >
-> >> > > > So, where in the code is the first 6 bytes generated ?
-> >> > > >
-> >> > > >
-> >> > > > Regards
-> >> > > >
-> >> > > > Nick
-> >> > >
-> >> > >
-> >> > >
-> >> > > --
-> >> > > thanks,
-> >> > > shafi
-> >> > > --
-> >> > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> > > the body of a message to majordomo@vger.kernel.org
-> >> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
-> >> > >
-> >> >
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at http://vger.kernel.org/majordomo-info.html
-> >> >
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at http://vger.kernel.org/majordomo-info.html
-> >>
-> >
-> 
-> 
-> 
-> -- 
-> thanks,
-> shafi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-> 
-
+Thanks for any hints,
+bruno
