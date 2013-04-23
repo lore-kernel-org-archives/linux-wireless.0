@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58777 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:1540 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934397Ab3DGWES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Apr 2013 18:04:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 6/7] ath9k: detect more kinds of invalid descriptors
-Date: Mon,  8 Apr 2013 00:04:12 +0200
-Message-Id: <1365372253-32782-6-git-send-email-nbd@openwrt.org> (sfid-20130408_000422_512800_0707C9C3)
-In-Reply-To: <1365372253-32782-5-git-send-email-nbd@openwrt.org>
-References: <1365372253-32782-1-git-send-email-nbd@openwrt.org>
- <1365372253-32782-2-git-send-email-nbd@openwrt.org>
- <1365372253-32782-3-git-send-email-nbd@openwrt.org>
- <1365372253-32782-4-git-send-email-nbd@openwrt.org>
- <1365372253-32782-5-git-send-email-nbd@openwrt.org>
+	id S1752079Ab3DWLLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Apr 2013 07:11:48 -0400
+Message-ID: <51766C1F.5010102@broadcom.com> (sfid-20130423_131151_558040_E44017D3)
+Date: Tue, 23 Apr 2013 13:10:23 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Kai Hendry" <hendry@iki.fi>
+cc: Schrober <franzschrober@yahoo.de>, linux-wireless@vger.kernel.org
+Subject: Re: How to find ESSID & signal strength
+References: <CAF8XF0cS0kY96ubMisvsm--UE1PHCzrFmRC0b1Wd5-d164EdNg@mail.gmail.com>
+ <2075657.YTpB93Bl1M@bentobox>
+ <CAF8XF0dqL_vQrGU+WYq6oa7dUt4MtN=6eGCVjBZayQqnssXS0w@mail.gmail.com>
+In-Reply-To: <CAF8XF0dqL_vQrGU+WYq6oa7dUt4MtN=6eGCVjBZayQqnssXS0w@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If AR_CRCErr, AR_PHYErr, AR_DecryptCRCErr or AR_MichaelErr is indicated
-in the rx status word, but AR_RxFrameOK is also set, the descriptor
-contents are typically invalid. This can show up as a warning about
-invalid MCS rates in a frame. Even with those checks in place, a
-descriptor with invalid MCS rates can still sometimes make it through to
-the driver (mostly on older hardware like AR91xx).
+On 04/23/2013 12:14 PM, Kai Hendry wrote:
+> Hi there Schrober,
+>
+> On 23 April 2013 11:00, Schrober <franzschrober@yahoo.de> wrote:
+>> "Do NOT screenscrape this tool, we don't consider its output stable."
+>> Use nl80211
+>
+> Could you give me a code sample how you would use this "nl80211"
+> thing, from shell?
 
-Detect such errors in the last descriptor of a frame and discard the
-whole frame if present.
+this popped up earlier. Using shell scripts is a bad idea.  However, 
+libnl does provide python bindings. nl80211 is a netlink interface to 
+the linux wireless kernel module.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/mac.c  | 8 ++++++++
- drivers/net/wireless/ath/ath9k/mac.h  | 1 +
- drivers/net/wireless/ath/ath9k/recv.c | 2 ++
- 3 files changed, 11 insertions(+)
+>
+> Oh while I'm here. Is there no traditional /proc like interface
+> proposal for wireless information? If not, why not?
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 811007e..498fee0 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -615,6 +615,14 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		else if (ads.ds_rxstatus8 & AR_MichaelErr)
- 			rs->rs_status |= ATH9K_RXERR_MIC;
-+	} else {
-+		if (ads.ds_rxstatus8 &
-+		    (AR_CRCErr | AR_PHYErr | AR_DecryptCRCErr | AR_MichaelErr))
-+			rs->rs_status |= ATH9K_RXERR_CORRUPT_DESC;
-+
-+		/* Only up to MCS16 supported, everything above is invalid */
-+		if (rs->rs_rate >= 0x90)
-+			rs->rs_status |= ATH9K_RXERR_CORRUPT_DESC;
- 	}
- 
- 	if (ads.ds_rxstatus8 & AR_KeyMiss)
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 1ff8170..5865f92 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -183,6 +183,7 @@ struct ath_htc_rx_status {
- #define ATH9K_RXERR_DECRYPT       0x08
- #define ATH9K_RXERR_MIC           0x10
- #define ATH9K_RXERR_KEYMISS       0x20
-+#define ATH9K_RXERR_CORRUPT_DESC  0x40
- 
- #define ATH9K_RX_MORE             0x01
- #define ATH9K_RX_MORE_AGGR        0x02
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 0c6dc28..703c82c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1312,6 +1312,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			sc->rx.frag = skb;
- 			goto requeue;
- 		}
-+		if (rs.rs_status & ATH9K_RXERR_CORRUPT_DESC)
-+			goto requeue_drop_frag;
- 
- 		if (sc->rx.frag) {
- 			int space = skb->len - skb_tailroom(hdr_skb);
--- 
-1.8.0.2
+Because nl80211 is there to provide all the info.
+
+If you do not mind reworking your shell script and want to stick to it 
+than the answer is:
+
+$ iw wlanX link
+
+wlanX should be your wireless network interface.
+
+Regards,
+Arend
 
