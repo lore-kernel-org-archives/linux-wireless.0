@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52869 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753940Ab3D2KSi (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60275 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756584Ab3DWXvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 06:18:38 -0400
-Message-ID: <1367230699.8289.1.camel@jlt4.sipsolutions.net> (sfid-20130429_121841_132580_1EEB0CD5)
-Subject: Re: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, linux@rempel-privat.de
-Date: Mon, 29 Apr 2013 12:18:19 +0200
-In-Reply-To: <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110625_498196_82A8FB5B)
-References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
-	 <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com>
-	 (sfid-20130429_110625_498196_82A8FB5B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 23 Apr 2013 19:51:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.10 3/4] mwifiex: Do not kfree cmd buf while unregistering PCIe
+Date: Tue, 23 Apr 2013 16:49:49 -0700
+Message-ID: <1366760990-15748-4-git-send-email-bzhao@marvell.com> (sfid-20130424_015152_393403_D58801EB)
+In-Reply-To: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
+References: <1366760990-15748-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-29 at 11:04 +0200, Wojciech Dubowik wrote:
-> Add rx flag to radiotap header which tells whether
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Same here, you can't just randomly add something to radiotap. Go
-standardise it first.
+All the command buffers are freed in mwifiex_free_cmd_buffer()
+and hence there is no need to kfree the current command buffer
+again. This might ends up freeing memory allocated by some other
+kernel code.
 
-johannes
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index b924e1d..eaf93f5 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -863,7 +863,6 @@ static int mwifiex_pcie_delete_cmdrsp_buf(struct mwifiex_adapter *adapter)
+ 		MWIFIEX_SKB_PACB(card->cmd_buf, &buf_pa);
+ 		pci_unmap_single(card->dev, buf_pa, MWIFIEX_SIZE_OF_CMD_BUFFER,
+ 				 PCI_DMA_TODEVICE);
+-		dev_kfree_skb_any(card->cmd_buf);
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.0.2
 
