@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4456 "EHLO mms2.broadcom.com"
+Received: from www.piware.de ([213.9.93.70]:44880 "EHLO www.piware.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760345Ab3DCKlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 06:41:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 18/25] brcmfmac: avoid error output on header only
- packet
-Date: Wed, 3 Apr 2013 12:40:43 +0200
-Message-ID: <1364985650-11719-19-git-send-email-arend@broadcom.com> (sfid-20130403_124306_971587_6F7E592B)
-In-Reply-To: <1364985650-11719-1-git-send-email-arend@broadcom.com>
-References: <1364985650-11719-1-git-send-email-arend@broadcom.com>
+	id S1757319Ab3DXKxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 06:53:25 -0400
+Date: Wed, 24 Apr 2013 12:53:21 +0200
+From: Martin Pitt <martin.pitt@ubuntu.com>
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dcbw@redhat.com
+Subject: Re: [PATCH] mac80211_hwsim: correctly register the platform driver
+Message-ID: <20130424105321.GA2898@piware.de> (sfid-20130424_125345_503581_EC71D674)
+References: <1366778405-7584-1-git-send-email-sasha.levin@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
+In-Reply-To: <1366778405-7584-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Piotr Haber <phaber@broadcom.com>
 
-During SDIO layer flow control signalling firmware can issue
-invalid packets. Prevent printing of parsing errors in such case.
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hello Sasha,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index e224bcb..59c77aa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -303,8 +303,8 @@ int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
- 
- 	/* Pop BDC header used to convey priority for buses that don't */
- 
--	if (pktbuf->len < BDC_HEADER_LEN) {
--		brcmf_err("rx data too short (%d < %d)\n",
-+	if (pktbuf->len <= BDC_HEADER_LEN) {
-+		brcmf_dbg(INFO, "rx data too short (%d <= %d)\n",
- 			  pktbuf->len, BDC_HEADER_LEN);
- 		return -EBADE;
- 	}
--- 
-1.7.10.4
+Sasha Levin [2013-04-24  0:40 -0400]:
+> Not registering a platform_driver would make us access garbage
+> when the platform callbacks under driver_register() kicks in.
+>=20
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
 
+Ah, thanks for catching this! I applied that patch and verified that
+it still works well.
 
+Tested-By: Martin Pitt <martin.pitt@ubuntu.com>
+
+Martin
+--=20
+Martin Pitt                        | http://www.piware.de
+Ubuntu Developer (www.ubuntu.com)  | Debian Developer  (www.debian.org)
+
+--zYM0uCDKw75PZbzx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRd7mhAAoJEPmIJawmtHufgSsP/jKmdrVPj69ClRn4sgySd0TH
+UmEvACPZQ+8Z9KCWnERDDL7f/RsHELFJ7LebyTsauaOhkTJqWJGRybX7PT7QDlul
+NHoCPXUcIKX2QNxgn2biWa2rcGx5YYXf/xeibdsqPi0BLsOVXn1nAykYlJbcbyJl
+M7uThqtLl8V4PVqliEhtSa2ch6idkMIavIqFME5HmmQ6d0/AL3OlL5ZM9vftg/g0
+2pk7kEJHonbUBtQCv0v4vhkypUidJzEZi5vaWqpfa0MmtKfeQIYx+LSBDQhHsOH5
+RSDh4KtJTgR78aGgC8myTqsYj5WLdxRXTcwDWfk61tdd05ND/g8oeEHVdqXGubxc
+CvalZCAsRBbYX0WIxUljE46fuxyzazBEBZIiGd13gTF22O9jUdEyDWtYfo7aPUyp
+7EU+YvpgynNl4kSY3XnIK0aOZeZa4zMYISPyMF6Bx4Bs/Oi5kpXlGJDoz6R9+5AJ
+a+9veRiWlpJDnGv6i+VntEih8B/yvaIjx9rzhq+4kbB+bOOC9DiSlrQuz7BUYNJ8
+taSeOI0A3dX4Xp5uL1uy02d9eWkrkHVCsJWLfQKjCNJIgkEzqa4mrXa79kGkSJm7
+y58jGExddG/60J9Mdt1SJZ2I3GmL4kjzmRbijFkoNuP6OK8Qs7LQVMrtjnATTMfU
+WM8Uu08CGGvWzqz+JtZR
+=y4W9
+-----END PGP SIGNATURE-----
+
+--zYM0uCDKw75PZbzx--
