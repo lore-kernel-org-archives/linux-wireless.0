@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:51408 "EHLO plane.gmane.org"
+Received: from sipsolutions.net ([144.76.43.152]:50187 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765499Ab3DFTIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Apr 2013 15:08:45 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1UOYG0-0003j3-JJ
-	for linux-wireless@vger.kernel.org; Sat, 06 Apr 2013 20:54:32 +0200
-Received: from static-65-129-225-77.ipcom.comunitel.net ([static-65-129-225-77.ipcom.comunitel.net])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Apr 2013 20:54:32 +0200
-Received: from rtpardavila by static-65-129-225-77.ipcom.comunitel.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Apr 2013 20:54:32 +0200
-To: linux-wireless@vger.kernel.org
-From: Ricardo =?utf-8?b?VHViw61v?= <rtpardavila@gmail.com>
-Subject: Re: [ath5k][802.11p] Deactivate beacon
-Date: Fri, 5 Apr 2013 18:50:58 +0000 (UTC)
-Message-ID: <loom.20130405T204912-602@post.gmane.org> (sfid-20130406_210858_176098_FBA6C767)
+	id S1751492Ab3DXLb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 07:31:59 -0400
+Message-ID: <1366803109.21854.12.camel@jlt4.sipsolutions.net> (sfid-20130424_133203_039672_919478D5)
+Subject: Re: [PATCH] cfg80211: Cover  60g regulatory class in
+ ieee80211_operating_class_to_band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 24 Apr 2013 13:31:49 +0200
+In-Reply-To: <9494232.kA7XtV1HX3@lx-vladimir>
+References: <9494232.kA7XtV1HX3@lx-vladimir>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am now working with the GCDC v3 branch software and, after compiling it, I 
-found that you still have to do some hacks on that code for it to work 
-properly. I have made a couple of patches and, with that, I have achieved the 
-following:
+On Tue, 2013-04-23 at 09:54 +0300, Vladimir Kondratiev wrote:
+> Hi,
+> 
+> In the function ieee80211_operating_class_to_band, introduced in commit
+> 1ce3e82b0eb472161313183be0033e46d5c4bbaf cfg80211: add ieee80211_operating_class_to_band,
+> 60GHz band is not covered. Patch below adds 60g.
+> 
+> Thanks, Vladimir
 
-1) Full ITS band support (channels 176-184 @5.8-5.9 GHz).
-2) iw tool modified for setting the beacon interval.
-3) airemon-ng and aircrack utils support for the ITS band channels (by 
-default, they do not support any channel above 120).
+Applied. I'd really prefer if you could format your patches properly
+though, with the extra text behind a --- line. Next time please.
 
-Currently, I am working on the following issues:
-
-1) Packet injection support through 'aireplay-ng' by patching ath5k with the 
-patches that I found on their website.
-2) Bandwidth selection instead of turbo mode selection. For this, I am based 
-my patch on the following patch submitted previously to the linux-networking 
-group: http://thread.gmane.org/gmane.linux.kernel.wireless.general/59932
-
- I am testing all this and I have a network analyzer up to 6 GHz, so I can 
-fully verified the integrity of the signal generated.
-
-I would appreciate that anybody can provide me any support on these tasks.
+johannes
 
