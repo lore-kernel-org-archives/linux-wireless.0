@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:60218 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754522Ab3DSQOi (ORCPT
+Received: from jacques.telenet-ops.be ([195.130.132.50]:51740 "EHLO
+	jacques.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932262Ab3DXMCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Apr 2013 12:14:38 -0400
-Received: by mail-bk0-f45.google.com with SMTP id j10so1773074bkw.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Apr 2013 09:14:37 -0700 (PDT)
+	Wed, 24 Apr 2013 08:02:42 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ath6kl: Unify sg_sz and buf_sz in ath6kl_sdio_alloc_prep_scat_req()
+Date: Wed, 24 Apr 2013 14:02:34 +0200
+Message-Id: <1366804954-20491-1-git-send-email-geert@linux-m68k.org> (sfid-20130424_140302_549445_0EF2F589)
 MIME-Version: 1.0
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local>
-References: <773DB8A82AB6A046AE0195C68612A3190152C98B@sbs2003.acksys.local>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Fri, 19 Apr 2013 18:14:17 +0200
-Message-ID: <CAG6hwVN5LRVgchuX7QQWKEioBxTz3WXO5JUVv7fE3_X5LKXayg@mail.gmail.com> (sfid-20130419_181442_827594_B491AB01)
-Subject: Re: Mutli vif in mesh mode
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 19, 2013 at 5:04 PM, Cedric VONCKEN
-<cedric.voncken@acksys.fr> wrote:
-> I try to setup 2 mesh node on the same wireless card.
-> I am using the ath9k driver from Compat 2013-02-22 (openwrt package).
->
-> The command line sequence is
-> Create mesh node 1
->         iw phy0 interface add wlan0 type mp
->         iw wlan0 set channel 44 HT20
->         ifconfig wlan0 up
->         iw wlan0 mesh join test
->
-> Create mesh node 2
-> iw phy0 interface add wlan1 type mp
-> iw wlan1 set channel 44 HT20
-> ifconfig wlan1 hw ether 00:09:90:aa:11:22 up
-> iw wlan1 mesh join test2
->
-> With wireshark and air pcap adapter, I cannot see the beacon for the
-> second mesh node.
-> If I  execute each mesh node separately, it works correctly (I see the
-> beacon on wireshark)
->
-> Is it possible to execute 2 mesh node on one ath9k wireless card?
+sg_sz and buf_sz are initialized and used in a mutual exclusive way.
+However, some versions of gcc are not smart enough to see this:
 
-This is because ath9k currently uses the hardware's adhoc beaconing
-mode for mesh. See ath9k_hw_beaconinit() in
-drivers/net/wireless/ath/ath9k/hw.c. This is probably wrong, and we
-have a patch to beacon with AP mode, but I'll have to dig it up.
+drivers/net/wireless/ath/ath6kl/sdio.c: In function ‘ath6kl_sdio_alloc_prep_scat_req’:
+drivers/net/wireless/ath/ath6kl/sdio.c:338: warning: ‘sg_sz’ may be used uninitialized in this function
 
---
-Thomas
+Unify the sg_sz and buf_sz variables into a single size variable to kill
+the compiler warning.
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index d111980..7638135 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -335,17 +335,17 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ {
+ 	struct hif_scatter_req *s_req;
+ 	struct bus_request *bus_req;
+-	int i, scat_req_sz, scat_list_sz, sg_sz, buf_sz;
++	int i, scat_req_sz, scat_list_sz, size;
+ 	u8 *virt_buf;
+ 
+ 	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
+ 	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+ 
+ 	if (!virt_scat)
+-		sg_sz = sizeof(struct scatterlist) * n_scat_entry;
++		size = sizeof(struct scatterlist) * n_scat_entry;
+ 	else
+-		buf_sz =  2 * L1_CACHE_BYTES +
+-			  ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
++		size =  2 * L1_CACHE_BYTES +
++			ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+ 
+ 	for (i = 0; i < n_scat_req; i++) {
+ 		/* allocate the scatter request */
+@@ -354,7 +354,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 			return -ENOMEM;
+ 
+ 		if (virt_scat) {
+-			virt_buf = kzalloc(buf_sz, GFP_KERNEL);
++			virt_buf = kzalloc(size, GFP_KERNEL);
+ 			if (!virt_buf) {
+ 				kfree(s_req);
+ 				return -ENOMEM;
+@@ -364,7 +364,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 				(u8 *)L1_CACHE_ALIGN((unsigned long)virt_buf);
+ 		} else {
+ 			/* allocate sglist */
+-			s_req->sgentries = kzalloc(sg_sz, GFP_KERNEL);
++			s_req->sgentries = kzalloc(size, GFP_KERNEL);
+ 
+ 			if (!s_req->sgentries) {
+ 				kfree(s_req);
+-- 
+1.7.0.4
+
