@@ -1,93 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41712 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965154Ab3DPS0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 14:26:44 -0400
-Subject: [PATCH 12/28] rtl8192u: Don't need to save device proc dir PDE [RFC]
-To: linux-kernel@vger.kernel.org
-From: David Howells <dhowells@redhat.com>
-Cc: devel@driverdev.osuosl.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Jerry Chuang <jerry-chuang@realtek.com>,
-	linux-wireless@vger.kernel.org, viro@zeniv.linux.org.uk,
-	linux-fsdevel@vger.kernel.org
-Date: Tue, 16 Apr 2013 19:26:39 +0100
-Message-ID: <20130416182639.27773.60503.stgit@warthog.procyon.org.uk> (sfid-20130416_203309_820406_1CE54654)
-In-Reply-To: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk>
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:54611 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323Ab3DXRde (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 13:33:34 -0400
+Received: by mail-lb0-f181.google.com with SMTP id r11so1975799lbv.26
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 10:33:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CALvqYaRrjMtPE72PGR-Zzuj11CL=E6+ruC+E1wGPO3m5wgdOhg@mail.gmail.com>
+References: <CALvqYaTZrtSsP9GQzH4B988KjPg+LRCcyREKZ1zkjoaEDKPHNA@mail.gmail.com>
+	<CALvqYaTSYR43rS-pptFKCfsgvsatrUSz4v+AFBPQ0UrHC4WkXA@mail.gmail.com>
+	<5177F100.1070803@lwfinger.net>
+	<CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com>
+	<51780C92.4000208@lwfinger.net>
+	<CALvqYaRrjMtPE72PGR-Zzuj11CL=E6+ruC+E1wGPO3m5wgdOhg@mail.gmail.com>
+Date: Wed, 24 Apr 2013 19:27:38 +0200
+Message-ID: <CALvqYaT==e4U43dxtyX55A9CNgWh9apHMrj89=bBybutyJOoiw@mail.gmail.com> (sfid-20130424_193338_016976_9ABCCD0A)
+Subject: Re: Fwd: Realtek 8192CU not working
+From: Michael Stahn <michael.stahn.42@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't need to save the PDE of a directory created under /proc/net/rtl8192/ as
-we can use proc subtree deletion to get rid of it and all its children.
+okay now it gets a little awkward: un/reloading the driver seems to
+fix the authentication-problem (ip gets assigned), but no ping
+succeeds..
+http://bpaste.net/show/93913/
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Jerry Chuang <jerry-chuang@realtek.com>
-cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-cc: linux-wireless@vger.kernel.org
-cc: devel@driverdev.osuosl.org
----
-
- drivers/staging/rtl8192u/r8192U.h      |    1 -
- drivers/staging/rtl8192u/r8192U_core.c |   18 ++++++------------
- 2 files changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/staging/rtl8192u/r8192U.h b/drivers/staging/rtl8192u/r8192U.h
-index e538e02..bedeb33 100644
---- a/drivers/staging/rtl8192u/r8192U.h
-+++ b/drivers/staging/rtl8192u/r8192U.h
-@@ -946,7 +946,6 @@ typedef struct r8192_priv {
- 	/*stats*/
- 	struct Stats stats;
- 	struct iw_statistics wstats;
--	struct proc_dir_entry *dir_dev;
- 
- 	/*RX stuff*/
- //	u32 *rxring;
-diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
-index d81d7d5..27ba2a3 100644
---- a/drivers/staging/rtl8192u/r8192U_core.c
-+++ b/drivers/staging/rtl8192u/r8192U_core.c
-@@ -669,20 +669,19 @@ static const struct rtl8192_proc_file rtl8192_proc_files[] = {
- void rtl8192_proc_init_one(struct net_device *dev)
- {
- 	const struct rtl8192_proc_file *f;
--	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
-+	struct proc_dir_entry *dir;
- 
- 	if (rtl8192_proc) {
--		priv->dir_dev = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
--		if (!priv->dir_dev) {
-+		dir = proc_mkdir_data(dev->name, 0, rtl8192_proc, dev);
-+		if (!dir) {
- 			RT_TRACE(COMP_ERR, "Unable to initialize /proc/net/rtl8192/%s\n",
- 				 dev->name);
- 			return;
- 		}
- 
- 		for (f = rtl8192_proc_files; f->name[0]; f++) {
--			if (!proc_create_data(f->name, S_IFREG | S_IRUGO,
--					      priv->dir_dev,
--					      rtl8192_proc_fops, f->show)) {
-+			if (!proc_create_data(f->name, S_IFREG | S_IRUGO, dir,
-+					      &rtl8192_proc_fops, f->show)) {
- 				RT_TRACE(COMP_ERR, "Unable to initialize "
- 					 "/proc/net/rtl8192/%s/%s\n",
- 					 dev->name, f->name);
-@@ -694,12 +693,7 @@ void rtl8192_proc_init_one(struct net_device *dev)
- 
- void rtl8192_proc_remove_one(struct net_device *dev)
- {
--	struct r8192_priv *priv = (struct r8192_priv *)ieee80211_priv(dev);
--
--	if (priv->dir_dev) {
--		remove_proc_subtree(dev->name, rtl8192_proc);
--		priv->dir_dev = NULL;
--	}
-+	remove_proc_subtree(dev->name, rtl8192_proc);
- }
- 
- /****************************************************************************
-
+2013/4/24 Michael Stahn <michael.stahn.42@gmail.com>:
+> I'm using a i686 Architecture on AMD E2-1800 APU with Radeon(tm) HD
+> Graphics AuthenticAMD GNU/Linux with linux 3.7.10. CONFIG_USB_DEBUG
+> was allready set. I've used an USB 3.0 port previously and now
+> rechecked everything with a USB2.0 port. The result is nearly the
+> same: first connection succeeds (ping response), doing a manual
+> reconnect to the AP leads to the same error. I've done several
+> ifconfig down/ups at the end with no change.
+> dmesg gives: http://bpaste.net/show/93912/
+>
+> 2013/4/24 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 04/24/2013 11:20 AM, Michael Stahn wrote:
+>>>
+>>> I've just recompiled the kernel and executed the following procedure:
+>>> modprobe rtl8192cu -> plugin in Wlan-Stick -> connect wlan via
+>>> Networkmanager (no connection was established, credentials are
+>>> correct) -> unplug Stick. Attachment contains the dmes-output.
+>>
+>>
+>> Please do not drop the Cc to the Linux wireless mailing list unless you are
+>> requested to send something of a sensitive nature. Always use "Reply to
+>> all".
+>>
+>> [  448.211707] rtl8192cu: MAC auto ON okay!
+>> [  448.248820] rtl8192cu: Tx queue select: 0x05
+>> [  448.615206] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [  464.990166] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 1
+>> [  464.990540] ehci_hcd 0000:00:16.2: detected XactErr len 0/15360 retry 2
+>> [  464.990613] hub 3-0:1.0: state 7 ports 4 chg 0000 evt 0004
+>> [  464.990642] ehci_hcd 0000:00:16.2: GetStatus port:2 status 001002 0  ACK
+>> POWER sig=se0 CSC
+>> [  464.990661] hub 3-0:1.0: port 2, status 0100, change 0001, 12 Mb/s
+>> [  464.990672] usb 3-2: USB disconnect, device number 3
+>>
+>> That error is something in the USB hub driver. What is your architecture?
+>>
+>> To get a little more detail, please rebuild your kernel with
+>> CONFIG_USB_DEBUG set and post the full log on some paste site. I will likely
+>> need to have the help of the USB expert on this matter, but we need more
+>> details first.
+>>
+>> Larry
+>>
