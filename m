@@ -1,107 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:33458 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756593Ab3DWX6d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 19:58:33 -0400
-Date: Tue, 23 Apr 2013 20:58:25 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2013-04-23
-Message-ID: <20130423235825.GG1697@joana> (sfid-20130424_015850_670483_5EF35923)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+Received: from sipsolutions.net ([144.76.43.152]:50095 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754072Ab3DXLIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 07:08:24 -0400
+Message-ID: <1366801278.11111.23.camel@jlt4.sipsolutions.net> (sfid-20130424_130828_072984_F618248B)
+Subject: Re: [RFC 1/2] mac80211:  Add vif hash for multi-station RX
+ performance.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <517705E0.4070304@candelatech.com>
+References: <1365007698-25295-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20130403_184908_772897_29241D1E) <1365501478.8465.17.camel@jlt4.sipsolutions.net>
+	 <516455CA.6070504@candelatech.com>
+	 <1365671968.8272.35.camel@jlt4.sipsolutions.net>
+	 <5176E442.7070907@candelatech.com> <517705E0.4070304@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Apr 2013 13:01:18 +0200
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-04-23 at 15:06 -0700, Ben Greear wrote:
 
---ew6BAiZeqk4r7MaW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > This idea suddenly looks a lot more interesting.  The ieee80211_tx_status method needs
+> > to find the remote station & sdata, but in the AP case, the station hash works best,
+> > and in my many-sta-vif case, the VIF hash works best.  I don't see any way to guess
+> > which hash to use in this case.
 
-Hi John,
+Indeed, that'd be tricky.
 
-A few more patches intended for 3.10, the most important one is the support=
- in
-btusb for fw loading for the Intel Bluetooth device. Other than that we have
-only fixes and clean ups.
+> > But, if we first hashed to find sdata, and then had a vif hash in the sdata
+> > object, the lookup should be fast for cases where the hash function works
+> > well.
+> >
+> > I'll give this a try...
+> 
+> Seems to mostly be working, but I've a few questions.
+> 
+> First, if we are hashing sdata on sdata->vif.addr, then we must
+> assume that everything in that hash has a unique MAC.  I'm
+> thinking that I would just never put monitor devices in
+> the hash.  Is there anything else that would cause problems
+> with this?
 
-Please pull or let me know of any problems! Thanks.
+Monitor interfaces won't have stations, so they're not needed anyway.
 
-	Gustavo
----
-The following changes since commit 76a388beaf92cc75b829d4a0b7d69afaaeaa4b0a:
+> Second, the sta_info_get_bss call is found fairly often.  It
+> talks about finding a station on sdata or associated vlan.
+> Does this indicate that the there are VLAN sdata objects
+> with duplicate MACs?
 
-  Bluetooth: Rename LE_SCANNING_* macros (2013-04-18 01:17:27 -0300)
+Yes. See net/mac80211/iface.c identical_mac_addr_allowed().
 
-are available in the git repository at:
+> I was hoping I could replace at least most calls to sta_info_get_bss
+> with one that just searched the new sdata->sta_hash hash table...
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next fo=
-r-upstream=20
+I have no idea how my answer affects this :)
 
-for you to fetch changes up to 69676b1c2af451bfe5cd36ff4973a484b5d5a86c:
+johannes
 
-  Bluetooth: btmrvl: report error if verify_fw_download times out (2013-04-=
-23 20:55:55 -0300)
-
-----------------------------------------------------------------
-Andreas Fenkart (2):
-      Bluetooth: btmrvl: release lock while waiting for fw download complete
-      Bluetooth: btmrvl: report error if verify_fw_download times out
-
-Andy Shevchenko (1):
-      Bluetooth: btmrvl: use native helpers for debugfs
-
-Fengguang Wu (1):
-      Bluetooth: hci_get_cmd_complete() can be static
-
-Gustavo Padovan (1):
-      Bluetooth: remove unneeded var initialization in btmrvl
-
-Johan Hedberg (2):
-      Bluetooth: Fix HCI command send functions to use const specifier
-      Bluetooth: Fix sending write_le_host_supporte for LE-only controllers
-
-Marcel Holtmann (1):
-      Bluetooth: Remove unneeded parameter from L2CAP ATT channel handling
-
-Tedd Ho-Jeong An (1):
-      Bluetooth: Add support for Intel Bluetooth device [8087:07dc]
-
- drivers/bluetooth/btmrvl_debugfs.c | 266 +++------------------------
- drivers/bluetooth/btmrvl_sdio.c    |  41 +++--
- drivers/bluetooth/btusb.c          | 377 +++++++++++++++++++++++++++++++++=
-++++++
- include/net/bluetooth/hci_core.h   |  14 +-
- net/bluetooth/hci_core.c           |  29 ++-
- net/bluetooth/l2cap_core.c         |   7 +-
- net/bluetooth/mgmt.c               |   8 +-
- 7 files changed, 462 insertions(+), 280 deletions(-)
-
-
---ew6BAiZeqk4r7MaW
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRdyAhAAoJEPs3PUX4s20ob18P/2gfa73Qcfts+Wq47sfRe4Ui
-CaKMe6iQLsQCgRfGkKE5ut5VCcxHlJFrVZ1sw8c6ucKZqM8xMjaXhyHngZ+lt+RT
-RLy7RCyWSP2yAZEFPdehaEuPPO7UVjjc7Ae/uHkdj7mW61h6j/vRmXHA+w4t/C1d
-RJQi8Ta+18Rwk87/xebMmRGUO08/k1OBXPELbbGZOjnjujnRklOSoDx360RaqM+m
-6XHx/lsHNJKKTe2/EbiubsbxzH6RfIFQ2ohCGv5FiidXxyfb01KfsHdWroP+S0ia
-BGHRsjnT15HtwT10JA0E0WLCKJbC5euv4+6JGnafAKN4nTbiCpSIe1EodniHrPGt
-q3PKY8QxJOKa4+QnHzpa5wQcc+Qp9zdSE6ZSoLLkMeZQdp4I7P9RoXHooXR+2Wjk
-KAknZL7ezGeZnbDQrgyIXwKO9T3JShZTOQuPj3Am0ZPvucvYTCK+x266AKLP2c7K
-gRykaXeVth5tPrNA/uxX7xDgCqFjBlIhiJdn4UN2H6jZYiZ8CIc34xUySXsOxX6E
-MtsvLMcKL/gw2Wn1qjIkdRsfBy51BiRGSuIvL8RZY2zmoQDvv0gsyIS4BB/rtwuN
-lRpfpy61CosKiTa9HislzZAeq2Tw7zAuh7R21Mc9bzNaUTyuSFyBVYJCPK2Liv3a
-l/btT+0fHBfNz1He/S8s
-=JPJI
------END PGP SIGNATURE-----
-
---ew6BAiZeqk4r7MaW--
