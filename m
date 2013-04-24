@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55442 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760602Ab3DIRgF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Apr 2013 13:36:05 -0400
-Message-ID: <5164517C.1050304@candelatech.com> (sfid-20130409_193610_127026_8B114EBB)
-Date: Tue, 09 Apr 2013 10:35:56 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55171 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757314Ab3DXTbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 15:31:06 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2] ssb: implement ssb spuravoid for chipid BCM43222
+Date: Wed, 24 Apr 2013 21:30:54 +0200
+Message-Id: <1366831854-19634-1-git-send-email-hauke@hauke-m.de> (sfid-20130424_213110_962625_4AD65392)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] mac80211:  Optimize sta lookup for many VIFs
-References: <1364572823-28071-1-git-send-email-greearb@candelatech.com>  (sfid-20130329_170033_026763_9F6C74DD) <1365501048.8465.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1365501048.8465.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2013 02:50 AM, Johannes Berg wrote:
-> On Fri, 2013-03-29 at 09:00 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> The sta_info hash is designed to deal with an AP
->> with lots of stations associated, or a station interface
->> connected to a single AP.
->
-> Given your other hash patches, does this even make sense still?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/ssb/driver_chipcommon_pmu.c |   19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-This handles the TX side for station VIFs.  The more complicated
-hashing handles the rx logic.  I could use the hash
-for the tx side, though performance is likely a small bit
-worse since you have to deal with the hash logic.
-
-And, if the more complicated RFC hashing patch has no upstream
-chance anyway, then if the 'some-sta' patch is acceptable,
-I'd still be interested in seeing it upstream.
-
-Thanks,
-Ben
-
+diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
+index 23c5dbf..1173a09 100644
+--- a/drivers/ssb/driver_chipcommon_pmu.c
++++ b/drivers/ssb/driver_chipcommon_pmu.c
+@@ -687,8 +687,23 @@ void ssb_pmu_spuravoid_pllupdate(struct ssb_chipcommon *cc, int spuravoid)
+ 		pmu_ctl = SSB_CHIPCO_PMU_CTL_PLL_UPD;
+ 		break;
+ 	case 43222:
+-		/* TODO: BCM43222 requires updating PLLs too */
+-		return;
++		if (spuravoid == 1) {
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL0, 0x11500008);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL1, 0x0C000C06);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL2, 0x0F600a08);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL3, 0x00000000);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL4, 0x2001E920);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL5, 0x88888815);
++		} else {
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL0, 0x11100008);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL1, 0x0c000c06);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL2, 0x03000a08);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL3, 0x00000000);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL4, 0x200005c0);
++			ssb_chipco_pll_write(cc, SSB_PMU1_PLLCTL5, 0x88888855);
++		}
++		pmu_ctl = SSB_CHIPCO_PMU_CTL_PLL_UPD;
++		break;
+ 	default:
+ 		ssb_printk(KERN_ERR PFX
+ 			   "Unknown spuravoidance settings for chip 0x%04X, not changing PLL\n",
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
