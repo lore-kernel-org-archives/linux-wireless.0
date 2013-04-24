@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46464 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab3D0S3i (ORCPT
+Received: from postler.einfach.org ([86.59.21.13]:49741 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756712Ab3DXPSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Apr 2013 14:29:38 -0400
-Message-ID: <1367085173.8445.0.camel@jlt4.sipsolutions.net> (sfid-20130427_202941_172558_BA796D0D)
-Subject: Re: Intel Centrino Wireless-N 2230 (rev c4) bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paolo Zaffino <p.zaffino@unicz.it>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Sat, 27 Apr 2013 19:52:53 +0200
-In-Reply-To: <517BD02A.5060904@unicz.it> (sfid-20130427_151940_748350_F10D6AF1)
-References: <517BD02A.5060904@unicz.it>
-	 (sfid-20130427_151940_748350_F10D6AF1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 24 Apr 2013 11:18:53 -0400
+Message-ID: <5177F7D6.2020800@einfach.org> (sfid-20130424_171857_836844_462EA8BD)
+Date: Wed, 24 Apr 2013 16:18:46 +0100
+From: Bruno Randolf <br1@einfach.org>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
+	meuleman@broadcom.com, brudley@broadcom.com,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?5rW36Je75pWs5LmL?= <tkaiso@thinktube.com>
+Subject: Re: Broadcom brcmfmac vs bcmdhd on Android
+References: <5176ABB1.2070506@einfach.org> <5176F8C2.7050502@broadcom.com>
+In-Reply-To: <5176F8C2.7050502@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-04-27 at 15:18 +0200, Paolo Zaffino wrote:
+On 04/23/2013 10:10 PM, Arend van Spriel wrote:
+> I am working mainly on brcmfmac. IBSS should work, but reading the
+> commit message of your patch I guess it may be a firmware issue so using
+> brcmfmac will not make a difference.
 
+I would like to try that to confirm it. And from your message I conclude 
+the brcmfmac is the way to go forward...
 
-> [ 1756.822019] wlp3s0: deauthenticating from 74:ea:3a:cd:28:42 by local 
-> choice (reason=3)
+>> I succeeded to compile brcmfmac from recent compat-drivers against the
+>> "tuna" (Galaxy Nexus) kernel, the modules load, but no device is
+>> recognized. Has anyone succeeded doing this? Is there any chance it can
+>> work?
+>
+> That is how we did it and with success. What do you mean by 'no device
+> is recognized'? Do you have any traces to look at?
 
-This is your problem, you're probably running two instances of
-wpa_supplicant or something equally strange.
+Good to know. What I did is I compiled the "tuna" kernel (3.0.31) 
+without bcmdhd, then brcmfmac from compat-drivers, loaded the brcmfmac 
+module (+ dependencies), but then nothing happens. It looks like the 
+device is not recognized on SDIO. Is there anything special I need to do 
+to activate the chip?
+Anyhow I'll debug this further and send you more info later.
 
-johannes
+Thanks,
+bruno
+
 
