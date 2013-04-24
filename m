@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52821 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757549Ab3D2KKf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 06:10:35 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: fix WoWLAN wakeup tracing
-Date: Mon, 29 Apr 2013 12:10:23 +0200
-Message-Id: <1367230223-16740-1-git-send-email-johannes@sipsolutions.net> (sfid-20130429_121039_695193_E0DA9A6F)
+Received: from mms1.broadcom.com ([216.31.210.17]:1607 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757003Ab3DXTQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 15:16:31 -0400
+Message-ID: <51782F84.6070605@broadcom.com> (sfid-20130424_211636_624407_7BB0D744)
+Date: Wed, 24 Apr 2013 21:16:20 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Kalle Valo" <kvalo@adurom.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] cfg80211: Android P2P-Device workaround
+References: <1366791988-11309-1-git-send-email-johannes@sipsolutions.net>
+ <87mwso5jbx.fsf@purkki.adurom.net>
+ <1366800294.11111.7.camel@jlt4.sipsolutions.net>
+ <87ehe05hgc.fsf@purkki.adurom.net>
+In-Reply-To: <87ehe05hgc.fsf@purkki.adurom.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 04/24/2013 12:52 PM, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>> On Wed, 2013-04-24 at 13:11 +0300, Kalle Valo wrote:
+>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>
+>>>> +#ifndef CONFIG_CFG80211_ANDROID_P2P_HACK
+>>>>   	if (WARN_ON(wdev->netdev))
+>>>>   		return;
+>>>> +#endif
+>>>
+>>> With my favorite kernel macro, config_enabled(), you could get rid of
+>>> quite a lot of the ugly ifdefs.
+>>
+>> Yeah, but as long as this isn't going upstream I don't really want to
+>> though since then it touches the code and is less obvious. Anyway we'll
+>> see.
+>
+> Ah, makes send.
+>
+> FWIW, I think we should push this, and other wireless Android support,
+> upstream. We should first get them to use upstream interfaces and then
+> start fixing the problematic areas one by one.
 
-If the device reports a non-wireless wakeup reason, the
-tracing code crashes trying to dereference a NULL pointer.
-Fix this by checking the pointer on all accesses and also
-add a non_wireless tag to the event.
+I agree. Another big hurdle I see are the android driver private ioctls. 
+Do you have a good knowledge about those? I think some of those already 
+have a nl80211 equivalent.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/trace.h | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+Maybe it would be good to update twiki [1] on wireless.kernel.org with 
+such information. It seems a bit outdated.
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ecd4fce..5755bc1 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2441,6 +2441,7 @@ TRACE_EVENT(cfg80211_report_wowlan_wakeup,
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		WDEV_ENTRY
-+		__field(bool, non_wireless)
- 		__field(bool, disconnect)
- 		__field(bool, magic_pkt)
- 		__field(bool, gtk_rekey_failure)
-@@ -2449,20 +2450,22 @@ TRACE_EVENT(cfg80211_report_wowlan_wakeup,
- 		__field(bool, rfkill_release)
- 		__field(s32, pattern_idx)
- 		__field(u32, packet_len)
--		__dynamic_array(u8, packet, wakeup->packet_present_len)
-+		__dynamic_array(u8, packet,
-+				wakeup ? wakeup->packet_present_len : 0)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		WDEV_ASSIGN;
--		__entry->disconnect = wakeup->disconnect;
--		__entry->magic_pkt = wakeup->magic_pkt;
--		__entry->gtk_rekey_failure = wakeup->gtk_rekey_failure;
--		__entry->eap_identity_req = wakeup->eap_identity_req;
--		__entry->four_way_handshake = wakeup->four_way_handshake;
--		__entry->rfkill_release = wakeup->rfkill_release;
--		__entry->pattern_idx = wakeup->pattern_idx;
--		__entry->packet_len = wakeup->packet_len;
--		if (wakeup->packet && wakeup->packet_present_len)
-+		__entry->non_wireless = !wakeup;
-+		__entry->disconnect = wakeup ? wakeup->disconnect : false;
-+		__entry->magic_pkt = wakeup ? wakeup->magic_pkt : false;
-+		__entry->gtk_rekey_failure = wakeup ? wakeup->gtk_rekey_failure : false;
-+		__entry->eap_identity_req = wakeup ? wakeup->eap_identity_req : false;
-+		__entry->four_way_handshake = wakeup ? wakeup->four_way_handshake : false;
-+		__entry->rfkill_release = wakeup ? wakeup->rfkill_release : false;
-+		__entry->pattern_idx = wakeup ? wakeup->pattern_idx : false;
-+		__entry->packet_len = wakeup ? wakeup->packet_len : false;
-+		if (wakeup && wakeup->packet && wakeup->packet_present_len)
- 			memcpy(__get_dynamic_array(packet), wakeup->packet,
- 			       wakeup->packet_present_len);
- 	),
--- 
-1.8.0
+Regards,
+Arend
+
+[1] http://wireless.kernel.org/en/developers/Documentation/Android
 
