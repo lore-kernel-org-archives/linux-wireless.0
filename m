@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34507 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:55248 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758132Ab3DAOvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Apr 2013 10:51:51 -0400
-Message-ID: <1364827975.3059.1.camel@dcbw.foobar.com> (sfid-20130401_165155_630486_43EAADF3)
-Subject: Re: [RFC V2] cfg80211: introduce critical protocol indication from
- user-space
-From: Dan Williams <dcbw@redhat.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Date: Mon, 01 Apr 2013 09:52:55 -0500
-In-Reply-To: <5154D286.4040001@candelatech.com>
-References: <1364472669-5629-1-git-send-email-arend@broadcom.com>
-	  <1364487476.10397.23.camel@jlt4.sipsolutions.net>
-	  <5154B347.9080904@broadcom.com>
-	  <1364506118.10397.29.camel@jlt4.sipsolutions.net>
-	  <1364510577.3226.7.camel@dcbw.foobar.com>
-	  <1364510646.10397.81.camel@jlt4.sipsolutions.net>
-	 <1364511671.3226.22.camel@dcbw.foobar.com>
-	 <5154D286.4040001@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1757911Ab3DXKwU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Apr 2013 06:52:20 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v2] cfg80211: Android P2P-Device workaround
+References: <1366791988-11309-1-git-send-email-johannes@sipsolutions.net>
+	<87mwso5jbx.fsf@purkki.adurom.net>
+	<1366800294.11111.7.camel@jlt4.sipsolutions.net>
+Date: Wed, 24 Apr 2013 13:52:19 +0300
+In-Reply-To: <1366800294.11111.7.camel@jlt4.sipsolutions.net> (Johannes Berg's
+	message of "Wed, 24 Apr 2013 12:44:54 +0200")
+Message-ID: <87ehe05hgc.fsf@purkki.adurom.net> (sfid-20130424_125226_580381_A5A78CA9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-03-28 at 16:30 -0700, Ben Greear wrote:
-> On 03/28/2013 04:01 PM, Dan Williams wrote:
-> > On Thu, 2013-03-28 at 23:44 +0100, Johannes Berg wrote:
-> >> On Thu, 2013-03-28 at 17:42 -0500, Dan Williams wrote:
-> >>
-> >>>> Well, you can do DHCP a second or so, I'd think? And EAPOL much quicker,
-> >>>> of course. I don't really see any reasonable minimum time? We might want
-> >>>> to enforce a max though, maybe.
-> >>>
-> >>> Not quite.  A lot is dependent on the server itself, and I've had users
-> >>> on university and corporate networks report it sometimes takes 30 to 60
-> >>> seconds for the whole DHCP transaction to complete (DISCOVER, REQUEST,
-> >>> OFFER, ACK).  Sometimes there's a NAK in there if the server doesn't
-> >>> like your lease, which means you need another round-trip.  So in many
-> >>> cases, it's a couple round-trips and each of these packets may or may
-> >>> not get lost in noisy environments.
-> >>
-> >> Oh, yes, of course. However, we're talking about optimising the good
-> >> cases, not the bad ones. Think of it this way: if it goes fast, we
-> >> shouldn't make it slow by putting things like powersave or similar in
-> >> the way. If it's slow, then it'll still work, just slower. But when
-> >> "slower" only means a few hundred milliseconds, it doesn't matter if
-> >> everything takes forever (30-60 secs)
-> >
-> > True, but at least 4 or 5 seconds is the minimum time I'd recommend here
-> > for DHCP.
-> 
-> Couldn't dhcp just turn off the critical protection as soon as it is done?
-> 
-> Then, you only need to worry about the max time allowed.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Yes, that's really what I meant.  4 - 5 seconds is the "best worst-case
-scenario", clearly when a lease is acquired the critical protection
-would be turned off by the connection manager.
+> On Wed, 2013-04-24 at 13:11 +0300, Kalle Valo wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > +#ifndef CONFIG_CFG80211_ANDROID_P2P_HACK
+>> >  	if (WARN_ON(wdev->netdev))
+>> >  		return;
+>> > +#endif
+>> 
+>> With my favorite kernel macro, config_enabled(), you could get rid of
+>> quite a lot of the ugly ifdefs.
+>
+> Yeah, but as long as this isn't going upstream I don't really want to
+> though since then it touches the code and is less obvious. Anyway we'll
+> see.
 
-But if something doesn't turn it off, and the 802.11 stack needs a
-timeout value, I would suggest 4 or 5 seconds for that.
+Ah, makes send.
 
-Dan
+FWIW, I think we should push this, and other wireless Android support,
+upstream. We should first get them to use upstream interfaces and then
+start fixing the problematic areas one by one.
 
-> Also, you would probably need to enforce in the kernel that only
-> x out of y time in any given period can be locked, otherwise lots
-> of different dhclient processes (perhaps erroneously spawned..or
-> running on lots of different VIFs) could basically disable scanning
-> or channel changes...
-> 
-> Thanks,
-> Ben
-> 
-
-
+-- 
+Kalle Valo
