@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:38054 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162478Ab3DEVOx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 17:14:53 -0400
-Received: by mail-we0-f170.google.com with SMTP id z2so3244812wey.29
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Apr 2013 14:14:52 -0700 (PDT)
-References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org> <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <CAGXE3d9WHgXbKZc+Qp0anx9sA+inEg2k+aUbb=_rN_OsZfeDSA@mail.gmail.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2458 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872Ab3DYJDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Apr 2013 05:03:32 -0400
+Message-ID: <5178F158.60103@broadcom.com> (sfid-20130425_110337_162540_7FEE487C)
+Date: Thu, 25 Apr 2013 11:03:20 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Marcel Holtmann" <marcel@holtmann.org>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
+References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
+ <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
+ <1366735340.8385.20.camel@jlt4.sipsolutions.net>
+ <51779434.4010709@broadcom.com>
+ <F323F29D-5EF8-4D01-A4B3-F9AF12326012@holtmann.org>
+In-Reply-To: <F323F29D-5EF8-4D01-A4B3-F9AF12326012@holtmann.org>
 Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <5F6B3AA0-EB1B-4002-AB44-A61BDE6DE31D@gmail.com> (sfid-20130405_231457_959125_F1124257)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 0/6] rt2x00: use rt2x00mmio prefix for rt2x00mmio module functions
-Date: Fri, 5 Apr 2013 23:14:49 +0200
-To: Gabor Juhos <juhosg@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/24/2013 04:29 PM, Marcel Holtmann wrote:
+> Hi Arend,
+>
+>>>>> +config CFG80211_ANDROID_P2P_HACK
+>>>>> +	bool "Android P2P netdevice hack"
+>>>>> +	depends on CFG80211
+>>>>> +	depends on !CFG80211_WEXT
+>>>>> +	help
+>>>>> +	  Enable this option for Android P2P w/ P2P Device.
+>>>>> +
+>>>>
+>>>> do you really think this is a good idea? Wouldn't it be better if
+>>>> Android just gets its userspace fixed. This way, they never will and
+>>>> you carry this workaround forever.
+>>>
+>>> Well, I'm about 50/50 on whether to merge this. On the one hand, it's a
+>>> very simple patch to carry out of tree, on the other hand more than one
+>>> person will need it.
+>>>
+>>
+>> Here is one who needs it. I consider this patch as a temporary solution, but it would be good to have it upstream. We would be using compat-drivers to backport the upstream brcmfmac to the android kernel, which also takes care of cfg80211.
+>
+> why do I get the feeling that the root-cause for this stupid p2p0 device is the Broadcom binary only driver  ;)
 
+Hi Marcel,
 
-Sent from my iPad
+Just like you I can only guess, but you are probably right except that 
+the broadcom driver introducing this p2p0 device was propbably the 
+bcmdhd driver which is available in android repositories.
 
-On 5 apr. 2013, at 10:16, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+Because of the design of the firmware (which is binary) going for a 
+net_device was the most straightforward and also because wpa_supplicant 
+is all about net_device interfaces.
 
-> On Fri, Apr 5, 2013 at 8:26 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
->> This series replaces the rt2x00pci prefix to
->> rt2x00mmio of the functions provided by the
->> rt2x00mmio module. This is a supplement of the
->> 'rt2x00: rt2x00pci: fix build error on Ralink
->> RT3x5x SoCs' patch.
-> 
-> Patch set looks good to me! Thanks a lot Gabor.
-> 
-> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> I feel like being back in the world of Wireless Extensions ;)
 
-Yep, looks good to me as well.
+I hear you and we are still not fully rid of that.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Gr. AvS
 
-for the whole series.
-
-Note to John: you will have to pull the wireless tree into the wireless-next tree before you can apply this series there.
-
----
-Gertjan
