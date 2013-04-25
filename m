@@ -1,90 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:48416 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162523Ab3DETQs (ORCPT
+Received: from postler.einfach.org ([86.59.21.13]:52500 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758003Ab3DYSjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 15:16:48 -0400
+	Thu, 25 Apr 2013 14:39:44 -0400
+Message-ID: <51797866.9030403@einfach.org> (sfid-20130425_203949_394504_4513D238)
+Date: Thu, 25 Apr 2013 19:39:34 +0100
+From: Bruno Randolf <br1@einfach.org>
 MIME-Version: 1.0
-In-Reply-To: <201304052008.15412.chunkeey@googlemail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<201304051903.11215.chunkeey@googlemail.com>
-	<CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-	<201304052008.15412.chunkeey@googlemail.com>
-Date: Fri, 5 Apr 2013 12:16:46 -0700
-Message-ID: <CAJ-VmomdD9nOrAb0_cY7vYw1DiP7ENnGALW=24newMj-XZ4cTA@mail.gmail.com> (sfid-20130405_211725_841237_341D76AC)
-Subject: Re: Version number policy!
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
+	meuleman@broadcom.com, brudley@broadcom.com,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?5rW36Je75pWs5LmL?= <tkaiso@thinktube.com>
+Subject: Re: Broadcom brcmfmac vs bcmdhd on Android
+References: <5176ABB1.2070506@einfach.org> <5176F8C2.7050502@broadcom.com> <5177F7D6.2020800@einfach.org>
+In-Reply-To: <5177F7D6.2020800@einfach.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The point here is that once we hit a new major version, all the
-previous version checks can go away.
+On 04/24/2013 04:18 PM, Bruno Randolf wrote:
+>>> I succeeded to compile brcmfmac from recent compat-drivers against the
+>>> "tuna" (Galaxy Nexus) kernel, the modules load, but no device is
+>>> recognized. Has anyone succeeded doing this? Is there any chance it can
+>>> work?
+>>
+>> That is how we did it and with success. What do you mean by 'no device
+>> is recognized'? Do you have any traces to look at?
+>
+> Good to know. What I did is I compiled the "tuna" kernel (3.0.31)
+> without bcmdhd, then brcmfmac from compat-drivers, loaded the brcmfmac
+> module (+ dependencies), but then nothing happens. It looks like the
+> device is not recognized on SDIO. Is there anything special I need to do
+> to activate the chip?
 
-So, if we decide to change some WMI message formats, it'll be in 2.x
-rather than 1.x.
+I spent some more time tracing the problem, without much success. Still 
+it simply looks like no SDIO device is detected. Please see below for 
+what I found, maybe something rings a bell for you?
 
-For example, has talked about killing off rate control in the NIC and
-doing it on the host. I'm happy with that (since it's easy enough to
-move back into the NIC if people want it for whatever reason) so:
+Enabling tracing in the brcmfmac driver shows me
+"brcmfmac: brcmf_sdio_init: Enter", nothing more.
 
-* Do we make it configurable?
-* Do we make it backwards compatible?
-* Do we just say "oh screw this" and treat it as part of the next
-major revision?
+Then, I enabled function tracing, here are the relevant parts:
 
-If I were doing this for work and there was a long lifetime
-requirement for this stuff, then sure, we may have pressure from
-various groups to maintain backwards compatibility. And as we do so,
-we end up slowly bloating out the firmware and adding more driver
-capabilities.
+sdio_register_driver <-brcmf_sdio_init
+driver_register <-sdio_register_driver
+driver_find <-driver_register
+bus_add_driver <-driver_register
+driver_attach <-bus_add_driver
+bus_for_each_dev <-driver_attach
+module_add_driver <-bus_add_driver
 
-But since we're doing this in an open community, we can just create
-branches and let people who wish to maintain things do so, whilst not
-tying ourselves down too much. We have very specific pressures here
-(ie, how much RAM and CPU these little USB SoCs have), so we can't
-just infinitely grow the API.
+The rest is sysfs file registration, nothing more interesting, but I can 
+send you the full dump if you want... No driver probe functions are called.
 
-If there are bugfixes that someone like Google, Redhat or Canonical
-need for the 1.3 firmware in say, 2015 (when we've moved onto a much
-later evolution of this firmware) because they have a compat-wireless
-download that _only gets bugfixes_ and doesn't get new features (ie
-,doesn't just sync against the latest compat-wireless to get bugfixes
-_and_ features), then they're quite welcome to cherry-pick fixes from
-mainline, merge them into the 1.3 branch and send a diff or pull
-request. But I personally don't want to maintain config options and
-backwards compatibility outside of what goes on in a minor branch.
+I see a strange problem with the brcmf_sdmmc_ids:
 
-So, to address Christian's concern in more specific detail:
+{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_43241)},
+{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
+{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4330)},
+{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4334)},
 
-* I intend that major revisions are break points, and that when we
-push out a new major revision, ath9k_htc (or whatever it becomes) will
-eventually update to use that;
-* .. then we can do things that break backwards compatibility, which
-means we can kill all those capability checks if we need to;
-* For things that occur during a given major release branch, we can
-either use a capability bitmap OR we can do it via versioning -
-because I don't want to see ath9k_htc try to support >1 major version;
-* How we do that check isn't really that big a deal - as long as the
-checks look like:
+On the Galaxy Nexus modinfo just shows:
 
-if (feature_xxx(sc)) {
-}
+alias:          sdio:c*v02D0d4334*
+alias:          sdio:c*v02D0d4329*
 
-.. we can easily just change feature_xxx() to be a bitmap check or a
-version check.
+I.e. every second device, while on my host the modinfo list looks OK.
 
-* And then once we push out a new major release, we can reap features
-that are either on by default in the new major release.
+I manually changed the list to only include 4330 and that way modinfo 
+shows it correctly also on the device, but maybe this is part of the 
+problem?
 
-How's that sound?
+How did you get it to work? Which device did you use (Galaxy Nexus?)?
+Do I need to activate CONFIG_BRCMFMAC_SDIO_OOB (I tried with no difference)?
+
+Thank you for any hints,
+bruno
 
 
-Adrian
+
+
