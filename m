@@ -1,63 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44709 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757148Ab3DPNh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 09:37:28 -0400
-Date: Tue, 16 Apr 2013 15:38:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] iwlwifi: fix freeing uninitialized pointer
-Message-ID: <20130416133828.GA20024@redhat.com> (sfid-20130416_153732_618259_B802848A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-da0-f41.google.com ([209.85.210.41]:35996 "EHLO
+	mail-da0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932228Ab3DYWCb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Apr 2013 18:02:31 -0400
+Received: by mail-da0-f41.google.com with SMTP id p8so45485dan.14
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Apr 2013 15:02:30 -0700 (PDT)
+From: Jacob Minshall <jacob@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: scan using meshid
+Date: Thu, 25 Apr 2013 15:02:19 -0700
+Message-Id: <1366927339-4870-1-git-send-email-jacob@cozybit.com> (sfid-20130426_000235_438296_1812FA2A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If on iwl_dump_nic_event_log() error occurs before that function
-initialize buf, we process uninitiated pointer in
-iwl_dbgfs_log_event_read() and can hit "BUG at mm/slub.c:3409"
+From: jacob minshall <jacob@cozybit.com>
 
-Resolves:
-https://bugzilla.redhat.com/show_bug.cgi?id=951241
+This patch adds the ability to perform a directed scan
+for MBSSs matching meshid by
 
-Reported-by: ian.odette@eprize.com
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+iw <dev> scan meshid <meshid>
+
+Signed-off-by: jacob minshall <jacob@cozybit.com>
 ---
-Patch is only compile tested, but I'm sure it fixes the problem.
+ scan.c | 43 ++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 36 insertions(+), 7 deletions(-)
 
- drivers/net/wireless/iwlwifi/dvm/debugfs.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/debugfs.c b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-index 7b8178b..cb6dd58 100644
---- a/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/debugfs.c
-@@ -2237,15 +2237,15 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
- 					 size_t count, loff_t *ppos)
- {
- 	struct iwl_priv *priv = file->private_data;
--	char *buf;
--	int pos = 0;
--	ssize_t ret = -ENOMEM;
-+	char *buf = NULL;
-+	ssize_t ret;
+diff --git a/scan.c b/scan.c
+index 1842655..6d770d3 100644
+--- a/scan.c
++++ b/scan.c
+@@ -85,12 +85,13 @@ static int handle_scan(struct nl80211_state *state,
+ 		FREQ,
+ 		IES,
+ 		SSID,
++		MESHID,
+ 		DONE,
+ 	} parse = NONE;
+ 	int freq;
+ 	bool passive = false, have_ssids = false, have_freqs = false;
+-	size_t tmp;
+-	unsigned char *ies;
++	size_t ies_len = 0, meshid_len = 0;
++	unsigned char *ies = NULL, *meshid = NULL, *tmpies;
+ 	int flags = 0;
  
--	ret = pos = iwl_dump_nic_event_log(priv, true, &buf, true);
--	if (buf) {
--		ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
--		kfree(buf);
--	}
-+	ret = iwl_dump_nic_event_log(priv, true, &buf, true);
-+	if (ret < 0)
-+		goto err;
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, ret);
-+err:
-+	kfree(buf);
- 	return ret;
+ 	ssids = nlmsg_alloc();
+@@ -133,6 +134,9 @@ static int handle_scan(struct nl80211_state *state,
+ 				parse = DONE;
+ 				passive = true;
+ 				break;
++			} else if (strcmp(argv[i], "meshid") == 0) {
++				parse = MESHID;
++				break;
+ 			}
+ 		case DONE:
+ 			return 1;
+@@ -147,17 +151,42 @@ static int handle_scan(struct nl80211_state *state,
+ 			NLA_PUT_U32(freqs, i, freq);
+ 			break;
+ 		case IES:
+-			ies = parse_hex(argv[i], &tmp);
++			ies = parse_hex(argv[i], &ies_len);
+ 			if (!ies)
+ 				goto nla_put_failure;
+-			NLA_PUT(msg, NL80211_ATTR_IE, tmp, ies);
+-			free(ies);
+ 			parse = NONE;
+ 			break;
+ 		case SSID:
+ 			NLA_PUT(ssids, i, strlen(argv[i]), argv[i]);
+ 			break;
++		case MESHID:
++			meshid_len = strlen(argv[i]);
++			meshid = (unsigned char *) malloc(meshid_len + 2);
++			if (!meshid)
++				goto nla_put_failure;
++			meshid[0] = 114; /* mesh element id */
++			meshid[1] = meshid_len;
++			memcpy(&meshid[2], argv[i], meshid_len);
++			meshid_len += 2;
++			parse = NONE;
++			break;
++		}
++	}
++
++	if (ies || meshid) {
++		tmpies = (unsigned char *) malloc(ies_len + meshid_len);
++		if (!tmpies)
++			goto nla_put_failure;
++		if (ies) {
++			memcpy(tmpies, ies, ies_len);
++			free(ies);
++		}
++		if (meshid) {
++			memcpy(&tmpies[ies_len], meshid, meshid_len);
++			free(meshid);
+ 		}
++		NLA_PUT(msg, NL80211_ATTR_IE, ies_len + meshid_len, tmpies);
++		free(tmpies);
+ 	}
+ 
+ 	if (!have_ssids)
+@@ -1535,7 +1564,7 @@ static int handle_scan_combined(struct nl80211_state *state,
+ 	dump_argv[0] = argv[0];
+ 	return handle_cmd(state, id, dump_argc, dump_argv);
  }
- 
+-TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]", 0, 0,
++TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]", 0, 0,
+ 	 CIB_NETDEV, handle_scan_combined,
+ 	 "Scan on the given frequencies and probe for the given SSIDs\n"
+ 	 "(or wildcard if not given) unless passive scanning is requested.\n"
+@@ -1545,7 +1574,7 @@ COMMAND(scan, dump, "[-u]",
+ 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
+ 	"Dump the current scan results. If -u is specified, print unknown\n"
+ 	"data in scan results.");
+-COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]",
++COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force] [ssid <ssid>*|passive]",
+ 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
+ 	 "Trigger a scan on the given frequencies with probing for the given\n"
+ 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
 -- 
-1.7.11.7
+1.8.1.2
 
