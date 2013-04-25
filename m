@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:54218 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303Ab3DVFhn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Apr 2013 01:37:43 -0400
-Received: by mail-we0-f181.google.com with SMTP id r6so5749317wey.26
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Apr 2013 22:37:42 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2720 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932087Ab3DYUQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Apr 2013 16:16:10 -0400
+Message-ID: <51798EF9.9020803@broadcom.com> (sfid-20130425_221614_498274_48755A53)
+Date: Thu, 25 Apr 2013 22:15:53 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVUNP-qp-1kNmy6_OrZLi5CuR2GShxt-M7idxVKmMhKMw@mail.gmail.com>
-References: <87li8k0yu1.fsf@kamboji.qca.qualcomm.com>
-	<20130415204030.51f20f43@m4a785t-m.gnutoo.workgroup>
-	<loom.20130421T145410-125@post.gmane.org>
-	<CAGRGNgVUNP-qp-1kNmy6_OrZLi5CuR2GShxt-M7idxVKmMhKMw@mail.gmail.com>
-Date: Sun, 21 Apr 2013 22:37:42 -0700
-Message-ID: <CAJ-VmonnsgP-puZeeTikT3wkNNixYrc0prWCQc=5N=V=aGMDJg@mail.gmail.com> (sfid-20130422_073747_269278_CF2315E6)
-Subject: Re: ath10k: mac80211 driver for QCA9880
-From: Adrian Chadd <adrian@freebsd.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Edward <eliasacorn@yahoo.com.sg>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Piotr Haber" <phaber@broadcom.com>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3.9] brcmsmac: Fix merge issue
+References: <1366885629-11382-1-git-send-email-phaber@broadcom.com>
+In-Reply-To: <1366885629-11382-1-git-send-email-phaber@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.. as I said, there's no schedule for releasing firmware source for
-the QCA988x 11ac NICs.
+On 04/25/2013 12:27 PM, Piotr Haber wrote:
+> Commit 7088f4835aa353f7226e57e73fd9e6564a4dfb75
+> "Merge branch 'master' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless"
+> ramoved call to brcms_led_unregister in mac80211_if.c
+>
 
-For now, please proceed as if there will never be a firmware source release.
+Hi Piotr,
 
-If this ever changes, us in the QCA team will let everyone know. (Most
-likely by saying "hey, go here! there's source! yay!.")
+After we discussed this, I realized that the led support was added to 
+wireless-next, ie. for v3.10 kernel.
+
+John,
+
+Can you take it in wireless-next repository this close to the merge 
+window? It applies without issues to that.
+
+Regards,
+Arend
+
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Piotr Haber <phaber@broadcom.com>
+> ---
+>   .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> index 2346821..3a65447 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> @@ -336,6 +336,7 @@ static void brcms_remove(struct bcma_device *pdev)
+>   	struct brcms_info *wl = hw->priv;
+>
+>   	if (wl->wlc) {
+> +		brcms_led_unregister(wl);
+>   		wiphy_rfkill_set_hw_state(wl->pub->ieee_hw->wiphy, false);
+>   		wiphy_rfkill_stop_polling(wl->pub->ieee_hw->wiphy);
+>   		ieee80211_unregister_hw(hw);
+>
 
 
-
-adrian
