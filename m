@@ -1,27 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760148Ab3DCMZZ (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:46102 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932559Ab3DYOuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Apr 2013 08:25:25 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1UNMkl-0004VW-OC
-	for linux-wireless@vger.kernel.org; Wed, 03 Apr 2013 14:25:24 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] mac80211: fixes for do_stop while suspended
-Date: Wed,  3 Apr 2013 14:25:17 +0200
-Message-Id: <1364991920-11712-1-git-send-email-johannes@sipsolutions.net> (sfid-20130403_142528_316378_A6E9C1A9)
-In-Reply-To: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
-References: <1364423602-18821-1-git-send-email-johannes@sipsolutions.net>
+	Thu, 25 Apr 2013 10:50:44 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH-NEXT] rtlwifi: rtl8192cu: Fix false loss of AP indication
+Date: Thu, 25 Apr 2013 09:50:28 -0500
+Message-Id: <1366901428-21307-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130425_165055_542523_F5B1BB49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inspired by Stanislaw's patches, I took another look. He tested my
-RFC series and while there were still issues it looks better now,
-so we're going to apply this. Speak up if you don't want that! :)
+A major change in the rtlwifi family recently added code to detect when
+there is loss of AP signals. One critical statement needed for the USB
+driver was missed.
 
-johannes
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+Sorry to be so late, but this problem was just discovered.
+
+Larry
+---
+
+ drivers/net/wireless/rtlwifi/usb.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 83915dc..76732b0 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -521,6 +521,9 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 				rtlpriv->link_info.num_rx_inperiod++;
+ 		}
+ 
++		/* static bcn for roaming */
++		rtl_beacon_statistic(hw, skb);
++
+ 		if (likely(rtl_action_proc(hw, skb, false)))
+ 			ieee80211_rx(hw, skb);
+ 		else
+-- 
+1.8.1.4
 
