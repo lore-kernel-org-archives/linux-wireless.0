@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3436 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932090Ab3DBTGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 15:06:37 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for-3.9 1/4] brcmfmac: fix tkip mic tx/rx ap swap bug.
-Date: Tue, 2 Apr 2013 21:06:17 +0200
-Message-ID: <1364929580-6206-2-git-send-email-arend@broadcom.com> (sfid-20130402_210652_436834_23396638)
-In-Reply-To: <1364929580-6206-1-git-send-email-arend@broadcom.com>
-References: <1364929580-6206-1-git-send-email-arend@broadcom.com>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:56246 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754404Ab3DZJvU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Apr 2013 05:51:20 -0400
+Received: by mail-ob0-f170.google.com with SMTP id eh20so3391007obb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 02:51:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1698401.RCfH1UvLZM@pebbles>
+References: <1698401.RCfH1UvLZM@pebbles>
+Date: Fri, 26 Apr 2013 11:51:19 +0200
+Message-ID: <CACna6rwW7fMcCLPt9yW6scpVEzvfKsRv7JgDFe6eju0Q9H3Hbg@mail.gmail.com> (sfid-20130426_115125_502046_0107BD2D)
+Subject: Re: Throughput regression in b43 caused by spurious avoidance implementation
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Stefan_Br=C3=BCns?= <stefan.bruens@rwth-aachen.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+2012/9/24 Stefan Brüns <stefan.bruens@rwth-aachen.de>:
+> Hi everyone,
+>
+> as I have been plagued by the performance regression in b43 between linux 3.2
+> and 3.3, I have bisected it:
+>
+> git bisect good
+> 49d55cef5b1925a5c1efb6aaddaa40fc7c693335 is the first bad commit
+> commit 49d55cef5b1925a5c1efb6aaddaa40fc7c693335
+> Author: Rafał Miłecki <zajec5@gmail.com>
+> Date:   Sun Dec 11 13:16:51 2011 +0100
+>
+>     b43: N-PHY: implement spurious tone avoidance
+>
+>     Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-tx and rx michael tkip keys are always swapped in case being
-configured per mac. This is wrong for AP. The swap should only
-be done for STA mode.
+Hi Stefan,
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+I'm not sure if you're still interested in this, as half a year has
+passed since your report :( Anyway we've managed to resolve most
+problems with BCM4322.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 2af9c0f..3bc47ea 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1891,8 +1891,10 @@ static s32
- brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
- 	      u8 key_idx, const u8 *mac_addr, struct key_params *params)
- {
-+	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_wsec_key key;
- 	s32 err = 0;
-+	u8 keybuf[8];
- 
- 	memset(&key, 0, sizeof(key));
- 	key.index = (u32) key_idx;
-@@ -1916,8 +1918,9 @@ brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
- 		brcmf_dbg(CONN, "Setting the key index %d\n", key.index);
- 		memcpy(key.data, params->key, key.len);
- 
--		if (params->cipher == WLAN_CIPHER_SUITE_TKIP) {
--			u8 keybuf[8];
-+		if ((ifp->vif->mode != WL_MODE_AP) &&
-+		    (params->cipher == WLAN_CIPHER_SUITE_TKIP)) {
-+			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
- 			memcpy(keybuf, &key.data[24], sizeof(keybuf));
- 			memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
- 			memcpy(&key.data[16], keybuf, sizeof(keybuf));
-@@ -2013,7 +2016,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		if (ifp->vif->mode != WL_MODE_AP) {
--			brcmf_dbg(CONN, "Swapping key\n");
-+			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
- 			memcpy(keybuf, &key.data[24], sizeof(keybuf));
- 			memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
- 			memcpy(&key.data[16], keybuf, sizeof(keybuf));
+I took me 3 attempts to debug this issue and the last one that succeed
+took me few days. I was quite tricky to debug & bisect everything, as
+there were 4 regressions in b43 driver and I couldn't really distinct
+them at the beginning.
+
+After all there were 3 patches applied to the kernel that you may be
+interested in:
+
+1) b43: N-PHY: increase initial value of "mind" in RSSI calibration
+It has been applied in 3.4.39 and 3.8.6 stables
+
+2) b43: N-PHY: use more bits for offset in RSSI calibration
+It has been applied in 3.4.39 and 3.8.6 stables
+
+3) ssb: implement spurious tone avoidance
+It has been applied in 3.4.42 and 3.8.9 stables
+
+Unfortunately there is one more regression I've bisected but didn't
+manage to fix yet. It's related to the scanning on channel 13. It was
+reported in:
+
+1) Scanning regression since "cfg80211: use DS or HT operation IEs to
+determine BSS channel"
+http://www.spinics.net/lists/linux-wireless/msg105359.html
+http://marc.info/?t=136431795000003&r=1&w=4
+
+2) [No subject]
+http://lists.infradead.org/pipermail/b43-dev/2013-April/003041.html
+
 -- 
-1.7.10.4
-
-
+Rafał
