@@ -1,87 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:57400 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934846Ab3DHWDr convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:33862 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756673Ab3DZS3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 18:03:47 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: Re: Version number policy!
-Date: Tue, 9 Apr 2013 00:03:46 +0200
-Cc: Adrian Chadd <adrian@freebsd.org>, Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linux-bluetooth" <linux-bluetooth@vger.kernel.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"ath9k_htc_fw" <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com> <CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com> <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
-In-Reply-To: <CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
+	Fri, 26 Apr 2013 14:29:23 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 26 Apr 2013 11:28:09 -0700
+Subject: RE: Memory leak in mwifiex_cfg80211_scan
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9E150221@SC-VEXCH1.marvell.com> (sfid-20130426_202928_895686_A615186D)
+References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
+	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
+	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
+ <CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
+In-Reply-To: <CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_477F20668A386D41ADCC57781B1F70430D9E150221SCVEXCH1marve_"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1252"
-Message-Id: <201304090003.47056.chunkeey@googlemail.com> (sfid-20130409_000407_155693_DD9E8920)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+--_002_477F20668A386D41ADCC57781B1F70430D9E150221SCVEXCH1marve_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-On Monday, April 08, 2013 10:37:08 PM Eugene Krasnikov wrote:
-> Did you have such a situation when e.g. one feature has 2 incompatible
-> implementations?
-I'm not aware of anything in particular. But we can look elsewhere for
-examples, maybe Kalle knows one? Or you could ask the file system folks.
-AFAIK ext2 fs is using one and they have maintained some basic 
-compatibility throughout the major releases.
+Hi Daniel,
 
-For example, it's possible to read data on a ext3 and ext4(dev) file
-system with the old ext2 module - this is very user-friendly [1]!
-Maybe, you can dig up more examples, just browse the web for "feature 
-bits/flags/..."
- 
-> 2013/4/8 Adrian Chadd <adrian@freebsd.org>:
-> > On 8 April 2013 08:33, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> >> On Monday, April 08, 2013 11:10:30 AM Eugene Krasnikov wrote:
-> >>> It’s a good idea to pack bitmap into the tail/header of the firmware
-> >>> binary to get capabilities even before fw loading. The plan is to add
-> >>> 8 bytes for caps and also add time stamp. Let me play around with that
-> >>> and provide fw and driver patch for review.
-> >>
-> >> Hm, come to think of it. Kalle, do you think ath9k_htc could use
-> >> some bits of the fw header format, parser or the complete infrastructure
-> >> from ath6kl? This could be great for Adrian, because he could
-> >> just point people to it and they could moved it into the code
-> >> into /drivers/net/wireless/ath/fw.c.
-> >
-> > Just remember that we (ath9k_htc and carl9170) aren't constrained by
-> > the same kinds of issues that closed firmware is. So version checks
-> > aren't that bad, because that way over time we don't end up needing to
-> > maintain lots of special cases for firmware options.
+> Thanks.  This seems to be working, and makes kmemleak happy.
 
-I know, I know, but wouldn't it be great to have a common firmware parsing
-infrastructure for all the driver with firmware under ath/? [No, I'm not
-talking about writing a firmware that works on all devices. I want common
-rules for firmware header descriptors. But if you peg features (firmware
-or device!) to abstract firmware versions like "1.2.3.4-34+", then this is
-going to be difficult.] 
+Thanks for testing.
 
-> > I still like the idea of firmware options for build time options that
-> > people may wish to use - eg, say we want to support a version of
-> > ath9k-htc firmware that does offloaded TX rate control, versus not.
-> > But, maintaining multiple builds of the same firmware is IMHO going to
-> > be a path towards madness to maintain.
-> >
-> > The maintainability is why I'm hoping (!) to keep the number of
-> > options low and just do "clean slate" moves whenever we shift to the
-> > next major firmware version.
+> So when we find a race-free way to free user_scan_cfg, we can probably
+> end this topic.
 
-Or like ext2,3,4 => just have a lowest common denominator. So users can
-at least always access the web and get a matching firmware. 
+Please find attached Amitkumar's patch that addresses this issue. I tested =
+it on my Chromebook.
+If it works for you on XO-4 I will rebase both patches and resend to the li=
+st.
 
-Of course, it could be that we are just talking about completely different
-things. Anyway, Luis asked me, if I have any "input"... and not more ;-).
+> So far I have not managed to get scan_delay_timer_fn() to execute at
+> all - even when I am not using that script. But I have not really
+> diagnosed why. I was wondering if there's anything obvious I might be
+> missing.
 
-Regards,
-	Christian
+Here's how I can get scan_delay_timer_fn() trigged on my Chromebook:
+0) boot up and switch to a shell console
+1) stop wpasupplicant; stop shill # stop my Connection Manager
+2) ifconfig mlan0 up
+3) iwlist mlan0 scan & sleep 1; ifconfig mlan0 down
 
-[1] 
-<https://ext4.wiki.kernel.org/index.php/Frequently_Asked_Questions#Can_I_mount_existing_Ext3_as_Ext4.3F_And_vice_versa.3F_Similarly_from_Ext2_to_Ext4_and_its_reverse.3F>
+Thanks,
+Bing
+
+>=20
+> Thanks
+> Daniel
+
+--_002_477F20668A386D41ADCC57781B1F70430D9E150221SCVEXCH1marve_
+Content-Type: application/octet-stream;
+	name="0001-mwifiex-remove-global-user_scan_cfg-variable.patch"
+Content-Description: 0001-mwifiex-remove-global-user_scan_cfg-variable.patch
+Content-Disposition: attachment;
+	filename="0001-mwifiex-remove-global-user_scan_cfg-variable.patch";
+	size=6912; creation-date="Fri, 26 Apr 2013 18:19:16 GMT";
+	modification-date="Fri, 26 Apr 2013 18:19:16 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSAwNTU5NjZlMTBhYjc0YzZlZjUwNzM0NTExMTQ5MGZjYzZlY2YwZDIyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgpEYXRlOiBTYXQsIDI3IEFwciAyMDEzIDIwOjEwOjEzICswNTMwClN1YmplY3Q6IFtQQVRDSF0g
+bXdpZmlleDogcmVtb3ZlIGdsb2JhbCB1c2VyX3NjYW5fY2ZnIHZhcmlhYmxlCgpBcyB0aGUgdmFy
+aWFibGUgaXMgdXNlZCBvbmx5IGZvciBwcmVwYXJhdGlvbiBvZiBzY2FuIGNvbW1hbmRzLAp3ZSBk
+b24ndCBuZWVkIHRvIGtlZXAgaXQgYWxsb2NhdGVkIHVudGlsIHRoZSBlbnRpcmUgc2Nhbgpjb21w
+bGV0ZXMuIFdlIHdpbGwgZGVmaW5lIGl0IGFzIGEgbG9jYWwgdmFyaWFibGUgYW5kIGZyZWUKaW1t
+ZWRpYXRlbHkgYWZ0ZXIgaXQncyB1c2UuCgpOZXcgZmxhZyAnaXNfbmRvX3N0b3AnIGlzIGFkZGVk
+IHRvIGhhbmRsZSByYWNlIGJldHdlZW4KbXdpZmlleF9jbG9zZSgpIGFuZCBzY2FuIGhhbmRsZXIu
+IFByZXZpb3VzbHkgdXNlcl9zY2FuX2NmZwpwb2ludGVyIHVzZWQgdG8gdGFrZSBjYXJlIG9mIHRo
+aXMuCgpTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29t
+PgotLS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYyB8ICAgMzIgKysr
+KysrKysrKysrKysrKystLS0tLS0tLS0tLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4
+L2luaXQuYyAgICAgfCAgIDIwICsrKysrKy0tLS0tLS0tLS0tLQogZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbXdpZmlleC9tYWluLmMgICAgIHwgICAgMSArCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
+aWV4L21haW4uaCAgICAgfCAgICAyICstCiBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3Nj
+YW4uYyAgICAgfCAgIDIyICsrKysrKystLS0tLS0tLS0tLS0tCiA1IGZpbGVzIGNoYW5nZWQsIDM1
+IGluc2VydGlvbnMoKyksIDQyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvY2ZnODAyMTEuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZp
+ZXgvY2ZnODAyMTEuYwppbmRleCBhMGNiMDc3Li5mNDdiYTdmIDEwMDY0NAotLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbXdpZmlleC9jZmc4MDIxMS5jCkBAIC0xODU5LDYgKzE4NTksNyBAQCBtd2lmaWV4X2NmZzgw
+MjExX3NjYW4oc3RydWN0IHdpcGh5ICp3aXBoeSwKIAlpbnQgaSwgb2Zmc2V0LCByZXQ7CiAJc3Ry
+dWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFuOwogCXN0cnVjdCBpZWVlX3R5cGVzX2hlYWRlciAq
+aWU7CisJc3RydWN0IG13aWZpZXhfdXNlcl9zY2FuX2NmZyAqdXNlcl9zY2FuX2NmZzsKIAogCXdp
+cGh5X2RiZyh3aXBoeSwgImluZm86IHJlY2VpdmVkIHNjYW4gcmVxdWVzdCBvbiAlc1xuIiwgZGV2
+LT5uYW1lKTsKIApAQCAtMTg2OSwyMCArMTg3MCwyMyBAQCBtd2lmaWV4X2NmZzgwMjExX3NjYW4o
+c3RydWN0IHdpcGh5ICp3aXBoeSwKIAkJcmV0dXJuIC1FQlVTWTsKIAl9CiAKLQlpZiAocHJpdi0+
+dXNlcl9zY2FuX2NmZykgeworCS8qIEJsb2NrIHNjYW4gcmVxdWVzdCBpZiBzY2FuIG9wZXJhdGlv
+biBvciBzY2FuIGNsZWFudXAgd2hlbiBpbnRlcmZhY2UKKwkgKiBpcyBkaXNhYmxlZCBpcyBpbiBw
+cm9jZXNzCisJICovCisJaWYgKHByaXYtPnNjYW5fcmVxdWVzdCB8fCBwcml2LT5pc19uZG9fc3Rv
+cCkgewogCQlkZXZfZXJyKHByaXYtPmFkYXB0ZXItPmRldiwgImNtZDogU2NhbiBhbHJlYWR5IGlu
+IHByb2Nlc3MuLlxuIik7CiAJCXJldHVybiAtRUJVU1k7CiAJfQogCi0JcHJpdi0+dXNlcl9zY2Fu
+X2NmZyA9IGt6YWxsb2Moc2l6ZW9mKHN0cnVjdCBtd2lmaWV4X3VzZXJfc2Nhbl9jZmcpLAotCQkJ
+CSAgICAgIEdGUF9LRVJORUwpOwotCWlmICghcHJpdi0+dXNlcl9zY2FuX2NmZykKKwl1c2VyX3Nj
+YW5fY2ZnID0ga3phbGxvYyhzaXplb2Yoc3RydWN0IG13aWZpZXhfdXNlcl9zY2FuX2NmZyksCisJ
+CQkJR0ZQX0tFUk5FTCk7CisJaWYgKCF1c2VyX3NjYW5fY2ZnKQogCQlyZXR1cm4gLUVOT01FTTsK
+IAogCXByaXYtPnNjYW5fcmVxdWVzdCA9IHJlcXVlc3Q7CiAKLQlwcml2LT51c2VyX3NjYW5fY2Zn
+LT5udW1fc3NpZHMgPSByZXF1ZXN0LT5uX3NzaWRzOwotCXByaXYtPnVzZXJfc2Nhbl9jZmctPnNz
+aWRfbGlzdCA9IHJlcXVlc3QtPnNzaWRzOworCXVzZXJfc2Nhbl9jZmctPm51bV9zc2lkcyA9IHJl
+cXVlc3QtPm5fc3NpZHM7CisJdXNlcl9zY2FuX2NmZy0+c3NpZF9saXN0ID0gcmVxdWVzdC0+c3Np
+ZHM7CiAKIAlpZiAocmVxdWVzdC0+aWUgJiYgcmVxdWVzdC0+aWVfbGVuKSB7CiAJCW9mZnNldCA9
+IDA7CkBAIC0xOTAyLDI1ICsxOTA2LDI1IEBAIG13aWZpZXhfY2ZnODAyMTFfc2NhbihzdHJ1Y3Qg
+d2lwaHkgKndpcGh5LAogCWZvciAoaSA9IDA7IGkgPCBtaW5fdCh1MzIsIHJlcXVlc3QtPm5fY2hh
+bm5lbHMsCiAJCQkgICAgICBNV0lGSUVYX1VTRVJfU0NBTl9DSEFOX01BWCk7IGkrKykgewogCQlj
+aGFuID0gcmVxdWVzdC0+Y2hhbm5lbHNbaV07Ci0JCXByaXYtPnVzZXJfc2Nhbl9jZmctPmNoYW5f
+bGlzdFtpXS5jaGFuX251bWJlciA9IGNoYW4tPmh3X3ZhbHVlOwotCQlwcml2LT51c2VyX3NjYW5f
+Y2ZnLT5jaGFuX2xpc3RbaV0ucmFkaW9fdHlwZSA9IGNoYW4tPmJhbmQ7CisJCXVzZXJfc2Nhbl9j
+ZmctPmNoYW5fbGlzdFtpXS5jaGFuX251bWJlciA9IGNoYW4tPmh3X3ZhbHVlOworCQl1c2VyX3Nj
+YW5fY2ZnLT5jaGFuX2xpc3RbaV0ucmFkaW9fdHlwZSA9IGNoYW4tPmJhbmQ7CiAKIAkJaWYgKGNo
+YW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fUEFTU0lWRV9TQ0FOKQotCQkJcHJpdi0+dXNlcl9z
+Y2FuX2NmZy0+Y2hhbl9saXN0W2ldLnNjYW5fdHlwZSA9CisJCQl1c2VyX3NjYW5fY2ZnLT5jaGFu
+X2xpc3RbaV0uc2Nhbl90eXBlID0KIAkJCQkJCU1XSUZJRVhfU0NBTl9UWVBFX1BBU1NJVkU7CiAJ
+CWVsc2UKLQkJCXByaXYtPnVzZXJfc2Nhbl9jZmctPmNoYW5fbGlzdFtpXS5zY2FuX3R5cGUgPQor
+CQkJdXNlcl9zY2FuX2NmZy0+Y2hhbl9saXN0W2ldLnNjYW5fdHlwZSA9CiAJCQkJCQlNV0lGSUVY
+X1NDQU5fVFlQRV9BQ1RJVkU7CiAKLQkJcHJpdi0+dXNlcl9zY2FuX2NmZy0+Y2hhbl9saXN0W2ld
+LnNjYW5fdGltZSA9IDA7CisJCXVzZXJfc2Nhbl9jZmctPmNoYW5fbGlzdFtpXS5zY2FuX3RpbWUg
+PSAwOwogCX0KIAotCXJldCA9IG13aWZpZXhfc2Nhbl9uZXR3b3Jrcyhwcml2LCBwcml2LT51c2Vy
+X3NjYW5fY2ZnKTsKKwlyZXQgPSBtd2lmaWV4X3NjYW5fbmV0d29ya3MocHJpdiwgdXNlcl9zY2Fu
+X2NmZyk7CisJa2ZyZWUodXNlcl9zY2FuX2NmZyk7CiAJaWYgKHJldCkgewogCQlkZXZfZXJyKHBy
+aXYtPmFkYXB0ZXItPmRldiwgInNjYW4gZmFpbGVkOiAlZFxuIiwgcmV0KTsKKwkJcHJpdi0+aXNf
+bmRvX3N0b3AgPSBmYWxzZTsKIAkJcHJpdi0+c2Nhbl9yZXF1ZXN0ID0gTlVMTDsKLQkJa2ZyZWUo
+cHJpdi0+dXNlcl9zY2FuX2NmZyk7Ci0JCXByaXYtPnVzZXJfc2Nhbl9jZmcgPSBOVUxMOwogCQly
+ZXR1cm4gcmV0OwogCX0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
+eC9pbml0LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2luaXQuYwppbmRleCA5ZjQ0
+ZmRhLi42Y2I4OTUwIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2lu
+aXQuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2luaXQuYwpAQCAtNzgsMTkg
+Kzc4LDEzIEBAIHN0YXRpYyB2b2lkIHNjYW5fZGVsYXlfdGltZXJfZm4odW5zaWduZWQgbG9uZyBk
+YXRhKQogCQlhZGFwdGVyLT5lbXB0eV90eF9xX2NudCA9IDA7CiAJCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoJmFkYXB0ZXItPm13aWZpZXhfY21kX2xvY2ssIGZsYWdzKTsKIAotCQlpZiAocHJpdi0+
+dXNlcl9zY2FuX2NmZykgewotCQkJaWYgKHByaXYtPnNjYW5fcmVxdWVzdCkgewotCQkJCWRldl9k
+YmcocHJpdi0+YWRhcHRlci0+ZGV2LAotCQkJCQkiaW5mbzogYWJvcnRpbmcgc2NhblxuIik7Ci0J
+CQkJY2ZnODAyMTFfc2Nhbl9kb25lKHByaXYtPnNjYW5fcmVxdWVzdCwgMSk7Ci0JCQkJcHJpdi0+
+c2Nhbl9yZXF1ZXN0ID0gTlVMTDsKLQkJCX0gZWxzZSB7Ci0JCQkJZGV2X2RiZyhwcml2LT5hZGFw
+dGVyLT5kZXYsCi0JCQkJCSJpbmZvOiBzY2FuIGFscmVhZHkgYWJvcnRlZFxuIik7Ci0JCQl9Ci0K
+LQkJCWtmcmVlKHByaXYtPnVzZXJfc2Nhbl9jZmcpOwotCQkJcHJpdi0+dXNlcl9zY2FuX2NmZyA9
+IE5VTEw7CisJCWlmIChwcml2LT5zY2FuX3JlcXVlc3QpIHsKKwkJCWRldl9kYmcoYWRhcHRlci0+
+ZGV2LCAiaW5mbzogYWJvcnRpbmcgc2NhblxuIik7CisJCQljZmc4MDIxMV9zY2FuX2RvbmUocHJp
+di0+c2Nhbl9yZXF1ZXN0LCAxKTsKKwkJCXByaXYtPnNjYW5fcmVxdWVzdCA9IE5VTEw7CisJCX0g
+ZWxzZSB7CisJCQlwcml2LT5pc19uZG9fc3RvcCA9IGZhbHNlOworCQkJZGV2X2RiZyhhZGFwdGVy
+LT5kZXYsICJpbmZvOiBzY2FuIGFscmVhZHkgYWJvcnRlZFxuIik7CiAJCX0KIAkJZ290byBkb25l
+OwogCX0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5jIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKaW5kZXggZGRiZjg1Yy4uYWI1NDE3
+ZSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKKysrIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmMKQEAgLTQzNiw2ICs0MzYsNyBAQCBt
+d2lmaWV4X2Nsb3NlKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYpCiAJCWRldl9kYmcocHJpdi0+YWRh
+cHRlci0+ZGV2LCAiYWJvcnRpbmcgc2NhbiBvbiBuZG9fc3RvcFxuIik7CiAJCWNmZzgwMjExX3Nj
+YW5fZG9uZShwcml2LT5zY2FuX3JlcXVlc3QsIDEpOwogCQlwcml2LT5zY2FuX3JlcXVlc3QgPSBO
+VUxMOworCQlwcml2LT5pc19uZG9fc3RvcCA9IHRydWU7CiAJfQogCiAJcmV0dXJuIDA7CmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaCBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCmluZGV4IDRlZjY3ZmMuLjdkM2E3NDggMTAwNjQ0Ci0t
+LSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCisrKyBiL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL213aWZpZXgvbWFpbi5oCkBAIC00OTIsNyArNDkyLDYgQEAgc3RydWN0IG13aWZp
+ZXhfcHJpdmF0ZSB7CiAJc3RydWN0IHNlbWFwaG9yZSBhc3luY19zZW07CiAJdTggcmVwb3J0X3Nj
+YW5fcmVzdWx0OwogCXN0cnVjdCBjZmc4MDIxMV9zY2FuX3JlcXVlc3QgKnNjYW5fcmVxdWVzdDsK
+LQlzdHJ1Y3QgbXdpZmlleF91c2VyX3NjYW5fY2ZnICp1c2VyX3NjYW5fY2ZnOwogCXU4IGNmZ19i
+c3NpZFs2XTsKIAlzdHJ1Y3Qgd3BzIHdwczsKIAl1OCBzY2FuX2Jsb2NrOwpAQCAtNTEwLDYgKzUw
+OSw3IEBAIHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUgewogCXU4IGFwXzExYWNfZW5hYmxlZDsKIAl1
+MzIgbWdtdF9mcmFtZV9tYXNrOwogCXN0cnVjdCBtd2lmaWV4X3JvY19jZmcgcm9jX2NmZzsKKwli
+b29sIGlzX25kb19zdG9wOwogfTsKIAogZW51bSBtd2lmaWV4X2JhX3N0YXR1cyB7CmRpZmYgLS1n
+aXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL213aWZpZXgvc2Nhbi5jCmluZGV4IDljZjVkOGYuLmY2MDZhODMgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL213aWZpZXgvc2Nhbi5jCkBAIC0xNzg0LDIyICsxNzg0LDE2IEBAIGNoZWNrX25leHRf
+c2NhbjoKIAkJaWYgKHByaXYtPnJlcG9ydF9zY2FuX3Jlc3VsdCkKIAkJCXByaXYtPnJlcG9ydF9z
+Y2FuX3Jlc3VsdCA9IGZhbHNlOwogCi0JCWlmIChwcml2LT51c2VyX3NjYW5fY2ZnKSB7Ci0JCQlp
+ZiAocHJpdi0+c2Nhbl9yZXF1ZXN0KSB7Ci0JCQkJZGV2X2RiZyhwcml2LT5hZGFwdGVyLT5kZXYs
+Ci0JCQkJCSJpbmZvOiBub3RpZnlpbmcgc2NhbiBkb25lXG4iKTsKLQkJCQljZmc4MDIxMV9zY2Fu
+X2RvbmUocHJpdi0+c2Nhbl9yZXF1ZXN0LCAwKTsKLQkJCQlwcml2LT5zY2FuX3JlcXVlc3QgPSBO
+VUxMOwotCQkJfSBlbHNlIHsKLQkJCQlkZXZfZGJnKHByaXYtPmFkYXB0ZXItPmRldiwKLQkJCQkJ
+ImluZm86IHNjYW4gYWxyZWFkeSBhYm9ydGVkXG4iKTsKLQkJCX0KLQotCQkJa2ZyZWUocHJpdi0+
+dXNlcl9zY2FuX2NmZyk7Ci0JCQlwcml2LT51c2VyX3NjYW5fY2ZnID0gTlVMTDsKKwkJaWYgKHBy
+aXYtPnNjYW5fcmVxdWVzdCkgeworCQkJZGV2X2RiZyhhZGFwdGVyLT5kZXYsICJpbmZvOiBub3Rp
+Znlpbmcgc2NhbiBkb25lXG4iKTsKKwkJCWNmZzgwMjExX3NjYW5fZG9uZShwcml2LT5zY2FuX3Jl
+cXVlc3QsIDApOworCQkJcHJpdi0+c2Nhbl9yZXF1ZXN0ID0gTlVMTDsKKwkJfSBlbHNlIHsKKwkJ
+CXByaXYtPmlzX25kb19zdG9wID0gZmFsc2U7CisJCQlkZXZfZGJnKGFkYXB0ZXItPmRldiwgImlu
+Zm86IHNjYW4gYWxyZWFkeSBhYm9ydGVkXG4iKTsKIAkJfQogCX0gZWxzZSB7Ci0JCWlmIChwcml2
+LT51c2VyX3NjYW5fY2ZnICYmICFwcml2LT5zY2FuX3JlcXVlc3QpIHsKKwkJaWYgKHByaXYtPmlz
+X25kb19zdG9wICYmICFwcml2LT5zY2FuX3JlcXVlc3QpIHsKIAkJCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoJmFkYXB0ZXItPnNjYW5fcGVuZGluZ19xX2xvY2ssCiAJCQkJCSAgICAgICBmbGFncyk7
+CiAJCQlhZGFwdGVyLT5zY2FuX2RlbGF5X2NudCA9IE1XSUZJRVhfTUFYX1NDQU5fREVMQVlfQ05U
+OwotLSAKMS43LjMuNAoK
+
+--_002_477F20668A386D41ADCC57781B1F70430D9E150221SCVEXCH1marve_--
