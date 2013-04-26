@@ -1,143 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58592 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090Ab3DPLi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 07:38:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
-Subject: [PATCH v2 1/5] mac80211: fix and optimize MCS mask handling
-Date: Tue, 16 Apr 2013 13:38:42 +0200
-Message-Id: <1366112326-92981-1-git-send-email-nbd@openwrt.org> (sfid-20130416_133908_284146_8D6779EA)
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:54262 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752907Ab3DZHRr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Apr 2013 03:17:47 -0400
+Received: by mail-qa0-f44.google.com with SMTP id j8so97136qah.17
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 00:17:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Fri, 26 Apr 2013 11:17:30 +0400
+Message-ID: <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com> (sfid-20130426_091751_233993_5D770149)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the code always copies the configured MCS mask (even if it is
-set to default), but only uses it if legacy rates were also masked out.
-Fix this by adding a flag that tracks whether the configured MCS mask is
-set to default or not.
-Optimize the code further by storing a pointer to the configured rate
-mask in txrc instead of using memcpy.
+Any news ?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h     |  4 ++--
- net/mac80211/cfg.c         | 13 +++++++++++++
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/rate.c        |  9 ++++++---
- net/mac80211/tx.c          | 10 +++++-----
- 5 files changed, 28 insertions(+), 10 deletions(-)
+2013/4/21 Vasiliy Tolstov <v.tolstov@selfip.ru>:
+> 2013/4/19 Arend van Spriel <arend@broadcom.com>:
+>> I have no quick solution so need to more detailed info. For these kind of
+>> questions it always helps to provide kernel log and output from commands
+>> like lspci and lsusb.
+>
+>
+> Now i'm sometimes not able ping my wifi hot spot (only on 43228, on
+> 4311 all works fine with b43 driver)
+> lspci:
+> 03:00.0 0280: 14e4:4359
+>         Subsystem: 105b:e04b
+>         Flags: bus master, fast devsel, latency 0, IRQ 17
+>         Memory at c0500000 (64-bit, non-prefetchable) [size=16K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>         Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [d0] Express Endpoint, MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [13c] Virtual Channel
+>         Capabilities: [160] Device Serial Number 00-00-b9-ff-ff-fc-08-ed
+>         Capabilities: [16c] Power Budgeting <?>
+>         Kernel driver in use: wl
+>         Kernel modules: wl
+>
+>
+> Some logs from kernel and ping in attached file. I'm try to send this
+> email ten times, becouse wifi very bad work's with this driver =(
+>
+> --
+> Vasiliy Tolstov,
+> e-mail: v.tolstov@selfip.ru
+> jabber: vase@selfip.ru
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 64faf01..96cb507 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4107,7 +4107,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
-  *	(deprecated; this will be removed once drivers get updated to use
-  *	rate_idx_mask)
-  * @rate_idx_mask: user-requested (legacy) rate mask
-- * @rate_idx_mcs_mask: user-requested MCS rate mask
-+ * @rate_idx_mcs_mask: user-requested MCS rate mask (NULL if not in use)
-  * @bss: whether this frame is sent out in AP or IBSS mode
-  */
- struct ieee80211_tx_rate_control {
-@@ -4119,7 +4119,7 @@ struct ieee80211_tx_rate_control {
- 	bool rts, short_preamble;
- 	u8 max_rate_idx;
- 	u32 rate_idx_mask;
--	u8 rate_idx_mcs_mask[IEEE80211_HT_MCS_MASK_LEN];
-+	u8 *rate_idx_mcs_mask;
- 	bool bss;
- };
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 764dd9a..1d8c66c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2416,9 +2416,22 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 	}
- 
- 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		struct ieee80211_supported_band *sband = wiphy->bands[i];
-+		int j;
-+
- 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
- 		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].mcs,
- 		       sizeof(mask->control[i].mcs));
-+
-+		sdata->rc_has_mcs_mask[i] = false;
-+		if (!sband)
-+			continue;
-+
-+		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++)
-+			if (~sdata->rc_rateidx_mcs_mask[i][j]) {
-+				sdata->rc_has_mcs_mask[i] = true;
-+				break;
-+			}
- 	}
- 
- 	return 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 135ab46..4f4a40e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -740,6 +740,8 @@ struct ieee80211_sub_if_data {
- 
- 	/* bitmap of allowed (non-MCS) rate indexes for rate control */
- 	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
-+
-+	bool rc_has_mcs_mask[IEEE80211_NUM_BANDS];
- 	u8  rc_rateidx_mcs_mask[IEEE80211_NUM_BANDS][IEEE80211_HT_MCS_MASK_LEN];
- 
- 	union {
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index dd88381..5d545dd 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -460,9 +460,12 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	 * the common case.
- 	 */
- 	mask = sdata->rc_rateidx_mask[info->band];
--	memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
--	       sizeof(mcs_mask));
--	if (mask != (1 << txrc->sband->n_bitrates) - 1) {
-+	if (mask != (1 << txrc->sband->n_bitrates) - 1 || txrc->rate_idx_mcs_mask) {
-+		if (txrc->rate_idx_mcs_mask)
-+			memcpy(mcs_mask, txrc->rate_idx_mcs_mask, sizeof(mcs_mask));
-+		else
-+			memset(mcs_mask, 0xff, sizeof(mcs_mask));
-+
- 		if (sta) {
- 			/* Filter out rates that the STA does not support */
- 			mask &= sta->sta.supp_rates[info->band];
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index aad0bf5..c3f3ff6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -642,9 +642,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 		txrc.max_rate_idx = -1;
- 	else
- 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
--	memcpy(txrc.rate_idx_mcs_mask,
--	       tx->sdata->rc_rateidx_mcs_mask[info->band],
--	       sizeof(txrc.rate_idx_mcs_mask));
-+
-+	if (tx->sdata->rc_has_mcs_mask[info->band])
-+		txrc.rate_idx_mcs_mask =
-+			tx->sdata->rc_rateidx_mcs_mask[info->band];
-+
- 	txrc.bss = (tx->sdata->vif.type == NL80211_IFTYPE_AP ||
- 		    tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
- 		    tx->sdata->vif.type == NL80211_IFTYPE_ADHOC);
-@@ -2502,8 +2504,6 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		txrc.max_rate_idx = -1;
- 	else
- 		txrc.max_rate_idx = fls(txrc.rate_idx_mask) - 1;
--	memcpy(txrc.rate_idx_mcs_mask, sdata->rc_rateidx_mcs_mask[band],
--	       sizeof(txrc.rate_idx_mcs_mask));
- 	txrc.bss = true;
- 	rate_control_get_rate(sdata, NULL, &txrc);
- 
+
+
 -- 
-1.8.0.2
-
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
