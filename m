@@ -1,68 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51756 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763884Ab3DJTvh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 15:51:37 -0400
-Date: Wed, 10 Apr 2013 15:51:31 -0400 (EDT)
-Message-Id: <20130410.155131.1606837345365804721.davem@davemloft.net> (sfid-20130410_215145_052976_77EB7958)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2013-04-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130410171825.GB15428@tuxdriver.com>
-References: <20130410171825.GB15428@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:51701 "EHLO
+	na3sys009aog128.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758830Ab3DZAlH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Apr 2013 20:41:07 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Rhodes <jrhodes@marvell.com>
+Date: Thu, 25 Apr 2013 17:40:27 -0700
+Subject: RE: mwifiex frequent "not allowed while suspended" crash on resume
+Message-ID: <477F20668A386D41ADCC57781B1F70430D9E14FFB9@SC-VEXCH1.marvell.com> (sfid-20130426_024122_456086_5E0F542A)
+References: <CAMLZHHRpPghm0tWTksFiD-zxUUM1dSbgPbj6doMck1jqv-yokw@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9DAD431B@SC-VEXCH1.marvell.com>
+	<CAMLZHHRcTgQ66fucR09SEyjCCRiZixigM=cDwnfKB5yWYk4PQw@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9DDAB9CC@SC-VEXCH1.marvell.com>
+	<CAMLZHHTe+9D_XwYHFMbu8bRAD7OHNgf8_0+44ZhM+AwSnwLZBw@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E057145@SC-VEXCH1.marvell.com>
+ <CAMLZHHS_fBABvx1rGSs2zwv3RredXHh5ChrN7Nwz8ofuL8Vmyg@mail.gmail.com>
+In-Reply-To: <CAMLZHHS_fBABvx1rGSs2zwv3RredXHh5ChrN7Nwz8ofuL8Vmyg@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 10 Apr 2013 13:18:25 -0400
+Hi Daniel,
 
-> Please accept this pull request for the 3.10 stream...
-> 
-> Regarding the mac80211 bits, Johannes says:
-> 
-> "Here I have a bunch of minstrel fixes from Felix, per-interface
-> multicast filtering from Alex, set_tim debouncing from Ilan,
-> per-interface debugfs cleanups from Stanislaw, an error return fix from
-> Wei and a number of small improvements and fixes that I made myself."
-> 
-> And for the iwlwifi bits, Johannes says:
-> 
-> "Andrei changed an instance of kmalloc+memdup to kmemdup, Stanislaw
-> removed the now unused 5ghz_disable module parameter. I also have a
-> number of fixes from Ilan, Emmanuel and myself, Emmanuel also continued
-> working on Bluetooth coexistence."
-> 
-> For the sizeable batch of Bluetooth bits, Gustavo says:
-> 
-> "This is our first batch of patches for 3.10. The biggest changes of this pull
-> request are from Johan Hedberg, he implemented a HCI request framework to make
-> life easier when we have to send many HCI commands and a block and wait for
-> all of the to finish, we were able to fix a few issues in stack with the
-> introduction of this framework.
-> 
-> Other than that Dean Jenkins did a good work cleaning the RFCOMM code, the
-> refcnt infrastructure was removed and now we use NULL pointer checks to know
-> when a object was freed or not. That code was buggy and now it looks a way
-> better.
-> 
-> The rest of changes are clean ups, fixes and small improvements all over the
-> Bluetooth subsystem."
-> 
-> Regarding the wl12xx bits, Luca says:
-> 
-> "Some patches intended for 3.10.  Mostly bug fixes and other small
-> improvements."
-> 
-> On top of that, there are updates to brcmfmac, brcmsmac, b43, ssb and
-> bcma, as well as mwifiex, rt2x00, and ath9k and a few others.  The most
-> notable bit is the addition of a new driver in the rtlwifi family.
-> 
-> Please let me know if there are problems!
- ...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git for-davem
+> The order of events in this code makes me uneasy. You suggested
+> earlier that is_suspended is the flag that indicates from the
+> mwifiex_sdio layer "I'm ready to transmit again". But is it really OK
+> to transmit before the host sleep is cancelled, as the above ordering
+> suggests?
 
-Pulled, thanks John.
+No, it's not OK to transmit before the host sleep is cancelled.
+I was under the assumption that no TX packet is from kernel during the time we cancel host sleep. This assumption can be wrong without netif_device_detach, etc.
+
+> 
+> In this particular case, as you can see in the dynamic debug logs, it
+> looks like the whole situation is confused here due to the arrival of
+> an interrupt which causes mwifiex to take an early exit from the host
+> sleep.
+
+The driver has the code to work around this case. It is buggy however because it never gets verified with my own platforms.
+
+> 
+> http://dev.laptop.org/~dsd/20130425/mwifiex-earlytx.log
+
+Could you try resetting is_suspend flag when an early RX is received?
+
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1191,6 +1191,7 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
+        adapter->if_ops.wakeup(adapter);
+        adapter->hs_activated = false;
+        adapter->is_hs_configured = false;
++       adapter->is_suspended = false;
+        mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
+                                                    MWIFIEX_BSS_ROLE_ANY),
+                                   false);
+
+> No, that message doesn't appear.
+> I can't quite grasp what you're trying to do in that patch. Where does
+> mwifiex even set MMC_PM_WAKE_SDIO_IRQ?
+
+I was expecting sdhci driver to set MMC_PM_WAKE_SDIO_IRQ bit.
+
+> But the logic in the patch suggests that you would expect the
+> WAKE_SDIO_IRQ flag to be set before sdio_release_irq() is called,
+> triggering the "KEEP IRQ ON" message that you're looking for.
+
+That's correct. I'm hoping that this MMC change generates "resume handler first, RX interrupt next" sequence.
+
+Thanks,
+Bing
+
+> 
+> Thanks
+> Daniel
