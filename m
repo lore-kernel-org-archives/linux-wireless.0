@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:35963 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761650Ab3DJWnO (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:55056 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071Ab3DZSHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Apr 2013 18:43:14 -0400
-Received: by mail-da0-f48.google.com with SMTP id p8so399803dan.35
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2013 15:43:14 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH] mac80211: fix ieee80211_queue_stopped()
-Date: Wed, 10 Apr 2013 15:41:40 -0700
-Message-Id: <1365633700-16509-1-git-send-email-thomas@cozybit.com> (sfid-20130411_004318_709703_95577EF5)
+	Fri, 26 Apr 2013 14:07:10 -0400
+Message-ID: <517AC21E.30705@infradead.org> (sfid-20130426_200715_656386_3F44BD3B)
+Date: Fri, 26 Apr 2013 11:06:22 -0700
+From: Randy Dunlap <rdunlap@infradead.org>
+MIME-Version: 1.0
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] NFC: Add missing RFKILL dependency for Kconfig
+References: <1366999114-26903-1-git-send-email-marcel@holtmann.org>
+In-Reply-To: <1366999114-26903-1-git-send-email-marcel@holtmann.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg notes mac80211 drivers which use
-ieee80211_queue_stopped() really only want to know if they
-previously requested a queue stop.
+On 04/26/13 10:58, Marcel Holtmann wrote:
+> Since the NFC subsystem gained RFKILL support, it needs to be able
+> to build properly with whatever option for RFKILL has been selected.
+> 
+> on i386:
+> 
+> net/built-in.o: In function `nfc_unregister_device':
+> (.text+0x6a36d): undefined reference to `rfkill_unregister'
+> net/built-in.o: In function `nfc_unregister_device':
+> (.text+0x6a378): undefined reference to `rfkill_destroy'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a493): undefined reference to `rfkill_alloc'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a4a4): undefined reference to `rfkill_register'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a4b3): undefined reference to `rfkill_destroy'
+> net/built-in.o: In function `nfc_dev_up':
+> (.text+0x6a8e8): undefined reference to `rfkill_blocked'
+> 
+> when CONFIG_RFKILL=m but NFC is builtin.
+> 
+> Reported-by: Randy Dunlap <rdunlap@infradead.org>
+> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/util.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 447e665..53e9d8a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -485,7 +485,8 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
- 		return true;
- 
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--	ret = !!local->queue_stop_reasons[queue];
-+	ret = !!(local->queue_stop_reasons[queue] &
-+		 IEEE80211_QUEUE_STOP_REASON_DRIVER);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 	return ret;
- }
+Thanks.
+
+> ---
+>  net/nfc/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/net/nfc/Kconfig b/net/nfc/Kconfig
+> index 60c3bbb..28afdb1 100644
+> --- a/net/nfc/Kconfig
+> +++ b/net/nfc/Kconfig
+> @@ -4,6 +4,7 @@
+>  
+>  menuconfig NFC
+>  	depends on NET
+> +	depends on RFKILL || !RFKILL
+>  	tristate "NFC subsystem support"
+>  	default n
+>  	help
+> 
+
+
 -- 
-1.7.10.4
-
+~Randy
