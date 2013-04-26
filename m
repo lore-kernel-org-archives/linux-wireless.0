@@ -1,104 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34515 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956Ab3DOQcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 12:32:35 -0400
-Message-ID: <1366043660.5649.4.camel@dcbw.foobar.com> (sfid-20130415_183239_483404_72345C65)
-Subject: Re: Centrino Ultimate-N 6300 AGN rfkill always Soft blocked
-From: Dan Williams <dcbw@redhat.com>
-To: schwaahed <schwaahed@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 15 Apr 2013 11:34:20 -0500
-In-Reply-To: <CAPutgu_3tkxZa1Yn67ZxU9m=E=xRHjPiz7b6yv48kSiw_xQnXw@mail.gmail.com>
-References: <CAPutgu8mCmfmsEq0jkqtAN25oUBmCxZLW-kTZrsPKFpCfdJU2A@mail.gmail.com>
-	 <1365804259.10342.20.camel@dcbw.foobar.com>
-	 <1366032132.8361.19.camel@jlt4.sipsolutions.net>
-	 <1366036772.2404.3.camel@dcbw.foobar.com>
-	 <1366039892.8361.29.camel@jlt4.sipsolutions.net>
-	 <CAPutgu_3tkxZa1Yn67ZxU9m=E=xRHjPiz7b6yv48kSiw_xQnXw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qe0-f43.google.com ([209.85.128.43]:37400 "EHLO
+	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756476Ab3DZUUL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Apr 2013 16:20:11 -0400
+Received: by mail-qe0-f43.google.com with SMTP id f6so2996606qej.2
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 13:20:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <517A427E.3010809@broadcom.com>
+References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
+ <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
+ <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
+ <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
+ <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
+ <517199D4.9070702@broadcom.com> <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
+ <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com> <517A427E.3010809@broadcom.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Sat, 27 Apr 2013 00:19:53 +0400
+Message-ID: <CACaajQsf8cgG9DQ-QuWY5EqeUNq4RgX9CMgQ8bZi7s8UJzCE_g@mail.gmail.com> (sfid-20130426_222017_348379_9EB8D2ED)
+Subject: Re: very bad work of wl (bcm 43228)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-04-15 at 11:50 -0400, schwaahed wrote:
-> So I configured a kernel with hp-wmi enabled. It had the unfortunate
-> consequence of disabling wireless on the windows side. I also saw that
-> some people with different hardware from me were able to resolve their
-> problem by blacklisting hp-wmi.
-
-Ok, so that means that perhaps the airplane mode interface changed on
-your machine from earlier models in the Elitebook series.  You'll need
-to talk to the hp-wmi maintainers about how to handle your device then,
-at this point it's not a wifi issue, it's the BIOS telling the wifi
-hardware to enable/disable itself and that's causing your issues when
-trying to unblock stuff.
-
-> rfkill show an additional wifi interface ('hp-wifi' I think), that
-> behaves exactly as phy0 did. I still am unable to unblock this
-> interface. phy0 doesn't respond to any rfkill commands or the physical
-> wifi switch. It is just remains soft and hard blocked.
-
-Yeah, kernel driver issue for hp-wmi, of if HP isn't using WMI anymore
-then a different module.  One question though, any idea if your laptop
-uses UEFI instead of traditional BIOS?
-
-> Dan -- Are there any links/search terms to older conversations on this issue?
-
-Not your specific issue that I know of, but the rfkill + BIOS
-interaction issue has been going on for years; every time the OEMs
-change the way BIOS talks to the OS and the wifi card, we need a kernel
-update of the various laptop drivers like acer-wmi, hp-wmi,
-thinkpad-acpi, etc to handle it.
-
-> Is wifi working on your 2530p?
-
-Yeah, but it's probably not relevant for your machine, since the 2530p
-is from 2009.  HP has likely changed the BIOS <-> OS interface since
-then.
-
-Dan
-
-> Thanks
-> - Darwin
-> 
-> On Mon, Apr 15, 2013 at 11:31 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2013-04-15 at 09:39 -0500, Dan Williams wrote:
-> >
-> >> > Yeah it seems not loaded, but how then does the soft block affect hard
-> >> > block? All very odd, but almost certainly a platform rather than a wifi
-> >> > issue.
-> >>
-> >> On my 2530p and a lot of other laptops, blocking the BIOS
-> >> "switch" (either physically or softblock) hardblocks phy0.  I guess the
-> >> BIOS twiddles a GPIO that's connected to the mPCI-E module's rfkill
-> >> line/GPIO?
-> >
-> > Yes, that seems to be the case. Something does, anyway, as the GPIO
-> > state is pretty much directly reflected in the hard kill of the "phy0"
-> > device.
-> >
-> >> Which leads to the problem we've talked about a long time ago; you can't
-> >> treat phy0 hardblock as a physical block that cannot be soft-unblocked,
-> >> because some other switch might actually control it's state.  We tried
-> >> to gray-out the "Enable Wireless" when hardblocked (since logically you
-> >> can't soft-unblock something that's hardblocked), but it turns out you
-> >> can't do that because unblocking BIOS switches might un-hardblock the
-> >> phy0 wifi switch...  (and the kernel doesn't describe these
-> >> dependencies, because, well, that's laptop-specific and would never be
-> >> up-to-date).
-> >
-> > Yeah ... best thing you could do is assume that if a bios rfkill exists
-> > it controls the phy0 hard kill and in case it doesn't enable when you
-> > unblock the bios device you pop up a message saying to switch the
-> > physical button?
-> >
-> > johannes
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2013/4/26 Arend van Spriel <arend@broadcom.com>:
+> Not really. You could try disabling powersave. I am not very familiar with
+> wl driver.
+>
+> $ iw dev wlanX power_save off
+>
+> Can you still provide lsusb and lspci for all devices?
+>
+> Gr. AvS
 
 
+I'm already disable powersaving but it not helps. My lspci and lsusb:
+
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor
+Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation
+Core Processor Family Integrated Graphics Controller (rev 09)
+00:14.0 USB controller: Intel Corporation Panther Point USB xHCI Host
+Controller (rev 04)
+00:16.0 Communication controller: Intel Corporation Panther Point MEI
+Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation Panther Point USB Enhanced
+Host Controller #2 (rev 04)
+00:1b.0 Audio device: Intel Corporation Panther Point High Definition
+Audio Controller (rev 04)
+00:1c.0 PCI bridge: Intel Corporation Panther Point PCI Express Root
+Port 1 (rev c4)
+00:1c.1 PCI bridge: Intel Corporation Panther Point PCI Express Root
+Port 2 (rev c4)
+00:1c.2 PCI bridge: Intel Corporation Panther Point PCI Express Root
+Port 3 (rev c4)
+00:1d.0 USB controller: Intel Corporation Panther Point USB Enhanced
+Host Controller #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation Panther Point LPC Controller (rev 04)
+00:1f.2 SATA controller: Intel Corporation Panther Point 6 port SATA
+Controller [AHCI mode] (rev 04)
+00:1f.3 SMBus: Intel Corporation Panther Point SMBus Controller (rev 04)
+03:00.0 Network controller: Broadcom Corporation BCM43228 802.11a/b/g/n
+04:00.0 Ethernet controller: Broadcom Corporation NetLink BCM57785
+Gigabit Ethernet PCIe (rev 10)
+04:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765
+Memory Card Reader (rev 10)
+
+
+Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 001 Device 003: ID 0489:e046 Foxconn / Hon Hai
+Bus 001 Device 004: ID 04f2:b336 Chicony Electronics Co., Ltd
+
+
+
+
+--
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
