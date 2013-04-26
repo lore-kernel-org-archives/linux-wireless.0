@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56804 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755140Ab3DWGye (ORCPT
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:23984 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932096Ab3DZTMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Apr 2013 02:54:34 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] ath9k: Use lockless variants for the RX fifo queue
-Date: Tue, 23 Apr 2013 12:22:18 +0530
-Message-Id: <1366699939-14076-3-git-send-email-sujith@msujith.org> (sfid-20130423_085439_708654_243FBD8C)
-In-Reply-To: <1366699939-14076-1-git-send-email-sujith@msujith.org>
-References: <1366699939-14076-1-git-send-email-sujith@msujith.org>
+	Fri, 26 Apr 2013 15:12:06 -0400
+Message-ID: <22a4295e8ebbfab1bf23a591639ce442.squirrel@www.infidigm.net> (sfid-20130426_211210_532239_CB967D2B)
+Date: Fri, 26 Apr 2013 15:55:22 -0400
+Subject: mmc/sdio broken in 3.9.0-rc2?
+From: drwho@infidigm.net
+To: linux-wireless@vger.kernel.org
+Cc: ath6kl-devel@qca.qualcomm.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ath6kl sdio is working good in 3.7.0-rc7, but in 3.9.0-rc2, there are a
+couple of seconds between each mmc queue and the ath6kl fails to load. I
+have a real sdio on the pci bus (sdhci_pci module) - Thinkpad SL410.
 
-The RX fifo can be accessed from the common tasklet or it can
-be reaped/cleaned when RX is stopped, which is done when doing
-a reset or channel change - this happens in process context.
+// 3.7.0-rc7-custom-wl-ar6
+[  196.354874] mmc0: queuing unknown CIS tuple 0x01 (3 bytes)
+[  196.363612] mmc0: queuing unknown CIS tuple 0x1a (5 bytes)
+[  196.367059] mmc0: queuing unknown CIS tuple 0x1b (8 bytes)
+[  196.367709] mmc0: queuing unknown CIS tuple 0x14 (0 bytes)
+[  196.372065] mmc0: queuing unknown CIS tuple 0x80 (1 bytes)
+[  196.372278] mmc0: queuing unknown CIS tuple 0x81 (1 bytes)
+[  196.372483] mmc0: queuing unknown CIS tuple 0x82 (1 bytes)
+[  196.372563] mmc0: new SDIO card at address 0001
+[  196.420427] ath6kl: temporary war to avoid sdio crc error
+[  196.868594] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144\x01 api 3
 
-Since it is ensured that there are no pending tasklets when
-stopping RX and cleaning the FIFO, there is no need to use
-SKB queue functions which take internal locks.
+// 3.9.0-rc2-wl-ar6+
+[   75.996139] mmc0: queuing unknown CIS tuple 0x01 (3 bytes)
+[   78.296130] mmc0: queuing unknown CIS tuple 0x1a (5 bytes)
+[   79.296086] mmc0: queuing unknown CIS tuple 0x1b (8 bytes)
+[   79.496084] mmc0: queuing unknown CIS tuple 0x14 (0 bytes)
+[   85.896171] mmc0: queuing unknown CIS tuple 0x80 (1 bytes)
+[   86.196143] mmc0: queuing unknown CIS tuple 0x81 (1 bytes)
+[   86.496134] mmc0: queuing unknown CIS tuple 0x82 (1 bytes)
+[   86.596161] mmc0: new SDIO card at address 0001
+[   92.396156] ath6kl: temporary war to avoid sdio crc error
+[  186.296301] ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.144\x01 api 3
+[  186.296315] ath6kl: firmware supports:
+sched-scan,sta-p2pdev-duplex,rsn-cap-override
+[  186.296322] ath6kl: abi version mismatch: host(0x1), target(0x0)
+[  186.496361] ath6kl: host has no rx buffers blocking receiver to prevent
+overrun
+[  186.896282] ath6kl: Failed to start hardware: -5
+[  186.896400] ath6kl: Failed to init ath6kl core
+[  186.896446] ath6kl_sdio: probe of mmc0:0001:1 failed with error -5
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Jon
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c8265a7..9c0045e 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -124,7 +124,7 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
- 
- 	SKB_CB_ATHBUF(skb) = bf;
- 	ath9k_hw_addrxbuf_edma(ah, bf->bf_buf_addr, qtype);
--	skb_queue_tail(&rx_edma->rx_fifo, skb);
-+	__skb_queue_tail(&rx_edma->rx_fifo, skb);
- 
- 	return true;
- }
-@@ -155,7 +155,7 @@ static void ath_rx_remove_buffer(struct ath_softc *sc,
- 
- 	rx_edma = &sc->rx.rx_edma[qtype];
- 
--	while ((skb = skb_dequeue(&rx_edma->rx_fifo)) != NULL) {
-+	while ((skb = __skb_dequeue(&rx_edma->rx_fifo)) != NULL) {
- 		bf = SKB_CB_ATHBUF(skb);
- 		BUG_ON(!bf);
- 		list_add_tail(&bf->list, &sc->rx.rxbuf);
--- 
-1.8.2.1
+
+
+
 
