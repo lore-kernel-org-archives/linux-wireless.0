@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40391 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195Ab3DFFwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Apr 2013 01:52:23 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Adrian Chadd <adrian@freebsd.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Version number policy!
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAB=NE6V3sApMSGWkKbaFaJC4+VpLxgYF-xyNRKxiA-YDCwhGkQ@mail.gmail.com>
-	<201304051903.11215.chunkeey@googlemail.com>
-	<CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-Date: Sat, 06 Apr 2013 08:52:19 +0300
-In-Reply-To: <CAFSJ42bqquh+xekt8+V3wbG3MOUVFELTxR3mNPfS0Jn9J7OURQ@mail.gmail.com>
-	(Eugene Krasnikov's message of "Fri, 5 Apr 2013 19:23:54 +0200")
-Message-ID: <8762008auk.fsf@purkki.adurom.net> (sfid-20130406_075227_805423_72AFDB03)
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:58578 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756329Ab3DZR3y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Apr 2013 13:29:54 -0400
+Received: by mail-qa0-f46.google.com with SMTP id p6so287465qad.12
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Apr 2013 10:29:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
+References: <CAMLZHHSVd6GpmqTQyJmbsheH1utZh8mNW8d4zLtjwoONaGwbNA@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E0579DB@SC-VEXCH1.marvell.com>
+	<CAMLZHHQ=BNuD0UmcV8pv=6phW=W-C5C7Af6n8tLWTrzyuzPQow@mail.gmail.com>
+	<CAMLZHHQXY3OuWKr_K1B9-NmZFwCcQFPNTBoOkpvT9kxWJ=ixqQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430D9E14FF4C@SC-VEXCH1.marvell.com>
+Date: Fri, 26 Apr 2013 11:29:53 -0600
+Message-ID: <CAMLZHHSHG2ySmW0ac6+M-7fOgNFrqXBf7=SXFFkWDrhwGwYKXQ@mail.gmail.com> (sfid-20130426_192959_049128_77C99D04)
+Subject: Re: Memory leak in mwifiex_cfg80211_scan
+From: Daniel Drake <dsd@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eugene Krasnikov <k.eugene.e@gmail.com> writes:
-
-> Good point regarding timestamp.
+On Thu, Apr 25, 2013 at 4:50 PM, Bing Zhao <bzhao@marvell.com> wrote:
+> Hi Daniel,
 >
-> When it comes to feature bitmap do you have an example of such a
-> bitmap from carl9170? Why not to rely always on major version?
+>> While I don't have an explanation for why kmemleak didn't detect this
+>> before, I have confirmed with some simple printks that mwifiex does
+>> not call free_netdev on the netdev that it allocates, at least when
+>> using the test script posted earlier in this thread. So that is
+>> another leak that must be fixed.
+>
+> Yes it is. Attached is a patch from Amitkumar Karwar to fix it.
 
-I'm with Christian here. In ath6kl we switched to firmware advertising
-feature capabilities and I have never looked back, it's so much easier.
-You don't need to do any mapping between firmware versions and features,
-you just deal one feature at a time.
+Thanks.  This seems to be working, and makes kmemleak happy.
+So when we find a race-free way to free user_scan_cfg, we can probably
+end this topic.
 
--- 
-Kalle Valo
+> One scan request from cfg80211 is split to multiple scan commands being sent from driver to firmware.
+> If scan_request is cleared (e.g. mwifiex_close) during a scan command processing, all pending scan commands will be aborted after getting response of previous scan command, and scan_delay_timer is modified to fire in 50ms.
+>
+> With original script (mwifiex_sdio is removed), I don't see scan_delay_timer_fn() gets triggered either. My assumption is that the scan_pending_q has already been emptied, so we don't run into the same path as above.
+
+So far I have not managed to get scan_delay_timer_fn() to execute at
+all - even when I am not using that script. But I have not really
+diagnosed why. I was wondering if there's anything obvious I might be
+missing.
+
+Thanks
+Daniel
