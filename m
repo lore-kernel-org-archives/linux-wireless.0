@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:32845 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760624Ab3D3SCZ (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:59428 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756402Ab3DZR7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Apr 2013 14:02:25 -0400
-Received: by mail-we0-f175.google.com with SMTP id i48so678084wef.34
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Apr 2013 11:02:24 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 30 Apr 2013 11:02:22 -0700
-Message-ID: <CAJ-Vmon50nyvxJyV1J9XTqNDOb1+EbneqkxdkX7H=Nks+JJy+w@mail.gmail.com> (sfid-20130430_200232_416681_3302E7DF)
-Subject: Announcement: AR5513 HAL
-From: Adrian Chadd <adrian@freebsd.org>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Apr 2013 13:59:38 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Subject: Re: linux-next: Tree for Apr 26 (nfc)
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <517ABA92.304@infradead.org>
+Date: Fri, 26 Apr 2013 10:59:40 -0700
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-nfc@ml01.01.org
+Message-Id: <C716D09B-A010-4024-B115-9BDB834DE905@holtmann.org> (sfid-20130426_195942_508164_C71B4E44)
+References: <20130426180357.7599d1b6b7965470905dcdf3@canb.auug.org.au> <517ABA92.304@infradead.org>
+To: Randy Dunlap <rdunlap@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Randy,
 
-I've just pushed a copy of the AR5513 HAL from Qualcomm Atheros into
-the QCA github repository.
+>> Hi all,
+>> 
+>> Changes since 20130424:
+>> 
+> 
+> 
+> on i386:
+> 
+> net/built-in.o: In function `nfc_unregister_device':
+> (.text+0x6a36d): undefined reference to `rfkill_unregister'
+> net/built-in.o: In function `nfc_unregister_device':
+> (.text+0x6a378): undefined reference to `rfkill_destroy'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a493): undefined reference to `rfkill_alloc'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a4a4): undefined reference to `rfkill_register'
+> net/built-in.o: In function `nfc_register_device':
+> (.text+0x6a4b3): undefined reference to `rfkill_destroy'
+> net/built-in.o: In function `nfc_dev_up':
+> (.text+0x6a8e8): undefined reference to `rfkill_blocked'
+> 
+> 
+> when CONFIG_RFKILL=m but NFC is builtin.
+> 
+> Full randconfig file is attached.
 
-https://github.com/qca/qca-ar5513-hal
+it is missing the depends RFKILL || !RFKILL here. I send a patch for it.
 
-The AR5513 is a 2-antenna MIMO 11abg (not 11n) device that was sold
-into a few markets. As far as I'm aware, it's the only legacy PCI(e)
-chipset which the open source Atheros drivers are missing support for.
+Regards
 
-The HAL is from an earlier development effort, before things had fully
-migrated to using a Madwifi derivative. Thus, the HAL API isn't
-(easily) compatible with the Madwifi or FreeBSD Atheros driver code.
-However, it should be sufficient to bring up chipset support for the
-AR5513 in ath5k.
+Marcel
 
-We've opened this up in the hope that the opensource crowd will add
-support to ath5k for this chipset.
-
-Thanks,
-
-
-
-Adrian
