@@ -1,1156 +1,598 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:52213 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936502Ab3DIA6Q (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:40857 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485Ab3D0T1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 20:58:16 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, marcel@holtmann.org, gustavo@padovan.org,
-	johan.hedberg@gmail.com, linux-bluetooth@vger.kernel.org,
-	champion_chen@realsil.com.cn
-Subject: [RFC/RFT PATCH 2/2] rtk_btusb: A new driver for the Bluetooth portion of the Realtek RTL8723AE chip
-Date: Mon,  8 Apr 2013 19:57:48 -0500
-Message-Id: <1365469068-4548-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130409_025835_067355_523A5BE6)
-In-Reply-To: <1365469068-4548-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1365469068-4548-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 27 Apr 2013 15:27:33 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 01/14] cw1200: v6: Low-level hardware I/O access
+Date: Sat, 27 Apr 2013 15:27:14 -0400
+Message-Id: <1367090847-11937-2-git-send-email-pizza@shaftnet.org> (sfid-20130427_212738_790731_527E8F97)
+In-Reply-To: <1367090847-11937-1-git-send-email-pizza@shaftnet.org>
+References: <1367090847-11937-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver is similar to btusb, and uses as much of that code as possible.
-Those parts that are unique are provided here.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- drivers/bluetooth/Kconfig     |  10 +
- drivers/bluetooth/Makefile    |   1 +
- drivers/bluetooth/rtk_btusb.c | 974 ++++++++++++++++++++++++++++++++++++++++++
- drivers/bluetooth/rtk_btusb.h | 102 +++++
- 4 files changed, 1087 insertions(+)
- create mode 100644 drivers/bluetooth/rtk_btusb.c
- create mode 100644 drivers/bluetooth/rtk_btusb.h
+ drivers/net/wireless/cw1200/hwio.c | 311 +++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/cw1200/hwio.h | 247 +++++++++++++++++++++++++++++
+ 2 files changed, 558 insertions(+)
+ create mode 100644 drivers/net/wireless/cw1200/hwio.c
+ create mode 100644 drivers/net/wireless/cw1200/hwio.h
 
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index fdfd61a..11a9e80 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -242,4 +242,14 @@ config BT_WILINK
- 
- 	  Say Y here to compile support for Texas Instrument's WiLink7 driver
- 	  into the kernel or say M to compile it as module.
-+
-+config BT_RTKUSB
-+	tristate "Realtek BT driver for RTL8723AE"
-+	select FW_LOADER
-+	help
-+	  This enables the Bluetooth driver for the Realtek RTL8723AE Wifi/BT
-+	  combo device.
-+
-+	  Say Y here to compile support for these devices into the kernel
-+	  or say M to build it as a module.
- endmenu
-diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-index 4afae20..167ccc0 100644
---- a/drivers/bluetooth/Makefile
-+++ b/drivers/bluetooth/Makefile
-@@ -19,6 +19,7 @@ obj-$(CONFIG_BT_ATH3K)		+= ath3k.o
- obj-$(CONFIG_BT_MRVL)		+= btmrvl.o
- obj-$(CONFIG_BT_MRVL_SDIO)	+= btmrvl_sdio.o
- obj-$(CONFIG_BT_WILINK)		+= btwilink.o
-+obj-$(CONFIG_BT_RTKUSB)		+= rtk_btusb.o
- 
- btmrvl-y			:= btmrvl_main.o
- btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
-diff --git a/drivers/bluetooth/rtk_btusb.c b/drivers/bluetooth/rtk_btusb.c
+diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw1200/hwio.c
 new file mode 100644
-index 0000000..9a12855
+index 0000000..1af7b3d
 --- /dev/null
-+++ b/drivers/bluetooth/rtk_btusb.c
-@@ -0,0 +1,974 @@
++++ b/drivers/net/wireless/cw1200/hwio.c
+@@ -0,0 +1,311 @@
 +/*
++ * Low-level device IO routines for ST-Ericsson CW1200 drivers
 + *
-+ *  Realtek Bluetooth USB driver
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
 + *
-+ *  Copyright (C) 2012-2013  Edward Bian <edward_bian@realsil.com.cn>
++ * Based on:
++ * ST-Ericsson UMAC CW1200 driver, which is
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Ajitpal Singh <ajitpal.singh@lockless.no>
 + *
-+ *  Parts of this routine are copied and modified from btusb, the
-+ *  Generic Bluetooth USB driver. In addition, several of the routines
-+ *  in btusb are used directly. The btusb code is
-+ *  Copyright (C) 2005-2008  Marcel Holtmann <marcel@holtmann.org>
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
 + */
 +
-+#include <linux/module.h>
-+#include <linux/usb.h>
-+#include <linux/firmware.h>
-+#include <linux/suspend.h>
-+#include <net/bluetooth/bluetooth.h>
-+#include <net/bluetooth/hci_core.h>
-+#include <linux/completion.h>
-+#include <linux/version.h>
-+#include <linux/pm_runtime.h>
++#include <linux/types.h>
 +
-+#include "btusb.h"
-+#include "rtk_btusb.h"
++#include "cw1200.h"
++#include "hwio.h"
++#include "sbus.h"
 +
-+#define VERSION "0.8"
++ /* Sdio addr is 4*spi_addr */
++#define SPI_REG_ADDR_TO_SDIO(spi_reg_addr) ((spi_reg_addr) << 2)
++#define SDIO_ADDR17BIT(buf_id, mpf, rfu, reg_id_ofs) \
++				((((buf_id)    & 0x1F) << 7) \
++				| (((mpf)        & 1) << 6) \
++				| (((rfu)        & 1) << 5) \
++				| (((reg_id_ofs) & 0x1F) << 0))
++#define MAX_RETRY		3
 +
-+static struct usb_driver btusb_driver;
 +
-+static struct patch_info patch_table[] = {
-+	{0, 0x1200, "rtl_bt/rtl8723a.bin", "rtk8723_bt_config", NULL, 0}
-+};
-+
-+static LIST_HEAD(dev_data_list);
-+
-+/*******************************/
-+
-+static struct usb_device_id btusb_table[] = {
-+	{USB_DEVICE(0x0bda, 0x8723)},
-+	{ }
-+};
-+
-+/*******************************/
-+
-+MODULE_DEVICE_TABLE(usb, btusb_table);
-+
-+static int send_hci_cmd(struct xchange_data *xdata)
++static int __cw1200_reg_read(struct cw1200_common *priv, u16 addr,
++			     void *buf, size_t buf_len, int buf_id)
 +{
-+	int ret_val;
++	u16 addr_sdio;
++	u32 sdio_reg_addr_17bit;
 +
-+	ret_val = usb_control_msg(
-+		xdata->dev_entry->udev, xdata->pipe_out,
-+		0, USB_TYPE_CLASS, 0, 0,
-+		(void *)(xdata->send_pkt),
-+		xdata->pkt_len, MSG_TO);
++	/* Check if buffer is aligned to 4 byte boundary */
++	if (WARN_ON(((unsigned long)buf & 3) && (buf_len > 4))) {
++		pr_err("buffer is not aligned.\n");
++		return -EINVAL;
++	}
 +
-+	return ret_val;
++	/* Convert to SDIO Register Address */
++	addr_sdio = SPI_REG_ADDR_TO_SDIO(addr);
++	sdio_reg_addr_17bit = SDIO_ADDR17BIT(buf_id, 0, 0, addr_sdio);
++
++	return priv->sbus_ops->sbus_memcpy_fromio(priv->sbus_priv,
++						  sdio_reg_addr_17bit,
++						  buf, buf_len);
 +}
 +
-+static int rcv_hci_evt(struct xchange_data *xdata)
++static int __cw1200_reg_write(struct cw1200_common *priv, u16 addr,
++				const void *buf, size_t buf_len, int buf_id)
 +{
-+	int ret_len, ret_val;
-+	int i;
++	u16 addr_sdio;
++	u32 sdio_reg_addr_17bit;
 +
-+	while (1) {
-+		for (i = 0; i < 5; i++) {
-+			/*  Try to send USB interrupt message 5 times. */
-+			ret_val = usb_interrupt_msg(
-+				xdata->dev_entry->udev, xdata->pipe_in,
-+				(void *)(xdata->rcv_pkt), PKT_LEN,
-+				&ret_len, MSG_TO);
-+			if (ret_val >= 0)
-+				break;
-+		}
-+		if (ret_val < 0)
-+			return ret_val;
++	/* Convert to SDIO Register Address */
++	addr_sdio = SPI_REG_ADDR_TO_SDIO(addr);
++	sdio_reg_addr_17bit = SDIO_ADDR17BIT(buf_id, 0, 0, addr_sdio);
 +
-+		if (CMD_CMP_EVT == xdata->evt_hdr->evt) {
-+			if (xdata->cmd_hdr->opcode == xdata->cmd_cmp->opcode)
-+				return ret_len;
-+		}
-+	}
++	return priv->sbus_ops->sbus_memcpy_toio(priv->sbus_priv,
++						sdio_reg_addr_17bit,
++						buf, buf_len);
 +}
 +
-+static int download_data(struct xchange_data *xdata)
++static inline int __cw1200_reg_read_32(struct cw1200_common *priv,
++					u16 addr, u32 *val)
 +{
-+	struct download_cp *cmd_para;
-+	struct download_rp *evt_para;
-+	uint8_t *pcur;
-+	int pkt_len, frag_num, frag_len;
-+	int i, ret_val;
-+
-+	cmd_para = (struct download_cp *)xdata->req_para;
-+	evt_para = (struct download_rp *)xdata->rsp_para;
-+	pcur = xdata->fw_data;
-+	pkt_len = CMD_HDR_LEN + sizeof(struct download_cp);
-+	frag_num = xdata->fw_len / PATCH_SEG_MAX + 1;
-+	frag_len = PATCH_SEG_MAX;
-+
-+	for (i = 0; i < frag_num; i++) {
-+		cmd_para->index = i;
-+		if (i == (frag_num - 1)) {
-+			cmd_para->index |= DATA_END;
-+			frag_len = xdata->fw_len % PATCH_SEG_MAX;
-+			pkt_len -= (PATCH_SEG_MAX - frag_len);
-+		}
-+		xdata->cmd_hdr->opcode = cpu_to_le16(DOWNLOAD_OPCODE);
-+		xdata->cmd_hdr->plen = sizeof(uint8_t) + frag_len;
-+		xdata->pkt_len = pkt_len;
-+		memcpy(cmd_para->data, pcur, frag_len);
-+
-+		ret_val = send_hci_cmd(xdata);
-+		if (ret_val < 0)
-+			return ret_val;
-+
-+		ret_val = rcv_hci_evt(xdata);
-+		if (ret_val < 0)
-+			return ret_val;
-+		if (0 != evt_para->status)
-+			return -1;
-+
-+		pcur += PATCH_SEG_MAX;
-+	}
-+
-+	return xdata->fw_len;
++	int i = __cw1200_reg_read(priv, addr, val, sizeof(*val), 0);
++	*val = le32_to_cpu(*val);
++	return i;
 +}
 +
-+static struct dev_data *dev_data_find(struct usb_interface *intf)
++static inline int __cw1200_reg_write_32(struct cw1200_common *priv,
++					u16 addr, u32 val)
 +{
-+	struct dev_data *dev_entry;
-+
-+	list_for_each_entry(dev_entry, &dev_data_list, list_node) {
-+		if (dev_entry->intf == intf)
-+			return dev_entry;
-+	}
-+
-+	return NULL;
++	val = cpu_to_le32(val);
++	return __cw1200_reg_write(priv, addr, &val, sizeof(val), 0);
 +}
 +
-+static void init_xdata(struct xchange_data *xdata, struct dev_data *dev_entry)
++static inline int __cw1200_reg_read_16(struct cw1200_common *priv,
++					u16 addr, u16 *val)
 +{
-+	memset(xdata, 0, sizeof(struct xchange_data));
-+	xdata->dev_entry = dev_entry;
-+	xdata->pipe_in = usb_rcvintpipe(dev_entry->udev, INTR_EP);
-+	xdata->pipe_out = usb_sndctrlpipe(dev_entry->udev, CTRL_EP);
-+	xdata->cmd_hdr = (struct hci_command_hdr *)(xdata->send_pkt);
-+	xdata->evt_hdr = (struct hci_event_hdr *)(xdata->rcv_pkt);
-+	xdata->cmd_cmp = (struct hci_ev_cmd_complete *)(xdata->rcv_pkt +
-+							EVT_HDR_LEN);
-+	xdata->req_para = xdata->send_pkt + CMD_HDR_LEN;
-+	xdata->rsp_para = xdata->rcv_pkt + EVT_HDR_LEN + CMD_CMP_LEN;
++	int i = __cw1200_reg_read(priv, addr, val, sizeof(*val), 0);
++	*val = le16_to_cpu(*val);
++	return i;
 +}
 +
-+static int check_fw_version(struct xchange_data *xdata)
++static inline int __cw1200_reg_write_16(struct cw1200_common *priv,
++					u16 addr, u16 val)
 +{
-+	struct hci_rp_read_local_version *read_ver_rsp;
-+	struct patch_info *patch_entry;
-+	int ret_val;
-+
-+	xdata->cmd_hdr->opcode = cpu_to_le16(HCI_OP_READ_LOCAL_VERSION);
-+	xdata->cmd_hdr->plen = 0;
-+	xdata->pkt_len = CMD_HDR_LEN;
-+
-+	ret_val = send_hci_cmd(xdata);
-+	if (ret_val < 0)
-+		goto version_end;
-+
-+	ret_val = rcv_hci_evt(xdata);
-+	if (ret_val < 0)
-+		goto version_end;
-+
-+	patch_entry = xdata->dev_entry->patch_entry;
-+	read_ver_rsp = (struct hci_rp_read_local_version *)(xdata->rsp_para);
-+	BT_DBG("check_fw_version : read_ver_rsp->lmp_subver = 0x%x",
-+	       le16_to_cpu(read_ver_rsp->lmp_subver));
-+	if (patch_entry->lmp_sub != le16_to_cpu(read_ver_rsp->lmp_subver))
-+		return 1;
-+
-+	ret_val = 0;
-+version_end:
-+	return ret_val;
++	val = cpu_to_le16(val);
++	return __cw1200_reg_write(priv, addr, &val, sizeof(val), 0);
 +}
 +
-+static void bt_fw_cb(const struct firmware *firmware, void *context)
++int cw1200_reg_read(struct cw1200_common *priv, u16 addr, void *buf,
++			size_t buf_len)
 +{
-+	struct dev_data *dev_entry = context;
-+
-+	dev_entry->fw = firmware;
-+	if (!firmware)
-+		pr_err("In callback routine, firmware file not available\n");
-+	complete(&dev_entry->firmware_loading_complete);
++	int ret;
++	priv->sbus_ops->lock(priv->sbus_priv);
++	ret = __cw1200_reg_read(priv, addr, buf, buf_len, 0);
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
 +}
 +
-+static int load_firmware(struct dev_data *dev_entry, uint8_t **buff)
++int cw1200_reg_write(struct cw1200_common *priv, u16 addr, const void *buf,
++			size_t buf_len)
 +{
-+#if LOAD_CONFIG
-+	const struct firmware *fw;
-+#endif
-+	struct usb_device *udev;
-+	struct patch_info *patch_entry;
-+	char *fw_name;
-+	int fw_len = 0, ret_val;
-+
-+	udev = dev_entry->udev;
-+	init_completion(&dev_entry->firmware_loading_complete);
-+	patch_entry = dev_entry->patch_entry;
-+	fw_name = patch_entry->patch_name;
-+	BT_DBG("Reading firmware file %s", fw_name);
-+	ret_val = request_firmware_nowait(THIS_MODULE, 1, fw_name, &udev->dev,
-+					  GFP_KERNEL, dev_entry, bt_fw_cb);
-+	if (ret_val < 0)
-+		goto fw_fail;
-+
-+	wait_for_completion(&dev_entry->firmware_loading_complete);
-+	if (!dev_entry->fw)
-+		goto fw_fail;
-+	*buff = kzalloc(dev_entry->fw->size, GFP_KERNEL);
-+	if (NULL == *buff)
-+		goto alloc_fail;
-+	memcpy(*buff, dev_entry->fw->data, dev_entry->fw->size);
-+	fw_len = dev_entry->fw->size;
-+
-+#if LOAD_CONFIG
-+	release_firmware(dev_entry->fw);
-+	fw_name = patch_entry->config_name;
-+	ret_val = request_firmware(&fw, fw_name, &udev->dev);
-+	if (ret_val < 0) {
-+		fw_len = 0;
-+		kfree(*buff);
-+		*buff = NULL;
-+		goto fw_fail;
-+	}
-+
-+	*buff = krealloc(*buff, fw_len + fw->size, GFP_KERNEL);
-+	if (NULL == *buff) {
-+		fw_len = 0;
-+		release_firmware(fw);
-+		goto fw_fail;
-+	}
-+	memcpy(*buff + fw_len, fw->data, fw->size);
-+	fw_len += fw->size;
-+#endif
-+
-+alloc_fail:
-+	release_firmware(dev_entry->fw);
-+fw_fail:
-+	return fw_len;
++	int ret;
++	priv->sbus_ops->lock(priv->sbus_priv);
++	ret = __cw1200_reg_write(priv, addr, buf, buf_len, 0);
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
 +}
 +
-+static int get_firmware(struct xchange_data *xdata)
++int cw1200_data_read(struct cw1200_common *priv, void *buf, size_t buf_len)
 +{
-+	struct dev_data	*dev_entry;
-+	struct patch_info *patch_entry;
++	int ret, retry = 1;
++	int buf_id_rx = priv->buf_id_rx;
 +
-+	dev_entry = xdata->dev_entry;
-+	patch_entry = dev_entry->patch_entry;
-+	if (patch_entry->fw_len > 0) {
-+		xdata->fw_data = kzalloc(patch_entry->fw_len, GFP_KERNEL);
-+		if (NULL == xdata->fw_data)
-+			return -ENOMEM;
-+		memcpy(xdata->fw_data, patch_entry->fw_cache,
-+		       patch_entry->fw_len);
-+		xdata->fw_len = patch_entry->fw_len;
-+	} else {
-+		xdata->fw_len = load_firmware(dev_entry, &xdata->fw_data);
-+		if (xdata->fw_len <= 0)
-+			return -1;
-+	}
++	priv->sbus_ops->lock(priv->sbus_priv);
 +
-+	return 0;
-+}
-+
-+static int download_patch(struct usb_interface *intf)
-+{
-+	struct dev_data		*dev_entry;
-+	uint8_t			*fw_buf;
-+	int			ret_val;
-+
-+	BT_DBG("download_patch start");
-+	dev_entry = dev_data_find(intf);
-+	if (NULL == dev_entry) {
-+		ret_val = -1;
-+		BT_DBG("NULL == dev_entry");
-+		goto patch_end;
-+	}
-+
-+	init_xdata(&dev_entry->xdata, dev_entry);
-+	ret_val = check_fw_version(&dev_entry->xdata);
-+	if (ret_val != 0)
-+		goto patch_end;
-+
-+	ret_val = get_firmware(&dev_entry->xdata);
-+	if (ret_val < 0) {
-+		BT_DBG("get_firmware failed!");
-+		goto patch_end;
-+	}
-+	fw_buf = dev_entry->xdata.fw_data;
-+
-+	ret_val = download_data(&dev_entry->xdata);
-+	if (ret_val < 0) {
-+		BT_DBG("download_data failed!");
-+		goto patch_fail;
-+	}
-+
-+	ret_val = check_fw_version(&dev_entry->xdata);
-+	if (ret_val <= 0) {
-+		ret_val = -1;
-+		goto patch_fail;
-+	}
-+
-+	ret_val = 0;
-+patch_fail:
-+	kfree(fw_buf);
-+patch_end:
-+	BT_DBG("Rtk patch end %d", ret_val);
-+	return ret_val;
-+}
-+
-+static int btusb_open(struct hci_dev *hdev)
-+{
-+	struct btusb_data *data = hci_get_drvdata(hdev);
-+	int err;
-+
-+	BT_DBG("%s", hdev->name);
-+
-+	err = usb_autopm_get_interface(data->intf);
-+	if (err < 0)
-+		return err;
-+
-+	data->intf->needs_remote_wakeup = 1;
-+	BT_DBG("%s start pm_usage_cnt(0x%x)", __func__,
-+		 atomic_read(&(data->intf->pm_usage_cnt)));
-+
-+	/*******************************/
-+	if (0 == atomic_read(&hdev->promisc)) {
-+		BT_DBG("btusb_open hdev->promisc == 0");
-+		err = -1;
-+	}
-+	err = download_patch(data->intf);
-+	if (err < 0)
-+		goto failed;
-+	/*******************************/
-+
-+	if (test_and_set_bit(HCI_RUNNING, &hdev->flags))
-+		goto done;
-+
-+	if (test_and_set_bit(BTUSB_INTR_RUNNING, &data->flags))
-+		goto done;
-+
-+	err = btusb_submit_intr_urb(hdev, GFP_KERNEL);
-+	if (err < 0)
-+		goto failed;
-+
-+	err = btusb_submit_bulk_urb(hdev, GFP_KERNEL);
-+	if (err < 0) {
-+		mdelay(URB_CANCELING_DELAY_MS);      /*  Added by Realtek */
-+		usb_kill_anchored_urbs(&data->intr_anchor);
-+		goto failed;
-+	}
-+
-+	set_bit(BTUSB_BULK_RUNNING, &data->flags);
-+	btusb_submit_bulk_urb(hdev, GFP_KERNEL);
-+
-+done:
-+	usb_autopm_put_interface(data->intf);
-+	BT_DBG("%s end  pm_usage_cnt(0x%x)", __func__,
-+		  atomic_read(&(data->intf->pm_usage_cnt)));
-+
-+	return 0;
-+
-+failed:
-+	clear_bit(BTUSB_INTR_RUNNING, &data->flags);
-+	clear_bit(HCI_RUNNING, &hdev->flags);
-+	usb_autopm_put_interface(data->intf);
-+	BT_DBG("%s failed  pm_usage_cnt(0x%x)", __func__,
-+		  atomic_read(&(data->intf->pm_usage_cnt)));
-+	return err;
-+}
-+
-+static int btusb_close(struct hci_dev *hdev)
-+{
-+	struct btusb_data *data = hci_get_drvdata(hdev);
-+	int i, err;
-+
-+	if (!test_and_clear_bit(HCI_RUNNING, &hdev->flags))
-+		return 0;
-+
-+	BT_DBG("btusb_close");
-+	/*******************************/
-+	for (i = 0; i < NUM_REASSEMBLY; i++) {
-+		if (hdev->reassembly[i])	{
-+			kfree_skb(hdev->reassembly[i]);
-+			hdev->reassembly[i] = NULL;
-+			BT_DBG("%s free ressembly i =%d", __func__, i);
-+		}
-+	}
-+	/*******************************/
-+	cancel_work_sync(&data->work);
-+	cancel_work_sync(&data->waker);
-+
-+	clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+	clear_bit(BTUSB_BULK_RUNNING, &data->flags);
-+	clear_bit(BTUSB_INTR_RUNNING, &data->flags);
-+
-+	btusb_stop_traffic(data);
-+	err = usb_autopm_get_interface(data->intf);
-+	if (err < 0)
-+		goto failed;
-+
-+	data->intf->needs_remote_wakeup = 0;
-+	usb_autopm_put_interface(data->intf);
-+
-+failed:
-+	mdelay(URB_CANCELING_DELAY_MS);     /*  Added by Realtek */
-+	usb_scuttle_anchored_urbs(&data->deferred);
-+	return 0;
-+}
-+
-+static inline int __set_isoc_interface(struct hci_dev *hdev, int altsetting)
-+{
-+	struct btusb_data *data = hci_get_drvdata(hdev);
-+	struct usb_interface *intf = data->isoc;
-+	struct usb_endpoint_descriptor *ep_desc;
-+	int i, err;
-+
-+	if (!data->isoc)
-+		return -ENODEV;
-+
-+	err = usb_set_interface(data->udev, 1, altsetting);
-+	if (err < 0) {
-+		BT_ERR("%s setting interface failed (%d)", hdev->name, -err);
-+		return err;
-+	}
-+
-+	data->isoc_altsetting = altsetting;
-+
-+	data->isoc_tx_ep = NULL;
-+	data->isoc_rx_ep = NULL;
-+
-+	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; i++) {
-+		ep_desc = &intf->cur_altsetting->endpoint[i].desc;
-+
-+		if (!data->isoc_tx_ep && usb_endpoint_is_isoc_out(ep_desc)) {
-+			data->isoc_tx_ep = ep_desc;
-+			continue;
-+		}
-+
-+		if (!data->isoc_rx_ep && usb_endpoint_is_isoc_in(ep_desc)) {
-+			data->isoc_rx_ep = ep_desc;
-+			continue;
-+		}
-+	}
-+
-+	if (!data->isoc_tx_ep || !data->isoc_rx_ep) {
-+		BT_ERR("%s invalid SCO descriptors", hdev->name);
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
-+static void btusb_work(struct work_struct *work)
-+{
-+	struct btusb_data *data = container_of(work, struct btusb_data, work);
-+	struct hci_dev *hdev = data->hdev;
-+	int err;
-+
-+	if (hdev->conn_hash.sco_num > 0) {
-+		if (!test_bit(BTUSB_DID_ISO_RESUME, &data->flags)) {
-+			err = usb_autopm_get_interface(data->isoc ? data->isoc :
-+						       data->intf);
-+			if (err < 0) {
-+				clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+				/*  Delay added by Realtek */
-+				mdelay(URB_CANCELING_DELAY_MS);
-+				usb_kill_anchored_urbs(&data->isoc_anchor);
-+				return;
-+			}
-+
-+			set_bit(BTUSB_DID_ISO_RESUME, &data->flags);
-+		}
-+		if (data->isoc_altsetting != 2) {
-+			clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+			mdelay(URB_CANCELING_DELAY_MS);  /*  Added by Realtek */
-+			usb_kill_anchored_urbs(&data->isoc_anchor);
-+
-+			if (__set_isoc_interface(hdev, 2) < 0)
-+				return;
-+		}
-+
-+		if (!test_and_set_bit(BTUSB_ISOC_RUNNING, &data->flags)) {
-+			if (btusb_submit_isoc_urb(hdev, GFP_KERNEL) < 0)
-+				clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+			else
-+				btusb_submit_isoc_urb(hdev, GFP_KERNEL);
-+		}
-+	} else {
-+		clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+		mdelay(URB_CANCELING_DELAY_MS);      /*  Added by Realtek */
-+		usb_kill_anchored_urbs(&data->isoc_anchor);
-+
-+		__set_isoc_interface(hdev, 0);
-+		if (test_and_clear_bit(BTUSB_DID_ISO_RESUME, &data->flags))
-+			usb_autopm_put_interface(data->isoc ? data->isoc :
-+						 data->intf);
-+	}
-+}
-+
-+static struct patch_info *get_patch_entry(struct usb_device *udev)
-+{
-+	struct patch_info	*patch_entry;
-+	uint16_t	pid;
-+
-+	patch_entry = patch_table;
-+	pid = le16_to_cpu(udev->descriptor.idProduct);
-+	while (pid != patch_entry->prod_id) {
-+		if (0 == patch_entry->prod_id)
++	while (retry <= MAX_RETRY) {
++		ret = __cw1200_reg_read(priv,
++					ST90TDS_IN_OUT_QUEUE_REG_ID, buf,
++					buf_len, buf_id_rx + 1);
++		if (!ret) {
++			buf_id_rx = (buf_id_rx + 1) & 3;
++			priv->buf_id_rx = buf_id_rx;
 +			break;
-+		patch_entry++;
-+	}
-+
-+	return patch_entry;
-+}
-+
-+static int rtkbt_pm_notify(struct notifier_block *notifier, ulong pm_event,
-+		    void *unused)
-+{
-+	struct dev_data	*dev_entry;
-+	struct patch_info	*patch_entry;
-+	struct usb_device *udev;
-+
-+	dev_entry = container_of(notifier, struct dev_data, pm_notifier);
-+	patch_entry = dev_entry->patch_entry;
-+	udev = dev_entry->udev;
-+	BT_DBG("rtkbt_pm_notify pm_event =%ld", pm_event);
-+	switch (pm_event) {
-+	case PM_SUSPEND_PREPARE:
-+	case PM_HIBERNATION_PREPARE:
-+		patch_entry->fw_len = load_firmware(dev_entry,
-+						    &patch_entry->fw_cache);
-+		if (patch_entry->fw_len <= 0) {
-+			BT_DBG("rtkbt_pm_notify return NOTIFY_BAD");
-+			return NOTIFY_BAD;
-+		}
-+
-+		if (!device_may_wakeup(&udev->dev)) {
-+			dev_entry->intf->needs_binding = 1;
-+			BT_DBG("remote wakeup not support, set intf->needs_binding = 1");
-+		}
-+		break;
-+	case PM_POST_SUSPEND:
-+	case PM_POST_HIBERNATION:
-+	case PM_POST_RESTORE:
-+		if (patch_entry->fw_len > 0) {
-+			kfree(patch_entry->fw_cache);
-+			patch_entry->fw_cache = NULL;
-+			patch_entry->fw_len = 0;
-+		}
-+#if BTUSB_RPM
-+		usb_disable_autosuspend(udev);
-+		usb_enable_autosuspend(udev);
-+		pm_runtime_set_autosuspend_delay(&(udev->dev), 2000);
-+#endif
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
-+	return NOTIFY_DONE;
-+}
-+
-+static int patch_add(struct usb_interface *intf)
-+{
-+	struct dev_data	*dev_entry;
-+	struct usb_device *udev;
-+
-+	BT_DBG("patch_add");
-+	dev_entry = dev_data_find(intf);
-+	if (NULL != dev_entry)
-+		return -1;
-+
-+	udev = interface_to_usbdev(intf);
-+#if BTUSB_RPM
-+	BT_DBG("auto suspend is enabled");
-+	usb_enable_autosuspend(udev);
-+	pm_runtime_set_autosuspend_delay(&(udev->dev), 2000);
-+#endif
-+
-+	dev_entry = kzalloc(sizeof(struct dev_data), GFP_KERNEL);
-+	dev_entry->intf = intf;
-+	dev_entry->udev = udev;
-+	dev_entry->pm_notifier.notifier_call = rtkbt_pm_notify;
-+	dev_entry->patch_entry = get_patch_entry(udev);
-+	list_add(&dev_entry->list_node, &dev_data_list);
-+	register_pm_notifier(&dev_entry->pm_notifier);
-+
-+	return 0;
-+}
-+
-+static int btusb_probe(struct usb_interface *intf,
-+				const struct usb_device_id *id)
-+{
-+	struct usb_endpoint_descriptor *ep_desc;
-+	struct btusb_data *data;
-+	struct hci_dev *hdev;
-+	int i, err, flag1, flag2;
-+	struct usb_device *udev;
-+	udev = interface_to_usbdev(intf);
-+
-+	BT_DBG("Realtek Bluetooth USB driver ver %s", VERSION);
-+
-+	/* interface numbers are hardcoded in the spec */
-+	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
-+		return -ENODEV;
-+
-+	/*******************************/
-+	flag1 = device_can_wakeup(&udev->dev);
-+	flag2 = device_may_wakeup(&udev->dev);
-+	BT_DBG("btusb_probe 1 ========== can_wakeup =%x	 flag2 =%x",
-+	       flag1, flag2);
-+	device_wakeup_disable(&udev->dev);
-+	flag1 = device_can_wakeup(&udev->dev);
-+	flag2 = device_may_wakeup(&udev->dev);
-+	BT_DBG("wakeup_disable ========== can_wakeup =%x	 flag2 =%x",
-+	       flag1, flag2);
-+	err = patch_add(intf);
-+	if (err < 0)
-+		return -1;
-+	/*******************************/
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+
-+	for (i = 0; i < intf->cur_altsetting->desc.bNumEndpoints; i++) {
-+		ep_desc = &intf->cur_altsetting->endpoint[i].desc;
-+
-+		if (!data->intr_ep && usb_endpoint_is_int_in(ep_desc)) {
-+			data->intr_ep = ep_desc;
-+			continue;
-+		}
-+
-+		if (!data->bulk_tx_ep && usb_endpoint_is_bulk_out(ep_desc)) {
-+			data->bulk_tx_ep = ep_desc;
-+			continue;
-+		}
-+
-+		if (!data->bulk_rx_ep && usb_endpoint_is_bulk_in(ep_desc)) {
-+			data->bulk_rx_ep = ep_desc;
-+			continue;
-+		}
-+	}
-+
-+	if (!data->intr_ep || !data->bulk_tx_ep || !data->bulk_rx_ep) {
-+		kfree(data);
-+		return -ENODEV;
-+	}
-+
-+	data->cmdreq_type = USB_TYPE_CLASS;
-+
-+	data->udev = interface_to_usbdev(intf);
-+	data->intf = intf;
-+
-+	spin_lock_init(&data->lock);
-+
-+	INIT_WORK(&data->work, btusb_work);
-+	INIT_WORK(&data->waker, btusb_waker);
-+	spin_lock_init(&data->txlock);
-+
-+	init_usb_anchor(&data->tx_anchor);
-+	init_usb_anchor(&data->intr_anchor);
-+	init_usb_anchor(&data->bulk_anchor);
-+	init_usb_anchor(&data->isoc_anchor);
-+	init_usb_anchor(&data->deferred);
-+
-+	hdev = hci_alloc_dev();
-+	if (!hdev) {
-+		kfree(data);
-+		return -ENOMEM;
-+	}
-+
-+	HDEV_BUS = HCI_USB;
-+
-+	data->hdev = hdev;
-+
-+	SET_HCIDEV_DEV(hdev, &intf->dev);
-+
-+	hdev->open     = btusb_open;
-+	hdev->close    = btusb_close;
-+	hdev->flush    = btusb_flush;
-+	hdev->send     = btusb_send_frame;
-+	hdev->notify   = btusb_notify;
-+
-+
-+	hci_set_drvdata(hdev, data);
-+
-+	/* Interface numbers are hardcoded in the specification */
-+	data->isoc = usb_ifnum_to_if(data->udev, 1);
-+
-+	if (data->isoc) {
-+		err = usb_driver_claim_interface(&btusb_driver,
-+						 data->isoc, data);
-+		if (err < 0) {
-+			hci_free_dev(hdev);
-+			kfree(data);
-+			return err;
-+		}
-+	}
-+
-+	err = hci_register_dev(hdev);
-+	if (err < 0) {
-+		hci_free_dev(hdev);
-+		kfree(data);
-+		return err;
-+	}
-+
-+	usb_set_intfdata(intf, data);
-+
-+	return 0;
-+}
-+
-+static void patch_remove(struct usb_interface *intf)
-+{
-+	struct dev_data *dev_entry;
-+	struct usb_device *udev;
-+
-+	udev = interface_to_usbdev(intf);
-+#if BTUSB_RPM
-+	usb_disable_autosuspend(udev);
-+#endif
-+
-+	dev_entry = dev_data_find(intf);
-+	if (NULL == dev_entry)
-+		return;
-+
-+	BT_DBG("patch_remove");
-+	list_del(&dev_entry->list_node);
-+	unregister_pm_notifier(&dev_entry->pm_notifier);
-+	kfree(dev_entry);
-+}
-+
-+static void btusb_disconnect(struct usb_interface *intf)
-+{
-+	struct btusb_data *data = usb_get_intfdata(intf);
-+	struct hci_dev *hdev;
-+	struct usb_device *udev;
-+	udev = interface_to_usbdev(intf);
-+
-+	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
-+		return;
-+
-+	if (!data)
-+		return;
-+
-+	BT_DBG("btusb_disconnect");
-+	/*******************************/
-+	patch_remove(intf);
-+	/*******************************/
-+
-+	hdev = data->hdev;
-+
-+	usb_set_intfdata(data->intf, NULL);
-+
-+	if (data->isoc)
-+		usb_set_intfdata(data->isoc, NULL);
-+
-+	hci_unregister_dev(hdev);
-+
-+	if (intf == data->isoc)
-+		usb_driver_release_interface(&btusb_driver, data->intf);
-+	else if (data->isoc)
-+		usb_driver_release_interface(&btusb_driver, data->isoc);
-+
-+	hci_free_dev(hdev);
-+	kfree(data);
-+}
-+
-+#ifdef CONFIG_PM
-+static int set_btoff(struct usb_interface *intf)
-+{
-+	struct dev_data *dev_entry;
-+	int ret_val;
-+
-+	BT_DBG("set_btoff");
-+	dev_entry = dev_data_find(intf);
-+	if (NULL == dev_entry)
-+		return -1;
-+
-+	init_xdata(&dev_entry->xdata, dev_entry);
-+	dev_entry->xdata.cmd_hdr->opcode = cpu_to_le16(BTOFF_OPCODE);
-+	dev_entry->xdata.cmd_hdr->plen = 1;
-+	dev_entry->xdata.pkt_len = CMD_HDR_LEN + 1;
-+	dev_entry->xdata.send_pkt[CMD_HDR_LEN] = 1;
-+
-+	ret_val = send_hci_cmd(&dev_entry->xdata);
-+	if (ret_val < 0)
-+		return ret_val;
-+
-+	ret_val = rcv_hci_evt(&dev_entry->xdata);
-+	if (ret_val < 0)
-+		return ret_val;
-+
-+	BT_DBG("set_btoff done");
-+	return 0;
-+}
-+
-+static int btusb_suspend(struct usb_interface *intf, pm_message_t message)
-+{
-+	struct btusb_data *data = usb_get_intfdata(intf);
-+
-+	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
-+		return 0;
-+
-+	/*******************************/
-+	BT_DBG("btusb_suspend message.event = 0x%x, data->suspend_count =%d",
-+	       message.event, data->suspend_count);
-+	if (!test_bit(HCI_RUNNING, &data->hdev->flags)) {
-+		BT_DBG("btusb_suspend-----bt is off");
-+		set_btoff(data->intf);
-+	}
-+	/*******************************/
-+
-+	if (data->suspend_count++)
-+		return 0;
-+
-+	spin_lock_irq(&data->txlock);
-+	if (!((message.event & PM_EVENT_AUTO) && data->tx_in_flight)) {
-+		set_bit(BTUSB_SUSPENDING, &data->flags);
-+		spin_unlock_irq(&data->txlock);
-+	} else {
-+		spin_unlock_irq(&data->txlock);
-+		data->suspend_count--;
-+		return -EBUSY;
-+	}
-+
-+	cancel_work_sync(&data->work);
-+
-+	btusb_stop_traffic(data);
-+	mdelay(URB_CANCELING_DELAY_MS);      /*  Added by Realtek */
-+	usb_kill_anchored_urbs(&data->tx_anchor);
-+
-+	return 0;
-+}
-+
-+static void play_deferred(struct btusb_data *data)
-+{
-+	struct urb *urb;
-+	int err;
-+
-+	while ((urb = usb_get_from_anchor(&data->deferred))) {
-+
-+		/************************************/
-+		usb_anchor_urb(urb, &data->tx_anchor);
-+		err = usb_submit_urb(urb, GFP_ATOMIC);
-+		if (err < 0) {
-+			BT_ERR("play_deferred urb %p submission failed",  urb);
-+			kfree(urb->setup_packet);
-+			usb_unanchor_urb(urb);
 +		} else {
-+			usb_mark_last_busy(data->udev);
++			retry++;
++			mdelay(1);
++			pr_err("error :[%d]\n", ret);
 +		}
-+		usb_free_urb(urb);
-+		/************************************/
-+		data->tx_in_flight++;
 +	}
-+	mdelay(URB_CANCELING_DELAY_MS);     /*  Added by Realtek */
-+	usb_scuttle_anchored_urbs(&data->deferred);
++
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
 +}
 +
-+static int btusb_resume(struct usb_interface *intf)
++int cw1200_data_write(struct cw1200_common *priv, const void *buf,
++			size_t buf_len)
 +{
-+	struct btusb_data *data = usb_get_intfdata(intf);
-+	struct hci_dev *hdev = data->hdev;
-+	int err = 0;
++	int ret, retry = 1;
++	int buf_id_tx = priv->buf_id_tx;
 +
-+	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
-+		return 0;
++	priv->sbus_ops->lock(priv->sbus_priv);
 +
-+
-+	/*******************************/
-+	BT_DBG("btusb_resume data->suspend_count =%d", data->suspend_count);
-+
-+	if (!test_bit(HCI_RUNNING, &hdev->flags)) {
-+		BT_DBG("btusb_resume-----bt is off, download patch");
-+		download_patch(intf);
-+	} else {
-+		BT_DBG("btusb_resume,----bt is on");
-+	}
-+	/*******************************/
-+	if (--data->suspend_count)
-+		return 0;
-+
-+	if (test_bit(BTUSB_INTR_RUNNING, &data->flags)) {
-+		err = btusb_submit_intr_urb(hdev, GFP_NOIO);
-+		if (err < 0) {
-+			clear_bit(BTUSB_INTR_RUNNING, &data->flags);
-+			goto failed;
++	while (retry <= MAX_RETRY) {
++		ret = __cw1200_reg_write(priv,
++					 ST90TDS_IN_OUT_QUEUE_REG_ID, buf,
++					 buf_len, buf_id_tx);
++		if (!ret) {
++			buf_id_tx = (buf_id_tx + 1) & 31;
++			priv->buf_id_tx = buf_id_tx;
++			break;
++		} else {
++			retry++;
++			mdelay(1);
++			pr_err("error :[%d]\n", ret);
 +		}
 +	}
 +
-+	if (test_bit(BTUSB_BULK_RUNNING, &data->flags)) {
-+		err = btusb_submit_bulk_urb(hdev, GFP_NOIO);
-+		if (err < 0) {
-+			clear_bit(BTUSB_BULK_RUNNING, &data->flags);
-+			goto failed;
-+		}
-+
-+		btusb_submit_bulk_urb(hdev, GFP_NOIO);
-+	}
-+
-+	if (test_bit(BTUSB_ISOC_RUNNING, &data->flags)) {
-+		if (btusb_submit_isoc_urb(hdev, GFP_NOIO) < 0)
-+			clear_bit(BTUSB_ISOC_RUNNING, &data->flags);
-+		else
-+			btusb_submit_isoc_urb(hdev, GFP_NOIO);
-+	}
-+
-+	spin_lock_irq(&data->txlock);
-+	play_deferred(data);
-+	clear_bit(BTUSB_SUSPENDING, &data->flags);
-+	spin_unlock_irq(&data->txlock);
-+	schedule_work(&data->work);
-+
-+	return 0;
-+
-+failed:
-+	mdelay(URB_CANCELING_DELAY_MS);      /*  Added by Realtek */
-+	usb_scuttle_anchored_urbs(&data->deferred);
-+/* done: */
-+	spin_lock_irq(&data->txlock);
-+	clear_bit(BTUSB_SUSPENDING, &data->flags);
-+	spin_unlock_irq(&data->txlock);
-+
-+	return err;
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
 +}
-+#endif
 +
-+static struct usb_driver btusb_driver = {
-+	.name		= "rtk_btusb",
-+	.probe		= btusb_probe,
-+	.disconnect	= btusb_disconnect,
-+#ifdef CONFIG_PM
-+	.suspend	= btusb_suspend,
-+	.resume		= btusb_resume,
-+#endif
-+	.id_table	= btusb_table,
-+	.supports_autosuspend = 1,
-+};
++int cw1200_indirect_read(struct cw1200_common *priv, u32 addr, void *buf,
++			 size_t buf_len, u32 prefetch, u16 port_addr)
++{
++	u32 val32 = 0;
++	int i, ret;
 +
++	if ((buf_len / 2) >= 0x1000) {
++		pr_err("Can't read more than 0xfff words.\n");
++		return -EINVAL;
++		goto out;
++	}
 +
-+module_usb_driver(btusb_driver);
++	priv->sbus_ops->lock(priv->sbus_priv);
++	/* Write address */
++	ret = __cw1200_reg_write_32(priv, ST90TDS_SRAM_BASE_ADDR_REG_ID, addr);
++	if (ret < 0) {
++		pr_err("Can't write address register.\n");
++		goto out;
++	}
 +
-+MODULE_AUTHOR("Edward Bian <edward_bian@realsil.com.cn>");
-+MODULE_DESCRIPTION("Realtek Bluetooth USB driver ver " VERSION);
-+MODULE_VERSION(VERSION);
-+MODULE_LICENSE("GPL");
-+MODULE_FIRMWARE("rtl_bt/rtl8723a.bin");
-diff --git a/drivers/bluetooth/rtk_btusb.h b/drivers/bluetooth/rtk_btusb.h
++	/* Read CONFIG Register Value - We will read 32 bits */
++	ret = __cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
++	if (ret < 0) {
++		pr_err("Can't read config register.\n");
++		goto out;
++	}
++
++	/* Set PREFETCH bit */
++	ret = __cw1200_reg_write_32(priv, ST90TDS_CONFIG_REG_ID,
++					val32 | prefetch);
++	if (ret < 0) {
++		pr_err("Can't write prefetch bit.\n");
++		goto out;
++	}
++
++	/* Check for PRE-FETCH bit to be cleared */
++	for (i = 0; i < 20; i++) {
++		ret = __cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
++		if (ret < 0) {
++			pr_err("Can't check prefetch bit.\n");
++			goto out;
++		}
++		if (!(val32 & prefetch))
++			break;
++
++		mdelay(i);
++	}
++
++	if (val32 & prefetch) {
++		pr_err("Prefetch bit is not cleared.\n");
++		goto out;
++	}
++
++	/* Read data port */
++	ret = __cw1200_reg_read(priv, port_addr, buf, buf_len, 0);
++	if (ret < 0) {
++		pr_err("Can't read data port.\n");
++		goto out;
++	}
++
++out:
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
++}
++
++int cw1200_apb_write(struct cw1200_common *priv, u32 addr, const void *buf,
++			size_t buf_len)
++{
++	int ret;
++
++	if ((buf_len / 2) >= 0x1000) {
++		pr_err("Can't write more than 0xfff words.\n");
++		return -EINVAL;
++	}
++
++	priv->sbus_ops->lock(priv->sbus_priv);
++
++	/* Write address */
++	ret = __cw1200_reg_write_32(priv, ST90TDS_SRAM_BASE_ADDR_REG_ID, addr);
++	if (ret < 0) {
++		pr_err("Can't write address register.\n");
++		goto out;
++	}
++
++	/* Write data port */
++	ret = __cw1200_reg_write(priv, ST90TDS_SRAM_DPORT_REG_ID,
++					buf, buf_len, 0);
++	if (ret < 0) {
++		pr_err("Can't write data port.\n");
++		goto out;
++	}
++
++out:
++	priv->sbus_ops->unlock(priv->sbus_priv);
++	return ret;
++}
++
++int __cw1200_irq_enable(struct cw1200_common *priv, int enable)
++{
++	u32 val32;
++	u16 val16;
++	int ret;
++
++	if (HIF_8601_SILICON == priv->hw_type) {
++		ret = __cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
++		if (ret < 0) {
++			pr_err("Can't read config register.\n");
++			return ret;
++		}
++
++		if (enable)
++			val32 |= ST90TDS_CONF_IRQ_RDY_ENABLE;
++		else
++			val32 &= ~ST90TDS_CONF_IRQ_RDY_ENABLE;
++
++		ret = __cw1200_reg_write_32(priv, ST90TDS_CONFIG_REG_ID, val32);
++		if (ret < 0) {
++			pr_err("Can't write config register.\n");
++			return ret;
++		}
++	} else {
++		ret = __cw1200_reg_read_16(priv, ST90TDS_CONFIG_REG_ID, &val16);
++		if (ret < 0) {
++			pr_err("Can't read control register.\n");
++			return ret;
++		}
++
++		if (enable)
++			val16 |= ST90TDS_CONT_IRQ_RDY_ENABLE;
++		else
++			val16 &= ~ST90TDS_CONT_IRQ_RDY_ENABLE;
++
++		ret = __cw1200_reg_write_16(priv, ST90TDS_CONFIG_REG_ID, val16);
++		if (ret < 0) {
++			pr_err("Can't write control register.\n");
++			return ret;
++		}
++	}
++	return 0;
++}
+diff --git a/drivers/net/wireless/cw1200/hwio.h b/drivers/net/wireless/cw1200/hwio.h
 new file mode 100644
-index 0000000..0c55dd6
+index 0000000..7ee73fe
 --- /dev/null
-+++ b/drivers/bluetooth/rtk_btusb.h
-@@ -0,0 +1,102 @@
++++ b/drivers/net/wireless/cw1200/hwio.h
+@@ -0,0 +1,247 @@
 +/*
++ * Low-level API for mac80211 ST-Ericsson CW1200 drivers
 + *
-+ *  Realtek Bluetooth USB driver
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@lockless.no>
 + *
-+ *  Copyright (C) 2012-2013  Edward Bian <edward_bian@realsil.com.cn>
++ * Based on:
++ * ST-Ericsson UMAC CW1200 driver which is
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Ajitpal Singh <ajitpal.singh@stericsson.com>
 + *
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
 + */
 +
-+#ifndef RTK_BTUSB_H
-+#define RTK_BTUSB_H
++#ifndef CW1200_HWIO_H_INCLUDED
++#define CW1200_HWIO_H_INCLUDED
 +
-+#define HDEV_BUS			(hdev->bus)
-+#define USB_RPM				1
++/* extern */ struct cw1200_common;
 +
-+#define BTUSB_RPM			0	/*1 SS enable; 0 SS disable */
-+#define LOAD_CONFIG			0
-+#define URB_CANCELING_DELAY_MS		10   /*  Added by Realtek */
++#define CW1200_CUT_11_ID_STR		(0x302E3830)
++#define CW1200_CUT_22_ID_STR1		(0x302e3132)
++#define CW1200_CUT_22_ID_STR2		(0x32302e30)
++#define CW1200_CUT_22_ID_STR3		(0x3335)
++#define CW1200_CUT_ID_ADDR		(0xFFF17F90)
++#define CW1200_CUT2_ID_ADDR		(0xFFF1FF90)
 +
-+#define BTUSB_MAX_ISOC_FRAMES		10
-+#define BTUSB_INTR_RUNNING		0
-+#define BTUSB_BULK_RUNNING		1
-+#define BTUSB_ISOC_RUNNING		2
-+#define BTUSB_SUSPENDING		3
-+#define BTUSB_DID_ISO_RESUME		4
++/* Download control area */
++/* boot loader start address in SRAM */
++#define DOWNLOAD_BOOT_LOADER_OFFSET	(0x00000000)
++/* 32K, 0x4000 to 0xDFFF */
++#define DOWNLOAD_FIFO_OFFSET		(0x00004000)
++/* 32K */
++#define DOWNLOAD_FIFO_SIZE		(0x00008000)
++/* 128 bytes, 0xFF80 to 0xFFFF */
++#define DOWNLOAD_CTRL_OFFSET		(0x0000FF80)
++#define DOWNLOAD_CTRL_DATA_DWORDS	(32-6)
 +
-+#define CMD_CMP_EVT			0x0e
-+#define PKT_LEN				300
-+#define MSG_TO				1000
-+#define PATCH_SEG_MAX			252
-+#define DATA_END			0x80
-+#define DOWNLOAD_OPCODE			0xfc20
-+#define BTOFF_OPCODE			0xfc28
-+#define CMD_HDR_LEN			sizeof(struct hci_command_hdr)
-+#define EVT_HDR_LEN			sizeof(struct hci_event_hdr)
-+#define CMD_CMP_LEN			sizeof(struct hci_ev_cmd_complete)
-+
-+enum rtk_endpoit {
-+	CTRL_EP = 0,
-+	INTR_EP = 1,
-+	BULK_EP = 2,
-+	ISOC_EP = 3
++struct download_cntl_t {
++	/* size of whole firmware file (including Cheksum), host init */
++	u32 image_size;
++	/* downloading flags */
++	u32 flags;
++	/* No. of bytes put into the download, init & updated by host */
++	u32 put;
++	/* last traced program counter, last ARM reg_pc */
++	u32 trace_pc;
++	/* No. of bytes read from the download, host init, device updates */
++	u32 get;
++	/* r0, boot losader status, host init to pending, device updates */
++	u32 status;
++	/* Extra debug info, r1 to r14 if status=r0=DOWNLOAD_EXCEPTION */
++	u32 debug_data[DOWNLOAD_CTRL_DATA_DWORDS];
 +};
 +
-+struct patch_info {
-+	uint16_t	prod_id;
-+	uint16_t	lmp_sub;
-+	char		*patch_name;
-+	char		*config_name;
-+	uint8_t		*fw_cache;
-+	int		fw_len;
-+};
++#define	DOWNLOAD_IMAGE_SIZE_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, image_size))
++#define	DOWNLOAD_FLAGS_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, flags))
++#define DOWNLOAD_PUT_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, put))
++#define DOWNLOAD_TRACE_PC_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, trace_pc))
++#define	DOWNLOAD_GET_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, get))
++#define	DOWNLOAD_STATUS_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, status))
++#define DOWNLOAD_DEBUG_DATA_REG		\
++	(DOWNLOAD_CTRL_OFFSET + offsetof(struct download_cntl_t, debug_data))
++#define DOWNLOAD_DEBUG_DATA_LEN		(108)
 +
-+struct xchange_data {
-+	struct dev_data	*dev_entry;
-+	int pipe_in, pipe_out;
-+	uint8_t send_pkt[PKT_LEN];
-+	uint8_t rcv_pkt[PKT_LEN];
-+	struct hci_command_hdr *cmd_hdr;
-+	struct hci_event_hdr *evt_hdr;
-+	struct hci_ev_cmd_complete *cmd_cmp;
-+	uint8_t *req_para, *rsp_para;
-+	uint8_t *fw_data;
-+	int pkt_len, fw_len;
-+};
++#define DOWNLOAD_BLOCK_SIZE		(1024)
 +
-+struct dev_data {
-+	struct list_head	list_node;
-+	struct usb_interface	*intf;
-+	struct usb_device	*udev;
-+	struct notifier_block	pm_notifier;
-+	struct patch_info	*patch_entry;
-+	struct xchange_data	xdata;
-+	struct completion firmware_loading_complete;
-+	const struct firmware *fw;
-+};
++/* For boot loader detection */
++#define DOWNLOAD_ARE_YOU_HERE		(0x87654321)
++#define DOWNLOAD_I_AM_HERE		(0x12345678)
 +
-+struct download_cp {
-+	uint8_t index;
-+	uint8_t data[PATCH_SEG_MAX];
-+} __packed;
++/* Download error code */
++#define DOWNLOAD_PENDING		(0xFFFFFFFF)
++#define DOWNLOAD_SUCCESS		(0)
++#define DOWNLOAD_EXCEPTION		(1)
++#define DOWNLOAD_ERR_MEM_1		(2)
++#define DOWNLOAD_ERR_MEM_2		(3)
++#define DOWNLOAD_ERR_SOFTWARE		(4)
++#define DOWNLOAD_ERR_FILE_SIZE		(5)
++#define DOWNLOAD_ERR_CHECKSUM		(6)
++#define DOWNLOAD_ERR_OVERFLOW		(7)
++#define DOWNLOAD_ERR_IMAGE		(8)
++#define DOWNLOAD_ERR_HOST		(9)
++#define DOWNLOAD_ERR_ABORT		(10)
 +
-+struct download_rp {
-+	uint8_t status;
-+	uint8_t index;
-+} __packed;
 +
-+#endif
++#define SYS_BASE_ADDR_SILICON		(0)
++#define PAC_BASE_ADDRESS_SILICON	(SYS_BASE_ADDR_SILICON + 0x09000000)
++#define PAC_SHARED_MEMORY_SILICON	(PAC_BASE_ADDRESS_SILICON)
++
++#define CW1200_APB(addr)		(PAC_SHARED_MEMORY_SILICON + (addr))
++
++/* ***************************************************************
++*Device register definitions
++*************************************************************** */
++/* WBF - SPI Register Addresses */
++#define ST90TDS_ADDR_ID_BASE		(0x0000)
++/* 16/32 bits */
++#define ST90TDS_CONFIG_REG_ID		(0x0000)
++/* 16/32 bits */
++#define ST90TDS_CONTROL_REG_ID		(0x0001)
++/* 16 bits, Q mode W/R */
++#define ST90TDS_IN_OUT_QUEUE_REG_ID	(0x0002)
++/* 32 bits, AHB bus R/W */
++#define ST90TDS_AHB_DPORT_REG_ID	(0x0003)
++/* 16/32 bits */
++#define ST90TDS_SRAM_BASE_ADDR_REG_ID   (0x0004)
++/* 32 bits, APB bus R/W */
++#define ST90TDS_SRAM_DPORT_REG_ID	(0x0005)
++/* 32 bits, t_settle/general */
++#define ST90TDS_TSET_GEN_R_W_REG_ID	(0x0006)
++/* 16 bits, Q mode read, no length */
++#define ST90TDS_FRAME_OUT_REG_ID	(0x0007)
++#define ST90TDS_ADDR_ID_MAX		(ST90TDS_FRAME_OUT_REG_ID)
++
++/* WBF - Control register bit set */
++/* next o/p length, bit 11 to 0 */
++#define ST90TDS_CONT_NEXT_LEN_MASK	(0x0FFF)
++#define ST90TDS_CONT_WUP_BIT		(BIT(12))
++#define ST90TDS_CONT_RDY_BIT		(BIT(13))
++#define ST90TDS_CONT_IRQ_ENABLE		(BIT(14))
++#define ST90TDS_CONT_RDY_ENABLE		(BIT(15))
++#define ST90TDS_CONT_IRQ_RDY_ENABLE	(BIT(14)|BIT(15))
++
++/* SPI Config register bit set */
++#define ST90TDS_CONFIG_FRAME_BIT	(BIT(2))
++#define ST90TDS_CONFIG_WORD_MODE_BITS	(BIT(3)|BIT(4))
++#define ST90TDS_CONFIG_WORD_MODE_1	(BIT(3))
++#define ST90TDS_CONFIG_WORD_MODE_2	(BIT(4))
++#define ST90TDS_CONFIG_ERROR_0_BIT	(BIT(5))
++#define ST90TDS_CONFIG_ERROR_1_BIT	(BIT(6))
++#define ST90TDS_CONFIG_ERROR_2_BIT	(BIT(7))
++/* TBD: Sure??? */
++#define ST90TDS_CONFIG_CSN_FRAME_BIT	(BIT(7))
++#define ST90TDS_CONFIG_ERROR_3_BIT	(BIT(8))
++#define ST90TDS_CONFIG_ERROR_4_BIT	(BIT(9))
++/* QueueM */
++#define ST90TDS_CONFIG_ACCESS_MODE_BIT	(BIT(10))
++/* AHB bus */
++#define ST90TDS_CONFIG_AHB_PRFETCH_BIT	(BIT(11))
++#define ST90TDS_CONFIG_CPU_CLK_DIS_BIT	(BIT(12))
++/* APB bus */
++#define ST90TDS_CONFIG_PRFETCH_BIT	(BIT(13))
++/* cpu reset */
++#define ST90TDS_CONFIG_CPU_RESET_BIT	(BIT(14))
++#define ST90TDS_CONFIG_CLEAR_INT_BIT	(BIT(15))
++
++/* For CW1200 the IRQ Enable and Ready Bits are in CONFIG register */
++#define ST90TDS_CONF_IRQ_ENABLE		(BIT(16))
++#define ST90TDS_CONF_RDY_ENABLE		(BIT(17))
++#define ST90TDS_CONF_IRQ_RDY_ENABLE	(BIT(16)|BIT(17))
++
++int cw1200_data_read(struct cw1200_common *priv,
++		     void *buf, size_t buf_len);
++int cw1200_data_write(struct cw1200_common *priv,
++		      const void *buf, size_t buf_len);
++
++int cw1200_reg_read(struct cw1200_common *priv, u16 addr,
++		    void *buf, size_t buf_len);
++int cw1200_reg_write(struct cw1200_common *priv, u16 addr,
++		     const void *buf, size_t buf_len);
++
++static inline int cw1200_reg_read_16(struct cw1200_common *priv,
++				     u16 addr, u16 *val)
++{
++	u32 tmp;
++	int i;
++	i = cw1200_reg_read(priv, addr, &tmp, sizeof(tmp));
++	tmp = le32_to_cpu(tmp);
++	*val = tmp & 0xffff;
++	return i;
++}
++
++static inline int cw1200_reg_write_16(struct cw1200_common *priv,
++				      u16 addr, u16 val)
++{
++	u32 tmp = val;
++	tmp = cpu_to_le32(tmp);
++	return cw1200_reg_write(priv, addr, &tmp, sizeof(tmp));
++}
++
++static inline int cw1200_reg_read_32(struct cw1200_common *priv,
++				     u16 addr, u32 *val)
++{
++	int i = cw1200_reg_read(priv, addr, val, sizeof(*val));
++	*val = le32_to_cpu(*val);
++	return i;
++}
++
++static inline int cw1200_reg_write_32(struct cw1200_common *priv,
++				      u16 addr, u32 val)
++{
++	val = cpu_to_le32(val);
++	return cw1200_reg_write(priv, addr, &val, sizeof(val));
++}
++
++int cw1200_indirect_read(struct cw1200_common *priv, u32 addr, void *buf,
++			 size_t buf_len, u32 prefetch, u16 port_addr);
++int cw1200_apb_write(struct cw1200_common *priv, u32 addr, const void *buf,
++		     size_t buf_len);
++
++static inline int cw1200_apb_read(struct cw1200_common *priv, u32 addr,
++				  void *buf, size_t buf_len)
++{
++	return cw1200_indirect_read(priv, addr, buf, buf_len,
++				    ST90TDS_CONFIG_PRFETCH_BIT,
++				    ST90TDS_SRAM_DPORT_REG_ID);
++}
++
++static inline int cw1200_ahb_read(struct cw1200_common *priv, u32 addr,
++				  void *buf, size_t buf_len)
++{
++	return cw1200_indirect_read(priv, addr, buf, buf_len,
++				    ST90TDS_CONFIG_AHB_PRFETCH_BIT,
++				    ST90TDS_AHB_DPORT_REG_ID);
++}
++
++static inline int cw1200_apb_read_32(struct cw1200_common *priv,
++				     u32 addr, u32 *val)
++{
++	int i = cw1200_apb_read(priv, addr, val, sizeof(*val));
++	*val = le32_to_cpu(*val);
++	return i;
++}
++
++static inline int cw1200_apb_write_32(struct cw1200_common *priv,
++				      u32 addr, u32 val)
++{
++	val = cpu_to_le32(val);
++	return cw1200_apb_write(priv, addr, &val, sizeof(val));
++}
++static inline int cw1200_ahb_read_32(struct cw1200_common *priv,
++				     u32 addr, u32 *val)
++{
++	int i = cw1200_ahb_read(priv, addr, val, sizeof(*val));
++	*val = le32_to_cpu(*val);
++	return i;
++}
++
++#endif /* CW1200_HWIO_H_INCLUDED */
 -- 
 1.8.1.4
 
