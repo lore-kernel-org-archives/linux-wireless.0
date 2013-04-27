@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:55185 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933377Ab3DGMXX (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:43275 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753549Ab3D0PDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Apr 2013 08:23:23 -0400
+	Sat, 27 Apr 2013 11:03:01 -0400
+Received: by mail-ob0-f174.google.com with SMTP id wc20so4365390obb.33
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 08:03:00 -0700 (PDT)
+Message-ID: <517BE8A2.3020202@lwfinger.net> (sfid-20130427_170313_618009_5413339A)
+Date: Sat, 27 Apr 2013 10:02:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	<20130304134949.GB3021@redhat.com>
-	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-	<20130304154832.GD3021@redhat.com>
-	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-	<CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-	<CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
-	<CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
-	<CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
-Date: Sun, 7 Apr 2013 15:23:21 +0300
-Message-ID: <CANUX_P3Mt3X8JXq5siSijrWGkjeWbTCcdmJ-Fuv6U8jUqrFouQ@mail.gmail.com> (sfid-20130407_142337_471504_785D3E60)
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Kris Reeves <myndzi@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: RTL8192CU / Kconfig
+References: <CABH51ZYepRMcmW4wFUmOf9dcnB4X0X377mmwSXNo9AQGbsNAxA@mail.gmail.com> <CABH51ZbDsx9hg9NtafyOk__62O=yO1sKkW2bf_DHEghSwSd=EQ@mail.gmail.com>
+In-Reply-To: <CABH51ZbDsx9hg9NtafyOk__62O=yO1sKkW2bf_DHEghSwSd=EQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> I attached all the data you needed.
->> The link state seems to go to L1 based on the low power the NIC consumes.
->> So it seems that even if we use pci_disable_link_state() to disabled
->> L1, L1 is still disabled.
->>
+On 04/27/2013 07:02 AM, Kris Reeves wrote:
+> This file:
+> https://github.com/raspberrypi/linux/blob/rpi-3.6.y/drivers/net/wireless/rtl8192cu/Kconfig
 >
-> Ugh... so doesn't make any sense.... so again:
->
-> So it seems that even if we use pci_disable_link_state() to disable
-> L1, the link state still enters L1.
+> Should, I believe, include select statements for WIRELESS_EXT,
+> WEXT_PRIV, and (maybe?) WEXT_SPY (I added it preemptively after the
+> first two stopped compilation...)
 
-ping? :-)
+All three of those are selected in net/wireless/Kconfig, thus they never need to 
+be selected by any specific wireless driver. Once you have NET defined, and are 
+not building for the S390 architecture, they should be automatic.
+
+> The drivers won't compile without those options, but can be enabled in
+> situations where they are not set.
+>
+> I realize this is the raspberry pi github page, but from what I can
+> tell, these files didn't originate there and this driver is in staging
+> on its way to mainline(?)
+
+That driver has never been in staging - it went directly to mainline in kernel 
+2.6.38, i.e. more than two years ago.
+
+> This file:
+> https://github.com/torvalds/linux/blob/master/drivers/net/wireless/rtlwifi/Kconfig
+>
+> appears to be the equivalent and it doesn't look like it contains the
+> relevant lines. I'm uncertain if they are necessary here.
+
+As stated earlier, they are not needed in mainline.
+
+> If you would, please inform me of the correct way to determine who I
+> should report something like this to and how! I know there are various
+> bugtrackers about but I can't seem to work out where I should go with
+> it.
+
+I am convinced that this is not a problem for mainline. I have not used any of 
+the ARM architectures, and it may be a problem there, but I have no way to test. 
+If so, the proper place to submit a patch would be the appropriate ARM tree. 
+Make certain that cfg80211 and mac80211 have been selected. If you are still 
+having a problem, post the .config that you are using *without* changing any of 
+the selection rules for the RTL8192CU.
+
+I have read of alignment problems for the RPi in the lower-level USB routines 
+that affect rtl8192cu, but I don't know any of the details.
+
+Larry
+
+
