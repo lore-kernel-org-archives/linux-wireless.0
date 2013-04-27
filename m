@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:40951 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967156Ab3DSCQ4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab3D0UVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 22:16:56 -0400
-Received: by mail-bk0-f44.google.com with SMTP id jk13so1520654bkc.17
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 19:16:54 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 19 Apr 2013 10:10:03 +0800
-Message-ID: <CAPgLHd8GkC50rYFD0zDRuE3o0JUHBCnSGXQi2jNL9DdK+8pNDA@mail.gmail.com> (sfid-20130419_041659_974381_6B8DFD0B)
-Subject: [PATCH -next] brcmfmac: fix error return code in brcmf_fws_init()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, linville@tuxdriver.com,
-	pieterpg@broadcom.com, phaber@broadcom.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 27 Apr 2013 16:21:40 -0400
+Message-ID: <1367094096.8445.3.camel@jlt4.sipsolutions.net> (sfid-20130427_222144_472244_87CD5D41)
+Subject: Re: Intel Centrino Wireless-N 2230 (rev c4) bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paolo Zaffino <p.zaffino@unicz.it>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Date: Sat, 27 Apr 2013 22:21:36 +0200
+In-Reply-To: <517C18A4.70402@unicz.it> (sfid-20130427_202857_500207_32CC2EAC)
+References: <517BD02A.5060904@unicz.it>
+	  (sfid-20130427_151940_748350_F10D6AF1) <1367085173.8445.0.camel@jlt4.sipsolutions.net>
+	 <517C18A4.70402@unicz.it> (sfid-20130427_202857_500207_32CC2EAC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Sat, 2013-04-27 at 20:27 +0200, Paolo Zaffino wrote:
+> First of all thanks for your support.
+> Can you give me any advice on what look for in my system?
+> I really haven't idea about this strange situation.
 
-Fix to return a negative error code from the error handling
-case instead of 0, as done elsewhere in this function.
+Well, make sure you kill all supplicant processes. I'm guessing you're
+not using your distro's tools (e.g. network-manager) but starting your
+own, and the distro init scripts also start a supplicant process.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Anyway, that's about all I can help you with, everything else would be
+distro specific and then you should ask them for help. Most likely
+they'll just tell you to use the "sanctioned" way though.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 1bcd58c..df2ac2f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -1875,8 +1875,9 @@ int brcmf_fws_init(struct brcmf_pub *drvr)
- 		goto fail;
- 	}
- 
--	if (brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
--				brcmf_fws_notify_credit_map)) {
-+	rc = brcmf_fweh_register(drvr, BRCMF_E_FIFO_CREDIT_MAP,
-+				 brcmf_fws_notify_credit_map);
-+	if (rc) {
- 		brcmf_err("register credit map handler failed\n");
- 		goto fail;
- 	}
+johannes
 
