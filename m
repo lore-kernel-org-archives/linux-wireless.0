@@ -1,49 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:41469 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500Ab3DRMaq (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:57935 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756216Ab3D0T2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Apr 2013 08:30:46 -0400
-Received: by mail-ea0-f182.google.com with SMTP id q15so1209237ead.27
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2013 05:30:45 -0700 (PDT)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 2/2] mac80211: minstrel_ht: initialize rates selection
-Date: Thu, 18 Apr 2013 14:26:21 +0200
-Message-Id: <1366287981-24134-2-git-send-email-karl.beldan@gmail.com> (sfid-20130418_143049_012369_721AC3FB)
-In-Reply-To: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com>
-References: <1366287981-24134-1-git-send-email-karl.beldan@gmail.com>
+	Sat, 27 Apr 2013 15:28:11 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 13/14] cw1200: v6: Module defining platform data for Sagrad SG901-1091/1098 modules
+Date: Sat, 27 Apr 2013 15:27:26 -0400
+Message-Id: <1367090847-11937-14-git-send-email-pizza@shaftnet.org> (sfid-20130427_212936_376838_C7BCB952)
+In-Reply-To: <1367090847-11937-1-git-send-email-pizza@shaftnet.org>
+References: <1367090847-11937-1-git-send-email-pizza@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
-
-Initialize {mp,mi}->{max_tp_rate,max_tp_rate2,max_prob_rate} in
-minstrel_ht's rate_init and rate_update.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/cw1200/cw1200_sagrad.c | 145 ++++++++++++++++++++++++++++
+ 1 file changed, 145 insertions(+)
+ create mode 100644 drivers/net/wireless/cw1200/cw1200_sagrad.c
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index eb6dc3f..5768cc0 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -907,6 +907,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	if (!n_supported)
- 		goto use_legacy;
- 
-+	/* init {mi,mi->groups[*]}->{max_tp_rate,max_tp_rate2,max_prob_rate} */
-+	minstrel_ht_update_stats(mp, mi);
+diff --git a/drivers/net/wireless/cw1200/cw1200_sagrad.c b/drivers/net/wireless/cw1200/cw1200_sagrad.c
+new file mode 100644
+index 0000000..a5ada0e
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/cw1200_sagrad.c
+@@ -0,0 +1,145 @@
++/*
++ * Platform glue data for ST-Ericsson CW1200 driver
++ *
++ * Copyright (c) 2013, Sagrad, Inc
++ * Author: Solomon Peachy <speachy@sagrad.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
- 	return;
- 
- use_legacy:
++#include <linux/module.h>
++#include <linux/cw1200_platform.h>
++
++MODULE_AUTHOR("Solomon Peachy <speachy@sagrad.com>");
++MODULE_DESCRIPTION("ST-Ericsson CW1200 Platform glue driver");
++MODULE_LICENSE("GPL");
++
++/* Define just one of these.  Feel free to customize as needed */
++#define SAGRAD_1091_1098_EVK_SDIO
++/* #define SAGRAD_1091_1098_EVK_SPI */
++
++#ifdef SAGRAD_1091_1098_EVK_SDIO
++#if 0
++static struct resource cw1200_href_resources[] = {
++	{
++		.start = 215,  /* fix me as appropriate */
++		.end = 215,    /* ditto */
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_reset",
++	},
++	{
++		.start = 216,  /* fix me as appropriate */
++		.end = 216,    /* ditto */
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_powerup",
++	},
++	{
++		.start = NOMADIK_GPIO_TO_IRQ(216), /* fix me as appropriate */
++		.end = NOMADIK_GPIO_TO_IRQ(216),   /* ditto */
++		.flags = IORESOURCE_IRQ,
++		.name = "cw1200_wlan_irq",
++	},
++};
++#endif
++
++static int cw1200_power_ctrl(const struct cw1200_platform_data_sdio *pdata,
++			     bool enable)
++{
++	/* Control 3v3 and 1v8 to hardware as appropriate */
++	/* Note this is not needed if it's controlled elsewhere or always on */
++
++	/* May require delay for power to stabilize */
++	return 0;
++}
++
++static int cw1200_clk_ctrl(const struct cw1200_platform_data_sdio *pdata,
++			   bool enable)
++{
++	/* Turn CLK_32K off and on as appropriate. */
++	/* Note this is not needed if it's always on */
++
++	/* May require delay for clock to stabilize */
++	return 0;
++}
++
++static struct cw1200_platform_data_sdio cw1200_platform_data = {
++	.ref_clk = 38400,
++	.have_5ghz = false,
++#if 0
++	.reset = &cw1200_href_resources[0],
++	.powerup = &cw1200_href_resources[1],
++	.irq = &cw1200_href_resources[2],
++#endif
++	.power_ctrl = cw1200_power_ctrl,
++	.clk_ctrl = cw1200_clk_ctrl,
++/*	.macaddr = ??? */
++	.sdd_file = "sdd_sagrad_1091_1098.bin",
++};
++#endif
++
++#ifdef SAGRAD_1091_1098_EVK_SPI
++/* Note that this is an example of integrating into your board support file */
++static struct resource cw1200_href_resources[] = {
++	{
++		.start = GPIO_RF_RESET,
++		.end = GPIO_RF_RESET,
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_reset",
++	},
++	{
++		.start = GPIO_RF_POWERUP,
++		.end = GPIO_RF_POWERUP,
++		.flags = IORESOURCE_IO,
++		.name = "cw1200_wlan_powerup",
++	},
++};
++
++static int cw1200_power_ctrl(const struct cw1200_platform_data_spi *pdata,
++			     bool enable)
++{
++	/* Control 3v3 and 1v8 to hardware as appropriate */
++	/* Note this is not needed if it's controlled elsewhere or always on */
++
++	/* May require delay for power to stabilize */
++	return 0;
++}
++static int cw1200_clk_ctrl(const struct cw1200_platform_data_spi *pdata,
++			   bool enable)
++{
++	/* Turn CLK_32K off and on as appropriate. */
++	/* Note this is not needed if it's always on */
++
++	/* May require delay for clock to stabilize */
++	return 0;
++}
++
++static struct cw1200_platform_data_spi cw1200_platform_data = {
++	.ref_clk = 38400,
++	.spi_bits_per_word = 16,
++	.reset = &cw1200_href_resources[0],
++	.powerup = &cw1200_href_resources[1],
++	.power_ctrl = cw1200_power_ctrl,
++	.clk_ctrl = cw1200_clk_ctrl,
++/*	.macaddr = ??? */
++	.sdd_file = "sdd_sagrad_1091_1098.bin",
++};
++static struct spi_board_info myboard_spi_devices[] __initdata = {
++	{
++		.modalias = "cw1200_wlan_spi",
++		.max_speed_hz = 10000000, /* 52MHz Max */
++		.bus_num = 0,
++		.irq = WIFI_IRQ,
++		.platform_data = &cw1200_platform_data,
++		.chip_select = 0,
++	},
++};
++#endif
++
++
++const void *cw1200_get_platform_data(void)
++{
++	return &cw1200_platform_data;
++}
++EXPORT_SYMBOL_GPL(cw1200_get_platform_data);
 -- 
-1.8.2
+1.8.1.4
 
