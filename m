@@ -1,39 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:63019 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab3DQMlO (ORCPT
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:36674 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637Ab3D0M1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Apr 2013 08:41:14 -0400
-Received: by mail-ie0-f179.google.com with SMTP id 16so1823201iea.10
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2013 05:41:14 -0700 (PDT)
+	Sat, 27 Apr 2013 08:27:21 -0400
+Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
+	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id r3RCRIcl020152
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2013 08:27:18 -0400
+Received: (from pizza@localhost)
+	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id r3RCRICb020151
+	for linux-wireless@vger.kernel.org; Sat, 27 Apr 2013 08:27:18 -0400
+Date: Sat, 27 Apr 2013 08:27:18 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: RFCv5: ST-E CW1200 WLAN driver
+Message-ID: <20130427122717.GA19834@shaftnet.org> (sfid-20130427_142734_758091_A03553EC)
+References: <1363905589-8350-1-git-send-email-pizza@shaftnet.org>
+ <20130402191327.GA9444@shaftnet.org>
 MIME-Version: 1.0
-In-Reply-To: <1366200500-4661-8-git-send-email-stf_xl@wp.pl>
-References: <1366200500-4661-1-git-send-email-stf_xl@wp.pl>
-	<1366200500-4661-8-git-send-email-stf_xl@wp.pl>
-Date: Wed, 17 Apr 2013 14:41:14 +0200
-Message-ID: <CAL1gcdMcoam5m4aVpAkKBtOoLhXf2VVAjrL2FAxE9XAWx6YJpg@mail.gmail.com> (sfid-20130417_144119_223650_4D314A0D)
-Subject: Re: [PATCH v2 07/11] rt2800: add rt2800_rx_filter_calibration procedure
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
+In-Reply-To: <20130402191327.GA9444@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 2:08 PM,  <stf_xl@wp.pl> wrote:
-> From: Stanislaw Gruszka <stf_xl@wp.pl>
->
-> Add procedure for both bands filter calibration and use it on individual
-> chipset init rfcsr subroutines.
->
-> Remove "Set back to initial state" code for 3290 since vendor driver
-> DPO_RT3290_LinuxSTA_V2600_20120508 does not include it.
->
-> Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+--ZGiS0Q5IWpPtfppv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
----
-Gertjan
+On Tue, Apr 02, 2013 at 03:13:28PM -0400, Solomon Peachy wrote:
+> On Thu, Mar 21, 2013 at 06:39:34PM -0400, Solomon Peachy wrote:
+> > I'm satisfied with this driver from a functional standpoint (it handles=
+=20
+> > everything I'm able throw at it) so I'd really like to kick this thing=
+=20
+> > upstairs into wireless-next, assuming it passes muster.
+>=20
+> ...anything? =20
+
+I'd really like to see some progress on this.  What's the next step=20
+towards getting this thing merged?
+
+(I have a small handful of additional changes since my v5 patch set=20
+ that will be in the next submission; I can submit a v6 patch set, I=20
+ suppose)
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org	=20
+Melbourne, FL                          ^^ (mail/jabber/gtalk) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--ZGiS0Q5IWpPtfppv
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
+
+iD8DBQFRe8QlPuLgii2759ARAnD9AJ9dTVnMuP4W4fcyR98denJnxdx30gCfbtNZ
+49EsT2nxmYGpfDg8E1Pt23I=
+=Adk0
+-----END PGP SIGNATURE-----
+
+--ZGiS0Q5IWpPtfppv--
