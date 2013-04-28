@@ -1,38 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1707 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755152Ab3DPK2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Apr 2013 06:28:22 -0400
-Date: Tue, 16 Apr 2013 12:29:11 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: minimumlaw@rambler.ru
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] rt2x00: Fix transmit power troubles on some Ralink
- RT30xx cards
-Message-ID: <20130416102910.GA1163@redhat.com> (sfid-20130416_122826_407009_94FAA0E9)
-References: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
+Received: from mail.candelatech.com ([208.74.158.172]:55359 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752344Ab3D1PPd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Apr 2013 11:15:33 -0400
+Message-ID: <517D3D0A.1080505@candelatech.com> (sfid-20130428_171548_489110_BBC9CDD7)
+Date: Sun, 28 Apr 2013 08:15:22 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365996575-18989-1-git-send-email-minimumlaw@rambler.ru>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
+ and Rx-STBC packets
+References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D3840.2060000@candelatech.com> <517D3B50.6070806@openwrt.org>
+In-Reply-To: <517D3B50.6070806@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 07:29:35AM +0400, minimumlaw@rambler.ru wrote:
-> From: "Alex A. Mihaylov" <minimumlaw@rambler.ru>
-> 
-> Some cards on Ralink RT30xx chipset not have correctly TX_MIXER_GAIN
-> value in them EEPROM/EFUSE. In this case, we must use default value,
-> but always used EEPROM/EFUSE value. As result we have tranmitt power
-> range from -10dBm to +6dBm instead 0dBm to +16dBm.
-> 
-> Correctly value in EEPROM/EFUSE is one or more for RT3070 and two or
-> more for other RT30xx chips.
-> 
-> Tested on Canyon CNP-WF518N1 usb Wi-Fi dongle and Jorjin WN8020 usb
-> embedded Wi-Fi module.
-> 
-> Signed-off-by: Alex A. Mihaylov <minimumlaw@rambler.ru>
-> Cc: stable@vger.kernel.org
+On 04/28/2013 08:08 AM, Felix Fietkau wrote:
+> On 2013-04-28 4:54 PM, Ben Greear wrote:
+>> On 04/28/2013 05:51 AM, Felix Fietkau wrote:
+>>> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
+>>>> Collect statistics about recived duplicate and STBC packets.
+>>>> This information should help see if STBC is actually working.
+>>>>
+>>>> Tested on ar9285;
+>>>>
+>>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+>>> I thought about this patch some more, and I'm wondering what's the point
+>>> in doing this? These statistics are going to be completely useless for
+>>> most people and they'll waste some memory/cpu cycles, especially on
+>>> small-cache devices. I think it's much more useful to simply pass the
+>>> information to mac80211 via rx flags and get them added to the radiotap
+>>> header.
+>>> I'd like to keep the number of 'poor man's debug hacks' in the driver to
+>>> a minimum, and there are some other things that I think should be
+>>> removed: rx_frags and rx_beacons in struct ath_rx_stats, the tx/rx MAC
+>>> sampling hack, and pretty much anything else that can be just as easily
+>>> accessed from mac80211 through regular interfaces.
+>>
+>> Does that mean we can just put the stats in mac80211, or do we have
+>> to be running a sniffer to gather the stats?
+> Right now you'd have to use a sniffer, but if you really care about
+> getting specific stats it might make sense to write a kernel module that
+> attaches to a monitor interface and gathers them (maybe even with
+> support for gathering arbitrary stats by attaching bpf filters).
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+I'd like ongoing stats w/out a monitor interface or sniffer, though
+it would be fine to add it to the sniffer path as well.  Maybe we can
+have compile-time flag to enable the extra and mostly useless
+stats so only the 1% that cares pays the overhead.
+
+> The problem I have with the current stats is they're just an arbitrary
+> collection of random stuff that is probably useless for 99% of all
+> users. In many cases the way the stats are collected also makes the data
+> completely meaningless (e.g. because the source/destination address is
+> not taken into account).
+>
+> Why care about the number of packets on the air that were sent with a
+> specific rate flag? Why care about the number of beacons on the air
+> (with no filter on a set of APs or anything)? Or what about the number
+> of fragments received? To me it just looks like an incoherent set of
+> useless facts.
+
+I think having lots of stats allows for the possibility of seeing a pattern
+that might otherwise be missed, and when testing in an isolated environment,
+you don't have to care about who is sending what being reported..you already
+know.
+
+One thing I'd like to do, for instance, is to figure out how to get some
+average MPDU lengths calculated in hopes that would correlate with decreased
+performance in cases were we have lots of stations....
+
+Thanks,
+Ben
+
+>
+> - Felix
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
 
