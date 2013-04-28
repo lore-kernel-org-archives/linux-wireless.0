@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:55797 "EHLO mout.gmx.net"
+Received: from mout.gmx.net ([212.227.17.21]:60152 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762743Ab3DDVCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Apr 2013 17:02:16 -0400
-Received: from mailout-de.gmx.net ([10.1.76.34]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0Lmhpd-1UxC3205h5-00aGbG for
- <linux-wireless@vger.kernel.org>; Thu, 04 Apr 2013 23:02:15 +0200
-From: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-To: bzhao@marvell.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	daniel@zonque.org,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>
-Subject: [PATCH 3/4] mwifiex: bug: remove NO_PKT_PRIO_TID.
-Date: Thu,  4 Apr 2013 23:01:24 +0200
-Message-Id: <1365109286-5075-3-git-send-email-andreas.fenkart@streamunlimited.com> (sfid-20130404_230223_726181_778D566E)
-In-Reply-To: <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
-References: <20130404205706.GA29851@blumentopf>
- <1365109286-5075-1-git-send-email-andreas.fenkart@streamunlimited.com>
+	id S1756443Ab3D1TTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Apr 2013 15:19:08 -0400
+Received: from mailout-de.gmx.net ([10.1.76.35]) by mrigmx.server.lan
+ (mrigmx002) with ESMTP (Nemesis) id 0MOEEk-1UR0ow11fg-005YXu for
+ <linux-wireless@vger.kernel.org>; Sun, 28 Apr 2013 21:19:06 +0200
+Message-ID: <517D7626.6030109@rempel-privat.de> (sfid-20130428_212052_138463_20B4364C)
+Date: Sun, 28 Apr 2013 21:19:02 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH RFC] ath9k: collect statistics about Rx-Dup
+ and Rx-STBC packets
+References: <1367076326-21616-1-git-send-email-linux@rempel-privat.de> <517D1B45.9020302@openwrt.org> <517D2E77.8000104@rempel-privat.de> <517D3A5F.6020205@rempel-privat.de>
+In-Reply-To: <517D3A5F.6020205@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using NO_PKT_PRIO_TID and tx_pkts_queued to check for an empty state, can
-lead to a contradictory state, resulting in an infinite loop.
-Currently queueing and dequeuing of packets is not synchronized, and can
-happen concurrently. While tx_pkts_queued is incremented when adding a
-packet, max prio is set to NO_PKT when the WMM list is empty. If a packet
-is added right after the check for empty, but before setting max prio to
-NO_PKT, that packet is trapped and creates an infinite loop.
-Because of the new packet, tx_pkts_queued is at least 1, indicating wmm
-lists are not empty. Opposing that max prio is NO_PKT, which means "skip
-this wmm queue, it has no packets". The infinite loop results, because the
-main loop checks the wmm lists for not empty via tx_pkts_queued, but for
-dequeing it uses max_prio to see if it can skip current list. This will
-never end, unless a new packet is added which will restore max prio to the
-level of the trapped packet.
-The solution here is to rely on tx_pkts_queued solely for checking wmm
-queue to be empty, and drop the NO_PKT define. It does not address the
-locking issue.
+Am 28.04.2013 17:03, schrieb Oleksij Rempel:
+> Am 28.04.2013 16:13, schrieb Oleksij Rempel:
+>> Am 28.04.2013 14:51, schrieb Felix Fietkau:
+>>> On 2013-04-27 5:25 PM, Oleksij Rempel wrote:
+>>>> Collect statistics about recived duplicate and STBC packets.
+>>>> This information should help see if STBC is actually working.
+>>>>
+>>>> Tested on ar9285;
+>>>>
+>>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+>>> I thought about this patch some more, and I'm wondering what's the point
+>>> in doing this? These statistics are going to be completely useless for
+>>> most people and they'll waste some memory/cpu cycles, especially on
+>>> small-cache devices. I think it's much more useful to simply pass the
+>>> information to mac80211 via rx flags and get them added to the radiotap
+>>> header.
+>>
+>> Sure.
 
-Signed-off-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
----
- drivers/net/wireless/mwifiex/main.h |    1 -
- drivers/net/wireless/mwifiex/wmm.c  |   13 ++++++-------
- 2 files changed, 6 insertions(+), 8 deletions(-)
+Now i need some help.
+Why there is no traces of  radiotap in ath9k. Some other drivers have 
+them? Do it communicate in some different way or there is just no 
+radiotap support in ath9k?
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d94406a..082a468 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -216,7 +216,6 @@ struct mwifiex_tid_tbl {
- #define WMM_HIGHEST_PRIORITY		7
- #define HIGH_PRIO_TID				7
- #define LOW_PRIO_TID				0
--#define NO_PKT_PRIO_TID				(-1)
- 
- struct mwifiex_wmm_desc {
- 	struct mwifiex_tid_tbl tid_tbl_ptr[MAX_NUM_TID];
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 96eed2f..62b07d3 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -919,8 +919,12 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 
- 		do {
- 			priv_tmp = bssprio_node->priv;
--			hqp = &priv_tmp->wmm.highest_queued_prio;
- 
-+			if (atomic_read(&priv_tmp->wmm.tx_pkts_queued) == 0)
-+				goto skip_bss;
-+
-+			/* iterate over the WMM queues of the BSS */
-+			hqp = &priv_tmp->wmm.highest_queued_prio;
- 			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
- 
- 				tid_ptr = &(priv_tmp)->wmm.
-@@ -979,12 +983,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				} while (ptr != head);
- 			}
- 
--			/* No packet at any TID for this priv. Mark as such
--			 * to skip checking TIDs for this priv (until pkt is
--			 * added).
--			 */
--			atomic_set(hqp, NO_PKT_PRIO_TID);
--
-+skip_bss:
- 			/* Get next bss priority node */
- 			bssprio_node = list_first_entry(&bssprio_node->list,
- 						struct mwifiex_bss_prio_node,
+
 -- 
-1.7.10.4
-
+Regards,
+Oleksij
