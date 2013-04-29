@@ -1,81 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3868 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754404Ab3DZJCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Apr 2013 05:02:05 -0400
-Message-ID: <517A427E.3010809@broadcom.com> (sfid-20130426_110216_399860_B706F143)
-Date: Fri, 26 Apr 2013 11:01:50 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Vasiliy Tolstov" <v.tolstov@selfip.ru>
-cc: "Julian Calaby" <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Larry Finger" <larry.finger@lwfinger.net>
-Subject: Re: very bad work of wl (bcm 43228)
-References: <CACaajQtmPLHBStjPT4L5pa6s2nVC2zwxCa3v+Z10ZBFCXp+dDw@mail.gmail.com>
- <CAGRGNgX0P8+6xT-hi81Y+gE47ZD2JPRuD=4TeXePHC_2bQhxSg@mail.gmail.com>
- <CACaajQusznz4ATwN35i8S=NRbYnuRR0GF=1TE89Mpi3dmyKaDA@mail.gmail.com>
- <CAGRGNgWEDjzP5GG6ZJHQ4tc+G+hKdJdateAc13NppEMaDckGHA@mail.gmail.com>
- <CACaajQvv975G0oOu73aWxfy3iQLiV2gtkzk-E3jhBcOjZxa+pA@mail.gmail.com>
- <517199D4.9070702@broadcom.com>
- <CACaajQuC3QpcEVnDZA7nCJ_6mmSNafn5zZp=QMdomzHUQ7AsSQ@mail.gmail.com>
- <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
-In-Reply-To: <CACaajQtbR5Utac82Zik00dQZYiE=tcDRmhWDt17BYEHDOj1Z2w@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:52821 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757549Ab3D2KKf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 06:10:35 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix WoWLAN wakeup tracing
+Date: Mon, 29 Apr 2013 12:10:23 +0200
+Message-Id: <1367230223-16740-1-git-send-email-johannes@sipsolutions.net> (sfid-20130429_121039_695193_E0DA9A6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2013 09:17 AM, Vasiliy Tolstov wrote:
-> Any news ?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Not really. You could try disabling powersave. I am not very familiar 
-with wl driver.
+If the device reports a non-wireless wakeup reason, the
+tracing code crashes trying to dereference a NULL pointer.
+Fix this by checking the pointer on all accesses and also
+add a non_wireless tag to the event.
 
-$ iw dev wlanX power_save off
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/trace.h | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-Can you still provide lsusb and lspci for all devices?
-
-Gr. AvS
-
-> 2013/4/21 Vasiliy Tolstov <v.tolstov@selfip.ru>:
->> 2013/4/19 Arend van Spriel <arend@broadcom.com>:
->>> I have no quick solution so need to more detailed info. For these kind of
->>> questions it always helps to provide kernel log and output from commands
->>> like lspci and lsusb.
->>
->>
->> Now i'm sometimes not able ping my wifi hot spot (only on 43228, on
->> 4311 all works fine with b43 driver)
->> lspci:
->> 03:00.0 0280: 14e4:4359
->>          Subsystem: 105b:e04b
->>          Flags: bus master, fast devsel, latency 0, IRQ 17
->>          Memory at c0500000 (64-bit, non-prefetchable) [size=16K]
->>          Capabilities: [40] Power Management version 3
->>          Capabilities: [58] Vendor Specific Information: Len=78 <?>
->>          Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
->>          Capabilities: [d0] Express Endpoint, MSI 00
->>          Capabilities: [100] Advanced Error Reporting
->>          Capabilities: [13c] Virtual Channel
->>          Capabilities: [160] Device Serial Number 00-00-b9-ff-ff-fc-08-ed
->>          Capabilities: [16c] Power Budgeting <?>
->>          Kernel driver in use: wl
->>          Kernel modules: wl
->>
->>
->> Some logs from kernel and ping in attached file. I'm try to send this
->> email ten times, becouse wifi very bad work's with this driver =(
->>
->> --
->> Vasiliy Tolstov,
->> e-mail: v.tolstov@selfip.ru
->> jabber: vase@selfip.ru
->
->
->
-
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ecd4fce..5755bc1 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2441,6 +2441,7 @@ TRACE_EVENT(cfg80211_report_wowlan_wakeup,
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		WDEV_ENTRY
++		__field(bool, non_wireless)
+ 		__field(bool, disconnect)
+ 		__field(bool, magic_pkt)
+ 		__field(bool, gtk_rekey_failure)
+@@ -2449,20 +2450,22 @@ TRACE_EVENT(cfg80211_report_wowlan_wakeup,
+ 		__field(bool, rfkill_release)
+ 		__field(s32, pattern_idx)
+ 		__field(u32, packet_len)
+-		__dynamic_array(u8, packet, wakeup->packet_present_len)
++		__dynamic_array(u8, packet,
++				wakeup ? wakeup->packet_present_len : 0)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		WDEV_ASSIGN;
+-		__entry->disconnect = wakeup->disconnect;
+-		__entry->magic_pkt = wakeup->magic_pkt;
+-		__entry->gtk_rekey_failure = wakeup->gtk_rekey_failure;
+-		__entry->eap_identity_req = wakeup->eap_identity_req;
+-		__entry->four_way_handshake = wakeup->four_way_handshake;
+-		__entry->rfkill_release = wakeup->rfkill_release;
+-		__entry->pattern_idx = wakeup->pattern_idx;
+-		__entry->packet_len = wakeup->packet_len;
+-		if (wakeup->packet && wakeup->packet_present_len)
++		__entry->non_wireless = !wakeup;
++		__entry->disconnect = wakeup ? wakeup->disconnect : false;
++		__entry->magic_pkt = wakeup ? wakeup->magic_pkt : false;
++		__entry->gtk_rekey_failure = wakeup ? wakeup->gtk_rekey_failure : false;
++		__entry->eap_identity_req = wakeup ? wakeup->eap_identity_req : false;
++		__entry->four_way_handshake = wakeup ? wakeup->four_way_handshake : false;
++		__entry->rfkill_release = wakeup ? wakeup->rfkill_release : false;
++		__entry->pattern_idx = wakeup ? wakeup->pattern_idx : false;
++		__entry->packet_len = wakeup ? wakeup->packet_len : false;
++		if (wakeup && wakeup->packet && wakeup->packet_present_len)
+ 			memcpy(__get_dynamic_array(packet), wakeup->packet,
+ 			       wakeup->packet_present_len);
+ 	),
+-- 
+1.8.0
 
