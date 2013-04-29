@@ -1,135 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2376 "EHLO mms3.broadcom.com"
+Received: from mail.neratec.com ([80.75.119.105]:46408 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754637Ab3DKL3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Apr 2013 07:29:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/15] brcmfmac: Add drive strength programming for SDIO
- 43143.
-Date: Thu, 11 Apr 2013 13:28:55 +0200
-Message-ID: <1365679740-25679-11-git-send-email-arend@broadcom.com> (sfid-20130411_132934_656470_3710B3BB)
-In-Reply-To: <1365679740-25679-1-git-send-email-arend@broadcom.com>
-References: <1365679740-25679-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753277Ab3D2JGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 05:06:19 -0400
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux@rempel-privat.de,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 2/2] ath9k: Add STBC flag to rx status
+Date: Mon, 29 Apr 2013 11:04:19 +0200
+Message-Id: <1367226260-26755-3-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110624_859019_A0B98B88)
+In-Reply-To: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Pass RX flag to mac80211 layer when STBC stream has been received.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Piotr Haber <phaber@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   53 +++++++++++++-------
- 1 file changed, 34 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c        |    2 ++
+ drivers/net/wireless/ath/ath9k/mac.h        |    1 +
+ drivers/net/wireless/ath/ath9k/recv.c       |    2 ++
+ 4 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index 0ac048d..ca72177 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -82,6 +82,14 @@ static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
- 	{0, 0x1}
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 2570ccc..3318a5f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -592,6 +592,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
+ 	rxs->rs_flags  = (rxsp->status4 & AR_GI) ? ATH9K_RX_GI : 0;
+ 	rxs->rs_flags  |= (rxsp->status4 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rxs->rs_flags |= (rxsp->status4 & AR_RxStbc) ? ATH9K_RX_STBC : 0;
  
-+/* SDIO Drive Strength to sel value table for 43143 PMU Rev 17 (3.3V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
-+	{16, 0x7},
-+	{12, 0x5},
-+	{8,  0x3},
-+	{4,  0x1}
-+};
-+
- u8
- brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid)
- {
-@@ -702,21 +710,37 @@ void
- brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
- 				  struct chip_info *ci, u32 drivestrength)
- {
--	struct sdiod_drive_str *str_tab = NULL;
--	u32 str_mask = 0;
--	u32 str_shift = 0;
-+	const struct sdiod_drive_str *str_tab = NULL;
-+	u32 str_mask;
-+	u32 str_shift;
- 	char chn[8];
- 	u32 base = ci->c_inf[0].base;
-+	u32 i;
-+	u32 drivestrength_sel = 0;
-+	u32 cc_data_temp;
-+	u32 addr;
+         rxs->rs_hw_upload_data = (rxsp->status2 & AR_HwUploadData) ? 1 : 0;
+ 	rxs->rs_not_sounding = (rxsp->status4 & AR_RxNotSounding) ? 1 : 0;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 498fee0..288361d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -590,6 +590,8 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 		(ads.ds_rxstatus3 & AR_GI) ? ATH9K_RX_GI : 0;
+ 	rs->rs_flags |=
+ 		(ads.ds_rxstatus3 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rs->rs_flags |=
++		(ads.ds_rxstatus3 & AR_RxStbc) ? ATH9K_RX_STBC : 0;
  
- 	if (!(ci->c_inf[0].caps & CC_CAP_PMU))
- 		return;
+ 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
+ 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index da5ab6e..a2d17f4 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -199,6 +199,7 @@ struct ath_htc_rx_status {
+ #define ATH9K_RX_DELIM_CRC_PRE    0x10
+ #define ATH9K_RX_DELIM_CRC_POST   0x20
+ #define ATH9K_RX_DECRYPT_BUSY     0x40
++#define ATH9K_RX_STBC             0x80
  
- 	switch (SDIOD_DRVSTR_KEY(ci->chip, ci->pmurev)) {
- 	case SDIOD_DRVSTR_KEY(BCM4330_CHIP_ID, 12):
--		str_tab = (struct sdiod_drive_str *)&sdiod_drvstr_tab1_1v8;
-+		str_tab = sdiod_drvstr_tab1_1v8;
- 		str_mask = 0x00003800;
- 		str_shift = 11;
- 		break;
-+	case SDIOD_DRVSTR_KEY(BCM43143_CHIP_ID, 17):
-+		/* note: 43143 does not support tristate */
-+		i = ARRAY_SIZE(sdiod_drvstr_tab2_3v3) - 1;
-+		if (drivestrength >= sdiod_drvstr_tab2_3v3[i].strength) {
-+			str_tab = sdiod_drvstr_tab2_3v3;
-+			str_mask = 0x00000007;
-+			str_shift = 0;
-+		} else
-+			brcmf_err("Invalid SDIO Drive strength for chip %s, strength=%d\n",
-+				  brcmf_sdio_chip_name(ci->chip, chn, 8),
-+				  drivestrength);
-+		break;
- 	default:
- 		brcmf_err("No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
- 			  brcmf_sdio_chip_name(ci->chip, chn, 8),
-@@ -725,31 +749,22 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+ #define ATH9K_RXKEYIX_INVALID	((u8)-1)
+ #define ATH9K_TXKEYIX_INVALID	((u8)-1)
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 8be2b5d..f442c1e 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -872,6 +872,8 @@ static int ath9k_process_rate(struct ath_common *common,
+ 			rxs->flag |= RX_FLAG_40MHZ;
+ 		if (rx_stats->rs_flags & ATH9K_RX_GI)
+ 			rxs->flag |= RX_FLAG_SHORT_GI;
++		if (rx_stats->rs_flags & ATH9K_RX_STBC)
++			rxs->flag |= RX_FLAG_STBC;
+ 		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+ 		return 0;
  	}
- 
- 	if (str_tab != NULL) {
--		u32 drivestrength_sel = 0;
--		u32 cc_data_temp;
--		int i;
--
- 		for (i = 0; str_tab[i].strength != 0; i++) {
- 			if (drivestrength >= str_tab[i].strength) {
- 				drivestrength_sel = str_tab[i].sel;
- 				break;
- 			}
- 		}
--
--		brcmf_sdio_regwl(sdiodev, CORE_CC_REG(base, chipcontrol_addr),
--				 1, NULL);
--		cc_data_temp =
--			brcmf_sdio_regrl(sdiodev,
--					 CORE_CC_REG(base, chipcontrol_addr),
--					 NULL);
-+		addr = CORE_CC_REG(base, chipcontrol_addr);
-+		brcmf_sdio_regwl(sdiodev, addr, 1, NULL);
-+		cc_data_temp = brcmf_sdio_regrl(sdiodev, addr, NULL);
- 		cc_data_temp &= ~str_mask;
- 		drivestrength_sel <<= str_shift;
- 		cc_data_temp |= drivestrength_sel;
--		brcmf_sdio_regwl(sdiodev, CORE_CC_REG(base, chipcontrol_addr),
--				 cc_data_temp, NULL);
-+		brcmf_sdio_regwl(sdiodev, addr, cc_data_temp, NULL);
- 
--		brcmf_dbg(INFO, "SDIO: %dmA drive strength selected, set to 0x%08x\n",
--			  drivestrength, cc_data_temp);
-+		brcmf_dbg(INFO, "SDIO: %d mA (req=%d mA) drive strength selected, set to 0x%08x\n",
-+			  str_tab[i].strength, drivestrength, cc_data_temp);
- 	}
- }
- 
 -- 
 1.7.10.4
-
 
