@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:51882 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935512Ab3DHXMJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Apr 2013 19:12:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <201304090003.47056.chunkeey@googlemail.com>
-References: <CAJ-Vmo=LVSzdEo6DhfOVT_0JHCTMmdPU1zGfMuBmhmr8QuDmJQ@mail.gmail.com>
-	<CAJ-VmomS_=1=QLZrfdD4vhu9Qy0w2JNQxEFrkt_OKjWetrWY4w@mail.gmail.com>
-	<CAFSJ42b7DD9UVtzT7YWhaEchzwpde0yW=pS3nJVeMCHoVQGBqQ@mail.gmail.com>
-	<201304090003.47056.chunkeey@googlemail.com>
-Date: Mon, 8 Apr 2013 16:12:07 -0700
-Message-ID: <CAJ-VmomksDSNvTpKQpNRRQx+QboSVHpby7V4qq4rngqVkTvf+A@mail.gmail.com> (sfid-20130409_011226_210660_7E8E7654)
-Subject: Re: Version number policy!
-From: Adrian Chadd <adrian@freebsd.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:16114 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757150Ab3D2P7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 11:59:13 -0400
+Message-ID: <1367251268.20151.0.camel@dcbw.foobar.com> (sfid-20130429_175919_733666_9901936D)
+Subject: Re: Intel Centrino Wireless-N 2230 (rev c4) bug
+From: Dan Williams <dcbw@redhat.com>
+To: Paolo Zaffino <p.zaffino@unicz.it>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Date: Mon, 29 Apr 2013 11:01:08 -0500
+In-Reply-To: <517C18A4.70402@unicz.it>
+References: <517BD02A.5060904@unicz.it>
+	  (sfid-20130427_151940_748350_F10D6AF1) <1367085173.8445.0.camel@jlt4.sipsolutions.net>
+	 <517C18A4.70402@unicz.it>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm a FreeBSD user. I know what it's like to have an alternate, out of
-linux implementation of ext2/3 that doesn't implement all of the
-features.
+On Sat, 2013-04-27 at 20:27 +0200, Paolo Zaffino wrote:
+> First of all thanks for your support.
+> Can you give me any advice on what look for in my system?
+> I really haven't idea about this strange situation.
 
-I also know what kinds of crap happens when you try mounting a more
-recent extX filesystem on an earlier kernel. Ie, it doesn't
-necessarily end well. :-)
+If you are using NetworkManager, also grab the NM log output which goes
+to syslog's daemon facility.  That gets dumped to a file depending on
+your distro, which could
+be /var/log/messages, /var/log/daemon.log, /var/log/syslog, /var/log/NetworkManager.log, or systemd's journal.
 
-Anyway, there's been a lot of good points in this discussion. Let's
-keep it in mind as we slowly march forward.
+Dan
 
-There's only like, 60k of generated binary code on these things. Let's
-not overthink things too much for now. :)
+> Thanks a lot.
+> Paolo
+> 
+> 
+> 
+> On 27/04/2013 19:52, Johannes Berg wrote:
+> > On Sat, 2013-04-27 at 15:18 +0200, Paolo Zaffino wrote:
+> >
+> >
+> >> [ 1756.822019] wlp3s0: deauthenticating from 74:ea:3a:cd:28:42 by local
+> >> choice (reason=3)
+> > This is your problem, you're probably running two instances of
+> > wpa_supplicant or something equally strange.
+> >
+> > johannes
+> >
+> >
+> 
+> 
 
 
-
-Adrian
