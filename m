@@ -1,65 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2458 "EHLO mms3.broadcom.com"
+Received: from mail.neratec.com ([80.75.119.105]:46407 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab3DYJDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Apr 2013 05:03:32 -0400
-Message-ID: <5178F158.60103@broadcom.com> (sfid-20130425_110337_162540_7FEE487C)
-Date: Thu, 25 Apr 2013 11:03:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Marcel Holtmann" <marcel@holtmann.org>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: Android P2P-Device workaround
-References: <1366721149-5440-1-git-send-email-johannes@sipsolutions.net>
- <EC4E16A7-2F9E-4E59-A561-88C85A459BCA@holtmann.org>
- <1366735340.8385.20.camel@jlt4.sipsolutions.net>
- <51779434.4010709@broadcom.com>
- <F323F29D-5EF8-4D01-A4B3-F9AF12326012@holtmann.org>
-In-Reply-To: <F323F29D-5EF8-4D01-A4B3-F9AF12326012@holtmann.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1752444Ab3D2JGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 05:06:19 -0400
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux@rempel-privat.de,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap
+Date: Mon, 29 Apr 2013 11:04:18 +0200
+Message-Id: <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110625_498196_82A8FB5B)
+In-Reply-To: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2013 04:29 PM, Marcel Holtmann wrote:
-> Hi Arend,
->
->>>>> +config CFG80211_ANDROID_P2P_HACK
->>>>> +	bool "Android P2P netdevice hack"
->>>>> +	depends on CFG80211
->>>>> +	depends on !CFG80211_WEXT
->>>>> +	help
->>>>> +	  Enable this option for Android P2P w/ P2P Device.
->>>>> +
->>>>
->>>> do you really think this is a good idea? Wouldn't it be better if
->>>> Android just gets its userspace fixed. This way, they never will and
->>>> you carry this workaround forever.
->>>
->>> Well, I'm about 50/50 on whether to merge this. On the one hand, it's a
->>> very simple patch to carry out of tree, on the other hand more than one
->>> person will need it.
->>>
->>
->> Here is one who needs it. I consider this patch as a temporary solution, but it would be good to have it upstream. We would be using compat-drivers to backport the upstream brcmfmac to the android kernel, which also takes care of cfg80211.
->
-> why do I get the feeling that the root-cause for this stupid p2p0 device is the Broadcom binary only driver  ;)
+Add rx flag to radiotap header which tells whether
+Space-Time Block Code was used. At the moment only
+1 stream STBC is supported.
 
-Hi Marcel,
+TODO: Pass information from the driver on how many STBC
+streams have been received.
 
-Just like you I can only guess, but you are probably right except that 
-the broadcom driver introducing this p2p0 device was propbably the 
-bcmdhd driver which is available in android repositories.
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ include/net/ieee80211_radiotap.h |    6 ++++++
+ include/net/mac80211.h           |    2 ++
+ net/mac80211/main.c              |    3 ++-
+ net/mac80211/rx.c                |    2 ++
+ 4 files changed, 12 insertions(+), 1 deletion(-)
 
-Because of the design of the firmware (which is binary) going for a 
-net_device was the most straightforward and also because wpa_supplicant 
-is all about net_device interfaces.
-
-> I feel like being back in the world of Wireless Extensions ;)
-
-I hear you and we are still not fully rid of that.
-
-Gr. AvS
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index e07d7d7..0254cbd 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -271,6 +271,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+ 
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -280,6 +281,11 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
++#define IEEE80211_RADIOTAP_MCS_STBC_MASK	0x60
++#define		IEEE80211_RADIOTAP_MCS_STBC_0	0
++#define		IEEE80211_RADIOTAP_MCS_STBC_1	1
++#define		IEEE80211_RADIOTAP_MCS_STBC_2	2
++#define		IEEE80211_RADIOTAP_MCS_STBC_3	3
+ 
+ /* For IEEE80211_RADIOTAP_AMPDU_STATUS */
+ #define IEEE80211_RADIOTAP_AMPDU_REPORT_ZEROLEN		0x0001
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1fe1844..efa9fb1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -808,6 +808,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_STBC: Space-Time Block Code was used
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -835,6 +836,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_80MHZ			= BIT(23),
+ 	RX_FLAG_80P80MHZ		= BIT(24),
+ 	RX_FLAG_160MHZ			= BIT(25),
++	RX_FLAG_STBC			= BIT(26),
+ };
+ 
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8a7bfc4..44191a3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -589,7 +589,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->hw.radiotap_mcs_details = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+ 					 IEEE80211_RADIOTAP_MCS_HAVE_GI |
+-					 IEEE80211_RADIOTAP_MCS_HAVE_BW;
++					 IEEE80211_RADIOTAP_MCS_HAVE_BW |
++					 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+ 	local->hw.radiotap_vht_details = IEEE80211_RADIOTAP_VHT_KNOWN_GI |
+ 					 IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
+ 	local->hw.uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c8447af..955a70f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -267,6 +267,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
+ 		if (status->flag & RX_FLAG_HT_GF)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_FMT_GF;
++		if (status->flag & RX_FLAG_STBC)
++			*pos |= IEEE80211_RADIOTAP_MCS_STBC_1;
+ 		pos++;
+ 		*pos++ = status->rate_idx;
+ 	}
+-- 
+1.7.10.4
 
