@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33536 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161564Ab3DEG0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 02:26:43 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 0/6] rt2x00: use rt2x00mmio prefix for rt2x00mmio module functions
-Date: Fri,  5 Apr 2013 08:26:59 +0200
-Message-Id: <1365143225-24532-1-git-send-email-juhosg@openwrt.org> (sfid-20130405_082651_695628_A009D22B)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2502 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757294Ab3D2Lkd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 07:40:33 -0400
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v6] cfg80211: P2P find phase offload
+Date: Mon, 29 Apr 2013 14:40:09 +0300
+Message-ID: <1367235610-10375-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20130429_134038_982845_B8BDF540)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series replaces the rt2x00pci prefix to
-rt2x00mmio of the functions provided by the
-rt2x00mmio module. This is a supplement of the
-'rt2x00: rt2x00pci: fix build error on Ralink
-RT3x5x SoCs' patch.
+I agree that it is better to require use of P2P interface, i.e.
+NL80211_IFTYPE_P2P_DEVICE, for new API. Modified patch to do this.
 
-The patch-set is based on the master branch of
-wireless-testing.git.
+Also, addressed split() for wiphy get.
 
-Gabor Juhos (6):
-  rt2x00: rt2x00mmio: use rt2x00mmio prefix in function names
-  rt2x00: rt2400pci: use the rt2x00mmio_* routines
-  rt2x00: rt2500pci: use the rt2x00mmio_* routines
-  rt2x00: rt61pci: use the rt2x00mmio_* routines
-  rt2x00: rt2800pci: use the rt2x00mmio_* routines
-  rt2x00: rt2x00mmio: remove unused rt2x00pci_* defines
+>From what I recall, these are all remaining items.
 
- drivers/net/wireless/rt2x00/rt2400pci.c  |  309 +++++++++---------
- drivers/net/wireless/rt2x00/rt2500pci.c  |  334 +++++++++----------
- drivers/net/wireless/rt2x00/rt2800pci.c  |  241 +++++++-------
- drivers/net/wireless/rt2x00/rt2x00mmio.c |   48 +--
- drivers/net/wireless/rt2x00/rt2x00mmio.h |   52 +--
- drivers/net/wireless/rt2x00/rt61pci.c    |  515 +++++++++++++++---------------
- 6 files changed, 754 insertions(+), 745 deletions(-)
+Vladimir Kondratiev (1):
+  cfg80211: P2P find phase offload
 
---
-1.7.10
+ include/net/cfg80211.h       |  63 ++++++++++++++++
+ include/uapi/linux/nl80211.h |  14 ++++
+ net/wireless/nl80211.c       | 167 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  19 +++++
+ net/wireless/trace.h         |  43 +++++++++++
+ 5 files changed, 306 insertions(+)
+
+-- 
+1.8.1.2
 
