@@ -1,76 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:64150 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757269Ab3D2Jdy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Apr 2013 05:33:54 -0400
-Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
- (mrigmx001) with ESMTP (Nemesis) id 0M0euW-1Ukgkp2T9y-00uq0W for
- <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2013 11:33:53 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 1/4] ath9k_htc: add STBC TX support
-Date: Mon, 29 Apr 2013 11:33:41 +0200
-Message-Id: <1367228024-17936-2-git-send-email-linux@rempel-privat.de> (sfid-20130429_113358_417357_606170B2)
-In-Reply-To: <1367228024-17936-1-git-send-email-linux@rempel-privat.de>
-References: <1367228024-17936-1-git-send-email-linux@rempel-privat.de>
+Received: from s3.sipsolutions.net ([144.76.43.152]:53344 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700Ab3D2NaU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 09:30:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix IEEE80211_SDATA_DISCONNECT_RESUME
+Date: Mon, 29 Apr 2013 15:30:07 +0200
+Message-Id: <1367242207-28671-1-git-send-email-johannes@sipsolutions.net> (sfid-20130429_153025_106505_50F144FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-current firmware will enable STBC_TX, only if other peer support it.
-This patch provide ht_peer_caps to firmware.
-FW versions 1.3, 1.4 should be able to work with it.
-Tested on ar7010+ar9280 and ar7010+ar9287.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Since commit 12e7f517029dad819c45eca9ca01fdb9ba57616b,
+IEEE80211_SDATA_DISCONNECT_RESUME no longer worked as
+it would simply never be tested. Restore a bit of the
+code removed there and in 9b7d72c1041ec5b20b24af487a9
+to make it work again.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          | 2 ++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 4 ++++
- 3 files changed, 9 insertions(+)
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 25 +++++++++++++++++++++++++
+ net/mac80211/util.c        |  7 +++++++
+ 3 files changed, 33 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index d3b099d..db4a793 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -142,6 +142,8 @@ struct ath9k_htc_target_aggr {
- #define WLAN_RC_40_FLAG  0x02
- #define WLAN_RC_SGI_FLAG 0x04
- #define WLAN_RC_HT_FLAG  0x08
-+#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
-+#define WLAN_RC_RX_STBC_FLAG 0xC0 /* RX STBC ,2 bits */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 158e6eb..44be28cfc 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1267,6 +1267,7 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mgd_conn_tx_status(struct ieee80211_sub_if_data *sdata,
+ 				  __le16 fc, bool acked);
++void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
  
- struct ath9k_htc_rateset {
- 	u8 rs_nrates;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a47f5e0..c79c5ac 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -517,6 +517,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	ath_dbg(common, CONFIG, "TX streams %d, RX streams: %d\n",
- 		tx_streams, rx_streams);
+ /* IBSS code */
+ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 13bb814..b6d03da 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3623,6 +3623,31 @@ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
  
-+	if (tx_streams >= 2)
-+		ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
++#ifdef CONFIG_PM
++void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
 +
- 	if (tx_streams != rx_streams) {
- 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
- 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0743a47..af08b4a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -623,6 +623,10 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
- 		trate->rates.ht_rates.rs_nrates = j;
++	mutex_lock(&ifmgd->mtx);
++	if (!ifmgd->associated) {
++		mutex_unlock(&ifmgd->mtx);
++		return;
++	}
++
++	if (sdata->flags & IEEE80211_SDATA_DISCONNECT_RESUME) {
++		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_RESUME;
++		mlme_dbg(sdata, "driver requested disconnect after resume\n");
++		ieee80211_sta_connection_lost(sdata,
++					      ifmgd->associated->bssid,
++					      WLAN_REASON_UNSPECIFIED,
++					      true);
++		mutex_unlock(&ifmgd->mtx);
++		return;
++	}
++	mutex_unlock(&sdata->local->mtx);
++}
++#endif
++
+ /* interface setup */
+ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3f87fa4..27e0715 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1740,6 +1740,13 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	mb();
+ 	local->resuming = false;
  
- 		caps = WLAN_RC_HT_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
-+			caps |= WLAN_RC_RX_STBC_FLAG;
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC)
-+			caps |= WLAN_RC_TX_STBC_FLAG;
- 		if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
- 		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++		if (sdata->vif.type == NL80211_IFTYPE_STATION)
++			ieee80211_sta_restart(sdata);
++	}
++
+ 	mod_timer(&local->sta_cleanup, jiffies + 1);
+ #else
+ 	WARN_ON(1);
 -- 
-1.8.1.2
+1.8.0
 
