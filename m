@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ia0-f171.google.com ([209.85.210.171]:63766 "EHLO
-	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757971Ab3DXXSa (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52869 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753940Ab3D2KSi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Apr 2013 19:18:30 -0400
-Received: by mail-ia0-f171.google.com with SMTP id r13so2043503iar.2
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2013 16:18:29 -0700 (PDT)
-Message-ID: <51786840.3090907@lwfinger.net> (sfid-20130425_011841_404397_E5DE3D64)
-Date: Wed, 24 Apr 2013 18:18:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Stahn <michael.stahn.42@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Realtek 8192CU not working
-References: <CALvqYaTZrtSsP9GQzH4B988KjPg+LRCcyREKZ1zkjoaEDKPHNA@mail.gmail.com> <CALvqYaTSYR43rS-pptFKCfsgvsatrUSz4v+AFBPQ0UrHC4WkXA@mail.gmail.com> <5177F100.1070803@lwfinger.net> <CALvqYaQt+nL-PxSeEUNpsG9SWV+--S64ksr1UR+8TPg5dVPKXA@mail.gmail.com> <51780C92.4000208@lwfinger.net> <CALvqYaRrjMtPE72PGR-Zzuj11CL=E6+ruC+E1wGPO3m5wgdOhg@mail.gmail.com> <CALvqYaT==e4U43dxtyX55A9CNgWh9apHMrj89=bBybutyJOoiw@mail.gmail.com> <51781976.3000601@lwfinger.net> <CALvqYaQTQ5=ER=F1-bxnJQKkFjrg6UH+1JWLexUPVZ3cFBG5UQ@mail.gmail.com> <51786303.3070107@lwfinger.net> <CALvqYaQ_z7w6yLeNb=Q7Sm=Et3Rxj+TP6vi=KcyhDpT4AmY4kA@mail.gmail.com>
-In-Reply-To: <CALvqYaQ_z7w6yLeNb=Q7Sm=Et3Rxj+TP6vi=KcyhDpT4AmY4kA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 29 Apr 2013 06:18:38 -0400
+Message-ID: <1367230699.8289.1.camel@jlt4.sipsolutions.net> (sfid-20130429_121841_132580_1EEB0CD5)
+Subject: Re: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, linux@rempel-privat.de
+Date: Mon, 29 Apr 2013 12:18:19 +0200
+In-Reply-To: <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20130429_110625_498196_82A8FB5B)
+References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com>
+	 <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com>
+	 (sfid-20130429_110625_498196_82A8FB5B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2013 06:08 PM, Michael Stahn wrote:
-> This kind of error doesn't seem to show up on the USB 2.0 interface. I
-> just configured the AP for WPA+TKIP but no change. Now the Adapter
-> won't connect anymore even I reload the module..pretty random error.
-> I'll try some other ideas in the next days...
+On Mon, 2013-04-29 at 11:04 +0200, Wojciech Dubowik wrote:
+> Add rx flag to radiotap header which tells whether
 
-OK, the USB3.0 error is a different matter. You should report that on the USB 
-mailing list.
+Same here, you can't just randomly add something to radiotap. Go
+standardise it first.
 
-You need WPA2-AES/CCMP encryption for it to work. I'm looking into that problem now.
-
-Larry
-
+johannes
 
