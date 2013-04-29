@@ -1,72 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hub022-ca-1.exch022.serverdata.net ([64.78.56.53]:16521 "EHLO
-	HUB022-ca-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753317Ab3DOKnj (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53484 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757827Ab3D2OYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Apr 2013 06:43:39 -0400
-Message-ID: <516BD9D7.3060804@posedge.com> (sfid-20130415_124343_618919_2D15DB9F)
-Date: Mon, 15 Apr 2013 16:13:35 +0530
-From: Vivekananda Holla <vivekanandah@posedge.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Patch] mac80211: add rts-cts for dynamic SMPS stations
-References: <516B9F21.2080304@posedge.com> <1366017844.8361.7.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1366017844.8361.7.camel@jlt4.sipsolutions.net>
+	Mon, 29 Apr 2013 10:24:30 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1UWp0H-0007FN-Hj
+	for linux-wireless@vger.kernel.org; Mon, 29 Apr 2013 16:24:29 +0200
+Message-ID: <1367245467.8289.5.camel@jlt4.sipsolutions.net> (sfid-20130429_162433_615895_6BF8B821)
+Subject: Re: [PATCH] cfg80211: fix WoWLAN wakeup tracing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 29 Apr 2013 16:24:27 +0200
+In-Reply-To: <1367230223-16740-1-git-send-email-johannes@sipsolutions.net> (sfid-20130429_121039_695193_E0DA9A6F)
+References: <1367230223-16740-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130429_121039_695193_E0DA9A6F)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Mon, 2013-04-29 at 12:10 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> If the device reports a non-wireless wakeup reason, the
+> tracing code crashes trying to dereference a NULL pointer.
+> Fix this by checking the pointer on all accesses and also
+> add a non_wireless tag to the event.
 
-I ran checkpatch.pl script and found some trailing white spaces in the patch which i have now
-corrected.
- 
-Also,i had initially placed my code in minstrel_ht_get_rate but saw that the minstrel code is being
-changed.
-hence, moved the code in to ieee80211_tx_h_rate_ctrl function.
+tested & applied.
 
-there is a check in this function
-
-        if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
-            WARN_ON(info->control.rates[i].idx > 76);
-            continue;
-        }
- 
-I feel it would be okay to move  the code for dyn_smps within this loop as
-this would solve the check for MCS rates.
-
-however i am not sure whether all ht rates flag settings need to be handled within minstrel_ht?
-
-        if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS) {
-            WARN_ON(info->control.rates[i].idx > 76);
-
-+        if (dyn_smps) {
-+            if ((info->control.rates[i].idx > 7) &&
-+                (info->control.rates[i].idx != 32))
-+                info->control.rates[i].flags |=
-+                    IEEE80211_TX_RC_USE_RTS_CTS;    
-
-
-            continue;
-        }
-
-awaiting your inputs
-
-thanks and regards
-Vivek
-
-On 04/15/2013 02:54 PM, Johannes Berg wrote:
-> Vivek,
->
-> Please work with some of your colleagues at posedge to submit a proper
-> patch. This is formatted completely wrongly in many ways.
->
->> +        if (dyn_smps) {
->> +            if ((info->control.rates[i].idx > 7) &&
->> +                (info->control.rates[i].idx != 32))
-> This is also completely wrong. (hint, there are non-HT bitrates still)
->
-> johannes
->
+johannes
 
