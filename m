@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:37395 "EHLO mx3.wp.pl"
+Received: from mout.gmx.net ([212.227.15.15]:51812 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162097Ab3DEVEG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Apr 2013 17:04:06 -0400
-Date: Fri, 5 Apr 2013 23:05:09 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 2/6] rt2x00: rt2400pci: use the
- rt2x00mmio_* routines
-Message-ID: <20130405210509.GB2396@localhost.localdomain> (sfid-20130405_230414_863107_CAF81BE6)
-References: <1365143225-24532-1-git-send-email-juhosg@openwrt.org>
- <1365143225-24532-3-git-send-email-juhosg@openwrt.org>
- <20130405133234.GB1571@redhat.com>
- <515EED2D.8090601@openwrt.org>
- <20130405210222.GA2396@localhost.localdomain>
+	id S1756901Ab3D2KMp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Apr 2013 06:12:45 -0400
+Received: from mailout-de.gmx.net ([10.1.76.1]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0LuJ7B-1UeHJT2i19-011g0e for
+ <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2013 12:12:44 +0200
+Message-ID: <517E4796.1010000@rempel-privat.de> (sfid-20130429_121249_210163_8C3AE719)
+Date: Mon, 29 Apr 2013 12:12:38 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20130405210222.GA2396@localhost.localdomain>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap
+References: <1367226260-26755-1-git-send-email-Wojciech.Dubowik@neratec.com> <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com>
+In-Reply-To: <1367226260-26755-2-git-send-email-Wojciech.Dubowik@neratec.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 05, 2013 at 11:02:22PM +0200, Stanislaw Gruszka wrote:
-> On Fri, Apr 05, 2013 at 05:26:37PM +0200, Gabor Juhos wrote:
-> > 2013.04.05. 15:32 keltezéssel, Stanislaw Gruszka írta:
-> > > On Fri, Apr 05, 2013 at 08:27:01AM +0200, Gabor Juhos wrote:
-> > >> Use the recently introduced rt2x00mmio_* routines
-> > >> instead of the rt2x00pci_* variants.
-> > >>
-> > >> The patch contains no functional changes.
-> > >>
-> > >> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> > >> ---
-> > >>  drivers/net/wireless/rt2x00/rt2400pci.c |  309 ++++++++++++++++---------------
-> > > 
-> > > Why do you modify rt2400pci ?
-> > 
-> > Because the rt2x00pci_* functions provided by the rt2x00mmio module has been
-> > renamed in the first patch and those are using the rt2x00mmio_ prefix now. The
-> > rt2x00mmio.h header provides definitions for the old function names but those
-> > definitions are removed by the last patch.
-> 
-> Ah, ok, but this breaks compilation. This should be avoided, to do not
-> break bisection. Hance patches should be merged into one or incremental
-> changes proposed that do not break compilation. Otherwise changes look
-> ok for me.
-Nevermind, you provided those compat defines, so compilation do not
-break.
+Am 29.04.2013 11:04, schrieb Wojciech Dubowik:
+> Add rx flag to radiotap header which tells whether
+> Space-Time Block Code was used. At the moment only
+> 1 stream STBC is supported.
+>
+> TODO: Pass information from the driver on how many STBC
+> streams have been received.
 
-ACK for set.
-
-Stanislaw
+Hi,
+do i understand it correctly, on 2x2 or 2x1 system we will get one 
+stream STBC. On 4x4 or 4x2 we will get one or two stream STBC, is it 
+correct?
+Is it possible that we will get some thing like this any time soon?
+-- 
+Regards,
+Oleksij
