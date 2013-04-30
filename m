@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56340 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760022Ab3DBTMm convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57456 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760460Ab3D3NnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Apr 2013 15:12:42 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Jonathan McDowell <noodles@earth.li>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: RE: [Ilw] Problems with Intel 2230 and AP mode
-Date: Tue, 2 Apr 2013 19:11:12 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301965EC0@HASMSX103.ger.corp.intel.com> (sfid-20130402_211248_309315_8DB94435)
-References: <20130402190831.GQ31591@earth.li>
-In-Reply-To: <20130402190831.GQ31591@earth.li>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 30 Apr 2013 09:43:24 -0400
+Message-ID: <1367329400.8337.6.camel@jlt4.sipsolutions.net> (sfid-20130430_154327_818974_C042154E)
+Subject: Re: [RFC v4] cfg80211: Android P2P-Device workaround
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sreenath <sreenats@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 30 Apr 2013 15:43:20 +0200
+In-Reply-To: <517FC953.3010206@broadcom.com> (sfid-20130430_154110_890405_EBC844C4)
+References: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
+	 <517FC953.3010206@broadcom.com> (sfid-20130430_154110_890405_EBC844C4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-04-30 at 19:08 +0530, Sreenath wrote:
+> Hello Johannes,
 > 
-> I'm trying to build my own wifi router, cobbling together a Debian
-> (wheezy) box, hostapd (1.0) and an Intel 2230. I'm seeing various
-> problems with the 2230 and I'm wondering if I'm mad for trying to use
-> this card in AP mode (in which case is there an alternative Intel card I
-> should use, or is an ath9k my best bet), or if it's worthwhile reporting
-> the issues and trying fixes.
-> 
-> I'm using 3.8.5 (and previously 3.8.4). I tried 3.9-rc4 briefly but it
-> was unusable - as soon as there was any traffic I saw errors like:
-> 
-> Mar 27 19:33:51 ramen kernel: [ 7687.814137] iwlwifi 0000:04:00.0: Stopping
-> AGG while state not ON or starting for 3 on 0 (4)
-> Mar 27 19:33:51 ramen kernel: [ 7687.818846] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
-> Mar 27 19:33:51 ramen kernel: [ 7687.818899] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
-> Mar 27 19:33:51 ramen kernel: [ 7687.818946] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
-> Mar 27 19:33:51 ramen kernel: [ 7687.818993] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
-> Mar 27 19:33:51 ramen kernel: [ 7687.819039] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
-> Mar 27 19:33:51 ramen kernel: [ 7687.819085] iwlwifi 0000:04:00.0: txq_id
-> mismatch: 11 0
+> As per this patch, the dummy 'p2p0' interface will be created only if 
+> new interface creation request is for interface type - 
+> NL80211_IFTYPE_P2P_DEVICE. Does that mean that this P2P hack will work 
+> only with wpa_supplicant patches submitted by David Spinadel or similar 
+> changes have to be done in wpa_supplicant? Because with current version 
+> of wpa_supplicant there won't be any interface creation request for 
+> NL80211_IFTYPE_P2P_DEVICE as the interface type.
 
-Can you please try with debug=0x80000000 and send the output of it?
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
+Like I just said on the hostap list, you have to create it manually or
+in a script first.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
 
