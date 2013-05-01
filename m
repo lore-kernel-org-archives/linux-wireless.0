@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33830 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153Ab3EHSpk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53424 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753563Ab3EAMuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 May 2013 14:45:40 -0400
-Message-ID: <518A9D4C.10502@candelatech.com> (sfid-20130508_204543_694409_DC86DFF8)
-Date: Wed, 08 May 2013 11:45:32 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 1 May 2013 08:50:23 -0400
+Date: Wed, 1 May 2013 08:50:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Borkmann <borkmann@iogearbox.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: net-next, wireless compile warnings
+Message-ID: <20130501125017.GK25625@tuxdriver.com> (sfid-20130501_145027_078706_05A64B19)
+References: <518108D7.9050206@iogearbox.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 warning in 3.9.0+ when unloading ath9k driver.
-References: <518A8DB1.7080904@candelatech.com>  (sfid-20130508_193902_610347_FF7CDB2D) <1368036259.8279.26.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1368036259.8279.26.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <518108D7.9050206@iogearbox.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2013 11:04 AM, Johannes Berg wrote:
-> On Wed, 2013-05-08 at 10:38 -0700, Ben Greear wrote:
->> I saw the WARN_ON_ONCE hit below on 3.9.0+ (+ hacks)
->> on a system with ath9k and ath9k_htc driver.
->
-> Were you using VLANs?
+On Wed, May 01, 2013 at 02:21:43PM +0200, Daniel Borkmann wrote:
+> When compiling the latest net-next tree with W=1, I get these warnings
+> related to wireless. Not sure how much of them are actually serious:
+> 
+> net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_sdata_addr_evt’:
+> net/mac80211/./trace.h:72:775: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
+> net/mac80211/./trace.h:72:964: warning: ordered comparison of pointer with null pointer [-Wextra]
+> In file included from include/trace/ftrace.h:356:0,
+>                  from include/trace/define_trace.h:86,
+>                  from net/mac80211/trace.h:1953,
+>                  from net/mac80211/trace.c:10:
 
-No.
+I'm sure that Johannes will address these, or else be subjected to
+merciless teasing at the hands of every Finn that we can muster...
 
->
->> I'll be happy to add more debugging if someone has suggestions.
->
->> 		compat = cfg80211_chandef_compatible(
->> 				&sdata->vif.bss_conf.chandef, compat);
->> 		if (!compat)
->> 			break;
->> 	}
->> 	rcu_read_unlock();
->>
->> 	if (WARN_ON_ONCE(!compat))
->> 		return;
->
-> Might be helpful to know whether chandef_compatible() returned NULL, or
-> if the loop simply never found an interface with a matching pointer.
-
-Ok, I'll add this.
-
-Probably un-related, but the system usually crashes shortly after.  With
-memory debugging enabled, it appears to be relayfs and/or ath9k accessing
-freed memory.
-
-I'm digging into that one first on an un-hacked kernel..then will
-get back to this warning...
-
-Thanks,
-Ben
-
->
-> johannes
->
-
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
