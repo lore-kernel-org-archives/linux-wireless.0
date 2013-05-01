@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42775 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759467Ab3EOOwk (ORCPT
+Received: from mail-ia0-f176.google.com ([209.85.210.176]:35005 "EHLO
+	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989Ab3EAUGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:40 -0400
-Subject: [PATCH 26/29] ath10k: add txrx.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:46:30 +0300
-Message-ID: <20130515144630.4492.89013.stgit@localhost6.localdomain6> (sfid-20130515_165317_043461_B778C48D)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
+	Wed, 1 May 2013 16:06:37 -0400
+Received: by mail-ia0-f176.google.com with SMTP id l27so1654044iae.21
+        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 13:06:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1367421455-18463-4-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+	<1367421455-18463-4-git-send-email-juhosg@openwrt.org>
+Date: Wed, 1 May 2013 22:06:37 +0200
+Message-ID: <CAL1gcdNwPNCnFTQY3=Tjr3nO+mvqgdbt+en=Bk_Wpo5mvZ+R4A@mail.gmail.com> (sfid-20130501_220654_387523_8B8E9C42)
+Subject: Re: [PATCH 3/7] rt2x00: rt2800pci: use rt2x00dev->tx->limit
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> The TX data queue is initialized already when
+> the rt2800pci_txstatus_interrupt() function is
+> called.
+>
+> Fetch the number of the queue entries from that
+> instead of using the entry_num field of the data
+> queue descriptor.
+>
+> The two values are the same, and the use of the
+> rt2x00dev->tx->limit value allows us to get rid
+> of a superfluous pointer dereference.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 6f4a861..330f1d2 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1014,7 +1014,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+>          * Since we have only one producer and one consumer we don't
+>          * need to lock the kfifo.
+>          */
+> -       for (i = 0; i < rt2x00dev->ops->tx->entry_num; i++) {
+> +       for (i = 0; i < rt2x00dev->tx->limit; i++) {
+>                 rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
+>
+>                 if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
+> --
+> 1.7.10
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+--
 ---
- drivers/net/wireless/ath/ath10k/txrx.h |   39 ++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/txrx.h
-
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.h b/drivers/net/wireless/ath/ath10k/txrx.h
-new file mode 100644
-index 0000000..e78632a
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/txrx.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _TXRX_H_
-+#define _TXRX_H_
-+
-+#include "htt.h"
-+
-+void ath10k_txrx_tx_unref(struct ath10k_htt *htt, struct sk_buff *txdesc);
-+void ath10k_txrx_tx_completed(struct ath10k_htt *htt,
-+			      const struct htt_tx_done *tx_done);
-+void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info);
-+
-+struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
-+				     const u8 *addr);
-+int ath10k_wait_for_peer_created(struct ath10k *ar, int vdev_id,
-+				 const u8 *addr);
-+int ath10k_wait_for_peer_deleted(struct ath10k *ar, int vdev_id,
-+				 const u8 *addr);
-+
-+void ath10k_peer_map_event(struct ath10k_htt *htt,
-+			   struct htt_peer_map_event *ev);
-+void ath10k_peer_unmap_event(struct ath10k_htt *htt,
-+			     struct htt_peer_unmap_event *ev);
-+
-+#endif
-
+Gertjan
