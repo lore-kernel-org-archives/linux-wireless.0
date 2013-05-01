@@ -1,99 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:32842 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763Ab3EMEzo (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:44782 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219Ab3EAIb0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 00:55:44 -0400
+	Wed, 1 May 2013 04:31:26 -0400
 MIME-Version: 1.0
-In-Reply-To: <518E0CD6.3040501@hauke-m.de>
-References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
- <518DF4B1.3020706@broadcom.com> <518E0CD6.3040501@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Sun, 12 May 2013 21:55:22 -0700
-Message-ID: <CAB=NE6W8ra0fzXjJdRz8tSTEa9PoNUSAQ_MCV0aRoTr3tO1WoQ@mail.gmail.com> (sfid-20130513_065548_918077_3B8A08DD)
-Subject: Re: Using compat-drivers conflicts with kernel mac80211 and cfg80211
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	Paul Stewart <pstew@chromium.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	JoSH Lehan <krellan@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1367362536.9976.9.camel@x230>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+	<20130304154832.GD3021@redhat.com>
+	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
+	<CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
+	<CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
+	<CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
+	<CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
+	<CANUX_P3Mt3X8JXq5siSijrWGkjeWbTCcdmJ-Fuv6U8jUqrFouQ@mail.gmail.com>
+	<CAErSpo66=UngrHNcEDeh4gXnt5c0qJHwbxum0mBz-rSWGduLhg@mail.gmail.com>
+	<CANUX_P0hpx8NNvX6cJXfOZMNYN8hrEF-gzf9hBN2Uz=k0WiwgA@mail.gmail.com>
+	<CANUX_P1JnFk7yovC7kXBMDWiErGhvzDQrNCm8te39m41SonCNg@mail.gmail.com>
+	<CAErSpo5WbdCx0iyt14bJxCiNBtUWjT2rMeg5YwNQaRt=M+_v8Q@mail.gmail.com>
+	<1367362536.9976.9.camel@x230>
+Date: Wed, 1 May 2013 11:31:25 +0300
+Message-ID: <CANUX_P1sS8+3s-8-TyovHEwpa5qgQDj4W8P_hvfQjE2MKcTNEA@mail.gmail.com> (sfid-20130501_103146_203595_D2AF555D)
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 11, 2013 at 2:18 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 05/11/2013 09:35 AM, Arend van Spriel wrote:
->> On 05/11/2013 02:52 AM, JoSH Lehan wrote:
->>> It seems I can choose to use the mac80211/cfg80211 that came with the
->>> kernel,*or*, the mac80211/cfg80211 that come with compat-drivers.  Is
->>> this correct?  I'll have to maintain these two mac80211/cfg80211
->>> drivers in separate directories, since they have the same name, and it
->>> will complicate my detection/loading script, but if there's no other
->>> way, then this is what needs to be done.
->>
->> Luis may correct me, but I think you are correct. compat-drivers
->> provides a compat.ko which is the glue between new drivers and your
->> kernel. With the new drivers you get new features provided you have new
->> mac80211/cfg80211 as well. Hence the glue is between wireless modules
->> (including mac80211/cfg80211) and rest of your kernel. On a non-embedded
->> system the compat-driver modules are installed in a separate folder
->> /lib/modules/<your_kernel_version/updates. depmod is run during the
->> install in which this folder takes precedence.
->>
->> Not sure what your use-case is. You have a system in which different
->> wireless devices may be plugged in or ...?
+[from Bjorn's mail]
+> In Emmanuel's case, we don't get _OSC control, so
+> pci_disable_link_state() does nothing.
+
+Right, but this is true with the specific log I sent to you. Is it
+possible that another platform  / BIOS, we *will* get _OSC control and
+that pci_disable_link_state() will actually do something? In that case
+I would prefer not to remove the call to pcie_disable_link_state().
+Also - in the log I sent you, we don't get _OSC control, but I can see
+'disabling PCIe ASPM" ... and it *is* enabled (since L1 works). So I
+am kinda scratching my head here...
+
 >
-> You can only use mac80211/cfg80211 from compat-driver *or* the kernel.
-> There was a plan to rename all exported symbols and make it possible to
-> use both at the same time, but no one fully implemented it.
+>> I'm not convinced iwlwifi really needs to disable the link power
+>> management states in the first place -- the 1a7123cdd9 changelog isn't
+>> very convincing, and I'm not aware of any reported issues even though
+>> we're actually leaving them enabled in many cases.
+>>
+>> More generally, I don't think the pci_disable_link_state() interface
+>> is very useful because it often doesn't do what it claims, and the
+>> caller has no indication.
+>
+> The general issue here is that Windows will (as far as we've been able
+> to determine) never touch ASPM registers unless given PCIe control via
+> _OSC. Drivers are presumably able to override this by hitting
+> configuration registers themselves. The pci_disable_link_state()
+> functions are currently broadly equivalent to the helper functions
+> provided in the Windows .inf files, and if drivers really want to
+> disable the control themselves then they can do so. Renaming the
+> functions to make that clearer, and possibly adding some additional
+> functions to force the case, may be worthwhile.
+>
+> The only time this should be relevant is if (a) the BIOS has enabled L1
+> on iwlwifi, (b) the BIOS has disabled ASPM control, and (c) the hardware
+> doesn't work with L1 enabled. Are there really cases where that's true?
+>
 
-I ended up renaming as many exported symbols as I could when and only
-when we were not providing a full subsystem backport for where that
-exported symbol lived. You can find these pegged with a
-LINUX_BACKPORT() macro. If a subsystem is backported fully we don't do
-the mapping name change. I still looked at an option to provide what
-you describe though and simply rename all exported symbols with a the
-LINUX_BACKPORT() prefix, ie, backport_ -- and the best lead I found
-was work done by Andi Kleen a while ago on introducing module
-namespaces but this work got rejected. We could try to port that
-ourselves somehow for backports. For details see this commit which
-talks about it:
+After having read (a bit) about _OSC I can say the following:
+L1 is a must for the Windows driver - so that it doesn't sounds
+reasonable that the .inf of the Windows driver for Intel Wireless NICs
+disables ASPM through _OSC or through any other mechanism.
+(a) - this is really platform / BIOS dependent, and I can't test all
+the platform out there
+(b) - ditto
+(c) - the HW *should* work with L1 enabled but we may very well have a
+bug in the driver. I have tried to check the way we initialize the HW
+and it seems fine, but one never knows.
 
-https://git.kernel.org/cgit/linux/kernel/git/mcgrof/compat.git/commit/?id=8ae967309876a9297dedfdf64dfcca406639686f
 
-Under the new backports tree though we now use Python for some code
-mangling to help us with our backport, this will specially be useful
-later when we start using SmPL for patch treatment where the hunks
-don't line up anymore or simply always with SmPL. Anyway, apart from
-that - we also use the python script to do some mangling of Kconfig
-entries for us. Given that -- it should then also be possible for us
-to then treat all EXPORT_SYMBOL_GPL() (note on backports all symbols
-are EXPORT_SYMBOL_GPL() or at least that was the intent, we should fix
-if anything has leaked) to add the LINUX_BACKPORT() prefix for us --
-but note that it still does not address the head file changes. I
-suppose you could first scrape for all exported symbols and then go
-also address headers.
-
-So these are the two options I see right now, Andi's work or Python
-magic. Both are projects in themselves. Patches welcomed.
-
-I should note the compat-drivers git tree will be renamed to backports
-where it now has compat and compat-drivers merged and I'll soon make
-it available on kernel.org, as soon as I get all delta merged that
-gets us to backport a v3.10 release. I the meantime interested
-developers should look at the instructions I provided another
-developer here:
-
-http://marc.info/?l=linux-backports&m=136838721415310&w=2
-
-As for kernel integration of backports -- that is not possible today
-but I welcome such changes. I provided a hint as to how this could be
-possible to do here:
-
-http://marc.info/?l=linux-backports&m=136823203813610&w=2
-
-Patches welcomed.
-
-  Luis
+thanks for your time!
