@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4800 "EHLO mms3.broadcom.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:36243 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757589Ab3EDV2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 May 2013 17:28:44 -0400
-Message-ID: <51857D7D.3010706@broadcom.com> (sfid-20130504_232855_081035_CB645FCE)
-Date: Sat, 4 May 2013 23:28:29 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Matt Chen" <machen@suse.com>, joeyli <jlee@suse.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux summit this year ?
-References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
- <20130225143201.GA6455@tuxdriver.com>
- <1361809785.3902.19.camel@aeonflux> <512BAED0.2000507@lwfinger.net>
- <20130225211207.GE6455@tuxdriver.com>
- <1361892097.3902.34.camel@aeonflux>
- <1367522831.11375.1.camel@jlt4.sipsolutions.net>
- <20130502194308.GC2050@tuxdriver.com>
- <1367568670.9430.7.camel@jlt4.sipsolutions.net>
- <20130503144947.GF2069@tuxdriver.com>
- <1367592778.13104.37.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1367592778.13104.37.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1761480Ab3EAPRe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 May 2013 11:17:34 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 4/7] rt2x00: rt2800usb: use rt2x00dev->rx->limit
+Date: Wed,  1 May 2013 17:17:32 +0200
+Message-Id: <1367421455-18463-5-git-send-email-juhosg@openwrt.org> (sfid-20130501_171801_923423_9F6E1638)
+In-Reply-To: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2013 04:52 PM, Johannes Berg wrote:
-> On Fri, 2013-05-03 at 10:49 -0400, John W. Linville wrote:
->
->>> Sounds good to me. If it overlaps LPC, which one are people going to
->>> have to register for (if not going to both anyway)?
->>
->> I would presume that if you want to got to LPC sessions then you
->> would have to register for LPC.  Generally we have required Wireless
->> Summit attendees to register for LinuxCon, and I presume that would
->> be required this time (so both LinuxCon and LPC if you want the
->> LPC sessions).
->
-> That's what I figured, would just be good to announce it (you're going
-> to send an invitation email once plans are finalized, right? :) )
->
->> Alternatively, probably we could have a separate Wireless Summit
->> registration -- not sure what that will cost, but it probably won't
->> be zero.
->
-> That seems far too much overhead, and people who are there likely want
-> to attend some other sessions anyway.
->
->> Probably can have an easel w/ a big note pad
->
-> Sure, that's almost equivalent and much easier I guess. No need to
-> inquire otherwise.
+The RX data queue is initialized already when
+the rt2800_usb_enable_radio() function is called.
 
-So the wl summit is going to be in North-America this year? I was 
-setting my hopes on Edinburgh.
+Fetch the number of the queue entries from that
+instead of using the entry_num field of the data
+queue descriptor.
 
-Gr. AvS
+The two values are the same, and the use of the
+rt2x00dev->rx->limit value allows us to get rid
+of a superfluous pointer dereference.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index ac854d7..c71a48d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -327,7 +327,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	 * this limit so reduce the number to prevent errors.
+ 	 */
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_LIMIT,
+-			   ((rt2x00dev->ops->rx->entry_num * DATA_FRAME_SIZE)
++			   ((rt2x00dev->rx->limit * DATA_FRAME_SIZE)
+ 			    / 1024) - 3);
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_EN, 1);
+ 	rt2x00_set_field32(&reg, USB_DMA_CFG_TX_BULK_EN, 1);
+-- 
+1.7.10
 
