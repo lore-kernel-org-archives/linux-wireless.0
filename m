@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-blr1.sasken.com ([203.200.200.72]:63511 "EHLO
-	mta-blr1.sasken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933565Ab3E1IjM convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:60453 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989Ab3EAUHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 May 2013 04:39:12 -0400
-From: Rohini Srinivas <rohini.srinivas@sasken.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Compact-wireless build issue
-Date: Tue, 28 May 2013 08:39:08 +0000
-Message-ID: <6B416C79F6231545B911C08312C479F2F01A@exgmbxfz02.sasken.com> (sfid-20130528_103917_376011_8E85E9E9)
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 1 May 2013 16:07:01 -0400
+Received: by mail-ie0-f178.google.com with SMTP id aq17so2310950iec.37
+        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 13:07:00 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1367421455-18463-5-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+	<1367421455-18463-5-git-send-email-juhosg@openwrt.org>
+Date: Wed, 1 May 2013 22:07:00 +0200
+Message-ID: <CAL1gcdMGnBCyqPofrhzb8EB13ejS5=Po4_UnDArpnStWV6Y+iQ@mail.gmail.com> (sfid-20130501_220704_545872_21C30237)
+Subject: Re: [PATCH 4/7] rt2x00: rt2800usb: use rt2x00dev->rx->limit
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> The RX data queue is initialized already when
+> the rt2800_usb_enable_radio() function is called.
+>
+> Fetch the number of the queue entries from that
+> instead of using the entry_num field of the data
+> queue descriptor.
+>
+> The two values are the same, and the use of the
+> rt2x00dev->rx->limit value allows us to get rid
+> of a superfluous pointer dereference.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-This is Rohini Srinivas from Sasken Communication Technologies, Bangalore. I am trying to build the compact wireless for wilink8 with our dm814x specific ezsdk kernel version 2.6.37.
-We are currently facing issues with regard to the same.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I have followed the steps as mentioned in http://processors.wiki.ti.com/index.php/WL18xx_Build_System_Scripts .Procedure under "System Build Scripts".
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index ac854d7..c71a48d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -327,7 +327,7 @@ static int rt2800usb_enable_radio(struct rt2x00_dev *rt2x00dev)
+>          * this limit so reduce the number to prevent errors.
+>          */
+>         rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_AGG_LIMIT,
+> -                          ((rt2x00dev->ops->rx->entry_num * DATA_FRAME_SIZE)
+> +                          ((rt2x00dev->rx->limit * DATA_FRAME_SIZE)
+>                             / 1024) - 3);
+>         rt2x00_set_field32(&reg, USB_DMA_CFG_RX_BULK_EN, 1);
+>         rt2x00_set_field32(&reg, USB_DMA_CFG_TX_BULK_EN, 1);
+> --
+> 1.7.10
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The dm81x ezsdk version details - http://processors.wiki.ti.com/index.php/EZSDK_Feature_List .The ezsdk version we are using is 5.04.
 
-As per the README document in compat-wireless downloaded for wilink8 "ol_r8.a6.01" tag, I see that kernel verison > 2.6.24 is compatible. I am trying to build this compact-wireless package with our 2.6.37 kernel, which is failing due to some variables been referred which are added post 3.2 kernel.
 
-Script run - ./wl18xx_build.sh all
-Error-
-  CC [M]  /u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.o
-/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.c: In function 'wl1271_probe':
-/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.c:272: error: 'SDIO_SDIO_REV_3_00' undeclared (first use in this function)
-/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.c:272: error: (Each undeclared identifier is reported only once
-/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.c:272: error: for each function it appears in.)
-make[5]: *** [/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore/sdio.o] Error 1
-make[4]: *** [/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti/wlcore] Error 2
-make[3]: *** [/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless/ti] Error 2
-make[2]: *** [/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless/drivers/net/wireless] Error 2
-make[1]: *** [_module_/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/wlan_settings/build-utilites/wlan_tools/compat-wireless] Error 2
-make[1]: Leaving directory `/u/rohinis/ezsdk_dm814x-evm_5_04_00_11_setuplinux/board-support/linux-2.6.37-psp04.04.00.01_roh'
-make: *** [modules] Error 2
-
-Could patches be provided to the kernel 2.6.37 wrt to wilink8 module only which may resolve this problem? Or any other suggestions if you have would be helpful.
-
-Please could you provide me any pointers and help us resolve this issue.
-
-Thanks and Regards,
-Rohini
-
-________________________________
-
-SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
-Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
+--
+---
+Gertjan
