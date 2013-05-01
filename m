@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52974 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050Ab3EQSaI (ORCPT
+Received: from avasout07.plus.net ([84.93.230.235]:34156 "EHLO
+	avasout07.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754336Ab3EAIfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 May 2013 14:30:08 -0400
-Date: Fri, 17 May 2013 14:21:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 1 May 2013 04:35:15 -0400
+From: Gerry Gavigan <gerry@gavigan.f9.co.uk>
+To: Sujith Manoharan <sujith@msujith.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2013-05-16
-Message-ID: <20130517182143.GA2012@tuxdriver.com> (sfid-20130517_203026_722623_D10998AA)
-References: <1368737568.8253.7.camel@jlt4.sipsolutions.net>
+Subject: Re: ath9k problems on openSUSE 12.3
+Date: Wed, 01 May 2013 09:35:10 +0100
+Message-ID: <1835202.Vr0lTLYE3Q@linux-zd5t.site> (sfid-20130501_103522_007634_1CF84971)
+In-Reply-To: <20854.23253.514263.467205@gargle.gargle.HOWL>
+References: <d5546f49ab812cc89887b18b41d44da0@imap.force9.net> <2687000.szPz826eEU@linux-zd5t.site> <20854.23253.514263.467205@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1368737568.8253.7.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 16, 2013 at 10:52:48PM +0200, Johannes Berg wrote:
-> John,
+On Tuesday 23 Apr 2013 15:26:37 Sujith Manoharan wrote:
+> Gerry Gavigan wrote:
+> > - turned power save off
+> > - confirmed
+> > - shut down
+> > - restarted
+> > - power save is on
+> > 
+> > problem persists
 > 
-> Here's my first pull request for the 3.10 fixes stream. Unfortunately, a
-> fairly large number of these also had to be tagged for stable.
+> Ok.
 > 
-> This is what I have:
->  * a patch from Felix to fix RCU usage in his rate table code
->  * a patch from Ilan to add the wdev id to some notifications so they
-> can
->    actually be used by userspace
->  * Sasha Levin found an issue in how hwsim handles devices
->  * a fix for a bug in the wiphy_register() error path that's been there
-> forever
->  * three fixes for WoWLAN
->  * AP mode frame matching was erroneously giving frames to all virtual
-> AP
->    interfaces (reported by Jouni)
->  * a fix for HT handling in my CSA changes, found by Sujith
->  * a fix for some locking simplifications gone wrong
->  * Ben Greear found more cfg80211/mac80211 state confusion
->  * and a fix for another bug found by Jouni: local state changes need to
-> be
->    reported by mac80211 to cfg80211 so it disconnects properly.
-> 
-> Please pull. Thanks,
-> johannes
-> 
-> 
-> 
-> The following changes since commit 61f1598278876527314f5fc1d00cf0a4d525c1f7:
-> 
->   Merge branch 'wireless' (2013-05-10 09:44:05 -0700)
-> 
-> are available in the git repository at:
-> 
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to e248ad30204eff6559b4d2d94d49d9d46c08185a:
-> 
->   cfg80211: fix sending WoWLAN TCP wakeup settings (2013-05-16 22:38:09 +0200)
+> Can you load the driver with more debugging options and post the kernel log
+> ? Please use the mask debug=0x8f49.
 
-Pulling now...
+I managed to identify what turned out to be the real problem.  It was nothing 
+to do with the ath9k and everything to do with my router.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I apologise for wasting your time but I am grateful that you bothered
+
+Gerry
+
+
+
+
+
+
