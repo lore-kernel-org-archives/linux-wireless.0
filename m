@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36769 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:33232 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008Ab3EJO1N (ORCPT
+	with ESMTP id S1751393Ab3EAQo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 May 2013 10:27:13 -0400
-Message-ID: <1368196028.8390.18.camel@jlt4.sipsolutions.net> (sfid-20130510_162721_054162_B62A4BEF)
-Subject: Re: [RFC 0/4] cfg80211/mac80211: simplify locking
+	Wed, 1 May 2013 12:44:28 -0400
+Message-ID: <1367426645.9065.1.camel@jlt4.sipsolutions.net> (sfid-20130501_184509_558766_C6C05BA0)
+Subject: Re: net-next, wireless compile warnings
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 10 May 2013 16:27:08 +0200
-In-Reply-To: <518D0390.90006@candelatech.com>
-References: <1368187689-29706-1-git-send-email-johannes@sipsolutions.net>
-	 <518D0390.90006@candelatech.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Borkmann <borkmann@iogearbox.net>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 01 May 2013 18:44:05 +0200
+In-Reply-To: <20130501125017.GK25625@tuxdriver.com> (sfid-20130501_145027_078706_05A64B19)
+References: <518108D7.9050206@iogearbox.net>
+	 <20130501125017.GK25625@tuxdriver.com>
+	 (sfid-20130501_145027_078706_05A64B19)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-05-10 at 07:26 -0700, Ben Greear wrote:
-> On 05/10/2013 05:08 AM, Johannes Berg wrote:
-> > I got a little fed up with all the locking, and decided to simplify.
-> >
-> > This should still work, but I've only done some very simple tests.
-> > I'm hoping it'll fix some of the weird corner cases that Ben and
-> > others have found, which may be due to different locks in different
-> > cases and things racing against each other ... I'm not convinced it
-> > really will though, but hey, who knows :)
+On Wed, 2013-05-01 at 08:50 -0400, John W. Linville wrote:
+> On Wed, May 01, 2013 at 02:21:43PM +0200, Daniel Borkmann wrote:
+> > When compiling the latest net-next tree with W=1, I get these warnings
+> > related to wireless. Not sure how much of them are actually serious:
+> > 
+> > net/mac80211/./trace.h: In function ‘ftrace_define_fields_local_sdata_addr_evt’:
+> > net/mac80211/./trace.h:72:775: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
+> > net/mac80211/./trace.h:72:964: warning: ordered comparison of pointer with null pointer [-Wextra]
+> > In file included from include/trace/ftrace.h:356:0,
+> >                  from include/trace/define_trace.h:86,
+> >                  from net/mac80211/trace.h:1953,
+> >                  from net/mac80211/trace.c:10:
 > 
-> I'm stacked high with tasks at the moment, but will try to
-> run this through some testing soon.
-> 
-> These are in your tree?
+> I'm sure that Johannes will address these, or else be subjected to
+> merciless teasing at the hands of every Finn that we can muster...
 
-In the wip branch, for now.
+It's the teasing part ;-)
+
+This is in the tracing macros. I've been aware of these for a while, but
+there isn't really anything I can do about it without dissecting the
+tracing macros ... :)
 
 johannes
 
