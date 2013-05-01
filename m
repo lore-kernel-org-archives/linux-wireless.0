@@ -1,50 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4858 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753248Ab3ELKeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 May 2013 06:34:25 -0400
-Message-ID: <518F701B.2080900@broadcom.com> (sfid-20130512_123431_472460_4ADC8521)
-Date: Sun, 12 May 2013 12:34:03 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:52371 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756649Ab3EAUIM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 May 2013 16:08:12 -0400
+Received: by mail-ie0-f182.google.com with SMTP id bn7so2361847ieb.27
+        for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 13:08:12 -0700 (PDT)
 MIME-Version: 1.0
-To: "JoSH Lehan" <krellan@gmail.com>
-cc: "Adrian Chadd" <adrian@freebsd.org>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: Using compat-drivers conflicts with kernel mac80211 and
- cfg80211
-References: <CALOB5QZCeC7OTqkw5go6E_KUajVe5GDuCsSsc68cpZqE2YVfRQ@mail.gmail.com>
- <518DF4B1.3020706@broadcom.com> <518ECC39.9090401@gmail.com>
- <CAJ-VmonOuhBgXa3-LkspaCgAAh8Y9Jxejn-McVourzgE-ajHTw@mail.gmail.com>
-In-Reply-To: <CAJ-VmonOuhBgXa3-LkspaCgAAh8Y9Jxejn-McVourzgE-ajHTw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <1367421455-18463-7-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+	<1367421455-18463-7-git-send-email-juhosg@openwrt.org>
+Date: Wed, 1 May 2013 22:08:11 +0200
+Message-ID: <CAL1gcdP0ygaGVNqb9XMgzAXqnKEvmj3qPidSeOf+tJJS9_d5ww@mail.gmail.com> (sfid-20130501_220815_084796_50283642)
+Subject: Re: [PATCH 6/7] rt2x00: rt2x00dev: defer operational mode detection
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/12/2013 02:46 AM, Adrian Chadd wrote:
-> Hi,
+On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> Only do it after the queues are allocated. This
+> will allow to use the 'rt2x00dev->bcn->limit'
+> instead of 'rt2x00dev->ops->bcn->entry_num'.
 >
-> On 11 May 2013 15:54, JoSH Lehan <krellan@gmail.com> wrote:
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |   34 +++++++++++++++----------------
+>  1 file changed, 17 insertions(+), 17 deletions(-)
 >
->> Thanks!  So, I'll need to maintain two sets of mac80211/cfg80211
->> modules: one for drivers that were compiled along with the kernel, and
->> another for drivers that were compiled as part of the compat-drivers
->> package.
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index b287467..6a20172 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1301,23 +1301,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+>                 (rt2x00dev->ops->max_ap_intf - 1);
 >
-> No, you or the vendor should forward port it to linux-next, then you
-> can just pick up the whole driver/framework set from compat-wireless.
+>         /*
+> -        * Determine which operating modes are supported, all modes
+> -        * which require beaconing, depend on the availability of
+> -        * beacon entries.
+> -        */
+> -       rt2x00dev->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> -       if (rt2x00dev->ops->bcn->entry_num > 0)
+> -               rt2x00dev->hw->wiphy->interface_modes |=
+> -                   BIT(NL80211_IFTYPE_ADHOC) |
+> -                   BIT(NL80211_IFTYPE_AP) |
+> -#ifdef CONFIG_MAC80211_MESH
+> -                   BIT(NL80211_IFTYPE_MESH_POINT) |
+> -#endif
+> -                   BIT(NL80211_IFTYPE_WDS);
+> -
+> -       rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+> -
+> -       /*
+>          * Initialize work.
+>          */
+>         rt2x00dev->workqueue =
+> @@ -1348,6 +1331,23 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+>                 goto exit;
+>
+>         /*
+> +        * Determine which operating modes are supported, all modes
+> +        * which require beaconing, depend on the availability of
+> +        * beacon entries.
+> +        */
+> +       rt2x00dev->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> +       if (rt2x00dev->ops->bcn->entry_num > 0)
+> +               rt2x00dev->hw->wiphy->interface_modes |=
+> +                   BIT(NL80211_IFTYPE_ADHOC) |
+> +                   BIT(NL80211_IFTYPE_AP) |
+> +#ifdef CONFIG_MAC80211_MESH
+> +                   BIT(NL80211_IFTYPE_MESH_POINT) |
+> +#endif
+> +                   BIT(NL80211_IFTYPE_WDS);
+> +
+> +       rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+> +
+> +       /*
+>          * Initialize ieee80211 structure.
+>          */
+>         retval = rt2x00lib_probe_hw(rt2x00dev);
+> --
+> 1.7.10
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-That is indeed the approach. So integrate your vendor provided driver 
-into your local linux-next tree and create you own compat-drivers 
-package using that tree (see [1]). You have to tinker the framework to 
-include that driver.
-
-Regards,
-Arend
-
-[1] 
-https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/hacking
 
 
+--
+---
+Gertjan
