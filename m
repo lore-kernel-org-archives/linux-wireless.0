@@ -1,105 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:52893 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755166Ab3EMUIF (ORCPT
+Received: from sjcbarracuda02.arubanetworks.com ([199.127.104.60]:45988 "EHLO
+	sjcbarracuda02.arubanetworks.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754746Ab3EAOtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 May 2013 16:08:05 -0400
-Received: by mail-ee0-f49.google.com with SMTP id d17so3883126eek.22
-        for <linux-wireless@vger.kernel.org>; Mon, 13 May 2013 13:08:04 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] bcma: prepare for supporting more SPROM sizes
-Date: Mon, 13 May 2013 22:07:52 +0200
-Message-Id: <1368475673-27587-2-git-send-email-zajec5@gmail.com> (sfid-20130513_220811_845533_AE756F17)
-In-Reply-To: <1368475673-27587-1-git-send-email-zajec5@gmail.com>
-References: <1368475673-27587-1-git-send-email-zajec5@gmail.com>
+	Wed, 1 May 2013 10:49:41 -0400
+Received: from ALPINEMEADOWS.arubanetworks.com ([10.1.8.22]) by sjcbarracuda02.arubanetworks.com with ESMTP id AVnyDkbaa4D5Vnwu (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Wed, 01 May 2013 07:49:40 -0700 (PDT)
+Message-ID: <51812B80.1030705@arubanetworks.com> (sfid-20130501_164945_507119_96BCED7B)
+Date: Wed, 1 May 2013 16:49:36 +0200
+From: Shawn Adams <sadams@arubanetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi no HT function - is_lq_table_valid
+References: <5180F0C0.3070002@arubanetworks.com>
+In-Reply-To: <5180F0C0.3070002@arubanetworks.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/sprom.c |   35 ++++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
+All,
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 5386cdd..c96f71c 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -502,7 +502,6 @@ static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
- 	case BCMA_CHIP_ID_BCM4331:
- 		present = chip_status & BCMA_CC_CHIPST_4331_OTP_PRESENT;
- 		break;
--
- 	case BCMA_CHIP_ID_BCM43224:
- 	case BCMA_CHIP_ID_BCM43225:
- 		/* for these chips OTP is always available */
-@@ -550,7 +549,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
- {
- 	u16 offset = BCMA_CC_SPROM;
- 	u16 *sprom;
--	int err = 0;
-+	size_t sprom_sizes[] = { SSB_SPROMSIZE_WORDS_R4, };
-+	int i, err = 0;
- 
- 	if (!bus->drv_cc.core)
- 		return -EOPNOTSUPP;
-@@ -579,32 +579,37 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 		}
- 	}
- 
--	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
--			GFP_KERNEL);
--	if (!sprom)
--		return -ENOMEM;
--
- 	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4331 ||
- 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
- 
- 	bcma_debug(bus, "SPROM offset 0x%x\n", offset);
--	bcma_sprom_read(bus, offset, sprom, SSB_SPROMSIZE_WORDS_R4);
-+	for (i = 0; i < ARRAY_SIZE(sprom_sizes); i++) {
-+		size_t words = sprom_sizes[i];
-+
-+		sprom = kcalloc(words, sizeof(u16), GFP_KERNEL);
-+		if (!sprom)
-+			return -ENOMEM;
-+
-+		bcma_sprom_read(bus, offset, sprom, words);
-+		err = bcma_sprom_valid(sprom, words);
-+		if (!err)
-+			break;
-+
-+		kfree(sprom);
-+	}
- 
- 	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4331 ||
- 	    bus->chipinfo.id == BCMA_CHIP_ID_BCM43431)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
- 
--	err = bcma_sprom_valid(sprom, SSB_SPROMSIZE_WORDS_R4);
- 	if (err) {
--		bcma_warn(bus, "invalid sprom read from the PCIe card, try to use fallback sprom\n");
-+		bcma_warn(bus, "Invalid SPROM read from the PCIe card, trying to use fallback SPROM\n");
- 		err = bcma_fill_sprom_with_fallback(bus, &bus->sprom);
--		goto out;
-+	} else {
-+		bcma_sprom_extract_r8(bus, sprom);
-+		kfree(sprom);
- 	}
- 
--	bcma_sprom_extract_r8(bus, sprom);
--
--out:
--	kfree(sprom);
- 	return err;
- }
+Please disregard this post, the issue was /etc/modprobe.d/iwlwifi.conf
+
+This and /etc/modprobe.d/iwlwifi.conf both contained conflicting
+11n_disable lines, apparently iwlwifi.conf
+takes precedence, HT was in fact, disabled.
+
+ grep . /sys/module/iwlwifi/parameters/*
+/sys/module/iwlwifi/parameters/11n_disable:1
+
+Apologies for missing this.
+
+
+
+
+On 05/01/2013 12:38 PM, Shawn Adams wrote:
+> Hello,
+>
+> I'm new to the list, and have one question, apologies if this not
+> appropriate for this list.
+>
+>
+> I have recently updated a Lenovo T410s to opensuse 12.3, and noted that the
+> PC will no longer connect HT to anything.
+>
+> It connects fine at both 802.11a and 802.11g, but never with HT.
+>
+> throughout is ~30Mbps,  both AP and card list the connection at 54Mbps
+>
+>
+> This worked before the update from opensuse 12.2 and the older
+> kernel/iwlwifi driver, using
+> 5Ghz HT at throughput at 90Mbps
+>
+>
+> I see these messages in the debug, regardless of which band or channel
+> is used:
+>
+>
+> 2013-04-30T21:33:02.853629+02:00 lamda kernel: [ 6355.226711] iwlwifi
+> 0000:03:00.0: I is_lq_table_valid Channel 48 is not an HT channel
+>
+>
+> This event occurs in 802.11g and 802.11a bands, and on a variety of APs,
+> channels.
+>
+> At the same moment a number of different clients are happily using HT on
+> the same channel and AP.
+>
+>
+> I read through some of the related patch, but not being a coder, was not
+> able to answer tihs question:
+>
+> What is the driver detecting that tells it this is not an HT channel ?
+>
+>
+> hints very much appreciated.
+>
+> Best regards,
+>
+>
+>
+>
+>
+>
+> Background info:
+>
+> Linux lamda 3.7.10-1.1-default #1 SMP Thu Feb 28 15:06:29 UTC 2013
+> (82d3f21) i686 i686 i386 GNU/Linux
+>
+>
+> 03:00.0 Network controller: Intel Corporation Centrino Advanced-N 6200
+> (rev 35)
+>     Subsystem: Intel Corporation Centrino Advanced-N 6200 2x2 AGN
+>     Flags: bus master, fast devsel, latency 0, IRQ 44
+>     Memory at f2400000 (64-bit, non-prefetchable) [size=8K]
+>     Capabilities: [c8] Power Management version 3
+>     Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>     Capabilities: [e0] Express Endpoint, MSI 00
+>     Capabilities: [100] Advanced Error Reporting
+>     Capabilities: [140] Device Serial Number 58-94-6b-ff-ff-57-31-cc
+>     Kernel driver in use: iwlwifi
+>
+>
+> Connected to d8:c7:c8:9e:dd:09 (on wlan0)
+>     SSID: priv_cert
+>     freq: 5240
+>     RX: 13154608 bytes (28155 packets)
+>     TX: 1411780 bytes (6962 packets)
+>     signal: -57 dBm
+>     tx bitrate: 54.0 MBit/s
+>
+>     bss flags:    short-slot-time
+>     dtim period:    0
+>     beacon int:    100
+>
+>
+>
+>
+
+
 -- 
-1.7.10.4
+
+Shawn Adams
+ACMA,ACMP,CPPA
+Principle Network Engineer, Customer Advocacy
+Tel: +49 151 1265 4997
+Email: sadams@arubanetworks.com <mailto:sadams@arubanetworks.com>
+
+*AIRHEADS SOCIAL*
+
+Wireless Network Headaches? Find Your Cure.
+community.arubanetworks.com <http://community.arubanetworks.com/>
+
 
