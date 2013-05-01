@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:47559 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932432Ab3EOUWZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 16:22:25 -0400
-Date: Wed, 15 May 2013 22:22:16 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sam Leffler <sleffler@google.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCHv2 03/18] mac80211: fix various components for the new 5
- and 10 MHz widths
-Message-ID: <20130515202216.GA23922@pandem0nium> (sfid-20130515_222231_562877_6F631BB7)
-References: <1368627549-22518-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1368627549-22518-4-git-send-email-siwu@hrz.tu-chemnitz.de>
- <CA+yqC4a6W6i9TUoEc1Boxe6a5eun_TSjLB0F+w3F2L_Hn+v_gA@mail.gmail.com>
- <1368641562.20897.11.camel@jlt4.sipsolutions.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:41013 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098Ab3EAUld (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 May 2013 16:41:33 -0400
+Message-ID: <51817E10.2000906@openwrt.org> (sfid-20130501_224137_162592_AB0CBD77)
+Date: Wed, 01 May 2013 22:41:52 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lrZ03NoBR/3+SXJZ"
-In-Reply-To: <1368641562.20897.11.camel@jlt4.sipsolutions.net>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH 0/7] rt2x00: avoid a few superfluous pointer dereferences
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org> <CAL1gcdNQc1-vrxv5LGp3rtcLDPhNRqnCqedYRZdt+V4PSc71rg@mail.gmail.com>
+In-Reply-To: <CAL1gcdNQc1-vrxv5LGp3rtcLDPhNRqnCqedYRZdt+V4PSc71rg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Gertjan,
 
---lrZ03NoBR/3+SXJZ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Wed, May 1, 2013 at 5:17 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> Gabor Juhos (7):
+>>   rt2x00: rt2x00dev: use rt2x00dev->tx->limit
+>>   rt2x00: rt61pci: use rt2x00dev->tx->limit
+>>   rt2x00: rt2800pci: use rt2x00dev->tx->limit
+>>   rt2x00: rt2800usb: use rt2x00dev->rx->limit
+>>   rt2x00: rt2800lib: use rt2x00dev->bcn->winfo_size
+>>   rt2x00: rt2x00dev: defer operational mode detection
+>>   rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
+>>
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+>>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+>>  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+>>  drivers/net/wireless/rt2x00/rt2x00dev.c |   36 +++++++++++++++----------------
+>>  drivers/net/wireless/rt2x00/rt61pci.c   |    2 +-
+>>  5 files changed, 22 insertions(+), 22 deletions(-)
+>>
+> 
+> Thanks for these. Although they are micro optimizations, I guess it is 
+> cleaner to use the actual queue data rather than the queue description data.
 
-On Wed, May 15, 2013 at 08:12:42PM +0200, Johannes Berg wrote:
-> On Wed, 2013-05-15 at 10:16 -0700, Sam Leffler wrote:
-> > On Wed, May 15, 2013 at 7:18 AM, Simon Wunderlich
-> > <simon.wunderlich@s2003.tu-chemnitz.de> wrote:
-> >         This is a collection of minor fixes:
-> >          * don't allow HT IEs in IBSS for 5/10 MHz
-> >          * don't allow HT IEs in Mesh for 5/10 MHz
-> >          * consider 5 and 10 MHz channels when downgrading
-> >          * don't try HT rates for 5 and 10 MHz channels when selecting
-> >         rates
-> >=20
-> >=20
-> > Perhaps I missed a standards discussion but unilaterally disallowing
-> > HT rates on 5/10 channels breaks existing functionality (e.g. I use
-> > them on openwrt).  NOHT should be a regulatory constraint just like it
-> > is for 20 channels.
->=20
-> I don't see how this would break anything, since we wouldn't advertise
-> HT capabilities (for now). My point was that that the standard doesn't
-> (currently) define this, so I think it should be a separate second step
-> for 5/10 MHz channels to see how to do it in a way that wouldn't break
-> when/if the standard is changed to allow it, etc.
+To be honest, I made these patches in preparation of queue descriptor data
+removal. However these changes are not strictly related to that, so I posted the
+patches as a separate series.
 
-I generally think that we could add HT rates too, but this patchset does not
-include that yet. Felix also told me that HT rates work on current hardware,
-and freebsd seems to have support as well. But I'd like to postpone this st=
-ep
-for now and fix this in a later patchset, where we can address concerns too.
+> I've acked all patches, 
 
-Thanks,
-	Simon
+Thanks!
 
---lrZ03NoBR/3+SXJZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+> but I'm afraid they may have come just too late to be included in
+> the 3.10 timeframe, but I leave it up to John to decide.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+No problem, the patches can wait for 3.11.
 
-iEYEARECAAYFAlGT7ngACgkQrzg/fFk7axb+ggCfX1/TiF83fkuH4ZMf0fakEg4U
-Qs8AoMaKc4wXNkcUyQg6evsLA1RVOxRe
-=cfKJ
------END PGP SIGNATURE-----
-
---lrZ03NoBR/3+SXJZ--
+-Gabor
