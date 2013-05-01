@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:40053 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790Ab3EaCJu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 May 2013 22:09:50 -0400
-Received: by mail-pb0-f52.google.com with SMTP id xa12so1376731pbc.25
-        for <linux-wireless@vger.kernel.org>; Thu, 30 May 2013 19:09:50 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 03/40] crda: remove verbose errors out of regdom_intersect()
-Date: Thu, 30 May 2013 19:08:52 -0700
-Message-Id: <1369966169-23640-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130531_040953_513783_9D406B0B)
-In-Reply-To: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1369966169-23640-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:36258 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761486Ab3EAPRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 May 2013 11:17:36 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 7/7] rt2x00: rt2x00dev: use rt2x00dev->bcn->limit
+Date: Wed,  1 May 2013 17:17:35 +0200
+Message-Id: <1367421455-18463-8-git-send-email-juhosg@openwrt.org> (sfid-20130501_171754_185336_BDAAA88D)
+In-Reply-To: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
+References: <1367421455-18463-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+The beacon data queue is initialized already,
+so fetch the number of the queue entries from
+that instead of using the entry_num field of
+the data queue descriptor.
 
-We want to move this to reglib so nuke all that fluff.
+The two values are the same, and the use of the
+rt2x00dev->bcn->limit value allows us to get rid
+of a superfluous pointer dereference.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- intersect.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/intersect.c b/intersect.c
-index e35f2cc..bd2976f 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -110,10 +110,8 @@ static struct ieee80211_regdomain *regdom_intersect(
- 
- 	memset(intersected_rule, 0, sizeof(struct ieee80211_reg_rule));
- 
--	if (!rd1 || !rd2) {
--		fprintf(stderr, "rd1 or or rd2 is null\n");
-+	if (!rd1 || !rd2)
- 		return NULL;
--	}
- 
- 	/* First we get a count of the rules we'll need, then we actually
- 	 * build them. This is to so we can malloc() and free() a
-@@ -133,19 +131,15 @@ static struct ieee80211_regdomain *regdom_intersect(
- 		}
- 	}
- 
--	if (!num_rules) {
--		fprintf(stderr, "error: num_rules == 0\n");
-+	if (!num_rules)
- 		return NULL;
--	}
- 
- 	size_of_regd = sizeof(struct ieee80211_regdomain) +
- 		((num_rules + 1) * sizeof(struct ieee80211_reg_rule));
- 
- 	rd = malloc(size_of_regd);
--	if (!rd) {
--		fprintf(stderr, "no memory left\n");
-+	if (!rd)
- 		return NULL;
--	}
- 
- 	memset(rd, 0, size_of_regd);
- 
-@@ -166,7 +160,6 @@ static struct ieee80211_regdomain *regdom_intersect(
- 	}
- 
- 	if (rule_idx != num_rules) {
--		fprintf(stderr, "Error while doing regdom interesection :(\n");
- 		free(rd);
- 		return NULL;
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 6a20172..dff5012 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1336,7 +1336,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	 * beacon entries.
+ 	 */
+ 	rt2x00dev->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+-	if (rt2x00dev->ops->bcn->entry_num > 0)
++	if (rt2x00dev->bcn->limit > 0)
+ 		rt2x00dev->hw->wiphy->interface_modes |=
+ 		    BIT(NL80211_IFTYPE_ADHOC) |
+ 		    BIT(NL80211_IFTYPE_AP) |
 -- 
-1.7.10.4
+1.7.10
 
