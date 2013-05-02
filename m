@@ -1,34 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rrcs-24-73-230-86.se.biz.rr.com ([24.73.230.86]:39112 "EHLO
-	stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610Ab3EYAE6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 May 2013 20:04:58 -0400
-Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
-	by stuffed.shaftnet.org (8.14.5/8.14.5) with ESMTP id r4P04vbw009476
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 24 May 2013 20:04:57 -0400
-Received: (from pizza@localhost)
-	by stuffed.shaftnet.org (8.14.5/8.14.5/Submit) id r4P04v3K009475
-	for linux-wireless@vger.kernel.org; Fri, 24 May 2013 20:04:57 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ST-E CW1200 driver (v7)
-Date: Fri, 24 May 2013 20:04:37 -0400
-Message-Id: <1369440291-8961-1-git-send-email-pizza@shaftnet.org> (sfid-20130525_020501_622790_8744952E)
+Received: from arrakis.dune.hu ([78.24.191.176]:46299 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758569Ab3EBMaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 08:30:12 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 12/14] rt2x00: rt61pci: implement queue_init callback
+Date: Thu,  2 May 2013 14:30:27 +0200
+Message-Id: <1367497829-7672-13-git-send-email-juhosg@openwrt.org> (sfid-20130502_143035_458652_3CA6B7D7)
+In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Very little has changed since the last patch:
+The generic rt2x00 code has been changed to allow the
+drivers toimplement dynamic data_queue initialization.
 
- * Add a module paramater that disables bss loss mitigation entirely
- * 3.9 compatibility
- * Fix Kconfig (again)
- * 3.10 compatibility
- * Rebase against wireless-next 
+Remove the static data queue descriptor structures
+and implement the queue_init callback instead.
 
-The 3.10+ changes have been compile-tested only -- Due to a move-in-
-progress I'm temporarily unable to test anything.
+Compile tested only.
 
- - Solomon
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   54 ++++++++++++++++++++-------------
+ 1 file changed, 33 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 7e1759b..17507d1 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3025,26 +3025,40 @@ static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
+ 	.config			= rt61pci_config,
+ };
+ 
+-static const struct data_queue_desc rt61pci_queue_rx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= RXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++static void rt61pci_queue_init(struct data_queue *queue)
++{
++	switch (queue->qid) {
++	case QID_RX:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = RXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
+ 
+-static const struct data_queue_desc rt61pci_queue_tx = {
+-	.entry_num		= 32,
+-	.data_size		= DATA_FRAME_SIZE,
+-	.desc_size		= TXD_DESC_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++	case QID_AC_VO:
++	case QID_AC_VI:
++	case QID_AC_BE:
++	case QID_AC_BK:
++		queue->limit = 32;
++		queue->data_size = DATA_FRAME_SIZE;
++		queue->desc_size = TXD_DESC_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
+ 
+-static const struct data_queue_desc rt61pci_queue_bcn = {
+-	.entry_num		= 4,
+-	.data_size		= 0, /* No DMA required for beacons */
+-	.desc_size		= TXINFO_SIZE,
+-	.priv_size		= sizeof(struct queue_entry_priv_mmio),
+-};
++	case QID_BEACON:
++		queue->limit = 4;
++		queue->data_size = 0; /* No DMA required for beacons */
++		queue->desc_size = TXINFO_SIZE;
++		queue->priv_size = sizeof(struct queue_entry_priv_mmio);
++		break;
++
++	case QID_ATIM:
++		/* fallthrough */
++	default:
++		BUG();
++		break;
++	}
++}
+ 
+ static const struct rt2x00_ops rt61pci_ops = {
+ 	.name			= KBUILD_MODNAME,
+@@ -3053,9 +3067,7 @@ static const struct rt2x00_ops rt61pci_ops = {
+ 	.rf_size		= RF_SIZE,
+ 	.tx_queues		= NUM_TX_QUEUES,
+ 	.extra_tx_headroom	= 0,
+-	.rx			= &rt61pci_queue_rx,
+-	.tx			= &rt61pci_queue_tx,
+-	.bcn			= &rt61pci_queue_bcn,
++	.queue_init		= rt61pci_queue_init,
+ 	.lib			= &rt61pci_rt2x00_ops,
+ 	.hw			= &rt61pci_mac80211_ops,
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+-- 
+1.7.10
 
