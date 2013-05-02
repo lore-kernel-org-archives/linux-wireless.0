@@ -1,197 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:48638 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759454Ab3EOOwh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 May 2013 10:52:37 -0400
-Subject: [PATCH 12/29] ath10k: add htt.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k-devel@qca.qualcomm.com
-Date: Wed, 15 May 2013 17:44:23 +0300
-Message-ID: <20130515144423.4492.61589.stgit@localhost6.localdomain6> (sfid-20130515_165256_828821_818920EF)
-In-Reply-To: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-References: <20130515143356.4492.43033.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:60483 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752592Ab3EBQsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 12:48:10 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20130430075704.GH7237@elgon.mountain>
+References: <20130430075704.GH7237@elgon.mountain>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: dhowells@redhat.com, Simon Kelley <simon@thekelleys.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] atmel: printing bogus information
+Date: Thu, 02 May 2013 17:47:58 +0100
+Message-ID: <11125.1367513278@warthog.procyon.org.uk> (sfid-20130502_184821_937420_6FB1ACBC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.c |  165 +++++++++++++++++++++++++++++++++
- 1 file changed, 165 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/htt.c
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-new file mode 100644
-index 0000000..4131cc6
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -0,0 +1,165 @@
-+/*
-+ * Copyright (c) 2005-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2013 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/slab.h>
-+
-+#include "htt.h"
-+#include "core.h"
-+#include "debug.h"
-+
-+static void ath10k_htt_stop_queue(struct ath10k *ar)
-+{
-+	ieee80211_stop_queues(ar->hw);
-+}
-+
-+static void ath10k_htt_wake_queue(struct ath10k *ar)
-+{
-+	ieee80211_wake_queues(ar->hw);
-+}
-+
-+static int ath10k_htt_htc_attach(struct ath10k_htt *htt)
-+{
-+	struct ath10k_htc_svc_conn_req conn_req;
-+	struct ath10k_htc_svc_conn_resp conn_resp;
-+	int status;
-+
-+	memset(&conn_req, 0, sizeof(conn_req));
-+	memset(&conn_resp, 0, sizeof(conn_resp));
-+
-+	conn_req.ep_ops.ep_tx_complete = ath10k_htt_htc_tx_complete;
-+	conn_req.ep_ops.ep_rx_complete = ath10k_htt_t2h_msg_handler;
-+	conn_req.ep_ops.stop_queue = ath10k_htt_stop_queue;
-+	conn_req.ep_ops.wake_queue = ath10k_htt_wake_queue;
-+
-+	/*
-+	 * Specify how deep to let a queue get before ath10k_htc_send will
-+	 * call the ep_send_full function due to excessive send queue depth.
-+	 */
-+	conn_req.max_send_queue_depth = HTT_MAX_SEND_QUEUE_DEPTH;
-+
-+	/* connect to control service */
-+	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_DATA_MSG;
-+
-+	status = ath10k_htc_connect_service(htt->ar->htc, &conn_req,
-+					    &conn_resp);
-+
-+	if (status)
-+		return status;
-+
-+	htt->eid = conn_resp.eid;
-+
-+	return 0;
-+}
-+
-+struct ath10k_htt *ath10k_htt_attach(struct ath10k *ar)
-+{
-+	struct ath10k_htt *htt;
-+
-+	htt = kzalloc(sizeof(*htt), GFP_KERNEL);
-+	if (!htt)
-+		return NULL;
-+
-+	htt->ar = ar;
-+	htt->max_throughput_mbps = 800;
-+
-+	/*
-+	 * Connect to HTC service.
-+	 * This has to be done before calling ath10k_htt_rx_attach,
-+	 * since ath10k_htt_rx_attach involves sending a rx ring configure
-+	 * message to the target.
-+	 */
-+	if (ath10k_htt_htc_attach(htt))
-+		goto err_htc_attach;
-+
-+	ath10k_htt_tx_attach(htt);
-+
-+	if (ath10k_htt_rx_attach(htt))
-+		goto err_rx_attach;
-+
-+	/*
-+	 * Prefetch enough data to satisfy target
-+	 * classification engine.
-+	 * This is for LL chips. HL chips will probably
-+	 * transfer all frame in the tx fragment.
-+	 */
-+	htt->prefetch_len =
-+		36 + /* 802.11 + qos + ht */
-+		4 + /* 802.1q */
-+		8 + /* llc snap */
-+		2; /* ip4 dscp or ip6 priority */
-+
-+	return htt;
-+
-+err_rx_attach:
-+	ath10k_htt_tx_detach(htt);
-+err_htc_attach:
-+	kfree(htt);
-+	return NULL;
-+}
-+
-+#define HTT_TARGET_VERSION_TIMEOUT_HZ (3*HZ)
-+
-+static int ath10k_htt_verify_version(struct ath10k_htt *htt)
-+{
-+	ath10k_dbg(ATH10K_DBG_HTT,
-+		   "htt target version %d.%d; host version %d.%d\n",
-+		    htt->target_version_major,
-+		    htt->target_version_minor,
-+		    HTT_CURRENT_VERSION_MAJOR,
-+		    HTT_CURRENT_VERSION_MINOR);
-+
-+	if (htt->target_version_major != HTT_CURRENT_VERSION_MAJOR) {
-+		ath10k_err("htt major versions are incompatible!\n");
-+		return -ENOTSUPP;
-+	}
-+
-+	if (htt->target_version_minor != HTT_CURRENT_VERSION_MINOR)
-+		ath10k_warn("htt minor version differ but still compatible\n");
-+
-+	return 0;
-+}
-+
-+int ath10k_htt_attach_target(struct ath10k_htt *htt)
-+{
-+	int status;
-+
-+	init_completion(&htt->target_version_received);
-+
-+	status = ath10k_htt_h2t_ver_req_msg(htt);
-+	if (status)
-+		return status;
-+
-+	status = wait_for_completion_timeout(&htt->target_version_received,
-+						HTT_TARGET_VERSION_TIMEOUT_HZ);
-+	if (status <= 0) {
-+		ath10k_warn("htt version request timed out\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	status = ath10k_htt_verify_version(htt);
-+	if (status)
-+		return status;
-+
-+	return ath10k_htt_send_rx_ring_cfg_ll(htt);
-+}
-+
-+void ath10k_htt_detach(struct ath10k_htt *htt)
-+{
-+	ath10k_htt_rx_detach(htt);
-+	ath10k_htt_tx_detach(htt);
-+	kfree(htt);
-+}
+> There was an extra ';' character added to the end of the if statement
+> which means that it always prints that the /proc entry wasn't created
+> even though it was.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+The patches have gone upstream, so send it Linuswards.
+
+Acked-by: David Howells <dhowells@redhat.com>
