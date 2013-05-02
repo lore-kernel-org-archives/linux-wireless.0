@@ -1,66 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:35941
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753886Ab3EaMGE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 May 2013 08:06:04 -0400
-Date: Fri, 31 May 2013 08:05:54 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: cw1200 "sbus" conflicts with SPARC "sbus"
-Message-ID: <20130531120553.GA31667@shaftnet.org> (sfid-20130531_140609_343566_CC2623E3)
-References: <alpine.DEB.2.00.1305311127200.4645@ayla.of.borg>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
-In-Reply-To: <alpine.DEB.2.00.1305311127200.4645@ayla.of.borg>
+Received: from arrakis.dune.hu ([78.24.191.176]:46268 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758176Ab3EBMaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 08:30:10 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [RFC 03/14] rt2x00: rt2x00queue: remove qdesc parameter of rt2x00queue_alloc_entries
+Date: Thu,  2 May 2013 14:30:18 +0200
+Message-Id: <1367497829-7672-4-git-send-email-juhosg@openwrt.org> (sfid-20130502_143018_908102_D772F657)
+In-Reply-To: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
+References: <1367497829-7672-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The qdesc parameter is not used anymore, so remove that.
 
---HcAYCG3uE/tztfnV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-On Fri, May 31, 2013 at 11:31:05AM +0200, Geert Uytterhoeven wrote:
->=20
-> sparc64/allmodconfig:
->=20
-> drivers/net/wireless/cw1200/hwio.c:51:21: error: macro "sbus_memcpy_fromi=
-o" passed 4 arguments, but takes just 3
-> drivers/net/wireless/cw1200/hwio.c:66:19: error: macro "sbus_memcpy_toio"=
- passed 4 arguments, but takes just 3
->=20
-> http://kisskb.ellerman.id.au/kisskb/buildresult/8846508/
->=20
-> At first I thought it was a bad/old implementation of a real SPARC sbus
-> driver.  but it seems the two sbusses are completely unrelated.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 7f938a5..c12d1c8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -1161,8 +1161,7 @@ void rt2x00queue_init_queues(struct rt2x00_dev *rt2x00dev)
+ 	}
+ }
+ 
+-static int rt2x00queue_alloc_entries(struct data_queue *queue,
+-				     const struct data_queue_desc *qdesc)
++static int rt2x00queue_alloc_entries(struct data_queue *queue)
+ {
+ 	struct queue_entry *entries;
+ 	unsigned int entry_size;
+@@ -1231,23 +1230,22 @@ int rt2x00queue_initialize(struct rt2x00_dev *rt2x00dev)
+ 	struct data_queue *queue;
+ 	int status;
+ 
+-	status = rt2x00queue_alloc_entries(rt2x00dev->rx, rt2x00dev->ops->rx);
++	status = rt2x00queue_alloc_entries(rt2x00dev->rx);
+ 	if (status)
+ 		goto exit;
+ 
+ 	tx_queue_for_each(rt2x00dev, queue) {
+-		status = rt2x00queue_alloc_entries(queue, rt2x00dev->ops->tx);
++		status = rt2x00queue_alloc_entries(queue);
+ 		if (status)
+ 			goto exit;
+ 	}
+ 
+-	status = rt2x00queue_alloc_entries(rt2x00dev->bcn, rt2x00dev->ops->bcn);
++	status = rt2x00queue_alloc_entries(rt2x00dev->bcn);
+ 	if (status)
+ 		goto exit;
+ 
+ 	if (test_bit(REQUIRE_ATIM_QUEUE, &rt2x00dev->cap_flags)) {
+-		status = rt2x00queue_alloc_entries(rt2x00dev->atim,
+-						   rt2x00dev->ops->atim);
++		status = rt2x00queue_alloc_entries(rt2x00dev->atim);
+ 		if (status)
+ 			goto exit;
+ 	}
+-- 
+1.7.10
 
-Yikes.=20
-
-Would it be sufficient to just rename that pair of macros, or should I=20
-go and rename entire cw1200's "bus" subsystem?
-
-Either way, I'll add this to the to-do list for the weekend.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org	=20
-Delray Beach, FL                          ^^ (mail/jabber) ^^
-Quidquid latine dictum sit, altum viditur.
-
---HcAYCG3uE/tztfnV
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iD8DBQFRqJIhPuLgii2759ARAqnIAKDuJmGl4GdnnN8FYROfmonYfRM2YACfU1oI
-2WFw0GyBMlsAqdXHjnUrw40=
-=SbeX
------END PGP SIGNATURE-----
-
---HcAYCG3uE/tztfnV--
