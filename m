@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:54573 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753974Ab3EPN1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 May 2013 09:27:18 -0400
-Received: from mailout-de.gmx.net ([10.1.76.27]) by mrigmx.server.lan
- (mrigmx002) with ESMTP (Nemesis) id 0MXTLc-1UyMR11bWg-00WUxy for
- <linux-wireless@vger.kernel.org>; Thu, 16 May 2013 15:27:17 +0200
-Message-ID: <5194DEB3.2060407@rempel-privat.de> (sfid-20130516_152721_653837_09D3C43D)
-Date: Thu, 16 May 2013 15:27:15 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52092 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753204Ab3ECBGN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 21:06:13 -0400
+Date: Thu, 2 May 2013 15:43:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Matt Chen <machen@suse.com>, joeyli <jlee@suse.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Linux summit this year ?
+Message-ID: <20130502194308.GC2050@tuxdriver.com> (sfid-20130503_030617_970463_BEC43B05)
+References: <CALx5=V-wOkHb1Q4A_32LBQm9aP0dUL1J5s4ceLwqVGSYhfpwxw@mail.gmail.com>
+ <20130225143201.GA6455@tuxdriver.com>
+ <1361809785.3902.19.camel@aeonflux>
+ <512BAED0.2000507@lwfinger.net>
+ <20130225211207.GE6455@tuxdriver.com>
+ <1361892097.3902.34.camel@aeonflux>
+ <1367522831.11375.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Ignacy Gawedzki <i@lri.fr>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc: Target is unresponsive
-References: <20130515134258.GA9033@zenon.in.qult.net>
-In-Reply-To: <20130515134258.GA9033@zenon.in.qult.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1367522831.11375.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 15.05.2013 15:42, schrieb Ignacy Gawedzki:
-> Hi everyone,
->
-> This is an old issue, about which it seems the first posts date back to 2009.
-> With the latest possible version of the firmware for AR9271 and the latest
-> possible wireless drivers, the issue is still there.  Whether this is still
-> the exact same problem every time remains to be checked, but it is annoying
-> enough to deserve some consideration.
->
-> The problem is that the driver can't talk to the device if the following
-> conditions are met:
->
->   - The system cold boots with the USB dongle inserted or the USB dongle is
->     inserted on a running system.
->
->   - The interface is *not* brought up.
->
->   - The system (warm) reboots.
->
-> Then the driver complains about the target being unresponsive after uploading
-> the firmware.  Apparently the only way to make it work again is to unplug and
-> then plug the USB dongle back, physically.  It seems that if the USB port is
-> not powered down during reboot (which happens with at least two different
-> setups that I've tested it with), the device is left in a broken state.
->
-> I would gladly help in tracing down this bug if only I knew where to start.
->
-> Thanks for any suggestion.
+On Thu, May 02, 2013 at 09:27:11PM +0200, Johannes Berg wrote:
+> On Tue, 2013-02-26 at 07:21 -0800, Marcel Holtmann wrote:
+> 
+> > > I would still like to do New Orleans.  I'm just not sure if we can
+> > > fit it in.  I don't suppose that someone would like to propose it as
+> > > a mini-conference for LPC?  Do we know what we want to discuss?
+> > 
+> > I am checking with Angela right now. Lets see what we can work out. I do
+> > believe we should have it in North America this time.
+> 
+> Any results on that?
+> 
+> I was looking into things and the Graphics & Display uconf
+> (http://wiki.linuxplumbersconf.org/2013:graphics_and_display) is
+> proposing to talk about wireless display technologies, so it might be a
+> really good thing to combine forces with them for some parts.
+> 
+> IOW I think we should do New Orleans, if only for that combination.
 
-Hi Ignacy,
+Angela says:
 
-i can't reproduce this issue on my system. I tested it with 4 different 
-ath9_htc adapter. Without luck. Please provide as match information as 
-possible:
-- Usb host controller
-- Adapter manufacture and version, or even better add it to the wiki, 
-and upload some images:
-http://wikidevi.com/wiki/Main_Page
-- your kernel version
+"I'm confirming that we got the space you needed for the Wireless Summit in
+New Orleans. To confirm, we have one main meeting room on Thurs, Sept 19th
+& Fri, Sept 20th (overlapping Plumbers) and two smaller rooms that can hold
+up to 30ppl if need be (but are better off for 5-15).
 
-I assume it is not firmware. May be there are some issue with boot 
-loader on adapter. Are you sure that UART pins are not soldered?
-Current ath9k_htc do not have mechanism to reset an adapter. I will 
-start to work on it after some other issues are done.
+Please confirm this is good to go and let Stephanie know of anything you
+need in the rooms (AV etc).
 
-PS: please find some way to enable uart, at least TX pin.
+I assume you'll be keeping your own registration list unless I hear
+otherwise."
 
+Does that sound alright to everyone?  What do we need other than a projector?
+
+John
 -- 
-Regards,
-Oleksij
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
