@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28612 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2981 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758106Ab3EWMT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 08:19:56 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jake Edge <jake@lwn.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFT/RFC 4/4] Revert "iwl4965: workaround connection regression on passive channel"
-Date: Thu, 23 May 2013 14:21:00 +0200
-Message-Id: <1369311660-15378-5-git-send-email-sgruszka@redhat.com> (sfid-20130523_141958_645085_3AF22DBC)
-In-Reply-To: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
-References: <1369311660-15378-1-git-send-email-sgruszka@redhat.com>
+	id S1761170Ab3EBTRx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 15:17:53 -0400
+Message-ID: <5182BBD4.9010701@broadcom.com> (sfid-20130502_211758_316167_F77274E8)
+Date: Thu, 2 May 2013 21:17:40 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v4] cfg80211: Android P2P-Device workaround
+References: <1367238384-26722-1-git-send-email-johannes@sipsolutions.net>
+ <51823A0E.8020005@broadcom.com>
+ <1367489163.8298.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1367489163.8298.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit dd9c46408fdc07098333655ff27edf8cac8d9fcf.
----
- drivers/net/wireless/iwlegacy/4965-mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On 05/02/2013 12:06 PM, Johannes Berg wrote:
+> On Thu, 2013-05-02 at 12:03 +0200, Arend van Spriel wrote:
+>
+>> I tested the patch on x86 platform and was successful executing a
+>> p2p_find, p2p_connect, and able to ping my peer. But....
+>>
+>> When I tried this a second time I got a lockdep warning about annotation
+>> as brcmfmac tried to take a mutex during scan (p2p_find). Two minutes
+>> later I got warning about rcu stalls. Not sure where to look.
+>
+> Me neither? :) What does it say?
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 72b8c4e..b083502 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5760,7 +5760,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 	hw->flags =
- 	    IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_AMPDU_AGGREGATION |
- 	    IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC | IEEE80211_HW_SPECTRUM_MGMT |
--	    IEEE80211_HW_SUPPORTS_PS | IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | IEEE80211_HW_SUPPORTS_PS |
-+	    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 	if (il->cfg->sku & IL_SKU_N)
- 		hw->flags |=
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
--- 
-1.7.11.7
+crap. One time I get the lockdep warning/rcu stall and the next a null 
+pointer access, but the stack trace is the same. Afraid this is a 
+brcmfmac issue that I will have to look into it.
+
+Gr. AvS
 
