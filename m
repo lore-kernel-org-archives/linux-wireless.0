@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932575Ab3EGNkt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 May 2013 09:40:49 -0400
-Message-ID: <1367934045.8328.20.camel@jlt4.sipsolutions.net> (sfid-20130507_161636_391573_E690763C)
-Subject: Re: [RFC 03/12] mac80211: use all MBSS interfaces for path selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wirelss <linux-wireless@vger.kernel.org>, me@bobcopeland.com,
-	open80211s <devel@lists.open80211s.org>
-Date: Tue, 07 May 2013 15:40:45 +0200
-In-Reply-To: <1367548442-8229-4-git-send-email-thomas@cozybit.com> (sfid-20130503_043618_332593_B0A4ABED)
-References: <1367548442-8229-1-git-send-email-thomas@cozybit.com>
-	 <1367548442-8229-4-git-send-email-thomas@cozybit.com>
-	 (sfid-20130503_043618_332593_B0A4ABED)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.17.20]:53684 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751355Ab3EBILz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 04:11:55 -0400
+Received: from mailout-de.gmx.net ([10.1.76.28]) by mrigmx.server.lan
+ (mrigmx001) with ESMTP (Nemesis) id 0MDSWR-1UoaoR1HnZ-00GqoV for
+ <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 10:11:54 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 0/2] work sync
+Date: Thu,  2 May 2013 10:11:46 +0200
+Message-Id: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> (sfid-20130502_101200_805540_386C9DE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-05-02 at 19:33 -0700, Thomas Pedersen wrote:
+Hello all,
 
->  /**
-> - * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame. Calling
-> - * this function is considered "using" the associated mpath, so preempt a path
-> - * refresh if this mpath expires soon.
-> + * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame and
-> + * insert the correct outgoing interface on the skb cb. Calling this function
-> + * is considered "using" the associated mpath, so preempt a path refresh if
-> + * this mpath expires soon.
+this patches currently pending for review or ack. Can please some one
+do it untill i forgt them :)
 
-This is of course completely bogus kernel-doc :)
+Oleksij Rempel (2):
+  ath9k_htc: add STBC TX support
+  ath9k: remove useless flag conversation.
 
-johannes
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c   |  5 +++--
+ drivers/net/wireless/ath/ath9k/htc.h          |  2 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  3 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |  4 ++++
+ drivers/net/wireless/ath/ath9k/mac.c          | 11 +++++++----
+ drivers/net/wireless/ath/ath9k/mac.h          |  1 +
+ drivers/net/wireless/ath/ath9k/recv.c         |  5 +----
+ 7 files changed, 21 insertions(+), 10 deletions(-)
+
+-- 
+1.8.1.2
 
