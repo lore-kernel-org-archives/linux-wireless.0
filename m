@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:54769 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759847Ab3EWWh4 (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:45478 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760850Ab3EBQ4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 May 2013 18:37:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 23 May 2013 15:36:24 -0700
-Subject: RE: [PATCH v2 1/2] iw: use updated structures and enums for packet
- pattern
-Message-ID: <477F20668A386D41ADCC57781B1F70430E801DC66D@SC-VEXCH1.marvell.com> (sfid-20130524_003807_602049_7ED0A31A)
-References: <1369344941-11217-1-git-send-email-bzhao@marvell.com>
-	 <1369345157.12002.87.camel@jlt4.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F70430E801DC656@SC-VEXCH1.marvell.com>
- <1369348092.17244.0.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1369348092.17244.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 2 May 2013 12:56:01 -0400
+Received: by mail-wg0-f41.google.com with SMTP id y10so808999wgg.4
+        for <linux-wireless@vger.kernel.org>; Thu, 02 May 2013 09:55:59 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1367482308-9882-2-git-send-email-linux@rempel-privat.de>
+References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de>
+	<1367482308-9882-2-git-send-email-linux@rempel-privat.de>
+Date: Thu, 2 May 2013 09:55:59 -0700
+Message-ID: <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> (sfid-20130502_185618_143572_2EA902F7)
+Subject: Re: [PATCH 1/2] ath9k_htc: add STBC TX support
+From: Adrian Chadd <adrian@freebsd.org>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gPiBQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8g
-cmVzZW5kIDEvMiB3aXRoIHJldmlzZWQgY29tbWl0IGxvZy4NCj4gPiBPdGhlcndpc2UsIHBsZWFz
-ZSBzaW1wbHkgZHJvcCAxLzIgYW5kIGFwcGx5IDIvMiBhbG9uZS4NCj4gDQo+IE5vLCBubyBuZWVk
-LiBKdXN0IHdhbnRlZCB0byBkb3VibGUtY2hlY2suIEkgc3RhcnRlZCBnb2luZyB0aHJvdWdoIHRo
-ZQ0KPiBrZXJuZWwgc2lkZSBwYXRjaGVzIGFuZCBoYWQgc29tZSBjb21tZW50cywgYnV0IEknbSB0
-b28gdGlyZWQgdG8gZmluaXNoDQo+IG5vdy4NCg0KT0ssIE5vIGh1cnJ5Lg0KDQpUaGFua3MsDQpC
-aW5nDQo=
+On 2 May 2013 01:11, Oleksij Rempel <linux@rempel-privat.de> wrote:
+
+> +#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
+> +#define WLAN_RC_RX_STBC_FLAG 0xC0 /* RX STBC ,2 bits */
+
+I thought we covered this; why are you marking two bits here?
+
+Atheros 11n hardware only supports 1-stream STBC RX.
+
+Have you verified that we're actually negotiating 1-stream STBC RX
+with a peer? (Ie, by looking at packet captures?)
+
+
+
+Adrian
