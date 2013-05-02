@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:36012
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933783Ab3D3Wzq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Apr 2013 18:55:46 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Subject: Re: is L1 really disabled in iwlwifi
-Date: Tue, 30 Apr 2013 22:55:36 +0000
-Message-ID: <1367362536.9976.9.camel@x230> (sfid-20130501_005551_871458_F6917709)
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	 <20130304134949.GB3021@redhat.com>
-	 <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-	 <20130304154832.GD3021@redhat.com>
-	 <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-	 <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-	 <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-	 <CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
-	 <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
-	 <CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
-	 <CANUX_P3Mt3X8JXq5siSijrWGkjeWbTCcdmJ-Fuv6U8jUqrFouQ@mail.gmail.com>
-	 <CAErSpo66=UngrHNcEDeh4gXnt5c0qJHwbxum0mBz-rSWGduLhg@mail.gmail.com>
-	 <CANUX_P0hpx8NNvX6cJXfOZMNYN8hrEF-gzf9hBN2Uz=k0WiwgA@mail.gmail.com>
-	 <CANUX_P1JnFk7yovC7kXBMDWiErGhvzDQrNCm8te39m41SonCNg@mail.gmail.com>
-	 <CAErSpo5WbdCx0iyt14bJxCiNBtUWjT2rMeg5YwNQaRt=M+_v8Q@mail.gmail.com>
-In-Reply-To: <CAErSpo5WbdCx0iyt14bJxCiNBtUWjT2rMeg5YwNQaRt=M+_v8Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:52090 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932081Ab3EBSBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 May 2013 14:01:14 -0400
+Message-ID: <5182A9DC.6030203@openwrt.org> (sfid-20130502_200119_288279_EB8633E3)
+Date: Thu, 02 May 2013 20:01:00 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: Adrian Chadd <adrian@freebsd.org>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH 1/2] ath9k_htc: add STBC TX support
+References: <1367482308-9882-1-git-send-email-linux@rempel-privat.de> <1367482308-9882-2-git-send-email-linux@rempel-privat.de> <CAJ-Vmo=rZrHmXD0Os-Mb40jSEywbO-7GHSqL=7iMbkzAfS=+UQ@mail.gmail.com> <5182A341.8050704@rempel-privat.de>
+In-Reply-To: <5182A341.8050704@rempel-privat.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDEzLTA0LTMwIGF0IDE2OjQ1IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-DQo+IEknbSBub3QgY29udmluY2VkIGl3bHdpZmkgcmVhbGx5IG5lZWRzIHRvIGRpc2FibGUgdGhl
-IGxpbmsgcG93ZXINCj4gbWFuYWdlbWVudCBzdGF0ZXMgaW4gdGhlIGZpcnN0IHBsYWNlIC0tIHRo
-ZSAxYTcxMjNjZGQ5IGNoYW5nZWxvZyBpc24ndA0KPiB2ZXJ5IGNvbnZpbmNpbmcsIGFuZCBJJ20g
-bm90IGF3YXJlIG9mIGFueSByZXBvcnRlZCBpc3N1ZXMgZXZlbiB0aG91Z2gNCj4gd2UncmUgYWN0
-dWFsbHkgbGVhdmluZyB0aGVtIGVuYWJsZWQgaW4gbWFueSBjYXNlcy4NCj4gDQo+IE1vcmUgZ2Vu
-ZXJhbGx5LCBJIGRvbid0IHRoaW5rIHRoZSBwY2lfZGlzYWJsZV9saW5rX3N0YXRlKCkgaW50ZXJm
-YWNlDQo+IGlzIHZlcnkgdXNlZnVsIGJlY2F1c2UgaXQgb2Z0ZW4gZG9lc24ndCBkbyB3aGF0IGl0
-IGNsYWltcywgYW5kIHRoZQ0KPiBjYWxsZXIgaGFzIG5vIGluZGljYXRpb24uDQoNClRoZSBnZW5l
-cmFsIGlzc3VlIGhlcmUgaXMgdGhhdCBXaW5kb3dzIHdpbGwgKGFzIGZhciBhcyB3ZSd2ZSBiZWVu
-IGFibGUNCnRvIGRldGVybWluZSkgbmV2ZXIgdG91Y2ggQVNQTSByZWdpc3RlcnMgdW5sZXNzIGdp
-dmVuIFBDSWUgY29udHJvbCB2aWENCl9PU0MuIERyaXZlcnMgYXJlIHByZXN1bWFibHkgYWJsZSB0
-byBvdmVycmlkZSB0aGlzIGJ5IGhpdHRpbmcNCmNvbmZpZ3VyYXRpb24gcmVnaXN0ZXJzIHRoZW1z
-ZWx2ZXMuIFRoZSBwY2lfZGlzYWJsZV9saW5rX3N0YXRlKCkNCmZ1bmN0aW9ucyBhcmUgY3VycmVu
-dGx5IGJyb2FkbHkgZXF1aXZhbGVudCB0byB0aGUgaGVscGVyIGZ1bmN0aW9ucw0KcHJvdmlkZWQg
-aW4gdGhlIFdpbmRvd3MgLmluZiBmaWxlcywgYW5kIGlmIGRyaXZlcnMgcmVhbGx5IHdhbnQgdG8N
-CmRpc2FibGUgdGhlIGNvbnRyb2wgdGhlbXNlbHZlcyB0aGVuIHRoZXkgY2FuIGRvIHNvLiBSZW5h
-bWluZyB0aGUNCmZ1bmN0aW9ucyB0byBtYWtlIHRoYXQgY2xlYXJlciwgYW5kIHBvc3NpYmx5IGFk
-ZGluZyBzb21lIGFkZGl0aW9uYWwNCmZ1bmN0aW9ucyB0byBmb3JjZSB0aGUgY2FzZSwgbWF5IGJl
-IHdvcnRod2hpbGUuDQoNClRoZSBvbmx5IHRpbWUgdGhpcyBzaG91bGQgYmUgcmVsZXZhbnQgaXMg
-aWYgKGEpIHRoZSBCSU9TIGhhcyBlbmFibGVkIEwxDQpvbiBpd2x3aWZpLCAoYikgdGhlIEJJT1Mg
-aGFzIGRpc2FibGVkIEFTUE0gY29udHJvbCwgYW5kIChjKSB0aGUgaGFyZHdhcmUNCmRvZXNuJ3Qg
-d29yayB3aXRoIEwxIGVuYWJsZWQuIEFyZSB0aGVyZSByZWFsbHkgY2FzZXMgd2hlcmUgdGhhdCdz
-IHRydWU/DQoNCi0tIA0KTWF0dGhldyBHYXJyZXR0IHwgbWpnNTlAc3JjZi51Y2FtLm9yZw0K
+On 2013-05-02 7:32 PM, Oleksij Rempel wrote:
+> Am 02.05.2013 18:55, schrieb Adrian Chadd:
+>> On 2 May 2013 01:11, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>>
+>>> +#define WLAN_RC_TX_STBC_FLAG 0x20 /* TX STBC */
+>>> +#define WLAN_RC_RX_STBC_FLAG 0xC0 /* RX STBC ,2 bits */
+>>
+>> I thought we covered this; why are you marking two bits here?
+> 
+> becouse firmware checks for two bits (and then use it as bool ;)), so i 
+> pass what firmware can handle.
+> 
+>> Atheros 11n hardware only supports 1-stream STBC RX.
+> 
+> Did you got my email with lots of assumptions and questions?
+> What do you mean by 1-stream STBC RX? After i did some home work on STBC 
+> i see that it encoded from at least two spatial streams.
+> Is
+> 1-stream STBC RX = 2 spatial streams with mirrored data?
+> and
+> 2-stream STBC RX = 4 spatial streams with mirrored data?
+> 
+> or
+> 
+> 1-stream STBC RX = compatibility mode for one stream hardware(so only of 
+> two streams received)?
+When you're talking about 'streams', please specify where you're talking
+about Spatial Streams (Nss, defined by the MCS), or Space-Time Streams
+(Nsts). STBC is useful whenever the number of possible Space-Time
+streams exceeds the number of Spatial streams, i.e. if the number of tx
+chains is bigger than the number of spatial streams.
+There's an asymmetry between Rx and Tx here. If a receiver has 1 chain
+and the transmitter has 2 chains, tx can use 2 Space-Time streams to
+encode 1 Spatial stream to improve the reliability of the signal.
+The HT STBC capability field indicates the maximum number of Spatial
+Streams, not Space-Time streams. Atheros hardware only supports STBC
+with Nss = 1, so announcing 2-stream STBC is definitely wrong.
 
+> That would make sense for 1x1:1 hardware, but if you say all atheros N 
+> hardware support only 1-stream STBC RX, will mean that STBC is useless 
+> on this hardware.
+Only STBC With Nss=1, Nsts=2 is supported, but this does not make it
+useless at all. It helps, even if the receiver only has one antenna.
+
+- Felix
